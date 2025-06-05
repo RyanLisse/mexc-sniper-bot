@@ -1,6 +1,7 @@
 """
 Configuration management for MEXC Sniper Bot Pattern Discovery System
 """
+
 from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -9,15 +10,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AppConfig(BaseSettings):
     """Application configuration using Pydantic settings"""
 
-    model_config = SettingsConfigDict(
-        env_file='.env',
-        env_file_encoding='utf-8',
-        extra='ignore',
-        case_sensitive=False
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=False)
 
     # API Settings
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: Optional[str] = None
     MEXC_API_KEY: Optional[str] = None
     MEXC_SECRET_KEY: Optional[str] = None
 
@@ -30,9 +26,9 @@ class AppConfig(BaseSettings):
     # Cache Settings (Redis/Valkey)
     REDIS_URL: Optional[str] = None
     VALKEY_URL: Optional[str] = None  # Alternative to REDIS_URL
-    CACHE_TTL_SYMBOLS: int = 5        # TTL for symbols data (seconds)
-    CACHE_TTL_CALENDAR: int = 30      # TTL for calendar data (seconds)
-    CACHE_TTL_ACCOUNT: int = 60       # TTL for account data (seconds)
+    CACHE_TTL_SYMBOLS: int = 5  # TTL for symbols data (seconds)
+    CACHE_TTL_CALENDAR: int = 30  # TTL for calendar data (seconds)
+    CACHE_TTL_ACCOUNT: int = 60  # TTL for account data (seconds)
 
     # Inngest Settings
     INNGEST_EVENT_KEY: Optional[str] = None
@@ -52,7 +48,7 @@ class AppConfig(BaseSettings):
 
     # Monitoring Intervals
     CALENDAR_POLL_INTERVAL_SECONDS: int = 300  # 5 minutes
-    CALENDAR_POLL_CRON: str = "*/5 * * * *"   # Inngest cron: every 5 minutes
+    CALENDAR_POLL_CRON: str = "*/5 * * * *"  # Inngest cron: every 5 minutes
     SYMBOLS_POLL_INTERVAL_SECONDS_DEFAULT: int = 30
     SYMBOLS_POLL_INTERVAL_SECONDS_NEAR_LAUNCH: int = 5
     SYMBOLS_POLL_NEAR_LAUNCH_THRESHOLD_MINUTES: int = 60
@@ -60,6 +56,13 @@ class AppConfig(BaseSettings):
     # Trading Settings
     DEFAULT_BUY_AMOUNT_USDT: float = 100.0
     MAX_CONCURRENT_SNIPES: int = 3
+    STOP_LOSS_PERCENT: float = 5.0
+    TAKE_PROFIT_PERCENT: float = 15.0
+
+    # Performance Settings
+    MAX_RETRIES: int = 3
+    REQUEST_TIMEOUT: int = 10
+    CONNECTION_POOL_SIZE: int = 10
 
     # Application Settings
     LOG_LEVEL: str = "INFO"
@@ -95,6 +98,27 @@ class AppConfig(BaseSettings):
     def inngest_configured(self) -> bool:
         """Check if Inngest is configured"""
         return bool(self.INNGEST_SIGNING_KEY)
+
+    def validate_configuration(self) -> list[str]:
+        """Validate configuration and return list of issues"""
+        issues = []
+
+        if not self.OPENAI_API_KEY:
+            issues.append("OPENAI_API_KEY is required")
+
+        if self.DEFAULT_BUY_AMOUNT_USDT <= 0:
+            issues.append("DEFAULT_BUY_AMOUNT_USDT must be positive")
+
+        if self.MAX_CONCURRENT_SNIPES <= 0:
+            issues.append("MAX_CONCURRENT_SNIPES must be positive")
+
+        if not (0 < self.STOP_LOSS_PERCENT < 100):
+            issues.append("STOP_LOSS_PERCENT must be between 0 and 100")
+
+        if not (0 < self.TAKE_PROFIT_PERCENT < 1000):
+            issues.append("TAKE_PROFIT_PERCENT must be between 0 and 1000")
+
+        return issues
 
 
 # Global settings instance

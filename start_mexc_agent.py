@@ -40,15 +40,18 @@ def check_environment():
     print("✅ Environment check passed")
     return True
 
+
 def check_dependencies():
     """Check if required dependencies are installed"""
     print("📦 Checking dependencies...")
 
     try:
-        import agents
         import aiohttp
         import fastapi
         import pydantic
+
+        import agents
+
         print("✅ All dependencies installed")
         return True
     except ImportError as e:
@@ -57,16 +60,12 @@ def check_dependencies():
         print("pip install -r requirements.txt")
         return False
 
+
 def start_server(host="0.0.0.0", port=8000, reload=True):
     """Start the FastAPI server"""
     print(f"🚀 Starting MEXC Pattern Discovery Agent on {host}:{port}")
 
-    cmd = [
-        "uvicorn",
-        "api.agents:app",
-        "--host", host,
-        "--port", str(port)
-    ]
+    cmd = ["uvicorn", "api.agents:app", "--host", host, "--port", str(port)]
 
     if reload:
         cmd.append("--reload")
@@ -79,6 +78,7 @@ def start_server(host="0.0.0.0", port=8000, reload=True):
         print(f"❌ Failed to start server: {e}")
     except FileNotFoundError:
         print("❌ uvicorn not found. Install with: pip install uvicorn")
+
 
 def show_usage():
     """Show usage information"""
@@ -117,6 +117,7 @@ Quick Test:
   curl http://localhost:8000/api/agents/ping
 """)
 
+
 def main():
     """Main function"""
     import argparse
@@ -151,11 +152,8 @@ def main():
 
     # Start server
     print()
-    start_server(
-        host=args.host,
-        port=args.port,
-        reload=not args.no_reload
-    )
+    start_server(host=args.host, port=args.port, reload=not args.no_reload)
+
 
 if __name__ == "__main__":
     main()

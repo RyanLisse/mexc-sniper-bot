@@ -135,9 +135,6 @@ class MexcApiClient:
         retries: int = 3,
     ) -> dict[str, Any]:
         """Make HTTP request with error handling and retries"""
-        if self.session is None:
-            await self.start_session()
-
         url = f"{self.base_url}{endpoint}"
         headers = self._get_headers(include_api_key=authenticated)
 
@@ -150,6 +147,14 @@ class MexcApiClient:
 
         for attempt in range(retries + 1):
             try:
+                # Ensure session is active for each attempt
+                if self.session is None or self.session.closed:
+                    await self.start_session()
+                    # Verify session was successfully started
+                    if self.session is None or self.session.closed:
+                        logger.error("Failed to establish a valid HTTP session after attempting to start it.")
+                        raise MexcApiError("Failed to establish HTTP session.")
+
                 await self._rate_limit()
 
                 async with self.session.request(
@@ -205,7 +210,7 @@ class MexcApiClient:
                                 vcoinId=item_data["vcoinId"],
                                 symbol=item_data["symbol"],
                                 projectName=item_data["projectName"],
-                                firstOpenTime=item_data["firstOpenTime"]
+                                firstOpenTime=item_data["firstOpenTime"],
                             )
                             valid_entries.append(entry)
                     except Exception as e:
@@ -238,7 +243,7 @@ class MexcApiClient:
                             vcoinId=item_data["vcoinId"],
                             symbol=item_data["symbol"],
                             projectName=item_data["projectName"],
-                            firstOpenTime=item_data["firstOpenTime"]
+                            firstOpenTime=item_data["firstOpenTime"],
                         )
                         valid_entries.append(entry)
                         # Store raw data for caching (serializable)
@@ -271,7 +276,7 @@ class MexcApiClient:
                     ca=item_data.get("ca"),
                     ps=item_data.get("ps"),
                     qs=item_data.get("qs"),
-                    ot=item_data.get("ot")
+                    ot=item_data.get("ot"),
                 )
         except Exception as e:
             logger.debug(f"Failed to parse symbol entry: {e}")
@@ -408,6 +413,7 @@ async def get_mexc_client(cache_service: Optional[CacheService] = None) -> MexcA
 
     # Type narrowing: after the if block, _api_client is guaranteed to be MexcApiClient
     from typing import cast
+
     return cast(MexcApiClient, _api_client)
 
 

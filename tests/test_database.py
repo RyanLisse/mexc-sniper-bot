@@ -1,6 +1,7 @@
 """
 Tests for database operations
 """
+
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
@@ -29,7 +30,7 @@ def mock_database_url():
 
 
 @pytest.fixture
-async def test_database():
+async def _test_database():
     """Setup test database"""
     # Use in-memory SQLite for testing
     original_url = settings.DATABASE_URL
@@ -53,7 +54,7 @@ def sample_listing_data():
         "symbol_name": "TESTUSDT",
         "project_name": "Test Token",
         "announced_launch_time_ms": int(launch_time.timestamp() * 1000),
-        "announced_launch_datetime_utc": launch_time
+        "announced_launch_datetime_utc": launch_time,
     }
 
 
@@ -73,12 +74,7 @@ def sample_target_data():
         "discovered_at_utc": discovered_time,
         "hours_advance_notice": 4.0,
         "intended_buy_amount_usdt": 100.0,
-        "execution_order_params": {
-            "symbol": "TESTUSDT",
-            "side": "BUY",
-            "type": "MARKET",
-            "quoteOrderQty": 100.0
-        }
+        "execution_order_params": {"symbol": "TESTUSDT", "side": "BUY", "type": "MARKET", "quoteOrderQty": 100.0},
     }
 
 
@@ -87,15 +83,16 @@ class TestDatabaseInitialization:
 
     def test_init_database_with_url(self):
         """Test database initialization with URL"""
-        with patch('src.database.create_engine') as mock_create_engine, \
-             patch('src.database.create_async_engine') as mock_create_async_engine, \
-             patch('src.database.sessionmaker') as mock_sessionmaker:
-
+        with (
+            patch("src.database.create_engine") as mock_create_engine,
+            patch("src.database.create_async_engine") as mock_create_async_engine,
+            patch("src.database.async_sessionmaker") as mock_async_sessionmaker,
+        ):
             init_database()
 
             mock_create_engine.assert_called_once()
             mock_create_async_engine.assert_called_once()
-            mock_sessionmaker.assert_called_once()
+            mock_async_sessionmaker.assert_called_once()
 
     def test_init_database_without_url(self):
         """Test database initialization without URL (fallback to SQLite)"""
@@ -103,9 +100,10 @@ class TestDatabaseInitialization:
         settings.DATABASE_URL = None
 
         try:
-            with patch('src.database.create_engine') as mock_create_engine, \
-                 patch('src.database.create_async_engine') as mock_create_async_engine:
-
+            with (
+                patch("src.database.create_engine") as mock_create_engine,
+                patch("src.database.create_async_engine") as mock_create_async_engine,
+            ):
                 init_database()
 
                 # Should use SQLite fallback
@@ -119,15 +117,23 @@ class TestDatabaseInitialization:
             settings.DATABASE_URL = original_url
 
 
+@pytest.mark.usefixtures("_test_database")
 class TestMonitoredListingOperations:
     """Test monitored listing database operations"""
 
     @pytest.mark.asyncio
-    async def test_create_and_get_monitored_listing(self, test_database, sample_listing_data):
+    async def test_create_and_get_monitored_listing(self, sample_listing_data):
         """Test creating and retrieving monitored listing"""
         async with get_async_session() as session:
             # Create listing
-            listing = await create_monitored_listing(session, **sample_listing_data)
+            listing = await create_monitored_listing(
+                session,
+                vcoin_id=sample_listing_data["vcoin_id"],
+                symbol_name=sample_listing_data["symbol_name"],
+                project_name=sample_listing_data["project_name"],
+                announced_launch_time_ms=sample_listing_data["announced_launch_time_ms"],
+                announced_launch_datetime_utc=sample_listing_data["announced_launch_datetime_utc"],
+            )
 
             assert listing.vcoin_id == sample_listing_data["vcoin_id"]
             assert listing.symbol_name == sample_listing_data["symbol_name"]
@@ -142,18 +148,25 @@ class TestMonitoredListingOperations:
             assert retrieved.symbol_name == listing.symbol_name
 
     @pytest.mark.asyncio
-    async def test_get_nonexistent_listing(self, test_database):
+    async def test_get_nonexistent_listing(self):
         """Test retrieving non-existent listing"""
         async with get_async_session() as session:
             listing = await get_monitored_listing(session, "NONEXISTENT")
             assert listing is None
 
     @pytest.mark.asyncio
-    async def test_get_monitoring_listings(self, test_database, sample_listing_data):
+    async def test_get_monitoring_listings(self, sample_listing_data):
         """Test getting all monitoring listings"""
         async with get_async_session() as session:
             # Create test listing
-            await create_monitored_listing(session, **sample_listing_data)
+            await create_monitored_listing(
+                session,
+                vcoin_id=sample_listing_data["vcoin_id"],
+                symbol_name=sample_listing_data["symbol_name"],
+                project_name=sample_listing_data["project_name"],
+                announced_launch_time_ms=sample_listing_data["announced_launch_time_ms"],
+                announced_launch_datetime_utc=sample_listing_data["announced_launch_datetime_utc"],
+            )
 
             # Get monitoring listings
             listings = await get_monitoring_listings(session)
@@ -163,18 +176,38 @@ class TestMonitoredListingOperations:
             assert listings[0].status == "monitoring"
 
 
+@pytest.mark.usefixtures("_test_database")
 class TestSnipeTargetOperations:
     """Test snipe target database operations"""
 
     @pytest.mark.asyncio
-    async def test_create_and_get_snipe_target(self, test_database, sample_listing_data, sample_target_data):
+    async def test_create_and_get_snipe_target(self, sample_listing_data, sample_target_data):
         """Test creating and retrieving snipe target"""
         async with get_async_session() as session:
             # First create the monitored listing (required for foreign key)
-            await create_monitored_listing(session, **sample_listing_data)
+            await create_monitored_listing(
+                session,
+                vcoin_id=sample_listing_data["vcoin_id"],
+                symbol_name=sample_listing_data["symbol_name"],
+                project_name=sample_listing_data["project_name"],
+                announced_launch_time_ms=sample_listing_data["announced_launch_time_ms"],
+                announced_launch_datetime_utc=sample_listing_data["announced_launch_datetime_utc"],
+            )
 
             # Create snipe target
-            target = await create_snipe_target(session, **sample_target_data)
+            target = await create_snipe_target(
+                session,
+                vcoin_id=sample_target_data["vcoin_id"],
+                mexc_symbol_contract=sample_target_data["mexc_symbol_contract"],
+                price_precision=sample_target_data["price_precision"],
+                quantity_precision=sample_target_data["quantity_precision"],
+                actual_launch_time_ms=sample_target_data["actual_launch_time_ms"],
+                actual_launch_datetime_utc=sample_target_data["actual_launch_datetime_utc"],
+                discovered_at_utc=sample_target_data["discovered_at_utc"],
+                hours_advance_notice=sample_target_data["hours_advance_notice"],
+                intended_buy_amount_usdt=sample_target_data["intended_buy_amount_usdt"],
+                execution_order_params=sample_target_data["execution_order_params"],
+            )
 
             assert target.vcoin_id == sample_target_data["vcoin_id"]
             assert target.mexc_symbol_contract == sample_target_data["mexc_symbol_contract"]
@@ -192,12 +225,31 @@ class TestSnipeTargetOperations:
             assert retrieved.mexc_symbol_contract == target.mexc_symbol_contract
 
     @pytest.mark.asyncio
-    async def test_update_snipe_target_status(self, test_database, sample_listing_data, sample_target_data):
+    async def test_update_snipe_target_status(self, sample_listing_data, sample_target_data):
         """Test updating snipe target status"""
         async with get_async_session() as session:
             # Create prerequisite listing and target
-            await create_monitored_listing(session, **sample_listing_data)
-            target = await create_snipe_target(session, **sample_target_data)
+            await create_monitored_listing(
+                session,
+                vcoin_id=sample_listing_data["vcoin_id"],
+                symbol_name=sample_listing_data["symbol_name"],
+                project_name=sample_listing_data["project_name"],
+                announced_launch_time_ms=sample_listing_data["announced_launch_time_ms"],
+                announced_launch_datetime_utc=sample_listing_data["announced_launch_datetime_utc"],
+            )
+            target = await create_snipe_target(
+                session,
+                vcoin_id=sample_target_data["vcoin_id"],
+                mexc_symbol_contract=sample_target_data["mexc_symbol_contract"],
+                price_precision=sample_target_data["price_precision"],
+                quantity_precision=sample_target_data["quantity_precision"],
+                actual_launch_time_ms=sample_target_data["actual_launch_time_ms"],
+                actual_launch_datetime_utc=sample_target_data["actual_launch_datetime_utc"],
+                discovered_at_utc=sample_target_data["discovered_at_utc"],
+                hours_advance_notice=sample_target_data["hours_advance_notice"],
+                intended_buy_amount_usdt=sample_target_data["intended_buy_amount_usdt"],
+                execution_order_params=sample_target_data["execution_order_params"],
+            )
 
             # Update status
             execution_response = {"orderId": "12345", "status": "FILLED"}
@@ -205,10 +257,10 @@ class TestSnipeTargetOperations:
 
             updated_target = await update_snipe_target_status(
                 session=session,
-                target_id=target.id,
+                target_id=target.id or 0,
                 status="success",
                 execution_response=execution_response,
-                executed_at_utc=executed_at
+                executed_at_utc=executed_at,
             )
 
             assert updated_target is not None
@@ -217,12 +269,31 @@ class TestSnipeTargetOperations:
             assert updated_target.executed_at_utc == executed_at
 
     @pytest.mark.asyncio
-    async def test_get_pending_snipe_targets(self, test_database, sample_listing_data, sample_target_data):
+    async def test_get_pending_snipe_targets(self, sample_listing_data, sample_target_data):
         """Test getting pending snipe targets"""
         async with get_async_session() as session:
             # Create test data
-            await create_monitored_listing(session, **sample_listing_data)
-            target = await create_snipe_target(session, **sample_target_data)
+            await create_monitored_listing(
+                session,
+                vcoin_id=sample_listing_data["vcoin_id"],
+                symbol_name=sample_listing_data["symbol_name"],
+                project_name=sample_listing_data["project_name"],
+                announced_launch_time_ms=sample_listing_data["announced_launch_time_ms"],
+                announced_launch_datetime_utc=sample_listing_data["announced_launch_datetime_utc"],
+            )
+            target = await create_snipe_target(
+                session,
+                vcoin_id=sample_target_data["vcoin_id"],
+                mexc_symbol_contract=sample_target_data["mexc_symbol_contract"],
+                price_precision=sample_target_data["price_precision"],
+                quantity_precision=sample_target_data["quantity_precision"],
+                actual_launch_time_ms=sample_target_data["actual_launch_time_ms"],
+                actual_launch_datetime_utc=sample_target_data["actual_launch_datetime_utc"],
+                discovered_at_utc=sample_target_data["discovered_at_utc"],
+                hours_advance_notice=sample_target_data["hours_advance_notice"],
+                intended_buy_amount_usdt=sample_target_data["intended_buy_amount_usdt"],
+                execution_order_params=sample_target_data["execution_order_params"],
+            )
 
             # Get pending targets
             pending_targets = await get_pending_snipe_targets(session)
@@ -232,29 +303,30 @@ class TestSnipeTargetOperations:
             assert pending_targets[0].execution_status == "pending"
 
             # Update status to non-pending
-            await update_snipe_target_status(session, target.id, "success")
+            await update_snipe_target_status(session, target.id or 0, "success")
 
             # Should not return completed targets
             pending_targets = await get_pending_snipe_targets(session)
             assert len(pending_targets) == 0
 
 
+@pytest.mark.usefixtures("_test_database")
 class TestDatabaseSessionManagement:
     """Test database session management"""
 
     @pytest.mark.asyncio
-    async def test_session_context_manager(self, test_database):
+    async def test_session_context_manager(self):
         """Test async session context manager"""
         async with get_async_session() as session:
             assert session is not None
             # Session should be active
-            assert not session.is_active or True  # Different SQLAlchemy versions
+            assert session.is_active is not None  # Session should exist
 
     @pytest.mark.asyncio
-    async def test_session_rollback_on_error(self, test_database):
+    async def test_session_rollback_on_error(self):
         """Test session rollback on error"""
         try:
-            async with get_async_session() as session:
+            async with get_async_session() as _session:
                 # Simulate an error
                 raise ValueError("Test error")
         except ValueError:
@@ -278,7 +350,7 @@ class TestDatabaseModels:
             actual_launch_datetime_utc=datetime.now(timezone.utc),
             discovered_at_utc=datetime.now(timezone.utc),
             hours_advance_notice=4.0,
-            intended_buy_amount_usdt=100.0
+            intended_buy_amount_usdt=100.0,
         )
 
         # Test setting order params
@@ -303,7 +375,7 @@ class TestDatabaseModels:
             actual_launch_datetime_utc=datetime.now(timezone.utc),
             discovered_at_utc=datetime.now(timezone.utc),
             hours_advance_notice=4.0,
-            intended_buy_amount_usdt=100.0
+            intended_buy_amount_usdt=100.0,
         )
 
         # Test setting execution response

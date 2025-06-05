@@ -1,7 +1,7 @@
 {
-  "name": "serverless-agents",
+  "name": "mexc-sniper-bot",
   "version": "0.1.0",
-  "description": "A production-ready starter for building AI applications with serverless agents on Vercel, Inngest workflows, and Next.js",
+  "description": "AI-powered MEXC cryptocurrency trading bot with pattern detection and automated execution",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -25,10 +25,12 @@
     "@vercel/blob": "^1.1.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "inngest": "^3.38.0",
     "lucide-react": "^0.511.0",
     "next": "15.3.2",
     "react": "^19.0.0",
+    "react-day-picker": "8.10.1",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",

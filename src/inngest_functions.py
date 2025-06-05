@@ -1,6 +1,7 @@
 """
 Inngest functions for MEXC Sniper Bot pattern discovery system
 """
+
 import logging
 from datetime import datetime, timezone
 from typing import Any
@@ -19,27 +20,33 @@ logger = logging.getLogger(__name__)
 
 # --- Inngest Event Definitions ---
 
+
 class MexcCalendarPollRequested:
     """Event for manually triggering calendar poll"""
+
     name = "admin.calendar.poll.requested"
 
 
 class MexcNewListingDiscovered:
     """Event triggered when new listing is discovered"""
+
     name = "mexc.new_listing_discovered"
 
 
 class MexcSymbolRecheckNeeded:
     """Event for rechecking symbol status"""
+
     name = "mexc.symbol_recheck_needed"
 
 
 class MexcTargetReady:
     """Event triggered when target is ready for execution"""
+
     name = "mexc.target_ready"
 
 
 # --- Inngest Functions ---
+
 
 @inngest_client.create_function(
     fn_id="poll-mexc-calendar",
@@ -51,7 +58,7 @@ class MexcTargetReady:
 async def poll_mexc_calendar(ctx: Context, step: Step) -> dict[str, Any]:
     """
     Poll MEXC calendar for new token listings
-    
+
     This function:
     1. Integrates with existing pattern discovery engine
     2. Uses enhanced MEXC API client with caching
@@ -66,28 +73,20 @@ async def poll_mexc_calendar(ctx: Context, step: Step) -> dict[str, Any]:
 
         # Step 2: Run calendar discovery cycle
         discovery_result = await step.run(
-            "run-calendar-discovery",
-            lambda: _run_calendar_discovery_cycle(discovery_engine)
+            "run-calendar-discovery", lambda: _run_calendar_discovery_cycle(discovery_engine)
         )
 
         # Step 3: Process results and trigger follow-up events
         follow_up_events = await step.run(
-            "process-discovery-results",
-            lambda: _process_discovery_results(discovery_result)
+            "process-discovery-results", lambda: _process_discovery_results(discovery_result)
         )
 
         # Step 4: Send follow-up events for new listings
         if follow_up_events:
-            await step.run(
-                "send-follow-up-events",
-                lambda: _send_follow_up_events(follow_up_events)
-            )
+            await step.run("send-follow-up-events", lambda: _send_follow_up_events(follow_up_events))
 
         # Step 5: Log final results
-        summary = await step.run(
-            "log-results",
-            lambda: _log_discovery_summary(discovery_result, ctx.event.name)
-        )
+        summary = await step.run("log-results", lambda: _log_discovery_summary(discovery_result, ctx.event.name))
 
         return {
             "status": "success",
@@ -98,18 +97,18 @@ async def poll_mexc_calendar(ctx: Context, step: Step) -> dict[str, Any]:
             "errors": discovery_result.errors,
             "follow_up_events_sent": len(follow_up_events),
             "summary": summary,
-            "timestamp": discovery_result.analysis_timestamp.isoformat()
+            "timestamp": discovery_result.analysis_timestamp.isoformat(),
         }
 
     except Exception as e:
         error_msg = f"Calendar poll failed: {e!s}"
-        logger.error(error_msg, exc_info=True)
+        logger.exception(error_msg)
 
         return {
             "status": "error",
             "trigger": ctx.event.name,
             "error": error_msg,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
 
@@ -123,7 +122,7 @@ async def poll_mexc_calendar(ctx: Context, step: Step) -> dict[str, Any]:
 async def watch_mexc_symbol(ctx: Context, step: Step) -> dict[str, Any]:
     """
     Watch specific MEXC symbol for ready state pattern
-    
+
     This function monitors individual tokens for the ready state pattern
     and creates snipe targets when conditions are met.
     """
@@ -142,15 +141,11 @@ async def watch_mexc_symbol(ctx: Context, step: Step) -> dict[str, Any]:
         mexc_client = await _get_mexc_client_with_cache()
 
         # Step 2: Check symbol status
-        symbol_status = await step.run(
-            "check-symbol-status",
-            lambda: _check_symbol_status(mexc_client, vcoin_id)
-        )
+        symbol_status = await step.run("check-symbol-status", lambda: _check_symbol_status(mexc_client, vcoin_id))
 
         # Step 3: Process symbol status and create targets if ready
         result = await step.run(
-            "process-symbol-status",
-            lambda: _process_symbol_status(symbol_status, vcoin_id, attempt)
+            "process-symbol-status", lambda: _process_symbol_status(symbol_status, vcoin_id, attempt)
         )
 
         return {
@@ -160,23 +155,24 @@ async def watch_mexc_symbol(ctx: Context, step: Step) -> dict[str, Any]:
             "symbol_ready": result.get("ready", False),
             "target_created": result.get("target_created", False),
             "next_check_scheduled": result.get("next_check_scheduled", False),
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as e:
         error_msg = f"Symbol watch failed for {vcoin_id}: {e!s}"
-        logger.error(error_msg, exc_info=True)
+        logger.exception(error_msg)
 
         return {
             "status": "error",
             "vcoin_id": vcoin_id,
             "attempt": attempt,
             "error": error_msg,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
 
 # --- Helper Functions ---
+
 
 async def _run_calendar_discovery_cycle(discovery_engine):
     """Run the calendar discovery cycle using existing pattern discovery engine"""
@@ -192,19 +188,22 @@ async def _process_discovery_results(discovery_result):
         # Get the newly discovered listings from database
         async with get_async_session() as session:
             from .database import get_monitoring_listings
+
             listings = await get_monitoring_listings(session)
 
             # Create events for newly discovered listings
-            for listing in listings[-discovery_result.new_listings_found:]:
-                follow_up_events.append({
-                    "name": MexcNewListingDiscovered.name,
-                    "data": {
-                        "vcoin_id": listing.vcoin_id,
-                        "symbol_name": listing.symbol_name,
-                        "project_name": listing.project_name,
-                        "launch_time": listing.announced_launch_datetime_utc.isoformat()
+            for listing in listings[-discovery_result.new_listings_found :]:
+                follow_up_events.append(
+                    {
+                        "name": MexcNewListingDiscovered.name,
+                        "data": {
+                            "vcoin_id": listing.vcoin_id,
+                            "symbol_name": listing.symbol_name,
+                            "project_name": listing.project_name,
+                            "launch_time": listing.announced_launch_datetime_utc.isoformat(),
+                        },
                     }
-                })
+                )
 
     return follow_up_events
 
@@ -247,11 +246,7 @@ async def _check_symbol_status(mexc_client, vcoin_id):
 
     for symbol in symbols:
         if symbol.matches_ready_pattern(settings.READY_STATE_PATTERN):
-            return {
-                "ready": True,
-                "symbol": symbol,
-                "has_complete_data": symbol.has_complete_data
-            }
+            return {"ready": True, "symbol": symbol, "has_complete_data": symbol.has_complete_data}
 
     return {"ready": False, "symbols_found": len(symbols)}
 
@@ -261,17 +256,12 @@ async def _process_symbol_status(symbol_status, vcoin_id, attempt):
     if not symbol_status.get("ready"):
         # Symbol not ready yet, schedule recheck if not too many attempts
         if attempt < 10:  # Max 10 attempts
-            await inngest_client.send({
-                "name": MexcSymbolRecheckNeeded.name,
-                "data": {
-                    "vcoin_id": vcoin_id,
-                    "attempt": attempt + 1
-                }
-            })
+            event = Event(name=MexcSymbolRecheckNeeded.name, data={"vcoin_id": vcoin_id, "attempt": attempt + 1})
+            await inngest_client.send(event)
             return {"next_check_scheduled": True}
-        else:
-            logger.warning(f"Max attempts reached for vcoin_id: {vcoin_id}")
-            return {"max_attempts_reached": True}
+
+        logger.warning(f"Max attempts reached for vcoin_id: {vcoin_id}")
+        return {"max_attempts_reached": True}
 
     # Symbol is ready, create snipe target using discovery engine
     if symbol_status.get("has_complete_data"):
@@ -280,12 +270,11 @@ async def _process_symbol_status(symbol_status, vcoin_id, attempt):
         # Use existing pattern discovery logic to create target
         async with get_async_session() as session:
             from .database import get_monitored_listing
+
             listing = await get_monitored_listing(session, vcoin_id)
 
             if listing:
-                target = await discovery_engine._create_ready_target(
-                    session, listing, symbol_status["symbol"]
-                )
+                target = await discovery_engine._create_ready_target(session, listing, symbol_status["symbol"])
 
                 if target:
                     # Send target ready event
@@ -295,8 +284,8 @@ async def _process_symbol_status(symbol_status, vcoin_id, attempt):
                             data={
                                 "target_id": target.id,
                                 "vcoin_id": vcoin_id,
-                                "launch_time_utc_iso": target.actual_launch_datetime_utc.isoformat()
-                            }
+                                "launch_time_utc_iso": target.actual_launch_datetime_utc.isoformat(),
+                            },
                         )
                     )
 

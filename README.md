@@ -4,22 +4,24 @@ An intelligent cryptocurrency trading bot that leverages AI agents to discover a
 
 ## 🚀 Key Features
 
-- **AI-Powered Pattern Discovery**: Uses GPT-4 agents to analyze token launch patterns
-- **Automated Trading**: Executes trades within milliseconds of token launch
-- **Real-time Dashboard**: Monitor active positions and upcoming listings
-- **Smart Risk Management**: Configurable stop-loss and take-profit targets
-- **Serverless Architecture**: Scales automatically with Vercel Functions
+- **AI-Powered Pattern Discovery**: Uses GPT-4 agents to analyze token launch patterns 3.5+ hours in advance
+- **High-Performance Trading**: Optimized execution with connection pooling and caching
+- **Real-time Dashboard**: Monitor active positions and upcoming listings with 5-second refresh
+- **Smart Risk Management**: Configurable stop-loss and take-profit targets with validation
+- **Serverless Architecture**: Scales automatically with Vercel Functions and health checks
+- **Graceful Degradation**: Redis caching with fallback to ensure reliability
+- **Comprehensive Testing**: Performance, integration, and unit tests included
 
 ## 🏗️ Architecture
 
 This project uses a modern serverless architecture:
 
 - **Frontend**: Next.js 15 with TypeScript and React 19
-- **Backend**: Python FastAPI with OpenAI Agents
-- **Workflows**: Inngest for long-running background tasks
-- **Database**: SQLModel with async PostgreSQL/SQLite
-- **Caching**: Redis for API response optimization
-- **Deployment**: Vercel with automatic scaling
+- **Backend**: Python FastAPI with OpenAI Agents and optimized connection pooling
+- **Workflows**: Inngest for long-running background tasks and scheduled monitoring
+- **Database**: SQLModel with async PostgreSQL/SQLite and Alembic migrations
+- **Caching**: Redis/Valkey with graceful degradation and 5-second TTL
+- **Deployment**: Vercel with automatic scaling and comprehensive health checks
 
 ## 📋 Prerequisites
 
@@ -94,6 +96,14 @@ npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest
 - **Inngest Dashboard**: http://localhost:8288
 
 ## 📡 API Endpoints
+
+### Health Checks
+```http
+GET /api/agents/health              # Basic health check
+GET /api/agents/health/detailed     # Comprehensive health with dependencies
+GET /api/agents/health/ready        # Kubernetes-style readiness probe
+GET /api/agents/health/live         # Kubernetes-style liveness probe
+```
 
 ### Pattern Discovery
 ```http

@@ -1,6 +1,9 @@
 """
-Redis/Valkey caching service for MEXC Sniper Bot
-Provides async caching with graceful degradation when Redis is unavailable
+Valkey caching service for MEXC Sniper Bot
+Provides async caching with graceful degradation when Valkey is unavailable
+
+Valkey is a Redis-compatible in-memory data store that provides the same
+functionality as Redis but is open source and maintained by the Linux Foundation.
 """
 
 import json
@@ -18,18 +21,19 @@ logger = logging.getLogger(__name__)
 
 class CacheService:
     """
-    Async Redis/Valkey cache service with graceful degradation
+    Async Valkey cache service with graceful degradation
 
     Features:
     - JSON serialization/deserialization
     - TTL-based expiration
-    - Graceful degradation when Redis unavailable
+    - Graceful degradation when Valkey unavailable
     - Namespace isolation with key prefixes
     - Non-blocking operations with silent failures
+    - Redis-compatible protocol for easy migration
     """
 
-    def __init__(self, redis_url: Optional[str] = None, key_prefix: str = "mexc"):
-        self.redis_url = redis_url or settings.REDIS_URL
+    def __init__(self, cache_url: Optional[str] = None, key_prefix: str = "mexc"):
+        self.cache_url = cache_url or settings.cache_url
         self.key_prefix = key_prefix
         self.redis_client: Optional[redis.Redis] = None
         self.is_available = False
@@ -47,17 +51,17 @@ class CacheService:
 
     async def start(self) -> bool:
         """
-        Initialize Redis connection
+        Initialize Valkey connection
         Returns True if connection successful, False otherwise
         """
-        if not self.redis_url:
-            logger.info("Redis URL not configured, cache service will operate in no-op mode")
+        if not self.cache_url:
+            logger.info("Valkey URL not configured, cache service will operate in no-op mode")
             return False
 
         try:
-            # Parse Redis URL and create client with optimized connection pooling
+            # Parse Valkey URL and create client with optimized connection pooling
             self.redis_client = redis.from_url(
-                self.redis_url,
+                self.cache_url,
                 encoding="utf-8",
                 decode_responses=True,
                 socket_connect_timeout=3,  # Faster connection timeout for trading
@@ -66,11 +70,6 @@ class CacheService:
                 retry_on_error=[RedisConnectionError],
                 health_check_interval=15,  # More frequent health checks
                 max_connections=settings.CONNECTION_POOL_SIZE,
-                connection_pool_kwargs={
-                    "retry_on_timeout": True,
-                    "socket_keepalive": True,
-                    "socket_keepalive_options": {},
-                },
             )
 
             # Test connection
@@ -78,28 +77,28 @@ class CacheService:
             self.is_available = True
             self.connection_attempts = 0
 
-            logger.info(f"Cache service connected to Redis at {self._mask_url(self.redis_url)}")
+            logger.info(f"Cache service connected to Valkey at {self._mask_url(self.cache_url)}")
             return True
 
         except (RedisConnectionError, RedisError, Exception) as e:
             self.connection_attempts += 1
-            logger.warning(f"Failed to connect to Redis (attempt {self.connection_attempts}): {e}")
+            logger.warning(f"Failed to connect to Valkey (attempt {self.connection_attempts}): {e}")
 
             if self.connection_attempts >= self.max_connection_attempts:
-                logger.warning("Max Redis connection attempts reached, operating in no-op mode")
+                logger.warning("Max Valkey connection attempts reached, operating in no-op mode")
 
             self.is_available = False
             self.redis_client = None
             return False
 
     async def close(self):
-        """Close Redis connection"""
+        """Close Valkey connection"""
         if self.redis_client:
             try:
                 await self.redis_client.close()
                 logger.info("Cache service connection closed")
             except Exception as e:
-                logger.warning(f"Error closing Redis connection: {e}")
+                logger.warning(f"Error closing Valkey connection: {e}")
             finally:
                 self.redis_client = None
                 self.is_available = False
@@ -109,7 +108,7 @@ class CacheService:
         return f"{self.key_prefix}:{key}"
 
     def _mask_url(self, url: str) -> str:
-        """Mask sensitive parts of Redis URL for logging"""
+        """Mask sensitive parts of Valkey URL for logging"""
         if not url:
             return "None"
 
@@ -147,7 +146,7 @@ class CacheService:
         return self.ttl_config.get(cache_type, self.default_ttl)
 
     async def _ensure_connection(self) -> bool:
-        """Ensure Redis connection is available"""
+        """Ensure Valkey connection is available"""
         if not self.is_available and self.connection_attempts < self.max_connection_attempts:
             return await self.start()
         return self.is_available
@@ -273,7 +272,7 @@ class CacheService:
             return {
                 "available": False,
                 "connection_attempts": self.connection_attempts,
-                "redis_url_configured": bool(self.redis_url),
+                "valkey_url_configured": bool(self.cache_url),
             }
 
         try:
@@ -286,7 +285,7 @@ class CacheService:
                 "total_commands_processed": info.get("total_commands_processed", 0),
                 "keyspace_hits": info.get("keyspace_hits", 0),
                 "keyspace_misses": info.get("keyspace_misses", 0),
-                "redis_version": info.get("redis_version", "unknown"),
+                "valkey_version": info.get("redis_version", "unknown"),  # Valkey reports as redis_version for compatibility
                 "uptime_in_seconds": info.get("uptime_in_seconds", 0),
             }
 
@@ -309,6 +308,7 @@ async def get_cache_service() -> CacheService:
 
     # Type narrowing: after the if block, _cache_service is guaranteed to be CacheService
     from typing import cast
+
     return cast(CacheService, _cache_service)
 
 

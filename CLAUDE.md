@@ -133,7 +133,7 @@ vercel --prod
 
 - **Database**: SQLModel with AsyncPG/AioSQLite (`src/database.py`)
 - **Models**: Defined in `src/models.py`
-- **Caching**: Redis integration in `src/services/cache_service.py`
+- **Caching**: Valkey integration in `src/services/cache_service.py` (Redis-compatible)
 
 ## Environment Variables
 

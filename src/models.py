@@ -1,6 +1,7 @@
 """
 Database models for MEXC Sniper Bot Pattern Discovery System
 """
+
 from __future__ import annotations
 
 import json
@@ -8,18 +9,21 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from pydantic import BaseModel
-from sqlmodel import Field as SQLField, Relationship, SQLModel
+from sqlmodel import Field as SQLField, SQLModel
 
 # --- Pydantic Models for API Validation & Business Logic ---
 
+
 class BaseApiModel(BaseModel):
     """Base model for API responses"""
+
     class Config:
         from_attributes = True
 
 
 class CalendarEntryApi(BaseApiModel):
     """Calendar entry from MEXC API"""
+
     vcoinId: str
     symbol: str
     projectName: str
@@ -33,14 +37,15 @@ class CalendarEntryApi(BaseApiModel):
 
 class SymbolV2EntryApi(BaseApiModel):
     """Symbol entry from MEXC symbolsV2 API"""
+
     cd: str  # vcoinId
-    ca: Optional[str] = None  # Contract address (symbol like "BTCUSDT")
-    ps: Optional[int] = None  # Price scale
-    qs: Optional[int] = None  # Quantity scale
+    ca: str | None = None  # Contract address (symbol like "BTCUSDT")
+    ps: int | None = None  # Price scale
+    qs: int | None = None  # Quantity scale
     sts: int  # Status 1
-    st: int   # Status 2
-    tt: int   # Status 3
-    ot: Optional[int] = None  # Open time (ms)
+    st: int  # Status 2
+    tt: int  # Status 3
+    ot: int | None = None  # Open time (ms)
 
     def matches_ready_pattern(self, pattern: tuple) -> bool:
         """Check if symbol matches the ready state pattern"""
@@ -49,12 +54,7 @@ class SymbolV2EntryApi(BaseApiModel):
     @property
     def has_complete_data(self) -> bool:
         """Check if symbol has all required trading data"""
-        return all([
-            self.ca,
-            self.ps is not None,
-            self.qs is not None,
-            self.ot is not None
-        ])
+        return all([self.ca, self.ps is not None, self.qs is not None, self.ot is not None])
 
     @property
     def launch_datetime_from_ot(self) -> datetime | None:
@@ -66,6 +66,7 @@ class SymbolV2EntryApi(BaseApiModel):
 
 class SnipeTargetApi(BaseApiModel):
     """Snipe target for API responses"""
+
     vcoin_id: str
     symbol_contract: str
     project_name: str
@@ -84,9 +85,11 @@ class SnipeTargetApi(BaseApiModel):
 
 # --- SQLModel Table Models for Database Persistence ---
 
+
 class MonitoredListing(SQLModel, table=True):
     """Table for tracking monitored token listings from calendar"""
-    __tablename__ = "monitored_listings"
+
+    __tablename__: str = "monitored_listings"
 
     vcoin_id: str = SQLField(primary_key=True, index=True)
     symbol_name: str
@@ -102,15 +105,16 @@ class MonitoredListing(SQLModel, table=True):
     created_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
 
-    # Relationship
-    snipe_target: Optional["SnipeTarget"] = Relationship(back_populates="listing")
+    # Relationship (disabled for now due to SQLModel issues)
+    # snipe_target: "SnipeTarget" = Relationship(back_populates="listing")
 
 
 class SnipeTarget(SQLModel, table=True):
     """Table for storing ready tokens with execution parameters"""
-    __tablename__ = "snipe_targets"
 
-    id: Optional[int] = SQLField(default=None, primary_key=True, index=True)
+    __tablename__: str = "snipe_targets"
+
+    id: int | None = SQLField(default=None, primary_key=True, index=True)
     vcoin_id: str = SQLField(foreign_key="monitored_listings.vcoin_id", unique=True)
 
     # Token details
@@ -131,15 +135,15 @@ class SnipeTarget(SQLModel, table=True):
     # Execution tracking
     execution_status: str = SQLField(default="pending", index=True)
     # Possible statuses: pending, scheduled, executing, success, failed, cancelled
-    execution_response_json: Optional[str] = SQLField(default=None)  # JSON string
-    executed_at_utc: Optional[datetime] = SQLField(default=None)
+    execution_response_json: str | None = SQLField(default=None)  # JSON string
+    executed_at_utc: datetime | None = SQLField(default=None)
 
     # Timestamps
     created_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
 
-    # Relationship
-    listing: MonitoredListing = Relationship(back_populates="snipe_target")
+    # Relationship (disabled for now due to SQLModel issues)
+    # listing: MonitoredListing = Relationship(back_populates="snipe_target")
 
     @property
     def execution_order_params(self) -> dict[str, Any]:
@@ -155,7 +159,7 @@ class SnipeTarget(SQLModel, table=True):
         self.execution_order_params_json = json.dumps(value)
 
     @property
-    def execution_response(self) -> Optional[dict[str, Any]]:
+    def execution_response(self) -> dict[str, Any] | None:
         """Get execution response as dict"""
         if not self.execution_response_json:
             return None
@@ -165,19 +169,28 @@ class SnipeTarget(SQLModel, table=True):
             return None
 
     @execution_response.setter
-    def execution_response(self, value: Optional[dict[str, Any]]):
+    def execution_response(self, value: dict[str, Any] | None):
         """Set execution response from dict"""
         if value is None:
             self.execution_response_json = None
         else:
             self.execution_response_json = json.dumps(value)
 
+    def __getattribute__(self, name):
+        """Ensure executed_at_utc always returns timezone-aware datetime"""
+        value = super().__getattribute__(name)
+        if name == "executed_at_utc" and value is not None and value.tzinfo is None:
+            # Add UTC timezone to timezone-naive datetime
+            return value.replace(tzinfo=timezone.utc)
+        return value
+
 
 class ExecutionHistory(SQLModel, table=True):
     """Table for tracking execution history and performance"""
-    __tablename__ = "execution_history"
 
-    id: Optional[int] = SQLField(default=None, primary_key=True, index=True)
+    __tablename__: str = "execution_history"
+
+    id: int | None = SQLField(default=None, primary_key=True, index=True)
     vcoin_id: str = SQLField(index=True)
     symbol_contract: str
 
@@ -185,22 +198,22 @@ class ExecutionHistory(SQLModel, table=True):
     execution_timestamp: datetime
     execution_type: str  # "snipe", "manual", "test"
     buy_amount_usdt: float
-    execution_duration_ms: Optional[float] = None
+    execution_duration_ms: float | None = None
 
     # Results
     success: bool
-    order_id: Optional[str] = None
-    filled_quantity: Optional[float] = None
-    average_price: Optional[float] = None
-    total_cost_usdt: Optional[float] = None
+    order_id: str | None = None
+    filled_quantity: float | None = None
+    average_price: float | None = None
+    total_cost_usdt: float | None = None
 
     # Performance metrics
-    advance_notice_hours: Optional[float] = None
-    price_impact_percent: Optional[float] = None
+    advance_notice_hours: float | None = None
+    price_impact_percent: float | None = None
 
     # Error details
-    error_message: Optional[str] = None
-    error_code: Optional[str] = None
+    error_message: str | None = None
+    error_code: str | None = None
 
     # Timestamps
     created_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
@@ -208,9 +221,10 @@ class ExecutionHistory(SQLModel, table=True):
 
 class UserPreferences(SQLModel, table=True):
     """Table for storing user preferences and trading configuration"""
-    __tablename__ = "user_preferences"
 
-    id: Optional[int] = SQLField(default=None, primary_key=True, index=True)
+    __tablename__: str = "user_preferences"
+
+    id: int | None = SQLField(default=None, primary_key=True, index=True)
     user_id: str = SQLField(unique=True, index=True)  # User identifier (could be session ID or user ID)
 
     # Risk Management
@@ -252,29 +266,30 @@ class UserPreferences(SQLModel, table=True):
 
 class ApiCredentials(SQLModel, table=True):
     """Table for storing encrypted API credentials"""
-    __tablename__ = "api_credentials"
 
-    id: Optional[int] = SQLField(default=None, primary_key=True, index=True)
+    __tablename__: str = "api_credentials"
+
+    id: int | None = SQLField(default=None, primary_key=True, index=True)
     user_id: str = SQLField(index=True)  # User identifier
     provider: str = SQLField(index=True)  # "mexc", "binance", etc.
-    
+
     # Encrypted credentials (base64 encoded)
-    api_key_encrypted: Optional[str] = None
-    secret_key_encrypted: Optional[str] = None
-    passphrase_encrypted: Optional[str] = None  # For some exchanges
-    
+    api_key_encrypted: str | None = None
+    secret_key_encrypted: str | None = None
+    passphrase_encrypted: str | None = None  # For some exchanges
+
     # Metadata
     is_active: bool = SQLField(default=True)
     is_testnet: bool = SQLField(default=False)
-    nickname: Optional[str] = None  # User-friendly name for the credentials
-    
+    nickname: str | None = None  # User-friendly name for the credentials
+
     # Permissions (JSON string)
     permissions_json: str = SQLField(default='["spot_trading"]')  # JSON array of permissions
-    
+
     # Timestamps
     created_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
-    last_used_at: Optional[datetime] = None
+    last_used_at: datetime | None = None
 
     @property
     def permissions(self) -> list[str]:
@@ -292,8 +307,10 @@ class ApiCredentials(SQLModel, table=True):
 
 # --- API Response Models ---
 
+
 class MonitoredListingResponse(BaseApiModel):
     """Response model for monitored listings"""
+
     vcoin_id: str
     symbol_name: str
     project_name: str
@@ -305,6 +322,7 @@ class MonitoredListingResponse(BaseApiModel):
 
 class SnipeTargetResponse(BaseApiModel):
     """Response model for snipe targets"""
+
     id: int
     vcoin_id: str
     mexc_symbol_contract: str
@@ -315,12 +333,13 @@ class SnipeTargetResponse(BaseApiModel):
     hours_advance_notice: float
     intended_buy_amount_usdt: float
     execution_status: str
-    executed_at_utc: Optional[datetime]
-    listing: Optional[MonitoredListingResponse] = None
+    executed_at_utc: datetime | None
+    listing: MonitoredListingResponse | None = None
 
 
 class PatternDiscoveryStats(BaseApiModel):
     """Statistics for pattern discovery system"""
+
     total_monitored_listings: int
     total_ready_targets: int
     total_executed: int
@@ -331,102 +350,106 @@ class PatternDiscoveryStats(BaseApiModel):
 
 class UserPreferencesResponse(BaseApiModel):
     """Response model for user preferences"""
+
     id: int
     user_id: str
-    
+
     # Risk Management
     stop_loss_enabled: bool
     stop_loss_type: str
     stop_loss_percentage: float
     stop_loss_amount: float
-    
+
     take_profit_enabled: bool
     take_profit_type: str
     take_profit_percentage: float
     take_profit_amount: float
-    
+
     # Position Sizing
     default_buy_amount: float
     max_positions_per_token: int
     risk_per_trade: float
-    
+
     # Pattern Detection
     pattern_monitoring_enabled: bool
     target_pattern_sts: int
     target_pattern_st: int
     target_pattern_tt: int
-    
+
     # Auto-trading
     auto_trading_enabled: bool
     max_daily_trades: int
     min_market_cap: float
-    
+
     # Notifications
     telegram_notifications: bool
     email_notifications: bool
     discord_notifications: bool
-    
+
     created_at: datetime
     updated_at: datetime
 
 
 class UserPreferencesRequest(BaseApiModel):
     """Request model for updating user preferences"""
+
     # Risk Management
-    stop_loss_enabled: Optional[bool] = None
-    stop_loss_type: Optional[str] = None
-    stop_loss_percentage: Optional[float] = None
-    stop_loss_amount: Optional[float] = None
-    
-    take_profit_enabled: Optional[bool] = None
-    take_profit_type: Optional[str] = None
-    take_profit_percentage: Optional[float] = None
-    take_profit_amount: Optional[float] = None
-    
+    stop_loss_enabled: bool | None = None
+    stop_loss_type: str | None = None
+    stop_loss_percentage: float | None = None
+    stop_loss_amount: float | None = None
+
+    take_profit_enabled: bool | None = None
+    take_profit_type: str | None = None
+    take_profit_percentage: float | None = None
+    take_profit_amount: float | None = None
+
     # Position Sizing
-    default_buy_amount: Optional[float] = None
-    max_positions_per_token: Optional[int] = None
-    risk_per_trade: Optional[float] = None
-    
+    default_buy_amount: float | None = None
+    max_positions_per_token: int | None = None
+    risk_per_trade: float | None = None
+
     # Pattern Detection
-    pattern_monitoring_enabled: Optional[bool] = None
-    target_pattern_sts: Optional[int] = None
-    target_pattern_st: Optional[int] = None
-    target_pattern_tt: Optional[int] = None
-    
+    pattern_monitoring_enabled: bool | None = None
+    target_pattern_sts: int | None = None
+    target_pattern_st: int | None = None
+    target_pattern_tt: int | None = None
+
     # Auto-trading
-    auto_trading_enabled: Optional[bool] = None
-    max_daily_trades: Optional[int] = None
-    min_market_cap: Optional[float] = None
-    
+    auto_trading_enabled: bool | None = None
+    max_daily_trades: int | None = None
+    min_market_cap: float | None = None
+
     # Notifications
-    telegram_notifications: Optional[bool] = None
-    email_notifications: Optional[bool] = None
-    discord_notifications: Optional[bool] = None
+    telegram_notifications: bool | None = None
+    email_notifications: bool | None = None
+    discord_notifications: bool | None = None
+
+
+class ApiCredentialsRequest(BaseApiModel):
+    """Request model for creating/updating API credentials"""
+
+    provider: str  # "mexc", "binance", etc.
+    api_key: str
+    secret_key: str
+    passphrase: str | None = None  # For some exchanges
+    is_testnet: bool = False
+    nickname: str | None = None
+    permissions: list[str] = ["spot_trading"]
 
 
 class ApiCredentialsResponse(BaseApiModel):
     """Response model for API credentials (without sensitive data)"""
+
     id: int
     user_id: str
     provider: str
     is_active: bool
     is_testnet: bool
-    nickname: Optional[str]
+    nickname: str | None
     permissions: list[str]
     has_api_key: bool  # Boolean indicator without exposing the actual key
     has_secret_key: bool  # Boolean indicator without exposing the actual secret
     created_at: datetime
     updated_at: datetime
-    last_used_at: Optional[datetime]
-
-
-class ApiCredentialsRequest(BaseApiModel):
-    """Request model for API credentials"""
-    provider: str
-    api_key: str
-    secret_key: str
-    passphrase: Optional[str] = None
-    is_testnet: bool = False
-    nickname: Optional[str] = None
-    permissions: list[str] = ["spot_trading"]
+    last_used_at: datetime | None

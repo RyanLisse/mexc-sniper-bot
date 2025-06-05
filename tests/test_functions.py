@@ -20,6 +20,7 @@ try:
     # Extract the actual callable functions from Inngest Function objects
     # Inngest Function objects have a _handler attribute that contains the original function
     from typing import Any, Callable
+
     poll_mexc_calendar_fn: Callable[..., Any] = poll_mexc_calendar._handler  # type: ignore[attr-defined]
     watch_mexc_symbol_fn: Callable[..., Any] = watch_mexc_symbol._handler  # type: ignore[attr-defined]
 

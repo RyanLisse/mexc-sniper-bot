@@ -4,15 +4,32 @@ import os
 import sys
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+from sqlmodel import select
 
 from agents import Agent, Runner, WebSearchTool, function_tool
 
 # Import new components
 from src.config import settings
+
+# Dynamic database import based on configuration
+# Use standard database for now (Turso functions not implemented)
+from src.database import (
+    create_api_credentials,
+    create_user_preferences,
+    delete_api_credentials,
+    get_all_user_credentials,
+    get_api_credentials,
+    get_async_session,
+    get_user_preferences,
+    shutdown_database,
+    startup_database,
+    update_user_preferences,
+)
 from src.models import (
     ApiCredentialsRequest,
     ApiCredentialsResponse,
@@ -21,36 +38,6 @@ from src.models import (
     UserPreferencesRequest,
     UserPreferencesResponse,
 )
-
-# Dynamic database import based on configuration
-if settings.USE_TURSO_DB:
-    from src.turso_database import (
-        create_api_credentials,
-        create_user_preferences,
-        delete_api_credentials,
-        get_all_user_credentials,
-        get_api_credentials,
-        get_async_session,
-        get_user_preferences,
-        shutdown_database,
-        startup_database,
-        update_user_preferences,
-    )
-else:
-    from src.database import (
-        create_api_credentials,
-        create_user_preferences,
-        delete_api_credentials,
-        get_all_user_credentials,
-        get_api_credentials,
-        get_async_session,
-        get_user_preferences,
-        shutdown_database,
-        startup_database,
-        update_user_preferences,
-    )
-from typing import Optional
-
 from src.services.cache_service import close_cache_service, get_cache_service
 from src.services.encryption_service import decrypt_api_credentials, encrypt_api_credentials
 from src.services.mexc_api import close_mexc_client, get_mexc_client
@@ -64,6 +51,7 @@ try:
     from inngest.fast_api import serve as inngest_serve
     from src.inngest_client import inngest_client
     from src.inngest_functions import inngest_functions
+
     INNGEST_AVAILABLE = True
     logger.info("Inngest integration available")
 except ImportError as e:
@@ -85,23 +73,28 @@ MEXC_BASE_URL = "https://api.mexc.com"
 MEXC_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     "Accept": "application/json",
-    "Accept-Language": "en-US,en;q=0.9"
+    "Accept-Language": "en-US,en;q=0.9",
 }
+
 
 # Define request schemas
 class TopicsRequest(BaseModel):
     topics: list[str]
 
+
 class FormatRequest(BaseModel):
     raw_content: str
     topics: list[str]
+
 
 # MEXC-specific request schemas
 class PatternDiscoveryRequest(BaseModel):
     action: str = Field(..., description="Action to perform: 'start', 'stop', 'status'")
 
+
 class TokenAnalysisRequest(BaseModel):
     symbol: str = Field(..., description="Token symbol to analyze (e.g., 'BTCUSDT')")
+
 
 class SnipeConfigRequest(BaseModel):
     buy_amount_usdt: float = Field(default=100, description="Amount in USDT to invest")
@@ -110,9 +103,10 @@ class SnipeConfigRequest(BaseModel):
     pattern_st: int = Field(default=2, description="Target ST value for ready pattern")
     pattern_tt: int = Field(default=4, description="Target TT value for ready pattern")
 
+
 # Application lifecycle management
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     """Manage application startup and shutdown"""
     # Startup
     try:
@@ -141,15 +135,129 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Application shutdown error: {e}")
 
+
 # Initialize FastAPI app with lifecycle management
-app = FastAPI(
-    title="MEXC Pattern Discovery Agents",
-    root_path="/api/agents",
-    lifespan=lifespan
-)
+app = FastAPI(title="MEXC Pattern Discovery Agents", root_path="/api/agents", lifespan=lifespan)
+
+
+# Health Check Endpoints
+@app.get("/health")
+async def health_check():
+    """Basic health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "service": "mexc-sniper-bot",
+        "version": "0.1.0",
+    }
+
+
+@app.get("/health/detailed")
+async def detailed_health_check():
+    """Comprehensive health check with all service dependencies"""
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "service": "mexc-sniper-bot",
+        "version": "0.1.0",
+        "checks": {},
+    }
+
+    overall_healthy = True
+
+    # Check database connectivity
+    try:
+        async with get_async_session() as session:
+            await session.execute(select(1))
+        health_status["checks"]["database"] = {"status": "healthy", "message": "Database connection successful"}
+    except Exception as e:
+        health_status["checks"]["database"] = {"status": "unhealthy", "message": f"Database error: {e}"}
+        overall_healthy = False
+
+    # Check cache service
+    try:
+        cache_service = await get_cache_service()
+        cache_stats = await cache_service.get_stats()
+        if cache_stats.get("available", False):
+            health_status["checks"]["cache"] = {"status": "healthy", "message": "Cache service available"}
+        else:
+            health_status["checks"]["cache"] = {
+                "status": "degraded",
+                "message": "Cache service unavailable but non-critical",
+            }
+    except Exception as e:
+        health_status["checks"]["cache"] = {"status": "degraded", "message": f"Cache error: {e}"}
+
+    # Check MEXC API connectivity
+    try:
+        mexc_client = await get_mexc_client()
+        connectivity = await mexc_client.test_connectivity()
+        if connectivity:
+            health_status["checks"]["mexc_api"] = {"status": "healthy", "message": "MEXC API connectivity successful"}
+        else:
+            health_status["checks"]["mexc_api"] = {"status": "unhealthy", "message": "MEXC API connectivity failed"}
+            overall_healthy = False
+    except Exception as e:
+        health_status["checks"]["mexc_api"] = {"status": "unhealthy", "message": f"MEXC API error: {e}"}
+        overall_healthy = False
+
+    # Check configuration
+    config_issues = settings.validate_configuration()
+    if config_issues:
+        health_status["checks"]["configuration"] = {
+            "status": "unhealthy",
+            "message": f"Configuration issues: {', '.join(config_issues)}",
+        }
+        overall_healthy = False
+    else:
+        health_status["checks"]["configuration"] = {"status": "healthy", "message": "Configuration valid"}
+
+    # Check pattern discovery engine
+    try:
+        discovery_engine = get_discovery_engine()
+        discovery_status = await discovery_engine.get_discovery_status()
+        health_status["checks"]["pattern_discovery"] = {
+            "status": "healthy",
+            "message": f"Pattern discovery engine operational (running: {discovery_status['running']})",
+        }
+    except Exception as e:
+        health_status["checks"]["pattern_discovery"] = {
+            "status": "unhealthy",
+            "message": f"Pattern discovery error: {e}",
+        }
+        overall_healthy = False
+
+    # Set overall status
+    if not overall_healthy:
+        health_status["status"] = "unhealthy"
+
+    return health_status
+
+
+@app.get("/health/ready")
+async def readiness_check():
+    """Kubernetes-style readiness probe"""
+    try:
+        # Check critical dependencies
+        async with get_async_session() as session:
+            await session.execute(select(1))
+
+        mexc_client = await get_mexc_client()
+        await mexc_client.test_connectivity()
+
+        return {"status": "ready", "timestamp": datetime.now(timezone.utc).isoformat()}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Service not ready: {e}")
+
+
+@app.get("/health/live")
+async def liveness_check():
+    """Kubernetes-style liveness probe"""
+    return {"status": "alive", "timestamp": datetime.now(timezone.utc).isoformat()}
+
 
 # Integrate Inngest if available
-if INNGEST_AVAILABLE and settings.inngest_configured:
+if INNGEST_AVAILABLE and settings.inngest_configured and inngest_client is not None:
     try:
         inngest_serve(app, inngest_client, inngest_functions)
         logger.info("Inngest functions registered with FastAPI")
@@ -167,18 +275,15 @@ pattern_discovery_state = {
     "ready_tokens": [],
     "pattern_states": {},
     "last_update": None,
-    "statistics": {
-        "total_detections": 0,
-        "successful_snipes": 0,
-        "total_profit_usdt": 0.0
-    }
+    "statistics": {"total_detections": 0, "successful_snipes": 0, "total_profit_usdt": 0.0},
 }
+
 
 # MEXC API Tools using function_tool decorator
 @function_tool
 async def mexc_calendar() -> str:
     """Fetch upcoming token listings from MEXC calendar API.
-    
+
     Returns calendar data for upcoming token listings on MEXC exchange.
     """
     try:
@@ -190,26 +295,29 @@ async def mexc_calendar() -> str:
         week_from_now = now + (7 * 24 * 60 * 60 * 1000)
 
         upcoming = [
-            entry for entry in calendar_entries
-            if entry.firstOpenTime > now and entry.firstOpenTime < week_from_now
+            entry for entry in calendar_entries if entry.firstOpenTime > now and entry.firstOpenTime < week_from_now
         ]
 
-        return json.dumps({
-            "status": "success",
-            "total_entries": len(calendar_entries),
-            "upcoming_count": len(upcoming),
-            "upcoming_listings": [entry.dict() for entry in upcoming[:10]]  # Limit to 10 for readability
-        }, indent=2)
+        return json.dumps(
+            {
+                "status": "success",
+                "total_entries": len(calendar_entries),
+                "upcoming_count": len(upcoming),
+                "upcoming_listings": [entry.model_dump() for entry in upcoming[:10]],  # Limit to 10 for readability
+            },
+            indent=2,
+        )
     except Exception as e:
         return f"Error: {e!s}"
+
 
 @function_tool
 async def mexc_symbols_v2(vcoin_id: Optional[str] = None) -> str:
     """Fetch symbol data from MEXC symbolsV2 API to detect ready state patterns.
-    
+
     Args:
         vcoin_id: Optional filter for specific vcoin ID
-        
+
     Returns symbol data with pattern detection analysis.
     """
     try:
@@ -217,10 +325,7 @@ async def mexc_symbols_v2(vcoin_id: Optional[str] = None) -> str:
         symbols = await mexc_client.get_symbols_v2(vcoin_id=vcoin_id)
 
         # Look for ready pattern (sts:2, st:2, tt:4)
-        ready_pattern_symbols = [
-            s for s in symbols
-            if s.matches_ready_pattern(settings.READY_STATE_PATTERN)
-        ]
+        ready_pattern_symbols = [s for s in symbols if s.matches_ready_pattern(settings.READY_STATE_PATTERN)]
 
         # Analyze state distribution
         state_distribution = {}
@@ -228,36 +333,40 @@ async def mexc_symbols_v2(vcoin_id: Optional[str] = None) -> str:
             state_key = f"sts:{symbol.sts},st:{symbol.st},tt:{symbol.tt}"
             state_distribution[state_key] = state_distribution.get(state_key, 0) + 1
 
-        return json.dumps({
-            "status": "success",
-            "total_symbols": len(symbols),
-            "ready_pattern_count": len(ready_pattern_symbols),
-            "ready_pattern_symbols": [s.dict() for s in ready_pattern_symbols[:5]],  # Limit for readability
-            "state_distribution": dict(sorted(state_distribution.items(), key=lambda x: x[1], reverse=True)[:10]),
-            "vcoin_id_filter": vcoin_id
-        }, indent=2)
+        return json.dumps(
+            {
+                "status": "success",
+                "total_symbols": len(symbols),
+                "ready_pattern_count": len(ready_pattern_symbols),
+                "ready_pattern_symbols": [s.model_dump() for s in ready_pattern_symbols[:5]],  # Limit for readability
+                "state_distribution": dict(sorted(state_distribution.items(), key=lambda x: x[1], reverse=True)[:10]),
+                "vcoin_id_filter": vcoin_id,
+            },
+            indent=2,
+        )
     except Exception as e:
         return f"Error: {e!s}"
+
 
 @function_tool
 async def mexc_pattern_analysis() -> str:
     """Analyze patterns by correlating calendar data with symbols data to find ready tokens.
-    
+
     Performs comprehensive pattern analysis using centralized service.
     """
     try:
         # Use the pattern discovery engine for analysis
         engine = PatternDiscoveryEngine()
-        analysis_results = await engine.analyze_current_opportunities()
+        analysis_results = await engine.run_discovery_cycle()
 
         # Convert to JSON-serializable format
-        return json.dumps({
-            "status": "success",
-            "analysis": analysis_results,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }, indent=2)
+        return json.dumps(
+            {"status": "success", "analysis": analysis_results, "timestamp": datetime.now(timezone.utc).isoformat()},
+            indent=2,
+        )
     except Exception as e:
         return f"Error in pattern analysis: {e!s}"
+
 
 # MEXC Pattern Discovery Agent
 mexc_pattern_agent = Agent(
@@ -282,7 +391,7 @@ mexc_pattern_agent = Agent(
         "- Recommend next actions for the sniper bot\n\n"
         "Always use your tools to get real-time data before making recommendations."
     ),
-    tools=[mexc_calendar, mexc_symbols_v2, mexc_pattern_analysis]
+    tools=[mexc_calendar, mexc_symbols_v2, mexc_pattern_analysis],
 )
 
 # MEXC Trading Strategy Agent
@@ -308,12 +417,13 @@ mexc_strategy_agent = Agent(
         "- Adaptable to different market conditions\n"
         "- Clear and actionable for automated execution"
     ),
-    tools=[]
+    tools=[],
 )
 
+
 @app.get("/ping")
-async def health_check():
-    """Health check endpoint"""
+async def ping_check():
+    """Ping endpoint for basic status"""
     return {
         "status": "ok",
         "openai_api_key_set": bool(OPENAI_API_KEY),
@@ -325,6 +435,7 @@ async def health_check():
         "pattern_discovery_running": pattern_discovery_state["running"],
         "ready_tokens_count": len(pattern_discovery_state["ready_tokens"]),
     }
+
 
 # Research Agent: Searches web and generates newsletter content
 research_agent = Agent(
@@ -363,7 +474,7 @@ research_agent = Agent(
         "Use clear, engaging language throughout.\n"
         "Focus on creating a narrative that shows how these topics interconnect rather than just listing summaries."
     ),
-    tools=[ WebSearchTool() ]
+    tools=[WebSearchTool()],
 )
 
 # Formatting Agent: Transforms content into polished markdown
@@ -392,8 +503,9 @@ formatting_agent = Agent(
         "5. The output should be publication-ready markdown that looks professional when rendered\n\n"
         "Transform the content into an engaging, visually appealing newsletter while preserving all information."
     ),
-    tools=[]
+    tools=[],
 )
+
 
 @app.post("/research")
 async def generate_research(request: TopicsRequest):
@@ -402,7 +514,6 @@ async def generate_research(request: TopicsRequest):
         return {"error": "No topics provided."}
 
     # Get current date and yesterday for fresh news focus
-    from datetime import timedelta
     today = datetime.now(timezone.utc)
     yesterday = today - timedelta(days=1)
     today_str = today.strftime("%B %d, %Y")
@@ -424,6 +535,7 @@ async def generate_research(request: TopicsRequest):
 
     return {"content": raw_content}
 
+
 @app.post("/format")
 async def format_newsletter(request: FormatRequest):
     raw_content = request.raw_content
@@ -442,7 +554,9 @@ async def format_newsletter(request: FormatRequest):
 
     return {"content": formatted_content}
 
+
 # MEXC Pattern Discovery Endpoints
+
 
 @app.post("/mexc/pattern-discovery")
 async def mexc_pattern_discovery(request: PatternDiscoveryRequest):
@@ -467,9 +581,9 @@ async def mexc_pattern_discovery(request: PatternDiscoveryRequest):
                     "ready_targets_found": result.ready_targets_found,
                     "targets_scheduled": result.targets_scheduled,
                     "errors": result.errors,
-                    "analysis_timestamp": result.analysis_timestamp.isoformat()
+                    "analysis_timestamp": result.analysis_timestamp.isoformat(),
                 },
-                "state": pattern_discovery_state
+                "state": pattern_discovery_state,
             }
         except Exception as e:
             logger.error(f"Failed to start pattern discovery: {e}")
@@ -478,11 +592,7 @@ async def mexc_pattern_discovery(request: PatternDiscoveryRequest):
     elif action == "stop":
         discovery_engine.stop_monitoring()
         pattern_discovery_state["running"] = False
-        return {
-            "status": "stopped",
-            "message": "Pattern discovery system stopped",
-            "state": pattern_discovery_state
-        }
+        return {"status": "stopped", "message": "Pattern discovery system stopped", "state": pattern_discovery_state}
 
     elif action == "status":
         try:
@@ -496,18 +606,15 @@ async def mexc_pattern_discovery(request: PatternDiscoveryRequest):
             return {
                 "status": "running" if enhanced_status["running"] else "stopped",
                 "enhanced_status": enhanced_status,
-                "state": pattern_discovery_state
+                "state": pattern_discovery_state,
             }
         except Exception as e:
             logger.error(f"Failed to get discovery status: {e}")
-            return {
-                "status": "error",
-                "error": str(e),
-                "state": pattern_discovery_state
-            }
+            return {"status": "error", "error": str(e), "state": pattern_discovery_state}
 
     else:
         raise HTTPException(status_code=400, detail="Invalid action. Use 'start', 'stop', or 'status'")
+
 
 @app.post("/mexc/analyze-token")
 async def mexc_analyze_token(request: TokenAnalysisRequest):
@@ -522,11 +629,65 @@ async def mexc_analyze_token(request: TokenAnalysisRequest):
 
     result = await Runner.run(mexc_pattern_agent, user_prompt)
 
-    return {
-        "symbol": symbol,
-        "analysis": result.final_output,
-        "timestamp": datetime.now().isoformat()
-    }
+    return {"symbol": symbol, "analysis": result.final_output, "timestamp": datetime.now().isoformat()}
+
+
+@app.get("/mexc/listings")
+async def get_mexc_listings(date: Optional[str] = None):
+    """Get coin listings for a specific date"""
+    try:
+        mexc_client = await get_mexc_client()
+
+        if date:
+            # Parse the date and get listings for that specific date
+            target_date = datetime.fromisoformat(date)
+
+            # Get calendar data and filter by date
+            calendar_entries = await mexc_client.get_calendar_listings()
+
+            # Filter listings for the target date
+            listings = []
+            for entry in calendar_entries:
+                listing_date = datetime.fromtimestamp(entry.firstOpenTime / 1000, tz=timezone.utc)
+                if listing_date.date() == target_date.date():
+                    listings.append(
+                        {
+                            "symbol": entry.symbol,
+                            "listingTime": listing_date.isoformat(),
+                            "tradingStartTime": listing_date.isoformat(),
+                        }
+                    )
+
+            return {"listings": listings, "date": date}
+
+        # Return listings for today and tomorrow
+        now = datetime.now(timezone.utc)
+        tomorrow = now + timedelta(days=1)
+
+        calendar_entries = await mexc_client.get_calendar_listings()
+
+        today_listings = []
+        tomorrow_listings = []
+
+        for entry in calendar_entries:
+            listing_date = datetime.fromtimestamp(entry.firstOpenTime / 1000, tz=timezone.utc)
+            listing_info = {
+                "symbol": entry.symbol,
+                "listingTime": listing_date.isoformat(),
+                "tradingStartTime": listing_date.isoformat(),
+            }
+
+            if listing_date.date() == now.date():
+                today_listings.append(listing_info)
+            elif listing_date.date() == tomorrow.date():
+                tomorrow_listings.append(listing_info)
+
+        return {"today": today_listings, "tomorrow": tomorrow_listings}
+
+    except Exception as e:
+        logger.error(f"Failed to get MEXC listings: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch listings: {e!s}")
+
 
 @app.post("/mexc/trading-strategy")
 async def mexc_trading_strategy(request: SnipeConfigRequest):
@@ -537,7 +698,7 @@ async def mexc_trading_strategy(request: SnipeConfigRequest):
     if not ready_tokens:
         return {
             "error": "No ready tokens found. Run pattern discovery first.",
-            "suggestion": "Use /mexc/pattern-discovery with action='start' to find ready tokens"
+            "suggestion": "Use /mexc/pattern-discovery with action='start' to find ready tokens",
         }
 
     user_prompt = (
@@ -558,10 +719,11 @@ async def mexc_trading_strategy(request: SnipeConfigRequest):
 
     return {
         "ready_tokens_count": len(ready_tokens),
-        "configuration": request.dict(),
+        "configuration": request.model_dump(),
         "strategy": result.final_output,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 @app.get("/mexc/status")
 async def mexc_status():
@@ -589,19 +751,17 @@ async def mexc_status():
                 "mexc_api_configured": settings.mexc_api_configured,
                 "database_configured": settings.database_configured,
                 "redis_configured": settings.redis_configured,
-                "openai_configured": bool(OPENAI_API_KEY)
+                "openai_configured": bool(OPENAI_API_KEY),
             },
-            "cache_stats": await _get_cache_stats()
+            "cache_stats": await _get_cache_stats(),
         }
     except Exception as e:
         logger.error(f"Error getting MEXC status: {e}")
-        return {
-            "system_status": "error",
-            "error": str(e),
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
+        return {"system_status": "error", "error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
+
 
 # New enhanced endpoints for database-backed functionality
+
 
 @app.get("/mexc/monitored-listings")
 async def get_monitored_listings():
@@ -609,6 +769,7 @@ async def get_monitored_listings():
     try:
         async with get_async_session() as session:
             from src.database import get_monitoring_listings
+
             listings = await get_monitoring_listings(session)
 
             return {
@@ -622,14 +783,16 @@ async def get_monitored_listings():
                         announced_launch_datetime_utc=listing.announced_launch_datetime_utc,
                         status=listing.status,
                         created_at=listing.created_at,
-                        updated_at=listing.updated_at
-                    ) for listing in listings
+                        updated_at=listing.updated_at,
+                    )
+                    for listing in listings
                 ],
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
     except Exception as e:
         logger.error(f"Error getting monitored listings: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/mexc/snipe-targets")
 async def get_snipe_targets():
@@ -637,6 +800,7 @@ async def get_snipe_targets():
     try:
         async with get_async_session() as session:
             from src.database import get_pending_snipe_targets
+
             targets = await get_pending_snipe_targets(session)
 
             return {
@@ -644,7 +808,7 @@ async def get_snipe_targets():
                 "count": len(targets),
                 "targets": [
                     SnipeTargetResponse(
-                        id=target.id,
+                        id=target.id or 0,
                         vcoin_id=target.vcoin_id,
                         mexc_symbol_contract=target.mexc_symbol_contract,
                         price_precision=target.price_precision,
@@ -654,14 +818,16 @@ async def get_snipe_targets():
                         hours_advance_notice=target.hours_advance_notice,
                         intended_buy_amount_usdt=target.intended_buy_amount_usdt,
                         execution_status=target.execution_status,
-                        executed_at_utc=target.executed_at_utc
-                    ) for target in targets
+                        executed_at_utc=target.executed_at_utc,
+                    )
+                    for target in targets
                 ],
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
     except Exception as e:
         logger.error(f"Error getting snipe targets: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/mexc/run-discovery")
 async def run_discovery_cycle():
@@ -677,15 +843,17 @@ async def run_discovery_cycle():
                 "ready_targets_found": result.ready_targets_found,
                 "targets_scheduled": result.targets_scheduled,
                 "errors": result.errors,
-                "analysis_timestamp": result.analysis_timestamp.isoformat()
+                "analysis_timestamp": result.analysis_timestamp.isoformat(),
             },
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         logger.error(f"Error running discovery cycle: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # Helper functions
+
 
 async def _get_cache_stats():
     """Get cache statistics"""
@@ -696,19 +864,17 @@ async def _get_cache_stats():
         logger.warning(f"Failed to get cache stats: {e}")
         return {"available": False, "error": str(e)}
 
+
 @app.get("/mexc/cache-stats")
 async def get_cache_stats():
     """Get cache service statistics and performance metrics"""
     try:
         stats = await _get_cache_stats()
-        return {
-            "status": "success",
-            "cache_stats": stats,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
+        return {"status": "success", "cache_stats": stats, "timestamp": datetime.now(timezone.utc).isoformat()}
     except Exception as e:
         logger.error(f"Error getting cache stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/mexc/cache-clear")
 async def clear_cache(pattern: str = "*"):
@@ -721,37 +887,40 @@ async def clear_cache(pattern: str = "*"):
             "status": "success",
             "message": f"Cleared {cleared_count} cache entries matching pattern: {pattern}",
             "cleared_count": cleared_count,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         logger.error(f"Error clearing cache: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/mexc/inngest-trigger-calendar-poll")
 async def trigger_calendar_poll():
     """Manually trigger Inngest calendar poll function"""
-    if not INNGEST_AVAILABLE:
+    if not INNGEST_AVAILABLE or inngest_client is None:
         raise HTTPException(status_code=503, detail="Inngest not available")
 
     try:
+        # Import Inngest Event class
+        from inngest import Event
+
         # Send manual trigger event
-        await inngest_client.send({
-            "name": "admin.calendar.poll.requested",
-            "data": {
-                "triggered_by": "api",
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
-        })
+        event = Event(
+            name="admin.calendar.poll.requested",
+            data={"triggered_by": "api", "timestamp": datetime.now(timezone.utc).isoformat()},
+        )
+        await inngest_client.send(event)
 
         return {
             "status": "success",
             "message": "Calendar poll triggered successfully",
             "event_sent": "admin.calendar.poll.requested",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         logger.error(f"Error triggering calendar poll: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/mexc/inngest-status")
 async def get_inngest_status():
@@ -762,10 +931,12 @@ async def get_inngest_status():
         "functions_registered": len(inngest_functions) if INNGEST_AVAILABLE else 0,
         "calendar_poll_cron": settings.CALENDAR_POLL_CRON,
         "environment": settings.ENVIRONMENT,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
+
 # User Preferences Management Endpoints
+
 
 @app.get("/user/preferences/{user_id}")
 async def get_user_preferences_endpoint(user_id: str) -> UserPreferencesResponse:
@@ -773,34 +944,34 @@ async def get_user_preferences_endpoint(user_id: str) -> UserPreferencesResponse
     try:
         async with get_async_session() as session:
             preferences = await get_user_preferences(session, user_id)
-            
+
             if not preferences:
                 # Create default preferences if they don't exist
                 preferences = await create_user_preferences(session, user_id)
-            
+
             return UserPreferencesResponse.model_validate(preferences)
     except Exception as e:
         logger.error(f"Error getting user preferences: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.put("/user/preferences/{user_id}")
-async def update_user_preferences_endpoint(
-    user_id: str,
-    request: UserPreferencesRequest
-) -> UserPreferencesResponse:
+async def update_user_preferences_endpoint(user_id: str, request: UserPreferencesRequest) -> UserPreferencesResponse:
     """Update user preferences"""
     try:
         async with get_async_session() as session:
             # Convert request to dict and filter out None values
             update_data = request.model_dump(exclude_unset=True, exclude_none=True)
-            
+
             preferences = await update_user_preferences(session, user_id, update_data)
             return UserPreferencesResponse.model_validate(preferences)
     except Exception as e:
         logger.error(f"Error updating user preferences: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # API Credentials Management Endpoints
+
 
 @app.get("/user/credentials/{user_id}")
 async def get_user_credentials_endpoint(user_id: str) -> list[ApiCredentialsResponse]:
@@ -808,44 +979,40 @@ async def get_user_credentials_endpoint(user_id: str) -> list[ApiCredentialsResp
     try:
         async with get_async_session() as session:
             credentials_list = await get_all_user_credentials(session, user_id)
-            
+
             # Convert to response format without sensitive data
             response_list = []
             for cred in credentials_list:
-                response_list.append(ApiCredentialsResponse(
-                    id=cred.id,
-                    user_id=cred.user_id,
-                    provider=cred.provider,
-                    is_active=cred.is_active,
-                    is_testnet=cred.is_testnet,
-                    nickname=cred.nickname,
-                    permissions=cred.permissions,
-                    has_api_key=bool(cred.api_key_encrypted),
-                    has_secret_key=bool(cred.secret_key_encrypted),
-                    created_at=cred.created_at,
-                    updated_at=cred.updated_at,
-                    last_used_at=cred.last_used_at
-                ))
-            
+                response_list.append(
+                    ApiCredentialsResponse(
+                        id=cred.id or 0,
+                        user_id=cred.user_id,
+                        provider=cred.provider,
+                        is_active=cred.is_active,
+                        is_testnet=cred.is_testnet,
+                        nickname=cred.nickname,
+                        permissions=cred.permissions,
+                        has_api_key=bool(cred.api_key_encrypted),
+                        has_secret_key=bool(cred.secret_key_encrypted),
+                        created_at=cred.created_at,
+                        updated_at=cred.updated_at,
+                        last_used_at=cred.last_used_at,
+                    )
+                )
+
             return response_list
     except Exception as e:
         logger.error(f"Error getting user credentials: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/user/credentials/{user_id}")
-async def create_api_credentials_endpoint(
-    user_id: str,
-    request: ApiCredentialsRequest
-) -> ApiCredentialsResponse:
+async def create_api_credentials_endpoint(user_id: str, request: ApiCredentialsRequest) -> ApiCredentialsResponse:
     """Create or update API credentials for a user"""
     try:
         # Encrypt the credentials
-        encrypted_data = encrypt_api_credentials(
-            request.api_key,
-            request.secret_key,
-            request.passphrase
-        )
-        
+        encrypted_data = encrypt_api_credentials(request.api_key, request.secret_key, request.passphrase)
+
         async with get_async_session() as session:
             credentials = await create_api_credentials(
                 session=session,
@@ -856,12 +1023,12 @@ async def create_api_credentials_endpoint(
                 passphrase_encrypted=encrypted_data["passphrase_encrypted"],
                 is_testnet=request.is_testnet,
                 nickname=request.nickname,
-                permissions_json=json.dumps(request.permissions)
+                permissions_json=json.dumps(request.permissions),
             )
-            
+
             # Return response without sensitive data
             return ApiCredentialsResponse(
-                id=credentials.id,
+                id=credentials.id or 0,
                 user_id=credentials.user_id,
                 provider=credentials.provider,
                 is_active=credentials.is_active,
@@ -872,11 +1039,12 @@ async def create_api_credentials_endpoint(
                 has_secret_key=bool(credentials.secret_key_encrypted),
                 created_at=credentials.created_at,
                 updated_at=credentials.updated_at,
-                last_used_at=credentials.last_used_at
+                last_used_at=credentials.last_used_at,
             )
     except Exception as e:
         logger.error(f"Error creating API credentials: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.delete("/user/credentials/{user_id}/{provider}")
 async def delete_api_credentials_endpoint(user_id: str, provider: str):
@@ -884,14 +1052,14 @@ async def delete_api_credentials_endpoint(user_id: str, provider: str):
     try:
         async with get_async_session() as session:
             deleted = await delete_api_credentials(session, user_id, provider)
-            
+
             if not deleted:
                 raise HTTPException(status_code=404, detail="Credentials not found")
-            
+
             return {
                 "status": "success",
                 "message": f"API credentials for {provider} deleted successfully",
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
     except HTTPException:
         raise
@@ -899,23 +1067,26 @@ async def delete_api_credentials_endpoint(user_id: str, provider: str):
         logger.error(f"Error deleting API credentials: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/user/credentials/{user_id}/{provider}/decrypt")
 async def get_decrypted_credentials(user_id: str, provider: str):
     """Get decrypted API credentials for use (admin/internal use only)"""
     try:
         async with get_async_session() as session:
             credentials = await get_api_credentials(session, user_id, provider)
-            
+
             if not credentials:
                 raise HTTPException(status_code=404, detail="Credentials not found")
-            
+
             # Decrypt the credentials
-            decrypted_data = decrypt_api_credentials({
-                "api_key_encrypted": credentials.api_key_encrypted,
-                "secret_key_encrypted": credentials.secret_key_encrypted,
-                "passphrase_encrypted": credentials.passphrase_encrypted,
-            })
-            
+            decrypted_data = decrypt_api_credentials(
+                {
+                    "api_key_encrypted": credentials.api_key_encrypted,
+                    "secret_key_encrypted": credentials.secret_key_encrypted,
+                    "passphrase_encrypted": credentials.passphrase_encrypted,
+                }
+            )
+
             return {
                 "provider": credentials.provider,
                 "api_key": decrypted_data["api_key"],
@@ -923,13 +1094,14 @@ async def get_decrypted_credentials(user_id: str, provider: str):
                 "passphrase": decrypted_data["passphrase"],
                 "is_testnet": credentials.is_testnet,
                 "permissions": credentials.permissions,
-                "last_used_at": credentials.last_used_at
+                "last_used_at": credentials.last_used_at,
             }
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error decrypting API credentials: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # IMPORTANT: Handler for Vercel serverless functions
 # Vercel's Python runtime will automatically handle FastAPI apps

@@ -370,4 +370,5 @@ def get_discovery_engine() -> PatternDiscoveryEngine:
 
     # Type narrowing: after the if block, _discovery_engine is guaranteed to be PatternDiscoveryEngine
     from typing import cast
+
     return cast(PatternDiscoveryEngine, _discovery_engine)

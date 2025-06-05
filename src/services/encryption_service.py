@@ -109,6 +109,7 @@ def get_encryption_service() -> EncryptionService:
 
     # Type narrowing: after the if block, _encryption_service is guaranteed to be EncryptionService
     from typing import cast
+
     return cast(EncryptionService, _encryption_service)
 
 

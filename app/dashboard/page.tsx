@@ -9,14 +9,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { 
-  TrendingUp, 
-  Bot, 
-  Activity, 
-  Target, 
-  Eye, 
-  Zap, 
-  AlertTriangle, 
+import {
+  TrendingUp,
+  Bot,
+  Activity,
+  Target,
+  Eye,
+  Zap,
+  AlertTriangle,
   Clock,
   DollarSign,
   ArrowUpRight,
@@ -27,6 +27,7 @@ import {
   Settings
 } from "lucide-react";
 import Link from "next/link";
+import { CoinCalendar } from "@/components/coin-calendar";
 
 interface SystemStatus {
   status: string;
@@ -49,7 +50,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchSystemStatus();
-    const interval = setInterval(fetchSystemStatus, 30000); // Refresh every 30 seconds
+    const interval = setInterval(fetchSystemStatus, 10000); // Faster refresh for trading data
     return () => clearInterval(interval);
   }, []);
 
@@ -137,8 +138,8 @@ export default function DashboardPage() {
             <div className="text-sm text-slate-400">
               Last updated: {lastRefresh.toLocaleTimeString()}
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={fetchSystemStatus}
               disabled={isLoading}
@@ -185,8 +186,8 @@ export default function DashboardPage() {
                   onClick={togglePatternDiscovery}
                   disabled={isLoading}
                   className={`${
-                    isDiscoveryRunning 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                    isDiscoveryRunning
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-green-500 hover:bg-green-600'
                   } text-white`}
                 >
@@ -199,7 +200,7 @@ export default function DashboardPage() {
                   )}
                   {isDiscoveryRunning ? 'Stop Discovery' : 'Start Discovery'}
                 </Button>
-                
+
                 <Button
                   onClick={runDiscoveryCycle}
                   disabled={isLoading}
@@ -213,7 +214,7 @@ export default function DashboardPage() {
                   )}
                   Run Discovery Cycle
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   className="border-slate-600 text-slate-300 hover:bg-slate-700"
@@ -318,7 +319,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">Success Rate</span>
                 <span className="text-green-400 font-medium">
-                  {systemStatus?.statistics?.successful_snipes && systemStatus?.statistics?.total_detections 
+                  {systemStatus?.statistics?.successful_snipes && systemStatus?.statistics?.total_detections
                     ? ((systemStatus.statistics.successful_snipes / systemStatus.statistics.total_detections) * 100).toFixed(1)
                     : '0.0'
                   }%
@@ -351,7 +352,7 @@ export default function DashboardPage() {
                 </div>
                 <ArrowUpRight className="h-4 w-4 text-green-400" />
               </div>
-              
+
               <div className="flex items-center space-x-3 p-3 bg-slate-700/50 rounded-lg animate-slide-up">
                 <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                 <div className="flex-1">
@@ -360,7 +361,7 @@ export default function DashboardPage() {
                 </div>
                 <Eye className="h-4 w-4 text-blue-400" />
               </div>
-              
+
               <div className="flex items-center space-x-3 p-3 bg-slate-700/50 rounded-lg animate-slide-up">
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                 <div className="flex-1">
@@ -369,7 +370,7 @@ export default function DashboardPage() {
                 </div>
                 <Zap className="h-4 w-4 text-green-400" />
               </div>
-              
+
               <div className="flex items-center space-x-3 p-3 bg-slate-700/50 rounded-lg animate-slide-up">
                 <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
                 <div className="flex-1">
@@ -378,6 +379,24 @@ export default function DashboardPage() {
                 </div>
                 <Bot className="h-4 w-4 text-purple-400" />
               </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Coin Calendar */}
+        <section className="mb-8">
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Clock className="h-5 w-5 text-blue-400" />
+                <span>Coin Listings Calendar</span>
+              </CardTitle>
+              <CardDescription>
+                View coin listings by date - check today, tomorrow, or any future date
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CoinCalendar />
             </CardContent>
           </Card>
         </section>
@@ -413,7 +432,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3">
                   <h4 className="font-medium text-slate-300">Pattern States</h4>
                   <div className="space-y-2">
@@ -431,7 +450,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3">
                   <h4 className="font-medium text-slate-300">System Health</h4>
                   <div className="space-y-2">
@@ -463,7 +482,7 @@ export default function DashboardPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-amber-400 mb-2">Live Trading Environment</h3>
                   <p className="text-amber-200/80 text-sm leading-relaxed">
-                    This dashboard controls live trading systems. All actions will affect real trades and funds. 
+                    This dashboard controls live trading systems. All actions will affect real trades and funds.
                     Monitor system performance carefully and ensure proper risk management settings are in place.
                   </p>
                 </div>

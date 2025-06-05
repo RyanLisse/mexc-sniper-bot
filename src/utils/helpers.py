@@ -1,6 +1,7 @@
 """
 Utility functions for MEXC Sniper Bot
 """
+
 import asyncio
 import json
 import logging
@@ -25,14 +26,7 @@ def calculate_time_until(target_datetime: datetime) -> dict[str, Any]:
     delta = target_datetime - now
 
     if delta.total_seconds() <= 0:
-        return {
-            "is_past": True,
-            "total_seconds": 0,
-            "hours": 0,
-            "minutes": 0,
-            "seconds": 0,
-            "formatted": "Past due"
-        }
+        return {"is_past": True, "total_seconds": 0, "hours": 0, "minutes": 0, "seconds": 0, "formatted": "Past due"}
 
     total_seconds = int(delta.total_seconds())
     hours = total_seconds // 3600
@@ -52,7 +46,7 @@ def calculate_time_until(target_datetime: datetime) -> dict[str, Any]:
         "hours": hours,
         "minutes": minutes,
         "seconds": seconds,
-        "formatted": formatted
+        "formatted": formatted,
     }
 
 
@@ -86,19 +80,13 @@ def safe_json_dumps(obj: Any, default: str = "{}") -> str:
         return default
 
 
-def calculate_advance_notice_hours(
-    discovered_at: datetime,
-    launch_time: datetime
-) -> float:
+def calculate_advance_notice_hours(discovered_at: datetime, launch_time: datetime) -> float:
     """Calculate advance notice in hours"""
     delta = launch_time - discovered_at
     return delta.total_seconds() / 3600
 
 
-def is_advance_notice_sufficient(
-    advance_notice_hours: float,
-    minimum_hours: float = 3.5
-) -> bool:
+def is_advance_notice_sufficient(advance_notice_hours: float, minimum_hours: float = 3.5) -> bool:
     """Check if advance notice meets minimum requirement"""
     return advance_notice_hours >= minimum_hours
 
@@ -107,15 +95,15 @@ def format_currency(amount: float, currency: str = "USDT") -> str:
     """Format currency amount for display"""
     if amount >= 1000:
         return f"{amount:,.2f} {currency}"
-    else:
-        return f"{amount:.8f} {currency}".rstrip('0').rstrip('.')
+
+    return f"{amount:.8f} {currency}".rstrip("0").rstrip(".")
 
 
 def truncate_string(text: str, max_length: int = 50) -> str:
     """Truncate string with ellipsis if too long"""
     if len(text) <= max_length:
         return text
-    return text[:max_length-3] + "..."
+    return text[: max_length - 3] + "..."
 
 
 def get_status_emoji(status: str) -> str:
@@ -130,17 +118,12 @@ def get_status_emoji(status: str) -> str:
         "failed": "❌",
         "cancelled": "🚫",
         "missed": "😞",
-        "error": "🔥"
+        "error": "🔥",
     }
     return status_emojis.get(status.lower(), "❓")
 
 
-def format_discovery_summary(
-    new_listings: int,
-    ready_targets: int,
-    scheduled_targets: int,
-    errors: list[str]
-) -> str:
+def format_discovery_summary(new_listings: int, ready_targets: int, scheduled_targets: int, errors: list[str]) -> str:
     """Format discovery cycle summary"""
     summary_parts = []
 
@@ -167,10 +150,10 @@ async def retry_async_operation(
     max_retries: int = 3,
     delay_seconds: float = 1.0,
     backoff_multiplier: float = 2.0,
-    exceptions: tuple = (Exception,)
+    exceptions: tuple = (Exception,),
 ) -> Any:
     """Retry async operation with exponential backoff"""
-    last_exception = None
+    last_exception: Optional[BaseException] = None
 
     for attempt in range(max_retries + 1):
         try:
@@ -181,11 +164,14 @@ async def retry_async_operation(
             if attempt == max_retries:
                 break
 
-            wait_time = delay_seconds * (backoff_multiplier ** attempt)
+            wait_time = delay_seconds * (backoff_multiplier**attempt)
             logger.warning(f"Operation failed (attempt {attempt + 1}), retrying in {wait_time}s: {e}")
             await asyncio.sleep(wait_time)
 
-    raise last_exception
+    if last_exception is not None:
+        raise last_exception
+
+    raise RuntimeError("Operation failed with no exception captured")
 
 
 def validate_order_params(params: dict[str, Any]) -> bool:
@@ -205,10 +191,7 @@ def validate_order_params(params: dict[str, Any]) -> bool:
         return False
 
     # For market orders, need either quantity or quoteOrderQty
-    if params.get("type") == "MARKET" and not (params.get("quantity") or params.get("quoteOrderQty")):
-        return False
-
-    return True
+    return not (params.get("type") == "MARKET" and not (params.get("quantity") or params.get("quoteOrderQty")))
 
 
 def sanitize_symbol_name(symbol: str) -> str:
@@ -218,7 +201,8 @@ def sanitize_symbol_name(symbol: str) -> str:
 
     # Remove any non-alphanumeric characters except common ones
     import re
-    sanitized = re.sub(r'[^A-Za-z0-9_-]', '', symbol)
+
+    sanitized = re.sub(r"[^A-Za-z0-9_-]", "", symbol)
     return sanitized.upper()
 
 
@@ -232,5 +216,5 @@ def get_environment_info() -> dict[str, Any]:
         "platform": platform.platform(),
         "architecture": platform.architecture(),
         "processor": platform.processor(),
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }

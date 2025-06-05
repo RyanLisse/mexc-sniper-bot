@@ -1,6 +1,7 @@
 """
 Inngest client configuration for MEXC Sniper Bot
 """
+
 import logging
 
 from inngest import Inngest
