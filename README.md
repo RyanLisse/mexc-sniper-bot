@@ -32,6 +32,16 @@ This project uses a modern serverless architecture:
 - Redis (for caching)
 - PostgreSQL (optional, SQLite for development)
 
+### OpenAI Codex Setup (Optional)
+
+If you plan to use or develop features leveraging OpenAI Codex, you'll need to set up your API key.
+A script is provided to help with this:
+
+```bash
+python scripts/setup_openai.py
+```
+This script will guide you through saving your API key in a `.openai_config.json` file (which is gitignored) and setting it as an environment variable.
+
 ## 🛠️ Quick Start
 
 ### 1. Clone and Install
@@ -189,6 +199,19 @@ pytest --cov=src
 # TypeScript linting
 npm run lint
 ```
+
+## 🔄 CI/CD Workflow
+
+This project uses GitHub Actions for CI/CD, defined in `.github/workflows/cicd.yml`. The workflow is triggered on pushes and pull requests to the `main` branch and performs the following:
+
+- Checks out the code.
+- Sets up Python and Node.js (with Bun).
+- Installs Python and Node.js dependencies.
+- Runs linters and formatters for both Python and TypeScript/JavaScript.
+- Executes Python tests (using `pytest`).
+- Executes TypeScript/JavaScript tests.
+
+This helps ensure code quality and that tests pass before merging changes.
 
 ## 🤝 Contributing
 
