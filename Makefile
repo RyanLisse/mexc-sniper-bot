@@ -96,7 +96,7 @@ dev-python: ## Start Python API server
 .PHONY: dev-inngest
 dev-inngest: ## Start Inngest dev server
 	@echo -e "${BLUE}Starting Inngest dev server...${NC}"
-	@npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest
+	@npx inngest-cli@latest dev -u http://localhost:3000/api/inngest
 
 # ==================== Code Quality Commands ====================
 

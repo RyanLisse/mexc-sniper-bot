@@ -1,200 +1,252 @@
-import { put } from "@vercel/blob";
 import { inngest } from "./client";
-// Removed uuid as slug should be unique enough with date and topics
+import { MexcOrchestrator } from "../mexc-agents/orchestrator";
 
-const NEWSLETTER_READ_WRITE_TOKEN =
-  process.env.NEWSLETTER_READ_WRITE_TOKEN || "dummy-token-for-build";
-
-// Define data structure for the initial event
-interface NewsletterGenerateRequestedData {
-  slug: string;
-  blobKey: string;
-  topics: string[];
+// MEXC Calendar polling event data
+interface MexcCalendarPollRequestedData {
+  trigger?: string;
+  force?: boolean;
 }
 
-// Main Inngest function with multi-step workflow
-export const generateNewsletter = inngest.createFunction(
-  { id: "generate-newsletter" },
-  { event: "newsletter/generate.requested" },
-  async ({ event, step }: { event: { data: NewsletterGenerateRequestedData }; step: unknown }) => {
-    const { topics, slug, blobKey } = event.data;
-    if (!topics || !slug || !blobKey) {
-      throw new Error("Missing topics, slug, or blobKey in event data.");
+// MEXC Symbol watching event data  
+interface MexcSymbolWatchRequestedData {
+  vcoinId: string;
+  symbolName?: string;
+  projectName?: string;
+  launchTime?: string;
+  attempt?: number;
+}
+
+// MEXC Pattern analysis event data
+interface MexcPatternAnalysisRequestedData {
+  vcoinId?: string;
+  symbols?: string[];
+  analysisType?: "discovery" | "monitoring" | "execution";
+}
+
+// MEXC Trading strategy event data
+interface MexcTradingStrategyRequestedData {
+  vcoinId: string;
+  symbolData: any;
+  riskLevel?: "low" | "medium" | "high";
+  capital?: number;
+}
+
+// MEXC Calendar Polling Function
+export const pollMexcCalendar = inngest.createFunction(
+  { id: "poll-mexc-calendar" },
+  { event: "mexc/calendar.poll.requested" },
+  async ({ event, step }: { event: { data: MexcCalendarPollRequestedData }; step: any }) => {
+    const { trigger = "manual", force = false } = event.data;
+    
+    // Step 1: Execute Multi-Agent Calendar Discovery
+    const discoveryResult = await step.run("calendar-discovery-workflow", async () => {
+      const orchestrator = new MexcOrchestrator();
+      return await orchestrator.executeCalendarDiscoveryWorkflow({
+        trigger,
+        force,
+      });
+    });
+
+    if (!discoveryResult.success) {
+      throw new Error(`Calendar discovery failed: ${discoveryResult.error}`);
     }
 
-    function assertStepHasRun(
-      s: unknown
-    ): asserts s is { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } {
-      if (!s || typeof s !== "object" || typeof (s as { run?: unknown }).run !== "function") {
-        throw new Error("step.run is not available");
+    // Step 2: Process and send follow-up events for new listings
+    const followUpEvents = await step.run("process-discovery-results", async () => {
+      if (discoveryResult.data?.newListings?.length) {
+        // Send symbol watch events for new discoveries
+        const events = discoveryResult.data.newListings.map((listing: any) => ({
+          name: "mexc/symbol.watch.requested",
+          data: {
+            vcoinId: listing.vcoinId,
+            symbolName: listing.symbolName,
+            projectName: listing.projectName,
+            launchTime: listing.launchTime,
+            attempt: 1,
+          },
+        }));
+
+        // Send events
+        for (const eventData of events) {
+          await inngest.send(eventData);
+        }
+
+        return events.length;
       }
-    }
-    assertStepHasRun(step);
+      return 0;
+    });
 
-    // Step 1: Call Python Agent
-    const rawAgentContentUnknown = await step.run("call-python-agent", () =>
-      callPythonAgent(topics, slug)
-    );
-    if (typeof rawAgentContentUnknown !== "string") {
-      throw new Error("Python agent did not return a string");
-    }
-    const rawAgentContent = rawAgentContentUnknown;
-
-    // Step 2: Format Newsletter with Markdown Agent
-    const formattedContentUnknown = await step.run("format-newsletter", () =>
-      formatNewsletter(rawAgentContent, topics, slug)
-    );
-    if (typeof formattedContentUnknown !== "string") {
-      throw new Error("Formatting agent did not return a string");
-    }
-    const formattedContent = formattedContentUnknown;
-
-    // Step 3: Save Newsletter to Blob
-    const finalBlobUnknown = await step.run("save-to-blob", () =>
-      saveNewsletterToBlob(blobKey, formattedContent, slug)
-    );
-    if (
-      !finalBlobUnknown ||
-      typeof finalBlobUnknown !== "object" ||
-      typeof (finalBlobUnknown as { url?: unknown }).url !== "string"
-    ) {
-      throw new Error("Blob result missing url");
-    }
-    const finalBlob = finalBlobUnknown as { url: string };
-
-    return { url: finalBlob.url, message: `Newsletter generated and saved for ${slug}` };
+    return {
+      status: "success",
+      trigger,
+      newListingsFound: discoveryResult.data?.newListings?.length || 0,
+      readyTargetsFound: discoveryResult.data?.readyTargets?.length || 0,
+      followUpEventsSent: followUpEvents,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        agentsUsed: ["calendar", "pattern-discovery", "api"],
+        analysisComplete: true,
+      }
+    };
   }
 );
 
-// --- Step implementations below ---
+// MEXC Symbol Watching Function
+export const watchMexcSymbol = inngest.createFunction(
+  { id: "watch-mexc-symbol" },
+  { event: "mexc/symbol.watch.requested" },
+  async ({ event, step }: { event: { data: MexcSymbolWatchRequestedData }; step: any }) => {
+    const { vcoinId, symbolName, projectName, launchTime, attempt = 1 } = event.data;
+    
+    if (!vcoinId) {
+      throw new Error("Missing vcoinId in event data");
+    }
 
-// Helper function to get the Python agent URL
-function getPythonAgentUrl(): string {
-  // Use custom APP_URL if set (recommended approach)
-  if (process.env.APP_URL) {
-    return `${process.env.APP_URL}/api/agents`;
-  }
-
-  // For local development
-  if (!process.env.VERCEL) {
-    return "http://localhost:8000";
-  }
-
-  // For production, use the production URL
-  if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/api/agents`;
-  }
-
-  // For preview deployments, use branch URL
-  if (process.env.VERCEL_BRANCH_URL) {
-    return `https://${process.env.VERCEL_BRANCH_URL}/api/agents`;
-  }
-
-  // Fallback
-  console.warn("[Inngest] No suitable URL found for Python agent, using deployment URL");
-  return `https://${process.env.VERCEL_URL}/api/agents`;
-}
-
-async function callPythonAgent(topics: string[], slug: string) {
-  const pythonAgentUrl = getPythonAgentUrl();
-
-  try {
-    const response = await fetch(`${pythonAgentUrl}/research`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ topics }),
+    // Step 1: Execute Multi-Agent Symbol Analysis
+    const analysisResult = await step.run("symbol-analysis-workflow", async () => {
+      const orchestrator = new MexcOrchestrator();
+      return await orchestrator.executeSymbolAnalysisWorkflow({
+        vcoinId,
+        symbolName,
+        projectName,
+        launchTime,
+        attempt,
+      });
     });
 
-    if (!response.ok) {
-      console.error(
-        `[Inngest] Research agent request failed for slug ${slug}. Status: ${response.status}`
-      );
-      throw new Error(`Research agent request failed with status ${response.status}`);
+    if (!analysisResult.success) {
+      throw new Error(`Symbol analysis failed: ${analysisResult.error}`);
     }
 
-    const data = await response.json();
-    const content = data.content;
+    // Step 2: Handle results based on symbol status
+    const actionResult = await step.run("process-symbol-results", async () => {
+      const { symbolReady, hasCompleteData, riskLevel } = analysisResult.data || {};
 
-    if (!content) {
-      throw new Error("Research agent returned no content");
-    }
+      if (symbolReady && hasCompleteData) {
+        // Create trading strategy and target
+        await inngest.send({
+          name: "mexc/trading.strategy.requested",
+          data: {
+            vcoinId,
+            symbolData: analysisResult.data.symbolData,
+            riskLevel: riskLevel || "medium",
+          },
+        });
 
-    return content;
-  } catch (error) {
-    console.error(`[Inngest] Research agent error for slug ${slug}:`, error);
-    throw error;
-  }
-}
+        return { action: "strategy_created", targetReady: true };
+      } else if (attempt < 10) {
+        // Schedule recheck
+        await inngest.send({
+          name: "mexc/symbol.watch.requested", 
+          data: {
+            vcoinId,
+            symbolName,
+            projectName,
+            launchTime,
+            attempt: attempt + 1,
+          },
+        });
 
-async function formatNewsletter(rawContent: string, topics: string[], slug: string) {
-  // Build the appropriate URL based on environment
-  let pythonAgentUrl: string;
-  if (!process.env.VERCEL) {
-    // Local development
-    pythonAgentUrl = "http://localhost:8000";
-  } else if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    // Production environment - use the production URL
-    pythonAgentUrl = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}/api/agents`;
-  } else if (process.env.VERCEL_BRANCH_URL) {
-    // Preview environment - use the branch URL which is more stable than VERCEL_URL
-    pythonAgentUrl = `https://${process.env.VERCEL_BRANCH_URL}/api/agents`;
-  } else {
-    // Fallback to deployment URL if nothing else is available
-    pythonAgentUrl = `https://${process.env.VERCEL_URL}/api/agents`;
-  }
-
-  try {
-    const response = await fetch(`${pythonAgentUrl}/format`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        raw_content: rawContent,
-        topics: topics,
-      }),
+        return { action: "recheck_scheduled", nextAttempt: attempt + 1 };
+      } else {
+        return { action: "max_attempts_reached", abandoned: true };
+      }
     });
 
-    if (!response.ok) {
-      console.error(
-        `[Inngest] Formatting agent request failed for slug ${slug}. Status: ${response.status}`
-      );
-      throw new Error(`Formatting agent request failed with status ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.content;
-
-    if (!content) {
-      throw new Error("Formatting agent returned no content");
-    }
-
-    return content;
-  } catch (error) {
-    console.error(`[Inngest] Formatting agent error for slug ${slug}:`, error);
-    throw error;
+    return {
+      status: "success",
+      vcoinId,
+      symbolName,
+      attempt,
+      symbolReady: analysisResult.data?.symbolReady || false,
+      action: actionResult.action,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        agentsUsed: ["symbol-analysis", "pattern-discovery", "api"],
+        hasCompleteData: analysisResult.data?.hasCompleteData || false,
+      }
+    };
   }
-}
+);
 
-async function saveNewsletterToBlob(blobKey: string, rawAgentContent: string, slug: string) {
-  if (typeof rawAgentContent !== "string") {
-    console.error(
-      `[Inngest] Invalid content type for slug ${slug}. Expected string, got ${typeof rawAgentContent}`
-    );
-    throw new Error("Invalid content type from agent for saving to blob.");
-  }
-  try {
-    const blob = await put(blobKey, rawAgentContent, {
-      access: "public",
-      contentType: "text/markdown",
-      token: NEWSLETTER_READ_WRITE_TOKEN,
-      allowOverwrite: true,
+// MEXC Pattern Analysis Function  
+export const analyzeMexcPatterns = inngest.createFunction(
+  { id: "analyze-mexc-patterns" },
+  { event: "mexc/pattern.analysis.requested" },
+  async ({ event, step }: { event: { data: MexcPatternAnalysisRequestedData }; step: any }) => {
+    const { vcoinId, symbols, analysisType = "discovery" } = event.data;
+
+    // Step 1: Execute Multi-Agent Pattern Analysis
+    const patternResult = await step.run("pattern-analysis-workflow", async () => {
+      const orchestrator = new MexcOrchestrator();
+      return await orchestrator.executePatternAnalysisWorkflow({
+        vcoinId,
+        symbols,
+        analysisType,
+      });
     });
-    return blob;
-  } catch (error) {
-    console.error(`[Inngest] Error saving to blob for slug ${slug}:`, error);
-    throw error;
+
+    if (!patternResult.success) {
+      throw new Error(`Pattern analysis failed: ${patternResult.error}`);
+    }
+
+    return {
+      status: "success",
+      analysisType,
+      patternsFound: patternResult.data?.patterns?.length || 0,
+      recommendations: patternResult.data?.recommendations || [],
+      confidenceScore: patternResult.data?.confidenceScore || 0,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        agentsUsed: ["pattern-analysis", "market-analysis", "strategy"],
+        vcoinId,
+        symbols: symbols?.length || 0,
+      }
+    };
   }
-}
+);
+
+// MEXC Trading Strategy Function
+export const createMexcTradingStrategy = inngest.createFunction(
+  { id: "create-mexc-trading-strategy" },
+  { event: "mexc/trading.strategy.requested" },
+  async ({ event, step }: { event: { data: MexcTradingStrategyRequestedData }; step: any }) => {
+    const { vcoinId, symbolData, riskLevel = "medium", capital } = event.data;
+    
+    if (!vcoinId || !symbolData) {
+      throw new Error("Missing vcoinId or symbolData in event data");
+    }
+
+    // Step 1: Execute Multi-Agent Trading Strategy Creation
+    const strategyResult = await step.run("trading-strategy-workflow", async () => {
+      const orchestrator = new MexcOrchestrator();
+      return await orchestrator.executeTradingStrategyWorkflow({
+        vcoinId,
+        symbolData,
+        riskLevel,
+        capital,
+      });
+    });
+
+    if (!strategyResult.success) {
+      throw new Error(`Trading strategy creation failed: ${strategyResult.error}`);
+    }
+
+    return {
+      status: "success",
+      vcoinId,
+      strategyCreated: true,
+      entryPrice: strategyResult.data?.entryPrice,
+      stopLoss: strategyResult.data?.stopLoss,
+      takeProfit: strategyResult.data?.takeProfit,
+      positionSize: strategyResult.data?.positionSize,
+      riskRewardRatio: strategyResult.data?.riskRewardRatio,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        agentsUsed: ["trading-strategy", "risk-management", "market-analysis"],
+        riskLevel,
+        capital,
+      }
+    };
+  }
+);

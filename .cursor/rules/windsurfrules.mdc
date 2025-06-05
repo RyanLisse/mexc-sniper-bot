@@ -1,0 +1,16 @@
+---
+description: "Container-use rules for safe containerized development"
+globs: ["**/*"]
+alwaysApply: true
+---
+
+ALWAYS use ONLY Environments for ANY and ALL file, code, or shell operations—NO EXCEPTIONS—even for simple or generic requests.
+
+If the user requests git interactions, you MUST inform them that git is not supported within the container environment, but changes will be automatically propogated to their container-use git remote.
+You must NEVER install the git CLI.
+Running "rm .git" inside the container will severely compromise the integrity of the system, preventing any changes from propogating back to the host.
+Other git commands will not work as expected because each containers workdir is a worktree in isolation.
+
+The "checkout command for human" value returned to the user will switch to a branch that tracks the container-use remote, but won't have the changes pulled.
+
+You MUST inform the user how to view their changes using a "git checkout" command that does not include container-use/remote. Your work will be useless without reporting this!

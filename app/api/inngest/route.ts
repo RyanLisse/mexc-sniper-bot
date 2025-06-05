@@ -1,30 +1,19 @@
-// Temporarily disabled Inngest route due to environment variable parsing issues
-// The Inngest library is trying to parse malformed URLs from environment variables
+import { serve } from "inngest/next";
+import { inngest } from "../../../src/inngest/client";
+import { 
+  pollMexcCalendar,
+  watchMexcSymbol,
+  analyzeMexcPatterns,
+  createMexcTradingStrategy,
+} from "../../../src/inngest/functions";
 
-export async function GET() {
-  return new Response(JSON.stringify({ 
-    status: "disabled", 
-    message: "Inngest temporarily disabled - environment configuration issue",
-    issue: "URL parsing error in Inngest library with malformed env vars"
-  }), {
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
-export async function POST() {
-  return new Response(JSON.stringify({ 
-    status: "disabled", 
-    message: "Inngest temporarily disabled" 
-  }), {
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
-export async function PUT() {
-  return new Response(JSON.stringify({ 
-    status: "disabled", 
-    message: "Inngest temporarily disabled" 
-  }), {
-    headers: { "Content-Type": "application/json" },
-  });
-}
+// Create the handler and configure it to serve our MEXC multi-agent functions
+export const { GET, POST, PUT } = serve({
+  client: inngest,
+  functions: [
+    pollMexcCalendar,         // Calendar discovery with multi-agent analysis
+    watchMexcSymbol,          // Symbol monitoring and readiness analysis
+    analyzeMexcPatterns,      // Pattern discovery and validation
+    createMexcTradingStrategy, // Trading strategy creation and risk assessment
+  ],
+});
