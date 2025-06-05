@@ -1,55 +1,46 @@
-# Serverless Agent Architecture Starter
+# MEXC Sniper Bot 🎯
 
-A production-ready starter project demonstrating how to build full-stack applications with AI agents deployed to Vercel, orchestrated by Inngest, and powered by Next.js 15. This architecture pattern enables you to build scalable AI-powered applications with long-running workflows.
+An intelligent cryptocurrency trading bot that leverages AI agents to discover and execute trades on new token listings on the MEXC exchange. Built with a hybrid Next.js/Python architecture deployed on Vercel.
 
-🔗 **GitHub Repository**: [https://github.com/brookr/serverless-agents](https://github.com/brookr/serverless-agents)
+## 🚀 Key Features
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbrookr%2Fserverless-agents&env=OPENAI_API_KEY,NEWSLETTER_READ_WRITE_TOKEN&envDescription=Configure%20your%20AI%20agents%20and%20storage&envLink=https%3A%2F%2Fgithub.com%2Fbrookr%2Fserverless-agents%23environment-setup&project-name=serverless-agents&repository-name=serverless-agents)
+- **AI-Powered Pattern Discovery**: Uses GPT-4 agents to analyze token launch patterns
+- **Automated Trading**: Executes trades within milliseconds of token launch
+- **Real-time Dashboard**: Monitor active positions and upcoming listings
+- **Smart Risk Management**: Configurable stop-loss and take-profit targets
+- **Serverless Architecture**: Scales automatically with Vercel Functions
 
-⚠️ **Important**: After deploying, you must configure the Inngest integration in Vercel. See [Deployment Instructions](#-deployment) for details.
+## 🏗️ Architecture
 
-![Architecture Pattern](public/newspaper-icon.svg)
+This project uses a modern serverless architecture:
 
-## 🏗️ Architecture Pattern
+- **Frontend**: Next.js 15 with TypeScript and React 19
+- **Backend**: Python FastAPI with OpenAI Agents
+- **Workflows**: Inngest for long-running background tasks
+- **Database**: SQLModel with async PostgreSQL/SQLite
+- **Caching**: Redis for API response optimization
+- **Deployment**: Vercel with automatic scaling
 
-This starter demonstrates a modern serverless architecture for AI applications:
-
-- **AI Agents as Vercel Functions**: Python FastAPI agents that deploy as serverless functions
-- **Next.js Frontend**: Modern React application with App Router
-- **Inngest Orchestration**: Reliable workflow management for long-running AI tasks
-- **Vercel Blob Storage**: Persistent storage for generated content
-- **Two-Stage Processing**: Separation of concerns with research and formatting agents
-
-## 🎯 Why This Architecture?
-
-This pattern solves common challenges in AI application development:
-
-- **Serverless Scalability**: Agents scale automatically with demand
-- **Long-Running Jobs**: Inngest handles workflows that exceed typical timeout limits
-- **Cost Efficiency**: Pay only for actual usage, no idle servers
-- **Developer Experience**: Local development mirrors production exactly
-- **Type Safety**: Full TypeScript support across the stack
-
-## 🚀 Quick Start
-
-### Prerequisites
+## 📋 Prerequisites
 
 - Node.js 18+ and npm
 - Python 3.9+
 - OpenAI API key
-- Vercel account (free tier works)
+- MEXC API credentials (optional)
+- Redis (for caching)
+- PostgreSQL (optional, SQLite for development)
+
+## 🛠️ Quick Start
 
 ### 1. Clone and Install
 
 ```bash
 # Clone the repository
-git clone https://github.com/brookr/serverless-agents.git
-cd serverless-agents
+git clone https://github.com/your-username/mexc-sniper-bot.git
+cd mexc-sniper-bot
 
-# Install Node.js dependencies
+# Install dependencies
 npm install
-
-# Install Python dependencies
 pip install -r requirements.txt
 ```
 
@@ -59,286 +50,148 @@ Create a `.env.local` file:
 
 ```bash
 # Required
-OPENAI_API_KEY=your_openai_api_key_here
-NEWSLETTER_READ_WRITE_TOKEN=your_vercel_blob_token
+OPENAI_API_KEY=your_openai_api_key
 
-# Optional (Inngest will auto-generate if not provided)
-INNGEST_SIGNING_KEY=your_inngest_signing_key
+# Optional MEXC API (for authenticated endpoints)
+MEXC_API_KEY=your_mexc_api_key
+MEXC_SECRET_KEY=your_mexc_secret_key
+
+# Database (optional, defaults to SQLite)
+DATABASE_URL=postgresql://user:pass@localhost/mexc_sniper
+REDIS_URL=redis://localhost:6379
+
+# Inngest (auto-generated if not provided)
+INNGEST_SIGNING_KEY=your_signing_key
+INNGEST_EVENT_KEY=your_event_key
 ```
 
 ### 3. Run Development Servers
 
 You'll need three terminals:
 
-**Terminal 1 - Python Agent Server:**
-
-```bash
-uvicorn api.agents:app --reload --reload-dir api --port 8000
-```
-
-**Terminal 2 - Next.js Development:**
-
+**Terminal 1 - Next.js Development:**
 ```bash
 npm run dev
 ```
 
-**Terminal 3 - Inngest Dev Server:**
+**Terminal 2 - Python MEXC Agent:**
+```bash
+npm run mexc-agent-dev
+# OR
+uvicorn api.agents:app --reload --port 8001
+```
 
+**Terminal 3 - Inngest Dev Server:**
 ```bash
 npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest
 ```
 
 ### 4. Access the Application
 
-- **Main App**: http://localhost:3000
-- **Python API**: http://localhost:8000
+- **Dashboard**: http://localhost:3000/app/dashboard
+- **Python API**: http://localhost:8001
+- **API Docs**: http://localhost:8001/docs
 - **Inngest Dashboard**: http://localhost:8288
 
-## 📁 Project Structure
+## 📡 API Endpoints
 
-```text
-├── src/
-│   ├── app/                      # Next.js app directory
-│   │   ├── api/
-│   │   │   ├── inngest/         # Inngest webhook endpoint
-│   │   │   └── newsletter/      # API routes for the example app
-│   │   └── newsletter/
-│   │       └── [slug]/          # Dynamic pages
-│   ├── components/              # React components
-│   │   └── ui/                  # shadcn/ui components
-│   ├── inngest/
-│   │   ├── client.ts           # Inngest client configuration
-│   │   └── functions.ts        # Workflow definitions
-│   └── lib/
-│       └── *.ts                # Utilities and helpers
-├── api/
-│   └── agents.py               # FastAPI agent definitions
-├── public/                     # Static assets
-├── vercel.json                # Vercel routing configuration
-├── requirements.txt            # Python dependencies
-└── package.json               # Node.js dependencies
-```
-
-## 🔧 Core Components
-
-### 1. AI Agents (FastAPI + Vercel Functions)
-
-The `api/agents.py` file demonstrates how to structure AI agents:
-
-```python
-# Example agent structure
-research_agent = Agent(
-    name="Research Agent",
-    model="gpt-4.1",
-    instructions="...",
-    tools=[WebSearchTool()]
-)
-
-@app.post("/research")
-async def research_endpoint(request: TopicsRequest):
-    # Agent logic here
-```
-
-### 2. Inngest Workflows
-
-The `src/inngest/functions.ts` shows how to orchestrate long-running tasks:
-
-```typescript
-export const generateNewsletter = inngest.createFunction(
-  { id: "generate-newsletter" },
-  { event: "newsletter/generate" },
-  async ({ event, step }) => {
-    // Multi-step workflow with retries and error handling
-  }
-);
-```
-
-### 3. Next.js Integration
-
-API routes in `src/app/api/` demonstrate the integration pattern:
-
-- Webhook endpoint for Inngest
-- Status checking endpoints
-- Trigger endpoints for workflows
-
-### 4. Vercel Configuration
-
-The `vercel.json` file is critical for proper Python API routing. Build python after NextJS, and configure the routes to point to the python file:
-
-```json
+### Pattern Discovery
+```http
+POST /api/agents/mexc/pattern-discovery
 {
-  "builds": [
-    { "src": "package.json", "use": "@vercel/next" },
-    { "src": "api/agents.py", "use": "@vercel/python" }
-  ],
-  "routes": [
-    { "src": "^/api/agents/(.*)", "dest": "/api/agents.py" },
-    { "src": "^/api/agents$", "dest": "/api/agents.py" }
-  ]
+  "action": "start" | "stop" | "status"
 }
 ```
 
-This configuration ensures that all `/api/agents/*` paths are routed to your Python FastAPI application.
+### Token Analysis
+```http
+POST /api/agents/mexc/analyze-token
+{
+  "symbol": "BTCUSDT"
+}
+```
 
-## 🎨 Customizing for Your Use Case
+### Trading Strategy
+```http
+POST /api/agents/mexc/trading-strategy
+{
+  "buy_amount_usdt": 100,
+  "max_concurrent_snipes": 3
+}
+```
 
-This starter uses a newsletter generator as an example, but the architecture supports any AI-powered application:
+## 🤖 AI Agents
 
-### Common Patterns
+### MEXC Pattern Discovery Agent
+- Monitors new token listings on MEXC calendar
+- Detects "ready state" patterns in symbol data
+- Correlates calendar and trading data
+- Provides advance notice of trading opportunities
 
-1. **Document Processing**
-   - Replace newsletter generation with document analysis
-   - Use multiple agents for extraction, summarization, etc.
+### MEXC Trading Strategy Agent
+- Generates trading strategies for ready tokens
+- Calculates optimal entry timing
+- Provides risk management parameters
+- Plans execution strategies
 
-2. **Data Pipeline**
-   - Implement ETL workflows with AI enhancement
-   - Chain multiple processing steps
+## ⚙️ Configuration
 
-3. **Content Generation**
-   - Build blog post generators, report writers, etc.
-   - Add review and approval workflows
+Key settings in `src/config.py`:
+- `DEFAULT_BUY_AMOUNT`: USDT amount per trade
+- `MAX_CONCURRENT_SNIPES`: Parallel trade limit
+- `READY_STATE_PATTERN`: Pattern that indicates token readiness
+- `STOP_LOSS_PERCENT`: Automatic stop-loss trigger
 
-4. **Multi-Modal Applications**
-   - Integrate image generation APIs
-   - Process audio/video with AI agents
+## 🚀 Deployment
 
-### Key Files to Modify
+### Deploy to Vercel
 
-- `api/agents.py` - Define your AI agents and their capabilities
-- `src/inngest/functions.ts` - Create your workflow logic
-- `src/app/api/` - Add your API endpoints
-- `src/app/` - Build your UI
+1. Push your code to GitHub
+2. Import project in Vercel Dashboard
+3. Add environment variables
+4. Deploy
 
-## 🚢 Deployment
-
-### One-Click Deploy with Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbrookr%2Fserverless-agents&env=OPENAI_API_KEY,NEWSLETTER_READ_WRITE_TOKEN&envDescription=Configure%20your%20AI%20agents%20and%20storage&envLink=https%3A%2F%2Fgithub.com%2Fbrookr%2Fserverless-agents%23environment-setup&project-name=serverless-agents&repository-name=serverless-agents)
-
-1. **Click the Deploy Button**
-   - This will fork the repository to your GitHub account
-   - You'll be prompted to enter the required environment variables:
-     - `OPENAI_API_KEY` - Your OpenAI API key
-     - `NEWSLETTER_READ_WRITE_TOKEN` - Generate this in Vercel Blob storage settings
-
-2. **Configure Inngest Integration** ⚠️ **Critical Step**
-
-   After deployment completes:
-   - Go to your new project in the Vercel dashboard
-   - Navigate to **Settings** → **Integrations**
-   - Search for and install the **Inngest** integration
-   - Follow the setup wizard to connect your Inngest account
-   - This automatically adds `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY`
-
-   **Note**: Without this step, the API routes will return 404 errors!
-
-3. **Redeploy Your Project**
-   - After installing Inngest, go to the **Deployments** tab
-   - Click the three dots menu on the latest deployment
-   - Select **Redeploy**
-   - Wait for the deployment to complete
-
-4. **Verify Everything Works**
-   - Visit your deployed site
-   - Try generating a newsletter
-   - Check that all API endpoints respond:
-     - `/api/newsletter/[slug]` - Newsletter generation
-     - `/api/agents/ping` - Python API health check
-     - `/api/agents/research` - AI research agent
-     - `/api/agents/format` - AI formatting agent
-     - `/api/inngest` - Inngest webhook
+**Important**: After deployment, install the Inngest integration from Vercel's integration marketplace.
 
 ### Manual Deployment
 
-If you prefer to deploy manually:
-
 ```bash
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/serverless-agents
-cd serverless-agents
-
-# Login to Vercel
-vercel login
-
-# Deploy (you'll be prompted for env vars)
 vercel --prod
 ```
 
-Then follow steps 2-4 above to configure Inngest.
+## 📚 Documentation
 
-### Environment Variables Reference
+- [Agent Architecture](docs/agent-architecture.md) - AI agent system design
+- [Sniper System](docs/sniper-system.md) - Trading bot implementation
+- [API Reference](https://localhost:8001/docs) - Interactive API documentation
 
-| Variable | Description | When Added |
-|----------|-------------|------------|
-| `OPENAI_API_KEY` | OpenAI API key for AI agents | During deployment |
-| `NEWSLETTER_READ_WRITE_TOKEN` | Vercel Blob storage token | During deployment |
-| `INNGEST_EVENT_KEY` | Event security key | Auto-added by Inngest |
-| `INNGEST_SIGNING_KEY` | Webhook signing key | Auto-added by Inngest |
+## 🧪 Testing
 
-### Troubleshooting
+Run the test suite:
 
-- **404 on API routes**: Make sure you've installed the Inngest integration and redeployed
-- **500 on Python agents**: Check that `OPENAI_API_KEY` is set correctly
-- **Newsletter not generating**: Verify all environment variables are present in Vercel dashboard
+```bash
+# Python tests
+pytest
 
-## 🔍 Understanding the Architecture
+# Run with coverage
+pytest --cov=src
 
-### Request Flow
-
-1. **User Interaction** → Next.js frontend
-2. **API Route** → Triggers Inngest workflow
-3. **Inngest Function** → Orchestrates the process
-4. **Agent Calls** → Vercel Functions execute AI tasks
-5. **Storage** → Results saved to Vercel Blob
-6. **Response** → User sees the result
-
-### Why Inngest?
-
-- **Reliability**: Automatic retries and error handling
-- **Observability**: Built-in monitoring and debugging
-- **Scalability**: Handles thousands of concurrent workflows
-- **Developer Experience**: Great local development tools
-
-### Why Vercel Functions for Agents?
-
-- **Zero Config**: Python agents deploy automatically
-- **Auto-scaling**: Handle any load without infrastructure management
-- **Cost Effective**: Pay per execution, not for idle time
-- **Global Edge**: Deploy close to your users
+# TypeScript linting
+npm run lint
+```
 
 ## 🤝 Contributing
 
-We welcome contributions! See our [Contributing Guidelines](CONTRIBUTING.md) for details.
+1. Fork the repository
+2. Create a feature branch
+3. Write tests for new functionality
+4. Ensure all tests pass
+5. Submit a pull request
 
-📦 **Repository**: [https://github.com/brookr/serverless-agents](https://github.com/brookr/serverless-agents)
+## ⚠️ Disclaimer
+
+This bot is for educational purposes. Cryptocurrency trading carries significant risk. Never invest more than you can afford to lose. The authors are not responsible for any financial losses.
 
 ## 📄 License
 
-This project is licensed under CC0 1.0 Universal - see the [LICENSE.md](LICENSE.md) file.
-
-## 📚 Learn More
-
-### Architecture Components
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Inngest Documentation](https://www.inngest.com/docs)
-- [Vercel Functions](https://vercel.com/docs/functions)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-
-### Related Patterns
-
-- [Serverless AI Patterns](https://vercel.com/guides/serverless-ai-patterns)
-- [Long-Running Jobs with Inngest](https://www.inngest.com/docs/guides/long-running-jobs)
-- [Python on Vercel](https://vercel.com/docs/functions/runtimes/python)
-
-## 🎯 Next Steps
-
-1. **Explore the Code**: Start with `api/agents.py` and `src/inngest/functions.ts`
-2. **Run Locally**: Get the development environment running
-3. **Modify for Your Use Case**: Replace the newsletter example with your own AI workflow
-4. **Deploy**: Push to production on Vercel
-5. **Share**: Let us know what you build!
-
----
-
-Built as a reference architecture for modern AI applications. Use this as a starting point for your own serverless agent projects.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.

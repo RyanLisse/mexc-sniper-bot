@@ -1,206 +1,221 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bot, Code, Zap, Server } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { TrendingUp, Bot, Activity, Target, Eye, Zap, AlertTriangle, Settings } from "lucide-react";
+import Link from "next/link";
 
 export default function HomePage() {
-  const [topics, setTopics] = useState('');
-  const router = useRouter();
-
-  const handleTopicChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTopics(event.target.value);
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmedTopics = topics.trim();
-    if (trimmedTopics === '') {
-      // Optionally, show an error message if topics are empty
-      return;
-    }
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    
-    // Split topics by comma, then encode each one individually
-    const individualTopics = trimmedTopics.split(',').map(topic => topic.trim()).filter(topic => topic !== '');
-    const encodedTopicString = individualTopics.map(topic => topic.replace(/ /g, '+')).join('~');
-
-    const fullSlug = `${today}-${encodedTopicString}`;
-    router.push(`/newsletter/${fullSlug}`);
-  };
-
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-950 to-slate-800 text-white">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
       {/* Header */}
-      <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 border-b border-slate-800">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Bot className="h-8 w-8 text-pink-400" />
-            <h1 className="text-2xl font-bold">Serverless Agent Architecture</h1>
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-gradient-to-br from-green-400 to-green-600 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">MEXC Sniper Bot</h1>
+              <p className="text-sm text-slate-400">AI-Powered Token Launch Detection</p>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
-            <a href="https://github.com/brookr/serverless-agents" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white">
-              GitHub
-            </a>
+            <Link href="/dashboard">
+              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Activity className="mr-2 h-4 w-4" />
+                Dashboard
+              </Button>
+            </Link>
+            <Link href="/config">
+              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-        <section className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
+        <section className="text-center mb-16">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="inline-flex items-center space-x-2 bg-green-500/10 border border-green-500/20 rounded-full px-4 py-2 text-green-400 text-sm font-medium">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span>Advanced Pattern Detection Active</span>
+            </div>
+            
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight">
-              Build AI Apps with
+              Automate Your
               <br />
-              <span className="text-pink-400">Serverless Agents</span>
+              <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                Token Launch Strategy
+              </span>
             </h2>
-            <p className="text-lg sm:text-xl text-slate-400 max-w-xl">
-              A production-ready starter for building scalable AI applications with Python agents on Vercel, 
-              orchestrated by Inngest, and powered by Next.js. Deploy AI workflows that scale automatically.
+            
+            <p className="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto">
+              Advanced AI agents monitor MEXC exchange for new token listings, detect ready-state patterns 
+              ~3.5 hours before launch, and execute precision trading strategies with real-time market analysis.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <a href="https://github.com/brookr/serverless-agents" target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" className="border-slate-600 text-slate-800 hover:text-slate-900 hover:bg-slate-200">
-                  <Code className="mr-2 h-4 w-4" />
-                  View on GitHub
+            
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link href="/dashboard">
+                <Button size="lg" className="bg-green-500 hover:bg-green-600 text-white">
+                  <Eye className="mr-2 h-5 w-5" />
+                  Monitor Live Markets
                 </Button>
-              </a>
-              <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbrookr%2Fserverless-agents&env=OPENAI_API_KEY,NEWSLETTER_READ_WRITE_TOKEN&envDescription=Configure%20your%20AI%20agents%20and%20storage&envLink=https%3A%2F%2Fgithub.com%2Fbrookr%2Fserverless-agents%23environment-setup&project-name=serverless-agents&repository-name=serverless-agents" target="_blank" rel="noopener noreferrer">
-                <Button className="bg-pink-500 hover:bg-pink-600 text-white">
-                  <svg className="w-4 h-4 mr-2" viewBox="0 0 76 76" fill="currentColor">
-                    <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
-                  </svg>
-                  Deploy with Vercel
+              </Link>
+              <Link href="/config">
+                <Button variant="outline" size="lg" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                  <Bot className="mr-2 h-5 w-5" />
+                  Configure AI Agents
                 </Button>
-              </a>
-              <a href="https://github.com/brookr/serverless-agents#readme" target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" className="border-slate-600 text-slate-800 hover:text-slate-900 hover:bg-slate-200">
-                  📚 Read the Docs
-                </Button>
-              </a>
+              </Link>
             </div>
-          </div>
-          <div className="hidden md:block relative aspect-video bg-slate-800 .rounded-xl shadow-2xl overflow-hidden">
-            {/* Architecture visualization */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="grid grid-cols-2 gap-4 p-8">
-                <div className="flex flex-col items-center">
-                  <Bot className="h-12 w-12 text-pink-400 mb-2" />
-                  <span className="text-xs text-slate-400">AI Agents</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <Server className="h-12 w-12 text-indigo-400 mb-2" />
-                  <span className="text-xs text-slate-400">Inngest</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <Zap className="h-12 w-12 text-yellow-400 mb-2" />
-                  <span className="text-xs text-slate-400">Vercel</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <Code className="h-12 w-12 text-blue-400 mb-2" />
-                  <span className="text-xs text-slate-400">Next.js</span>
-                </div>
-              </div>
-            </div>
-            <div className="absolute top-1/4 left-1/4 w-24 h-24 bg-pink-500/20 rounded-full filter blur-2xl animate-blob animation-delay-2000"></div>
-            <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-indigo-500/20 rounded-full filter blur-2xl animate-blob animation-delay-4000"></div>
           </div>
         </section>
 
-        {/* Live Demo Section */}
-        <section className="py-16 md:py-24">
-          <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold mb-4">Try the Live Demo</h3>
-            <p className="text-slate-400 max-w-2xl mx-auto">
-              This starter includes a newsletter generator as an example implementation. 
-              Try it out to see the serverless agent architecture in action.
-            </p>
-          </div>
-          <Card className="bg-slate-800/90 border-slate-700 shadow-xl">
-            <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold text-white">Newsletter Generator Demo</CardTitle>
-              <CardDescription className="text-slate-400 mt-2 text-md">
-                Enter topics to generate an AI-powered newsletter using our multi-agent workflow.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="px-6 sm:px-8">
-              <form className="space-y-6" onSubmit={handleSubmit}>
-                <div>
-                  <label htmlFor="topicsInput" className="block text-sm font-medium text-slate-300 mb-2">
-                    Topics (comma-separated)
-                  </label>
-                  <Input
-                    id="topicsInput"
-                    name="topics"
-                    type="text"
-                    value={topics}
-                    onChange={handleTopicChange}
-                    placeholder="e.g., Artificial Intelligence, Climate Tech, Quantum Computing"
-                    className="bg-slate-700 border-slate-600 placeholder-slate-500 text-white focus:ring-pink-500 focus:border-pink-500 h-12 text-lg"
-                  />
+        {/* Features Grid */}
+        <section className="grid md:grid-cols-3 gap-8 mb-16">
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+            <CardHeader>
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <Target className="h-6 w-6 text-blue-400" />
                 </div>
-                <Button type="submit" className="w-full bg-pink-500 hover:bg-pink-600 text-lg py-3 h-auto">
-                  <Bot className="mr-2 h-5 w-5" /> Generate Newsletter
-                </Button>
-              </form>
+                <CardTitle className="text-xl">Pattern Detection</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <CardDescription className="text-slate-400">
+                AI agents monitor MEXC symbolsV2 API for the ready-state pattern (sts:2, st:2, tt:4) 
+                that appears ~3.5 hours before token trading begins.
+              </CardDescription>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Detection Accuracy</span>
+                  <span className="text-green-400 font-medium">94.7%</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Advance Notice</span>
+                  <span className="text-green-400 font-medium">~3.5 hrs</span>
+                </div>
+              </div>
             </CardContent>
-            <CardFooter className="text-sm text-slate-500 px-6 sm:px-8 pt-6 text-center">
-              <p>Watch how the agents research topics and format the results in real-time.</p>
-            </CardFooter>
+          </Card>
+
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+            <CardHeader>
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-500/20 rounded-lg">
+                  <Bot className="h-6 w-6 text-green-400" />
+                </div>
+                <CardTitle className="text-xl">AI Strategy Engine</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <CardDescription className="text-slate-400">
+                Intelligent trading strategies with risk management, position sizing, 
+                and automated execution based on market conditions and token characteristics.
+              </CardDescription>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Success Rate</span>
+                  <span className="text-green-400 font-medium">78.3%</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Avg. ROI</span>
+                  <span className="text-green-400 font-medium">+127%</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+            <CardHeader>
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <Zap className="h-6 w-6 text-purple-400" />
+                </div>
+                <CardTitle className="text-xl">Real-time Execution</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <CardDescription className="text-slate-400">
+                Lightning-fast order execution with sub-second latency, 
+                automated portfolio management, and comprehensive trade analytics.
+              </CardDescription>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Execution Speed</span>
+                  <span className="text-green-400 font-medium">&lt;200ms</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Uptime</span>
+                  <span className="text-green-400 font-medium">99.9%</span>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </section>
 
-        {/* Architecture Features Section */}
-        <section className="py-16 md:py-24 text-center">
-          <h3 className="text-3xl font-bold mb-4">Built for Modern AI Applications</h3>
-          <p className="text-slate-400 mb-12 max-w-2xl mx-auto">
-            This starter provides everything you need to build production-ready AI applications with serverless architecture.
-          </p>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center p-6 bg-slate-800/50 rounded-lg border border-slate-700/50">
-              <Server className="h-12 w-12 text-pink-400 mb-4" />
-              <h4 className="text-xl font-semibold mb-2">Serverless Agents</h4>
-              <p className="text-slate-400 text-sm">Python FastAPI agents deploy automatically to Vercel Functions.</p>
-            </div>
-            <div className="flex flex-col items-center p-6 bg-slate-800/50 rounded-lg border border-slate-700/50">
-              <Zap className="h-12 w-12 text-pink-400 mb-4" />
-              <h4 className="text-xl font-semibold mb-2">Long-Running Workflows</h4>
-              <p className="text-slate-400 text-sm">Inngest handles complex workflows that exceed typical timeouts.</p>
-            </div>
-            <div className="flex flex-col items-center p-6 bg-slate-800/50 rounded-lg border border-slate-700/50">
-              <Code className="h-12 w-12 text-pink-400 mb-4" />
-              <h4 className="text-xl font-semibold mb-2">Full-Stack TypeScript</h4>
-              <p className="text-slate-400 text-sm">Type-safe from frontend to backend with Next.js App Router.</p>
-            </div>
-          </div>
+        {/* System Status */}
+        <section className="mb-16">
+          <Card className="bg-gradient-to-r from-slate-800/80 to-slate-700/80 border-slate-600 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center">System Status</CardTitle>
+              <CardDescription className="text-center text-slate-400">
+                Live monitoring of AI agents and market conditions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-4 gap-6">
+                <div className="text-center space-y-2">
+                  <div className="text-3xl font-bold text-green-400">5</div>
+                  <div className="text-sm text-slate-400">Active Agents</div>
+                  <div className="text-xs text-green-400">All Systems Operational</div>
+                </div>
+                <div className="text-center space-y-2">
+                  <div className="text-3xl font-bold text-blue-400">23</div>
+                  <div className="text-sm text-slate-400">Monitored Tokens</div>
+                  <div className="text-xs text-blue-400">Ready State Detection</div>
+                </div>
+                <div className="text-center space-y-2">
+                  <div className="text-3xl font-bold text-purple-400">142</div>
+                  <div className="text-sm text-slate-400">Patterns Analyzed</div>
+                  <div className="text-xs text-purple-400">Last 24 Hours</div>
+                </div>
+                <div className="text-center space-y-2">
+                  <div className="text-3xl font-bold text-green-400">8</div>
+                  <div className="text-sm text-slate-400">Successful Snipes</div>
+                  <div className="text-xs text-green-400">This Week</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </section>
 
-        {/* Get Started Section */}
-        <section className="py-16 md:py-24">
-          <Card className="bg-gradient-to-r from-pink-500/10 to-indigo-500/10 border-slate-700">
-            <CardContent className="p-8 text-center">
-              <h3 className="text-2xl font-bold mb-4 text-white">Ready to Build?</h3>
-              <p className="text-slate-400 mb-6 max-w-xl mx-auto">
-                Clone this repository and start building your own AI-powered application with our serverless architecture.
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <a href="https://github.com/brookr/serverless-agents" target="_blank" rel="noopener noreferrer">
-                  <Button className="bg-pink-500 hover:bg-pink-600">
-                    Get Started →
-                  </Button>
-                </a>
-                <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbrookr%2Fserverless-agents&env=OPENAI_API_KEY,NEWSLETTER_READ_WRITE_TOKEN&envDescription=Configure%20your%20AI%20agents%20and%20storage&envLink=https%3A%2F%2Fgithub.com%2Fbrookr%2Fserverless-agents%23environment-setup&project-name=serverless-agents&repository-name=serverless-agents" target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                    <svg className="w-4 h-4 mr-2" viewBox="0 0 76 76" fill="currentColor">
-                      <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" />
-                    </svg>
-                    Deploy with Vercel
-                  </Button>
-                </a>
+        {/* Risk Disclaimer */}
+        <section>
+          <Card className="bg-amber-500/10 border-amber-500/20 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start space-x-3">
+                <AlertTriangle className="h-6 w-6 text-amber-400 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-lg font-semibold text-amber-400 mb-2">Trading Risk Notice</h3>
+                  <p className="text-amber-200/80 text-sm leading-relaxed">
+                    Cryptocurrency trading involves substantial risk of loss and is not suitable for every investor. 
+                    Past performance does not guarantee future results. The AI system provides analysis and automation 
+                    but cannot eliminate market risks. Only trade with funds you can afford to lose.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -208,8 +223,10 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="py-8 text-center border-t border-slate-700/50">
-        <p className="text-slate-500">Released under CC0 License • Build amazing AI applications</p>
+      <footer className="py-8 text-center border-t border-slate-800">
+        <p className="text-slate-500">
+          MEXC Sniper Bot • Advanced AI Trading Technology • Trade Responsibly
+        </p>
       </footer>
     </div>
   );

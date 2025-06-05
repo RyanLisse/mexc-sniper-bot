@@ -72,3 +72,15 @@ htmlcov/ # For coverage reports
 *.sqlite3
 *.db3
 .env*.local
+
+# Data dumps and temporary files
+*_scrape.json
+*.dump
+*.bak
+*.tmp
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo

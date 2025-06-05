@@ -1,10 +1,9 @@
 {
-  "builds": [
-    { "src": "package.json", "use": "@vercel/next" },
-    { "src": "api/agents.py", "use": "@vercel/python" }
-  ],
-  "routes": [
-    { "src": "^/api/agents/(.*)", "dest": "/api/agents.py" },
-    { "src": "^/api/agents$", "dest": "/api/agents.py" }
+  "buildCommand": "bun run build",
+  "installCommand": "bun install",
+  "rewrites": [
+    { "source": "/api/inngest", "destination": "api/inngest.py" },
+    { "source": "/api/agents/(.*)", "destination": "api/agents.py" },
+    { "source": "/api/agents", "destination": "api/agents.py" }
   ]
-} 
+}

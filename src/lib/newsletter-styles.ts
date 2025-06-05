@@ -125,4 +125,4 @@ export const newsletterStyles = `
     border-color: rgb(51 65 85 / 0.5);
     column-span: all;
   }
-`; 
+`;
