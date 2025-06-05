@@ -1,7 +1,7 @@
 """
 Configuration management for MEXC Sniper Bot Pattern Discovery System
 """
-from typing import Optional, Tuple
+from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -47,7 +47,7 @@ class AppConfig(BaseSettings):
     MEXC_ORDER_ENDPOINT: str = "/api/v3/order"
 
     # Pattern Discovery Settings
-    READY_STATE_PATTERN: Tuple[int, int, int] = (2, 2, 4)  # sts:2, st:2, tt:4
+    READY_STATE_PATTERN: tuple[int, int, int] = (2, 2, 4)  # sts:2, st:2, tt:4
     TARGET_ADVANCE_HOURS: float = 3.5  # Target advance notice in hours
 
     # Monitoring Intervals

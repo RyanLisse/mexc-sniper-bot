@@ -3,7 +3,7 @@ Inngest functions for MEXC Sniper Bot pattern discovery system
 """
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any
 
 from inngest import Context, Event, Step, TriggerCron, TriggerEvent
 
@@ -48,7 +48,7 @@ class MexcTargetReady:
         TriggerEvent(event=MexcCalendarPollRequested.name),
     ],
 )
-async def poll_mexc_calendar(ctx: Context, step: Step) -> Dict[str, Any]:
+async def poll_mexc_calendar(ctx: Context, step: Step) -> dict[str, Any]:
     """
     Poll MEXC calendar for new token listings
     
@@ -120,7 +120,7 @@ async def poll_mexc_calendar(ctx: Context, step: Step) -> Dict[str, Any]:
         TriggerEvent(event=MexcSymbolRecheckNeeded.name),
     ],
 )
-async def watch_mexc_symbol(ctx: Context, step: Step) -> Dict[str, Any]:
+async def watch_mexc_symbol(ctx: Context, step: Step) -> dict[str, Any]:
     """
     Watch specific MEXC symbol for ready state pattern
     

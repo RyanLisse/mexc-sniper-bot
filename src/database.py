@@ -311,7 +311,7 @@ async def get_api_credentials(
     statement = select(ApiCredentials).where(
         ApiCredentials.user_id == user_id,
         ApiCredentials.provider == provider,
-        ApiCredentials.is_active == True
+        ApiCredentials.is_active is True
     )
     result = await session.execute(statement)
     return result.scalar_one_or_none()

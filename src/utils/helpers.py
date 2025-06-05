@@ -5,7 +5,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ def format_timestamp(timestamp_ms: int) -> str:
         return "Invalid timestamp"
 
 
-def calculate_time_until(target_datetime: datetime) -> Dict[str, Any]:
+def calculate_time_until(target_datetime: datetime) -> dict[str, Any]:
     """Calculate time until target datetime"""
     now = datetime.now(timezone.utc)
     delta = target_datetime - now
@@ -139,7 +139,7 @@ def format_discovery_summary(
     new_listings: int,
     ready_targets: int,
     scheduled_targets: int,
-    errors: List[str]
+    errors: list[str]
 ) -> str:
     """Format discovery cycle summary"""
     summary_parts = []
@@ -188,7 +188,7 @@ async def retry_async_operation(
     raise last_exception
 
 
-def validate_order_params(params: Dict[str, Any]) -> bool:
+def validate_order_params(params: dict[str, Any]) -> bool:
     """Validate order parameters"""
     required_fields = ["symbol", "side", "type"]
 
@@ -205,9 +205,8 @@ def validate_order_params(params: Dict[str, Any]) -> bool:
         return False
 
     # For market orders, need either quantity or quoteOrderQty
-    if params.get("type") == "MARKET":
-        if not (params.get("quantity") or params.get("quoteOrderQty")):
-            return False
+    if params.get("type") == "MARKET" and not (params.get("quantity") or params.get("quoteOrderQty")):
+        return False
 
     return True
 
@@ -223,7 +222,7 @@ def sanitize_symbol_name(symbol: str) -> str:
     return sanitized.upper()
 
 
-def get_environment_info() -> Dict[str, Any]:
+def get_environment_info() -> dict[str, Any]:
     """Get environment information for debugging"""
     import platform
     import sys

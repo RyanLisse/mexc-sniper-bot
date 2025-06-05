@@ -112,23 +112,21 @@ def encrypt_api_credentials(api_key: str, secret_key: str, passphrase: Optional[
     """Encrypt API credentials for storage"""
     service = get_encryption_service()
     
-    result = {
+    return {
         "api_key_encrypted": service.encrypt(api_key) if api_key else None,
         "secret_key_encrypted": service.encrypt(secret_key) if secret_key else None,
         "passphrase_encrypted": service.encrypt(passphrase) if passphrase else None,
     }
     
-    return result
 
 
 def decrypt_api_credentials(encrypted_data: dict) -> dict:
     """Decrypt API credentials for use"""
     service = get_encryption_service()
     
-    result = {
+    return {
         "api_key": service.decrypt(encrypted_data.get("api_key_encrypted", "")) if encrypted_data.get("api_key_encrypted") else None,
         "secret_key": service.decrypt(encrypted_data.get("secret_key_encrypted", "")) if encrypted_data.get("secret_key_encrypted") else None,
         "passphrase": service.decrypt(encrypted_data.get("passphrase_encrypted", "")) if encrypted_data.get("passphrase_encrypted") else None,
     }
     
-    return result

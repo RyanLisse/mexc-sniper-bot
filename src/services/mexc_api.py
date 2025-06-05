@@ -6,13 +6,14 @@ import hashlib
 import hmac
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from urllib.parse import urlencode
 
 import aiohttp
 
-from ..config import settings
-from ..models import CalendarEntryApi, SymbolV2EntryApi
+from src.config import settings
+from src.models import CalendarEntryApi, SymbolV2EntryApi
+
 from .cache_service import CacheService
 
 logger = logging.getLogger(__name__)
@@ -71,7 +72,7 @@ class MexcApiClient:
         if self.session and not self.session.closed:
             await self.session.close()
 
-    def _generate_signature(self, params: Dict[str, Any]) -> str:
+    def _generate_signature(self, params: dict[str, Any]) -> str:
         """Generate MEXC API signature"""
         if not self.secret_key:
             raise MexcApiError("MEXC secret key not configured")
@@ -83,7 +84,7 @@ class MexcApiClient:
             hashlib.sha256
         ).hexdigest()
 
-    def _get_headers(self, include_api_key: bool = False) -> Dict[str, str]:
+    def _get_headers(self, include_api_key: bool = False) -> dict[str, str]:
         """Get request headers"""
         headers = {
             "Content-Type": "application/json",
@@ -133,11 +134,11 @@ class MexcApiClient:
         self,
         method: str,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
+        data: Optional[dict[str, Any]] = None,
         authenticated: bool = False,
         retries: int = 3
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Make HTTP request with error handling and retries"""
         if self.session is None:
             await self.start_session()
@@ -197,7 +198,7 @@ class MexcApiClient:
 
         raise MexcApiError("Max retries exceeded")
 
-    async def get_calendar_listings(self) -> List[CalendarEntryApi]:
+    async def get_calendar_listings(self) -> list[CalendarEntryApi]:
         """Fetch upcoming token listings from MEXC calendar with caching"""
         cache_key = "calendar"
 
@@ -252,7 +253,7 @@ class MexcApiClient:
         except Exception as e:
             raise MexcApiError(f"Error fetching calendar listings: {e!s}")
 
-    async def get_symbols_v2(self, vcoin_id: Optional[str] = None) -> List[SymbolV2EntryApi]:
+    async def get_symbols_v2(self, vcoin_id: Optional[str] = None) -> list[SymbolV2EntryApi]:
         """Fetch symbol data from MEXC symbolsV2 API with caching"""
         # Create cache key - include vcoin_id filter if specified
         cache_key = f"symbolsV2:{vcoin_id}" if vcoin_id else "symbolsV2"
@@ -320,7 +321,7 @@ class MexcApiClient:
         self,
         symbol: str,
         quote_order_qty: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Place a market buy order"""
         if not settings.mexc_api_configured:
             raise MexcApiError("MEXC API credentials not configured")
@@ -349,18 +350,17 @@ class MexcApiClient:
         except Exception as e:
             raise MexcApiError(f"Error placing order: {e!s}")
 
-    async def get_account_info(self) -> Dict[str, Any]:
+    async def get_account_info(self) -> dict[str, Any]:
         """Get account information"""
         if not settings.mexc_api_configured:
             raise MexcApiError("MEXC API credentials not configured")
 
         try:
-            response_data = await self._make_request(
+            return await self._make_request(
                 method="GET",
                 endpoint="/api/v3/account",
                 authenticated=True
             )
-            return response_data
 
         except MexcApiError:
             raise

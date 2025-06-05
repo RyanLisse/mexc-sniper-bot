@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pydantic import BaseModel
 from sqlmodel import Field as SQLField, Relationship, SQLModel
@@ -57,7 +57,7 @@ class SymbolV2EntryApi(BaseApiModel):
         ])
 
     @property
-    def launch_datetime_from_ot(self) -> Optional[datetime]:
+    def launch_datetime_from_ot(self) -> datetime | None:
         """Get launch datetime from ot field"""
         if self.ot:
             return datetime.fromtimestamp(self.ot / 1000, tz=timezone.utc)
@@ -74,7 +74,7 @@ class SnipeTargetApi(BaseApiModel):
     launch_time: datetime
     discovered_at: datetime
     hours_advance_notice: float
-    order_params: Dict[str, Any]
+    order_params: dict[str, Any]
 
     @property
     def time_until_launch(self) -> timedelta:
@@ -103,7 +103,7 @@ class MonitoredListing(SQLModel, table=True):
     updated_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
 
     # Relationship
-    snipe_target: Optional[SnipeTarget] = Relationship(back_populates="listing")
+    snipe_target: Optional["SnipeTarget"] = Relationship(back_populates="listing")
 
 
 class SnipeTarget(SQLModel, table=True):
@@ -132,7 +132,7 @@ class SnipeTarget(SQLModel, table=True):
     execution_status: str = SQLField(default="pending", index=True)
     # Possible statuses: pending, scheduled, executing, success, failed, cancelled
     execution_response_json: Optional[str] = SQLField(default=None)  # JSON string
-    executed_at_utc: Optional[datetime] = None
+    executed_at_utc: Optional[datetime] = SQLField(default=None)
 
     # Timestamps
     created_at: datetime = SQLField(default_factory=lambda: datetime.now(timezone.utc))
@@ -142,7 +142,7 @@ class SnipeTarget(SQLModel, table=True):
     listing: MonitoredListing = Relationship(back_populates="snipe_target")
 
     @property
-    def execution_order_params(self) -> Dict[str, Any]:
+    def execution_order_params(self) -> dict[str, Any]:
         """Get execution order parameters as dict"""
         try:
             return json.loads(self.execution_order_params_json)
@@ -150,12 +150,12 @@ class SnipeTarget(SQLModel, table=True):
             return {}
 
     @execution_order_params.setter
-    def execution_order_params(self, value: Dict[str, Any]):
+    def execution_order_params(self, value: dict[str, Any]):
         """Set execution order parameters from dict"""
         self.execution_order_params_json = json.dumps(value)
 
     @property
-    def execution_response(self) -> Optional[Dict[str, Any]]:
+    def execution_response(self) -> Optional[dict[str, Any]]:
         """Get execution response as dict"""
         if not self.execution_response_json:
             return None
@@ -165,7 +165,7 @@ class SnipeTarget(SQLModel, table=True):
             return None
 
     @execution_response.setter
-    def execution_response(self, value: Optional[Dict[str, Any]]):
+    def execution_response(self, value: Optional[dict[str, Any]]):
         """Set execution response from dict"""
         if value is None:
             self.execution_response_json = None

@@ -6,10 +6,10 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
-from ..config import settings
-from ..database import (
+from src.config import settings
+from src.database import (
     create_monitored_listing,
     create_snipe_target,
     get_async_session,
@@ -17,7 +17,8 @@ from ..database import (
     get_snipe_target,
     update_snipe_target_status,
 )
-from ..models import MonitoredListing, SnipeTarget, SymbolV2EntryApi
+from src.models import MonitoredListing, SnipeTarget, SymbolV2EntryApi
+
 from .mexc_api import get_mexc_client
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ class PatternDiscoveryResult:
     new_listings_found: int
     ready_targets_found: int
     targets_scheduled: int
-    errors: List[str]
+    errors: list[str]
     analysis_timestamp: datetime
 
 
@@ -39,7 +40,7 @@ class PatternDiscoveryEngine:
     def __init__(self):
         self.running = False
         self.last_calendar_check = None
-        self.monitored_vcoin_ids: Set[str] = set()
+        self.monitored_vcoin_ids: set[str] = set()
         self.discovery_stats = {
             "total_discoveries": 0,
             "successful_snipes": 0,
@@ -178,7 +179,7 @@ class PatternDiscoveryEngine:
 
             async with get_async_session() as session:
                 # Get all monitoring listings
-                from ..database import get_monitoring_listings
+                from src.database import get_monitoring_listings
                 monitoring_listings = await get_monitoring_listings(session)
 
                 for listing in monitoring_listings:
@@ -280,7 +281,7 @@ class PatternDiscoveryEngine:
             scheduled_count = 0
 
             async with get_async_session() as session:
-                from ..database import get_pending_snipe_targets
+                from src.database import get_pending_snipe_targets
                 pending_targets = await get_pending_snipe_targets(session)
 
                 for target in pending_targets:
@@ -312,7 +313,7 @@ class PatternDiscoveryEngine:
             logger.error(f"Error scheduling targets: {e}")
             raise
 
-    async def get_discovery_status(self) -> Dict[str, Any]:
+    async def get_discovery_status(self) -> dict[str, Any]:
         """Get current discovery system status"""
         async with get_async_session() as session:
             from sqlmodel import func, select

@@ -5,12 +5,12 @@ Provides async caching with graceful degradation when Redis is unavailable
 import json
 import logging
 from datetime import timedelta
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 import redis.asyncio as redis
 from redis.exceptions import ConnectionError as RedisConnectionError, RedisError
 
-from ..config import settings
+from src.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -260,7 +260,7 @@ class CacheService:
             logger.warning(f"Cache clear pattern error for {pattern}: {e}")
             return 0
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """
         Get cache statistics
         Returns empty dict if cache unavailable

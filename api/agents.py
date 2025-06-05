@@ -4,7 +4,7 @@ import os
 import sys
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -49,6 +49,8 @@ else:
         startup_database,
         update_user_preferences,
     )
+from typing import Optional
+
 from src.services.cache_service import close_cache_service, get_cache_service
 from src.services.encryption_service import decrypt_api_credentials, encrypt_api_credentials
 from src.services.mexc_api import close_mexc_client, get_mexc_client
@@ -76,7 +78,6 @@ MEXC_API_KEY = os.getenv("MEXC_API_KEY")
 MEXC_SECRET_KEY = os.getenv("MEXC_SECRET_KEY")
 
 if not OPENAI_API_KEY:
-    print("OPENAI_API_KEY not found in environment variables", file=sys.stderr)
     raise ValueError("OPENAI_API_KEY must be set")
 
 # MEXC API constants
@@ -203,7 +204,7 @@ async def mexc_calendar() -> str:
         return f"Error: {e!s}"
 
 @function_tool
-async def mexc_symbols_v2(vcoin_id: str = None) -> str:
+async def mexc_symbols_v2(vcoin_id: Optional[str] = None) -> str:
     """Fetch symbol data from MEXC symbolsV2 API to detect ready state patterns.
     
     Args:
@@ -253,7 +254,7 @@ async def mexc_pattern_analysis() -> str:
         return json.dumps({
             "status": "success",
             "analysis": analysis_results,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }, indent=2)
     except Exception as e:
         return f"Error in pattern analysis: {e!s}"
@@ -402,7 +403,7 @@ async def generate_research(request: TopicsRequest):
 
     # Get current date and yesterday for fresh news focus
     from datetime import timedelta
-    today = datetime.now()
+    today = datetime.now(timezone.utc)
     yesterday = today - timedelta(days=1)
     today_str = today.strftime("%B %d, %Y")
     yesterday_str = yesterday.strftime("%B %d, %Y")
@@ -456,7 +457,7 @@ async def mexc_pattern_discovery(request: PatternDiscoveryRequest):
 
             # Update legacy state for backward compatibility
             pattern_discovery_state["running"] = True
-            pattern_discovery_state["last_update"] = datetime.now().isoformat()
+            pattern_discovery_state["last_update"] = datetime.now(timezone.utc).isoformat()
 
             return {
                 "status": "started",
@@ -490,7 +491,7 @@ async def mexc_pattern_discovery(request: PatternDiscoveryRequest):
 
             # Update legacy state
             pattern_discovery_state["running"] = enhanced_status["running"]
-            pattern_discovery_state["last_update"] = datetime.now().isoformat()
+            pattern_discovery_state["last_update"] = datetime.now(timezone.utc).isoformat()
 
             return {
                 "status": "running" if enhanced_status["running"] else "stopped",
@@ -583,7 +584,7 @@ async def mexc_status():
             "enhanced_status": enhanced_status,
             "state": pattern_discovery_state,
             "live_analysis": result.final_output,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "api_status": {
                 "mexc_api_configured": settings.mexc_api_configured,
                 "database_configured": settings.database_configured,
@@ -597,7 +598,7 @@ async def mexc_status():
         return {
             "system_status": "error",
             "error": str(e),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
 # New enhanced endpoints for database-backed functionality
@@ -624,7 +625,7 @@ async def get_monitored_listings():
                         updated_at=listing.updated_at
                     ) for listing in listings
                 ],
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
     except Exception as e:
         logger.error(f"Error getting monitored listings: {e}")
@@ -656,7 +657,7 @@ async def get_snipe_targets():
                         executed_at_utc=target.executed_at_utc
                     ) for target in targets
                 ],
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
     except Exception as e:
         logger.error(f"Error getting snipe targets: {e}")
@@ -678,7 +679,7 @@ async def run_discovery_cycle():
                 "errors": result.errors,
                 "analysis_timestamp": result.analysis_timestamp.isoformat()
             },
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
         logger.error(f"Error running discovery cycle: {e}")
@@ -703,7 +704,7 @@ async def get_cache_stats():
         return {
             "status": "success",
             "cache_stats": stats,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
         logger.error(f"Error getting cache stats: {e}")
@@ -720,7 +721,7 @@ async def clear_cache(pattern: str = "*"):
             "status": "success",
             "message": f"Cleared {cleared_count} cache entries matching pattern: {pattern}",
             "cleared_count": cleared_count,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
         logger.error(f"Error clearing cache: {e}")
@@ -738,7 +739,7 @@ async def trigger_calendar_poll():
             "name": "admin.calendar.poll.requested",
             "data": {
                 "triggered_by": "api",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         })
 
@@ -746,7 +747,7 @@ async def trigger_calendar_poll():
             "status": "success",
             "message": "Calendar poll triggered successfully",
             "event_sent": "admin.calendar.poll.requested",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
         logger.error(f"Error triggering calendar poll: {e}")
@@ -890,7 +891,7 @@ async def delete_api_credentials_endpoint(user_id: str, provider: str):
             return {
                 "status": "success",
                 "message": f"API credentials for {provider} deleted successfully",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
     except HTTPException:
         raise
