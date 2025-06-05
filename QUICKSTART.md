@@ -20,6 +20,10 @@ OPENAI_API_KEY=your-openai-api-key
 # Optional MEXC API credentials
 MEXC_API_KEY=your-mexc-api-key
 MEXC_SECRET_KEY=your-mexc-secret-key
+
+# For OpenAI Codex specific features (optional):
+# Run `python scripts/setup_openai.py` to configure your OpenAI key for Codex.
+# This will create a .openai_config.json (gitignored).
 ```
 
 ### 3. Start Development Servers
@@ -94,5 +98,7 @@ curl -X POST http://localhost:8001/api/agents/mexc/pattern-discovery \
 2. Read the [full documentation](README.md)
 3. Configure your trading parameters
 4. Deploy to production when ready
+
+- Be aware that a CI/CD workflow runs on GitHub Actions for pushes/PRs to `main` to ensure code quality.
 
 Happy trading! 🎯💰

@@ -84,3 +84,6 @@ htmlcov/ # For coverage reports
 .idea/
 *.swp
 *.swo
+
+# OpenAI config
+.openai_config.json
