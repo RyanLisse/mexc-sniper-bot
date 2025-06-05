@@ -87,3 +87,29 @@ htmlcov/ # For coverage reports
 
 # OpenAI config
 .openai_config.json
+
+# AI-generated files
+ai-review.json
+ai-docs.json
+ai-tests.json
+ai-*.json
+
+# Codex generated files
+.codex/context.json
+.codex/file_index.json
+.codex/prompts.json
+
+# Database files
+*.db
+mexc_sniper.db
+test_mexc_sniper.db
+
+# Cache files
+.ruff_cache/
+.pytest_cache/
+*.coverage
+coverage.xml
+
+# Security reports
+security-report.json
+safety-report.json

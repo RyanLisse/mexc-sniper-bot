@@ -312,6 +312,38 @@ f: format ## Alias for format
 .PHONY: b
 b: build ## Alias for build
 
+# ==================== AI/Codex Commands ====================
+
+.PHONY: codex-setup
+codex-setup: ## Setup OpenAI Codex integration
+	@echo -e "${BLUE}Setting up OpenAI Codex...${NC}"
+	@$(PYTHON) scripts/setup_openai.py
+
+.PHONY: codex-review
+codex-review: ## Run AI code review on files (usage: make codex-review FILES="file1.py file2.py")
+	@echo -e "${BLUE}Running AI code review...${NC}"
+	@if [ -z "$(FILES)" ]; then echo "Usage: make codex-review FILES=\"file1.py file2.py\""; exit 1; fi
+	@$(PYTHON) .codex/agents.py --workflow review --files $(FILES) --output ai-review.json
+	@echo -e "${GREEN}✓ Review complete. Check ai-review.json${NC}"
+
+.PHONY: codex-docs
+codex-docs: ## Generate AI documentation for files (usage: make codex-docs FILES="file1.py file2.py")
+	@echo -e "${BLUE}Generating AI documentation...${NC}"
+	@if [ -z "$(FILES)" ]; then echo "Usage: make codex-docs FILES=\"file1.py file2.py\""; exit 1; fi
+	@$(PYTHON) .codex/agents.py --workflow docs --files $(FILES) --output ai-docs.json
+	@echo -e "${GREEN}✓ Documentation generated. Check ai-docs.json${NC}"
+
+.PHONY: codex-test
+codex-test: ## Generate AI tests for files (usage: make codex-test FILES="file1.py file2.py")
+	@echo -e "${BLUE}Generating AI tests...${NC}"
+	@if [ -z "$(FILES)" ]; then echo "Usage: make codex-test FILES=\"file1.py file2.py\""; exit 1; fi
+	@$(PYTHON) .codex/agents.py --workflow test --files $(FILES) --output ai-tests.json
+	@echo -e "${GREEN}✓ Tests generated. Check ai-tests.json${NC}"
+
+.PHONY: codex-check
+codex-check: ## Check OpenAI API configuration
+	@$(PYTHON) scripts/setup_openai.py --check
+
 # ==================== Special Targets ====================
 
 .DEFAULT_GOAL := help

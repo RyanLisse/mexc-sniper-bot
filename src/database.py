@@ -38,6 +38,8 @@ def init_database():
             async_database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
         elif database_url.startswith("postgresql+psycopg2://"):
             async_database_url = database_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://")
+        elif database_url.startswith("sqlite://"):
+            async_database_url = database_url.replace("sqlite://", "sqlite+aiosqlite://")
         else:
             async_database_url = database_url
 
