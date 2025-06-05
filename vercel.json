@@ -1,9 +1,35 @@
 {
-  "buildCommand": "bun run build",
-  "installCommand": "bun install",
-  "rewrites": [
-    { "source": "/api/inngest", "destination": "api/inngest.py" },
-    { "source": "/api/agents/(.*)", "destination": "api/agents.py" },
-    { "source": "/api/agents", "destination": "api/agents.py" }
+  "builds": [
+    { "src": "package.json", "use": "@vercel/next" },
+    { "src": "api/agents.py", "use": "@vercel/python" },
+    { "src": "api/inngest.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "^/api/agents/(.*)", "dest": "/api/agents.py" },
+    { "src": "^/api/agents$", "dest": "/api/agents.py" },
+    { "src": "^/api/inngest$", "dest": "/api/inngest.py" }
+  ],
+  "functions": {
+    "api/agents.py": {
+      "maxDuration": 30
+    },
+    "api/inngest.py": {
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "ENVIRONMENT": "production",
+    "DEBUG": "false",
+    "LOG_LEVEL": "INFO"
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    }
   ]
 }
