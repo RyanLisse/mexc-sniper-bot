@@ -2,6 +2,7 @@
 Redis/Valkey caching service for MEXC Sniper Bot
 Provides async caching with graceful degradation when Redis is unavailable
 """
+
 import json
 import logging
 from datetime import timedelta
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 class CacheService:
     """
     Async Redis/Valkey cache service with graceful degradation
-    
+
     Features:
     - JSON serialization/deserialization
     - TTL-based expiration
@@ -38,10 +39,10 @@ class CacheService:
         # Default TTL values (in seconds)
         self.default_ttl = 5
         self.ttl_config = {
-            "symbols": 5,      # Symbol data changes frequently
-            "calendar": 30,    # Calendar data is more stable
-            "account": 60,     # Account info rarely changes
-            "server_time": 10  # Server time for sync
+            "symbols": 5,  # Symbol data changes frequently
+            "calendar": 30,  # Calendar data is more stable
+            "account": 60,  # Account info rarely changes
+            "server_time": 10,  # Server time for sync
         }
 
     async def start(self) -> bool:
@@ -54,15 +55,22 @@ class CacheService:
             return False
 
         try:
-            # Parse Redis URL and create client
+            # Parse Redis URL and create client with optimized connection pooling
             self.redis_client = redis.from_url(
                 self.redis_url,
                 encoding="utf-8",
                 decode_responses=True,
-                socket_connect_timeout=5,
-                socket_timeout=5,
+                socket_connect_timeout=3,  # Faster connection timeout for trading
+                socket_timeout=3,  # Faster socket timeout
                 retry_on_timeout=True,
-                health_check_interval=30
+                retry_on_error=[RedisConnectionError],
+                health_check_interval=15,  # More frequent health checks
+                max_connections=settings.CONNECTION_POOL_SIZE,
+                connection_pool_kwargs={
+                    "retry_on_timeout": True,
+                    "socket_keepalive": True,
+                    "socket_keepalive_options": {},
+                },
             )
 
             # Test connection
@@ -149,7 +157,7 @@ class CacheService:
         Get value from cache
         Returns None if key not found or cache unavailable
         """
-        if not await self._ensure_connection():
+        if not await self._ensure_connection() or not self.redis_client:
             return None
 
         try:
@@ -168,17 +176,13 @@ class CacheService:
             return None
 
     async def set(
-        self,
-        key: str,
-        value: Any,
-        ttl: Optional[Union[int, timedelta]] = None,
-        cache_type: str = "default"
+        self, key: str, value: Any, ttl: Optional[Union[int, timedelta]] = None, cache_type: str = "default"
     ) -> bool:
         """
         Set value in cache with TTL
         Returns True if successful, False otherwise
         """
-        if not await self._ensure_connection():
+        if not await self._ensure_connection() or not self.redis_client:
             return False
 
         try:
@@ -206,7 +210,7 @@ class CacheService:
         Delete key from cache
         Returns True if successful, False otherwise
         """
-        if not await self._ensure_connection():
+        if not await self._ensure_connection() or not self.redis_client:
             return False
 
         try:
@@ -225,7 +229,7 @@ class CacheService:
         Check if key exists in cache
         Returns False if cache unavailable
         """
-        if not await self._ensure_connection():
+        if not await self._ensure_connection() or not self.redis_client:
             return False
 
         try:
@@ -242,7 +246,7 @@ class CacheService:
         Clear all keys matching pattern
         Returns number of keys deleted, 0 if cache unavailable
         """
-        if not await self._ensure_connection():
+        if not await self._ensure_connection() or not self.redis_client:
             return 0
 
         try:
@@ -265,11 +269,11 @@ class CacheService:
         Get cache statistics
         Returns empty dict if cache unavailable
         """
-        if not await self._ensure_connection():
+        if not await self._ensure_connection() or not self.redis_client:
             return {
                 "available": False,
                 "connection_attempts": self.connection_attempts,
-                "redis_url_configured": bool(self.redis_url)
+                "redis_url_configured": bool(self.redis_url),
             }
 
         try:
@@ -283,7 +287,7 @@ class CacheService:
                 "keyspace_hits": info.get("keyspace_hits", 0),
                 "keyspace_misses": info.get("keyspace_misses", 0),
                 "redis_version": info.get("redis_version", "unknown"),
-                "uptime_in_seconds": info.get("uptime_in_seconds", 0)
+                "uptime_in_seconds": info.get("uptime_in_seconds", 0),
             }
 
         except (RedisError, Exception) as e:
@@ -303,13 +307,16 @@ async def get_cache_service() -> CacheService:
         _cache_service = CacheService()
         await _cache_service.start()
 
-    return _cache_service
+    # Type narrowing: after the if block, _cache_service is guaranteed to be CacheService
+    from typing import cast
+    return cast(CacheService, _cache_service)
 
 
 async def close_cache_service():
     """Close global cache service"""
     global _cache_service
+    from typing import cast
 
-    if _cache_service:
-        await _cache_service.close()
+    if _cache_service is not None:
+        await cast(CacheService, _cache_service).close()
         _cache_service = None

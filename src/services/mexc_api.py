@@ -1,6 +1,7 @@
 """
 Enhanced MEXC API client with authentication and comprehensive error handling
 """
+
 import asyncio
 import hashlib
 import hmac
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class MexcApiError(Exception):
     """Custom exception for MEXC API errors"""
+
     def __init__(self, message: str, status_code: Optional[int] = None, response_data: Optional[dict] = None):
         self.message = message
         self.status_code = status_code
@@ -42,15 +44,15 @@ class MexcApiClient:
         self.last_request_time = 0
         self.min_request_interval = 0.1  # 100ms between requests
 
-        # Request timeout
-        self.timeout = aiohttp.ClientTimeout(total=10.0)
+        # Request timeout with optimized settings
+        self.timeout = aiohttp.ClientTimeout(total=settings.REQUEST_TIMEOUT, connect=5.0, sock_read=5.0)
 
         # Cache configuration
         self.cache_enabled = cache_service is not None
         self.cache_ttl = {
             "symbols": settings.CACHE_TTL_SYMBOLS,
             "calendar": settings.CACHE_TTL_CALENDAR,
-            "account": settings.CACHE_TTL_ACCOUNT
+            "account": settings.CACHE_TTL_ACCOUNT,
         }
 
     async def __aenter__(self):
@@ -78,18 +80,11 @@ class MexcApiClient:
             raise MexcApiError("MEXC secret key not configured")
 
         query_string = urlencode(sorted(params.items()))
-        return hmac.new(
-            self.secret_key.encode('utf-8'),
-            query_string.encode('utf-8'),
-            hashlib.sha256
-        ).hexdigest()
+        return hmac.new(self.secret_key.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).hexdigest()
 
     def _get_headers(self, include_api_key: bool = False) -> dict[str, str]:
         """Get request headers"""
-        headers = {
-            "Content-Type": "application/json",
-            "User-Agent": "MEXC-Sniper-Bot/1.0"
-        }
+        headers = {"Content-Type": "application/json", "User-Agent": "MEXC-Sniper-Bot/1.0"}
 
         if include_api_key and self.api_key:
             headers["X-MEXC-APIKEY"] = self.api_key
@@ -137,7 +132,7 @@ class MexcApiClient:
         params: Optional[dict[str, Any]] = None,
         data: Optional[dict[str, Any]] = None,
         authenticated: bool = False,
-        retries: int = 3
+        retries: int = 3,
     ) -> dict[str, Any]:
         """Make HTTP request with error handling and retries"""
         if self.session is None:
@@ -158,33 +153,25 @@ class MexcApiClient:
                 await self._rate_limit()
 
                 async with self.session.request(
-                    method=method,
-                    url=url,
-                    params=params,
-                    json=data,
-                    headers=headers
+                    method=method, url=url, params=params, json=data, headers=headers
                 ) as response:
                     response_data = await response.json()
 
                     if response.status == 200:
                         return response_data
-                    else:
-                        error_msg = f"MEXC API error: {response.status}"
-                        if isinstance(response_data, dict):
-                            error_msg += f" - {response_data.get('msg', 'Unknown error')}"
 
-                        raise MexcApiError(
-                            message=error_msg,
-                            status_code=response.status,
-                            response_data=response_data
-                        )
+                    error_msg = f"MEXC API error: {response.status}"
+                    if isinstance(response_data, dict):
+                        error_msg += f" - {response_data.get('msg', 'Unknown error')}"
+
+                    raise MexcApiError(message=error_msg, status_code=response.status, response_data=response_data)
 
             except aiohttp.ClientError as e:
                 if attempt == retries:
                     raise MexcApiError(f"Network error after {retries + 1} attempts: {e!s}")
 
                 # Exponential backoff
-                wait_time = (2 ** attempt) * 0.5
+                wait_time = (2**attempt) * 0.5
                 logger.warning(f"Request failed (attempt {attempt + 1}), retrying in {wait_time}s: {e!s}")
                 await asyncio.sleep(wait_time)
 
@@ -192,7 +179,7 @@ class MexcApiClient:
                 if attempt == retries:
                     raise MexcApiError(f"Unexpected error: {e!s}")
 
-                wait_time = (2 ** attempt) * 0.5
+                wait_time = (2**attempt) * 0.5
                 logger.warning(f"Unexpected error (attempt {attempt + 1}), retrying in {wait_time}s: {e!s}")
                 await asyncio.sleep(wait_time)
 
@@ -210,8 +197,17 @@ class MexcApiClient:
                 valid_entries = []
                 for item_data in cached_data:
                     try:
-                        entry = CalendarEntryApi(**item_data)
-                        valid_entries.append(entry)
+                        # Ensure required fields are present
+                        required_fields = ["vcoinId", "symbol", "projectName", "firstOpenTime"]
+                        if all(key in item_data for key in required_fields):
+                            # Create entry with only the required fields to avoid missing-argument errors
+                            entry = CalendarEntryApi(
+                                vcoinId=item_data["vcoinId"],
+                                symbol=item_data["symbol"],
+                                projectName=item_data["projectName"],
+                                firstOpenTime=item_data["firstOpenTime"]
+                            )
+                            valid_entries.append(entry)
                     except Exception as e:
                         logger.debug(f"Failed to parse cached calendar entry: {e}")
 
@@ -234,10 +230,19 @@ class MexcApiClient:
 
             for item_data in listings_data:
                 try:
-                    entry = CalendarEntryApi(**item_data)
-                    valid_entries.append(entry)
-                    # Store raw data for caching (serializable)
-                    cache_data.append(item_data)
+                    # Ensure required fields are present
+                    required_fields = ["vcoinId", "symbol", "projectName", "firstOpenTime"]
+                    if all(key in item_data for key in required_fields):
+                        # Create entry with only the required fields to avoid missing-argument errors
+                        entry = CalendarEntryApi(
+                            vcoinId=item_data["vcoinId"],
+                            symbol=item_data["symbol"],
+                            projectName=item_data["projectName"],
+                            firstOpenTime=item_data["firstOpenTime"]
+                        )
+                        valid_entries.append(entry)
+                        # Store raw data for caching (serializable)
+                        cache_data.append(item_data)
                 except Exception as e:
                     logger.debug(f"Failed to parse calendar entry {item_data}: {e}")
 
@@ -253,93 +258,100 @@ class MexcApiClient:
         except Exception as e:
             raise MexcApiError(f"Error fetching calendar listings: {e!s}")
 
+    def _create_symbol_from_data(self, item_data: dict[str, Any]) -> Optional[SymbolV2EntryApi]:
+        """Create SymbolV2EntryApi from raw data"""
+        try:
+            required_fields = ["cd", "sts", "st", "tt"]
+            if all(key in item_data for key in required_fields):
+                return SymbolV2EntryApi(
+                    cd=item_data["cd"],
+                    sts=item_data["sts"],
+                    st=item_data["st"],
+                    tt=item_data["tt"],
+                    ca=item_data.get("ca"),
+                    ps=item_data.get("ps"),
+                    qs=item_data.get("qs"),
+                    ot=item_data.get("ot")
+                )
+        except Exception as e:
+            logger.debug(f"Failed to parse symbol entry: {e}")
+        return None
+
+    async def _get_symbols_from_cache(self, cache_key: str) -> Optional[list[SymbolV2EntryApi]]:
+        """Get symbols from cache"""
+        cached_data = await self._get_from_cache(cache_key)
+        if cached_data is None:
+            return None
+
+        try:
+            valid_symbols = []
+            for item_data in cached_data:
+                symbol = self._create_symbol_from_data(item_data)
+                if symbol:
+                    valid_symbols.append(symbol)
+
+            logger.debug(f"Retrieved {len(valid_symbols)} symbols from cache")
+            return valid_symbols
+        except Exception as e:
+            logger.warning(f"Failed to process cached symbols data: {e}")
+            return None
+
+    async def _fetch_symbols_from_api(self, vcoin_id: Optional[str], cache_key: str) -> list[SymbolV2EntryApi]:
+        """Fetch symbols from API"""
+        response_data = await self._make_request("GET", settings.MEXC_SYMBOLS_V2_ENDPOINT)
+
+        symbols_data = response_data.get("data", {}).get("symbols", [])
+        if not isinstance(symbols_data, list):
+            logger.warning(f"Unexpected symbols data format: {type(symbols_data)}")
+            return []
+
+        valid_symbols = []
+        cache_data = []
+
+        for item_data in symbols_data:
+            symbol = self._create_symbol_from_data(item_data)
+            if symbol and (vcoin_id is None or symbol.cd == vcoin_id):
+                valid_symbols.append(symbol)
+                cache_data.append(item_data)
+
+        # Cache the filtered data
+        if cache_data:
+            await self._set_cache(cache_key, cache_data, "symbols")
+
+        if vcoin_id:
+            logger.info(f"Retrieved {len(valid_symbols)} symbols for vcoin_id {vcoin_id} from API")
+        else:
+            logger.info(f"Retrieved {len(valid_symbols)} valid symbols from API")
+
+        return valid_symbols
+
     async def get_symbols_v2(self, vcoin_id: Optional[str] = None) -> list[SymbolV2EntryApi]:
         """Fetch symbol data from MEXC symbolsV2 API with caching"""
-        # Create cache key - include vcoin_id filter if specified
         cache_key = f"symbolsV2:{vcoin_id}" if vcoin_id else "symbolsV2"
 
         # Try cache first
-        cached_data = await self._get_from_cache(cache_key)
-        if cached_data is not None:
-            try:
-                # Reconstruct SymbolV2EntryApi objects from cached data
-                valid_symbols = []
-                for item_data in cached_data:
-                    try:
-                        symbol = SymbolV2EntryApi(**item_data)
-                        valid_symbols.append(symbol)
-                    except Exception as e:
-                        logger.debug(f"Failed to parse cached symbol entry: {e}")
-
-                logger.debug(f"Retrieved {len(valid_symbols)} symbols from cache")
-                return valid_symbols
-            except Exception as e:
-                logger.warning(f"Failed to process cached symbols data: {e}")
-                # Continue to fetch from API
+        cached_symbols = await self._get_symbols_from_cache(cache_key)
+        if cached_symbols is not None:
+            return cached_symbols
 
         try:
-            response_data = await self._make_request("GET", settings.MEXC_SYMBOLS_V2_ENDPOINT)
-
-            symbols_data = response_data.get("data", {}).get("symbols", [])
-            if not isinstance(symbols_data, list):
-                logger.warning(f"Unexpected symbols data format: {type(symbols_data)}")
-                return []
-
-            valid_symbols = []
-            cache_data = []
-
-            for item_data in symbols_data:
-                try:
-                    symbol = SymbolV2EntryApi(**item_data)
-
-                    # Filter by vcoin_id if specified
-                    if vcoin_id is None or symbol.cd == vcoin_id:
-                        valid_symbols.append(symbol)
-                        # Store raw data for caching (serializable)
-                        cache_data.append(item_data)
-
-                except Exception as e:
-                    logger.debug(f"Failed to parse symbol entry: {e}")
-
-            # Cache the filtered data
-            if cache_data:
-                await self._set_cache(cache_key, cache_data, "symbols")
-
-            if vcoin_id:
-                logger.info(f"Retrieved {len(valid_symbols)} symbols for vcoin_id {vcoin_id} from API")
-            else:
-                logger.info(f"Retrieved {len(valid_symbols)} valid symbols from API")
-
-            return valid_symbols
-
+            return await self._fetch_symbols_from_api(vcoin_id, cache_key)
         except MexcApiError:
             raise
         except Exception as e:
             raise MexcApiError(f"Error fetching symbols data: {e!s}")
 
-    async def place_market_buy_order(
-        self,
-        symbol: str,
-        quote_order_qty: float
-    ) -> dict[str, Any]:
+    async def place_market_buy_order(self, symbol: str, quote_order_qty: float) -> dict[str, Any]:
         """Place a market buy order"""
         if not settings.mexc_api_configured:
             raise MexcApiError("MEXC API credentials not configured")
 
-        params = {
-            "symbol": symbol,
-            "side": "BUY",
-            "type": "MARKET",
-            "quoteOrderQty": f"{quote_order_qty:.8f}"
-        }
+        params = {"symbol": symbol, "side": "BUY", "type": "MARKET", "quoteOrderQty": f"{quote_order_qty:.8f}"}
 
         try:
             logger.info(f"Placing market buy order: {symbol}, amount: {quote_order_qty} USDT")
             response_data = await self._make_request(
-                method="POST",
-                endpoint=settings.MEXC_ORDER_ENDPOINT,
-                params=params,
-                authenticated=True
+                method="POST", endpoint=settings.MEXC_ORDER_ENDPOINT, params=params, authenticated=True
             )
 
             logger.info(f"Order placed successfully: {response_data}")
@@ -356,11 +368,7 @@ class MexcApiClient:
             raise MexcApiError("MEXC API credentials not configured")
 
         try:
-            return await self._make_request(
-                method="GET",
-                endpoint="/api/v3/account",
-                authenticated=True
-            )
+            return await self._make_request(method="GET", endpoint="/api/v3/account", authenticated=True)
 
         except MexcApiError:
             raise
@@ -398,23 +406,25 @@ async def get_mexc_client(cache_service: Optional[CacheService] = None) -> MexcA
         _api_client = MexcApiClient(cache_service=cache_service)
         await _api_client.start_session()
 
-    return _api_client
+    # Type narrowing: after the if block, _api_client is guaranteed to be MexcApiClient
+    from typing import cast
+    return cast(MexcApiClient, _api_client)
 
 
 async def close_mexc_client():
     """Close global MEXC API client"""
     global _api_client
+    from typing import cast
 
-    if _api_client:
-        await _api_client.close_session()
-        _api_client = None
+    if _api_client is not None:
+        await cast(MexcApiClient, _api_client).close_session()
+
+    _api_client = None
 
 
 def set_mexc_client_cache(cache_service: CacheService):
     """Set cache service for existing MEXC client"""
-    global _api_client
-
-    if _api_client:
+    if _api_client is not None:
         _api_client.cache_service = cache_service
         _api_client.cache_enabled = True
         logger.info("Cache service attached to existing MEXC API client")

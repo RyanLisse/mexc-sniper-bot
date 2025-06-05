@@ -1,13 +1,15 @@
 """
 Database connection and session management for MEXC Sniper Bot
 """
+
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Optional
+from datetime import datetime
+from typing import Any, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from .config import settings
@@ -16,9 +18,9 @@ from .models import ApiCredentials, ExecutionHistory, MonitoredListing, SnipeTar
 logger = logging.getLogger(__name__)
 
 # Database engines
-engine: Optional[create_engine] = None
-async_engine: Optional[create_async_engine] = None
-async_session_maker: Optional[sessionmaker] = None
+engine: Optional[Engine] = None
+async_engine: Optional[AsyncEngine] = None
+async_session_maker: Optional[async_sessionmaker] = None
 
 
 def init_database():
@@ -27,10 +29,10 @@ def init_database():
 
     if not settings.database_configured:
         logger.warning("Database URL not configured. Using SQLite in-memory database for development.")
-        database_url = "sqlite:///./mexc_sniper.db"
-        async_database_url = "sqlite+aiosqlite:///./mexc_sniper.db"
+        database_url: str = "sqlite:///./mexc_sniper.db"
+        async_database_url: str = "sqlite+aiosqlite:///./mexc_sniper.db"
     else:
-        database_url = settings.DATABASE_URL
+        database_url = settings.DATABASE_URL or "sqlite:///./mexc_sniper.db"
         # Convert PostgreSQL URL to async version if needed
         if database_url.startswith("postgresql://"):
             async_database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
@@ -39,26 +41,33 @@ def init_database():
         else:
             async_database_url = database_url
 
-    # Create engines
-    engine = create_engine(
-        database_url,
-        echo=settings.DEBUG,
-        pool_pre_ping=True
-    )
+    # Create engines with optimized connection pooling (PostgreSQL only)
+    base_kwargs: dict[str, Any] = {
+        "echo": settings.DEBUG,
+        "pool_pre_ping": True,
+    }
 
-    async_engine = create_async_engine(
-        async_database_url,
-        echo=settings.DEBUG,
-        future=True,
-        pool_pre_ping=True
-    )
+    # Add PostgreSQL-specific pooling parameters only for PostgreSQL
+    if database_url and database_url.startswith(("postgresql://", "postgresql+asyncpg://", "postgresql+psycopg2://")):
+        base_kwargs.update(
+            {
+                "pool_size": settings.CONNECTION_POOL_SIZE,
+                "max_overflow": settings.CONNECTION_POOL_SIZE * 2,
+                "pool_timeout": 30,
+                "pool_recycle": 3600,  # Recycle connections every hour
+            }
+        )
+
+    engine = create_engine(database_url, **base_kwargs)
+
+    async_engine_kwargs: dict[str, Any] = {
+        **base_kwargs,
+        "future": True,
+    }
+    async_engine = create_async_engine(async_database_url, **async_engine_kwargs)
 
     # Create async session maker
-    async_session_maker = sessionmaker(
-        async_engine,
-        class_=AsyncSession,
-        expire_on_commit=False
-    )
+    async_session_maker = async_sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
     logger.info(f"Database initialized with URL: {database_url}")
 
@@ -112,6 +121,7 @@ def get_sync_session() -> Session:
 
 # --- Database Operations ---
 
+
 async def get_monitored_listing(session: AsyncSession, vcoin_id: str) -> Optional[MonitoredListing]:
     """Get monitored listing by vcoin_id"""
     statement = select(MonitoredListing).where(MonitoredListing.vcoin_id == vcoin_id)
@@ -125,7 +135,7 @@ async def create_monitored_listing(
     symbol_name: str,
     project_name: str,
     announced_launch_time_ms: int,
-    announced_launch_datetime_utc
+    announced_launch_datetime_utc,
 ) -> MonitoredListing:
     """Create a new monitored listing"""
     listing = MonitoredListing(
@@ -133,7 +143,7 @@ async def create_monitored_listing(
         symbol_name=symbol_name,
         project_name=project_name,
         announced_launch_time_ms=announced_launch_time_ms,
-        announced_launch_datetime_utc=announced_launch_datetime_utc
+        announced_launch_datetime_utc=announced_launch_datetime_utc,
     )
     session.add(listing)
     await session.flush()
@@ -166,7 +176,7 @@ async def create_snipe_target(
     discovered_at_utc,
     hours_advance_notice: float,
     intended_buy_amount_usdt: float,
-    execution_order_params: dict
+    execution_order_params: dict,
 ) -> SnipeTarget:
     """Create a new snipe target"""
     target = SnipeTarget(
@@ -178,7 +188,7 @@ async def create_snipe_target(
         actual_launch_datetime_utc=actual_launch_datetime_utc,
         discovered_at_utc=discovered_at_utc,
         hours_advance_notice=hours_advance_notice,
-        intended_buy_amount_usdt=intended_buy_amount_usdt
+        intended_buy_amount_usdt=intended_buy_amount_usdt,
     )
     target.execution_order_params = execution_order_params
 
@@ -193,7 +203,7 @@ async def update_snipe_target_status(
     target_id: int,
     status: str,
     execution_response: Optional[dict] = None,
-    executed_at_utc: Optional = None
+    executed_at_utc: Optional[datetime] = None,
 ) -> Optional[SnipeTarget]:
     """Update snipe target execution status"""
     target = await get_snipe_target_by_id(session, target_id)
@@ -214,7 +224,7 @@ async def update_snipe_target_status(
 async def get_pending_snipe_targets(session: AsyncSession) -> list[SnipeTarget]:
     """Get all pending snipe targets"""
     statement = select(SnipeTarget).where(
-        SnipeTarget.execution_status.in_(["pending", "scheduled"])
+        (SnipeTarget.execution_status == "pending") | (SnipeTarget.execution_status == "scheduled")
     )
     result = await session.execute(statement)
     return list(result.scalars().all())
@@ -222,9 +232,7 @@ async def get_pending_snipe_targets(session: AsyncSession) -> list[SnipeTarget]:
 
 async def get_monitoring_listings(session: AsyncSession) -> list[MonitoredListing]:
     """Get all listings currently being monitored"""
-    statement = select(MonitoredListing).where(
-        MonitoredListing.status == "monitoring"
-    )
+    statement = select(MonitoredListing).where(MonitoredListing.status == "monitoring")
     result = await session.execute(statement)
     return list(result.scalars().all())
 
@@ -237,7 +245,7 @@ async def create_execution_history(
     execution_type: str,
     buy_amount_usdt: float,
     success: bool,
-    **kwargs
+    **kwargs,
 ) -> ExecutionHistory:
     """Create execution history record"""
     history = ExecutionHistory(
@@ -247,7 +255,7 @@ async def create_execution_history(
         execution_type=execution_type,
         buy_amount_usdt=buy_amount_usdt,
         success=success,
-        **kwargs
+        **kwargs,
     )
 
     session.add(history)
@@ -257,6 +265,7 @@ async def create_execution_history(
 
 
 # --- User Preferences Operations ---
+
 
 async def get_user_preferences(session: AsyncSession, user_id: str) -> Optional[UserPreferences]:
     """Get user preferences by user_id"""
@@ -274,14 +283,10 @@ async def create_user_preferences(session: AsyncSession, user_id: str, **kwargs)
     return preferences
 
 
-async def update_user_preferences(
-    session: AsyncSession,
-    user_id: str,
-    update_data: dict
-) -> Optional[UserPreferences]:
+async def update_user_preferences(session: AsyncSession, user_id: str, update_data: dict) -> Optional[UserPreferences]:
     """Update user preferences"""
     preferences = await get_user_preferences(session, user_id)
-    
+
     if not preferences:
         # Create new preferences if they don't exist
         preferences = await create_user_preferences(session, user_id, **update_data)
@@ -290,28 +295,24 @@ async def update_user_preferences(
         for field, value in update_data.items():
             if hasattr(preferences, field) and value is not None:
                 setattr(preferences, field, value)
-        
+
         from datetime import datetime, timezone
+
         preferences.updated_at = datetime.now(timezone.utc)
         session.add(preferences)
         await session.flush()
         await session.refresh(preferences)
-    
+
     return preferences
 
 
 # --- API Credentials Operations ---
 
-async def get_api_credentials(
-    session: AsyncSession,
-    user_id: str,
-    provider: str
-) -> Optional[ApiCredentials]:
+
+async def get_api_credentials(session: AsyncSession, user_id: str, provider: str) -> Optional[ApiCredentials]:
     """Get API credentials by user_id and provider"""
     statement = select(ApiCredentials).where(
-        ApiCredentials.user_id == user_id,
-        ApiCredentials.provider == provider,
-        ApiCredentials.is_active is True
+        ApiCredentials.user_id == user_id, ApiCredentials.provider == provider, ApiCredentials.is_active is True
     )
     result = await session.execute(statement)
     return result.scalar_one_or_none()
@@ -331,7 +332,7 @@ async def create_api_credentials(
     api_key_encrypted: str,
     secret_key_encrypted: str,
     passphrase_encrypted: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> ApiCredentials:
     """Create new API credentials"""
     # Deactivate existing credentials for the same provider
@@ -339,46 +340,40 @@ async def create_api_credentials(
     if existing:
         existing.is_active = False
         session.add(existing)
-    
+
     credentials = ApiCredentials(
         user_id=user_id,
         provider=provider,
         api_key_encrypted=api_key_encrypted,
         secret_key_encrypted=secret_key_encrypted,
         passphrase_encrypted=passphrase_encrypted,
-        **kwargs
+        **kwargs,
     )
-    
+
     session.add(credentials)
     await session.flush()
     await session.refresh(credentials)
     return credentials
 
 
-async def update_api_credentials_last_used(
-    session: AsyncSession,
-    credentials_id: int
-) -> Optional[ApiCredentials]:
+async def update_api_credentials_last_used(session: AsyncSession, credentials_id: int) -> Optional[ApiCredentials]:
     """Update the last_used_at timestamp for API credentials"""
     statement = select(ApiCredentials).where(ApiCredentials.id == credentials_id)
     result = await session.execute(statement)
     credentials = result.scalar_one_or_none()
-    
+
     if credentials:
         from datetime import datetime, timezone
+
         credentials.last_used_at = datetime.now(timezone.utc)
         session.add(credentials)
         await session.flush()
         await session.refresh(credentials)
-    
+
     return credentials
 
 
-async def delete_api_credentials(
-    session: AsyncSession,
-    user_id: str,
-    provider: str
-) -> bool:
+async def delete_api_credentials(session: AsyncSession, user_id: str, provider: str) -> bool:
     """Delete API credentials for a user and provider"""
     credentials = await get_api_credentials(session, user_id, provider)
     if credentials:
@@ -399,12 +394,13 @@ async def startup_database():
 async def shutdown_database():
     """Clean up database connections on application shutdown"""
     global engine, async_engine, async_session_maker
+    from typing import cast
 
-    if async_engine:
-        await async_engine.dispose()
+    if async_engine is not None:
+        await cast(AsyncEngine, async_engine).dispose()
 
-    if engine:
-        engine.dispose()
+    if engine is not None:
+        cast(Engine, engine).dispose()
 
     engine = None
     async_engine = None

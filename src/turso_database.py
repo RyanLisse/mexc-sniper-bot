@@ -2,15 +2,15 @@
 TursoDB connection and session management for MEXC Sniper Bot
 Uses libSQL for edge-hosted distributed database with SQLite compatibility
 """
+
 import logging
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 
 from .config import settings
@@ -22,9 +22,9 @@ TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL")
 TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
 
 # Database engines
-turso_engine: Optional[create_engine] = None
-async_turso_engine: Optional[create_async_engine] = None
-async_session_maker: Optional[sessionmaker] = None
+turso_engine: Optional[Engine] = None
+async_turso_engine: Optional[AsyncEngine] = None
+async_session_maker: Optional[async_sessionmaker] = None
 
 
 def get_turso_url() -> str:
@@ -32,19 +32,19 @@ def get_turso_url() -> str:
     if TURSO_DATABASE_URL and TURSO_AUTH_TOKEN:
         # Use remote TursoDB with authentication
         return f"libsql://{TURSO_DATABASE_URL}?authToken={TURSO_AUTH_TOKEN}"
-    else:
-        # Fallback to local SQLite-compatible database
-        logger.warning("TursoDB credentials not found, using local SQLite database")
-        return "sqlite+aiosqlite:///./mexc_sniper_turso.db"
+
+    # Fallback to local SQLite-compatible database
+    logger.warning("TursoDB credentials not found, using local SQLite database")
+    return "sqlite+aiosqlite:///./mexc_sniper_turso.db"
 
 
 def init_turso_database():
     """Initialize TursoDB engines and session makers"""
     global turso_engine, async_turso_engine, async_session_maker
-    
+
     # Get connection URL
     db_url = get_turso_url()
-    
+
     # For async operations, we'll use the libsql URL format
     if db_url.startswith("libsql://"):
         # TursoDB remote connection
@@ -52,31 +52,27 @@ def init_turso_database():
     else:
         # Local SQLite
         async_db_url = db_url
-    
+
     # Create sync engine for migrations
     turso_engine = create_engine(
         db_url if not db_url.startswith("libsql://") else "sqlite:///./mexc_sniper_turso.db",
         echo=settings.DEBUG,
         pool_pre_ping=True,
-        connect_args={"check_same_thread": False} if "sqlite" in db_url else {}
+        connect_args={"check_same_thread": False} if "sqlite" in db_url else {},
     )
-    
+
     # Create async engine for operations
     async_turso_engine = create_async_engine(
         async_db_url,
         echo=settings.DEBUG,
         future=True,
         pool_pre_ping=True,
-        connect_args={"check_same_thread": False} if "sqlite" in async_db_url else {}
+        connect_args={"check_same_thread": False} if "sqlite" in async_db_url else {},
     )
-    
+
     # Create async session maker
-    async_session_maker = sessionmaker(
-        async_turso_engine,
-        class_=AsyncSession,
-        expire_on_commit=False
-    )
-    
+    async_session_maker = async_sessionmaker(async_turso_engine, class_=AsyncSession, expire_on_commit=False)
+
     logger.info(f"TursoDB initialized with URL: {db_url.split('?')[0]}")
 
 
@@ -84,10 +80,10 @@ async def create_turso_tables():
     """Create all database tables in TursoDB"""
     if async_turso_engine is None:
         raise RuntimeError("TursoDB not initialized. Call init_turso_database() first.")
-    
+
     async with async_turso_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-    
+
     logger.info("TursoDB tables created successfully")
 
 
@@ -96,7 +92,7 @@ async def get_turso_session() -> AsyncGenerator[AsyncSession, None]:
     """Get TursoDB async session with automatic cleanup"""
     if async_session_maker is None:
         raise RuntimeError("TursoDB not initialized. Call init_turso_database() first.")
-    
+
     async with async_session_maker() as session:
         try:
             yield session
@@ -118,17 +114,18 @@ async def startup_turso_database():
 async def shutdown_turso_database():
     """Clean up TursoDB connections on application shutdown"""
     global turso_engine, async_turso_engine, async_session_maker
-    
-    if async_turso_engine:
-        await async_turso_engine.dispose()
-    
-    if turso_engine:
-        turso_engine.dispose()
-    
+    from typing import cast
+
+    if async_turso_engine is not None:
+        await cast(AsyncEngine, async_turso_engine).dispose()
+
+    if turso_engine is not None:
+        cast(Engine, turso_engine).dispose()
+
     turso_engine = None
     async_turso_engine = None
     async_session_maker = None
-    
+
     logger.info("TursoDB shutdown completed")
 
 

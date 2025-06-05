@@ -2,6 +2,7 @@
 Core pattern discovery engine for MEXC sniper bot
 Implements proactive monitoring and 3.5+ hour advance detection
 """
+
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -27,6 +28,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PatternDiscoveryResult:
     """Result of pattern discovery analysis"""
+
     new_listings_found: int
     ready_targets_found: int
     targets_scheduled: int
@@ -44,8 +46,12 @@ class PatternDiscoveryEngine:
         self.discovery_stats = {
             "total_discoveries": 0,
             "successful_snipes": 0,
-            "average_advance_hours": 0.0
+            "average_advance_hours": 0.0,
+            "error_count": 0,
+            "last_error": None,
+            "uptime_start": None,
         }
+        self._background_task: Optional[asyncio.Task] = None
 
     async def start_monitoring(self) -> PatternDiscoveryResult:
         """Start the pattern discovery monitoring system"""
@@ -57,7 +63,7 @@ class PatternDiscoveryEngine:
             result = await self.run_discovery_cycle()
 
             # Start background monitoring
-            asyncio.create_task(self._background_monitoring_loop())
+            self._background_task = asyncio.create_task(self._background_monitoring_loop())
 
             logger.info(f"Pattern discovery started successfully: {result}")
             return result
@@ -100,7 +106,7 @@ class PatternDiscoveryEngine:
             ready_targets_found=ready_targets,
             targets_scheduled=scheduled_targets,
             errors=errors,
-            analysis_timestamp=start_time
+            analysis_timestamp=start_time,
         )
 
     async def _background_monitoring_loop(self):
@@ -154,13 +160,15 @@ class PatternDiscoveryEngine:
                         symbol_name=entry.symbol,
                         project_name=entry.projectName,
                         announced_launch_time_ms=entry.firstOpenTime,
-                        announced_launch_datetime_utc=entry.launch_datetime
+                        announced_launch_datetime_utc=entry.launch_datetime,
                     )
 
                     self.monitored_vcoin_ids.add(entry.vcoinId)
                     new_listings_count += 1
 
-                    logger.info(f"New listing discovered: {entry.symbol} ({entry.vcoinId}) - Launch: {entry.launch_datetime}")
+                    logger.info(
+                        f"New listing discovered: {entry.symbol} ({entry.vcoinId}) - Launch: {entry.launch_datetime}"
+                    )
 
             logger.info(f"Found {new_listings_count} new listings to monitor")
             return new_listings_count
@@ -180,6 +188,7 @@ class PatternDiscoveryEngine:
             async with get_async_session() as session:
                 # Get all monitoring listings
                 from src.database import get_monitoring_listings
+
                 monitoring_listings = await get_monitoring_listings(session)
 
                 for listing in monitoring_listings:
@@ -194,7 +203,9 @@ class PatternDiscoveryEngine:
                                     ready_target = await self._create_ready_target(session, listing, symbol)
                                     if ready_target:
                                         ready_targets_count += 1
-                                        logger.info(f"Ready state detected: {symbol.ca} ({listing.vcoin_id}) - {ready_target.hours_advance_notice:.1f}h advance")
+                                        logger.info(
+                                            f"Ready state detected: {symbol.ca} ({listing.vcoin_id}) - {ready_target.hours_advance_notice:.1f}h advance"
+                                        )
                                 else:
                                     logger.warning(f"Ready pattern detected but incomplete data: {listing.vcoin_id}")
 
@@ -210,10 +221,7 @@ class PatternDiscoveryEngine:
             raise
 
     async def _create_ready_target(
-        self,
-        session,
-        listing: MonitoredListing,
-        symbol: SymbolV2EntryApi
+        self, session, listing: MonitoredListing, symbol: SymbolV2EntryApi
     ) -> Optional[SnipeTarget]:
         """Create a snipe target from ready symbol"""
         try:
@@ -234,7 +242,14 @@ class PatternDiscoveryEngine:
 
             # Check if advance notice meets minimum requirement
             if advance_notice_hours < settings.TARGET_ADVANCE_HOURS:
-                logger.warning(f"Advance notice too short: {advance_notice_hours:.1f}h < {settings.TARGET_ADVANCE_HOURS}h")
+                logger.warning(
+                    f"Advance notice too short: {advance_notice_hours:.1f}h < {settings.TARGET_ADVANCE_HOURS}h"
+                )
+                return None
+
+            # Validate required fields
+            if not symbol.ca or symbol.ps is None or symbol.qs is None or symbol.ot is None:
+                logger.error(f"Missing required symbol data for {listing.vcoin_id}")
                 return None
 
             # Prepare order parameters
@@ -242,22 +257,22 @@ class PatternDiscoveryEngine:
                 "symbol": symbol.ca,
                 "side": "BUY",
                 "type": "MARKET",
-                "quoteOrderQty": settings.DEFAULT_BUY_AMOUNT_USDT
+                "quoteOrderQty": settings.DEFAULT_BUY_AMOUNT_USDT,
             }
 
             # Create snipe target
             target = await create_snipe_target(
                 session=session,
                 vcoin_id=listing.vcoin_id,
-                mexc_symbol_contract=symbol.ca,
-                price_precision=symbol.ps,
-                quantity_precision=symbol.qs,
-                actual_launch_time_ms=symbol.ot,
+                mexc_symbol_contract=symbol.ca or "UNKNOWN",
+                price_precision=symbol.ps or 8,
+                quantity_precision=symbol.qs or 6,
+                actual_launch_time_ms=symbol.ot or 0,
                 actual_launch_datetime_utc=actual_launch_time,
                 discovered_at_utc=discovered_at,
                 hours_advance_notice=advance_notice_hours,
                 intended_buy_amount_usdt=settings.DEFAULT_BUY_AMOUNT_USDT,
-                execution_order_params=order_params
+                execution_order_params=order_params,
             )
 
             # Update listing status
@@ -282,29 +297,24 @@ class PatternDiscoveryEngine:
 
             async with get_async_session() as session:
                 from src.database import get_pending_snipe_targets
+
                 pending_targets = await get_pending_snipe_targets(session)
 
                 for target in pending_targets:
-                    if target.execution_status == "pending":
+                    if target.execution_status == "pending" and target.id is not None:
                         # Calculate time until execution
-                        time_until_launch = (target.actual_launch_datetime_utc - datetime.now(timezone.utc)).total_seconds()
+                        time_until_launch = (
+                            target.actual_launch_datetime_utc - datetime.now(timezone.utc)
+                        ).total_seconds()
 
                         if time_until_launch > 10:  # At least 10 seconds lead time
                             # Schedule execution (for now, just mark as scheduled)
-                            await update_snipe_target_status(
-                                session=session,
-                                target_id=target.id,
-                                status="scheduled"
-                            )
+                            await update_snipe_target_status(session=session, target_id=target.id, status="scheduled")
                             scheduled_count += 1
                             logger.info(f"Scheduled target {target.id} for execution in {time_until_launch:.0f}s")
                         else:
                             # Too late to schedule
-                            await update_snipe_target_status(
-                                session=session,
-                                target_id=target.id,
-                                status="missed"
-                            )
+                            await update_snipe_target_status(session=session, target_id=target.id, status="missed")
                             logger.warning(f"Target {target.id} missed - too late to schedule")
 
             return scheduled_count
@@ -319,18 +329,18 @@ class PatternDiscoveryEngine:
             from sqlmodel import func, select
 
             # Count monitored listings
-            monitored_count = len(await session.execute(
-                select(func.count(MonitoredListing.vcoin_id)).where(
-                    MonitoredListing.status == "monitoring"
-                )
-            ).scalar())
+            monitored_result = await session.execute(
+                select(func.count()).select_from(MonitoredListing).where(MonitoredListing.status == "monitoring")
+            )
+            monitored_count = monitored_result.scalar() or 0
 
             # Count ready targets
-            ready_count = len(await session.execute(
-                select(func.count(SnipeTarget.id)).where(
-                    SnipeTarget.execution_status.in_(["pending", "scheduled"])
-                )
-            ).scalar())
+            ready_result = await session.execute(
+                select(func.count())
+                .select_from(SnipeTarget)
+                .where((SnipeTarget.execution_status == "pending") | (SnipeTarget.execution_status == "scheduled"))
+            )
+            ready_count = ready_result.scalar() or 0
 
             return {
                 "running": self.running,
@@ -342,8 +352,8 @@ class PatternDiscoveryEngine:
                     "ready_state_pattern": settings.READY_STATE_PATTERN,
                     "target_advance_hours": settings.TARGET_ADVANCE_HOURS,
                     "calendar_poll_interval": settings.CALENDAR_POLL_INTERVAL_SECONDS,
-                    "default_buy_amount": settings.DEFAULT_BUY_AMOUNT_USDT
-                }
+                    "default_buy_amount": settings.DEFAULT_BUY_AMOUNT_USDT,
+                },
             }
 
 
@@ -358,4 +368,6 @@ def get_discovery_engine() -> PatternDiscoveryEngine:
     if _discovery_engine is None:
         _discovery_engine = PatternDiscoveryEngine()
 
-    return _discovery_engine
+    # Type narrowing: after the if block, _discovery_engine is guaranteed to be PatternDiscoveryEngine
+    from typing import cast
+    return cast(PatternDiscoveryEngine, _discovery_engine)
