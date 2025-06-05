@@ -7,61 +7,73 @@
 # Install Node.js dependencies
 npm install
 
-# Install Python dependencies
+# Install Python dependencies (for legacy support)
 pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment
 Create a `.env.local` file:
 ```bash
-# Required
+# Required for TypeScript Multi-Agent System
 OPENAI_API_KEY=your-openai-api-key
 
 # Optional MEXC API credentials
 MEXC_API_KEY=your-mexc-api-key
 MEXC_SECRET_KEY=your-mexc-secret-key
 
-# For OpenAI Codex specific features (optional):
-# Run `python scripts/setup_openai.py` to configure your OpenAI key for Codex.
-# This will create a .openai_config.json (gitignored).
+# Database (optional - defaults to SQLite)
+DATABASE_URL=sqlite:///./mexc_sniper.db
+
+# Caching (optional - for performance boost)
+VALKEY_URL=redis://localhost:6379/0
 ```
 
 ### 3. Start Development Servers
 
-**Terminal 1 - Next.js Frontend:**
+**Terminal 1 - Next.js + TypeScript Agents:**
 ```bash
 npm run dev
-# Open http://localhost:3000 in your browser
+# Frontend: http://localhost:3000
+# TypeScript agents integrated
 ```
 
-**Terminal 2 - Python API:**
+**Terminal 2 - Inngest Multi-Agent Workflows:**
+```bash
+npx inngest-cli dev -u http://localhost:3000/api/inngest
+# Dashboard: http://localhost:8288
+# 🤖 4 specialized MEXC workflows available
+```
+
+**Terminal 3 - Python API (Legacy):**
 ```bash
 npm run mexc-agent-dev
-# API runs on http://localhost:8001
-# Docs at http://localhost:8001/docs
+# API: http://localhost:8001
+# Docs: http://localhost:8001/docs
 ```
 
-**Terminal 3 - Inngest (optional):**
-```bash
-npx inngest-cli dev --no-discovery -u http://localhost:3000/api/inngest
-# Dashboard at http://localhost:8288
-```
+## 🎯 What the Multi-Agent System Does
 
-## 🎯 What the Bot Does
+### 🤖 **Specialized AI Agents Working Together:**
 
-1. **Monitors** new coin listings on MEXC exchange
-2. **Analyzes** token patterns using AI agents
-3. **Discovers** trading opportunities before launch
-4. **Provides** strategic recommendations
-5. **Executes** trades automatically (when configured)
+1. **📅 CalendarAgent** - Discovers new MEXC listings with 3.5+ hour advance
+2. **🔍 PatternDiscoveryAgent** - Detects ready state patterns (sts:2, st:2, tt:4)
+3. **📊 SymbolAnalysisAgent** - Real-time readiness assessment with confidence scoring
+4. **🌐 MexcApiAgent** - Smart API integration with fallback mechanisms
+5. **🎭 MexcOrchestrator** - Coordinates all agents for optimal performance
+
+### 🚀 **Intelligent Workflows:**
+- **Calendar Discovery**: Auto-scans for new opportunities
+- **Symbol Monitoring**: Tracks readiness with dynamic intervals
+- **Pattern Analysis**: AI-powered validation with confidence scores
+- **Strategy Generation**: Creates risk-adjusted trading plans
 
 ## 📊 Key Features
 
-- AI-powered pattern discovery
-- Real-time dashboard
-- Automated trading strategies
-- Risk management tools
-- Performance analytics
+- **🧠 Multi-Agent AI System**: 5 specialized TypeScript agents
+- **⚡ Real-time Analysis**: Continuous pattern monitoring
+- **📈 Confidence Scoring**: 0-100% reliability metrics
+- **🎯 Smart Timing**: 3.5+ hour advance detection
+- **🛡️ Risk Management**: AI-powered risk assessment
 
 ## ⚙️ Configuration Options
 
@@ -73,16 +85,39 @@ Edit `src/config.py` to customize:
 
 ## 🔍 Quick Commands
 
+### TypeScript Multi-Agent Workflows (Primary System)
+
+Trigger calendar discovery:
+```bash
+# Via Inngest Dashboard (http://localhost:8288)
+# Or programmatically:
+curl -X POST http://localhost:3000/api/inngest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "mexc/calendar.poll.requested",
+    "data": { "trigger": "manual", "force": false }
+  }'
+```
+
+Monitor specific symbol:
+```bash
+curl -X POST http://localhost:3000/api/inngest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "mexc/symbol.watch.requested",
+    "data": {
+      "vcoinId": "EXAMPLE001",
+      "symbolName": "EXAMPLECOIN",
+      "attempt": 1
+    }
+  }'
+```
+
+### Legacy Python API Commands
+
 Check system status:
 ```bash
 curl -X GET http://localhost:8001/api/agents/mexc/status
-```
-
-Start pattern discovery:
-```bash
-curl -X POST http://localhost:8001/api/agents/mexc/pattern-discovery \
-  -H "Content-Type: application/json" \
-  -d '{"action": "start"}'
 ```
 
 ## ⚠️ Important Notes

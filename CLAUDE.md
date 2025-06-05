@@ -30,10 +30,12 @@ To switch to TursoDB:
 
 ## Project Overview
 
-This is a hybrid Next.js/Python project for a MEXC cryptocurrency trading bot with AI agents. It combines:
+This is a modern Next.js project featuring a sophisticated TypeScript multi-agent system for MEXC cryptocurrency trading. It combines:
 - **Frontend**: Next.js 15 with TypeScript and React 19
-- **Backend**: Python FastAPI with OpenAI Agents framework
-- **Architecture**: Serverless deployment on Vercel with Inngest workflows
+- **Multi-Agent System**: 5 specialized TypeScript agents with OpenAI GPT-4 integration
+- **Workflows**: Inngest for reliable event-driven task orchestration
+- **Legacy Backend**: Python FastAPI (maintained for compatibility)
+- **Architecture**: Serverless deployment on Vercel with edge optimization
 
 ## Common Development Commands
 
@@ -59,19 +61,19 @@ bun run pre-commit
 ### Development
 
 ```bash
-# Run Next.js frontend (port 3000)
+# Run Next.js frontend with TypeScript agents (port 3000)
 npm run dev
 
-# Run Python MEXC agent API (port 8001)
+# Run Inngest dev server for TypeScript multi-agent workflows
+npx inngest-cli dev -u http://localhost:3000/api/inngest
+
+# Run Python API for legacy support (port 8001)
 npm run mexc-agent-dev
 # OR
 uvicorn api.agents:app --reload --port 8001
 
-# Run Inngest dev server
-npx inngest-cli dev --no-discovery -u http://localhost:3000/api/inngest
-
-# Test MEXC agent functionality
-npm run mexc-test
+# Test TypeScript agents via Inngest workflows
+# Access Inngest dashboard at http://localhost:8288
 ```
 
 ### Testing
@@ -102,32 +104,53 @@ vercel --prod
 
 ## Architecture Overview
 
+### TypeScript Multi-Agent System
+
+The core system now runs on specialized TypeScript agents:
+
+#### **🎯 Core Agents** (`src/mexc-agents/`)
+
+1. **MexcApiAgent** (`mexc-api-agent.ts`)
+   - MEXC API interactions and data analysis
+   - Trading signal extraction with AI
+   - Data quality assessment and validation
+
+2. **PatternDiscoveryAgent** (`pattern-discovery-agent.ts`)
+   - Ready state pattern detection: `sts:2, st:2, tt:4`
+   - Early opportunity identification (3.5+ hour advance)
+   - Confidence scoring and pattern validation
+
+3. **CalendarAgent** (`calendar-agent.ts`)
+   - New listing discovery and monitoring
+   - Launch timing analysis and predictions
+   - Market potential assessment
+
+4. **SymbolAnalysisAgent** (`symbol-analysis-agent.ts`)
+   - Real-time readiness assessment
+   - Market microstructure analysis
+   - Risk evaluation and confidence scoring
+
+5. **MexcOrchestrator** (`orchestrator.ts`)
+   - Multi-agent workflow coordination
+   - Result synthesis and error handling
+   - Performance optimization
+
+#### **🚀 Inngest Workflows** (`src/inngest/functions.ts`)
+
+1. **pollMexcCalendar** - Multi-agent calendar discovery
+2. **watchMexcSymbol** - Symbol monitoring with AI analysis
+3. **analyzeMexcPatterns** - Pattern discovery and validation
+4. **createMexcTradingStrategy** - AI-powered strategy creation
+
 ### API Routes
 
-- `/api/agents/*` → Python FastAPI agents (handled by `api/agents.py`)
-- `/api/inngest` → Inngest webhook endpoint
-- `/api/newsletter/*` → Newsletter generation endpoints
+- `/api/inngest` → TypeScript multi-agent workflows
+- `/api/agents/*` → Python FastAPI agents (legacy support)
 
-### Key Python Components
+### Legacy Python Components (Maintained)
 
-1. **MEXC Pattern Discovery Agent** (`api/agents.py`)
-   - Discovers token launch patterns using AI
-   - Tools: MEXCCalendarTool, MEXCSymbolsV2Tool, MEXCPatternAnalysisTool
-   - Ready pattern detection: `sts:2, st:2, tt:4`
-
-2. **MEXC Trading Strategy Agent** (`api/agents.py`)
-   - Generates trading strategies for ready tokens
-   - Provides entry timing and risk management
-
-### Key TypeScript Components
-
-1. **Inngest Functions** (`src/inngest/functions.ts`)
-   - Orchestrates long-running workflows
-   - Handles newsletter generation pipeline
-
-2. **Next.js App** (`src/app/`)
-   - Dashboard UI at `/app/dashboard/page.tsx`
-   - API route handlers in `/app/api/`
+- **MEXC Pattern Discovery Agent** (`api/agents.py`) - Legacy rule-based system
+- **Python Inngest Handler** (`api/inngest.py`) - Python workflow support
 
 ### Database & Caching
 
@@ -137,28 +160,56 @@ vercel --prod
 
 ## Environment Variables
 
-Required for development:
+Required for TypeScript multi-agent system:
 ```bash
-OPENAI_API_KEY=your-openai-api-key
+# Core AI Integration
+OPENAI_API_KEY=your-openai-api-key  # Required for all agents
+
+# MEXC API Access
 MEXC_API_KEY=your-mexc-api-key      # Optional
 MEXC_SECRET_KEY=your-mexc-secret    # Optional
-NEWSLETTER_READ_WRITE_TOKEN=your-vercel-blob-token
-INNGEST_SIGNING_KEY=your-inngest-key
+MEXC_BASE_URL=https://api.mexc.com  # Default
+
+# Workflow Orchestration
+# INNGEST_SIGNING_KEY=auto-generated  # Optional, auto-generated if not provided
+# INNGEST_EVENT_KEY=auto-generated    # Optional, auto-generated if not provided
+
+# Database & Caching
+DATABASE_URL=sqlite:///./mexc_sniper.db  # Default SQLite
+VALKEY_URL=redis://localhost:6379/0      # Optional Redis/Valkey caching
 ```
 
 ## Project Structure
 
 ```
-├── api/                    # Python API endpoints
-│   ├── agents.py          # MEXC AI agents
-│   └── inngest.py         # Inngest Python handler
-├── src/                   # Python source code
-│   ├── services/          # MEXC API, pattern discovery
-│   ├── models.py          # Database models
-│   └── database.py        # Database configuration
-├── app/                   # Next.js app directory
-├── tests/                 # Python tests
-└── vercel.json           # Vercel deployment config
+├── src/                         # TypeScript source code
+│   ├── mexc-agents/            # 🤖 Multi-agent system
+│   │   ├── mexc-api-agent.ts   # MEXC API integration
+│   │   ├── pattern-discovery-agent.ts  # Pattern detection
+│   │   ├── calendar-agent.ts   # Calendar monitoring
+│   │   ├── symbol-analysis-agent.ts    # Symbol analysis
+│   │   ├── orchestrator.ts     # Workflow coordination
+│   │   └── index.ts           # Agent exports
+│   ├── agents/                 # 🧠 General AI agents
+│   │   ├── base-agent.ts       # Base agent class
+│   │   ├── research-agent.ts   # Research capabilities
+│   │   ├── analysis-agent.ts   # Market analysis
+│   │   ├── strategy-agent.ts   # Trading strategies
+│   │   └── index.ts           # Agent exports
+│   ├── inngest/               # 🚀 Workflow definitions
+│   │   ├── client.ts          # Inngest client
+│   │   └── functions.ts       # MEXC workflows
+│   ├── services/              # 🐍 Python services (legacy)
+│   ├── models.py              # Database models
+│   └── database.py            # Database configuration
+├── app/                       # 🌐 Next.js app directory
+│   ├── api/inngest/route.ts   # TypeScript workflow endpoint
+│   └── dashboard/             # Trading dashboard
+├── api/                       # 🐍 Python API endpoints (legacy)
+│   ├── agents.py             # Legacy MEXC agents
+│   └── inngest.py            # Python workflow handler
+├── tests/                     # 🧪 Test suite
+└── vercel.json               # ⚙️ Vercel deployment config
 ```
 
 ## Critical Deployment Configuration
