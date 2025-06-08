@@ -1,4 +1,4 @@
-import { BaseAgent, AgentConfig, AgentResponse } from "./base-agent";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 export interface ResearchRequest {
   topics: string[];
@@ -43,7 +43,7 @@ Output Format:
 
   async process(input: string, context?: ResearchRequest): Promise<AgentResponse> {
     const request: ResearchRequest = context || { topics: [input] };
-    
+
     const userMessage = `
 Research Request:
 Topics: ${request.topics.join(", ")}
@@ -62,10 +62,18 @@ Please provide comprehensive research on these topics with focus on cryptocurren
     ]);
   }
 
-  async researchCryptocurrency(symbol: string, depth: "shallow" | "moderate" | "deep" = "moderate"): Promise<AgentResponse> {
+  async researchCryptocurrency(
+    symbol: string,
+    depth: "shallow" | "moderate" | "deep" = "moderate"
+  ): Promise<AgentResponse> {
     return await this.process(`Research ${symbol} cryptocurrency`, {
       topics: [symbol],
-      focusAreas: ["price analysis", "market trends", "trading opportunities", "technical indicators"],
+      focusAreas: [
+        "price analysis",
+        "market trends",
+        "trading opportunities",
+        "technical indicators",
+      ],
       depth,
       timeframe: "recent",
     });
@@ -74,7 +82,12 @@ Please provide comprehensive research on these topics with focus on cryptocurren
   async analyzeMarketTrends(topics: string[]): Promise<AgentResponse> {
     return await this.process("Market trend analysis", {
       topics,
-      focusAreas: ["market sentiment", "price movements", "volume analysis", "emerging opportunities"],
+      focusAreas: [
+        "market sentiment",
+        "price movements",
+        "volume analysis",
+        "emerging opportunities",
+      ],
       depth: "deep",
       timeframe: "last 30 days",
     });

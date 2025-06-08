@@ -1,0 +1,388 @@
+"use client";
+
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Input } from "@/src/components/ui/input";
+import {
+  type ApiCredentials,
+  useApiCredentials,
+  useDeleteApiCredentials,
+  useSaveApiCredentials,
+  useTestApiCredentials,
+} from "@/src/hooks/use-api-credentials";
+import { AlertCircle, CheckCircle, Eye, EyeOff, Key, Loader2, Shield } from "lucide-react";
+import { useState } from "react";
+
+interface ApiCredentialsFormProps {
+  userId: string;
+}
+
+export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
+  const { data: apiCredentials, isLoading: apiCredsLoading } = useApiCredentials(userId);
+  const saveApiCredentials = useSaveApiCredentials();
+  const deleteApiCredentials = useDeleteApiCredentials();
+  const testApiCredentials = useTestApiCredentials();
+
+  const [editingApiKeys, setEditingApiKeys] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [secretKeyInput, setSecretKeyInput] = useState("");
+  const [testResult, setTestResult] = useState<{ success?: boolean; message?: string } | null>(
+    null
+  );
+
+  const handleSaveApiKeys = async () => {
+    if (!apiKeyInput.trim() || !secretKeyInput.trim()) {
+      setTestResult({ success: false, message: "Please enter both API key and secret key" });
+      return;
+    }
+
+    try {
+      await saveApiCredentials.mutateAsync({
+        userId,
+        apiKey: apiKeyInput.trim(),
+        secretKey: secretKeyInput.trim(),
+        provider: "mexc",
+      });
+      setEditingApiKeys(false);
+      setApiKeyInput("");
+      setSecretKeyInput("");
+      setTestResult({ success: true, message: "API credentials saved successfully!" });
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to save API credentials",
+      });
+    }
+  };
+
+  const handleDeleteApiKeys = async () => {
+    try {
+      await deleteApiCredentials.mutateAsync({ userId, provider: "mexc" });
+      setTestResult({ success: true, message: "API credentials deleted successfully!" });
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: error instanceof Error ? error.message : "Failed to delete API credentials",
+      });
+    }
+  };
+
+  const handleTestApiKeys = async () => {
+    try {
+      setTestResult(null);
+      const result = await testApiCredentials.mutateAsync({ userId, provider: "mexc" });
+      setTestResult({ success: true, message: result.message });
+    } catch (error) {
+      setTestResult({
+        success: false,
+        message: error instanceof Error ? error.message : "API test failed",
+      });
+    }
+  };
+
+  const handleCancelApiEdit = () => {
+    setApiKeyInput("");
+    setSecretKeyInput("");
+    setEditingApiKeys(false);
+    setTestResult(null);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Key className="h-5 w-5" />
+          <span>MEXC API Configuration</span>
+        </CardTitle>
+        <CardDescription>
+          Securely store your MEXC API credentials for automated trading. Your keys are encrypted
+          and stored locally.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {apiCredsLoading ? (
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-muted rounded w-3/4"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
+          </div>
+        ) : (
+          <>
+            {/* Current API Status */}
+            <ApiCredentialsStatus apiCredentials={apiCredentials} />
+
+            {/* API Key Management Form */}
+            {editingApiKeys ? (
+              <ApiCredentialsEditForm
+                apiKeyInput={apiKeyInput}
+                secretKeyInput={secretKeyInput}
+                showApiKey={showApiKey}
+                showSecretKey={showSecretKey}
+                onApiKeyChange={setApiKeyInput}
+                onSecretKeyChange={setSecretKeyInput}
+                onToggleApiKey={() => setShowApiKey(!showApiKey)}
+                onToggleSecretKey={() => setShowSecretKey(!showSecretKey)}
+                onSave={handleSaveApiKeys}
+                onCancel={handleCancelApiEdit}
+                isLoading={saveApiCredentials.isPending}
+              />
+            ) : (
+              <ApiCredentialsDisplay
+                apiCredentials={apiCredentials}
+                onEdit={() => setEditingApiKeys(true)}
+                onTest={handleTestApiKeys}
+                onDelete={handleDeleteApiKeys}
+                isTestLoading={testApiCredentials.isPending}
+                isDeleteLoading={deleteApiCredentials.isPending}
+              />
+            )}
+
+            {/* Test Result */}
+            {testResult && <ApiCredentialsTestResult testResult={testResult} />}
+
+            {/* Security Notice */}
+            <SecurityNotice />
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ApiCredentialsStatus({ apiCredentials }: { apiCredentials: ApiCredentials | null }) {
+  return (
+    <div className="flex items-center justify-between p-4 border rounded-lg">
+      <div className="flex items-center space-x-3">
+        <Shield className={`h-5 w-5 ${apiCredentials ? "text-green-500" : "text-gray-400"}`} />
+        <div>
+          <div className="font-medium">
+            {apiCredentials ? "API Keys Configured" : "No API Keys"}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {apiCredentials
+              ? `Last updated: ${new Date(apiCredentials.updatedAt || "").toLocaleDateString()}`
+              : "Configure your MEXC API keys to enable automated trading"}
+          </div>
+        </div>
+      </div>
+      {apiCredentials && (
+        <Badge variant={apiCredentials.isActive ? "default" : "secondary"}>
+          {apiCredentials.isActive ? "Active" : "Inactive"}
+        </Badge>
+      )}
+    </div>
+  );
+}
+
+interface ApiCredentialsEditFormProps {
+  apiKeyInput: string;
+  secretKeyInput: string;
+  showApiKey: boolean;
+  showSecretKey: boolean;
+  onApiKeyChange: (value: string) => void;
+  onSecretKeyChange: (value: string) => void;
+  onToggleApiKey: () => void;
+  onToggleSecretKey: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  isLoading: boolean;
+}
+
+function ApiCredentialsEditForm({
+  apiKeyInput,
+  secretKeyInput,
+  showApiKey,
+  showSecretKey,
+  onApiKeyChange,
+  onSecretKeyChange,
+  onToggleApiKey,
+  onToggleSecretKey,
+  onSave,
+  onCancel,
+  isLoading,
+}: ApiCredentialsEditFormProps) {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <label className="text-sm font-medium">MEXC API Key</label>
+        <div className="relative">
+          <Input
+            type={showApiKey ? "text" : "password"}
+            value={apiKeyInput}
+            onChange={(e) => onApiKeyChange(e.target.value)}
+            placeholder="Enter your MEXC API key"
+            className="pr-10"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3"
+            onClick={onToggleApiKey}
+          >
+            {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">MEXC Secret Key</label>
+        <div className="relative">
+          <Input
+            type={showSecretKey ? "text" : "password"}
+            value={secretKeyInput}
+            onChange={(e) => onSecretKeyChange(e.target.value)}
+            placeholder="Enter your MEXC secret key"
+            className="pr-10"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-0 top-0 h-full px-3"
+            onClick={onToggleSecretKey}
+          >
+            {showSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Button
+          onClick={onSave}
+          disabled={isLoading || !apiKeyInput.trim() || !secretKeyInput.trim()}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            "Save API Keys"
+          )}
+        </Button>
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+interface ApiCredentialsDisplayProps {
+  apiCredentials: ApiCredentials | null;
+  onEdit: () => void;
+  onTest: () => void;
+  onDelete: () => void;
+  isTestLoading: boolean;
+  isDeleteLoading: boolean;
+}
+
+function ApiCredentialsDisplay({
+  apiCredentials,
+  onEdit,
+  onTest,
+  onDelete,
+  isTestLoading,
+  isDeleteLoading,
+}: ApiCredentialsDisplayProps) {
+  return (
+    <div className="space-y-4">
+      {/* Display current keys (masked) */}
+      {apiCredentials && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">API Key</label>
+            <div className="font-mono text-sm p-2 bg-muted rounded">{apiCredentials.apiKey}</div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Secret Key</label>
+            <div className="font-mono text-sm p-2 bg-muted rounded">{apiCredentials.secretKey}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div className="flex items-center space-x-2">
+        <Button onClick={onEdit} variant={apiCredentials ? "outline" : "default"}>
+          {apiCredentials ? "Update API Keys" : "Add API Keys"}
+        </Button>
+
+        {apiCredentials && (
+          <>
+            <Button onClick={onTest} disabled={isTestLoading} variant="outline">
+              {isTestLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Testing...
+                </>
+              ) : (
+                "Test Connection"
+              )}
+            </Button>
+
+            <Button onClick={onDelete} disabled={isDeleteLoading} variant="destructive">
+              {isDeleteLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ApiCredentialsTestResult({
+  testResult,
+}: {
+  testResult: { success?: boolean; message?: string };
+}) {
+  return (
+    <div
+      className={`flex items-center space-x-2 p-3 rounded-lg ${
+        testResult.success
+          ? "bg-green-50 text-green-700 border border-green-200"
+          : "bg-red-50 text-red-700 border border-red-200"
+      }`}
+    >
+      {testResult.success ? (
+        <CheckCircle className="h-4 w-4" />
+      ) : (
+        <AlertCircle className="h-4 w-4" />
+      )}
+      <span className="text-sm">{testResult.message}</span>
+    </div>
+  );
+}
+
+function SecurityNotice() {
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="flex items-start space-x-2">
+        <Shield className="h-5 w-5 text-blue-500 mt-0.5" />
+        <div className="text-sm text-blue-700">
+          <div className="font-medium">Security Notice</div>
+          <div className="mt-1">
+            Your API keys are encrypted before storage and never transmitted in plaintext. Make sure
+            to use API keys with limited permissions (spot trading only) and avoid keys with
+            withdrawal permissions.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

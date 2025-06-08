@@ -1,4 +1,4 @@
-import { BaseAgent, AgentConfig, AgentResponse } from "./base-agent";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 export interface StrategyRequest {
   marketData: string;
@@ -55,12 +55,12 @@ Output Format:
   }
 
   async process(input: string, context?: StrategyRequest): Promise<AgentResponse> {
-    const request: StrategyRequest = context || { 
+    const request: StrategyRequest = context || {
       marketData: input,
       riskTolerance: "medium",
-      timeframe: "medium"
+      timeframe: "medium",
     };
-    
+
     const userMessage = `
 Strategy Development Request:
 Risk Tolerance: ${request.riskTolerance || "medium"}
@@ -83,7 +83,7 @@ Please develop a comprehensive trading strategy with specific entry/exit criteri
   }
 
   async createTradingStrategy(
-    marketData: string, 
+    marketData: string,
     riskTolerance: "low" | "medium" | "high" = "medium",
     timeframe: "short" | "medium" | "long" = "medium"
   ): Promise<AgentResponse> {

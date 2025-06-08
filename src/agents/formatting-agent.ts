@@ -1,4 +1,4 @@
-import { BaseAgent, AgentConfig, AgentResponse } from "./base-agent";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 export interface FormattingRequest {
   rawContent: string;
@@ -49,13 +49,13 @@ Newsletter Structure:
   }
 
   async process(input: string, context?: FormattingRequest): Promise<AgentResponse> {
-    const request: FormattingRequest = context || { 
-      rawContent: input, 
+    const request: FormattingRequest = context || {
+      rawContent: input,
       topics: [],
       format: "newsletter",
-      targetAudience: "traders"
+      targetAudience: "traders",
     };
-    
+
     const userMessage = `
 Format the following raw research content into a professional ${request.format || "newsletter"}:
 

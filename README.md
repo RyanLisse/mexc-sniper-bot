@@ -1,6 +1,6 @@
 # MEXC Sniper Bot 🎯
 
-An intelligent cryptocurrency trading bot powered by specialized AI agents that discover and analyze new token listings on the MEXC exchange. Features a cutting-edge TypeScript multi-agent system with OpenAI integration for advanced pattern recognition and trading strategy generation.
+An intelligent cryptocurrency trading bot powered by specialized AI agents that discover and analyze new token listings on the MEXC exchange. Features a cutting-edge TypeScript multi-agent system with OpenAI integration for advanced pattern recognition and automated trading strategies.
 
 ## 🚀 Key Features
 
@@ -9,9 +9,10 @@ An intelligent cryptocurrency trading bot powered by specialized AI agents that 
 - **⏰ Advanced Timing**: 3.5+ hour advance detection for optimal position entry
 - **📊 Real-time Analysis**: Continuous symbol monitoring with dynamic confidence scoring
 - **🎯 Smart Strategy Generation**: AI-powered trading strategies with risk assessment
-- **⚡ High-Performance Architecture**: Pure TypeScript with Inngest workflow orchestration
+- **⚡ Pure TypeScript Architecture**: Modern stack with Drizzle ORM and TanStack Query
 - **🛡️ Robust Error Handling**: Multi-agent fallbacks and graceful degradation
 - **📈 Confidence Scoring**: 0-100% reliability metrics for every trading signal
+- **⚙️ User Configurable**: Customizable take profit levels and risk management
 
 ## 🏗️ Multi-Agent Architecture
 
@@ -52,28 +53,15 @@ Revolutionary TypeScript-based system with specialized AI agents:
 - **Frontend**: Next.js 15 with TypeScript and React 19
 - **Agent System**: Pure TypeScript with OpenAI GPT-4 integration
 - **Workflows**: Inngest for reliable background task orchestration
-- **Database**: SQLModel with async PostgreSQL/SQLite support
-- **Caching**: Valkey (Redis-compatible) for high-performance data caching
+- **Database**: Drizzle ORM with SQLite/TursoDB support
+- **Data Management**: TanStack Query for real-time data fetching and caching
 - **Deployment**: Vercel with automatic scaling and edge optimization
 
 ## 📋 Prerequisites
 
-- Node.js 18+ and npm
-- Python 3.9+
-- OpenAI API key
-- MEXC API credentials (optional)
-- Redis (for caching)
-- PostgreSQL (optional, SQLite for development)
-
-### OpenAI Codex Setup (Optional)
-
-If you plan to use or develop features leveraging OpenAI Codex, you'll need to set up your API key.
-A script is provided to help with this:
-
-```bash
-python scripts/setup_openai.py
-```
-This script will guide you through saving your API key in a `.openai_config.json` file (which is gitignored) and setting it as an environment variable.
+- Node.js 18+ and bun/npm
+- OpenAI API key (required for AI agents)
+- MEXC API credentials (optional, for authenticated endpoints)
 
 ## 🛠️ Quick Start
 
@@ -84,9 +72,11 @@ This script will guide you through saving your API key in a `.openai_config.json
 git clone https://github.com/your-username/mexc-sniper-bot.git
 cd mexc-sniper-bot
 
-# Install dependencies
+# Install dependencies with bun (recommended)
+bun install
+
+# Or with npm
 npm install
-pip install -r requirements.txt
 ```
 
 ### 2. Environment Setup
@@ -94,62 +84,66 @@ pip install -r requirements.txt
 Create a `.env.local` file:
 
 ```bash
-# Required
+# Required - Core AI Integration
 OPENAI_API_KEY=your_openai_api_key
 
-# Optional MEXC API (for authenticated endpoints)
+# Optional - MEXC API Access
 MEXC_API_KEY=your_mexc_api_key
 MEXC_SECRET_KEY=your_mexc_secret_key
+MEXC_BASE_URL=https://api.mexc.com
 
-# Database (optional, defaults to SQLite)
-DATABASE_URL=postgresql://user:pass@localhost/mexc_sniper
-REDIS_URL=redis://localhost:6379
+# Optional - Database (defaults to SQLite)
+DATABASE_URL=sqlite:///./mexc_sniper.db
+# For TursoDB: uncomment and configure
+# TURSO_DATABASE_URL=your_turso_database_url
+# TURSO_AUTH_TOKEN=your_turso_auth_token
 
-# Inngest (auto-generated if not provided)
-INNGEST_SIGNING_KEY=your_signing_key
-INNGEST_EVENT_KEY=your_event_key
+# Optional - Workflow Orchestration (auto-generated if not provided)
+# INNGEST_SIGNING_KEY=your_signing_key
+# INNGEST_EVENT_KEY=your_event_key
 ```
 
-### 3. Run Development Servers
+### 3. Setup Database
 
-You'll need three terminals:
-
-**Terminal 1 - Next.js Development:**
 ```bash
-npm run dev
+# Initialize database with migrations
+make db-migrate
+
+# Or using bun directly
+bun run db:migrate
 ```
 
-**Terminal 2 - Python API (Legacy):**
+### 4. Run Development Environment
+
+Use the convenient Makefile commands:
+
 ```bash
-npm run mexc-agent-dev
-# OR
-uvicorn api.agents:app --reload --port 8001
+# Start all development servers (Next.js + Inngest)
+make dev
+
+# Or start individually:
+make dev-next    # Next.js on port 3000
+make dev-inngest # Inngest dev server on port 8288
 ```
 
-**Terminal 3 - Inngest Dev Server:**
-```bash
-npx inngest-cli@latest dev -u http://localhost:3000/api/inngest
-```
+### 5. Access the Application
 
-### 4. Access the Application
-
-- **Dashboard**: http://localhost:3000/app/dashboard
-- **Inngest Dashboard**: http://localhost:8288 (TypeScript agents)
-- **Python API**: http://localhost:8001 (Legacy support)
-- **API Docs**: http://localhost:8001/docs
+- **Trading Dashboard**: http://localhost:3000/dashboard
+- **Configuration**: http://localhost:3000/config  
+- **Inngest Dashboard**: http://localhost:8288 (workflow monitoring)
 
 ## 🤖 TypeScript Multi-Agent System
 
 ### 🚀 Inngest Workflows
 
-The new system uses event-driven Inngest workflows for reliable execution:
+The system uses event-driven Inngest workflows for reliable execution:
 
 #### **Calendar Discovery Workflow**
 ```typescript
 // Trigger calendar scanning
 await inngest.send({
-  name: "mexc/calendar.poll.requested",
-  data: { trigger: "manual", force: false }
+  name: "mexc/calendar.poll",
+  data: { triggeredBy: "manual", timestamp: new Date().toISOString() }
 });
 ```
 
@@ -157,7 +151,7 @@ await inngest.send({
 ```typescript
 // Monitor specific symbol for ready state
 await inngest.send({
-  name: "mexc/symbol.watch.requested", 
+  name: "mexc/symbol.watch", 
   data: {
     vcoinId: "EXAMPLE001",
     symbolName: "EXAMPLECOIN",
@@ -170,7 +164,7 @@ await inngest.send({
 ```typescript
 // Analyze patterns across symbols
 await inngest.send({
-  name: "mexc/pattern.analysis.requested",
+  name: "mexc/pattern.analysis",
   data: {
     symbols: ["BTC", "ETH", "SOL"],
     analysisType: "discovery"
@@ -182,12 +176,12 @@ await inngest.send({
 ```typescript
 // Generate AI-powered trading strategy
 await inngest.send({
-  name: "mexc/trading.strategy.requested",
+  name: "mexc/trading.strategy",
   data: {
     vcoinId: "EXAMPLE001", 
     symbolData: {...},
     riskLevel: "medium",
-    capital: 1000
+    positionSize: 1000
   }
 });
 ```
@@ -224,23 +218,34 @@ await inngest.send({
 - **Error Recovery**: Robust fallback and retry mechanisms
 - **Performance Optimization**: Efficient resource allocation and scheduling
 
-## 📡 Legacy API Endpoints (Python)
+## ⚙️ User Configuration
 
-### Health Checks
-```http
-GET /api/agents/health              # Basic health check  
-GET /api/agents/health/detailed     # Comprehensive health with dependencies
-GET /api/agents/health/ready        # Kubernetes-style readiness probe
-GET /api/agents/health/live         # Kubernetes-style liveness probe
-```
+### Take Profit Levels
+Configure your preferred take profit percentages:
 
-## ⚙️ Configuration
+- **Level 1**: Conservative (default: 5%)
+- **Level 2**: Moderate (default: 10%) 
+- **Level 3**: Aggressive (default: 15%)
+- **Level 4**: Very Aggressive (default: 25%)
+- **Custom**: User-defined percentage
 
-Key settings in `src/config.py`:
-- `DEFAULT_BUY_AMOUNT`: USDT amount per trade
-- `MAX_CONCURRENT_SNIPES`: Parallel trade limit
-- `READY_STATE_PATTERN`: Pattern that indicates token readiness
-- `STOP_LOSS_PERCENT`: Automatic stop-loss trigger
+### Trading Preferences
+- **Default Buy Amount**: USDT amount per trade
+- **Max Concurrent Snipes**: Parallel trade limit
+- **Ready State Pattern**: Pattern indicating token readiness (default: 2,2,4)
+- **Stop Loss Percent**: Automatic stop-loss trigger
+- **Risk Tolerance**: Low, Medium, High
+- **Target Advance Hours**: How far ahead to detect opportunities
+
+## 📊 Database Schema
+
+The system uses Drizzle ORM with the following key tables:
+
+- **user_preferences**: Trading configuration and take profit levels
+- **api_credentials**: Encrypted API keys and credentials
+- **monitored_listings**: Tracked MEXC listings with pattern states
+- **snipe_targets**: Active trading targets with execution details
+- **execution_history**: Complete trading history and performance metrics
 
 ## 🚀 Deployment
 
@@ -251,55 +256,87 @@ Key settings in `src/config.py`:
 3. Add environment variables
 4. Deploy
 
-**Important**: After deployment, install the Inngest integration from Vercel's integration marketplace.
+**Important**: The system works entirely on Vercel's serverless infrastructure.
 
 ### Manual Deployment
 
 ```bash
+# Build and deploy
+make build
 vercel --prod
 ```
 
 ## 📚 Documentation
 
 - [Agent Architecture](docs/agent-architecture.md) - AI agent system design
+- [TypeScript Multi-Agent Architecture](docs/typescript-multi-agent-architecture.md) - Technical implementation
 - [Sniper System](docs/sniper-system.md) - Trading bot implementation
-- [API Reference](https://localhost:8001/docs) - Interactive API documentation
 
-## 🧪 Testing
+## 🧪 Testing & Development
 
-Run the test suite:
+### Code Quality
 
 ```bash
-# Python tests
-pytest
+# Run all linters and formatters
+make lint
 
-# Run with coverage
-pytest --cov=src
+# TypeScript type checking
+make type-check
 
-# TypeScript linting
-npm run lint
+# Format code
+make format
+
+# Run all pre-commit checks
+make pre-commit
 ```
 
-## 🔄 CI/CD Workflow
+### Database Operations
 
-This project uses GitHub Actions for CI/CD, defined in `.github/workflows/cicd.yml`. The workflow is triggered on pushes and pull requests to the `main` branch and performs the following:
+```bash
+# Generate new migrations
+make db-generate
 
-- Checks out the code.
-- Sets up Python and Node.js (with Bun).
-- Installs Python and Node.js dependencies.
-- Runs linters and formatters for both Python and TypeScript/JavaScript.
-- Executes Python tests (using `pytest`).
-- Executes TypeScript/JavaScript tests.
+# Apply migrations
+make db-migrate
 
-This helps ensure code quality and that tests pass before merging changes.
+# Open database studio
+make db-studio
+
+# Reset database (WARNING: destroys data)
+make db-reset
+```
+
+### Utilities
+
+```bash
+# Check project status
+make status
+
+# Clean generated files
+make clean
+
+# Check for outdated dependencies
+make deps-check
+
+# Update dependencies
+make deps-update
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Write tests for new functionality
-4. Ensure all tests pass
+4. Ensure all tests pass and linting is clean
 5. Submit a pull request
+
+### Development Guidelines
+
+- Follow TypeScript best practices
+- Use Drizzle ORM for database operations
+- Implement proper error handling
+- Add comprehensive JSDoc comments
+- Write tests for new features
 
 ## ⚠️ Disclaimer
 

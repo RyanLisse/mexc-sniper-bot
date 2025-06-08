@@ -1,4 +1,4 @@
-import { BaseAgent, AgentConfig, AgentResponse } from "./base-agent";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 export interface AnalysisRequest {
   content: string;
@@ -43,12 +43,12 @@ Analysis Framework:
   }
 
   async process(input: string, context?: AnalysisRequest): Promise<AgentResponse> {
-    const request: AnalysisRequest = context || { 
+    const request: AnalysisRequest = context || {
       content: input,
       analysisType: "technical",
-      depth: "standard"
+      depth: "standard",
     };
-    
+
     const userMessage = `
 Analysis Request:
 Type: ${request.analysisType || "comprehensive"}

@@ -1,1 +1,0 @@
-# MEXC Sniper Bot Utilities

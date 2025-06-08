@@ -48,15 +48,15 @@ export class BaseAgent {
         ...options,
       });
 
-      const content = response.choices[0]?.message?.content || "";
-      
+      const content = "choices" in response ? response.choices[0]?.message?.content || "" : "";
+
       return {
         content,
         metadata: {
           agent: this.config.name,
           timestamp: new Date().toISOString(),
-          tokensUsed: response.usage?.total_tokens,
-          model: response.model,
+          tokensUsed: "usage" in response ? response.usage?.total_tokens : undefined,
+          model: "model" in response ? response.model : undefined,
         },
       };
     } catch (error) {
@@ -65,7 +65,8 @@ export class BaseAgent {
     }
   }
 
-  async process(input: string, context?: Record<string, any>): Promise<AgentResponse> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async process(_input: string, _context?: Record<string, unknown>): Promise<AgentResponse> {
     throw new Error("Process method must be implemented by subclass");
   }
 }

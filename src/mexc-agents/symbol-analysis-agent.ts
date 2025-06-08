@@ -1,4 +1,4 @@
-import { BaseAgent, AgentConfig, AgentResponse } from "../agents/base-agent";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "../agents/base-agent";
 
 export interface SymbolAnalysisRequest {
   vcoinId: string;
@@ -79,7 +79,7 @@ Output Framework:
       vcoinId: input,
       analysisDepth: "standard",
     };
-    
+
     const userMessage = `
 MEXC Symbol Analysis Request:
 
@@ -91,8 +91,12 @@ Symbol Details:
 - Analysis Attempt: ${request.attempt || 1}
 - Analysis Depth: ${request.analysisDepth || "standard"}
 
-${input.includes("{") ? `Symbol Data:
-${input}` : `Analysis Target: ${input}`}
+${
+  input.includes("{")
+    ? `Symbol Data:
+${input}`
+    : `Analysis Target: ${input}`
+}
 
 Please conduct a comprehensive symbol analysis focusing on:
 
@@ -145,7 +149,7 @@ Provide clear READY/NOT READY determination with detailed confidence metrics and
 
   async analyzeSymbolReadiness(vcoinId: string, symbolData: any): Promise<AgentResponse> {
     const dataJson = JSON.stringify(symbolData, null, 2);
-    
+
     return await this.process(dataJson, {
       vcoinId,
       analysisDepth: "comprehensive",
@@ -221,52 +225,68 @@ If READY:
     ]);
   }
 
-  async assessMarketMicrostructure(marketData: any): Promise<AgentResponse> {
+  async assessMarketMicrostructure(params: {
+    vcoinId: string;
+    symbolData: any[];
+  }): Promise<AgentResponse> {
     const userMessage = `
 MEXC Market Microstructure Analysis:
 
-Market Data:
-${JSON.stringify(marketData, null, 2)}
+VCoin ID: ${params.vcoinId}
+Symbol Data:
+${JSON.stringify(params.symbolData, null, 2)}
 
-Please analyze the market microstructure and trading conditions:
+Please analyze the market microstructure and trading conditions for this specific symbol:
 
-1. **Liquidity Assessment**
+1. **Symbol Infrastructure Assessment**
+   - Trading pair availability and configurations
+   - Market maker presence and activity levels
+   - Order book setup and structure readiness
+   - Exchange infrastructure operational status
+
+2. **Liquidity Assessment**
    - Order book depth (bids/asks within 5% of mid)
    - Market impact analysis for various trade sizes
    - Liquidity concentration and distribution
    - Real vs. apparent liquidity evaluation
 
-2. **Price Discovery Efficiency**
+3. **Price Discovery Efficiency**
    - Bid-ask spread analysis (absolute and relative)
    - Price volatility and stability patterns
    - Market maker activity and competition
    - Price improvement opportunities
 
-3. **Trading Volume Analysis**
+4. **Trading Volume Analysis**
    - Historical volume patterns and trends
    - Volume-price relationships and correlations
    - Unusual activity detection and validation
    - Sustainable volume projections
 
-4. **Market Quality Metrics**
+5. **Market Quality Metrics**
    - Effective spread measurements
    - Price impact and market depth ratios
    - Order flow analysis and imbalances
    - Market fragmentation assessment
 
-5. **Risk Factors**
+6. **Risk Factors**
    - Liquidity concentration risks
    - Market manipulation indicators
    - System latency and execution risks
    - Counterparty and settlement risks
 
-6. **Trading Recommendations**
+7. **Trading Recommendations**
    - Optimal order sizes and execution strategy
    - Best timing for market entry/exit
    - Risk management parameters
    - Alternative execution venues
 
-Provide quantitative metrics where possible and specific trading recommendations.
+8. **Symbol-Specific Analysis**
+   - Ready state pattern indicators (sts, st, tt values)
+   - Infrastructure readiness for trading launch
+   - Timing optimization for market entry
+   - Risk-adjusted position sizing recommendations
+
+Provide quantitative metrics where possible and specific trading recommendations based on the symbol data.
 `;
 
     return await this.callOpenAI([

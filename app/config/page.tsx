@@ -363,11 +363,6 @@ export default function ConfigPage() {
                 Dashboard
               </Button>
             </Link>
-            <Link href="/">
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                Home
-              </Button>
-            </Link>
           </div>
         </div>
       </header>

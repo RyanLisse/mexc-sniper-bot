@@ -14,7 +14,7 @@ The MEXC Sniper Bot features a revolutionary TypeScript-based multi-agent system
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    MexcOrchestrator                         │
-│              (Workflow Coordination Hub)                    │
+│              (Primary Workflow Coordinator)                 │
 └─────────────────────┬───────────────────────────────────────┘
                       │
          ┌────────────┼────────────┐
@@ -31,6 +31,9 @@ The MEXC Sniper Bot features a revolutionary TypeScript-based multi-agent system
                  │MEXC API│
                  │ Agent  │
                  └────────┘
+
+Note: This is the production architecture. Enhanced/newsletter 
+components are experimental or out-of-scope respectively.
 ```
 
 ## 🤖 Specialized Agents
@@ -482,6 +485,42 @@ class MLPatternAgent extends PatternDiscoveryAgent {
   }
 }
 ```
+
+## 🧹 Architecture Cleanup & Component Roles
+
+### Current System State
+
+The project currently contains three distinct agent architectures:
+
+1. **🎯 Production MEXC System** (`src/mexc-agents/`)
+   - **Status**: ✅ Active, Production-ready
+   - **Purpose**: MEXC cryptocurrency trading operations
+   - **Components**: MexcOrchestrator + 4 specialized agents
+   - **Integration**: Full Inngest workflow integration
+
+2. **🧪 Enhanced Multi-Agent System** (`src/agents/enhanced-*.ts`)
+   - **Status**: ⚠️ Experimental, Not integrated
+   - **Purpose**: Advanced agent coordination with handoffs
+   - **Components**: MultiAgentOrchestrator + Enhanced agents
+   - **Integration**: None (standalone experimental code)
+
+3. **📰 Newsletter/Content System** (`src/agents/orchestrator.ts` + general agents)
+   - **Status**: ❌ Out-of-scope, Unused
+   - **Purpose**: Newsletter and content generation
+   - **Components**: AgentOrchestrator + research/analysis/formatting agents
+   - **Integration**: None (completely unrelated to MEXC trading)
+
+### Recommended Actions
+
+| Component | Action | Reason |
+|-----------|--------|--------|
+| **MEXC Agents** | ✅ **Keep** | Core production functionality |
+| **MexcOrchestrator** | ✅ **Keep** | Primary workflow coordinator |
+| **Enhanced Agents** | ⚠️ **Evaluate** | Potentially valuable features |
+| **Newsletter System** | ❌ **Remove** | Out-of-scope for trading bot |
+| **General Agents** | ❌ **Remove** | Not related to MEXC trading |
+
+For detailed analysis, see: [`docs/agent-orchestrator-roles.md`](./agent-orchestrator-roles.md)
 
 ---
 

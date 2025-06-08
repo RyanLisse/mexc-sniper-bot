@@ -1,5 +1,24 @@
-import { inngest } from "./client";
 import { MexcOrchestrator } from "../mexc-agents/orchestrator";
+import { inngest } from "./client";
+
+// Helper function to update workflow status
+async function updateWorkflowStatus(action: string, data: any) {
+  try {
+    const response = await fetch("http://localhost:3000/api/workflow-status", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ action, data }),
+    });
+
+    if (!response.ok) {
+      console.warn("Failed to update workflow status:", response.statusText);
+    }
+  } catch (error) {
+    console.warn("Error updating workflow status:", error);
+  }
+}
 
 // MEXC Calendar polling event data
 interface MexcCalendarPollRequestedData {
@@ -7,7 +26,7 @@ interface MexcCalendarPollRequestedData {
   force?: boolean;
 }
 
-// MEXC Symbol watching event data  
+// MEXC Symbol watching event data
 interface MexcSymbolWatchRequestedData {
   vcoinId: string;
   symbolName?: string;
@@ -34,10 +53,18 @@ interface MexcTradingStrategyRequestedData {
 // MEXC Calendar Polling Function
 export const pollMexcCalendar = inngest.createFunction(
   { id: "poll-mexc-calendar" },
-  { event: "mexc/calendar.poll.requested" },
+  { event: "mexc/calendar.poll" },
   async ({ event, step }: { event: { data: MexcCalendarPollRequestedData }; step: any }) => {
     const { trigger = "manual", force = false } = event.data;
-    
+
+    // Update status: Started calendar discovery
+    await updateWorkflowStatus("addActivity", {
+      activity: {
+        type: "calendar",
+        message: "Calendar discovery started",
+      },
+    });
+
     // Step 1: Execute Multi-Agent Calendar Discovery
     const discoveryResult = await step.run("calendar-discovery-workflow", async () => {
       const orchestrator = new MexcOrchestrator();
@@ -48,15 +75,28 @@ export const pollMexcCalendar = inngest.createFunction(
     });
 
     if (!discoveryResult.success) {
+      await updateWorkflowStatus("addActivity", {
+        activity: {
+          type: "calendar",
+          message: `Calendar discovery failed: ${discoveryResult.error}`,
+        },
+      });
       throw new Error(`Calendar discovery failed: ${discoveryResult.error}`);
     }
+
+    // Update metrics
+    await updateWorkflowStatus("updateMetrics", {
+      metrics: {
+        readyTokens: discoveryResult.data?.readyTargets?.length || 0,
+      },
+    });
 
     // Step 2: Process and send follow-up events for new listings
     const followUpEvents = await step.run("process-discovery-results", async () => {
       if (discoveryResult.data?.newListings?.length) {
         // Send symbol watch events for new discoveries
         const events = discoveryResult.data.newListings.map((listing: any) => ({
-          name: "mexc/symbol.watch.requested",
+          name: "mexc/symbol.watch",
           data: {
             vcoinId: listing.vcoinId,
             symbolName: listing.symbolName,
@@ -71,7 +111,21 @@ export const pollMexcCalendar = inngest.createFunction(
           await inngest.send(eventData);
         }
 
+        await updateWorkflowStatus("addActivity", {
+          activity: {
+            type: "calendar",
+            message: `Calendar scan completed - ${discoveryResult.data.newListings.length} new listings found`,
+          },
+        });
+
         return events.length;
+      } else {
+        await updateWorkflowStatus("addActivity", {
+          activity: {
+            type: "calendar",
+            message: "Calendar scan completed - no new listings",
+          },
+        });
       }
       return 0;
     });
@@ -86,7 +140,7 @@ export const pollMexcCalendar = inngest.createFunction(
       metadata: {
         agentsUsed: ["calendar", "pattern-discovery", "api"],
         analysisComplete: true,
-      }
+      },
     };
   }
 );
@@ -94,13 +148,21 @@ export const pollMexcCalendar = inngest.createFunction(
 // MEXC Symbol Watching Function
 export const watchMexcSymbol = inngest.createFunction(
   { id: "watch-mexc-symbol" },
-  { event: "mexc/symbol.watch.requested" },
+  { event: "mexc/symbol.watch" },
   async ({ event, step }: { event: { data: MexcSymbolWatchRequestedData }; step: any }) => {
     const { vcoinId, symbolName, projectName, launchTime, attempt = 1 } = event.data;
-    
+
     if (!vcoinId) {
       throw new Error("Missing vcoinId in event data");
     }
+
+    // Update status: Started symbol watching
+    await updateWorkflowStatus("addActivity", {
+      activity: {
+        type: "analysis",
+        message: `Watching symbol ${symbolName || vcoinId} (attempt ${attempt})`,
+      },
+    });
 
     // Step 1: Execute Multi-Agent Symbol Analysis
     const analysisResult = await step.run("symbol-analysis-workflow", async () => {
@@ -125,7 +187,7 @@ export const watchMexcSymbol = inngest.createFunction(
       if (symbolReady && hasCompleteData) {
         // Create trading strategy and target
         await inngest.send({
-          name: "mexc/trading.strategy.requested",
+          name: "mexc/strategy.create",
           data: {
             vcoinId,
             symbolData: analysisResult.data.symbolData,
@@ -133,11 +195,18 @@ export const watchMexcSymbol = inngest.createFunction(
           },
         });
 
+        await updateWorkflowStatus("addActivity", {
+          activity: {
+            type: "pattern",
+            message: `Pattern detected for ${symbolName || vcoinId} - ready state confirmed`,
+          },
+        });
+
         return { action: "strategy_created", targetReady: true };
       } else if (attempt < 10) {
         // Schedule recheck
         await inngest.send({
-          name: "mexc/symbol.watch.requested", 
+          name: "mexc/symbol.watch",
           data: {
             vcoinId,
             symbolName,
@@ -164,17 +233,25 @@ export const watchMexcSymbol = inngest.createFunction(
       metadata: {
         agentsUsed: ["symbol-analysis", "pattern-discovery", "api"],
         hasCompleteData: analysisResult.data?.hasCompleteData || false,
-      }
+      },
     };
   }
 );
 
-// MEXC Pattern Analysis Function  
+// MEXC Pattern Analysis Function
 export const analyzeMexcPatterns = inngest.createFunction(
   { id: "analyze-mexc-patterns" },
-  { event: "mexc/pattern.analysis.requested" },
+  { event: "mexc/patterns.analyze" },
   async ({ event, step }: { event: { data: MexcPatternAnalysisRequestedData }; step: any }) => {
     const { vcoinId, symbols, analysisType = "discovery" } = event.data;
+
+    // Update status: Started pattern analysis
+    await updateWorkflowStatus("addActivity", {
+      activity: {
+        type: "pattern",
+        message: `Pattern analysis started for ${symbols?.length || 0} symbols`,
+      },
+    });
 
     // Step 1: Execute Multi-Agent Pattern Analysis
     const patternResult = await step.run("pattern-analysis-workflow", async () => {
@@ -201,7 +278,7 @@ export const analyzeMexcPatterns = inngest.createFunction(
         agentsUsed: ["pattern-analysis", "market-analysis", "strategy"],
         vcoinId,
         symbols: symbols?.length || 0,
-      }
+      },
     };
   }
 );
@@ -209,13 +286,21 @@ export const analyzeMexcPatterns = inngest.createFunction(
 // MEXC Trading Strategy Function
 export const createMexcTradingStrategy = inngest.createFunction(
   { id: "create-mexc-trading-strategy" },
-  { event: "mexc/trading.strategy.requested" },
+  { event: "mexc/strategy.create" },
   async ({ event, step }: { event: { data: MexcTradingStrategyRequestedData }; step: any }) => {
     const { vcoinId, symbolData, riskLevel = "medium", capital } = event.data;
-    
+
     if (!vcoinId || !symbolData) {
       throw new Error("Missing vcoinId or symbolData in event data");
     }
+
+    // Update status: Started trading strategy creation
+    await updateWorkflowStatus("addActivity", {
+      activity: {
+        type: "snipe",
+        message: `Creating trading strategy for ${symbolData.symbol || vcoinId}`,
+      },
+    });
 
     // Step 1: Execute Multi-Agent Trading Strategy Creation
     const strategyResult = await step.run("trading-strategy-workflow", async () => {
@@ -229,8 +314,28 @@ export const createMexcTradingStrategy = inngest.createFunction(
     });
 
     if (!strategyResult.success) {
+      await updateWorkflowStatus("addActivity", {
+        activity: {
+          type: "snipe",
+          message: `Trading strategy failed for ${symbolData.symbol || vcoinId}`,
+        },
+      });
       throw new Error(`Trading strategy creation failed: ${strategyResult.error}`);
     }
+
+    // Update metrics for successful strategy
+    await updateWorkflowStatus("updateMetrics", {
+      metrics: {
+        successfulSnipes: 1, // This would be incremented in real implementation
+      },
+    });
+
+    await updateWorkflowStatus("addActivity", {
+      activity: {
+        type: "snipe",
+        message: `Trading strategy created for ${symbolData.symbol || vcoinId} - ready to execute`,
+      },
+    });
 
     return {
       status: "success",
@@ -246,7 +351,7 @@ export const createMexcTradingStrategy = inngest.createFunction(
         agentsUsed: ["trading-strategy", "risk-management", "market-analysis"],
         riskLevel,
         capital,
-      }
+      },
     };
   }
 );

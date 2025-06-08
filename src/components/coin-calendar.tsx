@@ -3,13 +3,15 @@
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
+import { useMexcCalendar } from "@/src/hooks/use-mexc-data";
+import { useMemo, useState } from "react";
 
-interface CoinListing {
-  symbol: string;
-  listingTime: string;
-  tradingStartTime: string;
-}
+// interface CoinListing {
+//   symbol: string;
+//   listingTime: string;
+//   tradingStartTime: string;
+//   projectName?: string;
+// }
 
 interface CoinCalendarProps {
   onDateSelect?: (date: Date) => void;
@@ -17,33 +19,32 @@ interface CoinCalendarProps {
 
 export function CoinCalendar({ onDateSelect }: CoinCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [coinListings, setCoinListings] = useState<CoinListing[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  const handleDateSelect = async (date: Date | undefined) => {
+  // Use real MEXC calendar data
+  const { data: mexcCalendarData, isLoading: mexcLoading, error: mexcError } = useMexcCalendar();
+
+  // Filter listings by selected date
+  const coinListings = useMemo(() => {
+    if (!mexcCalendarData) return [];
+
+    const selectedDateStr = selectedDate.toDateString();
+
+    return mexcCalendarData
+      .filter((entry) => {
+        const listingDate = new Date(entry.firstOpenTime);
+        return listingDate.toDateString() === selectedDateStr;
+      })
+      .map((entry) => ({
+        symbol: entry.symbol,
+        listingTime: new Date(entry.firstOpenTime).toISOString(),
+        tradingStartTime: new Date(entry.firstOpenTime).toISOString(),
+        projectName: entry.projectName,
+      }));
+  }, [mexcCalendarData, selectedDate]);
+
+  const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
-
     setSelectedDate(date);
-    setLoading(true);
-
-    try {
-      // Fetch coin listings for selected date
-      const response = await fetch(
-        `/api/agents/mexc/listings?date=${date.toISOString().split("T")[0]}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setCoinListings(data.listings || []);
-      } else {
-        setCoinListings([]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch coin listings:", error);
-      setCoinListings([]);
-    } finally {
-      setLoading(false);
-    }
-
     onDateSelect?.(date);
   };
 
@@ -105,9 +106,15 @@ export function CoinCalendar({ onDateSelect }: CoinCalendarProps) {
           <CardDescription>Listings for {formatDate(selectedDate)}</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {mexcLoading ? (
             <div className="flex items-center justify-center p-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading MEXC data...</span>
+            </div>
+          ) : mexcError ? (
+            <div className="text-center text-red-400 p-8">
+              <p>Error loading calendar data:</p>
+              <p className="text-sm">{mexcError.message}</p>
             </div>
           ) : coinListings.length > 0 ? (
             <div className="space-y-3">
@@ -116,10 +123,15 @@ export function CoinCalendar({ onDateSelect }: CoinCalendarProps) {
                   key={`${listing.symbol}-${listing.listingTime}`}
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
-                  <div>
-                    <Badge variant="outline" className="text-sm font-mono">
+                  <div className="flex flex-col">
+                    <Badge variant="outline" className="text-sm font-mono w-fit">
                       {listing.symbol}
                     </Badge>
+                    {listing.projectName && (
+                      <span className="text-xs text-muted-foreground mt-1">
+                        {listing.projectName}
+                      </span>
+                    )}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {new Date(listing.listingTime).toLocaleTimeString()}
@@ -127,12 +139,13 @@ export function CoinCalendar({ onDateSelect }: CoinCalendarProps) {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : mexcCalendarData ? (
             <div className="text-center text-muted-foreground p-8">
-              {isToday(selectedDate) || isTomorrow(selectedDate)
-                ? "No listings found for this date"
-                : "Select today or tomorrow to view available listings"}
+              <p>No listings for {formatDate(selectedDate)}</p>
+              <p className="text-xs mt-1">Total listings available: {mexcCalendarData.length}</p>
             </div>
+          ) : (
+            <div className="text-center text-muted-foreground p-8">No calendar data available</div>
           )}
         </CardContent>
       </Card>

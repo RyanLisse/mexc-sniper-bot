@@ -1,4 +1,13 @@
-import { BaseAgent, AgentConfig, AgentResponse } from "../agents/base-agent";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "../agents/base-agent";
+import {
+  READY_STATE_PATTERN,
+  type SymbolV2Entry,
+  hasCompleteData,
+  isValidForSnipe,
+  matchesReadyPattern,
+  validateSymbolV2Entry,
+} from "../schemas/mexc-schemas";
+import { getMexcClient } from "../services/mexc-api-client";
 
 export interface MexcApiRequest {
   endpoint: string;
@@ -76,7 +85,7 @@ Output Format:
 
   async process(input: string, context?: MexcApiRequest): Promise<AgentResponse> {
     const request: MexcApiRequest = context || { endpoint: input };
-    
+
     const userMessage = `
 MEXC API Analysis Request:
 Endpoint: ${request.endpoint}
@@ -103,7 +112,7 @@ Focus on actionable analysis for cryptocurrency trading decisions.
 
   async analyzeSymbolData(symbolData: MexcSymbolData[]): Promise<AgentResponse> {
     const dataJson = JSON.stringify(symbolData, null, 2);
-    
+
     return await this.process("Analyze MEXC symbol data", {
       endpoint: "/api/v3/etf/symbols",
       method: "GET",
@@ -113,17 +122,17 @@ Focus on actionable analysis for cryptocurrency trading decisions.
 
   async analyzeCalendarData(calendarData: MexcCalendarEntry[]): Promise<AgentResponse> {
     const dataJson = JSON.stringify(calendarData, null, 2);
-    
+
     return await this.process("Analyze MEXC calendar data", {
       endpoint: "/api/v3/etf/calendar",
-      method: "GET", 
+      method: "GET",
       params: { calendarData: dataJson },
     });
   }
 
   async assessDataQuality(apiResponse: any): Promise<AgentResponse> {
     const responseJson = JSON.stringify(apiResponse, null, 2);
-    
+
     const userMessage = `
 MEXC API Data Quality Assessment:
 
@@ -170,7 +179,7 @@ Provide a structured assessment with specific recommendations for trading decisi
 
   async identifyTradingSignals(marketData: any): Promise<AgentResponse> {
     const dataJson = JSON.stringify(marketData, null, 2);
-    
+
     const userMessage = `
 MEXC Trading Signal Analysis:
 
@@ -215,33 +224,363 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
     ]);
   }
 
-  // Helper method to make actual MEXC API calls
+  // Enhanced method to call TypeScript MEXC API client with retry logic and AI analysis
   async callMexcApi(endpoint: string, params?: Record<string, any>): Promise<any> {
+    const maxRetries = 3;
+    const retryDelay = 1000; // Start with 1 second delay
+
+    console.log(`[MexcApiAgent] Calling MEXC API: ${endpoint}`, { params });
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const mexcClient = getMexcClient();
+        let apiResponse: any;
+
+        // Route to appropriate API method based on endpoint
+        switch (endpoint) {
+          case "/api/v3/etf/calendar":
+          case "/calendar":
+            console.log(`[MexcApiAgent] Fetching calendar data (attempt ${attempt}/${maxRetries})`);
+            apiResponse = await mexcClient.getCalendarListings();
+            break;
+
+          case "/api/v3/etf/symbols":
+          case "/symbols":
+            console.log(`[MexcApiAgent] Fetching symbols data (attempt ${attempt}/${maxRetries})`);
+            const vcoinId = params?.vcoin_id || params?.vcoinId;
+            apiResponse = await mexcClient.getSymbolsV2(vcoinId);
+            break;
+
+          default:
+            console.warn(`[MexcApiAgent] Unknown endpoint: ${endpoint}, using direct API call`);
+            apiResponse = await this.directMexcApiCall(endpoint, params);
+            break;
+        }
+
+        // Validate API response structure
+        if (!this.isValidApiResponse(apiResponse)) {
+          throw new Error(`Invalid API response structure: ${JSON.stringify(apiResponse)}`);
+        }
+
+        // Add AI analysis to the response
+        const enhancedResponse = await this.enhanceResponseWithAI(apiResponse, endpoint);
+
+        console.log(`[MexcApiAgent] API call successful on attempt ${attempt}`);
+        return enhancedResponse;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error(`[MexcApiAgent] Attempt ${attempt}/${maxRetries} failed:`, errorMessage);
+
+        // If this is the last attempt, return error response
+        if (attempt === maxRetries) {
+          console.error(`[MexcApiAgent] All retry attempts failed for endpoint: ${endpoint}`);
+          return {
+            success: false,
+            data: [],
+            error: errorMessage,
+            timestamp: new Date().toISOString(),
+            endpoint,
+            retryAttempts: maxRetries,
+          };
+        }
+
+        // Wait before retrying with exponential backoff
+        const delay = retryDelay * Math.pow(2, attempt - 1);
+        console.log(`[MexcApiAgent] Retrying in ${delay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  // Validate API response structure
+  private isValidApiResponse(response: any): boolean {
+    if (!response || typeof response !== "object") {
+      return false;
+    }
+
+    // Check for expected structure
+    return (
+      response.hasOwnProperty("success") &&
+      response.hasOwnProperty("data") &&
+      response.hasOwnProperty("timestamp")
+    );
+  }
+
+  // Enhance API response with AI analysis
+  private async enhanceResponseWithAI(apiResponse: any, endpoint: string): Promise<any> {
     try {
-      const url = new URL(endpoint, this.baseUrl);
-      if (params) {
-        Object.entries(params).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            url.searchParams.append(key, String(value));
-          }
-        });
+      if (!apiResponse.success || !apiResponse.data) {
+        return apiResponse; // Return as-is if not successful
       }
 
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(this.apiKey && { "X-MEXC-APIKEY": this.apiKey }),
+      // Determine analysis type based on endpoint
+      let aiAnalysis: AgentResponse;
+
+      if (endpoint.includes("calendar")) {
+        aiAnalysis = await this.analyzeCalendarData(apiResponse.data);
+      } else if (endpoint.includes("symbols")) {
+        aiAnalysis = await this.analyzeSymbolData(apiResponse.data);
+      } else {
+        aiAnalysis = await this.assessDataQuality(apiResponse);
+      }
+
+      // Enhance response with AI insights
+      return {
+        ...apiResponse,
+        aiAnalysis: {
+          analysis: aiAnalysis.content,
+          timestamp: new Date().toISOString(),
+          endpoint,
         },
-      });
+      };
+    } catch (error) {
+      console.warn(`[MexcApiAgent] AI analysis failed, returning raw response:`, error);
+      return apiResponse; // Return original response if AI analysis fails
+    }
+  }
 
-      if (!response.ok) {
-        throw new Error(`MEXC API error: ${response.status} ${response.statusText}`);
+  // Advanced pattern detection method with Zod validation
+  async detectReadyStatePatterns(symbolData?: SymbolV2Entry[]): Promise<AgentResponse> {
+    try {
+      let symbols: SymbolV2Entry[];
+
+      // If no data provided, fetch from API
+      if (!symbolData) {
+        console.log(`[MexcApiAgent] Fetching symbols for pattern detection`);
+        const apiResponse = await this.callMexcApi("/symbols");
+
+        if (!apiResponse.success) {
+          throw new Error(`Failed to fetch symbol data: ${apiResponse.error}`);
+        }
+
+        symbols = apiResponse.data.symbols || [];
+      } else {
+        symbols = symbolData;
       }
 
-      return await response.json();
+      // Validate and filter symbols using Zod schemas
+      const validatedSymbols = symbols
+        .map((symbol) => {
+          try {
+            return validateSymbolV2Entry(symbol);
+          } catch (error) {
+            console.warn(`[MexcApiAgent] Invalid symbol data:`, symbol);
+            return null;
+          }
+        })
+        .filter((symbol): symbol is SymbolV2Entry => symbol !== null);
+
+      // Detect patterns
+      const readySymbols = validatedSymbols.filter(matchesReadyPattern);
+      const completeDataSymbols = validatedSymbols.filter(hasCompleteData);
+      const snipeReadySymbols = validatedSymbols.filter(isValidForSnipe);
+
+      const patternAnalysis = {
+        totalSymbols: validatedSymbols.length,
+        readyStatePattern: {
+          count: readySymbols.length,
+          symbols: readySymbols.map((s) => s.cd),
+          pattern: READY_STATE_PATTERN,
+        },
+        completeData: {
+          count: completeDataSymbols.length,
+          symbols: completeDataSymbols.map((s) => s.cd),
+        },
+        snipeReady: {
+          count: snipeReadySymbols.length,
+          symbols: snipeReadySymbols.map((s) => s.cd),
+        },
+        patternBreakdown: this.analyzePatternDistribution(validatedSymbols),
+      };
+
+      // Generate AI analysis of patterns
+      const aiResponse = await this.callOpenAI([
+        {
+          role: "user",
+          content: `
+MEXC Pattern Detection Analysis:
+
+${JSON.stringify(patternAnalysis, null, 2)}
+
+Ready State Pattern (sts:2, st:2, tt:4): ${readySymbols.length} symbols detected
+Snipe-Ready Symbols: ${snipeReadySymbols.length} symbols with complete data
+
+Please analyze these pattern detection results and provide:
+
+1. **Pattern Analysis Summary**
+   - Overall pattern distribution insights
+   - Ready state pattern significance
+   - Data completeness assessment
+
+2. **Trading Opportunities**
+   - Immediate snipe-ready symbols
+   - Symbols approaching ready state
+   - Priority recommendations
+
+3. **Market Conditions**
+   - Pattern frequency trends
+   - Market readiness indicators
+   - Risk assessment based on patterns
+
+4. **Action Recommendations**
+   - Which symbols to monitor immediately
+   - Timing for pattern state changes
+   - Alert configurations
+
+Focus on actionable trading signals and specific symbol recommendations.
+          `,
+        },
+      ]);
+
+      return {
+        content:
+          aiResponse.content +
+          `\n\n**Pattern Analysis Data:**\n${JSON.stringify(patternAnalysis, null, 2)}`,
+        metadata: {
+          ...aiResponse.metadata,
+        },
+      };
     } catch (error) {
-      console.error(`[MexcApiAgent] API call failed:`, error);
+      console.error(`[MexcApiAgent] Pattern detection failed:`, error);
+      return {
+        content: `Pattern detection failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        metadata: {
+          agent: this.config.name,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+  }
+
+  // Analyze pattern distribution across all symbols
+  private analyzePatternDistribution(symbols: SymbolV2Entry[]): Record<string, number> {
+    const distribution: Record<string, number> = {};
+
+    symbols.forEach((symbol) => {
+      const patternKey = `sts:${symbol.sts},st:${symbol.st},tt:${symbol.tt}`;
+      distribution[patternKey] = (distribution[patternKey] || 0) + 1;
+    });
+
+    return distribution;
+  }
+
+  // Get specific symbols by their vcoinIds with enhanced analysis
+  async getSymbolsByVcoinIds(vcoinIds: string[]): Promise<AgentResponse> {
+    try {
+      console.log(`[MexcApiAgent] Fetching symbols for vcoinIds:`, vcoinIds);
+
+      const apiResponse = await this.callMexcApi("/symbols");
+
+      if (!apiResponse.success) {
+        throw new Error(`Failed to fetch symbol data: ${apiResponse.error}`);
+      }
+
+      // Filter symbols by vcoinIds
+      const allSymbols = apiResponse.data.symbols || [];
+      const requestedSymbols = allSymbols.filter((symbol: any) => vcoinIds.includes(symbol.cd));
+
+      const analysis = await this.analyzeSymbolData(requestedSymbols);
+
+      return {
+        content:
+          analysis.content +
+          `\n\n**Requested VcoinIds:** ${vcoinIds.join(", ")}\n**Found Symbols:** ${requestedSymbols.length}`,
+        metadata: {
+          ...analysis.metadata,
+        },
+      };
+    } catch (error) {
+      console.error(`[MexcApiAgent] Error fetching symbols by vcoinIds:`, error);
+      return {
+        content: `Failed to fetch symbols: ${error instanceof Error ? error.message : "Unknown error"}`,
+        metadata: {
+          agent: this.config.name,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+  }
+
+  // Direct MEXC API call as fallback
+  private async directMexcApiCall(endpoint: string, params?: Record<string, any>): Promise<any> {
+    try {
+      // Use correct MEXC endpoints based on config
+      let apiUrl: string;
+
+      if (endpoint.includes("calendar") || endpoint === "/api/v3/etf/calendar") {
+        // Use the real MEXC calendar endpoint provided by user
+        apiUrl = "https://www.mexc.com/api/operation/new_coin_calendar";
+        const timestamp = Date.now();
+        const url = new URL(apiUrl);
+        url.searchParams.append("timestamp", timestamp.toString());
+
+        const response = await fetch(url.toString(), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "MEXC-Sniper-Bot/1.0",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`MEXC API error: ${response.status} ${response.statusText}`);
+        }
+
+        return await response.json();
+      } else if (endpoint.includes("symbols") || endpoint === "/api/v3/etf/symbols") {
+        // Use the configured symbols endpoint
+        apiUrl = `${this.baseUrl}/api/platform/spot/market-v2/web/symbolsV2`;
+
+        const url = new URL(apiUrl);
+        if (params) {
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              url.searchParams.append(key, String(value));
+            }
+          });
+        }
+
+        const response = await fetch(url.toString(), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "User-Agent": "MEXC-Sniper-Bot/1.0",
+            ...(this.apiKey && { "X-MEXC-APIKEY": this.apiKey }),
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`MEXC API error: ${response.status} ${response.statusText}`);
+        }
+
+        return await response.json();
+      } else {
+        // Generic endpoint call
+        const url = new URL(endpoint, this.baseUrl);
+        if (params) {
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              url.searchParams.append(key, String(value));
+            }
+          });
+        }
+
+        const response = await fetch(url.toString(), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(this.apiKey && { "X-MEXC-APIKEY": this.apiKey }),
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`MEXC API error: ${response.status} ${response.statusText}`);
+        }
+
+        return await response.json();
+      }
+    } catch (error) {
+      console.error(`[MexcApiAgent] Direct API call failed:`, error);
       throw error;
     }
   }

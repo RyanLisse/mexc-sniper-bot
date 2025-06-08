@@ -1,8 +1,8 @@
-import { ResearchAgent, ResearchRequest } from "./research-agent";
-import { FormattingAgent, FormattingRequest } from "./formatting-agent";
-import { AnalysisAgent, AnalysisRequest } from "./analysis-agent";
-import { StrategyAgent, StrategyRequest } from "./strategy-agent";
-import { AgentResponse } from "./base-agent";
+import { AnalysisAgent } from "./analysis-agent";
+import type { AgentResponse } from "./base-agent";
+import { FormattingAgent } from "./formatting-agent";
+import { ResearchAgent } from "./research-agent";
+import { StrategyAgent } from "./strategy-agent";
 
 export interface NewsletterWorkflowRequest {
   topics: string[];
@@ -43,11 +43,13 @@ export class AgentOrchestrator {
       // Step 1: Research Phase
       console.log(`[Orchestrator] Step 1: Research phase`);
       const researchResult = await this.researchAgent.analyzeMarketTrends(request.topics);
-      
+
       // Step 2: Analysis Phase
       console.log(`[Orchestrator] Step 2: Analysis phase`);
-      const analysisResult = await this.analysisAgent.performTechnicalAnalysis(researchResult.content);
-      
+      const analysisResult = await this.analysisAgent.performTechnicalAnalysis(
+        researchResult.content
+      );
+
       // Step 3: Strategy Phase (optional)
       let strategyResult: AgentResponse | undefined;
       if (request.includeStrategy) {
@@ -61,10 +63,15 @@ export class AgentOrchestrator {
       const contentToFormat = [
         researchResult.content,
         analysisResult.content,
-        strategyResult?.content || ""
-      ].filter(Boolean).join("\n\n");
+        strategyResult?.content || "",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
 
-      const formattedResult = await this.formattingAgent.formatNewsletter(contentToFormat, request.topics);
+      const formattedResult = await this.formattingAgent.formatNewsletter(
+        contentToFormat,
+        request.topics
+      );
 
       console.log(`[Orchestrator] Newsletter workflow completed successfully`);
 
@@ -77,7 +84,6 @@ export class AgentOrchestrator {
           formatted: formattedResult,
         },
       };
-
     } catch (error) {
       console.error(`[Orchestrator] Workflow failed:`, error);
       return {
@@ -87,23 +93,26 @@ export class AgentOrchestrator {
     }
   }
 
-  async executeResearchWorkflow(topics: string[], depth: "shallow" | "moderate" | "deep" = "moderate"): Promise<WorkflowResult> {
+  async executeResearchWorkflow(
+    topics: string[],
+    depth: "shallow" | "moderate" | "deep" = "moderate"
+  ): Promise<WorkflowResult> {
     try {
       console.log(`[Orchestrator] Starting research workflow for: ${topics.join(", ")}`);
 
       // Parallel research for multiple topics
-      const researchPromises = topics.map(topic => 
+      const researchPromises = topics.map((topic) =>
         this.researchAgent.researchCryptocurrency(topic, depth)
       );
 
       const researchResults = await Promise.all(researchPromises);
-      
+
       // Combine and analyze all research
-      const combinedResearch = researchResults.map(r => r.content).join("\n\n");
+      const combinedResearch = researchResults.map((r) => r.content).join("\n\n");
       const analysisResult = await this.analysisAgent.identifyOpportunities(combinedResearch);
 
       const formattedResult = await this.formattingAgent.formatReport(
-        `${combinedResearch}\n\n${analysisResult.content}`, 
+        `${combinedResearch}\n\n${analysisResult.content}`,
         topics
       );
 
@@ -121,7 +130,6 @@ export class AgentOrchestrator {
           formatted: formattedResult,
         },
       };
-
     } catch (error) {
       console.error(`[Orchestrator] Research workflow failed:`, error);
       return {
@@ -131,12 +139,15 @@ export class AgentOrchestrator {
     }
   }
 
-  async executeAnalysisWorkflow(content: string, analysisTypes: Array<"sentiment" | "technical" | "risk" | "opportunity">): Promise<WorkflowResult> {
+  async executeAnalysisWorkflow(
+    content: string,
+    analysisTypes: Array<"sentiment" | "technical" | "risk" | "opportunity">
+  ): Promise<WorkflowResult> {
     try {
       console.log(`[Orchestrator] Starting analysis workflow`);
 
       // Execute multiple analysis types in parallel
-      const analysisPromises = analysisTypes.map(type => {
+      const analysisPromises = analysisTypes.map((type) => {
         switch (type) {
           case "sentiment":
             return this.analysisAgent.analyzeSentiment(content);
@@ -152,11 +163,14 @@ export class AgentOrchestrator {
       });
 
       const analysisResults = await Promise.all(analysisPromises);
-      
+
       // Combine all analysis results
-      const combinedAnalysis = analysisResults.map((result, index) => 
-        `## ${analysisTypes[index].toUpperCase()} ANALYSIS\n\n${result.content}`
-      ).join("\n\n");
+      const combinedAnalysis = analysisResults
+        .map(
+          (result, index) =>
+            `## ${analysisTypes[index].toUpperCase()} ANALYSIS\n\n${result.content}`
+        )
+        .join("\n\n");
 
       const formattedResult = await this.formattingAgent.formatReport(combinedAnalysis, []);
 
@@ -180,7 +194,6 @@ export class AgentOrchestrator {
           formatted: formattedResult,
         },
       };
-
     } catch (error) {
       console.error(`[Orchestrator] Analysis workflow failed:`, error);
       return {
