@@ -6,9 +6,49 @@ import {
   type SymbolV2Entry,
   isValidForSnipe,
 } from "@/src/schemas/mexc-schemas";
-import { mexcApi } from "@/src/services/enhanced-mexc-api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
+
+// API client functions that use backend routes
+const apiClient = {
+  async getCalendar() {
+    const response = await fetch("/api/mexc/calendar");
+    if (!response.ok) {
+      throw new Error(`Calendar API failed: ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Calendar API failed");
+    }
+    return { data: result.data };
+  },
+
+  async getSymbolsForVcoins(vcoinIds: string[]) {
+    const params = new URLSearchParams();
+    if (vcoinIds.length > 0) {
+      params.append('vcoinId', vcoinIds.join(','));
+    }
+    
+    const response = await fetch(`/api/mexc/symbols?${params}`);
+    if (!response.ok) {
+      throw new Error(`Symbols API failed: ${response.status}`);
+    }
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Symbols API failed");
+    }
+    return { data: { symbols: result.data } };
+  },
+
+  async checkConnectivity() {
+    const response = await fetch("/api/mexc/connectivity");
+    if (!response.ok) {
+      throw new Error(`Connectivity API failed: ${response.status}`);
+    }
+    const result = await response.json();
+    return result.connected;
+  }
+};
 
 // Query keys
 export const queryKeys = {
@@ -44,7 +84,7 @@ export const usePatternSniper = () => {
     refetch: refetchCalendar,
   } = useQuery({
     queryKey: queryKeys.calendar,
-    queryFn: mexcApi.getCalendar.bind(mexcApi),
+    queryFn: apiClient.getCalendar,
     refetchInterval: 5 * 60 * 1000, // 5 minutes
     staleTime: 4 * 60 * 1000, // 4 minutes
     retry: 3,
@@ -59,7 +99,7 @@ export const usePatternSniper = () => {
     refetch: refetchSymbols,
   } = useQuery({
     queryKey: [...queryKeys.symbolsV2, Array.from(pendingDetection)],
-    queryFn: () => mexcApi.getSymbolsForVcoins(Array.from(pendingDetection)),
+    queryFn: () => apiClient.getSymbolsForVcoins(Array.from(pendingDetection)),
     refetchInterval: pendingDetection.size > 0 ? 30 * 1000 : false, // 30 seconds when active
     staleTime: 25 * 1000, // 25 seconds
     enabled: pendingDetection.size > 0,
@@ -70,7 +110,7 @@ export const usePatternSniper = () => {
   // Connectivity monitoring
   const { data: isConnected } = useQuery({
     queryKey: queryKeys.connectivity,
-    queryFn: mexcApi.checkConnectivity.bind(mexcApi),
+    queryFn: apiClient.checkConnectivity,
     refetchInterval: 60 * 1000, // 1 minute
     staleTime: 50 * 1000, // 50 seconds
     retry: 1,

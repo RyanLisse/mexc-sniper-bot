@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const vcoinId = searchParams.get('vcoinId');
     
     const symbolsResponse = vcoinId
-      ? await mexcApi.getSymbolsForVcoins([vcoinId])
+      ? await mexcApi.getSymbolsForVcoins(vcoinId.split(','))
       : await mexcApi.getSymbolsV2();
     
     return NextResponse.json({
