@@ -345,9 +345,9 @@ export class MexcApiClient {
         throw new Error("Invalid exchange info response");
       }
 
-      // Cache the symbols
+      // Cache the symbols - MEXC uses status "1" for trading symbols, not "TRADING"
       this.exchangeSymbolsCache = response.symbols.filter(
-        (symbol) => symbol.status === "TRADING" && symbol.quoteAsset === "USDT"
+        (symbol) => symbol.status === "1" && symbol.quoteAsset === "USDT"
       );
       this.exchangeSymbolsCacheTime = now;
 
@@ -428,11 +428,22 @@ export class MexcApiClient {
 
   async getAccountBalances(): Promise<MexcApiResponse<MexcAccountBalance>> {
     if (!this.config.apiKey || !this.config.secretKey) {
-      throw new Error("MEXC API credentials not configured for account balances");
+      console.error("[MexcApiClient] MEXC API credentials not configured");
+      return {
+        success: false,
+        data: {
+          balances: [],
+          totalUsdtValue: 0,
+          lastUpdated: new Date().toISOString(),
+        },
+        error: "MEXC API credentials not configured. Please add MEXC_API_KEY and MEXC_SECRET_KEY to your environment variables.",
+        timestamp: new Date().toISOString(),
+      };
     }
 
     try {
       console.log("[MexcApiClient] Fetching account balances...");
+      console.log("[MexcApiClient] Using API key:", this.config.apiKey.substring(0, 8) + "...");
 
       // Get account info with balances
       const accountInfo = await this.makeRequest<{
@@ -450,15 +461,42 @@ export class MexcApiClient {
       // Get valid trading pairs for USDT conversion validation
       const validTradingPairs = await this.getTradingPairs();
 
-      // Get current prices for USDT conversion
-      const tickerPrices = await this.get24hrTicker();
+      // Filter non-zero balances first to know which prices we need
+      const nonZeroBalances = accountInfo.balances.filter((balance) => {
+        const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
+        return total > 0; // Only include non-zero balances
+      });
 
-      // Process balances
-      const balances: MexcBalance[] = accountInfo.balances
-        .filter((balance) => {
-          const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
-          return total > 0; // Only include non-zero balances
-        })
+      // Get symbols we need prices for (excluding USDT)
+      const symbolsNeeded = nonZeroBalances
+        .filter((balance) => balance.asset !== "USDT")
+        .map((balance) => `${balance.asset}USDT`)
+        .filter((symbol) => validTradingPairs.has(symbol));
+
+      console.log(`[MexcApiClient] Need prices for ${symbolsNeeded.length} symbols:`, symbolsNeeded);
+
+      // Fetch prices for specific symbols only
+      const priceMap = new Map<string, number>();
+      
+      // Fetch individual ticker prices for better reliability
+      for (const symbol of symbolsNeeded) {
+        try {
+          const tickerResponse = await this.get24hrTicker(symbol);
+          if (tickerResponse.success && tickerResponse.data.length > 0) {
+            const ticker = tickerResponse.data[0];
+            const price = ticker?.lastPrice || ticker?.price;
+            if (price && Number.parseFloat(price) > 0) {
+              priceMap.set(symbol, Number.parseFloat(price));
+              console.log(`[MexcApiClient] Got price for ${symbol}: ${price}`);
+            }
+          }
+        } catch (error) {
+          console.error(`[MexcApiClient] Failed to get price for ${symbol}:`, error);
+        }
+      }
+
+      // Process balances with fetched prices
+      const balances: MexcBalance[] = nonZeroBalances
         .map((balance) => {
           const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
           let usdtValue = 0;
@@ -466,23 +504,16 @@ export class MexcApiClient {
           if (balance.asset === "USDT") {
             usdtValue = total;
           } else {
-            // Check if trading pair exists before attempting price lookup
             const symbol = `${balance.asset}USDT`;
-
-            if (validTradingPairs.has(symbol)) {
-              // Find price in ticker data
-              const ticker = tickerPrices.data?.find((t: any) => t.symbol === symbol);
-              const price = ticker?.lastPrice || ticker?.price; // Use lastPrice first, fallback to price
-              if (price && Number.parseFloat(price) > 0) {
-                usdtValue = total * Number.parseFloat(price);
-                console.log(
-                  `[MexcApiClient] USDT conversion: ${balance.asset} (${total}) @ ${price} = ${usdtValue.toFixed(6)} USDT`
-                );
-              } else {
-                console.log(`[MexcApiClient] No price data available for ${symbol}`);
-              }
+            const price = priceMap.get(symbol);
+            
+            if (price && price > 0) {
+              usdtValue = total * price;
+              console.log(
+                `[MexcApiClient] USDT conversion: ${balance.asset} (${total}) @ ${price} = ${usdtValue.toFixed(6)} USDT`
+              );
             } else {
-              console.log(`[MexcApiClient] Trading pair ${symbol} not found on exchange`);
+              console.log(`[MexcApiClient] No price available for ${symbol}`);
             }
           }
 
