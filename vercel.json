@@ -53,11 +53,7 @@
   "crons": [
     {
       "path": "/api/triggers/calendar-poll",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/triggers/pattern-analysis",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 12 * * *"
     }
   ],
   "regions": ["fra1"],
