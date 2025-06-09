@@ -15,12 +15,16 @@ export default defineConfig({
       '.next', 
       'coverage',
       'all-tests/e2e-tests/**/*',
+      'all-tests/e2e-tests/**/*.spec.ts',
+      'all-tests/e2e-tests/**/*.spec.js',
       'playwright-report/**/*',
+      'test-results/**/*',
       '**/*.spec.ts',
       '**/*.spec.js',
-      'test-results/**/*'
+      '**/*.e2e.*',
+      '**/e2e/**/*'
     ],
-    setupFiles: ['./vitest-setup.js'],
+    // setupFiles: ['./vitest-setup.js'],
   },
   resolve: {
     alias: {
