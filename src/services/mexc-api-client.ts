@@ -90,14 +90,22 @@ export class MexcApiClient {
       throw new Error("MEXC secret key not configured");
     }
 
+    // Create a copy of params excluding the signature parameter
+    const signatureParams = { ...params };
+    delete signatureParams.signature;
+
     const queryString = new URLSearchParams(
-      Object.entries(params)
+      Object.entries(signatureParams)
         .filter(([_, value]) => value !== undefined && value !== null)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
-    return crypto.createHmac("sha256", this.config.secretKey).update(queryString).digest("hex");
+    console.log(`[MexcApiClient] Signature query string: ${queryString}`);
+    const signature = crypto.createHmac("sha256", this.config.secretKey).update(queryString).digest("hex");
+    console.log(`[MexcApiClient] Generated signature: ${signature}`);
+    
+    return signature;
   }
 
   private async makeRequest<T>(
@@ -119,12 +127,20 @@ export class MexcApiClient {
       }
 
       // Add required parameters for MEXC API
-      params.timestamp = Date.now();
+      const timestamp = Date.now();
+      params.timestamp = timestamp;
       params.recvWindow = 5000; // Standard recv window
       
-      // Generate signature BEFORE adding it to params
-      params.signature = this.generateSignature(params);
+      console.log(`[MexcApiClient] Request timestamp: ${timestamp}`);
+      console.log(`[MexcApiClient] Request params before signature:`, params);
+      
+      // Generate signature from params WITHOUT signature parameter
+      const signature = this.generateSignature(params);
+      // Now add signature to params
+      params.signature = signature;
       headers["X-MEXC-APIKEY"] = this.config.apiKey;
+      
+      console.log(`[MexcApiClient] Final params with signature:`, params);
     }
 
     // Build URL with query parameters
