@@ -118,7 +118,11 @@ export class MexcApiClient {
         throw new Error("MEXC API credentials not configured for authenticated request");
       }
 
+      // Add required parameters for MEXC API
       params.timestamp = Date.now();
+      params.recvWindow = 5000; // Standard recv window
+      
+      // Generate signature BEFORE adding it to params
       params.signature = this.generateSignature(params);
       headers["X-MEXC-APIKEY"] = this.config.apiKey;
     }
@@ -545,6 +549,15 @@ export class MexcApiClient {
       };
     } catch (error) {
       console.error("[MexcApiClient] Account balances failed:", error);
+      // Provide more helpful error messages for common MEXC API issues
+      let errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
+      if (errorMessage.includes("700002") || errorMessage.includes("Signature for this request is not valid")) {
+        errorMessage = "MEXC API signature validation failed. This is likely due to: 1) IP address not allowlisted for API key, 2) Invalid API credentials, or 3) Clock synchronization issues. Please check your MEXC API key settings and ensure your deployment IP is allowlisted.";
+      } else if (errorMessage.includes("10072") || errorMessage.includes("Api key info invalid")) {
+        errorMessage = "MEXC API key is invalid or expired. Please check your MEXC_API_KEY and MEXC_SECRET_KEY environment variables.";
+      }
+
       return {
         success: false,
         data: {
@@ -552,7 +565,7 @@ export class MexcApiClient {
           totalUsdtValue: 0,
           lastUpdated: new Date().toISOString(),
         },
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: errorMessage,
         timestamp: new Date().toISOString(),
       };
     }
