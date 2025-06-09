@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDevelopmentSecurityHeaders, getProductionSecurityHeaders } from './src/lib/security-headers';
 
 export function middleware(request: NextRequest) {
-  // Get the appropriate security headers based on environment
-  const isProduction = process.env.NODE_ENV === 'production';
-  const securityHeaders = isProduction 
-    ? getProductionSecurityHeaders() 
-    : getDevelopmentSecurityHeaders();
-  
   // Create response
   const response = NextResponse.next();
   
-  // Apply security headers
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
+  // Basic security headers that work in edge runtime
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
   
-  // Additional request-specific headers
-  response.headers.set('X-Request-ID', crypto.randomUUID());
+  if (isProduction) {
+    // Production security headers
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('X-DNS-Prefetch-Control', 'off');
+    response.headers.set('X-Download-Options', 'noopen');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+  }
+  
+  // Generate simple request ID without crypto API
+  const requestId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+  response.headers.set('X-Request-ID', requestId);
   
   // Remove sensitive server information
   response.headers.delete('Server');
