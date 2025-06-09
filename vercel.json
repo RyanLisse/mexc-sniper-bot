@@ -1,12 +1,4 @@
 {
-  "functions": {
-    "app/api/inngest/route.ts": {
-      "maxDuration": 60
-    },
-    "app/api/*/route.ts": {
-      "maxDuration": 30
-    }
-  },
   "env": {
     "ENVIRONMENT": "production",
     "NODE_ENV": "production"
