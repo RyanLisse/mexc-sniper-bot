@@ -1,0 +1,9 @@
+[test]
+# Configure Bun test runner to only run unit tests
+exclude = [
+  "./all-tests/e2e-tests/**/*",
+  "./**/*.spec.ts",
+  "./**/*.spec.js", 
+  "./playwright-report/**/*",
+  "./test-results/**/*"
+]

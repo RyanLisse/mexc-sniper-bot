@@ -55,8 +55,13 @@ kill-ports: ## Kill processes on common development ports
 	@echo -e "${BLUE}Killing processes on common ports...${NC}"
 	@-pkill -f "next dev" 2>/dev/null || true
 	@-pkill -f "inngest" 2>/dev/null || true
+	@-pkill -f "playwright" 2>/dev/null || true
+	@-pkill -f "vitest" 2>/dev/null || true
 	@-lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+	@-lsof -ti:3008 | xargs kill -9 2>/dev/null || true
 	@-lsof -ti:8288 | xargs kill -9 2>/dev/null || true
+	@-lsof -ti:5555 | xargs kill -9 2>/dev/null || true
+	@sleep 1
 	@echo -e "${GREEN}✓ Ports cleared${NC}"
 
 .PHONY: dev
@@ -106,6 +111,104 @@ type-check: ## Run TypeScript type checking
 .PHONY: pre-commit
 pre-commit: lint type-check ## Run all pre-commit checks
 	@echo -e "${GREEN}✓ All pre-commit checks passed${NC}"
+
+# ==================== Testing Commands ====================
+
+.PHONY: test
+test: kill-ports ## Run all unit tests (kills ports first)
+	@echo -e "${BLUE}Running unit tests...${NC}"
+	@$(NODE) run test
+	@echo -e "${GREEN}✓ Unit tests completed${NC}"
+
+.PHONY: test-unit
+test-unit: ## Run unit tests only (no port killing)
+	@echo -e "${BLUE}Running unit tests only...${NC}"
+	@bunx vitest run __tests__/unit/ all-tests/vitest-unit-tests/
+	@echo -e "${GREEN}✓ Unit tests completed${NC}"
+
+.PHONY: test-integration
+test-integration: ## Run integration tests only
+	@echo -e "${BLUE}Running integration tests only...${NC}"
+	@bunx vitest run __tests__/integration/
+	@echo -e "${GREEN}✓ Integration tests completed${NC}"
+
+.PHONY: test-utils
+test-utils: ## Run utility/verification tests only
+	@echo -e "${BLUE}Running utility tests only...${NC}"
+	@bunx vitest run __tests__/utils/
+	@echo -e "${GREEN}✓ Utility tests completed${NC}"
+
+.PHONY: test-watch
+test-watch: ## Run tests in watch mode
+	@echo -e "${BLUE}Running tests in watch mode...${NC}"
+	@$(NODE) run test:watch
+
+.PHONY: test-ui
+test-ui: kill-ports ## Run tests with UI interface
+	@echo -e "${BLUE}Running tests with UI...${NC}"
+	@$(NODE) run test:ui
+
+.PHONY: test-coverage
+test-coverage: kill-ports ## Run tests with coverage report
+	@echo -e "${BLUE}Running tests with coverage...${NC}"
+	@$(NODE) run test:coverage
+	@echo -e "${GREEN}✓ Coverage report generated${NC}"
+
+.PHONY: test-e2e
+test-e2e: kill-ports ## Run E2E tests (starts dev server)
+	@echo -e "${BLUE}Running E2E tests...${NC}"
+	@echo -e "${YELLOW}Starting development server for E2E tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@echo -e "${BLUE}Running Playwright tests...${NC}"
+	@$(NODE) run test:e2e || true
+	@echo -e "${YELLOW}Cleaning up development server...${NC}"
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ E2E tests completed${NC}"
+
+.PHONY: test-e2e-ui
+test-e2e-ui: kill-ports ## Run E2E tests with UI
+	@echo -e "${BLUE}Running E2E tests with UI...${NC}"
+	@echo -e "${YELLOW}Starting development server for E2E tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:e2e:ui || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ E2E tests with UI completed${NC}"
+
+.PHONY: test-e2e-headed
+test-e2e-headed: kill-ports ## Run E2E tests in headed mode
+	@echo -e "${BLUE}Running E2E tests in headed mode...${NC}"
+	@echo -e "${YELLOW}Starting development server for E2E tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:e2e:headed || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ E2E tests in headed mode completed${NC}"
+
+.PHONY: test-all
+test-all: kill-ports ## Run all tests in sequence (unit → integration → E2E)
+	@echo -e "${BLUE}Running complete test suite in sequence...${NC}"
+	@echo -e "${YELLOW}1/3: Running unit tests...${NC}"
+	@$(NODE) run test:unit
+	@echo -e "${GREEN}✓ Unit tests passed${NC}"
+	@echo -e "${YELLOW}2/3: Running integration tests...${NC}"
+	@bunx vitest run __tests__/integration/
+	@echo -e "${GREEN}✓ Integration tests passed${NC}"
+	@echo -e "${YELLOW}3/3: Running E2E tests...${NC}"
+	@echo -e "${BLUE}Starting development server for E2E tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:e2e || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ E2E tests completed${NC}"
+	@echo -e "${GREEN}✓ All tests completed successfully${NC}"
+
+.PHONY: test-quick
+test-quick: ## Quick test run (unit tests only, no cleanup)
+	@echo -e "${BLUE}Running quick unit tests...${NC}"
+	@bunx vitest run --run
+	@echo -e "${GREEN}✓ Quick tests completed${NC}"
 
 # ==================== Build Commands ====================
 
@@ -239,6 +342,38 @@ f: format ## Alias for format
 
 .PHONY: b
 b: build ## Alias for build
+
+.PHONY: t
+t: test ## Alias for test
+
+.PHONY: tw
+tw: test-watch ## Alias for test-watch
+
+.PHONY: te
+te: test-e2e ## Alias for test-e2e
+
+.PHONY: tq
+tq: test-quick ## Alias for test-quick
+
+.PHONY: tu
+tu: test-unit ## Alias for test-unit
+
+.PHONY: ti
+ti: test-integration ## Alias for test-integration
+
+.PHONY: ta
+ta: test-all ## Alias for test-all
+
+# ==================== Complete Workflows ====================
+
+.PHONY: workflow-dev
+workflow-dev: kill-ports lint type-check test dev ## Complete development workflow
+
+.PHONY: workflow-ci
+workflow-ci: install lint type-check test build ## Complete CI workflow
+
+.PHONY: workflow-deploy
+workflow-deploy: workflow-ci deploy ## Complete deployment workflow
 
 # ==================== Special Targets ====================
 

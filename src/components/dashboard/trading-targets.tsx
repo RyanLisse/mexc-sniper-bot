@@ -76,23 +76,27 @@ export function TradingTargets({
   if (isLoading) {
     return (
       <div className={`space-y-6 ${className}`}>
-        {Array.from({ length: 2 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <div className="animate-pulse space-y-2">
-                <div className="h-5 bg-gray-200 rounded w-1/3" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="animate-pulse space-y-3">
-                {Array.from({ length: 3 }).map((_, j) => (
-                  <div key={j} className="h-16 bg-gray-200 rounded" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {Array.from({ length: 2 }, (_, i) => ({ id: `target-loading-${Date.now()}-${i}` })).map(
+          (item) => (
+            <Card key={item.id}>
+              <CardHeader>
+                <div className="animate-pulse space-y-2">
+                  <div className="h-5 bg-gray-200 rounded w-1/3" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="animate-pulse space-y-3">
+                  {Array.from({ length: 3 }, (_, j) => ({
+                    id: `target-item-${Date.now()}-${j}`,
+                  })).map((subItem) => (
+                    <div key={subItem.id} className="h-16 bg-gray-200 rounded" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        )}
       </div>
     );
   }

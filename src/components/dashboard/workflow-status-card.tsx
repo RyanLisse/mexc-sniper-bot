@@ -147,9 +147,9 @@ export function WorkflowStatusCard({
           <div>
             <span className="text-sm font-medium">Active Workflows:</span>
             <div className="mt-1 space-y-1">
-              {workflowStatus.activeWorkflows.map((workflow, idx) => (
+              {workflowStatus.activeWorkflows.map((workflow) => (
                 <Badge
-                  key={`workflow-${workflow}-${idx}`}
+                  key={`workflow-${workflow}-${Date.now()}`}
                   variant="outline"
                   className="text-xs mr-1"
                 >

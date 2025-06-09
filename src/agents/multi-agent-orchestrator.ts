@@ -1,4 +1,5 @@
-import type { EnhancedAgentResponse, EnhancedBaseAgent } from "./enhanced-base-agent";
+import type { AgentContext } from "@/src/types/agent-types";
+import type { AgentHandoff, EnhancedAgentResponse, EnhancedBaseAgent } from "./enhanced-base-agent";
 import { EnhancedCalendarAgent } from "./enhanced-calendar-agent";
 import { EnhancedPatternAgent } from "./enhanced-pattern-agent";
 import { EnhancedStrategyCreationAgent } from "./enhanced-strategy-creation-agent";
@@ -88,7 +89,7 @@ export class MultiAgentOrchestrator {
   private async executeWorkflowSteps(
     request: AgentWorkflowRequest,
     result: AgentWorkflowResult
-  ): Promise<{ success: boolean; finalResult?: any }> {
+  ): Promise<{ success: boolean; finalResult?: EnhancedAgentResponse }> {
     const startingAgent = this.selectStartingAgent(request.type);
     if (!startingAgent) {
       throw new Error(`No suitable starting agent found for workflow type: ${request.type}`);
@@ -96,7 +97,7 @@ export class MultiAgentOrchestrator {
 
     let currentAgent = startingAgent;
     let currentInput = request.input;
-    let currentContext = request.context || {};
+    let currentContext: AgentContext = request.context || {};
     let handoffCount = 0;
     const maxHandoffs = request.maxHandoffs || 5;
 
@@ -109,7 +110,12 @@ export class MultiAgentOrchestrator {
         handoffCount
       );
 
-      if (stepResult.shouldContinue) {
+      if (
+        stepResult.shouldContinue &&
+        stepResult.nextAgent &&
+        stepResult.nextInput &&
+        stepResult.nextContext
+      ) {
         currentAgent = stepResult.nextAgent;
         currentInput = stepResult.nextInput;
         currentContext = stepResult.nextContext;
@@ -130,17 +136,17 @@ export class MultiAgentOrchestrator {
    * Execute a single agent step
    */
   private async executeAgentStep(
-    agent: any,
-    input: any,
-    context: any,
+    agent: EnhancedBaseAgent,
+    input: string,
+    context: AgentContext,
     result: AgentWorkflowResult,
     handoffCount: number
   ): Promise<{
     shouldContinue: boolean;
-    nextAgent?: any;
-    nextInput?: any;
-    nextContext?: any;
-    finalResult?: any;
+    nextAgent?: EnhancedBaseAgent;
+    nextInput?: string;
+    nextContext?: AgentContext;
+    finalResult?: EnhancedAgentResponse;
   }> {
     const agentName = this.getAgentName(agent);
     result.executionPath.push(agentName);
@@ -165,7 +171,11 @@ export class MultiAgentOrchestrator {
   /**
    * Prepare handoff to next agent
    */
-  private prepareHandoff(currentAgentName: string, handoff: any, agentResult: any) {
+  private prepareHandoff(
+    currentAgentName: string,
+    handoff: AgentHandoff,
+    agentResult: EnhancedAgentResponse
+  ) {
     console.log(
       `[MultiAgent] Handoff: ${currentAgentName} -> ${handoff.toAgent} (${handoff.reason})`
     );

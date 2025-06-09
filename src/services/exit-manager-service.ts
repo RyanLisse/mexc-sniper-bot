@@ -1,14 +1,14 @@
-import { AutoExitManager } from "./auto-exit-manager";
+import { OptimizedAutoExitManager } from "./optimized-auto-exit-manager";
 
 /**
  * Global singleton service for managing the AutoExitManager
  */
 class ExitManagerService {
   private static instance: ExitManagerService;
-  private autoExitManager: AutoExitManager;
+  private autoExitManager: OptimizedAutoExitManager;
 
   private constructor() {
-    this.autoExitManager = new AutoExitManager();
+    this.autoExitManager = new OptimizedAutoExitManager();
   }
 
   public static getInstance(): ExitManagerService {
@@ -42,7 +42,7 @@ class ExitManagerService {
   /**
    * Get the auto exit manager instance
    */
-  getManager(): AutoExitManager {
+  getManager(): OptimizedAutoExitManager {
     return this.autoExitManager;
   }
 }

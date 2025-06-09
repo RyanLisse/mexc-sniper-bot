@@ -1,12 +1,33 @@
-import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { drizzle as drizzleTurso } from "drizzle-orm/libsql";
+import { createClient } from "@libsql/client";
 import * as schema from "./schema";
 
-// Database connection
-const sqlite = new Database("./mexc_sniper.db");
-sqlite.pragma("journal_mode = WAL");
+// Environment-specific database configuration
+function createDatabase() {
+  const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
+  const hasTursoConfig = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
 
-export const db = drizzle(sqlite, { schema });
+  // Only use TursoDB if we have valid configuration
+  if ((isProduction || hasTursoConfig) && process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+    // Use TursoDB for production/Vercel deployment
+    console.log("[Database] Using TursoDB for production");
+    const client = createClient({
+      url: process.env.TURSO_DATABASE_URL,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+    return drizzleTurso(client, { schema });
+  } else {
+    // Use SQLite for local development
+    console.log("[Database] Using SQLite for development");
+    const Database = require("better-sqlite3");
+    const sqlite = new Database("./mexc_sniper.db");
+    sqlite.pragma("journal_mode = WAL");
+    return drizzle(sqlite, { schema });
+  }
+}
+
+export const db = createDatabase();
 
 // Export schema for use in other files
 export * from "./schema";
@@ -14,13 +35,12 @@ export * from "./schema";
 // Database utilities
 export async function initializeDatabase() {
   try {
-    // Run migrations if needed
-    console.log("[Database] Initializing SQLite database...");
+    console.log("[Database] Initializing database...");
 
-    // Test connection
-    const result = sqlite.prepare("SELECT 1 as test").get();
+    // Test connection with a simple query
+    const result = await db.execute("SELECT 1 as test");
     if (result) {
-      console.log("[Database] SQLite connection successful");
+      console.log("[Database] Database connection successful");
     }
 
     return true;
@@ -32,8 +52,9 @@ export async function initializeDatabase() {
 
 export function closeDatabase() {
   try {
-    sqlite.close();
     console.log("[Database] Database connection closed");
+    // Note: TursoDB connections are automatically managed
+    // SQLite connections would be closed here in development
   } catch (error) {
     console.error("[Database] Error closing database:", error);
   }

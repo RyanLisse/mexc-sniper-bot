@@ -221,6 +221,16 @@ export const snipeTargets = sqliteTable(
     statusIdx: index("snipe_targets_status_idx").on(table.status),
     priorityIdx: index("snipe_targets_priority_idx").on(table.priority),
     executionTimeIdx: index("snipe_targets_execution_time_idx").on(table.targetExecutionTime),
+    // Compound indexes for optimization
+    userStatusPriorityIdx: index("snipe_targets_user_status_priority_idx").on(
+      table.userId,
+      table.status,
+      table.priority
+    ),
+    statusExecutionTimeIdx: index("snipe_targets_status_execution_time_idx").on(
+      table.status,
+      table.targetExecutionTime
+    ),
   })
 );
 
@@ -274,6 +284,22 @@ export const executionHistory = sqliteTable(
     symbolIdx: index("execution_history_symbol_idx").on(table.symbolName),
     statusIdx: index("execution_history_status_idx").on(table.status),
     executedAtIdx: index("execution_history_executed_at_idx").on(table.executedAt),
+    // Compound indexes for optimization
+    userSymbolTimeIdx: index("execution_history_user_symbol_time_idx").on(
+      table.userId,
+      table.symbolName,
+      table.executedAt
+    ),
+    userStatusActionIdx: index("execution_history_user_status_action_idx").on(
+      table.userId,
+      table.status,
+      table.action
+    ),
+    snipeTargetActionStatusIdx: index("execution_history_snipe_target_action_status_idx").on(
+      table.snipeTargetId,
+      table.action,
+      table.status
+    ),
   })
 );
 

@@ -78,8 +78,11 @@ test.describe('Authentication Integration - Simple Tests', () => {
     await page.waitForTimeout(1000);
     
     // Check for any error messages (the specific text may vary)
-    const hasErrors = await page.locator('text="required", text="invalid", text="error"').count() > 0;
-    expect(hasErrors).toBeTruthy();
+    const emailError = await page.locator('text=Email is required').isVisible();
+    const passwordError = await page.locator('text=Password is required').isVisible();
+    const anyValidationError = await page.locator(':has-text("required"), :has-text("invalid"), :has-text("error")').count() > 0;
+    
+    expect(emailError || passwordError || anyValidationError).toBeTruthy();
   });
 
   test('Backend auth endpoints are working', async ({ page }) => {

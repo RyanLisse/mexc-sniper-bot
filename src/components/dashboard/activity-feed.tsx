@@ -86,18 +86,20 @@ export function ActivityFeed({ activities = [], isLoading = false, className }: 
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={`activity-loading-${i}`} className="animate-pulse">
-              <div className="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg">
-                <div className="w-2 h-2 bg-gray-300 rounded-full" />
-                <div className="flex-1 space-y-1">
-                  <div className="h-4 bg-gray-300 rounded w-3/4" />
-                  <div className="h-3 bg-gray-300 rounded w-1/4" />
+          {Array.from({ length: 5 }, (_, i) => ({ id: `loading-${Date.now()}-${i}` })).map(
+            (item) => (
+              <div key={item.id} className="animate-pulse">
+                <div className="flex items-center space-x-3 p-3 bg-gray-100 rounded-lg">
+                  <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                  <div className="flex-1 space-y-1">
+                    <div className="h-4 bg-gray-300 rounded w-3/4" />
+                    <div className="h-3 bg-gray-300 rounded w-1/4" />
+                  </div>
+                  <div className="w-4 h-4 bg-gray-300 rounded" />
                 </div>
-                <div className="w-4 h-4 bg-gray-300 rounded" />
               </div>
-            </div>
-          ))}
+            )
+          )}
         </CardContent>
       </Card>
     );

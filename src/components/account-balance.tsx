@@ -137,8 +137,10 @@ export function AccountBalance({ userId = "default-user", className }: AccountBa
       <CardContent className="space-y-4">
         {isLoading ? (
           <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={`balance-loading-${i}`} className="animate-pulse">
+            {Array.from({ length: 3 }, (_, i) => ({
+              id: `balance-loading-${Date.now()}-${i}`,
+            })).map((item) => (
+              <div key={item.id} className="animate-pulse">
                 <div className="h-4 bg-slate-600/30 rounded w-3/4 mb-2" />
                 <div className="h-3 bg-slate-600/30 rounded w-1/2" />
               </div>
