@@ -88,10 +88,10 @@ export class AnalysisUtils {
       /launch\s+ready/i,
     ];
 
-    let readyIndicators = 0;
+    let _readyIndicators = 0;
     for (const pattern of readyPatterns) {
       if (pattern.test(text)) {
-        readyIndicators++;
+        _readyIndicators++;
         score += 25;
         reasons.push("Ready state pattern detected");
       }
@@ -122,7 +122,7 @@ export class AnalysisUtils {
   }
 
   static categorizeOpportunity(data: CalendarEntry, confidence: number): string {
-    const urgency = this.calculateUrgencyLevel(data);
+    const urgency = AnalysisUtils.calculateUrgencyLevel(data);
 
     if (confidence >= 80 && urgency === "high") return "prime";
     if (confidence >= 70 && urgency === "medium") return "strong";
@@ -132,8 +132,8 @@ export class AnalysisUtils {
   }
 
   static generateRecommendation(data: CalendarEntry, confidence: number): string {
-    const category = this.categorizeOpportunity(data, confidence);
-    const urgency = this.calculateUrgencyLevel(data);
+    const category = AnalysisUtils.categorizeOpportunity(data, confidence);
+    const urgency = AnalysisUtils.calculateUrgencyLevel(data);
 
     switch (category) {
       case "prime":

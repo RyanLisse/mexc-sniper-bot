@@ -65,8 +65,8 @@ Analysis Output:
     super(config);
   }
 
-  async process(input: string, context?: PatternAnalysisRequest): Promise<AgentResponse> {
-    const request: PatternAnalysisRequest = context || {
+  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+    const request: PatternAnalysisRequest = (context as unknown as PatternAnalysisRequest) || {
       analysisType: "discovery",
       confidenceThreshold: 70,
     };
@@ -213,9 +213,7 @@ Provide specific pattern matches with confidence scores and actionable recommend
 
       // Enhance response with pattern summary data
       const patternSummary = this.generatePatternSummary(processedData);
-      const enhancedContent =
-        aiResponse.content +
-        `\n\n**Pattern Analysis Summary:**\n${JSON.stringify(patternSummary, null, 2)}`;
+      const enhancedContent = `${aiResponse.content}\n\n**Pattern Analysis Summary:**\n${JSON.stringify(patternSummary, null, 2)}`;
 
       console.log(
         `[PatternDiscoveryAgent] Successfully analyzed ${calendarEntries.length} entries, found ${patternSummary.totalOpportunities} opportunities`
@@ -246,7 +244,7 @@ Provide specific pattern matches with confidence scores and actionable recommend
     return calendarEntries
       .filter((entry) => {
         // Filter for valid entries with required fields
-        return entry && entry.vcoinId && entry.symbol && (entry.firstOpenTime || entry.launchTime);
+        return entry?.vcoinId && entry.symbol && (entry.firstOpenTime || entry.launchTime);
       })
       .map((entry) => {
         const launchTime = entry.firstOpenTime || entry.launchTime;
@@ -719,7 +717,6 @@ Provide specific pattern matches with confidence levels, timing recommendations,
         metadata: {
           agent: this.config.name,
           timestamp: new Date().toISOString(),
-          error: true,
         },
       };
     }

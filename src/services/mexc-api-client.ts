@@ -32,10 +32,37 @@ export interface MexcApiResponse<T> {
   timestamp: string;
 }
 
+export interface MexcBalance {
+  asset: string;
+  free: string;
+  locked: string;
+  total: number;
+  usdtValue?: number;
+}
+
+export interface MexcAccountBalance {
+  balances: MexcBalance[];
+  totalUsdtValue: number;
+  lastUpdated: string;
+}
+
+export interface MexcExchangeSymbol {
+  symbol: string;
+  status: string;
+  baseAsset: string;
+  quoteAsset: string;
+  baseAssetPrecision: number;
+  quotePrecision: number;
+  quoteAssetPrecision: number;
+}
+
 export class MexcApiClient {
   private config: Required<MexcApiConfig>;
   private lastRequestTime = 0;
   private readonly rateLimitDelay = 100; // 100ms between requests
+  private exchangeSymbolsCache: MexcExchangeSymbol[] | null = null;
+  private exchangeSymbolsCacheTime = 0;
+  private readonly symbolsCacheExpiry = 300000; // 5 minutes
 
   constructor(config: MexcApiConfig = {}) {
     this.config = {
@@ -166,24 +193,26 @@ export class MexcApiClient {
               typeof entry === "object" &&
               entry !== null &&
               "vcoinId" in entry &&
-              entry.vcoinId &&
+              Boolean(entry.vcoinId) &&
               "symbol" in entry &&
-              entry.symbol &&
+              Boolean(entry.symbol) &&
               "firstOpenTime" in entry &&
-              entry.firstOpenTime
+              Boolean(entry.firstOpenTime)
           )
-          .map((entry) => ({
-            vcoinId: entry.vcoinId,
-            symbol: entry.symbol,
-            projectName: entry.projectName || entry.symbol,
-            firstOpenTime: Number(entry.firstOpenTime),
-          }));
+          .map(
+            (entry): MexcCalendarEntry => ({
+              vcoinId: String(entry.vcoinId),
+              symbol: String(entry.symbol),
+              projectName: String(entry.projectName || entry.symbol),
+              firstOpenTime: Number(entry.firstOpenTime),
+            })
+          );
       }
 
       console.log(`[MexcApiClient] Retrieved ${calendarData.length} calendar entries`);
 
       return {
-        success: true,
+        success: calendarData.length > 0,
         data: calendarData,
         timestamp: new Date().toISOString(),
       };
@@ -221,7 +250,7 @@ export class MexcApiClient {
             // Ensure required fields are present
             return (
               "cd" in entry &&
-              entry.cd &&
+              Boolean(entry.cd) &&
               "sts" in entry &&
               entry.sts !== undefined &&
               "st" in entry &&
@@ -230,22 +259,24 @@ export class MexcApiClient {
               entry.tt !== undefined
             );
           })
-          .map((entry) => ({
-            cd: entry.cd,
-            sts: Number(entry.sts),
-            st: Number(entry.st),
-            tt: Number(entry.tt),
-            ca: entry.ca,
-            ps: entry.ps,
-            qs: entry.qs,
-            ot: entry.ot,
-          }));
+          .map(
+            (entry): MexcSymbolEntry => ({
+              cd: String(entry.cd),
+              sts: Number(entry.sts),
+              st: Number(entry.st),
+              tt: Number(entry.tt),
+              ca: entry.ca as Record<string, unknown>,
+              ps: entry.ps as Record<string, unknown>,
+              qs: entry.qs as Record<string, unknown>,
+              ot: entry.ot as Record<string, unknown>,
+            })
+          );
       }
 
       console.log(`[MexcApiClient] Retrieved ${symbolData.length} symbol entries`);
 
       return {
-        success: true,
+        success: symbolData.length > 0,
         data: symbolData,
         timestamp: new Date().toISOString(),
       };
@@ -282,6 +313,77 @@ export class MexcApiClient {
     }
   }
 
+  async getExchangeInfo(): Promise<MexcApiResponse<MexcExchangeSymbol[]>> {
+    try {
+      // Check cache first
+      const now = Date.now();
+      if (
+        this.exchangeSymbolsCache &&
+        now - this.exchangeSymbolsCacheTime < this.symbolsCacheExpiry
+      ) {
+        return {
+          success: true,
+          data: this.exchangeSymbolsCache,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      console.log("[MexcApiClient] Fetching exchange info...");
+      const response = await this.makeRequest<{
+        symbols: Array<{
+          symbol: string;
+          status: string;
+          baseAsset: string;
+          quoteAsset: string;
+          baseAssetPrecision: number;
+          quotePrecision: number;
+          quoteAssetPrecision: number;
+        }>;
+      }>("/api/v3/exchangeInfo");
+
+      if (!response?.symbols || !Array.isArray(response.symbols)) {
+        throw new Error("Invalid exchange info response");
+      }
+
+      // Cache the symbols
+      this.exchangeSymbolsCache = response.symbols.filter(
+        (symbol) => symbol.status === "TRADING" && symbol.quoteAsset === "USDT"
+      );
+      this.exchangeSymbolsCacheTime = now;
+
+      console.log(
+        `[MexcApiClient] Retrieved ${this.exchangeSymbolsCache.length} USDT trading pairs`
+      );
+
+      return {
+        success: true,
+        data: this.exchangeSymbolsCache,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error("[MexcApiClient] Exchange info failed:", error);
+      return {
+        success: false,
+        data: [],
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  private async getTradingPairs(): Promise<Set<string>> {
+    try {
+      const exchangeInfo = await this.getExchangeInfo();
+      if (exchangeInfo.success) {
+        return new Set(exchangeInfo.data.map((symbol) => symbol.symbol));
+      }
+      return new Set();
+    } catch (error) {
+      console.error("[MexcApiClient] Failed to get trading pairs:", error);
+      return new Set();
+    }
+  }
+
   // Trading methods (authenticated)
   async placeMarketBuyOrder(
     symbol: string,
@@ -304,7 +406,7 @@ export class MexcApiClient {
       );
       const response = await this.makeRequest("/api/v3/order", params, true);
       console.log("[MexcApiClient] Order placed successfully:", response);
-      return response;
+      return response as Record<string, unknown>;
     } catch (error) {
       console.error("[MexcApiClient] Order placement failed:", error);
       throw error;
@@ -321,6 +423,130 @@ export class MexcApiClient {
     } catch (error) {
       console.error("[MexcApiClient] Account info failed:", error);
       throw error;
+    }
+  }
+
+  async getAccountBalances(): Promise<MexcApiResponse<MexcAccountBalance>> {
+    if (!this.config.apiKey || !this.config.secretKey) {
+      throw new Error("MEXC API credentials not configured for account balances");
+    }
+
+    try {
+      console.log("[MexcApiClient] Fetching account balances...");
+
+      // Get account info with balances
+      const accountInfo = await this.makeRequest<{
+        balances: Array<{
+          asset: string;
+          free: string;
+          locked: string;
+        }>;
+      }>("/api/v3/account", {}, true);
+
+      if (!accountInfo?.balances) {
+        throw new Error("Invalid account balance response");
+      }
+
+      // Get valid trading pairs for USDT conversion validation
+      const validTradingPairs = await this.getTradingPairs();
+
+      // Get current prices for USDT conversion
+      const tickerPrices = await this.get24hrTicker();
+
+      // Process balances
+      const balances: MexcBalance[] = accountInfo.balances
+        .filter((balance) => {
+          const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
+          return total > 0; // Only include non-zero balances
+        })
+        .map((balance) => {
+          const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
+          let usdtValue = 0;
+
+          if (balance.asset === "USDT") {
+            usdtValue = total;
+          } else {
+            // Check if trading pair exists before attempting price lookup
+            const symbol = `${balance.asset}USDT`;
+
+            if (validTradingPairs.has(symbol)) {
+              // Find price in ticker data
+              const ticker = tickerPrices.data?.find((t: any) => t.symbol === symbol);
+              if (ticker?.price && Number.parseFloat(ticker.price) > 0) {
+                usdtValue = total * Number.parseFloat(ticker.price);
+                console.log(
+                  `[MexcApiClient] USDT conversion: ${balance.asset} (${total}) @ ${ticker.price} = ${usdtValue.toFixed(6)} USDT`
+                );
+              } else {
+                console.log(`[MexcApiClient] No price data available for ${symbol}`);
+              }
+            } else {
+              console.log(`[MexcApiClient] Trading pair ${symbol} not found on exchange`);
+            }
+          }
+
+          return {
+            asset: balance.asset,
+            free: balance.free,
+            locked: balance.locked,
+            total,
+            usdtValue,
+          };
+        })
+        .sort((a, b) => (b.usdtValue || 0) - (a.usdtValue || 0)); // Sort by USDT value desc
+
+      const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
+      const balancesWithValue = balances.filter((b) => (b.usdtValue || 0) > 0);
+
+      console.log(
+        `[MexcApiClient] Retrieved ${balances.length} non-zero balances (${balancesWithValue.length} with USDT value), total value: ${totalUsdtValue.toFixed(2)} USDT`
+      );
+
+      return {
+        success: true,
+        data: {
+          balances,
+          totalUsdtValue,
+          lastUpdated: new Date().toISOString(),
+        },
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error("[MexcApiClient] Account balances failed:", error);
+      return {
+        success: false,
+        data: {
+          balances: [],
+          totalUsdtValue: 0,
+          lastUpdated: new Date().toISOString(),
+        },
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  async get24hrTicker(symbol?: string): Promise<MexcApiResponse<any[]>> {
+    try {
+      const endpoint = symbol ? `/api/v3/ticker/24hr?symbol=${symbol}` : "/api/v3/ticker/24hr";
+      const response = await this.makeRequest<any>(endpoint);
+
+      // Handle both single symbol and all symbols response
+      const data = Array.isArray(response) ? response : [response];
+
+      return {
+        success: true,
+        data,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error("[MexcApiClient] 24hr ticker failed:", error);
+      return {
+        success: false,
+        data: [],
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      };
     }
   }
 }

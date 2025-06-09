@@ -47,10 +47,7 @@ export class EnhancedMexcApi {
         calendarData = data.data.newCoins
           .filter(
             (entry: any) =>
-              entry &&
-              entry.vcoinId &&
-              (entry.vcoinName || entry.vcoinNameFull) &&
-              entry.firstOpenTime
+              entry?.vcoinId && (entry.vcoinName || entry.vcoinNameFull) && entry.firstOpenTime
           )
           .map((entry: any) => ({
             vcoinId: entry.vcoinId,
@@ -102,7 +99,7 @@ export class EnhancedMexcApi {
 
       if (data?.data?.symbols && Array.isArray(data.data.symbols)) {
         symbols = data.data.symbols
-          .filter((symbol: any) => symbol && symbol.cd && symbol.ca)
+          .filter((symbol: any) => symbol?.cd && symbol.ca)
           .map((symbol: any) => ({
             cd: symbol.cd,
             ca: symbol.ca,
@@ -212,7 +209,7 @@ export class EnhancedMexcApi {
           throw lastError;
         }
 
-        const delay = this.retryDelay * Math.pow(2, attempt - 1); // Exponential backoff
+        const delay = this.retryDelay * 2 ** (attempt - 1); // Exponential backoff
         console.warn(`⚠️ Attempt ${attempt} failed, retrying in ${delay}ms...`);
 
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -231,7 +228,8 @@ export class EnhancedMexcApi {
         message: "Request timeout: MEXC API did not respond in time",
         details: { timeout: true },
       };
-    } else if (error.message.includes("HTTP")) {
+    }
+    if (error.message.includes("HTTP")) {
       const statusMatch = error.message.match(/HTTP (\d+)/);
       const status = statusMatch ? Number.parseInt(statusMatch[1]) : undefined;
       return {
@@ -239,12 +237,11 @@ export class EnhancedMexcApi {
         message: `API Error: ${error.message}`,
         details: error,
       };
-    } else {
-      return {
-        message: `Network Error: ${error.message}`,
-        details: error,
-      };
     }
+    return {
+      message: `Network Error: ${error.message}`,
+      details: error,
+    };
   }
 
   /**

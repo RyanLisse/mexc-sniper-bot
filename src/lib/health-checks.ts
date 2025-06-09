@@ -211,7 +211,7 @@ export function checkSystemResources(): HealthStatus {
  * Perform comprehensive system health check
  */
 export async function performSystemHealthCheck(): Promise<SystemHealth> {
-  const startTime = Date.now();
+  const _startTime = Date.now();
 
   // Run all health checks in parallel
   const [databaseHealth, mexcApiHealth, openAiHealth, systemHealth] = await Promise.all([

@@ -38,12 +38,12 @@ test.describe('MEXC Sniper Bot - Latest Coins and Account Balance Verification',
       console.log(`🗓️ Looking for coins launching today (${todayStr}) or tomorrow (${tomorrowStr})`);
       
       // Check for date indicators
-      const dateElements = page.locator(`text*="${todayStr}"`).or(
-        page.locator(`text*="${tomorrowStr}"`)
+      const dateElements = page.locator(`text="${todayStr}"`).or(
+        page.locator(`text="${tomorrowStr}"`)
       ).or(
-        page.locator('text*="hours"')
+        page.locator('text="hours"')
       ).or(
-        page.locator('text*="minutes"')
+        page.locator('text="minutes"')
       );
       
       const dateCount = await dateElements.count();
@@ -56,7 +56,7 @@ test.describe('MEXC Sniper Bot - Latest Coins and Account Balance Verification',
         
         // Look for any coin symbols or names
         const coinSymbols = page.locator('[class*="symbol"]').or(
-          page.locator('text*="USDT"')
+          page.locator('text="USDT"')
         ).or(
           page.locator('[data-testid*="coin"]')
         );
@@ -150,16 +150,16 @@ test.describe('MEXC Sniper Bot - Latest Coins and Account Balance Verification',
       console.log('💵 Looking for account balance and trading settings...');
       
       // Look for balance-related elements
-      const balanceElements = page.locator('text*="balance"').or(
-        page.locator('text*="Balance"')
+      const balanceElements = page.locator('text="balance"').or(
+        page.locator('text="Balance"')
       ).or(
-        page.locator('text*="USDT"')
+        page.locator('text="USDT"')
       ).or(
-        page.locator('text*="Amount"')
+        page.locator('text="Amount"')
       ).or(
         page.locator('input[type="number"]')
       ).or(
-        page.locator('text*="Buy Amount"')
+        page.locator('text="Buy Amount"')
       );
       
       const balanceCount = await balanceElements.count();
@@ -175,12 +175,12 @@ test.describe('MEXC Sniper Bot - Latest Coins and Account Balance Verification',
       }
       
       // Look for trading configuration
-      const tradingConfig = page.locator('text*="Trading"').or(
-        page.locator('text*="Position"')
+      const tradingConfig = page.locator('text="Trading"').or(
+        page.locator('text="Position"')
       ).or(
-        page.locator('text*="Risk"')
+        page.locator('text="Risk"')
       ).or(
-        page.locator('text*="Profit"')
+        page.locator('text="Profit"')
       );
       
       const configCount = await tradingConfig.count();
@@ -191,12 +191,12 @@ test.describe('MEXC Sniper Bot - Latest Coins and Account Balance Verification',
       }
       
       // Look for API key configuration
-      const apiConfig = page.locator('text*="API"').or(
-        page.locator('text*="Key"')
+      const apiConfig = page.locator('text="API"').or(
+        page.locator('text="Key"')
       ).or(
         page.locator('input[type="password"]')
       ).or(
-        page.locator('text*="MEXC"')
+        page.locator('text="MEXC"')
       );
       
       const apiCount = await apiConfig.count();
@@ -240,9 +240,9 @@ test.describe('MEXC Sniper Bot - Latest Coins and Account Balance Verification',
     
     // Check for any auto-updating elements
     const autoUpdateElements = page.locator('[data-testid*="auto-update"]').or(
-      page.locator('text*="last updated"')
+      page.locator('text="last updated"')
     ).or(
-      page.locator('text*="ago"')
+      page.locator('text="ago"')
     ).or(
       page.locator('[class*="timestamp"]')
     );
@@ -269,12 +269,12 @@ test.describe('MEXC Sniper Bot - Latest Coins and Account Balance Verification',
     }
     
     // Check API health
-    const healthStatus = page.locator('text*="Connected"').or(
-      page.locator('text*="Online"')
+    const healthStatus = page.locator('text="Connected"').or(
+      page.locator('text="Online"')
     ).or(
       page.locator('[class*="status-connected"]')
     ).or(
-      page.locator('text*="Operational"')
+      page.locator('text="Operational"')
     );
     
     const healthCount = await healthStatus.count();
@@ -292,12 +292,12 @@ test.describe('MEXC Sniper Bot - Latest Coins and Account Balance Verification',
     await page.waitForSelector('text=Trading Dashboard', { timeout: 10000 });
     
     // Look for pattern-related elements
-    const patternElements = page.locator('text*="Pattern"').or(
-      page.locator('text*="Ready State"')
+    const patternElements = page.locator('text="Pattern"').or(
+      page.locator('text="Ready State"')
     ).or(
-      page.locator('text*="Signal"')
+      page.locator('text="Signal"')
     ).or(
-      page.locator('text*="sts:2"')
+      page.locator('text="sts:2"')
     ).or(
       page.locator('[data-testid*="pattern"]')
     );
@@ -314,10 +314,10 @@ test.describe('MEXC Sniper Bot - Latest Coins and Account Balance Verification',
     }
     
     // Look for confidence scores or percentages
-    const confidenceElements = page.locator('text*="%"').or(
-      page.locator('text*="confidence"')
+    const confidenceElements = page.locator('text="%"').or(
+      page.locator('text="confidence"')
     ).or(
-      page.locator('text*="score"')
+      page.locator('text="score"')
     );
     
     const confidenceCount = await confidenceElements.count();

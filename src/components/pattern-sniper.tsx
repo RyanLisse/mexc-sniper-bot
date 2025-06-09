@@ -47,7 +47,7 @@ export const PatternSniperComponent: React.FC = () => {
     removeTarget,
   } = usePatternSniper();
 
-  const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
+  const [_selectedTarget, _setSelectedTarget] = useState<string | null>(null);
 
   // Format time remaining
   const formatTimeRemaining = (launchTime: Date): string => {
@@ -84,9 +84,7 @@ export const PatternSniperComponent: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <div
-            className={`w-3 h-3 rounded-full ${isConnected ? "bg-green-400" : "bg-red-400"}`}
-          ></div>
+          <div className={`w-3 h-3 rounded-full ${isConnected ? "bg-green-400" : "bg-red-400"}`} />
           <span className="text-sm text-slate-400">
             {isConnected ? "Connected" : "Disconnected"}
           </span>

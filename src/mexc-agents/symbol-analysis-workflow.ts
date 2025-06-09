@@ -249,7 +249,7 @@ export class SymbolAnalysisWorkflow {
     readinessInsights: any,
     patternInsights: any,
     marketInsights: any,
-    patternData: any
+    _patternData: any
   ): {
     ready: boolean;
     score: number;

@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
         level4: prefs.takeProfitLevel4,
         custom: prefs.takeProfitCustom || undefined,
       },
+      takeProfitCustom: prefs.takeProfitCustom,
       defaultTakeProfitLevel: prefs.defaultTakeProfitLevel,
       stopLossPercent: prefs.stopLossPercent,
       riskTolerance: prefs.riskTolerance as "low" | "medium" | "high",
@@ -46,6 +47,12 @@ export async function GET(request: NextRequest) {
       targetAdvanceHours: prefs.targetAdvanceHours,
       calendarPollIntervalSeconds: prefs.calendarPollIntervalSeconds,
       symbolsPollIntervalSeconds: prefs.symbolsPollIntervalSeconds,
+      // Exit Strategy Settings
+      selectedExitStrategy: prefs.selectedExitStrategy || "balanced",
+      customExitStrategy: prefs.customExitStrategy ? JSON.parse(prefs.customExitStrategy) : undefined,
+      autoBuyEnabled: prefs.autoBuyEnabled ?? true,
+      autoSellEnabled: prefs.autoSellEnabled ?? true,
+      autoSnipeEnabled: prefs.autoSnipeEnabled ?? true,
     };
 
     return NextResponse.json(response);
@@ -93,20 +100,50 @@ export async function POST(request: NextRequest) {
       updateData.takeProfitCustom = data.takeProfitLevels.custom;
     }
     
-    // Support direct field access for individual take profit levels
+    // Support direct field access for individual take profit levels with validation
     if (data.takeProfitLevel1 !== undefined) {
+      if (data.takeProfitLevel1 < 0) {
+        return NextResponse.json(
+          { error: 'Take profit level 1 cannot be negative' },
+          { status: 400 }
+        );
+      }
       updateData.takeProfitLevel1 = data.takeProfitLevel1;
     }
     if (data.takeProfitLevel2 !== undefined) {
+      if (data.takeProfitLevel2 < 0) {
+        return NextResponse.json(
+          { error: 'Take profit level 2 cannot be negative' },
+          { status: 400 }
+        );
+      }
       updateData.takeProfitLevel2 = data.takeProfitLevel2;
     }
     if (data.takeProfitLevel3 !== undefined) {
+      if (data.takeProfitLevel3 < 0) {
+        return NextResponse.json(
+          { error: 'Take profit level 3 cannot be negative' },
+          { status: 400 }
+        );
+      }
       updateData.takeProfitLevel3 = data.takeProfitLevel3;
     }
     if (data.takeProfitLevel4 !== undefined) {
+      if (data.takeProfitLevel4 < 0) {
+        return NextResponse.json(
+          { error: 'Take profit level 4 cannot be negative' },
+          { status: 400 }
+        );
+      }
       updateData.takeProfitLevel4 = data.takeProfitLevel4;
     }
     if (data.takeProfitCustom !== undefined) {
+      if (data.takeProfitCustom < 0) {
+        return NextResponse.json(
+          { error: 'Custom take profit level cannot be negative' },
+          { status: 400 }
+        );
+      }
       updateData.takeProfitCustom = data.takeProfitCustom;
     }
     
@@ -131,6 +168,23 @@ export async function POST(request: NextRequest) {
     if (data.symbolsPollIntervalSeconds !== undefined) {
       updateData.symbolsPollIntervalSeconds = data.symbolsPollIntervalSeconds;
     }
+    
+    // Exit Strategy Settings
+    if (data.selectedExitStrategy !== undefined) {
+      updateData.selectedExitStrategy = data.selectedExitStrategy;
+    }
+    if (data.customExitStrategy !== undefined) {
+      updateData.customExitStrategy = JSON.stringify(data.customExitStrategy);
+    }
+    if (data.autoBuyEnabled !== undefined) {
+      updateData.autoBuyEnabled = data.autoBuyEnabled;
+    }
+    if (data.autoSellEnabled !== undefined) {
+      updateData.autoSellEnabled = data.autoSellEnabled;
+    }
+    if (data.autoSnipeEnabled !== undefined) {
+      updateData.autoSnipeEnabled = data.autoSnipeEnabled;
+    }
 
     // Try to update first
     const result = await db
@@ -145,11 +199,11 @@ export async function POST(request: NextRequest) {
         userId,
         defaultBuyAmountUsdt: data.defaultBuyAmountUsdt || 100.0,
         maxConcurrentSnipes: data.maxConcurrentSnipes || 3,
-        takeProfitLevel1: data.takeProfitLevels?.level1 || 5.0,
-        takeProfitLevel2: data.takeProfitLevels?.level2 || 10.0,
-        takeProfitLevel3: data.takeProfitLevels?.level3 || 15.0,
-        takeProfitLevel4: data.takeProfitLevels?.level4 || 25.0,
-        takeProfitCustom: data.takeProfitLevels?.custom,
+        takeProfitLevel1: data.takeProfitLevel1 || data.takeProfitLevels?.level1 || 5.0,
+        takeProfitLevel2: data.takeProfitLevel2 || data.takeProfitLevels?.level2 || 10.0,
+        takeProfitLevel3: data.takeProfitLevel3 || data.takeProfitLevels?.level3 || 15.0,
+        takeProfitLevel4: data.takeProfitLevel4 || data.takeProfitLevels?.level4 || 25.0,
+        takeProfitCustom: data.takeProfitCustom || data.takeProfitLevels?.custom,
         defaultTakeProfitLevel: data.defaultTakeProfitLevel || 2,
         stopLossPercent: data.stopLossPercent || 5.0,
         riskTolerance: data.riskTolerance || "medium",
@@ -157,6 +211,12 @@ export async function POST(request: NextRequest) {
         targetAdvanceHours: data.targetAdvanceHours || 3.5,
         calendarPollIntervalSeconds: data.calendarPollIntervalSeconds || 300,
         symbolsPollIntervalSeconds: data.symbolsPollIntervalSeconds || 30,
+        // Exit Strategy Settings with defaults
+        selectedExitStrategy: data.selectedExitStrategy || "balanced",
+        customExitStrategy: data.customExitStrategy ? JSON.stringify(data.customExitStrategy) : null,
+        autoBuyEnabled: data.autoBuyEnabled ?? true,
+        autoSellEnabled: data.autoSellEnabled ?? true,
+        autoSnipeEnabled: data.autoSnipeEnabled ?? true,
         ...updateData,
       };
 

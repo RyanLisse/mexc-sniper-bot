@@ -8,7 +8,7 @@ export interface EnhancedAgentConfig {
   model?: string;
   temperature?: number;
   maxTokens?: number;
-  tools?: unknown[];
+  tools?: any[];
   toolChoice?: "auto" | "none" | { type: "function"; function: { name: string } };
 }
 
@@ -47,7 +47,7 @@ export class EnhancedBaseAgent {
       name: config.name,
       instructions: config.instructions,
       model: config.model || "gpt-4o",
-      tools: config.tools || [],
+      tools: (config.tools as any) || [],
     });
   }
 

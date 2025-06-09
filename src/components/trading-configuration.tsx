@@ -8,10 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card";
-import type { UserPreferences } from "@/src/db/schema";
+import type { UserTradingPreferences } from "@/src/hooks/use-user-preferences";
 
 interface TradingConfigurationProps {
-  preferences: UserPreferences | null;
+  preferences: UserTradingPreferences | null;
 }
 
 export function TradingConfiguration({ preferences }: TradingConfigurationProps) {
@@ -47,7 +47,7 @@ export function TradingConfiguration({ preferences }: TradingConfigurationProps)
   );
 }
 
-function TradingBasicSettings({ preferences }: { preferences: UserPreferences }) {
+function TradingBasicSettings({ preferences }: { preferences: UserTradingPreferences }) {
   return (
     <div className="space-y-4">
       <ConfigItem label="Default Buy Amount" value={`$${preferences.defaultBuyAmountUsdt} USDT`} />
@@ -64,7 +64,7 @@ function TradingBasicSettings({ preferences }: { preferences: UserPreferences })
   );
 }
 
-function TradingAdvancedSettings({ preferences }: { preferences: UserPreferences }) {
+function TradingAdvancedSettings({ preferences }: { preferences: UserTradingPreferences }) {
   const readyStatePattern = preferences.readyStatePattern as number[] | string;
   const pattern = Array.isArray(readyStatePattern)
     ? readyStatePattern

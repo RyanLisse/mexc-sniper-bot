@@ -54,8 +54,8 @@ Output Format:
     super(config);
   }
 
-  async process(input: string, context?: StrategyRequest): Promise<AgentResponse> {
-    const request: StrategyRequest = context || {
+  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+    const request: StrategyRequest = (context as unknown as StrategyRequest) || {
       marketData: input,
       riskTolerance: "medium",
       timeframe: "medium",

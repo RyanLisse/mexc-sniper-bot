@@ -1,7 +1,7 @@
 import { db } from "@/src/db";
 import { executionHistory, monitoredListings, snipeTargets } from "@/src/db/schema";
-import { getConnectivityStatus, performSystemHealthCheck } from "@/src/lib/health-checks";
 import { emergencyRecoveryService } from "@/src/lib/emergency-recovery";
+import { getConnectivityStatus, performSystemHealthCheck } from "@/src/lib/health-checks";
 import { eq, sql } from "drizzle-orm";
 import { inngest } from "./client";
 
@@ -39,7 +39,7 @@ export const scheduledCalendarMonitoring = inngest.createFunction(
     });
 
     // Step 1: Trigger calendar polling
-    const calendarResult = await step.run("trigger-calendar-poll", async () => {
+    const _calendarResult = await step.run("trigger-calendar-poll", async () => {
       await inngest.send({
         name: "mexc/calendar.poll",
         data: {
@@ -82,7 +82,7 @@ export const scheduledPatternAnalysis = inngest.createFunction(
     });
 
     // Step 1: Trigger pattern analysis for all monitored symbols
-    const patternResult = await step.run("trigger-pattern-analysis", async () => {
+    const _patternResult = await step.run("trigger-pattern-analysis", async () => {
       await inngest.send({
         name: "mexc/patterns.analyze",
         data: {
@@ -357,7 +357,7 @@ export const scheduledIntensiveAnalysis = inngest.createFunction(
     });
 
     // Step 1: Execute comprehensive multi-agent pipeline
-    const pipelineResult = await step.run("comprehensive-pipeline", async () => {
+    const _pipelineResult = await step.run("comprehensive-pipeline", async () => {
       // Trigger calendar discovery
       await inngest.send({
         name: "mexc/calendar.poll",
@@ -433,9 +433,9 @@ export const emergencyResponseHandler = inngest.createFunction(
           try {
             const result = await Promise.race([
               recoveryStep.action(),
-              new Promise<never>((_, reject) => 
+              new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error("Recovery step timeout")), recoveryStep.timeoutMs)
-              )
+              ),
             ]);
 
             executionResults.push({
@@ -460,10 +460,10 @@ export const emergencyResponseHandler = inngest.createFunction(
           } catch (error) {
             lastError = error;
             attempts++;
-            
+
             if (attempts <= recoveryStep.maxRetries && recoveryStep.retryable) {
               // Wait before retry with exponential backoff
-              await new Promise(resolve => setTimeout(resolve, Math.min(1000 * attempts, 10000)));
+              await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * attempts, 10000)));
             }
           }
         }
@@ -474,7 +474,7 @@ export const emergencyResponseHandler = inngest.createFunction(
             stepId: recoveryStep.id,
             attempt: attempts,
             success: false,
-            message: `Recovery step failed after ${recoveryStep.maxRetries} retries: ${lastError?.message}`,
+            message: `Recovery step failed after ${recoveryStep.maxRetries} retries: ${lastError instanceof Error ? lastError.message : "Unknown error"}`,
             nextAction: "manual_intervention_required",
           });
 
@@ -492,8 +492,8 @@ export const emergencyResponseHandler = inngest.createFunction(
         severity,
         recoveryPlan,
         executionResults,
-        requiresManualIntervention: recoveryPlan.requiresManualIntervention || 
-          executionResults.some(r => !r.success),
+        requiresManualIntervention:
+          recoveryPlan.requiresManualIntervention || executionResults.some((r) => !r.success),
         estimatedRecoveryTime: recoveryPlan.estimatedRecoveryTime,
       };
     });

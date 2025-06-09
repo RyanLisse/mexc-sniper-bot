@@ -220,7 +220,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
 
       // Enhance response with structured analysis summary
       const summaryData = this.generateAnalysisSummary(processedListings);
-      const enhancedContent = aiResponse.content + `\n\n**Analysis Summary:**\n${summaryData}`;
+      const enhancedContent = `${aiResponse.content}\n\n**Analysis Summary:**\n${summaryData}`;
 
       console.log(`[CalendarAgent] Successfully analyzed ${processedListings.length} listings`);
       return {
@@ -246,7 +246,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
     return calendarData
       .filter((entry) => {
         // Filter out invalid entries
-        return entry && entry.vcoinId && entry.symbol && (entry.firstOpenTime || entry.launchTime);
+        return entry?.vcoinId && entry.symbol && (entry.firstOpenTime || entry.launchTime);
       })
       .map((entry) => {
         const launchTime = entry.firstOpenTime || entry.launchTime;
@@ -365,7 +365,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
         .map((entry: any) => {
           try {
             return validateCalendarEntry(entry);
-          } catch (error) {
+          } catch (_error) {
             console.warn(`[CalendarAgent] Invalid calendar entry:`, entry);
             return null;
           }
@@ -381,7 +381,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
   }
 
   // Comprehensive calendar monitoring workflow
-  async performCalendarMonitoring(request?: CalendarMonitoringRequest): Promise<AgentResponse> {
+  async performCalendarMonitoring(_request?: CalendarMonitoringRequest): Promise<AgentResponse> {
     try {
       console.log(`[CalendarAgent] Starting comprehensive calendar monitoring`);
 
@@ -413,7 +413,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
 
           // Combine results in content
           return {
-            content: scanResults.content + `\n\n**Monitoring Plan:**\n${monitoringPlan.content}`,
+            content: `${scanResults.content}\n\n**Monitoring Plan:**\n${monitoringPlan.content}`,
             metadata: scanResults.metadata,
           };
         }

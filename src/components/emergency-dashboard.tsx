@@ -1,43 +1,66 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
 
 interface EmergencyTest {
   emergencyType: string;
   severity: string;
+  label?: string;
+  description?: string;
   data: Record<string, unknown>;
 }
 
-const EMERGENCY_TYPES = [
+interface SystemHealth {
+  overall: string;
+  services: {
+    database: string;
+    mexcApi: string;
+    openAi: string;
+    memory: string;
+  };
+  lastChecked: string;
+}
+
+interface EmergencyResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  data?: unknown;
+}
+
+const EMERGENCY_TYPES: EmergencyTest[] = [
   {
-    type: "api_failure",
-    label: "API Failure",
-    description: "Test API connectivity recovery",
+    emergencyType: "api_failure",
+    severity: "high",
     data: { affectedAPIs: ["mexc", "openai"] },
   },
   {
-    type: "high_volatility", 
+    emergencyType: "high_volatility",
+    severity: "medium",
     label: "High Volatility",
     description: "Test volatility response mechanisms",
     data: { affectedSymbols: ["BTCUSDT", "ETHUSDT"], volatilityIncrease: "150%" },
   },
   {
-    type: "system_overload",
+    emergencyType: "system_overload",
+    severity: "high",
     label: "System Overload",
     description: "Test resource management recovery",
     data: { memoryUsage: "95%", cpuUsage: "90%" },
   },
   {
-    type: "database_failure",
-    label: "Database Failure", 
+    emergencyType: "database_failure",
+    severity: "critical",
+    label: "Database Failure",
     description: "Test database recovery procedures",
     data: { connectionLost: true, lastSuccessfulQuery: Date.now() - 30000 },
   },
   {
-    type: "trading_anomaly",
+    emergencyType: "trading_anomaly",
+    severity: "medium",
     label: "Trading Anomaly",
     description: "Test trading halt and investigation",
     data: { anomalyType: "unusual_price_movement", affectedSymbols: ["NEWCOIN"] },
@@ -53,8 +76,8 @@ const SEVERITY_LEVELS = [
 
 export function EmergencyDashboard() {
   const [loading, setLoading] = useState(false);
-  const [lastResponse, setLastResponse] = useState<any>(null);
-  const [systemHealth, setSystemHealth] = useState<any>(null);
+  const [lastResponse, setLastResponse] = useState<EmergencyResponse | null>(null);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
 
   // Check system health on component mount
   useEffect(() => {
@@ -68,7 +91,7 @@ export function EmergencyDashboard() {
         overall: "healthy",
         services: {
           database: "healthy",
-          mexcApi: "healthy", 
+          mexcApi: "healthy",
           openAi: "healthy",
           memory: "82MB",
         },
@@ -114,7 +137,7 @@ export function EmergencyDashboard() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             🚨 Emergency Response Dashboard
@@ -127,27 +150,37 @@ export function EmergencyDashboard() {
           <div className="space-y-4">
             {/* System Health Status */}
             {systemHealth && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-800/50 rounded-lg">
                 <div className="text-center">
-                  <div className="text-sm text-slate-600">Database</div>
-                  <Badge variant={systemHealth.services.database === "healthy" ? "default" : "destructive"}>
+                  <div className="text-sm text-slate-300">Database</div>
+                  <Badge
+                    variant={
+                      systemHealth.services.database === "healthy" ? "default" : "destructive"
+                    }
+                  >
                     {systemHealth.services.database}
                   </Badge>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm text-slate-600">MEXC API</div>
-                  <Badge variant={systemHealth.services.mexcApi === "healthy" ? "default" : "destructive"}>
+                  <div className="text-sm text-slate-300">MEXC API</div>
+                  <Badge
+                    variant={
+                      systemHealth.services.mexcApi === "healthy" ? "default" : "destructive"
+                    }
+                  >
                     {systemHealth.services.mexcApi}
                   </Badge>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm text-slate-600">OpenAI API</div>
-                  <Badge variant={systemHealth.services.openAi === "healthy" ? "default" : "destructive"}>
+                  <div className="text-sm text-slate-300">OpenAI API</div>
+                  <Badge
+                    variant={systemHealth.services.openAi === "healthy" ? "default" : "destructive"}
+                  >
                     {systemHealth.services.openAi}
                   </Badge>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm text-slate-600">Memory</div>
+                  <div className="text-sm text-slate-300">Memory</div>
                   <Badge variant="outline">{systemHealth.services.memory}</Badge>
                 </div>
               </div>
@@ -158,12 +191,15 @@ export function EmergencyDashboard() {
               <h3 className="text-lg font-semibold mb-4">Emergency Response Tests</h3>
               <div className="grid gap-4">
                 {EMERGENCY_TYPES.map((test) => (
-                  <Card key={test.type} className="border-l-4 border-l-orange-400">
+                  <Card
+                    key={test.emergencyType}
+                    className="bg-slate-800/30 border-slate-700 border-l-4 border-l-orange-400"
+                  >
                     <CardContent className="pt-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <h4 className="font-medium">{test.label}</h4>
-                          <p className="text-sm text-slate-600 mt-1">{test.description}</p>
+                          <p className="text-sm text-slate-300 mt-1">{test.description}</p>
                           <div className="text-xs text-slate-500 mt-2 font-mono">
                             Data: {JSON.stringify(test.data)}
                           </div>
@@ -192,17 +228,22 @@ export function EmergencyDashboard() {
 
             {/* Last Response */}
             {lastResponse && (
-              <Card className={`${lastResponse.success ? "border-green-200" : "border-red-200"}`}>
+              <Card
+                className={`bg-slate-800/30 border-slate-700 ${lastResponse.success ? "border-l-4 border-l-green-400" : "border-l-4 border-l-red-400"}`}
+              >
                 <CardHeader>
                   <CardTitle className="text-sm">
                     Last Emergency Test Result
-                    <Badge variant={lastResponse.success ? "default" : "destructive"} className="ml-2">
+                    <Badge
+                      variant={lastResponse.success ? "default" : "destructive"}
+                      className="ml-2"
+                    >
                       {lastResponse.success ? "Success" : "Failed"}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <pre className="text-xs bg-slate-50 p-3 rounded overflow-auto">
+                  <pre className="text-xs bg-slate-800/50 p-3 rounded overflow-auto">
                     {JSON.stringify(lastResponse, null, 2)}
                   </pre>
                 </CardContent>

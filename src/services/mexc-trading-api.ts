@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac } from "node:crypto";
 
 export interface OrderParameters {
   symbol: string;
@@ -145,7 +145,9 @@ export class MexcTradingApi {
       }
 
       const accountData = await response.json();
-      const assetBalance = accountData.balances?.find((balance: any) => balance.asset === asset);
+      const assetBalance = accountData.balances?.find(
+        (balance: { asset: string; free: string; locked: string }) => balance.asset === asset
+      );
 
       return assetBalance
         ? {

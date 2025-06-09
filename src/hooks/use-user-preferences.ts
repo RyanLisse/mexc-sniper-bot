@@ -1,4 +1,5 @@
 import { queryKeys } from "@/src/lib/query-client";
+import type { ExitStrategy } from "@/src/types/exit-strategies";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface TakeProfitLevels {
@@ -21,6 +22,12 @@ export interface UserTradingPreferences {
   targetAdvanceHours: number;
   calendarPollIntervalSeconds: number;
   symbolsPollIntervalSeconds: number;
+  // Exit Strategy Settings
+  selectedExitStrategy: string; // "conservative", "balanced", "aggressive", "custom"
+  customExitStrategy?: ExitStrategy; // Custom strategy if selectedExitStrategy is "custom"
+  autoBuyEnabled: boolean; // Auto-buy on ready state
+  autoSellEnabled: boolean; // Auto-sell at targets
+  autoSnipeEnabled: boolean; // Auto-snipe by default
 }
 
 // Hook to get user preferences
@@ -175,9 +182,51 @@ export function useResetUserPreferences() {
         targetAdvanceHours: 3.5,
         calendarPollIntervalSeconds: 300,
         symbolsPollIntervalSeconds: 30,
+        selectedExitStrategy: "balanced",
+        autoBuyEnabled: true,
+        autoSellEnabled: true,
+        autoSnipeEnabled: true,
       };
 
       return updatePreferences.mutateAsync(defaultPreferences);
+    },
+  });
+}
+
+// Hook to get exit strategy preferences
+export function useExitStrategyPreferences(userId: string) {
+  const { data: preferences } = useUserPreferences(userId);
+
+  return {
+    selectedExitStrategy: preferences?.selectedExitStrategy || "balanced",
+    customExitStrategy: preferences?.customExitStrategy,
+    autoBuyEnabled: preferences?.autoBuyEnabled ?? true,
+    autoSellEnabled: preferences?.autoSellEnabled ?? true,
+    autoSnipeEnabled: preferences?.autoSnipeEnabled ?? true,
+  };
+}
+
+// Hook to update exit strategy preferences
+export function useUpdateExitStrategyPreferences() {
+  const updatePreferences = useUpdateUserPreferences();
+
+  return useMutation({
+    mutationFn: async (data: {
+      userId: string;
+      selectedExitStrategy: string;
+      customExitStrategy?: ExitStrategy;
+      autoBuyEnabled?: boolean;
+      autoSellEnabled?: boolean;
+      autoSnipeEnabled?: boolean;
+    }) => {
+      return updatePreferences.mutateAsync({
+        userId: data.userId,
+        selectedExitStrategy: data.selectedExitStrategy,
+        customExitStrategy: data.customExitStrategy,
+        autoBuyEnabled: data.autoBuyEnabled,
+        autoSellEnabled: data.autoSellEnabled,
+        autoSnipeEnabled: data.autoSnipeEnabled,
+      });
     },
   });
 }

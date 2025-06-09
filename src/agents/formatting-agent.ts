@@ -48,8 +48,8 @@ Newsletter Structure:
     super(config);
   }
 
-  async process(input: string, context?: FormattingRequest): Promise<AgentResponse> {
-    const request: FormattingRequest = context || {
+  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+    const request: FormattingRequest = (context as unknown as FormattingRequest) || {
       rawContent: input,
       topics: [],
       format: "newsletter",

@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { db } from "@/src/db";
 import {
   type NewWorkflowActivity,
@@ -223,7 +223,7 @@ export class WorkflowStatusService {
 
       if (keepActivities.length === 50) {
         // Delete older activities
-        const keepIds = keepActivities.map((a) => a.id);
+        const _keepIds = keepActivities.map((a) => a.id);
         await db.delete(workflowActivity).where(
           and(
             eq(workflowActivity.userId, this.userId)

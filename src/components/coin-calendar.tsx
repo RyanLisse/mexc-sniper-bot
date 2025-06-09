@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMexcCalendar } from "@/src/hooks/use-mexc-data";
+import type { CalendarEntry } from "@/src/schemas/mexc-schemas";
 import { useMemo, useState } from "react";
 
 // interface CoinListing {
@@ -30,11 +31,11 @@ export function CoinCalendar({ onDateSelect }: CoinCalendarProps) {
     const selectedDateStr = selectedDate.toDateString();
 
     return mexcCalendarData
-      .filter((entry) => {
+      .filter((entry: CalendarEntry) => {
         const listingDate = new Date(entry.firstOpenTime);
         return listingDate.toDateString() === selectedDateStr;
       })
-      .map((entry) => ({
+      .map((entry: CalendarEntry) => ({
         symbol: entry.symbol,
         listingTime: new Date(entry.firstOpenTime).toISOString(),
         tradingStartTime: new Date(entry.firstOpenTime).toISOString(),
@@ -118,26 +119,33 @@ export function CoinCalendar({ onDateSelect }: CoinCalendarProps) {
             </div>
           ) : coinListings.length > 0 ? (
             <div className="space-y-3">
-              {coinListings.map((listing) => (
-                <div
-                  key={`${listing.symbol}-${listing.listingTime}`}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div className="flex flex-col">
-                    <Badge variant="outline" className="text-sm font-mono w-fit">
-                      {listing.symbol}
-                    </Badge>
-                    {listing.projectName && (
-                      <span className="text-xs text-muted-foreground mt-1">
-                        {listing.projectName}
-                      </span>
-                    )}
+              {coinListings.map(
+                (listing: {
+                  symbol: string;
+                  listingTime: string;
+                  tradingStartTime: string;
+                  projectName: string;
+                }) => (
+                  <div
+                    key={`${listing.symbol}-${listing.listingTime}`}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
+                    <div className="flex flex-col">
+                      <Badge variant="outline" className="text-sm font-mono w-fit">
+                        {listing.symbol}
+                      </Badge>
+                      {listing.projectName && (
+                        <span className="text-xs text-muted-foreground mt-1">
+                          {listing.projectName}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {new Date(listing.listingTime).toLocaleTimeString()}
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {new Date(listing.listingTime).toLocaleTimeString()}
-                  </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           ) : mexcCalendarData ? (
             <div className="text-center text-muted-foreground p-8">

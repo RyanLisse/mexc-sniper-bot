@@ -74,8 +74,8 @@ Output Framework:
     super(config);
   }
 
-  async process(input: string, context?: SymbolAnalysisRequest): Promise<AgentResponse> {
-    const request: SymbolAnalysisRequest = context || {
+  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+    const request: SymbolAnalysisRequest = (context as unknown as SymbolAnalysisRequest) || {
       vcoinId: input,
       analysisDepth: "standard",
     };

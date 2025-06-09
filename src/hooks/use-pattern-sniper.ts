@@ -26,7 +26,14 @@ export const usePatternSniper = () => {
   const [pendingDetection, setPendingDetection] = useState<Set<string>>(new Set());
   const [readyTargets, setReadyTargets] = useState<Map<string, SnipeTarget>>(new Map());
   const [executedTargets, setExecutedTargets] = useState<Set<string>>(new Set());
-  const [isMonitoring, setIsMonitoring] = useState(false);
+  const [isMonitoring, setIsMonitoring] = useState(() => {
+    // Auto-snipe enabled by default - restore from localStorage if available
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pattern-sniper-monitoring");
+      return saved ? JSON.parse(saved) : true; // Default to true for auto-snipe
+    }
+    return true;
+  });
   const [startTime, setStartTime] = useState<Date | null>(null);
 
   // Calendar monitoring query
@@ -194,27 +201,55 @@ export const usePatternSniper = () => {
     return () => clearInterval(interval);
   }, [isMonitoring, readyTargets, executedTargets]);
 
-  // Execute snipe order
-  const executeSnipe = useCallback(async (target: SnipeTarget) => {
+  // Execute snipe order with auto exit manager integration
+  const executeSnipe = useCallback(async (target: SnipeTarget, userId?: string) => {
     console.log(`🚀 EXECUTING SNIPE: ${target.symbol}`);
     console.log(`   Project: ${target.projectName}`);
     console.log(`   Launch Time: ${target.launchTime.toLocaleString()}`);
     console.log(`   Order Parameters:`, target.orderParameters);
 
+    const actualUserId = userId || "anonymous";
+
     try {
-      // Prepare trading parameters
+      // 1. Create snipe target entry in database for tracking
+      const snipeTargetResponse = await fetch("/api/snipe-targets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: actualUserId,
+          vcoinId: target.vcoinId,
+          symbolName: target.symbol,
+          entryStrategy: "market",
+          positionSizeUsdt: 100, // TODO: Get from user preferences
+          takeProfitLevel: 2, // Default to balanced
+          stopLossPercent: 5.0, // Default stop loss
+          status: "executing",
+          priority: 1,
+          targetExecutionTime: Math.floor(Date.now() / 1000),
+          confidenceScore: target.confidence || 0.8,
+          riskLevel: "medium",
+        }),
+      });
+
+      const snipeTargetData = snipeTargetResponse.ok ? await snipeTargetResponse.json() : null;
+      const snipeTargetId = snipeTargetData?.data?.id;
+
+      // 2. Prepare trading parameters
       const tradingParams = {
         symbol: `${target.symbol}USDT`, // Assuming USDT trading pair
         side: "BUY",
         type: "MARKET", // Use market order for immediate execution
         quantity: target.orderParameters?.quantity || "10", // Default quantity
-        userId: "demo-user", // TODO: Get from real authentication
+        userId: actualUserId,
+        snipeTargetId, // Link to snipe target for tracking
       };
 
       console.log(`🚀 Executing real trading order via API...`);
       console.log(`📊 Trading Parameters:`, tradingParams);
 
-      // Execute trading via server-side API
+      // 3. Execute trading via server-side API
       const response = await fetch("/api/mexc/trade", {
         method: "POST",
         headers: {
@@ -230,6 +265,37 @@ export const usePatternSniper = () => {
         console.log(`📊 Order ID: ${result.order.orderId}`);
         console.log(`📊 Status: ${result.order.status}`);
 
+        // 4. Update snipe target status to ready for exit monitoring
+        if (snipeTargetId) {
+          await fetch(`/api/snipe-targets/${snipeTargetId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              status: "ready", // Ready for exit monitoring
+              actualExecutionTime: Math.floor(Date.now() / 1000),
+              executionPrice: result.order.price || result.order.avgPrice,
+              actualPositionSize: result.order.executedQty || result.order.quantity,
+              executionStatus: "success",
+            }),
+          });
+        }
+
+        // 5. Start auto exit manager to monitor this position
+        try {
+          await fetch("/api/auto-exit-manager", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ action: "start" }),
+          });
+          console.log("🎯 Auto exit manager started for position monitoring");
+        } catch (autoExitError) {
+          console.warn("⚠️ Could not start auto exit manager:", autoExitError);
+        }
+
         // Log execution details
         console.log(`📊 Execution Summary:`);
         console.log(`   - Symbol: ${result.order.symbol}`);
@@ -239,12 +305,36 @@ export const usePatternSniper = () => {
         console.log(`   - Advance Notice: ${target.hoursAdvanceNotice.toFixed(1)} hours`);
         console.log(`   - Discovery Time: ${target.discoveredAt.toLocaleString()}`);
         console.log(`   - Execution Time: ${new Date().toLocaleString()}`);
+        console.log(`   - Snipe Target ID: ${snipeTargetId}`);
+
+        // Mark target as executed in local state
+        setExecutedTargets((prev) => new Set([...prev, target.vcoinId]));
+        setReadyTargets((prev) => {
+          const updated = new Map(prev);
+          updated.delete(target.vcoinId);
+          return updated;
+        });
 
         // Show success notification
         alert(
-          `🎉 Real trading order placed successfully!\nOrder ID: ${result.order.orderId}\nSymbol: ${result.order.symbol}\nQuantity: ${result.order.quantity}`
+          `🎉 Real trading order placed successfully!\nOrder ID: ${result.order.orderId}\nSymbol: ${result.order.symbol}\nQuantity: ${result.order.quantity}\n🎯 Auto exit monitoring started!`
         );
       } else {
+        // Update snipe target status to failed
+        if (snipeTargetId) {
+          await fetch(`/api/snipe-targets/${snipeTargetId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              status: "failed",
+              executionStatus: "failed",
+              errorMessage: result.error || result.message,
+            }),
+          });
+        }
+
         console.error(`❌ Snipe failed for ${target.symbol}:`, result.error || result.message);
         alert(`Trading failed: ${result.error || result.message}`);
       }
@@ -258,7 +348,13 @@ export const usePatternSniper = () => {
   const startMonitoring = useCallback(() => {
     setIsMonitoring(true);
     setStartTime(new Date());
-    console.log("🚀 Pattern Sniper started");
+
+    // Save monitoring state to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pattern-sniper-monitoring", "true");
+    }
+
+    console.log("🚀 Pattern Sniper started (Auto-Snipe Active)");
 
     // Force refresh data when starting
     refetchCalendar();
@@ -266,7 +362,13 @@ export const usePatternSniper = () => {
 
   const stopMonitoring = useCallback(() => {
     setIsMonitoring(false);
-    console.log("⏹️ Pattern Sniper stopped");
+
+    // Save monitoring state to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pattern-sniper-monitoring", "false");
+    }
+
+    console.log("⏹️ Pattern Sniper stopped (Auto-Snipe Disabled)");
   }, []);
 
   const clearAllTargets = useCallback(() => {
@@ -324,7 +426,7 @@ export const usePatternSniper = () => {
     forceRefresh,
 
     // Advanced actions
-    executeSnipe: (target: SnipeTarget) => executeSnipe(target),
+    executeSnipe: (target: SnipeTarget, userId?: string) => executeSnipe(target, userId),
     removeTarget: (vcoinId: string) => {
       const newTargets = new Map(calendarTargets);
       const newPending = new Set(pendingDetection);

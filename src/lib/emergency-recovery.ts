@@ -1,7 +1,7 @@
-import { performSystemHealthCheck, getConnectivityStatus } from "./health-checks";
 import { db } from "@/src/db";
 import { executionHistory } from "@/src/db/schema";
 import { sql } from "drizzle-orm";
+import { getConnectivityStatus, performSystemHealthCheck } from "./health-checks";
 
 export interface EmergencyRecoveryPlan {
   emergencyType: string;
@@ -28,14 +28,17 @@ export interface RecoveryResult {
 }
 
 export class EmergencyRecoveryService {
-  
   /**
    * Execute emergency recovery based on detected issues
    */
-  async executeRecovery(emergencyType: string, severity: string, data: any): Promise<EmergencyRecoveryPlan> {
+  async executeRecovery(
+    emergencyType: string,
+    severity: string,
+    data: any
+  ): Promise<EmergencyRecoveryPlan> {
     const systemHealth = await performSystemHealthCheck();
     const connectivity = await getConnectivityStatus();
-    
+
     // Log emergency start
     await this.logEmergencyEvent(emergencyType, severity, "recovery_started", {
       systemHealth: systemHealth.overall,
@@ -45,19 +48,19 @@ export class EmergencyRecoveryService {
     switch (emergencyType) {
       case "api_failure":
         return await this.handleApiFailureRecovery(connectivity, systemHealth);
-      
+
       case "database_failure":
         return await this.handleDatabaseFailureRecovery(systemHealth);
-      
+
       case "high_volatility":
         return await this.handleHighVolatilityRecovery(data, systemHealth);
-      
+
       case "system_overload":
         return await this.handleSystemOverloadRecovery(systemHealth);
-      
+
       case "trading_anomaly":
         return await this.handleTradingAnomalyRecovery(data);
-        
+
       default:
         return await this.handleGeneralEmergencyRecovery(emergencyType, severity);
     }
@@ -66,7 +69,10 @@ export class EmergencyRecoveryService {
   /**
    * Handle API failure recovery
    */
-  private async handleApiFailureRecovery(connectivity: any, systemHealth: any): Promise<EmergencyRecoveryPlan> {
+  private async handleApiFailureRecovery(
+    connectivity: any,
+    _systemHealth: any
+  ): Promise<EmergencyRecoveryPlan> {
     const recoverySteps: RecoveryStep[] = [];
 
     // Step 1: Test API connectivity with retries
@@ -124,7 +130,7 @@ export class EmergencyRecoveryService {
   /**
    * Handle database failure recovery
    */
-  private async handleDatabaseFailureRecovery(systemHealth: any): Promise<EmergencyRecoveryPlan> {
+  private async handleDatabaseFailureRecovery(_systemHealth: any): Promise<EmergencyRecoveryPlan> {
     const recoverySteps: RecoveryStep[] = [
       {
         id: "test_db_connection",
@@ -164,7 +170,10 @@ export class EmergencyRecoveryService {
   /**
    * Handle high volatility emergency response
    */
-  private async handleHighVolatilityRecovery(data: any, systemHealth: any): Promise<EmergencyRecoveryPlan> {
+  private async handleHighVolatilityRecovery(
+    data: any,
+    _systemHealth: any
+  ): Promise<EmergencyRecoveryPlan> {
     const recoverySteps: RecoveryStep[] = [
       {
         id: "pause_new_positions",
@@ -212,7 +221,7 @@ export class EmergencyRecoveryService {
   /**
    * Handle system overload recovery
    */
-  private async handleSystemOverloadRecovery(systemHealth: any): Promise<EmergencyRecoveryPlan> {
+  private async handleSystemOverloadRecovery(_systemHealth: any): Promise<EmergencyRecoveryPlan> {
     const recoverySteps: RecoveryStep[] = [
       {
         id: "reduce_monitoring_frequency",
@@ -300,7 +309,10 @@ export class EmergencyRecoveryService {
   /**
    * Handle general emergency recovery
    */
-  private async handleGeneralEmergencyRecovery(emergencyType: string, severity: string): Promise<EmergencyRecoveryPlan> {
+  private async handleGeneralEmergencyRecovery(
+    emergencyType: string,
+    severity: string
+  ): Promise<EmergencyRecoveryPlan> {
     const recoverySteps: RecoveryStep[] = [
       {
         id: "system_health_check",
@@ -336,24 +348,23 @@ export class EmergencyRecoveryService {
         method: "GET",
         signal: AbortSignal.timeout(5000),
       });
-      
+
       if (response.ok) {
         return {
           success: true,
           message: "MEXC API connection restored successfully",
           nextAction: "resume_monitoring",
         };
-      } else {
-        return {
-          success: false,
-          message: `MEXC API still unavailable: HTTP ${response.status}`,
-          nextAction: "continue_degraded_mode",
-        };
       }
+      return {
+        success: false,
+        message: `MEXC API still unavailable: HTTP ${response.status}`,
+        nextAction: "continue_degraded_mode",
+      };
     } catch (error) {
       return {
         success: false,
-        message: `MEXC API connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: `MEXC API connection failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         nextAction: "extend_retry_interval",
       };
     }
@@ -372,7 +383,7 @@ export class EmergencyRecoveryService {
       const response = await fetch("https://api.openai.com/v1/models", {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         },
         signal: AbortSignal.timeout(5000),
       });
@@ -383,17 +394,16 @@ export class EmergencyRecoveryService {
           message: "OpenAI API connection restored successfully",
           nextAction: "resume_ai_features",
         };
-      } else {
-        return {
-          success: false,
-          message: `OpenAI API still unavailable: HTTP ${response.status}`,
-          nextAction: "continue_without_ai",
-        };
       }
+      return {
+        success: false,
+        message: `OpenAI API still unavailable: HTTP ${response.status}`,
+        nextAction: "continue_without_ai",
+      };
     } catch (error) {
       return {
         success: false,
-        message: `OpenAI API connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: `OpenAI API connection failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         nextAction: "disable_ai_temporarily",
       };
     }
@@ -436,7 +446,7 @@ export class EmergencyRecoveryService {
     } catch (error) {
       return {
         success: false,
-        message: `Database connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: `Database connection test failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         nextAction: "attempt_repair",
       };
     }
@@ -492,7 +502,7 @@ export class EmergencyRecoveryService {
     };
   }
 
-  private async sendVolatilityNotification(data: any): Promise<RecoveryResult> {
+  private async sendVolatilityNotification(_data: any): Promise<RecoveryResult> {
     return {
       success: true,
       message: "High volatility notification sent to monitoring systems",
@@ -528,13 +538,12 @@ export class EmergencyRecoveryService {
         message: "Garbage collection forced to free memory",
         nextAction: "check_memory_usage",
       };
-    } else {
-      return {
-        success: false,
-        message: "Garbage collection not available (requires --expose-gc flag)",
-        nextAction: "try_alternative_memory_management",
-      };
     }
+    return {
+      success: false,
+      message: "Garbage collection not available (requires --expose-gc flag)",
+      nextAction: "try_alternative_memory_management",
+    };
   }
 
   private async requestResourceScaling(): Promise<RecoveryResult> {
@@ -580,12 +589,15 @@ export class EmergencyRecoveryService {
     return {
       success: true,
       message: `System health check completed - status: ${health.overall}`,
-      details: health,
+      details: health as unknown as Record<string, unknown>,
       nextAction: health.overall === "healthy" ? "resume_operations" : "continue_recovery",
     };
   }
 
-  private async logEmergencyDetails(emergencyType: string, severity: string): Promise<RecoveryResult> {
+  private async logEmergencyDetails(
+    emergencyType: string,
+    severity: string
+  ): Promise<RecoveryResult> {
     return {
       success: true,
       message: `Emergency details logged for ${emergencyType} (${severity})`,
@@ -594,23 +606,24 @@ export class EmergencyRecoveryService {
   }
 
   private async logEmergencyEvent(
-    emergencyType: string, 
-    severity: string, 
-    phase: string, 
+    emergencyType: string,
+    severity: string,
+    phase: string,
     details: any
   ): Promise<void> {
     try {
       await db.insert(executionHistory).values({
-        functionName: "emergency_recovery",
-        status: "info",
-        executedAt: Math.floor(Date.now() / 1000),
+        userId: "system",
+        vcoinId: "EMERGENCY",
+        symbolName: "SYSTEM",
+        action: "emergency_recovery",
+        orderType: "system",
+        orderSide: "system",
+        requestedQuantity: 0,
+        status: "success",
+        requestedAt: new Date(Date.now()),
+        executedAt: new Date(Date.now()),
         executionLatencyMs: 0,
-        metadata: {
-          emergencyType,
-          severity,
-          phase,
-          details,
-        },
       });
     } catch (error) {
       console.error("Failed to log emergency event:", error);

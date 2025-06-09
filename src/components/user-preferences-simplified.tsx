@@ -28,9 +28,9 @@ export function UserPreferences({ userId }: UserPreferencesProps) {
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-muted rounded w-3/4"></div>
-            <div className="h-4 bg-muted rounded w-1/2"></div>
-            <div className="h-4 bg-muted rounded w-5/6"></div>
+            <div className="h-4 bg-muted rounded w-3/4" />
+            <div className="h-4 bg-muted rounded w-1/2" />
+            <div className="h-4 bg-muted rounded w-5/6" />
           </div>
         </CardContent>
       </Card>
@@ -40,7 +40,7 @@ export function UserPreferences({ userId }: UserPreferencesProps) {
   return (
     <div className="space-y-6">
       <TakeProfitLevels userId={userId} />
-      <TradingConfiguration preferences={preferences} />
+      <TradingConfiguration preferences={preferences || null} />
       <ApiCredentialsForm userId={userId} />
     </div>
   );

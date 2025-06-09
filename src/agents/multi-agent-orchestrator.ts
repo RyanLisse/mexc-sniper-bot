@@ -67,81 +67,120 @@ export class MultiAgentOrchestrator {
     };
 
     try {
-      // Determine starting agent based on workflow type
-      const startingAgent = this.selectStartingAgent(request.type);
-      if (!startingAgent) {
-        throw new Error(`No suitable starting agent found for workflow type: ${request.type}`);
+      const workflowExecution = await this.executeWorkflowSteps(request, result);
+      result.success = workflowExecution.success;
+      if (workflowExecution.finalResult) {
+        result.finalResult = workflowExecution.finalResult;
       }
-
-      let currentAgent = startingAgent;
-      let currentInput = request.input;
-      let currentContext = request.context || {};
-      let handoffCount = 0;
-      const maxHandoffs = request.maxHandoffs || 5;
-
-      // Execute workflow with handoffs
-      while (currentAgent && handoffCount < maxHandoffs) {
-        const agentName = this.getAgentName(currentAgent);
-        result.executionPath.push(agentName);
-
-        console.log(`[MultiAgent] Executing agent: ${agentName} (handoff ${handoffCount})`);
-
-        // Execute current agent
-        const agentResult = await currentAgent.executeWithHandoff(
-          currentInput,
-          currentContext,
-          this.agentRegistry
-        );
-
-        result.agentResults.set(agentName, agentResult);
-
-        // Check for handoff
-        const handoff = currentAgent.checkHandoff(currentInput, {
-          ...currentContext,
-          ...this.extractContextFromResult(agentResult),
-        });
-
-        if (handoff && this.agentRegistry.has(handoff.toAgent)) {
-          // Execute handoff
-          console.log(
-            `[MultiAgent] Handoff: ${agentName} -> ${handoff.toAgent} (${handoff.reason})`
-          );
-
-          const nextAgent = this.agentRegistry.get(handoff.toAgent);
-          if (!nextAgent) {
-            throw new Error(`Agent ${handoff.toAgent} not found in registry`);
-          }
-          currentAgent = nextAgent;
-          currentContext = { ...currentContext, ...handoff.context };
-          handoffCount++;
-
-          // Update input for next agent based on previous result
-          currentInput = this.prepareHandoffInput(agentResult, handoff);
-        } else {
-          // No more handoffs, workflow complete
-          result.finalResult = agentResult;
-          break;
-        }
-      }
-
-      if (handoffCount >= maxHandoffs) {
-        console.warn(
-          `[MultiAgent] Maximum handoffs (${maxHandoffs}) reached for workflow ${executionId}`
-        );
-      }
-
-      result.success = true;
-      result.totalExecutionTime = Date.now() - startTime;
     } catch (error) {
       result.error = error instanceof Error ? error.message : String(error);
-      result.totalExecutionTime = Date.now() - startTime;
       console.error(`[MultiAgent] Workflow execution failed:`, error);
     }
 
-    // Store execution history
+    result.totalExecutionTime = Date.now() - startTime;
     this.executionHistory.set(executionId, result);
-
     return result;
+  }
+
+  /**
+   * Execute the workflow steps with handoff logic
+   */
+  private async executeWorkflowSteps(
+    request: AgentWorkflowRequest,
+    result: AgentWorkflowResult
+  ): Promise<{ success: boolean; finalResult?: any }> {
+    const startingAgent = this.selectStartingAgent(request.type);
+    if (!startingAgent) {
+      throw new Error(`No suitable starting agent found for workflow type: ${request.type}`);
+    }
+
+    let currentAgent = startingAgent;
+    let currentInput = request.input;
+    let currentContext = request.context || {};
+    let handoffCount = 0;
+    const maxHandoffs = request.maxHandoffs || 5;
+
+    while (currentAgent && handoffCount < maxHandoffs) {
+      const stepResult = await this.executeAgentStep(
+        currentAgent,
+        currentInput,
+        currentContext,
+        result,
+        handoffCount
+      );
+
+      if (stepResult.shouldContinue) {
+        currentAgent = stepResult.nextAgent;
+        currentInput = stepResult.nextInput;
+        currentContext = stepResult.nextContext;
+        handoffCount++;
+      } else {
+        return { success: true, finalResult: stepResult.finalResult };
+      }
+    }
+
+    if (handoffCount >= maxHandoffs) {
+      console.warn(`[MultiAgent] Maximum handoffs (${maxHandoffs}) reached`);
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Execute a single agent step
+   */
+  private async executeAgentStep(
+    agent: any,
+    input: any,
+    context: any,
+    result: AgentWorkflowResult,
+    handoffCount: number
+  ): Promise<{
+    shouldContinue: boolean;
+    nextAgent?: any;
+    nextInput?: any;
+    nextContext?: any;
+    finalResult?: any;
+  }> {
+    const agentName = this.getAgentName(agent);
+    result.executionPath.push(agentName);
+
+    console.log(`[MultiAgent] Executing agent: ${agentName} (handoff ${handoffCount})`);
+
+    const agentResult = await agent.executeWithHandoff(input, context, this.agentRegistry);
+    result.agentResults.set(agentName, agentResult);
+
+    const handoff = agent.checkHandoff(input, {
+      ...context,
+      ...this.extractContextFromResult(agentResult),
+    });
+
+    if (handoff && this.agentRegistry.has(handoff.toAgent)) {
+      return this.prepareHandoff(agentName, handoff, agentResult);
+    }
+
+    return { shouldContinue: false, finalResult: agentResult };
+  }
+
+  /**
+   * Prepare handoff to next agent
+   */
+  private prepareHandoff(currentAgentName: string, handoff: any, agentResult: any) {
+    console.log(
+      `[MultiAgent] Handoff: ${currentAgentName} -> ${handoff.toAgent} (${handoff.reason})`
+    );
+
+    const nextAgent = this.agentRegistry.get(handoff.toAgent);
+    if (!nextAgent) {
+      throw new Error(`Agent ${handoff.toAgent} not found in registry`);
+    }
+
+    return {
+      shouldContinue: true,
+      nextAgent,
+      nextInput: this.prepareHandoffInput(agentResult, handoff),
+      nextContext: { ...handoff.context },
+    };
   }
 
   /**

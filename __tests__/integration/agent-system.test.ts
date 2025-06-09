@@ -1,30 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-
-// Mock the OpenAI client
-vi.mock('openai', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    chat: {
-      completions: {
-        create: vi.fn().mockResolvedValue({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                analysis: 'Mock AI analysis',
-                confidence: 85,
-                recommendations: ['Mock recommendation']
-              })
-            }
-          }]
-        })
-      }
-    }
-  }))
-}))
+import { describe, it, expect } from 'vitest'
 
 describe('Agent System Integration', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
 
   describe('BaseAgent functionality', () => {
     it('should create agent with proper configuration', () => {

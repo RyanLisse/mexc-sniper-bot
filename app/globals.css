@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@source "../node_modules/@daveyplate/better-auth-ui";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -189,4 +191,29 @@
 .trading-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Better Auth UI Dark Theme Customization */
+.better-auth-form {
+  @apply text-white;
+}
+
+.better-auth-form input {
+  @apply bg-slate-700 border-slate-600 text-white placeholder:text-slate-400;
+}
+
+.better-auth-form button {
+  @apply bg-blue-600 hover:bg-blue-700 text-white;
+}
+
+.better-auth-form .error {
+  @apply text-red-400;
+}
+
+.better-auth-form .success {
+  @apply text-green-400;
+}
+
+.better-auth-form label {
+  @apply text-slate-300;
 }

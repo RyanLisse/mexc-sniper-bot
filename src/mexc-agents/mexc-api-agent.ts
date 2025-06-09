@@ -83,8 +83,8 @@ Output Format:
     this.secretKey = process.env.MEXC_SECRET_KEY;
   }
 
-  async process(input: string, context?: MexcApiRequest): Promise<AgentResponse> {
-    const request: MexcApiRequest = context || { endpoint: input };
+  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+    const request: MexcApiRequest = (context as unknown as MexcApiRequest) || { endpoint: input };
 
     const userMessage = `
 MEXC API Analysis Request:
@@ -245,11 +245,12 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
             break;
 
           case "/api/v3/etf/symbols":
-          case "/symbols":
+          case "/symbols": {
             console.log(`[MexcApiAgent] Fetching symbols data (attempt ${attempt}/${maxRetries})`);
             const vcoinId = params?.vcoin_id || params?.vcoinId;
             apiResponse = await mexcClient.getSymbolsV2(vcoinId);
             break;
+          }
 
           default:
             console.warn(`[MexcApiAgent] Unknown endpoint: ${endpoint}, using direct API call`);
@@ -285,7 +286,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
         }
 
         // Wait before retrying with exponential backoff
-        const delay = retryDelay * Math.pow(2, attempt - 1);
+        const delay = retryDelay * 2 ** (attempt - 1);
         console.log(`[MexcApiAgent] Retrying in ${delay}ms...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
@@ -363,7 +364,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
         .map((symbol) => {
           try {
             return validateSymbolV2Entry(symbol);
-          } catch (error) {
+          } catch (_error) {
             console.warn(`[MexcApiAgent] Invalid symbol data:`, symbol);
             return null;
           }
@@ -433,9 +434,7 @@ Focus on actionable trading signals and specific symbol recommendations.
       ]);
 
       return {
-        content:
-          aiResponse.content +
-          `\n\n**Pattern Analysis Data:**\n${JSON.stringify(patternAnalysis, null, 2)}`,
+        content: `${aiResponse.content}\n\n**Pattern Analysis Data:**\n${JSON.stringify(patternAnalysis, null, 2)}`,
         metadata: {
           ...aiResponse.metadata,
         },
@@ -482,9 +481,7 @@ Focus on actionable trading signals and specific symbol recommendations.
       const analysis = await this.analyzeSymbolData(requestedSymbols);
 
       return {
-        content:
-          analysis.content +
-          `\n\n**Requested VcoinIds:** ${vcoinIds.join(", ")}\n**Found Symbols:** ${requestedSymbols.length}`,
+        content: `${analysis.content}\n\n**Requested VcoinIds:** ${vcoinIds.join(", ")}\n**Found Symbols:** ${requestedSymbols.length}`,
         metadata: {
           ...analysis.metadata,
         },
@@ -527,7 +524,8 @@ Focus on actionable trading signals and specific symbol recommendations.
         }
 
         return await response.json();
-      } else if (endpoint.includes("symbols") || endpoint === "/api/v3/etf/symbols") {
+      }
+      if (endpoint.includes("symbols") || endpoint === "/api/v3/etf/symbols") {
         // Use the configured symbols endpoint
         apiUrl = `${this.baseUrl}/api/platform/spot/market-v2/web/symbolsV2`;
 
@@ -554,31 +552,30 @@ Focus on actionable trading signals and specific symbol recommendations.
         }
 
         return await response.json();
-      } else {
-        // Generic endpoint call
-        const url = new URL(endpoint, this.baseUrl);
-        if (params) {
-          Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-              url.searchParams.append(key, String(value));
-            }
-          });
-        }
-
-        const response = await fetch(url.toString(), {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(this.apiKey && { "X-MEXC-APIKEY": this.apiKey }),
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`MEXC API error: ${response.status} ${response.statusText}`);
-        }
-
-        return await response.json();
       }
+      // Generic endpoint call
+      const url = new URL(endpoint, this.baseUrl);
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            url.searchParams.append(key, String(value));
+          }
+        });
+      }
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(this.apiKey && { "X-MEXC-APIKEY": this.apiKey }),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`MEXC API error: ${response.status} ${response.statusText}`);
+      }
+
+      return await response.json();
     } catch (error) {
       console.error(`[MexcApiAgent] Direct API call failed:`, error);
       throw error;

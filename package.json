@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "AI-powered MEXC cryptocurrency trading bot with pattern detection and automated execution",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 3008",
     "build": "next build",
     "start": "next start",
     "lint": "biome check --write",
@@ -13,10 +13,10 @@
     "setup:turso": "./scripts/setup-turso.sh",
     "lint:all": "./scripts/lint-and-format.sh",
     "type-check": "tsc --noEmit",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:run": "vitest run",
-    "test:watch": "vitest --watch",
+    "test": "./run-unit-tests.sh",
+    "test:ui": "vitest --ui __tests__/ all-tests/vitest-unit-tests/",
+    "test:run": "./run-unit-tests.sh",
+    "test:watch": "vitest --watch __tests__/ all-tests/vitest-unit-tests/",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
@@ -31,6 +31,7 @@
     "db:reset": "rm -f mexc_sniper.db && bun run db:migrate"
   },
   "dependencies": {
+    "@daveyplate/better-auth-ui": "^1.7.4",
     "@libsql/client": "^0.15.8",
     "@openai/agents": "^0.0.3",
     "@radix-ui/react-slot": "^1.2.3",

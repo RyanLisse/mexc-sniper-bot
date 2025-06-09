@@ -41,8 +41,8 @@ Output Format:
     super(config);
   }
 
-  async process(input: string, context?: ResearchRequest): Promise<AgentResponse> {
-    const request: ResearchRequest = context || { topics: [input] };
+  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+    const request: ResearchRequest = (context as unknown as ResearchRequest) || { topics: [input] };
 
     const userMessage = `
 Research Request:

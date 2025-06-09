@@ -42,8 +42,8 @@ Analysis Framework:
     super(config);
   }
 
-  async process(input: string, context?: AnalysisRequest): Promise<AgentResponse> {
-    const request: AnalysisRequest = context || {
+  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+    const request: AnalysisRequest = (context as unknown as AnalysisRequest) || {
       content: input,
       analysisType: "technical",
       depth: "standard",

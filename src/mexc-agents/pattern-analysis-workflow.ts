@@ -36,7 +36,7 @@ export interface PatternSignal {
 export class PatternAnalysisWorkflow {
   async analyzePatterns(
     patternAnalysis: AgentResponse,
-    symbols?: string[],
+    _symbols?: string[],
     analysisType: "discovery" | "monitoring" | "execution" = "discovery"
   ): Promise<PatternAnalysisResult> {
     console.log(`[PatternAnalysisWorkflow] Analyzing patterns for ${analysisType}`);
@@ -66,7 +66,7 @@ export class PatternAnalysisWorkflow {
 
   private extractActionablePatterns(
     analysis: AgentResponse,
-    analysisType: string
+    _analysisType: string
   ): ActionablePattern[] {
     const content = analysis.content || "";
     const patterns: ActionablePattern[] = [];
@@ -228,7 +228,7 @@ export class PatternAnalysisWorkflow {
     return signals;
   }
 
-  private extractTimeToExecution(content: string, signalType: string): string {
+  private extractTimeToExecution(content: string, _signalType: string): string {
     // Look for time indicators near the signal
     const timePatterns = [
       /(\d+(?:\.\d+)?)\s*hours?/i,

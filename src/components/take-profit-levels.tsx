@@ -59,10 +59,10 @@ export function TakeProfitLevels({ userId }: TakeProfitLevelsProps) {
   };
 
   return (
-    <Card>
+    <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle>Take Profit Levels</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-white">Take Profit Levels</CardTitle>
+        <CardDescription className="text-slate-400">
           Configure your default take profit percentages for different risk levels
         </CardDescription>
       </CardHeader>
@@ -127,9 +127,9 @@ function TakeProfitLevelCard({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium">{level.name}</label>
+        <span className="text-sm font-medium text-white">{level.name}</span>
         {isDefault && (
-          <Badge variant="default" className="text-xs">
+          <Badge variant="default" className="text-xs bg-green-600 text-white">
             Default
           </Badge>
         )}
@@ -144,21 +144,25 @@ function TakeProfitLevelCard({
             min="0.1"
             max="100"
             step="0.1"
-            className="text-center"
+            className="text-center bg-slate-700 border-slate-600 text-white"
           />
           <Button
             variant={isDefault ? "default" : "outline"}
             size="sm"
-            className="w-full"
+            className={`w-full ${
+              isDefault
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+            }`}
             onClick={onSetDefault}
           >
             {isDefault ? "Default" : "Set Default"}
           </Button>
         </div>
       ) : (
-        <div className="text-center p-3 bg-muted rounded-lg">
-          <div className="text-2xl font-bold text-green-500">{level.value}%</div>
-          <div className="text-xs text-muted-foreground mt-1">{level.description}</div>
+        <div className="text-center p-3 bg-slate-700/30 border border-slate-600/50 rounded-lg">
+          <div className="text-2xl font-bold text-green-400">{level.value}%</div>
+          <div className="text-xs text-slate-400 mt-1">{level.description}</div>
         </div>
       )}
     </div>
@@ -178,10 +182,13 @@ function CustomLevelSection({
 }: CustomLevelSectionProps) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">Custom Level (Optional)</label>
+      <label htmlFor="custom-take-profit" className="text-sm font-medium text-white">
+        Custom Level (Optional)
+      </label>
       {editingLevels ? (
         <div className="flex items-center space-x-2">
           <Input
+            id="custom-take-profit"
             type="number"
             value={customLevel || ""}
             onChange={(e) => onCustomLevelChange(Number.parseFloat(e.target.value) || undefined)}
@@ -189,12 +196,12 @@ function CustomLevelSection({
             min="0.1"
             max="1000"
             step="0.1"
-            className="max-w-xs"
+            className="max-w-xs bg-slate-700 border-slate-600 text-white"
           />
-          <span className="text-sm text-muted-foreground">%</span>
+          <span className="text-sm text-slate-400">%</span>
         </div>
       ) : (
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-slate-400">
           {customLevel ? `${customLevel}% - Custom user-defined level` : "Not set"}
         </div>
       )}
@@ -221,15 +228,25 @@ function TakeProfitLevelActions({
     <div className="flex items-center space-x-2">
       {editingLevels ? (
         <>
-          <Button onClick={onSave} disabled={isLoading}>
+          <Button
+            onClick={onSave}
+            disabled={isLoading}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
             {isLoading ? "Saving..." : "Save Changes"}
           </Button>
-          <Button variant="outline" onClick={onCancel}>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
             Cancel
           </Button>
         </>
       ) : (
-        <Button onClick={onEdit}>Edit Levels</Button>
+        <Button onClick={onEdit} className="bg-blue-600 hover:bg-blue-700 text-white">
+          Edit Levels
+        </Button>
       )}
     </div>
   );

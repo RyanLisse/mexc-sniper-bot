@@ -238,7 +238,7 @@ export class MexcOrchestrator {
           analysisData = await this.mexcApiAgent.callMexcApi("/api/v3/etf/symbols", {
             vcoin_id: request.vcoinId,
           });
-        } catch (error) {
+        } catch (_error) {
           analysisData = { vcoinId: request.vcoinId, source: "fallback" };
         }
       } else if (request.symbols) {
@@ -457,7 +457,7 @@ export class MexcOrchestrator {
         const summaryData = summaryMatch[1].trim();
         structuredData = JSON.parse(summaryData);
       }
-    } catch (error) {
+    } catch (_error) {
       console.warn(`[MexcOrchestrator] Could not parse calendar summary data`);
     }
 
@@ -490,7 +490,7 @@ export class MexcOrchestrator {
         const summaryData = summaryMatch[1].trim();
         patternSummary = JSON.parse(summaryData);
       }
-    } catch (error) {
+    } catch (_error) {
       console.warn(`[MexcOrchestrator] Could not parse pattern summary data`);
     }
 
@@ -512,14 +512,14 @@ export class MexcOrchestrator {
   // Process listings with enhanced AI insights
   private processListingsWithAIInsights(
     calendarEntries: any[],
-    calendarInsights: any,
+    _calendarInsights: any,
     patternInsights: any
   ): any[] {
     const now = Date.now();
 
     return calendarEntries
       .filter((entry) => {
-        return entry && entry.vcoinId && entry.symbol && (entry.firstOpenTime || entry.launchTime);
+        return entry?.vcoinId && entry.symbol && (entry.firstOpenTime || entry.launchTime);
       })
       .map((entry) => {
         const launchTime = entry.firstOpenTime || entry.launchTime;
@@ -620,8 +620,8 @@ export class MexcOrchestrator {
   // Generate actionable recommendations
   private generateActionableRecommendations(
     categorizedResults: any,
-    calendarInsights: any,
-    patternInsights: any
+    _calendarInsights: any,
+    _patternInsights: any
   ): any {
     const immediate = [];
     const scheduled = [];
@@ -665,7 +665,7 @@ export class MexcOrchestrator {
   // Calculate overall assessment
   private calculateOverallAssessment(
     categorizedResults: any,
-    calendarInsights: any,
+    _calendarInsights: any,
     patternInsights: any
   ): any {
     const totalOpportunities =
@@ -1040,7 +1040,7 @@ export class MexcOrchestrator {
   private generateSymbolRecommendations(
     tradingReadiness: any,
     riskAssessment: any,
-    confidenceScores: any
+    _confidenceScores: any
   ): any {
     const immediate = [];
     const monitoring = [];
@@ -1088,7 +1088,7 @@ export class MexcOrchestrator {
     return "unknown";
   }
 
-  private async extractActionablePatterns(analysis: AgentResponse, data: any): Promise<any> {
+  private async extractActionablePatterns(analysis: AgentResponse, _data: any): Promise<any> {
     const content = analysis.content.toLowerCase();
 
     const patterns = [];
@@ -1108,9 +1108,9 @@ export class MexcOrchestrator {
   }
 
   private async compileTradingStrategy(
-    strategy: AgentResponse,
-    risk: AgentResponse,
-    market: AgentResponse,
+    _strategy: AgentResponse,
+    _risk: AgentResponse,
+    _market: AgentResponse,
     request: TradingStrategyWorkflowRequest
   ): Promise<any> {
     // Extract strategy parameters from AI analysis

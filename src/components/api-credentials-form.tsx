@@ -111,13 +111,13 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
       <CardContent className="space-y-6">
         {apiCredsLoading ? (
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-muted rounded w-3/4"></div>
-            <div className="h-4 bg-muted rounded w-1/2"></div>
+            <div className="h-4 bg-muted rounded w-3/4" />
+            <div className="h-4 bg-muted rounded w-1/2" />
           </div>
         ) : (
           <>
             {/* Current API Status */}
-            <ApiCredentialsStatus apiCredentials={apiCredentials} />
+            <ApiCredentialsStatus apiCredentials={apiCredentials ?? null} />
 
             {/* API Key Management Form */}
             {editingApiKeys ? (
@@ -136,7 +136,7 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
               />
             ) : (
               <ApiCredentialsDisplay
-                apiCredentials={apiCredentials}
+                apiCredentials={apiCredentials ?? null}
                 onEdit={() => setEditingApiKeys(true)}
                 onTest={handleTestApiKeys}
                 onDelete={handleDeleteApiKeys}
@@ -212,9 +212,12 @@ function ApiCredentialsEditForm({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">MEXC API Key</label>
+        <label htmlFor="mexc-api-key" className="text-sm font-medium">
+          MEXC API Key
+        </label>
         <div className="relative">
           <Input
+            id="mexc-api-key"
             type={showApiKey ? "text" : "password"}
             value={apiKeyInput}
             onChange={(e) => onApiKeyChange(e.target.value)}
@@ -234,9 +237,12 @@ function ApiCredentialsEditForm({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">MEXC Secret Key</label>
+        <label htmlFor="mexc-secret-key" className="text-sm font-medium">
+          MEXC Secret Key
+        </label>
         <div className="relative">
           <Input
+            id="mexc-secret-key"
             type={showSecretKey ? "text" : "password"}
             value={secretKeyInput}
             onChange={(e) => onSecretKeyChange(e.target.value)}
@@ -300,11 +306,11 @@ function ApiCredentialsDisplay({
       {apiCredentials && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-muted-foreground">API Key</label>
+            <span className="text-sm font-medium text-muted-foreground">API Key</span>
             <div className="font-mono text-sm p-2 bg-muted rounded">{apiCredentials.apiKey}</div>
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Secret Key</label>
+            <span className="text-sm font-medium text-muted-foreground">Secret Key</span>
             <div className="font-mono text-sm p-2 bg-muted rounded">{apiCredentials.secretKey}</div>
           </div>
         </div>

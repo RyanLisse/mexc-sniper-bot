@@ -147,14 +147,13 @@ export class DataFetcher {
     return results.map((result, index) => {
       if (result.status === "fulfilled") {
         return result.value;
-      } else {
-        console.error(`[DataFetcher] Failed to fetch symbol ${vcoinIds[index]}:`, result.reason);
-        return {
-          vcoinId: vcoinIds[index],
-          symbol: "UNKNOWN",
-          success: false,
-        };
       }
+      console.error(`[DataFetcher] Failed to fetch symbol ${vcoinIds[index]}:`, result.reason);
+      return {
+        vcoinId: vcoinIds[index],
+        symbol: "UNKNOWN",
+        success: false,
+      };
     });
   }
 

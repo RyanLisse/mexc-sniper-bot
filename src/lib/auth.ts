@@ -2,6 +2,8 @@ import { db } from "@/src/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
+console.log("Initializing better-auth...");
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "sqlite",
@@ -13,8 +15,15 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7, // 7 days
   },
   secret: process.env.AUTH_SECRET || "development_secret_change_in_production",
-  trustedOrigins: ["http://localhost:3000"],
+  trustedOrigins: [
+    "http://localhost:3008",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://mexc-sniper-bot.vercel.app",
+  ],
 });
 
+console.log("Better-auth initialized successfully");
+
 export type Session = typeof auth.$Infer.Session;
-export type User = typeof auth.$Infer.User;
+export type User = typeof auth.$Infer.Session.user;

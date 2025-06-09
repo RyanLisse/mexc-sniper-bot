@@ -119,14 +119,13 @@ export const pollMexcCalendar = inngest.createFunction(
         });
 
         return events.length;
-      } else {
-        await updateWorkflowStatus("addActivity", {
-          activity: {
-            type: "calendar",
-            message: "Calendar scan completed - no new listings",
-          },
-        });
       }
+      await updateWorkflowStatus("addActivity", {
+        activity: {
+          type: "calendar",
+          message: "Calendar scan completed - no new listings",
+        },
+      });
       return 0;
     });
 
@@ -203,7 +202,8 @@ export const watchMexcSymbol = inngest.createFunction(
         });
 
         return { action: "strategy_created", targetReady: true };
-      } else if (attempt < 10) {
+      }
+      if (attempt < 10) {
         // Schedule recheck
         await inngest.send({
           name: "mexc/symbol.watch",
@@ -217,9 +217,8 @@ export const watchMexcSymbol = inngest.createFunction(
         });
 
         return { action: "recheck_scheduled", nextAttempt: attempt + 1 };
-      } else {
-        return { action: "max_attempts_reached", abandoned: true };
       }
+      return { action: "max_attempts_reached", abandoned: true };
     });
 
     return {

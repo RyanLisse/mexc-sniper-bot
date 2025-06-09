@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/src/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import {
   TrendingUp,
@@ -29,12 +29,17 @@ import {
   Trash2
 } from "lucide-react";
 import Link from "next/link";
-import { CoinCalendar } from "@/components/coin-calendar";
+import { CoinCalendar } from "@/src/components/coin-calendar";
 import { UserPreferences } from "@/src/components/user-preferences";
 import { EmergencyDashboard } from "@/src/components/emergency-dashboard";
 import { useMexcCalendar, useMexcConnectivity, useRefreshMexcCalendar, useUpcomingLaunches, useReadyTargets, useMexcAccount } from "@/src/hooks/use-mexc-data";
+import { AccountBalance } from "@/src/components/account-balance";
 import { usePatternSniper } from "@/src/hooks/use-pattern-sniper";
 import { useAuth } from "@/src/lib/auth-client";
+// import { ExitStrategySelector } from "@/src/components/exit-strategy-selector";
+// import { useExitStrategyPreferences, useUpdateExitStrategyPreferences } from "@/src/hooks/use-user-preferences";
+// import type { ExitStrategy } from "@/src/types/exit-strategies";
+// import { useAutoExitManager, usePortfolio } from "@/src/hooks/use-portfolio";
 
 interface WorkflowStatus {
   systemStatus: "running" | "stopped" | "error";
@@ -64,9 +69,10 @@ export default function DashboardPage() {
   const [isDiscoveryRunning, setIsDiscoveryRunning] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [showPreferences, setShowPreferences] = useState(false);
+  const [showExitStrategy, setShowExitStrategy] = useState(false);
 
   // Auth status
-  const { user, isAuthenticated, isAnonymous } = useAuth();
+  const { user, isAuthenticated, isAnonymous, isLoading: authLoading } = useAuth();
   const userId = user?.id || "anonymous";
 
   // TanStack Query hooks for real MEXC data
@@ -95,11 +101,41 @@ export default function DashboardPage() {
     errors: sniperErrors,
   } = usePatternSniper();
 
+  // Exit Strategy preferences
+  // const exitStrategyPrefs = useExitStrategyPreferences(userId);
+  // const updateExitStrategy = useUpdateExitStrategyPreferences();
+
+  // Auto Exit Manager
+  // const autoExitManager = useAutoExitManager();
+
+  // Portfolio data
+  // const { data: portfolioData, isLoading: portfolioLoading } = usePortfolio(userId);
+
   useEffect(() => {
     fetchSystemStatus();
     const interval = setInterval(fetchSystemStatus, 10000); // Faster refresh for trading data
-    return () => clearInterval(interval);
-  }, []);
+    
+    // Fallback timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn('Dashboard loading timeout reached, forcing load');
+        setIsLoading(false);
+      }
+    }, 5000); // 5 second timeout
+    
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [isLoading]);
+
+  // Auto-start pattern sniper when dashboard loads (auto-snipe by default)
+  useEffect(() => {
+    if (!isMonitoring && !isLoading && isAuthenticated) {
+      console.log("🚀 Auto-starting pattern sniper for auto-snipe...");
+      startMonitoring();
+    }
+  }, [isMonitoring, isLoading, isAuthenticated, startMonitoring]);
 
   const fetchSystemStatus = async () => {
     try {
@@ -199,7 +235,60 @@ export default function DashboardPage() {
     }
   };
 
-  if (isLoading && !workflowStatus) {
+  // Exit Strategy handlers
+  // const handleStrategyChange = (strategyId: string) => {
+  //   updateExitStrategy.mutate({
+  //     userId,
+  //     selectedExitStrategy: strategyId,
+  //   });
+  // };
+
+  // const handleCustomStrategyChange = (strategy: ExitStrategy) => {
+  //   updateExitStrategy.mutate({
+  //     userId,
+  //     selectedExitStrategy: "custom",
+  //     customExitStrategy: strategy,
+  //   });
+  // };
+
+  // const handleAutoBuyToggle = (enabled: boolean) => {
+  //   updateExitStrategy.mutate({
+  //     userId,
+  //     selectedExitStrategy: exitStrategyPrefs.selectedExitStrategy,
+  //     autoBuyEnabled: enabled,
+  //   });
+  // };
+
+  // const handleAutoSellToggle = (enabled: boolean) => {
+  //   updateExitStrategy.mutate({
+  //     userId,
+  //     selectedExitStrategy: exitStrategyPrefs.selectedExitStrategy,
+  //     autoSellEnabled: enabled,
+  //   });
+  // };
+
+  // Show loading state only for workflow status, auth loading is handled separately
+  const showLoading = isLoading && !workflowStatus;
+  
+  // Add client-side mounting check to avoid hydration issues
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  // Don't render until mounted on client to avoid SSR/hydration issues
+  if (!isMounted) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto" />
+          <p className="text-slate-400">Initializing...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (showLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
         <div className="text-center space-y-4">
@@ -300,6 +389,15 @@ export default function DashboardPage() {
                   <Settings className="mr-2 h-4 w-4" />
                   {showPreferences ? 'Hide' : 'Show'} Preferences
                 </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setShowExitStrategy(!showExitStrategy)}
+                  className="border-purple-600 text-purple-300 hover:bg-purple-700"
+                >
+                  <Target className="mr-2 h-4 w-4" />
+                  {showExitStrategy ? 'Hide' : 'Show'} Exit Strategies
+                </Button>
                 
                 <Button
                   onClick={() => refreshCalendar.mutate()}
@@ -336,7 +434,7 @@ export default function DashboardPage() {
                   ) : (
                     <Play className="mr-2 h-4 w-4" />
                   )}
-                  {isMonitoring ? 'Stop Pattern Sniper' : 'Start Pattern Sniper'}
+                  {isMonitoring ? 'Stop Auto-Snipe' : 'Start Auto-Snipe'}
                 </Button>
 
                 <Button
@@ -361,6 +459,25 @@ export default function DashboardPage() {
                   <Target className="mr-2 h-4 w-4" />
                   Clear All Targets
                 </Button>
+
+{/* <Button
+                  onClick={autoExitManager.status?.isMonitoring ? autoExitManager.stop : autoExitManager.start}
+                  disabled={autoExitManager.isControlling}
+                  className={`${
+                    autoExitManager.status?.isMonitoring
+                      ? 'bg-yellow-500 hover:bg-yellow-600'
+                      : 'bg-purple-500 hover:bg-purple-600'
+                  } text-white`}
+                >
+                  {autoExitManager.isControlling ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : autoExitManager.status?.isMonitoring ? (
+                    <Pause className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Play className="mr-2 h-4 w-4" />
+                  )}
+                  {autoExitManager.status?.isMonitoring ? 'Stop Auto-Exit' : 'Start Auto-Exit'}
+                </Button> */}
               </div>
             </CardContent>
           </Card>
@@ -372,14 +489,14 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-400">Pattern Sniper</p>
+                  <p className="text-sm font-medium text-slate-400">Auto-Snipe</p>
                   <p className={`text-2xl font-bold ${
                     isMonitoring ? 'text-green-400' : 'text-red-400'
                   }`}>
                     {isMonitoring ? 'Active' : 'Stopped'}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {sniperConnected ? 'Connected' : 'Disconnected'}
+                    {isMonitoring ? 'Auto-executing trades' : 'Manual mode only'}
                   </p>
                 </div>
                 <div className={`p-3 rounded-full ${
@@ -427,24 +544,30 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+{/* <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-400">Executed Snipes</p>
-                  <p className="text-2xl font-bold text-purple-400">
-                    {sniperStats.executed}
+                  <p className="text-sm font-medium text-slate-400">Auto-Exit Monitor</p>
+                  <p className={`text-2xl font-bold ${
+                    autoExitManager.status?.isMonitoring ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {autoExitManager.status?.isMonitoring ? 'Active' : 'Stopped'}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {sniperStats.successRate?.toFixed(1) || '0.0'}% success rate
+                    Position monitoring system
                   </p>
                 </div>
-                <div className="p-3 rounded-full bg-purple-500/20">
-                  <Zap className="h-6 w-6 text-purple-400" />
+                <div className={`p-3 rounded-full ${
+                  autoExitManager.status?.isMonitoring ? 'bg-green-500/20' : 'bg-red-500/20'
+                }`}>
+                  <Target className={`h-6 w-6 ${
+                    autoExitManager.status?.isMonitoring ? 'text-green-400' : 'text-red-400'
+                  }`} />
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </section>
 
         {/* Performance Metrics */}
@@ -555,6 +678,35 @@ export default function DashboardPage() {
           </section>
         )}
 
+        {/* Exit Strategy Panel */}
+        {/* {showExitStrategy && (
+          <section className="mb-8">
+            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Target className="h-5 w-5 text-purple-400" />
+                  <span>Auto-Trading & Exit Strategies</span>
+                </CardTitle>
+                <CardDescription>
+                  Configure automatic trading behavior and exit strategies for profit taking
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ExitStrategySelector
+                  selectedStrategy={exitStrategyPrefs.selectedExitStrategy}
+                  customStrategy={exitStrategyPrefs.customExitStrategy}
+                  autoBuyEnabled={exitStrategyPrefs.autoBuyEnabled}
+                  autoSellEnabled={exitStrategyPrefs.autoSellEnabled}
+                  onStrategyChange={handleStrategyChange}
+                  onCustomStrategyChange={handleCustomStrategyChange}
+                  onAutoBuyToggle={handleAutoBuyToggle}
+                  onAutoSellToggle={handleAutoSellToggle}
+                />
+              </CardContent>
+            </Card>
+          </section>
+        )} */}
+
         {/* Pattern Sniper Errors */}
         {(sniperErrors.calendar || sniperErrors.symbols) && (
           <section className="mb-8">
@@ -622,7 +774,7 @@ export default function DashboardPage() {
                         <div className="flex space-x-2">
                           <Button
                             size="sm"
-                            onClick={() => executeSnipe(target)}
+                            onClick={() => executeSnipe(target, userId)}
                             className="bg-green-500 hover:bg-green-600"
                           >
                             <Zap className="h-4 w-4 mr-1" />
@@ -686,49 +838,90 @@ export default function DashboardPage() {
           </section>
         )}
 
+        {/* Portfolio Overview */}
+        {/* {portfolioData && (
+          <section className="mb-8">
+            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <DollarSign className="h-5 w-5 text-green-400" />
+                  <span>Portfolio Overview</span>
+                </CardTitle>
+                <CardDescription>
+                  Active positions and trading performance
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <p className="text-sm text-slate-400">Active Positions</p>
+                    <p className="text-xl font-bold text-green-400">
+                      {portfolioData.metrics.totalActivePositions}
+                    </p>
+                  </div>
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <p className="text-sm text-slate-400">Unrealized P&L</p>
+                    <p className={`text-xl font-bold ${
+                      portfolioData.metrics.totalUnrealizedPnL >= 0 ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      ${portfolioData.metrics.totalUnrealizedPnL.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <p className="text-sm text-slate-400">Capital Deployed</p>
+                    <p className="text-xl font-bold text-blue-400">
+                      ${portfolioData.metrics.totalCapitalDeployed.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                    <p className="text-sm text-slate-400">Success Rate</p>
+                    <p className="text-xl font-bold text-purple-400">
+                      {portfolioData.metrics.successRate.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+
+                {portfolioData.activePositions.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-3">Active Positions</h4>
+                    <div className="space-y-2">
+                      {portfolioData.activePositions.slice(0, 3).map((position) => (
+                        <div key={position.id} className="flex justify-between items-center p-3 bg-slate-700/20 rounded">
+                          <div>
+                            <span className="font-medium text-white">{position.symbolName}</span>
+                            <span className="text-sm text-slate-400 ml-2">
+                              Entry: ${position.executionPrice?.toFixed(6)}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div className={`font-medium ${
+                              position.unrealizedPnLPercent >= 0 ? 'text-green-400' : 'text-red-400'
+                            }`}>
+                              {position.unrealizedPnLPercent >= 0 ? '+' : ''}{position.unrealizedPnLPercent.toFixed(2)}%
+                            </div>
+                            <div className="text-sm text-slate-400">
+                              ${position.unrealizedPnL.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {portfolioData.activePositions.length > 3 && (
+                        <div className="text-center text-slate-400 text-sm">
+                          +{portfolioData.activePositions.length - 3} more positions
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+        )} */}
+
         {/* Account Balance & MEXC Data Status */}
         <section className="mb-8 grid md:grid-cols-2 gap-6">
-          {/* Account Balance */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <DollarSign className="h-5 w-5 text-yellow-400" />
-                <span>Account Balance</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {accountLoading ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-yellow-400" />
-                  <span className="ml-2 text-slate-400">Loading balance...</span>
-                </div>
-              ) : accountError ? (
-                <div className="text-red-400 text-sm">
-                  Error loading account: {accountError.message}
-                </div>
-              ) : accountData?.hasCredentials ? (
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400">USDT Balance</span>
-                    <span className="text-yellow-400 font-bold text-lg">
-                      {accountData.balances?.[0]?.free || '0.00'}
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-500">
-                    {accountData.message}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <AlertTriangle className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400">MEXC API credentials not configured</p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Add MEXC_API_KEY and MEXC_SECRET_KEY to view account balance
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Enhanced Account Balance with Token + USDT Values */}
+          <AccountBalance userId={userId} />
 
           {/* MEXC API Status */}
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">

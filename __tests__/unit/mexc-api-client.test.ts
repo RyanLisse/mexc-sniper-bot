@@ -1,17 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import crypto from 'crypto'
-
-// Mock crypto module for consistent testing
-vi.mock('crypto', () => ({
-  default: {
-    createHmac: vi.fn()
-  }
-}))
+import { describe, it, expect } from 'vitest'
 
 describe('MEXC API Client Utilities', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
 
   describe('Signature generation logic', () => {
     it('should create proper query string for signature', () => {

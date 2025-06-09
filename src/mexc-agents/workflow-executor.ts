@@ -125,13 +125,13 @@ export class WorkflowExecutor {
           .getPatternDiscoveryAgent()
           .process(`Validate pattern for ${request.vcoinId}`, {
             analysisType: "monitoring",
-            symbols: [request.vcoinId],
+            vcoinId: request.vcoinId,
           }),
         this.agentManager
           .getMexcApiAgent()
           .process(`Analyze market microstructure for ${request.vcoinId}`, {
             endpoint: "/market-depth",
-            parameters: { symbol: request.vcoinId },
+            vcoinId: request.vcoinId,
           }),
       ]);
 
@@ -188,7 +188,7 @@ export class WorkflowExecutor {
       console.log("[WorkflowExecutor] Step 1: Pattern discovery analysis");
       context.currentStep = "pattern-discovery";
       const patternAnalysis = await this.agentManager.getPatternDiscoveryAgent().analyzePatterns({
-        vcoinId: request.vcoinId,
+        vcoinId: request.vcoinId || "",
         symbols: request.symbols,
         analysisType: request.analysisType,
       });
@@ -237,12 +237,13 @@ export class WorkflowExecutor {
       // Step 1: Strategy analysis
       console.log("[WorkflowExecutor] Step 1: Strategy analysis");
       context.currentStep = "strategy-analysis";
-      const strategyAnalysis = await this.agentManager.getStrategyAgent().createTradingStrategy({
-        vcoinId: request.vcoinId,
-        symbolData: request.symbolData,
-        riskLevel: request.riskLevel || "medium",
-        capital: request.capital || 1000,
-      });
+      const strategyAnalysis = await this.agentManager
+        .getStrategyAgent()
+        .createTradingStrategy(
+          JSON.stringify(request.symbolData),
+          request.riskLevel || "medium",
+          "medium"
+        );
 
       // Step 2: Compile strategy
       console.log("[WorkflowExecutor] Step 2: Compiling trading strategy");

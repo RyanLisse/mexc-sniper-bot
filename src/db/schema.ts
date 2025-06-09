@@ -78,6 +78,13 @@ export const userPreferences = sqliteTable(
     // Pattern Discovery Settings
     readyStatePattern: text("ready_state_pattern").notNull().default("2,2,4"), // sts:2, st:2, tt:4
     targetAdvanceHours: real("target_advance_hours").notNull().default(3.5),
+    autoSnipeEnabled: integer("auto_snipe_enabled", { mode: "boolean" }).notNull().default(true), // Auto-snipe by default
+
+    // Exit Strategy Settings
+    selectedExitStrategy: text("selected_exit_strategy").notNull().default("balanced"), // "conservative", "balanced", "aggressive", "custom"
+    customExitStrategy: text("custom_exit_strategy"), // JSON string of custom strategy levels
+    autoBuyEnabled: integer("auto_buy_enabled", { mode: "boolean" }).notNull().default(true), // Auto-buy on ready state
+    autoSellEnabled: integer("auto_sell_enabled", { mode: "boolean" }).notNull().default(true), // Auto-sell at targets
 
     // Monitoring Intervals
     calendarPollIntervalSeconds: integer("calendar_poll_interval_seconds").notNull().default(300),

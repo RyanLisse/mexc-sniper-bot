@@ -55,11 +55,11 @@ bun run pre-commit
 ### Development
 
 ```bash
-# Run Next.js frontend with TypeScript agents (port 3000)
+# Run Next.js frontend with TypeScript agents (port 3008)
 npm run dev
 
 # Run Inngest dev server for TypeScript multi-agent workflows
-npx inngest-cli dev -u http://localhost:3000/api/inngest
+npx inngest-cli dev -u http://localhost:3008/api/inngest
 
 # Access Inngest dashboard at http://localhost:8288
 ```

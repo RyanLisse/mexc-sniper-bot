@@ -272,7 +272,7 @@ export class TradingStrategyWorkflow {
   private refineStrategyWithRisk(
     baseStrategy: CompiledTradingStrategy,
     riskPlan: RiskManagementPlan,
-    capital: number
+    _capital: number
   ): CompiledTradingStrategy {
     const refinedStrategy = { ...baseStrategy };
 
