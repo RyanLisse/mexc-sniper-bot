@@ -472,10 +472,11 @@ export class MexcApiClient {
             if (validTradingPairs.has(symbol)) {
               // Find price in ticker data
               const ticker = tickerPrices.data?.find((t: any) => t.symbol === symbol);
-              if (ticker?.price && Number.parseFloat(ticker.price) > 0) {
-                usdtValue = total * Number.parseFloat(ticker.price);
+              const price = ticker?.lastPrice || ticker?.price; // Use lastPrice first, fallback to price
+              if (price && Number.parseFloat(price) > 0) {
+                usdtValue = total * Number.parseFloat(price);
                 console.log(
-                  `[MexcApiClient] USDT conversion: ${balance.asset} (${total}) @ ${ticker.price} = ${usdtValue.toFixed(6)} USDT`
+                  `[MexcApiClient] USDT conversion: ${balance.asset} (${total}) @ ${price} = ${usdtValue.toFixed(6)} USDT`
                 );
               } else {
                 console.log(`[MexcApiClient] No price data available for ${symbol}`);
