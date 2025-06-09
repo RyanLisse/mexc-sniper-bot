@@ -77,9 +77,9 @@ export class EnhancedMexcApi {
    */
   async getSymbolsV2(): Promise<SymbolsV2Response> {
     return this.withRetry(async () => {
-      // Use the real MEXC symbols V2 API endpoint
-      const url = "https://api.mexc.com/api/platform/spot/market-v2/web/symbolsV2";
-      console.log(`🔍 MEXC API Request: GET ${url}`);
+      // Try the exchange info endpoint as fallback for symbols data
+      const url = "https://api.mexc.com/api/v3/exchangeInfo";
+      console.log(`🔍 MEXC API Request: GET ${url} (fallback symbols endpoint)`);
 
       const response = await fetch(url, {
         method: "GET",
@@ -92,24 +92,25 @@ export class EnhancedMexcApi {
       }
 
       const data = await response.json();
-      console.log(`✅ MEXC API Response: Real symbols data`);
+      console.log(`✅ MEXC API Response: Exchange info with ${data?.symbols?.length || 0} symbols`);
 
-      // Use real symbol data from MEXC
+      // Use real symbol data from MEXC exchange info endpoint
       let symbols: any[] = [];
 
-      if (data?.data?.symbols && Array.isArray(data.data.symbols)) {
-        symbols = data.data.symbols
-          .filter((symbol: any) => symbol?.cd && symbol.ca)
+      if (data?.symbols && Array.isArray(data.symbols)) {
+        symbols = data.symbols
+          .filter((symbol: any) => symbol?.symbol && symbol.status === "1")
           .map((symbol: any) => ({
-            cd: symbol.cd,
-            ca: symbol.ca,
-            ps: symbol.ps || 8,
-            qs: symbol.qs || 8,
-            sts: symbol.sts || 1,
-            st: symbol.st || 1,
-            tt: symbol.tt || 3,
-            ot: symbol.ot || Date.now(),
-          }));
+            cd: symbol.baseAsset || symbol.symbol.replace(/USDT$/, ''),
+            ca: symbol.symbol,
+            ps: symbol.baseAssetPrecision || 8,
+            qs: symbol.quoteAssetPrecision || 8,
+            sts: symbol.status === "1" ? 2 : 0,
+            st: symbol.status === "1" ? 2 : 0,
+            tt: 4, // Default trading type
+            ot: Date.now(),
+          }))
+          .slice(0, 100); // Limit to first 100 for performance
       }
 
       // If no real data, return empty array instead of fake data
