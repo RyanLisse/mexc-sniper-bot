@@ -381,14 +381,6 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowPreferences(!showPreferences)}
-                  className="border-blue-600 text-blue-300 hover:bg-blue-700"
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  {showPreferences ? 'Hide' : 'Show'} Preferences
-                </Button>
 
                 <Button
                   variant="outline"
@@ -483,7 +475,7 @@ export default function DashboardPage() {
           </Card>
         </section>
 
-        {/* System Status Cards */}
+        {/* System Status Cards & Account Balance */}
         <section className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
             <CardContent className="p-6">
@@ -544,139 +536,129 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-{/* <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-400">Auto-Exit Monitor</p>
+                  <p className="text-sm font-medium text-slate-400">MEXC API</p>
                   <p className={`text-2xl font-bold ${
-                    autoExitManager.status?.isMonitoring ? 'text-green-400' : 'text-red-400'
+                    mexcConnected ? 'text-green-400' : 'text-red-400'
                   }`}>
-                    {autoExitManager.status?.isMonitoring ? 'Active' : 'Stopped'}
+                    {mexcConnected ? 'Connected' : 'Offline'}
                   </p>
                   <p className="text-xs text-slate-500">
-                    Position monitoring system
+                    {accountData?.hasCredentials ? 'Configured' : 'Not configured'}
                   </p>
                 </div>
                 <div className={`p-3 rounded-full ${
-                  autoExitManager.status?.isMonitoring ? 'bg-green-500/20' : 'bg-red-500/20'
+                  mexcConnected ? 'bg-green-500/20' : 'bg-red-500/20'
                 }`}>
-                  <Target className={`h-6 w-6 ${
-                    autoExitManager.status?.isMonitoring ? 'text-green-400' : 'text-red-400'
+                  <Activity className={`h-6 w-6 ${
+                    mexcConnected ? 'text-green-400' : 'text-red-400'
                   }`} />
                 </div>
               </div>
             </CardContent>
-          </Card> */}
+          </Card>
         </section>
 
-        {/* Performance Metrics */}
-        <section className="grid md:grid-cols-2 gap-8 mb-8">
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+        {/* Account Balance & Detailed API Status */}
+        <section className="mb-8 grid md:grid-cols-2 gap-6">
+          {/* Enhanced Account Balance with Token + USDT Values */}
+          <AccountBalance userId={userId} />
+
+          {/* Detailed MEXC API Status */}
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="h-5 w-5 text-green-400" />
-                <span>Pattern Sniper Performance</span>
+                <Activity className="h-5 w-5 text-green-400" />
+                <span>MEXC API Details</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">Total Listings</span>
-                <span className="text-blue-400 font-bold text-xl">
-                  {sniperStats.totalListings}
-                </span>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${mexcConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                  <div>
+                    <p className="text-sm font-medium">API Connection</p>
+                    <p className="text-xs text-slate-400">{mexcConnected ? 'Connected' : 'Disconnected'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${calendarLoading ? 'bg-yellow-400' : calendarError ? 'bg-red-400' : 'bg-green-400'}`}></div>
+                  <div>
+                    <p className="text-sm font-medium">Calendar Data</p>
+                    <p className="text-xs text-slate-400">
+                      {calendarLoading ? 'Loading...' : calendarError ? 'Error' : `${calendarData?.length || 0} entries`}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${accountData?.hasCredentials ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
+                  <div>
+                    <p className="text-sm font-medium">Account Access</p>
+                    <p className="text-xs text-slate-400">
+                      {accountData?.hasCredentials ? 'Configured' : 'Not configured'}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">Success Rate</span>
-                <span className="text-green-400 font-medium">
-                  {sniperStats.successRate?.toFixed(1) || '0.0'}%
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">System Uptime</span>
-                <span className="text-green-400 font-medium">
-                  {sniperStats.uptime ? `${Math.floor(sniperStats.uptime / 60)}m ${Math.floor(sniperStats.uptime % 60)}s` : '0m 0s'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">Detection Rate</span>
-                <span className="text-green-400 font-medium">
-                  {sniperStats.totalListings > 0 ? ((sniperStats.readyToSnipe + sniperStats.executed) / sniperStats.totalListings * 100).toFixed(1) : '0.0'}%
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-blue-400" />
-                <span>Recent Activity</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {workflowStatus?.recentActivity?.length ? (
-                workflowStatus.recentActivity.map((activity) => {
-                  const getActivityIcon = (type: string) => {
-                    switch (type) {
-                      case 'pattern': return <ArrowUpRight className="h-4 w-4 text-green-400" />;
-                      case 'calendar': return <Eye className="h-4 w-4 text-blue-400" />;
-                      case 'snipe': return <Zap className="h-4 w-4 text-green-400" />;
-                      case 'analysis': return <Bot className="h-4 w-4 text-purple-400" />;
-                      default: return <Activity className="h-4 w-4 text-slate-400" />;
-                    }
-                  };
-                  
-                  const getActivityColor = (type: string) => {
-                    switch (type) {
-                      case 'pattern': return 'bg-green-400';
-                      case 'calendar': return 'bg-blue-400';
-                      case 'snipe': return 'bg-green-400';
-                      case 'analysis': return 'bg-purple-400';
-                      default: return 'bg-slate-400';
-                    }
-                  };
-
-                  const formatTimeAgo = (timestamp: string) => {
-                    const now = new Date();
-                    const time = new Date(timestamp);
-                    const diffMs = now.getTime() - time.getTime();
-                    const diffMins = Math.floor(diffMs / 60000);
-                    
-                    if (diffMins < 1) return 'Just now';
-                    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-                    const diffHours = Math.floor(diffMins / 60);
-                    return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-                  };
-
-                  return (
-                    <div key={activity.id} className="flex items-center space-x-3 p-3 bg-slate-700/50 rounded-lg animate-slide-up">
-                      <div className={`w-2 h-2 ${getActivityColor(activity.type)} rounded-full ${activity.type === 'pattern' ? 'animate-pulse-green' : ''}`}></div>
-                      <div className="flex-1">
-                        <p className="text-sm text-white">{activity.message}</p>
-                        <p className="text-xs text-slate-400">{formatTimeAgo(activity.timestamp)}</p>
-                      </div>
-                      {getActivityIcon(activity.type)}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center text-slate-400 py-4">
-                  <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No recent activity</p>
-                  <p className="text-xs">Start discovery to see live updates</p>
+              
+              {calendarError && (
+                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-sm text-red-400">
+                    Error loading calendar data: {calendarError.message}
+                  </p>
                 </div>
               )}
             </CardContent>
           </Card>
         </section>
 
-        {/* User Preferences Panel */}
-        {showPreferences && (
-          <section className="mb-8">
-            <UserPreferences userId={userId} />
-          </section>
-        )}
+        {/* Auto-Exit Monitor Card - Commented out
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-400">Auto-Exit Monitor</p>
+                  <p className="text-2xl font-bold text-green-400">Active</p>
+                  <p className="text-xs text-slate-500">Position monitoring system</p>
+                </div>
+                <div className="p-3 rounded-full bg-green-500/20">
+                  <Target className="h-6 w-6 text-green-400" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        */}
+
+        {/* Coin Calendar - At the top */}
+        <section className="mb-8">
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Clock className="h-5 w-5 text-blue-400" />
+                <span>Coin Listings Calendar</span>
+                <Badge variant="secondary" className="ml-2">
+                  {calendarData?.length || 0} listings
+                </Badge>
+              </CardTitle>
+              <CardDescription>
+                View coin listings by date - check today, tomorrow, or any future date
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CoinCalendar />
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* User Preferences Panel - Always visible */}
+        <section className="mb-8">
+          <UserPreferences userId={userId} />
+        </section>
 
         {/* Exit Strategy Panel */}
         {/* {showExitStrategy && (
@@ -918,81 +900,113 @@ export default function DashboardPage() {
           </section>
         )} */}
 
-        {/* Account Balance & MEXC Data Status */}
-        <section className="mb-8 grid md:grid-cols-2 gap-6">
-          {/* Enhanced Account Balance with Token + USDT Values */}
-          <AccountBalance userId={userId} />
 
-          {/* MEXC API Status */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Activity className="h-5 w-5 text-green-400" />
-                <span>MEXC API Status</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${mexcConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                  <div>
-                    <p className="text-sm font-medium">API Connection</p>
-                    <p className="text-xs text-slate-400">{mexcConnected ? 'Connected' : 'Disconnected'}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${calendarLoading ? 'bg-yellow-400' : calendarError ? 'bg-red-400' : 'bg-green-400'}`}></div>
-                  <div>
-                    <p className="text-sm font-medium">Calendar Data</p>
-                    <p className="text-xs text-slate-400">
-                      {calendarLoading ? 'Loading...' : calendarError ? 'Error' : `${calendarData?.length || 0} entries`}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${accountData?.hasCredentials ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
-                  <div>
-                    <p className="text-sm font-medium">Account Access</p>
-                    <p className="text-xs text-slate-400">
-                      {accountData?.hasCredentials ? 'Configured' : 'Not configured'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              {calendarError && (
-                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <p className="text-sm text-red-400">
-                    Error loading calendar data: {calendarError.message}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </section>
 
-        {/* Coin Calendar */}
-        <section className="mb-8">
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-blue-400" />
-                <span>Coin Listings Calendar</span>
-                <Badge variant="secondary" className="ml-2">
-                  {calendarData?.length || 0} listings
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                View coin listings by date - check today, tomorrow, or any future date
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <CoinCalendar />
-            </CardContent>
-          </Card>
-        </section>
+        {/* Performance Metrics - Hidden by default, can be toggled */}
+        {false && (
+          <section className="grid md:grid-cols-2 gap-8 mb-8">
+            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <TrendingUp className="h-5 w-5 text-green-400" />
+                  <span>Pattern Sniper Performance</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Total Listings</span>
+                  <span className="text-blue-400 font-bold text-xl">
+                    {sniperStats.totalListings}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Success Rate</span>
+                  <span className="text-green-400 font-medium">
+                    {sniperStats.successRate?.toFixed(1) || '0.0'}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">System Uptime</span>
+                  <span className="text-green-400 font-medium">
+                    {sniperStats.uptime != null ? 
+                      `${Math.floor(sniperStats.uptime! / 60)}m ${Math.floor(sniperStats.uptime! % 60)}s` : 
+                      '0m 0s'
+                    }
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Detection Rate</span>
+                  <span className="text-green-400 font-medium">
+                    {sniperStats.totalListings > 0 ? ((sniperStats.readyToSnipe + sniperStats.executed) / sniperStats.totalListings * 100).toFixed(1) : '0.0'}%
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm trading-card">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5 text-blue-400" />
+                  <span>Recent Activity</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {workflowStatus?.recentActivity?.length ? (
+                  workflowStatus!.recentActivity!.map((activity) => {
+                    const getActivityIcon = (type: string) => {
+                      switch (type) {
+                        case 'pattern': return <ArrowUpRight className="h-4 w-4 text-green-400" />;
+                        case 'calendar': return <Eye className="h-4 w-4 text-blue-400" />;
+                        case 'snipe': return <Zap className="h-4 w-4 text-green-400" />;
+                        case 'analysis': return <Bot className="h-4 w-4 text-purple-400" />;
+                        default: return <Activity className="h-4 w-4 text-slate-400" />;
+                      }
+                    };
+                    
+                    const getActivityColor = (type: string) => {
+                      switch (type) {
+                        case 'pattern': return 'bg-green-400';
+                        case 'calendar': return 'bg-blue-400';
+                        case 'snipe': return 'bg-green-400';
+                        case 'analysis': return 'bg-purple-400';
+                        default: return 'bg-slate-400';
+                      }
+                    };
+
+                    const formatTimeAgo = (timestamp: string) => {
+                      const now = new Date();
+                      const time = new Date(timestamp);
+                      const diffMs = now.getTime() - time.getTime();
+                      const diffMins = Math.floor(diffMs / 60000);
+                      
+                      if (diffMins < 1) return 'Just now';
+                      if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+                      const diffHours = Math.floor(diffMins / 60);
+                      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+                    };
+
+                    return (
+                      <div key={activity.id} className="flex items-center space-x-3 p-3 bg-slate-700/50 rounded-lg animate-slide-up">
+                        <div className={`w-2 h-2 ${getActivityColor(activity.type)} rounded-full ${activity.type === 'pattern' ? 'animate-pulse-green' : ''}`}></div>
+                        <div className="flex-1">
+                          <p className="text-sm text-white">{activity.message}</p>
+                          <p className="text-xs text-slate-400">{formatTimeAgo(activity.timestamp)}</p>
+                        </div>
+                        {getActivityIcon(activity.type)}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center text-slate-400 py-4">
+                    <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No recent activity</p>
+                    <p className="text-xs">Start discovery to see live updates</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
         {/* Emergency Response Dashboard */}
         <section className="mb-8">

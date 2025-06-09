@@ -21,6 +21,5 @@
       ]
     }
   ],
-  "regions": ["fra1"],
-  "outputFileTracing": false
+  "regions": ["fra1"]
 }
