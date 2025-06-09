@@ -62,6 +62,5 @@
   ],
   "regions": ["fra1"],
   "cleanUrls": true,
-  "trailingSlash": false,
-  "outputFileTracing": false
+  "trailingSlash": false
 }
