@@ -1,13 +1,17 @@
 "use client";
 
 import { createAuthClient } from "better-auth/client";
+import { usernameClient } from "better-auth/client/plugins";
 import { useEffect, useState } from "react";
 
 export const authClient = createAuthClient({
   baseURL: typeof window !== "undefined" ? window.location.origin : "http://localhost:3008",
+  plugins: [
+    usernameClient(),
+  ],
 });
 
-export const { signIn, signUp, signOut } = authClient;
+export const { signIn, signUp, signOut, forgetPassword, resetPassword, updateUser } = authClient;
 
 // Custom useSession hook that uses the correct endpoint
 export const useSession = () => {
