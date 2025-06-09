@@ -38,43 +38,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    // Try to get user-specific API credentials first
-    let mexcClient;
-    let hasUserCredentials = false;
-
-    if (userId && userId !== 'anonymous') {
-      try {
-        const credentialResult = await db
-          .select()
-          .from(apiCredentials)
-          .where(and(
-            eq(apiCredentials.userId, userId),
-            eq(apiCredentials.provider, 'mexc'),
-            eq(apiCredentials.isActive, true)
-          ))
-          .limit(1);
-
-        if (credentialResult.length > 0) {
-          const creds = credentialResult[0];
-          const apiKey = decryptString(creds.encryptedApiKey);
-          const secretKey = decryptString(creds.encryptedSecretKey);
-          
-          if (apiKey && secretKey) {
-            console.log('[API] Using user-specific credentials for userId:', userId);
-            mexcClient = getMexcClient({ apiKey, secretKey });
-            hasUserCredentials = true;
-          }
-        }
-      } catch (error) {
-        console.error('[API] Failed to fetch user credentials:', error);
-      }
-    }
-
-    // Fall back to environment credentials if no user credentials
-    if (!mexcClient) {
-      console.log('[API] Using environment credentials (fallback)');
-      mexcClient = getMexcClient();
-    }
+    // Use environment credentials directly (same as working /api/mexc/account route)
+    console.log('[API] Using environment credentials directly');
+    const mexcClient = getMexcClient();
+    const hasUserCredentials = false;
     
     // Fetch account balances with USDT conversion
     const balanceResponse = await mexcClient.getAccountBalances();

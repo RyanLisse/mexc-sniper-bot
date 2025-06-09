@@ -126,21 +126,23 @@ export class MexcApiClient {
         throw new Error("MEXC API credentials not configured for authenticated request");
       }
 
-      // Add required parameters for MEXC API
+      // Use exact same approach as working /api/mexc/account route
       const timestamp = Date.now();
       params.timestamp = timestamp;
-      params.recvWindow = 5000; // Standard recv window
+      // Remove recvWindow - not used in working route
       
       console.log(`[MexcApiClient] Request timestamp: ${timestamp}`);
-      console.log(`[MexcApiClient] Request params before signature:`, params);
+      console.log(`[MexcApiClient] API Key: ${this.config.apiKey.substring(0, 8)}...`);
       
-      // Generate signature from params WITHOUT signature parameter
-      const signature = this.generateSignature(params);
-      // Now add signature to params
+      // Generate signature exactly like working route: only timestamp
+      const queryString = `timestamp=${timestamp}`;
+      const signature = crypto.createHmac("sha256", this.config.secretKey).update(queryString).digest("hex");
+      
       params.signature = signature;
       headers["X-MEXC-APIKEY"] = this.config.apiKey;
       
-      console.log(`[MexcApiClient] Final params with signature:`, params);
+      console.log(`[MexcApiClient] Query string for signature: ${queryString}`);
+      console.log(`[MexcApiClient] Generated signature: ${signature}`);
     }
 
     // Build URL with query parameters
