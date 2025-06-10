@@ -17,7 +17,8 @@ const sendEmailDev = async ({ to, subject, text }: { to: string; subject: string
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "sqlite",
+    provider: "sqlite", // TursoDB is SQLite-compatible
+    usePlural: false,
   }),
   plugins: [
     username({

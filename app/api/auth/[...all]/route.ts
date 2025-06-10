@@ -72,3 +72,48 @@ export async function POST(request: Request) {
     });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    return auth.handler(request);
+  } catch (error) {
+    console.error("Auth PUT error:", error);
+    return new Response(JSON.stringify({ 
+      error: "Auth system error", 
+      details: error?.toString() 
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    return auth.handler(request);
+  } catch (error) {
+    console.error("Auth DELETE error:", error);
+    return new Response(JSON.stringify({ 
+      error: "Auth system error", 
+      details: error?.toString() 
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    return auth.handler(request);
+  } catch (error) {
+    console.error("Auth PATCH error:", error);
+    return new Response(JSON.stringify({ 
+      error: "Auth system error", 
+      details: error?.toString() 
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}

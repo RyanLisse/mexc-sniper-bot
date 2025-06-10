@@ -13,7 +13,7 @@ export const authClient = createAuthClient({
 
 export const { signIn, signUp, signOut, forgetPassword, resetPassword, updateUser } = authClient;
 
-// Custom useSession hook that uses the correct endpoint
+// Use Better Auth's built-in session hook
 export const useSession = () => {
   const [session, setSession] = useState<any>(null);
   const [isPending, setIsPending] = useState(true);
@@ -23,17 +23,10 @@ export const useSession = () => {
     try {
       setIsPending(true);
       setError(null);
-      const response = await fetch("/api/auth/get-session", {
-        credentials: "include", // Important for cookies
-      });
-
-      if (response.ok) {
-        const sessionData = await response.json();
-        setSession(sessionData);
-      } else {
-        setSession(null);
-      }
+      const sessionData = await authClient.getSession();
+      setSession(sessionData.data);
     } catch (err) {
+      console.error("Session fetch error:", err);
       setError(err);
       setSession(null);
     } finally {
