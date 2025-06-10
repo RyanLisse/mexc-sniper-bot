@@ -193,7 +193,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Add updated timestamp
-    updateData.updatedAt = new Date();
+    updateData.updatedAt = Math.floor(Date.now() / 1000);
 
     const [updated] = await db
       .update(transactions)

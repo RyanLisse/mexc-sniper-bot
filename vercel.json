@@ -37,13 +37,14 @@
       ]
     }
   ],
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/dashboard",
-      "permanent": false
+  "functions": {
+    "app/api/inngest/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/triggers/*/route.ts": {
+      "maxDuration": 30
     }
-  ],
+  },
   "rewrites": [
     {
       "source": "/health",
