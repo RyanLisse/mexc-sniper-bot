@@ -52,7 +52,7 @@
     "better-auth": "^1.2.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "date-fns": "^3.6.0",
+    "date-fns": "^4.1.0",
     "drizzle-kit": "^0.31.1",
     "drizzle-orm": "^0.44.2",
     "inngest": "^3.38.0",
