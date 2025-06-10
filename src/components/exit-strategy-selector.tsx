@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
+import { useCallback } from "react";
 import {
   EXIT_STRATEGIES,
   type ExitLevel,
@@ -63,18 +64,18 @@ export function ExitStrategySelector({
     }
   };
 
-  const validateCustomStrategy = () => {
+  const validateCustomStrategy = useCallback(() => {
     const strategy = createCustomStrategy(customLevels);
     const errors = validateExitStrategy(strategy);
     setValidationErrors(errors);
     return errors.length === 0;
-  };
+  }, [customLevels]);
 
   useEffect(() => {
     if (selectedStrategy === "custom") {
       validateCustomStrategy();
     }
-  }, [customLevels, selectedStrategy]);
+  }, [selectedStrategy, validateCustomStrategy]);
 
   const handleCustomLevelChange = (index: number, field: keyof ExitLevel, value: number) => {
     const newLevels = [...customLevels];
@@ -180,22 +181,15 @@ export function ExitStrategySelector({
           {/* Predefined Strategies */}
           <div className="grid gap-4">
             {EXIT_STRATEGIES.map((strategy) => (
-              <div
+              <button
                 key={strategy.id}
-                className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                type="button"
+                className={`w-full p-4 rounded-lg border transition-all text-left ${
                   selectedStrategy === strategy.id
                     ? "border-blue-500 bg-blue-500/10"
                     : "border-slate-600 bg-slate-700/30 hover:border-slate-500"
                 }`}
                 onClick={() => onStrategyChange(strategy.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onStrategyChange(strategy.id);
-                  }
-                }}
-                tabIndex={0}
-                role="button"
                 aria-pressed={selectedStrategy === strategy.id}
               >
                 <div className="flex items-center justify-between mb-3">
@@ -220,14 +214,14 @@ export function ExitStrategySelector({
 
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   {strategy.levels.map((level, index) => (
-                    <div key={index} className="text-center p-2 bg-slate-600/30 rounded">
+                    <div key={`${strategy.id}-level-${level.percentage}-${level.targetMultiplier}`} className="text-center p-2 bg-slate-600/30 rounded">
                       <div className="font-medium text-white">{level.percentage}%</div>
                       <div className="text-slate-300">at {level.targetMultiplier}x</div>
                       <div className="text-green-400">+{level.profitPercent}%</div>
                     </div>
                   ))}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -254,7 +248,7 @@ export function ExitStrategySelector({
             <div className="space-y-3">
               {customLevels.map((level, index) => (
                 <div
-                  key={index}
+                  key={`custom-level-${index}-${level.percentage}-${level.targetMultiplier}`}
                   className="flex items-center space-x-3 p-3 bg-slate-600/30 rounded"
                 >
                   <div className="flex-1 grid grid-cols-3 gap-3">
@@ -278,8 +272,9 @@ export function ExitStrategySelector({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Target Multiplier</label>
+                      <label htmlFor={`target-multiplier-${index}`} className="text-xs text-slate-400">Target Multiplier</label>
                       <Input
+                        id={`target-multiplier-${index}`}
                         type="number"
                         min="1.1"
                         step="0.1"
@@ -291,8 +286,9 @@ export function ExitStrategySelector({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400">Profit %</label>
+                      <label htmlFor={`profit-percent-${index}`} className="text-xs text-slate-400">Profit %</label>
                       <Input
+                        id={`profit-percent-${index}`}
                         type="number"
                         min="10"
                         value={level.profitPercent}
@@ -342,7 +338,7 @@ export function ExitStrategySelector({
                   <p className="text-sm font-medium text-red-400 mb-1">Validation Errors:</p>
                   <ul className="text-sm text-red-300 space-y-1">
                     {validationErrors.map((error, index) => (
-                      <li key={index}>• {error}</li>
+                      <li key={`validation-error-${index}-${error.slice(0, 10)}`}>• {error}</li>
                     ))}
                   </ul>
                 </div>

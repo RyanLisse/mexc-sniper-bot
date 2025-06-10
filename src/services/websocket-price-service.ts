@@ -150,7 +150,7 @@ export class WebSocketPriceService {
       }
     }
 
-    this.subscriptions.get(normalizedSymbol)!.add(callback);
+    this.subscriptions.get(normalizedSymbol)?.add(callback);
 
     // Send cached price immediately if available
     const cachedPrice = this.priceCache.get(normalizedSymbol);

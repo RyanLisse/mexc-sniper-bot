@@ -50,6 +50,7 @@ export function UserMenu({ user }: UserMenuProps) {
     <div className="relative">
       {/* User Badge - Clickable */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 hover:bg-slate-700/50 px-3 py-2 rounded-lg transition-colors"
       >
@@ -68,7 +69,18 @@ export function UserMenu({ user }: UserMenuProps) {
       {isOpen && (
         <>
           {/* Backdrop to close dropdown */}
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div 
+            className="fixed inset-0 z-10" 
+            onClick={() => setIsOpen(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsOpen(false);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Close dropdown"
+          />
 
           {/* Dropdown Content */}
           <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-20">
@@ -92,6 +104,7 @@ export function UserMenu({ user }: UserMenuProps) {
             <div className="py-2">
               {/* Profile/Settings Link */}
               <button
+                type="button"
                 onClick={() => {
                   setIsOpen(false);
                   router.push("/config");
@@ -107,6 +120,7 @@ export function UserMenu({ user }: UserMenuProps) {
 
               {/* Sign Out */}
               <button
+                type="button"
                 onClick={handleSignOut}
                 disabled={isSigningOut}
                 className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-50"

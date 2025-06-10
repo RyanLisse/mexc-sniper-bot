@@ -22,14 +22,13 @@ function createDatabase() {
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
     return drizzleTurso(client, { schema });
-  } else {
-    // Use SQLite for local development
-    console.log("[Database] Using SQLite for development");
-    const Database = require("better-sqlite3");
-    const sqlite = new Database("./mexc_sniper.db");
-    sqlite.pragma("journal_mode = WAL");
-    return drizzle(sqlite, { schema });
   }
+  // Use SQLite for local development
+  console.log("[Database] Using SQLite for development");
+  const Database = require("better-sqlite3");
+  const sqlite = new Database("./mexc_sniper.db");
+  sqlite.pragma("journal_mode = WAL");
+  return drizzle(sqlite, { schema });
 }
 
 export const db = createDatabase();
