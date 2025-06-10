@@ -9,11 +9,26 @@ import {
 } from "../schemas/mexc-schemas";
 import { getMexcClient } from "../services/mexc-api-client";
 
+export interface MexcApiParams {
+  vcoin_id?: string;
+  vcoinId?: string;
+  symbol?: string;
+  limit?: number;
+  [key: string]: string | number | boolean | undefined;
+}
+
 export interface MexcApiRequest {
   endpoint: string;
   method?: "GET" | "POST" | "PUT" | "DELETE";
-  params?: Record<string, any>;
+  params?: MexcApiParams;
   requireAuth?: boolean;
+}
+
+export interface MexcApiResponseData {
+  success: boolean;
+  data: unknown;
+  timestamp: string;
+  error?: string;
 }
 
 export interface MexcSymbolData {
@@ -26,6 +41,15 @@ export interface MexcSymbolData {
   volume?: number;
   isTrading: boolean;
   hasCompleteData: boolean;
+}
+
+export interface MexcSymbolFilterData {
+  cd: string;
+  symbol?: string;
+  sts?: number;
+  st?: number;
+  tt?: number;
+  [key: string]: unknown;
 }
 
 export interface MexcCalendarEntry {
@@ -130,7 +154,7 @@ Focus on actionable analysis for cryptocurrency trading decisions.
     });
   }
 
-  async assessDataQuality(apiResponse: any): Promise<AgentResponse> {
+  async assessDataQuality(apiResponse: MexcApiResponseData): Promise<AgentResponse> {
     const responseJson = JSON.stringify(apiResponse, null, 2);
 
     const userMessage = `
@@ -177,7 +201,7 @@ Provide a structured assessment with specific recommendations for trading decisi
     ]);
   }
 
-  async identifyTradingSignals(marketData: any): Promise<AgentResponse> {
+  async identifyTradingSignals(marketData: MexcSymbolData): Promise<AgentResponse> {
     const dataJson = JSON.stringify(marketData, null, 2);
 
     const userMessage = `
@@ -225,7 +249,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
   }
 
   // Enhanced method to call TypeScript MEXC API client with retry logic and AI analysis
-  async callMexcApi(endpoint: string, params?: Record<string, any>): Promise<any> {
+  async callMexcApi(endpoint: string, params?: MexcApiParams): Promise<unknown> {
     const maxRetries = 3;
     const retryDelay = 1000; // Start with 1 second delay
 
@@ -234,7 +258,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const mexcClient = getMexcClient();
-        let apiResponse: any;
+        let apiResponse: unknown;
 
         // Route to appropriate API method based on endpoint
         switch (endpoint) {
@@ -294,7 +318,17 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
   }
 
   // Validate API response structure
-  private isValidApiResponse(response: any): boolean {
+  private isValidApiResponseStructure(response: unknown): response is MexcApiResponseData {
+    return (
+      typeof response === "object" &&
+      response !== null &&
+      "success" in response &&
+      "data" in response &&
+      typeof (response as any).success === "boolean"
+    );
+  }
+
+  private isValidApiResponse(response: unknown): boolean {
     if (!response || typeof response !== "object") {
       return false;
     }
@@ -308,8 +342,13 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
   }
 
   // Enhance API response with AI analysis
-  private async enhanceResponseWithAI(apiResponse: any, endpoint: string): Promise<any> {
+  private async enhanceResponseWithAI(apiResponse: unknown, endpoint: string): Promise<unknown> {
     try {
+      // Type guard for response structure
+      if (!this.isValidApiResponseStructure(apiResponse)) {
+        return apiResponse; // Return as-is if not valid structure
+      }
+
       if (!apiResponse.success || !apiResponse.data) {
         return apiResponse; // Return as-is if not successful
       }
@@ -318,11 +357,11 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
       let aiAnalysis: AgentResponse;
 
       if (endpoint.includes("calendar")) {
-        aiAnalysis = await this.analyzeCalendarData(apiResponse.data);
+        aiAnalysis = await this.analyzeCalendarData(apiResponse.data as MexcCalendarEntry[]);
       } else if (endpoint.includes("symbols")) {
-        aiAnalysis = await this.analyzeSymbolData(apiResponse.data);
+        aiAnalysis = await this.analyzeSymbolData(apiResponse.data as MexcSymbolData[]);
       } else {
-        aiAnalysis = await this.assessDataQuality(apiResponse);
+        aiAnalysis = await this.assessDataQuality(apiResponse as MexcApiResponseData);
       }
 
       // Enhance response with AI insights
@@ -350,11 +389,14 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
         console.log(`[MexcApiAgent] Fetching symbols for pattern detection`);
         const apiResponse = await this.callMexcApi("/symbols");
 
-        if (!apiResponse.success) {
-          throw new Error(`Failed to fetch symbol data: ${apiResponse.error}`);
+        if (!this.isValidApiResponseStructure(apiResponse) || !apiResponse.success) {
+          const errorMsg = this.isValidApiResponseStructure(apiResponse)
+            ? apiResponse.error
+            : "Invalid response structure";
+          throw new Error(`Failed to fetch symbol data: ${errorMsg}`);
         }
 
-        symbols = apiResponse.data.symbols || [];
+        symbols = (apiResponse.data as any)?.symbols || [];
       } else {
         symbols = symbolData;
       }
@@ -470,13 +512,18 @@ Focus on actionable trading signals and specific symbol recommendations.
 
       const apiResponse = await this.callMexcApi("/symbols");
 
-      if (!apiResponse.success) {
-        throw new Error(`Failed to fetch symbol data: ${apiResponse.error}`);
+      if (!this.isValidApiResponseStructure(apiResponse) || !apiResponse.success) {
+        const errorMsg = this.isValidApiResponseStructure(apiResponse)
+          ? apiResponse.error
+          : "Invalid response structure";
+        throw new Error(`Failed to fetch symbol data: ${errorMsg}`);
       }
 
       // Filter symbols by vcoinIds
-      const allSymbols = apiResponse.data.symbols || [];
-      const requestedSymbols = allSymbols.filter((symbol: any) => vcoinIds.includes(symbol.cd));
+      const allSymbols = (apiResponse.data as any)?.symbols || [];
+      const requestedSymbols = allSymbols.filter((symbol: MexcSymbolFilterData) =>
+        vcoinIds.includes(symbol.cd)
+      );
 
       const analysis = await this.analyzeSymbolData(requestedSymbols);
 
@@ -499,7 +546,7 @@ Focus on actionable trading signals and specific symbol recommendations.
   }
 
   // Direct MEXC API call as fallback
-  private async directMexcApiCall(endpoint: string, params?: Record<string, any>): Promise<any> {
+  private async directMexcApiCall(endpoint: string, params?: MexcApiParams): Promise<unknown> {
     try {
       // Use correct MEXC endpoints based on config
       let apiUrl: string;

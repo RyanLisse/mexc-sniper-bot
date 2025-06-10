@@ -28,6 +28,7 @@ import {
 import type React from "react";
 import { useState } from "react";
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Component handles complex pattern detection UI with multiple conditional rendering paths
 export const PatternSniperComponent: React.FC = () => {
   const {
     isMonitoring,

@@ -231,7 +231,7 @@ export const scheduledDailyReport = inngest.createFunction(
 
     // Step 1: Collect daily metrics
     const dailyMetrics = await step.run("collect-daily-metrics", async () => {
-      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      const _twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
 
       try {
         // For simplicity, use default values for metrics in scheduled reports

@@ -69,11 +69,11 @@ export function UserMenu({ user }: UserMenuProps) {
       {isOpen && (
         <>
           {/* Backdrop to close dropdown */}
-          <div 
-            className="fixed inset-0 z-10" 
+          <div
+            className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
             onKeyDown={(e) => {
-              if (e.key === 'Escape') {
+              if (e.key === "Escape") {
                 setIsOpen(false);
               }
             }}

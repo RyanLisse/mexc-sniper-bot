@@ -148,7 +148,7 @@ export class DataArchivalService {
         // 3. Compress and store as JSON files
 
         // For now, we'll create a simple JSON archive
-        const archiveData = {
+        const _archiveData = {
           archivedAt: new Date().toISOString(),
           retentionDays: this.EXECUTION_HISTORY_RETENTION_DAYS,
           records: oldRecords,
@@ -197,7 +197,7 @@ export class DataArchivalService {
       console.log(`📦 Found ${recordsToArchive} workflow activity records to archive`);
 
       // Delete old workflow activity records (they're less critical than execution history)
-      const deleteResult = await db
+      const _deleteResult = await db
         .delete(workflowActivity)
         .where(lte(workflowActivity.timestamp, cutoffDate));
 

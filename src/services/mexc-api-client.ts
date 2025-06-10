@@ -56,6 +56,21 @@ export interface MexcExchangeSymbol {
   quoteAssetPrecision: number;
 }
 
+export interface MexcTicker {
+  symbol: string;
+  lastPrice: string;
+  price: string;
+  priceChange: string;
+  priceChangePercent: string;
+  volume: string;
+  quoteVolume?: string;
+  openPrice?: string;
+  highPrice?: string;
+  lowPrice?: string;
+  count?: string;
+  [key: string]: unknown;
+}
+
 export class MexcApiClient {
   private config: Required<MexcApiConfig>;
   private lastRequestTime = 0;
@@ -92,7 +107,7 @@ export class MexcApiClient {
 
     // Create a copy of params excluding the signature parameter
     const signatureParams = { ...params };
-    delete signatureParams.signature;
+    signatureParams.signature = undefined;
 
     const queryString = new URLSearchParams(
       Object.entries(signatureParams)
@@ -472,7 +487,7 @@ export class MexcApiClient {
 
     try {
       console.log("[MexcApiClient] Fetching account balances...");
-      console.log("[MexcApiClient] Using API key:", this.config.apiKey.substring(0, 8) + "...");
+      console.log("[MexcApiClient] Using API key:", `${this.config.apiKey.substring(0, 8)}...`);
 
       // Get account info with balances
       const accountInfo = await this.makeRequest<{
@@ -604,7 +619,7 @@ export class MexcApiClient {
     }
   }
 
-  async get24hrTicker(symbol?: string): Promise<MexcApiResponse<any[]>> {
+  async get24hrTicker(symbol?: string): Promise<MexcApiResponse<MexcTicker[]>> {
     try {
       const endpoint = symbol ? `/api/v3/ticker/24hr?symbol=${symbol}` : "/api/v3/ticker/24hr";
       const response = await this.makeRequest<any>(endpoint);

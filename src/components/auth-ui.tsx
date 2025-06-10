@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useState } from "react";
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: authentication UI
 export function AuthUI() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
@@ -96,6 +97,7 @@ export function AuthUI() {
     return true;
   };
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: auth handler is verbose
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
 

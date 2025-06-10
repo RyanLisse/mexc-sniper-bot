@@ -1,3 +1,4 @@
+import type { snipeTargets } from "@/src/db/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface PortfolioPosition {
@@ -153,7 +154,22 @@ export function useUpdateSnipeTarget() {
       updates,
     }: {
       id: number;
-      updates: Record<string, any>;
+      updates: Partial<
+        Pick<
+          typeof snipeTargets.$inferInsert,
+          | "status"
+          | "priority"
+          | "takeProfitLevel"
+          | "stopLossPercent"
+          | "entryStrategy"
+          | "entryPrice"
+          | "positionSizeUsdt"
+          | "takeProfitCustom"
+          | "confidenceScore"
+          | "riskLevel"
+          | "errorMessage"
+        >
+      >;
     }) => {
       const response = await fetch(`/api/snipe-targets/${id}`, {
         method: "PATCH",

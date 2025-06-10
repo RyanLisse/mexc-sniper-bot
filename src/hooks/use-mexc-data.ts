@@ -1,6 +1,22 @@
 import { queryKeys } from "@/src/lib/query-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+// Type definitions for MEXC API responses
+interface MexcSymbol {
+  sts: number;
+  st: number;
+  tt: number;
+  cd: string;
+  [key: string]: unknown;
+}
+
+interface CalendarEntry {
+  firstOpenTime: string | number;
+  vcoinId: string;
+  symbol: string;
+  [key: string]: unknown;
+}
+
 // MEXC Calendar Data Hook
 export function useMexcCalendar() {
   return useQuery({
@@ -127,7 +143,7 @@ export function useMexcPatternDetection(vcoinId?: string) {
 
   // Analyze symbols for ready state pattern (sts:2, st:2, tt:4)
   const readyStatePattern = symbols?.find(
-    (symbol: any) => symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4
+    (symbol: MexcSymbol) => symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4
   );
 
   const hasReadyPattern = !!readyStatePattern;
@@ -148,7 +164,7 @@ export function useUpcomingLaunches() {
   const { data: calendar, ...rest } = useMexcCalendar();
 
   const upcomingLaunches =
-    calendar?.filter((entry: any) => {
+    calendar?.filter((entry: CalendarEntry) => {
       const launchTime = new Date(entry.firstOpenTime);
       const now = new Date();
       const hours24 = 24 * 60 * 60 * 1000;
@@ -168,7 +184,7 @@ export function useReadyTargets() {
   const { data: calendar, ...rest } = useMexcCalendar();
 
   const readyTargets =
-    calendar?.filter((entry: any) => {
+    calendar?.filter((entry: CalendarEntry) => {
       const launchTime = new Date(entry.firstOpenTime);
       const now = new Date();
       const hours4 = 4 * 60 * 60 * 1000;

@@ -3,7 +3,7 @@ import { CalendarAgent } from "../../../src/mexc-agents/calendar-agent";
 import { PatternDiscoveryAgent } from "../../../src/mexc-agents/pattern-discovery-agent";
 import { MexcOrchestrator } from "../../../src/mexc-agents/orchestrator";
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     console.log('🧪 Starting OpenAI Integration Test...');
 

@@ -18,6 +18,7 @@ interface AccountBalanceProps {
   className?: string;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: complex UI logic
 export function AccountBalance({ userId = "default-user", className }: AccountBalanceProps) {
   const [showBalances, setShowBalances] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);

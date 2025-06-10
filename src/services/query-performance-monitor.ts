@@ -218,6 +218,7 @@ export class QueryPerformanceMonitor {
   /**
    * Get slow query recommendations
    */
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex recommendation logic with multiple conditions and patterns
   getOptimizationRecommendations(timeframeMinutes = 60): {
     recommendation: string;
     queryPattern: string;

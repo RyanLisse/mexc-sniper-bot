@@ -1,0 +1,233 @@
+# Test info
+
+- Name: Authentication Protection Flow >> Complete authentication flow with dashboard access protection
+- Location: /Users/neo/Developer/mexc-sniper-bot/all-tests/e2e-tests/auth-protection-flow.spec.ts:85:7
+
+# Error details
+
+```
+Error: expect(received).toHaveLength(expected)
+
+Expected length: 1
+Received length: 0
+Received array:  []
+    at /Users/neo/Developer/mexc-sniper-bot/all-tests/e2e-tests/auth-protection-flow.spec.ts:131:19
+```
+
+# Page snapshot
+
+```yaml
+- paragraph: Loading user information...
+- button "Open Tanstack query devtools":
+  - img
+- alert
+- button "Open Next.js Dev Tools":
+  - img
+```
+
+# Test source
+
+```ts
+   31 |     // Try to directly access dashboard
+   32 |     await page.goto('http://localhost:3008/dashboard');
+   33 |     await page.waitForLoadState('networkidle');
+   34 |     
+   35 |     // Wait a bit for any redirects to happen
+   36 |     await page.waitForTimeout(2000);
+   37 |     
+   38 |     // Should be redirected away from dashboard
+   39 |     const finalUrl = page.url();
+   40 |     console.log(`Dashboard access attempt resulted in URL: ${finalUrl}`);
+   41 |     
+   42 |     // Verify we're not on dashboard
+   43 |     expect(finalUrl).not.toMatch(/.*\/dashboard$/);
+   44 |     
+   45 |     // Check if redirected to homepage
+   46 |     if (finalUrl.match(/http:\/\/localhost:3008\/?$/)) {
+   47 |       await expect(page.locator('h1')).toContainText('MEXC Sniper Bot');
+   48 |       console.log('✓ Anonymous user redirected to homepage from dashboard');
+   49 |     } else if (finalUrl.match(/.*\/auth$/)) {
+   50 |       // Or redirected to auth page
+   51 |       console.log('✓ Anonymous user redirected to auth page from dashboard');
+   52 |     } else {
+   53 |       console.log(`✓ Anonymous user redirected away from dashboard to: ${finalUrl}`);
+   54 |     }
+   55 |   });
+   56 |
+   57 |   test('Anonymous users can access homepage and navigate to auth', async ({ page }) => {
+   58 |     console.log('Testing homepage access for anonymous users');
+   59 |     
+   60 |     // Go to homepage
+   61 |     await page.goto('http://localhost:3008');
+   62 |     await page.waitForLoadState('networkidle');
+   63 |     
+   64 |     // Skip loading state if present
+   65 |     const loadingElement = page.locator('text=Loading...');
+   66 |     if (await loadingElement.isVisible()) {
+   67 |       await loadingElement.waitFor({ state: 'detached', timeout: 10000 });
+   68 |     }
+   69 |     
+   70 |     // Verify homepage content is visible
+   71 |     await expect(page.locator('h1')).toContainText('MEXC Sniper Bot');
+   72 |     await expect(page.locator('text=Get Started')).toBeVisible();
+   73 |     await expect(page.locator('text=Sign In')).toBeVisible();
+   74 |     
+   75 |     console.log('✓ Homepage accessible for anonymous users');
+   76 |     
+   77 |     // Test navigation to auth
+   78 |     await page.click('text=Get Started');
+   79 |     await page.waitForURL('**/auth', { timeout: 10000 });
+   80 |     await expect(page).toHaveURL(/.*\/auth$/);
+   81 |     
+   82 |     console.log('✓ Navigation to auth page works');
+   83 |   });
+   84 |
+   85 |   test('Complete authentication flow with dashboard access protection', async ({ page }) => {
+   86 |     console.log('Testing complete authentication flow with dashboard protection');
+   87 |     
+   88 |     // Step 1: Start at homepage
+   89 |     await page.goto('http://localhost:3008');
+   90 |     await page.waitForLoadState('networkidle');
+   91 |     
+   92 |     // Skip loading if present
+   93 |     const loadingElement = page.locator('text=Loading...');
+   94 |     if (await loadingElement.isVisible()) {
+   95 |       await loadingElement.waitFor({ state: 'detached', timeout: 10000 });
+   96 |     }
+   97 |     
+   98 |     await expect(page.locator('h1')).toContainText('MEXC Sniper Bot');
+   99 |     console.log('✓ Step 1: Homepage loaded');
+  100 |     
+  101 |     // Step 2: Navigate to auth
+  102 |     await page.click('text=Get Started');
+  103 |     await page.waitForURL('**/auth');
+  104 |     console.log('✓ Step 2: Navigated to auth page');
+  105 |     
+  106 |     // Step 3: Register new user
+  107 |     await page.waitForSelector('form', { timeout: 10000 });
+  108 |     
+  109 |     // Switch to registration mode
+  110 |     const createAccountButton = page.locator('text=Create account here');
+  111 |     if (await createAccountButton.isVisible()) {
+  112 |       await createAccountButton.click();
+  113 |       await page.waitForTimeout(1000);
+  114 |     }
+  115 |     
+  116 |     // Fill registration form
+  117 |     await page.fill('#name', TEST_NAME);
+  118 |     await page.fill('#email', TEST_EMAIL);
+  119 |     await page.fill('#password', TEST_PASSWORD);
+  120 |     
+  121 |     // Submit registration
+  122 |     await page.click('button[type="submit"]:has-text("Create Account")');
+  123 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+  124 |     
+  125 |     // Verify we're on dashboard
+  126 |     await expect(page).toHaveURL(/.*\/dashboard$/);
+  127 |     console.log('✓ Step 3: User registered and redirected to dashboard');
+  128 |     
+  129 |     // Get user ID for cleanup
+  130 |     const users = await db.select().from(user).where(eq(user.email, TEST_EMAIL));
+> 131 |     expect(users).toHaveLength(1);
+      |                   ^ Error: expect(received).toHaveLength(expected)
+  132 |     userId = users[0].id;
+  133 |     console.log(`✓ User created with ID: ${userId}`);
+  134 |     
+  135 |     // Step 4: Verify dashboard is accessible when authenticated
+  136 |     await page.goto('http://localhost:3008/dashboard');
+  137 |     await page.waitForLoadState('networkidle');
+  138 |     await expect(page).toHaveURL(/.*\/dashboard$/);
+  139 |     console.log('✓ Step 4: Dashboard accessible when authenticated');
+  140 |     
+  141 |     // Step 5: Test that authenticated users get redirected from homepage to dashboard
+  142 |     await page.goto('http://localhost:3008');
+  143 |     await page.waitForURL('**/dashboard', { timeout: 10000 });
+  144 |     await expect(page).toHaveURL(/.*\/dashboard$/);
+  145 |     console.log('✓ Step 5: Authenticated users redirected from homepage to dashboard');
+  146 |     
+  147 |     // Step 6: Test sign out functionality (if available)
+  148 |     const userMenuSelectors = [
+  149 |       '[data-testid="user-menu"]',
+  150 |       'button:has-text("Sign Out")',
+  151 |       'text=Sign Out',
+  152 |       '[aria-label="User menu"]',
+  153 |       '.user-menu'
+  154 |     ];
+  155 |     
+  156 |     let signOutClicked = false;
+  157 |     for (const selector of userMenuSelectors) {
+  158 |       try {
+  159 |         const element = page.locator(selector);
+  160 |         if (await element.isVisible({ timeout: 2000 })) {
+  161 |           await element.click();
+  162 |           signOutClicked = true;
+  163 |           break;
+  164 |         }
+  165 |       } catch (error) {
+  166 |         // Continue to next selector
+  167 |       }
+  168 |     }
+  169 |     
+  170 |     if (!signOutClicked) {
+  171 |       // Try going to auth page which might have sign out option for authenticated users
+  172 |       await page.goto('http://localhost:3008/auth');
+  173 |       await page.waitForLoadState('networkidle');
+  174 |       
+  175 |       const signOutButton = page.locator('button:has-text("Sign Out")');
+  176 |       if (await signOutButton.isVisible()) {
+  177 |         await signOutButton.click();
+  178 |         signOutClicked = true;
+  179 |       }
+  180 |     }
+  181 |     
+  182 |     if (signOutClicked) {
+  183 |       // Wait for redirect to homepage after sign out
+  184 |       await page.waitForURL('http://localhost:3008', { timeout: 10000 });
+  185 |       await expect(page.locator('h1')).toContainText('MEXC Sniper Bot');
+  186 |       console.log('✓ Step 6: Sign out successful, redirected to homepage');
+  187 |       
+  188 |       // Step 7: Verify dashboard is protected again after sign out
+  189 |       await page.goto('http://localhost:3008/dashboard');
+  190 |       await page.waitForURL(/http:\/\/localhost:3008\/?$|.*\/auth$/, { timeout: 10000 });
+  191 |       expect(page.url()).not.toMatch(/.*\/dashboard$/);
+  192 |       console.log('✓ Step 7: Dashboard protected after sign out');
+  193 |       
+  194 |       // Step 8: Test sign in with existing credentials
+  195 |       if (!page.url().match(/.*\/auth$/)) {
+  196 |         await page.goto('http://localhost:3008/auth');
+  197 |       }
+  198 |       await page.waitForLoadState('networkidle');
+  199 |       
+  200 |       // Fill sign in form (should be in sign-in mode by default)
+  201 |       await page.fill('#email', TEST_EMAIL);
+  202 |       await page.fill('#password', TEST_PASSWORD);
+  203 |       
+  204 |       // Submit sign in
+  205 |       await page.click('button[type="submit"]:has-text("Sign In")');
+  206 |       await page.waitForURL('**/dashboard', { timeout: 15000 });
+  207 |       
+  208 |       await expect(page).toHaveURL(/.*\/dashboard$/);
+  209 |       console.log('✓ Step 8: Sign in successful, access to dashboard restored');
+  210 |     } else {
+  211 |       console.log('ℹ Sign out functionality not easily accessible, skipping sign out/in test');
+  212 |     }
+  213 |     
+  214 |     console.log('✅ Complete authentication flow with dashboard protection test passed!');
+  215 |   });
+  216 |
+  217 |   test('Config page protection test', async ({ page }) => {
+  218 |     console.log('Testing config page protection');
+  219 |     
+  220 |     // Try to access config page as anonymous user
+  221 |     await page.goto('http://localhost:3008/config');
+  222 |     await page.waitForLoadState('networkidle');
+  223 |     
+  224 |     // Wait for redirect
+  225 |     await page.waitForTimeout(2000);
+  226 |     
+  227 |     const finalUrl = page.url();
+  228 |     console.log(`Config access attempt resulted in URL: ${finalUrl}`);
+  229 |     
+  230 |     // Should be redirected away from config page
+  231 |     expect(finalUrl).not.toMatch(/.*\/config$/);
+```

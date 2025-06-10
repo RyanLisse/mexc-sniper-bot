@@ -240,6 +240,18 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
   }
 
   // Preprocess calendar data for better analysis
+  private isValidApiResponseStructure(
+    response: unknown
+  ): response is { success: boolean; data: unknown; error?: string } {
+    return (
+      typeof response === "object" &&
+      response !== null &&
+      "success" in response &&
+      "data" in response &&
+      typeof (response as any).success === "boolean"
+    );
+  }
+
   private preprocessCalendarData(calendarData: any[]): any[] {
     const now = Date.now();
 
@@ -356,12 +368,16 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
       const mexcApiAgent = new MexcApiAgent();
       const response = await mexcApiAgent.callMexcApi("/calendar");
 
-      if (!response.success) {
-        throw new Error(`Failed to fetch calendar data: ${response.error}`);
+      // Type guard for response structure
+      if (!this.isValidApiResponseStructure(response) || !response.success) {
+        const errorMsg = this.isValidApiResponseStructure(response)
+          ? response.error
+          : "Invalid response structure";
+        throw new Error(`Failed to fetch calendar data: ${errorMsg}`);
       }
 
       // Validate calendar entries using Zod
-      const validatedEntries = response.data
+      const validatedEntries = (response.data as any[])
         .map((entry: any) => {
           try {
             return validateCalendarEntry(entry);

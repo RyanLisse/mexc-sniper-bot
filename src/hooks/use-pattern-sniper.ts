@@ -96,7 +96,7 @@ export const usePatternSniper = () => {
     data: symbolsData,
     error: symbolsError,
     isLoading: symbolsLoading,
-    refetch: refetchSymbols,
+    refetch: _refetchSymbols,
   } = useQuery({
     queryKey: [...queryKeys.symbolsV2, Array.from(pendingDetection)],
     queryFn: () => apiClient.getSymbolsForVcoins(Array.from(pendingDetection)),

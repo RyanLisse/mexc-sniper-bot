@@ -606,10 +606,10 @@ export class EmergencyRecoveryService {
   }
 
   private async logEmergencyEvent(
-    emergencyType: string,
-    severity: string,
-    phase: string,
-    details: any
+    _emergencyType: string,
+    _severity: string,
+    _phase: string,
+    _details: any
   ): Promise<void> {
     try {
       await db.insert(executionHistory).values({
