@@ -107,12 +107,8 @@
           "name": "account_userId_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -201,10 +197,7 @@
       "indexes": {
         "api_credentials_user_provider_idx": {
           "name": "api_credentials_user_provider_idx",
-          "columns": [
-            "user_id",
-            "provider"
-          ],
+          "columns": ["user_id", "provider"],
           "isUnique": false
         }
       },
@@ -396,64 +389,42 @@
       "indexes": {
         "execution_history_user_idx": {
           "name": "execution_history_user_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "execution_history_snipe_target_idx": {
           "name": "execution_history_snipe_target_idx",
-          "columns": [
-            "snipe_target_id"
-          ],
+          "columns": ["snipe_target_id"],
           "isUnique": false
         },
         "execution_history_symbol_idx": {
           "name": "execution_history_symbol_idx",
-          "columns": [
-            "symbol_name"
-          ],
+          "columns": ["symbol_name"],
           "isUnique": false
         },
         "execution_history_status_idx": {
           "name": "execution_history_status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "execution_history_executed_at_idx": {
           "name": "execution_history_executed_at_idx",
-          "columns": [
-            "executed_at"
-          ],
+          "columns": ["executed_at"],
           "isUnique": false
         },
         "execution_history_user_symbol_time_idx": {
           "name": "execution_history_user_symbol_time_idx",
-          "columns": [
-            "user_id",
-            "symbol_name",
-            "executed_at"
-          ],
+          "columns": ["user_id", "symbol_name", "executed_at"],
           "isUnique": false
         },
         "execution_history_user_status_action_idx": {
           "name": "execution_history_user_status_action_idx",
-          "columns": [
-            "user_id",
-            "status",
-            "action"
-          ],
+          "columns": ["user_id", "status", "action"],
           "isUnique": false
         },
         "execution_history_snipe_target_action_status_idx": {
           "name": "execution_history_snipe_target_action_status_idx",
-          "columns": [
-            "snipe_target_id",
-            "action",
-            "status"
-          ],
+          "columns": ["snipe_target_id", "action", "status"],
           "isUnique": false
         }
       },
@@ -462,12 +433,8 @@
           "name": "execution_history_snipe_target_id_snipe_targets_id_fk",
           "tableFrom": "execution_history",
           "tableTo": "snipe_targets",
-          "columnsFrom": [
-            "snipe_target_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["snipe_target_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -623,37 +590,27 @@
       "indexes": {
         "monitored_listings_vcoin_id_unique": {
           "name": "monitored_listings_vcoin_id_unique",
-          "columns": [
-            "vcoin_id"
-          ],
+          "columns": ["vcoin_id"],
           "isUnique": true
         },
         "monitored_listings_vcoin_id_idx": {
           "name": "monitored_listings_vcoin_id_idx",
-          "columns": [
-            "vcoin_id"
-          ],
+          "columns": ["vcoin_id"],
           "isUnique": false
         },
         "monitored_listings_status_idx": {
           "name": "monitored_listings_status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "monitored_listings_launch_time_idx": {
           "name": "monitored_listings_launch_time_idx",
-          "columns": [
-            "first_open_time"
-          ],
+          "columns": ["first_open_time"],
           "isUnique": false
         },
         "monitored_listings_ready_pattern_idx": {
           "name": "monitored_listings_ready_pattern_idx",
-          "columns": [
-            "has_ready_pattern"
-          ],
+          "columns": ["has_ready_pattern"],
           "isUnique": false
         }
       },
@@ -727,9 +684,7 @@
       "indexes": {
         "session_token_unique": {
           "name": "session_token_unique",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "isUnique": true
         }
       },
@@ -738,12 +693,8 @@
           "name": "session_userId_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -937,47 +888,32 @@
       "indexes": {
         "snipe_targets_user_idx": {
           "name": "snipe_targets_user_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "snipe_targets_status_idx": {
           "name": "snipe_targets_status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "snipe_targets_priority_idx": {
           "name": "snipe_targets_priority_idx",
-          "columns": [
-            "priority"
-          ],
+          "columns": ["priority"],
           "isUnique": false
         },
         "snipe_targets_execution_time_idx": {
           "name": "snipe_targets_execution_time_idx",
-          "columns": [
-            "target_execution_time"
-          ],
+          "columns": ["target_execution_time"],
           "isUnique": false
         },
         "snipe_targets_user_status_priority_idx": {
           "name": "snipe_targets_user_status_priority_idx",
-          "columns": [
-            "user_id",
-            "status",
-            "priority"
-          ],
+          "columns": ["user_id", "status", "priority"],
           "isUnique": false
         },
         "snipe_targets_status_execution_time_idx": {
           "name": "snipe_targets_status_execution_time_idx",
-          "columns": [
-            "status",
-            "target_execution_time"
-          ],
+          "columns": ["status", "target_execution_time"],
           "isUnique": false
         }
       },
@@ -1165,61 +1101,42 @@
       "indexes": {
         "transactions_user_idx": {
           "name": "transactions_user_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "transactions_symbol_idx": {
           "name": "transactions_symbol_idx",
-          "columns": [
-            "symbol_name"
-          ],
+          "columns": ["symbol_name"],
           "isUnique": false
         },
         "transactions_status_idx": {
           "name": "transactions_status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "transactions_transaction_time_idx": {
           "name": "transactions_transaction_time_idx",
-          "columns": [
-            "transaction_time"
-          ],
+          "columns": ["transaction_time"],
           "isUnique": false
         },
         "transactions_type_idx": {
           "name": "transactions_type_idx",
-          "columns": [
-            "transaction_type"
-          ],
+          "columns": ["transaction_type"],
           "isUnique": false
         },
         "transactions_user_status_idx": {
           "name": "transactions_user_status_idx",
-          "columns": [
-            "user_id",
-            "status"
-          ],
+          "columns": ["user_id", "status"],
           "isUnique": false
         },
         "transactions_user_time_idx": {
           "name": "transactions_user_time_idx",
-          "columns": [
-            "user_id",
-            "transaction_time"
-          ],
+          "columns": ["user_id", "transaction_time"],
           "isUnique": false
         },
         "transactions_symbol_time_idx": {
           "name": "transactions_symbol_time_idx",
-          "columns": [
-            "symbol_name",
-            "transaction_time"
-          ],
+          "columns": ["symbol_name", "transaction_time"],
           "isUnique": false
         }
       },
@@ -1228,12 +1145,8 @@
           "name": "transactions_snipe_target_id_snipe_targets_id_fk",
           "tableFrom": "transactions",
           "tableTo": "snipe_targets",
-          "columnsFrom": [
-            "snipe_target_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["snipe_target_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1315,16 +1228,12 @@
       "indexes": {
         "user_email_unique": {
           "name": "user_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         },
         "user_username_unique": {
           "name": "user_username_unique",
-          "columns": [
-            "username"
-          ],
+          "columns": ["username"],
           "isUnique": true
         }
       },
@@ -1520,16 +1429,12 @@
       "indexes": {
         "user_preferences_user_id_unique": {
           "name": "user_preferences_user_id_unique",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": true
         },
         "user_preferences_user_id_idx": {
           "name": "user_preferences_user_id_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -1680,37 +1585,27 @@
       "indexes": {
         "workflow_activity_activity_id_unique": {
           "name": "workflow_activity_activity_id_unique",
-          "columns": [
-            "activity_id"
-          ],
+          "columns": ["activity_id"],
           "isUnique": true
         },
         "workflow_activity_user_id_idx": {
           "name": "workflow_activity_user_id_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         },
         "workflow_activity_activity_id_idx": {
           "name": "workflow_activity_activity_id_idx",
-          "columns": [
-            "activity_id"
-          ],
+          "columns": ["activity_id"],
           "isUnique": false
         },
         "workflow_activity_type_idx": {
           "name": "workflow_activity_type_idx",
-          "columns": [
-            "type"
-          ],
+          "columns": ["type"],
           "isUnique": false
         },
         "workflow_activity_timestamp_idx": {
           "name": "workflow_activity_timestamp_idx",
-          "columns": [
-            "timestamp"
-          ],
+          "columns": ["timestamp"],
           "isUnique": false
         }
       },
@@ -1837,9 +1732,7 @@
       "indexes": {
         "workflow_system_status_user_id_idx": {
           "name": "workflow_system_status_user_id_idx",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },

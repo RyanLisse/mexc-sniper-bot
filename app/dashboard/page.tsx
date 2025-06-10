@@ -73,19 +73,9 @@ export default function DashboardPage() {
   const [showPreferences, setShowPreferences] = useState(false);
   const [showExitStrategy, setShowExitStrategy] = useState(false);
 
-  // Auth status and protection
-  const { user, isAuthenticated, isAnonymous, isLoading: authLoading } = useAuth();
-  const router = useRouter();
+  // Get user info (middleware handles authentication protection)
+  const { user, isLoading: authLoading } = useAuth();
   const userId = user?.id || "anonymous";
-
-  // Redirect unauthenticated users to homepage
-  useEffect(() => {
-    if (!authLoading && (!isAuthenticated || isAnonymous)) {
-      console.log('Dashboard access denied - redirecting to homepage');
-      router.push('/');
-      return;
-    }
-  }, [isAuthenticated, isAnonymous, authLoading, router]);
 
   // TanStack Query hooks for real MEXC data
   const { data: calendarData, isLoading: calendarLoading, error: calendarError } = useMexcCalendar();
@@ -143,11 +133,11 @@ export default function DashboardPage() {
 
   // Auto-start pattern sniper when dashboard loads (auto-snipe by default)
   useEffect(() => {
-    if (!isMonitoring && !isLoading && isAuthenticated) {
+    if (!isMonitoring && !isLoading && user) {
       console.log("🚀 Auto-starting pattern sniper for auto-snipe...");
       startMonitoring();
     }
-  }, [isMonitoring, isLoading, isAuthenticated, startMonitoring]);
+  }, [isMonitoring, isLoading, user, startMonitoring]);
 
   const fetchSystemStatus = async () => {
     try {
@@ -300,21 +290,16 @@ export default function DashboardPage() {
     );
   }
 
-  // Show loading while checking authentication
+  // Show loading while getting user info
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto" />
-          <p className="text-slate-400">Checking authentication...</p>
+          <p className="text-slate-400">Loading user information...</p>
         </div>
       </div>
     );
-  }
-
-  // Don't render dashboard content for unauthenticated users
-  if (!isAuthenticated || isAnonymous) {
-    return null; // Let the useEffect redirect handle this
   }
   
   if (showLoading) {
@@ -343,21 +328,10 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            {/* Auth Status */}
+            {/* User Info */}
             <div className="flex items-center space-x-2">
-              {isAuthenticated && user ? (
+              {user ? (
                 <UserMenu user={user} />
-              ) : isAnonymous ? (
-                <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="border-yellow-600 text-yellow-400">
-                    Anonymous
-                  </Badge>
-                  <Link href="/auth">
-                    <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                      Sign In
-                    </Button>
-                  </Link>
-                </div>
               ) : (
                 <Link href="/auth">
                   <Button size="sm" className="bg-blue-600 hover:bg-blue-700">

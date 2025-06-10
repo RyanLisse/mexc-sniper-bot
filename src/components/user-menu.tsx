@@ -1,17 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signOut } from "@/src/lib/auth-client";
 import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
-import {
-  LogOut,
-  User,
-  Settings,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { signOut } from "@/src/lib/auth-client";
+import { ChevronDown, ChevronUp, LogOut, Settings, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface UserMenuProps {
   user: {
@@ -30,13 +23,13 @@ export function UserMenu({ user }: UserMenuProps) {
   const handleSignOut = async () => {
     try {
       setIsSigningOut(true);
-      
+
       await signOut({
         fetchOptions: {
           onSuccess: () => {
             // Trigger auth state change event
             window.dispatchEvent(new CustomEvent("auth-state-change"));
-            
+
             // Redirect to auth page
             router.push("/auth");
           },
@@ -75,11 +68,8 @@ export function UserMenu({ user }: UserMenuProps) {
       {isOpen && (
         <>
           {/* Backdrop to close dropdown */}
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
-          
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+
           {/* Dropdown Content */}
           <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-20">
             {/* User Info Header */}
@@ -89,16 +79,10 @@ export function UserMenu({ user }: UserMenuProps) {
                   <User className="h-4 w-4 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
-                    {displayName}
-                  </p>
-                  <p className="text-xs text-slate-400 truncate">
-                    {displayEmail}
-                  </p>
+                  <p className="text-sm font-medium text-white truncate">{displayName}</p>
+                  <p className="text-xs text-slate-400 truncate">{displayEmail}</p>
                   {user.username && (
-                    <p className="text-xs text-slate-500 truncate">
-                      @{user.username}
-                    </p>
+                    <p className="text-xs text-slate-500 truncate">@{user.username}</p>
                   )}
                 </div>
               </div>

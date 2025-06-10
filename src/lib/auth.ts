@@ -7,7 +7,11 @@ console.log("Initializing better-auth...");
 
 // Email sending function for development (console log)
 // In production, replace with actual email service
-const sendEmailDev = async ({ to, subject, text }: { to: string; subject: string; text: string }) => {
+const sendEmailDev = async ({
+  to,
+  subject,
+  text,
+}: { to: string; subject: string; text: string }) => {
   console.log("📧 Email would be sent:");
   console.log(`To: ${to}`);
   console.log(`Subject: ${subject}`);
@@ -43,7 +47,7 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, url, token }, request) => {
       await sendEmailDev({
         to: user.email,
-        subject: "Verify your email - MEXC Sniper Bot", 
+        subject: "Verify your email - MEXC Sniper Bot",
         text: `Welcome to MEXC Sniper Bot!\n\nClick the link to verify your email address: ${url}\n\nThis link will expire in 24 hours.`,
       });
     },

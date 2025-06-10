@@ -102,9 +102,12 @@ export class MexcApiClient {
     ).toString();
 
     console.log(`[MexcApiClient] Signature query string: ${queryString}`);
-    const signature = crypto.createHmac("sha256", this.config.secretKey).update(queryString).digest("hex");
+    const signature = crypto
+      .createHmac("sha256", this.config.secretKey)
+      .update(queryString)
+      .digest("hex");
     console.log(`[MexcApiClient] Generated signature: ${signature}`);
-    
+
     return signature;
   }
 
@@ -130,17 +133,20 @@ export class MexcApiClient {
       const timestamp = Date.now();
       params.timestamp = timestamp;
       // Remove recvWindow - not used in working route
-      
+
       console.log(`[MexcApiClient] Request timestamp: ${timestamp}`);
       console.log(`[MexcApiClient] API Key: ${this.config.apiKey.substring(0, 8)}...`);
-      
+
       // Generate signature exactly like working route: only timestamp
       const queryString = `timestamp=${timestamp}`;
-      const signature = crypto.createHmac("sha256", this.config.secretKey).update(queryString).digest("hex");
-      
+      const signature = crypto
+        .createHmac("sha256", this.config.secretKey)
+        .update(queryString)
+        .digest("hex");
+
       params.signature = signature;
       headers["X-MEXC-APIKEY"] = this.config.apiKey;
-      
+
       console.log(`[MexcApiClient] Query string for signature: ${queryString}`);
       console.log(`[MexcApiClient] Generated signature: ${signature}`);
     }
@@ -458,7 +464,8 @@ export class MexcApiClient {
           totalUsdtValue: 0,
           lastUpdated: new Date().toISOString(),
         },
-        error: "MEXC API credentials not configured. Please add MEXC_API_KEY and MEXC_SECRET_KEY to your environment variables.",
+        error:
+          "MEXC API credentials not configured. Please add MEXC_API_KEY and MEXC_SECRET_KEY to your environment variables.",
         timestamp: new Date().toISOString(),
       };
     }
@@ -495,11 +502,14 @@ export class MexcApiClient {
         .map((balance) => `${balance.asset}USDT`)
         .filter((symbol) => validTradingPairs.has(symbol));
 
-      console.log(`[MexcApiClient] Need prices for ${symbolsNeeded.length} symbols:`, symbolsNeeded);
+      console.log(
+        `[MexcApiClient] Need prices for ${symbolsNeeded.length} symbols:`,
+        symbolsNeeded
+      );
 
       // Fetch prices for specific symbols only
       const priceMap = new Map<string, number>();
-      
+
       // Fetch individual ticker prices for better reliability
       for (const symbol of symbolsNeeded) {
         try {
@@ -528,7 +538,7 @@ export class MexcApiClient {
           } else {
             const symbol = `${balance.asset}USDT`;
             const price = priceMap.get(symbol);
-            
+
             if (price && price > 0) {
               usdtValue = total * price;
               console.log(
@@ -569,11 +579,16 @@ export class MexcApiClient {
       console.error("[MexcApiClient] Account balances failed:", error);
       // Provide more helpful error messages for common MEXC API issues
       let errorMessage = error instanceof Error ? error.message : "Unknown error";
-      
-      if (errorMessage.includes("700002") || errorMessage.includes("Signature for this request is not valid")) {
-        errorMessage = "MEXC API signature validation failed. This is likely due to: 1) IP address not allowlisted for API key, 2) Invalid API credentials, or 3) Clock synchronization issues. Please check your MEXC API key settings and ensure your deployment IP is allowlisted.";
+
+      if (
+        errorMessage.includes("700002") ||
+        errorMessage.includes("Signature for this request is not valid")
+      ) {
+        errorMessage =
+          "MEXC API signature validation failed. This is likely due to: 1) IP address not allowlisted for API key, 2) Invalid API credentials, or 3) Clock synchronization issues. Please check your MEXC API key settings and ensure your deployment IP is allowlisted.";
       } else if (errorMessage.includes("10072") || errorMessage.includes("Api key info invalid")) {
-        errorMessage = "MEXC API key is invalid or expired. Please check your MEXC_API_KEY and MEXC_SECRET_KEY environment variables.";
+        errorMessage =
+          "MEXC API key is invalid or expired. Please check your MEXC_API_KEY and MEXC_SECRET_KEY environment variables.";
       }
 
       return {

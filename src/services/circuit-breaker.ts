@@ -23,9 +23,9 @@ interface CircuitBreakerStats {
 }
 
 enum CircuitBreakerState {
-  CLOSED = 'CLOSED',     // Normal operation
-  OPEN = 'OPEN',         // Circuit is open, rejecting requests
-  HALF_OPEN = 'HALF_OPEN' // Testing if service has recovered
+  CLOSED = "CLOSED", // Normal operation
+  OPEN = "OPEN", // Circuit is open, rejecting requests
+  HALF_OPEN = "HALF_OPEN", // Testing if service has recovered
 }
 
 export class CircuitBreaker {
@@ -37,13 +37,16 @@ export class CircuitBreaker {
   private totalRequests = 0;
   private failedRequests = 0;
   private successfulRequests = 0;
-  
+
   private readonly failureThreshold: number;
   private readonly recoveryTimeout: number;
   private readonly monitoringPeriod: number;
   private readonly expectedFailureRate: number;
 
-  constructor(private name: string, options: Partial<CircuitBreakerOptions> = {}) {
+  constructor(
+    private name: string,
+    options: Partial<CircuitBreakerOptions> = {}
+  ) {
     this.failureThreshold = options.failureThreshold || 5;
     this.recoveryTimeout = options.recoveryTimeout || 60000; // 1 minute
     this.monitoringPeriod = options.monitoringPeriod || 300000; // 5 minutes
@@ -63,12 +66,12 @@ export class CircuitBreaker {
     // Reject if circuit is OPEN
     if (this.state === CircuitBreakerState.OPEN) {
       console.warn(`⚡ Circuit breaker [${this.name}] is OPEN - rejecting request`);
-      
+
       if (fallback) {
         console.log(`🔄 Circuit breaker [${this.name}] using fallback mechanism`);
         return await fallback();
       }
-      
+
       throw new CircuitBreakerError(
         `Circuit breaker [${this.name}] is OPEN. Service is temporarily unavailable.`,
         this.getStats()
@@ -81,17 +84,22 @@ export class CircuitBreaker {
     try {
       const result = await fn();
       this.onSuccess();
-      
+
       const duration = performance.now() - startTime;
-      console.log(`✅ Circuit breaker [${this.name}] request succeeded in ${duration.toFixed(2)}ms`);
-      
+      console.log(
+        `✅ Circuit breaker [${this.name}] request succeeded in ${duration.toFixed(2)}ms`
+      );
+
       return result;
     } catch (error) {
       this.onFailure();
-      
+
       const duration = performance.now() - startTime;
-      console.error(`❌ Circuit breaker [${this.name}] request failed in ${duration.toFixed(2)}ms:`, error);
-      
+      console.error(
+        `❌ Circuit breaker [${this.name}] request failed in ${duration.toFixed(2)}ms:`,
+        error
+      );
+
       // If we have a fallback and circuit breaker suggests using it, try the fallback
       if (fallback) {
         console.log(`🔄 Circuit breaker [${this.name}] using fallback after failure`);
@@ -102,7 +110,7 @@ export class CircuitBreaker {
           throw error; // Throw original error, not fallback error
         }
       }
-      
+
       throw error;
     }
   }
@@ -134,7 +142,10 @@ export class CircuitBreaker {
       this.state = CircuitBreakerState.OPEN;
       this.nextRetryTime = new Date(Date.now() + this.recoveryTimeout);
       console.log(`⚡ Circuit breaker [${this.name}] failed during recovery - state: OPEN`);
-    } else if (this.state === CircuitBreakerState.CLOSED && this.failureCount >= this.failureThreshold) {
+    } else if (
+      this.state === CircuitBreakerState.CLOSED &&
+      this.failureCount >= this.failureThreshold
+    ) {
       // If we exceed failure threshold, open the circuit
       this.state = CircuitBreakerState.OPEN;
       this.nextRetryTime = new Date(Date.now() + this.recoveryTimeout);
@@ -163,7 +174,7 @@ export class CircuitBreaker {
       state: this.state,
       lastFailureTime: this.lastFailureTime,
       lastSuccessTime: this.lastSuccessTime,
-      nextRetryTime: this.nextRetryTime
+      nextRetryTime: this.nextRetryTime,
     };
   }
 
@@ -179,7 +190,7 @@ export class CircuitBreaker {
     this.totalRequests = 0;
     this.failedRequests = 0;
     this.successfulRequests = 0;
-    
+
     console.log(`🔄 Circuit breaker [${this.name}] manually reset`);
   }
 
@@ -214,8 +225,9 @@ export class CircuitBreaker {
    */
   isHealthy(): boolean {
     const stats = this.getStats();
-    return stats.state === CircuitBreakerState.CLOSED && 
-           stats.failureRate <= this.expectedFailureRate;
+    return (
+      stats.state === CircuitBreakerState.CLOSED && stats.failureRate <= this.expectedFailureRate
+    );
   }
 }
 
@@ -223,9 +235,12 @@ export class CircuitBreaker {
  * Circuit Breaker Error class
  */
 export class CircuitBreakerError extends Error {
-  constructor(message: string, public stats: CircuitBreakerStats) {
+  constructor(
+    message: string,
+    public stats: CircuitBreakerStats
+  ) {
     super(message);
-    this.name = 'CircuitBreakerError';
+    this.name = "CircuitBreakerError";
   }
 }
 
@@ -268,11 +283,11 @@ export class CircuitBreakerRegistry {
    */
   getHealthStatus(): { [name: string]: CircuitBreakerStats } {
     const status: { [name: string]: CircuitBreakerStats } = {};
-    
+
     for (const [name, breaker] of this.breakers) {
       status[name] = breaker.getStats();
     }
-    
+
     return status;
   }
 
@@ -283,7 +298,7 @@ export class CircuitBreakerRegistry {
     for (const breaker of this.breakers.values()) {
       breaker.reset();
     }
-    console.log('🔄 All circuit breakers reset');
+    console.log("🔄 All circuit breakers reset");
   }
 }
 
@@ -291,20 +306,20 @@ export class CircuitBreakerRegistry {
 export const circuitBreakerRegistry = CircuitBreakerRegistry.getInstance();
 
 // Predefined circuit breakers for common services
-export const mexcApiBreaker = circuitBreakerRegistry.getBreaker('mexc-api', {
+export const mexcApiBreaker = circuitBreakerRegistry.getBreaker("mexc-api", {
   failureThreshold: 3,
   recoveryTimeout: 30000,
-  expectedFailureRate: 0.2
+  expectedFailureRate: 0.2,
 });
 
-export const mexcWebSocketBreaker = circuitBreakerRegistry.getBreaker('mexc-websocket', {
+export const mexcWebSocketBreaker = circuitBreakerRegistry.getBreaker("mexc-websocket", {
   failureThreshold: 5,
   recoveryTimeout: 10000,
-  expectedFailureRate: 0.1
+  expectedFailureRate: 0.1,
 });
 
-export const databaseBreaker = circuitBreakerRegistry.getBreaker('database', {
+export const databaseBreaker = circuitBreakerRegistry.getBreaker("database", {
   failureThreshold: 2,
   recoveryTimeout: 5000,
-  expectedFailureRate: 0.05
+  expectedFailureRate: 0.05,
 });

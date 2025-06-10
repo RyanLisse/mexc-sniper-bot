@@ -101,7 +101,7 @@ export class EnhancedMexcApi {
         symbols = data.symbols
           .filter((symbol: any) => symbol?.symbol && symbol.status === "1")
           .map((symbol: any) => ({
-            cd: symbol.baseAsset || symbol.symbol.replace(/USDT$/, ''),
+            cd: symbol.baseAsset || symbol.symbol.replace(/USDT$/, ""),
             ca: symbol.symbol,
             ps: symbol.baseAssetPrecision || 8,
             qs: symbol.quoteAssetPrecision || 8,
