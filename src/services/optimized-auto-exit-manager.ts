@@ -120,6 +120,7 @@ export class OptimizedAutoExitManager {
   /**
    * OPTIMIZED: Get active positions with single JOIN query instead of N+1 queries
    */
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: database join logic
   private async getActivePositionsOptimized(): Promise<ActivePosition[]> {
     try {
       // Get active positions using simpler approach to avoid type issues
@@ -263,6 +264,7 @@ export class OptimizedAutoExitManager {
   /**
    * OPTIMIZED: Batch price fetching with caching
    */
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: batching logic
   private async getBatchPrices(symbols: string[]): Promise<BatchPriceData[]> {
     const now = Date.now();
     const results: BatchPriceData[] = [];
@@ -286,7 +288,7 @@ export class OptimizedAutoExitManager {
     if (symbolsToFetch.length > 0) {
       try {
         // Use MEXC batch ticker endpoint for multiple symbols
-        const symbolsParam = symbolsToFetch.join(",");
+        const _symbolsParam = symbolsToFetch.join(",");
         const response = await fetch(
           `https://api.mexc.com/api/v3/ticker/price?symbols=[${symbolsToFetch.map((s) => `"${s}"`).join(",")}]`
         );

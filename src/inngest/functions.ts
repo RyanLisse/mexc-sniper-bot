@@ -2,7 +2,7 @@ import { MexcOrchestrator } from "../mexc-agents/orchestrator";
 import { inngest } from "./client";
 
 // Helper function to update workflow status
-async function updateWorkflowStatus(action: string, data: any) {
+async function updateWorkflowStatus(action: string, data: unknown) {
   try {
     const response = await fetch("http://localhost:3000/api/workflow-status", {
       method: "POST",
@@ -45,7 +45,7 @@ interface MexcPatternAnalysisRequestedData {
 // MEXC Trading strategy event data
 interface MexcTradingStrategyRequestedData {
   vcoinId: string;
-  symbolData: any;
+  symbolData: Record<string, unknown>;
   riskLevel?: "low" | "medium" | "high";
   capital?: number;
 }
@@ -54,7 +54,7 @@ interface MexcTradingStrategyRequestedData {
 export const pollMexcCalendar = inngest.createFunction(
   { id: "poll-mexc-calendar" },
   { event: "mexc/calendar.poll" },
-  async ({ event, step }: { event: { data: MexcCalendarPollRequestedData }; step: any }) => {
+  async ({ event, step }: { event: { data: MexcCalendarPollRequestedData }; step: unknown }) => {
     const { trigger = "manual", force = false } = event.data;
 
     // Update status: Started calendar discovery
@@ -95,7 +95,7 @@ export const pollMexcCalendar = inngest.createFunction(
     const followUpEvents = await step.run("process-discovery-results", async () => {
       if (discoveryResult.data?.newListings?.length) {
         // Send symbol watch events for new discoveries
-        const events = discoveryResult.data.newListings.map((listing: any) => ({
+        const events = discoveryResult.data.newListings.map((listing: Record<string, unknown>) => ({
           name: "mexc/symbol.watch",
           data: {
             vcoinId: listing.vcoinId,
@@ -148,7 +148,7 @@ export const pollMexcCalendar = inngest.createFunction(
 export const watchMexcSymbol = inngest.createFunction(
   { id: "watch-mexc-symbol" },
   { event: "mexc/symbol.watch" },
-  async ({ event, step }: { event: { data: MexcSymbolWatchRequestedData }; step: any }) => {
+  async ({ event, step }: { event: { data: MexcSymbolWatchRequestedData }; step: unknown }) => {
     const { vcoinId, symbolName, projectName, launchTime, attempt = 1 } = event.data;
 
     if (!vcoinId) {
@@ -241,7 +241,7 @@ export const watchMexcSymbol = inngest.createFunction(
 export const analyzeMexcPatterns = inngest.createFunction(
   { id: "analyze-mexc-patterns" },
   { event: "mexc/patterns.analyze" },
-  async ({ event, step }: { event: { data: MexcPatternAnalysisRequestedData }; step: any }) => {
+  async ({ event, step }: { event: { data: MexcPatternAnalysisRequestedData }; step: unknown }) => {
     const { vcoinId, symbols, analysisType = "discovery" } = event.data;
 
     // Update status: Started pattern analysis
@@ -286,7 +286,7 @@ export const analyzeMexcPatterns = inngest.createFunction(
 export const createMexcTradingStrategy = inngest.createFunction(
   { id: "create-mexc-trading-strategy" },
   { event: "mexc/strategy.create" },
-  async ({ event, step }: { event: { data: MexcTradingStrategyRequestedData }; step: any }) => {
+  async ({ event, step }: { event: { data: MexcTradingStrategyRequestedData }; step: unknown }) => {
     const { vcoinId, symbolData, riskLevel = "medium", capital } = event.data;
 
     if (!vcoinId || !symbolData) {

@@ -1,7 +1,9 @@
 import {
+  type CalendarEntry,
   type CalendarResponse,
   CalendarResponseSchema,
   type MexcError,
+  type SymbolV2Entry,
   type SymbolsV2Response,
   SymbolsV2ResponseSchema,
 } from "@/src/schemas/mexc-schemas";
@@ -41,19 +43,26 @@ export class EnhancedMexcApi {
       console.log(`✅ MEXC API Response: ${response.status} ${url}`);
 
       // Use real calendar data from MEXC
-      let calendarData: any[] = [];
+      let calendarData: CalendarEntry[] = [];
 
       if (data?.data?.newCoins && Array.isArray(data.data.newCoins)) {
         calendarData = data.data.newCoins
           .filter(
-            (entry: any) =>
-              entry?.vcoinId && (entry.vcoinName || entry.vcoinNameFull) && entry.firstOpenTime
+            (entry: unknown) =>
+              typeof entry === "object" &&
+              entry !== null &&
+              "vcoinId" in entry &&
+              ("vcoinName" in entry || "vcoinNameFull" in entry) &&
+              "firstOpenTime" in entry
           )
-          .map((entry: any) => ({
-            vcoinId: entry.vcoinId,
-            symbol: entry.vcoinName,
-            projectName: entry.vcoinNameFull || entry.vcoinName || entry.vcoinId,
-            firstOpenTime: Number(entry.firstOpenTime),
+          .map((entry) => ({
+            vcoinId: String((entry as { vcoinId: unknown }).vcoinId),
+            symbol: String((entry as { vcoinName?: unknown }).vcoinName),
+            projectName:
+              (entry as { vcoinNameFull?: unknown }).vcoinNameFull ||
+              (entry as { vcoinName?: unknown }).vcoinName ||
+              String((entry as { vcoinId: unknown }).vcoinId),
+            firstOpenTime: Number((entry as { firstOpenTime: unknown }).firstOpenTime),
           }));
       }
 
@@ -95,12 +104,19 @@ export class EnhancedMexcApi {
       console.log(`✅ MEXC API Response: Exchange info with ${data?.symbols?.length || 0} symbols`);
 
       // Use real symbol data from MEXC exchange info endpoint
-      let symbols: any[] = [];
+      let symbols: SymbolV2Entry[] = [];
 
       if (data?.symbols && Array.isArray(data.symbols)) {
         symbols = data.symbols
-          .filter((symbol: any) => symbol?.symbol && symbol.status === "1")
-          .map((symbol: any) => ({
+          .filter(
+            (symbol: unknown): symbol is Record<string, unknown> =>
+              typeof symbol === "object" &&
+              symbol !== null &&
+              "symbol" in symbol &&
+              "status" in symbol
+          )
+          .filter((symbol: Record<string, unknown>) => symbol.symbol && symbol.status === "1")
+          .map((symbol: Record<string, unknown>) => ({
             cd: symbol.baseAsset || symbol.symbol.replace(/USDT$/, ""),
             ca: symbol.symbol,
             ps: symbol.baseAssetPrecision || 8,
@@ -197,7 +213,7 @@ export class EnhancedMexcApi {
    * Generic retry wrapper
    */
   private async withRetry<T>(operation: () => Promise<T>): Promise<T> {
-    let lastError: Error;
+    let lastError: Error | undefined;
 
     for (let attempt = 1; attempt <= this.retryCount; attempt++) {
       try {
@@ -217,7 +233,7 @@ export class EnhancedMexcApi {
       }
     }
 
-    throw lastError!;
+    throw lastError ?? new Error("Unknown error");
   }
 
   /**

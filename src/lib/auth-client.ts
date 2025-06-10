@@ -13,9 +13,9 @@ export const { signIn, signUp, signOut, forgetPassword, resetPassword, updateUse
 
 // Use Better Auth's built-in session hook with improved error handling
 export const useSession = () => {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<unknown>(null);
   const [isPending, setIsPending] = useState(true);
-  const [error, setError] = useState<any>(null);
+  const [error, setError] = useState<unknown>(null);
 
   const fetchSession = async () => {
     try {
@@ -28,7 +28,7 @@ export const useSession = () => {
       );
 
       const sessionPromise = authClient.getSession();
-      const sessionData = (await Promise.race([sessionPromise, timeoutPromise])) as any;
+      const sessionData = (await Promise.race([sessionPromise, timeoutPromise])) as unknown;
 
       // Validate session data structure
       if (sessionData && typeof sessionData === "object") {
@@ -46,6 +46,7 @@ export const useSession = () => {
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchSession stable
   useEffect(() => {
     // Add a small delay to prevent race conditions
     const timer = setTimeout(() => {

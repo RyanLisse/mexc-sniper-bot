@@ -3,7 +3,7 @@ import { getConnectivityStatus, performSystemHealthCheck } from "@/src/lib/healt
 import { inngest } from "./client";
 
 // Helper function to update workflow status
-async function updateWorkflowStatus(action: string, data: any) {
+async function updateWorkflowStatus(action: string, data: unknown) {
   try {
     const response = await fetch("http://localhost:3000/api/workflow-status", {
       method: "POST",
@@ -375,7 +375,7 @@ export const emergencyResponseHandler = inngest.createFunction(
       const executionResults = [];
       for (const recoveryStep of recoveryPlan.recoverySteps) {
         let attempts = 0;
-        let lastError;
+        let lastError: unknown;
 
         while (attempts <= recoveryStep.maxRetries) {
           try {

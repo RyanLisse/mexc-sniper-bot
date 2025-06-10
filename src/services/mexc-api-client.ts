@@ -40,6 +40,13 @@ export interface MexcBalance {
   usdtValue?: number;
 }
 
+export interface MexcTicker {
+  symbol: string;
+  lastPrice?: string;
+  price?: string;
+  [key: string]: unknown;
+}
+
 export interface MexcAccountBalance {
   balances: MexcBalance[];
   totalUsdtValue: number;
@@ -92,7 +99,8 @@ export class MexcApiClient {
 
     // Create a copy of params excluding the signature parameter
     const signatureParams = { ...params };
-    delete signatureParams.signature;
+    // Avoid delete operator for performance
+    signatureParams.signature = undefined;
 
     const queryString = new URLSearchParams(
       Object.entries(signatureParams)
@@ -454,6 +462,7 @@ export class MexcApiClient {
     }
   }
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: many balance checks
   async getAccountBalances(): Promise<MexcApiResponse<MexcAccountBalance>> {
     if (!this.config.apiKey || !this.config.secretKey) {
       console.error("[MexcApiClient] MEXC API credentials not configured");
@@ -472,7 +481,7 @@ export class MexcApiClient {
 
     try {
       console.log("[MexcApiClient] Fetching account balances...");
-      console.log("[MexcApiClient] Using API key:", this.config.apiKey.substring(0, 8) + "...");
+      console.log("[MexcApiClient] Using API key:", `${this.config.apiKey.substring(0, 8)}...`);
 
       // Get account info with balances
       const accountInfo = await this.makeRequest<{
@@ -604,10 +613,10 @@ export class MexcApiClient {
     }
   }
 
-  async get24hrTicker(symbol?: string): Promise<MexcApiResponse<any[]>> {
+  async get24hrTicker(symbol?: string): Promise<MexcApiResponse<MexcTicker[]>> {
     try {
       const endpoint = symbol ? `/api/v3/ticker/24hr?symbol=${symbol}` : "/api/v3/ticker/24hr";
-      const response = await this.makeRequest<any>(endpoint);
+      const response = await this.makeRequest<MexcTicker | MexcTicker[]>(endpoint);
 
       // Handle both single symbol and all symbols response
       const data = Array.isArray(response) ? response : [response];

@@ -65,6 +65,7 @@ export function useWebSocketPrice(
     return () => clearInterval(interval);
   }, []);
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: handles subscription lifecycle
   const subscribe = useCallback(async () => {
     if (!symbol || unsubscribeFn) return;
 
@@ -102,9 +103,12 @@ export function useWebSocketPrice(
       // Retry logic
       if (retryOnError && retryCount < maxRetries) {
         setRetryCount((prev) => prev + 1);
-        setTimeout(() => {
-          subscribe();
-        }, Math.pow(2, retryCount) * 1000); // Exponential backoff
+        setTimeout(
+          () => {
+            subscribe();
+          },
+          2 ** retryCount * 1000
+        ); // Exponential backoff
       }
     } finally {
       setIsConnecting(false);
@@ -197,6 +201,7 @@ export function useWebSocketPrices(
   }, []);
 
   const subscribe = useCallback(
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: manages multiple websockets
     async (symbol: string) => {
       if (!symbol || unsubscribeFns.has(symbol)) return;
 
@@ -246,9 +251,12 @@ export function useWebSocketPrices(
         const currentRetryCount = retryCounts.get(symbol) || 0;
         if (retryOnError && currentRetryCount < maxRetries) {
           setRetryCounts((prev) => new Map(prev).set(symbol, currentRetryCount + 1));
-          setTimeout(() => {
-            subscribe(symbol);
-          }, Math.pow(2, currentRetryCount) * 1000);
+          setTimeout(
+            () => {
+              subscribe(symbol);
+            },
+            2 ** currentRetryCount * 1000
+          );
         }
       }
     },

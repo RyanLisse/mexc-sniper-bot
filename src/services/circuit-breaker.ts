@@ -268,7 +268,11 @@ export class CircuitBreakerRegistry {
       this.breakers.set(name, new CircuitBreaker(name, options));
       console.log(`🔧 Created circuit breaker: ${name}`);
     }
-    return this.breakers.get(name)!;
+    const breaker = this.breakers.get(name);
+    if (!breaker) {
+      throw new Error(`Circuit breaker ${name} not found`);
+    }
+    return breaker;
   }
 
   /**

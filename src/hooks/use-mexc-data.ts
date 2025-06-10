@@ -127,7 +127,10 @@ export function useMexcPatternDetection(vcoinId?: string) {
 
   // Analyze symbols for ready state pattern (sts:2, st:2, tt:4)
   const readyStatePattern = symbols?.find(
-    (symbol: any) => symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4
+    (symbol: Record<string, unknown>) =>
+      (symbol as { sts?: number }).sts === 2 &&
+      (symbol as { st?: number }).st === 2 &&
+      (symbol as { tt?: number }).tt === 4
   );
 
   const hasReadyPattern = !!readyStatePattern;
@@ -148,7 +151,7 @@ export function useUpcomingLaunches() {
   const { data: calendar, ...rest } = useMexcCalendar();
 
   const upcomingLaunches =
-    calendar?.filter((entry: any) => {
+    calendar?.filter((entry: Record<string, unknown>) => {
       const launchTime = new Date(entry.firstOpenTime);
       const now = new Date();
       const hours24 = 24 * 60 * 60 * 1000;
@@ -168,7 +171,7 @@ export function useReadyTargets() {
   const { data: calendar, ...rest } = useMexcCalendar();
 
   const readyTargets =
-    calendar?.filter((entry: any) => {
+    calendar?.filter((entry: Record<string, unknown>) => {
       const launchTime = new Date(entry.firstOpenTime);
       const now = new Date();
       const hours4 = 4 * 60 * 60 * 1000;

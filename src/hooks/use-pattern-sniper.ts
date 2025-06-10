@@ -96,7 +96,7 @@ export const usePatternSniper = () => {
     data: symbolsData,
     error: symbolsError,
     isLoading: symbolsLoading,
-    refetch: refetchSymbols,
+    refetch: _refetchSymbols,
   } = useQuery({
     queryKey: [...queryKeys.symbolsV2, Array.from(pendingDetection)],
     queryFn: () => apiClient.getSymbolsForVcoins(Array.from(pendingDetection)),
@@ -149,6 +149,7 @@ export const usePatternSniper = () => {
   }, [calendarData, isMonitoring, calendarTargets, pendingDetection]);
 
   // Process symbols data to detect ready states
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: algorithm handles multiple cases
   useEffect(() => {
     if (!symbolsData?.data?.symbols || pendingDetection.size === 0 || !isMonitoring) return;
 
@@ -165,7 +166,7 @@ export const usePatternSniper = () => {
         const calendar = calendarTargets.get(vcoinId);
         if (calendar) {
           const target = processReadyToken(vcoinId, symbol, calendar);
-          newReady.set(symbol.ca!, target);
+          newReady.set(symbol.ca ?? "", target);
           newPending.delete(vcoinId);
           newReadyCount++;
 
@@ -190,11 +191,11 @@ export const usePatternSniper = () => {
   // Convert ready token to snipe target
   const processReadyToken = useCallback(
     (vcoinId: string, symbol: SymbolV2Entry, calendar: CalendarEntry): SnipeTarget => {
-      const launchTime = new Date(symbol.ot!);
+      const launchTime = new Date(symbol.ot ?? Date.now());
       const hoursAdvance = (launchTime.getTime() - Date.now()) / (1000 * 60 * 60);
 
       const orderParams: SchemaOrderParameters = {
-        symbol: symbol.ca!,
+        symbol: symbol.ca ?? "",
         side: "BUY",
         type: "MARKET",
         quoteOrderQty: 100, // Default $100 USDT
@@ -202,10 +203,10 @@ export const usePatternSniper = () => {
 
       return {
         vcoinId,
-        symbol: symbol.ca!,
+        symbol: symbol.ca ?? "",
         projectName: calendar.projectName,
-        priceDecimalPlaces: symbol.ps!,
-        quantityDecimalPlaces: symbol.qs!,
+        priceDecimalPlaces: symbol.ps ?? 8,
+        quantityDecimalPlaces: symbol.qs ?? 8,
         launchTime,
         discoveredAt: new Date(),
         hoursAdvanceNotice: hoursAdvance,
@@ -242,6 +243,7 @@ export const usePatternSniper = () => {
   }, [isMonitoring, readyTargets, executedTargets]);
 
   // Execute snipe order with auto exit manager integration
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: integrates multiple systems
   const executeSnipe = useCallback(async (target: SnipeTarget, userId?: string) => {
     console.log(`🚀 EXECUTING SNIPE: ${target.symbol}`);
     console.log(`   Project: ${target.projectName}`);

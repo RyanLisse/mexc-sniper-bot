@@ -373,7 +373,7 @@ export class AutoExitManager {
     position: ActivePosition,
     action: string,
     reason: string,
-    order: any,
+    order: Record<string, unknown>,
     price: number
   ): Promise<void> {
     try {

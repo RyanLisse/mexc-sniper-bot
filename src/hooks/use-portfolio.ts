@@ -153,7 +153,7 @@ export function useUpdateSnipeTarget() {
       updates,
     }: {
       id: number;
-      updates: Record<string, any>;
+      updates: Record<string, unknown>;
     }) => {
       const response = await fetch(`/api/snipe-targets/${id}`, {
         method: "PATCH",

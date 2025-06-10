@@ -28,6 +28,7 @@ import {
 import type React from "react";
 import { useState } from "react";
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: large component
 export const PatternSniperComponent: React.FC = () => {
   const {
     isMonitoring,

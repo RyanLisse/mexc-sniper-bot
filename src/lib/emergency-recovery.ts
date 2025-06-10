@@ -70,8 +70,8 @@ export class EmergencyRecoveryService {
    * Handle API failure recovery
    */
   private async handleApiFailureRecovery(
-    connectivity: any,
-    _systemHealth: any
+    connectivity: unknown,
+    _systemHealth: unknown
   ): Promise<EmergencyRecoveryPlan> {
     const recoverySteps: RecoveryStep[] = [];
 
@@ -130,7 +130,9 @@ export class EmergencyRecoveryService {
   /**
    * Handle database failure recovery
    */
-  private async handleDatabaseFailureRecovery(_systemHealth: any): Promise<EmergencyRecoveryPlan> {
+  private async handleDatabaseFailureRecovery(
+    _systemHealth: unknown
+  ): Promise<EmergencyRecoveryPlan> {
     const recoverySteps: RecoveryStep[] = [
       {
         id: "test_db_connection",
@@ -171,8 +173,8 @@ export class EmergencyRecoveryService {
    * Handle high volatility emergency response
    */
   private async handleHighVolatilityRecovery(
-    data: any,
-    _systemHealth: any
+    data: unknown,
+    _systemHealth: unknown
   ): Promise<EmergencyRecoveryPlan> {
     const recoverySteps: RecoveryStep[] = [
       {
@@ -221,7 +223,9 @@ export class EmergencyRecoveryService {
   /**
    * Handle system overload recovery
    */
-  private async handleSystemOverloadRecovery(_systemHealth: any): Promise<EmergencyRecoveryPlan> {
+  private async handleSystemOverloadRecovery(
+    _systemHealth: unknown
+  ): Promise<EmergencyRecoveryPlan> {
     const recoverySteps: RecoveryStep[] = [
       {
         id: "reduce_monitoring_frequency",
@@ -269,7 +273,7 @@ export class EmergencyRecoveryService {
   /**
    * Handle trading anomaly recovery
    */
-  private async handleTradingAnomalyRecovery(data: any): Promise<EmergencyRecoveryPlan> {
+  private async handleTradingAnomalyRecovery(data: unknown): Promise<EmergencyRecoveryPlan> {
     const recoverySteps: RecoveryStep[] = [
       {
         id: "halt_affected_trading",
