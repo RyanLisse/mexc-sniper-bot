@@ -8,7 +8,7 @@ export interface EnhancedAgentConfig {
   model?: string;
   temperature?: number;
   maxTokens?: number;
-  tools?: Array<Record<string, unknown>>;
+  tools?: Array<OpenAI.Beta.Assistants.AssistantTool>;
   toolChoice?: "auto" | "none" | { type: "function"; function: { name: string } };
 }
 
@@ -43,13 +43,11 @@ export class EnhancedBaseAgent {
     });
 
     // Initialize OpenAI Agent
-    // Using type assertion as the agent library has strict tool type requirements
-    // but runtime behavior works correctly with standard OpenAI tool definitions
     this.agent = new Agent({
       name: config.name,
       instructions: config.instructions,
       model: config.model || "gpt-4o",
-      tools: (config.tools || []) as any,
+      tools: config.tools || [],
     });
   }
 

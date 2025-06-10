@@ -75,7 +75,7 @@ function TradingAdvancedSettings({ preferences }: { preferences: UserTradingPref
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-muted-foreground">Risk Tolerance</label>
+        <span className="text-sm font-medium text-muted-foreground">Risk Tolerance</span>
         <div className="flex items-center space-x-2">
           <Badge
             variant={preferences.riskTolerance === "low" ? "default" : "secondary"}
@@ -87,7 +87,7 @@ function TradingAdvancedSettings({ preferences }: { preferences: UserTradingPref
       </div>
 
       <div>
-        <label className="text-sm font-medium text-muted-foreground">Ready State Pattern</label>
+        <span className="text-sm font-medium text-muted-foreground">Ready State Pattern</span>
         <div className="text-lg font-semibold font-mono">
           sts:{pattern[0]}, st:{pattern[1]}, tt:{pattern[2]}
         </div>
@@ -107,7 +107,7 @@ interface ConfigItemProps {
 function ConfigItem({ label, value, valueClassName = "" }: ConfigItemProps) {
   return (
     <div>
-      <label className="text-sm font-medium text-muted-foreground">{label}</label>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
       <div className={`text-lg font-semibold ${valueClassName}`}>{value}</div>
     </div>
   );

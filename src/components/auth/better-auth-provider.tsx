@@ -11,8 +11,7 @@ interface BetterAuthProviderProps {
 export function BetterAuthProvider({ children }: BetterAuthProviderProps) {
   // Type assertion: authClient from createAuthClient has compatible interface with AuthUIProvider
   // The difference is in useSession implementation (Atom vs function) but runtime behavior is correct
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const compatibleAuthClient = authClient as any;
+  const compatibleAuthClient = authClient as Parameters<typeof AuthUIProvider>[0]["authClient"];
 
   return <AuthUIProvider authClient={compatibleAuthClient}>{children}</AuthUIProvider>;
 }

@@ -30,9 +30,8 @@ export const SignUpExample = () => {
       if (error) {
         setMessage(`Error: ${error.message}`);
       } else {
-        setMessage(
-          `Success! User created: ${data.user.email} (${(data.user as any).username || data.user.name})`
-        );
+        const username = "username" in data.user ? data.user.username : data.user.name;
+        setMessage(`Success! User created: ${data.user.email} (${username || "user"})`);
       }
     } catch (err) {
       setMessage(`Error: ${err instanceof Error ? err.message : "Unknown error occurred"}`);
@@ -115,7 +114,9 @@ export const SignInExample = () => {
     setMessage("");
 
     try {
-      let result;
+      let result: Awaited<
+        ReturnType<typeof authClient.signIn.username | typeof authClient.signIn.email>
+      >;
       if (loginMethod === "username") {
         result = await authClient.signIn.username({
           username: loginData.identifier,
@@ -149,29 +150,31 @@ export const SignInExample = () => {
       <h3 className="text-lg font-semibold mb-4">Sign In</h3>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">Login Method:</label>
-        <div className="flex gap-4">
-          <label className="flex items-center">
-            <input
-              type="radio"
-              value="email"
-              checked={loginMethod === "email"}
-              onChange={(e) => setLoginMethod(e.target.value as "email" | "username")}
-              className="mr-2"
-            />
-            Email
-          </label>
-          <label className="flex items-center">
-            <input
-              type="radio"
-              value="username"
-              checked={loginMethod === "username"}
-              onChange={(e) => setLoginMethod(e.target.value as "email" | "username")}
-              className="mr-2"
-            />
-            Username
-          </label>
-        </div>
+        <fieldset>
+          <legend className="block text-sm font-medium mb-2">Login Method:</legend>
+          <div className="flex gap-4">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="email"
+                checked={loginMethod === "email"}
+                onChange={(e) => setLoginMethod(e.target.value as "email" | "username")}
+                className="mr-2"
+              />
+              Email
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="username"
+                checked={loginMethod === "username"}
+                onChange={(e) => setLoginMethod(e.target.value as "email" | "username")}
+                className="mr-2"
+              />
+              Username
+            </label>
+          </div>
+        </fieldset>
       </div>
 
       <form onSubmit={handleSignIn} className="space-y-3">
@@ -367,9 +370,16 @@ export const UpdateUsernameExample = () => {
       if (error) {
         setMessage(`Error: ${error.message}`);
       } else {
-        setMessage(
-          `Username updated successfully to: ${(data as any).user?.username || "username updated"}`
-        );
+        const updatedUsername =
+          data &&
+          typeof data === "object" &&
+          "user" in data &&
+          data.user &&
+          typeof data.user === "object" &&
+          "username" in data.user
+            ? data.user.username
+            : "username updated";
+        setMessage(`Username updated successfully to: ${updatedUsername}`);
         setNewUsername("");
       }
     } catch (err) {
