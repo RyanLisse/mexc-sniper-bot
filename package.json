@@ -37,7 +37,7 @@
     "db:reset": "rm -f mexc_sniper.db && bun run db:migrate",
     "agents:test": "bun test src/mexc-agents/**/*.test.ts",
     "agents:health": "bun run src/mexc-agents/health-check.ts",
-    "postinstall": "bun run db:migrate"
+    "postinstall": "./scripts/safe-migrate.sh"
   },
   "dependencies": {
     "@daveyplate/better-auth-ui": "^1.7.4",
