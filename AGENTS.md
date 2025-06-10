@@ -1,30 +1,42 @@
 # AGENTS.md
 
-## Build/Lint/Test Commands
+Quick setup guide for AI agents working with this MEXC sniper bot codebase.
 
-**Python:**
-- Run single test: `pytest tests/test_file.py::test_function`
-- All tests: `pytest` or `pytest --cov=src`
-- Lint: `uv run ruff check` | Format: `uv run ruff format`
-- Type check: `uvx ty check` or `pyright`
+## 🚀 Quick Setup
+```bash
+# Run automated setup script
+./SETUP.sh
 
-**TypeScript:**
-- Lint: `bun run lint` | Type check: `bun run type-check`
-- Build: `bun run build` | Dev: `bun run dev`
+# Or manual setup:
+bun install && bun run db:migrate
+```
 
-**All:** `bun run pre-commit` (runs all linting and type checking)
+## 🛠️ Essential Commands
+```bash
+# Development
+npm run dev                    # Start development server (port 3008)
+bun run pre-commit            # Run all quality checks
+bun run test                  # Run unit tests
+bun run test:e2e              # Run E2E tests
 
-## Code Style Guidelines
+# Database
+bun run db:migrate            # Apply database migrations
+bun run db:studio             # Open database GUI
 
-**Python:**
-- Line length: 120 chars, double quotes, snake_case
-- Imports: Use isort organization (`from src.module import Class`)
-- Types: Use modern syntax (`list[str]` over `List[str]` where compatible)
-- Errors: Use specific exception types, avoid bare `except:`
-- Use `uv` and `bun` for package management
+# Code Quality
+bun run lint:all              # Format and lint everything
+bun run type-check            # TypeScript validation
+```
 
-**TypeScript:**
-- Line width: 100 chars, double quotes, semicolons required
-- Indent: 2 spaces, camelCase for variables/functions
-- Imports: Organize with Biome (`@/components` for local imports)
-- Types: Prefer interfaces over types, avoid `any`, use strict mode
+## 📁 Key Files
+- `src/mexc-agents/` - Multi-agent trading system
+- `src/inngest/functions.ts` - Workflow orchestration
+- `app/api/` - Next.js API routes
+- `CLAUDE.md` - Detailed development guidelines
+- `.env.example` - Environment variable template
+
+## 🧠 Agent Architecture
+5 specialized TypeScript agents with OpenAI GPT-4 integration for MEXC trading automation.
+
+## ⚡ Testing
+Unit tests in `__tests__/unit/`, E2E tests in `all-tests/e2e-tests/`. Always run tests before pushing.

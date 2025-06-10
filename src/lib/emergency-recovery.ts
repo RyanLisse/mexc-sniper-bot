@@ -437,7 +437,7 @@ export class EmergencyRecoveryService {
 
   private async testDatabaseConnection(): Promise<RecoveryResult> {
     try {
-      await db.select({ count: sql<number>`count(*)` }).from(sql`sqlite_master`);
+      await db.run(sql`SELECT 1`);
       return {
         success: true,
         message: "Database connection test successful",

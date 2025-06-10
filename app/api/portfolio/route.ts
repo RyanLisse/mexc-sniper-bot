@@ -19,20 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get active positions (targets that have been successfully executed)
-    const activePositions = await db.select({
-      id: snipeTargets.id,
-      vcoinId: snipeTargets.vcoinId,
-      symbolName: snipeTargets.symbolName,
-      entryStrategy: snipeTargets.entryStrategy,
-      positionSizeUsdt: snipeTargets.positionSizeUsdt,
-      executionPrice: snipeTargets.executionPrice,
-      actualPositionSize: snipeTargets.actualPositionSize,
-      status: snipeTargets.status,
-      stopLossPercent: snipeTargets.stopLossPercent,
-      takeProfitLevel: snipeTargets.takeProfitLevel,
-      actualExecutionTime: snipeTargets.actualExecutionTime,
-      createdAt: snipeTargets.createdAt,
-    })
+    const activePositions = await db.select()
     .from(snipeTargets)
     .where(
       and(

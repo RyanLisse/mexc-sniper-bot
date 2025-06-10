@@ -8,7 +8,7 @@ import {
   workflowActivity,
   workflowSystemStatus,
 } from "@/src/db/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 
 export interface WorkflowMetrics {
   readyTokens?: number;
@@ -213,23 +213,32 @@ export class WorkflowStatusService {
    */
   private async cleanupOldActivities(): Promise<void> {
     try {
-      // Get IDs of activities to keep (last 50)
-      const keepActivities = await db
-        .select({ id: workflowActivity.id })
+      // Count total activities for this user
+      const totalCount = await db
+        .select()
         .from(workflowActivity)
-        .where(eq(workflowActivity.userId, this.userId))
-        .orderBy(desc(workflowActivity.timestamp))
-        .limit(50);
+        .where(eq(workflowActivity.userId, this.userId));
 
-      if (keepActivities.length === 50) {
-        // Delete older activities
-        const _keepIds = keepActivities.map((a) => a.id);
-        await db.delete(workflowActivity).where(
-          and(
-            eq(workflowActivity.userId, this.userId)
-            // Delete activities not in the keep list
-          )
-        );
+      if (totalCount.length > 50) {
+        // Get the 50th activity timestamp to use as cutoff
+        const cutoffActivity = await db
+          .select()
+          .from(workflowActivity)
+          .where(eq(workflowActivity.userId, this.userId))
+          .orderBy(desc(workflowActivity.timestamp))
+          .limit(1)
+          .offset(49); // 50th activity (0-indexed)
+
+        if (cutoffActivity.length > 0) {
+          // Delete activities older than the cutoff
+          await db.delete(workflowActivity).where(
+            and(
+              eq(workflowActivity.userId, this.userId),
+              // Activities older than the 50th most recent
+              sql`${workflowActivity.timestamp} < ${cutoffActivity[0].timestamp}`
+            )
+          );
+        }
       }
     } catch (error) {
       console.error("[WorkflowStatusService] Failed to cleanup activities:", error);

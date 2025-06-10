@@ -80,12 +80,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (fromDate) {
-      const fromTimestamp = Math.floor(new Date(fromDate).getTime() / 1000);
+      const fromTimestamp = new Date(fromDate);
       conditions.push(gte(transactions.transactionTime, fromTimestamp));
     }
 
     if (toDate) {
-      const toTimestamp = Math.floor(new Date(toDate).getTime() / 1000);
+      const toTimestamp = new Date(toDate);
       conditions.push(lte(transactions.transactionTime, toTimestamp));
     }
 

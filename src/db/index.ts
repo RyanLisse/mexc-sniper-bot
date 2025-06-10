@@ -1,6 +1,7 @@
+import { createClient } from "@libsql/client";
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { drizzle as drizzleTurso } from "drizzle-orm/libsql";
-import { createClient } from "@libsql/client";
 import * as schema from "./schema";
 
 // Environment-specific database configuration
@@ -9,7 +10,11 @@ function createDatabase() {
   const hasTursoConfig = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
 
   // Only use TursoDB if we have valid configuration
-  if ((isProduction || hasTursoConfig) && process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+  if (
+    (isProduction || hasTursoConfig) &&
+    process.env.TURSO_DATABASE_URL &&
+    process.env.TURSO_AUTH_TOKEN
+  ) {
     // Use TursoDB for production/Vercel deployment
     console.log("[Database] Using TursoDB for production");
     const client = createClient({
@@ -38,7 +43,7 @@ export async function initializeDatabase() {
     console.log("[Database] Initializing database...");
 
     // Test connection with a simple query
-    const result = await db.execute("SELECT 1 as test");
+    const result = await db.run(sql`SELECT 1`);
     if (result) {
       console.log("[Database] Database connection successful");
     }

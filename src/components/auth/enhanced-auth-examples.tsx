@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { authClient } from "@/src/lib/auth-client";
+import { useState } from "react";
 
 // Example: Sign Up with Email and Username
 export const SignUpExample = () => {
@@ -30,10 +30,12 @@ export const SignUpExample = () => {
       if (error) {
         setMessage(`Error: ${error.message}`);
       } else {
-        setMessage(`Success! User created: ${data.user.email} (${data.user.username})`);
+        setMessage(
+          `Success! User created: ${data.user.email} (${(data.user as any).username || data.user.name})`
+        );
       }
     } catch (err) {
-      setMessage(`Error: ${err.message}`);
+      setMessage(`Error: ${err instanceof Error ? err.message : "Unknown error occurred"}`);
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +89,9 @@ export const SignUpExample = () => {
         </button>
       </form>
       {message && (
-        <div className={`mt-3 p-2 rounded ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+        <div
+          className={`mt-3 p-2 rounded ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
+        >
           {message}
         </div>
       )}
@@ -134,7 +138,7 @@ export const SignInExample = () => {
         window.dispatchEvent(new CustomEvent("auth-state-change"));
       }
     } catch (err) {
-      setMessage(`Error: ${err.message}`);
+      setMessage(`Error: ${err instanceof Error ? err.message : "Unknown error occurred"}`);
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +147,7 @@ export const SignInExample = () => {
   return (
     <div className="p-4 border rounded">
       <h3 className="text-lg font-semibold mb-4">Sign In</h3>
-      
+
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2">Login Method:</label>
         <div className="flex gap-4">
@@ -196,7 +200,9 @@ export const SignInExample = () => {
         </button>
       </form>
       {message && (
-        <div className={`mt-3 p-2 rounded ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+        <div
+          className={`mt-3 p-2 rounded ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
+        >
           {message}
         </div>
       )}
@@ -223,7 +229,7 @@ export const ForgotPasswordExample = () => {
 
       setMessage("Password reset email sent! Check your inbox for reset instructions.");
     } catch (err) {
-      setMessage(`Error: ${err.message}`);
+      setMessage(`Error: ${err instanceof Error ? err.message : "Unknown error occurred"}`);
     } finally {
       setIsLoading(false);
     }
@@ -250,7 +256,9 @@ export const ForgotPasswordExample = () => {
         </button>
       </form>
       {message && (
-        <div className={`mt-3 p-2 rounded ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>
+        <div
+          className={`mt-3 p-2 rounded ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}
+        >
           {message}
         </div>
       )}
@@ -267,7 +275,7 @@ export const ResetPasswordExample = () => {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (newPassword !== confirmPassword) {
       setMessage("Error: Passwords do not match");
       return;
@@ -293,7 +301,7 @@ export const ResetPasswordExample = () => {
 
       setMessage("Password reset successful! You can now sign in with your new password.");
     } catch (err) {
-      setMessage(`Error: ${err.message}`);
+      setMessage(`Error: ${err instanceof Error ? err.message : "Unknown error occurred"}`);
     } finally {
       setIsLoading(false);
     }
@@ -330,7 +338,9 @@ export const ResetPasswordExample = () => {
         </button>
       </form>
       {message && (
-        <div className={`mt-3 p-2 rounded ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+        <div
+          className={`mt-3 p-2 rounded ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
+        >
           {message}
         </div>
       )}
@@ -357,11 +367,13 @@ export const UpdateUsernameExample = () => {
       if (error) {
         setMessage(`Error: ${error.message}`);
       } else {
-        setMessage(`Username updated successfully to: ${data.user.username}`);
+        setMessage(
+          `Username updated successfully to: ${(data as any).user?.username || "username updated"}`
+        );
         setNewUsername("");
       }
     } catch (err) {
-      setMessage(`Error: ${err.message}`);
+      setMessage(`Error: ${err instanceof Error ? err.message : "Unknown error occurred"}`);
     } finally {
       setIsLoading(false);
     }
@@ -390,7 +402,9 @@ export const UpdateUsernameExample = () => {
         </button>
       </form>
       {message && (
-        <div className={`mt-3 p-2 rounded ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+        <div
+          className={`mt-3 p-2 rounded ${message.startsWith("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
+        >
           {message}
         </div>
       )}

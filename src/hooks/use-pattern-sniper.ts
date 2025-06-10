@@ -26,9 +26,9 @@ const apiClient = {
   async getSymbolsForVcoins(vcoinIds: string[]) {
     const params = new URLSearchParams();
     if (vcoinIds.length > 0) {
-      params.append('vcoinId', vcoinIds.join(','));
+      params.append("vcoinId", vcoinIds.join(","));
     }
-    
+
     const response = await fetch(`/api/mexc/symbols?${params}`);
     if (!response.ok) {
       throw new Error(`Symbols API failed: ${response.status}`);
@@ -47,7 +47,7 @@ const apiClient = {
     }
     const result = await response.json();
     return result.connected;
-  }
+  },
 };
 
 // Query keys
@@ -88,7 +88,7 @@ export const usePatternSniper = () => {
     refetchInterval: 5 * 60 * 1000, // 5 minutes
     staleTime: 4 * 60 * 1000, // 4 minutes
     retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Symbols monitoring query (only when we have pending detections)
@@ -104,7 +104,7 @@ export const usePatternSniper = () => {
     staleTime: 25 * 1000, // 25 seconds
     enabled: pendingDetection.size > 0,
     retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 
   // Connectivity monitoring
@@ -159,7 +159,7 @@ export const usePatternSniper = () => {
     let newReadyCount = 0;
 
     for (const vcoinId of pendingDetection) {
-      const symbol = symbols.find((s) => s.cd === vcoinId);
+      const symbol = symbols.find((s: SymbolV2Entry) => s.cd === vcoinId);
 
       if (symbol && isValidForSnipe(symbol)) {
         const calendar = calendarTargets.get(vcoinId);

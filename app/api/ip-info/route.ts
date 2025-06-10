@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       } catch (error) {
         ipResults.push({
           service,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: 'Failed to get IP information',
-      details: error.message,
+      details: error instanceof Error ? error.message : 'Unknown error',
     }, { status: 500 });
   }
 }

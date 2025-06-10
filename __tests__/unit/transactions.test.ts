@@ -1,22 +1,32 @@
-import { describe, expect, it, beforeEach, afterEach, beforeAll } from 'vitest';
-import { db } from '@/src/db';
+import { describe, expect, it, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { transactions, type NewTransaction, type Transaction } from '@/src/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 
+// Unmock better-sqlite3 for this test file only
+vi.unmock('better-sqlite3');
+vi.unmock('drizzle-orm');
+
 describe('Transactions Table', () => {
   const testUserId = 'test-user-transactions';
   let createdTransactionIds: number[] = [];
+  let testDb: InstanceType<typeof Database>;
+  let db: ReturnType<typeof drizzle>;
 
   beforeAll(async () => {
-    // Ensure database is migrated
+    // Create a fresh in-memory database for tests
+    testDb = new Database(':memory:');
+    db = drizzle(testDb);
+    
+    // Apply migrations
     try {
       await migrate(db, { migrationsFolder: './src/db/migrations' });
+      console.log('Test database migrations applied successfully');
     } catch (error) {
-      // Migration might already be applied
-      console.log('Migration skipped or already applied');
+      console.error('Migration error:', error);
+      throw error;
     }
   });
 
@@ -28,6 +38,13 @@ describe('Transactions Table', () => {
     createdTransactionIds = [];
   });
 
+  afterAll(() => {
+    // Close the test database
+    if (testDb) {
+      testDb.close();
+    }
+  });
+
   describe('Transaction Creation', () => {
     it('should create a buy transaction', async () => {
       const buyTransaction: NewTransaction = {
@@ -37,7 +54,7 @@ describe('Transactions Table', () => {
         buyPrice: 50000.0,
         buyQuantity: 0.001,
         buyTotalCost: 50.05, // Including fees
-        buyTimestamp: Math.floor(Date.now() / 1000),
+        buyTimestamp: new Date(),
         buyOrderId: 'buy-order-123',
         fees: 0.05,
         status: 'completed',
@@ -62,7 +79,7 @@ describe('Transactions Table', () => {
         sellPrice: 3000.0,
         sellQuantity: 0.5,
         sellTotalRevenue: 1499.25, // After fees
-        sellTimestamp: Math.floor(Date.now() / 1000),
+        sellTimestamp: new Date(),
         sellOrderId: 'sell-order-456',
         fees: 0.75,
         status: 'completed',
@@ -86,12 +103,12 @@ describe('Transactions Table', () => {
         buyPrice: 0.5,
         buyQuantity: 1000,
         buyTotalCost: 500.25, // Including fees
-        buyTimestamp: Math.floor((Date.now() - 3600000) / 1000), // 1 hour ago
+        buyTimestamp: new Date(Date.now() - 3600000), // 1 hour ago
         buyOrderId: 'buy-ada-123',
         sellPrice: 0.55,
         sellQuantity: 1000,
         sellTotalRevenue: 549.45, // After fees
-        sellTimestamp: Math.floor(Date.now() / 1000),
+        sellTimestamp: new Date(),
         sellOrderId: 'sell-ada-456',
         profitLoss: 49.20, // 549.45 - 500.25
         profitLossPercentage: 9.83, // (49.20 / 500.25) * 100
@@ -118,11 +135,11 @@ describe('Transactions Table', () => {
         buyPrice: 0.08,
         buyQuantity: 10000,
         buyTotalCost: 800.80,
-        buyTimestamp: Math.floor((Date.now() - 7200000) / 1000), // 2 hours ago
+        buyTimestamp: new Date(Date.now() - 7200000), // 2 hours ago
         sellPrice: 0.075,
         sellQuantity: 10000,
         sellTotalRevenue: 749.25,
-        sellTimestamp: Math.floor(Date.now() / 1000),
+        sellTimestamp: new Date(),
         profitLoss: -51.55, // 749.25 - 800.80
         profitLossPercentage: -6.44, // (-51.55 / 800.80) * 100
         fees: 1.55,
@@ -151,7 +168,7 @@ describe('Transactions Table', () => {
           profitLoss: 100.0,
           profitLossPercentage: 5.0,
           status: 'completed',
-          transactionTime: Math.floor(new Date('2025-06-09T10:00:00Z').getTime() / 1000),
+          transactionTime: new Date('2025-06-09T10:00:00Z'),
         },
         {
           userId: testUserId,
@@ -160,7 +177,7 @@ describe('Transactions Table', () => {
           profitLoss: -50.0,
           profitLossPercentage: -2.5,
           status: 'completed',
-          transactionTime: Math.floor(new Date('2025-06-09T11:00:00Z').getTime() / 1000),
+          transactionTime: new Date('2025-06-09T11:00:00Z'),
         },
         {
           userId: testUserId,
@@ -169,7 +186,7 @@ describe('Transactions Table', () => {
           profitLoss: 25.0,
           profitLossPercentage: 1.25,
           status: 'completed',
-          transactionTime: Math.floor(new Date('2025-06-09T12:00:00Z').getTime() / 1000),
+          transactionTime: new Date('2025-06-09T12:00:00Z'),
         },
       ];
 
@@ -259,7 +276,7 @@ describe('Transactions Table', () => {
       // Update status to completed
       await db
         .update(transactions)
-        .set({ status: 'completed', updatedAt: Math.floor(Date.now() / 1000) })
+        .set({ status: 'completed', updatedAt: new Date() })
         .where(eq(transactions.id, created.id));
 
       const updated = await db

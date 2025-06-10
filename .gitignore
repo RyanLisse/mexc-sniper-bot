@@ -99,6 +99,14 @@ ai-*.json
 .codex/file_index.json
 .codex/prompts.json
 
+# Agent-specific files
+.agent-session/
+.agent-cache/
+agent-*.log
+agent-state.json
+.agentic-context/
+.remote-agent-state/
+
 # Database files
 *.db
 mexc_sniper.db
