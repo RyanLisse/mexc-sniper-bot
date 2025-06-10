@@ -40,8 +40,19 @@ bun run type-check            # TypeScript validation
 ## 🧠 Agent Architecture
 5 specialized TypeScript agents with OpenAI GPT-4 integration for MEXC trading automation.
 
-## ⚡ Testing
-Unit tests in `__tests__/unit/`, E2E tests in `all-tests/e2e-tests/`. Always run tests before pushing.
+## ⚡ Testing & Quality
+Unit tests in `__tests__/unit/`, E2E tests in `all-tests/e2e-tests/`. 
+
+**Quality Standards:**
+- ✅ All 96 tests must pass
+- ✅ TypeScript compiles with 0 errors  
+- ✅ Build completes successfully
+- ✅ Linting passes (some warnings OK)
+
+```bash
+# Complete quality check
+make test && make lint && bun run type-check && bun run build
+```
 
 ## 🔧 Troubleshooting
 

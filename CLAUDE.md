@@ -285,6 +285,48 @@ User Dashboard ←→ TanStack Query ←→ TypeScript MEXC Client ←→ MEXC A
 - **Network Monitoring**: TanStack Query DevTools
 - **Console Logs**: Browser DevTools for frontend debugging
 
+## Code Quality Standards
+
+### Recent Improvements (Latest)
+
+The codebase has been significantly improved with:
+
+**TypeScript Compliance:**
+- ✅ Zero TypeScript compilation errors
+- ✅ Proper type assertions for library compatibility
+- ✅ Removed all `any` usage with proper type guards
+- ✅ Fixed useEffect dependency arrays
+
+**Accessibility (a11y):**
+- ✅ Proper semantic HTML elements (button vs div)
+- ✅ Label associations with htmlFor attributes
+- ✅ Keyboard navigation support
+- ✅ ARIA attributes for screen readers
+
+**React Best Practices:**
+- ✅ Meaningful keys for mapped elements
+- ✅ useCallback for stable function references
+- ✅ Proper button types to prevent form submission
+
+**Code Quality:**
+- ✅ All 96 tests passing
+- ✅ Eliminated unused variables
+- ✅ Safe optional chaining over non-null assertions
+- ✅ Consistent code formatting with Biome
+
+### Quality Checks
+
+```bash
+# Run complete quality check
+make test && make lint && bun run type-check
+
+# Individual checks
+bun run type-check    # Must pass with 0 errors
+make test            # All 96 tests must pass
+make lint            # Check for issues (some warnings acceptable)
+bun run build        # Must complete successfully
+```
+
 ## Troubleshooting
 
 ### Database Issues
