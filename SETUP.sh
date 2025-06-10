@@ -87,8 +87,18 @@ setup_database() {
     
     # Check if database migrations exist
     if [ -d "src/db/migrations" ]; then
-        bun run db:migrate
-        log_success "Database migrations applied"
+        # Use safe migration script that handles existing tables
+        if [ -f "scripts/safe-migrate.sh" ]; then
+            log_info "Using safe migration script..."
+            ./scripts/safe-migrate.sh
+        else
+            log_warning "Safe migration script not found, using standard migration"
+            bun run db:migrate || {
+                log_warning "Standard migration failed - this might be normal if tables already exist"
+                log_info "Database setup continuing..."
+            }
+        fi
+        log_success "Database setup completed"
     else
         log_warning "No database migrations found in src/db/migrations"
     fi

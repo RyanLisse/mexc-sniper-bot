@@ -8,7 +8,7 @@ Quick setup guide for AI agents working with this MEXC sniper bot codebase.
 ./SETUP.sh
 
 # Or manual setup:
-bun install && bun run db:migrate
+bun install && bun run db:migrate:safe
 ```
 
 ## 🛠️ Essential Commands
