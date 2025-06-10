@@ -1,5 +1,12 @@
 import type { AgentResponse } from "../agents/base-agent";
-import { type AnalysisResult, AnalysisUtils, type SymbolData } from "./analysis-utils";
+import {
+  type AnalysisResult,
+  type SymbolData,
+  combineConfidenceScores,
+  extractConfidencePercentage,
+  extractLiquidityScore,
+  extractReadinessIndicators,
+} from "./analysis-utils";
 
 export interface SymbolAnalysisResult {
   readinessScore: number;
@@ -83,8 +90,8 @@ export class SymbolAnalysisWorkflow {
     timingAdvance: number;
   } {
     const content = analysis.content || "";
-    const confidence = AnalysisUtils.extractConfidencePercentage(content);
-    const readinessData = AnalysisUtils.extractReadinessIndicators(content);
+    const confidence = extractConfidencePercentage(content);
+    const readinessData = extractReadinessIndicators(content);
 
     const insights: string[] = [...readinessData.reasons];
 
@@ -118,7 +125,7 @@ export class SymbolAnalysisWorkflow {
     signals: string[];
   } {
     const content = analysis.content || "";
-    const confidence = AnalysisUtils.extractConfidencePercentage(content);
+    const confidence = extractConfidencePercentage(content);
 
     const patterns: string[] = [];
     const signals: string[] = [];
@@ -161,8 +168,8 @@ export class SymbolAnalysisWorkflow {
     marketQuality: string;
   } {
     const content = analysis.content || "";
-    const confidence = AnalysisUtils.extractConfidencePercentage(content);
-    const liquidity = AnalysisUtils.extractLiquidityScore(content);
+    const confidence = extractConfidencePercentage(content);
+    const liquidity = extractLiquidityScore(content);
 
     const insights: string[] = [];
 
@@ -242,7 +249,7 @@ export class SymbolAnalysisWorkflow {
   }
 
   private calculateUnifiedConfidence(confidenceScores: number[]): number {
-    return AnalysisUtils.combineConfidenceScores(confidenceScores);
+    return combineConfidenceScores(confidenceScores);
   }
 
   private determineTradingReadiness(

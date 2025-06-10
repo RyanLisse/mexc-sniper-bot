@@ -9,7 +9,7 @@ interface QueryMetric {
   query: string;
   duration: number;
   timestamp: Date;
-  parameters?: any[];
+  parameters?: unknown[];
   stackTrace?: string;
   userId?: string;
 }
@@ -73,7 +73,7 @@ export class QueryPerformanceMonitor {
     queryFn: () => Promise<T>,
     options?: {
       query?: string;
-      parameters?: any[];
+      parameters?: unknown[];
       userId?: string;
     }
   ): Promise<T> {
@@ -199,7 +199,8 @@ export class QueryPerformanceMonitor {
         });
       }
 
-      const patternData = patterns.get(pattern)!;
+      const patternData = patterns.get(pattern);
+      if (!patternData) continue;
       patternData.count++;
       patternData.totalDuration += metric.duration;
       patternData.slowestDuration = Math.max(patternData.slowestDuration, metric.duration);
@@ -227,7 +228,13 @@ export class QueryPerformanceMonitor {
     averageDuration: number;
   }[] {
     const patterns = this.analyzeQueryPatterns(timeframeMinutes);
-    const recommendations: any[] = [];
+    const recommendations: {
+      recommendation: string;
+      queryPattern: string;
+      impact: "high" | "medium" | "low";
+      frequency: number;
+      averageDuration: number;
+    }[] = [];
 
     for (const pattern of patterns) {
       if (pattern.averageDuration > this.slowQueryThreshold) {
@@ -353,7 +360,7 @@ export function monitorQuery<T>(
   queryFn: () => Promise<T>,
   options?: {
     query?: string;
-    parameters?: any[];
+    parameters?: unknown[];
     userId?: string;
   }
 ): Promise<T> {

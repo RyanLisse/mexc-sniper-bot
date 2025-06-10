@@ -27,7 +27,7 @@ interface UseDashboardStateOptions {
 }
 
 export function useDashboardState(options: UseDashboardStateOptions = {}) {
-  const { refreshInterval = 10000, userId } = options;
+  const { refreshInterval = 10000, userId: _userId } = options;
 
   // Core state
   const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(null);

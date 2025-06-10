@@ -2,7 +2,25 @@
 
 import { createAuthClient } from "better-auth/client";
 import { usernameClient } from "better-auth/client/plugins";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+interface SessionData {
+  user?: {
+    id: string;
+    email: string;
+    username?: string;
+    name?: string;
+  };
+  session?: {
+    id: string;
+    userId: string;
+    expiresAt: Date;
+  };
+}
+
+interface AuthError extends Error {
+  message: string;
+}
 
 export const authClient = createAuthClient({
   baseURL: typeof window !== "undefined" ? window.location.origin : "http://localhost:3008",
@@ -13,11 +31,11 @@ export const { signIn, signUp, signOut, forgetPassword, resetPassword, updateUse
 
 // Use Better Auth's built-in session hook with improved error handling
 export const useSession = () => {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<SessionData | null>(null);
   const [isPending, setIsPending] = useState(true);
-  const [error, setError] = useState<any>(null);
+  const [error, setError] = useState<AuthError | null>(null);
 
-  const fetchSession = async () => {
+  const fetchSession = useCallback(async () => {
     try {
       setIsPending(true);
       setError(null);
@@ -28,23 +46,23 @@ export const useSession = () => {
       );
 
       const sessionPromise = authClient.getSession();
-      const sessionData = (await Promise.race([sessionPromise, timeoutPromise])) as any;
+      const sessionData = (await Promise.race([sessionPromise, timeoutPromise])) as SessionData;
 
       // Validate session data structure
       if (sessionData && typeof sessionData === "object") {
-        setSession(sessionData.data || sessionData);
+        setSession((sessionData as { data?: SessionData }).data || sessionData);
       } else {
         console.warn("Invalid session data received:", sessionData);
         setSession(null);
       }
     } catch (err) {
       console.error("Session fetch error:", err);
-      setError(err);
+      setError(err as AuthError);
       setSession(null);
     } finally {
       setIsPending(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Add a small delay to prevent race conditions
@@ -74,7 +92,7 @@ export const useSession = () => {
       window.removeEventListener("auth-state-change", handleAuthChange);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, []);
+  }, [fetchSession]);
 
   return {
     data: session,

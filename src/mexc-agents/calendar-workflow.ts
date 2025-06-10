@@ -1,5 +1,16 @@
 import type { AgentResponse } from "../agents/base-agent";
-import { type AnalysisResult, AnalysisUtils, type CalendarEntry } from "./analysis-utils";
+import {
+  type AnalysisResult,
+  type CalendarEntry,
+  calculateUrgencyLevel,
+  categorizeOpportunity,
+  combineConfidenceScores,
+  extractConfidencePercentage,
+  extractLiquidityScore,
+  formatTimestamp,
+  generateRecommendation,
+  sanitizeSymbolName,
+} from "./analysis-utils";
 
 export interface CalendarWorkflowResult {
   newListings: CalendarEntry[];
@@ -40,7 +51,7 @@ export class CalendarWorkflow {
 
   private extractCalendarInsights(analysis: AgentResponse): AnalysisResult {
     const content = analysis.content || "";
-    const confidence = AnalysisUtils.extractConfidencePercentage(content);
+    const confidence = extractConfidencePercentage(content);
 
     const insights: string[] = [];
 
@@ -70,7 +81,7 @@ export class CalendarWorkflow {
 
   private extractPatternInsights(analysis: AgentResponse): AnalysisResult {
     const content = analysis.content || "";
-    const confidence = AnalysisUtils.extractConfidencePercentage(content);
+    const confidence = extractConfidencePercentage(content);
 
     const insights: string[] = [];
 
@@ -87,7 +98,7 @@ export class CalendarWorkflow {
       insights.push("Optimal advance timing detected");
     }
 
-    const liquidityScore = AnalysisUtils.extractLiquidityScore(content);
+    const liquidityScore = extractLiquidityScore(content);
     insights.push(`Liquidity assessment: ${liquidityScore}`);
 
     return {
@@ -110,14 +121,14 @@ export class CalendarWorkflow {
     }
 
     return calendarEntries.map((entry) => {
-      const confidence = AnalysisUtils.combineConfidenceScores([
+      const confidence = combineConfidenceScores([
         calendarInsights.confidence,
         patternInsights.confidence,
       ]);
 
-      const urgency = AnalysisUtils.calculateUrgencyLevel(entry);
-      const category = AnalysisUtils.categorizeOpportunity(entry, confidence);
-      const recommendation = AnalysisUtils.generateRecommendation(entry, confidence);
+      const urgency = calculateUrgencyLevel(entry);
+      const category = categorizeOpportunity(entry, confidence);
+      const recommendation = generateRecommendation(entry, confidence);
 
       return {
         ...entry,
@@ -194,21 +205,21 @@ export class CalendarWorkflow {
 
     // Process ready targets for immediate action
     for (const target of categorizedOpportunities.readyTargets) {
-      const symbol = AnalysisUtils.sanitizeSymbolName(target.symbol);
+      const symbol = sanitizeSymbolName(target.symbol);
       const analysis = target.aiAnalysis as any;
       immediate.push(`SNIPE ${symbol}: ${analysis?.recommendation || "High-priority target"}`);
     }
 
     // Process new listings for planned action
     for (const listing of categorizedOpportunities.newListings) {
-      const symbol = AnalysisUtils.sanitizeSymbolName(listing.symbol);
-      const launchTime = AnalysisUtils.formatTimestamp(listing.launchTime);
+      const symbol = sanitizeSymbolName(listing.symbol);
+      const launchTime = formatTimestamp(listing.launchTime);
       planned.push(`PREPARE ${symbol}: Launch at ${launchTime} - Monitor for ready state`);
     }
 
     // Process high potential for watchlist
     for (const potential of categorizedOpportunities.highPotential) {
-      const symbol = AnalysisUtils.sanitizeSymbolName(potential.symbol);
+      const symbol = sanitizeSymbolName(potential.symbol);
       const analysis = potential.aiAnalysis as any;
       const confidence = analysis?.confidence || 0;
       watchlist.push(`WATCH ${symbol}: ${confidence}% confidence - Monitor conditions`);

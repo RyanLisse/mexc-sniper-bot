@@ -3,7 +3,7 @@ import { getConnectivityStatus, performSystemHealthCheck } from "@/src/lib/healt
 import { inngest } from "./client";
 
 // Helper function to update workflow status
-async function updateWorkflowStatus(action: string, data: any) {
+async function updateWorkflowStatus(action: string, data: unknown) {
   try {
     const response = await fetch("http://localhost:3000/api/workflow-status", {
       method: "POST",
@@ -363,11 +363,16 @@ export const emergencyResponseHandler = inngest.createFunction(
     });
 
     // Step 1: Execute comprehensive emergency recovery
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex emergency recovery with multiple steps and error handling
     const responseResult = await step.run("emergency-response", async () => {
       // Execute the comprehensive recovery plan
+      const validSeverity = ["low", "medium", "high", "critical"].includes(severity as string)
+        ? (severity as "low" | "medium" | "high" | "critical")
+        : "medium";
+
       const recoveryPlan = await emergencyRecoveryService.executeRecovery(
         emergencyType,
-        severity,
+        validSeverity,
         data
       );
 
@@ -375,7 +380,7 @@ export const emergencyResponseHandler = inngest.createFunction(
       const executionResults = [];
       for (const recoveryStep of recoveryPlan.recoverySteps) {
         let attempts = 0;
-        let lastError;
+        let lastError: unknown = null;
 
         while (attempts <= recoveryStep.maxRetries) {
           try {

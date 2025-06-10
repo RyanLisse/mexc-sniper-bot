@@ -35,7 +35,7 @@ export const auth = betterAuth({
     requireEmailVerification: false, // Set to true in production
     minPasswordLength: 8,
     maxPasswordLength: 128,
-    sendResetPassword: async ({ user, url, token }, _request) => {
+    sendResetPassword: async ({ user, url, token: _token }, _request) => {
       await sendEmailDev({
         to: user.email,
         subject: "Reset your password - MEXC Sniper Bot",
@@ -44,7 +44,7 @@ export const auth = betterAuth({
     },
   },
   emailVerification: {
-    sendVerificationEmail: async ({ user, url, token }, _request) => {
+    sendVerificationEmail: async ({ user, url, token: _token }, _request) => {
       await sendEmailDev({
         to: user.email,
         subject: "Verify your email - MEXC Sniper Bot",

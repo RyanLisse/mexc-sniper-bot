@@ -1,5 +1,5 @@
 import type { AgentResponse } from "../agents/base-agent";
-import { AnalysisUtils } from "./analysis-utils";
+import { extractConfidencePercentage, sanitizeSymbolName } from "./analysis-utils";
 
 export interface TradingStrategyResult {
   strategy: CompiledTradingStrategy;
@@ -78,7 +78,7 @@ export class TradingStrategyWorkflow {
 
   private extractBaseStrategy(analysis: AgentResponse, symbolData: any): CompiledTradingStrategy {
     const content = analysis.content || "";
-    const symbol = AnalysisUtils.sanitizeSymbolName(symbolData.symbol);
+    const symbol = sanitizeSymbolName(symbolData.symbol);
 
     // Extract action recommendation
     let action: "buy" | "sell" | "hold" | "watch" = "watch";
@@ -250,7 +250,7 @@ export class TradingStrategyWorkflow {
     riskPlan: RiskManagementPlan
   ): number {
     const content = analysis.content || "";
-    let confidence = AnalysisUtils.extractConfidencePercentage(content);
+    let confidence = extractConfidencePercentage(content);
 
     // Adjust confidence based on strategy completeness
     if (strategy.entryPrice) confidence += 5;

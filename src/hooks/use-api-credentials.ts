@@ -105,7 +105,7 @@ export function useDeleteApiCredentials() {
 // Test API credentials
 export function useTestApiCredentials() {
   return useMutation({
-    mutationFn: async ({ provider = "mexc" }: { userId: string; provider?: string }) => {
+    mutationFn: async ({ provider: _provider = "mexc" }: { userId: string; provider?: string }) => {
       // This would normally test the API connection
       // For now, just simulate a test
       await new Promise((resolve) => setTimeout(resolve, 2000));

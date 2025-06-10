@@ -86,6 +86,7 @@ export interface PasswordStrength {
 /**
  * Comprehensive password strength validation
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex password validation with multiple strength checks
 export function validatePasswordStrength(password: string): PasswordStrength {
   const feedback: string[] = [];
   let score = 0;

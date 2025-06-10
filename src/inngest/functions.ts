@@ -1,8 +1,81 @@
 import { MexcOrchestrator } from "../mexc-agents/orchestrator";
 import { inngest } from "./client";
 
+// Inngest step interface
+interface InngestStep {
+  run: (id: string, fn: () => Promise<unknown>) => Promise<unknown>;
+}
+
+// Agent response type definitions
+interface CalendarDiscoveryData {
+  newListings?: Array<{
+    vcoinId: string;
+    symbolName?: string;
+    projectName?: string;
+    launchTime?: string;
+  }>;
+  readyTargets?: unknown[];
+}
+
+interface SymbolAnalysisData {
+  symbolReady?: boolean;
+  hasCompleteData?: boolean;
+  riskLevel?: "low" | "medium" | "high";
+  symbolData?: Record<string, unknown>;
+}
+
+interface PatternAnalysisData {
+  patterns?: unknown[];
+  recommendations?: unknown[];
+  confidenceScore?: number;
+}
+
+interface TradingStrategyData {
+  entryPrice?: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  positionSize?: number;
+  riskRewardRatio?: number;
+}
+
+interface AgentWorkflowResult {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+  metadata?: {
+    agentsUsed: string[];
+    duration?: number;
+    confidence?: number;
+  };
+}
+
+// Type guards for agent results
+function isAgentWorkflowResult(value: unknown): value is AgentWorkflowResult {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as AgentWorkflowResult).success === "boolean"
+  );
+}
+
+function isCalendarDiscoveryData(value: unknown): value is CalendarDiscoveryData {
+  return typeof value === "object" && value !== null;
+}
+
+function isSymbolAnalysisData(value: unknown): value is SymbolAnalysisData {
+  return typeof value === "object" && value !== null;
+}
+
+function isPatternAnalysisData(value: unknown): value is PatternAnalysisData {
+  return typeof value === "object" && value !== null;
+}
+
+function isTradingStrategyData(value: unknown): value is TradingStrategyData {
+  return typeof value === "object" && value !== null;
+}
+
 // Helper function to update workflow status
-async function updateWorkflowStatus(action: string, data: any) {
+async function updateWorkflowStatus(action: string, data: unknown) {
   try {
     const response = await fetch("http://localhost:3000/api/workflow-status", {
       method: "POST",
@@ -45,7 +118,12 @@ interface MexcPatternAnalysisRequestedData {
 // MEXC Trading strategy event data
 interface MexcTradingStrategyRequestedData {
   vcoinId: string;
-  symbolData: any;
+  symbolData: {
+    symbol?: string;
+    price?: number;
+    volume?: number;
+    [key: string]: unknown;
+  };
   riskLevel?: "low" | "medium" | "high";
   capital?: number;
 }
@@ -54,7 +132,10 @@ interface MexcTradingStrategyRequestedData {
 export const pollMexcCalendar = inngest.createFunction(
   { id: "poll-mexc-calendar" },
   { event: "mexc/calendar.poll" },
-  async ({ event, step }: { event: { data: MexcCalendarPollRequestedData }; step: any }) => {
+  async ({
+    event,
+    step,
+  }: { event: { data: MexcCalendarPollRequestedData }; step: InngestStep }) => {
     const { trigger = "manual", force = false } = event.data;
 
     // Update status: Started calendar discovery
@@ -74,6 +155,11 @@ export const pollMexcCalendar = inngest.createFunction(
       });
     });
 
+    // Type guard for discovery result
+    if (!isAgentWorkflowResult(discoveryResult)) {
+      throw new Error("Invalid discovery result format");
+    }
+
     if (!discoveryResult.success) {
       await updateWorkflowStatus("addActivity", {
         activity: {
@@ -84,27 +170,39 @@ export const pollMexcCalendar = inngest.createFunction(
       throw new Error(`Calendar discovery failed: ${discoveryResult.error}`);
     }
 
+    // Type guard for discovery data
+    const discoveryData = isCalendarDiscoveryData(discoveryResult.data)
+      ? discoveryResult.data
+      : null;
+
     // Update metrics
     await updateWorkflowStatus("updateMetrics", {
       metrics: {
-        readyTokens: discoveryResult.data?.readyTargets?.length || 0,
+        readyTokens: discoveryData?.readyTargets?.length || 0,
       },
     });
 
     // Step 2: Process and send follow-up events for new listings
     const followUpEvents = await step.run("process-discovery-results", async () => {
-      if (discoveryResult.data?.newListings?.length) {
+      if (discoveryData?.newListings?.length) {
         // Send symbol watch events for new discoveries
-        const events = discoveryResult.data.newListings.map((listing: any) => ({
-          name: "mexc/symbol.watch",
-          data: {
-            vcoinId: listing.vcoinId,
-            symbolName: listing.symbolName,
-            projectName: listing.projectName,
-            launchTime: listing.launchTime,
-            attempt: 1,
-          },
-        }));
+        const events = discoveryData.newListings.map(
+          (listing: {
+            vcoinId: string;
+            symbolName?: string;
+            projectName?: string;
+            launchTime?: string;
+          }) => ({
+            name: "mexc/symbol.watch",
+            data: {
+              vcoinId: listing.vcoinId,
+              symbolName: listing.symbolName,
+              projectName: listing.projectName,
+              launchTime: listing.launchTime,
+              attempt: 1,
+            },
+          })
+        );
 
         // Send events
         for (const eventData of events) {
@@ -114,7 +212,7 @@ export const pollMexcCalendar = inngest.createFunction(
         await updateWorkflowStatus("addActivity", {
           activity: {
             type: "calendar",
-            message: `Calendar scan completed - ${discoveryResult.data.newListings.length} new listings found`,
+            message: `Calendar scan completed - ${discoveryData.newListings.length} new listings found`,
           },
         });
 
@@ -132,8 +230,8 @@ export const pollMexcCalendar = inngest.createFunction(
     return {
       status: "success",
       trigger,
-      newListingsFound: discoveryResult.data?.newListings?.length || 0,
-      readyTargetsFound: discoveryResult.data?.readyTargets?.length || 0,
+      newListingsFound: discoveryData?.newListings?.length || 0,
+      readyTargetsFound: discoveryData?.readyTargets?.length || 0,
       followUpEventsSent: followUpEvents,
       timestamp: new Date().toISOString(),
       metadata: {
@@ -148,7 +246,7 @@ export const pollMexcCalendar = inngest.createFunction(
 export const watchMexcSymbol = inngest.createFunction(
   { id: "watch-mexc-symbol" },
   { event: "mexc/symbol.watch" },
-  async ({ event, step }: { event: { data: MexcSymbolWatchRequestedData }; step: any }) => {
+  async ({ event, step }: { event: { data: MexcSymbolWatchRequestedData }; step: InngestStep }) => {
     const { vcoinId, symbolName, projectName, launchTime, attempt = 1 } = event.data;
 
     if (!vcoinId) {
@@ -175,13 +273,21 @@ export const watchMexcSymbol = inngest.createFunction(
       });
     });
 
+    // Type guard for analysis result
+    if (!isAgentWorkflowResult(analysisResult)) {
+      throw new Error("Invalid analysis result format");
+    }
+
     if (!analysisResult.success) {
       throw new Error(`Symbol analysis failed: ${analysisResult.error}`);
     }
 
+    // Type guard for analysis data
+    const analysisData = isSymbolAnalysisData(analysisResult.data) ? analysisResult.data : null;
+
     // Step 2: Handle results based on symbol status
     const actionResult = await step.run("process-symbol-results", async () => {
-      const { symbolReady, hasCompleteData, riskLevel } = analysisResult.data || {};
+      const { symbolReady, hasCompleteData, riskLevel } = analysisData || {};
 
       if (symbolReady && hasCompleteData) {
         // Create trading strategy and target
@@ -189,7 +295,7 @@ export const watchMexcSymbol = inngest.createFunction(
           name: "mexc/strategy.create",
           data: {
             vcoinId,
-            symbolData: analysisResult.data.symbolData,
+            symbolData: analysisData?.symbolData,
             riskLevel: riskLevel || "medium",
           },
         });
@@ -226,12 +332,15 @@ export const watchMexcSymbol = inngest.createFunction(
       vcoinId,
       symbolName,
       attempt,
-      symbolReady: analysisResult.data?.symbolReady || false,
-      action: actionResult.action,
+      symbolReady: analysisData?.symbolReady || false,
+      action:
+        typeof actionResult === "object" && actionResult !== null && "action" in actionResult
+          ? (actionResult as { action: string }).action
+          : "unknown",
       timestamp: new Date().toISOString(),
       metadata: {
         agentsUsed: ["symbol-analysis", "pattern-discovery", "api"],
-        hasCompleteData: analysisResult.data?.hasCompleteData || false,
+        hasCompleteData: analysisData?.hasCompleteData || false,
       },
     };
   }
@@ -241,7 +350,10 @@ export const watchMexcSymbol = inngest.createFunction(
 export const analyzeMexcPatterns = inngest.createFunction(
   { id: "analyze-mexc-patterns" },
   { event: "mexc/patterns.analyze" },
-  async ({ event, step }: { event: { data: MexcPatternAnalysisRequestedData }; step: any }) => {
+  async ({
+    event,
+    step,
+  }: { event: { data: MexcPatternAnalysisRequestedData }; step: InngestStep }) => {
     const { vcoinId, symbols, analysisType = "discovery" } = event.data;
 
     // Update status: Started pattern analysis
@@ -262,16 +374,24 @@ export const analyzeMexcPatterns = inngest.createFunction(
       });
     });
 
+    // Type guard for pattern result
+    if (!isAgentWorkflowResult(patternResult)) {
+      throw new Error("Invalid pattern result format");
+    }
+
     if (!patternResult.success) {
       throw new Error(`Pattern analysis failed: ${patternResult.error}`);
     }
 
+    // Type guard for pattern data
+    const patternData = isPatternAnalysisData(patternResult.data) ? patternResult.data : null;
+
     return {
       status: "success",
       analysisType,
-      patternsFound: patternResult.data?.patterns?.length || 0,
-      recommendations: patternResult.data?.recommendations || [],
-      confidenceScore: patternResult.data?.confidenceScore || 0,
+      patternsFound: patternData?.patterns?.length || 0,
+      recommendations: patternData?.recommendations || [],
+      confidenceScore: patternData?.confidenceScore || 0,
       timestamp: new Date().toISOString(),
       metadata: {
         agentsUsed: ["pattern-analysis", "market-analysis", "strategy"],
@@ -286,7 +406,10 @@ export const analyzeMexcPatterns = inngest.createFunction(
 export const createMexcTradingStrategy = inngest.createFunction(
   { id: "create-mexc-trading-strategy" },
   { event: "mexc/strategy.create" },
-  async ({ event, step }: { event: { data: MexcTradingStrategyRequestedData }; step: any }) => {
+  async ({
+    event,
+    step,
+  }: { event: { data: MexcTradingStrategyRequestedData }; step: InngestStep }) => {
     const { vcoinId, symbolData, riskLevel = "medium", capital } = event.data;
 
     if (!vcoinId || !symbolData) {
@@ -312,6 +435,11 @@ export const createMexcTradingStrategy = inngest.createFunction(
       });
     });
 
+    // Type guard for strategy result
+    if (!isAgentWorkflowResult(strategyResult)) {
+      throw new Error("Invalid strategy result format");
+    }
+
     if (!strategyResult.success) {
       await updateWorkflowStatus("addActivity", {
         activity: {
@@ -321,6 +449,9 @@ export const createMexcTradingStrategy = inngest.createFunction(
       });
       throw new Error(`Trading strategy creation failed: ${strategyResult.error}`);
     }
+
+    // Type guard for strategy data
+    const strategyData = isTradingStrategyData(strategyResult.data) ? strategyResult.data : null;
 
     // Update metrics for successful strategy
     await updateWorkflowStatus("updateMetrics", {
@@ -340,11 +471,11 @@ export const createMexcTradingStrategy = inngest.createFunction(
       status: "success",
       vcoinId,
       strategyCreated: true,
-      entryPrice: strategyResult.data?.entryPrice,
-      stopLoss: strategyResult.data?.stopLoss,
-      takeProfit: strategyResult.data?.takeProfit,
-      positionSize: strategyResult.data?.positionSize,
-      riskRewardRatio: strategyResult.data?.riskRewardRatio,
+      entryPrice: strategyData?.entryPrice,
+      stopLoss: strategyData?.stopLoss,
+      takeProfit: strategyData?.takeProfit,
+      positionSize: strategyData?.positionSize,
+      riskRewardRatio: strategyData?.riskRewardRatio,
       timestamp: new Date().toISOString(),
       metadata: {
         agentsUsed: ["trading-strategy", "risk-management", "market-analysis"],

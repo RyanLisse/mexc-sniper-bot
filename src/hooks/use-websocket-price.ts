@@ -65,6 +65,7 @@ export function useWebSocketPrice(
     return () => clearInterval(interval);
   }, []);
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex websocket connection logic with error handling and state management
   const subscribe = useCallback(async () => {
     if (!symbol || unsubscribeFn) return;
 
@@ -200,6 +201,7 @@ export function useWebSocketPrices(
   }, []);
 
   const subscribe = useCallback(
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex multi-symbol websocket subscription with error handling and state management
     async (symbol: string) => {
       if (!symbol || unsubscribeFns.has(symbol)) return;
 

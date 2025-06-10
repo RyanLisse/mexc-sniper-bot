@@ -149,6 +149,7 @@ export const usePatternSniper = () => {
   }, [calendarData, isMonitoring, calendarTargets, pendingDetection]);
 
   // Process symbols data to detect ready states
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex state processing logic with multiple conditions
   useEffect(() => {
     if (!symbolsData?.data?.symbols || pendingDetection.size === 0 || !isMonitoring) return;
 
@@ -163,9 +164,9 @@ export const usePatternSniper = () => {
 
       if (symbol && isValidForSnipe(symbol)) {
         const calendar = calendarTargets.get(vcoinId);
-        if (calendar) {
+        if (calendar && symbol.ca) {
           const target = processReadyToken(vcoinId, symbol, calendar);
-          newReady.set(symbol.ca!, target);
+          newReady.set(symbol.ca, target);
           newPending.delete(vcoinId);
           newReadyCount++;
 
@@ -190,11 +191,15 @@ export const usePatternSniper = () => {
   // Convert ready token to snipe target
   const processReadyToken = useCallback(
     (vcoinId: string, symbol: SymbolV2Entry, calendar: CalendarEntry): SnipeTarget => {
-      const launchTime = new Date(symbol.ot!);
+      if (!symbol.ot || !symbol.ca) {
+        throw new Error(`Missing required symbol data for ${vcoinId}`);
+      }
+
+      const launchTime = new Date(symbol.ot);
       const hoursAdvance = (launchTime.getTime() - Date.now()) / (1000 * 60 * 60);
 
       const orderParams: SchemaOrderParameters = {
-        symbol: symbol.ca!,
+        symbol: symbol.ca,
         side: "BUY",
         type: "MARKET",
         quoteOrderQty: 100, // Default $100 USDT
@@ -202,10 +207,10 @@ export const usePatternSniper = () => {
 
       return {
         vcoinId,
-        symbol: symbol.ca!,
+        symbol: symbol.ca,
         projectName: calendar.projectName,
-        priceDecimalPlaces: symbol.ps!,
-        quantityDecimalPlaces: symbol.qs!,
+        priceDecimalPlaces: symbol.ps || 2,
+        quantityDecimalPlaces: symbol.qs || 6,
         launchTime,
         discoveredAt: new Date(),
         hoursAdvanceNotice: hoursAdvance,
@@ -242,6 +247,7 @@ export const usePatternSniper = () => {
   }, [isMonitoring, readyTargets, executedTargets]);
 
   // Execute snipe order with auto exit manager integration
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex snipe execution logic with multiple error handling and state management
   const executeSnipe = useCallback(async (target: SnipeTarget, userId?: string) => {
     console.log(`🚀 EXECUTING SNIPE: ${target.symbol}`);
     console.log(`   Project: ${target.projectName}`);
