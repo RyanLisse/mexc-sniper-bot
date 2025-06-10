@@ -80,6 +80,42 @@ bun run lint:all              # Fix formatting
 bun install                   # Reinstall packages
 ```
 
+### TypeScript Hanging Issues (Containers/CI)
+If `bun run type-check` or `tsc --noEmit` hangs in containerized environments:
+
+```bash
+# Method 1: Clear build cache first
+rm -rf .next .tsbuildinfo node_modules/.cache
+bun run type-check
+
+# Method 2: Use skipLibCheck for faster checking
+npx tsc --noEmit --skipLibCheck
+
+# Method 3: Increase memory limit (containers)
+NODE_OPTIONS="--max-old-space-size=4096" npx tsc --noEmit
+
+# Method 4: Check specific files only
+npx tsc --noEmit src/components/auth/better-auth-provider.tsx
+
+# Method 5: Use build command (includes type checking)
+bun run build
+
+# Method 6: Kill hanging processes
+pkill -f tsc || true
+pkill -f "node.*tsc" || true
+
+# Check log file if using setup script
+cat /tmp/setup_typecheck.log
+```
+
+**Common causes:**
+- Stale incremental build cache (`.next`, `.tsbuildinfo`)
+- Memory constraints in containers
+- File system differences between environments
+- Different Node.js/TypeScript versions
+
+**Resolution priority:** Try methods 1-3 first, then fall back to method 5 (build) as it includes comprehensive checking.
+
 ### Agent System
 ```bash
 # Check agent health

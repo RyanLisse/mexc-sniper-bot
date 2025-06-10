@@ -389,6 +389,27 @@ bun run lint:check
 bun run build
 ```
 
+#### TypeScript Hanging in Containers/CI
+If TypeScript checking hangs in containerized or CI environments:
+
+```bash
+# Priority fix: Clear build cache first
+rm -rf .next .tsbuildinfo node_modules/.cache && bun run type-check
+
+# Alternative methods if still hanging:
+npx tsc --noEmit --skipLibCheck                           # Skip lib checking
+NODE_OPTIONS="--max-old-space-size=4096" npx tsc --noEmit # Increase memory
+bun run build                                             # Use build (includes type check)
+
+# Kill hanging processes
+pkill -f tsc || pkill -f "node.*tsc" || true
+
+# Debug: Check what's in the log
+cat /tmp/setup_typecheck.log
+```
+
+**Root causes:** Stale incremental build cache, memory constraints, file system differences between local and container environments.
+
 ### Authentication Issues
 
 #### 500 Errors on Auth Endpoints
