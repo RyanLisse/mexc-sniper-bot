@@ -70,8 +70,14 @@ npx inngest-cli dev -u http://localhost:3008/api/inngest
 # Generate new migrations
 bun run db:generate
 
-# Apply migrations
+# Apply migrations (standard)
 bun run db:migrate
+
+# Apply migrations (safe - handles existing tables)
+bun run db:migrate:safe
+
+# Check database connection and status
+bun run db:check
 
 # Open database studio
 bun run db:studio
@@ -278,6 +284,109 @@ User Dashboard ←→ TanStack Query ←→ TypeScript MEXC Client ←→ MEXC A
 - **Database Studio**: `bun run db:studio`
 - **Network Monitoring**: TanStack Query DevTools
 - **Console Logs**: Browser DevTools for frontend debugging
+
+## Troubleshooting
+
+### Database Issues
+
+#### Migration Errors: "table already exists"
+This is common when working with persistent databases like TursoDB:
+
+```bash
+# Solution 1: Use safe migration
+bun run db:migrate:safe
+
+# Solution 2: Check database status first
+bun run db:check
+
+# Solution 3: For development, reset and migrate
+bun run db:reset && bun run db:migrate
+```
+
+#### TursoDB Connection Issues
+```bash
+# Check environment variables
+echo $TURSO_DATABASE_URL
+echo $TURSO_AUTH_TOKEN
+
+# Test database connection
+bun run db:check
+
+# Verify TursoDB configuration in drizzle.config.ts
+```
+
+#### SQLite Permission Issues
+```bash
+# Fix permissions (development)
+chmod 664 mexc_sniper.db
+
+# Reset database if corrupted
+bun run db:reset
+```
+
+### Deployment Issues
+
+#### Vercel Environment Variables
+Ensure these are set in Vercel Dashboard:
+```bash
+AUTH_SECRET=your-production-secret
+TURSO_DATABASE_URL=your-turso-url
+TURSO_AUTH_TOKEN=your-turso-token
+OPENAI_API_KEY=your-openai-key
+```
+
+#### Build Failures
+```bash
+# Check TypeScript errors
+bun run type-check
+
+# Check linting issues
+bun run lint:check
+
+# Test build locally
+bun run build
+```
+
+### Authentication Issues
+
+#### 500 Errors on Auth Endpoints
+Usually missing environment variables in production:
+```bash
+# Check if AUTH_SECRET is set
+# Check if database is accessible
+# Verify Better Auth configuration
+```
+
+#### Local vs Production Differences
+```bash
+# Test locally first
+curl http://localhost:3008/api/auth/get-session
+
+# Compare with production
+curl https://your-app.vercel.app/api/auth/get-session
+```
+
+### Agent System Issues
+
+#### Agent Health Check
+```bash
+# Run agent health check
+bun run agents:health
+
+# Test individual agents
+bun run agents:test
+```
+
+### Performance Issues
+
+#### Query Performance
+```bash
+# Monitor queries in development
+bun run db:studio
+
+# Check slow queries
+bun run test:performance
+```
 
 ## Important Notes
 

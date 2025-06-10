@@ -33,8 +33,10 @@
     "ci:build": "bun run build",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:migrate:safe": "./scripts/safe-migrate.sh",
     "db:studio": "drizzle-kit studio",
     "db:reset": "rm -f mexc_sniper.db && bun run db:migrate",
+    "db:check": "echo 'Checking database status...' && node -e 'import(\"./src/db/index.js\").then(({initializeDatabase}) => initializeDatabase())'",
     "agents:test": "bun test src/mexc-agents/**/*.test.ts",
     "agents:health": "bun run src/mexc-agents/health-check.ts",
     "postinstall": "./scripts/safe-migrate.sh"

@@ -20,7 +20,9 @@ bun run test                  # Run unit tests
 bun run test:e2e              # Run E2E tests
 
 # Database
-bun run db:migrate            # Apply database migrations
+bun run db:migrate:safe       # Safe migration (handles existing tables)
+bun run db:migrate            # Standard migration
+bun run db:check              # Check database status
 bun run db:studio             # Open database GUI
 
 # Code Quality
@@ -40,3 +42,43 @@ bun run type-check            # TypeScript validation
 
 ## ⚡ Testing
 Unit tests in `__tests__/unit/`, E2E tests in `all-tests/e2e-tests/`. Always run tests before pushing.
+
+## 🔧 Troubleshooting
+
+### Database Issues
+```bash
+# "table already exists" error
+bun run db:migrate:safe        # Use safe migration
+
+# Connection issues  
+bun run db:check              # Check database status
+
+# Reset database (development only)
+bun run db:reset && bun run db:migrate
+```
+
+### Build Issues
+```bash
+# TypeScript errors
+bun run type-check            # Check types
+
+# Linting issues
+bun run lint:all              # Fix formatting
+
+# Missing dependencies
+bun install                   # Reinstall packages
+```
+
+### Agent System
+```bash
+# Check agent health
+bun run agents:health         # Run health check
+
+# Test agents
+bun run agents:test           # Run agent tests
+```
+
+### Environment Setup
+- Copy `.env.example` to `.env.local`
+- Set required environment variables
+- Check `CLAUDE.md` for detailed troubleshooting
