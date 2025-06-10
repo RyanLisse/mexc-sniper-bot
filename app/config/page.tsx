@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/src/lib/auth-client";
+import { UserMenu } from "@/src/components/user-menu";
 
 // TypeScript interfaces for configuration
 interface TradingConfig {
@@ -122,6 +124,9 @@ export default function ConfigPage() {
   const [showApiKeys, setShowApiKeys] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  
+  // Auth status
+  const { user, isAuthenticated, isAnonymous } = useAuth();
 
   // Generate a simple user ID (in production, use proper authentication)
   const getUserId = () => {
@@ -357,6 +362,30 @@ export default function ConfigPage() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            {/* Auth Status */}
+            <div className="flex items-center space-x-2">
+              {isAuthenticated && user ? (
+                <UserMenu user={user} />
+              ) : isAnonymous ? (
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="border-yellow-600 text-yellow-400">
+                    Anonymous
+                  </Badge>
+                  <Link href="/auth">
+                    <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                      Sign In
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <Link href="/auth">
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    Sign In
+                  </Button>
+                </Link>
+              )}
+            </div>
+            
             <Link href="/dashboard">
               <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
                 <Activity className="mr-2 h-4 w-4" />

@@ -1,3 +1,20 @@
+CREATE TABLE `account` (
+	`id` text PRIMARY KEY NOT NULL,
+	`accountId` text NOT NULL,
+	`providerId` text NOT NULL,
+	`userId` text NOT NULL,
+	`accessToken` text,
+	`refreshToken` text,
+	`idToken` text,
+	`accessTokenExpiresAt` integer,
+	`refreshTokenExpiresAt` integer,
+	`scope` text,
+	`password` text,
+	`createdAt` integer DEFAULT (unixepoch()) NOT NULL,
+	`updatedAt` integer DEFAULT (unixepoch()) NOT NULL,
+	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `api_credentials` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`user_id` text NOT NULL,
@@ -46,6 +63,9 @@ CREATE INDEX `execution_history_snipe_target_idx` ON `execution_history` (`snipe
 CREATE INDEX `execution_history_symbol_idx` ON `execution_history` (`symbol_name`);--> statement-breakpoint
 CREATE INDEX `execution_history_status_idx` ON `execution_history` (`status`);--> statement-breakpoint
 CREATE INDEX `execution_history_executed_at_idx` ON `execution_history` (`executed_at`);--> statement-breakpoint
+CREATE INDEX `execution_history_user_symbol_time_idx` ON `execution_history` (`user_id`,`symbol_name`,`executed_at`);--> statement-breakpoint
+CREATE INDEX `execution_history_user_status_action_idx` ON `execution_history` (`user_id`,`status`,`action`);--> statement-breakpoint
+CREATE INDEX `execution_history_snipe_target_action_status_idx` ON `execution_history` (`snipe_target_id`,`action`,`status`);--> statement-breakpoint
 CREATE TABLE `monitored_listings` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`vcoin_id` text NOT NULL,
@@ -73,6 +93,19 @@ CREATE INDEX `monitored_listings_vcoin_id_idx` ON `monitored_listings` (`vcoin_i
 CREATE INDEX `monitored_listings_status_idx` ON `monitored_listings` (`status`);--> statement-breakpoint
 CREATE INDEX `monitored_listings_launch_time_idx` ON `monitored_listings` (`first_open_time`);--> statement-breakpoint
 CREATE INDEX `monitored_listings_ready_pattern_idx` ON `monitored_listings` (`has_ready_pattern`);--> statement-breakpoint
+CREATE TABLE `session` (
+	`id` text PRIMARY KEY NOT NULL,
+	`expiresAt` integer NOT NULL,
+	`token` text NOT NULL,
+	`createdAt` integer DEFAULT (unixepoch()) NOT NULL,
+	`updatedAt` integer DEFAULT (unixepoch()) NOT NULL,
+	`ipAddress` text,
+	`userAgent` text,
+	`userId` text NOT NULL,
+	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `session_token_unique` ON `session` (`token`);--> statement-breakpoint
 CREATE TABLE `snipe_targets` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`user_id` text NOT NULL,
@@ -104,6 +137,22 @@ CREATE INDEX `snipe_targets_user_idx` ON `snipe_targets` (`user_id`);--> stateme
 CREATE INDEX `snipe_targets_status_idx` ON `snipe_targets` (`status`);--> statement-breakpoint
 CREATE INDEX `snipe_targets_priority_idx` ON `snipe_targets` (`priority`);--> statement-breakpoint
 CREATE INDEX `snipe_targets_execution_time_idx` ON `snipe_targets` (`target_execution_time`);--> statement-breakpoint
+CREATE INDEX `snipe_targets_user_status_priority_idx` ON `snipe_targets` (`user_id`,`status`,`priority`);--> statement-breakpoint
+CREATE INDEX `snipe_targets_status_execution_time_idx` ON `snipe_targets` (`status`,`target_execution_time`);--> statement-breakpoint
+CREATE TABLE `user` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`email` text NOT NULL,
+	`emailVerified` integer DEFAULT false NOT NULL,
+	`image` text,
+	`username` text,
+	`displayUsername` text,
+	`createdAt` integer DEFAULT (unixepoch()) NOT NULL,
+	`updatedAt` integer DEFAULT (unixepoch()) NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `user_email_unique` ON `user` (`email`);--> statement-breakpoint
+CREATE UNIQUE INDEX `user_username_unique` ON `user` (`username`);--> statement-breakpoint
 CREATE TABLE `user_preferences` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`user_id` text NOT NULL,
@@ -119,6 +168,11 @@ CREATE TABLE `user_preferences` (
 	`risk_tolerance` text DEFAULT 'medium' NOT NULL,
 	`ready_state_pattern` text DEFAULT '2,2,4' NOT NULL,
 	`target_advance_hours` real DEFAULT 3.5 NOT NULL,
+	`auto_snipe_enabled` integer DEFAULT true NOT NULL,
+	`selected_exit_strategy` text DEFAULT 'balanced' NOT NULL,
+	`custom_exit_strategy` text,
+	`auto_buy_enabled` integer DEFAULT true NOT NULL,
+	`auto_sell_enabled` integer DEFAULT true NOT NULL,
 	`calendar_poll_interval_seconds` integer DEFAULT 300 NOT NULL,
 	`symbols_poll_interval_seconds` integer DEFAULT 30 NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
@@ -126,4 +180,50 @@ CREATE TABLE `user_preferences` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `user_preferences_user_id_unique` ON `user_preferences` (`user_id`);--> statement-breakpoint
-CREATE INDEX `user_preferences_user_id_idx` ON `user_preferences` (`user_id`);
+CREATE INDEX `user_preferences_user_id_idx` ON `user_preferences` (`user_id`);--> statement-breakpoint
+CREATE TABLE `verification` (
+	`id` text PRIMARY KEY NOT NULL,
+	`identifier` text NOT NULL,
+	`value` text NOT NULL,
+	`expiresAt` integer NOT NULL,
+	`createdAt` integer DEFAULT (unixepoch()) NOT NULL,
+	`updatedAt` integer DEFAULT (unixepoch()) NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `workflow_activity` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`user_id` text DEFAULT 'default' NOT NULL,
+	`activity_id` text NOT NULL,
+	`type` text NOT NULL,
+	`message` text NOT NULL,
+	`workflow_id` text,
+	`symbol_name` text,
+	`vcoin_id` text,
+	`level` text DEFAULT 'info' NOT NULL,
+	`timestamp` integer DEFAULT (unixepoch()) NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `workflow_activity_activity_id_unique` ON `workflow_activity` (`activity_id`);--> statement-breakpoint
+CREATE INDEX `workflow_activity_user_id_idx` ON `workflow_activity` (`user_id`);--> statement-breakpoint
+CREATE INDEX `workflow_activity_activity_id_idx` ON `workflow_activity` (`activity_id`);--> statement-breakpoint
+CREATE INDEX `workflow_activity_type_idx` ON `workflow_activity` (`type`);--> statement-breakpoint
+CREATE INDEX `workflow_activity_timestamp_idx` ON `workflow_activity` (`timestamp`);--> statement-breakpoint
+CREATE TABLE `workflow_system_status` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`user_id` text DEFAULT 'default' NOT NULL,
+	`system_status` text DEFAULT 'stopped' NOT NULL,
+	`last_update` integer DEFAULT (unixepoch()) NOT NULL,
+	`active_workflows` text DEFAULT '[]' NOT NULL,
+	`ready_tokens` integer DEFAULT 0 NOT NULL,
+	`total_detections` integer DEFAULT 0 NOT NULL,
+	`successful_snipes` integer DEFAULT 0 NOT NULL,
+	`total_profit` real DEFAULT 0 NOT NULL,
+	`success_rate` real DEFAULT 0 NOT NULL,
+	`average_roi` real DEFAULT 0 NOT NULL,
+	`best_trade` real DEFAULT 0 NOT NULL,
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch()) NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `workflow_system_status_user_id_idx` ON `workflow_system_status` (`user_id`);

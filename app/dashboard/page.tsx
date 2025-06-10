@@ -36,6 +36,7 @@ import { useMexcCalendar, useMexcConnectivity, useRefreshMexcCalendar, useUpcomi
 import { AccountBalance } from "@/src/components/account-balance";
 import { usePatternSniper } from "@/src/hooks/use-pattern-sniper";
 import { useAuth } from "@/src/lib/auth-client";
+import { UserMenu } from "@/src/components/user-menu";
 // import { ExitStrategySelector } from "@/src/components/exit-strategy-selector";
 // import { useExitStrategyPreferences, useUpdateExitStrategyPreferences } from "@/src/hooks/use-user-preferences";
 // import type { ExitStrategy } from "@/src/types/exit-strategies";
@@ -316,10 +317,8 @@ export default function DashboardPage() {
           <div className="flex items-center space-x-4">
             {/* Auth Status */}
             <div className="flex items-center space-x-2">
-              {isAuthenticated ? (
-                <Badge variant="secondary" className="bg-green-900 text-green-300">
-                  {user?.email}
-                </Badge>
+              {isAuthenticated && user ? (
+                <UserMenu user={user} />
               ) : isAnonymous ? (
                 <div className="flex items-center space-x-2">
                   <Badge variant="outline" className="border-yellow-600 text-yellow-400">

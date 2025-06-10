@@ -369,6 +369,62 @@ export const workflowActivity = sqliteTable(
   })
 );
 
+// Transactions Table - Simplified profit/loss tracking
+export const transactions = sqliteTable(
+  "transactions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: text("user_id").notNull(),
+    
+    // Transaction Details
+    transactionType: text("transaction_type").notNull(), // "buy", "sell", "complete_trade"
+    symbolName: text("symbol_name").notNull(),
+    vcoinId: text("vcoin_id"),
+    
+    // Buy Transaction Details
+    buyPrice: real("buy_price"),
+    buyQuantity: real("buy_quantity"),
+    buyTotalCost: real("buy_total_cost"), // Including fees
+    buyTimestamp: integer("buy_timestamp", { mode: "timestamp" }),
+    buyOrderId: text("buy_order_id"),
+    
+    // Sell Transaction Details  
+    sellPrice: real("sell_price"),
+    sellQuantity: real("sell_quantity"),
+    sellTotalRevenue: real("sell_total_revenue"), // After fees
+    sellTimestamp: integer("sell_timestamp", { mode: "timestamp" }),
+    sellOrderId: text("sell_order_id"),
+    
+    // Profit/Loss Calculation
+    profitLoss: real("profit_loss"), // sellTotalRevenue - buyTotalCost
+    profitLossPercentage: real("profit_loss_percentage"), // (profitLoss / buyTotalCost) * 100
+    fees: real("fees"), // Total fees for the transaction
+    
+    // Transaction Status
+    status: text("status").notNull().default("pending"), // "pending", "completed", "failed", "cancelled"
+    
+    // Metadata
+    snipeTargetId: integer("snipe_target_id").references(() => snipeTargets.id),
+    notes: text("notes"), // Optional notes about the transaction
+    
+    // Timestamps
+    transactionTime: integer("transaction_time", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  },
+  (table) => ({
+    userIdx: index("transactions_user_idx").on(table.userId),
+    symbolIdx: index("transactions_symbol_idx").on(table.symbolName),
+    statusIdx: index("transactions_status_idx").on(table.status),
+    transactionTimeIdx: index("transactions_transaction_time_idx").on(table.transactionTime),
+    typeIdx: index("transactions_type_idx").on(table.transactionType),
+    // Compound indexes for optimization
+    userStatusIdx: index("transactions_user_status_idx").on(table.userId, table.status),
+    userTimeIdx: index("transactions_user_time_idx").on(table.userId, table.transactionTime),
+    symbolTimeIdx: index("transactions_symbol_time_idx").on(table.symbolName, table.transactionTime),
+  })
+);
+
 // Types for TypeScript
 
 // Auth Types
@@ -405,3 +461,6 @@ export type NewWorkflowSystemStatus = typeof workflowSystemStatus.$inferInsert;
 
 export type WorkflowActivity = typeof workflowActivity.$inferSelect;
 export type NewWorkflowActivity = typeof workflowActivity.$inferInsert;
+
+export type Transaction = typeof transactions.$inferSelect;
+export type NewTransaction = typeof transactions.$inferInsert;
