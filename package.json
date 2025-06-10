@@ -25,11 +25,19 @@
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
     "test:all": "vitest run && playwright test",
+    "test:ci": "vitest run --reporter=verbose --coverage",
+    "test:e2e:ci": "playwright test --reporter=github",
     "pre-commit": "bun run lint:all && bun run type-check",
+    "ci:quality": "bun run lint:check && bun run format:check && bun run type-check",
+    "ci:test": "bun run test:ci && bun run test:e2e:ci",
+    "ci:build": "bun run build",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "db:reset": "rm -f mexc_sniper.db && bun run db:migrate"
+    "db:reset": "rm -f mexc_sniper.db && bun run db:migrate",
+    "agents:test": "bun test src/mexc-agents/**/*.test.ts",
+    "agents:health": "bun run src/mexc-agents/health-check.ts",
+    "postinstall": "bun run db:migrate"
   },
   "dependencies": {
     "@daveyplate/better-auth-ui": "^1.7.4",

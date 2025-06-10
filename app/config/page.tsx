@@ -23,6 +23,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/src/lib/auth-client";
 import { UserMenu } from "@/src/components/user-menu";
+import { useRouter } from "next/navigation";
 
 // TypeScript interfaces for configuration
 interface TradingConfig {
@@ -125,8 +126,34 @@ export default function ConfigPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   
-  // Auth status
-  const { user, isAuthenticated, isAnonymous } = useAuth();
+  // Auth status and protection
+  const { user, isAuthenticated, isAnonymous, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+
+  // Redirect unauthenticated users to homepage
+  useEffect(() => {
+    if (!authLoading && (!isAuthenticated || isAnonymous)) {
+      console.log('Config access denied - redirecting to homepage');
+      router.push('/');
+      return;
+    }
+  }, [isAuthenticated, isAnonymous, authLoading, router]);
+
+  // Don't render config for unauthenticated users
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || isAnonymous) {
+    return null; // Let the useEffect redirect handle this
+  }
 
   // Generate a simple user ID (in production, use proper authentication)
   const getUserId = () => {

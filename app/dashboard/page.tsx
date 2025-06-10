@@ -37,6 +37,7 @@ import { AccountBalance } from "@/src/components/account-balance";
 import { usePatternSniper } from "@/src/hooks/use-pattern-sniper";
 import { useAuth } from "@/src/lib/auth-client";
 import { UserMenu } from "@/src/components/user-menu";
+import { useRouter } from "next/navigation";
 // import { ExitStrategySelector } from "@/src/components/exit-strategy-selector";
 // import { useExitStrategyPreferences, useUpdateExitStrategyPreferences } from "@/src/hooks/use-user-preferences";
 // import type { ExitStrategy } from "@/src/types/exit-strategies";
@@ -72,9 +73,19 @@ export default function DashboardPage() {
   const [showPreferences, setShowPreferences] = useState(false);
   const [showExitStrategy, setShowExitStrategy] = useState(false);
 
-  // Auth status
+  // Auth status and protection
   const { user, isAuthenticated, isAnonymous, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const userId = user?.id || "anonymous";
+
+  // Redirect unauthenticated users to homepage
+  useEffect(() => {
+    if (!authLoading && (!isAuthenticated || isAnonymous)) {
+      console.log('Dashboard access denied - redirecting to homepage');
+      router.push('/');
+      return;
+    }
+  }, [isAuthenticated, isAnonymous, authLoading, router]);
 
   // TanStack Query hooks for real MEXC data
   const { data: calendarData, isLoading: calendarLoading, error: calendarError } = useMexcCalendar();
@@ -287,6 +298,23 @@ export default function DashboardPage() {
         </div>
       </div>
     );
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto" />
+          <p className="text-slate-400">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render dashboard content for unauthenticated users
+  if (!isAuthenticated || isAnonymous) {
+    return null; // Let the useEffect redirect handle this
   }
   
   if (showLoading) {
