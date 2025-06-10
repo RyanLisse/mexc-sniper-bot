@@ -117,6 +117,7 @@ export function sanitizePassword(password: string): string {
   let sanitized = stripDangerousTags(password);
 
   // Remove null bytes and control characters except tab, newline, carriage return
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: regex matches control chars
   sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
 
   // Limit length
@@ -135,6 +136,7 @@ export function sanitizeText(text: string): string {
   sanitized = escapeHtml(sanitized);
 
   // Remove null bytes and most control characters
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: regex matches control chars
   sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
 
   return sanitized.trim();

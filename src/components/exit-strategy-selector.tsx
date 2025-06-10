@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
-import { useCallback } from "react";
 import {
   EXIT_STRATEGIES,
   type ExitLevel,
@@ -19,6 +18,7 @@ import {
   validateExitStrategy,
 } from "@/src/types/exit-strategies";
 import { Plus, Shield, Target, Trash2, TrendingUp, Zap } from "lucide-react";
+import { useCallback } from "react";
 import { useEffect, useState } from "react";
 
 interface ExitStrategySelectorProps {
@@ -213,8 +213,11 @@ export function ExitStrategySelector({
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-sm">
-                  {strategy.levels.map((level, index) => (
-                    <div key={`${strategy.id}-level-${level.percentage}-${level.targetMultiplier}`} className="text-center p-2 bg-slate-600/30 rounded">
+                  {strategy.levels.map((level, _index) => (
+                    <div
+                      key={`${strategy.id}-level-${level.percentage}-${level.targetMultiplier}`}
+                      className="text-center p-2 bg-slate-600/30 rounded"
+                    >
                       <div className="font-medium text-white">{level.percentage}%</div>
                       <div className="text-slate-300">at {level.targetMultiplier}x</div>
                       <div className="text-green-400">+{level.profitPercent}%</div>
@@ -272,7 +275,12 @@ export function ExitStrategySelector({
                       />
                     </div>
                     <div>
-                      <label htmlFor={`target-multiplier-${index}`} className="text-xs text-slate-400">Target Multiplier</label>
+                      <label
+                        htmlFor={`target-multiplier-${index}`}
+                        className="text-xs text-slate-400"
+                      >
+                        Target Multiplier
+                      </label>
                       <Input
                         id={`target-multiplier-${index}`}
                         type="number"
@@ -286,7 +294,9 @@ export function ExitStrategySelector({
                       />
                     </div>
                     <div>
-                      <label htmlFor={`profit-percent-${index}`} className="text-xs text-slate-400">Profit %</label>
+                      <label htmlFor={`profit-percent-${index}`} className="text-xs text-slate-400">
+                        Profit %
+                      </label>
                       <Input
                         id={`profit-percent-${index}`}
                         type="number"

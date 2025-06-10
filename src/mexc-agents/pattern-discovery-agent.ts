@@ -1,8 +1,8 @@
 import { type AgentConfig, type AgentResponse, BaseAgent } from "../agents/base-agent";
 
 export interface PatternAnalysisRequest {
-  symbolData?: any[];
-  calendarData?: any[];
+  symbolData?: unknown[];
+  calendarData?: unknown[];
   analysisType: "discovery" | "monitoring" | "execution";
   timeframe?: string;
   confidenceThreshold?: number;
@@ -11,7 +11,7 @@ export interface PatternAnalysisRequest {
 export interface PatternMatch {
   patternType: string;
   confidence: number;
-  indicators: Record<string, any>;
+  indicators: Record<string, unknown>;
   recommendation: string;
   riskLevel: "low" | "medium" | "high";
 }
@@ -127,7 +127,7 @@ Provide specific pattern matches with confidence levels and clear action items.
     ]);
   }
 
-  async discoverNewListings(calendarEntries: any[]): Promise<AgentResponse> {
+  async discoverNewListings(calendarEntries: CalendarEntry[]): Promise<AgentResponse> {
     try {
       console.log(
         `[PatternDiscoveryAgent] Starting discovery analysis on ${calendarEntries.length} calendar entries`
@@ -238,7 +238,9 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Extract pattern-relevant data from calendar entries
-  private extractPatternsFromCalendarData(calendarEntries: any[]): any[] {
+  private extractPatternsFromCalendarData(
+    calendarEntries: CalendarEntry[]
+  ): Record<string, unknown>[] {
     const now = Date.now();
 
     return calendarEntries
@@ -377,7 +379,11 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Calculate pattern confidence score
-  private calculatePatternConfidence(entry: any, advanceHours: number, projectType: any): number {
+  private calculatePatternConfidence(
+    entry: CalendarEntry,
+    advanceHours: number,
+    projectType: { category: string; marketAppeal: number }
+  ): number {
     let confidence = 50; // Base confidence
 
     // Advance notice quality
@@ -396,7 +402,10 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Assess delay risk factors
-  private assessDelayRisk(entry: any, advanceHours: number): { level: string; factors: string[] } {
+  private assessDelayRisk(
+    entry: CalendarEntry,
+    advanceHours: number
+  ): { level: string; factors: string[] } {
     const factors: string[] = [];
     let riskLevel = "low";
 

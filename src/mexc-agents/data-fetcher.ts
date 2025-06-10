@@ -61,7 +61,7 @@ export class DataFetcher {
       if (result && typeof result === "object") {
         return {
           vcoinId,
-          symbol: (result as any).symbol || "UNKNOWN",
+          symbol: (result as Record<string, unknown>).symbol || "UNKNOWN",
           success: true,
           source: "mexc-api",
           data: result,
@@ -99,7 +99,7 @@ export class DataFetcher {
       const result = await this.mexcApiAgent.callMexcApi("/market", { symbol });
 
       if (result && typeof result === "object") {
-        const marketData = result as any;
+        const marketData = result as Record<string, unknown>;
         return {
           symbol,
           price: Number.parseFloat(marketData.price) || 0,

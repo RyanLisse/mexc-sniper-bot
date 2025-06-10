@@ -24,6 +24,7 @@ export interface SymbolData {
   [key: string]: unknown;
 }
 
+// biome-ignore lint/complexity/noStaticOnlyClass: utility class for namespacing
 export class AnalysisUtils {
   static calculateUrgencyLevel(data: CalendarEntry): string {
     const launchTime = data.launchTime ? new Date(data.launchTime) : null;

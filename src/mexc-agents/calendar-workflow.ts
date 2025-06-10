@@ -8,11 +8,20 @@ export interface CalendarWorkflowResult {
   analysisTimestamp: string;
 }
 
+interface CalendarDataResponse {
+  success: boolean;
+  data: CalendarEntry[];
+}
+
+interface EnrichedListing extends CalendarEntry {
+  aiAnalysis?: Record<string, unknown>;
+}
+
 export class CalendarWorkflow {
   async analyzeDiscoveryResults(
     calendarAnalysis: AgentResponse,
     patternAnalysis: AgentResponse,
-    calendarData: any
+    calendarData: CalendarDataResponse
   ): Promise<CalendarWorkflowResult> {
     console.log("[CalendarWorkflow] Analyzing discovery results");
 
@@ -101,7 +110,7 @@ export class CalendarWorkflow {
     calendarEntries: CalendarEntry[],
     calendarInsights: AnalysisResult,
     patternInsights: AnalysisResult
-  ): Promise<CalendarEntry[]> {
+  ): Promise<EnrichedListing[]> {
     console.log("[CalendarWorkflow] Processing listings with AI insights");
 
     if (!Array.isArray(calendarEntries)) {
@@ -134,7 +143,7 @@ export class CalendarWorkflow {
     });
   }
 
-  private categorizeOpportunities(processedListings: CalendarEntry[]): {
+  private categorizeOpportunities(processedListings: EnrichedListing[]): {
     newListings: CalendarEntry[];
     readyTargets: CalendarEntry[];
     highPotential: CalendarEntry[];
@@ -148,7 +157,7 @@ export class CalendarWorkflow {
     const monitoring: CalendarEntry[] = [];
 
     for (const listing of processedListings) {
-      const analysis = listing.aiAnalysis as any;
+      const analysis = listing.aiAnalysis as Record<string, unknown> | undefined;
       if (!analysis) continue;
 
       const confidence = analysis.confidence || 0;
@@ -195,7 +204,7 @@ export class CalendarWorkflow {
     // Process ready targets for immediate action
     for (const target of categorizedOpportunities.readyTargets) {
       const symbol = AnalysisUtils.sanitizeSymbolName(target.symbol);
-      const analysis = target.aiAnalysis as any;
+      const analysis = target.aiAnalysis as Record<string, unknown> | undefined;
       immediate.push(`SNIPE ${symbol}: ${analysis?.recommendation || "High-priority target"}`);
     }
 
@@ -209,7 +218,7 @@ export class CalendarWorkflow {
     // Process high potential for watchlist
     for (const potential of categorizedOpportunities.highPotential) {
       const symbol = AnalysisUtils.sanitizeSymbolName(potential.symbol);
-      const analysis = potential.aiAnalysis as any;
+      const analysis = potential.aiAnalysis as Record<string, unknown> | undefined;
       const confidence = analysis?.confidence || 0;
       watchlist.push(`WATCH ${symbol}: ${confidence}% confidence - Monitor conditions`);
     }

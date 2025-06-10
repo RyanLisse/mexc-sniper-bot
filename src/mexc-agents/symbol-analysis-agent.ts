@@ -147,7 +147,10 @@ Provide clear READY/NOT READY determination with detailed confidence metrics and
     ]);
   }
 
-  async analyzeSymbolReadiness(vcoinId: string, symbolData: any): Promise<AgentResponse> {
+  async analyzeSymbolReadiness(
+    vcoinId: string,
+    symbolData: Record<string, unknown>
+  ): Promise<AgentResponse> {
     const dataJson = JSON.stringify(symbolData, null, 2);
 
     return await this.process(dataJson, {
@@ -156,7 +159,7 @@ Provide clear READY/NOT READY determination with detailed confidence metrics and
     });
   }
 
-  async validateReadyStatePattern(symbolData: any): Promise<AgentResponse> {
+  async validateReadyStatePattern(symbolData: Record<string, unknown>): Promise<AgentResponse> {
     const userMessage = `
 MEXC Ready State Pattern Validation:
 
@@ -227,7 +230,7 @@ If READY:
 
   async assessMarketMicrostructure(params: {
     vcoinId: string;
-    symbolData: any[];
+    symbolData: Record<string, unknown>[];
   }): Promise<AgentResponse> {
     const userMessage = `
 MEXC Market Microstructure Analysis:
@@ -297,7 +300,10 @@ Provide quantitative metrics where possible and specific trading recommendations
     ]);
   }
 
-  async generateMonitoringPlan(vcoinId: string, currentStatus: any): Promise<AgentResponse> {
+  async generateMonitoringPlan(
+    vcoinId: string,
+    currentStatus: Record<string, unknown>
+  ): Promise<AgentResponse> {
     const userMessage = `
 MEXC Symbol Monitoring Plan Generation:
 

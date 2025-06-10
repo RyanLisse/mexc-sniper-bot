@@ -1,4 +1,5 @@
 import type { AgentResponse } from "../agents/base-agent";
+import type { SymbolV2Entry } from "../schemas/mexc-schemas";
 import { AnalysisUtils } from "./analysis-utils";
 
 export interface TradingStrategyResult {
@@ -46,7 +47,7 @@ export class TradingStrategyWorkflow {
   async compileTradingStrategy(
     strategyAnalysis: AgentResponse,
     vcoinId: string,
-    symbolData: any,
+    symbolData: SymbolV2Entry,
     riskLevel: "low" | "medium" | "high" = "medium",
     capital = 1000
   ): Promise<TradingStrategyResult> {
@@ -76,7 +77,10 @@ export class TradingStrategyWorkflow {
     };
   }
 
-  private extractBaseStrategy(analysis: AgentResponse, symbolData: any): CompiledTradingStrategy {
+  private extractBaseStrategy(
+    analysis: AgentResponse,
+    symbolData: SymbolV2Entry
+  ): CompiledTradingStrategy {
     const content = analysis.content || "";
     const symbol = AnalysisUtils.sanitizeSymbolName(symbolData.symbol);
 

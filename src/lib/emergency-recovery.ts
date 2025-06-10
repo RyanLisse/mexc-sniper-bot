@@ -33,8 +33,8 @@ export class EmergencyRecoveryService {
    */
   async executeRecovery(
     emergencyType: string,
-    severity: string,
-    data: any
+    severity: "low" | "medium" | "high" | "critical",
+    data: unknown
   ): Promise<EmergencyRecoveryPlan> {
     const systemHealth = await performSystemHealthCheck();
     const connectivity = await getConnectivityStatus();
@@ -338,7 +338,7 @@ export class EmergencyRecoveryService {
 
     return {
       emergencyType,
-      severity: severity as any,
+      severity,
       recoverySteps,
       estimatedRecoveryTime: 5,
       requiresManualIntervention: true,
@@ -506,7 +506,7 @@ export class EmergencyRecoveryService {
     };
   }
 
-  private async sendVolatilityNotification(_data: any): Promise<RecoveryResult> {
+  private async sendVolatilityNotification(_data: unknown): Promise<RecoveryResult> {
     return {
       success: true,
       message: "High volatility notification sent to monitoring systems",
@@ -568,7 +568,7 @@ export class EmergencyRecoveryService {
     };
   }
 
-  private async investigateTradingAnomaly(data: any): Promise<RecoveryResult> {
+  private async investigateTradingAnomaly(data: unknown): Promise<RecoveryResult> {
     return {
       success: true,
       message: "Trading anomaly investigation initiated",
@@ -610,10 +610,10 @@ export class EmergencyRecoveryService {
   }
 
   private async logEmergencyEvent(
-    emergencyType: string,
-    severity: string,
-    phase: string,
-    details: any
+    _emergencyType: string,
+    _severity: string,
+    _phase: string,
+    _details: unknown
   ): Promise<void> {
     try {
       await db.insert(executionHistory).values({

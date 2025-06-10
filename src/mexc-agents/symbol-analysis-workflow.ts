@@ -246,10 +246,10 @@ export class SymbolAnalysisWorkflow {
   }
 
   private determineTradingReadiness(
-    readinessInsights: any,
-    patternInsights: any,
-    marketInsights: any,
-    _patternData: any
+    readinessInsights: Record<string, unknown>,
+    patternInsights: Record<string, unknown>,
+    marketInsights: Record<string, unknown>,
+    _patternData: unknown
   ): {
     ready: boolean;
     score: number;
@@ -301,8 +301,8 @@ export class SymbolAnalysisWorkflow {
   }
 
   private generateSymbolRiskAssessment(
-    readinessInsights: any,
-    marketInsights: any,
+    readinessInsights: Record<string, unknown>,
+    marketInsights: Record<string, unknown>,
     confidence: number
   ): {
     level: "low" | "medium" | "high";
@@ -350,8 +350,8 @@ export class SymbolAnalysisWorkflow {
   }
 
   private generateSymbolRecommendations(
-    tradingReadiness: any,
-    riskAssessment: any,
+    tradingReadiness: Record<string, unknown>,
+    riskAssessment: Record<string, unknown>,
     confidence: number
   ): {
     action: "snipe" | "prepare" | "monitor" | "skip";
