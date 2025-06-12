@@ -8,6 +8,7 @@ import {
 } from "@/src/schemas/mexc-schemas";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
+import { type UserTradingPreferences, getUserPreferences } from "./use-user-preferences";
 
 // API client functions that use backend routes
 const apiClient = {
@@ -255,6 +256,12 @@ export const usePatternSniper = () => {
     console.log(`   Order Parameters:`, target.orderParameters);
 
     const actualUserId = userId || "anonymous";
+    let preferences: UserTradingPreferences | null = null;
+    try {
+      preferences = await getUserPreferences(actualUserId);
+    } catch (prefError) {
+      console.warn(`[usePatternSniper] Failed to load preferences for ${actualUserId}:`, prefError);
+    }
 
     try {
       // 1. Create snipe target entry in database for tracking
@@ -268,9 +275,9 @@ export const usePatternSniper = () => {
           vcoinId: target.vcoinId,
           symbolName: target.symbol,
           entryStrategy: "market",
-          positionSizeUsdt: 100, // TODO: Get from user preferences
-          takeProfitLevel: 2, // Default to balanced
-          stopLossPercent: 5.0, // Default stop loss
+          positionSizeUsdt: preferences?.defaultBuyAmountUsdt ?? 100,
+          takeProfitLevel: preferences?.defaultTakeProfitLevel ?? 2,
+          stopLossPercent: preferences?.stopLossPercent ?? 5.0,
           status: "executing",
           priority: 1,
           targetExecutionTime: Math.floor(Date.now() / 1000),

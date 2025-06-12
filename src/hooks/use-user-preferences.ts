@@ -30,6 +30,20 @@ export interface UserTradingPreferences {
   autoSnipeEnabled: boolean; // Auto-snipe by default
 }
 
+// Helper to fetch user preferences without React hooks
+export async function getUserPreferences(userId: string): Promise<UserTradingPreferences | null> {
+  try {
+    const response = await fetch(`/api/user-preferences?userId=${encodeURIComponent(userId)}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user preferences: ${response.statusText}`);
+    }
+    return (await response.json()) as UserTradingPreferences;
+  } catch (error) {
+    console.error("[getUserPreferences] Failed to fetch preferences:", error);
+    return null;
+  }
+}
+
 // Hook to get user preferences
 export function useUserPreferences(userId: string) {
   return useQuery({
