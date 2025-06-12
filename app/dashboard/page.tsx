@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/src/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,6 +8,7 @@ import {
   CardTitle,
 } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
 import {
   TrendingUp,
   Bot,
@@ -39,331 +38,103 @@ import { useAuth } from "@/src/lib/auth-client";
 import { UserMenu } from "@/src/components/user-menu";
 import { useRouter } from "next/navigation";
 import { TransactionLockMonitor } from "@/src/components/transaction-lock-monitor";
-// import { ExitStrategySelector } from "@/src/components/exit-strategy-selector";
-// import { useExitStrategyPreferences, useUpdateExitStrategyPreferences } from "@/src/hooks/use-user-preferences";
-// import type { ExitStrategy } from "@/src/types/exit-strategies";
-// import { useAutoExitManager, usePortfolio } from "@/src/hooks/use-portfolio";
+import { useWorkflowStatus } from "@/src/hooks/use-workflow-status";
+import React, { useEffect, useState } from "react";
 
-interface WorkflowStatus {
-  systemStatus: "running" | "stopped" | "error";
-  lastUpdate: string;
-  activeWorkflows: string[];
-  metrics: {
-    readyTokens: number;
-    totalDetections: number;
-    successfulSnipes: number;
-    totalProfit: number;
-    successRate: number;
-    averageROI: number;
-    bestTrade: number;
-  };
-  recentActivity: Array<{
-    id: string;
-    type: "pattern" | "calendar" | "snipe" | "analysis";
-    message: string;
-    timestamp: string;
-  }>;
-}
-
-
+// Pattern Sniper Dashboard Page Component - Production Trading Dashboard
 export default function DashboardPage() {
-  const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDiscoveryRunning, setIsDiscoveryRunning] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-  const [showPreferences, setShowPreferences] = useState(false);
+  const router = useRouter();
+  const { 
+    data: session, 
+    error: authError,
+    isPending: authLoading 
+  } = useAuth();
+  const userId = session?.user?.id || '';
   const [showExitStrategy, setShowExitStrategy] = useState(false);
 
-  // Get user info (middleware handles authentication protection)
-  const { user, isLoading: authLoading } = useAuth();
-  const userId = user?.id || "anonymous";
+  // Auth redirect
+  useEffect(() => {
+    if (!authLoading && !session?.user) {
+      router.push('/auth');
+    }
+  }, [session, authLoading, router]);
 
-  // TanStack Query hooks for real MEXC data
-  const { data: calendarData, isLoading: calendarLoading, error: calendarError } = useMexcCalendar();
-  const { data: mexcConnected } = useMexcConnectivity();
-  const { data: accountData, isLoading: accountLoading, error: accountError } = useMexcAccount(userId);
-  // const { data: upcomingLaunches, count: upcomingCount } = useUpcomingLaunches();
-  // const { data: readyTargets, count: readyCount } = useReadyTargets();
-  const refreshCalendar = useRefreshMexcCalendar();
-
-  // Pattern Sniper integration
+  // Pattern Sniper hooks
   const {
     isMonitoring,
-    isConnected: sniperConnected,
-    calendarTargets,
-    pendingDetection,
+    isLoading,
     readyTargets: sniperReadyTargets,
-    // executedTargets,
+    pendingDetection,
     stats: sniperStats,
+    errors: sniperErrors,
     startMonitoring,
     stopMonitoring,
-    clearAllTargets,
-    forceRefresh,
-    executeSnipe,
     removeTarget,
-    errors: sniperErrors,
-  } = usePatternSniper();
+    executeSnipe,
+    forceRefresh,
+    clearAllTargets
+  } = usePatternSniper(userId);
 
-  // Exit Strategy preferences
-  // const exitStrategyPrefs = useExitStrategyPreferences(userId);
-  // const updateExitStrategy = useUpdateExitStrategyPreferences();
-
-  // Auto Exit Manager
-  // const autoExitManager = useAutoExitManager();
-
-  // Portfolio data
-  // const { data: portfolioData, isLoading: portfolioLoading } = usePortfolio(userId);
-
-  useEffect(() => {
-    fetchSystemStatus();
-    const interval = setInterval(fetchSystemStatus, 10000); // Faster refresh for trading data
-    
-    // Fallback timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      if (isLoading) {
-        console.warn('Dashboard loading timeout reached, forcing load');
-        setIsLoading(false);
-      }
-    }, 5000); // 5 second timeout
-    
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
-  }, [isLoading]);
-
-  // Auto-start pattern sniper when dashboard loads (auto-snipe by default)
-  useEffect(() => {
-    if (!isMonitoring && !isLoading && user) {
-      console.log("🚀 Auto-starting pattern sniper for auto-snipe...");
-      startMonitoring();
-    }
-  }, [isMonitoring, isLoading, user, startMonitoring]);
-
-  const fetchSystemStatus = async () => {
-    try {
-      const response = await fetch('/api/workflow-status');
-      if (response.ok) {
-        const data = await response.json();
-        setWorkflowStatus(data);
-        setIsDiscoveryRunning(data.systemStatus === "running");
-      }
-    } catch (error) {
-      console.error('Failed to fetch workflow status:', error);
-    } finally {
-      setIsLoading(false);
-      setLastRefresh(new Date());
-    }
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const togglePatternDiscovery = async () => {
-    try {
-      setIsLoading(true);
-      const action = isDiscoveryRunning ? 'stop_monitoring' : 'start_monitoring';
-      
-      // Control scheduled monitoring
-      const scheduleResponse = await fetch('/api/schedule/control', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action }),
-      });
-
-      if (scheduleResponse.ok && action === 'start_monitoring') {
-        // Also trigger immediate workflows
-        await fetch('/api/triggers/calendar-poll', {
-          method: 'POST',
-        });
-        
-        await fetch('/api/triggers/pattern-analysis', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ symbols: [] }),
-        });
-      }
-
-      await fetchSystemStatus();
-    } catch (error) {
-      console.error('Failed to toggle pattern discovery:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const runDiscoveryCycle = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Force immediate comprehensive analysis
-      const forceResponse = await fetch('/api/schedule/control', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          action: 'force_analysis',
-          data: { symbols: [] }
-        }),
-      });
-
-      if (forceResponse.ok) {
-        // Add activity log
-        await fetch('/api/workflow-status', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'addActivity',
-            data: {
-              activity: {
-                type: 'analysis',
-                message: 'Forced discovery cycle initiated',
-              },
-            },
-          }),
-        });
-        
-        await fetchSystemStatus();
-      }
-    } catch (error) {
-      console.error('Failed to run discovery cycle:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Exit Strategy handlers
-  // const handleStrategyChange = (strategyId: string) => {
-  //   updateExitStrategy.mutate({
-  //     userId,
-  //     selectedExitStrategy: strategyId,
-  //   });
-  // };
-
-  // const handleCustomStrategyChange = (strategy: ExitStrategy) => {
-  //   updateExitStrategy.mutate({
-  //     userId,
-  //     selectedExitStrategy: "custom",
-  //     customExitStrategy: strategy,
-  //   });
-  // };
-
-  // const handleAutoBuyToggle = (enabled: boolean) => {
-  //   updateExitStrategy.mutate({
-  //     userId,
-  //     selectedExitStrategy: exitStrategyPrefs.selectedExitStrategy,
-  //     autoBuyEnabled: enabled,
-  //   });
-  // };
-
-  // const handleAutoSellToggle = (enabled: boolean) => {
-  //   updateExitStrategy.mutate({
-  //     userId,
-  //     selectedExitStrategy: exitStrategyPrefs.selectedExitStrategy,
-  //     autoSellEnabled: enabled,
-  //   });
-  // };
-
-  // Show loading state only for workflow status, auth loading is handled separately
-  const showLoading = isLoading && !workflowStatus;
+  // MEXC data hooks
+  const { data: calendarData, error: calendarError, isLoading: calendarLoading } = useMexcCalendar();
+  const { data: mexcConnected } = useMexcConnectivity();
+  const refreshCalendar = useRefreshMexcCalendar();
+  const { data: upcomingData } = useUpcomingLaunches();
+  const { data: readyTargets } = useReadyTargets();
+  const { data: accountData } = useMexcAccount();
   
-  // Add client-side mounting check to avoid hydration issues
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  
-  // Don't render until mounted on client to avoid SSR/hydration issues
-  if (!isMounted) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto" />
-          <p className="text-slate-400">Initializing...</p>
-        </div>
-      </div>
-    );
-  }
+  // Workflow status hook
+  const { data: workflowStatus } = useWorkflowStatus();
 
-  // Show loading while getting user info
+  // Calendar targets (if needed for monitoring UI)
+  const calendarTargets = React.useMemo(() => {
+    if (!calendarData) return [];
+    return calendarData.map(item => ({
+      vcoinId: item.vcoinId,
+      symbol: item.symbol,
+      projectName: item.projectName,
+      firstOpenTime: item.firstOpenTime,
+    }));
+  }, [calendarData]);
+
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto" />
-          <p className="text-slate-400">Loading user information...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  if (showLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto" />
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
           <p className="text-slate-400">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
+  if (!session?.user) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
-      {/* Header */}
-      <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 border-b border-slate-800">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-green-400 to-green-600 rounded-lg">
-              <Activity className="h-6 w-6 text-white" />
+    <div className="min-h-screen bg-slate-900 text-white">
+      <header className="bg-slate-800 shadow-lg border-b border-slate-700">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <Link href="/dashboard" className="flex items-center space-x-2">
+                <Bot className="h-8 w-8 text-blue-500" />
+                <h1 className="text-xl font-bold">MEXC Sniper Bot</h1>
+              </Link>
+              <Badge variant="secondary" className="hidden sm:inline-flex">
+                Pattern Detection Active
+              </Badge>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">Trading Dashboard</h1>
-              <p className="text-sm text-slate-400">Real-time monitoring and control</p>
+            <div className="flex items-center space-x-4">
+              <Link href="/config">
+                <Button variant="ghost" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Config
+                </Button>
+              </Link>
+              <UserMenu />
             </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            {/* User Info */}
-            <div className="flex items-center space-x-2">
-              {user ? (
-                <UserMenu user={user} />
-              ) : (
-                <Link href="/auth">
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                    Sign In
-                  </Button>
-                </Link>
-              )}
-            </div>
-            
-            <div className="text-sm text-slate-400">
-              Last updated: {lastRefresh.toLocaleTimeString()}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchSystemStatus}
-              disabled={isLoading}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-            </Button>
-            <Link href="/config">
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
-            </Link>
           </div>
         </div>
       </header>
