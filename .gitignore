@@ -121,3 +121,7 @@ coverage.xml
 # Security reports
 security-report.json
 safety-report.json
+
+# SQLite temporary files
+*.db-shm
+*.db-wal

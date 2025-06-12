@@ -22,9 +22,24 @@ interface AuthError extends Error {
   message: string;
 }
 
+// Ensure the base URL includes /api/auth for better-auth endpoints
+const getBaseURL = () => {
+  if (typeof window !== "undefined") {
+    // Client-side: use the current origin
+    return window.location.origin;
+  }
+  // Server-side: use the configured URL
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
+};
+
 export const authClient = createAuthClient({
-  baseURL: typeof window !== "undefined" ? window.location.origin : "http://localhost:3008",
+  baseURL: getBaseURL(),
+  basePath: "/api/auth", // Match the server configuration
   plugins: [usernameClient()],
+  // Explicitly configure fetch options to ensure proper HTTP methods
+  fetchOptions: {
+    credentials: "include", // Include cookies for session management
+  },
 });
 
 export const { signIn, signUp, signOut, forgetPassword, resetPassword, updateUser } = authClient;

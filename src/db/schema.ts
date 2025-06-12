@@ -59,7 +59,10 @@ export const userPreferences = sqliteTable(
   "user_preferences",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    userId: text("user_id").notNull().unique(),
+    userId: text("user_id")
+      .notNull()
+      .unique()
+      .references(() => user.id, { onDelete: "cascade" }),
 
     // Trading Configuration
     defaultBuyAmountUsdt: real("default_buy_amount_usdt").notNull().default(100.0),
@@ -106,7 +109,9 @@ export const apiCredentials = sqliteTable(
   "api_credentials",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    userId: text("user_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
     provider: text("provider").notNull(), // "mexc", "binance", etc.
 
     // Encrypted credentials
@@ -180,7 +185,9 @@ export const snipeTargets = sqliteTable(
   "snipe_targets",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    userId: text("user_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
     vcoinId: text("vcoin_id").notNull(),
     symbolName: text("symbol_name").notNull(),
 
@@ -241,8 +248,10 @@ export const executionHistory = sqliteTable(
   "execution_history",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    userId: text("user_id").notNull(),
-    snipeTargetId: integer("snipe_target_id").references(() => snipeTargets.id),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    snipeTargetId: integer("snipe_target_id").references(() => snipeTargets.id, { onDelete: "set null" }),
 
     // Execution Details
     vcoinId: text("vcoin_id").notNull(),
@@ -374,7 +383,9 @@ export const transactions = sqliteTable(
   "transactions",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    userId: text("user_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
 
     // Transaction Details
     transactionType: text("transaction_type").notNull(), // "buy", "sell", "complete_trade"
@@ -404,7 +415,7 @@ export const transactions = sqliteTable(
     status: text("status").notNull().default("pending"), // "pending", "completed", "failed", "cancelled"
 
     // Metadata
-    snipeTargetId: integer("snipe_target_id").references(() => snipeTargets.id),
+    snipeTargetId: integer("snipe_target_id").references(() => snipeTargets.id, { onDelete: "set null" }),
     notes: text("notes"), // Optional notes about the transaction
 
     // Timestamps
@@ -427,6 +438,107 @@ export const transactions = sqliteTable(
       table.symbolName,
       table.transactionTime
     ),
+  })
+);
+
+// Transaction Lock Tables
+export const transactionLocks = sqliteTable(
+  "transaction_locks",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    lockId: text("lock_id").notNull().unique(), // UUID for the lock
+    resourceId: text("resource_id").notNull(), // What we're locking (e.g., "trade:BTCUSDT:BUY")
+    idempotencyKey: text("idempotency_key").notNull().unique(), // Prevent duplicate requests
+    
+    // Lock ownership
+    ownerId: text("owner_id").notNull(), // Who owns this lock (userId or sessionId)
+    ownerType: text("owner_type").notNull(), // "user", "system", "workflow"
+    
+    // Lock timing
+    acquiredAt: integer("acquired_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+    releasedAt: integer("released_at", { mode: "timestamp" }),
+    
+    // Lock status
+    status: text("status").notNull().default("active"), // "active", "released", "expired", "failed"
+    lockType: text("lock_type").notNull().default("exclusive"), // "exclusive", "shared"
+    
+    // Transaction details
+    transactionType: text("transaction_type").notNull(), // "trade", "cancel", "update"
+    transactionData: text("transaction_data").notNull(), // JSON data about the transaction
+    
+    // Retry and timeout config
+    maxRetries: integer("max_retries").notNull().default(3),
+    currentRetries: integer("current_retries").notNull().default(0),
+    timeoutMs: integer("timeout_ms").notNull().default(30000), // 30 seconds default
+    
+    // Result tracking
+    result: text("result"), // JSON result of the transaction
+    errorMessage: text("error_message"),
+    
+    // Timestamps
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  },
+  (table) => ({
+    resourceIdIdx: index("transaction_locks_resource_id_idx").on(table.resourceId),
+    statusIdx: index("transaction_locks_status_idx").on(table.status),
+    expiresAtIdx: index("transaction_locks_expires_at_idx").on(table.expiresAt),
+    idempotencyKeyIdx: index("transaction_locks_idempotency_key_idx").on(table.idempotencyKey),
+    ownerIdIdx: index("transaction_locks_owner_id_idx").on(table.ownerId),
+    // Compound indexes for common queries
+    resourceStatusIdx: index("transaction_locks_resource_status_idx").on(table.resourceId, table.status),
+    ownerStatusIdx: index("transaction_locks_owner_status_idx").on(table.ownerId, table.status),
+  })
+);
+
+// Transaction Queue Table
+export const transactionQueue = sqliteTable(
+  "transaction_queue",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    queueId: text("queue_id").notNull().unique(), // UUID for the queue item
+    lockId: text("lock_id").references(() => transactionLocks.lockId),
+    
+    // Queue item details
+    resourceId: text("resource_id").notNull(),
+    priority: integer("priority").notNull().default(5), // 1=highest, 10=lowest
+    
+    // Transaction details
+    transactionType: text("transaction_type").notNull(),
+    transactionData: text("transaction_data").notNull(), // JSON
+    idempotencyKey: text("idempotency_key").notNull(),
+    
+    // Queue status
+    status: text("status").notNull().default("pending"), // "pending", "processing", "completed", "failed", "cancelled"
+    
+    // Timing
+    queuedAt: integer("queued_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    processingStartedAt: integer("processing_started_at", { mode: "timestamp" }),
+    completedAt: integer("completed_at", { mode: "timestamp" }),
+    
+    // Result
+    result: text("result"), // JSON result
+    errorMessage: text("error_message"),
+    attempts: integer("attempts").notNull().default(0),
+    
+    // Owner info
+    ownerId: text("owner_id").notNull(),
+    ownerType: text("owner_type").notNull(),
+    
+    // Timestamps
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  },
+  (table) => ({
+    resourceIdIdx: index("transaction_queue_resource_id_idx").on(table.resourceId),
+    statusIdx: index("transaction_queue_status_idx").on(table.status),
+    priorityIdx: index("transaction_queue_priority_idx").on(table.priority),
+    queuedAtIdx: index("transaction_queue_queued_at_idx").on(table.queuedAt),
+    idempotencyKeyIdx: index("transaction_queue_idempotency_key_idx").on(table.idempotencyKey),
+    // Compound indexes
+    statusPriorityIdx: index("transaction_queue_status_priority_idx").on(table.status, table.priority, table.queuedAt),
+    resourceStatusIdx: index("transaction_queue_resource_status_idx").on(table.resourceId, table.status),
   })
 );
 
@@ -469,3 +581,10 @@ export type NewWorkflowActivity = typeof workflowActivity.$inferInsert;
 
 export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
+
+// Transaction Lock Types
+export type TransactionLock = typeof transactionLocks.$inferSelect;
+export type NewTransactionLock = typeof transactionLocks.$inferInsert;
+
+export type TransactionQueue = typeof transactionQueue.$inferSelect;
+export type NewTransactionQueue = typeof transactionQueue.$inferInsert;

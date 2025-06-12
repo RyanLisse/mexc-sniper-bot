@@ -2,10 +2,15 @@
  * React Hook for WebSocket Price Data
  * Provides real-time price updates for trading symbols
  * Integrates with the WebSocket Price Service for efficient data streaming
+ * 
+ * Memory Management Features:
+ * - Proper cleanup of intervals and subscriptions
+ * - Prevents state updates after unmount
+ * - Efficient state updates without creating new objects
  */
 
 import { webSocketPriceService } from "@/src/services/websocket-price-service";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface PriceUpdate {
   symbol: string;
@@ -48,12 +53,17 @@ export function useWebSocketPrice(
   const [retryCount, setRetryCount] = useState(0);
   const [unsubscribeFn, setUnsubscribeFn] = useState<(() => void) | null>(null);
 
+  // Ref to track if component is mounted
+  const isMountedRef = useRef(true);
+  
   // Update connection status based on service status
   useEffect(() => {
     const updateStatus = () => {
-      const status = webSocketPriceService.getStatus();
-      setIsConnected(status.isConnected);
-      setIsConnecting(status.isConnecting);
+      if (isMountedRef.current) {
+        const status = webSocketPriceService.getStatus();
+        setIsConnected(status.isConnected);
+        setIsConnecting(status.isConnecting);
+      }
     };
 
     // Update status immediately
@@ -62,7 +72,10 @@ export function useWebSocketPrice(
     // Set up periodic status updates
     const interval = setInterval(updateStatus, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      isMountedRef.current = false;
+      clearInterval(interval);
+    };
   }, []);
 
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex websocket connection logic with error handling and state management
@@ -80,9 +93,11 @@ export function useWebSocketPrice(
 
       // Subscribe to price updates
       const unsubscribe = webSocketPriceService.subscribe(symbol, (priceUpdate) => {
-        setPrice(priceUpdate);
-        setError(null);
-        setRetryCount(0);
+        if (isMountedRef.current) {
+          setPrice(priceUpdate);
+          setError(null);
+          setRetryCount(0);
+        }
       });
 
       setUnsubscribeFn(() => unsubscribe);
@@ -146,6 +161,7 @@ export function useWebSocketPrice(
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      isMountedRef.current = false;
       unsubscribe();
     };
   }, [unsubscribe]);
@@ -186,18 +202,26 @@ export function useWebSocketPrices(
   const [errors, setErrors] = useState<Map<string, string>>(new Map());
   const [unsubscribeFns, setUnsubscribeFns] = useState<Map<string, () => void>>(new Map());
   const [retryCounts, setRetryCounts] = useState<Map<string, number>>(new Map());
+  
+  // Ref to track if component is mounted
+  const isMountedRef = useRef(true);
 
   // Update connection status
   useEffect(() => {
     const updateStatus = () => {
-      const status = webSocketPriceService.getStatus();
-      setIsConnected(status.isConnected);
-      setIsConnecting(status.isConnecting);
+      if (isMountedRef.current) {
+        const status = webSocketPriceService.getStatus();
+        setIsConnected(status.isConnected);
+        setIsConnecting(status.isConnecting);
+      }
     };
 
     updateStatus();
     const interval = setInterval(updateStatus, 1000);
-    return () => clearInterval(interval);
+    return () => {
+      isMountedRef.current = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const subscribe = useCallback(
@@ -219,17 +243,23 @@ export function useWebSocketPrices(
 
         // Subscribe to price updates
         const unsubscribe = webSocketPriceService.subscribe(symbol, (priceUpdate) => {
-          setPrices((prev) => new Map(prev).set(symbol, priceUpdate));
-          setErrors((prev) => {
-            const newErrors = new Map(prev);
-            newErrors.delete(symbol);
-            return newErrors;
-          });
-          setRetryCounts((prev) => {
-            const newCounts = new Map(prev);
-            newCounts.delete(symbol);
-            return newCounts;
-          });
+          if (isMountedRef.current) {
+            setPrices((prev) => {
+              const newPrices = new Map(prev);
+              newPrices.set(symbol, priceUpdate);
+              return newPrices;
+            });
+            setErrors((prev) => {
+              const newErrors = new Map(prev);
+              newErrors.delete(symbol);
+              return newErrors;
+            });
+            setRetryCounts((prev) => {
+              const newCounts = new Map(prev);
+              newCounts.delete(symbol);
+              return newCounts;
+            });
+          }
         });
 
         setUnsubscribeFns((prev) => new Map(prev).set(symbol, unsubscribe));
@@ -309,6 +339,7 @@ export function useWebSocketPrices(
     }
 
     return () => {
+      isMountedRef.current = false;
       unsubscribeAll();
     };
   }, [symbols, autoConnect, subscribeAll, unsubscribeAll]);

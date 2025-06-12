@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MexcTradingApi, OrderParameters } from "@/src/services/mexc-trading-api";
+import { transactionLockService } from "@/src/services/transaction-lock-service";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { symbol, side, type, quantity, price, userId } = body;
+    const { symbol, side, type, quantity, price, userId, snipeTargetId, skipLock } = body;
 
     if (!userId) {
       return NextResponse.json(
@@ -36,6 +37,26 @@ export async function POST(request: NextRequest) {
 
     console.log(`🚀 Trading API: Processing ${side} order for ${symbol}`);
 
+    // Create resource ID for locking
+    const resourceId = `trade:${symbol}:${side}:${snipeTargetId || 'manual'}`;
+    
+    // Skip lock for certain operations (e.g., emergency sells)
+    if (skipLock) {
+      console.log(`⚠️ Skipping lock for ${resourceId} (skipLock=true)`);
+    } else {
+      // Check if resource is already locked
+      const lockStatus = await transactionLockService.getLockStatus(resourceId);
+      if (lockStatus.isLocked) {
+        console.log(`🔒 Resource ${resourceId} is locked. Queue length: ${lockStatus.queueLength}`);
+        return NextResponse.json({
+          success: false,
+          error: "Trade already in progress",
+          message: `Another trade for ${symbol} ${side} is being processed. Queue position: ${lockStatus.queueLength + 1}`,
+          lockStatus,
+        }, { status: 409 });
+      }
+    }
+
     // Initialize trading API
     const tradingApi = new MexcTradingApi(apiKey, secretKey);
 
@@ -49,47 +70,82 @@ export async function POST(request: NextRequest) {
       timeInForce: 'IOC' // Immediate or Cancel for safety
     };
 
-    // Validate order parameters
-    const validation = tradingApi.validateOrderParameters(orderParams);
-    if (!validation.valid) {
-      return NextResponse.json({
-        success: false,
-        error: "Invalid order parameters",
-        details: validation.errors,
-        message: `Order validation failed: ${validation.errors.join(', ')}`
-      }, { status: 400 });
+    // Execute with lock protection
+    const executeTrade = async () => {
+      // Validate order parameters
+      const validation = tradingApi.validateOrderParameters(orderParams);
+      if (!validation.valid) {
+        throw new Error(`Order validation failed: ${validation.errors.join(', ')}`);
+      }
+
+      // Check account balance before placing order
+      const baseAsset = side.toUpperCase() === 'BUY' ? 'USDT' : symbol.replace('USDT', '');
+      const balance = await tradingApi.getAssetBalance(baseAsset);
+      
+      if (!balance) {
+        throw new Error("Unable to fetch account balance");
+      }
+
+      const availableBalance = parseFloat(balance.free);
+      const requiredAmount = side.toUpperCase() === 'BUY' 
+        ? parseFloat(quantity) * (price ? parseFloat(price) : 1) 
+        : parseFloat(quantity);
+
+      if (availableBalance < requiredAmount) {
+        throw new Error(`Insufficient ${baseAsset} balance. Available: ${balance.free}, Required: ${requiredAmount}`);
+      }
+
+      console.log(`💰 ${baseAsset} Balance: ${balance.free} (sufficient for trading)`);
+
+      // Execute the trading order
+      const orderResult = await tradingApi.placeOrder(orderParams);
+      
+      if (!orderResult.success) {
+        throw new Error(orderResult.error || "Order placement failed");
+      }
+      
+      return orderResult;
+    };
+
+    // Execute with or without lock
+    let result;
+    if (skipLock) {
+      result = await executeTrade();
+    } else {
+      const lockResult = await transactionLockService.executeWithLock(
+        {
+          resourceId,
+          ownerId: userId,
+          ownerType: "user",
+          transactionType: "trade",
+          transactionData: {
+            symbol,
+            side,
+            type,
+            quantity,
+            price,
+            snipeTargetId,
+          },
+          timeoutMs: 30000, // 30 second timeout
+          priority: side.toUpperCase() === 'SELL' ? 1 : 5, // Prioritize sells
+        },
+        executeTrade
+      );
+
+      if (!lockResult.success) {
+        return NextResponse.json({
+          success: false,
+          error: lockResult.error,
+          message: "Trade execution failed",
+          lockId: lockResult.lockId,
+          executionTimeMs: lockResult.executionTimeMs,
+        }, { status: 400 });
+      }
+
+      result = lockResult.result;
     }
 
-    // Check account balance before placing order
-    const baseAsset = side.toUpperCase() === 'BUY' ? 'USDT' : symbol.replace('USDT', '');
-    const balance = await tradingApi.getAssetBalance(baseAsset);
-    
-    if (!balance) {
-      return NextResponse.json({
-        success: false,
-        error: "Unable to fetch account balance",
-        message: "Could not verify account balance before trading"
-      }, { status: 500 });
-    }
-
-    const availableBalance = parseFloat(balance.free);
-    const requiredAmount = side.toUpperCase() === 'BUY' 
-      ? parseFloat(quantity) * (price ? parseFloat(price) : 1) 
-      : parseFloat(quantity);
-
-    if (availableBalance < requiredAmount) {
-      return NextResponse.json({
-        success: false,
-        error: "Insufficient balance",
-        message: `Insufficient ${baseAsset} balance. Available: ${balance.free}, Required: ${requiredAmount}`,
-        balance: balance
-      }, { status: 400 });
-    }
-
-    console.log(`💰 ${baseAsset} Balance: ${balance.free} (sufficient for trading)`);
-
-    // Execute the trading order
-    const orderResult = await tradingApi.placeOrder(orderParams);
+    const orderResult = result as any;
 
     if (orderResult.success) {
       console.log(`✅ Trading order executed successfully:`, orderResult);

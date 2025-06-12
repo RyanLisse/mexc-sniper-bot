@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/src/components/ui/card";
 import { useAuth } from "@/src/lib/auth-client";
-import { SignInForm, SignUpForm } from "@daveyplate/better-auth-ui";
+import { CustomSignInForm, CustomSignUpForm } from "./better-auth-forms";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -96,12 +96,12 @@ export function BetterAuthUI() {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Better Auth UI Forms */}
+        {/* Custom Auth Forms with proper HTTP methods */}
         <div className="better-auth-form">
           {isSignUp ? (
-            <SignUpForm className="space-y-4" localization={{}} />
+            <CustomSignUpForm className="space-y-4" />
           ) : (
-            <SignInForm className="space-y-4" localization={{}} />
+            <CustomSignInForm className="space-y-4" />
           )}
         </div>
 

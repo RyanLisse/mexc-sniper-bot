@@ -9,6 +9,7 @@ import {
   workflowSystemStatus,
 } from "@/src/db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { databaseBreaker } from "./circuit-breaker";
 
 export interface WorkflowMetrics {
   readyTokens?: number;
@@ -37,48 +38,96 @@ export class WorkflowStatusService {
   }
 
   /**
-   * Get current workflow system status
+   * Get current workflow system status with circuit breaker protection
    */
   async getSystemStatus(): Promise<WorkflowSystemStatus | null> {
-    try {
-      const result = await db
-        .select()
-        .from(workflowSystemStatus)
-        .where(eq(workflowSystemStatus.userId, this.userId))
-        .limit(1);
+    return databaseBreaker.execute(
+      async () => {
+        const maxRetries = 3;
+        const baseDelay = 1000; // 1 second
 
-      return result.length > 0 ? result[0] : null;
-    } catch (error) {
-      console.error("[WorkflowStatusService] Failed to get system status:", error);
-      return null;
-    }
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            const result = await db
+              .select()
+              .from(workflowSystemStatus)
+              .where(eq(workflowSystemStatus.userId, this.userId))
+              .limit(1);
+
+            return result.length > 0 ? result[0] : null;
+          } catch (error) {
+            console.error(
+              `[WorkflowStatusService] Failed to get system status (attempt ${attempt}/${maxRetries}):`,
+              error
+            );
+
+            if (attempt === maxRetries) {
+              throw error; // Let circuit breaker handle this
+            }
+
+            // Exponential backoff: wait before retrying
+            const delay = baseDelay * Math.pow(2, attempt - 1);
+            console.log(`[WorkflowStatusService] Retrying in ${delay}ms...`);
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
+        }
+
+        throw new Error("Maximum retry attempts exceeded");
+      },
+      async () => {
+        // Fallback when database circuit breaker is open
+        console.warn("[WorkflowStatusService] Database circuit breaker fallback triggered");
+        return null;
+      }
+    );
   }
 
   /**
-   * Initialize or get system status with defaults
+   * Initialize or get system status with defaults and error handling
    */
   async getOrCreateSystemStatus(): Promise<WorkflowSystemStatus> {
     let status = await this.getSystemStatus();
 
     if (!status) {
-      // Create initial status
-      const newStatus: NewWorkflowSystemStatus = {
-        userId: this.userId,
-        systemStatus: "stopped",
-        lastUpdate: new Date(),
-        activeWorkflows: "[]",
-        readyTokens: 0,
-        totalDetections: 0,
-        successfulSnipes: 0,
-        totalProfit: 0,
-        successRate: 0,
-        averageROI: 0,
-        bestTrade: 0,
-      };
+      try {
+        // Create initial status
+        const newStatus: NewWorkflowSystemStatus = {
+          userId: this.userId,
+          systemStatus: "stopped",
+          lastUpdate: new Date(),
+          activeWorkflows: "[]",
+          readyTokens: 0,
+          totalDetections: 0,
+          successfulSnipes: 0,
+          totalProfit: 0,
+          successRate: 0,
+          averageROI: 0,
+          bestTrade: 0,
+        };
 
-      const result = await db.insert(workflowSystemStatus).values(newStatus).returning();
+        const result = await db.insert(workflowSystemStatus).values(newStatus).returning();
+        status = result[0];
+      } catch (error) {
+        console.error("[WorkflowStatusService] Failed to create system status:", error);
 
-      status = result[0];
+        // Return a fallback status object to prevent total failure
+        return {
+          id: 0,
+          userId: this.userId,
+          systemStatus: "error",
+          lastUpdate: new Date(),
+          activeWorkflows: "[]",
+          readyTokens: 0,
+          totalDetections: 0,
+          successfulSnipes: 0,
+          totalProfit: 0,
+          successRate: 0,
+          averageROI: 0,
+          bestTrade: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+      }
     }
 
     return status;

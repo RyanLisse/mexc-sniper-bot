@@ -29,7 +29,7 @@ import {
   Trash2
 } from "lucide-react";
 import Link from "next/link";
-import { CoinCalendar } from "@/src/components/coin-calendar";
+import { Calendar19 } from "@/src/components/calendar-19";
 import { UserPreferences } from "@/src/components/user-preferences";
 import { EmergencyDashboard } from "@/src/components/emergency-dashboard";
 import { useMexcCalendar, useMexcConnectivity, useRefreshMexcCalendar, useUpcomingLaunches, useReadyTargets, useMexcAccount } from "@/src/hooks/use-mexc-data";
@@ -38,6 +38,7 @@ import { usePatternSniper } from "@/src/hooks/use-pattern-sniper";
 import { useAuth } from "@/src/lib/auth-client";
 import { UserMenu } from "@/src/components/user-menu";
 import { useRouter } from "next/navigation";
+import { TransactionLockMonitor } from "@/src/components/transaction-lock-monitor";
 // import { ExitStrategySelector } from "@/src/components/exit-strategy-selector";
 // import { useExitStrategyPreferences, useUpdateExitStrategyPreferences } from "@/src/hooks/use-user-preferences";
 // import type { ExitStrategy } from "@/src/types/exit-strategies";
@@ -651,7 +652,7 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <CoinCalendar />
+              <Calendar19 />
             </CardContent>
           </Card>
         </section>
@@ -1008,6 +1009,24 @@ export default function DashboardPage() {
             </Card>
           </section>
         )}
+
+        {/* Transaction Lock Monitor */}
+        <section className="mb-8">
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Activity className="h-5 w-5 text-blue-400" />
+                <span>Transaction Lock Monitor</span>
+              </CardTitle>
+              <CardDescription>
+                Monitor and manage transaction locks to prevent duplicate trades
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TransactionLockMonitor />
+            </CardContent>
+          </Card>
+        </section>
 
         {/* Emergency Response Dashboard */}
         <section className="mb-8">

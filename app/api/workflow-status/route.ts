@@ -12,13 +12,33 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(workflowStatus);
   } catch (error) {
     console.error("Failed to get workflow status:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to get workflow status",
-        message: error instanceof Error ? error.message : "Unknown error"
+    
+    // Return a fallback status when database is unavailable
+    const fallbackStatus = {
+      systemStatus: "error",
+      lastUpdate: new Date().toISOString(),
+      activeWorkflows: [],
+      metrics: {
+        readyTokens: 0,
+        totalDetections: 0,
+        successfulSnipes: 0,
+        totalProfit: 0,
+        successRate: 0,
+        averageROI: 0,
+        bestTrade: 0,
       },
-      { status: 500 }
-    );
+      recentActivity: [
+        {
+          id: "error",
+          type: "analysis",
+          message: "Database connection issue - using fallback mode",
+          timestamp: new Date().toISOString(),
+          level: "error",
+        }
+      ],
+    };
+    
+    return NextResponse.json(fallbackStatus);
   }
 }
 

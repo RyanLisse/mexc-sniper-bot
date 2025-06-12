@@ -2,34 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMexcClient } from '@/src/services/mexc-api-client';
 import { db, apiCredentials } from '@/src/db';
 import { eq, and } from 'drizzle-orm';
-import { createDecipheriv } from 'crypto';
-
-// Decryption helper (should match api-credentials route)
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32ch';
-const ALGORITHM = 'aes-256-cbc';
-
-function getKey(): Buffer {
-  const key = ENCRYPTION_KEY.padEnd(32, '0').slice(0, 32);
-  return Buffer.from(key, 'utf8');
-}
-
-function decryptString(encryptedText: string): string {
-  try {
-    const parts = encryptedText.split(':');
-    if (parts.length !== 2) {
-      throw new Error('Invalid encrypted format');
-    }
-    const iv = Buffer.from(parts[0], 'hex');
-    const encrypted = parts[1];
-    const decipher = createDecipheriv(ALGORITHM, getKey(), iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-  } catch (error) {
-    console.error('[Decryption] Failed:', error);
-    return '';
-  }
-}
+import { getEncryptionService } from '@/src/services/secure-encryption-service';
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,10 +1,13 @@
 import crypto from "node:crypto";
+import { mexcApiBreaker } from "./circuit-breaker";
 
 export interface MexcApiConfig {
   apiKey?: string;
   secretKey?: string;
   baseUrl?: string;
   timeout?: number;
+  maxRetries?: number;
+  retryDelay?: number;
 }
 
 export interface MexcCalendarEntry {
@@ -85,6 +88,8 @@ export class MexcApiClient {
       secretKey: config.secretKey || process.env.MEXC_SECRET_KEY || "",
       baseUrl: config.baseUrl || process.env.MEXC_BASE_URL || "https://api.mexc.com",
       timeout: config.timeout || 10000,
+      maxRetries: config.maxRetries || 3,
+      retryDelay: config.retryDelay || 1000,
     };
   }
 
@@ -131,89 +136,141 @@ export class MexcApiClient {
     params: Record<string, unknown> = {},
     authenticated = false
   ): Promise<T> {
-    await this.rateLimit();
+    const maxRetries = this.config.maxRetries || 3;
+    const baseDelay = this.config.retryDelay || 1000;
 
-    let url: string;
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      "User-Agent": "MEXC-Sniper-Bot/1.0",
-    };
+    return mexcApiBreaker.execute(
+      async () => {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            await this.rateLimit();
 
-    if (authenticated) {
-      if (!this.config.apiKey || !this.config.secretKey) {
-        throw new Error("MEXC API credentials not configured for authenticated request");
-      }
+            let url: string;
+            const headers: Record<string, string> = {
+              "Content-Type": "application/json",
+              "User-Agent": "MEXC-Sniper-Bot/1.0",
+            };
 
-      // Use exact same approach as working /api/mexc/account route
-      const timestamp = Date.now();
-      params.timestamp = timestamp;
-      // Remove recvWindow - not used in working route
+            if (authenticated) {
+              if (!this.config.apiKey || !this.config.secretKey) {
+                throw new Error("MEXC API credentials not configured for authenticated request");
+              }
 
-      console.log(`[MexcApiClient] Request timestamp: ${timestamp}`);
-      console.log(`[MexcApiClient] API Key: ${this.config.apiKey.substring(0, 8)}...`);
+              // Use exact same approach as working /api/mexc/account route
+              const timestamp = Date.now();
+              params.timestamp = timestamp;
+              // Remove recvWindow - not used in working route
 
-      // Generate signature exactly like working route: only timestamp
-      const queryString = `timestamp=${timestamp}`;
-      const signature = crypto
-        .createHmac("sha256", this.config.secretKey)
-        .update(queryString)
-        .digest("hex");
+              console.log(
+                `[MexcApiClient] Request timestamp: ${timestamp} (attempt ${attempt}/${maxRetries})`
+              );
+              console.log(`[MexcApiClient] API Key: ${this.config.apiKey.substring(0, 8)}...`);
 
-      params.signature = signature;
-      headers["X-MEXC-APIKEY"] = this.config.apiKey;
+              // Generate signature exactly like working route: only timestamp
+              const queryString = `timestamp=${timestamp}`;
+              const signature = crypto
+                .createHmac("sha256", this.config.secretKey)
+                .update(queryString)
+                .digest("hex");
 
-      console.log(`[MexcApiClient] Query string for signature: ${queryString}`);
-      console.log(`[MexcApiClient] Generated signature: ${signature}`);
-    }
+              params.signature = signature;
+              headers["X-MEXC-APIKEY"] = this.config.apiKey;
 
-    // Build URL with query parameters
-    if (endpoint.startsWith("http")) {
-      url = endpoint;
-    } else {
-      url = `${this.config.baseUrl}${endpoint}`;
-    }
+              console.log(`[MexcApiClient] Query string for signature: ${queryString}`);
+              console.log(`[MexcApiClient] Generated signature: ${signature}`);
+            }
 
-    const urlObj = new URL(url);
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        urlObj.searchParams.append(key, String(value));
-      }
-    });
+            // Build URL with query parameters
+            if (endpoint.startsWith("http")) {
+              url = endpoint;
+            } else {
+              url = `${this.config.baseUrl}${endpoint}`;
+            }
 
-    console.log(
-      `[MexcApiClient] ${authenticated ? "Authenticated" : "Public"} request: ${urlObj.toString()}`
-    );
+            const urlObj = new URL(url);
+            Object.entries(params).forEach(([key, value]) => {
+              if (value !== undefined && value !== null) {
+                urlObj.searchParams.append(key, String(value));
+              }
+            });
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+            console.log(
+              `[MexcApiClient] ${authenticated ? "Authenticated" : "Public"} request: ${urlObj.toString()}`
+            );
 
-      const response = await fetch(urlObj.toString(), {
-        method: "GET",
-        headers,
-        signal: controller.signal,
-      });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
-      clearTimeout(timeoutId);
+            const response = await fetch(urlObj.toString(), {
+              method: "GET",
+              headers,
+              signal: controller.signal,
+            });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`MEXC API error: ${response.status} ${response.statusText} - ${errorText}`);
-      }
+            clearTimeout(timeoutId);
 
-      const data = await response.json();
-      console.log(`[MexcApiClient] Success: ${endpoint}`);
-      return data;
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.name === "AbortError") {
-          throw new Error(`MEXC API request timeout after ${this.config.timeout}ms`);
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(
+                `MEXC API error: ${response.status} ${response.statusText} - ${errorText}`
+              );
+            }
+
+            const data = await response.json();
+            console.log(`[MexcApiClient] Success: ${endpoint} (attempt ${attempt})`);
+            return data;
+          } catch (error) {
+            const isTimeoutError =
+              error instanceof Error &&
+              (error.name === "AbortError" ||
+                error.message.includes("timeout") ||
+                error.message.includes("Connect Timeout"));
+
+            const isConnectionError =
+              error instanceof Error &&
+              (error.message.includes("fetch failed") ||
+                error.message.includes("ECONNRESET") ||
+                error.message.includes("ENOTFOUND"));
+
+            console.error(
+              `[MexcApiClient] Request failed (attempt ${attempt}/${maxRetries}):`,
+              error instanceof Error ? error.message : error
+            );
+
+            // Don't retry on authentication or client errors (4xx), only on timeouts and connection issues
+            if (
+              error instanceof Error &&
+              error.message.includes("MEXC API error") &&
+              !isTimeoutError &&
+              !isConnectionError
+            ) {
+              throw error;
+            }
+
+            if (attempt === maxRetries) {
+              if (isTimeoutError) {
+                throw new Error(
+                  `MEXC API request timeout after ${this.config.timeout}ms (${maxRetries} attempts)`
+                );
+              }
+              throw error instanceof Error ? error : new Error("Unknown error occurred");
+            }
+
+            // Exponential backoff with jitter for retryable errors
+            const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
+            console.log(`[MexcApiClient] Retrying in ${Math.round(delay)}ms...`);
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
         }
-        console.error(`[MexcApiClient] Request failed:`, error.message);
-        throw error;
+
+        throw new Error("Maximum retry attempts exceeded");
+      },
+      async () => {
+        // Fallback mechanism - return a minimal error response
+        console.warn("[MexcApiClient] Circuit breaker fallback triggered");
+        throw new Error("MEXC API circuit breaker is open - service temporarily unavailable");
       }
-      throw new Error("Unknown error occurred");
-    }
+    );
   }
 
   async getCalendarListings(): Promise<MexcApiResponse<MexcCalendarEntry[]>> {

@@ -2,8 +2,25 @@ import { db } from "@/src/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { username } from "better-auth/plugins";
+import * as schema from "@/src/db/schema";
 
 console.log("Initializing better-auth...");
+
+// Verify database connection before initializing auth
+async function verifyDatabase() {
+  try {
+    // Test database connection
+    const testQuery = await db.select().from(schema.user).limit(1);
+    console.log("Database connection verified for auth");
+    return true;
+  } catch (error) {
+    console.error("Database verification failed:", error);
+    return false;
+  }
+}
+
+// Run verification
+verifyDatabase().catch(console.error);
 
 // Email sending function for development (console log)
 // In production, replace with actual email service
@@ -21,9 +38,10 @@ const sendEmailDev = async ({
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "sqlite", // TursoDB is SQLite-compatible
+    provider: "sqlite", // SQLite for local dev, TursoDB uses libsql which is SQLite-compatible
     usePlural: false,
   }),
+  basePath: "/api/auth", // Explicitly set the base path
   plugins: [
     username({
       minUsernameLength: 3,

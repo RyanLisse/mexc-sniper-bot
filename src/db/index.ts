@@ -8,23 +8,49 @@ import * as schema from "./schema";
 function createDatabase() {
   const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
   const hasTursoConfig = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
+  const forceSQLite = process.env.FORCE_SQLITE === "true";
+
+  // Use SQLite if forced or if TursoDB is not properly configured
+  if (forceSQLite || (!isProduction && !hasTursoConfig)) {
+    console.log("[Database] Using SQLite for development");
+    try {
+      const Database = require("better-sqlite3");
+      const sqlite = new Database("./mexc_sniper.db");
+      sqlite.pragma("journal_mode = WAL");
+      sqlite.pragma("foreign_keys = ON");
+      return drizzle(sqlite, { schema });
+    } catch (error) {
+      console.error("[Database] SQLite initialization error:", error);
+      throw error;
+    }
+  }
 
   // Only use TursoDB if we have valid configuration
   if (
-    (isProduction || hasTursoConfig) &&
     process.env.TURSO_DATABASE_URL &&
     process.env.TURSO_AUTH_TOKEN
   ) {
-    // Use TursoDB for production/Vercel deployment
-    console.log("[Database] Using TursoDB for production");
-    const client = createClient({
-      url: process.env.TURSO_DATABASE_URL,
-      authToken: process.env.TURSO_AUTH_TOKEN,
-    });
-    return drizzleTurso(client, { schema });
+    console.log("[Database] Using TursoDB");
+    try {
+      const client = createClient({
+        url: process.env.TURSO_DATABASE_URL,
+        authToken: process.env.TURSO_AUTH_TOKEN,
+      });
+      return drizzleTurso(client, { schema });
+    } catch (error) {
+      console.error("[Database] TursoDB initialization error:", error);
+      // Fallback to SQLite if TursoDB fails
+      console.log("[Database] Falling back to SQLite due to TursoDB error");
+      const Database = require("better-sqlite3");
+      const sqlite = new Database("./mexc_sniper.db");
+      sqlite.pragma("journal_mode = WAL");
+      sqlite.pragma("foreign_keys = ON");
+      return drizzle(sqlite, { schema });
+    }
   }
-  // Use SQLite for local development
-  console.log("[Database] Using SQLite for development");
+
+  // Default to SQLite if no configuration is available
+  console.log("[Database] Using SQLite (default)");
   const Database = require("better-sqlite3");
   const sqlite = new Database("./mexc_sniper.db");
   sqlite.pragma("journal_mode = WAL");

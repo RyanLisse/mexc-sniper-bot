@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Test</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+        .calendar-container { max-width: 400px; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        // Mock Calendar19 component structure
+        function Calendar19() {
+            const [date, setDate] = React.useState(new Date());
+            
+            const presets = [
+                { label: "Today", value: 0 },
+                { label: "Tomorrow", value: 1 },
+                { label: "In 3 days", value: 3 },
+                { label: "In a week", value: 7 },
+                { label: "In 2 weeks", value: 14 },
+            ];
+            
+            return (
+                <div className="calendar-container">
+                    <div style={{
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        backgroundColor: 'white',
+                        padding: '16px',
+                        maxWidth: '300px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                    }}>
+                        {/* Calendar area */}
+                        <div style={{ padding: '16px' }}>
+                            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                                <h3>June 2025</h3>
+                                <div>Selected: {date.toDateString()}</div>
+                            </div>
+                        </div>
+                        
+                        {/* Footer with preset buttons */}
+                        <div style={{
+                            borderTop: '1px solid #e2e8f0',
+                            paddingTop: '16px',
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '8px'
+                        }}>
+                            {presets.map((preset) => (
+                                <button
+                                    key={preset.value}
+                                    style={{
+                                        flex: '1',
+                                        padding: '8px 12px',
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '6px',
+                                        backgroundColor: 'white',
+                                        cursor: 'pointer',
+                                        fontSize: '14px'
+                                    }}
+                                    onClick={() => {
+                                        const newDate = new Date();
+                                        newDate.setDate(newDate.getDate() + preset.value);
+                                        setDate(newDate);
+                                    }}
+                                >
+                                    {preset.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<Calendar19 />, document.getElementById('root'));
+    </script>
+</body>
+</html>

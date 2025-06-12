@@ -13,14 +13,57 @@ function isAuthEndpoint(pathname: string): boolean {
   return AUTH_ENDPOINTS.some(endpoint => pathname.includes(endpoint));
 }
 
+// Add OPTIONS handler for CORS preflight
+export async function OPTIONS(request: Request) {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Allow-Credentials": "true",
+    },
+  });
+}
+
 export async function GET(request: Request) {
   try {
-    return auth.handler(request);
+    // Log the request for debugging
+    const url = new URL(request.url);
+    console.log(`[Auth] GET ${url.pathname}`);
+    
+    // Check if this is a get-session request
+    if (url.pathname.includes('get-session')) {
+      console.log('[Auth] Processing get-session request');
+    }
+    
+    const response = await auth.handler(request);
+    
+    // Log response status for debugging
+    console.log(`[Auth] Response status: ${response.status}`);
+    
+    return response;
   } catch (error) {
-    console.error("Auth GET error:", error);
+    console.error("[Auth] GET error:", error);
+    console.error("[Auth] Stack trace:", error?.stack);
+    
+    // Check for specific database errors
+    if (error?.message?.includes('database') || error?.message?.includes('sqlite')) {
+      console.error("[Auth] Database connection error detected");
+      return new Response(JSON.stringify({ 
+        error: "Database connection error", 
+        details: "Unable to connect to the authentication database",
+        suggestion: "Please check database configuration and ensure migrations are applied"
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    
     return new Response(JSON.stringify({ 
       error: "Auth system error", 
-      details: error?.toString() 
+      details: error?.toString(),
+      message: error?.message || "Unknown error"
     }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
@@ -32,6 +75,8 @@ export async function POST(request: Request) {
   try {
     const url = new URL(request.url);
     const pathname = url.pathname;
+    
+    console.log(`[Auth] POST ${pathname}`);
     
     // Apply rate limiting to authentication endpoints
     if (isAuthEndpoint(pathname)) {
