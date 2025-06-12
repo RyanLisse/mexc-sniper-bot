@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { CalendarAgent } from "../../../src/mexc-agents/calendar-agent";
 import { PatternDiscoveryAgent } from "../../../src/mexc-agents/pattern-discovery-agent";
 import { MexcOrchestrator } from "../../../src/mexc-agents/orchestrator";
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS 
+} from "@/src/lib/api-response";
 
 export async function POST(_request: NextRequest) {
   try {
@@ -73,59 +80,62 @@ export async function POST(_request: NextRequest) {
 
     console.log('✅ MexcOrchestrator workflow completed!');
 
-    return NextResponse.json({
-      success: true,
-      message: "All OpenAI integration tests passed successfully!",
-      results: {
-        calendarAgentTest: {
-          success: true,
-          contentPreview: calendarResult.content.substring(0, 200),
-          metadata: calendarResult.metadata
+    return apiResponse(
+      createSuccessResponse({
+        results: {
+          calendarAgentTest: {
+            success: true,
+            contentPreview: calendarResult.content.substring(0, 200),
+            metadata: calendarResult.metadata
+          },
+          patternAgentTest: {
+            success: true,
+            contentPreview: patternResult.content.substring(0, 200),
+            metadata: patternResult.metadata
+          },
+          readyStateValidation: {
+            success: true,
+            contentPreview: readyStateResult.content.substring(0, 200),
+            metadata: readyStateResult.metadata
+          },
+          orchestratorWorkflow: {
+            success: workflowResult.success,
+            data: workflowResult.data,
+            metadata: workflowResult.metadata
+          }
         },
-        patternAgentTest: {
-          success: true,
-          contentPreview: patternResult.content.substring(0, 200),
-          metadata: patternResult.metadata
-        },
-        readyStateValidation: {
-          success: true,
-          contentPreview: readyStateResult.content.substring(0, 200),
-          metadata: readyStateResult.metadata
-        },
-        orchestratorWorkflow: {
-          success: workflowResult.success,
-          data: workflowResult.data,
-          metadata: workflowResult.metadata
+        summary: {
+          calendarAgentWorking: true,
+          patternAgentWorking: true,
+          readyStateValidationWorking: true,
+          orchestratorWorkflowWorking: workflowResult.success,
+          openaiIntegrationVerified: true
         }
-      },
-      summary: {
-        calendarAgentWorking: true,
-        patternAgentWorking: true,
-        readyStateValidationWorking: true,
-        orchestratorWorkflowWorking: workflowResult.success,
-        openaiIntegrationVerified: true
-      }
-    });
+      }, {
+        message: "All OpenAI integration tests passed successfully!"
+      })
+    );
 
   } catch (error) {
     console.error('❌ OpenAI integration test failed:', error);
     
-    return NextResponse.json({
-      success: false,
-      message: "OpenAI integration test failed",
-      error: {
-        message: (error as Error).message,
-        stack: (error as Error).stack?.split('\n').slice(0, 10)
-      },
-      troubleshooting: {
-        checkApiKey: process.env.OPENAI_API_KEY ? "API key is set" : "API key is missing",
-        possibleIssues: [
-          "Invalid OpenAI API key",
-          "Rate limit exceeded",
-          "Network connectivity issue",
-          "OpenAI service unavailable"
-        ]
-      }
-    }, { status: 500 });
+    return apiResponse(
+      createErrorResponse("OpenAI integration test failed", {
+        error: {
+          message: (error as Error).message,
+          stack: (error as Error).stack?.split('\n').slice(0, 10)
+        },
+        troubleshooting: {
+          checkApiKey: process.env.OPENAI_API_KEY ? "API key is set" : "API key is missing",
+          possibleIssues: [
+            "Invalid OpenAI API key",
+            "Rate limit exceeded",
+            "Network connectivity issue",
+            "OpenAI service unavailable"
+          ]
+        }
+      }),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
+    );
   }
 }

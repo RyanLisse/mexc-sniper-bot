@@ -1,4 +1,4 @@
-import type { AgentResponse } from "../agents/base-agent";
+import type { AgentResponse } from "./base-agent";
 
 export interface PatternAnalysisResult {
   patterns: ActionablePattern[];

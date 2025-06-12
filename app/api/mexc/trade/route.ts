@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MexcTradingApi, OrderParameters } from "@/src/services/mexc-trading-api";
 import { transactionLockService } from "@/src/services/transaction-lock-service";
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS 
+} from "@/src/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,9 +15,9 @@ export async function POST(request: NextRequest) {
     const { symbol, side, type, quantity, price, userId, snipeTargetId, skipLock } = body;
 
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User ID required" },
-        { status: 400 }
+      return apiResponse(
+        createErrorResponse("User ID required"),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -19,20 +26,22 @@ export async function POST(request: NextRequest) {
     const secretKey = process.env.MEXC_SECRET_KEY;
 
     if (!apiKey || !secretKey) {
-      return NextResponse.json({
-        success: false,
-        error: "MEXC API credentials not configured",
-        message: "Configure MEXC API keys in environment variables for trading"
-      }, { status: 400 });
+      return apiResponse(
+        createErrorResponse("MEXC API credentials not configured", {
+          message: "Configure MEXC API keys in environment variables for trading"
+        }),
+        HTTP_STATUS.BAD_REQUEST
+      );
     }
 
     // Validate required parameters
     if (!symbol || !side || !type || !quantity) {
-      return NextResponse.json({
-        success: false,
-        error: "Missing required trading parameters",
-        message: "Symbol, side, type, and quantity are required"
-      }, { status: 400 });
+      return apiResponse(
+        createErrorResponse("Missing required trading parameters", {
+          message: "Symbol, side, type, and quantity are required"
+        }),
+        HTTP_STATUS.BAD_REQUEST
+      );
     }
 
     console.log(`🚀 Trading API: Processing ${side} order for ${symbol}`);
@@ -48,12 +57,13 @@ export async function POST(request: NextRequest) {
       const lockStatus = await transactionLockService.getLockStatus(resourceId);
       if (lockStatus.isLocked) {
         console.log(`🔒 Resource ${resourceId} is locked. Queue length: ${lockStatus.queueLength}`);
-        return NextResponse.json({
-          success: false,
-          error: "Trade already in progress",
-          message: `Another trade for ${symbol} ${side} is being processed. Queue position: ${lockStatus.queueLength + 1}`,
-          lockStatus,
-        }, { status: 409 });
+        return apiResponse(
+          createErrorResponse("Trade already in progress", {
+            message: `Another trade for ${symbol} ${side} is being processed. Queue position: ${lockStatus.queueLength + 1}`,
+            lockStatus,
+          }),
+          HTTP_STATUS.CONFLICT
+        );
       }
     }
 
@@ -133,49 +143,48 @@ export async function POST(request: NextRequest) {
       );
 
       if (!lockResult.success) {
-        return NextResponse.json({
-          success: false,
-          error: lockResult.error,
-          message: "Trade execution failed",
-          lockId: lockResult.lockId,
-          executionTimeMs: lockResult.executionTimeMs,
-        }, { status: 400 });
+        return apiResponse(
+          createErrorResponse(lockResult.error || "Trade execution failed", {
+            message: "Trade execution failed",
+            lockId: lockResult.lockId,
+            executionTimeMs: lockResult.executionTimeMs,
+          }),
+          HTTP_STATUS.BAD_REQUEST
+        );
       }
 
       result = lockResult.result;
     }
 
-    const orderResult = result as any;
+    const orderResult = result as { success: boolean; error?: string; [key: string]: unknown };
 
     if (orderResult.success) {
       console.log(`✅ Trading order executed successfully:`, orderResult);
       
-      return NextResponse.json({
-        success: true,
-        message: "Order placed successfully",
-        order: orderResult,
-        timestamp: new Date().toISOString()
-      });
+      return apiResponse(
+        createSuccessResponse(orderResult, {
+          message: "Order placed successfully"
+        }),
+        HTTP_STATUS.CREATED
+      );
     } else {
       console.error(`❌ Trading order failed:`, orderResult);
       
-      return NextResponse.json({
-        success: false,
-        error: orderResult.error,
-        message: "Order placement failed",
-        details: orderResult,
-        timestamp: new Date().toISOString()
-      }, { status: 400 });
+      return apiResponse(
+        createErrorResponse(orderResult.error || "Order placement failed", {
+          message: "Order placement failed",
+          details: orderResult,
+        }),
+        HTTP_STATUS.BAD_REQUEST
+      );
     }
 
   } catch (error) {
     console.error("Trading API Error:", error);
     
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown trading error",
-      message: "Trading execution failed",
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
+    );
   }
 }

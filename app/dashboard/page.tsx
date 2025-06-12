@@ -78,19 +78,19 @@ export default function DashboardPage() {
   // MEXC data hooks
   const { data: calendarData, error: calendarError, isLoading: calendarLoading } = useMexcCalendar();
   const { data: mexcConnected } = useMexcConnectivity();
-  const refreshCalendar = useRefreshMexcCalendar(userId);
+  const refreshCalendar = useRefreshMexcCalendar();
   const { data: upcomingData } = useUpcomingLaunches();
   const { data: readyTargets } = useReadyTargets();
-  const { data: accountData } = useMexcAccount();
+  const { data: accountData } = useMexcAccount(userId);
   
   // Workflow status hook
   // const { data: workflowStatus } = useWorkflowStatus();
-  const workflowStatus = null;
+  const workflowStatus: { recentActivity?: Array<{ type: string; message: string; timestamp: string; vcoinId?: string; id?: string }> } | null = null;
 
   // Calendar targets (if needed for monitoring UI)
   const calendarTargets = React.useMemo(() => {
     if (!calendarData) return [];
-    return calendarData.map(item => ({
+    return calendarData.map((item) => ({
       vcoinId: item.vcoinId,
       symbol: item.symbol,
       projectName: item.projectName,
@@ -134,7 +134,7 @@ export default function DashboardPage() {
                   Config
                 </Button>
               </Link>
-              <UserMenu />
+              <UserMenu user={user} />
             </div>
           </div>
         </div>
@@ -570,12 +570,12 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="space-y-2">
                   {pendingDetection.map((vcoinId) => {
-                    const target = calendarTargets.find((t: any) => t.vcoinId === vcoinId);
+                    const target = calendarTargets.find((t) => t.vcoinId === vcoinId);
                     return target ? (
                       <div key={vcoinId} className="flex justify-between items-center p-3 bg-yellow-50/5 border border-yellow-500/20 rounded">
                         <div>
                           <span className="font-medium text-yellow-400">{target.symbol}</span>
-                          <span className="text-slate-400 ml-2">{target.projectName}</span>
+                          <span className="text-slate-400 ml-2">{String(target.projectName)}</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="text-sm text-yellow-400">
@@ -725,8 +725,8 @@ export default function DashboardPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {workflowStatus?.recentActivity?.length ? (
-                  workflowStatus!.recentActivity!.map((activity: any) => {
+                {workflowStatus && workflowStatus.recentActivity && workflowStatus.recentActivity.length > 0 ? (
+                  workflowStatus.recentActivity.map((activity: { type: string; message: string; timestamp: string; vcoinId?: string; id?: string }) => {
                     const getActivityIcon = (type: string) => {
                       switch (type) {
                         case 'pattern': return <ArrowUpRight className="h-4 w-4 text-green-400" />;
@@ -760,7 +760,7 @@ export default function DashboardPage() {
                     };
 
                     return (
-                      <div key={activity.id} className="flex items-center space-x-3 p-3 bg-slate-700/50 rounded-lg animate-slide-up">
+                      <div key={activity.id || activity.timestamp} className="flex items-center space-x-3 p-3 bg-slate-700/50 rounded-lg animate-slide-up">
                         <div className={`w-2 h-2 ${getActivityColor(activity.type)} rounded-full ${activity.type === 'pattern' ? 'animate-pulse-green' : ''}`}></div>
                         <div className="flex-1">
                           <p className="text-sm text-white">{activity.message}</p>

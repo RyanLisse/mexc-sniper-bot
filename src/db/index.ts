@@ -26,10 +26,7 @@ function createDatabase() {
   }
 
   // Only use TursoDB if we have valid configuration
-  if (
-    process.env.TURSO_DATABASE_URL &&
-    process.env.TURSO_AUTH_TOKEN
-  ) {
+  if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
     console.log("[Database] Using TursoDB");
     try {
       const client = createClient({

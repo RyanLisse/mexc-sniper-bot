@@ -1,8 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { addDays, format, isSameDay, isToday, isTomorrow } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import * as React from "react";
 
 import { Button } from "@/src/components/ui/button";
 import { Calendar } from "@/src/components/ui/calendar";
@@ -76,10 +75,7 @@ export function CoinDateSelector({
               fontWeight: "600",
             },
           }}
-          components={{
-            IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
-            IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
-          }}
+          components={{}}
         />
 
         {/* Quick date selection buttons */}

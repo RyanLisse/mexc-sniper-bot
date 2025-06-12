@@ -1,6 +1,6 @@
 /**
  * Secure Encryption Service for API Credentials
- * 
+ *
  * This service provides financial-grade encryption for sensitive data like API keys.
  * It implements:
  * - PBKDF2 key derivation from master key
@@ -10,16 +10,16 @@
  * - Secure key storage patterns
  */
 
-import { randomBytes, pbkdf2Sync, createCipheriv, createDecipheriv } from 'crypto';
+import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from "node:crypto";
 
 // Constants for cryptographic operations
-const ALGORITHM = 'aes-256-gcm';
+const ALGORITHM = "aes-256-gcm";
 const SALT_LENGTH = 32; // 256 bits
 const NONCE_LENGTH = 16; // 128 bits for GCM
-const TAG_LENGTH = 16; // 128 bits
+const _TAG_LENGTH = 16; // 128 bits
 const KEY_LENGTH = 32; // 256 bits
 const PBKDF2_ITERATIONS = 100000; // OWASP recommendation
-const PBKDF2_DIGEST = 'sha256';
+const PBKDF2_DIGEST = "sha256";
 
 // Version for key rotation support
 const CURRENT_VERSION = 1;
@@ -40,31 +40,31 @@ export class SecureEncryptionService {
   constructor() {
     // Validate and load master key from environment
     const envKey = process.env.ENCRYPTION_MASTER_KEY;
-    
+
     if (!envKey) {
       throw new Error(
-        'ENCRYPTION_MASTER_KEY environment variable is required. ' +
-        'Generate a secure key using: openssl rand -base64 32'
+        "ENCRYPTION_MASTER_KEY environment variable is required. " +
+          "Generate a secure key using: openssl rand -base64 32"
       );
     }
 
     // Validate key format and length
     try {
-      this.masterKey = Buffer.from(envKey, 'base64');
-      
-      if (this.masterKey.length < 32) {
-        throw new Error('Master key must be at least 256 bits (32 bytes)');
-      }
-    } catch (error) {
+      this.masterKey = Buffer.from(envKey, "base64");
+    } catch (_error) {
       throw new Error(
-        'Invalid ENCRYPTION_MASTER_KEY format. ' +
-        'Key must be base64 encoded. ' +
-        'Generate using: openssl rand -base64 32'
+        "Invalid ENCRYPTION_MASTER_KEY format. " +
+          "Key must be base64 encoded. " +
+          "Generate using: openssl rand -base64 32"
       );
     }
 
+    if (this.masterKey.length < 32) {
+      throw new Error("Master key must be at least 256 bits (32 bytes)");
+    }
+
     // Key ID for rotation tracking (optional)
-    this.keyId = process.env.ENCRYPTION_KEY_ID || 'default';
+    this.keyId = process.env.ENCRYPTION_KEY_ID || "default";
   }
 
   /**
@@ -89,10 +89,7 @@ export class SecureEncryptionService {
       const cipher = createCipheriv(ALGORITHM, derivedKey, nonce);
 
       // Encrypt data
-      const ciphertext = Buffer.concat([
-        cipher.update(plaintext, 'utf8'),
-        cipher.final()
-      ]);
+      const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
 
       // Get authentication tag
       const tag = cipher.getAuthTag();
@@ -100,17 +97,17 @@ export class SecureEncryptionService {
       // Combine all components into a structured format
       const encryptedData: EncryptedData = {
         version: CURRENT_VERSION,
-        salt: salt.toString('base64'),
-        nonce: nonce.toString('base64'),
-        tag: tag.toString('base64'),
-        ciphertext: ciphertext.toString('base64')
+        salt: salt.toString("base64"),
+        nonce: nonce.toString("base64"),
+        tag: tag.toString("base64"),
+        ciphertext: ciphertext.toString("base64"),
       };
 
       // Return as base64-encoded JSON
-      return Buffer.from(JSON.stringify(encryptedData)).toString('base64');
+      return Buffer.from(JSON.stringify(encryptedData)).toString("base64");
     } catch (error) {
-      console.error('[Encryption] Encryption failed:', error);
-      throw new Error('Failed to encrypt data');
+      console.error("[Encryption] Encryption failed:", error);
+      throw new Error("Failed to encrypt data");
     }
   }
 
@@ -121,7 +118,7 @@ export class SecureEncryptionService {
     try {
       // Parse the encrypted data structure
       const encryptedData: EncryptedData = JSON.parse(
-        Buffer.from(encryptedText, 'base64').toString('utf8')
+        Buffer.from(encryptedText, "base64").toString("utf8")
       );
 
       // Version check for future compatibility
@@ -130,10 +127,10 @@ export class SecureEncryptionService {
       }
 
       // Decode components
-      const salt = Buffer.from(encryptedData.salt, 'base64');
-      const nonce = Buffer.from(encryptedData.nonce, 'base64');
-      const tag = Buffer.from(encryptedData.tag, 'base64');
-      const ciphertext = Buffer.from(encryptedData.ciphertext, 'base64');
+      const salt = Buffer.from(encryptedData.salt, "base64");
+      const nonce = Buffer.from(encryptedData.nonce, "base64");
+      const tag = Buffer.from(encryptedData.tag, "base64");
+      const ciphertext = Buffer.from(encryptedData.ciphertext, "base64");
 
       // Derive the same key using PBKDF2
       const derivedKey = pbkdf2Sync(
@@ -149,17 +146,14 @@ export class SecureEncryptionService {
       decipher.setAuthTag(tag);
 
       // Decrypt and verify authentication
-      const plaintext = Buffer.concat([
-        decipher.update(ciphertext),
-        decipher.final()
-      ]);
+      const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 
-      return plaintext.toString('utf8');
+      return plaintext.toString("utf8");
     } catch (error) {
-      console.error('[Encryption] Decryption failed:', error);
-      
+      console.error("[Encryption] Decryption failed:", error);
+
       // Don't leak information about why decryption failed
-      throw new Error('Failed to decrypt data');
+      throw new Error("Failed to decrypt data");
     }
   }
 
@@ -175,7 +169,7 @@ export class SecureEncryptionService {
    * Generates a secure random key for initial setup
    */
   static generateSecureKey(): string {
-    return randomBytes(32).toString('base64');
+    return randomBytes(32).toString("base64");
   }
 
   /**
@@ -183,16 +177,14 @@ export class SecureEncryptionService {
    */
   isValidEncryptedFormat(encryptedText: string): boolean {
     try {
-      const data = JSON.parse(
-        Buffer.from(encryptedText, 'base64').toString('utf8')
-      );
-      
+      const data = JSON.parse(Buffer.from(encryptedText, "base64").toString("utf8"));
+
       return (
-        typeof data.version === 'number' &&
-        typeof data.salt === 'string' &&
-        typeof data.nonce === 'string' &&
-        typeof data.tag === 'string' &&
-        typeof data.ciphertext === 'string'
+        typeof data.version === "number" &&
+        typeof data.salt === "string" &&
+        typeof data.nonce === "string" &&
+        typeof data.tag === "string" &&
+        typeof data.ciphertext === "string"
       );
     } catch {
       return false;
@@ -202,16 +194,16 @@ export class SecureEncryptionService {
   /**
    * Masks sensitive data for display (shows first/last 4 chars)
    */
-  static maskSensitiveData(data: string, visibleChars: number = 4): string {
+  static maskSensitiveData(data: string, visibleChars = 4): string {
     if (data.length <= visibleChars * 2) {
-      return '*'.repeat(data.length);
+      return "*".repeat(data.length);
     }
-    
+
     const start = data.substring(0, visibleChars);
     const end = data.substring(data.length - visibleChars);
     const maskLength = Math.max(4, data.length - visibleChars * 2);
-    
-    return `${start}${'*'.repeat(maskLength)}${end}`;
+
+    return `${start}${"*".repeat(maskLength)}${end}`;
   }
 }
 
@@ -233,11 +225,11 @@ export function getEncryptionService(): SecureEncryptionService {
  */
 export function generateMasterKey(): void {
   const key = SecureEncryptionService.generateSecureKey();
-  console.log('\n🔐 Generated new master encryption key:');
+  console.log("\n🔐 Generated new master encryption key:");
   console.log(`ENCRYPTION_MASTER_KEY="${key}"`);
-  console.log('\n⚠️  Add this to your .env.local file and keep it secure!');
-  console.log('⚠️  Never commit this key to version control!');
-  console.log('⚠️  Loss of this key means loss of all encrypted data!\n');
+  console.log("\n⚠️  Add this to your .env.local file and keep it secure!");
+  console.log("⚠️  Never commit this key to version control!");
+  console.log("⚠️  Loss of this key means loss of all encrypted data!\n");
 }
 
 // For testing and key generation

@@ -16,7 +16,7 @@ async function applyForeignKeyMigration() {
 
     if (isSQLite) {
       console.log("📦 SQLite detected - applying foreign key migration...");
-      
+
       // Enable foreign keys for SQLite
       await db.run(sql`PRAGMA foreign_keys = ON`);
       console.log("✅ Foreign keys enabled");
@@ -81,7 +81,6 @@ async function applyForeignKeyMigration() {
       console.log("   - executionHistory.userId → user.id (CASCADE DELETE)");
       console.log("   - transactions.userId → user.id (CASCADE DELETE)");
     }
-
   } catch (error) {
     console.error("❌ Migration failed:", error);
     throw error;

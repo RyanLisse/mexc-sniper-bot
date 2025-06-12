@@ -123,19 +123,19 @@ test: kill-ports ## Run all unit tests (kills ports first)
 .PHONY: test-unit
 test-unit: ## Run unit tests only (no port killing)
 	@echo -e "${BLUE}Running unit tests only...${NC}"
-	@bunx vitest run __tests__/unit/ all-tests/vitest-unit-tests/
+	@bunx vitest run tests/unit/
 	@echo -e "${GREEN}✓ Unit tests completed${NC}"
 
 .PHONY: test-integration
 test-integration: ## Run integration tests only
 	@echo -e "${BLUE}Running integration tests only...${NC}"
-	@bunx vitest run __tests__/integration/
+	@bunx vitest run tests/integration/
 	@echo -e "${GREEN}✓ Integration tests completed${NC}"
 
 .PHONY: test-utils
 test-utils: ## Run utility/verification tests only
 	@echo -e "${BLUE}Running utility tests only...${NC}"
-	@bunx vitest run __tests__/utils/
+	@bunx vitest run tests/unit/verification.test.ts
 	@echo -e "${GREEN}✓ Utility tests completed${NC}"
 
 .PHONY: test-watch
@@ -193,7 +193,7 @@ test-all: kill-ports ## Run all tests in sequence (unit → integration → E2E)
 	@$(NODE) run test:unit
 	@echo -e "${GREEN}✓ Unit tests passed${NC}"
 	@echo -e "${YELLOW}2/3: Running integration tests...${NC}"
-	@bunx vitest run __tests__/integration/
+	@bunx vitest run tests/integration/
 	@echo -e "${GREEN}✓ Integration tests passed${NC}"
 	@echo -e "${YELLOW}3/3: Running E2E tests...${NC}"
 	@echo -e "${BLUE}Starting development server for E2E tests...${NC}"

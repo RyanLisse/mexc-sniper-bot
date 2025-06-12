@@ -4,13 +4,6 @@ const nextConfig: NextConfig = {
   // Exclude server-only packages from client-side bundles
   serverExternalPackages: ["better-sqlite3"],
   
-  // ESLint configuration for production builds
-  eslint: {
-    // Allow builds to complete - lint separately in CI/CD
-    ignoreDuringBuilds: true,
-    dirs: ['app', 'src', 'components'],
-  },
-  
   // TypeScript configuration
   typescript: {
     // Allow builds for deployment - fix types in development

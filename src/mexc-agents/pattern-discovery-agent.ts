@@ -1,8 +1,36 @@
-import { type AgentConfig, type AgentResponse, BaseAgent } from "../agents/base-agent";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
+
+export interface CalendarEntry {
+  vcoinId: string;
+  symbol: string;
+  projectName?: string;
+  firstOpenTime?: number;
+  launchTime?: string | number;
+  tradingPairs?: string[];
+  sts?: number;
+  st?: number;
+  // Pattern analysis properties
+  isUpcoming?: boolean;
+  patternConfidence?: number;
+  hasOptimalAdvance?: boolean;
+  projectType?: { category: string; marketAppeal: number };
+  advanceHours?: number;
+  urgencyLevel?: string;
+  [key: string]: unknown;
+}
+
+export interface SymbolData {
+  cd: string;
+  sts: number;
+  st: number;
+  tt: number;
+  symbol?: string;
+  [key: string]: unknown;
+}
 
 export interface PatternAnalysisRequest {
-  symbolData?: any[];
-  calendarData?: any[];
+  symbolData?: SymbolData[];
+  calendarData?: CalendarEntry[];
   analysisType: "discovery" | "monitoring" | "execution";
   timeframe?: string;
   confidenceThreshold?: number;
@@ -11,7 +39,7 @@ export interface PatternAnalysisRequest {
 export interface PatternMatch {
   patternType: string;
   confidence: number;
-  indicators: Record<string, any>;
+  indicators: Record<string, string | number | boolean>;
   recommendation: string;
   riskLevel: "low" | "medium" | "high";
 }
@@ -127,7 +155,7 @@ Provide specific pattern matches with confidence levels and clear action items.
     ]);
   }
 
-  async discoverNewListings(calendarEntries: any[]): Promise<AgentResponse> {
+  async discoverNewListings(calendarEntries: CalendarEntry[]): Promise<AgentResponse> {
     try {
       console.log(
         `[PatternDiscoveryAgent] Starting discovery analysis on ${calendarEntries.length} calendar entries`
@@ -238,18 +266,22 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Extract pattern-relevant data from calendar entries
-  private extractPatternsFromCalendarData(calendarEntries: any[]): any[] {
+  private extractPatternsFromCalendarData(calendarEntries: CalendarEntry[]): CalendarEntry[] {
     const now = Date.now();
 
     return calendarEntries
       .filter((entry) => {
         // Filter for valid entries with required fields
-        return entry?.vcoinId && entry.symbol && (entry.firstOpenTime || entry.launchTime);
+        return entry?.vcoinId && entry.symbol && entry.firstOpenTime;
       })
       .map((entry) => {
-        const launchTime = entry.firstOpenTime || entry.launchTime;
+        const launchTime = entry.firstOpenTime;
         const launchTimestamp =
-          typeof launchTime === "number" ? launchTime : new Date(launchTime).getTime();
+          typeof launchTime === "number"
+            ? launchTime
+            : launchTime
+              ? new Date(launchTime).getTime()
+              : Date.now();
         const advanceHours = (launchTimestamp - now) / (1000 * 60 * 60);
 
         // Extract pattern indicators
@@ -258,9 +290,7 @@ Provide specific pattern matches with confidence scores and actionable recommend
         const advanceNoticeQuality = this.assessAdvanceNoticeQuality(advanceHours);
 
         return {
-          vcoinId: entry.vcoinId,
-          symbol: entry.symbol,
-          projectName: entry.projectName || entry.symbol,
+          ...entry,
           launchTime: new Date(launchTimestamp).toISOString(),
           launchTimestamp,
           advanceHours: Math.round(advanceHours * 100) / 100,
@@ -377,7 +407,11 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Calculate pattern confidence score
-  private calculatePatternConfidence(entry: any, advanceHours: number, projectType: any): number {
+  private calculatePatternConfidence(
+    entry: CalendarEntry,
+    advanceHours: number,
+    projectType: { category: string; marketAppeal: number }
+  ): number {
     let confidence = 50; // Base confidence
 
     // Advance notice quality
@@ -396,7 +430,10 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Assess delay risk factors
-  private assessDelayRisk(entry: any, advanceHours: number): { level: string; factors: string[] } {
+  private assessDelayRisk(
+    entry: CalendarEntry,
+    advanceHours: number
+  ): { level: string; factors: string[] } {
     const factors: string[] = [];
     let riskLevel = "low";
 
@@ -420,12 +457,15 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Generate pattern analysis summary
-  private generatePatternSummary(processedData: any[]): any {
+  private generatePatternSummary(processedData: CalendarEntry[]): Record<string, unknown> {
     const upcomingOpportunities = processedData.filter((d) => d.isUpcoming);
-    const highConfidenceMatches = processedData.filter((d) => d.patternConfidence >= 80);
-    const optimalAdvanceNotice = processedData.filter((d) => d.hasOptimalAdvance);
+    const highConfidenceMatches = processedData.filter((d) => (d.patternConfidence || 0) >= 80);
+    const optimalAdvanceNotice = processedData.filter((d) => d.hasOptimalAdvance === true);
 
-    const totalAdvanceHours = upcomingOpportunities.reduce((sum, d) => sum + d.advanceHours, 0);
+    const totalAdvanceHours = upcomingOpportunities.reduce(
+      (sum, d) => sum + (d.advanceHours || 0),
+      0
+    );
     const averageAdvanceHours =
       upcomingOpportunities.length > 0
         ? Math.round((totalAdvanceHours / upcomingOpportunities.length) * 100) / 100
@@ -433,7 +473,8 @@ Provide specific pattern matches with confidence scores and actionable recommend
 
     const projectTypes = processedData.reduce(
       (acc, d) => {
-        acc[d.projectType.category] = (acc[d.projectType.category] || 0) + 1;
+        const category = d.projectType?.category || "Unknown";
+        acc[category] = (acc[category] || 0) + 1;
         return acc;
       },
       {} as Record<string, number>
@@ -457,7 +498,7 @@ Provide specific pattern matches with confidence scores and actionable recommend
     };
   }
 
-  async analyzeSymbolPatterns(symbolData: any[]): Promise<AgentResponse> {
+  async analyzeSymbolPatterns(symbolData: SymbolData[]): Promise<AgentResponse> {
     return await this.process("Analyze MEXC symbol patterns", {
       symbolData,
       analysisType: "monitoring",
@@ -468,7 +509,7 @@ Provide specific pattern matches with confidence scores and actionable recommend
 
   async validateReadyState(params: {
     vcoinId: string;
-    symbolData: any[];
+    symbolData: SymbolData[];
     count: number;
   }): Promise<AgentResponse> {
     const userMessage = `
@@ -549,7 +590,7 @@ Focus on precise pattern matching and actionable timing recommendations.
     ]);
   }
 
-  async identifyEarlyOpportunities(marketData: any): Promise<AgentResponse> {
+  async identifyEarlyOpportunities(marketData: SymbolData | CalendarEntry): Promise<AgentResponse> {
     const userMessage = `
 MEXC Early Opportunity Identification:
 
@@ -594,7 +635,7 @@ Focus on opportunities that provide 3.5+ hours advance notice for optimal positi
     ]);
   }
 
-  async assessPatternReliability(patternData: any): Promise<AgentResponse> {
+  async assessPatternReliability(patternData: SymbolData | CalendarEntry): Promise<AgentResponse> {
     const userMessage = `
 MEXC Pattern Reliability Assessment:
 

@@ -6,6 +6,8 @@ process.env.OPENAI_API_KEY = 'test-openai-key'
 process.env.MEXC_API_KEY = 'test-mexc-key'
 process.env.MEXC_SECRET_KEY = 'test-mexc-secret'
 process.env.MEXC_BASE_URL = 'https://api.mexc.com'
+// 32-byte base64 encoded key for encryption testing
+process.env.ENCRYPTION_MASTER_KEY = 'dGVzdC1lbmNyeXB0aW9uLWtleS0zMi1ieXRlcy1sb25n'
 
 // Mock AbortSignal.timeout for Node environments that don't support it
 if (!AbortSignal.timeout) {

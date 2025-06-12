@@ -28,7 +28,7 @@ export const SnipeTargetSchema = z.object({
   launchTime: z.date(),
   discoveredAt: z.date(),
   hoursAdvanceNotice: z.number(),
-  orderParameters: z.record(z.any()).optional(),
+  orderParameters: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
   confidence: z.number().optional(),
 });
 

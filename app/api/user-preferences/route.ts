@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, userPreferences, type NewUserPreferences } from '@/src/db';
 import { eq } from 'drizzle-orm';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS,
+  createValidationErrorResponse
+} from '@/src/lib/api-response';
 
 // GET /api/user-preferences?userId=xxx
 export async function GET(request: NextRequest) {
@@ -9,9 +17,9 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'userId parameter is required' },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('userId', 'userId parameter is required'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -22,7 +30,11 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (result.length === 0) {
-      return NextResponse.json(null);
+      return apiResponse(
+        createSuccessResponse(null, {
+          message: 'No preferences found for user'
+        })
+      );
     }
 
     const prefs = result[0];
@@ -55,12 +67,14 @@ export async function GET(request: NextRequest) {
       autoSnipeEnabled: prefs.autoSnipeEnabled ?? true,
     };
 
-    return NextResponse.json(response);
+    return apiResponse(
+      createSuccessResponse(response)
+    );
   } catch (error) {
     console.error('[API] Failed to fetch user preferences:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch user preferences' },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }
@@ -72,9 +86,9 @@ export async function POST(request: NextRequest) {
     const { userId, ...data } = body;
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('userId', 'userId is required'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -103,45 +117,45 @@ export async function POST(request: NextRequest) {
     // Support direct field access for individual take profit levels with validation
     if (data.takeProfitLevel1 !== undefined) {
       if (data.takeProfitLevel1 < 0) {
-        return NextResponse.json(
-          { error: 'Take profit level 1 cannot be negative' },
-          { status: 400 }
+        return apiResponse(
+          createValidationErrorResponse('takeProfitLevel1', 'Take profit level 1 cannot be negative'),
+          HTTP_STATUS.BAD_REQUEST
         );
       }
       updateData.takeProfitLevel1 = data.takeProfitLevel1;
     }
     if (data.takeProfitLevel2 !== undefined) {
       if (data.takeProfitLevel2 < 0) {
-        return NextResponse.json(
-          { error: 'Take profit level 2 cannot be negative' },
-          { status: 400 }
+        return apiResponse(
+          createValidationErrorResponse('takeProfitLevel2', 'Take profit level 2 cannot be negative'),
+          HTTP_STATUS.BAD_REQUEST
         );
       }
       updateData.takeProfitLevel2 = data.takeProfitLevel2;
     }
     if (data.takeProfitLevel3 !== undefined) {
       if (data.takeProfitLevel3 < 0) {
-        return NextResponse.json(
-          { error: 'Take profit level 3 cannot be negative' },
-          { status: 400 }
+        return apiResponse(
+          createValidationErrorResponse('takeProfitLevel3', 'Take profit level 3 cannot be negative'),
+          HTTP_STATUS.BAD_REQUEST
         );
       }
       updateData.takeProfitLevel3 = data.takeProfitLevel3;
     }
     if (data.takeProfitLevel4 !== undefined) {
       if (data.takeProfitLevel4 < 0) {
-        return NextResponse.json(
-          { error: 'Take profit level 4 cannot be negative' },
-          { status: 400 }
+        return apiResponse(
+          createValidationErrorResponse('takeProfitLevel4', 'Take profit level 4 cannot be negative'),
+          HTTP_STATUS.BAD_REQUEST
         );
       }
       updateData.takeProfitLevel4 = data.takeProfitLevel4;
     }
     if (data.takeProfitCustom !== undefined) {
       if (data.takeProfitCustom < 0) {
-        return NextResponse.json(
-          { error: 'Custom take profit level cannot be negative' },
-          { status: 400 }
+        return apiResponse(
+          createValidationErrorResponse('takeProfitCustom', 'Custom take profit level cannot be negative'),
+          HTTP_STATUS.BAD_REQUEST
         );
       }
       updateData.takeProfitCustom = data.takeProfitCustom;
@@ -223,12 +237,16 @@ export async function POST(request: NextRequest) {
       await db.insert(userPreferences).values(newPrefs);
     }
 
-    return NextResponse.json({ success: true, data });
+    return apiResponse(
+      createSuccessResponse(data, {
+        message: 'User preferences updated successfully'
+      })
+    );
   } catch (error) {
     console.error('[API] Failed to update user preferences:', error);
-    return NextResponse.json(
-      { error: 'Failed to update user preferences' },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }

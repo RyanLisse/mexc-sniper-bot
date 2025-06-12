@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MultiAgentOrchestrator } from "../../../../src/agents/multi-agent-orchestrator";
+import { MultiAgentOrchestrator } from "../../../../src/mexc-agents/multi-agent-orchestrator";
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS,
+  createValidationErrorResponse
+} from "@/src/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,36 +35,36 @@ export async function POST(request: NextRequest) {
     console.log(`[MultiAgent API] Workflow completed in ${result.totalExecutionTime}ms`);
     console.log(`[MultiAgent API] Execution path: ${result.executionPath.join(' -> ')}`);
 
-    return NextResponse.json({
-      success: true,
-      workflow: {
-        type: workflowType,
-        executionPath: result.executionPath,
-        totalExecutionTime: result.totalExecutionTime,
-        handoffCount: result.executionPath.length - 1,
-        finalResult: result.finalResult?.content,
-        agentResults: Object.fromEntries(
-          Array.from(result.agentResults.entries()).map(([agent, response]) => [
-            agent,
-            {
-              content: response.content.substring(0, 500) + (response.content.length > 500 ? '...' : ''),
-              executionTime: response.metadata.executionTime,
-              model: response.metadata.model
-            }
-          ])
-        )
-      },
-      error: result.error
-    });
+    return apiResponse(
+      createSuccessResponse({
+        workflow: {
+          type: workflowType,
+          executionPath: result.executionPath,
+          totalExecutionTime: result.totalExecutionTime,
+          handoffCount: result.executionPath.length - 1,
+          finalResult: result.finalResult?.content,
+          agentResults: Object.fromEntries(
+            Array.from(result.agentResults.entries()).map(([agent, response]) => [
+              agent,
+              {
+                content: response.content.substring(0, 500) + (response.content.length > 500 ? '...' : ''),
+                executionTime: (response.metadata as any).executionTime,
+                model: response.metadata.model
+              }
+            ])
+          )
+        },
+        error: result.error
+      }, {
+        message: `Workflow '${workflowType}' completed successfully`
+      })
+    );
 
   } catch (error) {
     console.error('[MultiAgent API] Test failed:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
-      },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }
@@ -68,25 +76,24 @@ export async function GET() {
     const metrics = orchestrator.getAgentMetrics();
     const history = orchestrator.getExecutionHistory(5);
 
-    return NextResponse.json({
-      availableWorkflows: [
-        "calendar_discovery",
-        "pattern_analysis", 
-        "full_pipeline"
-      ],
-      agentMetrics: Object.fromEntries(metrics),
-      recentExecutions: history.length,
-      status: "Multi-agent system operational"
-    });
+    return apiResponse(
+      createSuccessResponse({
+        availableWorkflows: [
+          "calendar_discovery",
+          "pattern_analysis", 
+          "full_pipeline"
+        ],
+        agentMetrics: Object.fromEntries(metrics),
+        recentExecutions: history.length,
+        status: "Multi-agent system operational"
+      })
+    );
 
   } catch (error) {
     console.error('[MultiAgent API] Status check failed:', error);
-    return NextResponse.json(
-      {
-        status: "Error retrieving multi-agent system status",
-        error: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
+    return apiResponse(
+      createErrorResponse("Error retrieving multi-agent system status"),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }

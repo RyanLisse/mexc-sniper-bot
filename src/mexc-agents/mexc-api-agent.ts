@@ -1,4 +1,3 @@
-import { type AgentConfig, type AgentResponse, BaseAgent } from "../agents/base-agent";
 import {
   READY_STATE_PATTERN,
   type SymbolV2Entry,
@@ -8,6 +7,7 @@ import {
   validateSymbolV2Entry,
 } from "../schemas/mexc-schemas";
 import { getMexcClient } from "../services/mexc-api-client";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 export interface MexcApiParams {
   vcoin_id?: string;
@@ -324,7 +324,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
       response !== null &&
       "success" in response &&
       "data" in response &&
-      typeof (response as any).success === "boolean"
+      typeof (response as MexcApiResponseData).success === "boolean"
     );
   }
 
@@ -396,7 +396,9 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
           throw new Error(`Failed to fetch symbol data: ${errorMsg}`);
         }
 
-        symbols = (apiResponse.data as any)?.symbols || [];
+        symbols = Array.isArray(apiResponse.data)
+          ? apiResponse.data
+          : (apiResponse.data as { symbols?: SymbolV2Entry[] })?.symbols || [];
       } else {
         symbols = symbolData;
       }
@@ -520,7 +522,9 @@ Focus on actionable trading signals and specific symbol recommendations.
       }
 
       // Filter symbols by vcoinIds
-      const allSymbols = (apiResponse.data as any)?.symbols || [];
+      const allSymbols = Array.isArray(apiResponse.data)
+        ? apiResponse.data
+        : (apiResponse.data as { symbols?: MexcSymbolFilterData[] })?.symbols || [];
       const requestedSymbols = allSymbols.filter((symbol: MexcSymbolFilterData) =>
         vcoinIds.includes(symbol.cd)
       );

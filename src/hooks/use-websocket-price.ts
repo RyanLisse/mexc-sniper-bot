@@ -2,7 +2,7 @@
  * React Hook for WebSocket Price Data
  * Provides real-time price updates for trading symbols
  * Integrates with the WebSocket Price Service for efficient data streaming
- * 
+ *
  * Memory Management Features:
  * - Proper cleanup of intervals and subscriptions
  * - Prevents state updates after unmount
@@ -55,7 +55,7 @@ export function useWebSocketPrice(
 
   // Ref to track if component is mounted
   const isMountedRef = useRef(true);
-  
+
   // Update connection status based on service status
   useEffect(() => {
     const updateStatus = () => {
@@ -202,7 +202,7 @@ export function useWebSocketPrices(
   const [errors, setErrors] = useState<Map<string, string>>(new Map());
   const [unsubscribeFns, setUnsubscribeFns] = useState<Map<string, () => void>>(new Map());
   const [retryCounts, setRetryCounts] = useState<Map<string, number>>(new Map());
-  
+
   // Ref to track if component is mounted
   const isMountedRef = useRef(true);
 

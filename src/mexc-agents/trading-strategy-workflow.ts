@@ -1,5 +1,17 @@
-import type { AgentResponse } from "../agents/base-agent";
 import { extractConfidencePercentage, sanitizeSymbolName } from "./analysis-utils";
+import type { AgentResponse } from "./base-agent";
+
+export interface SymbolDataInput {
+  cd: string;
+  sts: number;
+  st: number;
+  tt: number;
+  ca?: string;
+  ps?: number;
+  qs?: number;
+  ot?: number;
+  [key: string]: unknown;
+}
 
 export interface TradingStrategyResult {
   strategy: CompiledTradingStrategy;
@@ -46,7 +58,7 @@ export class TradingStrategyWorkflow {
   async compileTradingStrategy(
     strategyAnalysis: AgentResponse,
     vcoinId: string,
-    symbolData: any,
+    symbolData: SymbolDataInput | SymbolDataInput[],
     riskLevel: "low" | "medium" | "high" = "medium",
     capital = 1000
   ): Promise<TradingStrategyResult> {
@@ -76,9 +88,14 @@ export class TradingStrategyWorkflow {
     };
   }
 
-  private extractBaseStrategy(analysis: AgentResponse, symbolData: any): CompiledTradingStrategy {
+  private extractBaseStrategy(
+    analysis: AgentResponse,
+    symbolData: SymbolDataInput | SymbolDataInput[]
+  ): CompiledTradingStrategy {
     const content = analysis.content || "";
-    const symbol = sanitizeSymbolName(symbolData.symbol);
+    const symbol = sanitizeSymbolName(
+      Array.isArray(symbolData) ? symbolData[0]?.cd || "UNKNOWN" : symbolData?.cd || "UNKNOWN"
+    );
 
     // Extract action recommendation
     let action: "buy" | "sell" | "hold" | "watch" = "watch";

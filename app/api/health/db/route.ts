@@ -31,9 +31,10 @@ export async function GET() {
     });
   } catch (error) {
     console.error("[Health Check] Error:", error);
+    const errorObj = error as Error | { message?: string };
     return NextResponse.json({
       status: 'error',
-      error: error?.message || 'Unknown error',
+      error: errorObj?.message || 'Unknown error',
       timestamp: new Date().toISOString(),
     }, {
       status: 500,

@@ -3,7 +3,10 @@
  */
 
 export class ValidationError extends Error {
-  constructor(message: string, public field?: string) {
+  constructor(
+    message: string,
+    public field?: string
+  ) {
     super(message);
     this.name = "ValidationError";
   }
@@ -17,7 +20,10 @@ export class AuthError extends Error {
 }
 
 export class RateLimitError extends Error {
-  constructor(message: string, public retryAfter?: number) {
+  constructor(
+    message: string,
+    public retryAfter?: number
+  ) {
     super(message);
     this.name = "RateLimitError";
   }
@@ -58,7 +64,7 @@ export class ErrorClassifier {
    * Checks if error is retryable (timeout or connection)
    */
   static isRetryable(error: unknown): boolean {
-    return this.isTimeout(error) || this.isConnection(error);
+    return ErrorClassifier.isTimeout(error) || ErrorClassifier.isConnection(error);
   }
 
   /**
@@ -104,11 +110,11 @@ export class ErrorClassifier {
    * Gets the error type category
    */
   static getErrorType(error: unknown): string {
-    if (this.isTimeout(error)) return "timeout";
-    if (this.isConnection(error)) return "connection";
-    if (this.isAuth(error)) return "auth";
-    if (this.isRateLimit(error)) return "rate_limit";
-    if (this.isValidation(error)) return "validation";
+    if (ErrorClassifier.isTimeout(error)) return "timeout";
+    if (ErrorClassifier.isConnection(error)) return "connection";
+    if (ErrorClassifier.isAuth(error)) return "auth";
+    if (ErrorClassifier.isRateLimit(error)) return "rate_limit";
+    if (ErrorClassifier.isValidation(error)) return "validation";
     return "unknown";
   }
 
@@ -116,10 +122,10 @@ export class ErrorClassifier {
    * Gets HTTP status code for error type
    */
   static getStatusCode(error: unknown): number {
-    if (this.isValidation(error)) return 400;
-    if (this.isAuth(error)) return 401;
-    if (this.isRateLimit(error)) return 429;
-    if (this.isTimeout(error) || this.isConnection(error)) return 503;
+    if (ErrorClassifier.isValidation(error)) return 400;
+    if (ErrorClassifier.isAuth(error)) return 401;
+    if (ErrorClassifier.isRateLimit(error)) return 429;
+    if (ErrorClassifier.isTimeout(error) || ErrorClassifier.isConnection(error)) return 503;
     return 500;
   }
 
@@ -128,14 +134,14 @@ export class ErrorClassifier {
    */
   static shouldRetry(error: unknown, attempt: number, maxRetries: number): boolean {
     if (attempt >= maxRetries) return false;
-    return this.isRetryable(error);
+    return ErrorClassifier.isRetryable(error);
   }
 
   /**
    * Calculates retry delay with exponential backoff
    */
   static getRetryDelay(attempt: number, baseDelay = 1000, maxDelay = 30000): number {
-    const exponentialDelay = baseDelay * Math.pow(2, attempt - 1);
+    const exponentialDelay = baseDelay * 2 ** (attempt - 1);
     const jitter = Math.random() * 1000; // Add jitter to prevent thundering herd
     return Math.min(exponentialDelay + jitter, maxDelay);
   }
@@ -193,7 +199,7 @@ export class ErrorCollector {
 
   getErrors(): Record<string, string[]> {
     const grouped: Record<string, string[]> = {};
-    
+
     for (const error of this.errors) {
       const key = error.field || "general";
       if (!grouped[key]) {

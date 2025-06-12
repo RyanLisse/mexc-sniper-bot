@@ -2,7 +2,7 @@
  * WebSocket Price Service
  * Provides real-time price feeds using MEXC WebSocket streams
  * Reduces API polling and improves real-time responsiveness
- * 
+ *
  * Memory Management Features:
  * - LRU cache for price data with configurable size limit
  * - Proper cleanup of all event listeners and timers
@@ -38,12 +38,12 @@ type PriceCallback = (priceUpdate: PriceUpdate) => void;
 class LRUCache<K, V> {
   private maxSize: number;
   private cache: Map<K, V>;
-  
+
   constructor(maxSize: number) {
     this.maxSize = maxSize;
     this.cache = new Map();
   }
-  
+
   get(key: K): V | undefined {
     const value = this.cache.get(key);
     if (value !== undefined) {
@@ -53,16 +53,16 @@ class LRUCache<K, V> {
     }
     return value;
   }
-  
+
   set(key: K, value: V): void {
     // Remove if exists to update position
     if (this.cache.has(key)) {
       this.cache.delete(key);
     }
-    
+
     // Add to end
     this.cache.set(key, value);
-    
+
     // Remove oldest if over capacity
     if (this.cache.size > this.maxSize) {
       const firstKey = this.cache.keys().next().value;
@@ -71,27 +71,27 @@ class LRUCache<K, V> {
       }
     }
   }
-  
+
   has(key: K): boolean {
     return this.cache.has(key);
   }
-  
+
   delete(key: K): boolean {
     return this.cache.delete(key);
   }
-  
+
   clear(): void {
     this.cache.clear();
   }
-  
+
   get size(): number {
     return this.cache.size;
   }
-  
+
   keys(): IterableIterator<K> {
     return this.cache.keys();
   }
-  
+
   entries(): Map<K, V> {
     return new Map(this.cache);
   }
@@ -120,7 +120,7 @@ export class WebSocketPriceService {
   private isConnecting = false;
   private isConnected = false;
   private isShuttingDown = false;
-  
+
   // Memory management
   private memoryCheckInterval?: NodeJS.Timeout;
   private memoryMetrics: MemoryMetrics[] = [];
@@ -128,7 +128,7 @@ export class WebSocketPriceService {
   private readonly MAX_CACHE_SIZE = 1000; // Limit cache to 1000 symbols
   private readonly MEMORY_WARNING_THRESHOLD = 100 * 1024 * 1024; // 100MB
   private readonly MEMORY_CHECK_INTERVAL = 60000; // Check every minute
-  
+
   // Event handler references for cleanup
   private boundHandlers: {
     onOpen?: () => void;
@@ -160,36 +160,41 @@ export class WebSocketPriceService {
     if (this.memoryCheckInterval) {
       clearInterval(this.memoryCheckInterval);
     }
-    
+
     this.memoryCheckInterval = setInterval(() => {
       const metrics = this.collectMemoryMetrics();
-      
+
       // Store metrics with sliding window
       this.memoryMetrics.push(metrics);
       if (this.memoryMetrics.length > this.MAX_MEMORY_METRICS) {
         this.memoryMetrics.shift();
       }
-      
+
       // Check for memory issues
       if (metrics.heapUsed > this.MEMORY_WARNING_THRESHOLD) {
-        console.warn(`⚠️ High memory usage detected: ${(metrics.heapUsed / 1024 / 1024).toFixed(2)}MB`);
+        console.warn(
+          `⚠️ High memory usage detected: ${(metrics.heapUsed / 1024 / 1024).toFixed(2)}MB`
+        );
         this.performMemoryCleanup();
       }
-      
+
       // Check for memory leak (steady increase over time)
       if (this.memoryMetrics.length >= 10) {
         const recentMetrics = this.memoryMetrics.slice(-10);
         const memoryGrowth = recentMetrics[9].heapUsed - recentMetrics[0].heapUsed;
         const timeElapsed = recentMetrics[9].timestamp - recentMetrics[0].timestamp;
         const growthRate = memoryGrowth / (timeElapsed / 1000 / 60 / 60); // bytes per hour
-        
-        if (growthRate > 50 * 1024 * 1024) { // 50MB/hour
-          console.error(`🚨 Memory leak detected: ${(growthRate / 1024 / 1024).toFixed(2)}MB/hour growth rate`);
+
+        if (growthRate > 50 * 1024 * 1024) {
+          // 50MB/hour
+          console.error(
+            `🚨 Memory leak detected: ${(growthRate / 1024 / 1024).toFixed(2)}MB/hour growth rate`
+          );
         }
       }
     }, this.MEMORY_CHECK_INTERVAL);
   }
-  
+
   /**
    * Collect memory metrics
    */
@@ -197,37 +202,44 @@ export class WebSocketPriceService {
     let heapUsed = 0;
     let heapTotal = 0;
     let external = 0;
-    
-    if (typeof process !== 'undefined' && process.memoryUsage) {
+
+    if (typeof process !== "undefined" && process.memoryUsage) {
       const usage = process.memoryUsage();
       heapUsed = usage.heapUsed;
       heapTotal = usage.heapTotal;
       external = usage.external;
-    } else if (typeof window !== 'undefined' && 'memory' in performance) {
+    } else if (typeof window !== "undefined" && "memory" in performance) {
       // Browser environment
-      const memory = (performance as any).memory;
+      const memory = (
+        performance as Performance & {
+          memory?: {
+            usedJSHeapSize?: number;
+            totalJSHeapSize?: number;
+          };
+        }
+      ).memory;
       if (memory) {
         heapUsed = memory.usedJSHeapSize || 0;
         heapTotal = memory.totalJSHeapSize || 0;
       }
     }
-    
+
     return {
       heapUsed,
       heapTotal,
       external,
       subscriptionCount: this.subscriptions.size,
       cacheSize: this.priceCache.size,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
-  
+
   /**
    * Perform memory cleanup
    */
   private performMemoryCleanup(): void {
     console.log("🧹 Performing memory cleanup...");
-    
+
     // Clean up empty subscription sets
     const emptySymbols: string[] = [];
     this.subscriptions.forEach((callbacks, symbol) => {
@@ -235,16 +247,16 @@ export class WebSocketPriceService {
         emptySymbols.push(symbol);
       }
     });
-    
-    emptySymbols.forEach(symbol => {
+
+    emptySymbols.forEach((symbol) => {
       this.subscriptions.delete(symbol);
     });
-    
+
     // Force garbage collection if available (Node.js with --expose-gc flag)
-    if (typeof global !== 'undefined' && global.gc) {
+    if (typeof global !== "undefined" && global.gc) {
       global.gc();
     }
-    
+
     console.log(`✅ Cleanup complete. Removed ${emptySymbols.length} empty subscriptions`);
   }
 
@@ -255,7 +267,7 @@ export class WebSocketPriceService {
     if (this.isShuttingDown) {
       throw new Error("Service is shutting down");
     }
-    
+
     if (this.isConnecting || this.isConnected) {
       return;
     }
@@ -264,7 +276,7 @@ export class WebSocketPriceService {
 
     try {
       console.log("🔌 Connecting to MEXC WebSocket...");
-      
+
       // Clean up any existing connection first
       this.cleanupConnection();
 
@@ -285,20 +297,19 @@ export class WebSocketPriceService {
       this.boundHandlers.onMessage = this.handleMessage.bind(this);
       this.boundHandlers.onError = this.handleError.bind(this);
       this.boundHandlers.onClose = this.handleClose.bind(this);
-      
+
       // Add event listeners
-      this.ws.addEventListener('open', this.boundHandlers.onOpen);
-      this.ws.addEventListener('message', this.boundHandlers.onMessage);
-      this.ws.addEventListener('error', this.boundHandlers.onError);
-      this.ws.addEventListener('close', this.boundHandlers.onClose);
-      
+      this.ws.addEventListener("open", this.boundHandlers.onOpen);
+      this.ws.addEventListener("message", this.boundHandlers.onMessage);
+      this.ws.addEventListener("error", this.boundHandlers.onError);
+      this.ws.addEventListener("close", this.boundHandlers.onClose);
     } catch (error) {
       console.error("❌ Failed to connect to WebSocket:", error);
       this.isConnecting = false;
       this.scheduleReconnect();
     }
   }
-  
+
   /**
    * Handle WebSocket open event
    */
@@ -313,7 +324,7 @@ export class WebSocketPriceService {
     // Resubscribe to all symbols after reconnection
     this.resubscribeAll();
   }
-  
+
   /**
    * Handle WebSocket message event
    */
@@ -332,14 +343,14 @@ export class WebSocketPriceService {
       console.error("❌ Error parsing WebSocket message:", error);
     }
   }
-  
+
   /**
    * Handle WebSocket error event
    */
   private handleError(event: Event): void {
     console.error("❌ WebSocket error:", event);
   }
-  
+
   /**
    * Handle WebSocket close event
    */
@@ -350,11 +361,15 @@ export class WebSocketPriceService {
     this.stopHeartbeat();
 
     // Attempt to reconnect if not intentionally closed or shutting down
-    if (!event.wasClean && !this.isShuttingDown && this.reconnectAttempts < this.maxReconnectAttempts) {
+    if (
+      !event.wasClean &&
+      !this.isShuttingDown &&
+      this.reconnectAttempts < this.maxReconnectAttempts
+    ) {
       this.scheduleReconnect();
     }
   }
-  
+
   /**
    * Clean up WebSocket connection and handlers
    */
@@ -364,30 +379,30 @@ export class WebSocketPriceService {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = undefined;
     }
-    
+
     // Remove event listeners if WebSocket exists
     if (this.ws) {
       if (this.boundHandlers.onOpen) {
-        this.ws.removeEventListener('open', this.boundHandlers.onOpen);
+        this.ws.removeEventListener("open", this.boundHandlers.onOpen);
       }
       if (this.boundHandlers.onMessage) {
-        this.ws.removeEventListener('message', this.boundHandlers.onMessage);
+        this.ws.removeEventListener("message", this.boundHandlers.onMessage);
       }
       if (this.boundHandlers.onError) {
-        this.ws.removeEventListener('error', this.boundHandlers.onError);
+        this.ws.removeEventListener("error", this.boundHandlers.onError);
       }
       if (this.boundHandlers.onClose) {
-        this.ws.removeEventListener('close', this.boundHandlers.onClose);
+        this.ws.removeEventListener("close", this.boundHandlers.onClose);
       }
-      
+
       // Close WebSocket if still open
       if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
         this.ws.close(1000, "Cleanup");
       }
-      
+
       this.ws = null;
     }
-    
+
     // Clear bound handlers
     this.boundHandlers = {};
   }
@@ -401,11 +416,11 @@ export class WebSocketPriceService {
     this.isShuttingDown = true;
     this.stopHeartbeat();
     this.cleanupConnection();
-    
+
     // Clear all data
     this.subscriptions.clear();
     this.priceCache.clear();
-    
+
     this.isConnected = false;
     this.isConnecting = false;
     this.isShuttingDown = false;
@@ -611,17 +626,17 @@ export class WebSocketPriceService {
     memoryMetrics?: MemoryMetrics;
   } {
     const latestMetrics = this.memoryMetrics[this.memoryMetrics.length - 1];
-    
+
     return {
       isConnected: this.isConnected,
       isConnecting: this.isConnecting,
       subscribedSymbols: Array.from(this.subscriptions.keys()),
       cachedPrices: this.priceCache.size,
       reconnectAttempts: this.reconnectAttempts,
-      memoryMetrics: latestMetrics
+      memoryMetrics: latestMetrics,
     };
   }
-  
+
   /**
    * Get memory usage statistics
    */
@@ -632,40 +647,40 @@ export class WebSocketPriceService {
   } {
     const current = this.memoryMetrics[this.memoryMetrics.length - 1] || null;
     let growthRate: number | null = null;
-    
+
     if (this.memoryMetrics.length >= 10) {
       const oldMetric = this.memoryMetrics[this.memoryMetrics.length - 10];
       const timeElapsed = (current.timestamp - oldMetric.timestamp) / 1000 / 60 / 60; // hours
       growthRate = (current.heapUsed - oldMetric.heapUsed) / timeElapsed; // bytes per hour
     }
-    
+
     return {
       current,
       history: [...this.memoryMetrics],
-      growthRate
+      growthRate,
     };
   }
-  
+
   /**
    * Graceful shutdown
    */
   async shutdown(): Promise<void> {
     console.log("🛑 Shutting down WebSocket Price Service...");
-    
+
     this.isShuttingDown = true;
-    
+
     // Stop memory monitoring
     if (this.memoryCheckInterval) {
       clearInterval(this.memoryCheckInterval);
       this.memoryCheckInterval = undefined;
     }
-    
+
     // Disconnect from WebSocket
     this.disconnect();
-    
+
     // Clear all data
     this.memoryMetrics = [];
-    
+
     console.log("✅ WebSocket Price Service shutdown complete");
   }
 }
@@ -698,13 +713,13 @@ export function useWebSocketPrice(symbol: string): {
 }
 
 // Graceful shutdown handler
-if (typeof process !== 'undefined') {
-  process.on('SIGINT', async () => {
+if (typeof process !== "undefined") {
+  process.on("SIGINT", async () => {
     await webSocketPriceService.shutdown();
     process.exit(0);
   });
-  
-  process.on('SIGTERM', async () => {
+
+  process.on("SIGTERM", async () => {
     await webSocketPriceService.shutdown();
     process.exit(0);
   });

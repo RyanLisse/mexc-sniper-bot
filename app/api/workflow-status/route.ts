@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { WorkflowStatusService } from "@/src/services/workflow-status-service";
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS,
+  createValidationErrorResponse
+} from "@/src/lib/api-response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +17,9 @@ export async function GET(request: NextRequest) {
     const statusService = new WorkflowStatusService(userId);
     const workflowStatus = await statusService.getFullStatus();
     
-    return NextResponse.json(workflowStatus);
+    return apiResponse(
+      createSuccessResponse(workflowStatus)
+    );
   } catch (error) {
     console.error("Failed to get workflow status:", error);
     
@@ -38,7 +48,12 @@ export async function GET(request: NextRequest) {
       ],
     };
     
-    return NextResponse.json(fallbackStatus);
+    return apiResponse(
+      createErrorResponse("Database connection issue - using fallback mode", {
+        fallbackData: fallbackStatus
+      }),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
+    );
   }
 }
 
@@ -73,7 +88,10 @@ export async function POST(request: NextRequest) {
         if (data?.metrics) {
           updatedStatus = await statusService.updateMetrics(data.metrics);
         } else {
-          throw new Error("Metrics data required for updateMetrics action");
+          return apiResponse(
+            createValidationErrorResponse('metrics', 'Metrics data required for updateMetrics action'),
+            HTTP_STATUS.BAD_REQUEST
+          );
         }
         break;
 
@@ -82,7 +100,10 @@ export async function POST(request: NextRequest) {
           await statusService.addActivity(data.activity);
           updatedStatus = await statusService.getOrCreateSystemStatus();
         } else {
-          throw new Error("Activity data required for addActivity action");
+          return apiResponse(
+            createValidationErrorResponse('activity', 'Activity data required for addActivity action'),
+            HTTP_STATUS.BAD_REQUEST
+          );
         }
         break;
 
@@ -90,7 +111,10 @@ export async function POST(request: NextRequest) {
         if (data?.workflowId) {
           updatedStatus = await statusService.updateActiveWorkflows("add", data.workflowId);
         } else {
-          throw new Error("Workflow ID required for addWorkflow action");
+          return apiResponse(
+            createValidationErrorResponse('workflowId', 'Workflow ID required for addWorkflow action'),
+            HTTP_STATUS.BAD_REQUEST
+          );
         }
         break;
 
@@ -98,31 +122,33 @@ export async function POST(request: NextRequest) {
         if (data?.workflowId) {
           updatedStatus = await statusService.updateActiveWorkflows("remove", data.workflowId);
         } else {
-          throw new Error("Workflow ID required for removeWorkflow action");
+          return apiResponse(
+            createValidationErrorResponse('workflowId', 'Workflow ID required for removeWorkflow action'),
+            HTTP_STATUS.BAD_REQUEST
+          );
         }
         break;
 
       default:
-        throw new Error(`Unknown action: ${action}`);
+        return apiResponse(
+          createValidationErrorResponse('action', `Unknown action: ${action}`),
+          HTTP_STATUS.BAD_REQUEST
+        );
     }
 
     // Get full status for response
     const fullStatus = await statusService.getFullStatus();
 
-    return NextResponse.json({
-      success: true,
-      status: fullStatus,
-      message: `Action '${action}' completed successfully`
-    });
+    return apiResponse(
+      createSuccessResponse(fullStatus, {
+        message: `Action '${action}' completed successfully`
+      })
+    );
   } catch (error) {
     console.error("Failed to update workflow status:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to update workflow status",
-        message: "Workflow status update failed"
-      },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }

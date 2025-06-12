@@ -1,4 +1,3 @@
-import type { AgentResponse } from "../agents/base-agent";
 import {
   type AnalysisResult,
   type CalendarEntry,
@@ -11,6 +10,7 @@ import {
   generateRecommendation,
   sanitizeSymbolName,
 } from "./analysis-utils";
+import type { AgentResponse } from "./base-agent";
 
 export interface CalendarWorkflowResult {
   newListings: CalendarEntry[];

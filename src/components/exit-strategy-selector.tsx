@@ -229,9 +229,9 @@ export function ExitStrategySelector({
                     </div>
                     <p className="text-sm text-slate-400 mb-3">Your personalized exit levels</p>
                     <div className="grid grid-cols-3 gap-2 text-sm">
-                      {customLevels.map((level, index) => (
+                      {customLevels.map((level) => (
                         <div
-                          key={`custom-preview-level-${index}`}
+                          key={`custom-preview-${level.percentage}-${level.targetMultiplier}`}
                           className="text-center p-2 bg-slate-600/30 rounded"
                         >
                           <div className="font-medium text-white">{level.percentage}%</div>

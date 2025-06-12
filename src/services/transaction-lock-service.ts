@@ -1,14 +1,14 @@
+import crypto from "node:crypto";
 import { db } from "@/src/db";
 import { transactionLocks, transactionQueue } from "@/src/db/schema";
 import { and, eq, gte, lte, or } from "drizzle-orm";
-import crypto from "crypto";
 
 export interface TransactionLockConfig {
   resourceId: string;
   ownerId: string;
   ownerType: "user" | "system" | "workflow";
   transactionType: "trade" | "cancel" | "update";
-  transactionData: any;
+  transactionData: Record<string, unknown>;
   timeoutMs?: number;
   maxRetries?: number;
   priority?: number;
@@ -21,12 +21,12 @@ export interface LockResult {
   queuePosition?: number;
   error?: string;
   isRetry?: boolean;
-  existingResult?: any;
+  existingResult?: Record<string, unknown>;
 }
 
 export interface TransactionResult {
   success: boolean;
-  result?: any;
+  result?: Record<string, unknown>;
   error?: string;
   lockId: string;
   executionTimeMs: number;
@@ -59,17 +59,16 @@ export class TransactionLockService {
       // Include relevant transaction data that makes this request unique
       ...this.extractIdempotencyData(config.transactionData),
     };
-    
-    return crypto
-      .createHash("sha256")
-      .update(JSON.stringify(data))
-      .digest("hex");
+
+    return crypto.createHash("sha256").update(JSON.stringify(data)).digest("hex");
   }
 
   /**
    * Extract data relevant for idempotency from transaction data
    */
-  private extractIdempotencyData(transactionData: any): any {
+  private extractIdempotencyData(
+    transactionData: Record<string, unknown>
+  ): Record<string, unknown> {
     // For trade transactions, include symbol, side, quantity, and order type
     if (transactionData.symbol && transactionData.side) {
       return {
@@ -172,7 +171,11 @@ export class TransactionLockService {
   /**
    * Release a lock after transaction completion
    */
-  async releaseLock(lockId: string, result?: any, error?: string): Promise<boolean> {
+  async releaseLock(
+    lockId: string,
+    result?: Record<string, unknown>,
+    error?: string
+  ): Promise<boolean> {
     try {
       await db
         .update(transactionLocks)
@@ -187,9 +190,11 @@ export class TransactionLockService {
 
       // Process next item in queue for this resource
       await this.processQueueForResource(
-        (await db.query.transactionLocks.findFirst({
-          where: eq(transactionLocks.lockId, lockId),
-        }))?.resourceId || ""
+        (
+          await db.query.transactionLocks.findFirst({
+            where: eq(transactionLocks.lockId, lockId),
+          })
+        )?.resourceId || ""
       );
 
       return true;
@@ -239,17 +244,14 @@ export class TransactionLockService {
    */
   private async processQueueForResource(resourceId: string): Promise<void> {
     if (!resourceId) return;
-    
+
     // Get next pending item from queue
     const nextItem = await db.query.transactionQueue.findFirst({
       where: and(
         eq(transactionQueue.resourceId, resourceId),
         eq(transactionQueue.status, "pending")
       ),
-      orderBy: [
-        transactionQueue.priority,
-        transactionQueue.queuedAt,
-      ],
+      orderBy: [transactionQueue.priority, transactionQueue.queuedAt],
     });
 
     if (!nextItem) return;
@@ -258,8 +260,8 @@ export class TransactionLockService {
     const lockConfig: TransactionLockConfig = {
       resourceId: nextItem.resourceId,
       ownerId: nextItem.ownerId,
-      ownerType: nextItem.ownerType as any,
-      transactionType: nextItem.transactionType as any,
+      ownerType: nextItem.ownerType as "user" | "system" | "workflow",
+      transactionType: nextItem.transactionType as "trade" | "cancel" | "update",
       transactionData: JSON.parse(nextItem.transactionData),
       idempotencyKey: nextItem.idempotencyKey,
     };
@@ -381,7 +383,7 @@ export class TransactionLockService {
       isLocked: activeLocks.length > 0,
       lockCount: activeLocks.length,
       queueLength: queuedItems.length,
-      activeLocks: activeLocks.map(lock => ({
+      activeLocks: activeLocks.map((lock) => ({
         lockId: lock.lockId,
         ownerId: lock.ownerId,
         acquiredAt: lock.acquiredAt,
@@ -405,12 +407,7 @@ export class TransactionLockService {
           status: "expired",
           updatedAt: now,
         })
-        .where(
-          and(
-            eq(transactionLocks.status, "active"),
-            lte(transactionLocks.expiresAt, now)
-          )
-        );
+        .where(and(eq(transactionLocks.status, "active"), lte(transactionLocks.expiresAt, now)));
 
       // Clean up old completed/failed locks (older than 24 hours)
       const cutoffTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -450,9 +447,12 @@ export class TransactionLockService {
    */
   private startCleanupProcess(): void {
     // Run cleanup every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanupExpiredLocks();
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanupExpiredLocks();
+      },
+      5 * 60 * 1000
+    );
   }
 
   /**
@@ -507,14 +507,9 @@ export class TransactionLockService {
         errorMessage: "Force released by owner",
         updatedAt: new Date(),
       })
-      .where(
-        and(
-          eq(transactionLocks.ownerId, ownerId),
-          eq(transactionLocks.status, "active")
-        )
-      );
+      .where(and(eq(transactionLocks.ownerId, ownerId), eq(transactionLocks.status, "active")));
 
-    return result.changes || 0;
+    return (result as any).changes || 0;
   }
 }
 

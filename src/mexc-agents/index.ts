@@ -1,4 +1,15 @@
-// Export all MEXC agent classes and types for easy importing
+// Core base classes
+export { BaseAgent, type AgentConfig, type AgentResponse } from "./base-agent";
+export { StrategyAgent, type StrategyRequest } from "./strategy-agent";
+
+// Multi-agent orchestration
+export {
+  MultiAgentOrchestrator,
+  type AgentWorkflowRequest,
+  type AgentWorkflowResult,
+} from "./multi-agent-orchestrator";
+
+// MEXC-specific agents
 export {
   MexcApiAgent,
   type MexcApiRequest,

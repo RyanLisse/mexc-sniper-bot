@@ -1,3 +1,4 @@
+import type { CalendarEntry } from "../schemas/mexc-schemas";
 import type { AgentManager } from "./agent-manager";
 import { CalendarWorkflow } from "./calendar-workflow";
 import type { DataFetcher } from "./data-fetcher";
@@ -53,14 +54,14 @@ export class WorkflowExecutor {
       const calendarEntries = calendarData?.success ? calendarData.data : [];
       const calendarAnalysis = await this.agentManager
         .getCalendarAgent()
-        .scanForNewListings(calendarEntries);
+        .scanForNewListings(calendarEntries as CalendarEntry[]);
 
       // Step 3: Pattern discovery on calendar data
       console.log("[WorkflowExecutor] Step 3: Pattern discovery analysis");
       context.currentStep = "pattern-discovery";
       const patternAnalysis = await this.agentManager
         .getPatternDiscoveryAgent()
-        .discoverNewListings(calendarEntries);
+        .discoverNewListings(calendarEntries as CalendarEntry[]);
 
       // Step 4: Combine results using calendar workflow
       console.log("[WorkflowExecutor] Step 4: Combining analysis results");
@@ -251,7 +252,7 @@ export class WorkflowExecutor {
       const compiledStrategy = await this.tradingStrategyWorkflow.compileTradingStrategy(
         strategyAnalysis,
         request.vcoinId,
-        request.symbolData,
+        request.symbolData as any,
         request.riskLevel,
         request.capital
       );

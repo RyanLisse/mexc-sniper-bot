@@ -1,3 +1,4 @@
+import type { ApiResponse } from "@/src/lib/api-response";
 import { queryKeys } from "@/src/lib/query-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -26,7 +27,12 @@ export function useMexcCalendar() {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      const result = await response.json();
+      const result: ApiResponse<CalendarEntry[]> = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch MEXC calendar");
+      }
+
       return result.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -45,7 +51,12 @@ export function useMexcSymbols(vcoinId?: string) {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      const result = await response.json();
+      const result: ApiResponse<MexcSymbol[]> = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch MEXC symbols");
+      }
+
       return result.data;
     },
     enabled: true, // Always enabled for symbols data

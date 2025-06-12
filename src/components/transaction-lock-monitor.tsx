@@ -1,11 +1,17 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { Lock, Unlock, AlertCircle, Clock, CheckCircle, XCircle } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
+import { AlertCircle, CheckCircle, Clock, Lock, Unlock, XCircle } from "lucide-react";
 
 interface TransactionLock {
   lockId: string;
@@ -14,7 +20,7 @@ interface TransactionLock {
   ownerType: string;
   status: string;
   transactionType: string;
-  transactionData: any;
+  transactionData: Record<string, unknown>;
   acquiredAt: string;
   expiresAt: string;
   releasedAt?: string;
@@ -28,7 +34,7 @@ interface QueueItem {
   priority: number;
   status: string;
   transactionType: string;
-  transactionData: any;
+  transactionData: Record<string, unknown>;
   queuedAt: string;
   ownerId: string;
 }
@@ -73,13 +79,33 @@ export function TransactionLockMonitor() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-blue-500"><Lock className="h-3 w-3 mr-1" />Active</Badge>;
+        return (
+          <Badge className="bg-blue-500">
+            <Lock className="h-3 w-3 mr-1" />
+            Active
+          </Badge>
+        );
       case "released":
-        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Released</Badge>;
+        return (
+          <Badge className="bg-green-500">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Released
+          </Badge>
+        );
       case "expired":
-        return <Badge className="bg-yellow-500"><Clock className="h-3 w-3 mr-1" />Expired</Badge>;
+        return (
+          <Badge className="bg-yellow-500">
+            <Clock className="h-3 w-3 mr-1" />
+            Expired
+          </Badge>
+        );
       case "failed":
-        return <Badge className="bg-red-500"><XCircle className="h-3 w-3 mr-1" />Failed</Badge>;
+        return (
+          <Badge className="bg-red-500">
+            <XCircle className="h-3 w-3 mr-1" />
+            Failed
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -102,7 +128,7 @@ export function TransactionLockMonitor() {
     return (
       <Card>
         <CardContent className="flex items-center justify-center p-6">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
         </CardContent>
       </Card>
     );
@@ -169,16 +195,16 @@ export function TransactionLockMonitor() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {locks.filter(lock => lock.status === "active").length === 0 ? (
+          {locks.filter((lock) => lock.status === "active").length === 0 ? (
             <p className="text-muted-foreground text-center py-4">No active locks</p>
           ) : (
             <div className="space-y-2">
               {locks
-                .filter(lock => lock.status === "active")
+                .filter((lock) => lock.status === "active")
                 .map((lock) => {
                   const resource = getResourceDisplay(lock.resourceId);
                   const isExpired = new Date(lock.expiresAt) < new Date();
-                  
+
                   return (
                     <div
                       key={lock.lockId}
@@ -191,21 +217,19 @@ export function TransactionLockMonitor() {
                             {resource.type}: {resource.symbol} {resource.side}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Owner: {lock.ownerId} • Acquired: {formatDistanceToNow(new Date(lock.acquiredAt), { addSuffix: true })}
+                            Owner: {lock.ownerId} • Acquired:{" "}
+                            {formatDistanceToNow(new Date(lock.acquiredAt), { addSuffix: true })}
                           </div>
                           {isExpired && (
                             <div className="text-sm text-yellow-600 flex items-center mt-1">
                               <AlertCircle className="h-3 w-3 mr-1" />
-                              Expired {formatDistanceToNow(new Date(lock.expiresAt), { addSuffix: true })}
+                              Expired{" "}
+                              {formatDistanceToNow(new Date(lock.expiresAt), { addSuffix: true })}
                             </div>
                           )}
                         </div>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => releaseLock(lock.lockId)}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => releaseLock(lock.lockId)}>
                         <Unlock className="h-4 w-4 mr-1" />
                         Release
                       </Button>
@@ -221,9 +245,7 @@ export function TransactionLockMonitor() {
       <Card>
         <CardHeader>
           <CardTitle>Transaction Queue</CardTitle>
-          <CardDescription>
-            Pending transactions waiting for lock acquisition
-          </CardDescription>
+          <CardDescription>Pending transactions waiting for lock acquisition</CardDescription>
         </CardHeader>
         <CardContent>
           {queue.length === 0 ? (
@@ -232,7 +254,7 @@ export function TransactionLockMonitor() {
             <div className="space-y-2">
               {queue.map((item, index) => {
                 const resource = getResourceDisplay(item.resourceId);
-                
+
                 return (
                   <div
                     key={item.queueId}
@@ -245,7 +267,8 @@ export function TransactionLockMonitor() {
                           {resource.type}: {resource.symbol} {resource.side}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Owner: {item.ownerId} • Priority: {item.priority} • Queued: {formatDistanceToNow(new Date(item.queuedAt), { addSuffix: true })}
+                          Owner: {item.ownerId} • Priority: {item.priority} • Queued:{" "}
+                          {formatDistanceToNow(new Date(item.queuedAt), { addSuffix: true })}
                         </div>
                       </div>
                     </div>
@@ -265,21 +288,19 @@ export function TransactionLockMonitor() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Lock History</CardTitle>
-          <CardDescription>
-            Recently completed or failed transactions
-          </CardDescription>
+          <CardDescription>Recently completed or failed transactions</CardDescription>
         </CardHeader>
         <CardContent>
-          {locks.filter(lock => lock.status !== "active").length === 0 ? (
+          {locks.filter((lock) => lock.status !== "active").length === 0 ? (
             <p className="text-muted-foreground text-center py-4">No recent history</p>
           ) : (
             <div className="space-y-2">
               {locks
-                .filter(lock => lock.status !== "active")
+                .filter((lock) => lock.status !== "active")
                 .slice(0, 10)
                 .map((lock) => {
                   const resource = getResourceDisplay(lock.resourceId);
-                  
+
                   return (
                     <div
                       key={lock.lockId}
@@ -292,11 +313,10 @@ export function TransactionLockMonitor() {
                             {resource.type}: {resource.symbol} {resource.side}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Owner: {lock.ownerId} • 
-                            {lock.releasedAt 
+                            Owner: {lock.ownerId} •
+                            {lock.releasedAt
                               ? ` Released: ${formatDistanceToNow(new Date(lock.releasedAt), { addSuffix: true })}`
-                              : ` Acquired: ${formatDistanceToNow(new Date(lock.acquiredAt), { addSuffix: true })}`
-                            }
+                              : ` Acquired: ${formatDistanceToNow(new Date(lock.acquiredAt), { addSuffix: true })}`}
                           </div>
                           {lock.errorMessage && (
                             <div className="text-sm text-red-600 mt-1">

@@ -1,3 +1,4 @@
+import type { ApiResponse } from "@/src/lib/api-response";
 import { queryKeys } from "@/src/lib/query-client";
 import type { ExitStrategy } from "@/src/types/exit-strategies";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -42,8 +43,13 @@ export function useUserPreferences(userId: string) {
           throw new Error(`Failed to fetch user preferences: ${response.statusText}`);
         }
 
-        const data = await response.json();
-        return data;
+        const apiResponse: ApiResponse<UserTradingPreferences | null> = await response.json();
+
+        if (!apiResponse.success) {
+          throw new Error(apiResponse.error || "Failed to fetch user preferences");
+        }
+
+        return apiResponse.data || null;
       } catch (error) {
         console.error("[useUserPreferences] Failed to fetch preferences:", error);
         throw error;
@@ -72,8 +78,13 @@ export function useUpdateUserPreferences() {
           throw new Error(`Failed to update user preferences: ${response.statusText}`);
         }
 
-        const result = await response.json();
-        return result.data || data;
+        const apiResponse: ApiResponse<Partial<UserTradingPreferences>> = await response.json();
+
+        if (!apiResponse.success) {
+          throw new Error(apiResponse.error || "Failed to update user preferences");
+        }
+
+        return apiResponse.data || data;
       } catch (error) {
         console.error("[useUpdateUserPreferences] Failed to update preferences:", error);
         throw error;
@@ -81,7 +92,7 @@ export function useUpdateUserPreferences() {
     },
     onSuccess: (data) => {
       // Invalidate and refetch user preferences
-      queryClient.invalidateQueries({ queryKey: queryKeys.userPreferences(data.userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.userPreferences(data?.userId || "") });
     },
   });
 }

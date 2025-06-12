@@ -257,7 +257,7 @@ export class MexcApiClient {
             }
 
             // Exponential backoff with jitter for retryable errors
-            const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
+            const delay = baseDelay * 2 ** (attempt - 1) + Math.random() * 1000;
             console.log(`[MexcApiClient] Retrying in ${Math.round(delay)}ms...`);
             await new Promise((resolve) => setTimeout(resolve, delay));
           }
@@ -679,7 +679,7 @@ export class MexcApiClient {
   async get24hrTicker(symbol?: string): Promise<MexcApiResponse<MexcTicker[]>> {
     try {
       const endpoint = symbol ? `/api/v3/ticker/24hr?symbol=${symbol}` : "/api/v3/ticker/24hr";
-      const response = await this.makeRequest<any>(endpoint);
+      const response = await this.makeRequest<MexcTicker | MexcTicker[]>(endpoint);
 
       // Handle both single symbol and all symbols response
       const data = Array.isArray(response) ? response : [response];

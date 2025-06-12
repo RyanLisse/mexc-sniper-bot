@@ -14,7 +14,7 @@ async function verifyForeignKeys() {
     console.log("1️⃣ Checking foreign key status...");
     const fkStatus = await db.run(sql`PRAGMA foreign_keys`);
     const fkEnabled = (fkStatus as any)[0]?.foreign_keys === 1;
-    console.log(`   Foreign keys enabled: ${fkEnabled ? '✅ Yes' : '❌ No'}`);
+    console.log(`   Foreign keys enabled: ${fkEnabled ? "✅ Yes" : "❌ No"}`);
 
     // 2. Check for indexes
     console.log("\n2️⃣ Checking performance indexes...");
@@ -32,14 +32,14 @@ async function verifyForeignKeys() {
     `);
 
     const expectedIndexes = [
-      'api_credentials_user_idx',
-      'monitored_listings_symbol_name_idx',
-      'workflow_system_status_user_idx',
-      'workflow_activity_user_idx'
+      "api_credentials_user_idx",
+      "monitored_listings_symbol_name_idx",
+      "workflow_system_status_user_idx",
+      "workflow_activity_user_idx",
     ];
 
-    const foundIndexes = (indexes as any[]).map(idx => idx.name);
-    
+    const foundIndexes = (indexes as any[]).map((idx) => idx.name);
+
     for (const idx of expectedIndexes) {
       if (foundIndexes.includes(idx)) {
         console.log(`   ✅ ${idx} exists`);
@@ -50,25 +50,27 @@ async function verifyForeignKeys() {
 
     // 3. Check for orphaned records
     console.log("\n3️⃣ Checking for orphaned records...");
-    
+
     const tables = [
-      { name: 'user_preferences', fk: 'user_id' },
-      { name: 'api_credentials', fk: 'user_id' },
-      { name: 'snipe_targets', fk: 'user_id' },
-      { name: 'execution_history', fk: 'user_id' },
-      { name: 'transactions', fk: 'user_id' }
+      { name: "user_preferences", fk: "user_id" },
+      { name: "api_credentials", fk: "user_id" },
+      { name: "snipe_targets", fk: "user_id" },
+      { name: "execution_history", fk: "user_id" },
+      { name: "transactions", fk: "user_id" },
     ];
 
     let hasOrphans = false;
-    
+
     for (const table of tables) {
       try {
-        const result = await db.run(sql.raw(`
+        const result = await db.run(
+          sql.raw(`
           SELECT COUNT(*) as count 
           FROM ${table.name} 
           WHERE ${table.fk} NOT IN (SELECT id FROM user)
-        `));
-        
+        `)
+        );
+
         const count = (result as any)[0]?.count || 0;
         if (count > 0) {
           console.log(`   ⚠️  ${table.name}: ${count} orphaned records`);
@@ -76,7 +78,7 @@ async function verifyForeignKeys() {
         } else {
           console.log(`   ✅ ${table.name}: No orphaned records`);
         }
-      } catch (error: any) {
+      } catch (_error: any) {
         console.log(`   ⏭️  ${table.name}: Skipped (table may not exist)`);
       }
     }
@@ -84,7 +86,7 @@ async function verifyForeignKeys() {
     // 4. Test foreign key constraints (if enabled)
     if (fkEnabled) {
       console.log("\n4️⃣ Testing foreign key constraints...");
-      
+
       try {
         // Try to insert a record with invalid user_id
         await db.run(sql`
@@ -93,7 +95,7 @@ async function verifyForeignKeys() {
         `);
         console.log("   ❌ Foreign key constraint NOT working (insert succeeded)");
       } catch (error: any) {
-        if (error.message.includes('FOREIGN KEY constraint failed')) {
+        if (error.message.includes("FOREIGN KEY constraint failed")) {
           console.log("   ✅ Foreign key constraint is working correctly");
         } else {
           console.log("   ⚠️  Unexpected error:", error.message);
@@ -112,7 +114,7 @@ async function verifyForeignKeys() {
 
     let hasFkReferences = 0;
     for (const table of tableInfo as any[]) {
-      if (table.sql && table.sql.includes('REFERENCES')) {
+      if (table.sql?.includes("REFERENCES")) {
         hasFkReferences++;
       }
     }
@@ -122,10 +124,10 @@ async function verifyForeignKeys() {
     // Summary
     console.log("\n📊 Verification Summary:");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log(`Foreign Keys Enabled: ${fkEnabled ? '✅' : '❌'}`);
+    console.log(`Foreign Keys Enabled: ${fkEnabled ? "✅" : "❌"}`);
     console.log(`Performance Indexes: ${foundIndexes.length}/${expectedIndexes.length} ✅`);
-    console.log(`Orphaned Records: ${hasOrphans ? '⚠️  Found' : '✅ None'}`);
-    console.log(`FK References in Schema: ${hasFkReferences > 0 ? '✅' : '❌'}`);
+    console.log(`Orphaned Records: ${hasOrphans ? "⚠️  Found" : "✅ None"}`);
+    console.log(`FK References in Schema: ${hasFkReferences > 0 ? "✅" : "❌"}`);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
     if (!fkEnabled || foundIndexes.length < expectedIndexes.length || hasOrphans) {
@@ -133,7 +135,6 @@ async function verifyForeignKeys() {
     } else {
       console.log("\n✅ All checks passed! Database is properly configured.");
     }
-
   } catch (error) {
     console.error("❌ Verification failed:", error);
     throw error;

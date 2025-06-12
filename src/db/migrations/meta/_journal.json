@@ -29,6 +29,13 @@
       "when": 1749752077713,
       "tag": "0003_living_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1749844800000,
+      "tag": "0004_performance_indexes",
+      "breakpoints": true
     }
   ]
 }

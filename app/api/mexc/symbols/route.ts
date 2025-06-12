@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { mexcApi } from "@/src/services/enhanced-mexc-api";
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS 
+} from "@/src/lib/api-response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,25 +17,21 @@ export async function GET(request: NextRequest) {
       ? await mexcApi.getSymbolsForVcoins(vcoinId.split(','))
       : await mexcApi.getSymbolsV2();
     
-    return NextResponse.json({
-      success: true,
-      data: symbolsResponse.data.symbols,
-      timestamp: new Date().toISOString(),
-      count: symbolsResponse.data.symbols.length,
-      vcoinId: vcoinId || null
-    });
+    return apiResponse(
+      createSuccessResponse(symbolsResponse.data.symbols, {
+        count: symbolsResponse.data.symbols.length,
+        vcoinId: vcoinId || null
+      })
+    );
   } catch (error) {
     console.error("MEXC symbols fetch failed:", error);
     
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        data: [],
-        timestamp: new Date().toISOString(),
-        count: 0
-      },
-      { status: 500 }
+    return apiResponse(
+      createErrorResponse(
+        error instanceof Error ? error.message : "Unknown error",
+        { fallbackData: [] }
+      ),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }

@@ -4,8 +4,8 @@ import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { authClient } from "@/src/lib/auth-client";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface AuthFormProps {
   className?: string;
@@ -27,7 +27,7 @@ export function CustomSignInForm({ className }: AuthFormProps) {
       const result = await authClient.signIn.email({
         email,
         password,
-        callbackURL: "/dashboard"
+        callbackURL: "/dashboard",
       });
 
       if (result.error) {
@@ -49,7 +49,9 @@ export function CustomSignInForm({ className }: AuthFormProps) {
     <form onSubmit={handleSubmit} className={className}>
       <div className="space-y-4">
         <div>
-          <Label htmlFor="email" className="text-slate-300">Email</Label>
+          <Label htmlFor="email" className="text-slate-300">
+            Email
+          </Label>
           <Input
             id="email"
             type="email"
@@ -61,7 +63,9 @@ export function CustomSignInForm({ className }: AuthFormProps) {
           />
         </div>
         <div>
-          <Label htmlFor="password" className="text-slate-300">Password</Label>
+          <Label htmlFor="password" className="text-slate-300">
+            Password
+          </Label>
           <Input
             id="password"
             type="password"
@@ -72,9 +76,7 @@ export function CustomSignInForm({ className }: AuthFormProps) {
             className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
           />
         </div>
-        {error && (
-          <div className="text-red-400 text-sm">{error}</div>
-        )}
+        {error && <div className="text-red-400 text-sm">{error}</div>}
         <Button
           type="submit"
           disabled={loading}
@@ -110,7 +112,8 @@ export function CustomSignUpForm({ className }: AuthFormProps) {
       const result = await authClient.signUp.email({
         email,
         password,
-        callbackURL: "/dashboard"
+        name: email.split("@")[0], // Use email prefix as default name
+        callbackURL: "/dashboard",
       });
 
       if (result.error) {
@@ -132,7 +135,9 @@ export function CustomSignUpForm({ className }: AuthFormProps) {
     <form onSubmit={handleSubmit} className={className}>
       <div className="space-y-4">
         <div>
-          <Label htmlFor="email" className="text-slate-300">Email</Label>
+          <Label htmlFor="email" className="text-slate-300">
+            Email
+          </Label>
           <Input
             id="email"
             type="email"
@@ -144,7 +149,9 @@ export function CustomSignUpForm({ className }: AuthFormProps) {
           />
         </div>
         <div>
-          <Label htmlFor="password" className="text-slate-300">Password</Label>
+          <Label htmlFor="password" className="text-slate-300">
+            Password
+          </Label>
           <Input
             id="password"
             type="password"
@@ -157,7 +164,9 @@ export function CustomSignUpForm({ className }: AuthFormProps) {
           />
         </div>
         <div>
-          <Label htmlFor="confirmPassword" className="text-slate-300">Confirm Password</Label>
+          <Label htmlFor="confirmPassword" className="text-slate-300">
+            Confirm Password
+          </Label>
           <Input
             id="confirmPassword"
             type="password"
@@ -168,9 +177,7 @@ export function CustomSignUpForm({ className }: AuthFormProps) {
             className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
           />
         </div>
-        {error && (
-          <div className="text-red-400 text-sm">{error}</div>
-        )}
+        {error && <div className="text-red-400 text-sm">{error}</div>}
         <Button
           type="submit"
           disabled={loading}

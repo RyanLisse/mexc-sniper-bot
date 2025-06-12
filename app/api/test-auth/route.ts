@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     console.log("[Test Auth] Auth object info:", authInfo);
     
     // Test 3: Try to get session using auth directly
-    let sessionTest = { error: null, data: null };
+    let sessionTest: { error: string | null; data: any; status?: number } = { error: null, data: null };
     try {
       // Create a mock get-session request
       const mockRequest = new Request('http://localhost:3008/api/auth/get-session', {
@@ -36,8 +36,9 @@ export async function GET(request: Request) {
         data: data,
       };
     } catch (error) {
+      const errorObj = error as Error | { message?: string };
       sessionTest = {
-        error: error?.message || 'Unknown error',
+        error: errorObj?.message || 'Unknown error',
         data: null,
       };
     }
@@ -60,10 +61,11 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("[Test Auth] Error:", error);
+    const errorObj = error as Error | { message?: string; stack?: string };
     return NextResponse.json({
       status: 'error',
-      error: error?.message || 'Unknown error',
-      stack: error?.stack,
+      error: errorObj?.message || 'Unknown error',
+      stack: errorObj?.stack,
     }, { status: 500 });
   }
 }

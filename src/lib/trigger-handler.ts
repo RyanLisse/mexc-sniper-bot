@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
 import { inngest } from "@/src/inngest/client";
-import { ApiResponse } from "./api-response";
+import type { NextRequest } from "next/server";
+import { createErrorResponse, createSuccessResponse } from "./api-response";
 
 /**
  * Factory function to create consistent trigger handlers for Inngest workflows
@@ -33,7 +33,7 @@ export function createTriggerHandler(
         },
       });
 
-      return ApiResponse.success(
+      return createSuccessResponse(
         {
           message: `${description} workflow triggered`,
           eventId: event.ids[0],
@@ -45,7 +45,7 @@ export function createTriggerHandler(
         }
       );
     } catch (error) {
-      return ApiResponse.error(error, 500, {
+      return createErrorResponse(error as string, {
         workflow: description,
         eventName,
       });
@@ -57,27 +57,16 @@ export function createTriggerHandler(
  * Common trigger handlers for MEXC workflows
  */
 export const TriggerHandlers = {
-  calendarPoll: createTriggerHandler(
-    "mexc/calendar.poll",
-    "Calendar polling"
-  ),
+  calendarPoll: createTriggerHandler("mexc/calendar.poll", "Calendar polling"),
 
-  patternAnalysis: createTriggerHandler(
-    "mexc/patterns.analyze",
-    "Pattern analysis",
-    (body) => ({
-      symbols: body.symbols || [],
-    })
-  ),
+  patternAnalysis: createTriggerHandler("mexc/patterns.analyze", "Pattern analysis", (body) => ({
+    symbols: body.symbols || [],
+  })),
 
-  symbolWatch: createTriggerHandler(
-    "mexc/symbol.watch",
-    "Symbol watch",
-    (body) => ({
-      vcoinId: body.vcoinId,
-      symbol: body.symbol,
-    })
-  ),
+  symbolWatch: createTriggerHandler("mexc/symbol.watch", "Symbol watch", (body) => ({
+    vcoinId: body.vcoinId,
+    symbol: body.symbol,
+  })),
 
   tradingStrategy: createTriggerHandler(
     "mexc/strategy.create",
@@ -88,21 +77,17 @@ export const TriggerHandlers = {
     })
   ),
 
-  emergency: createTriggerHandler(
-    "mexc/emergency.stop",
-    "Emergency stop",
-    (body) => ({
-      reason: body.reason || "Manual trigger",
-      userId: body.userId,
-    })
-  ),
+  emergency: createTriggerHandler("mexc/emergency.stop", "Emergency stop", (body) => ({
+    reason: body.reason || "Manual trigger",
+    userId: body.userId,
+  })),
 };
 
 /**
  * Higher-order function to add authentication to trigger handlers
  */
-export function withAuth(handler: Function, requiredRole = "user") {
-  return async function(request: NextRequest) {
+export function withAuth(handler: Function, _requiredRole = "user") {
+  return async (request: NextRequest) => {
     // TODO: Add authentication logic here
     // For now, pass through to handler
     return handler(request);
@@ -115,22 +100,22 @@ export function withAuth(handler: Function, requiredRole = "user") {
 export function withRateLimit(handler: Function, maxRequests = 10, windowMs = 60000) {
   const requests = new Map<string, number[]>();
 
-  return async function(request: NextRequest) {
-    const clientIP = request.ip || request.headers.get("x-forwarded-for") || "unknown";
+  return async (request: NextRequest) => {
+    const clientIP = (request as any).ip || request.headers.get("x-forwarded-for") || "unknown";
     const now = Date.now();
     const windowStart = now - windowMs;
 
     // Get or create request log for this IP
     const clientRequests = requests.get(clientIP) || [];
-    
+
     // Remove old requests outside the window
-    const recentRequests = clientRequests.filter(timestamp => timestamp > windowStart);
-    
+    const recentRequests = clientRequests.filter((timestamp) => timestamp > windowStart);
+
     // Check if rate limit exceeded
     if (recentRequests.length >= maxRequests) {
       const oldestRequest = Math.min(...recentRequests);
-      const retryAfter = Math.ceil((oldestRequest + windowMs - now) / 1000);
-      return ApiResponse.rateLimited(retryAfter);
+      const _retryAfter = Math.ceil((oldestRequest + windowMs - now) / 1000);
+      return createErrorResponse("Rate limit exceeded");
     }
 
     // Add current request

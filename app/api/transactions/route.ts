@@ -3,6 +3,15 @@ import { db } from '@/src/db';
 import { transactions, type NewTransaction } from '@/src/db/schema';
 import { eq, desc, and, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS,
+  createValidationErrorResponse,
+  createPaginatedResponse
+} from '@/src/lib/api-response';
 
 // Validation schemas
 const createTransactionSchema = z.object({
@@ -56,9 +65,9 @@ export async function GET(request: NextRequest) {
 
     const parsed = querySchema.safeParse(queryData);
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Invalid query parameters', details: parsed.error.errors },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('query', 'Invalid query parameters'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -115,22 +124,25 @@ export async function GET(request: NextRequest) {
       averageProfitLoss: completedTrades.length > 0 ? totalProfitLoss / completedTrades.length : 0,
     };
 
-    return NextResponse.json({
-      success: true,
-      data: userTransactions,
-      summary,
-      pagination: {
-        limit,
-        offset,
-        hasMore: userTransactions.length === limit,
-      },
-    });
+    return apiResponse(
+      createSuccessResponse({
+        transactions: userTransactions,
+        summary
+      }, {
+        pagination: {
+          limit,
+          offset,
+          hasMore: userTransactions.length === limit,
+        },
+        count: userTransactions.length
+      })
+    );
 
   } catch (error) {
     console.error('Error fetching transactions:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch transactions' },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }
@@ -142,9 +154,9 @@ export async function POST(request: NextRequest) {
     const parsed = createTransactionSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Invalid transaction data', details: parsed.error.errors },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('body', 'Invalid transaction data'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -165,16 +177,18 @@ export async function POST(request: NextRequest) {
       .values(transactionData as NewTransaction)
       .returning();
 
-    return NextResponse.json({
-      success: true,
-      data: created,
-    }, { status: 201 });
+    return apiResponse(
+      createSuccessResponse(created, {
+        message: 'Transaction created successfully'
+      }),
+      HTTP_STATUS.CREATED
+    );
 
   } catch (error) {
     console.error('Error creating transaction:', error);
-    return NextResponse.json(
-      { error: 'Failed to create transaction' },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }
@@ -186,9 +200,9 @@ export async function PUT(request: NextRequest) {
     const { id, ...updateData } = body;
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Transaction ID is required' },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('id', 'Transaction ID is required'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -202,22 +216,23 @@ export async function PUT(request: NextRequest) {
       .returning();
 
     if (!updated) {
-      return NextResponse.json(
-        { error: 'Transaction not found' },
-        { status: 404 }
+      return apiResponse(
+        createErrorResponse('Transaction not found'),
+        HTTP_STATUS.NOT_FOUND
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      data: updated,
-    });
+    return apiResponse(
+      createSuccessResponse(updated, {
+        message: 'Transaction updated successfully'
+      })
+    );
 
   } catch (error) {
     console.error('Error updating transaction:', error);
-    return NextResponse.json(
-      { error: 'Failed to update transaction' },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }

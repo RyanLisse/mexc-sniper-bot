@@ -6,8 +6,8 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     include: [
-      '__tests__/**/*.test.{js,ts}',
-      'all-tests/vitest-unit-tests/**/*.test.{js,ts}'
+      'tests/unit/**/*.test.{js,ts}',
+      'tests/integration/**/*.test.{js,ts}'
     ],
     exclude: [
       'node_modules', 
@@ -25,6 +25,13 @@ export default defineConfig({
       '**/e2e/**/*'
     ],
     // setupFiles: ['./vitest-setup.js'],
+    env: {
+      OPENAI_API_KEY: 'test-openai-key',
+      MEXC_API_KEY: 'test-mexc-key',
+      MEXC_SECRET_KEY: 'test-mexc-secret',
+      MEXC_BASE_URL: 'https://api.mexc.com',
+      ENCRYPTION_MASTER_KEY: 'dGVzdC1lbmNyeXB0aW9uLWtleS0zMi1ieXRlcy1sb25n'
+    },
   },
   resolve: {
     alias: {

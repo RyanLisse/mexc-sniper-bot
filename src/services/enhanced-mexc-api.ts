@@ -41,17 +41,35 @@ export class EnhancedMexcApi {
       console.log(`✅ MEXC API Response: ${response.status} ${url}`);
 
       // Use real calendar data from MEXC
-      let calendarData: any[] = [];
+      let calendarData: Array<{
+        vcoinId: string;
+        symbol: string;
+        projectName: string;
+        firstOpenTime: number;
+      }> = [];
 
       if (data?.data?.newCoins && Array.isArray(data.data.newCoins)) {
         calendarData = data.data.newCoins
           .filter(
-            (entry: any) =>
-              entry?.vcoinId && (entry.vcoinName || entry.vcoinNameFull) && entry.firstOpenTime
+            (
+              entry: unknown
+            ): entry is {
+              vcoinId: string;
+              vcoinName?: string;
+              vcoinNameFull?: string;
+              firstOpenTime: number;
+            } =>
+              typeof entry === "object" &&
+              entry !== null &&
+              "vcoinId" in entry &&
+              typeof entry.vcoinId === "string" &&
+              ("vcoinName" in entry || "vcoinNameFull" in entry) &&
+              "firstOpenTime" in entry &&
+              typeof entry.firstOpenTime === "number"
           )
           .map((entry: any) => ({
             vcoinId: entry.vcoinId,
-            symbol: entry.vcoinName,
+            symbol: entry.vcoinName || entry.vcoinNameFull || entry.vcoinId,
             projectName: entry.vcoinNameFull || entry.vcoinName || entry.vcoinId,
             firstOpenTime: Number(entry.firstOpenTime),
           }));
@@ -95,11 +113,36 @@ export class EnhancedMexcApi {
       console.log(`✅ MEXC API Response: Exchange info with ${data?.symbols?.length || 0} symbols`);
 
       // Use real symbol data from MEXC exchange info endpoint
-      let symbols: any[] = [];
+      let symbols: Array<{
+        cd: string;
+        ca?: string;
+        ps?: number;
+        qs?: number;
+        sts: number;
+        st: number;
+        tt: number;
+        ot?: number;
+      }> = [];
 
       if (data?.symbols && Array.isArray(data.symbols)) {
         symbols = data.symbols
-          .filter((symbol: any) => symbol?.symbol && symbol.status === "1")
+          .filter(
+            (
+              symbol: unknown
+            ): symbol is {
+              symbol: string;
+              status: string;
+              baseAsset?: string;
+              baseAssetPrecision?: number;
+              quoteAssetPrecision?: number;
+            } =>
+              typeof symbol === "object" &&
+              symbol !== null &&
+              "symbol" in symbol &&
+              "status" in symbol &&
+              typeof symbol.symbol === "string" &&
+              symbol.status === "1"
+          )
           .map((symbol: any) => ({
             cd: symbol.baseAsset || symbol.symbol.replace(/USDT$/, ""),
             ca: symbol.symbol,

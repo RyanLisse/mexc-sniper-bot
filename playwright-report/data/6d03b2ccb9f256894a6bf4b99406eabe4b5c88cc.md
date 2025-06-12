@@ -1,0 +1,54 @@
+# Page snapshot
+
+```yaml
+- button "Open Next.js Dev Tools":
+  - img
+- button "Open issues overlay": 1 Issue
+- button "Collapse issues badge":
+  - img
+- navigation:
+  - button "previous" [disabled]:
+    - img "previous"
+  - text: 1/1
+  - button "next" [disabled]:
+    - img "next"
+- img
+- img
+- text: Next.js 15.3.3 Turbopack
+- img
+- dialog "Runtime Error":
+  - text: Runtime Error
+  - button "Copy Stack Trace":
+    - img
+  - button "No related documentation found" [disabled]:
+    - img
+  - link "Learn more about enabling Node.js inspector for server code with Chrome DevTools":
+    - /url: https://nextjs.org/docs/app/building-your-application/configuring/debugging#server-side-code
+    - img
+  - paragraph: "Error: calendar?.filter is not a function"
+  - paragraph:
+    - img
+    - text: src/hooks/use-mexc-data.ts (178:15) @ useUpcomingLaunches
+    - button "Open in editor":
+      - img
+  - text: "176 | 177 | const upcomingLaunches = > 178 | calendar?.filter((entry: CalendarEntry) => { | ^ 179 | const launchTime = new Date(entry.firstOpenTime); 180 | const now = new Date(); 181 | const hours24 = 24 * 60 * 60 * 1000;"
+  - paragraph: Call Stack 3
+  - button "Show 1 ignore-listed frame(s)":
+    - text: Show 1 ignore-listed frame(s)
+    - img
+  - text: useUpcomingLaunches
+  - button:
+    - img
+  - text: src/hooks/use-mexc-data.ts (178:15) DashboardPage
+  - button:
+    - img
+  - text: app/dashboard/page.tsx (82:52)
+- contentinfo:
+  - region "Error feedback":
+    - paragraph:
+      - link "Was this helpful?":
+        - /url: https://nextjs.org/telemetry#error-feedback
+    - button "Mark as helpful"
+    - button "Mark as not helpful"
+- 'heading "Application error: a client-side exception has occurred while loading localhost (see the browser console for more information)." [level=2]'
+```

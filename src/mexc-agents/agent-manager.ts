@@ -1,8 +1,8 @@
-import { StrategyAgent } from "../agents/strategy-agent";
 import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "../lib/health-checks";
 import { CalendarAgent } from "./calendar-agent";
 import { MexcApiAgent } from "./mexc-api-agent";
 import { PatternDiscoveryAgent } from "./pattern-discovery-agent";
+import { StrategyAgent } from "./strategy-agent";
 import { SymbolAnalysisAgent } from "./symbol-analysis-agent";
 
 export class AgentManager {

@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db, apiCredentials, type NewApiCredentials } from '@/src/db';
 import { eq, and } from 'drizzle-orm';
 import { getEncryptionService, SecureEncryptionService } from '@/src/services/secure-encryption-service';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS,
+  createValidationErrorResponse
+} from '@/src/lib/api-response';
 
 // GET /api/api-credentials?userId=xxx&provider=mexc
 export async function GET(request: NextRequest) {
@@ -11,9 +19,9 @@ export async function GET(request: NextRequest) {
     const provider = searchParams.get('provider') || 'mexc';
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'userId parameter is required' },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('userId', 'userId parameter is required'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -27,7 +35,11 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (result.length === 0) {
-      return NextResponse.json(null);
+      return apiResponse(
+        createSuccessResponse(null, {
+          message: 'No API credentials found for user'
+        })
+      );
     }
 
     const creds = result[0];
@@ -47,9 +59,11 @@ export async function GET(request: NextRequest) {
     } catch (decryptError) {
       console.error('[API] Failed to decrypt credentials:', decryptError);
       // Return error but don't leak encryption details
-      return NextResponse.json(
-        { error: 'Failed to retrieve credentials', code: 'DECRYPT_ERROR' },
-        { status: 500 }
+      return apiResponse(
+        createErrorResponse('Failed to retrieve credentials', {
+          code: 'DECRYPT_ERROR'
+        }),
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
       );
     }
 
@@ -66,12 +80,14 @@ export async function GET(request: NextRequest) {
       updatedAt: creds.updatedAt,
     };
 
-    return NextResponse.json(response);
+    return apiResponse(
+      createSuccessResponse(response)
+    );
   } catch (error) {
     console.error('[API] Failed to fetch API credentials:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch API credentials' },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }
@@ -83,25 +99,25 @@ export async function POST(request: NextRequest) {
     const { userId, provider = 'mexc', apiKey, secretKey, passphrase } = body;
 
     if (!userId || !apiKey || !secretKey) {
-      return NextResponse.json(
-        { error: 'userId, apiKey, and secretKey are required' },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('required_fields', 'userId, apiKey, and secretKey are required'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
     // Validate API key format (enhanced validation)
     if (apiKey.length < 10 || secretKey.length < 10) {
-      return NextResponse.json(
-        { error: 'API key and secret must be at least 10 characters' },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('api_credentials', 'API key and secret must be at least 10 characters'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
     // Additional security validation
     if (apiKey.includes(' ') || secretKey.includes(' ')) {
-      return NextResponse.json(
-        { error: 'API credentials cannot contain spaces' },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('api_credentials', 'API credentials cannot contain spaces'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -120,9 +136,11 @@ export async function POST(request: NextRequest) {
       }
     } catch (encryptError) {
       console.error('[API] Failed to encrypt credentials:', encryptError);
-      return NextResponse.json(
-        { error: 'Failed to secure credentials', code: 'ENCRYPT_ERROR' },
-        { status: 500 }
+      return apiResponse(
+        createErrorResponse('Failed to secure credentials', {
+          code: 'ENCRYPT_ERROR'
+        }),
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
       );
     }
 
@@ -157,18 +175,21 @@ export async function POST(request: NextRequest) {
       await db.insert(apiCredentials).values(credentialsData);
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'API credentials saved securely',
-      provider,
-      maskedApiKey: SecureEncryptionService.maskSensitiveData(apiKey),
-      maskedSecretKey: SecureEncryptionService.maskSensitiveData(secretKey),
-    });
+    return apiResponse(
+      createSuccessResponse({
+        provider,
+        maskedApiKey: SecureEncryptionService.maskSensitiveData(apiKey),
+        maskedSecretKey: SecureEncryptionService.maskSensitiveData(secretKey),
+      }, {
+        message: 'API credentials saved securely'
+      }),
+      HTTP_STATUS.CREATED
+    );
   } catch (error) {
     console.error('[API] Failed to save API credentials:', error);
-    return NextResponse.json(
-      { error: 'Failed to save API credentials' },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }
@@ -181,9 +202,9 @@ export async function DELETE(request: NextRequest) {
     const provider = searchParams.get('provider') || 'mexc';
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'userId parameter is required' },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('userId', 'userId parameter is required'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -194,15 +215,16 @@ export async function DELETE(request: NextRequest) {
         eq(apiCredentials.provider, provider)
       ));
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'API credentials deleted successfully' 
-    });
+    return apiResponse(
+      createSuccessResponse(null, {
+        message: 'API credentials deleted successfully'
+      })
+    );
   } catch (error) {
     console.error('[API] Failed to delete API credentials:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete API credentials' },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }

@@ -1,4 +1,16 @@
-import { type AgentConfig, type AgentResponse, BaseAgent } from "../agents/base-agent";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
+
+export interface SymbolData {
+  cd: string;
+  sts: number;
+  st: number;
+  tt: number;
+  ca?: string;
+  ps?: number;
+  qs?: number;
+  ot?: number;
+  [key: string]: unknown;
+}
 
 export interface SymbolAnalysisRequest {
   vcoinId: string;
@@ -147,7 +159,10 @@ Provide clear READY/NOT READY determination with detailed confidence metrics and
     ]);
   }
 
-  async analyzeSymbolReadiness(vcoinId: string, symbolData: any): Promise<AgentResponse> {
+  async analyzeSymbolReadiness(
+    vcoinId: string,
+    symbolData: SymbolData | SymbolData[]
+  ): Promise<AgentResponse> {
     const dataJson = JSON.stringify(symbolData, null, 2);
 
     return await this.process(dataJson, {
@@ -156,7 +171,7 @@ Provide clear READY/NOT READY determination with detailed confidence metrics and
     });
   }
 
-  async validateReadyStatePattern(symbolData: any): Promise<AgentResponse> {
+  async validateReadyStatePattern(symbolData: SymbolData | SymbolData[]): Promise<AgentResponse> {
     const userMessage = `
 MEXC Ready State Pattern Validation:
 
@@ -227,7 +242,7 @@ If READY:
 
   async assessMarketMicrostructure(params: {
     vcoinId: string;
-    symbolData: any[];
+    symbolData: SymbolData[];
   }): Promise<AgentResponse> {
     const userMessage = `
 MEXC Market Microstructure Analysis:
@@ -297,7 +312,10 @@ Provide quantitative metrics where possible and specific trading recommendations
     ]);
   }
 
-  async generateMonitoringPlan(vcoinId: string, currentStatus: any): Promise<AgentResponse> {
+  async generateMonitoringPlan(
+    vcoinId: string,
+    currentStatus: SymbolData | SymbolStatus
+  ): Promise<AgentResponse> {
     const userMessage = `
 MEXC Symbol Monitoring Plan Generation:
 

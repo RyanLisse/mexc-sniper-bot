@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { snipeTargets, executionHistory } from "@/src/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS,
+  createValidationErrorResponse
+} from "@/src/lib/api-response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,12 +17,9 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get("userId");
 
     if (!userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing required parameter: userId",
-        },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('userId', 'Missing required parameter'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -134,18 +139,17 @@ export async function GET(request: NextRequest) {
       })),
     };
 
-    return NextResponse.json({
-      success: true,
-      data: portfolio,
-    });
+    return apiResponse(
+      createSuccessResponse(portfolio, {
+        message: "Portfolio data retrieved successfully",
+        totalPositions: activePositions.length,
+      })
+    );
   } catch (error) {
     console.error("❌ Error fetching portfolio:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to fetch portfolio data",
-      },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }

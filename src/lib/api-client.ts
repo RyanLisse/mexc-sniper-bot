@@ -21,17 +21,13 @@ export class ApiClient {
       ...options,
       method: "GET",
     });
-    return this.handleResponse<T>(response);
+    return ApiClient.handleResponse<T>(response);
   }
 
   /**
    * Performs a POST request with consistent error handling
    */
-  static async post<T>(
-    url: string,
-    data?: unknown,
-    options?: RequestInit
-  ): Promise<T> {
+  static async post<T>(url: string, data?: unknown, options?: RequestInit): Promise<T> {
     const response = await fetch(url, {
       ...options,
       method: "POST",
@@ -41,17 +37,13 @@ export class ApiClient {
       },
       body: data ? JSON.stringify(data) : undefined,
     });
-    return this.handleResponse<T>(response);
+    return ApiClient.handleResponse<T>(response);
   }
 
   /**
    * Performs a PUT request with consistent error handling
    */
-  static async put<T>(
-    url: string,
-    data?: unknown,
-    options?: RequestInit
-  ): Promise<T> {
+  static async put<T>(url: string, data?: unknown, options?: RequestInit): Promise<T> {
     const response = await fetch(url, {
       ...options,
       method: "PUT",
@@ -61,7 +53,7 @@ export class ApiClient {
       },
       body: data ? JSON.stringify(data) : undefined,
     });
-    return this.handleResponse<T>(response);
+    return ApiClient.handleResponse<T>(response);
   }
 
   /**
@@ -72,17 +64,13 @@ export class ApiClient {
       ...options,
       method: "DELETE",
     });
-    return this.handleResponse<T>(response);
+    return ApiClient.handleResponse<T>(response);
   }
 
   /**
    * Performs a PATCH request with consistent error handling
    */
-  static async patch<T>(
-    url: string,
-    data?: unknown,
-    options?: RequestInit
-  ): Promise<T> {
+  static async patch<T>(url: string, data?: unknown, options?: RequestInit): Promise<T> {
     const response = await fetch(url, {
       ...options,
       method: "PATCH",
@@ -92,13 +80,16 @@ export class ApiClient {
       },
       body: data ? JSON.stringify(data) : undefined,
     });
-    return this.handleResponse<T>(response);
+    return ApiClient.handleResponse<T>(response);
   }
 
   /**
    * Creates a URL with query parameters
    */
-  static buildUrl(baseUrl: string, params?: Record<string, string | number | boolean | undefined>): string {
+  static buildUrl(
+    baseUrl: string,
+    params?: Record<string, string | number | boolean | undefined>
+  ): string {
     if (!params) return baseUrl;
 
     const url = new URL(baseUrl, window.location.origin);

@@ -32,53 +32,55 @@ export function WebSocketMonitor() {
     isConnecting: false,
     subscribedSymbols: [],
     cachedPrices: 0,
-    reconnectAttempts: 0
+    reconnectAttempts: 0,
   });
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const isMountedRef = useRef(true);
-  
+
   useEffect(() => {
     const updateStats = () => {
       if (!isMountedRef.current) return;
-      
+
       const status = webSocketPriceService.getStatus();
       setServiceStatus({
         isConnected: status.isConnected,
         isConnecting: status.isConnecting,
         subscribedSymbols: status.subscribedSymbols,
         cachedPrices: status.cachedPrices,
-        reconnectAttempts: status.reconnectAttempts
+        reconnectAttempts: status.reconnectAttempts,
       });
-      
+
       const stats = webSocketPriceService.getMemoryStats();
       setMemoryStats({
-        current: stats.current ? {
-          heapUsed: stats.current.heapUsed,
-          heapTotal: stats.current.heapTotal,
-          subscriptionCount: stats.current.subscriptionCount,
-          cacheSize: stats.current.cacheSize
-        } : null,
-        growthRate: stats.growthRate
+        current: stats.current
+          ? {
+              heapUsed: stats.current.heapUsed,
+              heapTotal: stats.current.heapTotal,
+              subscriptionCount: stats.current.subscriptionCount,
+              cacheSize: stats.current.cacheSize,
+            }
+          : null,
+        growthRate: stats.growthRate,
       });
     };
-    
+
     // Initial update
     updateStats();
-    
+
     // Update every 5 seconds
     const interval = setInterval(updateStats, 5000);
-    
+
     return () => {
       isMountedRef.current = false;
       clearInterval(interval);
     };
   }, []);
-  
+
   const formatBytes = (bytes: number): string => {
     return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
   };
-  
+
   const formatGrowthRate = (rate: number | null): string => {
     if (rate === null) return "N/A";
     const mbPerHour = rate / 1024 / 1024;
@@ -87,13 +89,14 @@ export function WebSocketMonitor() {
     }
     return `${mbPerHour > 0 ? "+" : ""}${mbPerHour.toFixed(2)} MB/hour`;
   };
-  
+
   const getStatusColor = (): string => {
     if (!serviceStatus.isConnected) return "text-red-500";
-    if (memoryStats.growthRate && memoryStats.growthRate > 50 * 1024 * 1024) return "text-yellow-500";
+    if (memoryStats.growthRate && memoryStats.growthRate > 50 * 1024 * 1024)
+      return "text-yellow-500";
     return "text-green-500";
   };
-  
+
   const getGrowthRateColor = (rate: number | null): string => {
     if (rate === null) return "";
     const mbPerHour = rate / 1024 / 1024;
@@ -105,31 +108,27 @@ export function WebSocketMonitor() {
 
   return (
     <Card className="relative">
-      <CardHeader 
-        className="cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+      <CardHeader className="cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
-              <span className={`inline-block w-2 h-2 rounded-full ${getStatusColor()} ${serviceStatus.isConnected ? 'animate-pulse' : ''}`} />
+              <span
+                className={`inline-block w-2 h-2 rounded-full ${getStatusColor()} ${serviceStatus.isConnected ? "animate-pulse" : ""}`}
+              />
               WebSocket Monitor
             </CardTitle>
             <CardDescription>
-              {serviceStatus.isConnected 
+              {serviceStatus.isConnected
                 ? `Connected • ${serviceStatus.subscribedSymbols.length} symbols`
-                : serviceStatus.isConnecting 
+                : serviceStatus.isConnecting
                   ? "Connecting..."
-                  : "Disconnected"
-              }
+                  : "Disconnected"}
             </CardDescription>
           </div>
-          <div className="text-sm text-muted-foreground">
-            {isExpanded ? "▼" : "▶"}
-          </div>
+          <div className="text-sm text-muted-foreground">{isExpanded ? "▼" : "▶"}</div>
         </div>
       </CardHeader>
-      
+
       {isExpanded && (
         <CardContent className="space-y-4">
           {/* Connection Status */}
@@ -148,7 +147,7 @@ export function WebSocketMonitor() {
               </div>
             </div>
           </div>
-          
+
           {/* Memory Usage */}
           {memoryStats.current && (
             <div className="space-y-2">
@@ -171,13 +170,16 @@ export function WebSocketMonitor() {
                 <div>
                   <span className="text-muted-foreground">Usage:</span>
                   <span className="ml-2">
-                    {((memoryStats.current.heapUsed / memoryStats.current.heapTotal) * 100).toFixed(1)}%
+                    {((memoryStats.current.heapUsed / memoryStats.current.heapTotal) * 100).toFixed(
+                      1
+                    )}
+                    %
                   </span>
                 </div>
               </div>
             </div>
           )}
-          
+
           {/* Data Stats */}
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Data Statistics</h4>
@@ -192,17 +194,14 @@ export function WebSocketMonitor() {
               </div>
             </div>
           </div>
-          
+
           {/* Subscribed Symbols */}
           {serviceStatus.subscribedSymbols.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Active Symbols</h4>
               <div className="flex flex-wrap gap-1">
-                {serviceStatus.subscribedSymbols.slice(0, 10).map(symbol => (
-                  <span 
-                    key={symbol}
-                    className="px-2 py-1 text-xs bg-muted rounded"
-                  >
+                {serviceStatus.subscribedSymbols.slice(0, 10).map((symbol) => (
+                  <span key={symbol} className="px-2 py-1 text-xs bg-muted rounded">
                     {symbol}
                   </span>
                 ))}
@@ -214,7 +213,7 @@ export function WebSocketMonitor() {
               </div>
             </div>
           )}
-          
+
           {/* Actions */}
           <div className="flex gap-2 pt-2">
             <button
@@ -242,7 +241,7 @@ export function WebSocketMonitor() {
                 type="button"
                 onClick={async () => {
                   webSocketPriceService.disconnect();
-                  await new Promise(resolve => setTimeout(resolve, 100));
+                  await new Promise((resolve) => setTimeout(resolve, 100));
                   await webSocketPriceService.connect();
                 }}
                 className="px-3 py-1 text-xs bg-yellow-500 text-white rounded"

@@ -45,10 +45,11 @@ export async function GET(request: Request) {
     return response;
   } catch (error) {
     console.error("[Auth] GET error:", error);
-    console.error("[Auth] Stack trace:", error?.stack);
+    const errorObj = error as Error | { stack?: string; message?: string };
+    console.error("[Auth] Stack trace:", errorObj?.stack);
     
     // Check for specific database errors
-    if (error?.message?.includes('database') || error?.message?.includes('sqlite')) {
+    if (errorObj?.message?.includes('database') || errorObj?.message?.includes('sqlite')) {
       console.error("[Auth] Database connection error detected");
       return new Response(JSON.stringify({ 
         error: "Database connection error", 
@@ -62,8 +63,8 @@ export async function GET(request: Request) {
     
     return new Response(JSON.stringify({ 
       error: "Auth system error", 
-      details: error?.toString(),
-      message: error?.message || "Unknown error"
+      details: errorObj?.toString(),
+      message: errorObj?.message || "Unknown error"
     }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

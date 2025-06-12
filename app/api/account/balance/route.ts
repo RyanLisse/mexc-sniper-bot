@@ -3,6 +3,13 @@ import { getMexcClient } from '@/src/services/mexc-api-client';
 import { db, apiCredentials } from '@/src/db';
 import { eq, and } from 'drizzle-orm';
 import { getEncryptionService } from '@/src/services/secure-encryption-service';
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS 
+} from '@/src/lib/api-response';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,56 +28,59 @@ export async function GET(request: NextRequest) {
     
     if (!balanceResponse.success) {
       console.error('[API] Account balance fetch failed:', balanceResponse.error);
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: balanceResponse.error || 'Failed to fetch account balances',
-          data: {
-            balances: [],
-            totalUsdtValue: 0,
-            lastUpdated: new Date().toISOString(),
+      return apiResponse(
+        createErrorResponse(
+          balanceResponse.error || 'Failed to fetch account balances',
+          {
+            fallbackData: {
+              balances: [],
+              totalUsdtValue: 0,
+              lastUpdated: new Date().toISOString(),
+            }
           }
-        },
-        { status: 500 }
+        ),
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
       );
     }
 
     console.log(`[API] Account balance success: ${balanceResponse.data.balances.length} balances, total: ${balanceResponse.data.totalUsdtValue.toFixed(2)} USDT`);
 
-    return NextResponse.json({
-      success: true,
-      data: {
+    return apiResponse(
+      createSuccessResponse({
         ...balanceResponse.data,
         hasUserCredentials,
         credentialsType: hasUserCredentials ? 'user-specific' : 'environment-fallback',
-      },
-      timestamp: new Date().toISOString(),
-    });
+      })
+    );
   } catch (error) {
     console.error('[API] Account balance error:', error);
     
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        data: {
-          balances: [],
-          totalUsdtValue: 0,
-          lastUpdated: new Date().toISOString(),
+    return apiResponse(
+      createErrorResponse(
+        error instanceof Error ? error.message : 'Unknown error occurred',
+        {
+          fallbackData: {
+            balances: [],
+            totalUsdtValue: 0,
+            lastUpdated: new Date().toISOString(),
+          }
         }
-      },
-      { status: 500 }
+      ),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }
 
 // For testing purposes, allow OPTIONS
 export async function OPTIONS() {
-  return NextResponse.json({ success: true }, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+  return NextResponse.json(
+    createSuccessResponse(null, { message: 'CORS preflight request' }), 
+    {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+    }
+  );
 }

@@ -1,5 +1,5 @@
-import { type AgentConfig, type AgentResponse, BaseAgent } from "../agents/base-agent";
 import { type CalendarEntry, validateCalendarEntry } from "../schemas/mexc-schemas";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 import { MexcApiAgent } from "./mexc-api-agent";
 
 export interface CalendarMonitoringRequest {
@@ -17,6 +17,17 @@ export interface NewListingData {
   advanceHours: number;
   confidence: number;
   priority: "low" | "medium" | "high" | "critical";
+}
+
+export interface ProcessedCalendarEntry extends CalendarEntry {
+  launchTime: string;
+  launchTimestamp: number;
+  advanceHours: number;
+  isUpcoming: boolean;
+  isRecent: boolean;
+  hasAdvanceNotice: boolean;
+  urgency: string;
+  tradingPairs: string[];
 }
 
 export class CalendarAgent extends BaseAgent {
@@ -139,7 +150,7 @@ Focus on opportunities providing ${request.minimumAdvanceHours || 3.5}+ hours ad
     ]);
   }
 
-  async scanForNewListings(calendarData: any[]): Promise<AgentResponse> {
+  async scanForNewListings(calendarData: CalendarEntry[]): Promise<AgentResponse> {
     try {
       console.log(
         `[CalendarAgent] Scanning ${calendarData.length} calendar entries for new listings`
@@ -248,28 +259,26 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
       response !== null &&
       "success" in response &&
       "data" in response &&
-      typeof (response as any).success === "boolean"
+      typeof (response as { success: boolean; data: unknown; error?: string }).success === "boolean"
     );
   }
 
-  private preprocessCalendarData(calendarData: any[]): any[] {
+  private preprocessCalendarData(calendarData: CalendarEntry[]): ProcessedCalendarEntry[] {
     const now = Date.now();
 
     return calendarData
       .filter((entry) => {
         // Filter out invalid entries
-        return entry?.vcoinId && entry.symbol && (entry.firstOpenTime || entry.launchTime);
+        return entry?.vcoinId && entry.symbol && entry.firstOpenTime;
       })
       .map((entry) => {
-        const launchTime = entry.firstOpenTime || entry.launchTime;
+        const launchTime = entry.firstOpenTime;
         const launchTimestamp =
           typeof launchTime === "number" ? launchTime : new Date(launchTime).getTime();
         const advanceHours = (launchTimestamp - now) / (1000 * 60 * 60);
 
         return {
-          vcoinId: entry.vcoinId,
-          symbol: entry.symbol,
-          projectName: entry.projectName || entry.symbol,
+          ...entry, // Spread the original entry to maintain type compatibility
           launchTime: new Date(launchTimestamp).toISOString(),
           launchTimestamp,
           advanceHours: Math.round(advanceHours * 100) / 100,
@@ -277,7 +286,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
           isRecent: advanceHours > -24 && advanceHours < 0, // Launched within last 24 hours
           hasAdvanceNotice: advanceHours >= 3.5,
           urgency: this.calculateUrgency(advanceHours),
-          tradingPairs: entry.tradingPairs || [`${entry.symbol}USDT`],
+          tradingPairs: [`${entry.symbol}USDT`],
         };
       })
       .sort((a, b) => a.advanceHours - b.advanceHours); // Sort by launch time (soonest first)
@@ -293,7 +302,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
   }
 
   // Generate analysis summary data
-  private generateAnalysisSummary(processedListings: any[]): string {
+  private generateAnalysisSummary(processedListings: ProcessedCalendarEntry[]): string {
     const upcomingListings = processedListings.filter((l) => l.isUpcoming);
     const recentListings = processedListings.filter((l) => l.isRecent);
     const criticalListings = processedListings.filter((l) => l.urgency === "critical");
@@ -328,7 +337,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
   }
 
   // Generate recommended actions based on listings analysis
-  private generateRecommendedActions(listings: any[]): string[] {
+  private generateRecommendedActions(listings: ProcessedCalendarEntry[]): string[] {
     const actions: string[] = [];
 
     const criticalListings = listings.filter((l) => l.urgency === "critical");
@@ -377,8 +386,8 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
       }
 
       // Validate calendar entries using Zod
-      const validatedEntries = (response.data as any[])
-        .map((entry: any) => {
+      const validatedEntries = (Array.isArray(response.data) ? response.data : [])
+        .map((entry: unknown) => {
           try {
             return validateCalendarEntry(entry);
           } catch (_error) {
@@ -448,7 +457,9 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
     }
   }
 
-  async analyzeListingTiming(listingData: any): Promise<AgentResponse> {
+  async analyzeListingTiming(
+    listingData: CalendarEntry | ProcessedCalendarEntry
+  ): Promise<AgentResponse> {
     const userMessage = `
 MEXC Listing Timing Analysis:
 
@@ -498,7 +509,9 @@ Provide specific timestamps and a detailed action timeline with confidence level
     ]);
   }
 
-  async assessMarketPotential(projectData: any): Promise<AgentResponse> {
+  async assessMarketPotential(
+    projectData: CalendarEntry | ProcessedCalendarEntry
+  ): Promise<AgentResponse> {
     const userMessage = `
 MEXC Project Market Potential Assessment:
 

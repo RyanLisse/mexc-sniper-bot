@@ -1,8 +1,8 @@
 import { db } from "@/src/db";
+import * as schema from "@/src/db/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { username } from "better-auth/plugins";
-import * as schema from "@/src/db/schema";
 
 console.log("Initializing better-auth...");
 
@@ -10,7 +10,7 @@ console.log("Initializing better-auth...");
 async function verifyDatabase() {
   try {
     // Test database connection
-    const testQuery = await db.select().from(schema.user).limit(1);
+    const _testQuery = await db.select().from(schema.user).limit(1);
     console.log("Database connection verified for auth");
     return true;
   } catch (error) {

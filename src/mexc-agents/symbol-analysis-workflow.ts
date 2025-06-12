@@ -1,4 +1,3 @@
-import type { AgentResponse } from "../agents/base-agent";
 import {
   type AnalysisResult,
   type SymbolData,
@@ -7,6 +6,21 @@ import {
   extractLiquidityScore,
   extractReadinessIndicators,
 } from "./analysis-utils";
+import type { AgentResponse } from "./base-agent";
+
+export interface InsightsData {
+  confidence?: number;
+  readiness?: number;
+  riskLevel?: "low" | "medium" | "high";
+  action?: string;
+  timing?: string;
+  reasoning?: string;
+  liquidity?: number;
+  volatility?: number;
+  supportLevels?: number[];
+  factors?: string[];
+  [key: string]: unknown;
+}
 
 export interface SymbolAnalysisResult {
   readinessScore: number;
@@ -53,15 +67,15 @@ export class SymbolAnalysisWorkflow {
     ]);
 
     const tradingReadiness = this.determineTradingReadiness(
-      readinessInsights,
-      patternInsights,
-      marketInsights,
-      patternData
+      readinessInsights as unknown as InsightsData,
+      patternInsights as unknown as InsightsData,
+      marketInsights as unknown as InsightsData,
+      patternData as unknown as SymbolData
     );
 
     const riskAssessment = this.generateSymbolRiskAssessment(
-      readinessInsights,
-      marketInsights,
+      readinessInsights as unknown as InsightsData,
+      marketInsights as unknown as InsightsData,
       unifiedConfidence
     );
 
@@ -253,10 +267,10 @@ export class SymbolAnalysisWorkflow {
   }
 
   private determineTradingReadiness(
-    readinessInsights: any,
-    patternInsights: any,
-    marketInsights: any,
-    _patternData: any
+    readinessInsights: InsightsData,
+    patternInsights: InsightsData,
+    marketInsights: InsightsData,
+    _patternData: SymbolData
   ): {
     ready: boolean;
     score: number;
@@ -271,29 +285,36 @@ export class SymbolAnalysisWorkflow {
       factors.push("Ready state pattern confirmed");
     }
 
-    if (readinessInsights.timingAdvance >= 3.5) {
+    if (
+      typeof readinessInsights.timingAdvance === "number" &&
+      readinessInsights.timingAdvance >= 3.5
+    ) {
       score += 20;
       factors.push("Optimal timing advance");
     }
 
     // Pattern factors
-    if (patternInsights.patterns.length >= 2) {
+    if (Array.isArray(patternInsights.patterns) && patternInsights.patterns.length >= 2) {
       score += 20;
       factors.push("Multiple patterns detected");
     }
 
-    if (patternInsights.signals.length >= 2) {
+    if (Array.isArray(patternInsights.signals) && patternInsights.signals.length >= 2) {
       score += 15;
       factors.push("Strong signal confirmation");
     }
 
     // Market factors
-    if (marketInsights.microstructure.liquidity >= 70) {
+    const microstructure = marketInsights.microstructure as {
+      liquidity?: number;
+      volatility?: number;
+    };
+    if (typeof microstructure?.liquidity === "number" && microstructure.liquidity >= 70) {
       score += 10;
       factors.push("High liquidity");
     }
 
-    if (marketInsights.microstructure.volatility <= 40) {
+    if (typeof microstructure?.volatility === "number" && microstructure.volatility <= 40) {
       score += 5;
       factors.push("Controlled volatility");
     }
@@ -308,8 +329,8 @@ export class SymbolAnalysisWorkflow {
   }
 
   private generateSymbolRiskAssessment(
-    readinessInsights: any,
-    marketInsights: any,
+    readinessInsights: InsightsData,
+    marketInsights: InsightsData,
     confidence: number
   ): {
     level: "low" | "medium" | "high";
@@ -325,12 +346,16 @@ export class SymbolAnalysisWorkflow {
       riskFactors.push("Low analysis confidence");
     }
 
-    if (marketInsights.microstructure.liquidity < 50) {
+    const microstructure = marketInsights.microstructure as {
+      liquidity?: number;
+      volatility?: number;
+    };
+    if (typeof microstructure?.liquidity === "number" && microstructure.liquidity < 50) {
       riskScore += 25;
       riskFactors.push("Poor liquidity conditions");
     }
 
-    if (marketInsights.microstructure.volatility > 70) {
+    if (typeof microstructure?.volatility === "number" && microstructure.volatility > 70) {
       riskScore += 20;
       riskFactors.push("High volatility risk");
     }
@@ -340,7 +365,10 @@ export class SymbolAnalysisWorkflow {
       riskFactors.push("No ready state confirmation");
     }
 
-    if (readinessInsights.timingAdvance < 2) {
+    if (
+      typeof readinessInsights.timingAdvance === "number" &&
+      readinessInsights.timingAdvance < 2
+    ) {
       riskScore += 10;
       riskFactors.push("Insufficient timing advance");
     }
@@ -357,8 +385,8 @@ export class SymbolAnalysisWorkflow {
   }
 
   private generateSymbolRecommendations(
-    tradingReadiness: any,
-    riskAssessment: any,
+    tradingReadiness: { ready: boolean; score: number; factors: string[] },
+    riskAssessment: { level: "low" | "medium" | "high"; factors: string[]; confidence: number },
     confidence: number
   ): {
     action: "snipe" | "prepare" | "monitor" | "skip";

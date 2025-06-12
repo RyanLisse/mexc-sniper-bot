@@ -9,6 +9,7 @@
  */
 
 import { db, apiCredentials } from '../src/db';
+import { eq } from 'drizzle-orm';
 import { createDecipheriv, createCipheriv, randomBytes } from 'crypto';
 import { getEncryptionService } from '../src/services/secure-encryption-service';
 import { config } from 'dotenv';
@@ -113,7 +114,7 @@ async function migrateEncryption() {
             encryptedPassphrase: newEncryptedPassphrase,
             updatedAt: new Date(),
           })
-          .where(db.sql`id = ${cred.id}`);
+          .where(eq(apiCredentials.id, cred.id));
 
         console.log(`  ✅ Successfully migrated\n`);
         successCount++;

@@ -9,9 +9,9 @@ import {
   CardTitle,
 } from "@/src/components/ui/card";
 import { useAuth } from "@/src/lib/auth-client";
-import { CustomSignInForm, CustomSignUpForm } from "./better-auth-forms";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { CustomSignInForm, CustomSignUpForm } from "./better-auth-forms";
 
 export function BetterAuthUI() {
   const { user, isAuthenticated } = useAuth();

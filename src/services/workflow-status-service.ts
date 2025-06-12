@@ -66,7 +66,7 @@ export class WorkflowStatusService {
             }
 
             // Exponential backoff: wait before retrying
-            const delay = baseDelay * Math.pow(2, attempt - 1);
+            const delay = baseDelay * 2 ** (attempt - 1);
             console.log(`[WorkflowStatusService] Retrying in ${delay}ms...`);
             await new Promise((resolve) => setTimeout(resolve, delay));
           }

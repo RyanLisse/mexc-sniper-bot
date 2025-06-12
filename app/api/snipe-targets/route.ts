@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schema";
 import { eq, and } from "drizzle-orm";
+import { 
+  createSuccessResponse, 
+  createErrorResponse, 
+  handleApiError, 
+  apiResponse, 
+  HTTP_STATUS,
+  createValidationErrorResponse
+} from "@/src/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,12 +33,12 @@ export async function POST(request: NextRequest) {
     } = body;
 
     if (!userId || !vcoinId || !symbolName) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing required fields: userId, vcoinId, symbolName",
-        },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse(
+          'required_fields', 
+          'Missing required fields: userId, vcoinId, symbolName'
+        ),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -53,19 +61,17 @@ export async function POST(request: NextRequest) {
       riskLevel,
     }).returning();
 
-    return NextResponse.json({
-      success: true,
-      data: result[0],
-      message: "Snipe target created successfully",
-    });
+    return apiResponse(
+      createSuccessResponse(result[0], {
+        message: "Snipe target created successfully",
+      }),
+      HTTP_STATUS.CREATED
+    );
   } catch (error) {
     console.error("❌ Error creating snipe target:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to create snipe target",
-      },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }
@@ -77,12 +83,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
 
     if (!userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing required parameter: userId",
-        },
-        { status: 400 }
+      return apiResponse(
+        createValidationErrorResponse('userId', 'Missing required parameter: userId'),
+        HTTP_STATUS.BAD_REQUEST
       );
     }
 
@@ -99,18 +102,17 @@ export async function GET(request: NextRequest) {
 
     const targets = await query;
 
-    return NextResponse.json({
-      success: true,
-      data: targets,
-    });
+    return apiResponse(
+      createSuccessResponse(targets, {
+        count: targets.length,
+        status: status || 'all'
+      })
+    );
   } catch (error) {
     console.error("❌ Error fetching snipe targets:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to fetch snipe targets",
-      },
-      { status: 500 }
+    return apiResponse(
+      handleApiError(error),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }

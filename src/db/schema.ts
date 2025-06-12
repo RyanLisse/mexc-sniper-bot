@@ -251,7 +251,9 @@ export const executionHistory = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    snipeTargetId: integer("snipe_target_id").references(() => snipeTargets.id, { onDelete: "set null" }),
+    snipeTargetId: integer("snipe_target_id").references(() => snipeTargets.id, {
+      onDelete: "set null",
+    }),
 
     // Execution Details
     vcoinId: text("vcoin_id").notNull(),
@@ -415,7 +417,9 @@ export const transactions = sqliteTable(
     status: text("status").notNull().default("pending"), // "pending", "completed", "failed", "cancelled"
 
     // Metadata
-    snipeTargetId: integer("snipe_target_id").references(() => snipeTargets.id, { onDelete: "set null" }),
+    snipeTargetId: integer("snipe_target_id").references(() => snipeTargets.id, {
+      onDelete: "set null",
+    }),
     notes: text("notes"), // Optional notes about the transaction
 
     // Timestamps
@@ -449,33 +453,33 @@ export const transactionLocks = sqliteTable(
     lockId: text("lock_id").notNull().unique(), // UUID for the lock
     resourceId: text("resource_id").notNull(), // What we're locking (e.g., "trade:BTCUSDT:BUY")
     idempotencyKey: text("idempotency_key").notNull().unique(), // Prevent duplicate requests
-    
+
     // Lock ownership
     ownerId: text("owner_id").notNull(), // Who owns this lock (userId or sessionId)
     ownerType: text("owner_type").notNull(), // "user", "system", "workflow"
-    
+
     // Lock timing
     acquiredAt: integer("acquired_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
     expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
     releasedAt: integer("released_at", { mode: "timestamp" }),
-    
+
     // Lock status
     status: text("status").notNull().default("active"), // "active", "released", "expired", "failed"
     lockType: text("lock_type").notNull().default("exclusive"), // "exclusive", "shared"
-    
+
     // Transaction details
     transactionType: text("transaction_type").notNull(), // "trade", "cancel", "update"
     transactionData: text("transaction_data").notNull(), // JSON data about the transaction
-    
+
     // Retry and timeout config
     maxRetries: integer("max_retries").notNull().default(3),
     currentRetries: integer("current_retries").notNull().default(0),
     timeoutMs: integer("timeout_ms").notNull().default(30000), // 30 seconds default
-    
+
     // Result tracking
     result: text("result"), // JSON result of the transaction
     errorMessage: text("error_message"),
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -487,7 +491,10 @@ export const transactionLocks = sqliteTable(
     idempotencyKeyIdx: index("transaction_locks_idempotency_key_idx").on(table.idempotencyKey),
     ownerIdIdx: index("transaction_locks_owner_id_idx").on(table.ownerId),
     // Compound indexes for common queries
-    resourceStatusIdx: index("transaction_locks_resource_status_idx").on(table.resourceId, table.status),
+    resourceStatusIdx: index("transaction_locks_resource_status_idx").on(
+      table.resourceId,
+      table.status
+    ),
     ownerStatusIdx: index("transaction_locks_owner_status_idx").on(table.ownerId, table.status),
   })
 );
@@ -499,33 +506,33 @@ export const transactionQueue = sqliteTable(
     id: integer("id").primaryKey({ autoIncrement: true }),
     queueId: text("queue_id").notNull().unique(), // UUID for the queue item
     lockId: text("lock_id").references(() => transactionLocks.lockId),
-    
+
     // Queue item details
     resourceId: text("resource_id").notNull(),
     priority: integer("priority").notNull().default(5), // 1=highest, 10=lowest
-    
+
     // Transaction details
     transactionType: text("transaction_type").notNull(),
     transactionData: text("transaction_data").notNull(), // JSON
     idempotencyKey: text("idempotency_key").notNull(),
-    
+
     // Queue status
     status: text("status").notNull().default("pending"), // "pending", "processing", "completed", "failed", "cancelled"
-    
+
     // Timing
     queuedAt: integer("queued_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
     processingStartedAt: integer("processing_started_at", { mode: "timestamp" }),
     completedAt: integer("completed_at", { mode: "timestamp" }),
-    
+
     // Result
     result: text("result"), // JSON result
     errorMessage: text("error_message"),
     attempts: integer("attempts").notNull().default(0),
-    
+
     // Owner info
     ownerId: text("owner_id").notNull(),
     ownerType: text("owner_type").notNull(),
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -537,8 +544,15 @@ export const transactionQueue = sqliteTable(
     queuedAtIdx: index("transaction_queue_queued_at_idx").on(table.queuedAt),
     idempotencyKeyIdx: index("transaction_queue_idempotency_key_idx").on(table.idempotencyKey),
     // Compound indexes
-    statusPriorityIdx: index("transaction_queue_status_priority_idx").on(table.status, table.priority, table.queuedAt),
-    resourceStatusIdx: index("transaction_queue_resource_status_idx").on(table.resourceId, table.status),
+    statusPriorityIdx: index("transaction_queue_status_priority_idx").on(
+      table.status,
+      table.priority,
+      table.queuedAt
+    ),
+    resourceStatusIdx: index("transaction_queue_resource_status_idx").on(
+      table.resourceId,
+      table.status
+    ),
   })
 );
 
