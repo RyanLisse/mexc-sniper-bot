@@ -1,3 +1,4 @@
+import type { UserTradingPreferences } from "@/src/hooks/use-user-preferences";
 import {
   type CalendarEntry,
   type OrderParameters as SchemaOrderParameters,
@@ -49,6 +50,16 @@ const apiClient = {
     return result.connected;
   },
 };
+
+async function fetchUserPreferences(userId: string): Promise<UserTradingPreferences | null> {
+  try {
+    const response = await fetch(`/api/user-preferences?userId=${encodeURIComponent(userId)}`);
+    if (!response.ok) return null;
+    return (await response.json()) as UserTradingPreferences;
+  } catch {
+    return null;
+  }
+}
 
 // Query keys
 export const queryKeys = {
@@ -258,6 +269,7 @@ export const usePatternSniper = () => {
 
     try {
       // 1. Create snipe target entry in database for tracking
+      const prefs = await fetchUserPreferences(actualUserId);
       const snipeTargetResponse = await fetch("/api/snipe-targets", {
         method: "POST",
         headers: {
@@ -268,9 +280,9 @@ export const usePatternSniper = () => {
           vcoinId: target.vcoinId,
           symbolName: target.symbol,
           entryStrategy: "market",
-          positionSizeUsdt: 100, // TODO: Get from user preferences
-          takeProfitLevel: 2, // Default to balanced
-          stopLossPercent: 5.0, // Default stop loss
+          positionSizeUsdt: prefs?.defaultBuyAmountUsdt ?? 100,
+          takeProfitLevel: prefs?.defaultTakeProfitLevel ?? 2,
+          stopLossPercent: prefs?.stopLossPercent ?? 5.0,
           status: "executing",
           priority: 1,
           targetExecutionTime: Math.floor(Date.now() / 1000),
