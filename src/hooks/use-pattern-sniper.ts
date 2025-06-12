@@ -1,3 +1,4 @@
+import { getUserPreferences } from "@/src/lib/user-preferences";
 import {
   type CalendarEntry,
   type OrderParameters as SchemaOrderParameters,
@@ -256,6 +257,11 @@ export const usePatternSniper = () => {
 
     const actualUserId = userId || "anonymous";
 
+    const prefs = await getUserPreferences(actualUserId);
+    const positionSizeUsdt = prefs?.defaultBuyAmountUsdt ?? 100;
+    const takeProfitLevel = prefs?.defaultTakeProfitLevel ?? 2;
+    const stopLossPercent = prefs?.stopLossPercent ?? 5.0;
+
     try {
       // 1. Create snipe target entry in database for tracking
       const snipeTargetResponse = await fetch("/api/snipe-targets", {
@@ -268,9 +274,9 @@ export const usePatternSniper = () => {
           vcoinId: target.vcoinId,
           symbolName: target.symbol,
           entryStrategy: "market",
-          positionSizeUsdt: 100, // TODO: Get from user preferences
-          takeProfitLevel: 2, // Default to balanced
-          stopLossPercent: 5.0, // Default stop loss
+          positionSizeUsdt,
+          takeProfitLevel,
+          stopLossPercent,
           status: "executing",
           priority: 1,
           targetExecutionTime: Math.floor(Date.now() / 1000),
