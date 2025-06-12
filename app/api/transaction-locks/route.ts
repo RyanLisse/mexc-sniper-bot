@@ -3,8 +3,9 @@ import { transactionLockService } from "@/src/services/transaction-lock-service"
 import { db } from "@/src/db";
 import { transactionLocks, transactionQueue } from "@/src/db/schema";
 import { eq, and, gte, or, desc } from "drizzle-orm";
+import type { ApiResponse } from "@/src/types/api-response";
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<Response> {
   try {
     const { searchParams } = new URL(request.url);
     const resourceId = searchParams.get("resourceId");
@@ -50,23 +51,22 @@ export async function GET(request: NextRequest) {
       ).length,
     };
 
-    return NextResponse.json({
+    const result: ApiResponse<{
+      locks: typeof activeLocks;
+      queue: typeof queueItems;
+      stats: typeof stats;
+    }> = {
       success: true,
-      data: {
-        locks: activeLocks,
-        queue: queueItems,
-        stats,
-      },
-    });
+      data: { locks: activeLocks, queue: queueItems, stats },
+    };
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Transaction locks API error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch lock data",
-      },
-      { status: 500 }
-    );
+    const errResult: ApiResponse<null> = {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch lock data",
+    };
+    return NextResponse.json(errResult, { status: 500 });
   }
 }
 
