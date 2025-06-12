@@ -163,14 +163,18 @@ export function useMexcPatternDetection(vcoinId?: string) {
 export function useUpcomingLaunches() {
   const { data: calendar, ...rest } = useMexcCalendar();
 
-  const upcomingLaunches =
-    calendar?.filter((entry: CalendarEntry) => {
-      const launchTime = new Date(entry.firstOpenTime);
-      const now = new Date();
-      const hours24 = 24 * 60 * 60 * 1000;
+  const upcomingLaunches = Array.isArray(calendar)
+    ? calendar.filter((entry: CalendarEntry) => {
+        const launchTime = new Date(entry.firstOpenTime);
+        const now = new Date();
+        const hours24 = 24 * 60 * 60 * 1000;
 
-      return launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours24;
-    }) || [];
+        return (
+          launchTime.getTime() > now.getTime() &&
+          launchTime.getTime() < now.getTime() + hours24
+        );
+      })
+    : [];
 
   return {
     data: upcomingLaunches,
@@ -183,14 +187,18 @@ export function useUpcomingLaunches() {
 export function useReadyTargets() {
   const { data: calendar, ...rest } = useMexcCalendar();
 
-  const readyTargets =
-    calendar?.filter((entry: CalendarEntry) => {
-      const launchTime = new Date(entry.firstOpenTime);
-      const now = new Date();
-      const hours4 = 4 * 60 * 60 * 1000;
+  const readyTargets = Array.isArray(calendar)
+    ? calendar.filter((entry: CalendarEntry) => {
+        const launchTime = new Date(entry.firstOpenTime);
+        const now = new Date();
+        const hours4 = 4 * 60 * 60 * 1000;
 
-      return launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours4;
-    }) || [];
+        return (
+          launchTime.getTime() > now.getTime() &&
+          launchTime.getTime() < now.getTime() + hours4
+        );
+      })
+    : [];
 
   return {
     data: readyTargets,
