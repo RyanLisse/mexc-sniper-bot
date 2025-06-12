@@ -38,26 +38,26 @@ import { useAuth } from "@/src/lib/auth-client";
 import { UserMenu } from "@/src/components/user-menu";
 import { useRouter } from "next/navigation";
 import { TransactionLockMonitor } from "@/src/components/transaction-lock-monitor";
-import { useWorkflowStatus } from "@/src/hooks/use-workflow-status";
+// import { useWorkflowStatus } from "@/src/hooks/use-workflow-status";
 import React, { useEffect, useState } from "react";
 
 // Pattern Sniper Dashboard Page Component - Production Trading Dashboard
 export default function DashboardPage() {
   const router = useRouter();
   const { 
-    data: session, 
-    error: authError,
-    isPending: authLoading 
+    user,
+    session,
+    isLoading: authLoading 
   } = useAuth();
-  const userId = session?.user?.id || '';
+  const userId = user?.id || '';
   const [showExitStrategy, setShowExitStrategy] = useState(false);
 
   // Auth redirect
   useEffect(() => {
-    if (!authLoading && !session?.user) {
+    if (!authLoading && !user) {
       router.push('/auth');
     }
-  }, [session, authLoading, router]);
+  }, [user, authLoading, router]);
 
   // Pattern Sniper hooks
   const {
@@ -73,18 +73,19 @@ export default function DashboardPage() {
     executeSnipe,
     forceRefresh,
     clearAllTargets
-  } = usePatternSniper(userId);
+  } = usePatternSniper();
 
   // MEXC data hooks
   const { data: calendarData, error: calendarError, isLoading: calendarLoading } = useMexcCalendar();
   const { data: mexcConnected } = useMexcConnectivity();
-  const refreshCalendar = useRefreshMexcCalendar();
+  const refreshCalendar = useRefreshMexcCalendar(userId);
   const { data: upcomingData } = useUpcomingLaunches();
   const { data: readyTargets } = useReadyTargets();
   const { data: accountData } = useMexcAccount();
   
   // Workflow status hook
-  const { data: workflowStatus } = useWorkflowStatus();
+  // const { data: workflowStatus } = useWorkflowStatus();
+  const workflowStatus = null;
 
   // Calendar targets (if needed for monitoring UI)
   const calendarTargets = React.useMemo(() => {
@@ -108,7 +109,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!session?.user) {
+  if (!user) {
     return null;
   }
 
@@ -529,7 +530,7 @@ export default function DashboardPage() {
                         <div className="flex space-x-2">
                           <Button
                             size="sm"
-                            onClick={() => executeSnipe(target, userId)}
+                            onClick={() => executeSnipe(target)}
                             className="bg-green-500 hover:bg-green-600"
                           >
                             <Zap className="h-4 w-4 mr-1" />
@@ -569,7 +570,7 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="space-y-2">
                   {pendingDetection.map((vcoinId) => {
-                    const target = calendarTargets.find(t => t.vcoinId === vcoinId);
+                    const target = calendarTargets.find((t: any) => t.vcoinId === vcoinId);
                     return target ? (
                       <div key={vcoinId} className="flex justify-between items-center p-3 bg-yellow-50/5 border border-yellow-500/20 rounded">
                         <div>
@@ -725,7 +726,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {workflowStatus?.recentActivity?.length ? (
-                  workflowStatus!.recentActivity!.map((activity) => {
+                  workflowStatus!.recentActivity!.map((activity: any) => {
                     const getActivityIcon = (type: string) => {
                       switch (type) {
                         case 'pattern': return <ArrowUpRight className="h-4 w-4 text-green-400" />;
