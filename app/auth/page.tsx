@@ -1,6 +1,6 @@
 "use client";
 
-import { AuthUI } from "@/src/components/auth-ui";
+import { KindeAuthUI } from "@/src/components/auth/kinde-auth-ui";
 
 export default function AuthPage() {
   return (
@@ -14,11 +14,11 @@ export default function AuthPage() {
             AI-powered cryptocurrency trading platform
           </p>
         </div>
-        
-        <AuthUI />
-        
+
+        <KindeAuthUI />
+
         <div className="mt-8 text-center">
-          <a 
+          <a
             href="/"
             className="text-sm text-blue-400 hover:underline"
           >

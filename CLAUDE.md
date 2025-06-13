@@ -341,6 +341,27 @@ npx inngest-cli dev -u http://localhost:3008/api/inngest
 # Access Inngest dashboard at http://localhost:8288
 ```
 
+### Authentication Setup
+
+The project uses Kinde Auth for secure user authentication:
+
+```bash
+# 1. Create a Kinde account at https://kinde.com
+# 2. Create a new application in your Kinde dashboard
+# 3. Configure the following settings in Kinde:
+#    - Allowed callback URLs: http://localhost:3008/api/auth/kinde_callback
+#    - Allowed logout redirect URLs: http://localhost:3008
+#    - Application type: Regular web application
+
+# 4. Add Kinde credentials to .env.local:
+KINDE_CLIENT_ID=your-client-id
+KINDE_CLIENT_SECRET=your-client-secret
+KINDE_ISSUER_URL=https://your-domain.kinde.com
+KINDE_SITE_URL=http://localhost:3008
+KINDE_POST_LOGOUT_REDIRECT_URL=http://localhost:3008
+KINDE_POST_LOGIN_REDIRECT_URL=http://localhost:3008/dashboard
+```
+
 ### Database Operations
 
 ```bash
@@ -431,6 +452,14 @@ Required for TypeScript multi-agent system:
 ```bash
 # Core AI Integration
 OPENAI_API_KEY=your-openai-api-key  # Required for all agents
+
+# Kinde Authentication
+KINDE_CLIENT_ID=your-kinde-client-id
+KINDE_CLIENT_SECRET=your-kinde-client-secret
+KINDE_ISSUER_URL=https://your-domain.kinde.com
+KINDE_SITE_URL=http://localhost:3008
+KINDE_POST_LOGOUT_REDIRECT_URL=http://localhost:3008
+KINDE_POST_LOGIN_REDIRECT_URL=http://localhost:3008/dashboard
 
 # MEXC API Access
 MEXC_API_KEY=your-mexc-api-key      # Optional

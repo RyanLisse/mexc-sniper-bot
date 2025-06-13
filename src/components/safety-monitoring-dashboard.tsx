@@ -20,13 +20,7 @@ import { useCallback, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
@@ -115,10 +109,7 @@ export function SafetyMonitoringDashboard() {
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            onClick={() => setIsAutoRefresh(!isAutoRefresh)}
-          >
+          <Button variant="outline" onClick={() => setIsAutoRefresh(!isAutoRefresh)}>
             {isAutoRefresh ? (
               <PauseCircle className="h-4 w-4 mr-2" />
             ) : (
@@ -126,14 +117,8 @@ export function SafetyMonitoringDashboard() {
             )}
             Auto Refresh
           </Button>
-          <Button
-            variant="outline"
-            onClick={handleRefreshAll}
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")}
-            />
+          <Button variant="outline" onClick={handleRefreshAll} disabled={isLoading}>
+            <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
             Refresh
           </Button>
           <Button
@@ -141,12 +126,7 @@ export function SafetyMonitoringDashboard() {
             onClick={() => runSafetyCheck()}
             disabled={isRunningSafetyCheck}
           >
-            <Shield
-              className={cn(
-                "h-4 w-4 mr-2",
-                isRunningSafetyCheck && "animate-pulse",
-              )}
-            />
+            <Shield className={cn("h-4 w-4 mr-2", isRunningSafetyCheck && "animate-pulse")} />
             Safety Check
           </Button>
           <Button
@@ -165,7 +145,7 @@ export function SafetyMonitoringDashboard() {
         className={cn(
           overallHealth === "healthy" && "border-green-500",
           overallHealth === "warning" && "border-yellow-500",
-          overallHealth === "critical" && "border-red-500",
+          overallHealth === "critical" && "border-red-500"
         )}
       >
         {getHealthIcon(overallHealth)}
@@ -173,11 +153,9 @@ export function SafetyMonitoringDashboard() {
         <AlertDescription>
           {systemHealth ? (
             <>
-              Last updated:{" "}
-              {new Date(systemHealth.lastUpdated).toLocaleString()}
+              Last updated: {new Date(systemHealth.lastUpdated).toLocaleString()}
               {" • "}
-              {systemHealth.healthyServices}/{systemHealth.totalServices}{" "}
-              services healthy
+              {systemHealth.healthyServices}/{systemHealth.totalServices} services healthy
             </>
           ) : (
             "Loading system status..."
@@ -199,16 +177,14 @@ export function SafetyMonitoringDashboard() {
             {/* Risk Level */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Risk Level
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Risk Level</CardTitle>
                 <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div
                   className={cn(
                     "text-2xl font-bold",
-                    getRiskColor(riskMetrics?.currentRisk || "low"),
+                    getRiskColor(riskMetrics?.currentRisk || "low")
                   )}
                 >
                   {riskMetrics?.currentRisk?.toUpperCase() || "UNKNOWN"}
@@ -233,9 +209,7 @@ export function SafetyMonitoringDashboard() {
                 <div
                   className={cn(
                     "text-2xl font-bold",
-                    (riskMetrics?.totalPnL || 0) >= 0
-                      ? "text-green-500"
-                      : "text-red-500",
+                    (riskMetrics?.totalPnL || 0) >= 0 ? "text-green-500" : "text-red-500"
                   )}
                 >
                   {formatCurrency(riskMetrics?.totalPnL || 0)}
@@ -253,9 +227,7 @@ export function SafetyMonitoringDashboard() {
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {riskMetrics?.activePositions || 0}
-                </div>
+                <div className="text-2xl font-bold">{riskMetrics?.activePositions || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Limit: {riskMetrics?.maxPositionsAllowed || 0}
                 </p>
@@ -273,12 +245,8 @@ export function SafetyMonitoringDashboard() {
             {/* Simulation Status */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Simulation
-                </CardTitle>
-                <Badge
-                  variant={simulationStatus?.active ? "default" : "secondary"}
-                >
+                <CardTitle className="text-sm font-medium">Simulation</CardTitle>
+                <Badge variant={simulationStatus?.active ? "default" : "secondary"}>
                   {simulationStatus?.active ? "ACTIVE" : "INACTIVE"}
                 </Badge>
               </CardHeader>
@@ -310,33 +278,22 @@ export function SafetyMonitoringDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Circuit Breaker Status</CardTitle>
-                <CardDescription>
-                  Automatic trading halts based on risk thresholds
-                </CardDescription>
+                <CardDescription>Automatic trading halts based on risk thresholds</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
                   <span>Status:</span>
                   <Badge
                     variant={
-                      riskMetrics?.circuitBreakerStatus === "closed"
-                        ? "default"
-                        : "destructive"
+                      riskMetrics?.circuitBreakerStatus === "closed" ? "default" : "destructive"
                     }
                   >
-                    {riskMetrics?.circuitBreakerStatus?.toUpperCase() ||
-                      "UNKNOWN"}
+                    {riskMetrics?.circuitBreakerStatus?.toUpperCase() || "UNKNOWN"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between mt-2">
                   <span>Emergency Halt:</span>
-                  <Badge
-                    variant={
-                      riskMetrics?.emergencyHaltActive
-                        ? "destructive"
-                        : "secondary"
-                    }
-                  >
+                  <Badge variant={riskMetrics?.emergencyHaltActive ? "destructive" : "secondary"}>
                     {riskMetrics?.emergencyHaltActive ? "ACTIVE" : "INACTIVE"}
                   </Badge>
                 </div>
@@ -346,9 +303,7 @@ export function SafetyMonitoringDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Risk Metrics</CardTitle>
-                <CardDescription>
-                  Current risk assessment and position limits
-                </CardDescription>
+                <CardDescription>Current risk assessment and position limits</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -356,17 +311,13 @@ export function SafetyMonitoringDashboard() {
                     <span>Risk Score</span>
                     <span>{riskMetrics?.riskScore || 0}/100</span>
                   </div>
-                  <Progress
-                    value={riskMetrics?.riskScore || 0}
-                    className="mt-1"
-                  />
+                  <Progress value={riskMetrics?.riskScore || 0} className="mt-1" />
                 </div>
                 <div>
                   <div className="flex justify-between text-sm">
                     <span>Position Utilization</span>
                     <span>
-                      {riskMetrics?.activePositions || 0} /{" "}
-                      {riskMetrics?.maxPositionsAllowed || 0}
+                      {riskMetrics?.activePositions || 0} / {riskMetrics?.maxPositionsAllowed || 0}
                     </span>
                   </div>
                   <Progress
@@ -388,25 +339,19 @@ export function SafetyMonitoringDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Simulation Session</CardTitle>
-                <CardDescription>
-                  Virtual trading environment for safe testing
-                </CardDescription>
+                <CardDescription>Virtual trading environment for safe testing</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span>Status:</span>
-                  <Badge
-                    variant={simulationStatus?.active ? "default" : "secondary"}
-                  >
+                  <Badge variant={simulationStatus?.active ? "default" : "secondary"}>
                     {simulationStatus?.active ? "RUNNING" : "STOPPED"}
                   </Badge>
                 </div>
                 {simulationStatus?.sessionId && (
                   <div className="flex items-center justify-between">
                     <span>Session ID:</span>
-                    <code className="text-sm">
-                      {simulationStatus.sessionId.slice(0, 8)}...
-                    </code>
+                    <code className="text-sm">{simulationStatus.sessionId.slice(0, 8)}...</code>
                   </div>
                 )}
                 {simulationStatus?.startTime && (
@@ -423,9 +368,7 @@ export function SafetyMonitoringDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Virtual Performance</CardTitle>
-                <CardDescription>
-                  Performance metrics from simulation trading
-                </CardDescription>
+                <CardDescription>Performance metrics from simulation trading</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -440,18 +383,14 @@ export function SafetyMonitoringDashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Win Rate:</span>
-                  <span>
-                    {formatPercentage(simulationStatus?.winRate || 0)}
-                  </span>
+                  <span>{formatPercentage(simulationStatus?.winRate || 0)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Virtual P&L:</span>
                   <span
                     className={cn(
                       "font-mono",
-                      (simulationStatus?.virtualPnL || 0) >= 0
-                        ? "text-green-500"
-                        : "text-red-500",
+                      (simulationStatus?.virtualPnL || 0) >= 0 ? "text-green-500" : "text-red-500"
                     )}
                   >
                     {formatCurrency(simulationStatus?.virtualPnL || 0)}
@@ -474,31 +413,21 @@ export function SafetyMonitoringDashboard() {
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-500">
-                    {formatPercentage(
-                      reconciliationStatus?.positionAccuracy || 0,
-                    )}
+                    {formatPercentage(reconciliationStatus?.positionAccuracy || 0)}
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Position Accuracy
-                  </p>
+                  <p className="text-sm text-muted-foreground">Position Accuracy</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-500">
-                    {formatPercentage(
-                      reconciliationStatus?.balanceAccuracy || 0,
-                    )}
+                    {formatPercentage(reconciliationStatus?.balanceAccuracy || 0)}
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Balance Accuracy
-                  </p>
+                  <p className="text-sm text-muted-foreground">Balance Accuracy</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold">
                     {reconciliationStatus?.discrepanciesFound || 0}
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Discrepancies Found
-                  </p>
+                  <p className="text-sm text-muted-foreground">Discrepancies Found</p>
                 </div>
               </div>
 
@@ -507,9 +436,7 @@ export function SafetyMonitoringDashboard() {
                   <span>Last Check:</span>
                   <span className="text-sm">
                     {reconciliationStatus?.lastCheck
-                      ? new Date(
-                          reconciliationStatus.lastCheck,
-                        ).toLocaleString()
+                      ? new Date(reconciliationStatus.lastCheck).toLocaleString()
                       : "Never"}
                   </span>
                 </div>
@@ -523,7 +450,7 @@ export function SafetyMonitoringDashboard() {
                     className={cn(
                       (reconciliationStatus?.manualResolutionRequired || 0) > 0
                         ? "text-yellow-500"
-                        : "text-green-500",
+                        : "text-green-500"
                     )}
                   >
                     {reconciliationStatus?.manualResolutionRequired || 0}
@@ -537,53 +464,47 @@ export function SafetyMonitoringDashboard() {
         <TabsContent value="services" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {systemHealth?.services &&
-              Object.entries(systemHealth.services).map(
-                ([serviceName, service]) => (
-                  <Card key={serviceName}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium capitalize">
-                        {serviceName.replace(/([A-Z])/g, " $1").trim()}
-                      </CardTitle>
-                      {getHealthIcon(service.status)}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-xs">Status:</span>
-                          <Badge
-                            variant={
-                              service.status === "online"
-                                ? "default"
-                                : service.status === "degraded"
-                                  ? "secondary"
-                                  : "destructive"
-                            }
-                          >
-                            {service.status.toUpperCase()}
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-xs">Health:</span>
-                          <span className="text-xs">{service.health}%</span>
-                        </div>
-                        <Progress value={service.health} className="h-1" />
-                        <div className="flex justify-between">
-                          <span className="text-xs">Response Time:</span>
-                          <span className="text-xs">
-                            {service.responseTime}ms
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-xs">Error Rate:</span>
-                          <span className="text-xs">
-                            {formatPercentage(service.errorRate)}
-                          </span>
-                        </div>
+              Object.entries(systemHealth.services).map(([serviceName, service]) => (
+                <Card key={serviceName}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium capitalize">
+                      {serviceName.replace(/([A-Z])/g, " $1").trim()}
+                    </CardTitle>
+                    {getHealthIcon(service.status)}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-xs">Status:</span>
+                        <Badge
+                          variant={
+                            service.status === "online"
+                              ? "default"
+                              : service.status === "degraded"
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
+                          {service.status.toUpperCase()}
+                        </Badge>
                       </div>
-                    </CardContent>
-                  </Card>
-                ),
-              )}
+                      <div className="flex justify-between">
+                        <span className="text-xs">Health:</span>
+                        <span className="text-xs">{service.health}%</span>
+                      </div>
+                      <Progress value={service.health} className="h-1" />
+                      <div className="flex justify-between">
+                        <span className="text-xs">Response Time:</span>
+                        <span className="text-xs">{service.responseTime}ms</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-xs">Error Rate:</span>
+                        <span className="text-xs">{formatPercentage(service.errorRate)}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
           </div>
         </TabsContent>
       </Tabs>

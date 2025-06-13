@@ -47,7 +47,7 @@ interface AgentStatus {
   };
 }
 
-const agentIcons: Record<string, any> = {
+const agentIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   "mexc-api": Bot,
   calendar: Calendar,
   pattern: TrendingUp,
@@ -210,6 +210,7 @@ export function AgentDashboard() {
   const executeAgentAction = useMutation({
     mutationFn: async ({ agentId, action }: { agentId: string; action: string }) => {
       // In real implementation, this would call an API endpoint
+      console.log(`Executing ${action} on agent ${agentId}`);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       return { success: true };
     },
@@ -436,8 +437,11 @@ export function AgentDashboard() {
                 <div className="grid gap-2">
                   {agents
                     ?.find((a) => a.id === selectedAgent)
-                    ?.capabilities.map((capability, index) => (
-                      <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                    ?.capabilities.map((capability) => (
+                      <div
+                        key={capability}
+                        className="flex items-center gap-2 p-3 bg-muted rounded-lg"
+                      >
                         <CheckCircle2 className="h-4 w-4 text-green-500" />
                         <span className="text-sm">{capability}</span>
                       </div>
@@ -473,8 +477,8 @@ export function AgentDashboard() {
                 <ScrollArea className="h-64">
                   <div className="space-y-2">
                     {/* Mock activity logs */}
-                    {[...Array(10)].map((_, i) => (
-                      <div key={i} className="flex items-start gap-2 p-2 text-sm">
+                    {Array.from({ length: 10 }, (_, i) => (
+                      <div key={`activity-log-${i}`} className="flex items-start gap-2 p-2 text-sm">
                         <span className="text-muted-foreground whitespace-nowrap">
                           {new Date(Date.now() - i * 5 * 60 * 1000).toLocaleTimeString()}
                         </span>

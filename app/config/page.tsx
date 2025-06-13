@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/src/lib/auth-client";
+import { useAuth } from "@/src/lib/kinde-auth-client";
 import { useRouter } from "next/navigation";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 

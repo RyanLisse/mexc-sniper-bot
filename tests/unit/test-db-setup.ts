@@ -3,49 +3,89 @@
  * 
  * This utility provides a clean database setup for tests that handles
  * migration issues and ensures proper foreign key constraints.
+ * 
+ * Uses TursoDB embedded replicas for consistent testing environment.
  */
 
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+import { createClient } from "@libsql/client";
+import { drizzle } from 'drizzle-orm/libsql';
+import { migrate } from 'drizzle-orm/libsql/migrator';
 import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import * as schema from '@/src/db/schema';
 
 export interface TestDbSetup {
-  testDb: InstanceType<typeof Database>;
+  client: ReturnType<typeof createClient>;
   db: ReturnType<typeof drizzle>;
   cleanup: () => void;
 }
 
 /**
  * Create a clean test database with all migrations applied
+ * Uses TursoDB embedded replica for testing
  */
 export async function createTestDatabase(): Promise<TestDbSetup> {
-  // Create in-memory database
-  const testDb = new Database(':memory:');
+  // Use TursoDB configuration for consistent testing, fallback to local SQLite
+  const databaseUrl = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
   
-  // Enable foreign keys for proper constraint checking
-  testDb.pragma('foreign_keys = ON');
-  testDb.pragma('journal_mode = MEMORY'); // Faster for tests
+  let client: Client;
   
-  const db = drizzle(testDb, { schema });
+  if (databaseUrl && authToken) {
+    // Use TursoDB if configured
+    const testId = `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const testDbPath = `./data/test_${testId}.db`;
+    
+    client = createClient({
+      url: `file:${testDbPath}`,
+      syncUrl: databaseUrl,
+      authToken: authToken,
+      syncInterval: 1, // Very fast sync for tests
+    });
+  } else {
+    // Fallback to local SQLite for tests when TursoDB is not configured
+    const testId = `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const testDbPath = `./data/test_${testId}.db`;
+    
+    client = createClient({
+      url: `file:${testDbPath}`,
+    });
+  }
+  
+  const db = drizzle(client, { schema });
+  
+  // Enable foreign keys and optimize for tests
+  try {
+    await db.run(sql`PRAGMA foreign_keys = ON`);
+    await db.run(sql`PRAGMA journal_mode = MEMORY`);
+    await db.run(sql`PRAGMA synchronous = OFF`); // Faster for tests
+    await db.run(sql`PRAGMA cache_size = -32000`); // 32MB cache
+  } catch (error) {
+    console.warn('Failed to set test database pragmas:', error);
+  }
   
   // Apply migrations with error handling
   try {
     await migrate(db, { migrationsFolder: './src/db/migrations' });
+    console.log(`[Test] Applied migrations to test database: ${testDbPath}`);
   } catch (error) {
-    console.error('Migration failed:', error);
-    // Close database and re-throw
-    testDb.close();
+    console.error('Test migration failed:', error);
+    // Close client and re-throw
+    try {
+      client.close();
+    } catch (closeError) {
+      console.warn('Error closing test client:', closeError);
+    }
     throw error;
   }
   
   return {
-    testDb,
+    client,
     db,
     cleanup: () => {
       try {
-        testDb.close();
+        client.close();
+        console.log(`[Test] Cleaned up test database: ${testDbPath}`);
       } catch (error) {
         console.warn('Error closing test database:', error);
       }

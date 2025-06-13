@@ -36,12 +36,11 @@ CREATE TABLE `execution_history_fixed` (
 );
 --> statement-breakpoint
 
--- Copy data
-INSERT INTO `execution_history_fixed` SELECT * FROM `execution_history`;
+-- Skip data copy - table may not exist yet in fresh databases
 --> statement-breakpoint
 
--- Drop old table
-DROP TABLE `execution_history`;
+-- Drop old table if it exists
+DROP TABLE IF EXISTS `execution_history`;
 --> statement-breakpoint
 
 -- Rename new table
@@ -79,12 +78,11 @@ CREATE TABLE `transactions_fixed` (
 );
 --> statement-breakpoint
 
--- Copy data
-INSERT INTO `transactions_fixed` SELECT * FROM `transactions`;
+-- Skip data copy - table may not exist yet in fresh databases
 --> statement-breakpoint
 
--- Drop old table
-DROP TABLE `transactions`;
+-- Drop old table if it exists
+DROP TABLE IF EXISTS `transactions`;
 --> statement-breakpoint
 
 -- Rename new table

@@ -43,7 +43,7 @@ Revolutionary TypeScript-based system with specialized AI agents:
 ### 🎯 **Specialized Agents**
 
 - **📅 CalendarAgent**: New listing discovery and launch timing analysis
-- **🔍 PatternDiscoveryAgent**: Ready state detection and pattern validation  
+- **🔍 PatternDiscoveryAgent**: Ready state detection and pattern validation
 - **📊 SymbolAnalysisAgent**: Real-time readiness assessment and market analysis
 - **🌐 MexcApiAgent**: API interactions and trading signal analysis
 - **🎭 MexcOrchestrator**: Multi-agent workflow coordination
@@ -87,6 +87,14 @@ Create a `.env.local` file:
 # Required - Core AI Integration
 OPENAI_API_KEY=your_openai_api_key
 
+# Required - Kinde Authentication
+KINDE_CLIENT_ID=your_kinde_client_id
+KINDE_CLIENT_SECRET=your_kinde_client_secret
+KINDE_ISSUER_URL=https://your-domain.kinde.com
+KINDE_SITE_URL=http://localhost:3008
+KINDE_POST_LOGOUT_REDIRECT_URL=http://localhost:3008
+KINDE_POST_LOGIN_REDIRECT_URL=http://localhost:3008/dashboard
+
 # Optional - MEXC API Access
 MEXC_API_KEY=your_mexc_api_key
 MEXC_SECRET_KEY=your_mexc_secret_key
@@ -104,6 +112,16 @@ DATABASE_URL=sqlite:///./mexc_sniper.db
 # INNGEST_SIGNING_KEY=your_signing_key
 # INNGEST_EVENT_KEY=your_event_key
 ```
+
+### 2.1. Kinde Authentication Setup
+
+1. **Create a Kinde account** at [https://kinde.com](https://kinde.com)
+2. **Create a new application** in your Kinde dashboard
+3. **Configure application settings**:
+   - Application type: Regular web application
+   - Allowed callback URLs: `http://localhost:3008/api/auth/kinde_callback`
+   - Allowed logout redirect URLs: `http://localhost:3008`
+4. **Copy credentials** to your `.env.local` file
 
 ### 3. Setup Database
 
@@ -130,8 +148,9 @@ make dev-inngest # Inngest dev server on port 8288
 
 ### 5. Access the Application
 
-- **Trading Dashboard**: http://localhost:3000/dashboard
-- **Configuration**: http://localhost:3000/config  
+- **Trading Dashboard**: http://localhost:3008/dashboard
+- **Configuration**: http://localhost:3008/config
+- **Authentication**: http://localhost:3008/auth
 - **Inngest Dashboard**: http://localhost:8288 (workflow monitoring)
 
 ## 🤖 TypeScript Multi-Agent System
@@ -149,11 +168,11 @@ await inngest.send({
 });
 ```
 
-#### **Symbol Monitoring Workflow**  
+#### **Symbol Monitoring Workflow**
 ```typescript
 // Monitor specific symbol for ready state
 await inngest.send({
-  name: "mexc/symbol.watch", 
+  name: "mexc/symbol.watch",
   data: {
     vcoinId: "EXAMPLE001",
     symbolName: "EXAMPLECOIN",
@@ -180,7 +199,7 @@ await inngest.send({
 await inngest.send({
   name: "mexc/trading.strategy",
   data: {
-    vcoinId: "EXAMPLE001", 
+    vcoinId: "EXAMPLE001",
     symbolData: {...},
     riskLevel: "medium",
     positionSize: 1000
@@ -196,7 +215,7 @@ await inngest.send({
 - **Market Potential**: Assesses project fundamentals and trading appeal
 - **Monitoring Plans**: Creates dynamic scheduling for discovered opportunities
 
-#### **🔍 PatternDiscoveryAgent**  
+#### **🔍 PatternDiscoveryAgent**
 - **Ready State Detection**: Validates sts:2, st:2, tt:4 pattern with 90%+ accuracy
 - **Early Opportunity ID**: Identifies pre-ready patterns for 3.5+ hour advance
 - **Confidence Scoring**: 0-100% reliability metrics for all patterns
@@ -204,7 +223,7 @@ await inngest.send({
 
 #### **📊 SymbolAnalysisAgent**
 - **Real-time Assessment**: Continuous READY/NOT READY determination
-- **Market Microstructure**: Analyzes liquidity, spreads, and trading conditions  
+- **Market Microstructure**: Analyzes liquidity, spreads, and trading conditions
 - **Risk Evaluation**: Comprehensive risk scoring and mitigation strategies
 - **Dynamic Monitoring**: AI-driven scheduling based on symbol status
 
@@ -226,7 +245,7 @@ await inngest.send({
 Configure your preferred take profit percentages:
 
 - **Level 1**: Conservative (default: 5%)
-- **Level 2**: Moderate (default: 10%) 
+- **Level 2**: Moderate (default: 10%)
 - **Level 3**: Aggressive (default: 15%)
 - **Level 4**: Very Aggressive (default: 25%)
 - **Custom**: User-defined percentage

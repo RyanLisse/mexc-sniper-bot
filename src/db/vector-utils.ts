@@ -1,6 +1,6 @@
-import { sql, eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, executeWithRetry } from "./index";
-import { patternEmbeddings, patternSimilarityCache, type NewPatternEmbedding } from "./schema";
+import { type NewPatternEmbedding, patternEmbeddings, patternSimilarityCache } from "./schema";
 
 // Vector similarity functions for SQLite/Turso
 export class VectorUtils {
@@ -54,10 +54,12 @@ export class VectorUtils {
   /**
    * Store a pattern embedding in the database
    */
-  static async storePatternEmbedding(pattern: Omit<NewPatternEmbedding, "embedding"> & { embedding: number[] }) {
+  static async storePatternEmbedding(
+    pattern: Omit<NewPatternEmbedding, "embedding"> & { embedding: number[] }
+  ) {
     return executeWithRetry(async () => {
       const embeddingJson = JSON.stringify(pattern.embedding);
-      
+
       await db.insert(patternEmbeddings).values({
         ...pattern,
         embedding: embeddingJson,
@@ -126,7 +128,7 @@ export class VectorUtils {
     patternId2: string,
     cosineSimilarity: number,
     euclideanDistance: number,
-    cacheHours: number = 24
+    cacheHours = 24
   ) {
     return executeWithRetry(async () => {
       const now = new Date();
@@ -135,22 +137,25 @@ export class VectorUtils {
       // Ensure consistent ordering for the cache
       const [id1, id2] = [patternId1, patternId2].sort();
 
-      await db.insert(patternSimilarityCache).values({
-        patternId1: id1,
-        patternId2: id2,
-        cosineSimilarity,
-        euclideanDistance,
-        calculatedAt: now,
-        expiresAt,
-      }).onConflictDoUpdate({
-        target: [patternSimilarityCache.patternId1, patternSimilarityCache.patternId2],
-        set: {
+      await db
+        .insert(patternSimilarityCache)
+        .values({
+          patternId1: id1,
+          patternId2: id2,
           cosineSimilarity,
           euclideanDistance,
           calculatedAt: now,
           expiresAt,
-        },
-      });
+        })
+        .onConflictDoUpdate({
+          target: [patternSimilarityCache.patternId1, patternSimilarityCache.patternId2],
+          set: {
+            cosineSimilarity,
+            euclideanDistance,
+            calculatedAt: now,
+            expiresAt,
+          },
+        });
     }, "Cache pattern similarity");
   }
 
@@ -165,9 +170,7 @@ export class VectorUtils {
       const result = await db
         .select()
         .from(patternSimilarityCache)
-        .where(
-          sql`pattern_id_1 = ${id1} AND pattern_id_2 = ${id2} AND expires_at > ${now}`
-        )
+        .where(sql`pattern_id_1 = ${id1} AND pattern_id_2 = ${id2} AND expires_at > ${now}`)
         .limit(1);
 
       return result[0] || null;
@@ -180,7 +183,7 @@ export class VectorUtils {
   static async cleanupExpiredCache() {
     return executeWithRetry(async () => {
       const now = new Date();
-      
+
       await db
         .delete(patternSimilarityCache)
         .where(sql`${patternSimilarityCache.expiresAt} <= ${now}`);
@@ -228,10 +231,7 @@ export class VectorUtils {
         updates.falsePositives = sql`false_positives + 1`;
       }
 
-      await db
-        .update(patternEmbeddings)
-        .set(updates)
-        .where(sql`pattern_id = ${patternId}`);
+      await db.update(patternEmbeddings).set(updates).where(sql`pattern_id = ${patternId}`);
     }, "Update pattern metrics");
   }
 
@@ -294,9 +294,7 @@ export class VectorUtils {
         }
 
         if (cachedResults.length >= limit) {
-          results[id] = cachedResults
-            .sort((a, b) => b.similarity - a.similarity)
-            .slice(0, limit);
+          results[id] = cachedResults.sort((a, b) => b.similarity - a.similarity).slice(0, limit);
           continue;
         }
       }
@@ -310,12 +308,7 @@ export class VectorUtils {
       // Cache results for future use
       if (useCache) {
         for (const similar of similarPatterns) {
-          await this.cacheSimilarity(
-            id,
-            similar.patternId,
-            similar.similarity,
-            similar.distance
-          );
+          await this.cacheSimilarity(id, similar.patternId, similar.similarity, similar.distance);
         }
       }
 

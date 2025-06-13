@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/src/components/ui/badge";
-import { signOut } from "@/src/lib/auth-client";
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import { ChevronDown, ChevronUp, LogOut, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -20,27 +20,9 @@ export function UserMenu({ user }: UserMenuProps) {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const router = useRouter();
 
-  const handleSignOut = async () => {
-    try {
-      setIsSigningOut(true);
-
-      await signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            // Trigger auth state change event
-            window.dispatchEvent(new CustomEvent("auth-state-change"));
-
-            // Redirect to auth page
-            router.push("/auth");
-          },
-        },
-      });
-    } catch (error) {
-      console.error("Sign out error:", error);
-    } finally {
-      setIsSigningOut(false);
-      setIsOpen(false);
-    }
+  const handleSignOut = () => {
+    setIsSigningOut(true);
+    setIsOpen(false);
   };
 
   const displayName = user.name || user.username || user.email;
@@ -119,15 +101,13 @@ export function UserMenu({ user }: UserMenuProps) {
               <div className="border-t border-slate-700 my-2" />
 
               {/* Sign Out */}
-              <button
-                type="button"
+              <LogoutLink
+                className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors"
                 onClick={handleSignOut}
-                disabled={isSigningOut}
-                className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-50"
               >
                 <LogOut className="h-4 w-4 mr-3" />
                 {isSigningOut ? "Signing out..." : "Sign out"}
-              </button>
+              </LogoutLink>
             </div>
           </div>
         </>

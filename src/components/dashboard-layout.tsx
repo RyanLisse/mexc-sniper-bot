@@ -23,7 +23,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/src/components/ui/sidebar";
-import { signOut, useAuth } from "@/src/lib/auth-client";
+import { signOut, useAuth } from "@/src/lib/kinde-auth-client";
 import {
   Bot,
   Brain,

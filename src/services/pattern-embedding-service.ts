@@ -1,6 +1,6 @@
-import OpenAI from "openai";
-import { vectorUtils } from "@/src/db/vector-utils";
 import type { NewPatternEmbedding } from "@/src/db/schema";
+import { vectorUtils } from "@/src/db/vector-utils";
+import OpenAI from "openai";
 
 export interface PatternData {
   symbolName: string;
@@ -49,9 +49,12 @@ export class PatternEmbeddingService {
     }
 
     if (pattern.type === "price_action" && pattern.data.priceChanges) {
-      const avgChange = pattern.data.priceChanges.reduce((a, b) => a + b, 0) / pattern.data.priceChanges.length;
+      const avgChange =
+        pattern.data.priceChanges.reduce((a, b) => a + b, 0) / pattern.data.priceChanges.length;
       parts.push(`Average Price Change: ${avgChange.toFixed(2)}%`);
-      parts.push(`Price Volatility: ${this.calculateVolatility(pattern.data.priceChanges).toFixed(2)}%`);
+      parts.push(
+        `Price Volatility: ${this.calculateVolatility(pattern.data.priceChanges).toFixed(2)}%`
+      );
     }
 
     if (pattern.type === "volume_profile" && pattern.data.volumeProfile) {
@@ -72,10 +75,11 @@ export class PatternEmbeddingService {
    */
   private calculateVolatility(priceChanges: number[]): number {
     if (priceChanges.length === 0) return 0;
-    
+
     const mean = priceChanges.reduce((a, b) => a + b, 0) / priceChanges.length;
-    const variance = priceChanges.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / priceChanges.length;
-    
+    const variance =
+      priceChanges.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / priceChanges.length;
+
     return Math.sqrt(variance);
   }
 
@@ -86,7 +90,7 @@ export class PatternEmbeddingService {
     const total = volumeProfile.reduce((a, b) => a + b, 0);
     if (total === 0) return "No volume";
 
-    const percentages = volumeProfile.map(v => ((v / total) * 100).toFixed(1));
+    const percentages = volumeProfile.map((v) => ((v / total) * 100).toFixed(1));
     return percentages.join("-");
   }
 
@@ -96,7 +100,7 @@ export class PatternEmbeddingService {
   async generateEmbedding(pattern: PatternData): Promise<number[]> {
     try {
       const text = this.patternToText(pattern);
-      
+
       const response = await this.openai.embeddings.create({
         model: this.embeddingModel,
         input: text,
@@ -182,7 +186,10 @@ export class PatternEmbeddingService {
         const patternId = await this.storePattern(pattern);
         patternIds.push(patternId);
       } catch (error) {
-        console.error(`[PatternEmbedding] Failed to process pattern for ${pattern.symbolName}:`, error);
+        console.error(
+          `[PatternEmbedding] Failed to process pattern for ${pattern.symbolName}:`,
+          error
+        );
       }
     }
 
@@ -229,10 +236,12 @@ export class PatternEmbeddingService {
   /**
    * Clean up old patterns and cache
    */
-  async cleanup(options: {
-    inactiveDays?: number;
-    lowConfidenceThreshold?: number;
-  } = {}) {
+  async cleanup(
+    options: {
+      inactiveDays?: number;
+      lowConfidenceThreshold?: number;
+    } = {}
+  ) {
     const { inactiveDays = 30, lowConfidenceThreshold = 50 } = options;
 
     try {

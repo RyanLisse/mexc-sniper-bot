@@ -6,7 +6,7 @@
 graph TB
     subgraph "Frontend Layer"
         UI[Next.js App<br/>React 19 + TypeScript]
-        Auth[Better Auth<br/>Authentication]
+        Auth[Kinde Auth<br/>Authentication]
         Query[TanStack Query<br/>Data Management]
     end
 
@@ -38,18 +38,18 @@ graph TB
     Auth --> API
     API --> Inngest
     API --> Drizzle
-    
+
     Inngest --> Orchestrator
     Orchestrator --> Calendar
     Orchestrator --> Pattern
     Orchestrator --> Symbol
     Orchestrator --> MexcAPI
-    
+
     Calendar --> OpenAI
     Pattern --> OpenAI
     Symbol --> OpenAI
     MexcAPI --> OpenAI
-    
+
     MexcAPI --> MEXC
     Drizzle --> DB
 ```
@@ -79,7 +79,7 @@ flowchart LR
     Dashboard --> TanStack
     Config --> Hooks
     Monitor --> TanStack
-    
+
     TanStack --> Auth
     TanStack --> Triggers
     Hooks --> Schedule
@@ -124,7 +124,7 @@ erDiagram
     users ||--o{ monitored_listings : tracks
     users ||--o{ snipe_targets : creates
     users ||--o{ execution_history : generates
-    
+
     user_preferences {
         string id PK
         string userId FK
@@ -135,7 +135,7 @@ erDiagram
         float stopLossPercent
         string riskTolerance
     }
-    
+
     api_credentials {
         string id PK
         string userId FK
@@ -143,7 +143,7 @@ erDiagram
         string encryptedSecret
         string exchange
     }
-    
+
     monitored_listings {
         string id PK
         string userId FK
@@ -153,7 +153,7 @@ erDiagram
         string status
         json patternState
     }
-    
+
     snipe_targets {
         string id PK
         string userId FK
@@ -163,7 +163,7 @@ erDiagram
         json takeProfitLevels
         string status
     }
-    
+
     execution_history {
         string id PK
         string userId FK
@@ -199,12 +199,12 @@ graph TB
 
     Local --> SQLite
     Local --> InngestDev
-    
+
     Edge --> Turso
     Serverless --> Turso
     Serverless --> InngestCloud
     Static --> Edge
-    
+
     Railway -.-> Turso
     Railway -.-> InngestCloud
 ```
@@ -214,7 +214,7 @@ graph TB
 ```mermaid
 flowchart TB
     subgraph "Security Layers"
-        Auth[Authentication<br/>Better Auth]
+        Auth[Authentication<br/>Kinde Auth]
         CSRF[CSRF Protection]
         RateLimit[Rate Limiting]
         Encryption[AES-256-GCM<br/>Encryption]
@@ -266,11 +266,11 @@ flowchart LR
     MEXCData --> Agents
     UserInput --> Workflows
     AIAnalysis --> Agents
-    
+
     Agents --> Cache
     Workflows --> TursoDB
     Cache --> LocalState
-    
+
     LocalState --> UI
     TursoDB --> Trades
     TursoDB --> Logs
@@ -327,7 +327,7 @@ flowchart TD
     API --> Fallback
     Agent --> Recovery
     DB --> Logging
-    
+
     Retry --> Toast
     Fallback --> ErrorBoundary
     Recovery --> GracefulDegradation
@@ -359,7 +359,7 @@ graph TB
     Vercel --> EdgeFunc
     Turso --> Regional
     Inngest --> EdgeOpt
-    
+
     EdgeOpt --> CDN
     QueryOpt --> CacheOpt
 ```

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/src/components/query-provider";
-import { BetterAuthProvider } from "@/src/components/auth/better-auth-provider";
+import { KindeAuthProvider } from "@/src/components/auth/kinde-auth-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,9 +33,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}>
-        <BetterAuthProvider>
+        <KindeAuthProvider>
           <QueryProvider>{children}</QueryProvider>
-        </BetterAuthProvider>
+        </KindeAuthProvider>
       </body>
     </html>
   );

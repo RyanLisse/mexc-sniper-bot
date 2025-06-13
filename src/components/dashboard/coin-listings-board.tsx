@@ -156,6 +156,60 @@ function CoinListingCard({ coin, onExecute, onRemove }: CoinListingCardProps) {
   );
 }
 
+// Helper function to filter upcoming coins
+function filterUpcomingCoins(calendarData: any[]) {
+  return calendarData.filter((item) => {
+    try {
+      const launchTime = new Date(item.firstOpenTime);
+      const now = new Date();
+      return launchTime.getTime() > now.getTime();
+    } catch {
+      return false;
+    }
+  });
+}
+
+// Helper function to enrich calendar data with status
+function enrichCalendarData(
+  calendarData: any[],
+  pendingDetection: string[],
+  readyTargets: any[],
+  executedTargets: string[]
+) {
+  return calendarData
+    .map((item) => {
+      const isPending = pendingDetection.includes(item.vcoinId);
+      const isReady = readyTargets.some((target) => target.vcoinId === item.vcoinId);
+      const isExecuted = executedTargets.includes(item.vcoinId);
+
+      let status: "calendar" | "monitoring" | "ready" | "executed" = "calendar";
+      if (isExecuted) status = "executed";
+      else if (isReady) status = "ready";
+      else if (isPending) status = "monitoring";
+
+      return {
+        ...item,
+        status,
+        launchTime: new Date(item.firstOpenTime),
+      };
+    })
+    .sort((a, b) => a.launchTime.getTime() - b.launchTime.getTime());
+}
+
+// Helper function to process executed targets
+function processExecutedTargets(executedTargets: string[], enrichedCalendarData: any[]) {
+  return executedTargets
+    .map((vcoinId) => {
+      const calendarEntry = enrichedCalendarData.find((coin) => coin.vcoinId === vcoinId);
+      if (!calendarEntry) return null;
+      return {
+        ...calendarEntry,
+        status: "executed" as const,
+      };
+    })
+    .filter((coin) => coin !== null);
+}
+
 export function CoinListingsBoard() {
   const {
     isMonitoring,
@@ -175,38 +229,14 @@ export function CoinListingsBoard() {
 
   const { data: calendarData, isLoading: calendarLoading } = useMexcCalendar();
 
-  // Filter and transform calendar data to only show upcoming coins
-  const enrichedCalendarData = Array.isArray(calendarData)
-    ? calendarData
-        .filter((item) => {
-          // Only show coins that haven't launched yet (future launch time)
-          try {
-            const launchTime = new Date(item.firstOpenTime);
-            const now = new Date();
-            return launchTime.getTime() > now.getTime();
-          } catch {
-            // If date parsing fails, exclude the item
-            return false;
-          }
-        })
-        .map((item) => {
-          const isPending = pendingDetection.includes(item.vcoinId);
-          const isReady = readyTargets.some((target) => target.vcoinId === item.vcoinId);
-          const isExecuted = executedTargets.includes(item.vcoinId);
-
-          let status: "calendar" | "monitoring" | "ready" | "executed" = "calendar";
-          if (isExecuted) status = "executed";
-          else if (isReady) status = "ready";
-          else if (isPending) status = "monitoring";
-
-          return {
-            ...item,
-            status,
-            launchTime: new Date(item.firstOpenTime),
-          };
-        })
-        .sort((a, b) => a.launchTime.getTime() - b.launchTime.getTime()) // Sort by earliest launch time first
-    : [];
+  // Process calendar data
+  const upcomingCoins = Array.isArray(calendarData) ? filterUpcomingCoins(calendarData) : [];
+  const enrichedCalendarData = enrichCalendarData(
+    upcomingCoins,
+    pendingDetection,
+    readyTargets,
+    executedTargets
+  );
 
   const calendarTargets = enrichedCalendarData.filter((c) => c.status === "calendar");
   const monitoringTargets = enrichedCalendarData.filter((c) => c.status === "monitoring");
@@ -214,16 +244,7 @@ export function CoinListingsBoard() {
     ...target,
     status: "ready" as const,
   }));
-  const executedTargetsEnriched = executedTargets
-    .map((vcoinId) => {
-      const calendarEntry = enrichedCalendarData.find((coin) => coin.vcoinId === vcoinId);
-      if (!calendarEntry) return null;
-      return {
-        ...calendarEntry,
-        status: "executed" as const,
-      };
-    })
-    .filter((coin) => coin !== null);
+  const executedTargetsEnriched = processExecutedTargets(executedTargets, enrichedCalendarData);
 
   return (
     <div className="space-y-6">

@@ -1,55 +1,16 @@
 import { sql } from "drizzle-orm";
 import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-// Better Auth Tables
+// Kinde Auth Compatible User Table
 export const user = sqliteTable("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
+  id: text("id").primaryKey(), // Kinde user ID
   email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  username: text("username").unique(),
   emailVerified: integer("emailVerified", { mode: "boolean" }).notNull().default(false),
   image: text("image"),
-  username: text("username").unique(), // For username plugin
-  displayUsername: text("displayUsername"), // For username plugin
-  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-});
-
-export const session = sqliteTable("session", {
-  id: text("id").primaryKey(),
-  expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
-  token: text("token").notNull().unique(),
-  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  ipAddress: text("ipAddress"),
-  userAgent: text("userAgent"),
-  userId: text("userId")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-});
-
-export const account = sqliteTable("account", {
-  id: text("id").primaryKey(),
-  accountId: text("accountId").notNull(),
-  providerId: text("providerId").notNull(),
-  userId: text("userId")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  accessToken: text("accessToken"),
-  refreshToken: text("refreshToken"),
-  idToken: text("idToken"),
-  accessTokenExpiresAt: integer("accessTokenExpiresAt", { mode: "timestamp" }),
-  refreshTokenExpiresAt: integer("refreshTokenExpiresAt", { mode: "timestamp" }),
-  scope: text("scope"),
-  password: text("password"),
-  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-});
-
-export const verification = sqliteTable("verification", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
+  // Store mapping to old better-auth ID for migration compatibility
+  legacyBetterAuthId: text("legacyBetterAuthId").unique(),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
 });
@@ -556,6 +517,47 @@ export const transactionQueue = sqliteTable(
   })
 );
 
+// Missing Auth Tables (referenced in types but not defined)
+export const session = sqliteTable("session", {
+  id: text("id").primaryKey(),
+  expiresAt: integer("expiresAt").notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  ipAddress: text("ipAddress"),
+  userAgent: text("userAgent"),
+  userId: text("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+});
+
+export const account = sqliteTable("account", {
+  id: text("id").primaryKey(),
+  accountId: text("accountId").notNull(),
+  providerId: text("providerId").notNull(),
+  userId: text("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  accessToken: text("accessToken"),
+  refreshToken: text("refreshToken"),
+  idToken: text("idToken"),
+  accessTokenExpiresAt: integer("accessTokenExpiresAt"),
+  refreshTokenExpiresAt: integer("refreshTokenExpiresAt"),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+});
+
+export const verification = sqliteTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: integer("expiresAt").notNull(),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+});
+
 // Types for TypeScript
 
 // Auth Types
@@ -836,39 +838,39 @@ export const patternEmbeddings = sqliteTable(
   "pattern_embeddings",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    
+
     // Pattern Identification
     patternId: text("pattern_id").notNull().unique(), // embed-{timestamp}-{random}
     patternType: text("pattern_type").notNull(), // "ready_state", "launch_pattern", "price_action", "volume_profile"
-    
+
     // Pattern Data
     symbolName: text("symbol_name").notNull(),
     vcoinId: text("vcoin_id"),
     patternData: text("pattern_data").notNull(), // JSON representation of the pattern
-    
+
     // Vector Embedding (stored as JSON array for SQLite compatibility)
     embedding: text("embedding").notNull(), // JSON array of floats [0.1, 0.2, ...]
     embeddingDimension: integer("embedding_dimension").notNull().default(1536), // OpenAI ada-002 dimension
     embeddingModel: text("embedding_model").notNull().default("text-embedding-ada-002"),
-    
+
     // Pattern Metadata
     confidence: real("confidence").notNull(), // 0-100
     occurrences: integer("occurrences").notNull().default(1),
     successRate: real("success_rate"), // Historical success rate of this pattern
     avgProfit: real("avg_profit"), // Average profit when this pattern appears
-    
+
     // Discovery Information
     discoveredAt: integer("discovered_at", { mode: "timestamp" }).notNull(),
     lastSeenAt: integer("last_seen_at", { mode: "timestamp" }).notNull(),
-    
+
     // Performance Metrics
     similarityThreshold: real("similarity_threshold").notNull().default(0.85), // Threshold for pattern matching
     falsePositives: integer("false_positives").notNull().default(0),
     truePositives: integer("true_positives").notNull().default(0),
-    
+
     // Status
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -896,7 +898,7 @@ export const patternSimilarityCache = sqliteTable(
   "pattern_similarity_cache",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    
+
     // Pattern References
     patternId1: text("pattern_id_1")
       .notNull()
@@ -904,15 +906,15 @@ export const patternSimilarityCache = sqliteTable(
     patternId2: text("pattern_id_2")
       .notNull()
       .references(() => patternEmbeddings.patternId, { onDelete: "cascade" }),
-    
+
     // Similarity Metrics
     cosineSimilarity: real("cosine_similarity").notNull(), // -1 to 1
     euclideanDistance: real("euclidean_distance").notNull(), // 0 to infinity
-    
+
     // Cache Metadata
     calculatedAt: integer("calculated_at", { mode: "timestamp" }).notNull(),
     expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(), // Cache expiry
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
   },

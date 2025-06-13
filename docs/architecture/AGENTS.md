@@ -41,11 +41,11 @@ bun run type-check            # TypeScript validation
 5 specialized TypeScript agents with OpenAI GPT-4 integration for MEXC trading automation.
 
 ## ⚡ Testing & Quality
-Unit tests in `__tests__/unit/`, E2E tests in `all-tests/e2e-tests/`. 
+Unit tests in `__tests__/unit/`, E2E tests in `all-tests/e2e-tests/`.
 
 **Quality Standards:**
 - ✅ All 96 tests must pass
-- ✅ TypeScript compiles with 0 errors  
+- ✅ TypeScript compiles with 0 errors
 - ✅ Build completes successfully
 - ✅ Linting passes (some warnings OK)
 
@@ -61,7 +61,7 @@ make test && make lint && bun run type-check && bun run build
 # "table already exists" error
 bun run db:migrate:safe        # Use safe migration
 
-# Connection issues  
+# Connection issues
 bun run db:check              # Check database status
 
 # Reset database (development only)
@@ -95,7 +95,7 @@ npx tsc --noEmit --skipLibCheck
 NODE_OPTIONS="--max-old-space-size=4096" npx tsc --noEmit
 
 # Method 4: Check specific files only
-npx tsc --noEmit src/components/auth/better-auth-provider.tsx
+npx tsc --noEmit src/components/auth/kinde-auth-provider.tsx
 
 # Method 5: Use build command (includes type checking)
 bun run build
