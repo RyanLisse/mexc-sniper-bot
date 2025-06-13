@@ -34,6 +34,7 @@ import {
   LogOut,
   MoreHorizontal,
   Settings,
+  Shield,
   User,
   Zap,
 } from "lucide-react";
@@ -59,6 +60,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       title: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Safety",
+      href: "/safety",
+      icon: Shield,
     },
     {
       title: "Agents",
