@@ -144,16 +144,18 @@ const PortfolioSummary = React.memo(
     totalValue,
     assetCount,
     showBalances,
+    topHoldings,
   }: {
     totalValue: number;
     assetCount: number;
     showBalances: boolean;
+    topHoldings: BalanceItem[];
   }) => {
-    const { formatCurrency } = useCurrencyFormatting();
+    const { formatCurrency, formatTokenAmount } = useCurrencyFormatting();
 
     return (
       <div className="p-4 bg-gradient-to-r from-slate-700/50 to-slate-600/50 rounded-lg border border-slate-600">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-sm font-medium text-slate-300">Total Portfolio Value</p>
             <p className="text-2xl font-bold text-white">
@@ -171,6 +173,34 @@ const PortfolioSummary = React.memo(
             {assetCount} assets
           </Badge>
         </div>
+        
+        {/* Top Holdings Summary */}
+        {showBalances && topHoldings.length > 0 && (
+          <div className="border-t border-slate-600 pt-3">
+            <p className="text-xs font-medium text-slate-400 mb-2">Major Holdings</p>
+            <div className="flex flex-wrap gap-2">
+              {topHoldings.slice(0, 4).map((holding) => (
+                holding.total > 0 && (
+                  <div key={holding.asset} className="text-xs bg-slate-600/50 px-2 py-1 rounded">
+                    <span className="text-white font-medium">
+                      {formatTokenAmount(holding.total, holding.asset)} {holding.asset}
+                    </span>
+                    {holding.usdtValue && holding.usdtValue > 0 && (
+                      <span className="text-slate-400 ml-1">
+                        (${formatCurrency(holding.usdtValue)})
+                      </span>
+                    )}
+                  </div>
+                )
+              ))}
+              {assetCount > 4 && (
+                <div className="text-xs bg-slate-600/30 px-2 py-1 rounded text-slate-400">
+                  +{assetCount - 4} more
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -288,6 +318,7 @@ export const OptimizedAccountBalance = React.memo(
                 totalValue={balanceData.totalUsdtValue}
                 assetCount={balanceData.balances.length}
                 showBalances={showBalances}
+                topHoldings={sortedBalances}
               />
 
               <div className="space-y-2">

@@ -15,6 +15,7 @@ import { OptimizedActivityFeed } from "@/src/components/dashboard/optimized-acti
 import { OptimizedTradingTargets } from "@/src/components/dashboard/optimized-trading-targets";
 import { RecentTradesTable } from "@/src/components/dashboard/recent-trades-table";
 import { UpcomingCoinsSection } from "@/src/components/dashboard/upcoming-coins-section";
+import { OptimizedAccountBalance } from "@/src/components/optimized-account-balance";
 
 export default function DashboardPage() {
   // Using a dummy userId for now - in production this should come from auth
@@ -109,15 +110,20 @@ export default function DashboardPage() {
           </div>
 
           <TabsContent value="overview" className="space-y-4">
-            <UpcomingCoinsSection />
-            <RecentTradesTable />
             <div className="grid gap-4 md:grid-cols-2">
-              <OptimizedActivityFeed />
-              <OptimizedTradingTargets 
-                onExecuteSnipe={handleExecuteSnipe}
-                onRemoveTarget={handleRemoveTarget}
-              />
+              <div className="space-y-4">
+                <UpcomingCoinsSection />
+                <OptimizedActivityFeed />
+              </div>
+              <div className="space-y-4">
+                <OptimizedAccountBalance userId={userId} />
+                <OptimizedTradingTargets 
+                  onExecuteSnipe={handleExecuteSnipe}
+                  onRemoveTarget={handleRemoveTarget}
+                />
+              </div>
             </div>
+            <RecentTradesTable />
           </TabsContent>
 
           <TabsContent value="listings" className="space-y-4">
