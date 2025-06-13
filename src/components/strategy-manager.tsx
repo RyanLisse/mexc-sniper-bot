@@ -73,7 +73,7 @@ interface StrategyTemplate {
 export function StrategyManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null);
+  const [_selectedStrategy, setSelectedStrategy] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("active");
 
   // Fetch strategies
@@ -224,14 +224,14 @@ export function StrategyManager() {
   // Control strategy
   const controlStrategy = useMutation({
     mutationFn: async ({
-      strategyId,
-      action,
+      strategyId: _strategyId,
+      action: _action,
     }: { strategyId: string; action: "pause" | "resume" | "delete" }) => {
       // In real implementation, call API
       await new Promise((resolve) => setTimeout(resolve, 1000));
       return { success: true };
     },
-    onSuccess: (_, { strategyId, action }) => {
+    onSuccess: (_, { strategyId: _strategyId, action }) => {
       toast({
         title: "Strategy Updated",
         description: `Strategy ${action}d successfully`,

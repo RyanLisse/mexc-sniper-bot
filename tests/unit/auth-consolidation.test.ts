@@ -61,9 +61,15 @@ describe('Authentication Consolidation', () => {
       const handler = vi.fn().mockRejectedValue(new Error('Test error'));
       const decoratedHandler = publicRoute(handler);
 
+      // Suppress console.error during test
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
       const response = await decoratedHandler(mockRequest);
       
       expect(response.status).toBe(500);
+      expect(consoleSpy).toHaveBeenCalledWith('[Public Route] Error:', expect.any(Error));
+      
+      consoleSpy.mockRestore();
     });
 
     it('should apply authentication to authenticated routes', async () => {

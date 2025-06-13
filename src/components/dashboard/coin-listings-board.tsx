@@ -156,6 +156,16 @@ function CoinListingCard({ coin, onExecute, onRemove }: CoinListingCardProps) {
   );
 }
 
+interface ProcessedCalendarEntry {
+  vcoinId: string;
+  symbol: string;
+  firstOpenTime: string;
+  status?: string;
+  readyTime?: string;
+  targetTime?: string;
+  confidence?: number;
+}
+
 // Helper function to filter upcoming coins
 function filterUpcomingCoins(calendarData: any[]) {
   return calendarData.filter((item) => {
@@ -167,6 +177,14 @@ function filterUpcomingCoins(calendarData: any[]) {
       return false;
     }
   });
+}
+
+interface SnipeTarget {
+  vcoinId: string;
+  symbol: string;
+  confidence: number;
+  targetTime: string;
+  status: string;
 }
 
 // Helper function to enrich calendar data with status
@@ -205,6 +223,7 @@ function processExecutedTargets(executedTargets: string[], enrichedCalendarData:
       return {
         ...calendarEntry,
         status: "executed" as const,
+        launchTime: calendarEntry.launchTime || new Date(calendarEntry.firstOpenTime),
       };
     })
     .filter((coin) => coin !== null);
@@ -224,10 +243,9 @@ export function CoinListingsBoard() {
     removeTarget,
     executeSnipe,
     forceRefresh,
-    clearAllTargets,
   } = usePatternSniper();
 
-  const { data: calendarData, isLoading: calendarLoading } = useMexcCalendar();
+  const { data: calendarData } = useMexcCalendar();
 
   // Process calendar data
   const upcomingCoins = Array.isArray(calendarData) ? filterUpcomingCoins(calendarData) : [];
@@ -243,6 +261,8 @@ export function CoinListingsBoard() {
   const readyTargetsEnriched = readyTargets.map((target) => ({
     ...target,
     status: "ready" as const,
+    targetTime: target.launchTime?.toISOString() || new Date().toISOString(),
+    // launchTime is already available from the schema SnipeTarget
   }));
   const executedTargetsEnriched = processExecutedTargets(executedTargets, enrichedCalendarData);
 

@@ -477,14 +477,20 @@ export function AgentDashboard() {
                 <ScrollArea className="h-64">
                   <div className="space-y-2">
                     {/* Mock activity logs */}
-                    {Array.from({ length: 10 }, (_, i) => (
-                      <div key={`activity-log-${i}`} className="flex items-start gap-2 p-2 text-sm">
-                        <span className="text-muted-foreground whitespace-nowrap">
-                          {new Date(Date.now() - i * 5 * 60 * 1000).toLocaleTimeString()}
-                        </span>
-                        <span>Executed task: Analysis completed for symbol XYZ</span>
-                      </div>
-                    ))}
+                    {Array.from({ length: 10 }, (_, i) => {
+                      const timestamp = Date.now() - i * 5 * 60 * 1000;
+                      return (
+                        <div
+                          key={`activity-log-${timestamp}-${i}`}
+                          className="flex items-start gap-2 p-2 text-sm"
+                        >
+                          <span className="text-muted-foreground whitespace-nowrap">
+                            {new Date(timestamp).toLocaleTimeString()}
+                          </span>
+                          <span>Executed task: Analysis completed for symbol XYZ</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               </TabsContent>

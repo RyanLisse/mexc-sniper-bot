@@ -50,7 +50,7 @@ export function UpcomingCoinsSection() {
         } else if (launchTime >= startOfTomorrow && launchTime < endOfTomorrow) {
           tomorrow.push(entry);
         }
-      } catch (error) {
+      } catch (_error) {
         console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
       }
     });

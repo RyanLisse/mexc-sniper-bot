@@ -4,12 +4,54 @@ import { transactionLocks, transactionQueue } from "@/src/db/schema";
 
 const BASE_URL = "http://localhost:3008";
 
-describe.skip("Transaction Lock Integration Tests", () => {
+// Helper function to check if server is available
+async function isServerRunning(): Promise<boolean> {
+  try {
+    const response = await fetch(`${BASE_URL}/api/health/db`, { 
+      method: 'GET',
+      signal: AbortSignal.timeout(1000) // 1 second timeout
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+// Helper function to conditionally run test based on server availability
+function itWithServer(name: string, testFn: () => Promise<void>) {
+  return it(name, async () => {
+    const serverRunning = await isServerRunning();
+    if (!serverRunning) {
+      console.warn(`⚠️  Skipping "${name}" - server not running`);
+      return;
+    }
+    await testFn();
+  });
+}
+
+describe("Transaction Lock Integration Tests", () => {
   
   beforeAll(async () => {
     // Clean up database
     await db.delete(transactionQueue);
     await db.delete(transactionLocks);
+    
+    // Check if server is running
+    try {
+      const response = await fetch(`${BASE_URL}/api/health/db`, { 
+        method: 'GET',
+        signal: AbortSignal.timeout(2000) // 2 second timeout
+      });
+      
+      if (!response.ok) {
+        console.warn('⚠️  Server health check failed. Integration tests require running Next.js server.');
+        console.warn('   Start server with: npm run dev');
+      }
+    } catch (error) {
+      console.warn('⚠️  Next.js server not running at http://localhost:3008');
+      console.warn('   Integration tests require running server. Start with: npm run dev');
+      console.warn('   Skipping integration tests that require server...');
+    }
   });
 
   afterAll(async () => {
@@ -19,7 +61,7 @@ describe.skip("Transaction Lock Integration Tests", () => {
   });
 
   describe("Trade API with Lock Protection", () => {
-    it("should prevent duplicate trades with same parameters", async () => {
+    itWithServer("should prevent duplicate trades with same parameters", async () => {
       const tradeParams = {
         symbol: "TESTUSDT",
         side: "BUY",
@@ -58,7 +100,7 @@ describe.skip("Transaction Lock Integration Tests", () => {
       }
     });
 
-    it("should allow different trades to execute concurrently", async () => {
+    itWithServer("should allow different trades to execute concurrently", async () => {
       const trade1 = {
         symbol: "BTCUSDT",
         side: "BUY",
@@ -98,7 +140,7 @@ describe.skip("Transaction Lock Integration Tests", () => {
   });
 
   describe("Lock Monitoring API", () => {
-    it("should return lock status information", async () => {
+    itWithServer("should return lock status information", async () => {
       const response = await fetch(`${BASE_URL}/api/transaction-locks`);
       expect(response.status).toBe(200);
 
@@ -109,7 +151,7 @@ describe.skip("Transaction Lock Integration Tests", () => {
       expect(data.data).toHaveProperty("stats");
     });
 
-    it("should check specific resource lock status", async () => {
+    itWithServer("should check specific resource lock status", async () => {
       const response = await fetch(`${BASE_URL}/api/transaction-locks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -129,7 +171,7 @@ describe.skip("Transaction Lock Integration Tests", () => {
   });
 
   describe("Emergency Lock Release", () => {
-    it("should allow force release of locks by owner", async () => {
+    itWithServer("should allow force release of locks by owner", async () => {
       // First create a lock by attempting a trade
       const tradeResponse = await fetch(`${BASE_URL}/api/mexc/trade`, {
         method: "POST",
@@ -156,7 +198,7 @@ describe.skip("Transaction Lock Integration Tests", () => {
   });
 
   describe("Queue Priority Testing", () => {
-    it("should prioritize SELL orders over BUY orders", async () => {
+    itWithServer("should prioritize SELL orders over BUY orders", async () => {
       const resourceId = "trade:QUEUETEST:mixed";
       
       // Create an initial lock
@@ -223,7 +265,7 @@ describe.skip("Transaction Lock Integration Tests", () => {
   });
 
   describe("Performance Under Load", () => {
-    it("should handle multiple concurrent requests gracefully", async () => {
+    itWithServer("should handle multiple concurrent requests gracefully", async () => {
       const requests = [];
       const numRequests = 10;
       
@@ -263,7 +305,7 @@ describe.skip("Transaction Lock Integration Tests", () => {
 
 // Real-world scenario test
 describe.skip("Pattern Sniper Integration with Locks", () => {
-  it("should handle rapid snipe executions with lock protection", async () => {
+  itWithServer("should handle rapid snipe executions with lock protection", async () => {
     // Simulate pattern sniper detecting multiple ready tokens
     const snipeTargets = [
       { symbol: "TOKEN1USDT", vcoinId: "token1" },
@@ -295,7 +337,7 @@ describe.skip("Pattern Sniper Integration with Locks", () => {
     });
   });
 
-  it("should prevent double-spend on same snipe target", async () => {
+  itWithServer("should prevent double-spend on same snipe target", async () => {
     const snipeTarget = {
       symbol: "SAFETESTUSDT",
       side: "BUY",

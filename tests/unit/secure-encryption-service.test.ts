@@ -206,7 +206,7 @@ describe('SecureEncryptionService', () => {
   });
 
   describe('Singleton Pattern', () => {
-    it.skip('should return same instance', () => {
+    it('should return same instance', () => {
       const instance1 = getEncryptionService();
       const instance2 = getEncryptionService();
       
