@@ -89,7 +89,7 @@ export default function DashboardPage() {
 
   // Calendar targets (if needed for monitoring UI)
   const calendarTargets = React.useMemo(() => {
-    if (!calendarData) return [];
+    if (!calendarData || !Array.isArray(calendarData)) return [];
     return calendarData.map((item) => ({
       vcoinId: item.vcoinId,
       symbol: item.symbol,

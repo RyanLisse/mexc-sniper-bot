@@ -12,20 +12,23 @@ export async function GET() {
   try {
     const calendar = await mexcApi.getCalendar();
     
+    // Ensure data is always an array
+    const calendarData = Array.isArray(calendar?.data) ? calendar.data : [];
+    
     return apiResponse(
-      createSuccessResponse(calendar.data, {
-        count: calendar.data.length
+      createSuccessResponse(calendarData, {
+        count: calendarData.length
       })
     );
   } catch (error) {
     console.error("MEXC calendar fetch failed:", error);
     
+    // Always return an empty array on error for consistency
     return apiResponse(
-      createErrorResponse(
-        error instanceof Error ? error.message : "Unknown error",
-        { fallbackData: [] }
-      ),
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      createSuccessResponse([], {
+        error: error instanceof Error ? error.message : "Unknown error",
+        count: 0
+      })
     );
   }
 }
