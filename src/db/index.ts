@@ -53,8 +53,12 @@ async function withRetry<T>(
 
 // Create Turso client with best practices
 function createTursoClient() {
-  if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
-    throw new Error("Turso configuration missing");
+  // Support both TURSO_DATABASE_URL and TURSO_HOST patterns
+  const databaseUrl = process.env.TURSO_DATABASE_URL || 
+                     (process.env.TURSO_HOST ? `libsql://${process.env.TURSO_HOST}` : null);
+  
+  if (!databaseUrl || !process.env.TURSO_AUTH_TOKEN) {
+    throw new Error("Turso configuration missing: need TURSO_DATABASE_URL (or TURSO_HOST) and TURSO_AUTH_TOKEN");
   }
 
   // Return cached client if available
@@ -67,7 +71,7 @@ function createTursoClient() {
 
   // Configure client based on environment
   const clientConfig: Parameters<typeof createClient>[0] = {
-    url: process.env.TURSO_DATABASE_URL,
+    url: databaseUrl,
     authToken: process.env.TURSO_AUTH_TOKEN,
   };
 
@@ -78,7 +82,7 @@ function createTursoClient() {
     
     // Use embedded replica URL if available (for Railway)
     if (process.env.TURSO_REPLICA_URL) {
-      clientConfig.syncUrl = process.env.TURSO_DATABASE_URL;
+      clientConfig.syncUrl = databaseUrl;
       clientConfig.url = process.env.TURSO_REPLICA_URL;
       console.log("[Database] Using embedded replica for improved performance");
     }
@@ -90,15 +94,18 @@ function createTursoClient() {
   return tursoClient;
 }
 
+// Check if we have TursoDB configuration
+const hasTursoConfig = () => (process.env.TURSO_DATABASE_URL || process.env.TURSO_HOST) && process.env.TURSO_AUTH_TOKEN;
+
 // Environment-specific database configuration
 function createDatabase() {
   const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
   const isRailway = process.env.RAILWAY_ENVIRONMENT === "production";
-  const hasTursoConfig = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
+  const tursoConfigured = hasTursoConfig();
   const forceSQLite = process.env.FORCE_SQLITE === "true";
 
   // Use SQLite if forced or if TursoDB is not properly configured
-  if (forceSQLite || (!isProduction && !isRailway && !hasTursoConfig)) {
+  if (forceSQLite || (!isProduction && !isRailway && !tursoConfigured)) {
     console.log("[Database] Using SQLite for development");
     try {
       const Database = require("better-sqlite3");
@@ -117,7 +124,7 @@ function createDatabase() {
   }
 
   // Only use TursoDB if we have valid configuration
-  if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+  if (tursoConfigured) {
     console.log("[Database] Using TursoDB with retry logic and connection pooling");
     try {
       const client = createTursoClient();
@@ -185,7 +192,7 @@ export async function initializeDatabase() {
       }
 
       // For Turso, enable vector extension if available
-      if (process.env.TURSO_DATABASE_URL) {
+      if (hasTursoConfig()) {
         try {
           await db.run(sql`SELECT load_extension('vector')`);
           console.log("[Database] Vector extension loaded successfully");
@@ -223,14 +230,14 @@ export async function healthCheck() {
     return {
       status,
       responseTime,
-      database: process.env.TURSO_DATABASE_URL ? "turso" : "sqlite",
+      database: hasTursoConfig() ? "turso" : "sqlite",
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
     return {
       status: "offline",
       error: error instanceof Error ? error.message : "Unknown error",
-      database: process.env.TURSO_DATABASE_URL ? "turso" : "sqlite",
+      database: hasTursoConfig() ? "turso" : "sqlite",
       timestamp: new Date().toISOString(),
     };
   }
