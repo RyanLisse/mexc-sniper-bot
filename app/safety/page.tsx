@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { SafetyMonitoringDashboard } from "@/src/components/safety-monitoring-dashboard";
 
 export const metadata: Metadata = {
@@ -8,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function SafetyPage() {
   return (
-    <div className="container mx-auto py-6 px-4">
+    <DashboardLayout>
       <SafetyMonitoringDashboard />
-    </div>
+    </DashboardLayout>
   );
 }

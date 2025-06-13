@@ -1,4 +1,4 @@
-import { type AgentConfig, type AgentResponse } from "./base-agent";
+import type { AgentConfig, AgentResponse } from "./base-agent";
 import { SafetyBaseAgent, type SafetyConfig } from "./safety-base-agent";
 
 export interface ErrorPattern {
@@ -29,7 +29,13 @@ export interface RecoveryAttempt {
 
 export interface ErrorIncident {
   id: string;
-  type: "api_failure" | "network_timeout" | "rate_limit" | "auth_failure" | "data_corruption" | "system_overload";
+  type:
+    | "api_failure"
+    | "network_timeout"
+    | "rate_limit"
+    | "auth_failure"
+    | "data_corruption"
+    | "system_overload";
   severity: "low" | "medium" | "high" | "critical";
   service: string; // "mexc_api", "database", "inngest", etc.
   errorMessage: string;
@@ -82,7 +88,8 @@ export class ErrorRecoveryAgent extends SafetyBaseAgent {
   private errorPatterns: Map<string, ErrorPattern> = new Map();
   private activeIncidents: Map<string, ErrorIncident> = new Map();
   private systemHealth: SystemHealth;
-  private circuitBreakers: Map<string, { isOpen: boolean; failures: number; lastFailure: Date }> = new Map();
+  private circuitBreakers: Map<string, { isOpen: boolean; failures: number; lastFailure: Date }> =
+    new Map();
 
   constructor(safetyConfig?: Partial<SafetyConfig>) {
     const config: AgentConfig = {
@@ -179,24 +186,35 @@ Active Incidents: ${this.activeIncidents.size}
 Recent Recoveries: ${this.systemHealth.recentRecoveries}
 
 Service Status:
-${Object.entries(this.systemHealth.services).map(([name, status]) => 
-  `- ${name}: ${status.status} (${status.responseTime}ms, ${status.errorRate}% errors)`
-).join("\n")}
+${Object.entries(this.systemHealth.services)
+  .map(
+    ([name, status]) =>
+      `- ${name}: ${status.status} (${status.responseTime}ms, ${status.errorRate}% errors)`
+  )
+  .join("\n")}
 
 Recent Incidents:
-${recentIncidents.map(incident => 
-  `- ${incident.type}: ${incident.service} - ${incident.severity} (${incident.occurrenceCount} times)`
-).join("\n")}
+${recentIncidents
+  .map(
+    (incident) =>
+      `- ${incident.type}: ${incident.service} - ${incident.severity} (${incident.occurrenceCount} times)`
+  )
+  .join("\n")}
 
 Top Error Patterns:
-${topErrorPatterns.map(pattern => 
-  `- ${pattern.errorType}: ${pattern.frequency} occurrences (${pattern.severity})`
-).join("\n")}
+${topErrorPatterns
+  .map(
+    (pattern) => `- ${pattern.errorType}: ${pattern.frequency} occurrences (${pattern.severity})`
+  )
+  .join("\n")}
 
 Circuit Breakers:
-${Array.from(this.circuitBreakers.entries()).map(([service, breaker]) => 
-  `- ${service}: ${breaker.isOpen ? "OPEN" : "CLOSED"} (${breaker.failures} failures)`
-).join("\n")}
+${Array.from(this.circuitBreakers.entries())
+  .map(
+    ([service, breaker]) =>
+      `- ${service}: ${breaker.isOpen ? "OPEN" : "CLOSED"} (${breaker.failures} failures)`
+  )
+  .join("\n")}
 
 Analysis Request: ${input}
 
@@ -231,13 +249,13 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
   }> {
     const errorType = this.classifyError(error);
     const severity = context.severity || this.determineSeverity(error, context);
-    
+
     // Create or update incident
     const incident = await this.createOrUpdateIncident(error, context, errorType, severity);
-    
+
     // Update error patterns
     await this.updateErrorPatterns(error, errorType, context);
-    
+
     // Check circuit breaker
     const circuitBreakerOpen = this.checkCircuitBreaker(context.service);
     if (circuitBreakerOpen) {
@@ -245,13 +263,14 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
         shouldRetry: false,
         retryDelay: 0,
         degradationMode: "circuit_breaker_open",
-        recommendedAction: "Service circuit breaker is open - wait for reset or use alternative service",
+        recommendedAction:
+          "Service circuit breaker is open - wait for reset or use alternative service",
       };
     }
 
     // Determine retry strategy
     const retryStrategy = await this.determineRetryStrategy(incident, errorType, context);
-    
+
     if (retryStrategy.shouldRetry) {
       // Create recovery attempt
       const recoveryAttempt: RecoveryAttempt = {
@@ -264,7 +283,7 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
         backoffDelay: retryStrategy.retryDelay,
         recoveryAction: retryStrategy.recommendedAction,
       };
-      
+
       incident.recoveryAttempts.push(recoveryAttempt);
     }
 
@@ -292,7 +311,11 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     const message = error.message.toLowerCase();
     const stack = error.stack?.toLowerCase() || "";
 
-    if (message.includes("network") || message.includes("timeout") || message.includes("econnreset")) {
+    if (
+      message.includes("network") ||
+      message.includes("timeout") ||
+      message.includes("econnreset")
+    ) {
       return "network_error";
     }
     if (message.includes("rate limit") || message.includes("429")) {
@@ -313,14 +336,23 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     return "unknown_error";
   }
 
-  private determineSeverity(error: Error, context: { service: string; operation: string }): "low" | "medium" | "high" | "critical" {
+  private determineSeverity(
+    error: Error,
+    context: { service: string; operation: string }
+  ): "low" | "medium" | "high" | "critical" {
     const criticalServices = ["database", "mexc_api"];
     const criticalOperations = ["trade_execution", "position_update", "balance_check"];
 
-    if (criticalServices.includes(context.service) && criticalOperations.includes(context.operation)) {
+    if (
+      criticalServices.includes(context.service) &&
+      criticalOperations.includes(context.operation)
+    ) {
       return "critical";
     }
-    if (criticalServices.includes(context.service) || criticalOperations.includes(context.operation)) {
+    if (
+      criticalServices.includes(context.service) ||
+      criticalOperations.includes(context.operation)
+    ) {
       return "high";
     }
     if (error.message.includes("timeout") || error.message.includes("rate limit")) {
@@ -371,11 +403,14 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     return incident;
   }
 
-  private escalateSeverity(current: string, new_severity: string): "low" | "medium" | "high" | "critical" {
+  private escalateSeverity(
+    current: string,
+    new_severity: string
+  ): "low" | "medium" | "high" | "critical" {
     const levels = { low: 1, medium: 2, high: 3, critical: 4 };
     const currentLevel = levels[current as keyof typeof levels] || 1;
     const newLevel = levels[new_severity as keyof typeof levels] || 1;
-    
+
     const escalatedLevel = Math.max(currentLevel, newLevel);
     return Object.keys(levels)[escalatedLevel - 1] as "low" | "medium" | "high" | "critical";
   }
@@ -448,16 +483,14 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     if (failed) {
       breaker.failures++;
       breaker.lastFailure = new Date();
-      
+
       // Check if should open circuit breaker
       if (breaker.failures >= this.recoveryConfig.circuitBreakerThreshold) {
         breaker.isOpen = true;
-        this.emitSafetyEvent(
-          "error",
-          "high",
-          `Circuit breaker opened for service: ${service}`,
-          { service, failures: breaker.failures }
-        );
+        this.emitSafetyEvent("error", "high", `Circuit breaker opened for service: ${service}`, {
+          service,
+          failures: breaker.failures,
+        });
       }
     } else {
       // Successful operation - reset failures
@@ -540,12 +573,14 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
   }
 
   private calculateBackoffDelay(attemptNumber: number): number {
-    const delay = this.recoveryConfig.baseBackoffMs * Math.pow(this.recoveryConfig.backoffMultiplier, attemptNumber);
+    const delay =
+      this.recoveryConfig.baseBackoffMs *
+      Math.pow(this.recoveryConfig.backoffMultiplier, attemptNumber);
     return Math.min(delay, this.recoveryConfig.maxBackoffMs);
   }
 
   async markIncidentResolved(incidentId: string, resolution: string): Promise<void> {
-    const incident = Array.from(this.activeIncidents.values()).find(i => i.id === incidentId);
+    const incident = Array.from(this.activeIncidents.values()).find((i) => i.id === incidentId);
     if (!incident) return;
 
     incident.recovered = true;
@@ -586,7 +621,7 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
       serviceHealth.lastCheck = new Date().toISOString();
       serviceHealth.responseTime = responseTime;
       serviceHealth.errorRate = errorRate;
-      
+
       // Simple uptime calculation
       if (status === "healthy") {
         serviceHealth.uptime = Math.min(serviceHealth.uptime + 1, 100);
@@ -602,8 +637,10 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
 
   private updateOverallHealth(): void {
     const services = Object.values(this.systemHealth.services);
-    const criticalServices = services.filter(s => s.status === "critical" || s.status === "offline");
-    const degradedServices = services.filter(s => s.status === "degraded");
+    const criticalServices = services.filter(
+      (s) => s.status === "critical" || s.status === "offline"
+    );
+    const degradedServices = services.filter((s) => s.status === "degraded");
 
     if (criticalServices.length > 0) {
       this.systemHealth.overall = "critical";
@@ -631,14 +668,18 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     }
 
     // Check for critical incidents
-    const criticalIncidents = Array.from(this.activeIncidents.values()).filter(i => i.severity === "critical");
+    const criticalIncidents = Array.from(this.activeIncidents.values()).filter(
+      (i) => i.severity === "critical"
+    );
     if (criticalIncidents.length > 0) {
       issues.push(`${criticalIncidents.length} critical incidents active`);
       recommendations.push("Resolve critical incidents immediately");
     }
 
     // Check circuit breaker status
-    const openCircuitBreakers = Array.from(this.circuitBreakers.entries()).filter(([, breaker]) => breaker.isOpen);
+    const openCircuitBreakers = Array.from(this.circuitBreakers.entries()).filter(
+      ([, breaker]) => breaker.isOpen
+    );
     if (openCircuitBreakers.length > 0) {
       issues.push(`${openCircuitBreakers.length} circuit breakers are open`);
       recommendations.push("Wait for circuit breaker reset or address underlying issues");
@@ -686,7 +727,6 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
       if (this.circuitBreakers.size === 0) {
         issues.push("No circuit breakers configured");
       }
-
     } catch (error) {
       issues.push(`Error recovery agent health check failed: ${error}`);
     }
@@ -716,12 +756,9 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
 
   updateRecoveryConfig(config: Partial<RecoveryConfig>): void {
     this.recoveryConfig = { ...this.recoveryConfig, ...config };
-    this.emitSafetyEvent(
-      "error",
-      "low",
-      "Error recovery configuration updated",
-      { newConfig: this.recoveryConfig }
-    );
+    this.emitSafetyEvent("error", "low", "Error recovery configuration updated", {
+      newConfig: this.recoveryConfig,
+    });
   }
 
   isServiceHealthy(service: string): boolean {

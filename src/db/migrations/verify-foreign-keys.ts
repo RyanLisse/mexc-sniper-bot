@@ -38,7 +38,7 @@ async function verifyForeignKeys() {
       "workflow_activity_user_idx",
     ];
 
-    const foundIndexes = (indexes as any[]).map((idx) => idx.name);
+    const foundIndexes = "rows" in indexes ? (indexes.rows as any[]).map((idx) => idx.name) : [];
 
     for (const idx of expectedIndexes) {
       if (foundIndexes.includes(idx)) {
@@ -113,7 +113,8 @@ async function verifyForeignKeys() {
     `);
 
     let hasFkReferences = 0;
-    for (const table of tableInfo as any[]) {
+    const tableData = "rows" in tableInfo ? (tableInfo.rows as any[]) : [];
+    for (const table of tableData) {
       if (table.sql?.includes("REFERENCES")) {
         hasFkReferences++;
       }
@@ -142,7 +143,7 @@ async function verifyForeignKeys() {
 }
 
 // Run verification
-if (import.meta.main) {
+if (require.main === module) {
   verifyForeignKeys()
     .then(() => {
       console.log("\n✅ Verification completed");

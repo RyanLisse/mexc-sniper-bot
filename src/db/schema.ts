@@ -615,12 +615,12 @@ export const simulationSessions = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    
+
     // Session Configuration
     startTime: integer("start_time", { mode: "timestamp" }).notNull(),
     endTime: integer("end_time", { mode: "timestamp" }),
     virtualBalance: real("virtual_balance").notNull(), // Starting balance in USDT
-    
+
     // Session Results
     currentBalance: real("current_balance").notNull(),
     finalBalance: real("final_balance"), // Set when session ends
@@ -630,14 +630,14 @@ export const simulationSessions = sqliteTable(
     maxDrawdown: real("max_drawdown").notNull().default(0), // Percentage
     bestTrade: real("best_trade").notNull().default(0),
     worstTrade: real("worst_trade").notNull().default(0),
-    
+
     // Session Status
     status: text("status").notNull().default("active"), // "active", "completed", "terminated"
-    
+
     // Configuration
     tradingFees: real("trading_fees").notNull().default(0.001), // 0.1%
     slippage: real("slippage").notNull().default(0.0005), // 0.05%
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -657,7 +657,7 @@ export const simulationTrades = sqliteTable(
     sessionId: text("session_id")
       .notNull()
       .references(() => simulationSessions.id, { onDelete: "cascade" }),
-    
+
     // Trade Details
     symbol: text("symbol").notNull(),
     type: text("type").notNull(), // "buy", "sell"
@@ -665,21 +665,21 @@ export const simulationTrades = sqliteTable(
     price: real("price").notNull(),
     value: real("value").notNull(), // quantity * price
     fees: real("fees").notNull(),
-    
+
     // Execution Details
     timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
     strategy: text("strategy").notNull(), // Which strategy triggered this trade
-    
+
     // P&L Tracking (for closed positions)
     realized: integer("realized", { mode: "boolean" }).notNull().default(false),
     profitLoss: real("profit_loss"), // Set when position is closed
     exitPrice: real("exit_price"), // Price when position was closed
     exitTimestamp: integer("exit_timestamp", { mode: "timestamp" }),
-    
+
     // Metadata
     slippagePercent: real("slippage_percent"),
     marketImpactPercent: real("market_impact_percent"),
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
   },
@@ -698,31 +698,31 @@ export const riskEvents = sqliteTable(
   {
     id: text("id").primaryKey(), // risk-{timestamp}-{random}
     userId: text("user_id").notNull().default("default"),
-    
+
     // Event Classification
     eventType: text("event_type").notNull(), // "circuit_breaker", "position_limit", "loss_limit", "volatility_spike"
     severity: text("severity").notNull(), // "low", "medium", "high", "critical"
-    
+
     // Event Details
     description: text("description").notNull(),
     circuitBreakerId: text("circuit_breaker_id"), // If related to a specific circuit breaker
-    
+
     // Risk Metrics at Time of Event
     totalExposure: real("total_exposure"),
     dailyPnL: real("daily_pnl"),
     openPositions: integer("open_positions"),
     riskPercentage: real("risk_percentage"),
     volatilityIndex: real("volatility_index"),
-    
+
     // Action Taken
     actionTaken: text("action_taken").notNull(), // "warn", "halt_new", "halt_all", "emergency_exit"
     actionDetails: text("action_details"), // JSON with additional action details
-    
+
     // Resolution
     resolved: integer("resolved", { mode: "boolean" }).notNull().default(false),
     resolvedAt: integer("resolved_at", { mode: "timestamp" }),
     resolution: text("resolution"),
-    
+
     // Timestamps
     timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -747,28 +747,28 @@ export const positionSnapshots = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    
+
     // Snapshot Details
     snapshotId: text("snapshot_id").notNull().unique(), // UUID
     source: text("source").notNull(), // "local", "exchange"
-    
+
     // Position Data
     symbol: text("symbol").notNull(),
     quantity: real("quantity").notNull(),
     averagePrice: real("average_price").notNull(),
     marketValue: real("market_value").notNull(),
     unrealizedPnL: real("unrealized_pnl").notNull(),
-    
+
     // Balance Data (if this is a balance snapshot)
     currency: text("currency"), // USDT, BTC, etc.
     totalBalance: real("total_balance"),
     availableBalance: real("available_balance"),
     lockedBalance: real("locked_balance"),
-    
+
     // Snapshot Metadata
     snapshotType: text("snapshot_type").notNull(), // "position", "balance", "full"
     reconciliationId: text("reconciliation_id"), // Links to reconciliation report
-    
+
     // Timestamps
     timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -779,9 +779,14 @@ export const positionSnapshots = sqliteTable(
     sourceIdx: index("position_snapshots_source_idx").on(table.source),
     symbolIdx: index("position_snapshots_symbol_idx").on(table.symbol),
     timestampIdx: index("position_snapshots_timestamp_idx").on(table.timestamp),
-    reconciliationIdIdx: index("position_snapshots_reconciliation_id_idx").on(table.reconciliationId),
+    reconciliationIdIdx: index("position_snapshots_reconciliation_id_idx").on(
+      table.reconciliationId
+    ),
     // Compound indexes
-    sourceTimestampIdx: index("position_snapshots_source_timestamp_idx").on(table.source, table.timestamp),
+    sourceTimestampIdx: index("position_snapshots_source_timestamp_idx").on(
+      table.source,
+      table.timestamp
+    ),
     userSymbolIdx: index("position_snapshots_user_symbol_idx").on(table.userId, table.symbol),
   })
 );
@@ -792,29 +797,29 @@ export const reconciliationReports = sqliteTable(
   {
     id: text("id").primaryKey(), // recon-{timestamp}-{random}
     userId: text("user_id").notNull().default("default"),
-    
+
     // Report Details
     startTime: integer("start_time", { mode: "timestamp" }).notNull(),
     endTime: integer("end_time", { mode: "timestamp" }).notNull(),
-    
+
     // Reconciliation Results
     totalChecks: integer("total_checks").notNull(),
     discrepanciesFound: integer("discrepancies_found").notNull(),
     criticalIssues: integer("critical_issues").notNull(),
     autoResolved: integer("auto_resolved").notNull(),
     manualReviewRequired: integer("manual_review_required").notNull(),
-    
+
     // Overall Status
     overallStatus: text("overall_status").notNull(), // "clean", "minor_issues", "major_issues", "critical"
-    
+
     // Report Data
     discrepancies: text("discrepancies").notNull(), // JSON array of discrepancy objects
     recommendations: text("recommendations").notNull(), // JSON array of recommendation strings
-    
+
     // Processing Details
     triggeredBy: text("triggered_by").notNull().default("scheduled"), // "scheduled", "manual", "alert"
     processingTimeMs: integer("processing_time_ms"),
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
   },
@@ -831,34 +836,34 @@ export const errorIncidents = sqliteTable(
   "error_incidents",
   {
     id: text("id").primaryKey(), // incident-{timestamp}-{random}
-    
+
     // Incident Classification
     type: text("type").notNull(), // "api_failure", "network_timeout", "rate_limit", "auth_failure", "data_corruption", "system_overload"
     severity: text("severity").notNull(), // "low", "medium", "high", "critical"
     service: text("service").notNull(), // "mexc_api", "database", "inngest", "openai"
-    
+
     // Error Details
     errorMessage: text("error_message").notNull(),
     stackTrace: text("stack_trace"),
     context: text("context").notNull(), // JSON with error context
-    
+
     // Occurrence Tracking
     firstOccurrence: integer("first_occurrence", { mode: "timestamp" }).notNull(),
     lastOccurrence: integer("last_occurrence", { mode: "timestamp" }).notNull(),
     occurrenceCount: integer("occurrence_count").notNull().default(1),
-    
+
     // Recovery Status
     recovered: integer("recovered", { mode: "boolean" }).notNull().default(false),
     recoveryAttempts: integer("recovery_attempts").notNull().default(0),
     resolution: text("resolution"),
     preventionStrategy: text("prevention_strategy"),
-    
+
     // Recovery Details
     lastRecoveryAttempt: integer("last_recovery_attempt", { mode: "timestamp" }),
     averageRecoveryTime: integer("average_recovery_time"), // milliseconds
     successfulRecoveries: integer("successful_recoveries").notNull().default(0),
     failedRecoveries: integer("failed_recoveries").notNull().default(0),
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -871,8 +876,14 @@ export const errorIncidents = sqliteTable(
     lastOccurrenceIdx: index("error_incidents_last_occurrence_idx").on(table.lastOccurrence),
     recoveredIdx: index("error_incidents_recovered_idx").on(table.recovered),
     // Compound indexes
-    serviceSeverityIdx: index("error_incidents_service_severity_idx").on(table.service, table.severity),
-    typeOccurrenceIdx: index("error_incidents_type_occurrence_idx").on(table.type, table.lastOccurrence),
+    serviceSeverityIdx: index("error_incidents_service_severity_idx").on(
+      table.service,
+      table.severity
+    ),
+    typeOccurrenceIdx: index("error_incidents_type_occurrence_idx").on(
+      table.type,
+      table.lastOccurrence
+    ),
   })
 );
 
@@ -881,36 +892,38 @@ export const systemHealthMetrics = sqliteTable(
   "system_health_metrics",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    
+
     // Service Identification
     service: text("service").notNull(), // "mexc_api", "database", "inngest", "openai", "overall"
-    
+
     // Health Status
     status: text("status").notNull(), // "healthy", "degraded", "critical", "offline"
-    
+
     // Performance Metrics
     responseTime: integer("response_time"), // milliseconds
     errorRate: real("error_rate"), // percentage
     uptime: real("uptime"), // percentage
     throughput: real("throughput"), // requests per second
-    
+
     // Resource Utilization
     cpuUsage: real("cpu_usage"), // percentage
     memoryUsage: real("memory_usage"), // percentage
     diskUsage: real("disk_usage"), // percentage
-    
+
     // Error Tracking
     totalErrors: integer("total_errors").notNull().default(0),
     criticalErrors: integer("critical_errors").notNull().default(0),
-    
+
     // Circuit Breaker Status
-    circuitBreakerOpen: integer("circuit_breaker_open", { mode: "boolean" }).notNull().default(false),
+    circuitBreakerOpen: integer("circuit_breaker_open", { mode: "boolean" })
+      .notNull()
+      .default(false),
     circuitBreakerFailures: integer("circuit_breaker_failures").notNull().default(0),
-    
+
     // Additional Metadata
     metadata: text("metadata"), // JSON with service-specific metrics
     alertsActive: integer("alerts_active").notNull().default(0),
-    
+
     // Timestamps
     timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -920,8 +933,14 @@ export const systemHealthMetrics = sqliteTable(
     statusIdx: index("system_health_metrics_status_idx").on(table.status),
     timestampIdx: index("system_health_metrics_timestamp_idx").on(table.timestamp),
     // Compound indexes
-    serviceTimestampIdx: index("system_health_metrics_service_timestamp_idx").on(table.service, table.timestamp),
-    serviceStatusIdx: index("system_health_metrics_service_status_idx").on(table.service, table.status),
+    serviceTimestampIdx: index("system_health_metrics_service_timestamp_idx").on(
+      table.service,
+      table.timestamp
+    ),
+    serviceStatusIdx: index("system_health_metrics_service_status_idx").on(
+      table.service,
+      table.status
+    ),
   })
 );
 

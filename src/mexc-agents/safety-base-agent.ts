@@ -1,4 +1,4 @@
-import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
+import { type AgentConfig, BaseAgent } from "./base-agent";
 
 export interface SafetyConfig {
   simulation: {
@@ -6,20 +6,20 @@ export interface SafetyConfig {
     virtualBalance: number;
     realDataDelay: number; // seconds
   };
-  
+
   riskManagement: {
     maxDailyLoss: number; // USDT
-    maxPositionSize: number; // USDT  
+    maxPositionSize: number; // USDT
     maxConcurrentTrades: number;
     circuitBreakerThreshold: number; // percentage
   };
-  
+
   reconciliation: {
     toleranceThreshold: number; // USDT
     checkInterval: number; // minutes
     autoReconcileLimit: number; // USDT
   };
-  
+
   errorRecovery: {
     maxRetryAttempts: number;
     backoffMultiplier: number;
@@ -144,13 +144,13 @@ export abstract class SafetyBaseAgent extends BaseAgent {
   }
 
   public getCriticalEvents(): SafetyEvent[] {
-    return this.events.filter(event => event.severity === "critical");
+    return this.events.filter((event) => event.severity === "critical");
   }
 
   public getMetrics(): SafetyMetrics {
     const now = Date.now();
     const uptime = ((now - this.startTime) / (now - this.startTime)) * 100; // Always 100% for now
-    
+
     return {
       totalEvents: this.events.length,
       criticalEvents: this.getCriticalEvents().length,
@@ -162,8 +162,8 @@ export abstract class SafetyBaseAgent extends BaseAgent {
 
   public updateSafetyConfig(newConfig: Partial<SafetyConfig>): void {
     this.safetyConfig = this.mergeWithDefaultConfig(newConfig);
-    this.emitSafetyEvent("simulation", "low", "Safety configuration updated", { 
-      newConfig: this.safetyConfig 
+    this.emitSafetyEvent("simulation", "low", "Safety configuration updated", {
+      newConfig: this.safetyConfig,
     });
   }
 

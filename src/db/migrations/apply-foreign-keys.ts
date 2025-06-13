@@ -29,7 +29,7 @@ async function applyForeignKeyMigration() {
       AND name = 'api_credentials_user_idx'
     `);
 
-    if (existingIndexes && existingIndexes.length > 0) {
+    if (existingIndexes && "rows" in existingIndexes && existingIndexes.rows.length > 0) {
       console.log("⚠️  Migration appears to have already been applied");
       console.log("💡 Skipping to avoid duplicate indexes");
       return;
@@ -88,7 +88,7 @@ async function applyForeignKeyMigration() {
 }
 
 // Run the migration
-if (import.meta.main) {
+if (require.main === module) {
   applyForeignKeyMigration()
     .then(() => {
       console.log("✅ Migration script completed");

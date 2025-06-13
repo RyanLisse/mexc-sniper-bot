@@ -1,11 +1,5 @@
-import { inngest } from "./client";
 import { AgentManager } from "../mexc-agents/agent-manager";
-import type { 
-  SimulationSession, 
-  RiskMetrics, 
-  ReconciliationReport, 
-  SystemHealth 
-} from "../mexc-agents";
+import { inngest } from "./client";
 
 // Initialize agent manager for safety operations
 const agentManager = new AgentManager();
@@ -26,8 +20,10 @@ export const safetyMonitor = inngest.createFunction(
     if (safetyStatus.overall === "critical") {
       await step.run("handle-critical-issues", async () => {
         // Activate emergency mode if critical issues detected
-        await agentManager.activateEmergencyMode("Critical safety issues detected during monitoring");
-        
+        await agentManager.activateEmergencyMode(
+          "Critical safety issues detected during monitoring"
+        );
+
         // Send alerts (would integrate with notification system)
         logger.error("CRITICAL SAFETY ISSUES DETECTED", {
           issues: safetyStatus.summary,
@@ -82,7 +78,7 @@ export const positionReconciliation = inngest.createFunction(
             unrealizedPnL: 100,
             lastUpdated: new Date().toISOString(),
             source: "local" as const,
-          }
+          },
         ],
         balances: [
           {
@@ -92,7 +88,7 @@ export const positionReconciliation = inngest.createFunction(
             currency: "USDT",
             timestamp: new Date().toISOString(),
             source: "local" as const,
-          }
+          },
         ],
       };
     });
@@ -111,7 +107,7 @@ export const positionReconciliation = inngest.createFunction(
             unrealizedPnL: 100,
             lastUpdated: new Date().toISOString(),
             source: "exchange" as const,
-          }
+          },
         ],
         balances: [
           {
@@ -121,7 +117,7 @@ export const positionReconciliation = inngest.createFunction(
             currency: "USDT",
             timestamp: new Date().toISOString(),
             source: "exchange" as const,
-          }
+          },
         ],
       };
     });
@@ -129,7 +125,7 @@ export const positionReconciliation = inngest.createFunction(
     // Step 3: Perform reconciliation
     const reconciliationReport = await step.run("perform-reconciliation", async () => {
       const reconciliationAgent = agentManager.getReconciliationAgent();
-      
+
       return await reconciliationAgent.performReconciliation(
         localData.positions,
         localData.balances,
@@ -138,7 +134,7 @@ export const positionReconciliation = inngest.createFunction(
       );
     });
 
-    logger.info("Reconciliation completed", { 
+    logger.info("Reconciliation completed", {
       reportId: reconciliationReport.id,
       discrepancies: reconciliationReport.discrepanciesFound,
       status: reconciliationReport.overallStatus,
@@ -148,7 +144,7 @@ export const positionReconciliation = inngest.createFunction(
     if (reconciliationReport.criticalIssues > 0) {
       await step.run("handle-critical-discrepancies", async () => {
         const riskManagerAgent = agentManager.getRiskManagerAgent();
-        
+
         // Trigger risk management response for critical discrepancies
         await riskManagerAgent.activateEmergencyHalt(
           `Critical position discrepancies found: ${reconciliationReport.criticalIssues} issues`
@@ -157,7 +153,9 @@ export const positionReconciliation = inngest.createFunction(
         logger.error("CRITICAL POSITION DISCREPANCIES", {
           reportId: reconciliationReport.id,
           criticalIssues: reconciliationReport.criticalIssues,
-          discrepancies: reconciliationReport.discrepancies.filter(d => d.severity === "critical"),
+          discrepancies: reconciliationReport.discrepancies.filter(
+            (d) => d.severity === "critical"
+          ),
         });
 
         return {
@@ -191,7 +189,7 @@ export const riskMonitor = inngest.createFunction(
     // Step 2: Update risk manager
     const riskAssessment = await step.run("update-risk-manager", async () => {
       const riskManagerAgent = agentManager.getRiskManagerAgent();
-      
+
       await riskManagerAgent.updateRiskMetrics(
         currentMetrics.totalExposure,
         currentMetrics.dailyPnL,
@@ -211,20 +209,24 @@ export const riskMonitor = inngest.createFunction(
       await step.run("handle-trading-halt", async () => {
         logger.warn("Trading halted by risk management", {
           reason: "Circuit breakers or emergency halt active",
-          circuitBreakers: riskAssessment.circuitBreakers.filter(cb => cb.triggered),
+          circuitBreakers: riskAssessment.circuitBreakers.filter((cb) => cb.triggered),
         });
 
         // This would integrate with trading system to halt trading
         return {
           action: "trading_halted",
-          activeBreakers: riskAssessment.circuitBreakers.filter(cb => cb.triggered).length,
+          activeBreakers: riskAssessment.circuitBreakers.filter((cb) => cb.triggered).length,
         };
       });
     }
 
     return {
-      riskLevel: currentMetrics.volatilityIndex > 70 ? "high" : 
-                currentMetrics.volatilityIndex > 40 ? "medium" : "low",
+      riskLevel:
+        currentMetrics.volatilityIndex > 70
+          ? "high"
+          : currentMetrics.volatilityIndex > 40
+            ? "medium"
+            : "low",
       canTrade: riskAssessment.canTrade,
       metrics: riskAssessment.metrics,
       timestamp: new Date().toISOString(),
@@ -242,7 +244,7 @@ export const simulationControl = inngest.createFunction(
     // Step 1: Toggle simulation mode
     const simulationSession = await step.run("toggle-simulation", async () => {
       const simulationAgent = agentManager.getSimulationAgent();
-      
+
       if (enabled) {
         // Start new simulation session
         const session = await simulationAgent.startSimulationSession(userId || "default", 10000);
@@ -252,7 +254,7 @@ export const simulationControl = inngest.createFunction(
         // End current simulation session
         const session = await simulationAgent.endSimulationSession();
         if (session) {
-          logger.info("Simulation session ended", { 
+          logger.info("Simulation session ended", {
             sessionId: session.id,
             finalPnL: session.profitLoss,
             totalTrades: session.totalTrades,
@@ -265,7 +267,7 @@ export const simulationControl = inngest.createFunction(
     // Step 2: Coordinate with other safety systems
     await step.run("coordinate-safety-systems", async () => {
       await agentManager.toggleSimulationMode(enabled);
-      
+
       // Update risk manager settings for simulation mode
       const riskManagerAgent = agentManager.getRiskManagerAgent();
       if (enabled) {
@@ -275,7 +277,7 @@ export const simulationControl = inngest.createFunction(
             ...riskManagerAgent.getSafetyConfig().riskManagement,
             maxDailyLoss: 10000,
             maxPositionSize: 1000,
-          }
+          },
         });
       }
 
@@ -303,7 +305,7 @@ export const errorRecovery = inngest.createFunction(
     // Step 1: Analyze error and determine recovery strategy
     const recoveryStrategy = await step.run("analyze-error", async () => {
       const errorRecoveryAgent = agentManager.getErrorRecoveryAgent();
-      
+
       return await errorRecoveryAgent.handleError(new Error(error.message), {
         service: context.service || "unknown",
         operation: context.operation || "unknown",
@@ -321,7 +323,7 @@ export const errorRecovery = inngest.createFunction(
     // Step 2: Execute recovery if recommended
     if (recoveryStrategy.shouldRetry) {
       await step.sleep("wait-before-retry", recoveryStrategy.retryDelay);
-      
+
       const recoveryResult = await step.run("execute-recovery", async () => {
         // This would implement the actual recovery logic
         // For now, just log the recovery attempt
@@ -384,7 +386,7 @@ export const systemHealthCheck = inngest.createFunction(
     // Step 2: Update error recovery agent with health status
     await step.run("update-health-status", async () => {
       const errorRecoveryAgent = agentManager.getErrorRecoveryAgent();
-      
+
       // Update health for each service based on agent status
       const healthUpdates = [
         { service: "mexc_api", healthy: agentHealth.mexcApi },
@@ -406,14 +408,22 @@ export const systemHealthCheck = inngest.createFunction(
     });
 
     logger.info("System health check completed", {
-      overall: Object.values(agentHealth).filter(v => typeof v === 'boolean').every(Boolean) ? "healthy" : "degraded",
+      overall: Object.values(agentHealth)
+        .filter((v) => typeof v === "boolean")
+        .every(Boolean)
+        ? "healthy"
+        : "degraded",
       agentHealth,
     });
 
     return {
       timestamp: new Date().toISOString(),
       agentHealth,
-      systemStatus: Object.values(agentHealth).filter(v => typeof v === 'boolean').every(Boolean) ? "healthy" : "degraded",
+      systemStatus: Object.values(agentHealth)
+        .filter((v) => typeof v === "boolean")
+        .every(Boolean)
+        ? "healthy"
+        : "degraded",
     };
   }
 );

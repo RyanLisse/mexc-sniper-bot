@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/src/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/src/components/ui/chart";
 import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
 import { useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
@@ -97,7 +97,7 @@ export function TradingChart({ className }: TradingChartProps) {
                 axisLine={false}
                 tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
               />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartTooltip />
               <Area
                 type="monotone"
                 dataKey="volume"

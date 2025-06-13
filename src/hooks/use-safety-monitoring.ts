@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export interface SystemHealth {
@@ -109,7 +109,7 @@ export function useSystemHealth(options: { refetchInterval?: number } = {}) {
         throw new Error(`Failed to fetch system health: ${response.statusText}`);
       }
       const result = await response.json();
-      
+
       // Transform the API response to match our interface
       return {
         overall: result.status || "critical",
@@ -137,7 +137,7 @@ export function useRiskMetrics(options: { refetchInterval?: number } = {}) {
         throw new Error(`Failed to fetch risk metrics: ${response.statusText}`);
       }
       const result = await response.json();
-      
+
       return {
         currentRisk: result.currentRisk || "low",
         totalPnL: result.totalPnL || 0,
@@ -169,7 +169,7 @@ export function useSimulationStatus(options: { refetchInterval?: number } = {}) 
         throw new Error(`Failed to fetch simulation status: ${response.statusText}`);
       }
       const result = await response.json();
-      
+
       return {
         active: result.active || false,
         sessionId: result.sessionId,
@@ -202,7 +202,7 @@ export function useReconciliationStatus(options: { refetchInterval?: number } = 
         throw new Error(`Failed to fetch reconciliation status: ${response.statusText}`);
       }
       const result = await response.json();
-      
+
       return {
         lastCheck: result.lastCheck || new Date().toISOString(),
         positionAccuracy: result.positionAccuracy || 100,
@@ -211,7 +211,8 @@ export function useReconciliationStatus(options: { refetchInterval?: number } = 
         autoResolved: result.autoResolved || 0,
         manualResolutionRequired: result.manualResolutionRequired || 0,
         status: result.status || "completed",
-        nextScheduledCheck: result.nextScheduledCheck || new Date(Date.now() + 3600000).toISOString(),
+        nextScheduledCheck:
+          result.nextScheduledCheck || new Date(Date.now() + 3600000).toISOString(),
         criticalDiscrepancies: result.criticalDiscrepancies || [],
       };
     },
@@ -224,7 +225,7 @@ export function useReconciliationStatus(options: { refetchInterval?: number } = 
 // Emergency halt mutation
 export function useEmergencyHalt() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ reason }: { reason: string }) => {
       const response = await fetch("/api/triggers/safety", {
@@ -235,11 +236,11 @@ export function useEmergencyHalt() {
           reason,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Emergency halt failed: ${response.statusText}`);
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -256,7 +257,7 @@ export function useEmergencyHalt() {
 // Toggle simulation mutation
 export function useToggleSimulation() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ enable }: { enable: boolean }) => {
       const response = await fetch("/api/triggers/safety", {
@@ -267,11 +268,11 @@ export function useToggleSimulation() {
           enable,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Simulation toggle failed: ${response.statusText}`);
       }
-      
+
       return response.json();
     },
     onSuccess: (_, variables) => {
@@ -288,7 +289,7 @@ export function useToggleSimulation() {
 // Comprehensive safety check mutation
 export function useComprehensiveSafetyCheck() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async () => {
       const response = await fetch("/api/triggers/safety?action=comprehensive-safety-check");
@@ -314,23 +315,20 @@ export function useSafetyMonitoring() {
   const riskMetrics = useRiskMetrics({ refetchInterval: 5000 });
   const simulationStatus = useSimulationStatus({ refetchInterval: 15000 });
   const reconciliationStatus = useReconciliationStatus({ refetchInterval: 30000 });
-  
+
   const emergencyHalt = useEmergencyHalt();
   const toggleSimulation = useToggleSimulation();
   const comprehensiveSafetyCheck = useComprehensiveSafetyCheck();
-  
-  const isLoading = 
+
+  const isLoading =
     systemHealth.isLoading ||
     riskMetrics.isLoading ||
     simulationStatus.isLoading ||
     reconciliationStatus.isLoading;
-  
-  const hasError = 
-    systemHealth.error ||
-    riskMetrics.error ||
-    simulationStatus.error ||
-    reconciliationStatus.error;
-  
+
+  const hasError =
+    systemHealth.error || riskMetrics.error || simulationStatus.error || reconciliationStatus.error;
+
   const overallHealth = (() => {
     if (hasError) return "critical";
     if (systemHealth.data?.overall === "critical" || riskMetrics.data?.currentRisk === "critical") {
@@ -341,24 +339,24 @@ export function useSafetyMonitoring() {
     }
     return "healthy";
   })();
-  
+
   return {
     // Data
     systemHealth: systemHealth.data,
     riskMetrics: riskMetrics.data,
     simulationStatus: simulationStatus.data,
     reconciliationStatus: reconciliationStatus.data,
-    
+
     // Loading states
     isLoading,
     hasError,
     overallHealth,
-    
+
     // Actions
     emergencyHalt: emergencyHalt.mutate,
     toggleSimulation: toggleSimulation.mutate,
     runSafetyCheck: comprehensiveSafetyCheck.mutate,
-    
+
     // Refetch functions
     refetchAll: () => {
       systemHealth.refetch();
@@ -366,7 +364,7 @@ export function useSafetyMonitoring() {
       simulationStatus.refetch();
       reconciliationStatus.refetch();
     },
-    
+
     // Mutation states
     isEmergencyHalting: emergencyHalt.isPending,
     isTogglingSimulation: toggleSimulation.isPending,

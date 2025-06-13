@@ -108,9 +108,7 @@ export {
 } from "./error-recovery-agent";
 
 // Agent Manager
-export {
-  AgentManager,
-} from "./agent-manager";
+export { AgentManager } from "./agent-manager";
 
 // MEXC event names for Inngest workflows
 export const mexcEvents = {

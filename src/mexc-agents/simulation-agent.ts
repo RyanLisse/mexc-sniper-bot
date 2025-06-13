@@ -1,4 +1,4 @@
-import { type AgentConfig, type AgentResponse } from "./base-agent";
+import type { AgentConfig, AgentResponse } from "./base-agent";
 import { SafetyBaseAgent, type SafetyConfig } from "./safety-base-agent";
 
 export interface SimulationSession {
@@ -75,7 +75,7 @@ Always maintain the virtual environment integrity while providing realistic mark
     };
 
     super(config, safetyConfig);
-    
+
     this.simulationConfig = {
       enabled: this.safetyConfig.simulation.enabled,
       virtualBalance: this.safetyConfig.simulation.virtualBalance,
@@ -110,7 +110,10 @@ Please analyze this simulation scenario and provide detailed insights about trad
     ]);
   }
 
-  async startSimulationSession(userId: string, initialBalance?: number): Promise<SimulationSession> {
+  async startSimulationSession(
+    userId: string,
+    initialBalance?: number
+  ): Promise<SimulationSession> {
     if (this.currentSession) {
       await this.endSimulationSession();
     }
@@ -132,12 +135,10 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
     this.currentSession = session;
 
-    await this.emitSafetyEvent(
-      "simulation",
-      "low",
-      "Simulation session started",
-      { sessionId: session.id, virtualBalance: session.virtualBalance }
-    );
+    await this.emitSafetyEvent("simulation", "low", "Simulation session started", {
+      sessionId: session.id,
+      virtualBalance: session.virtualBalance,
+    });
 
     return session;
   }
@@ -148,24 +149,19 @@ Please analyze this simulation scenario and provide detailed insights about trad
     }
 
     this.currentSession.endTime = new Date().toISOString();
-    
+
     // Calculate final metrics
     this.updateSessionMetrics();
 
     const completedSession = { ...this.currentSession };
 
-    await this.emitSafetyEvent(
-      "simulation",
-      "low",
-      "Simulation session ended",
-      {
-        sessionId: completedSession.id,
-        duration: Date.parse(completedSession.endTime!) - Date.parse(completedSession.startTime),
-        totalTrades: completedSession.totalTrades,
-        finalPnL: completedSession.profitLoss,
-        winRate: completedSession.winRate,
-      }
-    );
+    await this.emitSafetyEvent("simulation", "low", "Simulation session ended", {
+      sessionId: completedSession.id,
+      duration: Date.parse(completedSession.endTime!) - Date.parse(completedSession.startTime),
+      totalTrades: completedSession.totalTrades,
+      finalPnL: completedSession.profitLoss,
+      winRate: completedSession.winRate,
+    });
 
     this.currentSession = null;
     return completedSession;
@@ -205,7 +201,7 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
     // Simulate execution delay
     if (this.simulationConfig.delaySimulation) {
-      await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
+      await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000 + 500));
     }
 
     const trade: SimulatedTrade = {
@@ -231,22 +227,17 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
     this.currentSession.trades.push(trade);
     this.currentSession.totalTrades++;
-    
+
     this.updateSessionMetrics();
 
-    await this.emitSafetyEvent(
-      "simulation",
-      "low",
-      `Simulated ${type} trade executed`,
-      {
-        symbol,
-        quantity,
-        price: adjustedPrice,
-        value,
-        fees,
-        strategy,
-      }
-    );
+    await this.emitSafetyEvent("simulation", "low", `Simulated ${type} trade executed`, {
+      symbol,
+      quantity,
+      price: adjustedPrice,
+      value,
+      fees,
+      strategy,
+    });
 
     return {
       success: true,
@@ -282,13 +273,13 @@ Please analyze this simulation scenario and provide detailed insights about trad
     this.currentSession.profitLoss = this.currentSession.currentBalance - initialBalance;
 
     // Calculate win rate (simplified - assumes trades are closed)
-    const realizedTrades = trades.filter(t => t.realized && t.profitLoss !== undefined);
+    const realizedTrades = trades.filter((t) => t.realized && t.profitLoss !== undefined);
     if (realizedTrades.length > 0) {
-      const winners = realizedTrades.filter(t => (t.profitLoss || 0) > 0);
+      const winners = realizedTrades.filter((t) => (t.profitLoss || 0) > 0);
       this.currentSession.winRate = (winners.length / realizedTrades.length) * 100;
 
       // Best and worst trades
-      const pnls = realizedTrades.map(t => t.profitLoss || 0);
+      const pnls = realizedTrades.map((t) => t.profitLoss || 0);
       this.currentSession.bestTrade = Math.max(...pnls);
       this.currentSession.worstTrade = Math.min(...pnls);
     }
@@ -374,7 +365,6 @@ Please analyze this simulation scenario and provide detailed insights about trad
       if (this.currentSession && this.currentSession.trades.length > 10000) {
         issues.push("Current session has excessive trades - potential memory issue");
       }
-
     } catch (error) {
       issues.push(`Agent health check failed: ${error}`);
     }
@@ -402,12 +392,9 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
   updateSimulationConfig(config: Partial<SimulationConfig>): void {
     this.simulationConfig = { ...this.simulationConfig, ...config };
-    this.emitSafetyEvent(
-      "simulation",
-      "low",
-      "Simulation configuration updated",
-      { newConfig: this.simulationConfig }
-    );
+    this.emitSafetyEvent("simulation", "low", "Simulation configuration updated", {
+      newConfig: this.simulationConfig,
+    });
   }
 
   getSimulationConfig(): SimulationConfig {

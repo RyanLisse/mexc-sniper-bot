@@ -291,7 +291,7 @@ async function rollbackMigration() {
 }
 
 // Main execution
-if (import.meta.main) {
+if (require.main === module) {
   const args = process.argv.slice(2);
 
   if (args.includes("--rollback")) {

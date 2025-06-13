@@ -24,29 +24,29 @@ import {
   CheckCircle2,
   RefreshCw
 } from "lucide-react";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { useApiCredentials } from "@/src/hooks/use-api-credentials";
+import { useUserPreferences, useUpdateUserPreferences } from "@/src/hooks/use-user-preferences";
+import { useApiCredentials, useSaveApiCredentials, useTestApiCredentials } from "@/src/hooks/use-api-credentials";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
 import { Switch } from "@/src/components/ui/switch";
 import { Separator } from "@/src/components/ui/separator";
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { 
-    preferences, 
-    isLoading: prefsLoading, 
-    updatePreferences,
-    isUpdating 
-  } = useUserPreferences();
   
-  const {
-    credentials,
-    isLoading: credsLoading,
-    saveCredentials,
-    testConnection,
-    isSaving,
-    isTesting
-  } = useApiCredentials();
+  // Using a dummy userId for now - in production this should come from auth
+  const userId = "demo-user";
+  
+  const userPreferencesQuery = useUserPreferences(userId);
+  const preferences = userPreferencesQuery.data;
+  const prefsLoading = userPreferencesQuery.isLoading;
+  
+  const apiCredentialsQuery = useApiCredentials(userId);
+  const credentials = apiCredentialsQuery.data;
+  const credsLoading = apiCredentialsQuery.isLoading;
+  
+  const updatePreferencesMutation = useUpdateUserPreferences();
+  const saveCredentialsMutation = useSaveApiCredentials();
+  const testConnectionMutation = useTestApiCredentials();
 
   // State for form values
   const [showApiKeys, setShowApiKeys] = useState(false);
@@ -56,11 +56,11 @@ export default function SettingsPage() {
 
   // Take profit levels
   const [takeProfitLevels, setTakeProfitLevels] = useState({
-    level1: preferences?.takeProfitLevel1 || 5,
-    level2: preferences?.takeProfitLevel2 || 10,
-    level3: preferences?.takeProfitLevel3 || 15,
-    level4: preferences?.takeProfitLevel4 || 25,
-    custom: preferences?.takeProfitCustom || null,
+    level1: preferences?.takeProfitLevels?.level1 || 5,
+    level2: preferences?.takeProfitLevels?.level2 || 10,
+    level3: preferences?.takeProfitLevels?.level3 || 15,
+    level4: preferences?.takeProfitLevels?.level4 || 25,
+    custom: preferences?.takeProfitLevels?.custom || null,
     defaultLevel: preferences?.defaultTakeProfitLevel || 2
   });
 
@@ -84,9 +84,9 @@ export default function SettingsPage() {
 
   // Initialize credentials if they exist
   useEffect(() => {
-    if (credentials?.mexc) {
-      setApiKey(credentials.mexc.hasApiKey ? "••••••••" : "");
-      setSecretKey(credentials.mexc.hasSecretKey ? "••••••••" : "");
+    if (credentials) {
+      setApiKey(credentials.apiKey ? "••••••••" : "");
+      setSecretKey(credentials.secretKey ? "••••••••" : "");
     }
   }, [credentials]);
 
@@ -94,15 +94,18 @@ export default function SettingsPage() {
   const handleSave = useCallback(async () => {
     try {
       // Save preferences
-      await updatePreferences({
-        takeProfitLevel1: takeProfitLevels.level1,
-        takeProfitLevel2: takeProfitLevels.level2,
-        takeProfitLevel3: takeProfitLevels.level3,
-        takeProfitLevel4: takeProfitLevels.level4,
-        takeProfitCustom: takeProfitLevels.custom,
+      await updatePreferencesMutation.mutateAsync({
+        userId,
+        takeProfitLevels: {
+          level1: takeProfitLevels.level1,
+          level2: takeProfitLevels.level2,
+          level3: takeProfitLevels.level3,
+          level4: takeProfitLevels.level4,
+          custom: takeProfitLevels.custom || undefined,
+        },
         defaultTakeProfitLevel: takeProfitLevels.defaultLevel,
         stopLossPercent: riskSettings.stopLossPercent,
-        riskTolerance: riskSettings.riskTolerance,
+        riskTolerance: riskSettings.riskTolerance as "low" | "medium" | "high",
         maxConcurrentSnipes: riskSettings.maxConcurrentSnipes,
         defaultBuyAmountUsdt: riskSettings.defaultBuyAmount,
         selectedExitStrategy: exitStrategy,
@@ -113,7 +116,8 @@ export default function SettingsPage() {
 
       // Save API credentials if they changed
       if (apiKey && !apiKey.includes("•") && secretKey && !secretKey.includes("•")) {
-        await saveCredentials({
+        await saveCredentialsMutation.mutateAsync({
+          userId,
           provider: "mexc",
           apiKey,
           secretKey
@@ -139,14 +143,14 @@ export default function SettingsPage() {
     autoSettings, 
     apiKey, 
     secretKey,
-    updatePreferences,
-    saveCredentials,
+    updatePreferencesMutation.mutateAsync,
+    saveCredentialsMutation.mutateAsync,
     toast
   ]);
 
   const handleTestConnection = async () => {
     try {
-      const result = await testConnection();
+      const result = await testConnectionMutation.mutateAsync({ userId });
       if (result.success) {
         toast({
           title: "Connection successful",
@@ -155,7 +159,7 @@ export default function SettingsPage() {
       } else {
         toast({
           title: "Connection failed",
-          description: result.error || "Failed to connect to MEXC API.",
+          description: "Failed to connect to MEXC API.",
           variant: "destructive"
         });
       }
@@ -200,10 +204,10 @@ export default function SettingsPage() {
             )}
             <Button 
               onClick={handleSave}
-              disabled={isUpdating || isSaving || !isDirty}
+              disabled={updatePreferencesMutation.isPending || saveCredentialsMutation.isPending || !isDirty}
             >
               <Save className="mr-2 h-4 w-4" />
-              {isUpdating || isSaving ? "Saving..." : "Save Changes"}
+              {updatePreferencesMutation.isPending || saveCredentialsMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
@@ -273,22 +277,22 @@ export default function SettingsPage() {
                     <div className="space-y-1">
                       <p className="text-sm font-medium">Connection Status</p>
                       <p className="text-xs text-muted-foreground">
-                        {credentials?.mexc?.isActive ? "Connected to MEXC" : "Not connected"}
+                        {credentials?.isActive ? "Connected to MEXC" : "Not connected"}
                       </p>
                     </div>
                     <Button
                       variant="outline"
                       onClick={handleTestConnection}
-                      disabled={isTesting || (!apiKey || !secretKey || apiKey.includes("•"))}
+                      disabled={testConnectionMutation.isPending || (!apiKey || !secretKey || apiKey.includes("•"))}
                     >
-                      {isTesting ? (
+                      {testConnectionMutation.isPending ? (
                         <>
                           <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                           Testing...
                         </>
                       ) : (
                         <>
-                          {credentials?.mexc?.isActive ? (
+                          {credentials?.isActive ? (
                             <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
                           ) : (
                             <AlertCircle className="mr-2 h-4 w-4 text-yellow-500" />
@@ -490,7 +494,7 @@ export default function SettingsPage() {
                     <Select
                       value={riskSettings.riskTolerance}
                       onValueChange={(value) => {
-                        setRiskSettings(prev => ({ ...prev, riskTolerance: value }));
+                        setRiskSettings(prev => ({ ...prev, riskTolerance: value as "low" | "medium" | "high" }));
                         setIsDirty(true);
                       }}
                     >

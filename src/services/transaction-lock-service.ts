@@ -316,11 +316,15 @@ export class TransactionLockService {
       const result = await executor();
 
       // Release lock with success
-      await this.releaseLock(lockResult.lockId!, result);
+      await this.releaseLock(
+        lockResult.lockId!,
+        result && typeof result === "object" ? (result as Record<string, unknown>) : undefined
+      );
 
       return {
         success: true,
-        result,
+        result:
+          result && typeof result === "object" ? (result as Record<string, unknown>) : undefined,
         lockId: lockResult.lockId!,
         executionTimeMs: Date.now() - startTime,
       };

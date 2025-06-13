@@ -1,4 +1,4 @@
-import { type AgentConfig, type AgentResponse } from "./base-agent";
+import type { AgentConfig, AgentResponse } from "./base-agent";
 import { SafetyBaseAgent, type SafetyConfig } from "./safety-base-agent";
 
 export interface Position {
@@ -130,9 +130,12 @@ Auto-corrections Today: ${this.autoCorrectionsCount}
 Currently Reconciling: ${this.isReconciling}
 
 Recent Discrepancies:
-${recentDiscrepancies.map(d => 
-  `- ${d.type} ${d.symbol || ""}: ${d.severity} - ${d.description} (${d.difference.toFixed(4)} USDT diff)`
-).join("\n")}
+${recentDiscrepancies
+  .map(
+    (d) =>
+      `- ${d.type} ${d.symbol || ""}: ${d.severity} - ${d.description} (${d.difference.toFixed(4)} USDT diff)`
+  )
+  .join("\n")}
 
 Last Report Summary:
 ${lastReport}
@@ -172,7 +175,10 @@ Please provide detailed reconciliation analysis, identify potential causes of di
       let totalChecks = 0;
 
       // Reconcile positions
-      const positionDiscrepancies = await this.reconcilePositions(localPositions, exchangePositions);
+      const positionDiscrepancies = await this.reconcilePositions(
+        localPositions,
+        exchangePositions
+      );
       discrepancies.push(...positionDiscrepancies);
       totalChecks += localPositions.length + exchangePositions.length;
 
@@ -182,8 +188,8 @@ Please provide detailed reconciliation analysis, identify potential causes of di
       totalChecks += localBalances.length + exchangeBalances.length;
 
       // Categorize and process discrepancies
-      const criticalIssues = discrepancies.filter(d => d.severity === "critical").length;
-      const autoResolvableDiscrepancies = discrepancies.filter(d => d.autoReconcilable);
+      const criticalIssues = discrepancies.filter((d) => d.severity === "critical").length;
+      const autoResolvableDiscrepancies = discrepancies.filter((d) => d.autoReconcilable);
 
       // Attempt auto-resolution
       let autoResolved = 0;
@@ -209,7 +215,7 @@ Please provide detailed reconciliation analysis, identify potential causes of di
         discrepanciesFound: discrepancies.length,
         criticalIssues,
         autoResolved,
-        manualReviewRequired: discrepancies.filter(d => !d.resolved).length,
+        manualReviewRequired: discrepancies.filter((d) => !d.resolved).length,
         overallStatus: this.determineOverallStatus(discrepancies),
         discrepancies,
         recommendations: this.generateRecommendations(discrepancies),
@@ -223,7 +229,6 @@ Please provide detailed reconciliation analysis, identify potential causes of di
       await this.emitReconciliationEvents(report);
 
       return report;
-
     } finally {
       this.isReconciling = false;
     }
@@ -234,13 +239,13 @@ Please provide detailed reconciliation analysis, identify potential causes of di
     exchangePositions: Position[]
   ): Promise<ReconciliationDiscrepancy[]> {
     const discrepancies: ReconciliationDiscrepancy[] = [];
-    const exchangeMap = new Map(exchangePositions.map(p => [p.symbol, p]));
-    const localMap = new Map(localPositions.map(p => [p.symbol, p]));
+    const exchangeMap = new Map(exchangePositions.map((p) => [p.symbol, p]));
+    const localMap = new Map(localPositions.map((p) => [p.symbol, p]));
 
     // Check local positions against exchange
     for (const localPos of localPositions) {
       const exchangePos = exchangeMap.get(localPos.symbol);
-      
+
       if (!exchangePos) {
         // Local position exists but not on exchange
         discrepancies.push({
@@ -261,8 +266,9 @@ Please provide detailed reconciliation analysis, identify potential causes of di
         // Compare quantities
         const quantityDiff = Math.abs(localPos.quantity - exchangePos.quantity);
         if (quantityDiff > this.reconciliationConfig.toleranceThreshold) {
-          const percentDiff = (quantityDiff / Math.max(localPos.quantity, exchangePos.quantity)) * 100;
-          
+          const percentDiff =
+            (quantityDiff / Math.max(localPos.quantity, exchangePos.quantity)) * 100;
+
           discrepancies.push({
             id: `pos-qty-${localPos.symbol}-${Date.now()}`,
             type: "position",
@@ -273,7 +279,9 @@ Please provide detailed reconciliation analysis, identify potential causes of di
             exchangeValue: exchangePos.quantity,
             difference: quantityDiff,
             percentageDiff: percentDiff,
-            autoReconcilable: quantityDiff * localPos.averagePrice < this.reconciliationConfig.autoReconcileThreshold,
+            autoReconcilable:
+              quantityDiff * localPos.averagePrice <
+              this.reconciliationConfig.autoReconcileThreshold,
             timestamp: new Date().toISOString(),
             resolved: false,
           });
@@ -284,7 +292,7 @@ Please provide detailed reconciliation analysis, identify potential causes of di
         const priceThreshold = localPos.averagePrice * 0.01; // 1% tolerance
         if (priceDiff > priceThreshold) {
           const percentDiff = (priceDiff / localPos.averagePrice) * 100;
-          
+
           discrepancies.push({
             id: `pos-price-${localPos.symbol}-${Date.now()}`,
             type: "position",
@@ -316,7 +324,8 @@ Please provide detailed reconciliation analysis, identify potential causes of di
           exchangeValue: exchangePos.quantity,
           difference: exchangePos.quantity,
           percentageDiff: 100,
-          autoReconcilable: exchangePos.marketValue < this.reconciliationConfig.autoReconcileThreshold,
+          autoReconcilable:
+            exchangePos.marketValue < this.reconciliationConfig.autoReconcileThreshold,
           timestamp: new Date().toISOString(),
           resolved: false,
         });
@@ -331,11 +340,11 @@ Please provide detailed reconciliation analysis, identify potential causes of di
     exchangeBalances: BalanceSnapshot[]
   ): Promise<ReconciliationDiscrepancy[]> {
     const discrepancies: ReconciliationDiscrepancy[] = [];
-    const exchangeMap = new Map(exchangeBalances.map(b => [b.currency, b]));
+    const exchangeMap = new Map(exchangeBalances.map((b) => [b.currency, b]));
 
     for (const localBalance of localBalances) {
       const exchangeBalance = exchangeMap.get(localBalance.currency);
-      
+
       if (!exchangeBalance) {
         discrepancies.push({
           id: `bal-missing-${localBalance.currency}-${Date.now()}`,
@@ -346,7 +355,8 @@ Please provide detailed reconciliation analysis, identify potential causes of di
           exchangeValue: 0,
           difference: localBalance.totalBalance,
           percentageDiff: 100,
-          autoReconcilable: localBalance.totalBalance < this.reconciliationConfig.autoReconcileThreshold,
+          autoReconcilable:
+            localBalance.totalBalance < this.reconciliationConfig.autoReconcileThreshold,
           timestamp: new Date().toISOString(),
           resolved: false,
         });
@@ -356,8 +366,9 @@ Please provide detailed reconciliation analysis, identify potential causes of di
       // Check total balance
       const totalDiff = Math.abs(localBalance.totalBalance - exchangeBalance.totalBalance);
       if (totalDiff > this.reconciliationConfig.toleranceThreshold) {
-        const percentDiff = (totalDiff / Math.max(localBalance.totalBalance, exchangeBalance.totalBalance)) * 100;
-        
+        const percentDiff =
+          (totalDiff / Math.max(localBalance.totalBalance, exchangeBalance.totalBalance)) * 100;
+
         discrepancies.push({
           id: `bal-total-${localBalance.currency}-${Date.now()}`,
           type: "balance",
@@ -374,10 +385,15 @@ Please provide detailed reconciliation analysis, identify potential causes of di
       }
 
       // Check available balance
-      const availableDiff = Math.abs(localBalance.availableBalance - exchangeBalance.availableBalance);
+      const availableDiff = Math.abs(
+        localBalance.availableBalance - exchangeBalance.availableBalance
+      );
       if (availableDiff > this.reconciliationConfig.toleranceThreshold) {
-        const percentDiff = (availableDiff / Math.max(localBalance.availableBalance, exchangeBalance.availableBalance)) * 100;
-        
+        const percentDiff =
+          (availableDiff /
+            Math.max(localBalance.availableBalance, exchangeBalance.availableBalance)) *
+          100;
+
         discrepancies.push({
           id: `bal-available-${localBalance.currency}-${Date.now()}`,
           type: "balance",
@@ -419,7 +435,7 @@ Please provide detailed reconciliation analysis, identify potential causes of di
       // 1. Update the local database to match exchange
       // 2. Or create adjusting entries
       // 3. Log the reconciliation action
-      
+
       return true;
     } catch (error) {
       await this.emitSafetyEvent(
@@ -432,38 +448,42 @@ Please provide detailed reconciliation analysis, identify potential causes of di
     }
   }
 
-  private determineOverallStatus(discrepancies: ReconciliationDiscrepancy[]): ReconciliationReport["overallStatus"] {
+  private determineOverallStatus(
+    discrepancies: ReconciliationDiscrepancy[]
+  ): ReconciliationReport["overallStatus"] {
     if (discrepancies.length === 0) return "clean";
-    
-    const hasCritical = discrepancies.some(d => d.severity === "critical");
+
+    const hasCritical = discrepancies.some((d) => d.severity === "critical");
     if (hasCritical) return "critical";
-    
-    const hasMajor = discrepancies.some(d => d.severity === "major");
+
+    const hasMajor = discrepancies.some((d) => d.severity === "major");
     if (hasMajor) return "major_issues";
-    
+
     return "minor_issues";
   }
 
   private generateRecommendations(discrepancies: ReconciliationDiscrepancy[]): string[] {
     const recommendations: string[] = [];
-    
-    const criticalCount = discrepancies.filter(d => d.severity === "critical").length;
+
+    const criticalCount = discrepancies.filter((d) => d.severity === "critical").length;
     if (criticalCount > 0) {
-      recommendations.push(`URGENT: ${criticalCount} critical discrepancies require immediate attention`);
+      recommendations.push(
+        `URGENT: ${criticalCount} critical discrepancies require immediate attention`
+      );
       recommendations.push("Consider halting trading until critical issues are resolved");
     }
-    
-    const unresolvedCount = discrepancies.filter(d => !d.resolved).length;
+
+    const unresolvedCount = discrepancies.filter((d) => !d.resolved).length;
     if (unresolvedCount > 0) {
       recommendations.push(`${unresolvedCount} discrepancies require manual review`);
     }
-    
-    const positionIssues = discrepancies.filter(d => d.type === "position").length;
+
+    const positionIssues = discrepancies.filter((d) => d.type === "position").length;
     if (positionIssues > 0) {
       recommendations.push("Review position tracking and trade execution processes");
     }
-    
-    const balanceIssues = discrepancies.filter(d => d.type === "balance").length;
+
+    const balanceIssues = discrepancies.filter((d) => d.type === "balance").length;
     if (balanceIssues > 0) {
       recommendations.push("Verify balance updates and fee calculations");
     }
@@ -471,14 +491,19 @@ Please provide detailed reconciliation analysis, identify potential causes of di
     if (recommendations.length === 0) {
       recommendations.push("All positions and balances are accurately reconciled");
     }
-    
+
     return recommendations;
   }
 
   private async emitReconciliationEvents(report: ReconciliationReport): Promise<void> {
-    const severity = report.criticalIssues > 0 ? "critical" :
-                    report.overallStatus === "major_issues" ? "high" :
-                    report.overallStatus === "minor_issues" ? "medium" : "low";
+    const severity =
+      report.criticalIssues > 0
+        ? "critical"
+        : report.overallStatus === "major_issues"
+          ? "high"
+          : report.overallStatus === "minor_issues"
+            ? "medium"
+            : "low";
 
     await this.emitSafetyEvent(
       "reconciliation",
@@ -500,7 +525,7 @@ Please provide detailed reconciliation analysis, identify potential causes of di
     }
 
     const recentDiscrepancies = this.discrepancies.filter(
-      d => Date.parse(d.timestamp) > this.lastReconciliation!.getTime() - 24 * 60 * 60 * 1000
+      (d) => Date.parse(d.timestamp) > this.lastReconciliation!.getTime() - 24 * 60 * 60 * 1000
     );
 
     return `Last: ${this.lastReconciliation.toISOString()}, Recent discrepancies: ${recentDiscrepancies.length}`;
@@ -518,7 +543,7 @@ Please provide detailed reconciliation analysis, identify potential causes of di
     if (this.lastReconciliation) {
       const timeSinceLastRecon = Date.now() - this.lastReconciliation.getTime();
       const maxInterval = this.reconciliationConfig.checkInterval * 60 * 1000 * 2; // 2x the configured interval
-      
+
       if (timeSinceLastRecon > maxInterval) {
         issues.push("Reconciliation overdue");
         recommendations.push("Run immediate reconciliation check");
@@ -530,7 +555,7 @@ Please provide detailed reconciliation analysis, identify potential causes of di
 
     // Check for unresolved critical discrepancies
     const criticalDiscrepancies = this.discrepancies.filter(
-      d => d.severity === "critical" && !d.resolved
+      (d) => d.severity === "critical" && !d.resolved
     );
     if (criticalDiscrepancies.length > 0) {
       issues.push(`${criticalDiscrepancies.length} unresolved critical discrepancies`);
@@ -574,7 +599,6 @@ Please provide detailed reconciliation analysis, identify potential causes of di
         // This would need additional tracking in a real implementation
         issues.push("Warning: Reconciliation appears to be running for extended time");
       }
-
     } catch (error) {
       issues.push(`Reconciliation agent health check failed: ${error}`);
     }
@@ -591,11 +615,11 @@ Please provide detailed reconciliation analysis, identify potential causes of di
   }
 
   getUnresolvedDiscrepancies(): ReconciliationDiscrepancy[] {
-    return this.discrepancies.filter(d => !d.resolved);
+    return this.discrepancies.filter((d) => !d.resolved);
   }
 
   getCriticalDiscrepancies(): ReconciliationDiscrepancy[] {
-    return this.discrepancies.filter(d => d.severity === "critical");
+    return this.discrepancies.filter((d) => d.severity === "critical");
   }
 
   getReconciliationConfig(): ReconciliationConfig {
@@ -604,12 +628,9 @@ Please provide detailed reconciliation analysis, identify potential causes of di
 
   updateReconciliationConfig(config: Partial<ReconciliationConfig>): void {
     this.reconciliationConfig = { ...this.reconciliationConfig, ...config };
-    this.emitSafetyEvent(
-      "reconciliation",
-      "low",
-      "Reconciliation configuration updated",
-      { newConfig: this.reconciliationConfig }
-    );
+    this.emitSafetyEvent("reconciliation", "low", "Reconciliation configuration updated", {
+      newConfig: this.reconciliationConfig,
+    });
   }
 
   isReconciliationInProgress(): boolean {
@@ -622,11 +643,8 @@ Please provide detailed reconciliation analysis, identify potential causes of di
 
   resetAutoCorrectionsCount(): void {
     this.autoCorrectionsCount = 0;
-    this.emitSafetyEvent(
-      "reconciliation",
-      "low",
-      "Auto-corrections count reset",
-      { previousCount: this.autoCorrectionsCount }
-    );
+    this.emitSafetyEvent("reconciliation", "low", "Auto-corrections count reset", {
+      previousCount: this.autoCorrectionsCount,
+    });
   }
 }

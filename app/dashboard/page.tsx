@@ -17,10 +17,23 @@ import { RecentTradesTable } from "@/src/components/dashboard/recent-trades-tabl
 import { UpcomingCoinsSection } from "@/src/components/dashboard/upcoming-coins-section";
 
 export default function DashboardPage() {
-  const { data: accountBalance, isLoading: balanceLoading } = useAccountBalance();
-  const { data: portfolio } = usePortfolio();
+  // Using a dummy userId for now - in production this should come from auth
+  const userId = "demo-user";
+  const { data: accountBalance, isLoading: balanceLoading } = useAccountBalance({ userId });
+  const { data: portfolio } = usePortfolio(userId);
   const { data: calendarData } = useMexcCalendar();
   const { data: readyTargets } = useReadyTargets();
+
+  // Handler functions for trading targets
+  const handleExecuteSnipe = (target: any) => {
+    console.log("Executing snipe for target:", target);
+    // TODO: Implement snipe execution logic
+  };
+
+  const handleRemoveTarget = (vcoinId: string) => {
+    console.log("Removing target:", vcoinId);
+    // TODO: Implement target removal logic
+  };
 
   // Calculate metrics
   const totalBalance = accountBalance?.totalUsdtValue || 0;
@@ -100,7 +113,10 @@ export default function DashboardPage() {
             <RecentTradesTable />
             <div className="grid gap-4 md:grid-cols-2">
               <OptimizedActivityFeed />
-              <OptimizedTradingTargets />
+              <OptimizedTradingTargets 
+                onExecuteSnipe={handleExecuteSnipe}
+                onRemoveTarget={handleRemoveTarget}
+              />
             </div>
           </TabsContent>
 

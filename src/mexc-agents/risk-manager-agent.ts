@@ -1,4 +1,4 @@
-import { type AgentConfig, type AgentResponse } from "./base-agent";
+import type { AgentConfig, AgentResponse } from "./base-agent";
 import { SafetyBaseAgent, type SafetyConfig } from "./safety-base-agent";
 
 export interface RiskMetrics {
@@ -54,7 +54,7 @@ export class RiskManagerAgent extends SafetyBaseAgent {
   private circuitBreakers: Map<string, CircuitBreaker> = new Map();
   private riskEvents: RiskEvent[] = [];
   private emergencyHaltActive = false;
-  private lastRiskUpdate: number = 0;
+  private lastRiskUpdate = 0;
 
   constructor(safetyConfig?: Partial<SafetyConfig>) {
     const config: AgentConfig = {
@@ -175,7 +175,10 @@ Current Risk Metrics:
 
 Circuit Breaker Status:
 ${Array.from(this.circuitBreakers.values())
-  .map(cb => `- ${cb.name}: ${cb.triggered ? "TRIGGERED" : "OK"} (${cb.currentValue}/${cb.threshold})`)
+  .map(
+    (cb) =>
+      `- ${cb.name}: ${cb.triggered ? "TRIGGERED" : "OK"} (${cb.currentValue}/${cb.threshold})`
+  )
   .join("\n")}
 
 Emergency Halt: ${this.emergencyHaltActive ? "ACTIVE" : "Inactive"}
@@ -224,16 +227,11 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     await this.checkCircuitBreakers();
 
     // Emit risk update event
-    await this.emitSafetyEvent(
-      "risk",
-      "low",
-      "Risk metrics updated",
-      { 
-        previous: previousMetrics, 
-        current: this.riskMetrics,
-        significantChange: this.hasSignificantRiskChange(previousMetrics, this.riskMetrics)
-      }
-    );
+    await this.emitSafetyEvent("risk", "low", "Risk metrics updated", {
+      previous: previousMetrics,
+      current: this.riskMetrics,
+      significantChange: this.hasSignificantRiskChange(previousMetrics, this.riskMetrics),
+    });
   }
 
   private updateCircuitBreakerValues(): void {
@@ -301,12 +299,9 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
         breaker.triggered = false;
         breaker.resetAt = new Date().toISOString();
 
-        await this.emitSafetyEvent(
-          "risk",
-          "low",
-          `Circuit breaker reset: ${breaker.name}`,
-          { breakerId: breaker.id }
-        );
+        await this.emitSafetyEvent("risk", "low", `Circuit breaker reset: ${breaker.name}`, {
+          breakerId: breaker.id,
+        });
       }
     }
   }
@@ -367,7 +362,10 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     const warnings: string[] = [];
 
     // Position size risk (0-30 points)
-    const positionSizeRisk = Math.min((totalCost / this.safetyConfig.riskManagement.maxPositionSize) * 30, 30);
+    const positionSizeRisk = Math.min(
+      (totalCost / this.safetyConfig.riskManagement.maxPositionSize) * 30,
+      30
+    );
     riskScore += positionSizeRisk;
     if (positionSizeRisk > 20) {
       warnings.push(`Large position size: ${totalCost.toFixed(2)} USDT`);
@@ -375,7 +373,10 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
 
     // Portfolio concentration risk (0-25 points)
     const newExposure = this.riskMetrics.totalExposure + totalCost;
-    const concentrationRisk = Math.min((newExposure / (this.safetyConfig.riskManagement.maxPositionSize * 5)) * 25, 25);
+    const concentrationRisk = Math.min(
+      (newExposure / (this.safetyConfig.riskManagement.maxPositionSize * 5)) * 25,
+      25
+    );
     riskScore += concentrationRisk;
 
     // Volatility risk (0-20 points)
@@ -386,14 +387,15 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     }
 
     // Daily P&L risk (0-25 points)
-    const pnlRisk = Math.abs(this.riskMetrics.dailyPnL) / this.safetyConfig.riskManagement.maxDailyLoss * 25;
+    const pnlRisk =
+      (Math.abs(this.riskMetrics.dailyPnL) / this.safetyConfig.riskManagement.maxDailyLoss) * 25;
     riskScore += Math.min(pnlRisk, 25);
 
     // Check circuit breakers
-    const activeBreakers = Array.from(this.circuitBreakers.values()).filter(cb => cb.triggered);
+    const activeBreakers = Array.from(this.circuitBreakers.values()).filter((cb) => cb.triggered);
     if (activeBreakers.length > 0) {
       riskScore += 50; // Major penalty for active circuit breakers
-      reasons.push(`Active circuit breakers: ${activeBreakers.map(cb => cb.name).join(", ")}`);
+      reasons.push(`Active circuit breakers: ${activeBreakers.map((cb) => cb.name).join(", ")}`);
     }
 
     // Emergency halt check
@@ -414,9 +416,9 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
 
     // Determine approval
     const approved = riskScore < 70 && !this.hasBlockingCircuitBreakers();
-    
+
     // Calculate max allowed size
-    const maxAllowedSize = approved 
+    const maxAllowedSize = approved
       ? Math.min(
           this.safetyConfig.riskManagement.maxPositionSize,
           this.safetyConfig.riskManagement.maxPositionSize * 5 - this.riskMetrics.totalExposure
@@ -435,15 +437,18 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
       maxAllowedSize,
       estimatedImpact: {
         newExposure,
-        riskIncrease: (newExposure - this.riskMetrics.totalExposure) / this.riskMetrics.totalExposure * 100,
-        portfolioImpact: totalCost / newExposure * 100,
+        riskIncrease:
+          ((newExposure - this.riskMetrics.totalExposure) / this.riskMetrics.totalExposure) * 100,
+        portfolioImpact: (totalCost / newExposure) * 100,
       },
     };
   }
 
   private hasBlockingCircuitBreakers(): boolean {
     return Array.from(this.circuitBreakers.values()).some(
-      cb => cb.triggered && (cb.action === "halt_new" || cb.action === "halt_all" || cb.action === "emergency_exit")
+      (cb) =>
+        cb.triggered &&
+        (cb.action === "halt_new" || cb.action === "halt_all" || cb.action === "emergency_exit")
     );
   }
 
@@ -462,12 +467,10 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
 
     this.riskEvents.push(riskEvent);
 
-    await this.emitSafetyEvent(
-      "risk",
-      "critical",
-      `EMERGENCY HALT ACTIVATED: ${reason}`,
-      { reason, riskMetrics: this.riskMetrics }
-    );
+    await this.emitSafetyEvent("risk", "critical", `EMERGENCY HALT ACTIVATED: ${reason}`, {
+      reason,
+      riskMetrics: this.riskMetrics,
+    });
 
     // Here you would integrate with the trading system to:
     // 1. Cancel all pending orders
@@ -479,16 +482,14 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
   async deactivateEmergencyHalt(): Promise<void> {
     this.emergencyHaltActive = false;
 
-    await this.emitSafetyEvent(
-      "risk",
-      "medium",
-      "Emergency halt deactivated",
-      { riskMetrics: this.riskMetrics }
-    );
+    await this.emitSafetyEvent("risk", "medium", "Emergency halt deactivated", {
+      riskMetrics: this.riskMetrics,
+    });
   }
 
   private hasSignificantRiskChange(prev: RiskMetrics, current: RiskMetrics): boolean {
-    const exposureChange = Math.abs(current.totalExposure - prev.totalExposure) / Math.max(prev.totalExposure, 1);
+    const exposureChange =
+      Math.abs(current.totalExposure - prev.totalExposure) / Math.max(prev.totalExposure, 1);
     const pnlChange = Math.abs(current.dailyPnL - prev.dailyPnL);
     const positionChange = current.openPositions !== prev.openPositions;
 
@@ -505,13 +506,14 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
 
     // Check for stale risk data
     const dataAge = Date.now() - this.lastRiskUpdate;
-    if (dataAge > 300000) { // 5 minutes
+    if (dataAge > 300000) {
+      // 5 minutes
       issues.push("Risk metrics are stale (over 5 minutes old)");
       recommendations.push("Update risk metrics more frequently");
     }
 
     // Check for active circuit breakers
-    const activeBreakers = Array.from(this.circuitBreakers.values()).filter(cb => cb.triggered);
+    const activeBreakers = Array.from(this.circuitBreakers.values()).filter((cb) => cb.triggered);
     if (activeBreakers.length > 0) {
       issues.push(`${activeBreakers.length} circuit breaker(s) active`);
       recommendations.push("Address circuit breaker triggers before resuming trading");
@@ -551,7 +553,6 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
       if (this.riskEvents.length > 1000) {
         issues.push("Excessive risk events - potential memory issue");
       }
-
     } catch (error) {
       issues.push(`Risk manager health check failed: ${error}`);
     }
@@ -568,7 +569,7 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
   }
 
   getCircuitBreakers(): CircuitBreaker[] {
-    return Array.from(this.circuitBreakers.values()).map(cb => ({ ...cb }));
+    return Array.from(this.circuitBreakers.values()).map((cb) => ({ ...cb }));
   }
 
   getRiskEvents(limit = 50): RiskEvent[] {

@@ -38,7 +38,7 @@
     "db:verify:fk": "bun run src/db/migrations/verify-foreign-keys.ts",
     "db:studio": "drizzle-kit studio",
     "db:reset": "rm -f mexc_sniper.db && bun run db:migrate",
-    "db:check": "echo 'Checking database status...' && node -e 'import(\"./src/db/index.js\").then(({initializeDatabase}) => initializeDatabase())'",
+    "db:check": "tsx scripts/check-db.ts",
     "agents:test": "bun test src/mexc-agents/**/*.test.ts",
     "agents:health": "bun run src/mexc-agents/health-check.ts",
     "postinstall": "./scripts/safe-migrate.sh"
@@ -114,6 +114,7 @@
     "better-sqlite3": "^11.10.0",
     "jsdom": "^26.1.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.3",
     "tw-animate-css": "^1.3.2",
     "typescript": "^5",
     "vitest": "^3.2.2"

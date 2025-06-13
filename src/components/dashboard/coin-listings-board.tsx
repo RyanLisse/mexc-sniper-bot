@@ -192,7 +192,7 @@ export function CoinListingsBoard() {
         .map((item) => {
           const isPending = pendingDetection.includes(item.vcoinId);
           const isReady = readyTargets.some((target) => target.vcoinId === item.vcoinId);
-          const isExecuted = executedTargets.some((target) => target.vcoinId === item.vcoinId);
+          const isExecuted = executedTargets.includes(item.vcoinId);
 
           let status: "calendar" | "monitoring" | "ready" | "executed" = "calendar";
           if (isExecuted) status = "executed";
@@ -214,10 +214,16 @@ export function CoinListingsBoard() {
     ...target,
     status: "ready" as const,
   }));
-  const executedTargetsEnriched = executedTargets.map((target) => ({
-    ...target,
-    status: "executed" as const,
-  }));
+  const executedTargetsEnriched = executedTargets
+    .map((vcoinId) => {
+      const calendarEntry = enrichedCalendarData.find((coin) => coin.vcoinId === vcoinId);
+      if (!calendarEntry) return null;
+      return {
+        ...calendarEntry,
+        status: "executed" as const,
+      };
+    })
+    .filter((coin) => coin !== null);
 
   return (
     <div className="space-y-6">

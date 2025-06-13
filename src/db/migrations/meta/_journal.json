@@ -36,6 +36,13 @@
       "when": 1749804364363,
       "tag": "0004_slow_captain_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1749818000000,
+      "tag": "0005_fix_foreign_keys",
+      "breakpoints": true
     }
   ]
 }

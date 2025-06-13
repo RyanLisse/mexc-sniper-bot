@@ -1,10 +1,10 @@
 import { db } from "@/src/db";
-import { sql } from "drizzle-orm";
+import { account, session, user, verification } from "@/src/db/schema";
 
 export async function checkDatabaseHealth() {
   try {
-    // Simple connectivity test
-    const result = await db.select({ test: sql`1` });
+    // Simple connectivity test - just count users (table should exist)
+    const result = await db.select().from(user).limit(0);
 
     if (result) {
       console.log("[DB Health] Database connection successful");
@@ -25,15 +25,20 @@ export async function checkDatabaseHealth() {
 export async function checkAuthTables() {
   try {
     // Check if auth tables exist by querying them
-    const tables = ["user", "session", "account", "verification"];
+    const tableChecks = [
+      { name: "user", table: user },
+      { name: "session", table: session },
+      { name: "account", table: account },
+      { name: "verification", table: verification },
+    ];
     const results: Record<string, any> = {};
 
-    for (const table of tables) {
+    for (const { name, table } of tableChecks) {
       try {
-        const result = await db.select().from(sql.raw(table)).limit(1);
-        results[table] = { exists: true, count: result.length };
+        const result = await db.select().from(table).limit(1);
+        results[name] = { exists: true, count: result.length };
       } catch (error) {
-        results[table] = { exists: false, error: (error as Error).message };
+        results[name] = { exists: false, error: (error as Error).message };
       }
     }
 
