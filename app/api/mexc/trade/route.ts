@@ -8,6 +8,11 @@ import {
   apiResponse, 
   HTTP_STATUS 
 } from "@/src/lib/api-response";
+import { db } from "@/src/db";
+import { apiCredentials, executionHistory } from "@/src/db/schema";
+import { eq, and } from "drizzle-orm";
+import { getEncryptionService } from "@/src/services/secure-encryption-service";
+import type { NewExecutionHistory } from "@/src/db/schema";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,18 +26,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get API credentials from environment
-    const apiKey = process.env.MEXC_API_KEY;
-    const secretKey = process.env.MEXC_SECRET_KEY;
+    // Get API credentials from database
+    const credentials = await db
+      .select()
+      .from(apiCredentials)
+      .where(and(
+        eq(apiCredentials.userId, userId),
+        eq(apiCredentials.provider, 'mexc'),
+        eq(apiCredentials.isActive, true)
+      ))
+      .limit(1);
 
-    if (!apiKey || !secretKey) {
+    if (!credentials[0]) {
       return apiResponse(
-        createErrorResponse("MEXC API credentials not configured", {
-          message: "Configure MEXC API keys in environment variables for trading"
+        createErrorResponse("No active MEXC API credentials found", {
+          message: "Please configure your MEXC API credentials in settings"
         }),
         HTTP_STATUS.BAD_REQUEST
       );
     }
+
+    // Decrypt API credentials
+    const encryptionService = getEncryptionService();
+    const apiKey = encryptionService.decrypt(credentials[0].encryptedApiKey);
+    const secretKey = encryptionService.decrypt(credentials[0].encryptedSecretKey);
 
     // Validate required parameters
     if (!symbol || !side || !type || !quantity) {
@@ -160,6 +177,40 @@ export async function POST(request: NextRequest) {
 
     if (orderResult.success) {
       console.log(`✅ Trading order executed successfully:`, orderResult);
+      
+      // Save execution history
+      try {
+        const orderData = orderResult as any; // Type assertion for MEXC order response
+        const executionRecord: NewExecutionHistory = {
+          userId,
+          snipeTargetId: snipeTargetId || null,
+          vcoinId: body.vcoinId || symbol,
+          symbolName: symbol,
+          action: side.toLowerCase() as "buy" | "sell",
+          orderType: type.toLowerCase(),
+          orderSide: side.toLowerCase(),
+          requestedQuantity: parseFloat(quantity),
+          requestedPrice: price ? parseFloat(price) : null,
+          executedQuantity: orderData.executedQty ? parseFloat(orderData.executedQty) : parseFloat(quantity),
+          executedPrice: orderData.price ? parseFloat(orderData.price) : null,
+          totalCost: orderData.cummulativeQuoteQty ? parseFloat(orderData.cummulativeQuoteQty) : null,
+          fees: orderData.fee ? parseFloat(orderData.fee) : null,
+          exchangeOrderId: orderData.orderId?.toString() || null,
+          exchangeStatus: orderData.status || "filled",
+          exchangeResponse: JSON.stringify(orderResult),
+          executionLatencyMs: orderData.transactTime ? Date.now() - Number(orderData.transactTime) : null,
+          slippagePercent: price && orderData.price ? ((parseFloat(orderData.price) - parseFloat(price)) / parseFloat(price)) * 100 : null,
+          status: "success",
+          requestedAt: new Date(),
+          executedAt: orderData.transactTime ? new Date(Number(orderData.transactTime)) : new Date(),
+        };
+
+        await db.insert(executionHistory).values(executionRecord);
+        console.log(`📝 Execution history saved for order ${orderResult.orderId}`);
+      } catch (error) {
+        console.error("Failed to save execution history:", error);
+        // Don't fail the trade response if history save fails
+      }
       
       return apiResponse(
         createSuccessResponse(orderResult, {

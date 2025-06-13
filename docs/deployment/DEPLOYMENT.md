@@ -1,6 +1,6 @@
 # MEXC Sniper Bot - Production Deployment Guide
 
-This guide covers deploying the MEXC Sniper Bot with TypeScript multi-agent system to Vercel with TursoDB and Inngest.
+This comprehensive guide covers deploying the MEXC Sniper Bot with TypeScript multi-agent system to multiple platforms including Vercel (primary) and Railway (alternative), with TursoDB as the distributed database and Inngest for workflow orchestration.
 
 ## 🚀 Quick Deployment Checklist
 
@@ -263,10 +263,202 @@ turso db tokens revoke mexc-sniper-bot-prod <old-token>
 - **Inngest Issues**: [Inngest Discord](https://www.inngest.com/discord)
 - **Application Issues**: Check project GitHub issues
 
+## 🚂 Alternative Deployment: Railway
+
+Railway provides an alternative deployment platform with built-in database support and easier container-based deployments.
+
+### Railway Setup
+
+1. **Create Railway Account**: [railway.app](https://railway.app)
+
+2. **Deploy from GitHub**:
+   ```bash
+   # Install Railway CLI
+   npm install -g @railway/cli
+   
+   # Login to Railway
+   railway login
+   
+   # Initialize project
+   railway init
+   
+   # Link to existing project
+   railway link
+   ```
+
+3. **Configure Environment Variables**:
+   ```bash
+   # Set production variables
+   railway variables set TURSO_DATABASE_URL="libsql://your-database-url.turso.io"
+   railway variables set TURSO_AUTH_TOKEN="your-auth-token"
+   railway variables set OPENAI_API_KEY="sk-xxxxx"
+   railway variables set NODE_ENV="production"
+   ```
+
+4. **Deploy**:
+   ```bash
+   # Deploy to Railway
+   railway up
+   
+   # Or use GitHub auto-deploy
+   git push origin main
+   ```
+
+### Railway-Specific Configuration
+
+Create `railway.json`:
+```json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm run build"
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
+```
+
+### Railway Advantages
+
+- **Persistent Containers**: Better for long-running processes
+- **Built-in Monitoring**: Comprehensive logs and metrics
+- **Easy Rollbacks**: One-click deployment rollbacks
+- **Database Add-ons**: Optional PostgreSQL/Redis support
+- **Custom Domains**: Free SSL certificates
+
+### Railway + TursoDB Integration
+
+```bash
+# Configure TursoDB for Railway
+railway variables set DATABASE_PROVIDER="turso"
+railway variables set TURSO_DATABASE_URL="libsql://your-db.turso.io"
+railway variables set TURSO_AUTH_TOKEN="your-token"
+
+# Deploy with TursoDB
+railway up
+```
+
+## 🌍 TursoDB Best Practices
+
+### Global Distribution
+
+1. **Choose Strategic Locations**:
+   ```bash
+   # Create primary database
+   turso db create mexc-sniper-prod --location iad1
+   
+   # Add read replicas
+   turso db replicate mexc-sniper-prod sin1  # Singapore
+   turso db replicate mexc-sniper-prod fra1  # Frankfurt
+   turso db replicate mexc-sniper-prod syd1  # Sydney
+   ```
+
+2. **Connection String Configuration**:
+   ```typescript
+   // Use location hints for optimal routing
+   const dbUrl = process.env.TURSO_DATABASE_URL + "?location_hint=auto";
+   ```
+
+### Performance Optimization
+
+1. **Connection Pooling**:
+   ```typescript
+   // drizzle.config.ts
+   export default {
+     connection: {
+       url: process.env.TURSO_DATABASE_URL,
+       authToken: process.env.TURSO_AUTH_TOKEN,
+       // Enable connection pooling
+       maxConnections: 10,
+       idleTimeout: 30
+     }
+   };
+   ```
+
+2. **Query Optimization**:
+   - Use indexes for frequently queried columns
+   - Batch operations when possible
+   - Implement query result caching
+
+### Monitoring & Maintenance
+
+1. **Database Metrics**:
+   ```bash
+   # Check database stats
+   turso db show mexc-sniper-prod --stats
+   
+   # Monitor replication lag
+   turso db show mexc-sniper-prod --replicas
+   ```
+
+2. **Backup Strategy**:
+   ```bash
+   # Create backup
+   turso db backup create mexc-sniper-prod
+   
+   # List backups
+   turso db backup list mexc-sniper-prod
+   
+   # Restore from backup
+   turso db backup restore mexc-sniper-prod --backup-id <id>
+   ```
+
 ## 🔐 Security Notes
 
 - Never commit API keys to git
-- Use Vercel environment variables for all secrets
+- Use platform environment variables for all secrets
 - Rotate API keys regularly
-- Enable Vercel Deployment Protection for production
+- Enable deployment protection for production
 - Use different TursoDB databases for staging/production
+- Implement IP allowlisting for database access
+- Enable audit logging for compliance
+
+## 📊 Production Monitoring
+
+### Comprehensive Monitoring Stack
+
+1. **Application Monitoring**:
+   - Vercel Analytics (automatic)
+   - Railway Metrics (built-in)
+   - Custom OpenTelemetry integration
+
+2. **Database Monitoring**:
+   - TursoDB Dashboard
+   - Query performance tracking
+   - Replication health checks
+
+3. **Workflow Monitoring**:
+   - Inngest Dashboard
+   - Function execution logs
+   - Error tracking and alerts
+
+4. **AI Agent Monitoring**:
+   - Token usage tracking
+   - Response time metrics
+   - Success rate monitoring
+
+### Alerting Setup
+
+```typescript
+// Example alert configuration
+const alerts = {
+  database: {
+    connectionFailure: "critical",
+    highLatency: "warning",
+    replicationLag: "warning"
+  },
+  agents: {
+    apiFailure: "critical",
+    highTokenUsage: "warning",
+    lowSuccessRate: "warning"
+  },
+  trading: {
+    executionFailure: "critical",
+    priceSlippage: "warning"
+  }
+};
+```

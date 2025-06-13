@@ -260,11 +260,44 @@ This project uses modern TypeScript development tools:
 
 The project supports two database backends:
 - **SQLite** (default) - Local development database
-- **TursoDB** - Edge-hosted distributed database with SQLite compatibility
+- **TursoDB** - Edge-hosted distributed database with SQLite compatibility and global replication
 
-To switch to TursoDB:
-1. Run `bun run setup:turso` to configure TursoDB
-2. Set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` in your `.env.local` file
+#### TursoDB Features:
+- **Global Edge Distribution**: Automatic replication to 30+ locations worldwide
+- **SQLite Compatibility**: Drop-in replacement with enhanced features
+- **Low Latency**: <10ms reads from edge locations
+- **Automatic Backups**: Point-in-time recovery
+- **Built-in Analytics**: Query performance monitoring
+
+#### Setting up TursoDB:
+```bash
+# Quick setup
+bun run setup:turso
+
+# Manual setup
+turso auth login
+turso db create mexc-sniper-bot --location iad1
+turso db tokens create mexc-sniper-bot
+
+# Add to .env.local
+TURSO_DATABASE_URL=libsql://your-database.turso.io
+TURSO_AUTH_TOKEN=your-auth-token
+```
+
+#### Database Migration Commands:
+```bash
+# Generate migrations
+bun run db:generate
+
+# Apply migrations (handles existing tables gracefully)
+bun run db:migrate:safe
+
+# Check database health
+bun run db:check
+
+# Open database studio
+bun run db:studio
+```
 
 ## Project Overview
 

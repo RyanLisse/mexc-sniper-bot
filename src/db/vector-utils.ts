@@ -1,0 +1,330 @@
+import { sql, eq } from "drizzle-orm";
+import { db, executeWithRetry } from "./index";
+import { patternEmbeddings, patternSimilarityCache, type NewPatternEmbedding } from "./schema";
+
+// Vector similarity functions for SQLite/Turso
+export class VectorUtils {
+  /**
+   * Calculate cosine similarity between two embeddings
+   * Note: For SQLite compatibility, we calculate this in JavaScript
+   * In production with Turso vector extension, this could be done in SQL
+   */
+  static calculateCosineSimilarity(embedding1: number[], embedding2: number[]): number {
+    if (embedding1.length !== embedding2.length) {
+      throw new Error("Embeddings must have the same dimension");
+    }
+
+    let dotProduct = 0;
+    let norm1 = 0;
+    let norm2 = 0;
+
+    for (let i = 0; i < embedding1.length; i++) {
+      dotProduct += embedding1[i] * embedding2[i];
+      norm1 += embedding1[i] * embedding1[i];
+      norm2 += embedding2[i] * embedding2[i];
+    }
+
+    norm1 = Math.sqrt(norm1);
+    norm2 = Math.sqrt(norm2);
+
+    if (norm1 === 0 || norm2 === 0) {
+      return 0;
+    }
+
+    return dotProduct / (norm1 * norm2);
+  }
+
+  /**
+   * Calculate Euclidean distance between two embeddings
+   */
+  static calculateEuclideanDistance(embedding1: number[], embedding2: number[]): number {
+    if (embedding1.length !== embedding2.length) {
+      throw new Error("Embeddings must have the same dimension");
+    }
+
+    let sum = 0;
+    for (let i = 0; i < embedding1.length; i++) {
+      const diff = embedding1[i] - embedding2[i];
+      sum += diff * diff;
+    }
+
+    return Math.sqrt(sum);
+  }
+
+  /**
+   * Store a pattern embedding in the database
+   */
+  static async storePatternEmbedding(pattern: Omit<NewPatternEmbedding, "embedding"> & { embedding: number[] }) {
+    return executeWithRetry(async () => {
+      const embeddingJson = JSON.stringify(pattern.embedding);
+      
+      await db.insert(patternEmbeddings).values({
+        ...pattern,
+        embedding: embeddingJson,
+        discoveredAt: new Date(),
+        lastSeenAt: new Date(),
+      });
+    }, "Store pattern embedding");
+  }
+
+  /**
+   * Find similar patterns using vector similarity
+   */
+  static async findSimilarPatterns(
+    embedding: number[],
+    options: {
+      limit?: number;
+      threshold?: number;
+      patternType?: string;
+      symbolName?: string;
+    } = {}
+  ) {
+    const { limit = 10, threshold = 0.85, patternType, symbolName } = options;
+
+    return executeWithRetry(async () => {
+      // Build query conditions
+      const conditions = [];
+      if (patternType) conditions.push(sql`pattern_type = ${patternType}`);
+      if (symbolName) conditions.push(sql`symbol_name = ${symbolName}`);
+      conditions.push(sql`is_active = 1`);
+
+      // Fetch candidates
+      const query = db
+        .select()
+        .from(patternEmbeddings)
+        .where(sql`${sql.join(conditions, sql` AND `)}`)
+        .limit(100); // Fetch more candidates for client-side filtering
+
+      const candidates = await query;
+
+      // Calculate similarities client-side
+      const results = candidates
+        .map((candidate) => {
+          const candidateEmbedding = JSON.parse(candidate.embedding) as number[];
+          const similarity = this.calculateCosineSimilarity(embedding, candidateEmbedding);
+          const distance = this.calculateEuclideanDistance(embedding, candidateEmbedding);
+
+          return {
+            ...candidate,
+            similarity,
+            distance,
+          };
+        })
+        .filter((result) => result.similarity >= threshold)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, limit);
+
+      return results;
+    }, "Find similar patterns");
+  }
+
+  /**
+   * Cache similarity between two patterns
+   */
+  static async cacheSimilarity(
+    patternId1: string,
+    patternId2: string,
+    cosineSimilarity: number,
+    euclideanDistance: number,
+    cacheHours: number = 24
+  ) {
+    return executeWithRetry(async () => {
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + cacheHours * 60 * 60 * 1000);
+
+      // Ensure consistent ordering for the cache
+      const [id1, id2] = [patternId1, patternId2].sort();
+
+      await db.insert(patternSimilarityCache).values({
+        patternId1: id1,
+        patternId2: id2,
+        cosineSimilarity,
+        euclideanDistance,
+        calculatedAt: now,
+        expiresAt,
+      }).onConflictDoUpdate({
+        target: [patternSimilarityCache.patternId1, patternSimilarityCache.patternId2],
+        set: {
+          cosineSimilarity,
+          euclideanDistance,
+          calculatedAt: now,
+          expiresAt,
+        },
+      });
+    }, "Cache pattern similarity");
+  }
+
+  /**
+   * Get cached similarity between two patterns
+   */
+  static async getCachedSimilarity(patternId1: string, patternId2: string) {
+    return executeWithRetry(async () => {
+      const now = new Date();
+      const [id1, id2] = [patternId1, patternId2].sort();
+
+      const result = await db
+        .select()
+        .from(patternSimilarityCache)
+        .where(
+          sql`pattern_id_1 = ${id1} AND pattern_id_2 = ${id2} AND expires_at > ${now}`
+        )
+        .limit(1);
+
+      return result[0] || null;
+    }, "Get cached similarity");
+  }
+
+  /**
+   * Clean up expired cache entries
+   */
+  static async cleanupExpiredCache() {
+    return executeWithRetry(async () => {
+      const now = new Date();
+      
+      await db
+        .delete(patternSimilarityCache)
+        .where(sql`${patternSimilarityCache.expiresAt} <= ${now}`);
+
+      return 0; // SQLite doesn't return count for deletes
+    }, "Cleanup expired cache");
+  }
+
+  /**
+   * Update pattern performance metrics
+   */
+  static async updatePatternMetrics(
+    patternId: string,
+    metrics: {
+      occurrences?: number;
+      successRate?: number;
+      avgProfit?: number;
+      truePositive?: boolean;
+      falsePositive?: boolean;
+    }
+  ) {
+    return executeWithRetry(async () => {
+      const updates: any = {
+        lastSeenAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      if (metrics.occurrences !== undefined) {
+        updates.occurrences = sql`occurrences + ${metrics.occurrences}`;
+      }
+
+      if (metrics.successRate !== undefined) {
+        updates.successRate = metrics.successRate;
+      }
+
+      if (metrics.avgProfit !== undefined) {
+        updates.avgProfit = metrics.avgProfit;
+      }
+
+      if (metrics.truePositive) {
+        updates.truePositives = sql`true_positives + 1`;
+      }
+
+      if (metrics.falsePositive) {
+        updates.falsePositives = sql`false_positives + 1`;
+      }
+
+      await db
+        .update(patternEmbeddings)
+        .set(updates)
+        .where(sql`pattern_id = ${patternId}`);
+    }, "Update pattern metrics");
+  }
+
+  /**
+   * Get pattern by ID with parsed embedding
+   */
+  static async getPattern(patternId: string) {
+    return executeWithRetry(async () => {
+      const result = await db
+        .select()
+        .from(patternEmbeddings)
+        .where(sql`pattern_id = ${patternId}`)
+        .limit(1);
+
+      if (result[0]) {
+        return {
+          ...result[0],
+          embedding: JSON.parse(result[0].embedding) as number[],
+        };
+      }
+
+      return null;
+    }, "Get pattern");
+  }
+
+  /**
+   * Batch similarity search for multiple embeddings
+   */
+  static async batchSimilaritySearch(
+    embeddings: { id: string; embedding: number[] }[],
+    options: {
+      limit?: number;
+      threshold?: number;
+      useCache?: boolean;
+    } = {}
+  ) {
+    const { limit = 5, threshold = 0.85, useCache = true } = options;
+    const results: Record<string, any[]> = {};
+
+    for (const { id, embedding } of embeddings) {
+      // Check cache first if enabled
+      if (useCache) {
+        const cachedResults = [];
+        const patterns = await db
+          .select()
+          .from(patternEmbeddings)
+          .where(eq(patternEmbeddings.isActive, true))
+          .limit(20);
+
+        for (const pattern of patterns) {
+          const cached = await this.getCachedSimilarity(id, pattern.patternId);
+          if (cached && cached.cosineSimilarity >= threshold) {
+            cachedResults.push({
+              patternId: pattern.patternId,
+              similarity: cached.cosineSimilarity,
+              distance: cached.euclideanDistance,
+              fromCache: true,
+            });
+          }
+        }
+
+        if (cachedResults.length >= limit) {
+          results[id] = cachedResults
+            .sort((a, b) => b.similarity - a.similarity)
+            .slice(0, limit);
+          continue;
+        }
+      }
+
+      // Perform similarity search
+      const similarPatterns = await this.findSimilarPatterns(embedding, {
+        limit,
+        threshold,
+      });
+
+      // Cache results for future use
+      if (useCache) {
+        for (const similar of similarPatterns) {
+          await this.cacheSimilarity(
+            id,
+            similar.patternId,
+            similar.similarity,
+            similar.distance
+          );
+        }
+      }
+
+      results[id] = similarPatterns;
+    }
+
+    return results;
+  }
+}
+
+// Export convenience functions
+export const vectorUtils = VectorUtils;

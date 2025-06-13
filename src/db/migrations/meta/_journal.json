@@ -43,6 +43,13 @@
       "when": 1749818000000,
       "tag": "0005_fix_foreign_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1749827579620,
+      "tag": "0006_rainy_blink",
+      "breakpoints": true
     }
   ]
 }

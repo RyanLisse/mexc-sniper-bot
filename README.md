@@ -53,7 +53,7 @@ Revolutionary TypeScript-based system with specialized AI agents:
 - **Frontend**: Next.js 15 with TypeScript and React 19
 - **Agent System**: Pure TypeScript with OpenAI GPT-4 integration
 - **Workflows**: Inngest for reliable background task orchestration
-- **Database**: Drizzle ORM with SQLite/TursoDB support
+- **Database**: Drizzle ORM with TursoDB (distributed SQLite) for global edge performance
 - **Data Management**: TanStack Query for real-time data fetching and caching
 - **Deployment**: Vercel with automatic scaling and edge optimization
 
@@ -92,11 +92,13 @@ MEXC_API_KEY=your_mexc_api_key
 MEXC_SECRET_KEY=your_mexc_secret_key
 MEXC_BASE_URL=https://api.mexc.com
 
-# Optional - Database (defaults to SQLite)
+# Database Configuration
+# Option 1: Local SQLite (default for development)
 DATABASE_URL=sqlite:///./mexc_sniper.db
-# For TursoDB: uncomment and configure
-# TURSO_DATABASE_URL=your_turso_database_url
-# TURSO_AUTH_TOKEN=your_turso_auth_token
+
+# Option 2: TursoDB (recommended for production)
+# TURSO_DATABASE_URL=libsql://your-database.turso.io
+# TURSO_AUTH_TOKEN=your-auth-token
 
 # Optional - Workflow Orchestration (auto-generated if not provided)
 # INNGEST_SIGNING_KEY=your_signing_key
@@ -249,22 +251,53 @@ The system uses Drizzle ORM with the following key tables:
 
 ## 🚀 Deployment
 
-### Deploy to Vercel
+### Primary: Deploy to Vercel
 
 1. Push your code to GitHub
 2. Import project in Vercel Dashboard
-3. Add environment variables
+3. Add environment variables (including TursoDB credentials)
 4. Deploy
 
-**Important**: The system works entirely on Vercel's serverless infrastructure.
+**Important**: The system is optimized for Vercel's edge infrastructure with TursoDB for global low-latency data access.
+
+### Alternative: Deploy to Railway
+
+Railway offers persistent containers and built-in monitoring:
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Deploy
+railway login
+railway init
+railway up
+```
+
+### Database Setup with TursoDB
+
+```bash
+# Install Turso CLI
+curl -sSfL https://get.tur.so/install.sh | bash
+
+# Setup production database
+turso auth login
+turso db create mexc-sniper-prod --location iad1
+turso db tokens create mexc-sniper-prod
+```
 
 ### Manual Deployment
 
 ```bash
-# Build and deploy
+# Build and deploy to Vercel
 make build
 vercel --prod
+
+# Or deploy to Railway
+railway up
 ```
+
+For detailed deployment instructions, see [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)
 
 ## 📚 Documentation
 
