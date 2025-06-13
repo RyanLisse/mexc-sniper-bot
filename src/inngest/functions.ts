@@ -1,5 +1,7 @@
 import { MexcOrchestrator } from "../mexc-agents/orchestrator";
 import { inngest } from "./client";
+// Import safety functions
+import { safetyFunctions } from "./safety-functions";
 
 // Inngest step interface
 interface InngestStep {
@@ -485,3 +487,14 @@ export const createMexcTradingStrategy = inngest.createFunction(
     };
   }
 );
+
+// Export all functions for Inngest registration
+export const functions = [
+  // Core trading workflows
+  pollMexcCalendar,
+  watchMexcSymbol,
+  analyzeMexcPatterns,
+  createMexcTradingStrategy,
+  // Safety system workflows
+  ...safetyFunctions,
+];

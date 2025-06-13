@@ -74,6 +74,44 @@ export const mexcWorkflowPresets = {
   },
 };
 
+// Safety agents and types
+export {
+  SafetyBaseAgent,
+  type SafetyConfig,
+  type SafetyEvent,
+  type SafetyMetrics,
+} from "./safety-base-agent";
+export {
+  SimulationAgent,
+  type SimulationSession,
+  type SimulatedTrade,
+  type SimulationConfig,
+} from "./simulation-agent";
+export {
+  RiskManagerAgent,
+  type RiskMetrics,
+  type TradeRiskAssessment,
+  type CircuitBreaker,
+  type RiskEvent,
+} from "./risk-manager-agent";
+export {
+  ReconciliationAgent,
+  type ReconciliationReport,
+  type Position,
+  type BalanceSnapshot,
+} from "./reconciliation-agent";
+export {
+  ErrorRecoveryAgent,
+  type SystemHealth,
+  type ErrorPattern,
+  type ErrorIncident,
+} from "./error-recovery-agent";
+
+// Agent Manager
+export {
+  AgentManager,
+} from "./agent-manager";
+
 // MEXC event names for Inngest workflows
 export const mexcEvents = {
   calendarPoll: "mexc/calendar.poll.requested",

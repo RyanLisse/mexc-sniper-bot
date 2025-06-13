@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "9950b31f-27d4-4157-b085-cd9dc6ddf52d",
-  "prevId": "686ab0a9-f69e-43ad-990d-2630c4bcb70a",
+  "id": "f1cb2687-fa21-4a5b-8714-053897228378",
+  "prevId": "9950b31f-27d4-4157-b085-cd9dc6ddf52d",
   "tables": {
     "account": {
       "name": "account",
@@ -107,8 +107,12 @@
           "name": "account_userId_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": ["userId"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -197,7 +201,10 @@
       "indexes": {
         "api_credentials_user_provider_idx": {
           "name": "api_credentials_user_provider_idx",
-          "columns": ["user_id", "provider"],
+          "columns": [
+            "user_id",
+            "provider"
+          ],
           "isUnique": false
         }
       },
@@ -206,12 +213,232 @@
           "name": "api_credentials_user_id_user_id_fk",
           "tableFrom": "api_credentials",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "error_incidents": {
+      "name": "error_incidents",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "severity": {
+          "name": "severity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "service": {
+          "name": "service",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "stack_trace": {
+          "name": "stack_trace",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "context": {
+          "name": "context",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "first_occurrence": {
+          "name": "first_occurrence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "last_occurrence": {
+          "name": "last_occurrence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "occurrence_count": {
+          "name": "occurrence_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "recovered": {
+          "name": "recovered",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "recovery_attempts": {
+          "name": "recovery_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "resolution": {
+          "name": "resolution",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "prevention_strategy": {
+          "name": "prevention_strategy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "last_recovery_attempt": {
+          "name": "last_recovery_attempt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "average_recovery_time": {
+          "name": "average_recovery_time",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "successful_recoveries": {
+          "name": "successful_recoveries",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "failed_recoveries": {
+          "name": "failed_recoveries",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {
+        "error_incidents_type_idx": {
+          "name": "error_incidents_type_idx",
+          "columns": [
+            "type"
+          ],
+          "isUnique": false
+        },
+        "error_incidents_severity_idx": {
+          "name": "error_incidents_severity_idx",
+          "columns": [
+            "severity"
+          ],
+          "isUnique": false
+        },
+        "error_incidents_service_idx": {
+          "name": "error_incidents_service_idx",
+          "columns": [
+            "service"
+          ],
+          "isUnique": false
+        },
+        "error_incidents_first_occurrence_idx": {
+          "name": "error_incidents_first_occurrence_idx",
+          "columns": [
+            "first_occurrence"
+          ],
+          "isUnique": false
+        },
+        "error_incidents_last_occurrence_idx": {
+          "name": "error_incidents_last_occurrence_idx",
+          "columns": [
+            "last_occurrence"
+          ],
+          "isUnique": false
+        },
+        "error_incidents_recovered_idx": {
+          "name": "error_incidents_recovered_idx",
+          "columns": [
+            "recovered"
+          ],
+          "isUnique": false
+        },
+        "error_incidents_service_severity_idx": {
+          "name": "error_incidents_service_severity_idx",
+          "columns": [
+            "service",
+            "severity"
+          ],
+          "isUnique": false
+        },
+        "error_incidents_type_occurrence_idx": {
+          "name": "error_incidents_type_occurrence_idx",
+          "columns": [
+            "type",
+            "last_occurrence"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -399,42 +626,64 @@
       "indexes": {
         "execution_history_user_idx": {
           "name": "execution_history_user_idx",
-          "columns": ["user_id"],
+          "columns": [
+            "user_id"
+          ],
           "isUnique": false
         },
         "execution_history_snipe_target_idx": {
           "name": "execution_history_snipe_target_idx",
-          "columns": ["snipe_target_id"],
+          "columns": [
+            "snipe_target_id"
+          ],
           "isUnique": false
         },
         "execution_history_symbol_idx": {
           "name": "execution_history_symbol_idx",
-          "columns": ["symbol_name"],
+          "columns": [
+            "symbol_name"
+          ],
           "isUnique": false
         },
         "execution_history_status_idx": {
           "name": "execution_history_status_idx",
-          "columns": ["status"],
+          "columns": [
+            "status"
+          ],
           "isUnique": false
         },
         "execution_history_executed_at_idx": {
           "name": "execution_history_executed_at_idx",
-          "columns": ["executed_at"],
+          "columns": [
+            "executed_at"
+          ],
           "isUnique": false
         },
         "execution_history_user_symbol_time_idx": {
           "name": "execution_history_user_symbol_time_idx",
-          "columns": ["user_id", "symbol_name", "executed_at"],
+          "columns": [
+            "user_id",
+            "symbol_name",
+            "executed_at"
+          ],
           "isUnique": false
         },
         "execution_history_user_status_action_idx": {
           "name": "execution_history_user_status_action_idx",
-          "columns": ["user_id", "status", "action"],
+          "columns": [
+            "user_id",
+            "status",
+            "action"
+          ],
           "isUnique": false
         },
         "execution_history_snipe_target_action_status_idx": {
           "name": "execution_history_snipe_target_action_status_idx",
-          "columns": ["snipe_target_id", "action", "status"],
+          "columns": [
+            "snipe_target_id",
+            "action",
+            "status"
+          ],
           "isUnique": false
         }
       },
@@ -443,8 +692,12 @@
           "name": "execution_history_user_id_user_id_fk",
           "tableFrom": "execution_history",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -452,8 +705,12 @@
           "name": "execution_history_snipe_target_id_snipe_targets_id_fk",
           "tableFrom": "execution_history",
           "tableTo": "snipe_targets",
-          "columnsFrom": ["snipe_target_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "snipe_target_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -609,27 +866,585 @@
       "indexes": {
         "monitored_listings_vcoin_id_unique": {
           "name": "monitored_listings_vcoin_id_unique",
-          "columns": ["vcoin_id"],
+          "columns": [
+            "vcoin_id"
+          ],
           "isUnique": true
         },
         "monitored_listings_vcoin_id_idx": {
           "name": "monitored_listings_vcoin_id_idx",
-          "columns": ["vcoin_id"],
+          "columns": [
+            "vcoin_id"
+          ],
           "isUnique": false
         },
         "monitored_listings_status_idx": {
           "name": "monitored_listings_status_idx",
-          "columns": ["status"],
+          "columns": [
+            "status"
+          ],
           "isUnique": false
         },
         "monitored_listings_launch_time_idx": {
           "name": "monitored_listings_launch_time_idx",
-          "columns": ["first_open_time"],
+          "columns": [
+            "first_open_time"
+          ],
           "isUnique": false
         },
         "monitored_listings_ready_pattern_idx": {
           "name": "monitored_listings_ready_pattern_idx",
-          "columns": ["has_ready_pattern"],
+          "columns": [
+            "has_ready_pattern"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "position_snapshots": {
+      "name": "position_snapshots",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "snapshot_id": {
+          "name": "snapshot_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "symbol": {
+          "name": "symbol",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "average_price": {
+          "name": "average_price",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "market_value": {
+          "name": "market_value",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unrealized_pnl": {
+          "name": "unrealized_pnl",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "total_balance": {
+          "name": "total_balance",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "available_balance": {
+          "name": "available_balance",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "locked_balance": {
+          "name": "locked_balance",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "snapshot_type": {
+          "name": "snapshot_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reconciliation_id": {
+          "name": "reconciliation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {
+        "position_snapshots_snapshot_id_unique": {
+          "name": "position_snapshots_snapshot_id_unique",
+          "columns": [
+            "snapshot_id"
+          ],
+          "isUnique": true
+        },
+        "position_snapshots_user_id_idx": {
+          "name": "position_snapshots_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "position_snapshots_snapshot_id_idx": {
+          "name": "position_snapshots_snapshot_id_idx",
+          "columns": [
+            "snapshot_id"
+          ],
+          "isUnique": false
+        },
+        "position_snapshots_source_idx": {
+          "name": "position_snapshots_source_idx",
+          "columns": [
+            "source"
+          ],
+          "isUnique": false
+        },
+        "position_snapshots_symbol_idx": {
+          "name": "position_snapshots_symbol_idx",
+          "columns": [
+            "symbol"
+          ],
+          "isUnique": false
+        },
+        "position_snapshots_timestamp_idx": {
+          "name": "position_snapshots_timestamp_idx",
+          "columns": [
+            "timestamp"
+          ],
+          "isUnique": false
+        },
+        "position_snapshots_reconciliation_id_idx": {
+          "name": "position_snapshots_reconciliation_id_idx",
+          "columns": [
+            "reconciliation_id"
+          ],
+          "isUnique": false
+        },
+        "position_snapshots_source_timestamp_idx": {
+          "name": "position_snapshots_source_timestamp_idx",
+          "columns": [
+            "source",
+            "timestamp"
+          ],
+          "isUnique": false
+        },
+        "position_snapshots_user_symbol_idx": {
+          "name": "position_snapshots_user_symbol_idx",
+          "columns": [
+            "user_id",
+            "symbol"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "position_snapshots_user_id_user_id_fk": {
+          "name": "position_snapshots_user_id_user_id_fk",
+          "tableFrom": "position_snapshots",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "reconciliation_reports": {
+      "name": "reconciliation_reports",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'default'"
+        },
+        "start_time": {
+          "name": "start_time",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "end_time": {
+          "name": "end_time",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "total_checks": {
+          "name": "total_checks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "discrepancies_found": {
+          "name": "discrepancies_found",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "critical_issues": {
+          "name": "critical_issues",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "auto_resolved": {
+          "name": "auto_resolved",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "manual_review_required": {
+          "name": "manual_review_required",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "overall_status": {
+          "name": "overall_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "discrepancies": {
+          "name": "discrepancies",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recommendations": {
+          "name": "recommendations",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "triggered_by": {
+          "name": "triggered_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'scheduled'"
+        },
+        "processing_time_ms": {
+          "name": "processing_time_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {
+        "reconciliation_reports_user_id_idx": {
+          "name": "reconciliation_reports_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "reconciliation_reports_start_time_idx": {
+          "name": "reconciliation_reports_start_time_idx",
+          "columns": [
+            "start_time"
+          ],
+          "isUnique": false
+        },
+        "reconciliation_reports_overall_status_idx": {
+          "name": "reconciliation_reports_overall_status_idx",
+          "columns": [
+            "overall_status"
+          ],
+          "isUnique": false
+        },
+        "reconciliation_reports_critical_issues_idx": {
+          "name": "reconciliation_reports_critical_issues_idx",
+          "columns": [
+            "critical_issues"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "risk_events": {
+      "name": "risk_events",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'default'"
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "severity": {
+          "name": "severity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "circuit_breaker_id": {
+          "name": "circuit_breaker_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "total_exposure": {
+          "name": "total_exposure",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "daily_pnl": {
+          "name": "daily_pnl",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "open_positions": {
+          "name": "open_positions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "risk_percentage": {
+          "name": "risk_percentage",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "volatility_index": {
+          "name": "volatility_index",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "action_taken": {
+          "name": "action_taken",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "action_details": {
+          "name": "action_details",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resolved": {
+          "name": "resolved",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "resolved_at": {
+          "name": "resolved_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "resolution": {
+          "name": "resolution",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {
+        "risk_events_user_id_idx": {
+          "name": "risk_events_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "risk_events_event_type_idx": {
+          "name": "risk_events_event_type_idx",
+          "columns": [
+            "event_type"
+          ],
+          "isUnique": false
+        },
+        "risk_events_severity_idx": {
+          "name": "risk_events_severity_idx",
+          "columns": [
+            "severity"
+          ],
+          "isUnique": false
+        },
+        "risk_events_timestamp_idx": {
+          "name": "risk_events_timestamp_idx",
+          "columns": [
+            "timestamp"
+          ],
+          "isUnique": false
+        },
+        "risk_events_resolved_idx": {
+          "name": "risk_events_resolved_idx",
+          "columns": [
+            "resolved"
+          ],
+          "isUnique": false
+        },
+        "risk_events_user_severity_idx": {
+          "name": "risk_events_user_severity_idx",
+          "columns": [
+            "user_id",
+            "severity"
+          ],
+          "isUnique": false
+        },
+        "risk_events_type_timestamp_idx": {
+          "name": "risk_events_type_timestamp_idx",
+          "columns": [
+            "event_type",
+            "timestamp"
+          ],
           "isUnique": false
         }
       },
@@ -703,7 +1518,9 @@
       "indexes": {
         "session_token_unique": {
           "name": "session_token_unique",
-          "columns": ["token"],
+          "columns": [
+            "token"
+          ],
           "isUnique": true
         }
       },
@@ -712,8 +1529,376 @@
           "name": "session_userId_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": ["userId"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "simulation_sessions": {
+      "name": "simulation_sessions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_time": {
+          "name": "start_time",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "end_time": {
+          "name": "end_time",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "virtual_balance": {
+          "name": "virtual_balance",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "current_balance": {
+          "name": "current_balance",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "final_balance": {
+          "name": "final_balance",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "total_trades": {
+          "name": "total_trades",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "profit_loss": {
+          "name": "profit_loss",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "win_rate": {
+          "name": "win_rate",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "max_drawdown": {
+          "name": "max_drawdown",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "best_trade": {
+          "name": "best_trade",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "worst_trade": {
+          "name": "worst_trade",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
+        "trading_fees": {
+          "name": "trading_fees",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0.001
+        },
+        "slippage": {
+          "name": "slippage",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0.0005
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {
+        "simulation_sessions_user_id_idx": {
+          "name": "simulation_sessions_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "simulation_sessions_status_idx": {
+          "name": "simulation_sessions_status_idx",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        },
+        "simulation_sessions_start_time_idx": {
+          "name": "simulation_sessions_start_time_idx",
+          "columns": [
+            "start_time"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "simulation_sessions_user_id_user_id_fk": {
+          "name": "simulation_sessions_user_id_user_id_fk",
+          "tableFrom": "simulation_sessions",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "simulation_trades": {
+      "name": "simulation_trades",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "symbol": {
+          "name": "symbol",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "price": {
+          "name": "price",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fees": {
+          "name": "fees",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "strategy": {
+          "name": "strategy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "realized": {
+          "name": "realized",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "profit_loss": {
+          "name": "profit_loss",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "exit_price": {
+          "name": "exit_price",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "exit_timestamp": {
+          "name": "exit_timestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "slippage_percent": {
+          "name": "slippage_percent",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "market_impact_percent": {
+          "name": "market_impact_percent",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {
+        "simulation_trades_session_id_idx": {
+          "name": "simulation_trades_session_id_idx",
+          "columns": [
+            "session_id"
+          ],
+          "isUnique": false
+        },
+        "simulation_trades_symbol_idx": {
+          "name": "simulation_trades_symbol_idx",
+          "columns": [
+            "symbol"
+          ],
+          "isUnique": false
+        },
+        "simulation_trades_timestamp_idx": {
+          "name": "simulation_trades_timestamp_idx",
+          "columns": [
+            "timestamp"
+          ],
+          "isUnique": false
+        },
+        "simulation_trades_type_idx": {
+          "name": "simulation_trades_type_idx",
+          "columns": [
+            "type"
+          ],
+          "isUnique": false
+        },
+        "simulation_trades_realized_idx": {
+          "name": "simulation_trades_realized_idx",
+          "columns": [
+            "realized"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "simulation_trades_session_id_simulation_sessions_id_fk": {
+          "name": "simulation_trades_session_id_simulation_sessions_id_fk",
+          "tableFrom": "simulation_trades",
+          "tableTo": "simulation_sessions",
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -907,32 +2092,47 @@
       "indexes": {
         "snipe_targets_user_idx": {
           "name": "snipe_targets_user_idx",
-          "columns": ["user_id"],
+          "columns": [
+            "user_id"
+          ],
           "isUnique": false
         },
         "snipe_targets_status_idx": {
           "name": "snipe_targets_status_idx",
-          "columns": ["status"],
+          "columns": [
+            "status"
+          ],
           "isUnique": false
         },
         "snipe_targets_priority_idx": {
           "name": "snipe_targets_priority_idx",
-          "columns": ["priority"],
+          "columns": [
+            "priority"
+          ],
           "isUnique": false
         },
         "snipe_targets_execution_time_idx": {
           "name": "snipe_targets_execution_time_idx",
-          "columns": ["target_execution_time"],
+          "columns": [
+            "target_execution_time"
+          ],
           "isUnique": false
         },
         "snipe_targets_user_status_priority_idx": {
           "name": "snipe_targets_user_status_priority_idx",
-          "columns": ["user_id", "status", "priority"],
+          "columns": [
+            "user_id",
+            "status",
+            "priority"
+          ],
           "isUnique": false
         },
         "snipe_targets_status_execution_time_idx": {
           "name": "snipe_targets_status_execution_time_idx",
-          "columns": ["status", "target_execution_time"],
+          "columns": [
+            "status",
+            "target_execution_time"
+          ],
           "isUnique": false
         }
       },
@@ -941,12 +2141,196 @@
           "name": "snipe_targets_user_id_user_id_fk",
           "tableFrom": "snipe_targets",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "system_health_metrics": {
+      "name": "system_health_metrics",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "service": {
+          "name": "service",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "response_time": {
+          "name": "response_time",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "error_rate": {
+          "name": "error_rate",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "uptime": {
+          "name": "uptime",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "throughput": {
+          "name": "throughput",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "cpu_usage": {
+          "name": "cpu_usage",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "memory_usage": {
+          "name": "memory_usage",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "disk_usage": {
+          "name": "disk_usage",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "total_errors": {
+          "name": "total_errors",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "critical_errors": {
+          "name": "critical_errors",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "circuit_breaker_open": {
+          "name": "circuit_breaker_open",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "circuit_breaker_failures": {
+          "name": "circuit_breaker_failures",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "alerts_active": {
+          "name": "alerts_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch())"
+        }
+      },
+      "indexes": {
+        "system_health_metrics_service_idx": {
+          "name": "system_health_metrics_service_idx",
+          "columns": [
+            "service"
+          ],
+          "isUnique": false
+        },
+        "system_health_metrics_status_idx": {
+          "name": "system_health_metrics_status_idx",
+          "columns": [
+            "status"
+          ],
+          "isUnique": false
+        },
+        "system_health_metrics_timestamp_idx": {
+          "name": "system_health_metrics_timestamp_idx",
+          "columns": [
+            "timestamp"
+          ],
+          "isUnique": false
+        },
+        "system_health_metrics_service_timestamp_idx": {
+          "name": "system_health_metrics_service_timestamp_idx",
+          "columns": [
+            "service",
+            "timestamp"
+          ],
+          "isUnique": false
+        },
+        "system_health_metrics_service_status_idx": {
+          "name": "system_health_metrics_service_status_idx",
+          "columns": [
+            "service",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -1106,47 +2490,67 @@
       "indexes": {
         "transaction_locks_lock_id_unique": {
           "name": "transaction_locks_lock_id_unique",
-          "columns": ["lock_id"],
+          "columns": [
+            "lock_id"
+          ],
           "isUnique": true
         },
         "transaction_locks_idempotency_key_unique": {
           "name": "transaction_locks_idempotency_key_unique",
-          "columns": ["idempotency_key"],
+          "columns": [
+            "idempotency_key"
+          ],
           "isUnique": true
         },
         "transaction_locks_resource_id_idx": {
           "name": "transaction_locks_resource_id_idx",
-          "columns": ["resource_id"],
+          "columns": [
+            "resource_id"
+          ],
           "isUnique": false
         },
         "transaction_locks_status_idx": {
           "name": "transaction_locks_status_idx",
-          "columns": ["status"],
+          "columns": [
+            "status"
+          ],
           "isUnique": false
         },
         "transaction_locks_expires_at_idx": {
           "name": "transaction_locks_expires_at_idx",
-          "columns": ["expires_at"],
+          "columns": [
+            "expires_at"
+          ],
           "isUnique": false
         },
         "transaction_locks_idempotency_key_idx": {
           "name": "transaction_locks_idempotency_key_idx",
-          "columns": ["idempotency_key"],
+          "columns": [
+            "idempotency_key"
+          ],
           "isUnique": false
         },
         "transaction_locks_owner_id_idx": {
           "name": "transaction_locks_owner_id_idx",
-          "columns": ["owner_id"],
+          "columns": [
+            "owner_id"
+          ],
           "isUnique": false
         },
         "transaction_locks_resource_status_idx": {
           "name": "transaction_locks_resource_status_idx",
-          "columns": ["resource_id", "status"],
+          "columns": [
+            "resource_id",
+            "status"
+          ],
           "isUnique": false
         },
         "transaction_locks_owner_status_idx": {
           "name": "transaction_locks_owner_status_idx",
-          "columns": ["owner_id", "status"],
+          "columns": [
+            "owner_id",
+            "status"
+          ],
           "isUnique": false
         }
       },
@@ -1301,42 +2705,61 @@
       "indexes": {
         "transaction_queue_queue_id_unique": {
           "name": "transaction_queue_queue_id_unique",
-          "columns": ["queue_id"],
+          "columns": [
+            "queue_id"
+          ],
           "isUnique": true
         },
         "transaction_queue_resource_id_idx": {
           "name": "transaction_queue_resource_id_idx",
-          "columns": ["resource_id"],
+          "columns": [
+            "resource_id"
+          ],
           "isUnique": false
         },
         "transaction_queue_status_idx": {
           "name": "transaction_queue_status_idx",
-          "columns": ["status"],
+          "columns": [
+            "status"
+          ],
           "isUnique": false
         },
         "transaction_queue_priority_idx": {
           "name": "transaction_queue_priority_idx",
-          "columns": ["priority"],
+          "columns": [
+            "priority"
+          ],
           "isUnique": false
         },
         "transaction_queue_queued_at_idx": {
           "name": "transaction_queue_queued_at_idx",
-          "columns": ["queued_at"],
+          "columns": [
+            "queued_at"
+          ],
           "isUnique": false
         },
         "transaction_queue_idempotency_key_idx": {
           "name": "transaction_queue_idempotency_key_idx",
-          "columns": ["idempotency_key"],
+          "columns": [
+            "idempotency_key"
+          ],
           "isUnique": false
         },
         "transaction_queue_status_priority_idx": {
           "name": "transaction_queue_status_priority_idx",
-          "columns": ["status", "priority", "queued_at"],
+          "columns": [
+            "status",
+            "priority",
+            "queued_at"
+          ],
           "isUnique": false
         },
         "transaction_queue_resource_status_idx": {
           "name": "transaction_queue_resource_status_idx",
-          "columns": ["resource_id", "status"],
+          "columns": [
+            "resource_id",
+            "status"
+          ],
           "isUnique": false
         }
       },
@@ -1345,8 +2768,12 @@
           "name": "transaction_queue_lock_id_transaction_locks_lock_id_fk",
           "tableFrom": "transaction_queue",
           "tableTo": "transaction_locks",
-          "columnsFrom": ["lock_id"],
-          "columnsTo": ["lock_id"],
+          "columnsFrom": [
+            "lock_id"
+          ],
+          "columnsTo": [
+            "lock_id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1534,42 +2961,61 @@
       "indexes": {
         "transactions_user_idx": {
           "name": "transactions_user_idx",
-          "columns": ["user_id"],
+          "columns": [
+            "user_id"
+          ],
           "isUnique": false
         },
         "transactions_symbol_idx": {
           "name": "transactions_symbol_idx",
-          "columns": ["symbol_name"],
+          "columns": [
+            "symbol_name"
+          ],
           "isUnique": false
         },
         "transactions_status_idx": {
           "name": "transactions_status_idx",
-          "columns": ["status"],
+          "columns": [
+            "status"
+          ],
           "isUnique": false
         },
         "transactions_transaction_time_idx": {
           "name": "transactions_transaction_time_idx",
-          "columns": ["transaction_time"],
+          "columns": [
+            "transaction_time"
+          ],
           "isUnique": false
         },
         "transactions_type_idx": {
           "name": "transactions_type_idx",
-          "columns": ["transaction_type"],
+          "columns": [
+            "transaction_type"
+          ],
           "isUnique": false
         },
         "transactions_user_status_idx": {
           "name": "transactions_user_status_idx",
-          "columns": ["user_id", "status"],
+          "columns": [
+            "user_id",
+            "status"
+          ],
           "isUnique": false
         },
         "transactions_user_time_idx": {
           "name": "transactions_user_time_idx",
-          "columns": ["user_id", "transaction_time"],
+          "columns": [
+            "user_id",
+            "transaction_time"
+          ],
           "isUnique": false
         },
         "transactions_symbol_time_idx": {
           "name": "transactions_symbol_time_idx",
-          "columns": ["symbol_name", "transaction_time"],
+          "columns": [
+            "symbol_name",
+            "transaction_time"
+          ],
           "isUnique": false
         }
       },
@@ -1578,8 +3024,12 @@
           "name": "transactions_user_id_user_id_fk",
           "tableFrom": "transactions",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1587,8 +3037,12 @@
           "name": "transactions_snipe_target_id_snipe_targets_id_fk",
           "tableFrom": "transactions",
           "tableTo": "snipe_targets",
-          "columnsFrom": ["snipe_target_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "snipe_target_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1670,12 +3124,16 @@
       "indexes": {
         "user_email_unique": {
           "name": "user_email_unique",
-          "columns": ["email"],
+          "columns": [
+            "email"
+          ],
           "isUnique": true
         },
         "user_username_unique": {
           "name": "user_username_unique",
-          "columns": ["username"],
+          "columns": [
+            "username"
+          ],
           "isUnique": true
         }
       },
@@ -1871,12 +3329,16 @@
       "indexes": {
         "user_preferences_user_id_unique": {
           "name": "user_preferences_user_id_unique",
-          "columns": ["user_id"],
+          "columns": [
+            "user_id"
+          ],
           "isUnique": true
         },
         "user_preferences_user_id_idx": {
           "name": "user_preferences_user_id_idx",
-          "columns": ["user_id"],
+          "columns": [
+            "user_id"
+          ],
           "isUnique": false
         }
       },
@@ -1885,8 +3347,12 @@
           "name": "user_preferences_user_id_user_id_fk",
           "tableFrom": "user_preferences",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2037,27 +3503,37 @@
       "indexes": {
         "workflow_activity_activity_id_unique": {
           "name": "workflow_activity_activity_id_unique",
-          "columns": ["activity_id"],
+          "columns": [
+            "activity_id"
+          ],
           "isUnique": true
         },
         "workflow_activity_user_id_idx": {
           "name": "workflow_activity_user_id_idx",
-          "columns": ["user_id"],
+          "columns": [
+            "user_id"
+          ],
           "isUnique": false
         },
         "workflow_activity_activity_id_idx": {
           "name": "workflow_activity_activity_id_idx",
-          "columns": ["activity_id"],
+          "columns": [
+            "activity_id"
+          ],
           "isUnique": false
         },
         "workflow_activity_type_idx": {
           "name": "workflow_activity_type_idx",
-          "columns": ["type"],
+          "columns": [
+            "type"
+          ],
           "isUnique": false
         },
         "workflow_activity_timestamp_idx": {
           "name": "workflow_activity_timestamp_idx",
-          "columns": ["timestamp"],
+          "columns": [
+            "timestamp"
+          ],
           "isUnique": false
         }
       },
@@ -2184,7 +3660,9 @@
       "indexes": {
         "workflow_system_status_user_id_idx": {
           "name": "workflow_system_status_user_id_idx",
-          "columns": ["user_id"],
+          "columns": [
+            "user_id"
+          ],
           "isUnique": false
         }
       },

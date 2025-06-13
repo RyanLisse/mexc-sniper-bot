@@ -174,16 +174,18 @@ export function useMexcPatternDetection(vcoinId?: string) {
 export function useUpcomingLaunches() {
   const { data: calendar, ...rest } = useMexcCalendar();
 
-  const upcomingLaunches = Array.isArray(calendar) 
+  const upcomingLaunches = Array.isArray(calendar)
     ? calendar.filter((entry: CalendarEntry) => {
         try {
           const launchTime = new Date(entry.firstOpenTime);
           const now = new Date();
           const hours24 = 24 * 60 * 60 * 1000;
 
-          return launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours24;
+          return (
+            launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours24
+          );
         } catch (error) {
-          console.warn('Invalid date in calendar entry:', entry.firstOpenTime);
+          console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
           return false;
         }
       })
@@ -207,9 +209,11 @@ export function useReadyTargets() {
           const now = new Date();
           const hours4 = 4 * 60 * 60 * 1000;
 
-          return launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours4;
+          return (
+            launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours4
+          );
         } catch (error) {
-          console.warn('Invalid date in calendar entry:', entry.firstOpenTime);
+          console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
           return false;
         }
       })

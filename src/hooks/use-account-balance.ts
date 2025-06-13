@@ -39,7 +39,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
 
       return data.data;
     },
-    enabled: enabled && !!userId,
+    enabled: enabled,
     refetchInterval: refreshInterval,
     staleTime: 25000, // Consider data stale after 25 seconds
     retry: 3,

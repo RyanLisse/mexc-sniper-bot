@@ -1,9 +1,9 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { Input } from "@/src/components/ui/input";
 import { 
   Settings, 
   DollarSign, 
@@ -17,13 +17,14 @@ import {
   RotateCcw,
   Key,
   Bell,
-  Calendar
+  Calendar,
+  RefreshCw
 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/src/lib/auth-client";
-import { UserMenu } from "@/src/components/user-menu";
 import { useRouter } from "next/navigation";
+import { DashboardLayout } from "@/src/components/dashboard-layout";
 
 // TypeScript interfaces for configuration
 interface TradingConfig {
@@ -129,30 +130,9 @@ export default function ConfigPage() {
   // Get user info (middleware handles authentication protection)
   const { user, isLoading: authLoading } = useAuth();
 
-  // Don't render config while loading user info
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading user information...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Generate a simple user ID (in production, use proper authentication)
-  const getUserId = () => {
-    let userId = localStorage.getItem("mexc-user-id");
-    if (!userId) {
-      userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem("mexc-user-id", userId);
-    }
-    return userId;
-  };
-
   // Load config from database on mount
   useEffect(() => {
+    if (authLoading) return; // Skip loading if auth is still loading
     const loadConfig = async () => {
       try {
         const userId = getUserId();
@@ -246,7 +226,31 @@ export default function ConfigPage() {
     };
 
     loadConfig();
-  }, []);
+  }, [authLoading]);
+
+  // Generate a simple user ID (in production, use proper authentication)
+  const getUserId = () => {
+    let userId = localStorage.getItem("mexc-user-id");
+    if (!userId) {
+      userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem("mexc-user-id", userId);
+    }
+    return userId;
+  };
+
+  // Don't render config while loading user info
+  if (authLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center space-y-4">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+            <p className="text-muted-foreground">Loading configuration...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Update config state and mark as dirty
   const updateConfig = (path: string[], value: unknown) => {
@@ -361,60 +365,23 @@ export default function ConfigPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
-      {/* Header */}
-      <header className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 border-b border-slate-800">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-green-400 to-green-600 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">MEXC Sniper Bot</h1>
-              <p className="text-sm text-slate-400">Trading Configuration</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            {/* User Info */}
-            <div className="flex items-center space-x-2">
-              {user ? (
-                <UserMenu user={user} />
-              ) : (
-                <Link href="/auth">
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                    Sign In
-                  </Button>
-                </Link>
-              )}
-            </div>
-            
-            <Link href="/dashboard">
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-                <Activity className="mr-2 h-4 w-4" />
-                Dashboard
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <DashboardLayout>
+      <div className="space-y-8">
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold">Trading Configuration</h2>
-            <p className="text-slate-400 mt-1">Configure your trading parameters and risk management settings</p>
+            <h1 className="text-3xl font-bold">API Configuration</h1>
+            <p className="text-muted-foreground mt-1">Configure your trading parameters and risk management settings</p>
           </div>
           <div className="flex items-center space-x-3">
             {isDirty && (
-              <Badge variant="outline" className="border-amber-500 text-amber-400">
+              <Badge variant="outline" className="border-yellow-500 text-yellow-600">
                 Unsaved Changes
               </Badge>
             )}
             <Button 
               variant="outline" 
               onClick={resetToDefaults}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
               Reset to Defaults
@@ -422,7 +389,6 @@ export default function ConfigPage() {
             <Button 
               onClick={saveConfig}
               disabled={saveStatus === "saving"}
-              className="bg-green-500 hover:bg-green-600"
             >
               <Save className="mr-2 h-4 w-4" />
               {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved!" : "Save Configuration"}
@@ -433,11 +399,11 @@ export default function ConfigPage() {
         {/* Configuration Sections */}
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Risk Management */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <Card>
             <CardHeader>
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-red-500/20 rounded-lg">
-                  <Shield className="h-6 w-6 text-red-400" />
+                <div className="p-2 bg-red-500/10 rounded-lg">
+                  <Shield className="h-5 w-5 text-red-500" />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Risk Management</CardTitle>
@@ -454,7 +420,7 @@ export default function ConfigPage() {
                     type="checkbox"
                     checked={config.stopLoss.enabled}
                     onChange={(e) => updateConfig(["stopLoss", "enabled"], e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-600 bg-slate-700"
+                    className="w-4 h-4 rounded"
                   />
                 </div>
                 {config.stopLoss.enabled && (
@@ -466,7 +432,7 @@ export default function ConfigPage() {
                         step="0.1"
                         value={config.stopLoss.percentage}
                         onChange={(e) => updateConfig(["stopLoss", "percentage"], parseFloat(e.target.value) || 0)}
-                        className="bg-slate-700/50 border-slate-600"
+                        className=""
                       />
                     </div>
                     <div>
@@ -475,7 +441,7 @@ export default function ConfigPage() {
                         type="number"
                         value={config.stopLoss.amount}
                         onChange={(e) => updateConfig(["stopLoss", "amount"], parseFloat(e.target.value) || 0)}
-                        className="bg-slate-700/50 border-slate-600"
+                        className=""
                       />
                     </div>
                   </div>
@@ -490,7 +456,7 @@ export default function ConfigPage() {
                     type="checkbox"
                     checked={config.takeProfit.enabled}
                     onChange={(e) => updateConfig(["takeProfit", "enabled"], e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-600 bg-slate-700"
+                    className="w-4 h-4 rounded"
                   />
                 </div>
                 {config.takeProfit.enabled && (
@@ -502,7 +468,7 @@ export default function ConfigPage() {
                         step="0.1"
                         value={config.takeProfit.percentage}
                         onChange={(e) => updateConfig(["takeProfit", "percentage"], parseFloat(e.target.value) || 0)}
-                        className="bg-slate-700/50 border-slate-600"
+                        className=""
                       />
                     </div>
                     <div>
@@ -511,7 +477,7 @@ export default function ConfigPage() {
                         type="number"
                         value={config.takeProfit.amount}
                         onChange={(e) => updateConfig(["takeProfit", "amount"], parseFloat(e.target.value) || 0)}
-                        className="bg-slate-700/50 border-slate-600"
+                        className=""
                       />
                     </div>
                   </div>
@@ -526,7 +492,7 @@ export default function ConfigPage() {
                     type="number"
                     value={config.riskManagement.maxDailyLoss}
                     onChange={(e) => updateConfig(["riskManagement", "maxDailyLoss"], parseFloat(e.target.value) || 0)}
-                    className="bg-slate-700/50 border-slate-600 mt-1"
+                    className="mt-1"
                   />
                 </div>
                 <div>
@@ -537,7 +503,7 @@ export default function ConfigPage() {
                     max="20"
                     value={config.riskManagement.maxOpenPositions}
                     onChange={(e) => updateConfig(["riskManagement", "maxOpenPositions"], parseInt(e.target.value) || 1)}
-                    className="bg-slate-700/50 border-slate-600 mt-1"
+                    className="mt-1"
                   />
                 </div>
                 <div>
@@ -549,7 +515,7 @@ export default function ConfigPage() {
                     max="10"
                     value={config.riskManagement.slippageTolerance}
                     onChange={(e) => updateConfig(["riskManagement", "slippageTolerance"], parseFloat(e.target.value) || 0.1)}
-                    className="bg-slate-700/50 border-slate-600 mt-1"
+                    className="mt-1"
                   />
                 </div>
               </div>
@@ -557,11 +523,11 @@ export default function ConfigPage() {
           </Card>
 
           {/* Position Sizing */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <Card>
             <CardHeader>
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-blue-400" />
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <DollarSign className="h-5 w-5 text-blue-500" />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Position Sizing</CardTitle>
@@ -577,7 +543,7 @@ export default function ConfigPage() {
                   min="10"
                   value={config.positionSizing.defaultBuyAmount}
                   onChange={(e) => updateConfig(["positionSizing", "defaultBuyAmount"], parseFloat(e.target.value) || 10)}
-                  className="bg-slate-700/50 border-slate-600 mt-1"
+                  className="mt-1"
                 />
               </div>
               <div>
@@ -588,7 +554,7 @@ export default function ConfigPage() {
                   max="5"
                   value={config.positionSizing.maxPositionsPerToken}
                   onChange={(e) => updateConfig(["positionSizing", "maxPositionsPerToken"], parseInt(e.target.value) || 1)}
-                  className="bg-slate-700/50 border-slate-600 mt-1"
+                  className="mt-1"
                 />
               </div>
               <div>
@@ -600,18 +566,18 @@ export default function ConfigPage() {
                   max="10"
                   value={config.positionSizing.riskPerTrade}
                   onChange={(e) => updateConfig(["positionSizing", "riskPerTrade"], parseFloat(e.target.value) || 0.1)}
-                  className="bg-slate-700/50 border-slate-600 mt-1"
+                  className="mt-1"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* API Credentials */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <Card>
             <CardHeader>
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <Key className="h-6 w-6 text-purple-400" />
+                <div className="p-2 bg-purple-500/10 rounded-lg">
+                  <Key className="h-5 w-5 text-purple-500" />
                 </div>
                 <div>
                   <CardTitle className="text-xl">API Credentials</CardTitle>
@@ -656,18 +622,18 @@ export default function ConfigPage() {
                   value={config.apiCredentials.mexcSecretKey}
                   onChange={(e) => updateConfig(["apiCredentials", "mexcSecretKey"], e.target.value)}
                   placeholder={showApiKeys ? "Enter your MEXC secret key" : maskApiKey(config.apiCredentials.mexcSecretKey)}
-                  className="bg-slate-700/50 border-slate-600 mt-1"
+                  className="mt-1"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Pattern Detection */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <Card>
             <CardHeader>
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-500/20 rounded-lg">
-                  <Target className="h-6 w-6 text-green-400" />
+                <div className="p-2 bg-green-500/10 rounded-lg">
+                  <Target className="h-5 w-5 text-green-500" />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Pattern Detection</CardTitle>
@@ -684,9 +650,9 @@ export default function ConfigPage() {
                   max="99"
                   value={config.patternDetection.sensitivity}
                   onChange={(e) => updateConfig(["patternDetection", "sensitivity"], parseInt(e.target.value) || 85)}
-                  className="bg-slate-700/50 border-slate-600 mt-1"
+                  className="mt-1"
                 />
-                <p className="text-xs text-slate-400 mt-1">Higher values reduce false positives</p>
+                <p className="text-xs text-muted-foreground mt-1">Higher values reduce false positives</p>
               </div>
               <div>
                 <label className="text-sm font-medium">Min Advance Notice (hours)</label>
@@ -697,7 +663,7 @@ export default function ConfigPage() {
                   max="12"
                   value={config.patternDetection.minAdvanceNotice}
                   onChange={(e) => updateConfig(["patternDetection", "minAdvanceNotice"], parseFloat(e.target.value) || 2)}
-                  className="bg-slate-700/50 border-slate-600 mt-1"
+                  className="mt-1"
                 />
               </div>
               <div>
@@ -709,18 +675,18 @@ export default function ConfigPage() {
                   max="24"
                   value={config.patternDetection.maxAdvanceNotice}
                   onChange={(e) => updateConfig(["patternDetection", "maxAdvanceNotice"], parseFloat(e.target.value) || 6)}
-                  className="bg-slate-700/50 border-slate-600 mt-1"
+                  className="mt-1"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Notifications */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <Card>
             <CardHeader>
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-yellow-500/20 rounded-lg">
-                  <Bell className="h-6 w-6 text-yellow-400" />
+                <div className="p-2 bg-yellow-500/10 rounded-lg">
+                  <Bell className="h-5 w-5 text-yellow-500" />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Notifications</CardTitle>
@@ -746,7 +712,7 @@ export default function ConfigPage() {
                       type="checkbox"
                       checked={config.notifications.tradeExecution}
                       onChange={(e) => updateConfig(["notifications", "tradeExecution"], e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-600 bg-slate-700"
+                      className="w-4 h-4 rounded"
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -755,7 +721,7 @@ export default function ConfigPage() {
                       type="checkbox"
                       checked={config.notifications.patternDetection}
                       onChange={(e) => updateConfig(["notifications", "patternDetection"], e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-600 bg-slate-700"
+                      className="w-4 h-4 rounded"
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -764,7 +730,7 @@ export default function ConfigPage() {
                       type="checkbox"
                       checked={config.notifications.riskAlerts}
                       onChange={(e) => updateConfig(["notifications", "riskAlerts"], e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-600 bg-slate-700"
+                      className="w-4 h-4 rounded"
                     />
                   </div>
                 </>
@@ -773,11 +739,11 @@ export default function ConfigPage() {
           </Card>
 
           {/* Trading Hours */}
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+          <Card>
             <CardHeader>
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-indigo-500/20 rounded-lg">
-                  <Calendar className="h-6 w-6 text-indigo-400" />
+                <div className="p-2 bg-indigo-500/10 rounded-lg">
+                  <Calendar className="h-5 w-5 text-indigo-500" />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Trading Hours</CardTitle>
@@ -804,7 +770,7 @@ export default function ConfigPage() {
                         type="time"
                         value={config.tradingHours.startTime}
                         onChange={(e) => updateConfig(["tradingHours", "startTime"], e.target.value)}
-                        className="bg-slate-700/50 border-slate-600 mt-1"
+                        className="mt-1"
                       />
                     </div>
                     <div>
@@ -813,7 +779,7 @@ export default function ConfigPage() {
                         type="time"
                         value={config.tradingHours.endTime}
                         onChange={(e) => updateConfig(["tradingHours", "endTime"], e.target.value)}
-                        className="bg-slate-700/50 border-slate-600 mt-1"
+                        className="mt-1"
                       />
                     </div>
                   </div>
@@ -822,7 +788,7 @@ export default function ConfigPage() {
                     <select
                       value={config.tradingHours.timezone}
                       onChange={(e) => updateConfig(["tradingHours", "timezone"], e.target.value)}
-                      className="w-full mt-1 bg-slate-700/50 border border-slate-600 rounded-md px-3 py-2 text-white"
+                      className="w-full mt-1 bg-background border rounded-md px-3 py-2"
                     >
                       <option value="UTC">UTC</option>
                       <option value="America/New_York">Eastern Time</option>
@@ -839,11 +805,11 @@ export default function ConfigPage() {
         </div>
 
         {/* Configuration Summary */}
-        <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+        <Card>
           <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-slate-500/20 rounded-lg">
-                <Settings className="h-6 w-6 text-slate-400" />
+              <div className="p-2 bg-muted rounded-lg">
+                <Settings className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
                 <CardTitle className="text-xl">Configuration Summary</CardTitle>
@@ -854,7 +820,7 @@ export default function ConfigPage() {
           <CardContent>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <h4 className="font-medium text-green-400">Risk Controls</h4>
+                <h4 className="font-medium text-green-500">Risk Controls</h4>
                 <div className="text-sm space-y-1">
                   <p>Stop Loss: {config.stopLoss.enabled ? `${config.stopLoss.percentage}%` : "Disabled"}</p>
                   <p>Take Profit: {config.takeProfit.enabled ? `${config.takeProfit.percentage}%` : "Disabled"}</p>
@@ -862,7 +828,7 @@ export default function ConfigPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <h4 className="font-medium text-blue-400">Position Sizing</h4>
+                <h4 className="font-medium text-blue-500">Position Sizing</h4>
                 <div className="text-sm space-y-1">
                   <p>Default Buy: ${config.positionSizing.defaultBuyAmount}</p>
                   <p>Max Positions: {config.riskManagement.maxOpenPositions}</p>
@@ -870,7 +836,7 @@ export default function ConfigPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <h4 className="font-medium text-purple-400">System Settings</h4>
+                <h4 className="font-medium text-purple-500">System Settings</h4>
                 <div className="text-sm space-y-1">
                   <p>API Mode: {config.apiCredentials.testMode ? "Test" : "Live"}</p>
                   <p>Notifications: {config.notifications.enabled ? "Enabled" : "Disabled"}</p>
@@ -880,14 +846,7 @@ export default function ConfigPage() {
             </div>
           </CardContent>
         </Card>
-      </main>
-
-      {/* Footer */}
-      <footer className="py-8 text-center border-t border-slate-800">
-        <p className="text-slate-500">
-          MEXC Sniper Bot Configuration • Always test settings in demo mode first • Trade Responsibly
-        </p>
-      </footer>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

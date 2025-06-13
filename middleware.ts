@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Protected routes that require authentication
-const PROTECTED_ROUTES = ['/dashboard', '/config'];
+const PROTECTED_ROUTES = [
+  '/dashboard', 
+  '/config',
+  '/sniper',
+  '/trading',
+  '/portfolio',
+  '/analytics',
+  '/reports',
+  '/settings'
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -87,6 +96,12 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/config/:path*',
+    '/sniper/:path*',
+    '/trading/:path*',
+    '/portfolio/:path*',
+    '/analytics/:path*',
+    '/reports/:path*',
+    '/settings/:path*',
     '/auth',
   ],
 };
