@@ -153,15 +153,15 @@ export function useMexcPatternDetection(vcoinId?: string) {
   const { data: symbols, isLoading, error } = useMexcSymbols(vcoinId);
 
   // Analyze symbols for ready state pattern (sts:2, st:2, tt:4)
-  const readyStatePattern = symbols?.find(
-    (symbol: MexcSymbol) => symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4
-  );
+  const readyStatePattern = Array.isArray(symbols)
+    ? symbols.find((symbol: MexcSymbol) => symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4)
+    : undefined;
 
   const hasReadyPattern = !!readyStatePattern;
   const patternConfidence = hasReadyPattern ? 95 : 0;
 
   return {
-    symbols,
+    symbols: Array.isArray(symbols) ? symbols : [],
     readyStatePattern,
     hasReadyPattern,
     patternConfidence,
@@ -174,14 +174,20 @@ export function useMexcPatternDetection(vcoinId?: string) {
 export function useUpcomingLaunches() {
   const { data: calendar, ...rest } = useMexcCalendar();
 
-  const upcomingLaunches =
-    calendar?.filter((entry: CalendarEntry) => {
-      const launchTime = new Date(entry.firstOpenTime);
-      const now = new Date();
-      const hours24 = 24 * 60 * 60 * 1000;
+  const upcomingLaunches = Array.isArray(calendar) 
+    ? calendar.filter((entry: CalendarEntry) => {
+        try {
+          const launchTime = new Date(entry.firstOpenTime);
+          const now = new Date();
+          const hours24 = 24 * 60 * 60 * 1000;
 
-      return launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours24;
-    }) || [];
+          return launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours24;
+        } catch (error) {
+          console.warn('Invalid date in calendar entry:', entry.firstOpenTime);
+          return false;
+        }
+      })
+    : [];
 
   return {
     data: upcomingLaunches,
@@ -194,14 +200,20 @@ export function useUpcomingLaunches() {
 export function useReadyTargets() {
   const { data: calendar, ...rest } = useMexcCalendar();
 
-  const readyTargets =
-    calendar?.filter((entry: CalendarEntry) => {
-      const launchTime = new Date(entry.firstOpenTime);
-      const now = new Date();
-      const hours4 = 4 * 60 * 60 * 1000;
+  const readyTargets = Array.isArray(calendar)
+    ? calendar.filter((entry: CalendarEntry) => {
+        try {
+          const launchTime = new Date(entry.firstOpenTime);
+          const now = new Date();
+          const hours4 = 4 * 60 * 60 * 1000;
 
-      return launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours4;
-    }) || [];
+          return launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours4;
+        } catch (error) {
+          console.warn('Invalid date in calendar entry:', entry.firstOpenTime);
+          return false;
+        }
+      })
+    : [];
 
   return {
     data: readyTargets,
