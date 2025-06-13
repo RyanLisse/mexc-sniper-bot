@@ -59,7 +59,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-16">
+      <main className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
           <div className="mb-4">
@@ -223,7 +223,7 @@ export default function HomePage() {
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 }

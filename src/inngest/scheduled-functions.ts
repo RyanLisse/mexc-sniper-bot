@@ -5,7 +5,12 @@ import { inngest } from "./client";
 // Helper function to update workflow status
 async function updateWorkflowStatus(action: string, data: unknown) {
   try {
-    const response = await fetch("http://localhost:3008/api/workflow-status", {
+    // Use environment variable or default to localhost for development
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                   "http://localhost:3008";
+    
+    const response = await fetch(`${baseUrl}/api/workflow-status`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
