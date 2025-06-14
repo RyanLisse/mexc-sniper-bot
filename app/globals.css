@@ -1,73 +1,83 @@
 @import "tailwindcss";
 
 @theme {
-  --radius: 0.625rem;
-  --color-background: 0 0% 100%;
-  --color-foreground: 222.2 84% 4.9%;
-  --color-card: 0 0% 100%;
-  --color-card-foreground: 222.2 84% 4.9%;
-  --color-popover: 0 0% 100%;
-  --color-popover-foreground: 222.2 84% 4.9%;
-  --color-primary: 222.2 47.4% 11.2%;
-  --color-primary-foreground: 210 40% 98%;
-  --color-secondary: 210 40% 96%;
-  --color-secondary-foreground: 222.2 47.4% 11.2%;
-  --color-muted: 210 40% 96%;
-  --color-muted-foreground: 215.4 16.3% 46.9%;
-  --color-accent: 210 40% 96%;
-  --color-accent-foreground: 222.2 47.4% 11.2%;
-  --color-destructive: 0 84.2% 60.2%;
-  --color-destructive-foreground: 210 40% 98%;
-  --color-border: 214.3 31.8% 91.4%;
-  --color-input: 214.3 31.8% 91.4%;
-  --color-ring: 215 20.2% 65.1%;
+  --radius: 0.75rem;
+  
+  /* Light theme colors */
+  --color-background: 32 71% 95%;
+  --color-foreground: 32 5% 10%;
+  --color-card: 32 50% 90%;
+  --color-card-foreground: 32 5% 10%;
+  --color-popover: 32 71% 95%;
+  --color-popover-foreground: 32 95% 10%;
+  --color-primary: 32 88% 58%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-secondary: 32 30% 70%;
+  --color-secondary-foreground: 0 0% 0%;
+  --color-muted: -6 30% 85%;
+  --color-muted-foreground: 32 5% 35%;
+  --color-accent: -6 30% 80%;
+  --color-accent-foreground: 32 5% 10%;
+  --color-destructive: 0 71% 30%;
+  --color-destructive-foreground: 32 5% 90%;
+  --color-border: 32 30% 50%;
+  --color-input: 32 30% 18%;
+  --color-ring: 32 88% 58%;
+  
+  /* Chart colors */
   --color-chart-1: 12 76% 61%;
   --color-chart-2: 173 58% 39%;
   --color-chart-3: 197 37% 24%;
   --color-chart-4: 43 74% 66%;
   --color-chart-5: 27 87% 67%;
-  --color-sidebar: 0 0% 98%;
-  --color-sidebar-foreground: 240 5.3% 26.1%;
-  --color-sidebar-primary: 240 5.9% 10%;
-  --color-sidebar-primary-foreground: 0 0% 98%;
-  --color-sidebar-accent: 240 4.8% 95.9%;
-  --color-sidebar-accent-foreground: 240 5.9% 10%;
-  --color-sidebar-border: 220 13% 91%;
-  --color-sidebar-ring: 217.2 10.6% 64.9%;
+  
+  /* Sidebar colors */
+  --color-sidebar: 32 50% 90%;
+  --color-sidebar-foreground: 32 5% 10%;
+  --color-sidebar-primary: 32 88% 58%;
+  --color-sidebar-primary-foreground: 0 0% 100%;
+  --color-sidebar-accent: -6 30% 80%;
+  --color-sidebar-accent-foreground: 32 5% 10%;
+  --color-sidebar-border: 32 30% 50%;
+  --color-sidebar-ring: 32 88% 58%;
 
-  /* Dark mode colors */
-  --color-background-dark: 222.2 84% 4.9%;
-  --color-foreground-dark: 210 40% 98%;
-  --color-card-dark: 222.2 47.4% 11.2%;
-  --color-card-foreground-dark: 210 40% 98%;
-  --color-popover-dark: 222.2 47.4% 11.2%;
-  --color-popover-foreground-dark: 210 40% 98%;
-  --color-primary-dark: 210 40% 98%;
-  --color-primary-foreground-dark: 222.2 47.4% 11.2%;
-  --color-secondary-dark: 217.2 32.6% 17.5%;
-  --color-secondary-foreground-dark: 210 40% 98%;
-  --color-muted-dark: 217.2 32.6% 17.5%;
-  --color-muted-foreground-dark: 215 20.2% 65.1%;
-  --color-accent-dark: 217.2 32.6% 17.5%;
-  --color-accent-foreground-dark: 210 40% 98%;
-  --color-destructive-dark: 0 62.8% 30.6%;
-  --color-destructive-foreground-dark: 210 40% 98%;
-  --color-border-dark: 217.2 32.6% 17.5%;
-  --color-input-dark: 217.2 32.6% 17.5%;
-  --color-ring-dark: 215 20.2% 65.1%;
+  /* Dark theme colors */
+  --color-background-dark: 32 50% 10%;
+  --color-foreground-dark: 32 5% 90%;
+  --color-card-dark: 32 50% 10%;
+  --color-card-foreground-dark: 32 5% 90%;
+  --color-popover-dark: 32 50% 5%;
+  --color-popover-foreground-dark: 32 5% 90%;
+  --color-primary-dark: 32 88% 58%;
+  --color-primary-foreground-dark: 0 0% 100%;
+  --color-secondary-dark: 32 30% 10%;
+  --color-secondary-foreground-dark: 0 0% 100%;
+  --color-muted-dark: -6 30% 15%;
+  --color-muted-foreground-dark: 32 5% 60%;
+  --color-accent-dark: -6 30% 15%;
+  --color-accent-foreground-dark: 32 5% 90%;
+  --color-destructive-dark: 0 71% 30%;
+  --color-destructive-foreground-dark: 32 5% 90%;
+  --color-border-dark: 32 30% 18%;
+  --color-input-dark: 32 30% 18%;
+  --color-ring-dark: 32 88% 58%;
+  
+  /* Chart colors dark */
   --color-chart-1-dark: 220 70% 50%;
   --color-chart-2-dark: 160 60% 45%;
   --color-chart-3-dark: 30 80% 55%;
   --color-chart-4-dark: 280 65% 60%;
   --color-chart-5-dark: 340 75% 55%;
-  --color-sidebar-dark: 222.2 47.4% 11.2%;
-  --color-sidebar-foreground-dark: 210 40% 98%;
-  --color-sidebar-primary-dark: 224 71.4% 4.1%;
-  --color-sidebar-primary-foreground-dark: 210 40% 98%;
-  --color-sidebar-accent-dark: 216 12.2% 83.9%;
-  --color-sidebar-accent-foreground-dark: 222.2 47.4% 11.2%;
-  --color-sidebar-border-dark: 217.2 32.6% 17.5%;
-  --color-sidebar-ring-dark: 215 20.2% 65.1%;
+  
+  /* Sidebar colors dark */
+  --color-sidebar-dark: 32 50% 10%;
+  --color-sidebar-foreground-dark: 32 5% 90%;
+  --color-sidebar-primary-dark: 32 88% 58%;
+  --color-sidebar-primary-foreground-dark: 0 0% 100%;
+  --color-sidebar-accent-dark: -6 30% 15%;
+  --color-sidebar-accent-foreground-dark: 32 5% 90%;
+  --color-sidebar-border-dark: 32 30% 18%;
+  --color-sidebar-ring-dark: 32 88% 58%;
 
   /* Custom animations */
   --animate-pulse-green: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
