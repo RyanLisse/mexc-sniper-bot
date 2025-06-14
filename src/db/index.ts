@@ -83,7 +83,10 @@ function createTursoClient() {
   const embeddedPath = process.env.TURSO_EMBEDDED_PATH || "./data/mexc_sniper_replica.db";
   const syncInterval = Number.parseInt(process.env.TURSO_SYNC_INTERVAL || "30");
 
-  if ((!isProduction && process.env.USE_EMBEDDED_REPLICA !== "false") || process.env.USE_EMBEDDED_REPLICA === "true") {
+  if (
+    (!isProduction && process.env.USE_EMBEDDED_REPLICA !== "false") ||
+    process.env.USE_EMBEDDED_REPLICA === "true"
+  ) {
     // Enable embedded replica with local SQLite file
     const clientConfig: Parameters<typeof createClient>[0] = {
       url: `file:${embeddedPath}`,
@@ -109,7 +112,8 @@ function createTursoClient() {
         console.log(`[Database] Embedded replica sync URL: ${syncUrl}`);
         return tursoClient;
       } catch (error) {
-        console.warn(`[Database] Failed to create embedded replica with ${syncUrl}:`, error.message);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.warn(`[Database] Failed to create embedded replica with ${syncUrl}:`, errorMessage);
       }
     }
   } else {
@@ -140,10 +144,13 @@ function createTursoClient() {
         }
 
         tursoClient = createClient(clientConfig);
-        console.log(`[Database] Direct connection established with URL scheme: ${clientConfig.url}`);
+        console.log(
+          `[Database] Direct connection established with URL scheme: ${clientConfig.url}`
+        );
         return tursoClient;
       } catch (error) {
-        console.warn(`[Database] Failed to connect with URL scheme ${url}:`, error.message);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.warn(`[Database] Failed to connect with URL scheme ${url}:`, errorMessage);
       }
     }
   }
@@ -163,7 +170,7 @@ function createDatabase() {
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
   const tursoConfigured = hasTursoConfig();
   const forceSQLite = process.env.FORCE_SQLITE === "true";
-  
+
   // Debug logging (remove in production)
   if (process.env.NODE_ENV !== "production") {
     console.log("[Database] Configuration debug:");
@@ -235,19 +242,22 @@ function createDatabase() {
       if (isProduction || isRailway) {
         console.error("[Database] TursoDB failed in production environment");
         console.error("[Database] Error details:", {
-          message: error.message,
-          code: error.code || 'UNKNOWN',
+          message: error instanceof Error ? error.message : String(error),
+          code: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
           env: {
             hasUrl: !!process.env.TURSO_DATABASE_URL,
             hasToken: !!process.env.TURSO_AUTH_TOKEN,
             tokenLength: process.env.TURSO_AUTH_TOKEN ? process.env.TURSO_AUTH_TOKEN.length : 0,
             isVercel: !!process.env.VERCEL,
-            nodeEnv: process.env.NODE_ENV
-          }
+            nodeEnv: process.env.NODE_ENV,
+          },
         });
-        
+
         // In production, we need to fail gracefully
-        throw new Error(`TursoDB connection failed in production: ${error.message}. Check environment variables and token validity.`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `TursoDB connection failed in production: ${errorMessage}. Check environment variables and token validity.`
+        );
       }
 
       // Fallback to SQLite if TursoDB fails and we're not in production
@@ -322,7 +332,7 @@ export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
   get(target, prop) {
     const instance = getDb();
     return (instance as any)[prop];
-  }
+  },
 });
 
 // Export schema for use in other files

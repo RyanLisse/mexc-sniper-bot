@@ -20,35 +20,46 @@ export default withAuth(
     // Log for debugging
     console.log(`Middleware: Processing request for ${pathname}`);
 
-    // Let Kinde handle authentication for protected routes
-    // The withAuth wrapper will automatically redirect to login if needed
+    // Only apply auth to protected routes
     const isProtectedRoute = PROTECTED_ROUTES.some(route =>
       pathname.startsWith(route)
     );
 
     if (isProtectedRoute) {
-      console.log(`Middleware: Protected route ${pathname} - letting Kinde handle auth`);
+      console.log(`Middleware: Protected route ${pathname} - requiring authentication`);
+      // Let Kinde handle authentication for protected routes
+      return undefined;
     }
 
-    // No custom logic needed - let Kinde handle everything
-    return undefined; // Let Kinde middleware continue
+    // For non-protected routes (including homepage), allow access
+    console.log(`Middleware: Non-protected route ${pathname} - allowing access`);
+    return undefined;
   },
   {
     isReturnToCurrentPage: true,
     loginPage: '/api/auth/login',
-    isAuthorized: ({ token }) => !!token,
+    isAuthorized: ({ token }: { token: any }) => !!token,
   }
 );
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
+     * Only match protected routes, exclude:
      * - api/auth (Kinde auth routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - / (homepage)
+     * - /auth (auth page)
      */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
+    '/dashboard/:path*',
+    '/config/:path*',
+    '/sniper/:path*',
+    '/trading/:path*',
+    '/portfolio/:path*',
+    '/analytics/:path*',
+    '/reports/:path*',
+    '/settings/:path*'
   ],
 };
