@@ -93,6 +93,25 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-color: hsl(var(--color-background));
+    color: hsl(var(--color-foreground));
+  }
+  
+  /* Force theme color application */
+  .bg-primary {
+    background-color: hsl(var(--color-primary)) !important;
+  }
+  
+  .text-primary {
+    color: hsl(var(--color-primary)) !important;
+  }
+  
+  .bg-background {
+    background-color: hsl(var(--color-background)) !important;
+  }
+  
+  .text-foreground {
+    color: hsl(var(--color-foreground)) !important;
   }
 }
 
