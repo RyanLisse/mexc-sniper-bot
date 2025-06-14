@@ -1,6 +1,6 @@
 import crypto from "crypto";
-import OpenAI from "openai";
 import { ErrorLoggingService } from "@/src/services/error-logging-service";
+import OpenAI from "openai";
 
 export interface AgentConfig {
   name: string;

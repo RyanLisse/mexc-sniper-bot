@@ -37,6 +37,54 @@ interface Trade {
   sellTimestamp: string | null;
 }
 
+interface TradeRowsProps {
+  trades: Trade[];
+  getProfitLossIcon: (percentage: number | null) => React.ReactNode;
+  getProfitLossColor: (percentage: number | null) => string;
+  getStatusBadge: (status: string, profitLoss: number | null) => React.ReactNode;
+}
+
+function TradeRows({
+  trades,
+  getProfitLossIcon,
+  getProfitLossColor,
+  getStatusBadge,
+}: TradeRowsProps) {
+  return (
+    <>
+      {trades.map((trade) => (
+        <TableRow key={trade.id}>
+          <TableCell className="font-medium">{trade.symbolName}</TableCell>
+          <TableCell>${trade.buyPrice.toFixed(4)}</TableCell>
+          <TableCell>{trade.sellPrice ? `$${trade.sellPrice.toFixed(4)}` : "-"}</TableCell>
+          <TableCell>{trade.buyQuantity.toFixed(2)}</TableCell>
+          <TableCell>${trade.buyTotalCost.toFixed(2)}</TableCell>
+          <TableCell>
+            {trade.sellTotalRevenue ? `$${trade.sellTotalRevenue.toFixed(2)}` : "-"}
+          </TableCell>
+          <TableCell className={getProfitLossColor(trade.profitLoss)}>
+            <div className="flex items-center gap-1">
+              {getProfitLossIcon(trade.profitLoss)}
+              {trade.profitLoss !== null ? `$${Math.abs(trade.profitLoss).toFixed(2)}` : "-"}
+            </div>
+          </TableCell>
+          <TableCell className={getProfitLossColor(trade.profitLossPercentage)}>
+            {trade.profitLossPercentage !== null
+              ? `${trade.profitLossPercentage > 0 ? "+" : ""}${trade.profitLossPercentage.toFixed(2)}%`
+              : "-"}
+          </TableCell>
+          <TableCell>{getStatusBadge(trade.status, trade.profitLoss)}</TableCell>
+          <TableCell className="text-muted-foreground text-xs">
+            {formatDistanceToNow(new Date(trade.sellTimestamp || trade.buyTimestamp), {
+              addSuffix: true,
+            })}
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  );
+}
+
 export function RecentTradesTable() {
   const { data: trades, isLoading } = useQuery<Trade[]>({
     queryKey: ["recent-trades"],
@@ -74,7 +122,8 @@ export function RecentTradesTable() {
             Profit
           </Badge>
         );
-      } else if (profitLoss < 0) {
+      }
+      if (profitLoss < 0) {
         return (
           <Badge
             variant="destructive"
@@ -114,8 +163,8 @@ export function RecentTradesTable() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+            {Array.from({ length: 5 }, (_, i) => (
+              <Skeleton key={`skeleton-row-${i + 1}`} className="h-12 w-full" />
             ))}
           </div>
         </CardContent>
@@ -182,39 +231,12 @@ export function RecentTradesTable() {
                   </TableCell>
                 </TableRow>
               ) : (
-                trades.map((trade) => (
-                  <TableRow key={trade.id}>
-                    <TableCell className="font-medium">{trade.symbolName}</TableCell>
-                    <TableCell>${trade.buyPrice.toFixed(4)}</TableCell>
-                    <TableCell>
-                      {trade.sellPrice ? `$${trade.sellPrice.toFixed(4)}` : "-"}
-                    </TableCell>
-                    <TableCell>{trade.buyQuantity.toFixed(2)}</TableCell>
-                    <TableCell>${trade.buyTotalCost.toFixed(2)}</TableCell>
-                    <TableCell>
-                      {trade.sellTotalRevenue ? `$${trade.sellTotalRevenue.toFixed(2)}` : "-"}
-                    </TableCell>
-                    <TableCell className={getProfitLossColor(trade.profitLoss)}>
-                      <div className="flex items-center gap-1">
-                        {getProfitLossIcon(trade.profitLoss)}
-                        {trade.profitLoss !== null
-                          ? `$${Math.abs(trade.profitLoss).toFixed(2)}`
-                          : "-"}
-                      </div>
-                    </TableCell>
-                    <TableCell className={getProfitLossColor(trade.profitLossPercentage)}>
-                      {trade.profitLossPercentage !== null
-                        ? `${trade.profitLossPercentage > 0 ? "+" : ""}${trade.profitLossPercentage.toFixed(2)}%`
-                        : "-"}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(trade.status, trade.profitLoss)}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      {formatDistanceToNow(new Date(trade.sellTimestamp || trade.buyTimestamp), {
-                        addSuffix: true,
-                      })}
-                    </TableCell>
-                  </TableRow>
-                ))
+                <TradeRows
+                  trades={trades}
+                  getProfitLossIcon={getProfitLossIcon}
+                  getProfitLossColor={getProfitLossColor}
+                  getStatusBadge={getStatusBadge}
+                />
               )}
             </TableBody>
           </Table>

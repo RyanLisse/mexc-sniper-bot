@@ -24,6 +24,53 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Progress } from "./ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
+// Helper function to get health status icons
+function getHealthIcon(status: string) {
+  switch (status) {
+    case "healthy":
+    case "online":
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case "warning":
+    case "degraded":
+      return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+    case "critical":
+    case "offline":
+      return <XCircle className="h-4 w-4 text-red-500" />;
+    default:
+      return <Zap className="h-4 w-4 text-gray-500" />;
+  }
+}
+
+// Helper function to get risk color classes
+function getRiskColor(risk: string) {
+  switch (risk) {
+    case "low":
+      return "text-green-500";
+    case "medium":
+      return "text-yellow-500";
+    case "high":
+      return "text-orange-500";
+    case "critical":
+      return "text-red-500";
+    default:
+      return "text-gray-500";
+  }
+}
+
+// Helper function to format currency
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
+
+// Helper function to format percentage
+function formatPercentage(value: number) {
+  return `${value.toFixed(2)}%`;
+}
+
 export function SafetyMonitoringDashboard() {
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
 
@@ -54,49 +101,6 @@ export function SafetyMonitoringDashboard() {
   const handleToggleSimulation = useCallback(() => {
     toggleSimulation({ enable: !simulationStatus?.active });
   }, [toggleSimulation, simulationStatus?.active]);
-
-  const getHealthIcon = (status: string) => {
-    switch (status) {
-      case "healthy":
-      case "online":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "warning":
-      case "degraded":
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case "critical":
-      case "offline":
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Zap className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getRiskColor = (risk: string) => {
-    switch (risk) {
-      case "low":
-        return "text-green-500";
-      case "medium":
-        return "text-yellow-500";
-      case "high":
-        return "text-orange-500";
-      case "critical":
-        return "text-red-500";
-      default:
-        return "text-gray-500";
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(2)}%`;
-  };
 
   return (
     <div className="space-y-6">

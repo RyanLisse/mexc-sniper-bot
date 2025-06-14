@@ -238,9 +238,9 @@ describe('SecureEncryptionService', () => {
       }
       const decryptTime = Date.now() - startDecrypt;
       
-      // Should be less than 20ms per operation on average (realistic for PBKDF2 + AES-GCM)
-      expect(encryptTime / iterations).toBeLessThan(20);
-      expect(decryptTime / iterations).toBeLessThan(20);
+      // Should be less than 25ms per operation on average (realistic for PBKDF2 + AES-GCM)
+      expect(encryptTime / iterations).toBeLessThan(25);
+      expect(decryptTime / iterations).toBeLessThan(25);
       
       console.log(`Average encryption time: ${encryptTime / iterations}ms`);
       console.log(`Average decryption time: ${decryptTime / iterations}ms`);

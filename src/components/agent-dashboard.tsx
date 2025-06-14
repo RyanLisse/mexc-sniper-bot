@@ -481,7 +481,7 @@ export function AgentDashboard() {
                       const timestamp = Date.now() - i * 5 * 60 * 1000;
                       return (
                         <div
-                          key={`activity-log-${timestamp}-${i}`}
+                          key={`activity-log-${timestamp}`}
                           className="flex items-start gap-2 p-2 text-sm"
                         >
                           <span className="text-muted-foreground whitespace-nowrap">

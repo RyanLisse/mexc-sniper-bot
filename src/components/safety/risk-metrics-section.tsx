@@ -18,19 +18,6 @@ interface RiskMetricsSectionProps {
 }
 
 export function RiskMetricsSection({ riskMetrics, isLoading }: RiskMetricsSectionProps) {
-  const getRiskColor = (risk: string) => {
-    switch (risk) {
-      case "low":
-        return "text-green-500";
-      case "medium":
-        return "text-yellow-500";
-      case "high":
-        return "text-red-500";
-      default:
-        return "text-gray-500";
-    }
-  };
-
   const getRiskBadgeVariant = (risk: string) => {
     switch (risk) {
       case "low":
@@ -123,8 +110,8 @@ export function RiskMetricsSection({ riskMetrics, isLoading }: RiskMetricsSectio
             <div className="mt-4 pt-4 border-t">
               <h4 className="text-sm font-medium mb-2">Recommendations:</h4>
               <ul className="text-xs text-muted-foreground space-y-1">
-                {riskMetrics.recommendations.map((rec, index) => (
-                  <li key={`rec-${index}`} className="flex items-start gap-1">
+                {riskMetrics.recommendations.map((rec) => (
+                  <li key={`rec-${rec.slice(0, 20)}`} className="flex items-start gap-1">
                     <span>•</span>
                     <span>{rec}</span>
                   </li>

@@ -31,7 +31,6 @@ export function KindeAuthUI() {
     }
   }, [mounted, isAuthenticated, router]);
 
-
   const handleSignIn = () => {
     signIn();
   };

@@ -293,24 +293,36 @@ export class TransactionLockService {
     const lockResult = await this.acquireLock(config);
 
     if (!lockResult.success) {
-      if (lockResult.existingResult) {
-        // Transaction already completed, return existing result
-        return {
-          success: true,
-          result: lockResult.existingResult,
-          lockId: lockResult.lockId || "",
-          executionTimeMs: 0,
-        };
-      }
+      return this.handleLockFailure(lockResult, startTime);
+    }
 
+    return this.executeTransaction(lockResult, executor, startTime);
+  }
+
+  private handleLockFailure(lockResult: LockResult, startTime: number): TransactionResult {
+    if (lockResult.existingResult) {
+      // Transaction already completed, return existing result
       return {
-        success: false,
-        error: lockResult.error,
+        success: true,
+        result: lockResult.existingResult,
         lockId: lockResult.lockId || "",
-        executionTimeMs: Date.now() - startTime,
+        executionTimeMs: 0,
       };
     }
 
+    return {
+      success: false,
+      error: lockResult.error,
+      lockId: lockResult.lockId || "",
+      executionTimeMs: Date.now() - startTime,
+    };
+  }
+
+  private async executeTransaction<T>(
+    lockResult: LockResult,
+    executor: () => Promise<T>,
+    startTime: number
+  ): Promise<TransactionResult> {
     try {
       // Execute the transaction
       const result = await executor();
@@ -331,17 +343,27 @@ export class TransactionLockService {
         executionTimeMs: Date.now() - startTime,
       };
     } catch (error) {
-      // Release lock with error
-      const errorMessage = error instanceof Error ? error.message : "Transaction failed";
-      await this.releaseLock(lockResult.lockId!, undefined, errorMessage);
-
-      return {
-        success: false,
-        error: errorMessage,
-        lockId: lockResult.lockId!,
-        executionTimeMs: Date.now() - startTime,
-      };
+      return this.handleExecutionError(error, lockResult, startTime);
     }
+  }
+
+  private async handleExecutionError(
+    error: unknown,
+    lockResult: LockResult,
+    startTime: number
+  ): Promise<TransactionResult> {
+    // Release lock with error
+    const errorMessage = error instanceof Error ? error.message : "Transaction failed";
+    if (lockResult.lockId) {
+      await this.releaseLock(lockResult.lockId, undefined, errorMessage);
+    }
+
+    return {
+      success: false,
+      error: errorMessage,
+      lockId: lockResult.lockId || "",
+      executionTimeMs: Date.now() - startTime,
+    };
   }
 
   /**
@@ -366,7 +388,14 @@ export class TransactionLockService {
     isLocked: boolean;
     lockCount: number;
     queueLength: number;
-    activeLocks: any[];
+    activeLocks: Array<{
+      id: string;
+      ownerId: string;
+      resourceId: string;
+      status: string;
+      createdAt: Date;
+      expiresAt: Date;
+    }>;
   }> {
     const now = new Date();
 
@@ -390,11 +419,12 @@ export class TransactionLockService {
       lockCount: activeLocks.length,
       queueLength: queuedItems.length,
       activeLocks: activeLocks.map((lock) => ({
-        lockId: lock.lockId,
+        id: lock.lockId,
         ownerId: lock.ownerId,
-        acquiredAt: lock.acquiredAt,
+        resourceId: lock.resourceId,
+        status: lock.status,
+        createdAt: lock.acquiredAt,
         expiresAt: lock.expiresAt,
-        transactionType: lock.transactionType,
       })),
     };
   }
@@ -515,7 +545,7 @@ export class TransactionLockService {
       })
       .where(and(eq(transactionLocks.ownerId, ownerId), eq(transactionLocks.status, "active")));
 
-    return (result as any).changes || 0;
+    return (result as { changes?: number }).changes || 0;
   }
 }
 

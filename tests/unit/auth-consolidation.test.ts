@@ -41,7 +41,7 @@ describe('Authentication Consolidation', () => {
   let mockUser: any;
 
   beforeEach(() => {
-    mockRequest = new NextRequest('http://localhost:3000/api/test');
+    mockRequest = new NextRequest('http://localhost:3008/api/test');
     mockUser = { id: 'user123', email: 'test@example.com' };
     vi.clearAllMocks();
   });

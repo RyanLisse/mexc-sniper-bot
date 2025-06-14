@@ -156,18 +156,15 @@ function CoinListingCard({ coin, onExecute, onRemove }: CoinListingCardProps) {
   );
 }
 
-interface ProcessedCalendarEntry {
+interface CalendarEntry {
   vcoinId: string;
   symbol: string;
-  firstOpenTime: string;
-  status?: string;
-  readyTime?: string;
-  targetTime?: string;
-  confidence?: number;
+  firstOpenTime: string | number;
+  projectName?: string;
 }
 
 // Helper function to filter upcoming coins
-function filterUpcomingCoins(calendarData: any[]) {
+function filterUpcomingCoins(calendarData: CalendarEntry[]): CalendarEntry[] {
   return calendarData.filter((item) => {
     try {
       const launchTime = new Date(item.firstOpenTime);
@@ -179,21 +176,23 @@ function filterUpcomingCoins(calendarData: any[]) {
   });
 }
 
-interface SnipeTarget {
+interface EnrichedCoin {
   vcoinId: string;
   symbol: string;
-  confidence: number;
-  targetTime: string;
-  status: string;
+  firstOpenTime: string | number;
+  projectName?: string;
+  status: "calendar" | "monitoring" | "ready" | "executed";
+  launchTime: Date;
+  confidence?: number;
 }
 
 // Helper function to enrich calendar data with status
 function enrichCalendarData(
-  calendarData: any[],
+  calendarData: CalendarEntry[],
   pendingDetection: string[],
-  readyTargets: any[],
+  readyTargets: Array<{ vcoinId: string }>,
   executedTargets: string[]
-) {
+): EnrichedCoin[] {
   return calendarData
     .map((item) => {
       const isPending = pendingDetection.includes(item.vcoinId);
@@ -215,7 +214,10 @@ function enrichCalendarData(
 }
 
 // Helper function to process executed targets
-function processExecutedTargets(executedTargets: string[], enrichedCalendarData: any[]) {
+function processExecutedTargets(
+  executedTargets: string[],
+  enrichedCalendarData: EnrichedCoin[]
+): EnrichedCoin[] {
   return executedTargets
     .map((vcoinId) => {
       const calendarEntry = enrichedCalendarData.find((coin) => coin.vcoinId === vcoinId);
@@ -229,7 +231,8 @@ function processExecutedTargets(executedTargets: string[], enrichedCalendarData:
     .filter((coin) => coin !== null);
 }
 
-export function CoinListingsBoard() {
+// Hook to handle data processing logic
+function useProcessedCoinData() {
   const {
     isMonitoring,
     isLoading,
@@ -265,6 +268,44 @@ export function CoinListingsBoard() {
     // launchTime is already available from the schema SnipeTarget
   }));
   const executedTargetsEnriched = processExecutedTargets(executedTargets, enrichedCalendarData);
+
+  return {
+    isMonitoring,
+    isLoading,
+    stats,
+    errors,
+    startMonitoring,
+    stopMonitoring,
+    removeTarget,
+    executeSnipe,
+    forceRefresh,
+    enrichedCalendarData,
+    calendarTargets,
+    monitoringTargets,
+    readyTargetsEnriched,
+    executedTargetsEnriched,
+    readyTargets,
+  };
+}
+
+export function CoinListingsBoard() {
+  const {
+    isMonitoring,
+    isLoading,
+    stats,
+    errors,
+    startMonitoring,
+    stopMonitoring,
+    removeTarget,
+    executeSnipe,
+    forceRefresh,
+    enrichedCalendarData,
+    calendarTargets,
+    monitoringTargets,
+    readyTargetsEnriched,
+    executedTargetsEnriched,
+    readyTargets,
+  } = useProcessedCoinData();
 
   return (
     <div className="space-y-6">

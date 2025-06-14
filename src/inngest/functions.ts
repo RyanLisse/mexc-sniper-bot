@@ -79,7 +79,7 @@ function isTradingStrategyData(value: unknown): value is TradingStrategyData {
 // Helper function to update workflow status
 async function updateWorkflowStatus(action: string, data: unknown) {
   try {
-    const response = await fetch("http://localhost:3000/api/workflow-status", {
+    const response = await fetch("http://localhost:3008/api/workflow-status", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

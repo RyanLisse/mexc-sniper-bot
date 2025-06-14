@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "start_monitoring":
         // Update system status to running
-        await fetch('http://localhost:3000/api/workflow-status', {
+        await fetch('http://localhost:3008/api/workflow-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "stop_monitoring":
-        await fetch('http://localhost:3000/api/workflow-status', {
+        await fetch('http://localhost:3008/api/workflow-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
