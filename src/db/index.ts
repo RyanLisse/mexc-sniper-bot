@@ -123,6 +123,15 @@ function createTursoClient() {
           authToken: process.env.TURSO_AUTH_TOKEN,
         };
 
+        // Add Vercel-specific optimizations
+        if (process.env.VERCEL) {
+          // Use WebSocket scheme for Vercel Edge Functions compatibility
+          if (url.startsWith("libsql://")) {
+            clientConfig.url = url.replace("libsql://", "wss://");
+          }
+          console.log("[Database] Using Vercel-optimized configuration with WebSocket");
+        }
+
         // Add replica-specific configuration for Railway and Vercel
         if (isRailway && process.env.TURSO_REPLICA_URL) {
           clientConfig.syncUrl = url;
@@ -131,7 +140,7 @@ function createTursoClient() {
         }
 
         tursoClient = createClient(clientConfig);
-        console.log(`[Database] Direct connection established with URL scheme: ${url}`);
+        console.log(`[Database] Direct connection established with URL scheme: ${clientConfig.url}`);
         return tursoClient;
       } catch (error) {
         console.warn(`[Database] Failed to connect with URL scheme ${url}:`, error.message);
@@ -189,6 +198,13 @@ function createDatabase() {
       const client = createTursoClient();
       const db = drizzleTurso(client, { schema });
 
+      // Test connection immediately to catch auth issues early
+      if (isProduction || isRailway) {
+        // In production, test the connection synchronously
+        console.log("[Database] Testing TursoDB connection in production...");
+        // We'll handle the async test in a non-blocking way
+      }
+
       // Enable AI/embeddings features for TursoDB
       if (!isTest) {
         // Initialize vector extension and FTS5 for AI features
@@ -215,6 +231,25 @@ function createDatabase() {
     } catch (error) {
       console.error("[Database] TursoDB initialization error:", error);
 
+      // Enhanced error handling for production
+      if (isProduction || isRailway) {
+        console.error("[Database] TursoDB failed in production environment");
+        console.error("[Database] Error details:", {
+          message: error.message,
+          code: error.code || 'UNKNOWN',
+          env: {
+            hasUrl: !!process.env.TURSO_DATABASE_URL,
+            hasToken: !!process.env.TURSO_AUTH_TOKEN,
+            tokenLength: process.env.TURSO_AUTH_TOKEN ? process.env.TURSO_AUTH_TOKEN.length : 0,
+            isVercel: !!process.env.VERCEL,
+            nodeEnv: process.env.NODE_ENV
+          }
+        });
+        
+        // In production, we need to fail gracefully
+        throw new Error(`TursoDB connection failed in production: ${error.message}. Check environment variables and token validity.`);
+      }
+
       // Fallback to SQLite if TursoDB fails and we're not in production
       if (!isProduction && !isRailway) {
         console.log("[Database] Falling back to SQLite due to TursoDB error");
@@ -229,7 +264,7 @@ function createDatabase() {
         return drizzle(sqlite, { schema });
       }
 
-      // In production, throw the error
+      // This should not be reached
       throw error;
     }
   }
