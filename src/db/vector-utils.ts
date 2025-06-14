@@ -103,8 +103,8 @@ export class VectorUtils {
       const results = candidates
         .map((candidate) => {
           const candidateEmbedding = JSON.parse(candidate.embedding) as number[];
-          const similarity = this.calculateCosineSimilarity(embedding, candidateEmbedding);
-          const distance = this.calculateEuclideanDistance(embedding, candidateEmbedding);
+          const similarity = VectorUtils.calculateCosineSimilarity(embedding, candidateEmbedding);
+          const distance = VectorUtils.calculateEuclideanDistance(embedding, candidateEmbedding);
 
           return {
             ...candidate,
@@ -282,7 +282,7 @@ export class VectorUtils {
           .limit(20);
 
         for (const pattern of patterns) {
-          const cached = await this.getCachedSimilarity(id, pattern.patternId);
+          const cached = await VectorUtils.getCachedSimilarity(id, pattern.patternId);
           if (cached && cached.cosineSimilarity >= threshold) {
             cachedResults.push({
               patternId: pattern.patternId,
@@ -300,7 +300,7 @@ export class VectorUtils {
       }
 
       // Perform similarity search
-      const similarPatterns = await this.findSimilarPatterns(embedding, {
+      const similarPatterns = await VectorUtils.findSimilarPatterns(embedding, {
         limit,
         threshold,
       });
@@ -308,7 +308,12 @@ export class VectorUtils {
       // Cache results for future use
       if (useCache) {
         for (const similar of similarPatterns) {
-          await this.cacheSimilarity(id, similar.patternId, similar.similarity, similar.distance);
+          await VectorUtils.cacheSimilarity(
+            id,
+            similar.patternId,
+            similar.similarity,
+            similar.distance
+          );
         }
       }
 

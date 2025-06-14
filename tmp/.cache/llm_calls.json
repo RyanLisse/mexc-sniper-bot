@@ -1,0 +1,313 @@
+{
+  "200ff100b5685c421050874ebd7c02fefa14394190221a960876596a4db89862": {
+    "data": {
+      "title": "Dashboard"
+    },
+    "timestamp": 1749915167135,
+    "requestId": "w4iobzvl71"
+  },
+  "80079692350c56966b5c76b376335fa6f9f1f489330f788cf340b1143fda64b4": {
+    "data": {
+      "progress": "The main dashboard title 'Dashboard' has been extracted successfully.",
+      "completed": true
+    },
+    "timestamp": 1749915168287,
+    "requestId": "w4iobzvl71"
+  },
+  "b17fb478e594e3677b69f956a00ae62e86c224195ddc4c1d7e24762a9a4e1e26": {
+    "data": {
+      "elements": [
+        {
+          "elementId": 273,
+          "description": "The Overview tab in the tablist for navigating different sections of the dashboard.",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1749915170613,
+    "requestId": "i0wayqwtyyi"
+  },
+  "7d996da3227d039bac1be4becbca932df76ba1bca9918a9a47933a0fd9324167": {
+    "data": {
+      "elements": [
+        {
+          "elementId": 134,
+          "description": "User dropdown menu button in the sidebar with the text 'U User user@example.com'",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1749915173000,
+    "requestId": "41bizg2oyjn"
+  },
+  "1bcbfaeb2691bd131052d99b07e247f55c6ecbcc2637a8ccb82b57a9afbf9cf1": {
+    "data": {
+      "elements": [
+        {
+          "elementId": 275,
+          "description": "New Listings tab that displays the new listings available",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1749915173253,
+    "requestId": "121wp8u2emsr"
+  },
+  "f7d10ad3e6cb52f2c5d552453861035891ef8a944deb90d54d868caab7a372e3": {
+    "data": {
+      "settings": [
+        {
+          "name": "Level 1 (Conservative)",
+          "value": "5",
+          "type": "spinbutton"
+        },
+        {
+          "name": "Level 2 (Moderate)",
+          "value": "10",
+          "type": "spinbutton"
+        },
+        {
+          "name": "Level 3 (Aggressive)",
+          "value": "15",
+          "type": "spinbutton"
+        },
+        {
+          "name": "Level 4 (Very Aggressive)",
+          "value": "25",
+          "type": "spinbutton"
+        },
+        {
+          "name": "Default Take Profit Level",
+          "value": "Level 2 - Moderate (10%)",
+          "type": "combobox"
+        },
+        {
+          "name": "Custom Take Profit (Optional)",
+          "value": "",
+          "type": "spinbutton"
+        }
+      ]
+    },
+    "timestamp": 1749915177244,
+    "requestId": "5ow28l6wahr"
+  },
+  "68d29110e24047cc1f300b9d825a90b43ee26518cf8e57cfca51f188f6ca22c9": {
+    "data": {
+      "hasLogout": false,
+      "logoutText": ""
+    },
+    "timestamp": 1749915177338,
+    "requestId": "ln7eyf8r6qr"
+  },
+  "fd9576650506b0fc3a4e321d33554e8388781415b7d47922476812972928f6ce": {
+    "data": {
+      "progress": "All trading configuration options and their current values have been extracted successfully.",
+      "completed": true
+    },
+    "timestamp": 1749915178242,
+    "requestId": "5ow28l6wahr"
+  },
+  "625f5c7162012b2516ec3fd4be588d3387c28bdfc7a9a8d5bc1a92e4454f2f32": {
+    "data": {
+      "progress": "The extraction response indicates that there is no sign out or logout option available, as 'hasLogout' is false and 'logoutText' is empty.",
+      "completed": true
+    },
+    "timestamp": 1749915178393,
+    "requestId": "ln7eyf8r6qr"
+  },
+  "c499a671d1474c45b5a9cbb1c61a81dbc1622cd44374dfebe72a2ae95274f5c7": {
+    "data": {
+      "metrics": [
+        {
+          "title": "Total Balance",
+          "value": "$7.10"
+        },
+        {
+          "title": "New Listings",
+          "value": "131"
+        },
+        {
+          "title": "Active Targets",
+          "value": "0"
+        },
+        {
+          "title": "Win Rate",
+          "value": "0.0%"
+        },
+        {
+          "title": "Trading Volume",
+          "value": "Total volume for the last 3 months"
+        }
+      ]
+    },
+    "timestamp": 1749915179067,
+    "requestId": "vr119vmdjh"
+  },
+  "e190c79a4da0a1ab7ebc49542cacde689dbe8a70902c28ae669fe94dc85e5cde": {
+    "data": {
+      "progress": "All metric card values and titles have been extracted successfully.",
+      "completed": true
+    },
+    "timestamp": 1749915180396,
+    "requestId": "vr119vmdjh"
+  },
+  "515a17c050283a8ddba7335c46faf25588fc6595799a2817dc1e569c71f1b700": {
+    "data": {
+      "elements": [
+        {
+          "elementId": 82,
+          "description": "Safety navigation link",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1749915188783,
+    "requestId": "mdb7cbz7nms"
+  },
+  "403dc7cfaad8e62b71f88504c616de794da5f25879e61ffc7c746166e9fd33f2": {
+    "data": {
+      "isResponsive": true,
+      "visibleElements": [
+        "MEXC Sniper Bot - AI Trading Platform",
+        "Toggle Sidebar",
+        "Dashboard",
+        "Total Balance",
+        "0",
+        "0",
+        "0",
+        "%",
+        "$7.10",
+        "Trending up this month",
+        "New Listings",
+        "-20",
+        "%",
+        "131",
+        "Down 20% this period",
+        "Acquisition needs attention",
+        "Active Targets",
+        "12.5",
+        "%",
+        "0",
+        "Strong target retention",
+        "Engagement exceed targets",
+        "Win Rate",
+        "4.5",
+        "%",
+        "0.0%",
+        "Steady performance increase",
+        "Meets growth projections",
+        "Trading Volume",
+        "Total volume for the last",
+        "3 months",
+        "Last 3 months",
+        "Last 30 days",
+        "Last 7 days",
+        "Overview",
+        "New Listings 131",
+        "New Listings",
+        "131",
+        "Recent Trades",
+        "Pattern Detection",
+        "Add Section",
+        "Today's Launches",
+        "0",
+        "Coins launching today - sorted by earliest launch time",
+        "No coins launching today",
+        "Tomorrow's Launches",
+        "2",
+        "Coins launching tomorrow - sorted by earliest launch time",
+        "Flexiblepay",
+        "FPAY",
+        "06:00 AM",
+        "18",
+        "h",
+        "Platinum",
+        "PLAT",
+        "08:00 AM",
+        "20",
+        "h",
+        "Total upcoming launches:",
+        "2",
+        "Today:",
+        "0",
+        "Tomorrow:",
+        "2",
+        "Recent Activity",
+        "No recent activity",
+        "Start discovery to see live updates",
+        "Account Balance",
+        "Last updated:",
+        "11:33:05 AM",
+        "Total Portfolio Value",
+        "$",
+        "7.10",
+        "USDT",
+        "1",
+        "assets",
+        "Major Holdings",
+        "0.049138",
+        "SOL",
+        "($",
+        "7.10",
+        ")",
+        "Asset Breakdown",
+        "SO",
+        "SOL",
+        "0.049138",
+        "SOL",
+        "≈ $",
+        "7.10",
+        "USDT",
+        "No Trading Targets",
+        "Start pattern discovery to identify potential trading opportunities. The system will automatically detect tokens matching the ready state pattern.",
+        "Waiting for pattern detection...",
+        "Recent Trades",
+        "Latest trading activity and performance"
+      ]
+    },
+    "timestamp": 1749915193706,
+    "requestId": "4q7z07q4a4w"
+  },
+  "b95d0632805d5779683e00a1cc06e1f59ceab5e6ad932e2062dd793dde953b21": {
+    "data": {
+      "progress": "The page is confirmed to be responsive on mobile with visible elements listed.",
+      "completed": true
+    },
+    "timestamp": 1749915194595,
+    "requestId": "4q7z07q4a4w"
+  },
+  "a48ba3d9ed9caf5a713797d5ee54c722fbc410dfc6c4aa2d4e069d26fc2485ee": {
+    "data": {
+      "pageTitle": "Safety Monitoring - MEXC Sniper Bot",
+      "isCorrectPage": true
+    },
+    "timestamp": 1749915194859,
+    "requestId": "9tdpr498pr"
+  },
+  "f84edd65f71cd85a65da1f2623b66fcf25796e3866bbac51bf4497d52187f98f": {
+    "data": {
+      "progress": "The extraction confirms that we are on the Safety page with the title 'Safety Monitoring - MEXC Sniper Bot'.",
+      "completed": true
+    },
+    "timestamp": 1749915195781,
+    "requestId": "9tdpr498pr"
+  },
+  "42ab065ec5df19e67a90526a75a17462c8e4ed6d68e33e8f30fed1f1e592c6f0": {
+    "data": {
+      "elements": [
+        {
+          "elementId": 964,
+          "description": "The Dashboard navigation link that allows users to navigate to the Dashboard section of the application.",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1749915197519,
+    "requestId": "artf9hxulda"
+  }
+}

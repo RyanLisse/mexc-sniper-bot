@@ -287,7 +287,7 @@ Please analyze this simulation scenario and provide detailed insights about trad
     // Calculate max drawdown (simplified)
     let peak = initialBalance;
     let maxDrawdown = 0;
-    for (const trade of trades) {
+    for (const _trade of trades) {
       const currentBalance = this.currentSession.currentBalance; // Simplified
       if (currentBalance > peak) {
         peak = currentBalance;
@@ -304,13 +304,13 @@ Please analyze this simulation scenario and provide detailed insights about trad
     return this.currentSession ? { ...this.currentSession } : null;
   }
 
-  async getSessionHistory(userId: string): Promise<SimulationSession[]> {
+  async getSessionHistory(_userId: string): Promise<SimulationSession[]> {
     // In a real implementation, this would query the database
     // For now, return empty array as we only track current session
     return [];
   }
 
-  async performSafetyCheck(data: unknown): Promise<{
+  async performSafetyCheck(_data: unknown): Promise<{
     passed: boolean;
     issues: string[];
     recommendations: string[];

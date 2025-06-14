@@ -186,22 +186,101 @@ test-e2e-headed: kill-ports ## Run E2E tests in headed mode
 	@$(MAKE) kill-ports
 	@echo -e "${GREEN}✓ E2E tests in headed mode completed${NC}"
 
+.PHONY: test-stagehand
+test-stagehand: kill-ports ## Run Stagehand E2E tests
+	@echo -e "${BLUE}Running Stagehand E2E tests...${NC}"
+	@echo -e "${YELLOW}Starting development server for Stagehand tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:stagehand || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ Stagehand E2E tests completed${NC}"
+
+.PHONY: test-stagehand-auth
+test-stagehand-auth: kill-ports ## Run Stagehand authentication tests
+	@echo -e "${BLUE}Running Stagehand authentication tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:stagehand:auth || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ Stagehand auth tests completed${NC}"
+
+.PHONY: test-stagehand-dashboard
+test-stagehand-dashboard: kill-ports ## Run Stagehand dashboard tests
+	@echo -e "${BLUE}Running Stagehand dashboard tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:stagehand:dashboard || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ Stagehand dashboard tests completed${NC}"
+
+.PHONY: test-stagehand-patterns
+test-stagehand-patterns: kill-ports ## Run Stagehand pattern discovery tests
+	@echo -e "${BLUE}Running Stagehand pattern discovery tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:stagehand:patterns || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ Stagehand pattern tests completed${NC}"
+
+.PHONY: test-stagehand-api
+test-stagehand-api: kill-ports ## Run Stagehand API integration tests
+	@echo -e "${BLUE}Running Stagehand API integration tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:stagehand:api || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ Stagehand API tests completed${NC}"
+
+.PHONY: test-stagehand-integration
+test-stagehand-integration: kill-ports ## Run Stagehand integration tests
+	@echo -e "${BLUE}Running Stagehand integration tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:stagehand:integration || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ Stagehand integration tests completed${NC}"
+
+.PHONY: test-stagehand-headed
+test-stagehand-headed: kill-ports ## Run Stagehand tests in headed mode
+	@echo -e "${BLUE}Running Stagehand tests in headed mode...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:stagehand:headed || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ Stagehand headed tests completed${NC}"
+
+.PHONY: test-stagehand-ui
+test-stagehand-ui: kill-ports ## Run Stagehand tests with UI
+	@echo -e "${BLUE}Running Stagehand tests with UI...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:stagehand:ui || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ Stagehand UI tests completed${NC}"
+
 .PHONY: test-all
-test-all: kill-ports ## Run all tests in sequence (unit → integration → E2E)
+test-all: kill-ports ## Run all tests in sequence (unit → integration → E2E → Stagehand)
 	@echo -e "${BLUE}Running complete test suite in sequence...${NC}"
-	@echo -e "${YELLOW}1/3: Running unit tests...${NC}"
+	@echo -e "${YELLOW}1/4: Running unit tests...${NC}"
 	@$(NODE) run test:unit
 	@echo -e "${GREEN}✓ Unit tests passed${NC}"
-	@echo -e "${YELLOW}2/3: Running integration tests...${NC}"
+	@echo -e "${YELLOW}2/4: Running integration tests...${NC}"
 	@bunx vitest run tests/integration/
 	@echo -e "${GREEN}✓ Integration tests passed${NC}"
-	@echo -e "${YELLOW}3/3: Running E2E tests...${NC}"
+	@echo -e "${YELLOW}3/4: Running E2E tests...${NC}"
 	@echo -e "${BLUE}Starting development server for E2E tests...${NC}"
 	@$(NODE) run dev &
 	@sleep 5
 	@$(NODE) run test:e2e || true
 	@$(MAKE) kill-ports
 	@echo -e "${GREEN}✓ E2E tests completed${NC}"
+	@echo -e "${YELLOW}4/4: Running Stagehand E2E tests...${NC}"
+	@$(NODE) run dev &
+	@sleep 5
+	@$(NODE) run test:stagehand || true
+	@$(MAKE) kill-ports
+	@echo -e "${GREEN}✓ Stagehand tests completed${NC}"
 	@echo -e "${GREEN}✓ All tests completed successfully${NC}"
 
 .PHONY: test-quick
@@ -351,6 +430,9 @@ tw: test-watch ## Alias for test-watch
 
 .PHONY: te
 te: test-e2e ## Alias for test-e2e
+
+.PHONY: ts
+ts: test-stagehand ## Alias for test-stagehand
 
 .PHONY: tq
 tq: test-quick ## Alias for test-quick

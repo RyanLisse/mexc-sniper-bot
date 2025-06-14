@@ -124,7 +124,7 @@ export async function requireApiAuth(
 /**
  * Validate that the userId parameter matches the authenticated user
  */
-export async function validateUserAccess(request: NextRequest, userId: string) {
+export async function validateUserAccess(_request: NextRequest, userId: string) {
   try {
     const user = await requireAuth();
 
@@ -171,7 +171,7 @@ export async function getOptionalAuth() {
   try {
     const session = await getSession();
     return session.isAuthenticated ? session.user : null;
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }

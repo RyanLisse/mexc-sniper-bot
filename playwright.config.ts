@@ -27,6 +27,11 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+
+    /* Add test bypass header */
+    extraHTTPHeaders: {
+      'x-test-bypass': 'true'
+    },
   },
 
   /* Configure projects for major browsers */
@@ -59,9 +64,13 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'bun run dev',
+    command: 'PLAYWRIGHT_TEST=true bun run dev',
     url: 'http://localhost:3008',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      PLAYWRIGHT_TEST: 'true',
+      ...process.env,
+    },
   },
 })

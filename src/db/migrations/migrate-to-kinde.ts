@@ -4,7 +4,7 @@
  * This script safely migrates user data and updates foreign key references
  */
 
-import { resolve } from "path";
+import { resolve } from "node:path";
 import { config } from "dotenv";
 
 // Load environment variables

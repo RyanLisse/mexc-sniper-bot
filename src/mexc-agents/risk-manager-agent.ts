@@ -347,8 +347,8 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
   }
 
   async assessTradeRisk(
-    symbol: string,
-    type: "buy" | "sell",
+    _symbol: string,
+    _type: "buy" | "sell",
     quantity: number,
     price: number
   ): Promise<TradeRiskAssessment> {
@@ -496,7 +496,7 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     return exposureChange > 0.1 || pnlChange > 10 || positionChange;
   }
 
-  async performSafetyCheck(data: unknown): Promise<{
+  async performSafetyCheck(_data: unknown): Promise<{
     passed: boolean;
     issues: string[];
     recommendations: string[];

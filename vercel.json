@@ -44,22 +44,7 @@
     "app/api/inngest/route.ts": {
       "maxDuration": 30
     },
-    "app/api/triggers/calendar-poll/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/triggers/pattern-analysis/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/triggers/symbol-watch/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/triggers/trading-strategy/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/triggers/safety/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/triggers/emergency/route.ts": {
+    "app/api/triggers/**/route.ts": {
       "maxDuration": 30
     }
   },

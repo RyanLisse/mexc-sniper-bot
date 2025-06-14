@@ -50,7 +50,7 @@ export function authenticatedRoute<T extends any[]>(
 export function userQueryRoute<T extends any[]>(
   handler: (request: NextRequest, user: any, ...args: T) => Promise<Response>
 ) {
-  return withUserAuth(handler, (request: NextRequest, ...args: T) => getUserIdFromQuery(request));
+  return withUserAuth(handler, (request: NextRequest, ..._args: T) => getUserIdFromQuery(request));
 }
 
 /**
@@ -182,7 +182,7 @@ export function webhookRoute<T extends any[]>(
   handler: (request: NextRequest, ...args: T) => Promise<Response>
 ) {
   return withAuthOptions(
-    async (request: NextRequest, user: any, ...args: T) => {
+    async (request: NextRequest, _user: any, ...args: T) => {
       // Webhooks don't have users, so we pass null
       return await handler(request, ...args);
     },

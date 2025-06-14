@@ -5,9 +5,9 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 ## 📖 Documentation Structure
 
 ### 🏗️ Architecture Documentation
+- [**Quick Agent Setup**](architecture/AGENTS.md) - Quick setup guide for AI agents (essential for developers)
+- [**TypeScript Multi-Agent Architecture**](typescript-multi-agent-architecture.md) - Complete technical implementation details
 - [**Architecture Overview**](architecture/ARCHITECTURE_DIAGRAM.md) - Visual system architecture with diagrams
-- [**Multi-Agent System**](architecture/AGENTS.md) - Detailed agent architecture and roles
-- [**TypeScript Multi-Agent Architecture**](typescript-multi-agent-architecture.md) - Technical implementation details
 - [**Agent Orchestrator Roles**](agent-orchestrator-roles.md) - Orchestrator patterns and coordination
 - [**Transaction Locking System**](architecture/TRANSACTION_LOCKING_SYSTEM.md) - Concurrency control implementation
 - [**Memory Bank System**](architecture/memory-bank.md) - State management and persistence
@@ -22,6 +22,7 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 ### 📘 Development Guides
 - [**Quick Start Guide**](guides/QUICKSTART.md) - Get up and running quickly
 - [**Secure Encryption Guide**](guides/SECURE_ENCRYPTION_QUICKSTART.md) - API key encryption setup
+- [**Contributing Guide**](development/CONTRIBUTING.md) - Development guidelines and standards
 - [**OpenCode Development**](development/OpenCode.md) - Open source contribution guide
 - [**Error Handling Guide**](error-handling-migration-guide.md) - Error management patterns
 - [**Database Migration Guide**](database-foreign-key-migration.md) - Schema evolution practices
@@ -32,6 +33,9 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 - [**Trading Strategies**](new_strategies.md) - Strategy implementation guide
 - [**Sprint Checklist**](sprint_checklist_ts_migration.md) - TypeScript migration tracking
 
+### 🧪 Testing Documentation
+- [**Stagehand E2E Testing**](testing/STAGEHAND_E2E_TESTING.md) - AI-powered end-to-end testing framework
+
 ### 📸 Visual Documentation
 - [**Screenshots Gallery**](screenshots/) - UI/UX reference images
 
@@ -39,13 +43,14 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 
 ### For New Users
 1. Start with [Quick Start Guide](guides/QUICKSTART.md)
-2. Review [Architecture Overview](architecture/ARCHITECTURE_DIAGRAM.md)
+2. Review [Quick Agent Setup](architecture/AGENTS.md)
 3. Configure using [Secure Encryption Guide](guides/SECURE_ENCRYPTION_QUICKSTART.md)
 
 ### For Developers
-1. Read [TypeScript Multi-Agent Architecture](typescript-multi-agent-architecture.md)
-2. Study [Agent System](architecture/AGENTS.md)
-3. Follow [Error Handling Guide](error-handling-migration-guide.md)
+1. **Essential**: Read [Quick Agent Setup](architecture/AGENTS.md) - contains troubleshooting for common issues
+2. Study [TypeScript Multi-Agent Architecture](typescript-multi-agent-architecture.md) - complete technical details
+3. Review [Stagehand E2E Testing](testing/STAGEHAND_E2E_TESTING.md) - AI-powered testing framework
+4. Follow [Contributing Guide](development/CONTRIBUTING.md) - development standards
 
 ### For DevOps
 1. Follow [Deployment Guide](deployment/DEPLOYMENT.md)
@@ -55,10 +60,11 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 ## 🔍 Key Features Documentation
 
 ### Multi-Agent AI System
-- 5 specialized TypeScript agents
-- OpenAI GPT-4 integration
-- Event-driven workflows with Inngest
-- Real-time pattern recognition
+- 8+ specialized TypeScript agents for comprehensive trading automation
+- OpenAI GPT-4 integration for intelligent decision making
+- Event-driven workflows with Inngest for reliable background processing
+- Real-time MEXC pattern recognition (sts:2, st:2, tt:4)
+- Kinde Auth secure authentication system
 
 ### Database Architecture
 - TursoDB distributed SQLite
@@ -72,11 +78,13 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 - Customizable take profit levels
 - Risk management controls
 
-### Security Features
-- AES-256-GCM encryption
-- Transaction locking system
-- Rate limiting
-- CSRF protection
+### Security & Testing Features
+- **Authentication**: Kinde Auth with secure session management
+- **Encryption**: AES-256-GCM encryption for sensitive data
+- **Concurrency**: Transaction locking system for safe operations
+- **Protection**: Rate limiting and CSRF protection
+- **Testing**: Comprehensive test suite with Vitest, Playwright, and Stagehand
+- **Quality**: 100% test pass rate requirement with TypeScript strict mode
 
 ## 📝 Documentation Standards
 
@@ -108,6 +116,14 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for general contribution guidelines.
 
 ## 🔄 Documentation Updates
 
-This documentation is continuously updated. Last update: December 2024
+This documentation is continuously updated to reflect the current system architecture.
+
+**Latest Updates (January 2025):**
+- ✅ Updated to reflect 8+ specialized TypeScript agents
+- ✅ Added comprehensive Stagehand E2E testing documentation
+- ✅ Documented Kinde Auth integration and security features
+- ✅ Updated technology stack (Next.js 15, React 19, TanStack Query)
+- ✅ Added testing framework documentation (Vitest, Playwright, Stagehand)
+- ✅ Updated prerequisites and environment setup instructions
 
 For the latest updates, check the git history or release notes.

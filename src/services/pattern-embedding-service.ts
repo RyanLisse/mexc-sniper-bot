@@ -78,7 +78,7 @@ export class PatternEmbeddingService {
 
     const mean = priceChanges.reduce((a, b) => a + b, 0) / priceChanges.length;
     const variance =
-      priceChanges.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / priceChanges.length;
+      priceChanges.reduce((sum, val) => sum + (val - mean) ** 2, 0) / priceChanges.length;
 
     return Math.sqrt(variance);
   }

@@ -1,459 +1,294 @@
-# Claude Code Configuration - SPARC Development Environment
+# Claude Code Configuration - MEXC Sniper Bot AI System
 
 ## Project Overview
-This project uses the SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) methodology for systematic Test-Driven Development with AI assistance through Claude-Flow orchestration.
+This is a sophisticated TypeScript-based cryptocurrency trading bot featuring an advanced **Multi-Agent AI Architecture** designed for MEXC exchange. The system employs **11 specialized AI agents** orchestrated through **Inngest workflows** for automated pattern discovery, risk management, and trading strategy execution.
 
-## SPARC Development Commands
+## AI Agent Architecture Overview
 
-### Core SPARC Commands
-- `npx claude-flow sparc modes`: List all available SPARC development modes
-- `npx claude-flow sparc run <mode> "<task>"`: Execute specific SPARC mode for a task
-- `npx claude-flow sparc tdd "<feature>"`: Run complete TDD workflow using SPARC methodology
-- `npx claude-flow sparc info <mode>`: Get detailed information about a specific mode
+### 🤖 **Multi-Agent System** (`src/mexc-agents/`)
+
+The system features **11 specialized AI agents** powered by **OpenAI GPT-4** with intelligent caching, error recovery, and coordinated workflows:
+
+#### **Core Trading Agents**
+1. **BaseAgent** (`base-agent.ts`) - Foundation class with OpenAI integration, caching, and error handling
+2. **MexcApiAgent** (`mexc-api-agent.ts`) - MEXC API interactions and data analysis
+3. **PatternDiscoveryAgent** (`pattern-discovery-agent.ts`) - **Ready state pattern detection** (`sts:2, st:2, tt:4`)
+4. **CalendarAgent** (`calendar-agent.ts`) - New listing discovery and launch timing analysis
+5. **SymbolAnalysisAgent** (`symbol-analysis-agent.ts`) - Real-time readiness assessment and market analysis
+6. **StrategyAgent** (`strategy-agent.ts`) - AI-powered trading strategy creation
+
+#### **Risk Management & Safety Agents**  
+7. **SafetyBaseAgent** (`safety-base-agent.ts`) - Core safety monitoring and circuit breaker controls
+8. **RiskManagerAgent** (`risk-manager-agent.ts`) - Position sizing, risk metrics, and circuit breakers
+9. **SimulationAgent** (`simulation-agent.ts`) - Strategy backtesting and paper trading validation
+10. **ReconciliationAgent** (`reconciliation-agent.ts`) - Balance verification and position tracking
+11. **ErrorRecoveryAgent** (`error-recovery-agent.ts`) - System health monitoring and automatic recovery
+
+#### **Orchestration & Coordination**
+- **MultiAgentOrchestrator** (`multi-agent-orchestrator.ts`) - Workflow coordination and result synthesis
+- **MexcOrchestrator** (`orchestrator.ts`) - Specialized MEXC workflow execution
+- **AgentManager** (`agent-manager.ts`) - Agent lifecycle and health management
 
 ### Standard Build Commands
 - `npm run build`: Build the project
-- `npm run test`: Run the test suite
+- `npm run test`: Run the test suite (96 tests with 100% pass rate)
 - `npm run lint`: Run linter and format checks
 - `npm run typecheck`: Run TypeScript type checking
 
-## SPARC Methodology Workflow
+## 🚀 **Inngest Workflow Orchestration** (`src/inngest/functions.ts`)
 
-### 1. Specification Phase
-```bash
-# Create detailed specifications and requirements
-npx claude-flow sparc run spec-pseudocode "Define user authentication requirements"
-```
-- Define clear functional requirements
-- Document edge cases and constraints
-- Create user stories and acceptance criteria
-- Establish non-functional requirements
+### AI-Powered Trading Workflows
 
-### 2. Pseudocode Phase
-```bash
-# Develop algorithmic logic and data flows
-npx claude-flow sparc run spec-pseudocode "Create authentication flow pseudocode"
-```
-- Break down complex logic into steps
-- Define data structures and interfaces
-- Plan error handling and edge cases
-- Create modular, testable components
+The system uses **Inngest** for reliable, event-driven execution of multi-agent workflows:
 
-### 3. Architecture Phase
-```bash
-# Design system architecture and component structure
-npx claude-flow sparc run architect "Design authentication service architecture"
-```
-- Create system diagrams and component relationships
-- Define API contracts and interfaces
-- Plan database schemas and data flows
-- Establish security and scalability patterns
+#### **Core Trading Workflows**
+1. **`pollMexcCalendar`** - Multi-agent calendar discovery and new listing detection
+2. **`watchMexcSymbol`** - Symbol monitoring with AI pattern analysis and readiness assessment
+3. **`analyzeMexcPatterns`** - Pattern discovery and validation across multiple symbols
+4. **`createMexcTradingStrategy`** - AI-powered strategy creation with risk management
 
-### 4. Refinement Phase (TDD Implementation)
-```bash
-# Execute Test-Driven Development cycle
-npx claude-flow sparc tdd "implement user authentication system"
+#### **Safety & Monitoring Workflows** (`src/inngest/safety-functions.ts`)
+- **Circuit Breaker Controls** - Automatic trading halts on risk threshold breaches
+- **Balance Reconciliation** - Real-time position and balance verification
+- **Error Recovery** - Automatic system health monitoring and recovery procedures
+- **Risk Assessment** - Continuous risk evaluation and position management
+
+### Pattern Detection Algorithm: **`sts:2, st:2, tt:4`**
+
+The core trading logic centers on detecting the **MEXC Ready State Pattern**:
+
+```typescript
+// Ready State Pattern Detection
+interface ReadyStatePattern {
+  sts: 2,      // Symbol Trading Status: Ready
+  st: 2,       // Status: Active  
+  tt: 4        // Trading Time: Live
+}
 ```
 
-**TDD Cycle:**
-1. **Red**: Write failing tests first
-2. **Green**: Implement minimal code to pass tests
-3. **Refactor**: Optimize and clean up code
-4. **Repeat**: Continue until feature is complete
+#### **Pattern Analysis Framework**
+- **3.5+ Hour Advance Detection** - Early opportunity identification
+- **Confidence Scoring (0-100%)** - AI-calculated reliability metrics
+- **Multi-Symbol Cross-Analysis** - Correlated pattern detection
+- **Risk Pattern Recognition** - False positive filtering and risk assessment
 
-### 5. Completion Phase
-```bash
-# Integration, documentation, and validation
-npx claude-flow sparc run integration "integrate authentication with user management"
+### Agent Communication & Coordination
+
+```typescript
+// Agent Workflow Request Interface
+interface AgentWorkflowRequest {
+  type: "calendar_discovery" | "pattern_analysis" | "symbol_analysis" | "strategy_creation";
+  input: string;
+  context?: Record<string, unknown>;
+  maxHandoffs?: number;
+  timeout?: number;
+}
+
+// Multi-Agent Result Synthesis
+interface AgentWorkflowResult {
+  success: boolean;
+  finalResult?: AgentResponse;
+  executionPath: string[];
+  totalExecutionTime: number;
+  agentResults: Map<string, AgentResponse>;
+  error?: string;
+}
 ```
-- Integrate all components
-- Perform end-to-end testing
-- Create comprehensive documentation
-- Validate against original requirements
 
-## SPARC Mode Reference
+## 🌐 **API Endpoints & Triggers** (`app/api/`)
 
-### Development Modes
-- **`architect`**: System design and architecture planning
-- **`code`**: Clean, modular code implementation
-- **`tdd`**: Test-driven development and testing
-- **`spec-pseudocode`**: Requirements and algorithmic planning
-- **`integration`**: System integration and coordination
+### Agent Management & Monitoring
+- **`/api/inngest`** - Main Inngest webhook endpoint for workflow execution
+- **`/api/multi-agent`** - Direct multi-agent orchestrator access
+- **`/api/workflow-status`** - Real-time workflow status and activity monitoring
 
-### Quality Assurance Modes
-- **`debug`**: Troubleshooting and bug resolution
-- **`security-review`**: Security analysis and vulnerability assessment
-- **`refinement-optimization-mode`**: Performance optimization and refactoring
+### Manual Workflow Triggers (`app/api/triggers/`)
+- **`/api/triggers/calendar-poll`** - Manually trigger calendar discovery workflow
+- **`/api/triggers/symbol-watch`** - Start symbol monitoring for specific tokens  
+- **`/api/triggers/pattern-analysis`** - Run pattern analysis on demand
+- **`/api/triggers/trading-strategy`** - Create trading strategy for specific symbol
+- **`/api/triggers/safety`** - Trigger safety system checks and circuit breakers
+- **`/api/triggers/emergency`** - Emergency stop and system halt procedures
 
-### Support Modes
-- **`docs-writer`**: Documentation creation and maintenance
-- **`devops`**: Deployment and infrastructure management
-- **`mcp`**: External service integration
+### MEXC Integration (`app/api/mexc/`)
+- **`/api/mexc/calendar`** - MEXC calendar data with AI analysis
+- **`/api/mexc/symbols`** - Symbol data with pattern detection
+- **`/api/mexc/account`** - Account balance and trading status
+- **`/api/mexc/connectivity`** - Exchange connectivity and health checks
+- **`/api/mexc/trade`** - Trade execution and order management
 
-## Code Style and Best Practices
+### System Management
+- **`/api/health/db`** - Database connectivity and performance monitoring
+- **`/api/schedule/control`** - Workflow scheduling control and automation
+- **`/api/query-performance`** - Database query performance metrics
+- **`/api/transaction-locks`** - Transaction locking system status
+- **`/api/user-preferences`** - User configuration and trading preferences
 
-### SPARC Development Principles
-- **Modular Design**: Keep files under 500 lines, break into logical components
-- **Environment Safety**: Never hardcode secrets or environment-specific values
-- **Test-First**: Always write tests before implementation (Red-Green-Refactor)
-- **Clean Architecture**: Separate concerns, use dependency injection
-- **Documentation**: Maintain clear, up-to-date documentation
+## 🧪 **Testing & Quality Assurance**
 
-### Coding Standards
-- Use TypeScript for type safety and better tooling
-- Follow consistent naming conventions (camelCase for variables, PascalCase for classes)
-- Implement proper error handling and logging
-- Use async/await for asynchronous operations
-- Prefer composition over inheritance
+### Testing Strategy
+- **96 tests with 100% pass rate** - Comprehensive test coverage across all systems
+- **Unit Tests** (`tests/unit/`) - Individual agent and service testing
+- **Integration Tests** (`tests/integration/`) - Multi-agent workflow testing
+- **E2E Tests** (`tests/e2e/`) - Full system and UI testing with Playwright
+- **Stagehand E2E Tests** - Advanced browser automation and AI-driven testing
+
+### E2E Testing with Stagehand (`tests/e2e/stagehand-dashboard.spec.ts`)
+```typescript
+// AI-powered browser testing
+const dashboardTitle = await page.extract({
+  instruction: "Extract the main dashboard title",
+  schema: z.object({ title: z.string() }),
+  useTextExtract: false,
+});
+
+// Intelligent UI interaction
+const tabResults = await page.observe({
+  instruction: "Find the Overview tab",
+  onlyVisible: true,
+  returnAction: true,
+});
+```
+
+### Agent System Testing
+```bash
+# Test individual agents
+npm run test:unit
+
+# Test multi-agent workflows  
+npm run test:integration
+
+# Test full system with browser automation
+npm run test:e2e
+
+# Test with Stagehand AI browser automation
+npm run test:stagehand
+```
+
+### Code Quality Standards
+- **TypeScript Strict Mode** - Zero compilation errors required
+- **Biome.js** - Fast formatting and linting
+- **ESLint** - Additional TypeScript-specific rules
+- **Accessibility (a11y)** - Full WCAG compliance in UI components
+- **Error Handling** - Comprehensive error recovery in all agents
 
 ### Memory and State Management
-- Use claude-flow memory system for persistent state across sessions
-- Store progress and findings using namespaced keys
-- Query previous work before starting new tasks
-- Export/import memory for backup and sharing
+- **Agent Caching** - 5-minute intelligent response caching with SHA-256 keys
+- **Database State** - Drizzle ORM with SQLite/TursoDB persistence
+- **Workflow State** - Inngest-managed stateful workflows with recovery
+- **User Preferences** - Persistent trading configuration and risk settings
 
-## SPARC Memory Integration
+## 🔧 **Agent Development & Configuration**
 
-### Memory Commands for SPARC Development
-```bash
-# Store project specifications
-npx claude-flow memory store spec_auth "User authentication requirements and constraints"
+### Adding New AI Agents
 
-# Store architectural decisions
-npx claude-flow memory store arch_decisions "Database schema and API design choices"
+1. **Create Agent Class** (`src/mexc-agents/`)
+```typescript
+import { BaseAgent, type AgentConfig, type AgentResponse } from "./base-agent";
 
-# Store test results and coverage
-npx claude-flow memory store test_coverage "Authentication module: 95% coverage, all tests passing"
+export class CustomAgent extends BaseAgent {
+  constructor() {
+    const config: AgentConfig = {
+      name: "custom-agent",
+      model: "gpt-4o",
+      temperature: 0.2,
+      systemPrompt: `You are a specialized agent for...`,
+    };
+    super(config);
+  }
 
-# Query previous work
-npx claude-flow memory query auth_implementation
-
-# Export project memory
-npx claude-flow memory export project_backup.json
+  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+    return await this.callOpenAI([
+      { role: "user", content: input }
+    ]);
+  }
+}
 ```
 
-### Memory Namespaces
-- **`spec`**: Requirements and specifications
-- **`arch`**: Architecture and design decisions
-- **`impl`**: Implementation notes and code patterns
-- **`test`**: Test results and coverage reports
-- **`debug`**: Bug reports and resolution notes
+2. **Add to Orchestrator** (`src/mexc-agents/orchestrator.ts`)
+3. **Create Inngest Workflow** (`src/inngest/functions.ts`)
+4. **Add API Trigger** (`app/api/triggers/custom-agent/route.ts`)
+5. **Write Tests** (`tests/unit/custom-agent.test.ts`)
 
-## Workflow Examples
-
-### Feature Development Workflow
-```bash
-# 1. Start with specification
-npx claude-flow sparc run spec-pseudocode "User profile management feature"
-
-# 2. Design architecture
-npx claude-flow sparc run architect "Profile service architecture with data validation"
-
-# 3. Implement with TDD
-npx claude-flow sparc tdd "user profile CRUD operations"
-
-# 4. Security review
-npx claude-flow sparc run security-review "profile data access and validation"
-
-# 5. Integration testing
-npx claude-flow sparc run integration "profile service with authentication system"
-
-# 6. Documentation
-npx claude-flow sparc run docs-writer "profile service API documentation"
+### Agent Configuration
+```typescript
+interface AgentConfig {
+  name: string;
+  model?: string;           // Default: "gpt-4o"
+  temperature?: number;     // Default: 0.7
+  maxTokens?: number;       // Default: 2000
+  systemPrompt: string;
+  cacheEnabled?: boolean;   // Default: true
+  cacheTTL?: number;        // Default: 5 minutes
+}
 ```
 
-### Bug Fix Workflow
+### Agent Communication Patterns
+- **Workflow Handoffs** - Sequential agent execution in Inngest workflows
+- **Result Synthesis** - Multi-agent response aggregation and analysis
+- **Error Recovery** - Automatic fallback to alternative agents
+- **Performance Monitoring** - Cache hit rates, execution times, success rates
+
+## 💼 **Workflow Examples & Usage Patterns**
+
+### Multi-Agent Trading Workflow
 ```bash
-# 1. Debug and analyze
-npx claude-flow sparc run debug "authentication token expiration issue"
+# 1. Trigger Calendar Discovery  
+curl -X POST http://localhost:3008/api/triggers/calendar-poll
 
-# 2. Write regression tests
-npx claude-flow sparc run tdd "token refresh mechanism tests"
+# 2. Monitor Symbol Status (triggered automatically)
+# Agents: CalendarAgent → PatternDiscoveryAgent → SymbolAnalysisAgent
 
-# 3. Implement fix
-npx claude-flow sparc run code "fix token refresh in authentication service"
+# 3. Pattern Analysis (when symbols become active)
+curl -X POST http://localhost:3008/api/triggers/pattern-analysis \
+  -H "Content-Type: application/json" \
+  -d '{"vcoinId": "TOKEN123", "symbols": ["TOKENUSDT"]}'
 
-# 4. Security review
-npx claude-flow sparc run security-review "token handling security implications"
+# 4. Strategy Creation (when ready state detected)  
+curl -X POST http://localhost:3008/api/triggers/trading-strategy \
+  -H "Content-Type: application/json" \
+  -d '{"vcoinId": "TOKEN123", "riskLevel": "medium"}'
 ```
 
-## Configuration Files
-
-### SPARC Configuration
-- **`.roomodes`**: SPARC mode definitions and configurations
-- **`.roo/`**: Templates, workflows, and mode-specific rules
-
-### Claude-Flow Configuration
-- **`memory/`**: Persistent memory and session data
-- **`coordination/`**: Multi-agent coordination settings
-
-## Git Workflow Integration
-
-### Commit Strategy with SPARC
-- **Specification commits**: After completing requirements analysis
-- **Architecture commits**: After design phase completion
-- **TDD commits**: After each Red-Green-Refactor cycle
-- **Integration commits**: After successful component integration
-- **Documentation commits**: After completing documentation updates
-
-### Branch Strategy
-- **`feature/sparc-<feature-name>`**: Feature development with SPARC methodology
-- **`hotfix/sparc-<issue>`**: Bug fixes using SPARC debugging workflow
-- **`refactor/sparc-<component>`**: Refactoring using optimization mode
-
-## Troubleshooting
-
-### Common SPARC Issues
-- **Mode not found**: Check `.roomodes` file exists and is valid JSON
-- **Memory persistence**: Ensure `memory/` directory has write permissions
-- **Tool access**: Verify required tools are available for the selected mode
-- **Namespace conflicts**: Use unique memory namespaces for different features
-
-### Debug Commands
+### Safety System Activation
 ```bash
-# Check SPARC configuration
-npx claude-flow sparc modes
+# Emergency Stop All Trading
+curl -X POST http://localhost:3008/api/triggers/emergency \
+  -H "Content-Type: application/json" \
+  -d '{"action": "halt_all_trading", "reason": "market_volatility"}'
 
-# Verify memory system
-npx claude-flow memory stats
-
-# Check system status
-npx claude-flow status
-
-# View detailed mode information
-npx claude-flow sparc info <mode-name>
+# Risk Assessment
+curl -X POST http://localhost:3008/api/triggers/safety \
+  -H "Content-Type: application/json" \
+  -d '{"action": "risk_assessment", "symbols": ["BTCUSDT", "ETHUSDT"]}'
 ```
 
-## Project Architecture
-
-This SPARC-enabled project follows a systematic development approach:
-- **Clear separation of concerns** through modular design
-- **Test-driven development** ensuring reliability and maintainability
-- **Iterative refinement** for continuous improvement
-- **Comprehensive documentation** for team collaboration
-- **AI-assisted development** through specialized SPARC modes
-
-## Important Notes
-
-- Always run tests before committing (`npm run test`)
-- Use SPARC memory system to maintain context across sessions
-- Follow the Red-Green-Refactor cycle during TDD phases
-- Document architectural decisions in memory for future reference
-- Regular security reviews for any authentication or data handling code
-
-For more information about SPARC methodology, see: https://github.com/ruvnet/claude-code-flow/docs/sparc.md
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## 🛠️ Development Tools
-
-### Code Quality & Formatting
-
-This project uses modern TypeScript development tools:
-
-**TypeScript/JavaScript:**
-- **Biome.js** - Fast formatter and linter (configured in `biome.json`)
-- **TypeScript** - Built-in type checking with `tsc`
-
-### Database
-
-The project supports two database backends:
-- **SQLite** (default) - Local development database
-- **TursoDB** - Edge-hosted distributed database with SQLite compatibility and global replication
-
-#### TursoDB Features:
-- **Global Edge Distribution**: Automatic replication to 30+ locations worldwide
-- **SQLite Compatibility**: Drop-in replacement with enhanced features
-- **Low Latency**: <10ms reads from edge locations
-- **Automatic Backups**: Point-in-time recovery
-- **Built-in Analytics**: Query performance monitoring
-
-#### Setting up TursoDB:
+### Development Workflow
 ```bash
-# Quick setup
-bun run setup:turso
+# 1. Run tests before changes
+npm run test
 
-# Manual setup
-turso auth login
-turso db create mexc-sniper-bot --location iad1
-turso db tokens create mexc-sniper-bot
+# 2. Test individual agents  
+npm run test:unit -- pattern-discovery-agent
 
-# Add to .env.local
-TURSO_DATABASE_URL=libsql://your-database.turso.io
-TURSO_AUTH_TOKEN=your-auth-token
+# 3. Test multi-agent workflows
+npm run test:integration -- agent-system.test.ts
+
+# 4. Verify TypeScript compliance
+npm run type-check
+
+# 5. Test E2E with AI browser automation
+npm run test:stagehand
 ```
 
-#### Database Migration Commands:
+## ⚙️ **System Configuration & Environment**
+
+### Required Environment Variables
 ```bash
-# Generate migrations
-bun run db:generate
+# AI Integration (Required)
+OPENAI_API_KEY=your-openai-api-key
 
-# Apply migrations (handles existing tables gracefully)
-bun run db:migrate:safe
-
-# Check database health
-bun run db:check
-
-# Open database studio
-bun run db:studio
-```
-
-## Project Overview
-
-This is a modern Next.js project featuring a sophisticated TypeScript multi-agent system for MEXC cryptocurrency trading. The architecture is purely TypeScript-based with:
-
-- **Frontend**: Next.js 15 with TypeScript and React 19
-- **Multi-Agent System**: 5 specialized TypeScript agents with OpenAI GPT-4 integration
-- **Workflows**: Inngest for reliable event-driven task orchestration
-- **Database**: Drizzle ORM with SQLite/TursoDB support
-- **Data Management**: TanStack Query for real-time data fetching and caching
-- **Architecture**: Serverless deployment on Vercel with edge optimization
-
-## Common Development Commands
-
-### Code Quality
-
-```bash
-# Run all linting and formatting (TypeScript only)
-bun run lint:all
-
-# Run linting individually
-bun run lint          # TypeScript/JavaScript with Biome
-bun run format        # Format code with Biome
-
-# Type checking
-bun run type-check    # TypeScript
-
-# Pre-commit checks (runs all checks)
-bun run pre-commit
-```
-
-### Development
-
-```bash
-# Run Next.js frontend with TypeScript agents (port 3008)
-npm run dev
-
-# Run Inngest dev server for TypeScript multi-agent workflows
-npx inngest-cli dev -u http://localhost:3008/api/inngest
-
-# Access Inngest dashboard at http://localhost:8288
-```
-
-### Authentication Setup
-
-The project uses Kinde Auth for secure user authentication:
-
-```bash
-# 1. Create a Kinde account at https://kinde.com
-# 2. Create a new application in your Kinde dashboard
-# 3. Configure the following settings in Kinde:
-#    - Allowed callback URLs: http://localhost:3008/api/auth/kinde_callback
-#    - Allowed logout redirect URLs: http://localhost:3008
-#    - Application type: Regular web application
-
-# 4. Add Kinde credentials to .env.local:
-KINDE_CLIENT_ID=your-client-id
-KINDE_CLIENT_SECRET=your-client-secret
-KINDE_ISSUER_URL=https://your-domain.kinde.com
-KINDE_SITE_URL=http://localhost:3008
-KINDE_POST_LOGOUT_REDIRECT_URL=http://localhost:3008
-KINDE_POST_LOGIN_REDIRECT_URL=http://localhost:3008/dashboard
-```
-
-### Database Operations
-
-```bash
-# Generate new migrations
-bun run db:generate
-
-# Apply migrations (standard)
-bun run db:migrate
-
-# Apply migrations (safe - handles existing tables)
-bun run db:migrate:safe
-
-# Check database connection and status
-bun run db:check
-
-# Open database studio
-bun run db:studio
-
-# Reset database (WARNING: destroys all data)
-bun run db:reset
-```
-
-### Build & Deployment
-
-```bash
-# Build Next.js app
-npm run build
-
-# Deploy to Vercel (after git push)
-vercel --prod
-```
-
-## Architecture Overview
-
-### TypeScript Multi-Agent System
-
-The system is built entirely in TypeScript with specialized agents:
-
-#### **🎯 Core Agents** (`src/mexc-agents/`)
-
-1. **MexcApiAgent** (`mexc-api-agent.ts`)
-   - MEXC API interactions and data analysis
-   - Trading signal extraction with AI
-   - Data quality assessment and validation
-
-2. **PatternDiscoveryAgent** (`pattern-discovery-agent.ts`)
-   - Ready state pattern detection: `sts:2, st:2, tt:4`
-   - Early opportunity identification (3.5+ hour advance)
-   - Confidence scoring and pattern validation
-
-3. **CalendarAgent** (`calendar-agent.ts`)
-   - New listing discovery and monitoring
-   - Launch timing analysis and predictions
-   - Market potential assessment
-
-4. **SymbolAnalysisAgent** (`symbol-analysis-agent.ts`)
-   - Real-time readiness assessment
-   - Market microstructure analysis
-   - Risk evaluation and confidence scoring
-
-5. **MexcOrchestrator** (`orchestrator.ts`)
-   - Multi-agent workflow coordination
-   - Result synthesis and error handling
-   - Performance optimization
-
-#### **🚀 Inngest Workflows** (`src/inngest/functions.ts`)
-
-1. **pollMexcCalendar** - Multi-agent calendar discovery
-2. **watchMexcSymbol** - Symbol monitoring with AI analysis
-3. **analyzeMexcPatterns** - Pattern discovery and validation
-4. **createMexcTradingStrategy** - AI-powered strategy creation
-
-### API Routes
-
-- `/api/inngest` → TypeScript multi-agent workflows
-- `/api/triggers/*` → Manual workflow trigger endpoints
-- `/api/schedule/control` → Workflow scheduling control
-
-### Database & Data Management
-
-- **Database**: Drizzle ORM with SQLite/TursoDB (`src/db/schema.ts`)
-- **Data Fetching**: TanStack Query for real-time data management (`src/hooks/`)
-- **TypeScript API Client**: Direct MEXC integration (`src/services/mexc-api-client.ts`)
-
-## Environment Variables
-
-Required for TypeScript multi-agent system:
-```bash
-# Core AI Integration
-OPENAI_API_KEY=your-openai-api-key  # Required for all agents
-
-# Kinde Authentication
+# Authentication (Kinde)
 KINDE_CLIENT_ID=your-kinde-client-id
 KINDE_CLIENT_SECRET=your-kinde-client-secret
 KINDE_ISSUER_URL=https://your-domain.kinde.com
@@ -461,307 +296,169 @@ KINDE_SITE_URL=http://localhost:3008
 KINDE_POST_LOGOUT_REDIRECT_URL=http://localhost:3008
 KINDE_POST_LOGIN_REDIRECT_URL=http://localhost:3008/dashboard
 
-# MEXC API Access
-MEXC_API_KEY=your-mexc-api-key      # Optional
-MEXC_SECRET_KEY=your-mexc-secret    # Optional
-MEXC_BASE_URL=https://api.mexc.com  # Default
-
-# Database
-DATABASE_URL=sqlite:///./mexc_sniper.db  # Default SQLite
-# TursoDB (optional)
-TURSO_DATABASE_URL=your-turso-url
+# Database (SQLite default, TursoDB optional)
+DATABASE_URL=sqlite:///./mexc_sniper.db
+TURSO_DATABASE_URL=libsql://your-database.turso.io
 TURSO_AUTH_TOKEN=your-turso-token
 
-# Workflow Orchestration (auto-generated if not provided)
+# MEXC API (Optional)
+MEXC_API_KEY=your-mexc-api-key
+MEXC_SECRET_KEY=your-mexc-secret
+MEXC_BASE_URL=https://api.mexc.com
+
+# Workflow Orchestration (Auto-generated)
 INNGEST_SIGNING_KEY=auto-generated
 INNGEST_EVENT_KEY=auto-generated
 ```
 
-## Project Structure
+### Key Configuration Files
+- **`drizzle.config.ts`** - Database ORM configuration
+- **`next.config.ts`** - Next.js and deployment settings
+- **`vercel.json`** - Vercel deployment configuration  
+- **`playwright.config.ts`** - E2E testing configuration
+- **`biome.json`** - Code formatting and linting rules
+- **`tsconfig.json`** - TypeScript compilation settings
 
-```
-├── src/                         # TypeScript source code
-│   ├── mexc-agents/            # 🤖 Multi-agent system
-│   │   ├── mexc-api-agent.ts   # MEXC API integration
-│   │   ├── pattern-discovery-agent.ts  # Pattern detection
-│   │   ├── calendar-agent.ts   # Calendar monitoring
-│   │   ├── symbol-analysis-agent.ts    # Symbol analysis
-│   │   ├── orchestrator.ts     # Workflow coordination
-│   │   └── index.ts           # Agent exports
-│   ├── agents/                 # 🧠 General AI agents
-│   │   ├── base-agent.ts       # Base agent class
-│   │   ├── research-agent.ts   # Research capabilities
-│   │   ├── analysis-agent.ts   # Market analysis
-│   │   ├── strategy-agent.ts   # Trading strategies
-│   │   └── index.ts           # Agent exports
-│   ├── inngest/               # 🚀 Workflow definitions
-│   │   ├── client.ts          # Inngest client
-│   │   ├── functions.ts       # MEXC workflows
-│   │   └── scheduled-functions.ts # Automated scheduling
-│   ├── db/                    # 🗄️ Database layer
-│   │   ├── schema.ts          # Drizzle schema
-│   │   ├── index.ts           # Database client
-│   │   └── migrations/        # Database migrations
-│   ├── hooks/                 # 🪝 TanStack Query hooks
-│   │   ├── use-mexc-data.ts   # MEXC data fetching
-│   │   └── use-user-preferences.ts # User settings
-│   ├── services/              # 🌐 External services
-│   │   └── mexc-api-client.ts # TypeScript MEXC client
-│   └── components/            # ⚛️ React components
-│       ├── coin-calendar.tsx  # Calendar display
-│       ├── user-preferences.tsx # Settings management
-│       ├── query-provider.tsx # TanStack provider
-│       └── ui/               # UI components
-├── app/                       # 🌐 Next.js app directory
-│   ├── api/inngest/route.ts   # TypeScript workflow endpoint
-│   ├── api/triggers/         # Manual workflow triggers
-│   ├── api/schedule/         # Scheduling control
-│   └── dashboard/            # Trading dashboard
-└── vercel.json               # ⚙️ Vercel deployment config
-```
+## 🚀 **Development & Debugging Commands**
 
-## User Configuration System
-
-The system includes a comprehensive user preference system:
-
-### Take Profit Levels
-- **Level 1**: Conservative (default: 5%)
-- **Level 2**: Moderate (default: 10%)
-- **Level 3**: Aggressive (default: 15%)
-- **Level 4**: Very Aggressive (default: 25%)
-- **Custom**: User-defined percentage
-
-### Trading Preferences
-- Default buy amount in USDT
-- Maximum concurrent trading positions
-- Risk tolerance (low/medium/high)
-- Ready state pattern configuration
-- Stop loss percentages
-- Target advance detection hours
-
-## Data Flow Architecture
-
-```
-User Dashboard ←→ TanStack Query ←→ TypeScript MEXC Client ←→ MEXC API
-       ↓                ↓                      ↓
-   User Actions → Inngest Workflows → Multi-Agent System
-       ↓                ↓                      ↓
-   Configuration → Database (Drizzle) ← Agent Results
-```
-
-## Development Guidelines
-
-1. **Pure TypeScript**: All new code should be in TypeScript
-2. **Drizzle ORM**: Use Drizzle for all database operations
-3. **TanStack Query**: Use for all data fetching and caching
-4. **Agent Pattern**: Follow the established agent architecture
-5. **Error Handling**: Implement comprehensive error handling
-6. **Type Safety**: Maintain strict TypeScript typing
-7. **Testing**: Write tests for new functionality
-8. **Documentation**: Add JSDoc comments for complex functions
-
-## Common Workflows
-
-### Adding a New Agent
-1. Create agent file in `src/mexc-agents/`
-2. Extend base agent class
-3. Implement required methods
-4. Add to orchestrator
-5. Create corresponding Inngest workflow
-6. Add tests
-
-### Adding New Database Tables
-1. Define schema in `src/db/schema.ts`
-2. Generate migration: `bun run db:generate`
-3. Apply migration: `bun run db:migrate`
-4. Create TypeScript types
-5. Add TanStack Query hooks
-
-### Adding User Configuration
-1. Update user preferences schema
-2. Create migration for new fields
-3. Add UI components for configuration
-4. Update hooks for data management
-5. Test configuration persistence
-
-## Debugging & Monitoring
-
-- **Inngest Dashboard**: http://localhost:8288 (development)
-- **Database Studio**: `bun run db:studio`
-- **Network Monitoring**: TanStack Query DevTools
-- **Console Logs**: Browser DevTools for frontend debugging
-
-## Code Quality Standards
-
-### Recent Improvements (Latest)
-
-The codebase has been significantly improved with:
-
-**TypeScript Compliance:**
-- ✅ Zero TypeScript compilation errors
-- ✅ Proper type assertions for library compatibility
-- ✅ Removed all `any` usage with proper type guards
-- ✅ Fixed useEffect dependency arrays
-
-**Accessibility (a11y):**
-- ✅ Proper semantic HTML elements (button vs div)
-- ✅ Label associations with htmlFor attributes
-- ✅ Keyboard navigation support
-- ✅ ARIA attributes for screen readers
-
-**React Best Practices:**
-- ✅ Meaningful keys for mapped elements
-- ✅ useCallback for stable function references
-- ✅ Proper button types to prevent form submission
-
-**Code Quality:**
-- ✅ All 96 tests passing
-- ✅ Eliminated unused variables
-- ✅ Safe optional chaining over non-null assertions
-- ✅ Consistent code formatting with Biome
-
-### Quality Checks
-
+### Agent System Management
 ```bash
-# Run complete quality check
-make test && make lint && bun run type-check
+# Start development server with agents
+npm run dev
 
-# Individual checks
-bun run type-check    # Must pass with 0 errors
-make test            # All 96 tests must pass
-make lint            # Check for issues (some warnings acceptable)
-bun run build        # Must complete successfully
+# Start Inngest dev server for workflows  
+npx inngest-cli dev -u http://localhost:3008/api/inngest
+
+# Access Inngest dashboard
+open http://localhost:8288
+
+# Test agent health
+curl http://localhost:3008/api/health/agents
+
+# Monitor workflow status
+curl http://localhost:3008/api/workflow-status
 ```
 
-## Troubleshooting
-
-### Database Issues
-
-#### Migration Errors: "table already exists"
-This is common when working with persistent databases like TursoDB:
-
+### Database Operations
 ```bash
-# Solution 1: Use safe migration
+# Generate new migrations
+bun run db:generate
+
+# Apply migrations safely
 bun run db:migrate:safe
 
-# Solution 2: Check database status first
+# Open database studio
+bun run db:studio
+
+# Check database health
 bun run db:check
 
-# Solution 3: For development, reset and migrate
-bun run db:reset && bun run db:migrate
-```
-
-#### TursoDB Connection Issues
-```bash
-# Check environment variables
-echo $TURSO_DATABASE_URL
-echo $TURSO_AUTH_TOKEN
-
-# Test database connection
-bun run db:check
-
-# Verify TursoDB configuration in drizzle.config.ts
-```
-
-#### SQLite Permission Issues
-```bash
-# Fix permissions (development)
-chmod 664 mexc_sniper.db
-
-# Reset database if corrupted
+# Reset database (dev only)
 bun run db:reset
 ```
 
-### Deployment Issues
+### Development Monitoring
+- **Inngest Dashboard** - `http://localhost:8288` (workflow monitoring)
+- **Database Studio** - `bun run db:studio` (data management)
+- **TanStack Query DevTools** - Browser-based state inspection
+- **Agent Cache Statistics** - Available via API endpoints
+- **Performance Metrics** - Query performance and agent execution times
 
-#### Vercel Environment Variables
-Ensure these are set in Vercel Dashboard:
-```bash
-AUTH_SECRET=your-production-secret
-TURSO_DATABASE_URL=your-turso-url
-TURSO_AUTH_TOKEN=your-turso-token
-OPENAI_API_KEY=your-openai-key
-```
-
-#### Build Failures
-```bash
-# Check TypeScript errors
-bun run type-check
-
-# Check linting issues
-bun run lint:check
-
-# Test build locally
-bun run build
-```
-
-#### TypeScript Hanging in Containers/CI
-If TypeScript checking hangs in containerized or CI environments:
-
-```bash
-# Priority fix: Clear build cache first
-rm -rf .next .tsbuildinfo node_modules/.cache && bun run type-check
-
-# Alternative methods if still hanging:
-npx tsc --noEmit --skipLibCheck                           # Skip lib checking
-NODE_OPTIONS="--max-old-space-size=4096" npx tsc --noEmit # Increase memory
-bun run build                                             # Use build (includes type check)
-
-# Kill hanging processes
-pkill -f tsc || pkill -f "node.*tsc" || true
-
-# Debug: Check what's in the log
-cat /tmp/setup_typecheck.log
-```
-
-**Root causes:** Stale incremental build cache, memory constraints, file system differences between local and container environments.
-
-### Authentication Issues
-
-#### 500 Errors on Auth Endpoints
-Usually missing environment variables in production:
-```bash
-# Check if AUTH_SECRET is set
-# Check if database is accessible
-# Verify Better Auth configuration
-```
-
-#### Local vs Production Differences
-```bash
-# Test locally first
-curl http://localhost:3008/api/auth/get-session
-
-# Compare with production
-curl https://your-app.vercel.app/api/auth/get-session
-```
+## 🔧 **Troubleshooting & Error Recovery**
 
 ### Agent System Issues
 
-#### Agent Health Check
+#### Agent Communication Failures
 ```bash
-# Run agent health check
-bun run agents:health
+# Check OpenAI API connectivity
+curl -H "Authorization: Bearer $OPENAI_API_KEY" \
+  https://api.openai.com/v1/models
 
-# Test individual agents
-bun run agents:test
+# Test individual agent health
+curl http://localhost:3008/api/triggers/pattern-analysis \
+  -H "Content-Type: application/json" \
+  -d '{"test": true}'
+
+# Monitor agent cache performance
+curl http://localhost:3008/api/health/agents
 ```
 
-### Performance Issues
-
-#### Query Performance
+#### Workflow Execution Problems
 ```bash
-# Monitor queries in development
-bun run db:studio
+# Check Inngest workflow status
+curl http://localhost:3008/api/inngest/status
 
-# Check slow queries
-bun run test:performance
+# View failed workflow runs
+open http://localhost:8288
+
+# Test workflow triggers manually
+curl -X POST http://localhost:3008/api/triggers/calendar-poll
+
+# Emergency workflow halt
+curl -X POST http://localhost:3008/api/triggers/emergency \
+  -d '{"action": "halt_all_workflows"}'
 ```
 
-## Important Notes
+#### Performance Issues
+```bash
+# Clear agent caches
+curl -X POST http://localhost:3008/api/agents/clear-cache
 
-- **No Python Dependencies**: The system is purely TypeScript/JavaScript
-- **Serverless Architecture**: Designed for Vercel deployment
-- **Real-time Data**: Uses TanStack Query for live data updates
-- **AI Integration**: All agents use OpenAI GPT-4 for intelligence
-- **Error Recovery**: Multi-agent fallbacks for robust operation
-- **User Configurable**: Extensive customization options
+# Monitor database performance
+bun run db:check
+
+# Check query performance metrics
+curl http://localhost:3008/api/query-performance
+```
+
+## 🏗️ **Multi-Agent Architecture Summary**
+
+### System Architecture Principles
+- **AI-First Design** - All core functionality powered by OpenAI GPT-4 agents
+- **Event-Driven Workflows** - Inngest orchestration for reliable multi-agent coordination
+- **Fault Tolerance** - Comprehensive error recovery and circuit breaker patterns
+- **Real-time Processing** - TanStack Query for live data synchronization
+- **Type Safety** - Strict TypeScript with zero compilation errors
+- **Comprehensive Testing** - 96 tests covering all agent interactions and workflows
+
+### Agent Communication Flow
+```
+User Dashboard → API Triggers → Inngest Workflows → Multi-Agent Orchestrator
+                                       ↓
+Calendar Agent → Pattern Discovery Agent → Symbol Analysis Agent
+                                       ↓
+Risk Manager Agent ← Strategy Agent ← Trading Strategy Workflow
+                                       ↓
+Safety Monitoring ← Reconciliation Agent ← Error Recovery Agent
+```
+
+### Key Features
+- **11 Specialized AI Agents** with distinct roles and expertise
+- **Pattern Detection Algorithm** - `sts:2, st:2, tt:4` ready state recognition
+- **3.5+ Hour Advance Detection** - Early opportunity identification
+- **Multi-Layer Safety System** - Risk management and circuit breakers
+- **Intelligent Caching** - 5-minute SHA-256 cached responses
+- **Comprehensive Monitoring** - Real-time workflow and agent health tracking
+
+## 📋 **Important Development Notes**
+
+### Before Making Changes
+- **Run all tests** (`npm run test`) - 96 tests must pass
+- **Check TypeScript** (`npm run type-check`) - Zero errors required
+- **Verify agent health** - Ensure OpenAI API access and agent caches
+- **Test workflows** - Validate Inngest integration and multi-agent coordination
+
+### Agent Development Guidelines
+- **Extend BaseAgent** - Use the provided caching and error handling
+- **Clear System Prompts** - Define agent expertise and responsibilities
+- **Type Safety** - Maintain strict TypeScript interfaces
+- **Error Recovery** - Implement comprehensive error handling
+- **Testing** - Write unit tests for agent logic and integration tests for workflows
+
+### Production Deployment
+- **Environment Variables** - Ensure all required keys are set in Vercel
+- **Database Migration** - Use `db:migrate:safe` for zero-downtime updates
+- **Agent Monitoring** - Monitor workflow execution via Inngest dashboard
+- **Performance Tracking** - Review query performance and agent response times
+
+This system represents a sophisticated AI trading architecture with enterprise-grade reliability, comprehensive testing, and advanced multi-agent coordination capabilities.

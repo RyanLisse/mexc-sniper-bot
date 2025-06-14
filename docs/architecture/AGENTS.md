@@ -38,10 +38,28 @@ bun run type-check            # TypeScript validation
 - `.env.example` - Environment variable template
 
 ## 🧠 Agent Architecture
-5 specialized TypeScript agents with OpenAI GPT-4 integration for MEXC trading automation.
+8+ specialized TypeScript agents with OpenAI GPT-4 integration for MEXC trading automation.
+
+### Core Trading Agents
+- **MexcApiAgent**: Intelligent API integration and data analysis
+- **PatternDiscoveryAgent**: Ready state pattern detection (sts:2, st:2, tt:4)
+- **CalendarAgent**: New listing discovery and launch timing
+- **SymbolAnalysisAgent**: Real-time readiness assessment
+- **MexcOrchestrator**: Multi-agent workflow coordination
+
+### Supporting Agents
+- **SafetyBaseAgent**: Risk monitoring and circuit breakers
+- **ErrorRecoveryAgent**: Intelligent error handling and recovery
+- **RiskManagerAgent**: Position sizing and risk assessment
+- **ReconciliationAgent**: Data consistency validation
+- **SimulationAgent**: Strategy testing and backtesting
 
 ## ⚡ Testing & Quality
-Unit tests in `__tests__/unit/`, E2E tests in `all-tests/e2e-tests/`.
+Comprehensive testing framework with multiple approaches:
+- **Unit Tests**: `tests/unit/` (Vitest)
+- **E2E Tests**: `tests/e2e/` (Playwright)
+- **Stagehand Tests**: `tests/stagehand/` (AI-powered E2E)
+- **Integration Tests**: `tests/integration/` (Agent system testing)
 
 **Quality Standards:**
 - ✅ All 96 tests must pass

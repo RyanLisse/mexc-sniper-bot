@@ -525,13 +525,13 @@ Please provide detailed reconciliation analysis, identify potential causes of di
     }
 
     const recentDiscrepancies = this.discrepancies.filter(
-      (d) => Date.parse(d.timestamp) > this.lastReconciliation!.getTime() - 24 * 60 * 60 * 1000
+      (d) => Date.parse(d.timestamp) > (this.lastReconciliation?.getTime() || 0) - 24 * 60 * 60 * 1000
     );
 
     return `Last: ${this.lastReconciliation.toISOString()}, Recent discrepancies: ${recentDiscrepancies.length}`;
   }
 
-  async performSafetyCheck(data: unknown): Promise<{
+  async performSafetyCheck(_data: unknown): Promise<{
     passed: boolean;
     issues: string[];
     recommendations: string[];
@@ -594,7 +594,7 @@ Please provide detailed reconciliation analysis, identify potential causes of di
 
       // Check if currently stuck in reconciliation
       if (this.isReconciling) {
-        const now = Date.now();
+        const _now = Date.now();
         // Check if reconciliation has been running too long (over 10 minutes)
         // This would need additional tracking in a real implementation
         issues.push("Warning: Reconciliation appears to be running for extended time");

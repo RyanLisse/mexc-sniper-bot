@@ -1,17 +1,34 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { transactionLockService } from "@/src/services/transaction-lock-service";
+import { TransactionLockService } from "@/src/services/transaction-lock-service";
 import { db } from "@/src/db";
 import { transactionLocks, transactionQueue } from "@/src/db/schema";
 import { eq } from "drizzle-orm";
 
 describe("TransactionLockService", () => {
+  let lockService: TransactionLockService;
+
   beforeEach(async () => {
+    // Force SQLite for tests
+    process.env.DATABASE_URL = "sqlite:///./test-mexc.db";
+    process.env.FORCE_SQLITE = "true";
+    
     // Clean up any existing locks and queue items in proper order
     await db.delete(transactionQueue); // Delete queue items first (has foreign key to locks)
     await db.delete(transactionLocks); // Then delete locks
+    
+    // Wait a bit for cleanup to complete
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
+    // Create a fresh instance for each test to avoid state pollution
+    lockService = new TransactionLockService();
   });
 
   afterEach(async () => {
+    // Stop cleanup process for the test instance
+    if (lockService) {
+      lockService.stopCleanupProcess();
+    }
+    
     // Clean up after each test in proper order
     await db.delete(transactionQueue); // Delete queue items first (has foreign key to locks)
     await db.delete(transactionLocks); // Then delete locks
@@ -27,7 +44,7 @@ describe("TransactionLockService", () => {
         transactionData: { symbol: "BTCUSDT", side: "BUY" },
       };
 
-      const result = await transactionLockService.acquireLock(config);
+      const result = await lockService.acquireLock(config);
 
       expect(result.success).toBe(true);
       expect(result.lockId).toBeDefined();
@@ -44,11 +61,11 @@ describe("TransactionLockService", () => {
       };
 
       // First acquisition should succeed
-      const result1 = await transactionLockService.acquireLock(config);
+      const result1 = await lockService.acquireLock(config);
       expect(result1.success).toBe(true);
 
       // Second acquisition with same config should fail
-      const result2 = await transactionLockService.acquireLock(config);
+      const result2 = await lockService.acquireLock(config);
       expect(result2.success).toBe(false);
       expect(result2.error).toContain("Transaction already in progress");
       expect(result2.isRetry).toBe(true);
@@ -74,11 +91,11 @@ describe("TransactionLockService", () => {
       };
 
       // First lock should succeed
-      const result1 = await transactionLockService.acquireLock(config1);
+      const result1 = await lockService.acquireLock(config1);
       expect(result1.success).toBe(true);
 
       // Second should be queued
-      const result2 = await transactionLockService.acquireLock(config2);
+      const result2 = await lockService.acquireLock(config2);
       expect(result2.success).toBe(false);
       expect(result2.error).toContain("added to queue");
       expect(result2.queuePosition).toBe(1);
@@ -101,8 +118,8 @@ describe("TransactionLockService", () => {
         transactionData: { symbol: "ETHUSDT", side: "BUY" },
       };
 
-      const result1 = await transactionLockService.acquireLock(config1);
-      const result2 = await transactionLockService.acquireLock(config2);
+      const result1 = await lockService.acquireLock(config1);
+      const result2 = await lockService.acquireLock(config2);
 
       expect(result1.success).toBe(true);
       expect(result2.success).toBe(true);
@@ -120,10 +137,10 @@ describe("TransactionLockService", () => {
         transactionData: { symbol: "BTCUSDT", side: "BUY" },
       };
 
-      const lockResult = await transactionLockService.acquireLock(config);
+      const lockResult = await lockService.acquireLock(config);
       expect(lockResult.success).toBe(true);
 
-      const releaseResult = await transactionLockService.releaseLock(
+      const releaseResult = await lockService.releaseLock(
         lockResult.lockId!,
         { orderId: "12345" }
       );
@@ -145,10 +162,10 @@ describe("TransactionLockService", () => {
         transactionData: { symbol: "BTCUSDT", side: "BUY" },
       };
 
-      const lockResult = await transactionLockService.acquireLock(config);
+      const lockResult = await lockService.acquireLock(config);
       const tradeResult = { orderId: "12345", status: "filled" };
 
-      await transactionLockService.releaseLock(lockResult.lockId!, tradeResult);
+      await lockService.releaseLock(lockResult.lockId!, tradeResult);
 
       const lock = await db.query.transactionLocks.findFirst({
         where: eq(transactionLocks.lockId, lockResult.lockId!),
@@ -170,7 +187,7 @@ describe("TransactionLockService", () => {
 
       const mockExecutor = vi.fn().mockResolvedValue({ orderId: "12345" });
 
-      const result = await transactionLockService.executeWithLock(
+      const result = await lockService.executeWithLock(
         config,
         mockExecutor
       );
@@ -180,7 +197,7 @@ describe("TransactionLockService", () => {
       expect(mockExecutor).toHaveBeenCalledTimes(1);
     });
 
-    it.skip("should prevent concurrent execution of same resource", async () => {
+    it("should prevent concurrent execution of same resource", async () => {
       const config = {
         resourceId: "trade:BTCUSDT:BUY",
         ownerId: "user123",
@@ -206,13 +223,13 @@ describe("TransactionLockService", () => {
       };
 
       // Start first execution
-      const promise1 = transactionLockService.executeWithLock(config, executor1);
+      const promise1 = lockService.executeWithLock(config, executor1);
       
       // Wait a bit to ensure first lock is acquired
       await new Promise((resolve) => setTimeout(resolve, 10));
       
       // Try second execution with different idempotency key
-      const promise2 = transactionLockService.executeWithLock(
+      const promise2 = lockService.executeWithLock(
         { ...config, idempotencyKey: "different-key" },
         executor2
       );
@@ -242,7 +259,7 @@ describe("TransactionLockService", () => {
 
       const mockExecutor = vi.fn().mockRejectedValue(new Error("Trade failed"));
 
-      const result = await transactionLockService.executeWithLock(
+      const result = await lockService.executeWithLock(
         config,
         mockExecutor
       );
@@ -271,13 +288,13 @@ describe("TransactionLockService", () => {
       const mockExecutor = vi.fn().mockResolvedValue({ orderId: "12345" });
 
       // First execution
-      const result1 = await transactionLockService.executeWithLock(
+      const result1 = await lockService.executeWithLock(
         config,
         mockExecutor
       );
 
       // Second execution with same idempotency key
-      const result2 = await transactionLockService.executeWithLock(
+      const result2 = await lockService.executeWithLock(
         config,
         mockExecutor
       );
@@ -294,7 +311,7 @@ describe("TransactionLockService", () => {
       const resourceId = "trade:BTCUSDT:BUY";
       
       // Check unlocked resource
-      const status1 = await transactionLockService.getLockStatus(resourceId);
+      const status1 = await lockService.getLockStatus(resourceId);
       expect(status1.isLocked).toBe(false);
       expect(status1.lockCount).toBe(0);
       expect(status1.queueLength).toBe(0);
@@ -307,10 +324,10 @@ describe("TransactionLockService", () => {
         transactionType: "trade" as const,
         transactionData: { symbol: "BTCUSDT", side: "BUY" },
       };
-      await transactionLockService.acquireLock(config);
+      await lockService.acquireLock(config);
 
       // Check locked resource
-      const status2 = await transactionLockService.getLockStatus(resourceId);
+      const status2 = await lockService.getLockStatus(resourceId);
       expect(status2.isLocked).toBe(true);
       expect(status2.lockCount).toBe(1);
       expect(status2.activeLocks).toHaveLength(1);
@@ -330,7 +347,7 @@ describe("TransactionLockService", () => {
         transactionData: { symbol: "BTCUSDT", side: "BUY" },
         idempotencyKey: "initial",
       };
-      const initialLock = await transactionLockService.acquireLock(initialConfig);
+      const initialLock = await lockService.acquireLock(initialConfig);
       expect(initialLock.success).toBe(true);
 
       // Add items to queue with different priorities
@@ -354,15 +371,15 @@ describe("TransactionLockService", () => {
         idempotencyKey: "low-priority",
       };
 
-      await transactionLockService.acquireLock(highPriorityConfig);
-      await transactionLockService.acquireLock(lowPriorityConfig);
+      await lockService.acquireLock(highPriorityConfig);
+      await lockService.acquireLock(lowPriorityConfig);
 
       // Check queue
-      const status = await transactionLockService.getLockStatus(resourceId);
+      const status = await lockService.getLockStatus(resourceId);
       expect(status.queueLength).toBe(2);
 
       // Release initial lock - this should trigger processing of high priority item
-      await transactionLockService.releaseLock(initialLock.lockId!);
+      await lockService.releaseLock(initialLock.lockId!);
 
       // High priority should now have the lock
       const queueItems = await db.query.transactionQueue.findMany({
@@ -388,7 +405,7 @@ describe("TransactionLockService", () => {
         timeoutMs: 100, // 100ms timeout
       };
 
-      const lockResult = await transactionLockService.acquireLock(config);
+      const lockResult = await lockService.acquireLock(config);
       expect(lockResult.success).toBe(true);
       expect(lockResult.lockId).toBeDefined();
 
@@ -419,7 +436,7 @@ describe("TransactionLockService", () => {
 
       // The important test is that new locks can be acquired on the same resource
       // after the expired lock should not block new acquisitions
-      const newLockResult = await transactionLockService.acquireLock({
+      const newLockResult = await lockService.acquireLock({
         ...config,
         ownerId: "user124", // Different owner
         idempotencyKey: "new-unique-key", // Different idempotency key

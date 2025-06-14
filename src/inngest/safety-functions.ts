@@ -39,7 +39,7 @@ export const safetyMonitor = inngest.createFunction(
 
     // Step 3: Update system metrics
     await step.run("update-metrics", async () => {
-      const riskManagerAgent = agentManager.getRiskManagerAgent();
+      const _riskManagerAgent = agentManager.getRiskManagerAgent();
       const errorRecoveryAgent = agentManager.getErrorRecoveryAgent();
 
       // Update system health metrics
@@ -250,18 +250,17 @@ export const simulationControl = inngest.createFunction(
         const session = await simulationAgent.startSimulationSession(userId || "default", 10000);
         logger.info("Simulation session started", { sessionId: session.id });
         return session;
-      } else {
-        // End current simulation session
-        const session = await simulationAgent.endSimulationSession();
-        if (session) {
-          logger.info("Simulation session ended", {
-            sessionId: session.id,
-            finalPnL: session.profitLoss,
-            totalTrades: session.totalTrades,
-          });
-        }
-        return session;
       }
+      // End current simulation session
+      const session = await simulationAgent.endSimulationSession();
+      if (session) {
+        logger.info("Simulation session ended", {
+          sessionId: session.id,
+          finalPnL: session.profitLoss,
+          totalTrades: session.totalTrades,
+        });
+      }
+      return session;
     });
 
     // Step 2: Coordinate with other safety systems

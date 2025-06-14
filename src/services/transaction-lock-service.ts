@@ -36,7 +36,7 @@ export class TransactionLockService {
   private static instance: TransactionLockService;
   private cleanupInterval: NodeJS.Timeout | null = null;
 
-  private constructor() {
+  constructor() {
     // Start cleanup process
     this.startCleanupProcess();
   }
@@ -546,6 +546,37 @@ export class TransactionLockService {
       .where(and(eq(transactionLocks.ownerId, ownerId), eq(transactionLocks.status, "active")));
 
     return (result as { changes?: number }).changes || 0;
+  }
+
+  /**
+   * Get all active locks
+   */
+  async getActiveLocks() {
+    return await db.query.transactionLocks.findMany({
+      where: eq(transactionLocks.status, "active"),
+    });
+  }
+
+  /**
+   * Release a lock by resource ID and owner ID
+   */
+  async releaseLockByResource(resourceId: string, ownerId: string): Promise<boolean> {
+    const result = await db
+      .update(transactionLocks)
+      .set({
+        status: "released",
+        releasedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(transactionLocks.resourceId, resourceId),
+          eq(transactionLocks.ownerId, ownerId),
+          eq(transactionLocks.status, "active")
+        )
+      );
+
+    return ((result as { changes?: number }).changes || 0) > 0;
   }
 }
 

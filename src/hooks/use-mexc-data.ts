@@ -184,7 +184,7 @@ export function useUpcomingLaunches() {
           return (
             launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours24
           );
-        } catch (error) {
+        } catch (_error) {
           console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
           return false;
         }
@@ -212,7 +212,7 @@ export function useReadyTargets() {
           return (
             launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours4
           );
-        } catch (error) {
+        } catch (_error) {
           console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
           return false;
         }

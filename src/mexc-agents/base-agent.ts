@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { ErrorLoggingService } from "@/src/services/error-logging-service";
 import OpenAI from "openai";
 

@@ -1,18 +1,20 @@
 # MEXC Sniper Bot 🎯
 
-An intelligent cryptocurrency trading bot powered by specialized AI agents that discover and analyze new token listings on the MEXC exchange. Features a cutting-edge TypeScript multi-agent system with OpenAI integration for advanced pattern recognition and automated trading strategies.
+An intelligent cryptocurrency trading bot powered by specialized AI agents that discover and analyze new token listings on the MEXC exchange. Features a cutting-edge TypeScript multi-agent system with OpenAI GPT-4 integration for advanced pattern recognition and automated trading strategies.
 
 ## 🚀 Key Features
 
-- **🤖 Multi-Agent AI System**: 5 specialized TypeScript agents working together for comprehensive analysis
+- **🤖 Multi-Agent AI System**: 8+ specialized TypeScript agents working together for comprehensive analysis
 - **🔍 Intelligent Pattern Discovery**: AI-powered detection of MEXC ready state patterns (sts:2, st:2, tt:4)
 - **⏰ Advanced Timing**: 3.5+ hour advance detection for optimal position entry
 - **📊 Real-time Analysis**: Continuous symbol monitoring with dynamic confidence scoring
 - **🎯 Smart Strategy Generation**: AI-powered trading strategies with risk assessment
-- **⚡ Pure TypeScript Architecture**: Modern stack with Drizzle ORM and TanStack Query
+- **⚡ Pure TypeScript Architecture**: Modern stack with Next.js 15, Drizzle ORM, and TanStack Query
 - **🛡️ Robust Error Handling**: Multi-agent fallbacks and graceful degradation
 - **📈 Confidence Scoring**: 0-100% reliability metrics for every trading signal
 - **⚙️ User Configurable**: Customizable take profit levels and risk management
+- **🔐 Secure Authentication**: Kinde Auth integration with protected routes
+- **🧪 Comprehensive Testing**: Unit tests, Playwright E2E, and Stagehand AI-powered testing
 
 ## 🏗️ Multi-Agent Architecture
 
@@ -42,26 +44,39 @@ Revolutionary TypeScript-based system with specialized AI agents:
 
 ### 🎯 **Specialized Agents**
 
+**Core Trading Agents:**
 - **📅 CalendarAgent**: New listing discovery and launch timing analysis
 - **🔍 PatternDiscoveryAgent**: Ready state detection and pattern validation
 - **📊 SymbolAnalysisAgent**: Real-time readiness assessment and market analysis
 - **🌐 MexcApiAgent**: API interactions and trading signal analysis
 - **🎭 MexcOrchestrator**: Multi-agent workflow coordination
 
+**Supporting Agents:**
+- **🛡️ SafetyBaseAgent**: Risk monitoring and circuit breaker functionality
+- **🔧 ErrorRecoveryAgent**: Intelligent error handling and recovery
+- **⚖️ RiskManagerAgent**: Position sizing and risk assessment
+- **🔄 ReconciliationAgent**: Data consistency and validation
+- **🧪 SimulationAgent**: Strategy testing and backtesting
+
 ### 🚀 **Technology Stack**
 
 - **Frontend**: Next.js 15 with TypeScript and React 19
 - **Agent System**: Pure TypeScript with OpenAI GPT-4 integration
+- **Authentication**: Kinde Auth with secure session management
 - **Workflows**: Inngest for reliable background task orchestration
 - **Database**: Drizzle ORM with TursoDB (distributed SQLite) for global edge performance
 - **Data Management**: TanStack Query for real-time data fetching and caching
+- **Testing**: Vitest (unit), Playwright (E2E), Stagehand (AI-powered E2E)
+- **Code Quality**: Biome.js for formatting and linting, TypeScript for type safety
 - **Deployment**: Vercel with automatic scaling and edge optimization
 
 ## 📋 Prerequisites
 
-- Node.js 18+ and bun/npm
-- OpenAI API key (required for AI agents)
-- MEXC API credentials (optional, for authenticated endpoints)
+- **Node.js 20.11.0+** and bun/npm (see package.json engines)
+- **OpenAI API key** (required for AI agents and Stagehand testing)
+- **Kinde Auth account** (required for authentication)
+- **MEXC API credentials** (optional, for authenticated endpoints)
+- **TursoDB account** (optional, for production database)
 
 ## 🛠️ Quick Start
 
@@ -148,10 +163,14 @@ make dev-inngest # Inngest dev server on port 8288
 
 ### 5. Access the Application
 
-- **Trading Dashboard**: http://localhost:3008/dashboard
-- **Configuration**: http://localhost:3008/config
-- **Authentication**: http://localhost:3008/auth
-- **Inngest Dashboard**: http://localhost:8288 (workflow monitoring)
+- **Homepage**: http://localhost:3008 (public landing page)
+- **Authentication**: http://localhost:3008/auth (Kinde Auth login)
+- **Trading Dashboard**: http://localhost:3008/dashboard (authenticated users)
+- **Configuration**: http://localhost:3008/config (user settings)
+- **Safety Monitor**: http://localhost:3008/safety (risk management)
+- **Strategies**: http://localhost:3008/strategies (trading strategies)
+- **Workflows**: http://localhost:3008/workflows (agent workflows)
+- **Inngest Dashboard**: http://localhost:8288 (development workflow monitoring)
 
 ## 🤖 TypeScript Multi-Agent System
 
@@ -320,26 +339,107 @@ For detailed deployment instructions, see [docs/deployment/DEPLOYMENT.md](docs/d
 
 ## 📚 Documentation
 
-- [Agent Architecture](docs/agent-architecture.md) - AI agent system design
-- [TypeScript Multi-Agent Architecture](docs/typescript-multi-agent-architecture.md) - Technical implementation
-- [Sniper System](docs/sniper-system.md) - Trading bot implementation
+### Core Documentation
+- [Agent Architecture](docs/architecture/AGENTS.md) - Quick setup guide for AI agents
+- [TypeScript Multi-Agent Architecture](docs/typescript-multi-agent-architecture.md) - Technical implementation details
+- [Stagehand E2E Testing](docs/testing/STAGEHAND_E2E_TESTING.md) - AI-powered testing framework
+
+### Architecture & Design
+- [Architecture Diagram](docs/architecture/ARCHITECTURE_DIAGRAM.md) - System overview
+- [Transaction Locking System](docs/architecture/TRANSACTION_LOCKING_SYSTEM.md) - Concurrency control
+- [Coordination & Memory Bank](docs/architecture/coordination.md) - Agent coordination
+
+### Deployment & Operations
+- [Deployment Guide](docs/deployment/DEPLOYMENT.md) - Production deployment
+- [TursoDB Best Practices](docs/deployment/turso-best-practices.md) - Database optimization
+- [Vercel Configuration](docs/vercel-configuration.md) - Serverless deployment
+
+### Development
+- [Contributing Guide](docs/development/CONTRIBUTING.md) - Development guidelines
+- [Quick Start Guide](docs/guides/QUICKSTART.md) - Getting started
+- [Secure Encryption Guide](docs/guides/SECURE_ENCRYPTION_QUICKSTART.md) - Security setup
 
 ## 🧪 Testing & Development
+
+### Testing Framework
+
+The project includes comprehensive testing with multiple frameworks:
+
+#### **Unit Tests (Vitest)**
+```bash
+# Run unit tests
+bun run test
+npm run test:unit
+
+# Run with coverage
+npm run test:coverage
+
+# Watch mode
+npm run test:watch
+
+# UI mode
+npm run test:ui
+```
+
+#### **End-to-End Tests (Playwright)**
+```bash
+# Run E2E tests
+npm run test:e2e
+
+# Run with UI
+npm run test:e2e:ui
+
+# Run in headed mode
+npm run test:e2e:headed
+
+# Debug mode
+npm run test:e2e:debug
+
+# View reports
+npm run test:e2e:report
+```
+
+#### **AI-Powered E2E Tests (Stagehand)**
+```bash
+# Run all Stagehand tests
+npm run test:stagehand
+
+# Run specific test suites
+npm run test:stagehand:auth        # Authentication flows
+npm run test:stagehand:dashboard   # Dashboard functionality
+npm run test:stagehand:patterns    # Pattern discovery
+npm run test:stagehand:api         # API integration
+npm run test:stagehand:integration # Complete user journeys
+
+# Run with UI (debugging)
+npm run test:stagehand:ui
+
+# Run in headed mode
+npm run test:stagehand:headed
+```
+
+#### **Complete Test Suite**
+```bash
+# Run all tests (unit + E2E + Stagehand)
+npm run test:all
+
+# CI test pipeline
+npm run ci:test
+```
 
 ### Code Quality
 
 ```bash
-# Run all linters and formatters
-make lint
+# Run all linters and formatters (Biome.js)
+bun run lint:all
 
-# TypeScript type checking
-make type-check
+# Individual checks
+bun run lint          # Lint with Biome
+bun run format        # Format with Biome
+bun run type-check    # TypeScript validation
 
-# Format code
-make format
-
-# Run all pre-commit checks
-make pre-commit
+# Pre-commit checks
+bun run pre-commit
 ```
 
 ### Database Operations
@@ -384,11 +484,14 @@ make deps-update
 
 ### Development Guidelines
 
-- Follow TypeScript best practices
-- Use Drizzle ORM for database operations
-- Implement proper error handling
-- Add comprehensive JSDoc comments
-- Write tests for new features
+- **TypeScript First**: All new code must be in TypeScript with strict type checking
+- **Testing Required**: Write unit tests (Vitest), E2E tests (Playwright), and Stagehand tests for new features
+- **Code Quality**: Use Biome.js for formatting and linting, maintain 100% test pass rate
+- **Database**: Use Drizzle ORM for all database operations with safe migrations
+- **Authentication**: All protected routes must use Kinde Auth integration
+- **Error Handling**: Implement comprehensive error handling with proper logging
+- **Documentation**: Add JSDoc comments and update relevant documentation
+- **Performance**: Optimize for Vercel serverless deployment and global edge performance
 
 ## ⚠️ Disclaimer
 

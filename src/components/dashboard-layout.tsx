@@ -28,12 +28,11 @@ import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import {
   Bot,
   Brain,
+  CheckCircle,
   ChevronRight,
-  Database,
   GitBranch,
   LayoutDashboard,
   LogOut,
-  MoreHorizontal,
   Settings,
   Shield,
   User,
@@ -85,9 +84,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       icon: Settings,
     },
     {
-      title: "API Configuration",
+      title: "System Check",
       href: "/config",
-      icon: Database,
+      icon: CheckCircle,
     },
   ];
 
@@ -136,35 +135,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            <SidebarGroup className="mt-auto">
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <SidebarMenuButton>
-                          <MoreHorizontal className="mr-2 h-4 w-4" />
-                          More
-                        </SidebarMenuButton>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-48">
-                        <DropdownMenuItem asChild>
-                          <Link href="https://github.com/your-repo" target="_blank">
-                            Documentation
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="https://github.com/your-repo/wiki" target="_blank">
-                            API Reference
-                          </Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -221,7 +191,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               {pathname === "/workflows" && "Workflow Management"}
               {pathname === "/strategies" && "Trading Strategies"}
               {pathname === "/settings" && "Trading Settings"}
-              {pathname === "/config" && "API Configuration"}
+              {pathname === "/config" && "System Check"}
             </h1>
             <div className="ml-auto" />
           </div>

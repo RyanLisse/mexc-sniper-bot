@@ -574,8 +574,7 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
 
   private calculateBackoffDelay(attemptNumber: number): number {
     const delay =
-      this.recoveryConfig.baseBackoffMs *
-      Math.pow(this.recoveryConfig.backoffMultiplier, attemptNumber);
+      this.recoveryConfig.baseBackoffMs * this.recoveryConfig.backoffMultiplier ** attemptNumber;
     return Math.min(delay, this.recoveryConfig.maxBackoffMs);
   }
 
@@ -653,7 +652,7 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     }
   }
 
-  async performSafetyCheck(data: unknown): Promise<{
+  async performSafetyCheck(_data: unknown): Promise<{
     passed: boolean;
     issues: string[];
     recommendations: string[];

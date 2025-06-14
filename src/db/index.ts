@@ -220,7 +220,7 @@ function createDatabase() {
           try {
             await db.run(sql`SELECT load_extension('vector')`);
             console.log("[Database] Vector extension loaded for AI/embeddings support");
-          } catch (error) {
+          } catch (_error) {
             console.log("[Database] Vector extension not available, AI features limited");
           }
 
@@ -228,7 +228,7 @@ function createDatabase() {
             // Test FTS5 availability for full-text search
             await db.run(sql`SELECT fts5_version()`);
             console.log("[Database] FTS5 extension available for full-text search");
-          } catch (error) {
+          } catch (_error) {
             console.log("[Database] FTS5 extension not available");
           }
         }, 1000);
@@ -329,7 +329,7 @@ export function clearDbCache() {
 
 // Lazy initialization - db instance created when first accessed
 export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
-  get(target, prop) {
+  get(_target, prop) {
     const instance = getDb();
     return (instance as any)[prop];
   },
@@ -355,7 +355,7 @@ export async function initializeDatabase() {
         try {
           await db.run(sql`SELECT load_extension('vector')`);
           console.log("[Database] Vector extension loaded successfully");
-        } catch (error) {
+        } catch (_error) {
           // Vector extension might not be available, continue without it
           console.log("[Database] Vector extension not available, continuing without it");
         }
