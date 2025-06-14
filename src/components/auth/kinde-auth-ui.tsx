@@ -47,9 +47,9 @@ export function KindeAuthUI() {
   // Show loading state
   if (isLoading) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+      <Card className="bg-card border-border">
         <CardContent className="p-6">
-          <div className="text-center text-slate-400">Loading...</div>
+          <div className="text-center text-muted-foreground">Loading...</div>
         </CardContent>
       </Card>
     );
@@ -57,23 +57,23 @@ export function KindeAuthUI() {
 
   if (isAuthenticated) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="text-white">Welcome back!</CardTitle>
-          <CardDescription className="text-slate-400">Signed in as {user?.email}</CardDescription>
+          <CardTitle className="text-foreground">Welcome back!</CardTitle>
+          <CardDescription className="text-muted-foreground">Signed in as {user?.email}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <LogoutLink className="w-full">
             <Button
               variant="outline"
-              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+              className="w-full"
             >
               Sign Out
             </Button>
           </LogoutLink>
           <Button
             onClick={() => router.push("/dashboard")}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full"
           >
             Go to Dashboard
           </Button>
@@ -83,10 +83,10 @@ export function KindeAuthUI() {
   }
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+    <Card className="bg-card border-border shadow-lg">
       <CardHeader>
-        <CardTitle className="text-white">{isSignUp ? "Create Account" : "Welcome Back"}</CardTitle>
-        <CardDescription className="text-slate-400">
+        <CardTitle className="text-foreground">{isSignUp ? "Create Account" : "Welcome Back"}</CardTitle>
+        <CardDescription className="text-muted-foreground">
           {isSignUp ? "Sign up to start using MEXC Sniper Bot" : "Sign in to your account"}
         </CardDescription>
       </CardHeader>
@@ -95,14 +95,16 @@ export function KindeAuthUI() {
           <>
             <Button
               onClick={handleSignUp}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full"
+              size="lg"
             >
               Sign Up
             </Button>
             <Button
               onClick={() => setIsSignUp(false)}
               variant="outline"
-              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+              className="w-full"
+              size="lg"
             >
               Already have an account? Sign In
             </Button>
@@ -111,14 +113,16 @@ export function KindeAuthUI() {
           <>
             <Button
               onClick={handleSignIn}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full"
+              size="lg"
             >
               Sign In
             </Button>
             <Button
               onClick={() => setIsSignUp(true)}
               variant="outline"
-              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+              className="w-full"
+              size="lg"
             >
               Don't have an account? Sign Up
             </Button>
