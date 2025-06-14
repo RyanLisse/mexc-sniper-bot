@@ -110,12 +110,9 @@ export const signUp = () => {
   window.location.href = "/api/auth/register";
 };
 
-/**
- * Sign out with Kinde
- */
-export const signOut = () => {
-  window.location.href = "/api/auth/logout";
-};
+// Note: Logout should be handled via LogoutLink component only
+// Custom signOut function removed to prevent session management issues
+// Use: import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 
 // Export for compatibility
-export { signIn as login, signUp as register, signOut as logout };
+export { signIn as login, signUp as register };

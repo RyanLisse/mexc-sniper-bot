@@ -23,7 +23,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/src/components/ui/sidebar";
-import { signOut, useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "@/src/lib/kinde-auth-client";
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import {
   Bot,
   Brain,
@@ -39,7 +40,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -47,13 +48,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const { user } = useAuth();
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push("/");
-  };
 
   const mainNavItems = [
     {
@@ -206,9 +201,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
+                <DropdownMenuItem asChild>
+                  <LogoutLink className="flex w-full cursor-default select-none items-center">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign out
+                  </LogoutLink>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

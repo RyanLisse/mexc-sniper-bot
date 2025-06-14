@@ -51,7 +51,7 @@ async function withRetry<T>(
   throw lastError;
 }
 
-// Create Turso client with embedded replicas for better local performance
+// Create Turso client with better error handling and URL scheme fallback
 function createTursoClient() {
   // Support both TURSO_DATABASE_URL and TURSO_HOST patterns
   const databaseUrl =
@@ -73,21 +73,24 @@ function createTursoClient() {
   const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL || isRailway;
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
 
-  // Configure client based on environment
-  const clientConfig: Parameters<typeof createClient>[0] = {
-    url: databaseUrl,
-    authToken: process.env.TURSO_AUTH_TOKEN,
-  };
+  // Try different URL schemes for better compatibility
+  const urlSchemes = [
+    databaseUrl, // Original (libsql://)
+    databaseUrl.replace("libsql://", "wss://"), // WebSocket scheme
+  ];
 
   // Use embedded replicas for local development and testing for better performance
   const embeddedPath = process.env.TURSO_EMBEDDED_PATH || "./data/mexc_sniper_replica.db";
   const syncInterval = Number.parseInt(process.env.TURSO_SYNC_INTERVAL || "30");
 
-  if (!isProduction || process.env.USE_EMBEDDED_REPLICA === "true") {
+  if ((!isProduction && process.env.USE_EMBEDDED_REPLICA !== "false") || process.env.USE_EMBEDDED_REPLICA === "true") {
     // Enable embedded replica with local SQLite file
-    clientConfig.url = `file:${embeddedPath}`;
-    clientConfig.syncUrl = databaseUrl;
-    clientConfig.syncInterval = syncInterval;
+    const clientConfig: Parameters<typeof createClient>[0] = {
+      url: `file:${embeddedPath}`,
+      syncUrl: databaseUrl,
+      syncInterval: syncInterval,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    };
 
     console.log(
       `[Database] Using TursoDB embedded replica at ${embeddedPath} (sync every ${syncInterval}s)`
@@ -97,27 +100,52 @@ function createTursoClient() {
     if (isTest) {
       clientConfig.syncInterval = 5; // 5 seconds for tests
     }
+
+    // Try to create client with fallback URL schemes
+    for (const syncUrl of urlSchemes) {
+      try {
+        clientConfig.syncUrl = syncUrl;
+        tursoClient = createClient(clientConfig);
+        console.log(`[Database] Embedded replica sync URL: ${syncUrl}`);
+        return tursoClient;
+      } catch (error) {
+        console.warn(`[Database] Failed to create embedded replica with ${syncUrl}:`, error.message);
+      }
+    }
   } else {
-    // Production uses direct connection to TursoDB
-    console.log("[Database] Using direct TursoDB connection in production");
+    // Production uses direct connection to TursoDB with URL scheme fallback
+    console.log("[Database] Using direct TursoDB connection");
+
+    for (const url of urlSchemes) {
+      try {
+        const clientConfig: Parameters<typeof createClient>[0] = {
+          url: url,
+          authToken: process.env.TURSO_AUTH_TOKEN,
+        };
+
+        // Add replica-specific configuration for Railway and Vercel
+        if (isRailway && process.env.TURSO_REPLICA_URL) {
+          clientConfig.syncUrl = url;
+          clientConfig.url = process.env.TURSO_REPLICA_URL;
+          console.log("[Database] Using Railway-optimized replica configuration");
+        }
+
+        tursoClient = createClient(clientConfig);
+        console.log(`[Database] Direct connection established with URL scheme: ${url}`);
+        return tursoClient;
+      } catch (error) {
+        console.warn(`[Database] Failed to connect with URL scheme ${url}:`, error.message);
+      }
+    }
   }
 
-  // Add replica-specific configuration for Railway and Vercel
-  if (isRailway && process.env.TURSO_REPLICA_URL) {
-    clientConfig.syncUrl = databaseUrl;
-    clientConfig.url = process.env.TURSO_REPLICA_URL;
-    console.log("[Database] Using Railway-optimized replica configuration");
-  }
-
-  // Create and cache the client
-  tursoClient = createClient(clientConfig);
-
-  return tursoClient;
+  // If all schemes fail, throw the last error
+  throw new Error("Failed to create TursoDB client with any URL scheme");
 }
 
 // Check if we have TursoDB configuration
 const hasTursoConfig = () =>
-  (process.env.TURSO_DATABASE_URL || process.env.TURSO_HOST) && process.env.TURSO_AUTH_TOKEN;
+  !!(process.env.TURSO_DATABASE_URL || process.env.TURSO_HOST) && !!process.env.TURSO_AUTH_TOKEN;
 
 // Environment-specific database configuration
 function createDatabase() {
@@ -126,6 +154,15 @@ function createDatabase() {
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
   const tursoConfigured = hasTursoConfig();
   const forceSQLite = process.env.FORCE_SQLITE === "true";
+  
+  // Debug logging (remove in production)
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[Database] Configuration debug:");
+    console.log("- isProduction:", isProduction);
+    console.log("- USE_EMBEDDED_REPLICA:", process.env.USE_EMBEDDED_REPLICA);
+    console.log("- forceSQLite:", forceSQLite);
+    console.log("- tursoConfigured:", tursoConfigured);
+  }
 
   // Use SQLite if explicitly forced (for legacy compatibility)
   if (forceSQLite) {
@@ -239,7 +276,19 @@ export function getDb() {
   return dbInstance;
 }
 
-export const db = getDb();
+// Clear cached database instance (for testing)
+export function clearDbCache() {
+  dbInstance = null;
+  tursoClient = null;
+}
+
+// Lazy initialization - db instance created when first accessed
+export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
+  get(target, prop) {
+    const instance = getDb();
+    return (instance as any)[prop];
+  }
+});
 
 // Export schema for use in other files
 export * from "./schema";

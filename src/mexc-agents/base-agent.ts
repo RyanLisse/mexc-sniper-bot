@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import OpenAI from "openai";
+import { ErrorLoggingService } from "@/src/services/error-logging-service";
 
 export interface AgentConfig {
   name: string;
@@ -34,6 +35,7 @@ export class BaseAgent {
   protected config: AgentConfig;
   protected responseCache: Map<string, CachedResponse>;
   private readonly defaultCacheTTL = 5 * 60 * 1000; // 5 minutes default
+  private cacheCleanupInterval?: NodeJS.Timeout;
 
   constructor(config: AgentConfig) {
     this.config = {
@@ -47,7 +49,7 @@ export class BaseAgent {
     this.responseCache = new Map();
 
     // Clean up expired cache entries every 10 minutes
-    setInterval(() => this.cleanupExpiredCache(), 10 * 60 * 1000);
+    this.cacheCleanupInterval = setInterval(() => this.cleanupExpiredCache(), 10 * 60 * 1000);
   }
 
   /**
@@ -157,14 +159,17 @@ export class BaseAgent {
           timestamp: now,
           expiresAt: now + (this.config.cacheTTL || this.defaultCacheTTL),
         });
-        console.log(
-          `[${this.config.name}] Response cached for ${this.config.cacheTTL || this.defaultCacheTTL}ms`
-        );
+        // Cache logging removed - use debug mode if needed
       }
 
       return agentResponse;
     } catch (error) {
-      console.error(`[${this.config.name}] OpenAI API error:`, error);
+      const errorLoggingService = ErrorLoggingService.getInstance();
+      await errorLoggingService.logError(error as Error, {
+        agent: this.config.name,
+        operation: "processWithOpenAI",
+        messages: messages.length,
+      });
       throw new Error(`Agent ${this.config.name} failed: ${error}`);
     }
   }
@@ -172,5 +177,17 @@ export class BaseAgent {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async process(_input: string, _context?: Record<string, unknown>): Promise<AgentResponse> {
     throw new Error("Process method must be implemented by subclass");
+  }
+
+  /**
+   * Clean up resources and stop background tasks
+   * Call this when the agent is no longer needed to prevent memory leaks
+   */
+  destroy(): void {
+    if (this.cacheCleanupInterval) {
+      clearInterval(this.cacheCleanupInterval);
+      this.cacheCleanupInterval = undefined;
+    }
+    this.responseCache.clear();
   }
 }

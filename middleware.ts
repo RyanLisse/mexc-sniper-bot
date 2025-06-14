@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { withAuth } from "@kinde-oss/kinde-auth-nextjs/middleware";
 
 // Protected routes that require authentication
 const PROTECTED_ROUTES = [
   '/dashboard',
   '/config',
-  '/sniper',
+  '/sniper', 
   '/trading',
   '/portfolio',
   '/analytics',
@@ -17,40 +17,26 @@ export default withAuth(
   async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Check if the current path is a protected route
+    // Log for debugging
+    console.log(`Middleware: Processing request for ${pathname}`);
+
+    // Let Kinde handle authentication for protected routes
+    // The withAuth wrapper will automatically redirect to login if needed
     const isProtectedRoute = PROTECTED_ROUTES.some(route =>
       pathname.startsWith(route)
     );
 
     if (isProtectedRoute) {
-      // Check for Kinde session cookie
-      const kindeToken = request.cookies.get('kinde_token')?.value;
-
-      if (!kindeToken) {
-        // No session - redirect to login
-        console.log(`Middleware: No Kinde session found for ${pathname}, redirecting to login`);
-        return NextResponse.redirect(new URL('/api/auth/login', request.url));
-      }
-
-      // Kinde middleware will handle session validation
-      console.log(`Middleware: Kinde session found for ${pathname}, allowing access`);
+      console.log(`Middleware: Protected route ${pathname} - letting Kinde handle auth`);
     }
 
-    // For auth page, redirect authenticated users to dashboard
-    if (pathname === '/auth') {
-      const kindeToken = request.cookies.get('kinde_token')?.value;
-
-      if (kindeToken) {
-        // Authenticated user trying to access auth page - redirect to dashboard
-        console.log('Middleware: Authenticated user accessing auth page, redirecting to dashboard');
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-    }
-
-    return NextResponse.next();
+    // No custom logic needed - let Kinde handle everything
+    return undefined; // Let Kinde middleware continue
   },
   {
     isReturnToCurrentPage: true,
+    loginPage: '/api/auth/login',
+    isAuthorized: ({ token }) => !!token,
   }
 );
 

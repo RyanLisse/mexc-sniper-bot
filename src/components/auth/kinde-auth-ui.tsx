@@ -8,7 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card";
-import { signIn, signOut, signUp, useAuth } from "@/src/lib/kinde-auth-client";
+import { signIn, signUp, useAuth } from "@/src/lib/kinde-auth-client";
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -30,13 +31,6 @@ export function KindeAuthUI() {
     }
   }, [mounted, isAuthenticated, router]);
 
-  const handleSignOut = async () => {
-    try {
-      signOut();
-    } catch (error) {
-      console.error("Sign out error:", error);
-    }
-  };
 
   const handleSignIn = () => {
     signIn();
@@ -70,13 +64,14 @@ export function KindeAuthUI() {
           <CardDescription className="text-slate-400">Signed in as {user?.email}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button
-            onClick={handleSignOut}
-            variant="outline"
-            className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
-          >
-            Sign Out
-          </Button>
+          <LogoutLink className="w-full">
+            <Button
+              variant="outline"
+              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+            >
+              Sign Out
+            </Button>
+          </LogoutLink>
           <Button
             onClick={() => router.push("/dashboard")}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
