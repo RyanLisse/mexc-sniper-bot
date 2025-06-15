@@ -261,7 +261,7 @@ export class MultiPhaseExecutor {
    * @param currentPrice Current market price
    * @returns Detailed execution summary
    */
-  private calculateSummary(currentPrice: number): ExecutionSummary {
+  calculateSummary(currentPrice: number): ExecutionSummary {
     const totalSold = this.phaseHistory.reduce((sum, phase) => sum + phase.amount, 0);
     const totalRemaining = this.totalAmount - totalSold;
     const realizedProfit = this.phaseHistory.reduce((sum, phase) => sum + phase.profit, 0);
@@ -308,9 +308,9 @@ export class MultiPhaseExecutor {
   }
 
   /**
-   * Visual representation of phases
+   * Visual representation of phases - EXACT implementation from docs
    * @param currentPrice Current market price
-   * @returns String representation of phase status
+   * @returns String representation of phase status with emoji indicators
    */
   getPhaseVisualization(currentPrice: number): string {
     const priceIncrease = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
@@ -318,18 +318,13 @@ export class MultiPhaseExecutor {
     const phases = this.strategy.levels.map((level, index) => {
       const phaseNum = index + 1;
       const isExecuted = this.executedPhases.has(phaseNum);
-      const isTriggered = priceIncrease >= level.percentage;
-      const isNext = !isExecuted && !isTriggered && 
-        (index === 0 || priceIncrease >= this.strategy.levels[index - 1].percentage);
+      const isNext = !isExecuted && priceIncrease < level.percentage;
       
-      let status = "⬜"; // Pending
-      if (isExecuted) status = "✅"; // Completed
-      else if (isTriggered) status = "🎯"; // Ready to execute
-      else if (isNext) status = "⏭️"; // Next in line
+      let status = '⬜'; // Pending
+      if (isExecuted) status = '✅'; // Completed
+      else if (isNext) status = '🎯'; // Next target
 
-      const targetReached = isTriggered ? ` (${priceIncrease >= level.percentage ? "REACHED" : "pending"})` : "";
-      
-      return `${status} Phase ${phaseNum}: ${level.sellPercentage}% @ +${level.percentage}%${targetReached}`;
+      return `${status} Phase ${phaseNum}: ${level.sellPercentage}% @ +${level.percentage}%`;
     });
 
     const summary = this.calculateSummary(currentPrice);
@@ -343,6 +338,27 @@ export class MultiPhaseExecutor {
     }
 
     return phases.join("\n");
+  }
+
+  /**
+   * Enhanced visualization with current price percentage - EXACT from docs
+   * @param currentPricePercentage Current price increase percentage
+   * @returns String representation with enhanced status indicators
+   */
+  getPhaseVisualizationWithPercentage(currentPricePercentage: number): string {
+    const phases = this.strategy.levels.map((level, index) => {
+      const phaseNum = index + 1;
+      const isExecuted = this.executedPhases.has(phaseNum);
+      const isNext = !isExecuted && currentPricePercentage < level.percentage;
+      
+      let status = '⬜'; // Pending
+      if (isExecuted) status = '✅'; // Completed
+      else if (isNext) status = '🎯'; // Next target
+
+      return `${status} Phase ${phaseNum}: ${level.sellPercentage}% @ +${level.percentage}%`;
+    });
+
+    return phases.join('\n');
   }
 
   /**

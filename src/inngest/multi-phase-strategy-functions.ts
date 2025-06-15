@@ -730,3 +730,239 @@ export const initializeStrategyTemplates = inngest.createFunction(
     });
   }
 );
+
+// Execute multi-phase strategy monitoring and execution
+export const executeMultiPhaseStrategy = inngest.createFunction(
+  { id: "execute-multi-phase-strategy" },
+  { event: "strategy/execute-multi-phase" },
+  async ({ event, step }) => {
+    const { strategyId, userId, currentPrice, symbol } = event.data;
+
+    try {
+      // Step 1: Get strategy from database
+      const strategy = await step.run("get-strategy", async () => {
+        return await multiPhaseTradingService.getStrategyById(strategyId, userId);
+      });
+
+      if (!strategy) {
+        throw new Error(`Strategy ${strategyId} not found for user ${userId}`);
+      }
+
+      // Step 2: Create executor from strategy
+      const executor = await step.run("create-executor", async () => {
+        return await createExecutorFromStrategy(strategy, userId);
+      });
+
+      // Step 3: Calculate execution phases
+      const execution = await step.run("calculate-execution", async () => {
+        return executor.executePhases(currentPrice, {
+          dryRun: false,
+          maxPhasesPerExecution: 3,
+        });
+      });
+
+      // Step 4: Execute phases if any are triggered
+      const executionResults = await step.run("execute-phases", async () => {
+        const results = [];
+        
+        for (const phase of execution.phasesToExecute) {
+          try {
+            // Record phase execution
+            await executor.recordPhaseExecution(
+              phase.phase,
+              currentPrice,
+              phase.amount,
+              {
+                fees: phase.expectedProfit * 0.001, // 0.1% fee estimate
+                latency: 50, // Estimate 50ms latency
+              }
+            );
+
+            results.push({
+              phase: phase.phase,
+              amount: phase.amount,
+              profit: phase.expectedProfit,
+              price: currentPrice,
+              success: true,
+            });
+          } catch (error) {
+            console.error(`Failed to execute phase ${phase.phase}:`, error);
+            results.push({
+              phase: phase.phase,
+              amount: phase.amount,
+              profit: 0,
+              price: currentPrice,
+              success: false,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
+          }
+        }
+
+        return results;
+      });
+
+      // Step 5: Update strategy status
+      await step.run("update-strategy", async () => {
+        if (executor.isComplete()) {
+          await multiPhaseTradingService.updateStrategyStatus(
+            strategyId,
+            userId,
+            "completed",
+            {
+              currentPrice,
+              completedAt: new Date(),
+            }
+          );
+        } else {
+          await multiPhaseTradingService.updateStrategyStatus(
+            strategyId,
+            userId,
+            "active",
+            {
+              currentPrice,
+              lastExecutionAt: new Date(),
+            }
+          );
+        }
+      });
+
+      return {
+        success: true,
+        strategyId,
+        symbol,
+        currentPrice,
+        executedPhases: executionResults.filter(r => r.success).length,
+        totalProfit: executionResults.reduce((sum, r) => sum + r.profit, 0),
+        execution,
+        isComplete: executor.isComplete(),
+      };
+
+    } catch (error) {
+      console.error("Error executing multi-phase strategy:", error);
+      
+      // Update strategy status to failed
+      await multiPhaseTradingService.updateStrategyStatus(
+        strategyId,
+        userId,
+        "failed",
+        {
+          currentPrice,
+          errorMessage: error instanceof Error ? error.message : "Unknown error",
+        }
+      );
+
+      throw error;
+    }
+  }
+);
+
+// Strategy health check and maintenance
+export const strategyHealthCheck = inngest.createFunction(
+  { id: "strategy-health-check", retries: 2 },
+  { cron: "0 */4 * * *" }, // Every 4 hours
+  async ({ event, step }) => {
+    try {
+      // Step 1: Get all active strategies
+      const allActiveStrategies = await step.run("get-all-active-strategies", async () => {
+        return await db.select()
+          .from(tradingStrategies)
+          .where(eq(tradingStrategies.status, "active"));
+      });
+
+      // Step 2: Check each strategy for issues
+      const healthResults = await step.run("check-strategy-health", async () => {
+        const results = [];
+
+        for (const strategy of allActiveStrategies) {
+          const timeSinceLastExecution = strategy.lastExecutionAt 
+            ? Date.now() - new Date(strategy.lastExecutionAt).getTime()
+            : Date.now() - new Date(strategy.activatedAt || strategy.createdAt).getTime();
+
+          const hoursStale = timeSinceLastExecution / (1000 * 60 * 60);
+          
+          let healthStatus = "healthy";
+          const issues = [];
+
+          // Check for stale strategies
+          if (hoursStale > 24) {
+            healthStatus = "stale";
+            issues.push(`No execution in ${hoursStale.toFixed(1)} hours`);
+          }
+
+          // Check for incomplete phases
+          if (strategy.executedPhases === 0 && hoursStale > 4) {
+            healthStatus = "inactive";
+            issues.push("No phases executed despite being active");
+          }
+
+          // Check for performance issues
+          if (strategy.totalPnl && strategy.totalPnl < -strategy.positionSizeUsdt * 0.15) {
+            healthStatus = "underperforming";
+            issues.push("Significant losses detected");
+          }
+
+          results.push({
+            strategyId: strategy.id,
+            userId: strategy.userId,
+            symbol: strategy.symbol,
+            healthStatus,
+            issues,
+            hoursStale,
+            currentPnl: strategy.totalPnl || 0,
+          });
+        }
+
+        return results;
+      });
+
+      // Step 3: Take corrective actions
+      const correctiveActions = await step.run("take-corrective-actions", async () => {
+        const actions = [];
+
+        for (const result of healthResults) {
+          if (result.healthStatus === "stale") {
+            // Pause stale strategies
+            await multiPhaseTradingService.updateStrategyStatus(
+              result.strategyId,
+              result.userId,
+              "paused",
+              {
+                pauseReason: "Automatically paused due to inactivity",
+              }
+            );
+            actions.push(`Paused stale strategy ${result.strategyId}`);
+          } else if (result.healthStatus === "underperforming") {
+            // Update AI insights for underperforming strategies
+            await db.update(tradingStrategies)
+              .set({
+                aiInsights: `⚠️ Strategy underperforming. Current P&L: ${result.currentPnl.toFixed(2)}. Consider review.`,
+                lastAiAnalysis: new Date(),
+                updatedAt: new Date(),
+              })
+              .where(eq(tradingStrategies.id, result.strategyId));
+            actions.push(`Updated insights for underperforming strategy ${result.strategyId}`);
+          }
+        }
+
+        return actions;
+      });
+
+      return {
+        success: true,
+        totalStrategies: allActiveStrategies.length,
+        healthResults,
+        correctiveActions,
+        summary: {
+          healthy: healthResults.filter(r => r.healthStatus === "healthy").length,
+          stale: healthResults.filter(r => r.healthStatus === "stale").length,
+          inactive: healthResults.filter(r => r.healthStatus === "inactive").length,
+          underperforming: healthResults.filter(r => r.healthStatus === "underperforming").length,
+        },
+      };
+
+    } catch (error) {
+      console.error("Error in strategy health check:", error);
+      throw error;
+    }
+  }
+);

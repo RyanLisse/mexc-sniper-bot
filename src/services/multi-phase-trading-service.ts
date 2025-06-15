@@ -58,6 +58,17 @@ export const PREDEFINED_STRATEGIES: Record<string, TradingStrategyConfig> = {
       { percentage: 30, multiplier: 1.3, sellPercentage: 30 },
     ],
   },
+  highPriceIncrease: {
+    id: "high-price-increase", 
+    name: "Aggressive Multi-Phase Strategy",
+    description: "Agressieve multi-phase strategie voor hogere targets",
+    levels: [
+      { percentage: 100, multiplier: 2.0, sellPercentage: 15 },
+      { percentage: 150, multiplier: 2.5, sellPercentage: 15 },
+      { percentage: 200, multiplier: 3.0, sellPercentage: 25 },
+      { percentage: 300, multiplier: 4.0, sellPercentage: 25 },
+    ],
+  },
   aggressive: {
     id: "aggressive",
     name: "Aggressive Multi-Phase Strategy",
