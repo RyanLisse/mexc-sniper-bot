@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { db } from "@/src/db";
 import { transactionLocks, transactionQueue } from "@/src/db/schema";
 
@@ -7,11 +7,25 @@ const BASE_URL = "http://localhost:3008";
 // Helper function to check if server is available
 async function isServerRunning(): Promise<boolean> {
   try {
-    const response = await fetch(`${BASE_URL}/api/health/db`, { 
-      method: 'GET',
-      signal: AbortSignal.timeout(1000) // 1 second timeout
+    // Use a simple HTTP request to check if server is running
+    const response = await new Promise<boolean>((resolve) => {
+      const http = require('http');
+      const req = http.request({
+        hostname: 'localhost',
+        port: 3008,
+        path: '/api/health/db',
+        method: 'GET',
+        timeout: 1000
+      }, (res: any) => {
+        resolve(res.statusCode >= 200 && res.statusCode < 300);
+      });
+      
+      req.on('error', () => resolve(false));
+      req.on('timeout', () => resolve(false));
+      req.end();
     });
-    return response.ok;
+    
+    return response;
   } catch {
     return false;
   }
@@ -32,6 +46,9 @@ function itWithServer(name: string, testFn: () => Promise<void>) {
 describe("Transaction Lock Integration Tests", () => {
   
   beforeAll(async () => {
+    // Disable fetch mock for integration tests - restore original implementation
+    vi.mocked(fetch).mockRestore();
+    
     // Clean up database
     await db.delete(transactionQueue);
     await db.delete(transactionLocks);

@@ -1,4 +1,7 @@
 import type { AgentResponse } from "./base-agent";
+import { patternDetectionEngine, type PatternAnalysisResult as EngineResult, type PatternMatch } from "@/src/services/pattern-detection-engine";
+import { patternStrategyOrchestrator, type PatternWorkflowRequest } from "@/src/services/pattern-strategy-orchestrator";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 
 export interface PatternAnalysisResult {
   patterns: ActionablePattern[];
@@ -15,6 +18,9 @@ export interface PatternAnalysisResult {
     patternsFound: number;
     signalsDetected: number;
   };
+  // Enhanced fields from centralized engine
+  engineResult?: EngineResult;
+  strategicRecommendations?: any[];
 }
 
 export interface ActionablePattern {
@@ -34,12 +40,103 @@ export interface PatternSignal {
 }
 
 export class PatternAnalysisWorkflow {
+  /**
+   * Enhanced Pattern Analysis using Centralized Detection Engine
+   * This method integrates with our core competitive advantage system
+   */
+  async analyzePatternsWithEngine(
+    input: {
+      calendarEntries?: CalendarEntry[];
+      symbolData?: SymbolEntry[];
+      vcoinId?: string;
+      symbols?: string[];
+    },
+    analysisType: "discovery" | "monitoring" | "execution" = "discovery",
+    options?: {
+      confidenceThreshold?: number;
+      includeAgentAnalysis?: boolean;
+      enableAdvanceDetection?: boolean;
+    }
+  ): Promise<PatternAnalysisResult> {
+    console.log(`[PatternAnalysisWorkflow] Enhanced pattern analysis for ${analysisType}`);
+    
+    try {
+      // Use the centralized pattern strategy orchestrator
+      const workflowRequest: PatternWorkflowRequest = {
+        type: analysisType === "execution" ? "validation" : analysisType,
+        input,
+        options: {
+          confidenceThreshold: options?.confidenceThreshold || 70,
+          includeAdvanceDetection: options?.enableAdvanceDetection ?? true,
+          enableAgentAnalysis: options?.includeAgentAnalysis ?? true,
+          maxExecutionTime: 30000 // 30 second timeout
+        }
+      };
+
+      const workflowResult = await patternStrategyOrchestrator.executePatternWorkflow(workflowRequest);
+
+      if (!workflowResult.success) {
+        throw new Error(workflowResult.error || "Pattern workflow failed");
+      }
+
+      // Transform engine results to workflow format
+      const engineResult = workflowResult.results.patternAnalysis;
+      const strategicRecommendations = workflowResult.results.strategicRecommendations;
+
+      const actionablePatterns = this.transformEngineMatches(engineResult?.matches || []);
+      const patternSignals = this.extractSignalsFromMatches(engineResult?.matches || []);
+      const confidence = engineResult?.summary.averageConfidence || 0;
+      const recommendation = this.generateEnhancedRecommendation(
+        actionablePatterns,
+        strategicRecommendations || [],
+        confidence,
+        analysisType
+      );
+
+      return {
+        patterns: actionablePatterns,
+        signals: patternSignals,
+        confidence,
+        recommendation,
+        metadata: {
+          analysisTimestamp: new Date().toISOString(),
+          patternsFound: actionablePatterns.length,
+          signalsDetected: patternSignals.length,
+        },
+        engineResult,
+        strategicRecommendations
+      };
+      
+    } catch (error) {
+      console.error("[PatternAnalysisWorkflow] Enhanced analysis failed:", error);
+      
+      // Fallback to legacy analysis
+      return await this.analyzePatternsLegacy(
+        { content: `Analysis failed: ${error}`, metadata: { timestamp: new Date().toISOString() } },
+        [],
+        analysisType
+      );
+    }
+  }
+
+  /**
+   * Legacy Pattern Analysis (for backward compatibility)
+   * Preserved for fallback scenarios
+   */
   async analyzePatterns(
     patternAnalysis: AgentResponse,
     _symbols?: string[],
     analysisType: "discovery" | "monitoring" | "execution" = "discovery"
   ): Promise<PatternAnalysisResult> {
-    console.log(`[PatternAnalysisWorkflow] Analyzing patterns for ${analysisType}`);
+    return await this.analyzePatternsLegacy(patternAnalysis, _symbols, analysisType);
+  }
+
+  private async analyzePatternsLegacy(
+    patternAnalysis: AgentResponse,
+    _symbols?: string[],
+    analysisType: "discovery" | "monitoring" | "execution" = "discovery"
+  ): Promise<PatternAnalysisResult> {
+    console.log(`[PatternAnalysisWorkflow] Legacy pattern analysis for ${analysisType}`);
 
     const actionablePatterns = this.extractActionablePatterns(patternAnalysis, analysisType);
     const patternSignals = this.extractPatternSignals(patternAnalysis);
@@ -363,5 +460,173 @@ export class PatternAnalysisWorkflow {
       timing,
       reasoning,
     };
+  }
+
+  // ============================================================================
+  // Engine Integration Methods
+  // ============================================================================
+
+  /**
+   * Transform PatternMatches from engine to ActionablePatterns for workflow
+   */
+  private transformEngineMatches(matches: PatternMatch[]): ActionablePattern[] {
+    return matches.map(match => ({
+      type: match.patternType,
+      confidence: match.confidence,
+      timeframe: this.mapTimeframe(match),
+      indicators: this.extractIndicators(match),
+      significance: this.mapSignificance(match)
+    }));
+  }
+
+  /**
+   * Extract signals from PatternMatches
+   */
+  private extractSignalsFromMatches(matches: PatternMatch[]): PatternSignal[] {
+    const signals: PatternSignal[] = [];
+    
+    for (const match of matches) {
+      // Ready state signal
+      if (match.patternType === "ready_state") {
+        signals.push({
+          name: "ready_state_signal",
+          strength: match.confidence,
+          direction: "bullish",
+          timeToExecution: "immediate",
+          reliability: match.confidence
+        });
+      }
+
+      // Advance detection signal
+      if (match.patternType === "launch_sequence" && match.advanceNoticeHours >= 3.5) {
+        signals.push({
+          name: "advance_opportunity_signal",
+          strength: Math.min(match.advanceNoticeHours * 10, 95),
+          direction: "bullish",
+          timeToExecution: `${match.advanceNoticeHours.toFixed(1)} hours`,
+          reliability: match.confidence
+        });
+      }
+
+      // Pre-ready signal
+      if (match.patternType === "pre_ready") {
+        signals.push({
+          name: "pre_ready_signal",
+          strength: match.confidence,
+          direction: "neutral",
+          timeToExecution: `${match.advanceNoticeHours.toFixed(1)} hours to ready`,
+          reliability: match.confidence
+        });
+      }
+
+      // Risk signals
+      if (match.riskLevel === "high") {
+        signals.push({
+          name: "risk_warning_signal",
+          strength: 80,
+          direction: "bearish",
+          timeToExecution: "immediate",
+          reliability: 90
+        });
+      }
+    }
+
+    return signals;
+  }
+
+  /**
+   * Generate enhanced recommendations using strategic recommendations
+   */
+  private generateEnhancedRecommendation(
+    patterns: ActionablePattern[],
+    strategicRecommendations: any[],
+    confidence: number,
+    analysisType: string
+  ): {
+    action: "execute" | "prepare" | "monitor" | "skip";
+    priority: "high" | "medium" | "low";
+    timing: string;
+    reasoning: string;
+  } {
+    // Use strategic recommendations if available
+    if (strategicRecommendations.length > 0) {
+      const topRecommendation = strategicRecommendations
+        .sort((a, b) => b.confidence - a.confidence)[0];
+      
+      return {
+        action: this.mapActionFromStrategic(topRecommendation.action),
+        priority: this.mapPriorityFromConfidence(topRecommendation.confidence),
+        timing: this.formatTiming(topRecommendation.timing),
+        reasoning: topRecommendation.reasoning
+      };
+    }
+
+    // Fallback to legacy recommendation logic
+    return this.generatePatternRecommendation(patterns, [], confidence, analysisType);
+  }
+
+  // Helper methods for transformation
+  private mapTimeframe(match: PatternMatch): string {
+    if (match.patternType === "ready_state") return "immediate";
+    if (match.patternType === "pre_ready") return "short_term";
+    if (match.patternType === "launch_sequence") return "medium_term";
+    return "unknown";
+  }
+
+  private extractIndicators(match: PatternMatch): string[] {
+    const indicators: string[] = [];
+    
+    if (match.indicators.sts !== undefined) indicators.push(`sts:${match.indicators.sts}`);
+    if (match.indicators.st !== undefined) indicators.push(`st:${match.indicators.st}`);
+    if (match.indicators.tt !== undefined) indicators.push(`tt:${match.indicators.tt}`);
+    if (match.advanceNoticeHours > 0) indicators.push(`advance:${match.advanceNoticeHours.toFixed(1)}h`);
+    
+    return indicators;
+  }
+
+  private mapSignificance(match: PatternMatch): "high" | "medium" | "low" {
+    if (match.patternType === "ready_state" && match.confidence >= 85) return "high";
+    if (match.confidence >= 80) return "high";
+    if (match.confidence >= 60) return "medium";
+    return "low";
+  }
+
+  private mapActionFromStrategic(action: string): "execute" | "prepare" | "monitor" | "skip" {
+    switch (action) {
+      case "immediate_trade":
+      case "immediate_action":
+        return "execute";
+      case "prepare_position":
+      case "prepare_entry":
+        return "prepare";
+      case "monitor_closely":
+        return "monitor";
+      case "wait":
+      case "avoid":
+      default:
+        return "skip";
+    }
+  }
+
+  private mapPriorityFromConfidence(confidence: number): "high" | "medium" | "low" {
+    if (confidence >= 80) return "high";
+    if (confidence >= 60) return "medium";
+    return "low";
+  }
+
+  private formatTiming(timing: any): string {
+    if (!timing) return "Not specified";
+    
+    if (timing.optimalEntry) {
+      const entryTime = new Date(timing.optimalEntry);
+      const now = new Date();
+      const diffMinutes = Math.round((entryTime.getTime() - now.getTime()) / (1000 * 60));
+      
+      if (diffMinutes <= 5) return "Immediate";
+      if (diffMinutes <= 60) return `${diffMinutes} minutes`;
+      return `${Math.round(diffMinutes / 60)} hours`;
+    }
+    
+    return "Monitor timing";
   }
 }

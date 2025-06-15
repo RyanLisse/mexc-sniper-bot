@@ -8,7 +8,7 @@ import {
 import type { ExitLevel, ExitStrategy } from "@/src/types/exit-strategies";
 import { EXIT_STRATEGIES } from "@/src/types/exit-strategies";
 import { and, eq } from "drizzle-orm";
-import { MexcTradingApi } from "./mexc-trading-api";
+import { getMexcService } from "@/src/services/mexc-unified-exports";
 
 export interface ActivePosition {
   id: number;
@@ -44,7 +44,7 @@ export interface PositionUpdate {
  * Fixes N+1 queries, implements batching, and improves performance
  */
 export class OptimizedAutoExitManager {
-  private tradingApi: MexcTradingApi;
+  private mexcService = getMexcService();
   private isMonitoring = false;
   private monitoringInterval?: NodeJS.Timeout;
   private readonly MONITORING_INTERVAL_MS = 5000;
@@ -53,7 +53,7 @@ export class OptimizedAutoExitManager {
   private priceCache = new Map<string, { price: number; timestamp: number }>();
 
   constructor() {
-    this.tradingApi = new MexcTradingApi("", "");
+    // Service is already initialized as a class property
   }
 
   /**

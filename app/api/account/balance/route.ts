@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMexcClient } from '@/src/services/mexc-api-client';
+import { getMexcService } from "@/src/services/mexc-unified-exports";
 import { db, apiCredentials } from '@/src/db';
 import { eq, and } from 'drizzle-orm';
 import { getEncryptionService } from '@/src/services/secure-encryption-service';
 import { 
   createSuccessResponse, 
   createErrorResponse, 
-  handleApiError, 
+   
   apiResponse, 
   HTTP_STATUS 
 } from '@/src/lib/api-response';
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
 
     // Try to get user-specific credentials first
-    let mexcClient;
+    let mexcService;
     let hasUserCredentials = false;
 
     if (userId) {
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
           const apiKey = encryptionService.decrypt(credentials[0].encryptedApiKey);
           const secretKey = encryptionService.decrypt(credentials[0].encryptedSecretKey);
           
-          mexcClient = getMexcClient({ apiKey, secretKey });
+          mexcService = getMexcService({ apiKey, secretKey });
           hasUserCredentials = true;
           console.log('[API] Using user-specific credentials');
         }
@@ -49,13 +49,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Fallback to environment credentials if no user credentials
-    if (!mexcClient) {
+    if (!mexcService) {
       console.log('[API] Using environment credentials as fallback');
-      mexcClient = getMexcClient();
+      mexcService = getMexcService();
     }
     
     // Fetch account balances with USDT conversion
-    const balanceResponse = await mexcClient.getAccountBalances();
+    const balanceResponse = await mexcService.getAccountBalances();
     
     if (!balanceResponse.success) {
       console.error('[API] Account balance fetch failed:', balanceResponse.error);

@@ -5,7 +5,6 @@ import { TransactionLockService } from "@/src/services/transaction-lock-service"
 
 // Mock fetch for API testing without server
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
 
 describe("Transaction Lock Integration Tests (Standalone)", () => {
   let lockService: TransactionLockService;
@@ -18,6 +17,9 @@ describe("Transaction Lock Integration Tests (Standalone)", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    
+    // Override global fetch mock with our test mock
+    global.fetch = mockFetch;
     
     // Force SQLite for tests
     process.env.DATABASE_URL = "sqlite:///./test-mexc.db";

@@ -1,0 +1,103 @@
+{
+  "timestamp": "2025-06-15T00:33:04.413Z",
+  "totalSize": 1709448,
+  "gzippedSize": 0,
+  "files": [
+    {
+      "name": "chunks/vendors-ec95d3c823e18a78.js",
+      "size": 1011326,
+      "type": "js"
+    },
+    {
+      "name": "chunks/charts-b76b89de17d2dfad.js",
+      "size": 234442,
+      "type": "js"
+    },
+    {
+      "name": "chunks/polyfills-42372ed130431b0a.js",
+      "size": 112594,
+      "type": "js"
+    },
+    {
+      "name": "css/4a641808defdc2c7.css",
+      "size": 99718,
+      "type": "css"
+    },
+    {
+      "name": "chunks/radix-ui-bee8f1a4fb29ac04.js",
+      "size": 96286,
+      "type": "js"
+    },
+    {
+      "name": "media/93f479601ee12b01-s.p.woff2",
+      "size": 31288,
+      "type": "other"
+    },
+    {
+      "name": "chunks/ui-components-451d6a70b0358a6a.js",
+      "size": 30571,
+      "type": "js"
+    },
+    {
+      "name": "media/569ce4b8f30dc480-s.p.woff2",
+      "size": 28356,
+      "type": "other"
+    },
+    {
+      "name": "media/ba015fad6dcf6784-s.woff2",
+      "size": 15292,
+      "type": "other"
+    },
+    {
+      "name": "media/8d697b304b401681-s.woff2",
+      "size": 14676,
+      "type": "other"
+    },
+    {
+      "name": "media/747892c23ea88013-s.woff2",
+      "size": 13036,
+      "type": "other"
+    },
+    {
+      "name": "media/9610d9e46709d722-s.woff2",
+      "size": 12608,
+      "type": "other"
+    },
+    {
+      "name": "chunks/webpack-ec611cff83c0308a.js",
+      "size": 3567,
+      "type": "js"
+    },
+    {
+      "name": "css/f30152c0704fba31.css",
+      "size": 2374,
+      "type": "css"
+    },
+    {
+      "name": "_IFi6EvW6n8alACMMNgWr/_buildManifest.js",
+      "size": 2275,
+      "type": "js"
+    },
+    {
+      "name": "chunks/main-app-5269aed1cb035a14.js",
+      "size": 529,
+      "type": "js"
+    },
+    {
+      "name": "chunks/8034.5adb4efd9f4fe90f.js",
+      "size": 276,
+      "type": "js"
+    },
+    {
+      "name": "chunks/main-83859e7013a4dbad.js",
+      "size": 154,
+      "type": "js"
+    },
+    {
+      "name": "_IFi6EvW6n8alACMMNgWr/_ssgManifest.js",
+      "size": 80,
+      "type": "js"
+    }
+  ],
+  "chunks": []
+}

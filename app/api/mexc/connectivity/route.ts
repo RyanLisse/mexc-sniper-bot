@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { mexcApi } from "@/src/services/enhanced-mexc-api";
+import { getUnifiedMexcClient } from "@/src/services/mexc-unified-exports";
 
 export async function GET() {
   try {
-    const isConnected = await mexcApi.checkConnectivity();
+    const mexcClient = getUnifiedMexcClient();
+    const isConnected = await mexcClient.testConnectivity();
     
     return NextResponse.json({
       connected: isConnected,

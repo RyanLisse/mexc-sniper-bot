@@ -1,15 +1,15 @@
 "use client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
-import { Button } from "@/src/components/ui/button";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu";
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -22,9 +22,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-} from "@/src/components/ui/sidebar";
-import { useAuth } from "@/src/lib/kinde-auth-client";
-import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
+} from "@/src/components/ui/optimized-exports";
 import {
   Bot,
   Brain,
@@ -37,7 +35,9 @@ import {
   Shield,
   User,
   Zap,
-} from "lucide-react";
+} from "@/src/components/ui/optimized-icons";
+import { useAuth } from "@/src/lib/kinde-auth-client";
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 

@@ -1,16 +1,16 @@
 import { Metadata } from "next";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
-import { SafetyMonitoringDashboard } from "@/src/components/safety-monitoring-dashboard";
+import { ComprehensiveSafetyDashboard } from "@/src/components/safety/comprehensive-safety-dashboard";
 
 export const metadata: Metadata = {
-  title: "Safety Monitoring - MEXC Sniper Bot",
-  description: "Real-time monitoring of all safety systems, risk metrics, and agent health",
+  title: "Comprehensive Safety Dashboard - MEXC Sniper Bot",
+  description: "Advanced safety monitoring with emergency controls, risk analysis, and agent health monitoring",
 };
 
 export default function SafetyPage() {
   return (
     <DashboardLayout>
-      <SafetyMonitoringDashboard />
+      <ComprehensiveSafetyDashboard />
     </DashboardLayout>
   );
 }

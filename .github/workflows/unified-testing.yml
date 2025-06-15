@@ -1,0 +1,446 @@
+name: 🧪 Unified Testing Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      test_level:
+        description: 'Test level to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+        - smoke
+        - unit
+        - integration
+        - e2e
+        - full
+
+# Cancel in-progress runs for the same workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Node.js environment
+  NODE_VERSION: '20'
+  NODE_ENV: 'test'
+  
+  # Testing configuration
+  CI: true
+  VITEST: true
+  
+  # Mock API keys for testing (safe for CI)
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_TEST || 'test-openai-key-ci' }}
+  MEXC_API_KEY: 'test-mexc-api-key-ci'
+  MEXC_SECRET_KEY: 'test-mexc-secret-key-ci'
+  MEXC_BASE_URL: 'https://api.mexc.com'
+  
+  # Database configuration
+  DATABASE_URL: 'sqlite://test.db'
+  ENCRYPTION_MASTER_KEY: 'dGVzdC1lbmNyeXB0aW9uLWtleS0zMi1ieXRlcy1sb25n'
+  
+  # Stagehand configuration
+  STAGEHAND_ENV: 'LOCAL'
+  STAGEHAND_HEADLESS: 'true'
+  STAGEHAND_VERBOSE: '1'
+  STAGEHAND_CACHE: 'true'
+  STAGEHAND_TIMEOUT: '45000'
+  
+  # Browserbase configuration (optional)
+  BROWSERBASE_API_KEY: ${{ secrets.BROWSERBASE_API_KEY }}
+  BROWSERBASE_PROJECT_ID: ${{ secrets.BROWSERBASE_PROJECT_ID }}
+  
+  # Performance monitoring
+  ENABLE_PERFORMANCE_MONITORING: 'true'
+  ENABLE_DEBUG_LOGGING: 'false'
+
+jobs:
+  # ========================================
+  # Code Quality & Type Checking
+  # ========================================
+  quality:
+    name: 🔍 Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🚀 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📥 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+        
+      - name: 🎨 Check code formatting
+        run: npm run format:check
+        
+      - name: 🔍 Lint code
+        run: npm run lint:check
+        
+      - name: 🏗️ Type checking
+        run: npm run type-check
+        
+      - name: 📊 Upload quality results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quality-results
+          path: |
+            .biome-cache/
+            eslint-results.json
+          retention-days: 7
+
+  # ========================================
+  # Unit & Integration Tests
+  # ========================================
+  unit-tests:
+    name: 🧪 Unit & Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: quality
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: [unit, integration]
+        
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🚀 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📥 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+        
+      - name: 🗄️ Setup test database
+        run: |
+          npm run db:migrate
+          
+      - name: 🧪 Run ${{ matrix.test-type }} tests
+        run: npm run test:${{ matrix.test-type }}
+        
+      - name: 📊 Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: matrix.test-type == 'unit'
+        with:
+          file: ./coverage/lcov.info
+          flags: unit-tests
+          name: unit-coverage
+          fail_ci_if_error: false
+          
+      - name: 📋 Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.test-type }}-test-results
+          path: |
+            test-results/
+            coverage/
+          retention-days: 14
+
+  # ========================================
+  # End-to-End Tests (AI-Powered)
+  # ========================================
+  e2e-tests:
+    name: 🤖 AI-Powered E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: unit-tests
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        test-suite:
+          - auth
+          - dashboard
+          - journey
+        include:
+          - test-suite: auth
+            description: "Authentication & Security"
+            timeout: 10
+          - test-suite: dashboard
+            description: "Dashboard & Calendar Integration"
+            timeout: 15
+          - test-suite: journey
+            description: "Complete User Journey"
+            timeout: 20
+            
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🚀 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📥 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+        
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+        
+      - name: 🗄️ Setup test database
+        run: |
+          npm run db:migrate
+          
+      - name: 🚀 Start application
+        run: |
+          npm run build
+          npm start &
+          sleep 30
+          curl -f http://localhost:3008 || (echo "App failed to start" && exit 1)
+        
+      - name: 🤖 Run ${{ matrix.description }} tests
+        run: npm run test:e2e:${{ matrix.test-suite }}
+        timeout-minutes: ${{ matrix.timeout }}
+        
+      - name: 📸 Upload test screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-screenshots-${{ matrix.test-suite }}
+          path: |
+            test-results/
+            test-screenshots/
+            playwright-report/
+          retention-days: 14
+          
+      - name: 📋 Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-results-${{ matrix.test-suite }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 14
+
+  # ========================================
+  # Legacy Browser Testing (Fallback)
+  # ========================================
+  legacy-e2e:
+    name: 🌐 Legacy Browser Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-tests
+    if: github.event.inputs.test_level == 'full' || github.event_name == 'push'
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🚀 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📥 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+        
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install ${{ matrix.browser }} --with-deps
+        
+      - name: 🗄️ Setup test database
+        run: npm run db:migrate
+        
+      - name: 🚀 Start application
+        run: |
+          npm run build
+          npm start &
+          sleep 30
+          
+      - name: 🌐 Run legacy E2E tests
+        run: npx playwright test tests/e2e/auth-protection-flow.spec.ts tests/e2e/dashboard-with-calendar.spec.ts --project=${{ matrix.browser }}
+        
+      - name: 📋 Upload legacy test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: legacy-e2e-${{ matrix.browser }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+  # ========================================
+  # Performance & Benchmarking
+  # ========================================
+  performance:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: unit-tests
+    if: github.event.inputs.test_level == 'full' || github.event_name == 'push'
+    
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🚀 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📥 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+        
+      - name: ⚡ Run performance tests
+        run: npm run test:perf
+        
+      - name: 📊 Run benchmarks
+        run: npm run test:benchmark
+        
+      - name: 📈 Upload performance results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-results
+          path: |
+            test-results/performance-report.json
+            test-results/benchmark-results.json
+          retention-days: 30
+
+  # ========================================
+  # Test Summary & Reporting
+  # ========================================
+  test-summary:
+    name: 📊 Test Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [quality, unit-tests, e2e-tests]
+    if: always()
+    
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📥 Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: test-artifacts/
+          
+      - name: 📊 Generate test summary
+        run: |
+          echo "# 🧪 Test Summary Report" > test-summary.md
+          echo "" >> test-summary.md
+          echo "## 📈 Test Results Overview" >> test-summary.md
+          echo "" >> test-summary.md
+          
+          # Quality results
+          echo "### 🔍 Code Quality" >> test-summary.md
+          if [ "${{ needs.quality.result }}" = "success" ]; then
+            echo "✅ **PASSED** - Code quality checks" >> test-summary.md
+          else
+            echo "❌ **FAILED** - Code quality checks" >> test-summary.md
+          fi
+          echo "" >> test-summary.md
+          
+          # Unit test results
+          echo "### 🧪 Unit & Integration Tests" >> test-summary.md
+          if [ "${{ needs.unit-tests.result }}" = "success" ]; then
+            echo "✅ **PASSED** - All unit and integration tests" >> test-summary.md
+          else
+            echo "❌ **FAILED** - Unit and integration tests" >> test-summary.md
+          fi
+          echo "" >> test-summary.md
+          
+          # E2E test results
+          echo "### 🤖 AI-Powered E2E Tests" >> test-summary.md
+          if [ "${{ needs.e2e-tests.result }}" = "success" ]; then
+            echo "✅ **PASSED** - All AI-powered end-to-end tests" >> test-summary.md
+          else
+            echo "❌ **FAILED** - AI-powered end-to-end tests" >> test-summary.md
+          fi
+          echo "" >> test-summary.md
+          
+          echo "### 📊 Coverage & Metrics" >> test-summary.md
+          echo "- Test framework: **Unified Vitest + Stagehand**" >> test-summary.md
+          echo "- AI-powered testing: **Enabled**" >> test-summary.md
+          echo "- Performance monitoring: **Enabled**" >> test-summary.md
+          echo "" >> test-summary.md
+          
+          # Add timestamp
+          echo "---" >> test-summary.md
+          echo "*Generated on: $(date -u '+%Y-%m-%d %H:%M:%S') UTC*" >> test-summary.md
+          
+          cat test-summary.md
+          
+      - name: 📋 Upload test summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-summary-report
+          path: test-summary.md
+          retention-days: 30
+          
+      - name: 💬 Comment test summary on PR
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('test-summary.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+  # ========================================
+  # Deployment Readiness Check
+  # ========================================
+  deployment-check:
+    name: 🚀 Deployment Readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [quality, unit-tests, e2e-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🚀 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📥 Install dependencies
+        run: npm ci --prefer-offline --no-audit
+        
+      - name: 🏗️ Test production build
+        run: npm run build
+        
+      - name: ✅ Deployment readiness verification
+        run: |
+          echo "🎉 All tests passed! Deployment ready."
+          echo "- Code quality: ✅"
+          echo "- Unit tests: ✅"
+          echo "- Integration tests: ✅"
+          echo "- E2E tests: ✅"
+          echo "- Production build: ✅"

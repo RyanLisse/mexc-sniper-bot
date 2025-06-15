@@ -10,6 +10,8 @@ export interface ApiResponse<T = any> {
   data?: T;
   /** Error message if the request failed */
   error?: string;
+  /** Optional error details (for validation errors, etc.) */
+  details?: any;
   /** Optional metadata like pagination, timestamps, etc. */
   meta?: {
     timestamp?: string;
@@ -49,19 +51,6 @@ export function createErrorResponse(error: string, meta?: ApiResponse["meta"]): 
   };
 }
 
-/**
- * Helper to handle common API error cases
- * @deprecated Use handleApiError from error-handler.ts instead
- */
-export function handleApiError(error: unknown): ApiResponse {
-  console.error("API Error:", error);
-
-  if (error instanceof Error) {
-    return createErrorResponse(error.message);
-  }
-
-  return createErrorResponse("An unknown error occurred");
-}
 
 /**
  * Helper to create paginated responses
@@ -134,4 +123,35 @@ export function createRateLimitErrorResponse(resetTime: number): ApiResponse {
     resetTime,
     retryAfter: Math.ceil((resetTime - Date.now()) / 1000),
   });
+}
+
+/**
+ * Generic API response creator that handles both success and error cases
+ * This is the main function used by API routes
+ */
+export function createApiResponse<T>(
+  response: ApiResponse<T>, 
+  status?: number
+): Response {
+  const statusCode = status || (response.success ? HTTP_STATUS.OK : HTTP_STATUS.INTERNAL_SERVER_ERROR);
+  
+  return new Response(JSON.stringify(response), {
+    status: statusCode,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+/**
+ * Handle API errors and return appropriate error response
+ */
+export function handleApiError(error: unknown, defaultMessage = "An error occurred"): Response {
+  console.error("API Error:", error);
+  
+  if (error instanceof Error) {
+    return createApiResponse(createErrorResponse(error.message), HTTP_STATUS.INTERNAL_SERVER_ERROR);
+  }
+  
+  return createApiResponse(createErrorResponse(defaultMessage), HTTP_STATUS.INTERNAL_SERVER_ERROR);
 }

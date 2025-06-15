@@ -182,29 +182,58 @@ export class WorkflowExecutor {
 
     try {
       console.log(
-        `[WorkflowExecutor] Starting pattern analysis workflow - type: ${request.analysisType}`
+        `[WorkflowExecutor] Starting enhanced pattern analysis workflow - type: ${request.analysisType}`
       );
 
-      // Step 1: Pattern discovery analysis
-      console.log("[WorkflowExecutor] Step 1: Pattern discovery analysis");
-      context.currentStep = "pattern-discovery";
-      const patternAnalysis = await this.agentManager.getPatternDiscoveryAgent().analyzePatterns({
-        vcoinId: request.vcoinId || "",
-        symbols: request.symbols,
-        analysisType: request.analysisType,
-      });
+      // Step 1: Enhanced Pattern Analysis using Centralized Engine
+      console.log("[WorkflowExecutor] Step 1: Enhanced pattern analysis with centralized engine");
+      context.currentStep = "enhanced-pattern-analysis";
+      
+      // Prepare input for enhanced analysis
+      const analysisInput: any = {
+        vcoinId: request.vcoinId,
+        symbols: request.symbols
+      };
 
-      // Step 2: Process patterns
-      console.log("[WorkflowExecutor] Step 2: Processing pattern analysis");
-      context.currentStep = "process-patterns";
-      const processedAnalysis = await this.patternAnalysisWorkflow.analyzePatterns(
-        patternAnalysis,
-        request.symbols,
-        request.analysisType
-      );
+      // If we have symbol data, use it directly
+      if (request.symbolData && request.symbolData.length > 0) {
+        analysisInput.symbolData = request.symbolData;
+      }
+
+      // Try enhanced analysis first
+      let processedAnalysis;
+      try {
+        processedAnalysis = await this.patternAnalysisWorkflow.analyzePatternsWithEngine(
+          analysisInput,
+          request.analysisType,
+          {
+            confidenceThreshold: 70,
+            includeAgentAnalysis: true,
+            enableAdvanceDetection: true
+          }
+        );
+        context.agentsUsed.push("pattern-detection-engine", "pattern-strategy-orchestrator");
+        
+        console.log("[WorkflowExecutor] Enhanced pattern analysis completed successfully");
+      } catch (engineError) {
+        console.warn("[WorkflowExecutor] Enhanced analysis failed, falling back to legacy:", engineError);
+        
+        // Fallback to legacy pattern analysis
+        const patternAnalysis = await this.agentManager.getPatternDiscoveryAgent().analyzePatterns({
+          vcoinId: request.vcoinId || "",
+          symbols: request.symbols,
+          analysisType: request.analysisType,
+        });
+
+        processedAnalysis = await this.patternAnalysisWorkflow.analyzePatterns(
+          patternAnalysis,
+          request.symbols,
+          request.analysisType
+        );
+        context.agentsUsed.push("pattern-discovery");
+      }
 
       const duration = Date.now() - context.startTime;
-      context.agentsUsed.push("pattern-discovery");
 
       return {
         success: true,
@@ -214,6 +243,10 @@ export class WorkflowExecutor {
           recommendation: processedAnalysis.recommendation,
           analysisType: request.analysisType,
           metadata: processedAnalysis.metadata,
+          // Enhanced fields
+          engineResult: processedAnalysis.engineResult,
+          strategicRecommendations: processedAnalysis.strategicRecommendations,
+          enhancedAnalysis: !!processedAnalysis.engineResult
         },
         metadata: {
           agentsUsed: context.agentsUsed,

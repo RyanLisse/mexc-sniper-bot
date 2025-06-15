@@ -6,12 +6,12 @@ import { z } from 'zod';
 import { 
   createSuccessResponse, 
   createErrorResponse, 
-  handleApiError, 
   apiResponse, 
   HTTP_STATUS,
   createValidationErrorResponse,
   createPaginatedResponse
 } from '@/src/lib/api-response';
+import { handleApiError } from '@/src/lib/error-handler';
 
 // Validation schemas
 const createTransactionSchema = z.object({
@@ -141,7 +141,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching transactions:', error);
     return apiResponse(
-      handleApiError(error),
+      createErrorResponse(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      ),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
@@ -187,7 +189,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating transaction:', error);
     return apiResponse(
-      handleApiError(error),
+      createErrorResponse(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      ),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
@@ -231,7 +235,9 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error updating transaction:', error);
     return apiResponse(
-      handleApiError(error),
+      createErrorResponse(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      ),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }

@@ -1,23 +1,26 @@
 import { NextResponse } from "next/server";
-import { mexcApi } from "@/src/services/enhanced-mexc-api";
+import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
-  handleApiError, 
   apiResponse, 
   HTTP_STATUS 
 } from "@/src/lib/api-response";
 
 export async function GET() {
   try {
-    const calendar = await mexcApi.getCalendar();
+    const mexcService = getRecommendedMexcService();
+    const calendarResponse = await mexcService.getCalendarListings();
     
     // Ensure data is always an array
-    const calendarData = Array.isArray(calendar?.data) ? calendar.data : [];
+    const calendarData = Array.isArray(calendarResponse.data) ? calendarResponse.data : [];
     
     return apiResponse(
       createSuccessResponse(calendarData, {
-        count: calendarData.length
+        count: calendarData.length,
+        cached: calendarResponse.cached,
+        executionTimeMs: calendarResponse.executionTimeMs,
+        serviceLayer: true,
       })
     );
   } catch (error) {
@@ -27,7 +30,8 @@ export async function GET() {
     return apiResponse(
       createSuccessResponse([], {
         error: error instanceof Error ? error.message : "Unknown error",
-        count: 0
+        count: 0,
+        serviceLayer: true,
       })
     );
   }

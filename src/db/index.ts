@@ -338,6 +338,11 @@ export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
 // Export schema for use in other files
 export * from "./schema";
 
+// Import optimization tools
+import { databaseOptimizationManager } from "@/src/lib/database-optimization-manager";
+import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
+import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
+
 // Database utilities with retry logic
 export async function initializeDatabase() {
   return withRetry(
@@ -358,6 +363,22 @@ export async function initializeDatabase() {
         } catch (_error) {
           // Vector extension might not be available, continue without it
           console.log("[Database] Vector extension not available, continuing without it");
+        }
+      }
+
+      // Initialize performance monitoring
+      if (process.env.NODE_ENV !== "test") {
+        queryPerformanceMonitor.startMonitoring();
+        console.log("[Database] Performance monitoring started");
+
+        // Auto-optimize for agent workloads in production
+        if (process.env.NODE_ENV === "production") {
+          try {
+            await databaseOptimizationManager.optimizeForAgentWorkloads();
+            console.log("[Database] Optimized for AI agent workloads");
+          } catch (error) {
+            console.warn("[Database] Failed to auto-optimize for agents:", error);
+          }
         }
       }
 
@@ -402,9 +423,52 @@ export async function healthCheck() {
   }
 }
 
+// Optimized query execution wrappers
+export async function executeOptimizedSelect<T>(
+  queryFn: () => Promise<T>,
+  cacheKey?: string,
+  cacheTTL?: number
+): Promise<T> {
+  return databaseConnectionPool.executeSelect(queryFn, cacheKey, cacheTTL);
+}
+
+export async function executeOptimizedWrite<T>(
+  queryFn: () => Promise<T>,
+  invalidatePatterns: string[] = []
+): Promise<T> {
+  return databaseConnectionPool.executeWrite(queryFn, invalidatePatterns);
+}
+
+export async function executeBatchOperations<T>(
+  operations: (() => Promise<T>)[],
+  invalidatePatterns: string[] = []
+): Promise<T[]> {
+  return databaseConnectionPool.executeBatch(operations, invalidatePatterns);
+}
+
+// Performance monitoring wrapper
+export async function monitoredQuery<T>(
+  queryName: string,
+  queryFn: () => Promise<T>,
+  options?: {
+    query?: string;
+    parameters?: unknown[];
+    userId?: string;
+  }
+): Promise<T> {
+  return queryPerformanceMonitor.wrapQuery(queryName, queryFn, options);
+}
+
 export function closeDatabase() {
   try {
     console.log("[Database] Database connection closed");
+    
+    // Stop performance monitoring
+    queryPerformanceMonitor.stopMonitoring();
+    
+    // Shutdown connection pool
+    databaseConnectionPool.shutdown();
+    
     // Reset cached instances
     dbInstance = null;
     tursoClient = null;

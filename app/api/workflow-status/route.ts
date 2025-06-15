@@ -3,7 +3,6 @@ import { WorkflowStatusService } from "@/src/services/workflow-status-service";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
-  handleApiError, 
   apiResponse, 
   HTTP_STATUS,
   createValidationErrorResponse
@@ -147,7 +146,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Failed to update workflow status:", error);
     return apiResponse(
-      handleApiError(error),
+      createErrorResponse(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      ),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }

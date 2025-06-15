@@ -4,11 +4,11 @@ import { eq } from 'drizzle-orm';
 import { 
   createSuccessResponse, 
   createErrorResponse, 
-  handleApiError, 
   apiResponse, 
   HTTP_STATUS,
   createValidationErrorResponse
 } from '@/src/lib/api-response';
+import { handleApiError } from '@/src/lib/error-handler';
 
 // GET /api/user-preferences?userId=xxx
 export async function GET(request: NextRequest) {
@@ -73,7 +73,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[API] Failed to fetch user preferences:', error);
     return apiResponse(
-      handleApiError(error),
+      createErrorResponse(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      ),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
@@ -245,7 +247,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[API] Failed to update user preferences:', error);
     return apiResponse(
-      handleApiError(error),
+      createErrorResponse(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      ),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }

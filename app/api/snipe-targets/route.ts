@@ -5,11 +5,11 @@ import { eq, and } from "drizzle-orm";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
-  handleApiError, 
   apiResponse, 
   HTTP_STATUS,
   createValidationErrorResponse
 } from "@/src/lib/api-response";
+import { handleApiError } from "@/src/lib/error-handler";
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,7 +70,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("❌ Error creating snipe target:", error);
     return apiResponse(
-      handleApiError(error),
+      createErrorResponse(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      ),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
@@ -111,7 +113,9 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("❌ Error fetching snipe targets:", error);
     return apiResponse(
-      handleApiError(error),
+      createErrorResponse(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      ),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }

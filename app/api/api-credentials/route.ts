@@ -5,7 +5,7 @@ import { getEncryptionService, SecureEncryptionService } from '@/src/services/se
 import {
   createSuccessResponse,
   createErrorResponse,
-  handleApiError,
+  
   apiResponse,
   HTTP_STATUS,
   createValidationErrorResponse

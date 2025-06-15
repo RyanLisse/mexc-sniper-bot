@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MexcTradingApi, OrderParameters } from "@/src/services/mexc-trading-api";
+import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
+import { type OrderParameters } from "@/src/services/unified-mexc-client";
 import { transactionLockService } from "@/src/services/transaction-lock-service";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
-  handleApiError, 
   apiResponse, 
   HTTP_STATUS 
 } from "@/src/lib/api-response";
+import { handleApiError } from "@/src/lib/error-handler";
 import { db } from "@/src/db";
 import { apiCredentials, executionHistory } from "@/src/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -84,8 +85,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Initialize trading API
-    const tradingApi = new MexcTradingApi(apiKey, secretKey);
+    // Initialize service layer
+    const mexcService = getRecommendedMexcService({
+      apiKey,
+      secretKey,
+    });
 
     // Prepare order parameters
     const orderParams: OrderParameters = {
@@ -99,39 +103,28 @@ export async function POST(request: NextRequest) {
 
     // Execute with lock protection
     const executeTrade = async () => {
-      // Validate order parameters
-      const validation = tradingApi.validateOrderParameters(orderParams);
-      if (!validation.valid) {
-        throw new Error(`Order validation failed: ${validation.errors.join(', ')}`);
-      }
-
-      // Check account balance before placing order
-      const baseAsset = side.toUpperCase() === 'BUY' ? 'USDT' : symbol.replace('USDT', '');
-      const balance = await tradingApi.getAssetBalance(baseAsset);
+      // Place order via service layer (includes validation and balance checks)
+      const orderResponse = await mexcService.placeOrder(orderParams);
       
-      if (!balance) {
-        throw new Error("Unable to fetch account balance");
+      if (!orderResponse.success) {
+        throw new Error(orderResponse.error || "Order placement failed");
       }
-
-      const availableBalance = parseFloat(balance.free);
-      const requiredAmount = side.toUpperCase() === 'BUY' 
-        ? parseFloat(quantity) * (price ? parseFloat(price) : 1) 
-        : parseFloat(quantity);
-
-      if (availableBalance < requiredAmount) {
-        throw new Error(`Insufficient ${baseAsset} balance. Available: ${balance.free}, Required: ${requiredAmount}`);
-      }
-
-      console.log(`💰 ${baseAsset} Balance: ${balance.free} (sufficient for trading)`);
-
-      // Execute the trading order
-      const orderResult = await tradingApi.placeOrder(orderParams);
+      
+      // Service layer returns ServiceResponse<OrderResult>, we need the OrderResult
+      const orderResult = orderResponse.data;
       
       if (!orderResult.success) {
-        throw new Error(orderResult.error || "Order placement failed");
+        throw new Error(orderResult.error || "Order execution failed");
       }
       
-      return orderResult;
+      return {
+        ...orderResult,
+        serviceMetrics: {
+          executionTimeMs: orderResponse.executionTimeMs,
+          cached: orderResponse.cached,
+          requestId: orderResponse.requestId,
+        },
+      };
     };
 
     // Execute with or without lock
@@ -234,7 +227,9 @@ export async function POST(request: NextRequest) {
     console.error("Trading API Error:", error);
     
     return apiResponse(
-      handleApiError(error),
+      createErrorResponse(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      ),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }

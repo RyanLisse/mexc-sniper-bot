@@ -1,4 +1,4 @@
-import type { MexcAccountBalance } from "@/src/services/mexc-api-client";
+import type { BalanceEntry } from "@/src/services/mexc-unified-exports";
 import { useQuery } from "@tanstack/react-query";
 
 interface UseAccountBalanceOptions {
@@ -16,7 +16,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
 
   return useQuery({
     queryKey: ["account-balance", userId],
-    queryFn: async (): Promise<MexcAccountBalance> => {
+    queryFn: async (): Promise<{ balances: BalanceEntry[]; totalUsdtValue: number; lastUpdated: string }> => {
       const url = userId
         ? `/api/account/balance?userId=${encodeURIComponent(userId)}`
         : "/api/account/balance";
@@ -47,4 +47,4 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
   });
 }
 
-export type { MexcAccountBalance } from "@/src/services/mexc-api-client";
+export type { BalanceEntry } from "@/src/services/mexc-unified-exports";

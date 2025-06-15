@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { mexcApi } from "@/src/services/enhanced-mexc-api";
+import { getUnifiedMexcClient } from "@/src/services/mexc-unified-exports";
 
 export async function GET() {
   try {
-    const serverTime = await mexcApi.getServerTime();
+    const mexcClient = getUnifiedMexcClient();
+    const serverTime = await mexcClient.getServerTime();
     
     return NextResponse.json({
       success: true,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac } from "crypto";
+import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,90 +8,59 @@ export async function GET(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { success: false, error: "User ID required" },
+        { success: false, error: "User ID required", serviceLayer: true },
         { status: 400 }
       );
     }
 
-    // Check for MEXC API credentials
-    const apiKey = process.env.MEXC_API_KEY;
-    const secretKey = process.env.MEXC_SECRET_KEY;
+    const mexcService = getRecommendedMexcService();
 
-    if (!apiKey || !secretKey) {
+    // Check if service has credentials
+    if (!mexcService.hasCredentials()) {
       return NextResponse.json({
         success: false,
         error: "MEXC API credentials not configured",
         balances: [],
         hasCredentials: false,
-        message: "Configure MEXC API keys in environment variables to view account balance"
+        message: "Configure MEXC API keys in environment variables to view account balance",
+        serviceLayer: true,
+        timestamp: new Date().toISOString()
       });
     }
 
-    // Implement real MEXC account balance API call
-    try {
-      const timestamp = Date.now();
-      const queryString = `timestamp=${timestamp}`;
-      
-      // Create signature for MEXC API
-      const signature = createHmac('sha256', secretKey)
-        .update(queryString)
-        .digest('hex');
+    // Get account balances via service layer
+    const balancesResponse = await mexcService.getAccountBalances();
 
-      const url = `https://api.mexc.com/api/v3/account?${queryString}&signature=${signature}`;
-      
-      console.log(`🔐 MEXC Account API Request: ${timestamp}`);
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'X-MEXC-APIKEY': apiKey,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`❌ MEXC Account API Error: ${response.status} - ${errorText}`);
-        
-        return NextResponse.json({
-          success: false,
-          hasCredentials: true,
-          balances: [],
-          error: `MEXC API Error: ${response.status} - ${errorText}`,
-          message: "API credentials configured but account access failed",
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      const accountData = await response.json();
-      console.log(`✅ MEXC Account API Success - Found ${accountData.balances?.length || 0} balances`);
-
-      // Filter balances with actual amounts (free + locked > 0)
-      const nonZeroBalances = accountData.balances?.filter((balance: any) => 
-        parseFloat(balance.free) > 0 || parseFloat(balance.locked) > 0
-      ) || [];
-
-      return NextResponse.json({
-        success: true,
-        hasCredentials: true,
-        balances: nonZeroBalances,
-        totalBalances: accountData.balances?.length || 0,
-        message: `Real MEXC account data - ${nonZeroBalances.length} assets with balance`,
-        timestamp: new Date().toISOString()
-      });
-
-    } catch (apiError) {
-      console.error("MEXC API call failed:", apiError);
+    if (!balancesResponse.success) {
+      console.error(`❌ MEXC Account Service Error:`, balancesResponse.error);
       
       return NextResponse.json({
         success: false,
         hasCredentials: true,
         balances: [],
-        error: apiError instanceof Error ? apiError.message : "Unknown API error",
-        message: "MEXC API credentials configured but request failed",
-        timestamp: new Date().toISOString()
+        error: balancesResponse.error,
+        message: "API credentials configured but account access failed",
+        serviceLayer: true,
+        executionTimeMs: balancesResponse.executionTimeMs,
+        timestamp: balancesResponse.timestamp
       });
     }
+
+    const { balances, totalUsdtValue, lastUpdated } = balancesResponse.data;
+    console.log(`✅ MEXC Account Service Success - Found ${balances.length} balances with total value: ${totalUsdtValue.toFixed(2)} USDT`);
+
+    return NextResponse.json({
+      success: true,
+      hasCredentials: true,
+      balances,
+      totalUsdtValue,
+      lastUpdated,
+      message: `Real MEXC account data - ${balances.length} assets with balance`,
+      serviceLayer: true,
+      cached: balancesResponse.cached,
+      executionTimeMs: balancesResponse.executionTimeMs,
+      timestamp: balancesResponse.timestamp
+    });
 
   } catch (error) {
     console.error("MEXC account fetch failed:", error);
@@ -102,6 +71,7 @@ export async function GET(request: NextRequest) {
         error: error instanceof Error ? error.message : "Unknown error",
         balances: [],
         hasCredentials: false,
+        serviceLayer: true,
         timestamp: new Date().toISOString()
       },
       { status: 500 }

@@ -1,14 +1,8 @@
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 
-export interface CalendarEntry {
-  vcoinId: string;
-  symbol: string;
-  projectName?: string;
-  firstOpenTime?: number;
-  launchTime?: string | number;
-  tradingPairs?: string[];
-  sts?: number;
-  st?: number;
+// Extended calendar entry for pattern analysis
+export interface PatternCalendarEntry extends CalendarEntry {
   // Pattern analysis properties
   isUpcoming?: boolean;
   patternConfidence?: number;
@@ -16,21 +10,14 @@ export interface CalendarEntry {
   projectType?: { category: string; marketAppeal: number };
   advanceHours?: number;
   urgencyLevel?: string;
-  [key: string]: unknown;
 }
 
-export interface SymbolData {
-  cd: string;
-  sts: number;
-  st: number;
-  tt: number;
-  symbol?: string;
-  [key: string]: unknown;
-}
+// Alias for backward compatibility
+export type SymbolData = SymbolEntry;
 
 export interface PatternAnalysisRequest {
   symbolData?: SymbolData[];
-  calendarData?: CalendarEntry[];
+  calendarData?: PatternCalendarEntry[];
   analysisType: "discovery" | "monitoring" | "execution";
   timeframe?: string;
   confidenceThreshold?: number;

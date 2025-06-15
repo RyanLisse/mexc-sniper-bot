@@ -10,6 +10,11 @@ import {
 import type { NextRequest } from "next/server";
 
 /**
+ * Alias for requireApiAuth to maintain compatibility
+ */
+export const validateRequest = requireApiAuth;
+
+/**
  * Middleware to require authentication for API routes with rate limiting
  * Returns the authenticated user or throws an error response
  */
@@ -390,4 +395,36 @@ export async function getUserIdFromBody(request: NextRequest): Promise<string> {
       }
     );
   }
+}
+
+/**
+ * API Auth Wrapper - Wraps API route handlers with authentication
+ * This is the main wrapper function used in API routes
+ */
+export function apiAuthWrapper<T extends any[]>(
+  handler: (request: NextRequest, ...args: T) => Promise<Response>
+) {
+  return async (request: NextRequest, ...args: T): Promise<Response> => {
+    try {
+      // Apply basic authentication and rate limiting
+      await requireApiAuth(request);
+      
+      // Execute the handler
+      return await handler(request, ...args);
+    } catch (error) {
+      console.error("[API Auth] Request failed:", error);
+      
+      if (error instanceof Response) {
+        return error;
+      }
+
+      return new Response(
+        JSON.stringify(createErrorResponse("Internal server error")), 
+        {
+          status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+  };
 }

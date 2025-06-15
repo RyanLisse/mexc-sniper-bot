@@ -1,4 +1,5 @@
-import { type CalendarEntry, validateCalendarEntry } from "../schemas/mexc-schemas";
+import { validateCalendarEntry } from "../schemas/mexc-schemas";
+import type { CalendarEntry } from "@/src/services/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 import { MexcApiAgent } from "./mexc-api-agent";
 

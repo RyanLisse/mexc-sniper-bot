@@ -1,22 +1,7 @@
 import type { ApiResponse } from "@/src/lib/api-response";
 import { queryKeys } from "@/src/lib/query-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-// Type definitions for MEXC API responses
-interface MexcSymbol {
-  sts: number;
-  st: number;
-  tt: number;
-  cd: string;
-  [key: string]: unknown;
-}
-
-interface CalendarEntry {
-  firstOpenTime: string | number;
-  vcoinId: string;
-  symbol: string;
-  [key: string]: unknown;
-}
+import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 
 // MEXC Calendar Data Hook
 export function useMexcCalendar() {
@@ -51,7 +36,7 @@ export function useMexcSymbols(vcoinId?: string) {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      const result: ApiResponse<MexcSymbol[]> = await response.json();
+      const result: ApiResponse<SymbolEntry[]> = await response.json();
 
       if (!result.success) {
         throw new Error(result.error || "Failed to fetch MEXC symbols");
@@ -154,7 +139,7 @@ export function useMexcPatternDetection(vcoinId?: string) {
 
   // Analyze symbols for ready state pattern (sts:2, st:2, tt:4)
   const readyStatePattern = Array.isArray(symbols)
-    ? symbols.find((symbol: MexcSymbol) => symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4)
+    ? symbols.find((symbol: SymbolEntry) => symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4)
     : undefined;
 
   const hasReadyPattern = !!readyStatePattern;

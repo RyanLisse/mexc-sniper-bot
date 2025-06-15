@@ -223,6 +223,7 @@ export class TransactionLockService {
 
     await db.insert(transactionQueue).values({
       queueId,
+      lockId: null, // Explicitly set to null for queued items
       resourceId: config.resourceId,
       priority: config.priority || 5,
       transactionType: config.transactionType,
@@ -327,18 +328,25 @@ export class TransactionLockService {
       // Execute the transaction
       const result = await executor();
 
+      // Convert result to Record<string, unknown> safely
+      let resultRecord: Record<string, unknown> | undefined;
+      if (result !== null && result !== undefined) {
+        if (typeof result === "object") {
+          resultRecord = result as Record<string, unknown>;
+        } else {
+          // For primitive values, wrap them
+          resultRecord = { value: result };
+        }
+      }
+
       // Release lock with success
       if (lockResult.lockId) {
-        await this.releaseLock(
-          lockResult.lockId,
-          result && typeof result === "object" ? (result as Record<string, unknown>) : undefined
-        );
+        await this.releaseLock(lockResult.lockId, resultRecord);
       }
 
       return {
         success: true,
-        result:
-          result && typeof result === "object" ? (result as Record<string, unknown>) : undefined,
+        result: resultRecord,
         lockId: lockResult.lockId || "",
         executionTimeMs: Date.now() - startTime,
       };
