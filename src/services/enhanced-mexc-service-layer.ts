@@ -3,7 +3,7 @@ import {
   type MexcServiceConfig,
   type ServiceResponse,
   type HealthCheckResult,
-  getMexcService
+  getRecommendedMexcService
 } from "./mexc-service-layer";
 import {
   type CalendarEntry,
@@ -743,6 +743,6 @@ export function resetEnhancedMexcService(): void {
   }
 }
 
-// Export for compatibility
-export { getMexcService };
+// Export for compatibility - using the enhanced service as the default
+export { getEnhancedMexcService as getMexcService };
 export default EnhancedMexcServiceLayer;

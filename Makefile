@@ -80,7 +80,7 @@ dev-next: ## Start Next.js development server
 .PHONY: dev-inngest
 dev-inngest: ## Start Inngest dev server
 	@echo -e "${BLUE}Starting Inngest dev server...${NC}"
-	@npx inngest-cli@latest dev -u http://localhost:3000/api/inngest
+	@npx inngest-cli@latest dev -u http://localhost:3008/api/inngest
 
 # ==================== Code Quality Commands ====================
 

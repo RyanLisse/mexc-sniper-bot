@@ -7,7 +7,12 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const nextConfig: NextConfig = {
   // Exclude server-only packages from client-side bundles
-  serverExternalPackages: ["better-sqlite3"],
+  serverExternalPackages: [
+    "better-sqlite3",
+    "expo-secure-store",
+    "react-native", 
+    "@react-native-async-storage/async-storage"
+  ],
   
   // TypeScript configuration
   typescript: {
@@ -44,7 +49,6 @@ const nextConfig: NextConfig = {
       'tailwind-merge'
     ],
     // Enable advanced optimization features
-    serverComponentsExternalPackages: ['better-sqlite3', 'drizzle-orm'],
     optimizeCss: true,
     gzipSize: true,
   },
@@ -66,6 +70,10 @@ const nextConfig: NextConfig = {
         util: false,
         url: false,
         querystring: false,
+        // Exclude React Native and Expo dependencies that may be pulled in by Kinde
+        'expo-secure-store': false,
+        'react-native': false,
+        '@react-native-async-storage/async-storage': false,
       };
       
       // Ensure these packages never make it to the client bundle
@@ -73,6 +81,10 @@ const nextConfig: NextConfig = {
         ...config.resolve.alias,
         'better-sqlite3': false,
         'drizzle-orm/better-sqlite3': false,
+        // Explicitly exclude React Native and Expo dependencies
+        'expo-secure-store': false,
+        'react-native': false,
+        '@react-native-async-storage/async-storage': false,
       };
 
       // Advanced code splitting and optimization
