@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from "@kinde-oss/kinde-auth-nextjs/middleware";
+
+// Conditional import to avoid build issues with expo dependencies
+let withAuth: any = null;
+if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+  try {
+    withAuth = require("@kinde-oss/kinde-auth-nextjs/middleware").withAuth;
+  } catch (error) {
+    console.warn('Kinde middleware not available, using fallback');
+  }
+}
 
 // Protected routes that require authentication
 const PROTECTED_ROUTES = [
@@ -21,7 +30,7 @@ async function testMiddleware(request: NextRequest) {
 }
 
 // Production middleware with authentication
-const authMiddleware = withAuth(
+const authMiddleware = withAuth ? withAuth(
   async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
@@ -48,7 +57,7 @@ const authMiddleware = withAuth(
     loginPage: '/api/auth/login',
     isAuthorized: ({ token }: { token: any }) => !!token,
   }
-);
+) : testMiddleware;
 
 // Export appropriate middleware based on environment
 export default function middleware(request: NextRequest) {

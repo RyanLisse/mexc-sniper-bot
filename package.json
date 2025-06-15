@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "AI-powered MEXC cryptocurrency trading bot with pattern detection and automated execution",
   "scripts": {
-    "dev": "next dev --turbopack -p 3008",
+    "dev": "next dev -p 3008",
+    "dev:turbo": "next dev --turbopack -p 3008",
     "build": "next build",
     "start": "next start",
     "lint": "biome check --write",
@@ -73,6 +74,9 @@
     "db:studio": "drizzle-kit studio",
     "db:reset": "rm -f mexc_sniper.db && bun run db:migrate",
     "db:check": "tsx scripts/check-db.ts",
+    "db:diagnostic": "tsx scripts/database-health-diagnostic.ts",
+    "db:optimize": "tsx scripts/optimize-sqlite-database.ts",
+    "db:setup:turso": "tsx scripts/setup-turso-database.ts",
     "agents:test": "bun test src/mexc-agents/**/*.test.ts",
     "agents:health": "bun run src/mexc-agents/health-check.ts",
     "postinstall": "./scripts/safe-migrate.sh"

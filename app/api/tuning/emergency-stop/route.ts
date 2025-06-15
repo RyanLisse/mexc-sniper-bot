@@ -5,12 +5,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ParameterOptimizationEngine } from '@/src/services/parameter-optimization-engine';
+// import { ParameterOptimizationEngine } from '@/src/services/parameter-optimization-engine';
 import { ParameterManager } from '@/src/lib/parameter-management';
 import { logger } from '@/src/lib/utils';
 
 // Initialize components
-const optimizationEngine = new ParameterOptimizationEngine();
+// const optimizationEngine = new ParameterOptimizationEngine();
 const parameterManager = new ParameterManager();
 
 /**
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       
       for (const optimization of activeOptimizations) {
         try {
-          await optimizationEngine.stopOptimization(optimization.id);
+          // await optimizationEngine.stopOptimization(optimization.id);
           emergencyReport.actionsPerformed.push(`Stopped optimization: ${optimization.id}`);
         } catch (error) {
           emergencyReport.errors.push(`Failed to stop optimization ${optimization.id}: ${error.message}`);

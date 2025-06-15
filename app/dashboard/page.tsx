@@ -16,6 +16,7 @@ import { OptimizedTradingTargets } from "@/src/components/dashboard/optimized-tr
 import { RecentTradesTable } from "@/src/components/dashboard/recent-trades-table";
 import { UpcomingCoinsSection } from "@/src/components/dashboard/upcoming-coins-section";
 import { OptimizedAccountBalance } from "@/src/components/optimized-account-balance";
+import { MultiPhaseStrategyManager } from "@/src/components/multi-phase-strategy-manager";
 
 export default function DashboardPage() {
   // Using a dummy userId for now - in production this should come from auth
@@ -98,6 +99,7 @@ export default function DashboardPage() {
                   {newListings}
                 </span>
               </TabsTrigger>
+              <TabsTrigger value="strategies">Trading Strategies</TabsTrigger>
               <TabsTrigger value="trades">Recent Trades</TabsTrigger>
               <TabsTrigger value="patterns">Pattern Detection</TabsTrigger>
             </TabsList>
@@ -128,6 +130,10 @@ export default function DashboardPage() {
 
           <TabsContent value="listings" className="space-y-4">
             <CoinListingsBoard />
+          </TabsContent>
+
+          <TabsContent value="strategies" className="space-y-4">
+            <MultiPhaseStrategyManager userId={userId} />
           </TabsContent>
 
           <TabsContent value="trades" className="space-y-4">

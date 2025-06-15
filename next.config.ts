@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [
     "better-sqlite3",
     "expo-secure-store",
+    "expo-modules-core",
     "react-native", 
     "@react-native-async-storage/async-storage"
   ],
@@ -72,9 +73,25 @@ const nextConfig: NextConfig = {
         querystring: false,
         // Exclude React Native and Expo dependencies that may be pulled in by Kinde
         'expo-secure-store': false,
+        'expo-modules-core': false,
         'react-native': false,
         '@react-native-async-storage/async-storage': false,
       };
+
+      // Add specific ignorePlugin for expo modules
+      const webpack = require('webpack');
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new webpack.IgnorePlugin({
+          checkResource(resource, context) {
+            // Ignore expo modules being imported
+            if (resource.startsWith('expo-')) return true;
+            // Ignore specific problematic kinde utility imports
+            if (resource.includes('expoSecureStore') || resource.includes('expo-secure-store')) return true;
+            return false;
+          }
+        })
+      );
       
       // Ensure these packages never make it to the client bundle
       config.resolve.alias = {
@@ -83,6 +100,7 @@ const nextConfig: NextConfig = {
         'drizzle-orm/better-sqlite3': false,
         // Explicitly exclude React Native and Expo dependencies
         'expo-secure-store': false,
+        'expo-modules-core': false,
         'react-native': false,
         '@react-native-async-storage/async-storage': false,
       };

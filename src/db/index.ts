@@ -54,9 +54,15 @@ async function withRetry<T>(
 // Create Turso client with better error handling and URL scheme fallback
 function createTursoClient() {
   // Support both TURSO_DATABASE_URL and TURSO_HOST patterns
-  const databaseUrl =
-    process.env.TURSO_DATABASE_URL ||
-    (process.env.TURSO_HOST ? `libsql://${process.env.TURSO_HOST}` : null);
+  let databaseUrl = process.env.TURSO_DATABASE_URL;
+  
+  // If we only have TURSO_HOST, construct the URL
+  if (!databaseUrl && process.env.TURSO_HOST) {
+    const host = process.env.TURSO_HOST;
+    // Ensure the host doesn't already have a protocol
+    const cleanHost = host.replace(/^(libsql:\/\/|wss:\/\/|https:\/\/)/, '');
+    databaseUrl = `libsql://${cleanHost}`;
+  }
 
   if (!databaseUrl || !process.env.TURSO_AUTH_TOKEN) {
     throw new Error(

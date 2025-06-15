@@ -63,6 +63,14 @@ import {
   alertAnalytics,
 } from "./schemas/alerts";
 
+import {
+  strategyTemplates,
+  tradingStrategies,
+  strategyPhaseExecutions,
+  strategyPerformanceMetrics,
+  strategyConfigBackups,
+} from "./schemas/strategies";
+
 // Export all tables individually for backward compatibility
 export {
   // Auth tables
@@ -115,6 +123,13 @@ export {
   alertSuppressions,
   anomalyModels,
   alertAnalytics,
+  
+  // Strategy tables
+  strategyTemplates,
+  tradingStrategies,
+  strategyPhaseExecutions,
+  strategyPerformanceMetrics,
+  strategyConfigBackups,
 };
 
 // Export all types
@@ -125,6 +140,7 @@ export type * from "./schemas/patterns";
 export type * from "./schemas/workflows";
 export type * from "./schemas/performance";
 export type * from "./schemas/alerts";
+export type * from "./schemas/strategies";
 
 // Create a consolidated schema object for drizzle (required for proper table relationships)
 const allTables = {
@@ -178,6 +194,13 @@ const allTables = {
   alertSuppressions,
   anomalyModels,
   alertAnalytics,
+  
+  // Strategy tables
+  strategyTemplates,
+  tradingStrategies,
+  strategyPhaseExecutions,
+  strategyPerformanceMetrics,
+  strategyConfigBackups,
 };
 
 // Default export for database initialization
