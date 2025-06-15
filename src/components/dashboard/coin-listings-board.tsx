@@ -163,14 +163,21 @@ interface CalendarEntry {
   projectName?: string;
 }
 
-// Helper function to filter upcoming coins - only show listings starting from today and newer
+// Helper function to filter upcoming coins - show listings from today up to 30 days ahead
 function filterUpcomingCoins(calendarData: CalendarEntry[]): CalendarEntry[] {
   return calendarData.filter((item) => {
     try {
       const launchTime = new Date(item.firstOpenTime);
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Set to start of today (00:00:00)
-      return launchTime.getTime() >= today.getTime();
+      
+      // Only show listings within next 30 days to keep it manageable
+      const maxFutureDate = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
+      
+      return (
+        launchTime.getTime() >= today.getTime() && 
+        launchTime.getTime() <= maxFutureDate.getTime()
+      );
     } catch {
       return false;
     }
@@ -232,6 +239,13 @@ function processExecutedTargets(
     .filter((coin) => coin !== null);
 }
 
+// Helper function to limit and sort displayed listings
+function limitDisplayedListings(listings: CalendarEntry[], maxCount = 50): CalendarEntry[] {
+  return listings
+    .sort((a, b) => new Date(a.firstOpenTime).getTime() - new Date(b.firstOpenTime).getTime())
+    .slice(0, maxCount);
+}
+
 // Hook to handle data processing logic
 function useProcessedCoinData() {
   const {
@@ -251,8 +265,10 @@ function useProcessedCoinData() {
 
   const { data: calendarData } = useMexcCalendar();
 
-  // Process calendar data
-  const upcomingCoins = Array.isArray(calendarData) ? filterUpcomingCoins(calendarData) : [];
+  // Process calendar data with filtering and limiting
+  const upcomingCoins = Array.isArray(calendarData) 
+    ? limitDisplayedListings(filterUpcomingCoins(calendarData), 50)
+    : [];
   const enrichedCalendarData = enrichCalendarData(
     upcomingCoins,
     pendingDetection,
@@ -411,11 +427,27 @@ export function CoinListingsBoard() {
         </Card>
       )}
 
+      {/* Listings Info Banner */}
+      {enrichedCalendarData.length >= 50 && (
+        <Card className="border-blue-500/20 bg-blue-500/10">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-blue-400">
+              <Clock className="h-4 w-4" />
+              <p className="text-sm">
+                Showing top 50 listings from today to 30 days ahead. Total found: {enrichedCalendarData.length}.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Coin Listings by Status */}
       <Card>
         <CardHeader>
           <CardTitle>Coin Listings</CardTitle>
-          <CardDescription>All listings organized by their current status</CardDescription>
+          <CardDescription>
+            New listings from today to 30 days ahead (max 50 shown, sorted by launch time)
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all" className="space-y-4">
