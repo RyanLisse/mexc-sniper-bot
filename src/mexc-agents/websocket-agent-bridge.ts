@@ -1,9 +1,9 @@
 /**
  * WebSocket Agent Bridge
- * 
+ *
  * Bridges the 11-agent AI system with real-time WebSocket communication.
  * Provides live streaming of agent status, workflow progress, and results.
- * 
+ *
  * Features:
  * - Real-time agent status broadcasting
  * - Live workflow execution updates
@@ -13,34 +13,23 @@
  * - Error and alert distribution
  */
 
-import { EventEmitter } from 'events';
-import { webSocketServer } from '@/src/services/websocket-server';
-import { EnhancedMexcOrchestrator } from '@/src/mexc-agents/coordination/enhanced-orchestrator';
-import { AgentRegistry } from '@/src/mexc-agents/coordination/agent-registry';
-import { WorkflowEngine } from '@/src/mexc-agents/coordination/workflow-engine';
-import { PerformanceCollector } from '@/src/mexc-agents/coordination/performance-collector';
-import { AgentMonitoringService } from '@/src/services/agent-monitoring-service';
-import {
-  type AgentStatusMessage,
-  type AgentHealthMessage,
-  type AgentPerformanceMessage,
-  type AgentWorkflowMessage,
-  type AgentErrorMessage,
-  type PatternDiscoveryMessage,
-  type PatternReadyStateMessage,
-  type TradingSignalMessage,
-  type NotificationMessage,
-  type WebSocketMessage,
-} from '@/src/lib/websocket-types';
-import {
-  type AgentResponse,
-  type AgentConfig,
-  type CalendarDiscoveryWorkflowRequest,
-  type SymbolAnalysisWorkflowRequest,
-  type PatternAnalysisWorkflowRequest,
-  type TradingStrategyWorkflowRequest,
-  type MexcWorkflowResult,
-} from '@/src/mexc-agents/orchestrator-types';
+import { EventEmitter } from "events";
+import type {
+  AgentErrorMessage,
+  AgentHealthMessage,
+  AgentStatusMessage,
+  AgentWorkflowMessage,
+  NotificationMessage,
+  PatternDiscoveryMessage,
+  PatternReadyStateMessage,
+  TradingSignalMessage,
+} from "@/src/lib/websocket-types";
+import type { AgentRegistry } from "@/src/mexc-agents/coordination/agent-registry";
+import type { EnhancedMexcOrchestrator } from "@/src/mexc-agents/coordination/enhanced-orchestrator";
+import type { PerformanceCollector } from "@/src/mexc-agents/coordination/performance-collector";
+import type { WorkflowEngine } from "@/src/mexc-agents/coordination/workflow-engine";
+import type { MexcWorkflowResult } from "@/src/mexc-agents/orchestrator-types";
+import { webSocketServer } from "@/src/services/websocket-server";
 
 // ======================
 // Agent Status Tracker
@@ -50,7 +39,7 @@ interface AgentStatusTracker {
   agentId: string;
   agentType: string;
   lastUpdate: number;
-  status: 'healthy' | 'degraded' | 'unhealthy' | 'offline';
+  status: "healthy" | "degraded" | "unhealthy" | "offline";
   metrics: {
     responseTime: number;
     errorCount: number;
@@ -64,7 +53,7 @@ interface AgentStatusTracker {
 interface WorkflowTracker {
   workflowId: string;
   workflowType: string;
-  status: 'started' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: "started" | "running" | "completed" | "failed" | "cancelled";
   progress: number;
   agentsInvolved: string[];
   currentAgent?: string;
@@ -96,7 +85,7 @@ class RealTimeDataStreamer extends EventEmitter {
       this.broadcastWorkflowStatuses();
     }, this.updateIntervalMs);
 
-    console.log('[WebSocket Bridge] Real-time streaming started');
+    console.log("[WebSocket Bridge] Real-time streaming started");
   }
 
   stop(): void {
@@ -108,7 +97,7 @@ class RealTimeDataStreamer extends EventEmitter {
       this.updateInterval = undefined;
     }
 
-    console.log('[WebSocket Bridge] Real-time streaming stopped');
+    console.log("[WebSocket Bridge] Real-time streaming stopped");
   }
 
   updateAgentStatus(agentId: string, agentType: string, metrics: any): void {
@@ -125,7 +114,7 @@ class RealTimeDataStreamer extends EventEmitter {
         workflowsActive: metrics.workflowsActive || 0,
       },
       metadata: {
-        version: metrics.version || '1.0.0',
+        version: metrics.version || "1.0.0",
         memory: metrics.memory || 0,
         cpu: metrics.cpu || 0,
         uptime: metrics.uptime || 0,
@@ -139,14 +128,14 @@ class RealTimeDataStreamer extends EventEmitter {
   updateWorkflowStatus(
     workflowId: string,
     workflowType: string,
-    status: WorkflowTracker['status'],
+    status: WorkflowTracker["status"],
     progress: number,
     agentsInvolved: string[],
     currentAgent?: string,
     metadata: Record<string, any> = {}
   ): void {
     const existing = this.workflowTrackers.get(workflowId);
-    
+
     const tracker: WorkflowTracker = {
       workflowId,
       workflowType,
@@ -163,24 +152,27 @@ class RealTimeDataStreamer extends EventEmitter {
     this.broadcastWorkflowStatus(tracker);
 
     // Clean up completed workflows after 5 minutes
-    if (status === 'completed' || status === 'failed' || status === 'cancelled') {
-      setTimeout(() => {
-        this.workflowTrackers.delete(workflowId);
-      }, 5 * 60 * 1000);
+    if (status === "completed" || status === "failed" || status === "cancelled") {
+      setTimeout(
+        () => {
+          this.workflowTrackers.delete(workflowId);
+        },
+        5 * 60 * 1000
+      );
     }
   }
 
-  private calculateAgentStatus(metrics: any): AgentStatusTracker['status'] {
+  private calculateAgentStatus(metrics: any): AgentStatusTracker["status"] {
     const errorRate = metrics.errorRate || 0;
     const responseTime = metrics.averageResponseTime || 0;
     const successRate = metrics.successRate || 1;
 
     if (errorRate > 0.2 || responseTime > 5000 || successRate < 0.8) {
-      return 'unhealthy';
+      return "unhealthy";
     } else if (errorRate > 0.1 || responseTime > 3000 || successRate < 0.9) {
-      return 'degraded';
+      return "degraded";
     } else {
-      return 'healthy';
+      return "healthy";
     }
   }
 
@@ -228,8 +220,8 @@ class RealTimeDataStreamer extends EventEmitter {
     };
 
     webSocketServer.broadcast({
-      type: 'agent:workflow',
-      channel: 'agents:workflows',
+      type: "agent:workflow",
+      channel: "agents:workflows",
       data: message,
     });
   }
@@ -270,7 +262,7 @@ class PatternDiscoveryStreamer {
         detectedAt: pattern.detectedAt,
         estimatedExecution: pattern.estimatedExecution,
         advanceNotice: pattern.estimatedExecution - pattern.detectedAt,
-        timeframe: '1h', // Default timeframe
+        timeframe: "1h", // Default timeframe
       },
       criteria: pattern.criteria,
       metadata: pattern.metadata,
@@ -293,7 +285,7 @@ class PatternDiscoveryStreamer {
     tt: number;
     confidence: number;
     estimatedLaunchTime?: number;
-    riskLevel: 'low' | 'medium' | 'high';
+    riskLevel: "low" | "medium" | "high";
     expectedVolatility: number;
     correlatedSymbols: string[];
     metadata?: Record<string, any>;
@@ -325,14 +317,14 @@ class PatternDiscoveryStreamer {
     this.readyStateBuffer.set(data.symbol, message);
 
     webSocketServer.broadcast({
-      type: 'pattern:ready_state',
-      channel: 'patterns:ready_state',
+      type: "pattern:ready_state",
+      channel: "patterns:ready_state",
       data: message,
     });
 
     // Also broadcast to symbol-specific channel
     webSocketServer.broadcast({
-      type: 'pattern:ready_state',
+      type: "pattern:ready_state",
       channel: `patterns:${data.symbol}:ready_state`,
       data: message,
     });
@@ -346,22 +338,22 @@ class PatternDiscoveryStreamer {
   private broadcastPatternAlert(pattern: PatternDiscoveryMessage): void {
     const notification: NotificationMessage = {
       notificationId: crypto.randomUUID(),
-      type: 'info',
-      title: 'Pattern Discovered',
+      type: "info",
+      title: "Pattern Discovered",
       message: `High confidence ${pattern.pattern.type} pattern detected for ${pattern.symbol}`,
-      priority: 'high',
-      category: 'pattern',
+      priority: "high",
+      category: "pattern",
       timestamp: Date.now(),
       actionable: true,
       actions: [
         {
-          label: 'View Details',
-          action: 'navigate',
+          label: "View Details",
+          action: "navigate",
           params: { path: `/patterns/${pattern.patternId}` },
         },
         {
-          label: 'Create Strategy',
-          action: 'create_strategy',
+          label: "Create Strategy",
+          action: "create_strategy",
           params: { symbol: pattern.symbol, patternId: pattern.patternId },
         },
       ],
@@ -377,22 +369,22 @@ class PatternDiscoveryStreamer {
   private broadcastReadyStateAlert(readyState: PatternReadyStateMessage): void {
     const notification: NotificationMessage = {
       notificationId: crypto.randomUUID(),
-      type: 'success',
-      title: 'Symbol Ready for Trading',
+      type: "success",
+      title: "Symbol Ready for Trading",
       message: `${readyState.symbol} is now ready for trading (sts:${readyState.readyState.sts}, st:${readyState.readyState.st}, tt:${readyState.readyState.tt})`,
-      priority: 'critical',
-      category: 'pattern',
+      priority: "critical",
+      category: "pattern",
       timestamp: Date.now(),
       actionable: true,
       actions: [
         {
-          label: 'Execute Trade',
-          action: 'execute_trade',
+          label: "Execute Trade",
+          action: "execute_trade",
           params: { symbol: readyState.symbol, vcoinId: readyState.vcoinId },
         },
         {
-          label: 'Monitor Price',
-          action: 'monitor_price',
+          label: "Monitor Price",
+          action: "monitor_price",
           params: { symbol: readyState.symbol },
         },
       ],
@@ -414,7 +406,7 @@ class TradingSignalStreamer {
   broadcastTradingSignal(signal: {
     signalId: string;
     symbol: string;
-    type: 'buy' | 'sell' | 'hold' | 'monitor';
+    type: "buy" | "sell" | "hold" | "monitor";
     strength: number;
     confidence: number;
     source: string;
@@ -442,14 +434,14 @@ class TradingSignalStreamer {
     };
 
     webSocketServer.broadcast({
-      type: 'trading:signal',
-      channel: 'trading:signals',
+      type: "trading:signal",
+      channel: "trading:signals",
       data: message,
     });
 
     // Also broadcast to symbol-specific channel
     webSocketServer.broadcast({
-      type: 'trading:signal',
+      type: "trading:signal",
       channel: `trading:${signal.symbol}:signals`,
       data: message,
     });
@@ -463,24 +455,24 @@ class TradingSignalStreamer {
   private broadcastSignalAlert(signal: TradingSignalMessage): void {
     const notification: NotificationMessage = {
       notificationId: crypto.randomUUID(),
-      type: signal.type === 'buy' ? 'success' : signal.type === 'sell' ? 'warning' : 'info',
-      title: 'High-Strength Trading Signal',
+      type: signal.type === "buy" ? "success" : signal.type === "sell" ? "warning" : "info",
+      title: "High-Strength Trading Signal",
       message: `${signal.type.toUpperCase()} signal for ${signal.symbol} (Strength: ${signal.strength}%, Confidence: ${Math.round(signal.confidence * 100)}%)`,
-      priority: 'high',
-      category: 'trading',
+      priority: "high",
+      category: "trading",
       timestamp: Date.now(),
       actionable: true,
       actions: [
         {
-          label: 'View Signal',
-          action: 'navigate',
+          label: "View Signal",
+          action: "navigate",
           params: { path: `/signals/${signal.signalId}` },
         },
         {
-          label: 'Execute Trade',
-          action: 'execute_trade',
-          params: { 
-            symbol: signal.symbol, 
+          label: "Execute Trade",
+          action: "execute_trade",
+          params: {
+            symbol: signal.symbol,
             type: signal.type,
             signalId: signal.signalId,
           },
@@ -534,25 +526,25 @@ export class WebSocketAgentBridge extends EventEmitter {
   ): Promise<void> {
     if (this.isInitialized) return;
 
-    console.log('[WebSocket Bridge] Initializing...');
+    console.log("[WebSocket Bridge] Initializing...");
 
     this.orchestrator = orchestrator;
     this.agentRegistry = agentRegistry;
 
     // Set up event listeners for agent system
     this.setupAgentEventListeners(agentRegistry, workflowEngine, performanceCollector);
-    
+
     // Set up WebSocket server message handlers
     this.setupWebSocketHandlers();
 
     this.isInitialized = true;
-    console.log('[WebSocket Bridge] Initialization complete');
+    console.log("[WebSocket Bridge] Initialization complete");
   }
 
   start(): void {
     if (!this.isInitialized || this.isRunning) return;
 
-    console.log('[WebSocket Bridge] Starting real-time communication...');
+    console.log("[WebSocket Bridge] Starting real-time communication...");
 
     this.dataStreamer.start();
     this.isRunning = true;
@@ -560,20 +552,20 @@ export class WebSocketAgentBridge extends EventEmitter {
     // Start periodic agent health broadcasts
     this.startHealthBroadcasts();
 
-    console.log('[WebSocket Bridge] Real-time communication started');
-    this.emit('started');
+    console.log("[WebSocket Bridge] Real-time communication started");
+    this.emit("started");
   }
 
   stop(): void {
     if (!this.isRunning) return;
 
-    console.log('[WebSocket Bridge] Stopping real-time communication...');
+    console.log("[WebSocket Bridge] Stopping real-time communication...");
 
     this.dataStreamer.stop();
     this.isRunning = false;
 
-    console.log('[WebSocket Bridge] Real-time communication stopped');
-    this.emit('stopped');
+    console.log("[WebSocket Bridge] Real-time communication stopped");
+    this.emit("stopped");
   }
 
   // ======================
@@ -614,9 +606,9 @@ export class WebSocketAgentBridge extends EventEmitter {
     this.patternStreamer.broadcastPatternDiscovery({
       patternId: pattern.id || crypto.randomUUID(),
       symbol: pattern.symbol,
-      type: pattern.type || 'ready_state',
-      name: pattern.name || 'Pattern Discovery',
-      description: pattern.description || 'Automated pattern detection',
+      type: pattern.type || "ready_state",
+      name: pattern.name || "Pattern Discovery",
+      description: pattern.description || "Automated pattern detection",
       confidence: pattern.confidence || 0.8,
       strength: pattern.strength || 0.7,
       detectedAt: Date.now(),
@@ -637,7 +629,7 @@ export class WebSocketAgentBridge extends EventEmitter {
       tt: data.tt || 0,
       confidence: data.confidence || 0.8,
       estimatedLaunchTime: data.estimatedLaunchTime,
-      riskLevel: data.riskLevel || 'medium',
+      riskLevel: data.riskLevel || "medium",
       expectedVolatility: data.expectedVolatility || 0.1,
       correlatedSymbols: data.correlatedSymbols || [],
       metadata: data.metadata,
@@ -650,15 +642,15 @@ export class WebSocketAgentBridge extends EventEmitter {
     this.signalStreamer.broadcastTradingSignal({
       signalId: signal.id || crypto.randomUUID(),
       symbol: signal.symbol,
-      type: signal.type || 'hold',
+      type: signal.type || "hold",
       strength: signal.strength || 50,
       confidence: signal.confidence || 0.5,
-      source: signal.source || 'ai_agent',
-      reasoning: signal.reasoning || 'Automated signal generation',
+      source: signal.source || "ai_agent",
+      reasoning: signal.reasoning || "Automated signal generation",
       targetPrice: signal.targetPrice,
       stopLoss: signal.stopLoss,
       takeProfit: signal.takeProfit,
-      timeframe: signal.timeframe || '1h',
+      timeframe: signal.timeframe || "1h",
       metadata: signal.metadata,
     });
   }
@@ -669,30 +661,30 @@ export class WebSocketAgentBridge extends EventEmitter {
     const errorMessage: AgentErrorMessage = {
       agentId,
       error: {
-        type: error.type || 'unknown',
-        message: error.message || 'Unknown error',
+        type: error.type || "unknown",
+        message: error.message || "Unknown error",
         stack: error.stack,
         timestamp: Date.now(),
-        severity: error.severity || 'medium',
+        severity: error.severity || "medium",
       },
       context: error.context,
     };
 
     webSocketServer.broadcast({
-      type: 'agent:error',
-      channel: 'agents:errors',
+      type: "agent:error",
+      channel: "agents:errors",
       data: errorMessage,
     });
 
     // Send error notification for critical errors
-    if (error.severity === 'critical' || error.severity === 'high') {
+    if (error.severity === "critical" || error.severity === "high") {
       const notification: NotificationMessage = {
         notificationId: crypto.randomUUID(),
-        type: 'error',
-        title: 'Agent Error',
+        type: "error",
+        title: "Agent Error",
         message: `${agentId}: ${error.message}`,
-        priority: error.severity === 'critical' ? 'critical' : 'high',
-        category: 'agent',
+        priority: error.severity === "critical" ? "critical" : "high",
+        category: "agent",
         timestamp: Date.now(),
         metadata: {
           agentId,
@@ -714,20 +706,20 @@ export class WebSocketAgentBridge extends EventEmitter {
     performanceCollector: PerformanceCollector
   ): void {
     // Listen for agent status changes
-    agentRegistry.on?.('agent:status_changed', (data) => {
+    agentRegistry.on?.("agent:status_changed", (data) => {
       this.broadcastAgentUpdate(data.agentId, data.agentType, data.status);
     });
 
-    agentRegistry.on?.('agent:error', (data) => {
+    agentRegistry.on?.("agent:error", (data) => {
       this.broadcastAgentError(data.agentId, data.error);
     });
 
     // Listen for workflow events
-    workflowEngine.on?.('workflow:started', (data) => {
+    workflowEngine.on?.("workflow:started", (data) => {
       this.broadcastWorkflowProgress(
         data.workflowId,
         data.workflowType,
-        'started',
+        "started",
         0,
         data.agentsInvolved,
         undefined,
@@ -735,11 +727,11 @@ export class WebSocketAgentBridge extends EventEmitter {
       );
     });
 
-    workflowEngine.on?.('workflow:progress', (data) => {
+    workflowEngine.on?.("workflow:progress", (data) => {
       this.broadcastWorkflowProgress(
         data.workflowId,
         data.workflowType,
-        'running',
+        "running",
         data.progress,
         data.agentsInvolved,
         data.currentAgent,
@@ -747,11 +739,11 @@ export class WebSocketAgentBridge extends EventEmitter {
       );
     });
 
-    workflowEngine.on?.('workflow:completed', (data) => {
+    workflowEngine.on?.("workflow:completed", (data) => {
       this.broadcastWorkflowProgress(
         data.workflowId,
         data.workflowType,
-        'completed',
+        "completed",
         100,
         data.agentsInvolved,
         undefined,
@@ -759,11 +751,11 @@ export class WebSocketAgentBridge extends EventEmitter {
       );
     });
 
-    workflowEngine.on?.('workflow:failed', (data) => {
+    workflowEngine.on?.("workflow:failed", (data) => {
       this.broadcastWorkflowProgress(
         data.workflowId,
         data.workflowType,
-        'failed',
+        "failed",
         data.progress || 0,
         data.agentsInvolved,
         undefined,
@@ -772,24 +764,24 @@ export class WebSocketAgentBridge extends EventEmitter {
     });
 
     // Listen for performance updates
-    performanceCollector.on?.('metrics:updated', (data) => {
+    performanceCollector.on?.("metrics:updated", (data) => {
       for (const [agentId, metrics] of Object.entries(data.agentMetrics || {})) {
-        this.broadcastAgentUpdate(agentId, 'unknown', metrics);
+        this.broadcastAgentUpdate(agentId, "unknown", metrics);
       }
     });
   }
 
   private setupWebSocketHandlers(): void {
     // Handle workflow execution requests from WebSocket clients
-    webSocketServer.addMessageHandler('agents:workflows', async (message) => {
-      if (message.type === 'agent:workflow' && message.data.action === 'execute') {
+    webSocketServer.addMessageHandler("agents:workflows", async (message) => {
+      if (message.type === "agent:workflow" && message.data.action === "execute") {
         await this.handleWorkflowExecutionRequest(message.data);
       }
     });
 
     // Handle agent command requests
-    webSocketServer.addMessageHandler('agents:status', async (message) => {
-      if (message.data.action === 'health_check') {
+    webSocketServer.addMessageHandler("agents:status", async (message) => {
+      if (message.data.action === "health_check") {
         await this.broadcastAgentHealthStatus();
       }
     });
@@ -797,7 +789,7 @@ export class WebSocketAgentBridge extends EventEmitter {
 
   private async handleWorkflowExecutionRequest(data: any): Promise<void> {
     if (!this.orchestrator) {
-      console.error('[WebSocket Bridge] Orchestrator not available for workflow execution');
+      console.error("[WebSocket Bridge] Orchestrator not available for workflow execution");
       return;
     }
 
@@ -807,16 +799,16 @@ export class WebSocketAgentBridge extends EventEmitter {
       let result: MexcWorkflowResult;
 
       switch (workflowType) {
-        case 'calendar_discovery':
+        case "calendar_discovery":
           result = await this.orchestrator.executeCalendarDiscoveryWorkflow(request);
           break;
-        case 'symbol_analysis':
+        case "symbol_analysis":
           result = await this.orchestrator.executeSymbolAnalysisWorkflow(request);
           break;
-        case 'pattern_analysis':
+        case "pattern_analysis":
           result = await this.orchestrator.executePatternAnalysisWorkflow(request);
           break;
-        case 'trading_strategy':
+        case "trading_strategy":
           result = await this.orchestrator.executeTradingStrategyWorkflow(request);
           break;
         default:
@@ -825,30 +817,29 @@ export class WebSocketAgentBridge extends EventEmitter {
 
       // Broadcast result
       webSocketServer.broadcast({
-        type: 'agent:workflow',
-        channel: 'agents:workflows',
+        type: "agent:workflow",
+        channel: "agents:workflows",
         data: {
           workflowId: data.workflowId || crypto.randomUUID(),
           workflowType,
-          status: result.success ? 'completed' : 'failed',
+          status: result.success ? "completed" : "failed",
           progress: 100,
           result: result.data,
           error: result.error,
         },
       });
-
     } catch (error) {
-      console.error('[WebSocket Bridge] Workflow execution failed:', error);
-      
+      console.error("[WebSocket Bridge] Workflow execution failed:", error);
+
       webSocketServer.broadcast({
-        type: 'agent:workflow',
-        channel: 'agents:workflows',
+        type: "agent:workflow",
+        channel: "agents:workflows",
         data: {
           workflowId: data.workflowId || crypto.randomUUID(),
           workflowType: data.workflowType,
-          status: 'failed',
+          status: "failed",
           progress: 0,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         },
       });
     }
@@ -860,11 +851,11 @@ export class WebSocketAgentBridge extends EventEmitter {
     try {
       const health = await this.orchestrator.getAgentHealth();
       const metrics = this.orchestrator.getOrchestrationMetrics();
-      
+
       const healthMessage: AgentHealthMessage = {
-        agentId: 'orchestrator',
+        agentId: "orchestrator",
         health: {
-          status: health.coordination.registryHealthy ? 'healthy' : 'unhealthy',
+          status: health.coordination.registryHealthy ? "healthy" : "unhealthy",
           issues: [],
           recommendations: [],
           performanceMetrics: {
@@ -878,13 +869,12 @@ export class WebSocketAgentBridge extends EventEmitter {
       };
 
       webSocketServer.broadcast({
-        type: 'agent:health',
-        channel: 'agents:health',
+        type: "agent:health",
+        channel: "agents:health",
         data: healthMessage,
       });
-
     } catch (error) {
-      console.error('[WebSocket Bridge] Failed to broadcast health status:', error);
+      console.error("[WebSocket Bridge] Failed to broadcast health status:", error);
     }
   }
 
@@ -919,12 +909,12 @@ export class WebSocketAgentBridge extends EventEmitter {
     dataStreaming: boolean;
   } {
     const serverMetrics = webSocketServer.getServerMetrics();
-    
+
     return {
       initialized: this.isInitialized,
       running: this.isRunning,
       connectedClients: serverMetrics.totalConnections,
-      dataStreaming: this.dataStreamer['isStreaming'],
+      dataStreaming: this.dataStreamer["isStreaming"],
     };
   }
 }

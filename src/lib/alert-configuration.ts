@@ -1,17 +1,13 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { eq, and, desc, asc, count } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { 
-  alertRules,
-  notificationChannels,
-  escalationPolicies,
-  alertSuppressions,
+import {
   type InsertAlertRule,
-  type SelectAlertRule,
   type InsertNotificationChannel,
+  type SelectAlertRule,
   type SelectNotificationChannel,
-  type InsertEscalationPolicy,
-  type SelectEscalationPolicy
+  alertRules,
+  escalationPolicies,
+  notificationChannels,
 } from "../db/schemas/alerts";
 
 // ==========================================
@@ -23,28 +19,28 @@ export const AlertRuleConfigSchema = z.object({
   description: z.string().optional(),
   category: z.enum(["trading", "safety", "performance", "system", "agent"]),
   severity: z.enum(["critical", "high", "medium", "low", "info"]),
-  
+
   // Rule Configuration
   metricName: z.string().min(1),
   operator: z.enum(["gt", "lt", "eq", "gte", "lte", "anomaly"]),
   threshold: z.number().optional(),
   aggregationWindow: z.number().min(60).max(86400).default(300), // 1 minute to 24 hours
   evaluationInterval: z.number().min(30).max(3600).default(60), // 30 seconds to 1 hour
-  
+
   // ML Anomaly Detection
   useAnomalyDetection: z.boolean().default(false),
   anomalyThreshold: z.number().min(1.0).max(5.0).default(2.0),
   learningWindow: z.number().min(3600).max(604800).default(86400), // 1 hour to 1 week
-  
+
   // Alert Behavior
   suppressionDuration: z.number().min(60).max(86400).default(300), // 1 minute to 24 hours
   escalationDelay: z.number().min(300).max(86400).default(1800), // 5 minutes to 24 hours
   maxAlerts: z.number().min(1).max(1000).default(10),
-  
+
   // Correlation
   correlationKey: z.string().optional(),
   parentRuleId: z.string().optional(),
-  
+
   // Metadata
   tags: z.array(z.string()).default([]),
   customFields: z.record(z.string(), z.unknown()).default({}),
@@ -54,16 +50,18 @@ export const NotificationChannelConfigSchema = z.object({
   name: z.string().min(1).max(255),
   type: z.enum(["email", "slack", "webhook", "sms", "teams"]),
   config: z.record(z.string(), z.unknown()),
-  
+
   // Routing
   severityFilter: z.array(z.enum(["critical", "high", "medium", "low", "info"])).optional(),
-  categoryFilter: z.array(z.enum(["trading", "safety", "performance", "system", "agent"])).optional(),
+  categoryFilter: z
+    .array(z.enum(["trading", "safety", "performance", "system", "agent"]))
+    .optional(),
   tagFilter: z.array(z.string()).optional(),
-  
+
   // Behavior
   isDefault: z.boolean().default(false),
   rateLimitPerHour: z.number().min(1).max(10000).default(100),
-  
+
   // Formatting
   messageTemplate: z.string().optional(),
   titleTemplate: z.string().optional(),
@@ -72,24 +70,28 @@ export const NotificationChannelConfigSchema = z.object({
 export const EscalationPolicyConfigSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().optional(),
-  steps: z.array(z.object({
-    delay: z.number().min(60).max(86400), // 1 minute to 24 hours
-    channels: z.array(z.string()),
-    condition: z.enum(["unresolved", "unacknowledged"]).optional(),
-  })),
+  steps: z.array(
+    z.object({
+      delay: z.number().min(60).max(86400), // 1 minute to 24 hours
+      channels: z.array(z.string()),
+      condition: z.enum(["unresolved", "unacknowledged"]).optional(),
+    })
+  ),
 });
 
 export const AlertSuppressionConfigSchema = z.object({
   name: z.string().min(1).max(255),
   reason: z.string().min(1),
-  
+
   // Suppression Rules
   ruleIds: z.array(z.string()).optional(),
-  categoryFilter: z.array(z.enum(["trading", "safety", "performance", "system", "agent"])).optional(),
+  categoryFilter: z
+    .array(z.enum(["trading", "safety", "performance", "system", "agent"]))
+    .optional(),
   severityFilter: z.array(z.enum(["critical", "high", "medium", "low", "info"])).optional(),
   sourceFilter: z.array(z.string()).optional(),
   tagFilter: z.array(z.string()).optional(),
-  
+
   // Schedule
   startsAt: z.number().or(z.date()),
   endsAt: z.number().or(z.date()),
@@ -115,7 +117,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     anomalyThreshold: 2.5,
     tags: ["trading", "errors"],
   },
-  
+
   balance_discrepancy: {
     name: "Balance Discrepancy",
     description: "Detect significant balance discrepancies",
@@ -129,7 +131,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     maxAlerts: 5,
     tags: ["trading", "balance", "reconciliation"],
   },
-  
+
   api_response_time: {
     name: "MEXC API Response Time",
     description: "Monitor MEXC API response time degradation",
@@ -143,7 +145,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     useAnomalyDetection: true,
     tags: ["api", "performance", "mexc"],
   },
-  
+
   // Safety System Rules
   risk_limit_breach: {
     name: "Risk Limit Breach",
@@ -159,7 +161,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     escalationDelay: 300, // 5 minutes
     tags: ["risk", "safety", "limits"],
   },
-  
+
   circuit_breaker_triggered: {
     name: "Circuit Breaker Triggered",
     description: "Alert when circuit breaker is activated",
@@ -173,7 +175,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     suppressionDuration: 60, // 1 minute
     tags: ["circuit-breaker", "safety"],
   },
-  
+
   // Agent System Rules
   agent_failure_rate: {
     name: "AI Agent Failure Rate",
@@ -189,7 +191,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     correlationKey: "agent_health",
     tags: ["agents", "ai", "failures"],
   },
-  
+
   agent_response_time: {
     name: "AI Agent Response Time",
     description: "Monitor AI agent response time degradation",
@@ -203,7 +205,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     useAnomalyDetection: true,
     tags: ["agents", "performance"],
   },
-  
+
   // System Health Rules
   database_connection_pool: {
     name: "Database Connection Pool",
@@ -217,7 +219,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     evaluationInterval: 60,
     tags: ["database", "connections", "performance"],
   },
-  
+
   memory_usage: {
     name: "High Memory Usage",
     description: "Monitor system memory usage",
@@ -231,7 +233,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     useAnomalyDetection: true,
     tags: ["system", "memory", "resources"],
   },
-  
+
   // Performance Rules
   query_performance: {
     name: "Slow Database Queries",
@@ -245,7 +247,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     evaluationInterval: 60,
     tags: ["database", "performance", "queries"],
   },
-  
+
   websocket_disconnections: {
     name: "WebSocket Disconnections",
     description: "Monitor WebSocket connection stability",
@@ -272,9 +274,10 @@ export const NOTIFICATION_CHANNEL_TEMPLATES = {
     severityFilter: ["critical"],
     rateLimitPerHour: 50,
     titleTemplate: "🚨 CRITICAL: {{alert.message}}",
-    messageTemplate: "URGENT: {{alert.description}}\n\nImmediate action required for {{alert.source}}.",
+    messageTemplate:
+      "URGENT: {{alert.description}}\n\nImmediate action required for {{alert.source}}.",
   },
-  
+
   slack_general: {
     name: "General Slack Channel",
     type: "slack" as const,
@@ -282,7 +285,7 @@ export const NOTIFICATION_CHANNEL_TEMPLATES = {
     rateLimitPerHour: 100,
     titleTemplate: "{{alert.severity}} Alert: {{alert.message}}",
   },
-  
+
   sms_oncall: {
     name: "On-Call SMS",
     type: "sms" as const,
@@ -290,13 +293,13 @@ export const NOTIFICATION_CHANNEL_TEMPLATES = {
     rateLimitPerHour: 10,
     titleTemplate: "URGENT: {{alert.message}}",
   },
-  
+
   webhook_monitoring: {
     name: "External Monitoring System",
     type: "webhook" as const,
     rateLimitPerHour: 1000,
   },
-  
+
   teams_devops: {
     name: "DevOps Teams Channel",
     type: "teams" as const,
@@ -326,7 +329,7 @@ export class AlertConfigurationService {
   ): Promise<string> {
     const validated = AlertRuleConfigSchema.parse(config);
     const ruleId = `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const ruleData: InsertAlertRule = {
       id: ruleId,
       name: validated.name,
@@ -376,7 +379,8 @@ export class AlertConfigurationService {
     if (updates.threshold !== undefined) updateData.threshold = updates.threshold;
     if (updates.aggregationWindow) updateData.aggregationWindow = updates.aggregationWindow;
     if (updates.evaluationInterval) updateData.evaluationInterval = updates.evaluationInterval;
-    if (updates.useAnomalyDetection !== undefined) updateData.useAnomalyDetection = updates.useAnomalyDetection;
+    if (updates.useAnomalyDetection !== undefined)
+      updateData.useAnomalyDetection = updates.useAnomalyDetection;
     if (updates.anomalyThreshold) updateData.anomalyThreshold = updates.anomalyThreshold;
     if (updates.learningWindow) updateData.learningWindow = updates.learningWindow;
     if (updates.suppressionDuration) updateData.suppressionDuration = updates.suppressionDuration;
@@ -387,10 +391,7 @@ export class AlertConfigurationService {
     if (updates.tags) updateData.tags = JSON.stringify(updates.tags);
     if (updates.customFields) updateData.customFields = JSON.stringify(updates.customFields);
 
-    await this.db
-      .update(alertRules)
-      .set(updateData)
-      .where(eq(alertRules.id, ruleId));
+    await this.db.update(alertRules).set(updateData).where(eq(alertRules.id, ruleId));
 
     console.log(`Updated alert rule: ${ruleId}`);
   }
@@ -405,11 +406,7 @@ export class AlertConfigurationService {
   }
 
   async getAlertRule(ruleId: string): Promise<SelectAlertRule | null> {
-    const rules = await this.db
-      .select()
-      .from(alertRules)
-      .where(eq(alertRules.id, ruleId))
-      .limit(1);
+    const rules = await this.db.select().from(alertRules).where(eq(alertRules.id, ruleId)).limit(1);
 
     return rules.length > 0 ? rules[0] : null;
   }
@@ -472,16 +469,16 @@ export class AlertConfigurationService {
   async exportRulesConfiguration(): Promise<object> {
     const rules = await this.listAlertRules({ enabled: true });
     const channels = await this.listNotificationChannels({ enabled: true });
-    
+
     return {
       version: "1.0",
       timestamp: new Date().toISOString(),
-      rules: rules.map(rule => ({
+      rules: rules.map((rule) => ({
         ...rule,
         tags: rule.tags ? JSON.parse(rule.tags) : [],
         customFields: rule.customFields ? JSON.parse(rule.customFields) : {},
       })),
-      channels: channels.map(channel => ({
+      channels: channels.map((channel) => ({
         ...channel,
         config: JSON.parse(channel.config),
         severityFilter: channel.severityFilter ? JSON.parse(channel.severityFilter) : null,
@@ -491,7 +488,10 @@ export class AlertConfigurationService {
     };
   }
 
-  async importRulesConfiguration(config: any, createdBy: string): Promise<{
+  async importRulesConfiguration(
+    config: any,
+    createdBy: string
+  ): Promise<{
     imported: number;
     skipped: number;
     errors: string[];
@@ -556,7 +556,7 @@ export class AlertConfigurationService {
   ): Promise<string> {
     const validated = NotificationChannelConfigSchema.parse(config);
     const channelId = `channel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const channelData: InsertNotificationChannel = {
       id: channelId,
       name: validated.name,
@@ -612,7 +612,7 @@ export class AlertConfigurationService {
     } catch (error) {
       result.isValid = false;
       if (error instanceof z.ZodError) {
-        result.errors = error.errors.map(e => `${e.path.join('.')}: ${e.message}`);
+        result.errors = error.errors.map((e) => `${e.path.join(".")}: ${e.message}`);
       } else {
         result.errors.push("Invalid configuration format");
       }
@@ -620,7 +620,7 @@ export class AlertConfigurationService {
 
     // Additional business logic validation
     const validatedConfig = config as z.infer<typeof AlertRuleConfigSchema>;
-    
+
     if (validatedConfig.operator !== "anomaly" && !validatedConfig.threshold) {
       result.warnings.push("Threshold is required for non-anomaly operators");
     }
@@ -668,11 +668,11 @@ export class AlertConfigurationService {
 
   private async getRulesStatistics() {
     const allRules = await this.db.select().from(alertRules);
-    const enabledRules = allRules.filter(r => r.isEnabled);
-    
+    const enabledRules = allRules.filter((r) => r.isEnabled);
+
     const byCategory: Record<string, number> = {};
     const bySeverity: Record<string, number> = {};
-    
+
     for (const rule of enabledRules) {
       byCategory[rule.category] = (byCategory[rule.category] || 0) + 1;
       bySeverity[rule.severity] = (bySeverity[rule.severity] || 0) + 1;
@@ -688,10 +688,10 @@ export class AlertConfigurationService {
 
   private async getChannelsStatistics() {
     const allChannels = await this.db.select().from(notificationChannels);
-    const enabledChannels = allChannels.filter(c => c.isEnabled);
-    
+    const enabledChannels = allChannels.filter((c) => c.isEnabled);
+
     const byType: Record<string, number> = {};
-    
+
     for (const channel of enabledChannels) {
       byType[channel.type] = (byType[channel.type] || 0) + 1;
     }
@@ -705,7 +705,7 @@ export class AlertConfigurationService {
 
   private async getPoliciesStatistics() {
     const allPolicies = await this.db.select().from(escalationPolicies);
-    const enabledPolicies = allPolicies.filter(p => p.isEnabled);
+    const enabledPolicies = allPolicies.filter((p) => p.isEnabled);
 
     return {
       total: allPolicies.length,

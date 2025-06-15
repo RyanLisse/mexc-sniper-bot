@@ -1,9 +1,3 @@
-import { db } from "../../db";
-import { 
-  agentPerformanceMetrics, 
-  workflowPerformanceMetrics, 
-  systemPerformanceSnapshots 
-} from "../../db/schemas/performance";
 import type { AgentRegistry } from "./agent-registry";
 import type { WorkflowExecutionResult } from "./workflow-engine";
 
@@ -122,7 +116,7 @@ export class PerformanceCollector {
     }
   ) {
     this.agentRegistry = agentRegistry;
-    
+
     if (options?.collectionInterval) {
       this.collectionIntervalMs = options.collectionInterval;
     }
@@ -143,7 +137,7 @@ export class PerformanceCollector {
     this.isCollecting = true;
 
     // Initial collection
-    this.collectAllMetrics().catch(error => {
+    this.collectAllMetrics().catch((error) => {
       console.error("[PerformanceCollector] Initial metrics collection failed:", error);
     });
 
@@ -156,7 +150,9 @@ export class PerformanceCollector {
       }
     }, this.collectionIntervalMs);
 
-    console.log(`[PerformanceCollector] Started metrics collection (interval: ${this.collectionIntervalMs}ms)`);
+    console.log(
+      `[PerformanceCollector] Started metrics collection (interval: ${this.collectionIntervalMs}ms)`
+    );
   }
 
   /**
@@ -186,7 +182,6 @@ export class PerformanceCollector {
 
       // Persist to database
       await this.persistMetrics();
-
     } catch (error) {
       console.error("[PerformanceCollector] Failed to collect metrics:", error);
     }
@@ -201,20 +196,22 @@ export class PerformanceCollector {
     for (const agent of agents) {
       try {
         const metrics = await this.calculateAgentMetrics(agent.id, timestamp);
-        
+
         // Add to history
         let agentHistory = this.agentMetricsHistory.get(agent.id) || [];
         agentHistory.push(metrics);
-        
+
         // Keep only recent history
         if (agentHistory.length > this.maxHistorySize) {
           agentHistory = agentHistory.slice(-this.maxHistorySize);
         }
-        
-        this.agentMetricsHistory.set(agent.id, agentHistory);
 
+        this.agentMetricsHistory.set(agent.id, agentHistory);
       } catch (error) {
-        console.error(`[PerformanceCollector] Failed to collect metrics for agent ${agent.id}:`, error);
+        console.error(
+          `[PerformanceCollector] Failed to collect metrics for agent ${agent.id}:`,
+          error
+        );
       }
     }
   }
@@ -222,7 +219,10 @@ export class PerformanceCollector {
   /**
    * Calculate performance metrics for a specific agent
    */
-  private async calculateAgentMetrics(agentId: string, timestamp: Date): Promise<AgentPerformanceMetrics> {
+  private async calculateAgentMetrics(
+    agentId: string,
+    timestamp: Date
+  ): Promise<AgentPerformanceMetrics> {
     const agent = this.agentRegistry.getAgent(agentId);
     if (!agent) {
       throw new Error(`Agent ${agentId} not found`);
@@ -230,21 +230,22 @@ export class PerformanceCollector {
 
     const healthHistory = this.agentRegistry.getAgentHealthHistory(agentId, 100);
     const recentHistory = healthHistory.filter(
-      h => timestamp.getTime() - h.timestamp.getTime() < 60 * 60 * 1000 // Last hour
+      (h) => timestamp.getTime() - h.timestamp.getTime() < 60 * 60 * 1000 // Last hour
     );
 
     // Calculate basic metrics
     const totalRequests = recentHistory.length;
-    const successfulRequests = recentHistory.filter(h => h.success).length;
+    const successfulRequests = recentHistory.filter((h) => h.success).length;
     const failedRequests = totalRequests - successfulRequests;
-    
+
     const successRate = totalRequests > 0 ? successfulRequests / totalRequests : 0;
     const errorRate = totalRequests > 0 ? failedRequests / totalRequests : 0;
-    
-    const responseTimes = recentHistory.map(h => h.responseTime);
-    const averageResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length 
-      : 0;
+
+    const responseTimes = recentHistory.map((h) => h.responseTime);
+    const averageResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        : 0;
 
     // Calculate percentiles
     const sortedResponseTimes = [...responseTimes].sort((a, b) => a - b);
@@ -254,7 +255,7 @@ export class PerformanceCollector {
     // Calculate throughput (requests per minute)
     const timeWindow = 60 * 1000; // 1 minute
     const recentRequests = recentHistory.filter(
-      h => timestamp.getTime() - h.timestamp.getTime() < timeWindow
+      (h) => timestamp.getTime() - h.timestamp.getTime() < timeWindow
     );
     const throughput = recentRequests.length;
 
@@ -267,7 +268,7 @@ export class PerformanceCollector {
     const cpuUsage = this.estimateCpuUsage(agent, recentHistory);
 
     const lastError = recentHistory
-      .filter(h => !h.success)
+      .filter((h) => !h.success)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0]?.error;
 
     return {
@@ -302,34 +303,35 @@ export class PerformanceCollector {
   private async collectSystemSnapshot(timestamp: Date): Promise<void> {
     try {
       const registryStats = this.agentRegistry.getStats();
-      
+
       // Calculate workflow metrics from recent history
       const recentWorkflows = this.workflowMetricsHistory.filter(
-        w => timestamp.getTime() - w.timestamp.getTime() < 60 * 60 * 1000 // Last hour
+        (w) => timestamp.getTime() - w.timestamp.getTime() < 60 * 60 * 1000 // Last hour
       );
 
       const runningWorkflows = 0; // Would need to be tracked separately
-      const completedWorkflows = recentWorkflows.filter(w => w.status === "completed").length;
-      const failedWorkflows = recentWorkflows.filter(w => w.status === "failed").length;
+      const completedWorkflows = recentWorkflows.filter((w) => w.status === "completed").length;
+      const failedWorkflows = recentWorkflows.filter((w) => w.status === "failed").length;
 
       // Calculate system metrics
       const responseTimes = Array.from(this.agentMetricsHistory.values())
         .flat()
-        .filter(m => timestamp.getTime() - m.timestamp.getTime() < 60 * 60 * 1000)
-        .map(m => m.responseTime);
+        .filter((m) => timestamp.getTime() - m.timestamp.getTime() < 60 * 60 * 1000)
+        .map((m) => m.responseTime);
 
-      const averageResponseTime = responseTimes.length > 0
-        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
-        : 0;
+      const averageResponseTime =
+        responseTimes.length > 0
+          ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+          : 0;
 
       const totalThroughput = Array.from(this.agentMetricsHistory.values())
         .flat()
-        .filter(m => timestamp.getTime() - m.timestamp.getTime() < 60 * 1000) // Last minute
+        .filter((m) => timestamp.getTime() - m.timestamp.getTime() < 60 * 1000) // Last minute
         .reduce((sum, m) => sum + m.throughput, 0);
 
       const systemErrorRate = Array.from(this.agentMetricsHistory.values())
         .flat()
-        .filter(m => timestamp.getTime() - m.timestamp.getTime() < 60 * 60 * 1000)
+        .filter((m) => timestamp.getTime() - m.timestamp.getTime() < 60 * 60 * 1000)
         .reduce((sum, m, _, arr) => sum + m.errorRate / arr.length, 0);
 
       const snapshot: SystemPerformanceSnapshot = {
@@ -357,12 +359,11 @@ export class PerformanceCollector {
       };
 
       this.systemSnapshotHistory.push(snapshot);
-      
+
       // Keep only recent history
       if (this.systemSnapshotHistory.length > this.maxHistorySize) {
         this.systemSnapshotHistory = this.systemSnapshotHistory.slice(-this.maxHistorySize);
       }
-
     } catch (error) {
       console.error("[PerformanceCollector] Failed to collect system snapshot:", error);
     }
@@ -373,15 +374,14 @@ export class PerformanceCollector {
    */
   recordWorkflowExecution(result: WorkflowExecutionResult): void {
     try {
-      const stepDurations = result.steps.map(step => step.duration);
+      const stepDurations = result.steps.map((step) => step.duration);
       const totalResponseTime = stepDurations.reduce((sum, duration) => sum + duration, 0);
-      const averageStepTime = stepDurations.length > 0 
-        ? totalResponseTime / stepDurations.length 
-        : 0;
+      const averageStepTime =
+        stepDurations.length > 0 ? totalResponseTime / stepDurations.length : 0;
 
       // Find bottleneck step
-      const bottleneckStep = result.steps.reduce((max, step) => 
-        step.duration > max.duration ? step : max, 
+      const bottleneckStep = result.steps.reduce(
+        (max, step) => (step.duration > max.duration ? step : max),
         result.steps[0]
       );
 
@@ -415,14 +415,13 @@ export class PerformanceCollector {
       };
 
       this.workflowMetricsHistory.push(metrics);
-      
+
       // Keep only recent history
       if (this.workflowMetricsHistory.length > this.maxHistorySize) {
         this.workflowMetricsHistory = this.workflowMetricsHistory.slice(-this.maxHistorySize);
       }
 
       console.log(`[PerformanceCollector] Recorded workflow metrics for ${result.workflowId}`);
-
     } catch (error) {
       console.error("[PerformanceCollector] Failed to record workflow metrics:", error);
     }
@@ -431,54 +430,61 @@ export class PerformanceCollector {
   /**
    * Generate performance report for a given period
    */
-  generateReport(
-    startDate: Date,
-    endDate: Date
-  ): PerformanceReport {
+  generateReport(startDate: Date, endDate: Date): PerformanceReport {
     const periodAgentMetrics = Array.from(this.agentMetricsHistory.values())
       .flat()
-      .filter(m => m.timestamp >= startDate && m.timestamp <= endDate);
+      .filter((m) => m.timestamp >= startDate && m.timestamp <= endDate);
 
-    const periodWorkflowMetrics = this.workflowMetricsHistory
-      .filter(w => w.timestamp >= startDate && w.timestamp <= endDate);
+    const periodWorkflowMetrics = this.workflowMetricsHistory.filter(
+      (w) => w.timestamp >= startDate && w.timestamp <= endDate
+    );
 
-    const periodSystemSnapshots = this.systemSnapshotHistory
-      .filter(s => s.timestamp >= startDate && s.timestamp <= endDate);
+    const periodSystemSnapshots = this.systemSnapshotHistory.filter(
+      (s) => s.timestamp >= startDate && s.timestamp <= endDate
+    );
 
     // Calculate agent performance scores
     const agentScores = this.calculateAgentPerformanceScores(periodAgentMetrics);
-    const topPerformers = agentScores
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
+    const topPerformers = agentScores.sort((a, b) => b.score - a.score).slice(0, 5);
 
     const bottlenecks = periodAgentMetrics
-      .reduce((acc, metric) => {
-        const existing = acc.find(a => a.agentId === metric.agentId);
-        if (existing) {
-          existing.avgResponseTime = (existing.avgResponseTime + metric.averageResponseTime) / 2;
-        } else {
-          acc.push({ agentId: metric.agentId, avgResponseTime: metric.averageResponseTime });
-        }
-        return acc;
-      }, [] as { agentId: string; avgResponseTime: number }[])
+      .reduce(
+        (acc, metric) => {
+          const existing = acc.find((a) => a.agentId === metric.agentId);
+          if (existing) {
+            existing.avgResponseTime = (existing.avgResponseTime + metric.averageResponseTime) / 2;
+          } else {
+            acc.push({ agentId: metric.agentId, avgResponseTime: metric.averageResponseTime });
+          }
+          return acc;
+        },
+        [] as { agentId: string; avgResponseTime: number }[]
+      )
       .sort((a, b) => b.avgResponseTime - a.avgResponseTime)
       .slice(0, 5);
 
     // Calculate workflow statistics
-    const avgWorkflowDuration = periodWorkflowMetrics.length > 0
-      ? periodWorkflowMetrics.reduce((sum, w) => sum + w.duration, 0) / periodWorkflowMetrics.length
-      : 0;
+    const avgWorkflowDuration =
+      periodWorkflowMetrics.length > 0
+        ? periodWorkflowMetrics.reduce((sum, w) => sum + w.duration, 0) /
+          periodWorkflowMetrics.length
+        : 0;
 
-    const workflowSuccessRate = periodWorkflowMetrics.length > 0
-      ? periodWorkflowMetrics.filter(w => w.status === "completed").length / periodWorkflowMetrics.length
-      : 0;
+    const workflowSuccessRate =
+      periodWorkflowMetrics.length > 0
+        ? periodWorkflowMetrics.filter((w) => w.status === "completed").length /
+          periodWorkflowMetrics.length
+        : 0;
 
     const agentUsageCounts = periodWorkflowMetrics
-      .flatMap(w => w.agentsUsed)
-      .reduce((acc, agentId) => {
-        acc[agentId] = (acc[agentId] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      .flatMap((w) => w.agentsUsed)
+      .reduce(
+        (acc, agentId) => {
+          acc[agentId] = (acc[agentId] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
     const mostUsedAgents = Object.entries(agentUsageCounts)
       .map(([agentId, usageCount]) => ({ agentId, usageCount }))
@@ -498,7 +504,7 @@ export class PerformanceCollector {
     return {
       period: { start: startDate, end: endDate },
       agents: {
-        total: new Set(periodAgentMetrics.map(m => m.agentId)).size,
+        total: new Set(periodAgentMetrics.map((m) => m.agentId)).size,
         metrics: periodAgentMetrics,
         topPerformers,
         bottlenecks,
@@ -531,26 +537,32 @@ export class PerformanceCollector {
 
     const recentAgentMetrics = Array.from(this.agentMetricsHistory.values())
       .flat()
-      .filter(m => m.timestamp >= oneHourAgo);
+      .filter((m) => m.timestamp >= oneHourAgo);
 
-    const recentWorkflowMetrics = this.workflowMetricsHistory
-      .filter(w => w.timestamp >= oneHourAgo);
+    const recentWorkflowMetrics = this.workflowMetricsHistory.filter(
+      (w) => w.timestamp >= oneHourAgo
+    );
 
     const registryStats = this.agentRegistry.getStats();
 
-    const avgResponseTime = recentAgentMetrics.length > 0
-      ? recentAgentMetrics.reduce((sum, m) => sum + m.averageResponseTime, 0) / recentAgentMetrics.length
-      : 0;
+    const avgResponseTime =
+      recentAgentMetrics.length > 0
+        ? recentAgentMetrics.reduce((sum, m) => sum + m.averageResponseTime, 0) /
+          recentAgentMetrics.length
+        : 0;
 
     const totalThroughput = recentAgentMetrics.reduce((sum, m) => sum + m.throughput, 0);
 
-    const avgErrorRate = recentAgentMetrics.length > 0
-      ? recentAgentMetrics.reduce((sum, m) => sum + m.errorRate, 0) / recentAgentMetrics.length
-      : 0;
+    const avgErrorRate =
+      recentAgentMetrics.length > 0
+        ? recentAgentMetrics.reduce((sum, m) => sum + m.errorRate, 0) / recentAgentMetrics.length
+        : 0;
 
-    const avgWorkflowDuration = recentWorkflowMetrics.length > 0
-      ? recentWorkflowMetrics.reduce((sum, w) => sum + w.duration, 0) / recentWorkflowMetrics.length
-      : 0;
+    const avgWorkflowDuration =
+      recentWorkflowMetrics.length > 0
+        ? recentWorkflowMetrics.reduce((sum, w) => sum + w.duration, 0) /
+          recentWorkflowMetrics.length
+        : 0;
 
     return {
       agents: {
@@ -580,12 +592,11 @@ export class PerformanceCollector {
       // This would require adding the performance tables to the schema
       // For now, we'll just log the metrics
       console.log("[PerformanceCollector] Metrics collected successfully");
-      
+
       // TODO: Implement database persistence when schema is ready
       // await db.insert(agentPerformanceMetrics).values(...)
       // await db.insert(workflowPerformanceMetrics).values(...)
       // await db.insert(systemPerformanceSnapshots).values(...)
-      
     } catch (error) {
       console.error("[PerformanceCollector] Failed to persist metrics:", error);
     }
@@ -606,11 +617,12 @@ export class PerformanceCollector {
 
   private estimateCpuUsage(agent: any, healthHistory: any[]): number {
     // Simplified CPU estimation based on response times
-    const recentResponseTimes = healthHistory.slice(-10).map(h => h.responseTime);
-    const avgResponseTime = recentResponseTimes.length > 0
-      ? recentResponseTimes.reduce((sum, time) => sum + time, 0) / recentResponseTimes.length
-      : 0;
-    
+    const recentResponseTimes = healthHistory.slice(-10).map((h) => h.responseTime);
+    const avgResponseTime =
+      recentResponseTimes.length > 0
+        ? recentResponseTimes.reduce((sum, time) => sum + time, 0) / recentResponseTimes.length
+        : 0;
+
     return Math.min(100, Math.max(0, avgResponseTime / 100)); // Rough estimation
   }
 
@@ -641,23 +653,29 @@ export class PerformanceCollector {
     return process.uptime() * 1000; // milliseconds
   }
 
-  private calculateAgentPerformanceScores(metrics: AgentPerformanceMetrics[]): { agentId: string; score: number }[] {
-    const agentGroups = metrics.reduce((acc, metric) => {
-      if (!acc[metric.agentId]) acc[metric.agentId] = [];
-      acc[metric.agentId].push(metric);
-      return acc;
-    }, {} as Record<string, AgentPerformanceMetrics[]>);
+  private calculateAgentPerformanceScores(
+    metrics: AgentPerformanceMetrics[]
+  ): { agentId: string; score: number }[] {
+    const agentGroups = metrics.reduce(
+      (acc, metric) => {
+        if (!acc[metric.agentId]) acc[metric.agentId] = [];
+        acc[metric.agentId].push(metric);
+        return acc;
+      },
+      {} as Record<string, AgentPerformanceMetrics[]>
+    );
 
     return Object.entries(agentGroups).map(([agentId, agentMetrics]) => {
-      const avgSuccessRate = agentMetrics.reduce((sum, m) => sum + m.successRate, 0) / agentMetrics.length;
-      const avgResponseTime = agentMetrics.reduce((sum, m) => sum + m.averageResponseTime, 0) / agentMetrics.length;
+      const avgSuccessRate =
+        agentMetrics.reduce((sum, m) => sum + m.successRate, 0) / agentMetrics.length;
+      const avgResponseTime =
+        agentMetrics.reduce((sum, m) => sum + m.averageResponseTime, 0) / agentMetrics.length;
       const avgUptime = agentMetrics.reduce((sum, m) => sum + m.uptime, 0) / agentMetrics.length;
-      
+
       // Calculate composite score (higher is better)
-      const score = (avgSuccessRate * 40) + 
-                   (Math.max(0, 100 - avgResponseTime / 10) * 30) + 
-                   (avgUptime * 0.3);
-      
+      const score =
+        avgSuccessRate * 40 + Math.max(0, 100 - avgResponseTime / 10) * 30 + avgUptime * 0.3;
+
       return { agentId, score };
     });
   }
@@ -678,7 +696,8 @@ export class PerformanceCollector {
     const first = snapshots[0];
     const last = snapshots[snapshots.length - 1];
 
-    const responseTimeChange = ((last.averageResponseTime - first.averageResponseTime) / first.averageResponseTime) * 100;
+    const responseTimeChange =
+      ((last.averageResponseTime - first.averageResponseTime) / first.averageResponseTime) * 100;
     const throughputChange = ((last.throughput - first.throughput) / first.throughput) * 100;
     const errorRateChange = ((last.errorRate - first.errorRate) / (first.errorRate || 1)) * 100;
 
@@ -702,22 +721,22 @@ export class PerformanceCollector {
     const recommendations: string[] = [];
 
     // Analyze agent performance
-    const highErrorRateAgents = agentMetrics.filter(m => m.errorRate > 0.1);
+    const highErrorRateAgents = agentMetrics.filter((m) => m.errorRate > 0.1);
     if (highErrorRateAgents.length > 0) {
       recommendations.push(
-        `High error rate detected in agents: ${highErrorRateAgents.map(m => m.agentId).join(", ")}. Consider investigating agent health.`
+        `High error rate detected in agents: ${highErrorRateAgents.map((m) => m.agentId).join(", ")}. Consider investigating agent health.`
       );
     }
 
-    const slowAgents = agentMetrics.filter(m => m.averageResponseTime > 5000);
+    const slowAgents = agentMetrics.filter((m) => m.averageResponseTime > 5000);
     if (slowAgents.length > 0) {
       recommendations.push(
-        `Slow response times detected in agents: ${slowAgents.map(m => m.agentId).join(", ")}. Consider optimizing or scaling.`
+        `Slow response times detected in agents: ${slowAgents.map((m) => m.agentId).join(", ")}. Consider optimizing or scaling.`
       );
     }
 
     // Analyze workflow performance
-    const failedWorkflows = workflowMetrics.filter(w => w.status === "failed");
+    const failedWorkflows = workflowMetrics.filter((w) => w.status === "failed");
     if (failedWorkflows.length / workflowMetrics.length > 0.1) {
       recommendations.push(
         `High workflow failure rate (${((failedWorkflows.length / workflowMetrics.length) * 100).toFixed(1)}%). Review workflow configurations and dependencies.`
@@ -732,7 +751,8 @@ export class PerformanceCollector {
       );
     }
 
-    if (latestSnapshot?.systemMemoryUsage > 1000) { // > 1GB
+    if (latestSnapshot?.systemMemoryUsage > 1000) {
+      // > 1GB
       recommendations.push(
         "High system memory usage detected. Consider optimizing cache usage or scaling resources."
       );
@@ -749,7 +769,7 @@ export class PerformanceCollector {
     this.agentMetricsHistory.clear();
     this.workflowMetricsHistory = [];
     this.systemSnapshotHistory = [];
-    
+
     console.log("[PerformanceCollector] Performance collector destroyed");
   }
 }

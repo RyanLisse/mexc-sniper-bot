@@ -525,7 +525,8 @@ Please provide detailed reconciliation analysis, identify potential causes of di
     }
 
     const recentDiscrepancies = this.discrepancies.filter(
-      (d) => Date.parse(d.timestamp) > (this.lastReconciliation?.getTime() || 0) - 24 * 60 * 60 * 1000
+      (d) =>
+        Date.parse(d.timestamp) > (this.lastReconciliation?.getTime() || 0) - 24 * 60 * 60 * 1000
     );
 
     return `Last: ${this.lastReconciliation.toISOString()}, Recent discrepancies: ${recentDiscrepancies.length}`;

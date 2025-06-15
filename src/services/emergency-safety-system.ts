@@ -1,17 +1,16 @@
 /**
  * Emergency Safety System
- * 
+ *
  * Provides automated emergency response mechanisms including:
  * - Circuit breakers for trading halt scenarios
  * - Automatic position liquidation during market stress
- * - Emergency agent shutdown and recovery procedures  
+ * - Emergency agent shutdown and recovery procedures
  * - Real-time market anomaly detection
  * - System-wide emergency protocols
  */
 
-import { CircuitBreaker, circuitBreakerRegistry } from "./circuit-breaker";
-import { AdvancedRiskEngine } from "./advanced-risk-engine";
-import type { RiskAlert } from "./advanced-risk-engine";
+import type { AdvancedRiskEngine } from "./advanced-risk-engine";
+import { type CircuitBreaker, circuitBreakerRegistry } from "./circuit-breaker";
 
 // Emergency System Interfaces
 export interface EmergencyCondition {
@@ -27,7 +26,12 @@ export interface EmergencyCondition {
 
 export interface EmergencyAction {
   id: string;
-  type: "halt_trading" | "close_positions" | "reduce_exposure" | "shutdown_agents" | "notify_operators";
+  type:
+    | "halt_trading"
+    | "close_positions"
+    | "reduce_exposure"
+    | "shutdown_agents"
+    | "notify_operators";
   priority: number; // 1-10 (1 = highest priority)
   description: string;
   parameters: Record<string, unknown>;
@@ -105,31 +109,31 @@ export interface EmergencyResponse {
 
 export interface EmergencyConfig {
   // Detection Thresholds
-  priceDeviationThreshold: number;     // % for price anomaly detection
-  volumeAnomalyThreshold: number;      // Ratio for volume anomaly detection
-  correlationBreakThreshold: number;   // Correlation change threshold
-  liquidityGapThreshold: number;       // Spread ratio threshold
-  
+  priceDeviationThreshold: number; // % for price anomaly detection
+  volumeAnomalyThreshold: number; // Ratio for volume anomaly detection
+  correlationBreakThreshold: number; // Correlation change threshold
+  liquidityGapThreshold: number; // Spread ratio threshold
+
   // Response Settings
   autoResponseEnabled: boolean;
-  emergencyHaltThreshold: number;      // Risk score triggering auto-halt
-  liquidationThreshold: number;        // Risk score triggering liquidation
-  maxLiquidationSize: number;          // Max position size to liquidate
-  
+  emergencyHaltThreshold: number; // Risk score triggering auto-halt
+  liquidationThreshold: number; // Risk score triggering liquidation
+  maxLiquidationSize: number; // Max position size to liquidate
+
   // System Protection
   maxConcurrentEmergencies: number;
-  cooldownPeriod: number;             // Minutes between emergency responses
+  cooldownPeriod: number; // Minutes between emergency responses
   manualOverrideRequired: boolean;
-  
+
   // Recovery Settings
   autoRecoveryEnabled: boolean;
-  recoveryCheckInterval: number;       // Minutes
-  healthCheckTimeout: number;          // Seconds
+  recoveryCheckInterval: number; // Minutes
+  healthCheckTimeout: number; // Seconds
 }
 
 /**
  * Emergency Safety System
- * 
+ *
  * Monitors system health and market conditions to detect emergency
  * situations and execute automated responses to protect capital
  * and system integrity.
@@ -143,7 +147,7 @@ export class EmergencySafetySystem {
   private lastHealthCheck = 0;
   private isEmergencyActive = false;
   private activeEmergencies = 0;
-  
+
   // System state tracking
   private tradingHalted = false;
   private agentsShutdown: string[] = [];
@@ -178,7 +182,7 @@ export class EmergencySafetySystem {
         overall: "healthy",
         components: {
           riskEngine: "healthy",
-          tradingEngine: "healthy", 
+          tradingEngine: "healthy",
           dataFeed: "healthy",
           agentSystem: "healthy",
           database: "healthy",
@@ -193,8 +197,9 @@ export class EmergencySafetySystem {
       if (this.riskEngine) {
         const riskHealth = this.riskEngine.getHealthStatus();
         if (!riskHealth.healthy) {
-          healthCheck.components.riskEngine = riskHealth.issues.some(i => 
-            i.includes("critical")) ? "critical" : "degraded";
+          healthCheck.components.riskEngine = riskHealth.issues.some((i) => i.includes("critical"))
+            ? "critical"
+            : "degraded";
           if (healthCheck.components.riskEngine === "critical") {
             healthCheck.criticalIssues.push("Risk engine: " + riskHealth.issues.join(", "));
           } else {
@@ -235,9 +240,11 @@ export class EmergencySafetySystem {
 
       this.lastHealthCheck = Date.now();
       const checkDuration = this.lastHealthCheck - startTime;
-      
-      console.log(`[EmergencySafetySystem] Health check completed in ${checkDuration}ms - Status: ${healthCheck.overall}`);
-      
+
+      console.log(
+        `[EmergencySafetySystem] Health check completed in ${checkDuration}ms - Status: ${healthCheck.overall}`
+      );
+
       return healthCheck;
     });
   }
@@ -245,7 +252,9 @@ export class EmergencySafetySystem {
   /**
    * Detect market anomalies that could trigger emergency responses
    */
-  async detectMarketAnomalies(marketData: Record<string, unknown>): Promise<MarketAnomalyDetection> {
+  async detectMarketAnomalies(
+    marketData: Record<string, unknown>
+  ): Promise<MarketAnomalyDetection> {
     return await this.circuitBreaker.execute(async () => {
       const anomalies: MarketAnomalyDetection = {
         priceAnomalies: [],
@@ -256,19 +265,19 @@ export class EmergencySafetySystem {
 
       // Simulate market data analysis (in production, would use real market data)
       const symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT"];
-      
+
       for (const symbol of symbols) {
         // Price anomaly detection
         const currentPrice = Math.random() * 50000 + 25000; // Mock price
         const expectedPrice = currentPrice * (0.95 + Math.random() * 0.1); // ±5% variation
         const deviation = Math.abs((currentPrice - expectedPrice) / expectedPrice) * 100;
-        
+
         if (deviation > this.config.priceDeviationThreshold) {
           let severity: "low" | "medium" | "high" | "critical" = "low";
           if (deviation > 15) severity = "critical";
           else if (deviation > 10) severity = "high";
           else if (deviation > 5) severity = "medium";
-          
+
           anomalies.priceAnomalies.push({
             symbol,
             currentPrice,
@@ -282,13 +291,16 @@ export class EmergencySafetySystem {
         const currentVolume = Math.random() * 1000000 + 100000; // Mock volume
         const averageVolume = currentVolume * (0.7 + Math.random() * 0.6); // Variation
         const ratio = currentVolume / averageVolume;
-        
-        if (ratio > this.config.volumeAnomalyThreshold || ratio < (1 / this.config.volumeAnomalyThreshold)) {
+
+        if (
+          ratio > this.config.volumeAnomalyThreshold ||
+          ratio < 1 / this.config.volumeAnomalyThreshold
+        ) {
           let severity: "low" | "medium" | "high" | "critical" = "low";
           if (ratio > 5 || ratio < 0.2) severity = "critical";
           else if (ratio > 3 || ratio < 0.33) severity = "high";
           else if (ratio > 2 || ratio < 0.5) severity = "medium";
-          
+
           anomalies.volumeAnomalies.push({
             symbol,
             currentVolume,
@@ -302,13 +314,13 @@ export class EmergencySafetySystem {
         const bidAskSpread = Math.random() * 2; // Mock spread %
         const normalSpread = 0.1; // Normal spread
         const spreadRatio = bidAskSpread / normalSpread;
-        
+
         if (spreadRatio > this.config.liquidityGapThreshold) {
           let severity: "low" | "medium" | "high" | "critical" = "low";
           if (spreadRatio > 20) severity = "critical";
           else if (spreadRatio > 10) severity = "high";
           else if (spreadRatio > 5) severity = "medium";
-          
+
           anomalies.liquidityGaps.push({
             symbol,
             bidAskSpread,
@@ -321,9 +333,9 @@ export class EmergencySafetySystem {
 
       // Check for critical anomalies that require emergency response
       const criticalAnomalies = [
-        ...anomalies.priceAnomalies.filter(a => a.severity === "critical"),
-        ...anomalies.volumeAnomalies.filter(a => a.severity === "critical"),
-        ...anomalies.liquidityGaps.filter(a => a.severity === "critical"),
+        ...anomalies.priceAnomalies.filter((a) => a.severity === "critical"),
+        ...anomalies.volumeAnomalies.filter((a) => a.severity === "critical"),
+        ...anomalies.liquidityGaps.filter((a) => a.severity === "critical"),
       ];
 
       if (criticalAnomalies.length > 0) {
@@ -344,7 +356,7 @@ export class EmergencySafetySystem {
     triggers: string[]
   ): Promise<EmergencyResponse> {
     const startTime = Date.now();
-    
+
     // Check if we're in cooldown period
     if (Date.now() - this.lastEmergencyResponse < this.config.cooldownPeriod * 60000) {
       throw new Error("Emergency system in cooldown period");
@@ -384,10 +396,12 @@ export class EmergencySafetySystem {
         action.success = actionResult.success;
         action.error = actionResult.error;
         executedActions.push(action);
-        
+
         if (!actionResult.success) {
           success = false;
-          console.error(`[EmergencySafetySystem] Action failed: ${action.id} - ${actionResult.error}`);
+          console.error(
+            `[EmergencySafetySystem] Action failed: ${action.id} - ${actionResult.error}`
+          );
         }
       } catch (error) {
         action.success = false;
@@ -444,10 +458,10 @@ export class EmergencySafetySystem {
     try {
       // Begin recovery process
       await this.initiateRecovery(condition, reason);
-      
+
       this.emergencyConditions.delete(conditionId);
       this.activeEmergencies = Math.max(0, this.activeEmergencies - 1);
-      
+
       if (this.activeEmergencies === 0) {
         this.isEmergencyActive = false;
       }
@@ -455,7 +469,10 @@ export class EmergencySafetySystem {
       console.log(`[EmergencySafetySystem] Emergency deactivated: ${conditionId} - ${reason}`);
       return true;
     } catch (error) {
-      console.error(`[EmergencySafetySystem] Failed to deactivate emergency: ${conditionId}`, error);
+      console.error(
+        `[EmergencySafetySystem] Failed to deactivate emergency: ${conditionId}`,
+        error
+      );
       return false;
     }
   }
@@ -465,21 +482,21 @@ export class EmergencySafetySystem {
    */
   async forceEmergencyHalt(reason: string): Promise<void> {
     console.log(`[EmergencySafetySystem] FORCE EMERGENCY HALT: ${reason}`);
-    
+
     this.tradingHalted = true;
-    
+
     // Halt all circuit breakers
     const allBreakers = circuitBreakerRegistry.getAllBreakers();
     for (const [name, breaker] of allBreakers) {
       breaker.forceOpen();
     }
-    
+
     // Stop risk engine operations if available
     if (this.riskEngine) {
       // Risk engine doesn't have explicit stop method, but circuit breaker will protect it
       console.log("[EmergencySafetySystem] Risk engine operations halted via circuit breaker");
     }
-    
+
     // This would integrate with actual trading system
     console.log("[EmergencySafetySystem] All trading activities halted");
   }
@@ -510,7 +527,7 @@ export class EmergencySafetySystem {
       // Resume trading
       this.tradingHalted = false;
       this.agentsShutdown = [];
-      
+
       console.log("[EmergencySafetySystem] Normal operations resumed");
       return true;
     } catch (error) {
@@ -532,7 +549,7 @@ export class EmergencySafetySystem {
   } {
     const conditions = Array.from(this.emergencyConditions.values());
     const lastResponse = this.emergencyResponses[this.emergencyResponses.length - 1];
-    
+
     let systemHealth: "healthy" | "degraded" | "critical" | "emergency" = "healthy";
     if (this.isEmergencyActive) {
       systemHealth = "emergency";
@@ -595,7 +612,7 @@ export class EmergencySafetySystem {
         description: "Emergency halt of all trading activities",
         parameters: { immediate: true },
       });
-      
+
       actions.push({
         id: "shutdown-agents",
         type: "shutdown_agents",
@@ -603,7 +620,7 @@ export class EmergencySafetySystem {
         description: "Shutdown all trading agents",
         parameters: { agentTypes: ["trading", "strategy", "pattern-discovery"] },
       });
-      
+
       actions.push({
         id: "notify-critical",
         type: "notify_operators",
@@ -619,7 +636,7 @@ export class EmergencySafetySystem {
         description: "Halt new trade execution",
         parameters: { newTradesOnly: true },
       });
-      
+
       actions.push({
         id: "reduce-exposure",
         type: "reduce_exposure",
@@ -627,7 +644,7 @@ export class EmergencySafetySystem {
         description: "Reduce portfolio exposure by 50%",
         parameters: { reductionPercent: 50 },
       });
-      
+
       actions.push({
         id: "notify-high",
         type: "notify_operators",
@@ -643,7 +660,7 @@ export class EmergencySafetySystem {
         description: "Reduce position sizes by 30%",
         parameters: { reductionPercent: 30 },
       });
-      
+
       actions.push({
         id: "notify-medium",
         type: "notify_operators",
@@ -656,7 +673,9 @@ export class EmergencySafetySystem {
     return actions;
   }
 
-  private async executeEmergencyAction(action: EmergencyAction): Promise<{ success: boolean; error?: string }> {
+  private async executeEmergencyAction(
+    action: EmergencyAction
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       switch (action.type) {
         case "halt_trading":
@@ -673,14 +692,16 @@ export class EmergencySafetySystem {
           return { success: false, error: `Unknown action type: ${action.type}` };
       }
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
-  private async executeHaltTrading(parameters: Record<string, unknown>): Promise<{ success: boolean; error?: string }> {
+  private async executeHaltTrading(
+    parameters: Record<string, unknown>
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       if (parameters.immediate || !parameters.newTradesOnly) {
         this.tradingHalted = true;
@@ -690,56 +711,81 @@ export class EmergencySafetySystem {
       }
       return { success: true };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Failed to halt trading" };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to halt trading",
+      };
     }
   }
 
-  private async executeClosePositions(parameters: Record<string, unknown>): Promise<{ success: boolean; error?: string }> {
+  private async executeClosePositions(
+    parameters: Record<string, unknown>
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       // This would integrate with actual position management
-      const maxSize = parameters.maxSize as number || this.config.maxLiquidationSize;
+      const maxSize = (parameters.maxSize as number) || this.config.maxLiquidationSize;
       console.log(`[EmergencySafetySystem] Closing positions up to ${maxSize} USDT`);
       return { success: true };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Failed to close positions" };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to close positions",
+      };
     }
   }
 
-  private async executeReduceExposure(parameters: Record<string, unknown>): Promise<{ success: boolean; error?: string }> {
+  private async executeReduceExposure(
+    parameters: Record<string, unknown>
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      const reductionPercent = parameters.reductionPercent as number || 50;
+      const reductionPercent = (parameters.reductionPercent as number) || 50;
       console.log(`[EmergencySafetySystem] Reducing exposure by ${reductionPercent}%`);
       return { success: true };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Failed to reduce exposure" };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to reduce exposure",
+      };
     }
   }
 
-  private async executeShutdownAgents(parameters: Record<string, unknown>): Promise<{ success: boolean; error?: string }> {
+  private async executeShutdownAgents(
+    parameters: Record<string, unknown>
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      const agentTypes = parameters.agentTypes as string[] || [];
+      const agentTypes = (parameters.agentTypes as string[]) || [];
       this.agentsShutdown.push(...agentTypes);
       console.log(`[EmergencySafetySystem] Shutdown agents: ${agentTypes.join(", ")}`);
       return { success: true };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Failed to shutdown agents" };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to shutdown agents",
+      };
     }
   }
 
-  private async executeNotifyOperators(parameters: Record<string, unknown>): Promise<{ success: boolean; error?: string }> {
+  private async executeNotifyOperators(
+    parameters: Record<string, unknown>
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      const urgency = parameters.urgency as string || "medium";
-      const channels = parameters.channels as string[] || ["email"];
-      console.log(`[EmergencySafetySystem] Notifying operators - Urgency: ${urgency}, Channels: ${channels.join(", ")}`);
+      const urgency = (parameters.urgency as string) || "medium";
+      const channels = (parameters.channels as string[]) || ["email"];
+      console.log(
+        `[EmergencySafetySystem] Notifying operators - Urgency: ${urgency}, Channels: ${channels.join(", ")}`
+      );
       return { success: true };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Failed to notify operators" };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to notify operators",
+      };
     }
   }
 
   private async handleCriticalMarketAnomalies(anomalies: unknown[]): Promise<void> {
     console.log(`[EmergencySafetySystem] Critical market anomalies detected: ${anomalies.length}`);
-    
+
     await this.activateEmergencyResponse(
       "market_crash",
       "critical",
@@ -749,15 +795,19 @@ export class EmergencySafetySystem {
   }
 
   private countLiquidatedPositions(actions: EmergencyAction[]): number {
-    return actions.filter(a => a.type === "close_positions" && a.success).length;
+    return actions.filter((a) => a.type === "close_positions" && a.success).length;
   }
 
   private estimateRecoveryTime(severity: EmergencyCondition["severity"]): number {
     switch (severity) {
-      case "catastrophic": return 240; // 4 hours
-      case "critical": return 120;     // 2 hours
-      case "high": return 60;          // 1 hour
-      default: return 30;              // 30 minutes
+      case "catastrophic":
+        return 240; // 4 hours
+      case "critical":
+        return 120; // 2 hours
+      case "high":
+        return 60; // 1 hour
+      default:
+        return 30; // 30 minutes
     }
   }
 
@@ -784,11 +834,11 @@ export class EmergencySafetySystem {
 
   private async initiateRecovery(condition: EmergencyCondition, reason: string): Promise<void> {
     console.log(`[EmergencySafetySystem] Initiating recovery for ${condition.id}: ${reason}`);
-    
+
     if (this.config.autoRecoveryEnabled && condition.severity !== "catastrophic") {
       // Automated recovery steps
       console.log("[EmergencySafetySystem] Starting automated recovery process");
-      
+
       // This would implement actual recovery logic
       // For now, just log the steps
       const recoverySteps = this.generateRecoverySteps(condition);

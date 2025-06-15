@@ -6,8 +6,8 @@
 
 "use client";
 
-import { Suspense, lazy } from "react";
 import { Skeleton } from "@/src/components/ui/optimized-exports";
+import { Suspense, lazy } from "react";
 
 // Loading fallback components
 const ComponentSkeleton = ({ className = "" }: { className?: string }) => (
@@ -35,118 +35,118 @@ const TableSkeleton = () => (
 );
 
 // Lazy loaded dashboard components
-export const OptimizedCoinCalendar = lazy(() => 
-  import("./optimized-coin-calendar").then(module => ({
-    default: module.OptimizedCoinCalendar
+export const OptimizedCoinCalendar = lazy(() =>
+  import("./optimized-coin-calendar").then((module) => ({
+    default: module.OptimizedCoinCalendar,
   }))
 );
 
 export const OptimizedAccountBalance = lazy(() =>
-  import("./optimized-account-balance").then(module => ({
-    default: module.OptimizedAccountBalance  
+  import("./optimized-account-balance").then((module) => ({
+    default: module.OptimizedAccountBalance,
   }))
 );
 
 export const OptimizedWebSocketMonitor = lazy(() =>
-  import("./optimized-websocket-monitor").then(module => ({
-    default: module.OptimizedWebSocketMonitor
+  import("./optimized-websocket-monitor").then((module) => ({
+    default: module.OptimizedWebSocketMonitor,
   }))
 );
 
 export const SafetyMonitoringDashboard = lazy(() =>
-  import("./safety-monitoring-dashboard").then(module => ({
-    default: module.SafetyMonitoringDashboard
+  import("./safety-monitoring-dashboard").then((module) => ({
+    default: module.SafetyMonitoringDashboard,
   }))
 );
 
 export const PatternSniper = lazy(() =>
-  import("./pattern-sniper").then(module => ({
-    default: module.default || module.PatternSniper
+  import("./pattern-sniper").then((module) => ({
+    default: module.default || module.PatternSniper,
   }))
 );
 
 export const AgentDashboard = lazy(() =>
-  import("./agent-dashboard").then(module => ({
-    default: module.AgentDashboard
+  import("./agent-dashboard").then((module) => ({
+    default: module.AgentDashboard,
   }))
 );
 
 export const StrategyManager = lazy(() =>
-  import("./strategy-manager").then(module => ({
-    default: module.StrategyManager
+  import("./strategy-manager").then((module) => ({
+    default: module.StrategyManager,
   }))
 );
 
 export const WorkflowManager = lazy(() =>
-  import("./workflow-manager").then(module => ({
-    default: module.WorkflowManager
+  import("./workflow-manager").then((module) => ({
+    default: module.WorkflowManager,
   }))
 );
 
 export const TradingConfiguration = lazy(() =>
-  import("./trading-configuration").then(module => ({
-    default: module.TradingConfiguration
+  import("./trading-configuration").then((module) => ({
+    default: module.TradingConfiguration,
   }))
 );
 
 export const UserPreferences = lazy(() =>
-  import("./user-preferences").then(module => ({
-    default: module.UserPreferences
+  import("./user-preferences").then((module) => ({
+    default: module.UserPreferences,
   }))
 );
 
 // Dashboard section components
 export const CoinListingsBoard = lazy(() =>
-  import("./dashboard/coin-listings-board").then(module => ({
-    default: module.CoinListingsBoard
+  import("./dashboard/coin-listings-board").then((module) => ({
+    default: module.CoinListingsBoard,
   }))
 );
 
 export const MetricCard = lazy(() =>
-  import("./dashboard/metric-card").then(module => ({
-    default: module.MetricCard
+  import("./dashboard/metric-card").then((module) => ({
+    default: module.MetricCard,
   }))
 );
 
 export const OptimizedActivityFeed = lazy(() =>
-  import("./dashboard/optimized-activity-feed").then(module => ({
-    default: module.OptimizedActivityFeed
+  import("./dashboard/optimized-activity-feed").then((module) => ({
+    default: module.OptimizedActivityFeed,
   }))
 );
 
 export const OptimizedMetricsGrid = lazy(() =>
-  import("./dashboard/optimized-metrics-grid").then(module => ({
-    default: module.OptimizedMetricsGrid
+  import("./dashboard/optimized-metrics-grid").then((module) => ({
+    default: module.OptimizedMetricsGrid,
   }))
 );
 
 export const OptimizedTradingTargets = lazy(() =>
-  import("./dashboard/optimized-trading-targets").then(module => ({
-    default: module.OptimizedTradingTargets
+  import("./dashboard/optimized-trading-targets").then((module) => ({
+    default: module.OptimizedTradingTargets,
   }))
 );
 
 export const RecentTradesTable = lazy(() =>
-  import("./dashboard/recent-trades-table").then(module => ({
-    default: module.RecentTradesTable
+  import("./dashboard/recent-trades-table").then((module) => ({
+    default: module.RecentTradesTable,
   }))
 );
 
 export const TradingChart = lazy(() =>
-  import("./dashboard/trading-chart").then(module => ({
-    default: module.TradingChart
+  import("./dashboard/trading-chart").then((module) => ({
+    default: module.TradingChart,
   }))
 );
 
 export const UpcomingCoinsSection = lazy(() =>
-  import("./dashboard/upcoming-coins-section").then(module => ({
-    default: module.UpcomingCoinsSection
+  import("./dashboard/upcoming-coins-section").then((module) => ({
+    default: module.UpcomingCoinsSection,
   }))
 );
 
 export const WorkflowStatusCard = lazy(() =>
-  import("./dashboard/workflow-status-card").then(module => ({
-    default: module.WorkflowStatusCard
+  import("./dashboard/workflow-status-card").then((module) => ({
+    default: module.WorkflowStatusCard,
   }))
 );
 
@@ -157,44 +157,38 @@ interface LazyComponentWrapperProps {
   className?: string;
 }
 
-export function LazyComponentWrapper({ 
-  children, 
-  fallback = <ComponentSkeleton />, 
-  className = "" 
+export function LazyComponentWrapper({
+  children,
+  fallback = <ComponentSkeleton />,
+  className = "",
 }: LazyComponentWrapperProps) {
   return (
     <Suspense fallback={fallback}>
-      <div className={className}>
-        {children}
-      </div>
+      <div className={className}>{children}</div>
     </Suspense>
   );
 }
 
-export function LazyCardWrapper({ 
-  children, 
-  fallback = <CardSkeleton />, 
-  className = "" 
+export function LazyCardWrapper({
+  children,
+  fallback = <CardSkeleton />,
+  className = "",
 }: LazyComponentWrapperProps) {
   return (
     <Suspense fallback={fallback}>
-      <div className={className}>
-        {children}
-      </div>
+      <div className={className}>{children}</div>
     </Suspense>
   );
 }
 
-export function LazyTableWrapper({ 
-  children, 
-  fallback = <TableSkeleton />, 
-  className = "" 
+export function LazyTableWrapper({
+  children,
+  fallback = <TableSkeleton />,
+  className = "",
 }: LazyComponentWrapperProps) {
   return (
     <Suspense fallback={fallback}>
-      <div className={className}>
-        {children}
-      </div>
+      <div className={className}>{children}</div>
     </Suspense>
   );
 }

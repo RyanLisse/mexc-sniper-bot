@@ -7,7 +7,15 @@
 // Core UI Components - Only export what's needed
 export { Button } from "./button";
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card";
-export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
+export {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./dialog";
 export { Input } from "./input";
 export { Label } from "./label";
 export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
@@ -21,13 +29,13 @@ export { Checkbox } from "./checkbox";
 export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 
 // Navigation components
-export { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "./dropdown-menu";
 
 export {
@@ -51,8 +59,15 @@ export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 // Tooltip components
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
-// Sheet/Drawer components  
-export { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "./sheet";
+// Sheet/Drawer components
+export {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "./sheet";
 
 // Alert components
 export { Alert, AlertDescription, AlertTitle } from "./alert";

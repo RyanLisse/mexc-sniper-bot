@@ -1,9 +1,5 @@
-import type { 
-  NotificationProvider, 
-  NotificationMessage, 
-  NotificationResult 
-} from "./index";
-import type { SelectNotificationChannel, SelectAlertInstance } from "../../db/schemas/alerts";
+import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
+import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface SMSConfig {
   provider: "twilio" | "aws_sns" | "nexmo" | "messagebird";
@@ -26,14 +22,14 @@ export class SMSProvider implements NotificationProvider {
 
   async validateConfig(config: Record<string, unknown>): Promise<boolean> {
     const smsConfig = config as SMSConfig;
-    
+
     if (!smsConfig.provider || !smsConfig.fromPhoneNumber || !smsConfig.toPhoneNumbers?.length) {
       return false;
     }
 
     // Validate phone number format (basic validation)
     const phoneRegex = /^\+[1-9]\d{1,14}$/;
-    
+
     if (!phoneRegex.test(smsConfig.fromPhoneNumber)) {
       return false;
     }
@@ -65,9 +61,9 @@ export class SMSProvider implements NotificationProvider {
   ): Promise<NotificationResult> {
     try {
       const config = JSON.parse(channel.config) as SMSConfig;
-      
+
       const smsText = this.formatSMSMessage(message, alert, config.maxMessageLength || 160);
-      
+
       switch (config.provider) {
         case "twilio":
           return await this.sendViaTwilio(config, smsText);
@@ -96,10 +92,10 @@ export class SMSProvider implements NotificationProvider {
   ): string {
     const severity = alert.severity.toUpperCase();
     const icon = this.getSeverityIcon(alert.severity);
-    
+
     // Build short message
     let text = `${icon} ${severity}: ${alert.message}`;
-    
+
     // Add key details if space allows
     const details = [
       `ID: ${alert.id.slice(-8)}`, // Last 8 chars of ID
@@ -130,7 +126,7 @@ export class SMSProvider implements NotificationProvider {
   private async sendViaTwilio(config: SMSConfig, message: string): Promise<NotificationResult> {
     // In production, you would use the Twilio SDK
     // For now, we'll simulate the Twilio API call
-    
+
     console.log("Sending via Twilio:", {
       from: config.fromPhoneNumber,
       to: config.toPhoneNumbers,
@@ -140,7 +136,7 @@ export class SMSProvider implements NotificationProvider {
     // Simulate Twilio API call
     // const twilio = require('twilio');
     // const client = twilio(config.accountSid, config.authToken);
-    // 
+    //
     // const promises = config.toPhoneNumbers.map(to =>
     //   client.messages.create({
     //     body: message,
@@ -148,13 +144,13 @@ export class SMSProvider implements NotificationProvider {
     //     to: to,
     //   })
     // );
-    // 
+    //
     // const results = await Promise.allSettled(promises);
 
     return {
       success: true,
       messageId: `twilio_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      response: { 
+      response: {
         simulated: true,
         recipients: config.toPhoneNumbers.length,
       },
@@ -164,7 +160,7 @@ export class SMSProvider implements NotificationProvider {
   private async sendViaAWSSNS(config: SMSConfig, message: string): Promise<NotificationResult> {
     // In production, you would use the AWS SDK
     // For now, we'll simulate the AWS SNS API call
-    
+
     console.log("Sending via AWS SNS:", {
       from: config.fromPhoneNumber,
       to: config.toPhoneNumbers,
@@ -178,20 +174,20 @@ export class SMSProvider implements NotificationProvider {
     //   secretAccessKey: config.secretAccessKey,
     //   region: config.region || 'us-east-1'
     // });
-    // 
+    //
     // const promises = config.toPhoneNumbers.map(phoneNumber =>
     //   sns.publish({
     //     Message: message,
     //     PhoneNumber: phoneNumber,
     //   }).promise()
     // );
-    // 
+    //
     // const results = await Promise.allSettled(promises);
 
     return {
       success: true,
       messageId: `aws_sns_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      response: { 
+      response: {
         simulated: true,
         recipients: config.toPhoneNumbers.length,
       },
@@ -201,7 +197,7 @@ export class SMSProvider implements NotificationProvider {
   private async sendViaNexmo(config: SMSConfig, message: string): Promise<NotificationResult> {
     // In production, you would use the Vonage/Nexmo SDK
     // For now, we'll simulate the Nexmo API call
-    
+
     console.log("Sending via Nexmo:", {
       from: config.fromPhoneNumber,
       to: config.toPhoneNumbers,
@@ -214,7 +210,7 @@ export class SMSProvider implements NotificationProvider {
     //   apiKey: config.apiKey,
     //   apiSecret: config.apiSecret,
     // });
-    // 
+    //
     // const promises = config.toPhoneNumbers.map(to =>
     //   new Promise((resolve, reject) => {
     //     nexmo.message.sendSms(config.fromPhoneNumber, to, message, (err, responseData) => {
@@ -223,23 +219,26 @@ export class SMSProvider implements NotificationProvider {
     //     });
     //   })
     // );
-    // 
+    //
     // const results = await Promise.allSettled(promises);
 
     return {
       success: true,
       messageId: `nexmo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      response: { 
+      response: {
         simulated: true,
         recipients: config.toPhoneNumbers.length,
       },
     };
   }
 
-  private async sendViaMessageBird(config: SMSConfig, message: string): Promise<NotificationResult> {
+  private async sendViaMessageBird(
+    config: SMSConfig,
+    message: string
+  ): Promise<NotificationResult> {
     // In production, you would use the MessageBird SDK
     // For now, we'll simulate the MessageBird API call
-    
+
     console.log("Sending via MessageBird:", {
       originator: config.fromPhoneNumber,
       recipients: config.toPhoneNumbers,
@@ -248,13 +247,13 @@ export class SMSProvider implements NotificationProvider {
 
     // Simulate MessageBird API call
     // const messagebird = require('messagebird')(config.apiKey);
-    // 
+    //
     // const params = {
     //   originator: config.fromPhoneNumber,
     //   recipients: config.toPhoneNumbers,
     //   body: message,
     // };
-    // 
+    //
     // const result = await new Promise((resolve, reject) => {
     //   messagebird.messages.create(params, (err, response) => {
     //     if (err) reject(err);
@@ -265,7 +264,7 @@ export class SMSProvider implements NotificationProvider {
     return {
       success: true,
       messageId: `messagebird_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      response: { 
+      response: {
         simulated: true,
         recipients: config.toPhoneNumbers.length,
       },
@@ -274,12 +273,18 @@ export class SMSProvider implements NotificationProvider {
 
   private getSeverityIcon(severity: string): string {
     switch (severity) {
-      case "critical": return "🚨";
-      case "high": return "⚠️";
-      case "medium": return "⚡";
-      case "low": return "ℹ️";
-      case "info": return "📊";
-      default: return "📢";
+      case "critical":
+        return "🚨";
+      case "high":
+        return "⚠️";
+      case "medium":
+        return "⚡";
+      case "low":
+        return "ℹ️";
+      case "info":
+        return "📊";
+      default:
+        return "📢";
     }
   }
 }

@@ -1,9 +1,9 @@
 /**
  * Real-time Dashboard Component
- * 
+ *
  * Comprehensive dashboard integrating all real-time WebSocket functionality.
  * Displays live agent status, trading data, pattern discovery, and notifications.
- * 
+ *
  * Features:
  * - Real-time agent monitoring
  * - Live trading data feeds
@@ -13,22 +13,40 @@
  * - Interactive controls
  */
 
-'use client';
-
-import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
-import { Progress } from '@/src/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert';
-import { ScrollArea } from '@/src/components/ui/scroll-area';
-import { Separator } from '@/src/components/ui/separator';
-import { useWebSocket, useAgentStatus, useTradingPrices, usePatternDiscovery, useWorkflows, useNotifications } from '@/src/hooks/use-websocket';
-import { useRealTimePatterns } from '@/src/hooks/use-real-time-patterns';
-import { useLiveTradingData } from '@/src/hooks/use-live-trading-data';
-import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
-import { Activity, TrendingUp, Zap, AlertTriangle, CheckCircle, Clock, Settings, Wifi, WifiOff } from 'lucide-react';
+"use client";
+import { Alert, AlertDescription, AlertTitle } from "@/src/components/ui/alert";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Progress } from "@/src/components/ui/progress";
+import { ScrollArea } from "@/src/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+import { useLiveTradingData } from "@/src/hooks/use-live-trading-data";
+import { useRealTimePatterns } from "@/src/hooks/use-real-time-patterns";
+import {
+  useAgentStatus,
+  useNotifications,
+  useWebSocket,
+  useWorkflows,
+} from "@/src/hooks/use-websocket";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Settings,
+  TrendingUp,
+  Wifi,
+  WifiOff,
+  Zap,
+} from "lucide-react";
 
 // ======================
 // Connection Status Component
@@ -42,8 +60,14 @@ interface ConnectionStatusProps {
   onReconnect: () => void;
 }
 
-function ConnectionStatus({ isConnected, state, metrics, error, onReconnect }: ConnectionStatusProps) {
-  const statusColor = isConnected ? 'text-green-600' : 'text-red-600';
+function ConnectionStatus({
+  isConnected,
+  state,
+  metrics,
+  error,
+  onReconnect,
+}: ConnectionStatusProps) {
+  const statusColor = isConnected ? "text-green-600" : "text-red-600";
   const StatusIcon = isConnected ? Wifi : WifiOff;
 
   return (
@@ -52,9 +76,7 @@ function ConnectionStatus({ isConnected, state, metrics, error, onReconnect }: C
         <CardTitle className="flex items-center gap-2">
           <StatusIcon className={`h-5 w-5 ${statusColor}`} />
           WebSocket Connection
-          <Badge variant={isConnected ? 'default' : 'destructive'}>
-            {state}
-          </Badge>
+          <Badge variant={isConnected ? "default" : "destructive"}>{state}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -76,7 +98,7 @@ function ConnectionStatus({ isConnected, state, metrics, error, onReconnect }: C
             <p className="text-lg font-semibold">{metrics?.queuedMessages || 0}</p>
           </div>
         </div>
-        
+
         {error && (
           <Alert className="mt-4" variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -104,21 +126,31 @@ function AgentStatusPanel() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'text-green-600';
-      case 'degraded': return 'text-yellow-600';
-      case 'unhealthy': return 'text-red-600';
-      case 'offline': return 'text-gray-600';
-      default: return 'text-gray-600';
+      case "healthy":
+        return "text-green-600";
+      case "degraded":
+        return "text-yellow-600";
+      case "unhealthy":
+        return "text-red-600";
+      case "offline":
+        return "text-gray-600";
+      default:
+        return "text-gray-600";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'healthy': return CheckCircle;
-      case 'degraded': return AlertTriangle;
-      case 'unhealthy': return AlertTriangle;
-      case 'offline': return Clock;
-      default: return Clock;
+      case "healthy":
+        return CheckCircle;
+      case "degraded":
+        return AlertTriangle;
+      case "unhealthy":
+        return AlertTriangle;
+      case "offline":
+        return Clock;
+      default:
+        return Clock;
     }
   };
 
@@ -143,14 +175,15 @@ function AgentStatusPanel() {
         <ScrollArea className="h-64">
           <div className="space-y-3">
             {agentStatuses.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                No agent data available
-              </p>
+              <p className="text-muted-foreground text-center py-4">No agent data available</p>
             ) : (
               agentStatuses.map((agent) => {
                 const StatusIcon = getStatusIcon(agent.status);
                 return (
-                  <div key={agent.agentId} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div
+                    key={agent.agentId}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
                     <div className="flex items-center gap-3">
                       <StatusIcon className={`h-4 w-4 ${getStatusColor(agent.status)}`} />
                       <div>
@@ -159,15 +192,18 @@ function AgentStatusPanel() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <Badge variant={
-                        agent.status === 'healthy' ? 'default' : 
-                        agent.status === 'degraded' ? 'secondary' : 'destructive'
-                      }>
+                      <Badge
+                        variant={
+                          agent.status === "healthy"
+                            ? "default"
+                            : agent.status === "degraded"
+                              ? "secondary"
+                              : "destructive"
+                        }
+                      >
                         {agent.status}
                       </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {agent.responseTime}ms
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">{agent.responseTime}ms</p>
                     </div>
                   </div>
                 );
@@ -185,22 +221,22 @@ function AgentStatusPanel() {
 // ======================
 
 function TradingDataPanel() {
-  const symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT'];
+  const symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT"];
   const { prices, getPrice, getTopMovers, lastUpdate } = useLiveTradingData({
     symbols,
     enableOrderBook: true,
     enableSignals: true,
   });
 
-  const gainers = getTopMovers('gainers', 5);
-  const losers = getTopMovers('losers', 5);
+  const gainers = getTopMovers("gainers", 5);
+  const losers = getTopMovers("losers", 5);
 
   const formatPrice = (price: number) => {
     return price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 });
   };
 
   const formatPercent = (percent: number) => {
-    const sign = percent >= 0 ? '+' : '';
+    const sign = percent >= 0 ? "+" : "";
     return `${sign}${percent?.toFixed(2)}%`;
   };
 
@@ -228,16 +264,19 @@ function TradingDataPanel() {
             <TabsTrigger value="gainers">Top Gainers</TabsTrigger>
             <TabsTrigger value="losers">Top Losers</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="watchlist">
             <ScrollArea className="h-48">
               <div className="space-y-2">
                 {symbols.map((symbol) => {
                   const price = getPrice(symbol);
                   if (!price) return null;
-                  
+
                   return (
-                    <div key={symbol} className="flex items-center justify-between p-2 rounded border">
+                    <div
+                      key={symbol}
+                      className="flex items-center justify-between p-2 rounded border"
+                    >
                       <div>
                         <p className="font-medium">{symbol}</p>
                         <p className="text-sm text-muted-foreground">
@@ -246,7 +285,9 @@ function TradingDataPanel() {
                       </div>
                       <div className="text-right">
                         <p className="font-mono">${formatPrice(price.price)}</p>
-                        <p className={`text-sm ${price.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <p
+                          className={`text-sm ${price.changePercent >= 0 ? "text-green-600" : "text-red-600"}`}
+                        >
                           {formatPercent(price.changePercent)}
                         </p>
                       </div>
@@ -256,40 +297,42 @@ function TradingDataPanel() {
               </div>
             </ScrollArea>
           </TabsContent>
-          
+
           <TabsContent value="gainers">
             <ScrollArea className="h-48">
               <div className="space-y-2">
                 {gainers.map((price) => (
-                  <div key={price.symbol} className="flex items-center justify-between p-2 rounded border">
+                  <div
+                    key={price.symbol}
+                    className="flex items-center justify-between p-2 rounded border"
+                  >
                     <div>
                       <p className="font-medium">{price.symbol}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-mono">${formatPrice(price.price)}</p>
-                      <p className="text-sm text-green-600">
-                        {formatPercent(price.changePercent)}
-                      </p>
+                      <p className="text-sm text-green-600">{formatPercent(price.changePercent)}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </ScrollArea>
           </TabsContent>
-          
+
           <TabsContent value="losers">
             <ScrollArea className="h-48">
               <div className="space-y-2">
                 {losers.map((price) => (
-                  <div key={price.symbol} className="flex items-center justify-between p-2 rounded border">
+                  <div
+                    key={price.symbol}
+                    className="flex items-center justify-between p-2 rounded border"
+                  >
                     <div>
                       <p className="font-medium">{price.symbol}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-mono">${formatPrice(price.price)}</p>
-                      <p className="text-sm text-red-600">
-                        {formatPercent(price.changePercent)}
-                      </p>
+                      <p className="text-sm text-red-600">{formatPercent(price.changePercent)}</p>
                     </div>
                   </div>
                 ))}
@@ -313,7 +356,7 @@ function PatternDiscoveryPanel() {
     enableAnalytics: true,
   });
 
-  const readySymbols = Array.from(readyStates.values()).filter(rs => rs.isReady);
+  const readySymbols = Array.from(readyStates.values()).filter((rs) => rs.isReady);
 
   return (
     <Card>
@@ -323,9 +366,7 @@ function PatternDiscoveryPanel() {
           Pattern Discovery
           <Badge variant="outline">{patterns.length} patterns</Badge>
         </CardTitle>
-        <CardDescription>
-          Real-time AI pattern detection and ready state monitoring
-        </CardDescription>
+        <CardDescription>Real-time AI pattern detection and ready state monitoring</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -338,15 +379,11 @@ function PatternDiscoveryPanel() {
             <p className="text-xs text-muted-foreground">Total Patterns</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold">
-              {Math.round(metrics.averageConfidence * 100)}%
-            </p>
+            <p className="text-2xl font-bold">{Math.round(metrics.averageConfidence * 100)}%</p>
             <p className="text-xs text-muted-foreground">Avg Confidence</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold">
-              {Math.round(metrics.successRate * 100)}%
-            </p>
+            <p className="text-2xl font-bold">{Math.round(metrics.successRate * 100)}%</p>
             <p className="text-xs text-muted-foreground">Success Rate</p>
           </div>
         </div>
@@ -357,7 +394,7 @@ function PatternDiscoveryPanel() {
             <TabsTrigger value="ready">Ready States</TabsTrigger>
             <TabsTrigger value="patterns">Recent Patterns</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="alerts">
             <ScrollArea className="h-48">
               <div className="space-y-2">
@@ -365,22 +402,26 @@ function PatternDiscoveryPanel() {
                   <p className="text-muted-foreground text-center py-4">No active alerts</p>
                 ) : (
                   alerts.map((alert) => (
-                    <Alert key={alert.id} className={
-                      alert.priority === 'critical' ? 'border-red-500' :
-                      alert.priority === 'high' ? 'border-orange-500' : ''
-                    }>
+                    <Alert
+                      key={alert.id}
+                      className={
+                        alert.priority === "critical"
+                          ? "border-red-500"
+                          : alert.priority === "high"
+                            ? "border-orange-500"
+                            : ""
+                      }
+                    >
                       <AlertTriangle className="h-4 w-4" />
                       <AlertTitle className="flex items-center justify-between">
                         {alert.symbol}
                         <div className="flex items-center gap-2">
-                          <Badge variant={alert.priority === 'critical' ? 'destructive' : 'secondary'}>
+                          <Badge
+                            variant={alert.priority === "critical" ? "destructive" : "secondary"}
+                          >
                             {alert.priority}
                           </Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => dismissAlert(alert.id)}
-                          >
+                          <Button size="sm" variant="ghost" onClick={() => dismissAlert(alert.id)}>
                             ×
                           </Button>
                         </div>
@@ -397,7 +438,7 @@ function PatternDiscoveryPanel() {
               </div>
             </ScrollArea>
           </TabsContent>
-          
+
           <TabsContent value="ready">
             <ScrollArea className="h-48">
               <div className="space-y-2">
@@ -405,17 +446,20 @@ function PatternDiscoveryPanel() {
                   <p className="text-muted-foreground text-center py-4">No symbols ready</p>
                 ) : (
                   readySymbols.map((rs) => (
-                    <div key={rs.symbol} className="flex items-center justify-between p-2 rounded border border-green-200">
+                    <div
+                      key={rs.symbol}
+                      className="flex items-center justify-between p-2 rounded border border-green-200"
+                    >
                       <div>
                         <p className="font-medium">{rs.symbol}</p>
                         <p className="text-xs text-green-600">Ready for Trading</p>
                       </div>
                       <div className="text-right">
-                        <Badge variant="default">
-                          {Math.round(rs.confidence * 100)}%
-                        </Badge>
+                        <Badge variant="default">{Math.round(rs.confidence * 100)}%</Badge>
                         <p className="text-xs text-muted-foreground">
-                          {rs.advanceNotice > 0 ? `${Math.round(rs.advanceNotice / 1000 / 60)}m advance` : 'Live'}
+                          {rs.advanceNotice > 0
+                            ? `${Math.round(rs.advanceNotice / 1000 / 60)}m advance`
+                            : "Live"}
                         </p>
                       </div>
                     </div>
@@ -424,12 +468,15 @@ function PatternDiscoveryPanel() {
               </div>
             </ScrollArea>
           </TabsContent>
-          
+
           <TabsContent value="patterns">
             <ScrollArea className="h-48">
               <div className="space-y-2">
                 {patterns.slice(0, 10).map((pattern) => (
-                  <div key={pattern.patternId} className="flex items-center justify-between p-2 rounded border">
+                  <div
+                    key={pattern.patternId}
+                    className="flex items-center justify-between p-2 rounded border"
+                  >
                     <div>
                       <p className="font-medium">{pattern.symbol}</p>
                       <p className="text-xs text-muted-foreground">
@@ -461,8 +508,8 @@ function PatternDiscoveryPanel() {
 
 function WorkflowPanel() {
   const { workflows, lastUpdate } = useWorkflows();
-  const activeWorkflows = Array.from(workflows.values()).filter(w => 
-    w.status === 'running' || w.status === 'started'
+  const activeWorkflows = Array.from(workflows.values()).filter(
+    (w) => w.status === "running" || w.status === "started"
   );
 
   return (
@@ -473,34 +520,30 @@ function WorkflowPanel() {
           Active Workflows
           <Badge variant="outline">{activeWorkflows.length} running</Badge>
         </CardTitle>
-        <CardDescription>
-          Real-time AI workflow execution status
-        </CardDescription>
+        <CardDescription>Real-time AI workflow execution status</CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-48">
           <div className="space-y-3">
             {activeWorkflows.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                No active workflows
-              </p>
+              <p className="text-muted-foreground text-center py-4">No active workflows</p>
             ) : (
               activeWorkflows.map((workflow) => (
                 <div key={workflow.workflowId} className="p-3 rounded border">
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-medium">{workflow.workflowType}</p>
-                    <Badge variant={workflow.status === 'running' ? 'default' : 'secondary'}>
+                    <Badge variant={workflow.status === "running" ? "default" : "secondary"}>
                       {workflow.status}
                     </Badge>
                   </div>
                   <Progress value={workflow.progress} className="mb-2" />
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Current: {workflow.currentAgent || 'N/A'}</span>
+                    <span>Current: {workflow.currentAgent || "N/A"}</span>
                     <span>{workflow.progress}% complete</span>
                   </div>
                   {workflow.agentsInvolved.length > 0 && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Agents: {workflow.agentsInvolved.join(', ')}
+                      Agents: {workflow.agentsInvolved.join(", ")}
                     </p>
                   )}
                 </div>
@@ -537,11 +580,7 @@ export default function RealTimeDashboard() {
         </div>
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={markAsRead}
-            >
+            <Button variant="outline" size="sm" onClick={markAsRead}>
               {unreadCount} notifications
             </Button>
           )}
@@ -561,13 +600,13 @@ export default function RealTimeDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Agent Status */}
         <AgentStatusPanel />
-        
+
         {/* Trading Data */}
         <TradingDataPanel />
-        
+
         {/* Pattern Discovery */}
         <PatternDiscoveryPanel />
-        
+
         {/* Workflows */}
         <WorkflowPanel />
       </div>
@@ -590,10 +629,15 @@ export default function RealTimeDashboard() {
                   <div key={notification.notificationId} className="p-2 rounded border">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-sm">{notification.title}</p>
-                      <Badge variant={
-                        notification.type === 'error' ? 'destructive' :
-                        notification.type === 'warning' ? 'secondary' : 'default'
-                      }>
+                      <Badge
+                        variant={
+                          notification.type === "error"
+                            ? "destructive"
+                            : notification.type === "warning"
+                              ? "secondary"
+                              : "default"
+                        }
+                      >
                         {notification.type}
                       </Badge>
                     </div>

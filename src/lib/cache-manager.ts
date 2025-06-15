@@ -1,11 +1,11 @@
 /**
  * Multi-Level Cache Manager
- * 
+ *
  * Implements a comprehensive caching strategy with multiple levels:
  * - L1 Cache: In-memory LRU cache for hot data
  * - L2 Cache: Persistent cache for API responses and computed results
  * - L3 Cache: Database query result caching
- * 
+ *
  * Features:
  * - Smart TTL management based on data type
  * - Cache invalidation strategies (time-based, event-based, manual)
@@ -99,7 +99,7 @@ class LRUCache<T = any> {
   private maxSize: number;
   private metrics: CacheMetrics;
 
-  constructor(maxSize: number = 1000) {
+  constructor(maxSize = 1000) {
     this.maxSize = maxSize;
     this.metrics = {
       hits: 0,
@@ -131,7 +131,7 @@ class LRUCache<T = any> {
     // Update access information
     entry.accessCount++;
     entry.lastAccessed = Date.now();
-    
+
     // Move to end (most recently used)
     this.cache.delete(key);
     this.cache.set(key, entry);
@@ -141,9 +141,9 @@ class LRUCache<T = any> {
     return entry.value;
   }
 
-  set(key: string, value: T, ttl: number, metadata?: CacheEntry<T>['metadata']): void {
+  set(key: string, value: T, ttl: number, metadata?: CacheEntry<T>["metadata"]): void {
     const now = Date.now();
-    
+
     // Remove oldest entry if at capacity
     if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
       const firstKey = this.cache.keys().next().value;
@@ -222,10 +222,9 @@ class LRUCache<T = any> {
   private updateMetrics(accessTime: number): void {
     const total = this.metrics.hits + this.metrics.misses;
     this.metrics.hitRate = total > 0 ? (this.metrics.hits / total) * 100 : 0;
-    
+
     // Update average access time (simple moving average)
-    this.metrics.averageAccessTime = 
-      (this.metrics.averageAccessTime + accessTime) / 2;
+    this.metrics.averageAccessTime = (this.metrics.averageAccessTime + accessTime) / 2;
   }
 
   private updateTotalSize(): void {
@@ -243,7 +242,7 @@ export class CacheManager {
   private l1Cache: LRUCache;
   private l2Cache: Map<string, CacheEntry> = new Map();
   private l3Cache: Map<string, CacheEntry> = new Map();
-  
+
   private config: CacheConfig;
   private ttlConfig: TTLConfig;
   private cleanupInterval?: NodeJS.Timeout;
@@ -261,15 +260,15 @@ export class CacheManager {
     };
 
     this.ttlConfig = {
-      agent_response: 5 * 60 * 1000,      // 5 minutes
-      api_response: 2 * 60 * 1000,        // 2 minutes
-      pattern_detection: 10 * 60 * 1000,  // 10 minutes
-      query_result: 1 * 60 * 1000,        // 1 minute
-      session_data: 30 * 60 * 1000,       // 30 minutes
-      user_preferences: 60 * 60 * 1000,   // 1 hour
-      workflow_result: 15 * 60 * 1000,    // 15 minutes
-      performance_metrics: 30 * 1000,     // 30 seconds
-      health_status: 15 * 1000,           // 15 seconds
+      agent_response: 5 * 60 * 1000, // 5 minutes
+      api_response: 2 * 60 * 1000, // 2 minutes
+      pattern_detection: 10 * 60 * 1000, // 10 minutes
+      query_result: 1 * 60 * 1000, // 1 minute
+      session_data: 30 * 60 * 1000, // 30 minutes
+      user_preferences: 60 * 60 * 1000, // 1 hour
+      workflow_result: 15 * 60 * 1000, // 15 minutes
+      performance_metrics: 30 * 1000, // 30 seconds
+      health_status: 15 * 1000, // 15 seconds
     };
 
     this.l1Cache = new LRUCache(Math.floor(this.config.maxSize * 0.3)); // 30% of total for L1
@@ -307,9 +306,9 @@ export class CacheManager {
 
     try {
       // Try L1 cache first (fastest)
-      let value = this.l1Cache.get(key);
+      const value = this.l1Cache.get(key);
       if (value !== null) {
-        this.updateGlobalMetrics('hit', performance.now() - startTime);
+        this.updateGlobalMetrics("hit", performance.now() - startTime);
         return value as T;
       }
 
@@ -318,7 +317,7 @@ export class CacheManager {
       if (l2Entry && Date.now() <= l2Entry.expiresAt) {
         // Promote to L1 cache
         this.l1Cache.set(key, l2Entry.value, l2Entry.expiresAt - Date.now(), l2Entry.metadata);
-        this.updateGlobalMetrics('hit', performance.now() - startTime);
+        this.updateGlobalMetrics("hit", performance.now() - startTime);
         return l2Entry.value as T;
       }
 
@@ -329,16 +328,15 @@ export class CacheManager {
         const remainingTTL = l3Entry.expiresAt - Date.now();
         this.l1Cache.set(key, l3Entry.value, remainingTTL, l3Entry.metadata);
         this.l2Cache.set(key, l3Entry);
-        this.updateGlobalMetrics('hit', performance.now() - startTime);
+        this.updateGlobalMetrics("hit", performance.now() - startTime);
         return l3Entry.value as T;
       }
 
-      this.updateGlobalMetrics('miss', performance.now() - startTime);
+      this.updateGlobalMetrics("miss", performance.now() - startTime);
       return null;
-
     } catch (error) {
-      console.error('[CacheManager] Get error:', error);
-      this.updateGlobalMetrics('miss', performance.now() - startTime);
+      console.error("[CacheManager] Get error:", error);
+      this.updateGlobalMetrics("miss", performance.now() - startTime);
       return null;
     }
   }
@@ -347,22 +345,22 @@ export class CacheManager {
    * Set value in appropriate cache level based on data type
    */
   async set<T = any>(
-    key: string, 
-    value: T, 
+    key: string,
+    value: T,
     options: {
       type?: CacheDataType;
       ttl?: number;
-      level?: 'L1' | 'L2' | 'L3' | 'all';
-      metadata?: CacheEntry<T>['metadata'];
+      level?: "L1" | "L2" | "L3" | "all";
+      metadata?: CacheEntry<T>["metadata"];
     } = {}
   ): Promise<void> {
-    const { type = 'api_response', level = 'all' } = options;
+    const { type = "api_response", level = "all" } = options;
     const ttl = options.ttl || this.ttlConfig[type] || this.config.defaultTTL;
     const now = Date.now();
 
     const metadata = {
       type,
-      source: 'cache-manager',
+      source: "cache-manager",
       size: this.estimateSize(value),
       ...options.metadata,
     };
@@ -378,23 +376,22 @@ export class CacheManager {
     };
 
     try {
-      if (level === 'all' || level === 'L1') {
+      if (level === "all" || level === "L1") {
         this.l1Cache.set(key, value, ttl, metadata);
       }
 
-      if (level === 'all' || level === 'L2') {
+      if (level === "all" || level === "L2") {
         this.l2Cache.set(key, entry);
       }
 
-      if (level === 'all' || level === 'L3') {
+      if (level === "all" || level === "L3") {
         this.l3Cache.set(key, entry);
       }
 
       this.globalMetrics.sets++;
-      this.emit('set', key, value);
-
+      this.emit("set", key, value);
     } catch (error) {
-      console.error('[CacheManager] Set error:', error);
+      console.error("[CacheManager] Set error:", error);
     }
   }
 
@@ -411,11 +408,10 @@ export class CacheManager {
 
       if (deleted) {
         this.globalMetrics.deletes++;
-        this.emit('delete', key, null);
+        this.emit("delete", key, null);
       }
-
     } catch (error) {
-      console.error('[CacheManager] Delete error:', error);
+      console.error("[CacheManager] Delete error:", error);
     }
 
     return deleted;
@@ -425,30 +421,31 @@ export class CacheManager {
    * Check if key exists in any cache level
    */
   async has(key: string): Promise<boolean> {
-    return this.l1Cache.has(key) || 
-           (this.l2Cache.has(key) && Date.now() <= this.l2Cache.get(key)!.expiresAt) ||
-           (this.l3Cache.has(key) && Date.now() <= this.l3Cache.get(key)!.expiresAt);
+    return (
+      this.l1Cache.has(key) ||
+      (this.l2Cache.has(key) && Date.now() <= this.l2Cache.get(key)!.expiresAt) ||
+      (this.l3Cache.has(key) && Date.now() <= this.l3Cache.get(key)!.expiresAt)
+    );
   }
 
   /**
    * Clear all cache levels
    */
-  async clear(level?: 'L1' | 'L2' | 'L3'): Promise<void> {
+  async clear(level?: "L1" | "L2" | "L3"): Promise<void> {
     try {
-      if (!level || level === 'L1') {
+      if (!level || level === "L1") {
         this.l1Cache.clear();
       }
-      if (!level || level === 'L2') {
+      if (!level || level === "L2") {
         this.l2Cache.clear();
       }
-      if (!level || level === 'L3') {
+      if (!level || level === "L3") {
         this.l3Cache.clear();
       }
 
-      this.emit('clear', 'all', null);
-
+      this.emit("clear", "all", null);
     } catch (error) {
-      console.error('[CacheManager] Clear error:', error);
+      console.error("[CacheManager] Clear error:", error);
     }
   }
 
@@ -460,7 +457,7 @@ export class CacheManager {
    * Invalidate cache entries by pattern
    */
   async invalidatePattern(pattern: string | RegExp): Promise<number> {
-    const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
+    const regex = typeof pattern === "string" ? new RegExp(pattern) : pattern;
     let invalidated = 0;
 
     try {
@@ -486,10 +483,9 @@ export class CacheManager {
         }
       }
 
-      this.emit('invalidate', pattern.toString(), invalidated);
-
+      this.emit("invalidate", pattern.toString(), invalidated);
     } catch (error) {
-      console.error('[CacheManager] Invalidate pattern error:', error);
+      console.error("[CacheManager] Invalidate pattern error:", error);
     }
 
     return invalidated;
@@ -526,10 +522,9 @@ export class CacheManager {
         }
       }
 
-      this.emit('invalidateType', type, invalidated);
-
+      this.emit("invalidateType", type, invalidated);
     } catch (error) {
-      console.error('[CacheManager] Invalidate by type error:', error);
+      console.error("[CacheManager] Invalidate by type error:", error);
     }
 
     return invalidated;
@@ -542,7 +537,7 @@ export class CacheManager {
     let invalidated = 0;
 
     try {
-      const checkDependency = (entry: CacheEntry) => 
+      const checkDependency = (entry: CacheEntry) =>
         entry.metadata?.dependencies?.includes(dependency);
 
       // Check all cache levels
@@ -567,10 +562,9 @@ export class CacheManager {
         }
       }
 
-      this.emit('invalidateDependency', dependency, invalidated);
-
+      this.emit("invalidateDependency", dependency, invalidated);
     } catch (error) {
-      console.error('[CacheManager] Invalidate by dependency error:', error);
+      console.error("[CacheManager] Invalidate by dependency error:", error);
     }
 
     return invalidated;
@@ -586,7 +580,7 @@ export class CacheManager {
   getAnalytics(): CacheAnalytics {
     try {
       const l1Metrics = this.l1Cache.getMetrics();
-      
+
       // Combine metrics from all levels
       const performance: CacheMetrics = {
         hits: this.globalMetrics.hits,
@@ -616,14 +610,13 @@ export class CacheManager {
         typeBreakdown,
         recommendations,
       };
-
     } catch (error) {
-      console.error('[CacheManager] Analytics error:', error);
+      console.error("[CacheManager] Analytics error:", error);
       return {
         performance: this.globalMetrics,
         topKeys: [],
         typeBreakdown: {} as any,
-        recommendations: ['Analytics temporarily unavailable'],
+        recommendations: ["Analytics temporarily unavailable"],
       };
     }
   }
@@ -652,12 +645,12 @@ export class CacheManager {
    */
   getCacheKeys(): string[] {
     const keys = new Set<string>();
-    
+
     // Get keys from all cache levels
-    this.l1Cache.getKeys().forEach(key => keys.add(key));
-    Array.from(this.l2Cache.keys()).forEach(key => keys.add(key));
-    Array.from(this.l3Cache.keys()).forEach(key => keys.add(key));
-    
+    this.l1Cache.getKeys().forEach((key) => keys.add(key));
+    Array.from(this.l2Cache.keys()).forEach((key) => keys.add(key));
+    Array.from(this.l3Cache.keys()).forEach((key) => keys.add(key));
+
     return Array.from(keys);
   }
 
@@ -680,7 +673,9 @@ export class CacheManager {
     this.globalMetrics.lastCleanup = Date.now();
 
     if (results.total > 0) {
-      console.log(`[CacheManager] Cleaned up ${results.total} expired entries (L1: ${results.L1}, L2: ${results.L2}, L3: ${results.L3})`);
+      console.log(
+        `[CacheManager] Cleaned up ${results.total} expired entries (L1: ${results.L1}, L2: ${results.L2}, L3: ${results.L3})`
+      );
     }
 
     return results;
@@ -701,9 +696,10 @@ export class CacheManager {
 
       // Optimize L2 cache
       if (sizes.L2 > maxL2Size) {
-        const entries = Array.from(this.l2Cache.entries())
-          .sort(([, a], [, b]) => a.accessCount - b.accessCount);
-        
+        const entries = Array.from(this.l2Cache.entries()).sort(
+          ([, a], [, b]) => a.accessCount - b.accessCount
+        );
+
         const toRemove = sizes.L2 - maxL2Size;
         for (let i = 0; i < toRemove && i < entries.length; i++) {
           this.l2Cache.delete(entries[i][0]);
@@ -713,9 +709,10 @@ export class CacheManager {
 
       // Optimize L3 cache
       if (sizes.L3 > maxL3Size) {
-        const entries = Array.from(this.l3Cache.entries())
-          .sort(([, a], [, b]) => a.accessCount - b.accessCount);
-        
+        const entries = Array.from(this.l3Cache.entries()).sort(
+          ([, a], [, b]) => a.accessCount - b.accessCount
+        );
+
         const toRemove = sizes.L3 - maxL3Size;
         for (let i = 0; i < toRemove && i < entries.length; i++) {
           this.l3Cache.delete(entries[i][0]);
@@ -739,9 +736,8 @@ export class CacheManager {
       if (evicted > 0 || promoted > 0) {
         console.log(`[CacheManager] Optimized cache: evicted ${evicted}, promoted ${promoted}`);
       }
-
     } catch (error) {
-      console.error('[CacheManager] Optimization error:', error);
+      console.error("[CacheManager] Optimization error:", error);
     }
 
     return { evicted, promoted };
@@ -760,10 +756,9 @@ export class CacheManager {
       this.clear();
       this.eventListeners.clear();
 
-      console.log('[CacheManager] Destroyed cache manager');
-
+      console.log("[CacheManager] Destroyed cache manager");
     } catch (error) {
-      console.error('[CacheManager] Destroy error:', error);
+      console.error("[CacheManager] Destroy error:", error);
     }
   }
 
@@ -785,8 +780,8 @@ export class CacheManager {
     return cleaned;
   }
 
-  private updateGlobalMetrics(type: 'hit' | 'miss', accessTime: number): void {
-    if (type === 'hit') {
+  private updateGlobalMetrics(type: "hit" | "miss", accessTime: number): void {
+    if (type === "hit") {
       this.globalMetrics.hits++;
     } else {
       this.globalMetrics.misses++;
@@ -807,24 +802,26 @@ export class CacheManager {
 
   private estimateMemoryUsage(): number {
     let total = 0;
-    
+
     // L1 cache memory usage
     total += this.l1Cache.getMetrics().memoryUsage;
-    
+
     // L2 cache memory usage
     for (const entry of this.l2Cache.values()) {
       total += entry.metadata?.size || 1024;
     }
-    
+
     // L3 cache memory usage
     for (const entry of this.l3Cache.values()) {
       total += entry.metadata?.size || 1024;
     }
-    
+
     return total;
   }
 
-  private getTopAccessedKeys(limit: number): Array<{ key: string; hits: number; lastAccessed: number }> {
+  private getTopAccessedKeys(
+    limit: number
+  ): Array<{ key: string; hits: number; lastAccessed: number }> {
     const allEntries: Array<{ key: string; hits: number; lastAccessed: number }> = [];
 
     // Collect from L1
@@ -854,16 +851,18 @@ export class CacheManager {
       });
     }
 
-    return allEntries
-      .sort((a, b) => b.hits - a.hits)
-      .slice(0, limit);
+    return allEntries.sort((a, b) => b.hits - a.hits).slice(0, limit);
   }
 
-  private getTypeBreakdown(): Record<CacheDataType, { count: number; size: number; hitRate: number }> {
-    const breakdown: Record<string, { count: number; size: number; hits: number; total: number }> = {};
+  private getTypeBreakdown(): Record<
+    CacheDataType,
+    { count: number; size: number; hitRate: number }
+  > {
+    const breakdown: Record<string, { count: number; size: number; hits: number; total: number }> =
+      {};
 
     const processEntry = (entry: CacheEntry) => {
-      const type = entry.metadata?.type || 'api_response';
+      const type = entry.metadata?.type || "api_response";
       if (!breakdown[type]) {
         breakdown[type] = { count: 0, size: 0, hits: 0, total: 0 };
       }
@@ -885,7 +884,8 @@ export class CacheManager {
     }
 
     // Convert to final format
-    const result: Record<CacheDataType, { count: number; size: number; hitRate: number }> = {} as any;
+    const result: Record<CacheDataType, { count: number; size: number; hitRate: number }> =
+      {} as any;
     for (const [type, data] of Object.entries(breakdown)) {
       result[type as CacheDataType] = {
         count: data.count,
@@ -897,7 +897,10 @@ export class CacheManager {
     return result;
   }
 
-  private generateRecommendations(performance: CacheMetrics, typeBreakdown: Record<CacheDataType, any>): string[] {
+  private generateRecommendations(
+    performance: CacheMetrics,
+    typeBreakdown: Record<CacheDataType, any>
+  ): string[] {
     const recommendations: string[] = [];
 
     // Hit rate recommendations
@@ -908,14 +911,17 @@ export class CacheManager {
     }
 
     // Memory usage recommendations
-    if (performance.memoryUsage > 100 * 1024 * 1024) { // 100MB
+    if (performance.memoryUsage > 100 * 1024 * 1024) {
+      // 100MB
       recommendations.push("High memory usage - consider reducing cache size or TTL values");
     }
 
     // Type-specific recommendations
     for (const [type, data] of Object.entries(typeBreakdown)) {
       if (data.hitRate < 50) {
-        recommendations.push(`Poor hit rate for ${type} (${data.hitRate.toFixed(1)}%) - review caching strategy`);
+        recommendations.push(
+          `Poor hit rate for ${type} (${data.hitRate.toFixed(1)}%) - review caching strategy`
+        );
       }
     }
 
@@ -985,11 +991,13 @@ export const globalCacheManager = new CacheManager({
  * Generate cache key from multiple components
  */
 export function generateCacheKey(...components: (string | number | object)[]): string {
-  const keyData = components.map(component => 
-    typeof component === 'object' ? JSON.stringify(component) : String(component)
-  ).join(':');
-  
-  return crypto.createHash('sha256').update(keyData).digest('hex').substring(0, 32);
+  const keyData = components
+    .map((component) =>
+      typeof component === "object" ? JSON.stringify(component) : String(component)
+    )
+    .join(":");
+
+  return crypto.createHash("sha256").update(keyData).digest("hex").substring(0, 32);
 }
 
 /**
@@ -1003,11 +1011,11 @@ export function withCache<T extends (...args: any[]) => any>(
     type?: CacheDataType;
   } = {}
 ): T {
-  const { keyGenerator, ttl, type = 'api_response' } = options;
+  const { keyGenerator, ttl, type = "api_response" } = options;
 
   return (async (...args: Parameters<T>) => {
     const cacheKey = keyGenerator ? keyGenerator(...args) : generateCacheKey(fn.name, ...args);
-    
+
     // Try to get from cache first
     const cached = await globalCacheManager.get(cacheKey);
     if (cached !== null) {
@@ -1017,7 +1025,7 @@ export function withCache<T extends (...args: any[]) => any>(
     // Execute function and cache result
     const result = await fn(...args);
     await globalCacheManager.set(cacheKey, result, { type, ttl });
-    
+
     return result;
   }) as T;
 }
@@ -1025,17 +1033,19 @@ export function withCache<T extends (...args: any[]) => any>(
 /**
  * Warm up cache with predefined data
  */
-export async function warmUpCache(data: Array<{
-  key: string;
-  value: any;
-  type?: CacheDataType;
-  ttl?: number;
-}>): Promise<void> {
+export async function warmUpCache(
+  data: Array<{
+    key: string;
+    value: any;
+    type?: CacheDataType;
+    ttl?: number;
+  }>
+): Promise<void> {
   console.log(`[CacheManager] Warming up cache with ${data.length} entries...`);
-  
+
   for (const { key, value, type, ttl } of data) {
     await globalCacheManager.set(key, value, { type, ttl });
   }
-  
+
   console.log(`[CacheManager] Cache warm-up completed`);
 }

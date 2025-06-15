@@ -1,9 +1,9 @@
 /**
  * WebSocket Server Service
- * 
+ *
  * Server-side WebSocket management for real-time communication in the AI trading system.
  * Supports agent status broadcasting, trading data streaming, and user notifications.
- * 
+ *
  * Features:
  * - Connection management with authentication
  * - Channel-based message routing
@@ -13,27 +13,23 @@
  * - Integration with 11-agent system
  */
 
-import { IncomingMessage } from 'http';
-import { WebSocket, WebSocketServer } from 'ws';
-import { EventEmitter } from 'events';
-import crypto from 'crypto';
-import {
-  type WebSocketConnection,
-  type WebSocketMessage,
-  type WebSocketChannel,
-  type WebSocketServerConfig,
-  type ConnectionMetrics,
-  type ServerMetrics,
-  type WebSocketError,
-  type MessageHandler,
-  type AgentStatusMessage,
-  type TradingPriceMessage,
-  type PatternDiscoveryMessage,
-  type NotificationMessage,
-  type WebSocketEventMap
-} from '@/src/lib/websocket-types';
-import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
-import { requireApiAuth } from '@/src/lib/api-auth';
+import crypto from "crypto";
+import { EventEmitter } from "events";
+import type { IncomingMessage } from "http";
+import type {
+  AgentStatusMessage,
+  ConnectionMetrics,
+  MessageHandler,
+  NotificationMessage,
+  PatternDiscoveryMessage,
+  ServerMetrics,
+  TradingPriceMessage,
+  WebSocketChannel,
+  WebSocketConnection,
+  WebSocketMessage,
+  WebSocketServerConfig,
+} from "@/src/lib/websocket-types";
+import { WebSocket, WebSocketServer } from "ws";
 
 // ======================
 // Connection Management
@@ -46,10 +42,10 @@ class ConnectionManager {
   private connectionMetrics = new Map<string, ConnectionMetrics>();
 
   addConnection(
-    connectionId: string, 
-    ws: WebSocket, 
+    connectionId: string,
+    ws: WebSocket,
     userId?: string,
-    clientType: WebSocketConnection['clientType'] = 'dashboard'
+    clientType: WebSocketConnection["clientType"] = "dashboard"
   ): void {
     const connection: WebSocketConnection & { ws: WebSocket } = {
       id: connectionId,
@@ -60,10 +56,10 @@ class ConnectionManager {
       isAuthenticated: !!userId,
       ws,
       metadata: {
-        userAgent: '',
-        clientIP: '',
+        userAgent: "",
+        clientIP: "",
         connectedAt: Date.now(),
-      }
+      },
     };
 
     this.connections.set(connectionId, connection);
@@ -86,7 +82,7 @@ class ConnectionManager {
       subscriptions: [],
     });
 
-    console.log(`[WebSocket] Connection added: ${connectionId} (user: ${userId || 'anonymous'})`);
+    console.log(`[WebSocket] Connection added: ${connectionId} (user: ${userId || "anonymous"})`);
   }
 
   removeConnection(connectionId: string): void {
@@ -128,14 +124,14 @@ class ConnectionManager {
   getUserConnections(userId: string): (WebSocketConnection & { ws: WebSocket })[] {
     const connectionIds = this.userConnections.get(userId) || new Set();
     return Array.from(connectionIds)
-      .map(id => this.connections.get(id))
+      .map((id) => this.connections.get(id))
       .filter(Boolean) as (WebSocketConnection & { ws: WebSocket })[];
   }
 
   getChannelSubscribers(channel: string): (WebSocketConnection & { ws: WebSocket })[] {
     const connectionIds = this.channelSubscriptions.get(channel) || new Set();
     return Array.from(connectionIds)
-      .map(id => this.connections.get(id))
+      .map((id) => this.connections.get(id))
       .filter(Boolean) as (WebSocketConnection & { ws: WebSocket })[];
   }
 
@@ -144,7 +140,7 @@ class ConnectionManager {
     if (!connection) return false;
 
     connection.subscriptions.add(channel);
-    
+
     if (!this.channelSubscriptions.has(channel)) {
       this.channelSubscriptions.set(channel, new Set());
     }
@@ -165,7 +161,7 @@ class ConnectionManager {
     if (!connection) return false;
 
     connection.subscriptions.delete(channel);
-    
+
     const subscribers = this.channelSubscriptions.get(channel);
     if (subscribers) {
       subscribers.delete(connectionId);
@@ -187,20 +183,20 @@ class ConnectionManager {
   updateActivity(connectionId: string): void {
     const connection = this.connections.get(connectionId);
     const metrics = this.connectionMetrics.get(connectionId);
-    
+
     if (connection) {
       connection.lastActivity = Date.now();
     }
-    
+
     if (metrics) {
       metrics.lastActivity = Date.now();
     }
   }
 
-  incrementMessageCount(connectionId: string, type: 'sent' | 'received'): void {
+  incrementMessageCount(connectionId: string, type: "sent" | "received"): void {
     const metrics = this.connectionMetrics.get(connectionId);
     if (metrics) {
-      if (type === 'sent') {
+      if (type === "sent") {
         metrics.messagesSent++;
       } else {
         metrics.messagesReceived++;
@@ -220,7 +216,7 @@ class ConnectionManager {
     connectionMetrics: ConnectionMetrics[];
   } {
     const connections = Array.from(this.connections.values());
-    const authenticatedCount = connections.filter(c => c.isAuthenticated).length;
+    const authenticatedCount = connections.filter((c) => c.isAuthenticated).length;
     const totalSubscriptions = connections.reduce((sum, c) => sum + c.subscriptions.size, 0);
 
     return {
@@ -240,58 +236,61 @@ class ConnectionManager {
 class RateLimiter {
   private connectionLimits = new Map<string, { count: number; resetTime: number }>();
   private ipLimits = new Map<string, { connections: Set<string>; resetTime: number }>();
-  
+
   constructor(
-    private maxConnectionsPerIP: number = 10,
-    private maxMessagesPerMinute: number = 100,
-    private windowMs: number = 60000
+    private maxConnectionsPerIP = 10,
+    private maxMessagesPerMinute = 100,
+    private windowMs = 60000
   ) {}
 
   checkConnectionLimit(ip: string, connectionId: string): boolean {
     const now = Date.now();
-    
+
     // Clean up expired entries
     this.cleanupExpired(now);
-    
+
     const ipLimit = this.ipLimits.get(ip);
     if (!ipLimit) {
       this.ipLimits.set(ip, {
         connections: new Set([connectionId]),
-        resetTime: now + this.windowMs
+        resetTime: now + this.windowMs,
       });
       return true;
     }
-    
-    if (ipLimit.connections.size >= this.maxConnectionsPerIP && !ipLimit.connections.has(connectionId)) {
+
+    if (
+      ipLimit.connections.size >= this.maxConnectionsPerIP &&
+      !ipLimit.connections.has(connectionId)
+    ) {
       return false;
     }
-    
+
     ipLimit.connections.add(connectionId);
     return true;
   }
 
   checkMessageLimit(connectionId: string): boolean {
     const now = Date.now();
-    
+
     const limit = this.connectionLimits.get(connectionId);
     if (!limit) {
       this.connectionLimits.set(connectionId, {
         count: 1,
-        resetTime: now + this.windowMs
+        resetTime: now + this.windowMs,
       });
       return true;
     }
-    
+
     if (now > limit.resetTime) {
       limit.count = 1;
       limit.resetTime = now + this.windowMs;
       return true;
     }
-    
+
     if (limit.count >= this.maxMessagesPerMinute) {
       return false;
     }
-    
+
     limit.count++;
     return true;
   }
@@ -304,7 +303,7 @@ class RateLimiter {
         this.ipLimits.delete(ip);
       }
     }
-    
+
     this.connectionLimits.delete(connectionId);
   }
 
@@ -314,7 +313,7 @@ class RateLimiter {
         this.connectionLimits.delete(key);
       }
     }
-    
+
     for (const [ip, limit] of this.ipLimits.entries()) {
       if (now > limit.resetTime) {
         this.ipLimits.delete(ip);
@@ -388,11 +387,11 @@ export class WebSocketServerService extends EventEmitter {
 
   constructor(config: Partial<WebSocketServerConfig> = {}) {
     super();
-    
+
     this.config = {
       port: 8080,
-      host: 'localhost',
-      path: '/ws',
+      host: "localhost",
+      path: "/ws",
       authentication: {
         required: true,
         tokenValidation: this.defaultTokenValidation.bind(this),
@@ -411,7 +410,7 @@ export class WebSocketServerService extends EventEmitter {
       },
       monitoring: {
         metricsEnabled: true,
-        loggingLevel: 'info',
+        loggingLevel: "info",
         healthCheckInterval: 10000,
       },
       ...config,
@@ -434,7 +433,7 @@ export class WebSocketServerService extends EventEmitter {
 
   async start(): Promise<void> {
     if (this.isRunning) {
-      console.warn('[WebSocket] Server is already running');
+      console.warn("[WebSocket] Server is already running");
       return;
     }
 
@@ -446,21 +445,22 @@ export class WebSocketServerService extends EventEmitter {
         maxPayload: this.config.performance.maxPayloadSize,
       });
 
-      this.wss.on('connection', this.handleConnection.bind(this));
-      this.wss.on('error', (error) => {
-        console.error('[WebSocket] Server error:', error);
-        this.emit('error', error);
+      this.wss.on("connection", this.handleConnection.bind(this));
+      this.wss.on("error", (error) => {
+        console.error("[WebSocket] Server error:", error);
+        this.emit("error", error);
       });
 
       this.startHeartbeat();
       this.startMetricsCollection();
-      
-      this.isRunning = true;
-      console.log(`[WebSocket] Server started on ${this.config.host}:${this.config.port}${this.config.path}`);
-      this.emit('server:started');
 
+      this.isRunning = true;
+      console.log(
+        `[WebSocket] Server started on ${this.config.host}:${this.config.port}${this.config.path}`
+      );
+      this.emit("server:started");
     } catch (error) {
-      console.error('[WebSocket] Failed to start server:', error);
+      console.error("[WebSocket] Failed to start server:", error);
       throw error;
     }
   }
@@ -468,7 +468,7 @@ export class WebSocketServerService extends EventEmitter {
   async stop(): Promise<void> {
     if (!this.isRunning) return;
 
-    console.log('[WebSocket] Stopping server...');
+    console.log("[WebSocket] Stopping server...");
 
     // Stop intervals
     if (this.heartbeatInterval) {
@@ -481,7 +481,7 @@ export class WebSocketServerService extends EventEmitter {
     // Close all connections gracefully
     const connections = this.connectionManager.getAllConnections();
     for (const connection of connections) {
-      connection.ws.close(1001, 'Server shutting down');
+      connection.ws.close(1001, "Server shutting down");
     }
 
     // Close WebSocket server
@@ -491,15 +491,15 @@ export class WebSocketServerService extends EventEmitter {
     }
 
     this.isRunning = false;
-    console.log('[WebSocket] Server stopped');
-    this.emit('server:stopped');
+    console.log("[WebSocket] Server stopped");
+    this.emit("server:stopped");
   }
 
   // ======================
   // Message Broadcasting
   // ======================
 
-  broadcast<T>(message: Omit<WebSocketMessage<T>, 'messageId' | 'timestamp'>): void {
+  broadcast<T>(message: Omit<WebSocketMessage<T>, "messageId" | "timestamp">): void {
     const fullMessage: WebSocketMessage<T> = {
       ...message,
       messageId: crypto.randomUUID(),
@@ -511,7 +511,7 @@ export class WebSocketServerService extends EventEmitter {
 
   broadcastToChannel<T>(channel: WebSocketChannel, message: WebSocketMessage<T>): void {
     const subscribers = this.connectionManager.getChannelSubscribers(channel);
-    
+
     for (const connection of subscribers) {
       this.sendMessage(connection.id, message);
     }
@@ -521,7 +521,7 @@ export class WebSocketServerService extends EventEmitter {
 
   broadcastToUser<T>(userId: string, message: WebSocketMessage<T>): void {
     const connections = this.connectionManager.getUserConnections(userId);
-    
+
     for (const connection of connections) {
       this.sendMessage(connection.id, message);
     }
@@ -538,10 +538,10 @@ export class WebSocketServerService extends EventEmitter {
     try {
       const serialized = JSON.stringify(message);
       connection.ws.send(serialized);
-      
+
       this.connectionManager.updateActivity(connectionId);
-      this.connectionManager.incrementMessageCount(connectionId, 'sent');
-      
+      this.connectionManager.incrementMessageCount(connectionId, "sent");
+
       return true;
     } catch (error) {
       console.error(`[WebSocket] Failed to send message to ${connectionId}:`, error);
@@ -555,14 +555,14 @@ export class WebSocketServerService extends EventEmitter {
 
   broadcastAgentStatus(agentStatus: AgentStatusMessage): void {
     this.broadcast({
-      type: 'agent:status',
-      channel: 'agents:status',
+      type: "agent:status",
+      channel: "agents:status",
       data: agentStatus,
     });
 
     // Also broadcast to specific agent channel
     this.broadcast({
-      type: 'agent:status', 
+      type: "agent:status",
       channel: `agent:${agentStatus.agentId}:status`,
       data: agentStatus,
     });
@@ -570,14 +570,14 @@ export class WebSocketServerService extends EventEmitter {
 
   broadcastTradingPrice(priceData: TradingPriceMessage): void {
     this.broadcast({
-      type: 'trading:price',
-      channel: 'trading:prices',
+      type: "trading:price",
+      channel: "trading:prices",
       data: priceData,
     });
 
     // Also broadcast to symbol-specific channel
     this.broadcast({
-      type: 'trading:price',
+      type: "trading:price",
       channel: `trading:${priceData.symbol}:price`,
       data: priceData,
     });
@@ -585,14 +585,14 @@ export class WebSocketServerService extends EventEmitter {
 
   broadcastPatternDiscovery(pattern: PatternDiscoveryMessage): void {
     this.broadcast({
-      type: 'pattern:discovery',
-      channel: 'patterns:discovery',
+      type: "pattern:discovery",
+      channel: "patterns:discovery",
       data: pattern,
     });
 
     // Also broadcast to symbol-specific channel
     this.broadcast({
-      type: 'pattern:discovery',
+      type: "pattern:discovery",
       channel: `patterns:${pattern.symbol}:discovery`,
       data: pattern,
     });
@@ -602,7 +602,7 @@ export class WebSocketServerService extends EventEmitter {
     if (notification.userId) {
       // Send to specific user
       this.broadcastToUser(notification.userId, {
-        type: 'notification:info',
+        type: "notification:info",
         channel: `user:${notification.userId}:notifications`,
         data: notification,
         messageId: crypto.randomUUID(),
@@ -611,8 +611,8 @@ export class WebSocketServerService extends EventEmitter {
     } else {
       // Global notification
       this.broadcast({
-        type: 'notification:info',
-        channel: 'notifications:global',
+        type: "notification:info",
+        channel: "notifications:global",
         data: notification,
       });
     }
@@ -625,11 +625,14 @@ export class WebSocketServerService extends EventEmitter {
   private async handleConnection(ws: WebSocket, request: IncomingMessage): Promise<void> {
     const connectionId = crypto.randomUUID();
     const clientIP = this.getClientIP(request);
-    
+
     try {
       // Rate limiting check
-      if (this.config.rateLimiting.enabled && !this.rateLimiter.checkConnectionLimit(clientIP, connectionId)) {
-        ws.close(1008, 'Too many connections from this IP');
+      if (
+        this.config.rateLimiting.enabled &&
+        !this.rateLimiter.checkConnectionLimit(clientIP, connectionId)
+      ) {
+        ws.close(1008, "Too many connections from this IP");
         return;
       }
 
@@ -638,7 +641,7 @@ export class WebSocketServerService extends EventEmitter {
       if (this.config.authentication.required) {
         const authResult = await this.authenticateConnection(request);
         if (!authResult.valid) {
-          ws.close(1008, 'Authentication failed');
+          ws.close(1008, "Authentication failed");
           return;
         }
         userId = authResult.userId;
@@ -648,46 +651,48 @@ export class WebSocketServerService extends EventEmitter {
       this.connectionManager.addConnection(connectionId, ws, userId);
 
       // Setup message handling
-      ws.on('message', async (data) => {
+      ws.on("message", async (data) => {
         await this.handleMessage(connectionId, data);
       });
 
-      ws.on('close', (code, reason) => {
+      ws.on("close", (code, reason) => {
         this.handleDisconnection(connectionId, clientIP, code, reason);
       });
 
-      ws.on('error', (error) => {
+      ws.on("error", (error) => {
         console.error(`[WebSocket] Connection error for ${connectionId}:`, error);
         this.handleDisconnection(connectionId, clientIP, 1006, Buffer.from(error.message));
       });
 
       // Send welcome message
       this.sendMessage(connectionId, {
-        type: 'system:connect',
-        channel: 'system',
-        data: { 
-          connectionId, 
+        type: "system:connect",
+        channel: "system",
+        data: {
+          connectionId,
           serverTime: Date.now(),
-          features: ['agents', 'trading', 'patterns', 'notifications'],
+          features: ["agents", "trading", "patterns", "notifications"],
         },
         messageId: crypto.randomUUID(),
         timestamp: Date.now(),
       });
 
-      console.log(`[WebSocket] New connection: ${connectionId} (user: ${userId || 'anonymous'})`);
-      this.emit('connection:open', { connectionId, userId });
-
+      console.log(`[WebSocket] New connection: ${connectionId} (user: ${userId || "anonymous"})`);
+      this.emit("connection:open", { connectionId, userId });
     } catch (error) {
       console.error(`[WebSocket] Failed to handle connection:`, error);
-      ws.close(1011, 'Internal server error');
+      ws.close(1011, "Internal server error");
     }
   }
 
-  private async handleMessage(connectionId: string, data: Buffer | ArrayBuffer | Buffer[]): Promise<void> {
+  private async handleMessage(
+    connectionId: string,
+    data: Buffer | ArrayBuffer | Buffer[]
+  ): Promise<void> {
     try {
       // Rate limiting check
       if (this.config.rateLimiting.enabled && !this.rateLimiter.checkMessageLimit(connectionId)) {
-        this.sendError(connectionId, 'RATE_LIMITED', 'Too many messages');
+        this.sendError(connectionId, "RATE_LIMITED", "Too many messages");
         return;
       }
 
@@ -696,20 +701,20 @@ export class WebSocketServerService extends EventEmitter {
 
       // Validate message structure
       if (!this.isValidMessage(message)) {
-        this.sendError(connectionId, 'INVALID_MESSAGE', 'Invalid message format');
+        this.sendError(connectionId, "INVALID_MESSAGE", "Invalid message format");
         return;
       }
 
       this.connectionManager.updateActivity(connectionId);
-      this.connectionManager.incrementMessageCount(connectionId, 'received');
+      this.connectionManager.incrementMessageCount(connectionId, "received");
 
       // Handle subscription management
-      if (message.type === 'subscription:subscribe') {
+      if (message.type === "subscription:subscribe") {
         this.handleSubscription(connectionId, message);
         return;
       }
 
-      if (message.type === 'subscription:unsubscribe') {
+      if (message.type === "subscription:unsubscribe") {
         this.handleUnsubscription(connectionId, message);
         return;
       }
@@ -717,33 +722,39 @@ export class WebSocketServerService extends EventEmitter {
       // Route message to handlers
       await this.messageRouter.routeMessage(message, connectionId);
 
-      this.emit('message:received', { message, connectionId });
-
+      this.emit("message:received", { message, connectionId });
     } catch (error) {
       console.error(`[WebSocket] Error handling message from ${connectionId}:`, error);
-      this.sendError(connectionId, 'SERVER_ERROR', 'Failed to process message');
+      this.sendError(connectionId, "SERVER_ERROR", "Failed to process message");
     }
   }
 
-  private handleDisconnection(connectionId: string, clientIP: string, code: number, reason: Buffer): void {
+  private handleDisconnection(
+    connectionId: string,
+    clientIP: string,
+    code: number,
+    reason: Buffer
+  ): void {
     this.connectionManager.removeConnection(connectionId);
     this.rateLimiter.removeConnection(clientIP, connectionId);
-    
-    console.log(`[WebSocket] Connection closed: ${connectionId} (code: ${code}, reason: ${reason.toString()})`);
-    this.emit('connection:close', { connectionId, reason: reason.toString() });
+
+    console.log(
+      `[WebSocket] Connection closed: ${connectionId} (code: ${code}, reason: ${reason.toString()})`
+    );
+    this.emit("connection:close", { connectionId, reason: reason.toString() });
   }
 
   private handleSubscription(connectionId: string, message: WebSocketMessage): void {
     const { channel } = message.data;
     const success = this.connectionManager.subscribeToChannel(connectionId, channel);
-    
+
     this.sendMessage(connectionId, {
-      type: 'system:ack',
-      channel: 'system',
+      type: "system:ack",
+      channel: "system",
       data: {
         originalMessageId: message.messageId,
         success,
-        action: 'subscribe',
+        action: "subscribe",
         channel,
       },
       messageId: crypto.randomUUID(),
@@ -751,21 +762,21 @@ export class WebSocketServerService extends EventEmitter {
     });
 
     if (success) {
-      this.emit('subscription:added', { channel, connectionId });
+      this.emit("subscription:added", { channel, connectionId });
     }
   }
 
   private handleUnsubscription(connectionId: string, message: WebSocketMessage): void {
     const { channel } = message.data;
     const success = this.connectionManager.unsubscribeFromChannel(connectionId, channel);
-    
+
     this.sendMessage(connectionId, {
-      type: 'system:ack',
-      channel: 'system',
+      type: "system:ack",
+      channel: "system",
       data: {
         originalMessageId: message.messageId,
         success,
-        action: 'unsubscribe',
+        action: "unsubscribe",
         channel,
       },
       messageId: crypto.randomUUID(),
@@ -773,19 +784,19 @@ export class WebSocketServerService extends EventEmitter {
     });
 
     if (success) {
-      this.emit('subscription:removed', { channel, connectionId });
+      this.emit("subscription:removed", { channel, connectionId });
     }
   }
 
   private sendError(connectionId: string, code: string, message: string): void {
     this.sendMessage(connectionId, {
-      type: 'system:error',
-      channel: 'system',
+      type: "system:error",
+      channel: "system",
       data: {
         code,
         message,
         timestamp: Date.now(),
-        recoverable: code !== 'AUTH_FAILED',
+        recoverable: code !== "AUTH_FAILED",
       },
       messageId: crypto.randomUUID(),
       timestamp: Date.now(),
@@ -796,15 +807,17 @@ export class WebSocketServerService extends EventEmitter {
   private isValidMessage(message: any): message is WebSocketMessage {
     return (
       message &&
-      typeof message.type === 'string' &&
-      typeof message.channel === 'string' &&
+      typeof message.type === "string" &&
+      typeof message.channel === "string" &&
       message.data !== undefined &&
-      typeof message.timestamp === 'number' &&
-      typeof message.messageId === 'string'
+      typeof message.timestamp === "number" &&
+      typeof message.messageId === "string"
     );
   }
 
-  private async defaultTokenValidation(token: string): Promise<{ valid: boolean; userId?: string }> {
+  private async defaultTokenValidation(
+    token: string
+  ): Promise<{ valid: boolean; userId?: string }> {
     try {
       // This would integrate with Kinde Auth in a real implementation
       // For now, returning a basic validation
@@ -814,48 +827,51 @@ export class WebSocketServerService extends EventEmitter {
 
       // In a real implementation, this would validate the JWT token
       // and extract user information
-      return { valid: true, userId: 'test-user' };
+      return { valid: true, userId: "test-user" };
     } catch (error) {
-      console.error('[WebSocket] Token validation error:', error);
+      console.error("[WebSocket] Token validation error:", error);
       return { valid: false };
     }
   }
 
-  private async authenticateConnection(request: IncomingMessage): Promise<{ valid: boolean; userId?: string }> {
+  private async authenticateConnection(
+    request: IncomingMessage
+  ): Promise<{ valid: boolean; userId?: string }> {
     try {
-      const url = new URL(request.url || '', `http://${request.headers.host}`);
-      const token = url.searchParams.get('token') || request.headers.authorization?.replace('Bearer ', '');
-      
+      const url = new URL(request.url || "", `http://${request.headers.host}`);
+      const token =
+        url.searchParams.get("token") || request.headers.authorization?.replace("Bearer ", "");
+
       if (!token) {
         return { valid: false };
       }
 
       return await this.config.authentication.tokenValidation(token);
     } catch (error) {
-      console.error('[WebSocket] Authentication error:', error);
+      console.error("[WebSocket] Authentication error:", error);
       return { valid: false };
     }
   }
 
   private getClientIP(request: IncomingMessage): string {
-    const xForwardedFor = request.headers['x-forwarded-for'];
-    const xRealIP = request.headers['x-real-ip'];
-    
+    const xForwardedFor = request.headers["x-forwarded-for"];
+    const xRealIP = request.headers["x-real-ip"];
+
     if (xForwardedFor) {
-      return Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor.split(',')[0];
+      return Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor.split(",")[0];
     }
-    
+
     if (xRealIP) {
       return Array.isArray(xRealIP) ? xRealIP[0] : xRealIP;
     }
-    
-    return request.socket.remoteAddress || 'unknown';
+
+    return request.socket.remoteAddress || "unknown";
   }
 
   private setupMessageHandlers(): void {
     // Add global message logging handler
     this.messageRouter.addGlobalHandler(async (message) => {
-      if (this.config.monitoring.loggingLevel === 'debug') {
+      if (this.config.monitoring.loggingLevel === "debug") {
         console.log(`[WebSocket] Message routed:`, {
           type: message.type,
           channel: message.channel,
@@ -865,8 +881,8 @@ export class WebSocketServerService extends EventEmitter {
     });
 
     // Add heartbeat handler
-    this.messageRouter.addHandler('system', async (message) => {
-      if (message.type === 'system:heartbeat') {
+    this.messageRouter.addHandler("system", async (message) => {
+      if (message.type === "system:heartbeat") {
         // Heartbeat response is handled automatically
       }
     });
@@ -882,11 +898,11 @@ export class WebSocketServerService extends EventEmitter {
         if (connection.ws.readyState === WebSocket.OPEN) {
           // Send ping
           connection.ws.ping();
-          
+
           // Check if connection is stale
           if (now - connection.lastActivity > timeout * 2) {
             console.log(`[WebSocket] Closing stale connection: ${connection.id}`);
-            connection.ws.close(1001, 'Connection timeout');
+            connection.ws.close(1001, "Connection timeout");
           }
         }
       }
@@ -898,16 +914,16 @@ export class WebSocketServerService extends EventEmitter {
 
     this.metricsInterval = setInterval(() => {
       const connectionMetrics = this.connectionManager.getMetrics();
-      
+
       this.serverMetrics = {
         ...connectionMetrics,
         messagesPerSecond: 0, // Would need to track this properly
-        averageLatency: 0,    // Would need to measure latency
-        errorRate: 0,         // Would need to track errors
+        averageLatency: 0, // Would need to measure latency
+        errorRate: 0, // Would need to track errors
         uptime: this.isRunning ? Date.now() - (this.serverMetrics.uptime || Date.now()) : 0,
       };
 
-      this.emit('system:performance', { metrics: this.serverMetrics });
+      this.emit("system:performance", { metrics: this.serverMetrics });
     }, this.config.monitoring.healthCheckInterval);
   }
 

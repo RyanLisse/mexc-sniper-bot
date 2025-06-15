@@ -1,44 +1,37 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  ComposedChart
-} from "recharts";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Target, 
-  Shield, 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
   Activity,
-  PieChart as PieChartIcon,
-  BarChart3,
   AlertTriangle,
   CheckCircle,
-  Clock,
+  DollarSign,
+  RefreshCw,
+  Shield,
+  Target,
+  TrendingDown,
+  TrendingUp,
   Zap,
-  RefreshCw
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 interface TradingAnalyticsData {
   timestamp: string;
@@ -272,38 +265,38 @@ export function TradingAnalyticsDashboard() {
 
   const fetchTradingAnalytics = async () => {
     try {
-      const response = await fetch('/api/monitoring/trading-analytics');
+      const response = await fetch("/api/monitoring/trading-analytics");
       if (!response.ok) {
-        throw new Error('Failed to fetch trading analytics');
+        throw new Error("Failed to fetch trading analytics");
       }
       const result = await response.json();
       setData(result);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     }).format(value);
   };
 
   const formatPercentage = (value: number) => {
-    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+    return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
   };
 
   const getPerformanceColor = (value: number) => {
-    return value >= 0 ? 'text-green-600' : 'text-red-600';
+    return value >= 0 ? "text-green-600" : "text-red-600";
   };
 
-  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'];
+  const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#00ff00", "#ff00ff"];
 
   if (loading) {
     return (
@@ -370,7 +363,9 @@ export function TradingAnalyticsDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(data.portfolioMetrics.currentValue)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(data.portfolioMetrics.currentValue)}
+            </div>
             <p className={`text-xs ${getPerformanceColor(data.portfolioMetrics.dayChange)}`}>
               {formatPercentage(data.portfolioMetrics.dayChange)} today
             </p>
@@ -426,7 +421,8 @@ export function TradingAnalyticsDashboard() {
               {data.patternAnalytics.patternSuccessRate.toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground">
-              {data.patternAnalytics.successfulPatterns} / {data.patternAnalytics.totalPatternsDetected}
+              {data.patternAnalytics.successfulPatterns} /{" "}
+              {data.patternAnalytics.totalPatternsDetected}
             </p>
           </CardContent>
         </Card>
@@ -455,15 +451,15 @@ export function TradingAnalyticsDashboard() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                    <Tooltip 
-                      formatter={(value: any) => [formatCurrency(value), 'P&L']}
+                    <Tooltip
+                      formatter={(value: any) => [formatCurrency(value), "P&L"]}
                       labelFormatter={(date) => `Date: ${date}`}
                     />
-                    <Area 
-                      type="monotone" 
-                      dataKey="pnl" 
-                      stroke="#8884d8" 
-                      fill="#8884d8" 
+                    <Area
+                      type="monotone"
+                      dataKey="pnl"
+                      stroke="#8884d8"
+                      fill="#8884d8"
                       fillOpacity={0.6}
                     />
                   </AreaChart>
@@ -480,19 +476,27 @@ export function TradingAnalyticsDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Win/Loss Ratio</p>
-                    <p className="text-2xl font-bold">{data.tradingPerformance.winLossRatio.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">
+                      {data.tradingPerformance.winLossRatio.toFixed(2)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Sharpe Ratio</p>
-                    <p className="text-2xl font-bold">{data.tradingPerformance.sharpeRatio.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">
+                      {data.tradingPerformance.sharpeRatio.toFixed(2)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Max Drawdown</p>
-                    <p className="text-2xl font-bold text-red-600">{data.tradingPerformance.maxDrawdown.toFixed(2)}%</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {data.tradingPerformance.maxDrawdown.toFixed(2)}%
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Profit Factor</p>
-                    <p className="text-2xl font-bold">{data.tradingPerformance.profitFactor.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">
+                      {data.tradingPerformance.profitFactor.toFixed(2)}
+                    </p>
                   </div>
                 </div>
 
@@ -610,7 +614,7 @@ export function TradingAnalyticsDashboard() {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: any) => [`${value}%`, 'Allocation']} />
+                    <Tooltip formatter={(value: any) => [`${value}%`, "Allocation"]} />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -625,13 +629,17 @@ export function TradingAnalyticsDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Return</p>
-                    <p className={`text-2xl font-bold ${getPerformanceColor(data.portfolioMetrics.totalReturn)}`}>
+                    <p
+                      className={`text-2xl font-bold ${getPerformanceColor(data.portfolioMetrics.totalReturn)}`}
+                    >
                       {formatCurrency(data.portfolioMetrics.totalReturn)}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Return %</p>
-                    <p className={`text-2xl font-bold ${getPerformanceColor(data.portfolioMetrics.returnPercentage)}`}>
+                    <p
+                      className={`text-2xl font-bold ${getPerformanceColor(data.portfolioMetrics.returnPercentage)}`}
+                    >
                       {formatPercentage(data.portfolioMetrics.returnPercentage)}
                     </p>
                   </div>
@@ -641,7 +649,9 @@ export function TradingAnalyticsDashboard() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Volatility</p>
-                    <p className="text-2xl font-bold">{data.portfolioMetrics.volatility.toFixed(2)}%</p>
+                    <p className="text-2xl font-bold">
+                      {data.portfolioMetrics.volatility.toFixed(2)}%
+                    </p>
                   </div>
                 </div>
 
@@ -653,12 +663,12 @@ export function TradingAnalyticsDashboard() {
                         {formatPercentage(data.portfolioMetrics.dayChange)}
                       </span>
                     </div>
-                    <Progress 
-                      value={Math.abs(data.portfolioMetrics.dayChange) * 10} 
+                    <Progress
+                      value={Math.abs(data.portfolioMetrics.dayChange) * 10}
                       className="h-2"
                     />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Week Change</span>
@@ -666,12 +676,12 @@ export function TradingAnalyticsDashboard() {
                         {formatPercentage(data.portfolioMetrics.weekChange)}
                       </span>
                     </div>
-                    <Progress 
-                      value={Math.abs(data.portfolioMetrics.weekChange) * 5} 
+                    <Progress
+                      value={Math.abs(data.portfolioMetrics.weekChange) * 5}
                       className="h-2"
                     />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Month Change</span>
@@ -679,8 +689,8 @@ export function TradingAnalyticsDashboard() {
                         {formatPercentage(data.portfolioMetrics.monthChange)}
                       </span>
                     </div>
-                    <Progress 
-                      value={Math.abs(data.portfolioMetrics.monthChange) * 2} 
+                    <Progress
+                      value={Math.abs(data.portfolioMetrics.monthChange) * 2}
                       className="h-2"
                     />
                   </div>
@@ -697,7 +707,10 @@ export function TradingAnalyticsDashboard() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {data.portfolioMetrics.topPerformers.map((performer, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
                     <span className="font-medium">{performer.symbol}</span>
                     <Badge variant="default" className="bg-green-100 text-green-800">
                       +{performer.return.toFixed(2)}%
@@ -722,10 +735,10 @@ export function TradingAnalyticsDashboard() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="pattern" />
                     <YAxis />
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value: any, name: string) => [
-                        name === 'successRate' ? `${value}%` : `${value}%`,
-                        name === 'successRate' ? 'Success Rate' : 'Avg Return'
+                        name === "successRate" ? `${value}%` : `${value}%`,
+                        name === "successRate" ? "Success Rate" : "Avg Return",
                       ]}
                     />
                     <Bar dataKey="successRate" fill="#8884d8" name="Success Rate" />
@@ -766,11 +779,16 @@ export function TradingAnalyticsDashboard() {
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Detection Accuracy</span>
-                      <span>{data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy.toFixed(1)}%</span>
+                      <span>
+                        {data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy.toFixed(1)}
+                        %
+                      </span>
                     </div>
-                    <Progress value={data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy} />
+                    <Progress
+                      value={data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy}
+                    />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Pattern Confidence</span>
@@ -784,8 +802,12 @@ export function TradingAnalyticsDashboard() {
                       <span>Ready State Patterns</span>
                       <span>{data.patternAnalytics.readyStatePatterns} detected</span>
                     </div>
-                    <Progress 
-                      value={(data.patternAnalytics.readyStatePatterns / data.patternAnalytics.totalPatternsDetected) * 100} 
+                    <Progress
+                      value={
+                        (data.patternAnalytics.readyStatePatterns /
+                          data.patternAnalytics.totalPatternsDetected) *
+                        100
+                      }
                     />
                   </div>
                 </div>
@@ -803,10 +825,12 @@ export function TradingAnalyticsDashboard() {
                 {data.patternAnalytics.patternTypes.map((type, index) => (
                   <div key={index} className="text-center p-4 rounded-lg border">
                     <div className="text-2xl font-bold text-blue-600">{type.count}</div>
-                    <p className="text-sm text-muted-foreground capitalize">{type.type.replace('-', ' ')}</p>
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {type.type.replace("-", " ")}
+                    </p>
                     <div className="mt-2">
-                      <Progress 
-                        value={(type.count / data.patternAnalytics.totalPatternsDetected) * 100} 
+                      <Progress
+                        value={(type.count / data.patternAnalytics.totalPatternsDetected) * 100}
                         className="h-2"
                       />
                     </div>
@@ -828,14 +852,19 @@ export function TradingAnalyticsDashboard() {
                 {Object.entries(data.riskManagement.riskLimits).map(([key, limit]) => (
                   <div key={key} className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                      <span>{limit.current.toFixed(1)} / {limit.limit.toFixed(1)}%</span>
+                      <span className="capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</span>
+                      <span>
+                        {limit.current.toFixed(1)} / {limit.limit.toFixed(1)}%
+                      </span>
                     </div>
-                    <Progress 
+                    <Progress
                       value={(limit.current / limit.limit) * 100}
                       className={`h-3 ${
-                        (limit.current / limit.limit) > 0.8 ? 'bg-red-100' : 
-                        (limit.current / limit.limit) > 0.6 ? 'bg-yellow-100' : 'bg-green-100'
+                        (limit.current / limit.limit) > 0.8
+                          ? "bg-red-100"
+                          : limit.current / limit.limit > 0.6
+                            ? "bg-yellow-100"
+                            : "bg-green-100"
                       }`}
                     />
                   </div>
@@ -850,14 +879,17 @@ export function TradingAnalyticsDashboard() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {Object.entries(data.riskManagement.stressTestResults).map(([scenario, result]) => (
-                  <div key={scenario} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div
+                    key={scenario}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
                     <div>
-                      <p className="font-medium capitalize">{scenario.replace(/([A-Z])/g, ' $1').trim()}</p>
+                      <p className="font-medium capitalize">
+                        {scenario.replace(/([A-Z])/g, " $1").trim()}
+                      </p>
                       <p className="text-xs text-muted-foreground">Recovery: {result.recovery}</p>
                     </div>
-                    <Badge variant="destructive">
-                      {result.impact.toFixed(1)}%
-                    </Badge>
+                    <Badge variant="destructive">{result.impact.toFixed(1)}%</Badge>
                   </div>
                 ))}
               </CardContent>
@@ -873,16 +905,25 @@ export function TradingAnalyticsDashboard() {
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Exposure</p>
-                  <p className="text-2xl font-bold">{formatCurrency(data.riskManagement.exposureMetrics.totalExposure)}</p>
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(data.riskManagement.exposureMetrics.totalExposure)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Leverage Ratio</p>
-                  <p className="text-2xl font-bold">{data.riskManagement.exposureMetrics.leverageRatio.toFixed(2)}x</p>
+                  <p className="text-2xl font-bold">
+                    {data.riskManagement.exposureMetrics.leverageRatio.toFixed(2)}x
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Margin Utilization</p>
-                  <p className="text-2xl font-bold">{data.riskManagement.exposureMetrics.marginUtilization.toFixed(1)}%</p>
-                  <Progress value={data.riskManagement.exposureMetrics.marginUtilization} className="mt-2" />
+                  <p className="text-2xl font-bold">
+                    {data.riskManagement.exposureMetrics.marginUtilization.toFixed(1)}%
+                  </p>
+                  <Progress
+                    value={data.riskManagement.exposureMetrics.marginUtilization}
+                    className="mt-2"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -899,13 +940,17 @@ export function TradingAnalyticsDashboard() {
                   ) : (
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   )}
-                  <span className={`font-medium ${
-                    data.riskManagement.circuitBreakerStatus.active ? 'text-red-600' : 'text-green-600'
-                  }`}>
-                    {data.riskManagement.circuitBreakerStatus.active ? 'ACTIVE' : 'INACTIVE'}
+                  <span
+                    className={`font-medium ${
+                      data.riskManagement.circuitBreakerStatus.active
+                        ? "text-red-600"
+                        : "text-green-600"
+                    }`}
+                  >
+                    {data.riskManagement.circuitBreakerStatus.active ? "ACTIVE" : "INACTIVE"}
                   </span>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Trigger Count</span>
@@ -913,7 +958,11 @@ export function TradingAnalyticsDashboard() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Last Triggered</span>
-                    <span>{new Date(data.riskManagement.circuitBreakerStatus.lastTriggered).toLocaleDateString()}</span>
+                    <span>
+                      {new Date(
+                        data.riskManagement.circuitBreakerStatus.lastTriggered
+                      ).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -929,7 +978,15 @@ export function TradingAnalyticsDashboard() {
                   {data.riskManagement.correlationMatrix.map((corr, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <span className="text-sm">{corr.pair}</span>
-                      <Badge variant={corr.correlation > 0.7 ? 'destructive' : corr.correlation > 0.4 ? 'secondary' : 'default'}>
+                      <Badge
+                        variant={
+                          corr.correlation > 0.7
+                            ? "destructive"
+                            : corr.correlation > 0.4
+                              ? "secondary"
+                              : "default"
+                        }
+                      >
                         {corr.correlation.toFixed(2)}
                       </Badge>
                     </div>
@@ -950,15 +1007,21 @@ export function TradingAnalyticsDashboard() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{data.executionAnalytics.orderExecutionSpeed.average.toFixed(0)}ms</div>
+                    <div className="text-2xl font-bold">
+                      {data.executionAnalytics.orderExecutionSpeed.average.toFixed(0)}ms
+                    </div>
                     <p className="text-xs text-muted-foreground">Average</p>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{data.executionAnalytics.orderExecutionSpeed.p95.toFixed(0)}ms</div>
+                    <div className="text-2xl font-bold">
+                      {data.executionAnalytics.orderExecutionSpeed.p95.toFixed(0)}ms
+                    </div>
                     <p className="text-xs text-muted-foreground">95th Percentile</p>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{data.executionAnalytics.orderExecutionSpeed.p99.toFixed(0)}ms</div>
+                    <div className="text-2xl font-bold">
+                      {data.executionAnalytics.orderExecutionSpeed.p99.toFixed(0)}ms
+                    </div>
                     <p className="text-xs text-muted-foreground">99th Percentile</p>
                   </div>
                 </div>
@@ -975,9 +1038,12 @@ export function TradingAnalyticsDashboard() {
                   <PieChart>
                     <Pie
                       data={[
-                        { name: 'Full Fill', value: data.executionAnalytics.fillRates.fullFill },
-                        { name: 'Partial Fill', value: data.executionAnalytics.fillRates.partialFill },
-                        { name: 'No Fill', value: data.executionAnalytics.fillRates.noFill }
+                        { name: "Full Fill", value: data.executionAnalytics.fillRates.fullFill },
+                        {
+                          name: "Partial Fill",
+                          value: data.executionAnalytics.fillRates.partialFill,
+                        },
+                        { name: "No Fill", value: data.executionAnalytics.fillRates.noFill },
                       ]}
                       cx="50%"
                       cy="50%"
@@ -986,7 +1052,7 @@ export function TradingAnalyticsDashboard() {
                       dataKey="value"
                       label={({ name, value }) => `${name}: ${value}%`}
                     >
-                      {['#8884d8', '#82ca9d', '#ffc658'].map((color, index) => (
+                      {["#8884d8", "#82ca9d", "#ffc658"].map((color, index) => (
                         <Cell key={`cell-${index}`} fill={color} />
                       ))}
                     </Pie>
@@ -1007,21 +1073,27 @@ export function TradingAnalyticsDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Average</p>
-                    <p className="text-2xl font-bold">{data.executionAnalytics.slippageMetrics.averageSlippage.toFixed(3)}%</p>
+                    <p className="text-2xl font-bold">
+                      {data.executionAnalytics.slippageMetrics.averageSlippage.toFixed(3)}%
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Maximum</p>
-                    <p className="text-2xl font-bold text-red-600">{data.executionAnalytics.slippageMetrics.maxSlippage.toFixed(3)}%</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {data.executionAnalytics.slippageMetrics.maxSlippage.toFixed(3)}%
+                    </p>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
-                  {data.executionAnalytics.slippageMetrics.slippageDistribution.map((dist, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-sm">{dist.range}</span>
-                      <Badge variant="outline">{dist.count}</Badge>
-                    </div>
-                  ))}
+                  {data.executionAnalytics.slippageMetrics.slippageDistribution.map(
+                    (dist, index) => (
+                      <div key={index} className="flex justify-between items-center">
+                        <span className="text-sm">{dist.range}</span>
+                        <Badge variant="outline">{dist.count}</Badge>
+                      </div>
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1035,15 +1107,21 @@ export function TradingAnalyticsDashboard() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm">Trading Fees</span>
-                    <span className="font-medium">{formatCurrency(data.executionAnalytics.executionCosts.tradingFees)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(data.executionAnalytics.executionCosts.tradingFees)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Slippage Costs</span>
-                    <span className="font-medium">{formatCurrency(data.executionAnalytics.executionCosts.slippageCosts)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(data.executionAnalytics.executionCosts.slippageCosts)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Market Impact</span>
-                    <span className="font-medium">{formatCurrency(data.executionAnalytics.executionCosts.marketImpactCosts)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(data.executionAnalytics.executionCosts.marketImpactCosts)}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -1059,25 +1137,40 @@ export function TradingAnalyticsDashboard() {
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Order to Exchange</span>
-                      <span>{data.executionAnalytics.latencyMetrics.orderToExchange.toFixed(1)}ms</span>
+                      <span>
+                        {data.executionAnalytics.latencyMetrics.orderToExchange.toFixed(1)}ms
+                      </span>
                     </div>
-                    <Progress value={data.executionAnalytics.latencyMetrics.orderToExchange} className="h-2" />
+                    <Progress
+                      value={data.executionAnalytics.latencyMetrics.orderToExchange}
+                      className="h-2"
+                    />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Market Data</span>
-                      <span>{data.executionAnalytics.latencyMetrics.marketDataLatency.toFixed(1)}ms</span>
+                      <span>
+                        {data.executionAnalytics.latencyMetrics.marketDataLatency.toFixed(1)}ms
+                      </span>
                     </div>
-                    <Progress value={data.executionAnalytics.latencyMetrics.marketDataLatency * 2} className="h-2" />
+                    <Progress
+                      value={data.executionAnalytics.latencyMetrics.marketDataLatency * 2}
+                      className="h-2"
+                    />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>System Latency</span>
-                      <span>{data.executionAnalytics.latencyMetrics.systemLatency.toFixed(1)}ms</span>
+                      <span>
+                        {data.executionAnalytics.latencyMetrics.systemLatency.toFixed(1)}ms
+                      </span>
                     </div>
-                    <Progress value={data.executionAnalytics.latencyMetrics.systemLatency * 5} className="h-2" />
+                    <Progress
+                      value={data.executionAnalytics.latencyMetrics.systemLatency * 5}
+                      className="h-2"
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -1096,19 +1189,27 @@ export function TradingAnalyticsDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Trend</p>
-                    <Badge variant="default" className="capitalize">{data.marketAnalytics.marketConditions.trend}</Badge>
+                    <Badge variant="default" className="capitalize">
+                      {data.marketAnalytics.marketConditions.trend}
+                    </Badge>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Volatility</p>
-                    <Badge variant="secondary" className="capitalize">{data.marketAnalytics.marketConditions.volatility}</Badge>
+                    <Badge variant="secondary" className="capitalize">
+                      {data.marketAnalytics.marketConditions.volatility}
+                    </Badge>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Sentiment</p>
-                    <Badge variant="default" className="capitalize">{data.marketAnalytics.marketConditions.sentiment}</Badge>
+                    <Badge variant="default" className="capitalize">
+                      {data.marketAnalytics.marketConditions.sentiment}
+                    </Badge>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Fear & Greed</p>
-                    <p className="text-2xl font-bold">{data.marketAnalytics.marketConditions.fearGreedIndex}</p>
+                    <p className="text-2xl font-bold">
+                      {data.marketAnalytics.marketConditions.fearGreedIndex}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -1125,12 +1226,12 @@ export function TradingAnalyticsDashboard() {
                     <div key={index} className="flex items-center justify-between">
                       <span className="font-medium">{sector.sector}</span>
                       <div className="flex items-center gap-2">
-                        {sector.trend === 'up' ? (
+                        {sector.trend === "up" ? (
                           <TrendingUp className="h-4 w-4 text-green-600" />
                         ) : (
                           <TrendingDown className="h-4 w-4 text-red-600" />
                         )}
-                        <Badge variant={sector.performance > 0 ? 'default' : 'destructive'}>
+                        <Badge variant={sector.performance > 0 ? "default" : "destructive"}>
                           {formatPercentage(sector.performance)}
                         </Badge>
                       </div>
@@ -1150,14 +1251,17 @@ export function TradingAnalyticsDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {data.marketAnalytics.tradingOpportunities.map((opportunity, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 rounded-lg border"
+                    >
                       <div>
                         <p className="font-medium">{opportunity.symbol}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{opportunity.type}</p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {opportunity.type}
+                        </p>
                       </div>
-                      <Badge variant="default">
-                        {opportunity.confidence}%
-                      </Badge>
+                      <Badge variant="default">{opportunity.confidence}%</Badge>
                     </div>
                   ))}
                 </div>
@@ -1173,25 +1277,33 @@ export function TradingAnalyticsDashboard() {
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span>BTC Correlation</span>
-                    <span>{data.marketAnalytics.correlationToMarket.btcCorrelation.toFixed(2)}</span>
+                    <span>
+                      {data.marketAnalytics.correlationToMarket.btcCorrelation.toFixed(2)}
+                    </span>
                   </div>
                   <Progress value={data.marketAnalytics.correlationToMarket.btcCorrelation * 100} />
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span>ETH Correlation</span>
-                    <span>{data.marketAnalytics.correlationToMarket.ethCorrelation.toFixed(2)}</span>
+                    <span>
+                      {data.marketAnalytics.correlationToMarket.ethCorrelation.toFixed(2)}
+                    </span>
                   </div>
                   <Progress value={data.marketAnalytics.correlationToMarket.ethCorrelation * 100} />
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span>Overall Market</span>
-                    <span>{data.marketAnalytics.correlationToMarket.overallCorrelation.toFixed(2)}</span>
+                    <span>
+                      {data.marketAnalytics.correlationToMarket.overallCorrelation.toFixed(2)}
+                    </span>
                   </div>
-                  <Progress value={data.marketAnalytics.correlationToMarket.overallCorrelation * 100} />
+                  <Progress
+                    value={data.marketAnalytics.correlationToMarket.overallCorrelation * 100}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -1207,7 +1319,15 @@ export function TradingAnalyticsDashboard() {
                     <div key={index} className="space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-sm">{trend.trend}</span>
-                        <Badge variant={trend.impact === 'high' ? 'destructive' : trend.impact === 'medium' ? 'secondary' : 'default'}>
+                        <Badge
+                          variant={
+                            trend.impact === "high"
+                              ? "destructive"
+                              : trend.impact === "medium"
+                                ? "secondary"
+                                : "default"
+                          }
+                        >
                           {trend.impact}
                         </Badge>
                       </div>

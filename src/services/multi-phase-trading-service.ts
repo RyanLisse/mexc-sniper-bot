@@ -1,17 +1,16 @@
-import { z } from "zod";
-import { eq, desc, and } from "drizzle-orm";
 import { db } from "@/src/db";
 import {
+  type NewStrategyPhaseExecution,
+  type NewTradingStrategy,
+  type StrategyPhaseExecution,
+  type StrategyTemplate,
+  type TradingStrategy,
+  strategyPhaseExecutions,
   strategyTemplates,
   tradingStrategies,
-  strategyPhaseExecutions,
-  strategyPerformanceMetrics,
-  type NewTradingStrategy,
-  type TradingStrategy,
-  type StrategyTemplate,
-  type NewStrategyPhaseExecution,
-  type StrategyPhaseExecution,
 } from "@/src/db/schemas/strategies";
+import { and, desc, eq } from "drizzle-orm";
+import { z } from "zod";
 
 // ===========================================
 // MULTI-PHASE TRADING STRATEGY SERVICE
@@ -59,7 +58,7 @@ export const PREDEFINED_STRATEGIES: Record<string, TradingStrategyConfig> = {
     ],
   },
   highPriceIncrease: {
-    id: "high-price-increase", 
+    id: "high-price-increase",
     name: "Aggressive Multi-Phase Strategy",
     description: "Agressieve multi-phase strategie voor hogere targets",
     levels: [
@@ -161,7 +160,7 @@ export class MultiPhaseTradingService {
     description?: string;
   }): Promise<TradingStrategy> {
     const validated = TradingStrategyConfigSchema.parse(params.strategyConfig);
-    
+
     const strategyData: NewTradingStrategy = {
       userId: params.userId,
       name: params.name,
@@ -214,12 +213,7 @@ export class MultiPhaseTradingService {
     const [strategy] = await db
       .select()
       .from(tradingStrategies)
-      .where(
-        and(
-          eq(tradingStrategies.id, strategyId),
-          eq(tradingStrategies.userId, userId)
-        )
-      )
+      .where(and(eq(tradingStrategies.id, strategyId), eq(tradingStrategies.userId, userId)))
       .limit(1);
 
     return strategy || null;
@@ -249,12 +243,7 @@ export class MultiPhaseTradingService {
     const [updated] = await db
       .update(tradingStrategies)
       .set(updateData)
-      .where(
-        and(
-          eq(tradingStrategies.id, strategyId),
-          eq(tradingStrategies.userId, userId)
-        )
-      )
+      .where(and(eq(tradingStrategies.id, strategyId), eq(tradingStrategies.userId, userId)))
       .returning();
 
     return updated || null;
@@ -396,7 +385,7 @@ export class MultiPhaseTradingService {
 
     const totalRealizedPnl = executions.reduce((sum, exec) => sum + (exec.profit || 0), 0);
     const totalFees = executions.reduce((sum, exec) => sum + (exec.fees || 0), 0);
-    const executedPhases = executions.filter(exec => exec.executionStatus === "executed").length;
+    const executedPhases = executions.filter((exec) => exec.executionStatus === "executed").length;
 
     await db
       .update(tradingStrategies)
@@ -428,7 +417,7 @@ export class MultiPhaseTradingService {
   // Helper method to determine risk level from strategy levels
   private determineRiskLevel(levels: PriceMultiplier[]): "low" | "medium" | "high" {
     const avgTarget = levels.reduce((sum, level) => sum + level.percentage, 0) / levels.length;
-    
+
     if (avgTarget < 30) return "low";
     if (avgTarget < 100) return "medium";
     return "high";
@@ -453,22 +442,28 @@ export class MultiPhaseTradingService {
       throw new Error("Strategy not found");
     }
 
-    const successfulExecutions = executions.filter(exec => exec.executionStatus === "executed");
+    const successfulExecutions = executions.filter((exec) => exec.executionStatus === "executed");
     const totalPnl = successfulExecutions.reduce((sum, exec) => sum + (exec.profit || 0), 0);
     const initialInvestment = strategy.positionSizeUsdt;
     const totalPnlPercent = (totalPnl / initialInvestment) * 100;
 
     // Calculate other metrics
-    const winRate = successfulExecutions.length > 0 ? 
-      (successfulExecutions.filter(exec => (exec.profit || 0) > 0).length / successfulExecutions.length) * 100 : 0;
+    const winRate =
+      successfulExecutions.length > 0
+        ? (successfulExecutions.filter((exec) => (exec.profit || 0) > 0).length /
+            successfulExecutions.length) *
+          100
+        : 0;
 
-    const avgExecutionTime = successfulExecutions.length > 0 ?
-      successfulExecutions.reduce((sum, exec) => {
-        if (exec.triggeredAt && exec.executedAt) {
-          return sum + (exec.executedAt.getTime() - exec.triggeredAt.getTime());
-        }
-        return sum;
-      }, 0) / successfulExecutions.length : 0;
+    const avgExecutionTime =
+      successfulExecutions.length > 0
+        ? successfulExecutions.reduce((sum, exec) => {
+            if (exec.triggeredAt && exec.executedAt) {
+              return sum + (exec.executedAt.getTime() - exec.triggeredAt.getTime());
+            }
+            return sum;
+          }, 0) / successfulExecutions.length
+        : 0;
 
     return {
       totalPnl,

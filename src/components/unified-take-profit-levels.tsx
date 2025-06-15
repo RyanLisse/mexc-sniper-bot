@@ -1,10 +1,20 @@
 "use client";
-
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
 import { Separator } from "@/src/components/ui/separator";
 import { TrendingUp } from "lucide-react";
 
@@ -23,19 +33,23 @@ interface TakeProfitLevelsProps {
   onDirty: () => void;
 }
 
-export function UnifiedTakeProfitLevels({ levels, onLevelsChange, onDirty }: TakeProfitLevelsProps) {
+export function UnifiedTakeProfitLevels({
+  levels,
+  onLevelsChange,
+  onDirty,
+}: TakeProfitLevelsProps) {
   const updateLevel = (level: string, value: number) => {
-    onLevelsChange(prev => ({ ...prev, [level]: value }));
+    onLevelsChange((prev) => ({ ...prev, [level]: value }));
     onDirty();
   };
 
   const updateCustomLevel = (value: number | null) => {
-    onLevelsChange(prev => ({ ...prev, custom: value }));
+    onLevelsChange((prev) => ({ ...prev, custom: value }));
     onDirty();
   };
 
   const updateDefaultLevel = (level: number) => {
-    onLevelsChange(prev => ({ ...prev, defaultLevel: level }));
+    onLevelsChange((prev) => ({ ...prev, defaultLevel: level }));
     onDirty();
   };
 
@@ -46,9 +60,7 @@ export function UnifiedTakeProfitLevels({ levels, onLevelsChange, onDirty }: Tak
           <TrendingUp className="h-5 w-5" />
           Take Profit Configuration
         </CardTitle>
-        <CardDescription>
-          Set your profit targets for automated selling
-        </CardDescription>
+        <CardDescription>Set your profit targets for automated selling</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
@@ -62,7 +74,7 @@ export function UnifiedTakeProfitLevels({ levels, onLevelsChange, onDirty }: Tak
                 max="100"
                 step="0.5"
                 value={levels.level1}
-                onChange={(e) => updateLevel('level1', parseFloat(e.target.value) || 5)}
+                onChange={(e) => updateLevel("level1", Number.parseFloat(e.target.value) || 5)}
               />
               <span className="text-sm text-muted-foreground">%</span>
             </div>
@@ -78,7 +90,7 @@ export function UnifiedTakeProfitLevels({ levels, onLevelsChange, onDirty }: Tak
                 max="100"
                 step="0.5"
                 value={levels.level2}
-                onChange={(e) => updateLevel('level2', parseFloat(e.target.value) || 10)}
+                onChange={(e) => updateLevel("level2", Number.parseFloat(e.target.value) || 10)}
               />
               <span className="text-sm text-muted-foreground">%</span>
             </div>
@@ -94,7 +106,7 @@ export function UnifiedTakeProfitLevels({ levels, onLevelsChange, onDirty }: Tak
                 max="100"
                 step="0.5"
                 value={levels.level3}
-                onChange={(e) => updateLevel('level3', parseFloat(e.target.value) || 15)}
+                onChange={(e) => updateLevel("level3", Number.parseFloat(e.target.value) || 15)}
               />
               <span className="text-sm text-muted-foreground">%</span>
             </div>
@@ -110,7 +122,7 @@ export function UnifiedTakeProfitLevels({ levels, onLevelsChange, onDirty }: Tak
                 max="100"
                 step="0.5"
                 value={levels.level4}
-                onChange={(e) => updateLevel('level4', parseFloat(e.target.value) || 25)}
+                onChange={(e) => updateLevel("level4", Number.parseFloat(e.target.value) || 25)}
               />
               <span className="text-sm text-muted-foreground">%</span>
             </div>
@@ -124,7 +136,7 @@ export function UnifiedTakeProfitLevels({ levels, onLevelsChange, onDirty }: Tak
             <Label htmlFor="default-tp">Default Take Profit Level</Label>
             <Select
               value={levels.defaultLevel.toString()}
-              onValueChange={(value) => updateDefaultLevel(parseInt(value))}
+              onValueChange={(value) => updateDefaultLevel(Number.parseInt(value))}
             >
               <SelectTrigger id="default-tp">
                 <SelectValue />
@@ -148,7 +160,9 @@ export function UnifiedTakeProfitLevels({ levels, onLevelsChange, onDirty }: Tak
                 max="100"
                 step="0.5"
                 value={levels.custom || ""}
-                onChange={(e) => updateCustomLevel(e.target.value ? parseFloat(e.target.value) : null)}
+                onChange={(e) =>
+                  updateCustomLevel(e.target.value ? Number.parseFloat(e.target.value) : null)
+                }
                 placeholder="Custom percentage"
               />
               <span className="text-sm text-muted-foreground">%</span>

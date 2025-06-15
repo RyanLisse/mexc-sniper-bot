@@ -1,16 +1,16 @@
 /**
  * Bayesian Optimization Model
- * 
+ *
  * Implements Bayesian optimization for parameter tuning using Gaussian Process
  * regression and acquisition functions for efficient exploration of parameter space.
  */
 
-import { logger } from '../../lib/utils';
+import { logger } from "../../lib/utils";
 
 export interface BayesianConfig {
-  acquisitionFunction: 'ei' | 'ucb' | 'poi'; // Expected Improvement, Upper Confidence Bound, Probability of Improvement
+  acquisitionFunction: "ei" | "ucb" | "poi"; // Expected Improvement, Upper Confidence Bound, Probability of Improvement
   explorationFactor: number;
-  kernelType: 'rbf' | 'matern' | 'linear';
+  kernelType: "rbf" | "matern" | "linear";
   lengthScale: number;
   noiseVariance: number;
   alpha: number; // Regularization parameter
@@ -40,16 +40,16 @@ export class BayesianOptimizer {
 
   constructor(config?: Partial<BayesianConfig>) {
     this.config = {
-      acquisitionFunction: 'ei',
+      acquisitionFunction: "ei",
       explorationFactor: 2.0,
-      kernelType: 'rbf',
+      kernelType: "rbf",
       lengthScale: 1.0,
       noiseVariance: 0.01,
       alpha: 1e-6,
-      ...config
+      ...config,
     };
 
-    logger.info('Bayesian Optimizer initialized', { config: this.config });
+    logger.info("Bayesian Optimizer initialized", { config: this.config });
   }
 
   /**
@@ -57,18 +57,22 @@ export class BayesianOptimizer {
    */
   setParameterBounds(bounds: Record<string, { min: number; max: number }>): void {
     this.parameterBounds = { ...bounds };
-    logger.info('Parameter bounds set', { bounds });
+    logger.info("Parameter bounds set", { bounds });
   }
 
   /**
    * Add observation to the dataset
    */
-  addObservation(parameters: Record<string, number>, objective: number, metadata?: Record<string, any>): void {
+  addObservation(
+    parameters: Record<string, number>,
+    objective: number,
+    metadata?: Record<string, any>
+  ): void {
     const observation: Observation = {
       parameters: { ...parameters },
       objective,
       timestamp: new Date(),
-      metadata
+      metadata,
     };
 
     this.observations.push(observation);
@@ -77,14 +81,18 @@ export class BayesianOptimizer {
     if (!this.currentBest || objective > this.currentBest.objective) {
       this.currentBest = {
         parameters: { ...parameters },
-        objective
+        objective,
       };
     }
 
     // Update Gaussian Process model
     this.updateGaussianProcess();
 
-    logger.debug('Observation added', { parameters, objective, totalObservations: this.observations.length });
+    logger.debug("Observation added", {
+      parameters,
+      objective,
+      totalObservations: this.observations.length,
+    });
   }
 
   /**
@@ -112,7 +120,10 @@ export class BayesianOptimizer {
     const explorationCandidates = this.generateRandomCandidates(2);
     candidates.push(...explorationCandidates);
 
-    logger.debug('Generated candidates', { count: candidates.length, acquisitionFunction: this.config.acquisitionFunction });
+    logger.debug("Generated candidates", {
+      count: candidates.length,
+      acquisitionFunction: this.config.acquisitionFunction,
+    });
 
     return candidates;
   }
@@ -122,17 +133,17 @@ export class BayesianOptimizer {
    */
   async updateModel(evaluationResults: any[]): Promise<void> {
     for (const result of evaluationResults) {
-      if (result.valid && result.score > -Infinity) {
+      if (result.valid && result.score > Number.NEGATIVE_INFINITY) {
         this.addObservation(result.parameters, result.score, {
           backtestResults: result.backtestResults,
-          safetyValidation: result.safetyValidation
+          safetyValidation: result.safetyValidation,
         });
       }
     }
 
-    logger.debug('Model updated with evaluation results', { 
-      validResults: evaluationResults.filter(r => r.valid).length,
-      totalObservations: this.observations.length 
+    logger.debug("Model updated with evaluation results", {
+      validResults: evaluationResults.filter((r) => r.valid).length,
+      totalObservations: this.observations.length,
     });
   }
 
@@ -152,7 +163,7 @@ export class BayesianOptimizer {
       currentBest: this.currentBest,
       convergenceMetrics: this.calculateConvergenceMetrics(),
       acquisitionFunction: this.config.acquisitionFunction,
-      explorationFactor: this.config.explorationFactor
+      explorationFactor: this.config.explorationFactor,
     };
   }
 
@@ -165,7 +176,7 @@ export class BayesianOptimizer {
     try {
       // Build kernel matrix
       this.kernelMatrix = this.buildKernelMatrix();
-      
+
       // Add noise to diagonal (regularization)
       for (let i = 0; i < this.kernelMatrix.length; i++) {
         this.kernelMatrix[i][i] += this.config.noiseVariance + this.config.alpha;
@@ -173,9 +184,8 @@ export class BayesianOptimizer {
 
       // Compute inverse kernel matrix using Cholesky decomposition
       this.inverseKernelMatrix = this.invertMatrix(this.kernelMatrix);
-
     } catch (error) {
-      logger.error('Failed to update Gaussian Process:', error);
+      logger.error("Failed to update Gaussian Process:", error);
       // Fallback: add more regularization
       this.config.alpha *= 10;
       this.updateGaussianProcess();
@@ -187,7 +197,9 @@ export class BayesianOptimizer {
    */
   private buildKernelMatrix(): number[][] {
     const n = this.observations.length;
-    const matrix: number[][] = Array(n).fill(null).map(() => Array(n).fill(0));
+    const matrix: number[][] = Array(n)
+      .fill(null)
+      .map(() => Array(n).fill(0));
 
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
@@ -214,17 +226,17 @@ export class BayesianOptimizer {
     }
 
     switch (this.config.kernelType) {
-      case 'rbf':
+      case "rbf":
         return Math.exp(-squaredDistance / (2 * this.config.lengthScale * this.config.lengthScale));
-      
-      case 'matern':
+
+      case "matern":
         const r = Math.sqrt(squaredDistance);
-        const scaledR = Math.sqrt(3) * r / this.config.lengthScale;
+        const scaledR = (Math.sqrt(3) * r) / this.config.lengthScale;
         return (1 + scaledR) * Math.exp(-scaledR);
-      
-      case 'linear':
+
+      case "linear":
         return keys.reduce((sum, key) => sum + (params1[key] || 0) * (params2[key] || 0), 0);
-      
+
       default:
         return Math.exp(-squaredDistance / (2 * this.config.lengthScale * this.config.lengthScale));
     }
@@ -244,24 +256,31 @@ export class BayesianOptimizer {
 
     try {
       // Compute kernel vector between test point and training points
-      const kernelVector = this.observations.map(obs => 
+      const kernelVector = this.observations.map((obs) =>
         this.kernelFunction(parameters, obs.parameters)
       );
 
       // Compute mean prediction
-      const objectiveVector = this.observations.map(obs => obs.objective);
-      const mean = this.dotProduct(kernelVector, this.matrixVectorProduct(this.inverseKernelMatrix, objectiveVector));
+      const objectiveVector = this.observations.map((obs) => obs.objective);
+      const mean = this.dotProduct(
+        kernelVector,
+        this.matrixVectorProduct(this.inverseKernelMatrix, objectiveVector)
+      );
 
       // Compute variance prediction
       const kernelSelfValue = this.kernelFunction(parameters, parameters);
-      const variance = Math.max(0, kernelSelfValue - 
-        this.dotProduct(kernelVector, this.matrixVectorProduct(this.inverseKernelMatrix, kernelVector))
+      const variance = Math.max(
+        0,
+        kernelSelfValue -
+          this.dotProduct(
+            kernelVector,
+            this.matrixVectorProduct(this.inverseKernelMatrix, kernelVector)
+          )
       );
 
       return { mean, variance };
-
     } catch (error) {
-      logger.error('Prediction failed:', error);
+      logger.error("Prediction failed:", error);
       return { mean: 0, variance: 1 };
     }
   }
@@ -284,7 +303,7 @@ export class BayesianOptimizer {
           parameters: candidate,
           acquisitionValue,
           uncertainty: Math.sqrt(prediction.variance),
-          meanPrediction: prediction.mean
+          meanPrediction: prediction.mean,
         };
       }
     }
@@ -301,28 +320,28 @@ export class BayesianOptimizer {
   ): number {
     const { mean, variance } = prediction;
     const sigma = Math.sqrt(variance);
-    
+
     if (sigma < 1e-6) {
       return 0; // No uncertainty, no value in exploring
     }
 
     switch (this.config.acquisitionFunction) {
-      case 'ei': // Expected Improvement
+      case "ei": // Expected Improvement
         if (!this.currentBest) return mean;
-        
+
         const improvement = mean - this.currentBest.objective;
         const z = improvement / sigma;
         const phi = this.normalCDF(z);
         const pdf = this.normalPDF(z);
-        
+
         return improvement * phi + sigma * pdf;
 
-      case 'ucb': // Upper Confidence Bound
+      case "ucb": // Upper Confidence Bound
         return mean + this.config.explorationFactor * sigma;
 
-      case 'poi': // Probability of Improvement
+      case "poi": // Probability of Improvement
         if (!this.currentBest) return 0.5;
-        
+
         const z_poi = (mean - this.currentBest.objective) / sigma;
         return this.normalCDF(z_poi);
 
@@ -336,11 +355,11 @@ export class BayesianOptimizer {
    */
   private generateRandomCandidate(): Record<string, number> {
     const candidate: Record<string, number> = {};
-    
+
     for (const [param, bounds] of Object.entries(this.parameterBounds)) {
       candidate[param] = bounds.min + Math.random() * (bounds.max - bounds.min);
     }
-    
+
     return candidate;
   }
 
@@ -348,7 +367,9 @@ export class BayesianOptimizer {
    * Generate multiple random candidates
    */
   private generateRandomCandidates(count: number): Record<string, number>[] {
-    return Array(count).fill(null).map(() => this.generateRandomCandidate());
+    return Array(count)
+      .fill(null)
+      .map(() => this.generateRandomCandidate());
   }
 
   /**
@@ -356,12 +377,10 @@ export class BayesianOptimizer {
    */
   private calculateConvergenceMetrics(): any {
     if (this.observations.length < 5) {
-      return { trend: 'insufficient_data' };
+      return { trend: "insufficient_data" };
     }
 
-    const recentObjectives = this.observations
-      .slice(-10)
-      .map(obs => obs.objective);
+    const recentObjectives = this.observations.slice(-10).map((obs) => obs.objective);
 
     const improvement = Math.max(...recentObjectives) - Math.min(...recentObjectives);
     const trend = this.calculateTrend(recentObjectives);
@@ -370,15 +389,15 @@ export class BayesianOptimizer {
       recentImprovement: improvement,
       trend,
       observationCount: this.observations.length,
-      bestObjective: this.currentBest?.objective || 0
+      bestObjective: this.currentBest?.objective || 0,
     };
   }
 
   /**
    * Calculate trend in recent objectives
    */
-  private calculateTrend(values: number[]): 'improving' | 'stable' | 'declining' {
-    if (values.length < 3) return 'stable';
+  private calculateTrend(values: number[]): "improving" | "stable" | "declining" {
+    if (values.length < 3) return "stable";
 
     const firstHalf = values.slice(0, Math.floor(values.length / 2));
     const secondHalf = values.slice(Math.floor(values.length / 2));
@@ -389,11 +408,11 @@ export class BayesianOptimizer {
     const improvementThreshold = 0.01;
 
     if (secondAvg > firstAvg + improvementThreshold) {
-      return 'improving';
+      return "improving";
     } else if (secondAvg < firstAvg - improvementThreshold) {
-      return 'declining';
+      return "declining";
     } else {
-      return 'stable';
+      return "stable";
     }
   }
 
@@ -428,7 +447,7 @@ export class BayesianOptimizer {
       // Make diagonal element 1
       const pivot = augmented[i][i];
       if (Math.abs(pivot) < 1e-10) {
-        throw new Error('Matrix is singular');
+        throw new Error("Matrix is singular");
       }
 
       for (let j = 0; j < 2 * n; j++) {
@@ -447,16 +466,14 @@ export class BayesianOptimizer {
     }
 
     // Extract inverse matrix
-    return augmented.map(row => row.slice(n));
+    return augmented.map((row) => row.slice(n));
   }
 
   /**
    * Matrix-vector multiplication
    */
   private matrixVectorProduct(matrix: number[][], vector: number[]): number[] {
-    return matrix.map(row => 
-      row.reduce((sum, val, i) => sum + val * vector[i], 0)
-    );
+    return matrix.map((row) => row.reduce((sum, val, i) => sum + val * vector[i], 0));
   }
 
   /**
@@ -485,18 +502,18 @@ export class BayesianOptimizer {
    */
   private erf(x: number): number {
     // Abramowitz and Stegun approximation
-    const a1 =  0.254829592;
+    const a1 = 0.254829592;
     const a2 = -0.284496736;
-    const a3 =  1.421413741;
+    const a3 = 1.421413741;
     const a4 = -1.453152027;
-    const a5 =  1.061405429;
-    const p  =  0.3275911;
+    const a5 = 1.061405429;
+    const p = 0.3275911;
 
     const sign = x >= 0 ? 1 : -1;
     x = Math.abs(x);
 
     const t = 1.0 / (1.0 + p * x);
-    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+    const y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
 
     return sign * y;
   }

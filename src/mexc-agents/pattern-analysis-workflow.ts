@@ -1,7 +1,13 @@
-import type { AgentResponse } from "./base-agent";
-import { patternDetectionEngine, type PatternAnalysisResult as EngineResult, type PatternMatch } from "@/src/services/pattern-detection-engine";
-import { patternStrategyOrchestrator, type PatternWorkflowRequest } from "@/src/services/pattern-strategy-orchestrator";
 import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
+import type {
+  PatternAnalysisResult as EngineResult,
+  PatternMatch,
+} from "@/src/services/pattern-detection-engine";
+import {
+  type PatternWorkflowRequest,
+  patternStrategyOrchestrator,
+} from "@/src/services/pattern-strategy-orchestrator";
+import type { AgentResponse } from "./base-agent";
 
 export interface PatternAnalysisResult {
   patterns: ActionablePattern[];
@@ -59,7 +65,7 @@ export class PatternAnalysisWorkflow {
     }
   ): Promise<PatternAnalysisResult> {
     console.log(`[PatternAnalysisWorkflow] Enhanced pattern analysis for ${analysisType}`);
-    
+
     try {
       // Use the centralized pattern strategy orchestrator
       const workflowRequest: PatternWorkflowRequest = {
@@ -69,11 +75,12 @@ export class PatternAnalysisWorkflow {
           confidenceThreshold: options?.confidenceThreshold || 70,
           includeAdvanceDetection: options?.enableAdvanceDetection ?? true,
           enableAgentAnalysis: options?.includeAgentAnalysis ?? true,
-          maxExecutionTime: 30000 // 30 second timeout
-        }
+          maxExecutionTime: 30000, // 30 second timeout
+        },
       };
 
-      const workflowResult = await patternStrategyOrchestrator.executePatternWorkflow(workflowRequest);
+      const workflowResult =
+        await patternStrategyOrchestrator.executePatternWorkflow(workflowRequest);
 
       if (!workflowResult.success) {
         throw new Error(workflowResult.error || "Pattern workflow failed");
@@ -104,12 +111,11 @@ export class PatternAnalysisWorkflow {
           signalsDetected: patternSignals.length,
         },
         engineResult,
-        strategicRecommendations
+        strategicRecommendations,
       };
-      
     } catch (error) {
       console.error("[PatternAnalysisWorkflow] Enhanced analysis failed:", error);
-      
+
       // Fallback to legacy analysis
       return await this.analyzePatternsLegacy(
         { content: `Analysis failed: ${error}`, metadata: { timestamp: new Date().toISOString() } },
@@ -470,12 +476,12 @@ export class PatternAnalysisWorkflow {
    * Transform PatternMatches from engine to ActionablePatterns for workflow
    */
   private transformEngineMatches(matches: PatternMatch[]): ActionablePattern[] {
-    return matches.map(match => ({
+    return matches.map((match) => ({
       type: match.patternType,
       confidence: match.confidence,
       timeframe: this.mapTimeframe(match),
       indicators: this.extractIndicators(match),
-      significance: this.mapSignificance(match)
+      significance: this.mapSignificance(match),
     }));
   }
 
@@ -484,7 +490,7 @@ export class PatternAnalysisWorkflow {
    */
   private extractSignalsFromMatches(matches: PatternMatch[]): PatternSignal[] {
     const signals: PatternSignal[] = [];
-    
+
     for (const match of matches) {
       // Ready state signal
       if (match.patternType === "ready_state") {
@@ -493,7 +499,7 @@ export class PatternAnalysisWorkflow {
           strength: match.confidence,
           direction: "bullish",
           timeToExecution: "immediate",
-          reliability: match.confidence
+          reliability: match.confidence,
         });
       }
 
@@ -504,7 +510,7 @@ export class PatternAnalysisWorkflow {
           strength: Math.min(match.advanceNoticeHours * 10, 95),
           direction: "bullish",
           timeToExecution: `${match.advanceNoticeHours.toFixed(1)} hours`,
-          reliability: match.confidence
+          reliability: match.confidence,
         });
       }
 
@@ -515,7 +521,7 @@ export class PatternAnalysisWorkflow {
           strength: match.confidence,
           direction: "neutral",
           timeToExecution: `${match.advanceNoticeHours.toFixed(1)} hours to ready`,
-          reliability: match.confidence
+          reliability: match.confidence,
         });
       }
 
@@ -526,7 +532,7 @@ export class PatternAnalysisWorkflow {
           strength: 80,
           direction: "bearish",
           timeToExecution: "immediate",
-          reliability: 90
+          reliability: 90,
         });
       }
     }
@@ -550,14 +556,15 @@ export class PatternAnalysisWorkflow {
   } {
     // Use strategic recommendations if available
     if (strategicRecommendations.length > 0) {
-      const topRecommendation = strategicRecommendations
-        .sort((a, b) => b.confidence - a.confidence)[0];
-      
+      const topRecommendation = strategicRecommendations.sort(
+        (a, b) => b.confidence - a.confidence
+      )[0];
+
       return {
         action: this.mapActionFromStrategic(topRecommendation.action),
         priority: this.mapPriorityFromConfidence(topRecommendation.confidence),
         timing: this.formatTiming(topRecommendation.timing),
-        reasoning: topRecommendation.reasoning
+        reasoning: topRecommendation.reasoning,
       };
     }
 
@@ -575,12 +582,13 @@ export class PatternAnalysisWorkflow {
 
   private extractIndicators(match: PatternMatch): string[] {
     const indicators: string[] = [];
-    
+
     if (match.indicators.sts !== undefined) indicators.push(`sts:${match.indicators.sts}`);
     if (match.indicators.st !== undefined) indicators.push(`st:${match.indicators.st}`);
     if (match.indicators.tt !== undefined) indicators.push(`tt:${match.indicators.tt}`);
-    if (match.advanceNoticeHours > 0) indicators.push(`advance:${match.advanceNoticeHours.toFixed(1)}h`);
-    
+    if (match.advanceNoticeHours > 0)
+      indicators.push(`advance:${match.advanceNoticeHours.toFixed(1)}h`);
+
     return indicators;
   }
 
@@ -616,17 +624,17 @@ export class PatternAnalysisWorkflow {
 
   private formatTiming(timing: any): string {
     if (!timing) return "Not specified";
-    
+
     if (timing.optimalEntry) {
       const entryTime = new Date(timing.optimalEntry);
       const now = new Date();
       const diffMinutes = Math.round((entryTime.getTime() - now.getTime()) / (1000 * 60));
-      
+
       if (diffMinutes <= 5) return "Immediate";
       if (diffMinutes <= 60) return `${diffMinutes} minutes`;
       return `${Math.round(diffMinutes / 60)} hours`;
     }
-    
+
     return "Monitor timing";
   }
 }

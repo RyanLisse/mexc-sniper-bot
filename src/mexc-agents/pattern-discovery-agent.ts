@@ -1,5 +1,5 @@
-import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
+import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 // Extended calendar entry for pattern analysis
 export interface PatternCalendarEntry extends CalendarEntry {

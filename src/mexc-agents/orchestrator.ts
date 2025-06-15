@@ -9,6 +9,15 @@ export type {
 } from "./orchestrator-types";
 
 import { AgentManager } from "./agent-manager";
+import {
+  type AgentRegistry,
+  type EnhancedMexcOrchestrator,
+  type PerformanceCollector,
+  type WorkflowEngine,
+  checkCoordinationSystemHealth,
+  createCoordinationSystem,
+  registerCommonAgents,
+} from "./coordination";
 import { DataFetcher } from "./data-fetcher";
 import type {
   AgentOrchestrationMetrics,
@@ -19,23 +28,13 @@ import type {
   TradingStrategyWorkflowRequest,
 } from "./orchestrator-types";
 import { WorkflowExecutor } from "./workflow-executor";
-import { 
-  createCoordinationSystem,
-  registerCommonAgents,
-  checkCoordinationSystemHealth,
-  type EnhancedMexcOrchestrator,
-  type AgentRegistry,
-  type WorkflowEngine,
-  type PerformanceCollector
-} from "./coordination";
-import { agentLoader, type AgentType } from "./dynamic-loader";
 
 export class MexcOrchestrator {
   private agentManager: AgentManager;
   private dataFetcher: DataFetcher;
   private workflowExecutor: WorkflowExecutor;
   private metrics: AgentOrchestrationMetrics;
-  
+
   // Enhanced coordination system (optional, for improved features)
   private coordinationSystem: {
     agentRegistry: AgentRegistry;
@@ -62,10 +61,13 @@ export class MexcOrchestrator {
 
     // Optionally enable enhanced coordination
     this.useEnhancedCoordination = options?.useEnhancedCoordination || false;
-    
+
     if (this.useEnhancedCoordination) {
-      this.initializeCoordinationSystem().catch(error => {
-        console.warn("[MexcOrchestrator] Failed to initialize coordination system, falling back to legacy mode:", error);
+      this.initializeCoordinationSystem().catch((error) => {
+        console.warn(
+          "[MexcOrchestrator] Failed to initialize coordination system, falling back to legacy mode:",
+          error
+        );
         this.useEnhancedCoordination = false;
       });
     }
@@ -77,7 +79,7 @@ export class MexcOrchestrator {
   private async initializeCoordinationSystem(): Promise<void> {
     try {
       console.log("[MexcOrchestrator] Initializing enhanced coordination system...");
-      
+
       // Create coordination system
       this.coordinationSystem = await createCoordinationSystem({
         healthCheckInterval: 30000, // 30 seconds
@@ -89,7 +91,6 @@ export class MexcOrchestrator {
       registerCommonAgents(this.coordinationSystem.agentRegistry, this.agentManager);
 
       console.log("[MexcOrchestrator] Enhanced coordination system initialized successfully");
-      
     } catch (error) {
       console.error("[MexcOrchestrator] Failed to initialize coordination system:", error);
       throw error;
@@ -104,7 +105,10 @@ export class MexcOrchestrator {
       try {
         return await this.coordinationSystem.orchestrator.executeCalendarDiscoveryWorkflow(request);
       } catch (error) {
-        console.warn("[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:", error);
+        console.warn(
+          "[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:",
+          error
+        );
         // Fall through to legacy execution
       }
     }
@@ -139,7 +143,10 @@ export class MexcOrchestrator {
       try {
         return await this.coordinationSystem.orchestrator.executeSymbolAnalysisWorkflow(request);
       } catch (error) {
-        console.warn("[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:", error);
+        console.warn(
+          "[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:",
+          error
+        );
         // Fall through to legacy execution
       }
     }
@@ -177,7 +184,10 @@ export class MexcOrchestrator {
       try {
         return await this.coordinationSystem.orchestrator.executePatternAnalysisWorkflow(request);
       } catch (error) {
-        console.warn("[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:", error);
+        console.warn(
+          "[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:",
+          error
+        );
         // Fall through to legacy execution
       }
     }
@@ -212,7 +222,10 @@ export class MexcOrchestrator {
       try {
         return await this.coordinationSystem.orchestrator.executeTradingStrategyWorkflow(request);
       } catch (error) {
-        console.warn("[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:", error);
+        console.warn(
+          "[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:",
+          error
+        );
         // Fall through to legacy execution
       }
     }
@@ -262,7 +275,10 @@ export class MexcOrchestrator {
           strategy: enhancedHealth.strategy,
         };
       } catch (error) {
-        console.warn("[MexcOrchestrator] Enhanced health check failed, falling back to legacy mode:", error);
+        console.warn(
+          "[MexcOrchestrator] Enhanced health check failed, falling back to legacy mode:",
+          error
+        );
       }
     }
 
@@ -284,7 +300,10 @@ export class MexcOrchestrator {
           lastExecution: enhancedMetrics.lastExecution,
         };
       } catch (error) {
-        console.warn("[MexcOrchestrator] Enhanced metrics failed, falling back to legacy mode:", error);
+        console.warn(
+          "[MexcOrchestrator] Enhanced metrics failed, falling back to legacy mode:",
+          error
+        );
       }
     }
 
@@ -306,7 +325,10 @@ export class MexcOrchestrator {
           initialized: enhancedSummary.initialized,
         };
       } catch (error) {
-        console.warn("[MexcOrchestrator] Enhanced summary failed, falling back to legacy mode:", error);
+        console.warn(
+          "[MexcOrchestrator] Enhanced summary failed, falling back to legacy mode:",
+          error
+        );
       }
     }
 
@@ -319,7 +341,10 @@ export class MexcOrchestrator {
       try {
         return await this.coordinationSystem.orchestrator.healthCheck();
       } catch (error) {
-        console.warn("[MexcOrchestrator] Enhanced health check failed, falling back to legacy mode:", error);
+        console.warn(
+          "[MexcOrchestrator] Enhanced health check failed, falling back to legacy mode:",
+          error
+        );
       }
     }
 
@@ -360,7 +385,7 @@ export class MexcOrchestrator {
     this.useEnhancedCoordination = false;
     await this.coordinationSystem.orchestrator.shutdown();
     this.coordinationSystem = null;
-    
+
     console.log("[MexcOrchestrator] Enhanced coordination disabled, using legacy mode");
   }
 
@@ -375,7 +400,11 @@ export class MexcOrchestrator {
     try {
       return await checkCoordinationSystemHealth(this.coordinationSystem);
     } catch (error) {
-      return { enabled: true, healthy: false, error: error instanceof Error ? error.message : "Unknown error" };
+      return {
+        enabled: true,
+        healthy: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
     }
   }
 

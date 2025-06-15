@@ -4,28 +4,28 @@ export type AgentStatus = "healthy" | "degraded" | "unhealthy" | "unknown" | "re
 
 export interface HealthThresholds {
   responseTime: {
-    warning: number;    // ms - degraded threshold
-    critical: number;   // ms - unhealthy threshold
+    warning: number; // ms - degraded threshold
+    critical: number; // ms - unhealthy threshold
   };
   errorRate: {
-    warning: number;    // % - degraded threshold (0-1)
-    critical: number;   // % - unhealthy threshold (0-1)
+    warning: number; // % - degraded threshold (0-1)
+    critical: number; // % - unhealthy threshold (0-1)
   };
   consecutiveErrors: {
-    warning: number;    // count - degraded threshold
-    critical: number;   // count - unhealthy threshold
+    warning: number; // count - degraded threshold
+    critical: number; // count - unhealthy threshold
   };
   uptime: {
-    warning: number;    // % - degraded threshold (0-100)
-    critical: number;   // % - unhealthy threshold (0-100)
+    warning: number; // % - degraded threshold (0-100)
+    critical: number; // % - unhealthy threshold (0-100)
   };
   memoryUsage: {
-    warning: number;    // MB - degraded threshold
-    critical: number;   // MB - unhealthy threshold
+    warning: number; // MB - degraded threshold
+    critical: number; // MB - unhealthy threshold
   };
   cpuUsage: {
-    warning: number;    // % - degraded threshold (0-100)
-    critical: number;   // % - unhealthy threshold (0-100)
+    warning: number; // % - degraded threshold (0-100)
+    critical: number; // % - unhealthy threshold (0-100)
   };
 }
 
@@ -46,14 +46,14 @@ export interface AgentHealth {
     average: number;
   };
   // Enhanced health metrics
-  memoryUsage: number;      // MB
-  cpuUsage: number;         // %
-  cacheHitRate: number;     // %
-  requestCount: number;     // Total requests processed
-  successCount: number;     // Successful requests
+  memoryUsage: number; // MB
+  cpuUsage: number; // %
+  cacheHitRate: number; // %
+  requestCount: number; // Total requests processed
+  successCount: number; // Successful requests
   lastRecoveryAttempt?: Date;
   recoveryAttempts: number;
-  healthScore: number;      // Composite score 0-100
+  healthScore: number; // Composite score 0-100
   trends: {
     responseTime: "improving" | "degrading" | "stable";
     errorRate: "improving" | "degrading" | "stable";
@@ -106,9 +106,9 @@ export interface AgentRegistryOptions {
   defaultThresholds?: HealthThresholds;
   autoRecoveryEnabled?: boolean;
   alertThresholds?: {
-    unhealthyAgentPercentage: number;  // % of unhealthy agents that triggers system alert
-    systemResponseTime: number;       // ms - system-wide response time alert
-    systemErrorRate: number;         // % - system-wide error rate alert
+    unhealthyAgentPercentage: number; // % of unhealthy agents that triggers system alert
+    systemResponseTime: number; // ms - system-wide response time alert
+    systemErrorRate: number; // % - system-wide error rate alert
   };
 }
 
@@ -118,15 +118,19 @@ export interface AgentRegistryOptions {
 export class AgentRegistry {
   private agents: Map<string, RegisteredAgent> = new Map();
   private healthCheckInterval: NodeJS.Timeout | null = null;
-  private healthCheckIntervalMs: number = 30000; // 30 seconds
+  private healthCheckIntervalMs = 30000; // 30 seconds
   private healthHistory: Map<string, HealthCheckResult[]> = new Map();
   private maxHealthHistorySize = 100;
   private isRunning = false;
   private defaultThresholds: HealthThresholds;
   private autoRecoveryEnabled: boolean;
-  private alertThresholds: { unhealthyAgentPercentage: number; systemResponseTime: number; systemErrorRate: number };
+  private alertThresholds: {
+    unhealthyAgentPercentage: number;
+    systemResponseTime: number;
+    systemErrorRate: number;
+  };
   private recoveryStrategies: Map<string, () => Promise<boolean>> = new Map();
-  
+
   constructor(options?: AgentRegistryOptions) {
     if (options?.healthCheckInterval) {
       this.healthCheckIntervalMs = options.healthCheckInterval;
@@ -134,26 +138,26 @@ export class AgentRegistry {
     if (options?.maxHealthHistorySize) {
       this.maxHealthHistorySize = options.maxHealthHistorySize;
     }
-    
+
     this.autoRecoveryEnabled = options?.autoRecoveryEnabled ?? true;
-    
+
     // Default health thresholds
     this.defaultThresholds = options?.defaultThresholds ?? {
-      responseTime: { warning: 3000, critical: 10000 },      // 3s warning, 10s critical
-      errorRate: { warning: 0.1, critical: 0.3 },           // 10% warning, 30% critical
-      consecutiveErrors: { warning: 3, critical: 5 },        // 3 warnings, 5 critical
-      uptime: { warning: 95, critical: 90 },                 // 95% warning, 90% critical
-      memoryUsage: { warning: 100, critical: 250 },          // 100MB warning, 250MB critical
-      cpuUsage: { warning: 70, critical: 90 },               // 70% warning, 90% critical
+      responseTime: { warning: 3000, critical: 10000 }, // 3s warning, 10s critical
+      errorRate: { warning: 0.1, critical: 0.3 }, // 10% warning, 30% critical
+      consecutiveErrors: { warning: 3, critical: 5 }, // 3 warnings, 5 critical
+      uptime: { warning: 95, critical: 90 }, // 95% warning, 90% critical
+      memoryUsage: { warning: 100, critical: 250 }, // 100MB warning, 250MB critical
+      cpuUsage: { warning: 70, critical: 90 }, // 70% warning, 90% critical
     };
-    
+
     // Default system alert thresholds
     this.alertThresholds = options?.alertThresholds ?? {
-      unhealthyAgentPercentage: 20,  // Alert if >20% agents unhealthy
-      systemResponseTime: 5000,      // Alert if system avg response > 5s
-      systemErrorRate: 0.15,         // Alert if system error rate > 15%
+      unhealthyAgentPercentage: 20, // Alert if >20% agents unhealthy
+      systemResponseTime: 5000, // Alert if system avg response > 5s
+      systemErrorRate: 0.15, // Alert if system error rate > 15%
     };
-    
+
     this.setupDefaultRecoveryStrategies();
   }
 
@@ -222,7 +226,7 @@ export class AgentRegistry {
 
     this.agents.set(id, registeredAgent);
     this.healthHistory.set(id, []);
-    
+
     console.log(`[AgentRegistry] Registered agent: ${id} (${options.name})`);
   }
 
@@ -242,7 +246,7 @@ export class AgentRegistry {
 
     this.agents.delete(id);
     this.healthHistory.delete(id);
-    
+
     console.log(`[AgentRegistry] Unregistered agent: ${id}`);
     return true;
   }
@@ -273,14 +277,14 @@ export class AgentRegistry {
    * Get agents by type
    */
   getAgentsByType(type: string): RegisteredAgent[] {
-    return Array.from(this.agents.values()).filter(agent => agent.type === type);
+    return Array.from(this.agents.values()).filter((agent) => agent.type === type);
   }
 
   /**
    * Get agents by tag
    */
   getAgentsByTag(tag: string): RegisteredAgent[] {
-    return Array.from(this.agents.values()).filter(agent => agent.tags.includes(tag));
+    return Array.from(this.agents.values()).filter((agent) => agent.tags.includes(tag));
   }
 
   /**
@@ -299,7 +303,7 @@ export class AgentRegistry {
    * Get available agents by type
    */
   getAvailableAgentsByType(type: string): RegisteredAgent[] {
-    return this.getAgentsByType(type).filter(agent => this.isAgentAvailable(agent.id));
+    return this.getAgentsByType(type).filter((agent) => this.isAgentAvailable(agent.id));
   }
 
   /**
@@ -323,15 +327,18 @@ export class AgentRegistry {
 
       // Try a simple process call to test agent health
       const response = await Promise.race([
-        agent.instance.process("health_check", { source: "registry", timestamp: new Date().toISOString() }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Health check timeout")), 8000) // Increased timeout
+        agent.instance.process("health_check", {
+          source: "registry",
+          timestamp: new Date().toISOString(),
+        }),
+        new Promise(
+          (_, reject) => setTimeout(() => reject(new Error("Health check timeout")), 8000) // Increased timeout
         ),
       ]);
 
       const responseTime = Date.now() - startTime;
       const healthScore = this.calculateHealthScore(agent, responseTime, memoryUsage, cpuUsage);
-      
+
       result = {
         success: true,
         responseTime,
@@ -341,25 +348,30 @@ export class AgentRegistry {
         cacheHitRate,
         requestCount: agent.health.requestCount + 1,
         healthScore,
-        metadata: { 
+        metadata: {
           agent: agent.name,
           agentType: agent.type,
           cacheSize: cacheStats.size,
-          response: typeof response === "object" && response !== null ? response : {} 
+          response: typeof response === "object" && response !== null ? response : {},
         },
       };
 
       // Update agent health
       this.updateAgentHealth(id, result);
-      
     } catch (error) {
       const responseTime = Date.now() - startTime;
       const memoryUsage = this.getAgentMemoryUsage(agent);
       const cpuUsage = this.getAgentCpuUsage(agent);
       const cacheStats = agent.instance.getCacheStats?.() || { hitRate: 0, size: 0 };
       const cacheHitRate = typeof cacheStats.hitRate === "number" ? cacheStats.hitRate : 0;
-      const healthScore = this.calculateHealthScore(agent, responseTime, memoryUsage, cpuUsage, true);
-      
+      const healthScore = this.calculateHealthScore(
+        agent,
+        responseTime,
+        memoryUsage,
+        cpuUsage,
+        true
+      );
+
       result = {
         success: false,
         responseTime,
@@ -379,7 +391,7 @@ export class AgentRegistry {
 
       // Update agent health with error
       this.updateAgentHealth(id, result);
-      
+
       // Attempt auto-recovery if enabled
       if (agent.autoRecovery && agent.health.consecutiveErrors >= 2) {
         await this.attemptAgentRecovery(id);
@@ -415,7 +427,7 @@ export class AgentRegistry {
     });
 
     await Promise.allSettled(healthChecks);
-    
+
     console.log(`[AgentRegistry] Health check completed for ${agentIds.length} agents`);
     return results;
   }
@@ -430,9 +442,9 @@ export class AgentRegistry {
     }
 
     this.isRunning = true;
-    
+
     // Initial health check
-    this.checkAllAgentsHealth().catch(error => {
+    this.checkAllAgentsHealth().catch((error) => {
       console.error("[AgentRegistry] Initial health check failed:", error);
     });
 
@@ -445,7 +457,9 @@ export class AgentRegistry {
       }
     }, this.healthCheckIntervalMs);
 
-    console.log(`[AgentRegistry] Started health monitoring (interval: ${this.healthCheckIntervalMs}ms)`);
+    console.log(
+      `[AgentRegistry] Started health monitoring (interval: ${this.healthCheckIntervalMs}ms)`
+    );
   }
 
   /**
@@ -465,21 +479,24 @@ export class AgentRegistry {
    */
   getStats(): AgentRegistryStats {
     const agents = Array.from(this.agents.values());
-    const healthyCount = agents.filter(a => a.health.status === "healthy").length;
-    const degradedCount = agents.filter(a => a.health.status === "degraded").length;
-    const unhealthyCount = agents.filter(a => a.health.status === "unhealthy").length;
-    const unknownCount = agents.filter(a => a.health.status === "unknown").length;
+    const healthyCount = agents.filter((a) => a.health.status === "healthy").length;
+    const degradedCount = agents.filter((a) => a.health.status === "degraded").length;
+    const unhealthyCount = agents.filter((a) => a.health.status === "unhealthy").length;
+    const unknownCount = agents.filter((a) => a.health.status === "unknown").length;
 
     const totalResponseTimes = agents.reduce((sum, a) => sum + a.health.responseTime, 0);
     const averageResponseTime = agents.length > 0 ? totalResponseTimes / agents.length : 0;
 
-    const totalHealthChecks = Array.from(this.healthHistory.values())
-      .reduce((sum, history) => sum + history.length, 0);
+    const totalHealthChecks = Array.from(this.healthHistory.values()).reduce(
+      (sum, history) => sum + history.length,
+      0
+    );
 
-    const lastCheckTimes = agents.map(a => a.health.lastChecked).filter(Boolean);
-    const lastFullHealthCheck = lastCheckTimes.length > 0 
-      ? new Date(Math.max(...lastCheckTimes.map(d => d.getTime())))
-      : null;
+    const lastCheckTimes = agents.map((a) => a.health.lastChecked).filter(Boolean);
+    const lastFullHealthCheck =
+      lastCheckTimes.length > 0
+        ? new Date(Math.max(...lastCheckTimes.map((d) => d.getTime())))
+        : null;
 
     return {
       totalAgents: agents.length,
@@ -512,7 +529,7 @@ export class AgentRegistry {
 
     const health = agent.health;
     const thresholds = agent.thresholds;
-    
+
     health.lastChecked = result.timestamp;
     health.responseTime = result.responseTime;
     health.requestCount = result.requestCount || health.requestCount;
@@ -527,17 +544,17 @@ export class AgentRegistry {
       health.lastResponse = result.timestamp;
       health.consecutiveErrors = 0;
       health.successCount++;
-      
+
       // Calculate trends
       this.updateHealthTrends(id);
-      
+
       // Determine status based on enhanced thresholds
       const responseTimeStatus = this.getMetricStatus(health.responseTime, thresholds.responseTime);
       const errorRateStatus = this.getMetricStatus(health.errorRate, thresholds.errorRate);
       const memoryStatus = this.getMetricStatus(health.memoryUsage, thresholds.memoryUsage);
       const cpuStatus = this.getMetricStatus(health.cpuUsage, thresholds.cpuUsage);
       const uptimeStatus = this.getMetricStatus(health.uptime, thresholds.uptime, true); // Reverse logic for uptime
-      
+
       // Determine overall status (worst status wins)
       const statuses = [responseTimeStatus, errorRateStatus, memoryStatus, cpuStatus, uptimeStatus];
       if (statuses.includes("critical")) {
@@ -547,25 +564,27 @@ export class AgentRegistry {
       } else {
         health.status = "healthy";
       }
-      
     } else {
       health.errorCount++;
       health.consecutiveErrors++;
       health.lastError = result.error;
-      
+
       // Calculate error rate from recent history
       const history = this.healthHistory.get(id) || [];
       const recentChecks = history.slice(-20).concat([result]); // Last 20 checks + current
-      const recentErrors = recentChecks.filter(check => !check.success).length;
+      const recentErrors = recentChecks.filter((check) => !check.success).length;
       health.errorRate = recentChecks.length > 0 ? recentErrors / recentChecks.length : 1;
-      
+
       // Update trends
       this.updateHealthTrends(id);
-      
+
       // Determine status based on enhanced thresholds
-      const consecutiveErrorsStatus = this.getMetricStatus(health.consecutiveErrors, thresholds.consecutiveErrors);
+      const consecutiveErrorsStatus = this.getMetricStatus(
+        health.consecutiveErrors,
+        thresholds.consecutiveErrors
+      );
       const errorRateStatus = this.getMetricStatus(health.errorRate, thresholds.errorRate);
-      
+
       if (consecutiveErrorsStatus === "critical" || errorRateStatus === "critical") {
         health.status = "unhealthy";
       } else if (consecutiveErrorsStatus === "warning" || errorRateStatus === "warning") {
@@ -579,7 +598,7 @@ export class AgentRegistry {
     const totalChecks = (this.healthHistory.get(id) || []).length + 1;
     const successfulChecks = health.successCount;
     health.uptime = totalChecks > 0 ? (successfulChecks / totalChecks) * 100 : 0;
-    
+
     // Update load metrics
     this.updateLoadMetrics(agent, result.responseTime);
   }
@@ -590,12 +609,12 @@ export class AgentRegistry {
   private addToHealthHistory(id: string, result: HealthCheckResult): void {
     const history = this.healthHistory.get(id) || [];
     history.push(result);
-    
+
     // Keep only the most recent entries
     if (history.length > this.maxHealthHistorySize) {
       history.splice(0, history.length - this.maxHealthHistorySize);
     }
-    
+
     this.healthHistory.set(id, history);
   }
 
@@ -608,13 +627,13 @@ export class AgentRegistry {
       console.log("[AgentRegistry] Executing cache clearing recovery strategy");
       return true; // Would implement cache clearing logic
     });
-    
+
     // Restart strategy
     this.recoveryStrategies.set("restart", async () => {
       console.log("[AgentRegistry] Executing restart recovery strategy");
       return true; // Would implement agent restart logic
     });
-    
+
     // Health check retry strategy
     this.recoveryStrategies.set("health_retry", async () => {
       console.log("[AgentRegistry] Executing health retry recovery strategy");
@@ -626,8 +645,8 @@ export class AgentRegistry {
    * Get metric status based on thresholds
    */
   private getMetricStatus(
-    value: number, 
-    thresholds: { warning: number; critical: number }, 
+    value: number,
+    thresholds: { warning: number; critical: number },
     reverseLogic = false
   ): "healthy" | "warning" | "critical" {
     if (reverseLogic) {
@@ -647,32 +666,34 @@ export class AgentRegistry {
    * Calculate composite health score for an agent
    */
   private calculateHealthScore(
-    agent: RegisteredAgent, 
-    responseTime: number, 
-    memoryUsage: number, 
-    cpuUsage: number, 
+    agent: RegisteredAgent,
+    responseTime: number,
+    memoryUsage: number,
+    cpuUsage: number,
     hasError = false
   ): number {
     if (hasError) return Math.max(0, agent.health.healthScore - 20); // Penalty for errors
-    
+
     const thresholds = agent.thresholds;
-    
+
     // Score components (0-100 each)
-    const responseTimeScore = Math.max(0, 100 - (responseTime / thresholds.responseTime.critical) * 100);
+    const responseTimeScore = Math.max(
+      0,
+      100 - (responseTime / thresholds.responseTime.critical) * 100
+    );
     const memoryScore = Math.max(0, 100 - (memoryUsage / thresholds.memoryUsage.critical) * 100);
     const cpuScore = Math.max(0, 100 - (cpuUsage / thresholds.cpuUsage.critical) * 100);
     const uptimeScore = agent.health.uptime;
-    const errorRateScore = Math.max(0, 100 - (agent.health.errorRate * 100));
-    
+    const errorRateScore = Math.max(0, 100 - agent.health.errorRate * 100);
+
     // Weighted composite score
-    const score = (
-      responseTimeScore * 0.25 +  // 25% weight
-      memoryScore * 0.15 +        // 15% weight
-      cpuScore * 0.15 +           // 15% weight
-      uptimeScore * 0.25 +        // 25% weight
-      errorRateScore * 0.20       // 20% weight
-    );
-    
+    const score =
+      responseTimeScore * 0.25 + // 25% weight
+      memoryScore * 0.15 + // 15% weight
+      cpuScore * 0.15 + // 15% weight
+      uptimeScore * 0.25 + // 25% weight
+      errorRateScore * 0.2; // 20% weight
+
     return Math.round(Math.max(0, Math.min(100, score)));
   }
 
@@ -682,38 +703,43 @@ export class AgentRegistry {
   private updateHealthTrends(id: string): void {
     const agent = this.agents.get(id);
     if (!agent) return;
-    
+
     const history = this.healthHistory.get(id) || [];
     if (history.length < 5) return; // Need at least 5 data points
-    
+
     const recent = history.slice(-10); // Last 10 checks
     const older = history.slice(-20, -10); // Previous 10 checks
-    
+
     if (older.length === 0) return;
-    
+
     // Calculate averages
-    const recentAvgResponseTime = recent.reduce((sum, h) => sum + h.responseTime, 0) / recent.length;
+    const recentAvgResponseTime =
+      recent.reduce((sum, h) => sum + h.responseTime, 0) / recent.length;
     const olderAvgResponseTime = older.reduce((sum, h) => sum + h.responseTime, 0) / older.length;
-    
-    const recentErrorRate = recent.filter(h => !h.success).length / recent.length;
-    const olderErrorRate = older.filter(h => !h.success).length / older.length;
-    
+
+    const recentErrorRate = recent.filter((h) => !h.success).length / recent.length;
+    const olderErrorRate = older.filter((h) => !h.success).length / older.length;
+
     const recentThroughput = recent.length; // Simplified throughput calculation
     const olderThroughput = older.length;
-    
+
     // Determine trends (5% threshold for significance)
     const responseTimeDiff = (recentAvgResponseTime - olderAvgResponseTime) / olderAvgResponseTime;
     const errorRateDiff = recentErrorRate - olderErrorRate;
     const throughputDiff = (recentThroughput - olderThroughput) / olderThroughput;
-    
-    agent.health.trends.responseTime = Math.abs(responseTimeDiff) < 0.05 ? "stable" 
-      : responseTimeDiff > 0 ? "degrading" : "improving";
-      
-    agent.health.trends.errorRate = Math.abs(errorRateDiff) < 0.05 ? "stable" 
-      : errorRateDiff > 0 ? "degrading" : "improving";
-      
-    agent.health.trends.throughput = Math.abs(throughputDiff) < 0.05 ? "stable" 
-      : throughputDiff > 0 ? "improving" : "degrading";
+
+    agent.health.trends.responseTime =
+      Math.abs(responseTimeDiff) < 0.05
+        ? "stable"
+        : responseTimeDiff > 0
+          ? "degrading"
+          : "improving";
+
+    agent.health.trends.errorRate =
+      Math.abs(errorRateDiff) < 0.05 ? "stable" : errorRateDiff > 0 ? "degrading" : "improving";
+
+    agent.health.trends.throughput =
+      Math.abs(throughputDiff) < 0.05 ? "stable" : throughputDiff > 0 ? "improving" : "degrading";
   }
 
   /**
@@ -721,15 +747,15 @@ export class AgentRegistry {
    */
   private updateLoadMetrics(agent: RegisteredAgent, responseTime: number): void {
     const load = agent.health.load;
-    
+
     // Update current load (simplified based on response time)
     load.current = Math.min(100, (responseTime / 1000) * 10); // 1s = 10% load
-    
+
     // Update peak load
     if (load.current > load.peak) {
       load.peak = load.current;
     }
-    
+
     // Update average load (exponential moving average)
     load.average = load.average * 0.9 + load.current * 0.1;
   }
@@ -740,7 +766,7 @@ export class AgentRegistry {
   private getAgentMemoryUsage(agent: RegisteredAgent): number {
     const cacheStats = agent.instance.getCacheStats?.() || { size: 0 };
     // Base memory + cache size estimation
-    return Math.max(10, 20 + (cacheStats.size * 0.001)); // MB
+    return Math.max(10, 20 + cacheStats.size * 0.001); // MB
   }
 
   /**
@@ -749,13 +775,13 @@ export class AgentRegistry {
   private getAgentCpuUsage(agent: RegisteredAgent): number {
     const recentHistory = this.healthHistory.get(agent.id) || [];
     const recent = recentHistory.slice(-5); // Last 5 checks
-    
+
     if (recent.length === 0) return 0;
-    
+
     const avgResponseTime = recent.reduce((sum, h) => sum + h.responseTime, 0) / recent.length;
-    
+
     // Simplified CPU estimation based on response time and error rate
-    return Math.min(100, Math.max(0, (avgResponseTime / 100) + (agent.health.errorRate * 50)));
+    return Math.min(100, Math.max(0, avgResponseTime / 100 + agent.health.errorRate * 50));
   }
 
   /**
@@ -764,34 +790,37 @@ export class AgentRegistry {
   private async attemptAgentRecovery(id: string): Promise<boolean> {
     const agent = this.agents.get(id);
     if (!agent) return false;
-    
+
     agent.health.lastRecoveryAttempt = new Date();
     agent.health.recoveryAttempts++;
     agent.health.status = "recovering";
-    
-    console.log(`[AgentRegistry] Attempting recovery for agent ${id} (attempt ${agent.health.recoveryAttempts})`);
-    
+
+    console.log(
+      `[AgentRegistry] Attempting recovery for agent ${id} (attempt ${agent.health.recoveryAttempts})`
+    );
+
     try {
       // Try different recovery strategies based on agent type and error pattern
       const strategies = ["health_retry", "clear_cache"];
-      
+
       for (const strategyName of strategies) {
         const strategy = this.recoveryStrategies.get(strategyName);
         if (strategy) {
           const success = await strategy();
           if (success) {
-            console.log(`[AgentRegistry] Recovery successful for agent ${id} using strategy: ${strategyName}`);
-            
+            console.log(
+              `[AgentRegistry] Recovery successful for agent ${id} using strategy: ${strategyName}`
+            );
+
             // Reset consecutive errors after successful recovery
             agent.health.consecutiveErrors = Math.max(0, agent.health.consecutiveErrors - 2);
             return true;
           }
         }
       }
-      
+
       console.log(`[AgentRegistry] Recovery failed for agent ${id} after trying all strategies`);
       return false;
-      
     } catch (error) {
       console.error(`[AgentRegistry] Recovery attempt failed for agent ${id}:`, error);
       return false;
@@ -813,7 +842,7 @@ export class AgentRegistry {
     const alerts: { type: "warning" | "critical"; message: string; timestamp: Date }[] = [];
     const stats = this.getStats();
     const now = new Date();
-    
+
     // Check unhealthy agent percentage
     const unhealthyPercentage = (stats.unhealthyAgents / stats.totalAgents) * 100;
     if (unhealthyPercentage > this.alertThresholds.unhealthyAgentPercentage) {
@@ -823,7 +852,7 @@ export class AgentRegistry {
         timestamp: now,
       });
     }
-    
+
     // Check system response time
     if (stats.averageResponseTime > this.alertThresholds.systemResponseTime) {
       alerts.push({
@@ -832,7 +861,7 @@ export class AgentRegistry {
         timestamp: now,
       });
     }
-    
+
     // Check for agents with high recovery attempts
     for (const agent of this.agents.values()) {
       if (agent.health.recoveryAttempts > 5) {
@@ -843,7 +872,7 @@ export class AgentRegistry {
         });
       }
     }
-    
+
     return alerts;
   }
 
@@ -857,31 +886,41 @@ export class AgentRegistry {
   } | null {
     const agent = this.agents.get(id);
     if (!agent) return null;
-    
+
     const healthHistory = this.getAgentHealthHistory(id, 50);
     const recommendations: string[] = [];
-    
+
     // Generate recommendations based on health metrics
     if (agent.health.errorRate > agent.thresholds.errorRate.warning) {
-      recommendations.push("High error rate detected. Consider reviewing agent configuration or dependencies.");
+      recommendations.push(
+        "High error rate detected. Consider reviewing agent configuration or dependencies."
+      );
     }
-    
+
     if (agent.health.responseTime > agent.thresholds.responseTime.warning) {
-      recommendations.push("Slow response times detected. Consider optimizing agent processing or caching.");
+      recommendations.push(
+        "Slow response times detected. Consider optimizing agent processing or caching."
+      );
     }
-    
+
     if (agent.health.memoryUsage > agent.thresholds.memoryUsage.warning) {
-      recommendations.push("High memory usage detected. Consider clearing cache or optimizing memory usage.");
+      recommendations.push(
+        "High memory usage detected. Consider clearing cache or optimizing memory usage."
+      );
     }
-    
+
     if (agent.health.recoveryAttempts > 3) {
-      recommendations.push("Multiple recovery attempts detected. Consider investigating root cause of failures.");
+      recommendations.push(
+        "Multiple recovery attempts detected. Consider investigating root cause of failures."
+      );
     }
-    
+
     if (agent.health.trends.responseTime === "degrading") {
-      recommendations.push("Response time trend is degrading. Monitor for potential performance issues.");
+      recommendations.push(
+        "Response time trend is degrading. Monitor for potential performance issues."
+      );
     }
-    
+
     return {
       agent,
       healthHistory,
@@ -894,18 +933,18 @@ export class AgentRegistry {
    */
   destroy(): void {
     this.stopHealthMonitoring();
-    
+
     // Destroy all registered agents
     for (const agent of this.agents.values()) {
       if (typeof agent.instance.destroy === "function") {
         agent.instance.destroy();
       }
     }
-    
+
     this.agents.clear();
     this.healthHistory.clear();
     this.recoveryStrategies.clear();
-    
+
     console.log("[AgentRegistry] Registry destroyed");
   }
 }

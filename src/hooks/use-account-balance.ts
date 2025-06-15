@@ -16,7 +16,11 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
 
   return useQuery({
     queryKey: ["account-balance", userId],
-    queryFn: async (): Promise<{ balances: BalanceEntry[]; totalUsdtValue: number; lastUpdated: string }> => {
+    queryFn: async (): Promise<{
+      balances: BalanceEntry[];
+      totalUsdtValue: number;
+      lastUpdated: string;
+    }> => {
       const url = userId
         ? `/api/account/balance?userId=${encodeURIComponent(userId)}`
         : "/api/account/balance";

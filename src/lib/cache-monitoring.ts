@@ -1,6 +1,6 @@
 /**
  * Cache Monitoring & Analytics System
- * 
+ *
  * Comprehensive monitoring and analytics for the multi-level caching system:
  * - Real-time cache performance tracking
  * - Memory usage monitoring and optimization
@@ -10,9 +10,9 @@
  * - Alerting for cache performance issues
  */
 
-import { globalCacheManager, type CacheAnalytics, type CacheMetrics } from './cache-manager';
-import { globalEnhancedAgentCache, type AgentCacheAnalytics } from './enhanced-agent-cache';
-import { globalAPIResponseCache, type APICacheAnalytics } from './api-response-cache';
+import { type APICacheAnalytics, globalAPIResponseCache } from "./api-response-cache";
+import { type CacheMetrics, globalCacheManager } from "./cache-manager";
+import { type AgentCacheAnalytics, globalEnhancedAgentCache } from "./enhanced-agent-cache";
 
 // =======================
 // Monitoring Types
@@ -29,7 +29,7 @@ export interface CacheMonitoringConfig {
   };
   alerting: {
     enabled: boolean;
-    channels: ('console' | 'webhook' | 'email')[];
+    channels: ("console" | "webhook" | "email")[];
     webhookUrl?: string;
     emailRecipients?: string[];
   };
@@ -55,7 +55,7 @@ export interface SystemCacheMetrics {
     errorRate: number;
   };
   health: {
-    status: 'healthy' | 'degraded' | 'critical';
+    status: "healthy" | "degraded" | "critical";
     issues: string[];
     warnings: string[];
   };
@@ -63,8 +63,8 @@ export interface SystemCacheMetrics {
 
 export interface CacheAlert {
   id: string;
-  type: 'performance' | 'memory' | 'error' | 'threshold';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "performance" | "memory" | "error" | "threshold";
+  severity: "low" | "medium" | "high" | "critical";
   title: string;
   description: string;
   timestamp: number;
@@ -75,8 +75,8 @@ export interface CacheAlert {
 
 export interface CacheRecommendation {
   id: string;
-  type: 'configuration' | 'optimization' | 'scaling' | 'cleanup';
-  priority: 'low' | 'medium' | 'high';
+  type: "configuration" | "optimization" | "scaling" | "cleanup";
+  priority: "low" | "medium" | "high";
   title: string;
   description: string;
   impact: string;
@@ -105,9 +105,9 @@ export interface PerformanceReport {
     errorRate: number;
   };
   trends: {
-    hitRateTrend: 'improving' | 'stable' | 'declining';
-    memoryTrend: 'improving' | 'stable' | 'increasing';
-    responseTrend: 'improving' | 'stable' | 'degrading';
+    hitRateTrend: "improving" | "stable" | "declining";
+    memoryTrend: "improving" | "stable" | "increasing";
+    responseTrend: "improving" | "stable" | "degrading";
   };
   breakdown: {
     agents: Record<string, { hitRate: number; usage: number }>;
@@ -142,7 +142,7 @@ export class CacheMonitoringSystem {
       },
       alerting: {
         enabled: true,
-        channels: ['console'],
+        channels: ["console"],
       },
       enableMetricsCollection: true,
       metricsRetentionDays: 7,
@@ -162,7 +162,7 @@ export class CacheMonitoringSystem {
    * Start real-time cache monitoring
    */
   private startRealTimeMonitoring(): void {
-    console.log('[CacheMonitoring] Starting real-time cache monitoring');
+    console.log("[CacheMonitoring] Starting real-time cache monitoring");
 
     this.monitoringInterval = setInterval(async () => {
       try {
@@ -171,7 +171,7 @@ export class CacheMonitoringSystem {
         await this.checkThresholds();
         await this.cleanupOldMetrics();
       } catch (error) {
-        console.error('[CacheMonitoring] Monitoring cycle error:', error);
+        console.error("[CacheMonitoring] Monitoring cycle error:", error);
       }
     }, this.config.monitoringInterval);
   }
@@ -195,7 +195,11 @@ export class CacheMonitoringSystem {
       const apiAnalytics = globalAPIResponseCache.getAnalytics();
 
       // Calculate performance metrics
-      const performance = this.calculatePerformanceMetrics(globalMetrics, agentAnalytics, apiAnalytics);
+      const performance = this.calculatePerformanceMetrics(
+        globalMetrics,
+        agentAnalytics,
+        apiAnalytics
+      );
 
       // Assess system health
       const health = this.assessSystemHealth(globalMetrics, performance);
@@ -217,7 +221,7 @@ export class CacheMonitoringSystem {
       // Store metrics if collection is enabled
       if (this.config.enableMetricsCollection) {
         this.metricsHistory.push(metrics);
-        
+
         // Set baseline if not set
         if (!this.performanceBaseline) {
           this.performanceBaseline = metrics;
@@ -225,9 +229,8 @@ export class CacheMonitoringSystem {
       }
 
       return metrics;
-
     } catch (error) {
-      console.error('[CacheMonitoring] Error collecting metrics:', error);
+      console.error("[CacheMonitoring] Error collecting metrics:", error);
       throw error;
     }
   }
@@ -255,9 +258,8 @@ export class CacheMonitoringSystem {
 
       // Generate optimization recommendations
       this.generateRecommendations(current);
-
     } catch (error) {
-      console.error('[CacheMonitoring] Performance analysis error:', error);
+      console.error("[CacheMonitoring] Performance analysis error:", error);
     }
   }
 
@@ -276,9 +278,9 @@ export class CacheMonitoringSystem {
       // Check hit rate threshold
       if (current.global.hitRate < thresholds.minHitRate) {
         await this.createAlert({
-          type: 'performance',
-          severity: 'medium',
-          title: 'Low Cache Hit Rate',
+          type: "performance",
+          severity: "medium",
+          title: "Low Cache Hit Rate",
           description: `Cache hit rate (${current.global.hitRate.toFixed(1)}%) is below threshold (${thresholds.minHitRate}%)`,
           metadata: { hitRate: current.global.hitRate, threshold: thresholds.minHitRate },
         });
@@ -287,38 +289,43 @@ export class CacheMonitoringSystem {
       // Check memory usage threshold
       if (current.performance.totalMemoryUsage > thresholds.maxMemoryUsage) {
         await this.createAlert({
-          type: 'memory',
-          severity: 'high',
-          title: 'High Memory Usage',
+          type: "memory",
+          severity: "high",
+          title: "High Memory Usage",
           description: `Cache memory usage (${(current.performance.totalMemoryUsage / 1024 / 1024).toFixed(1)}MB) exceeds threshold`,
-          metadata: { memoryUsage: current.performance.totalMemoryUsage, threshold: thresholds.maxMemoryUsage },
+          metadata: {
+            memoryUsage: current.performance.totalMemoryUsage,
+            threshold: thresholds.maxMemoryUsage,
+          },
         });
       }
 
       // Check response time threshold
       if (current.performance.responseTimeP95 > thresholds.maxResponseTime) {
         await this.createAlert({
-          type: 'performance',
-          severity: 'medium',
-          title: 'High Response Time',
+          type: "performance",
+          severity: "medium",
+          title: "High Response Time",
           description: `P95 response time (${current.performance.responseTimeP95}ms) exceeds threshold`,
-          metadata: { responseTime: current.performance.responseTimeP95, threshold: thresholds.maxResponseTime },
+          metadata: {
+            responseTime: current.performance.responseTimeP95,
+            threshold: thresholds.maxResponseTime,
+          },
         });
       }
 
       // Check cache size threshold
       if (current.global.totalSize > thresholds.maxCacheSize) {
         await this.createAlert({
-          type: 'threshold',
-          severity: 'medium',
-          title: 'Cache Size Limit',
+          type: "threshold",
+          severity: "medium",
+          title: "Cache Size Limit",
           description: `Cache size (${current.global.totalSize}) approaching limit`,
           metadata: { cacheSize: current.global.totalSize, threshold: thresholds.maxCacheSize },
         });
       }
-
     } catch (error) {
-      console.error('[CacheMonitoring] Threshold checking error:', error);
+      console.error("[CacheMonitoring] Threshold checking error:", error);
     }
   }
 
@@ -336,16 +343,13 @@ export class CacheMonitoringSystem {
   /**
    * Get performance report for a specific period
    */
-  getPerformanceReport(
-    startTime: number,
-    endTime: number = Date.now()
-  ): PerformanceReport {
+  getPerformanceReport(startTime: number, endTime: number = Date.now()): PerformanceReport {
     const metrics = this.metricsHistory.filter(
-      m => m.timestamp >= startTime && m.timestamp <= endTime
+      (m) => m.timestamp >= startTime && m.timestamp <= endTime
     );
 
     if (metrics.length === 0) {
-      throw new Error('No metrics available for the specified period');
+      throw new Error("No metrics available for the specified period");
     }
 
     const firstMetric = metrics[0];
@@ -362,11 +366,11 @@ export class CacheMonitoringSystem {
 
     // Get alerts and recommendations for the period
     const alerts = Array.from(this.activeAlerts.values()).filter(
-      alert => alert.timestamp >= startTime && alert.timestamp <= endTime
+      (alert) => alert.timestamp >= startTime && alert.timestamp <= endTime
     );
 
     const recommendations = Array.from(this.recommendations.values()).filter(
-      rec => rec.timestamp >= startTime && rec.timestamp <= endTime
+      (rec) => rec.timestamp >= startTime && rec.timestamp <= endTime
     );
 
     return {
@@ -387,7 +391,7 @@ export class CacheMonitoringSystem {
    * Get active alerts
    */
   getActiveAlerts(): CacheAlert[] {
-    return Array.from(this.activeAlerts.values()).filter(alert => !alert.resolved);
+    return Array.from(this.activeAlerts.values()).filter((alert) => !alert.resolved);
   }
 
   /**
@@ -399,22 +403,24 @@ export class CacheMonitoringSystem {
       const current = this.metricsHistory[this.metricsHistory.length - 1];
       this.generateRecommendations(current);
     }
-    
+
     // If still no recommendations, generate some basic ones
     if (this.recommendations.size === 0) {
       this.addRecommendation({
-        type: 'optimization',
-        priority: 'medium',
-        title: 'Cache Performance Review',
-        description: 'Review cache hit rates and performance metrics for optimization opportunities',
-        impact: 'Improve overall system performance',
-        implementation: 'Analyze cache patterns and adjust TTL settings',
+        type: "optimization",
+        priority: "medium",
+        title: "Cache Performance Review",
+        description:
+          "Review cache hit rates and performance metrics for optimization opportunities",
+        impact: "Improve overall system performance",
+        implementation: "Analyze cache patterns and adjust TTL settings",
         estimatedImprovement: { hitRate: 10 },
       });
     }
-    
-    return Array.from(this.recommendations.values())
-      .sort((a, b) => this.getPriorityWeight(b.priority) - this.getPriorityWeight(a.priority));
+
+    return Array.from(this.recommendations.values()).sort(
+      (a, b) => this.getPriorityWeight(b.priority) - this.getPriorityWeight(a.priority)
+    );
   }
 
   /**
@@ -446,7 +452,7 @@ export class CacheMonitoringSystem {
 
     try {
       // Optimize based on health status
-      if (current.health.status === 'degraded' || current.health.status === 'critical') {
+      if (current.health.status === "degraded" || current.health.status === "critical") {
         // Cleanup expired entries
         const cleanupResults = globalCacheManager.cleanup();
         actions.push(`Cleaned up ${cleanupResults.total} expired entries`);
@@ -454,28 +460,34 @@ export class CacheMonitoringSystem {
 
         // Optimize cache sizes
         const optimizationResults = globalCacheManager.optimize();
-        actions.push(`Evicted ${optimizationResults.evicted} entries, promoted ${optimizationResults.promoted}`);
+        actions.push(
+          `Evicted ${optimizationResults.evicted} entries, promoted ${optimizationResults.promoted}`
+        );
         improvements.performanceImprovement = optimizationResults.promoted * 10; // Estimate ms saved
       }
 
       // Optimize based on hit rate
       if (current.global.hitRate < 60) {
-        actions.push('Recommended: Increase TTL for stable data types');
+        actions.push("Recommended: Increase TTL for stable data types");
         improvements.hitRateImprovement = 15; // Estimated improvement
       }
 
       // Optimize based on memory usage
-      if (current.performance.totalMemoryUsage > this.config.performanceThresholds.maxMemoryUsage * 0.8) {
-        actions.push('Recommended: Enable more aggressive cache cleanup');
+      if (
+        current.performance.totalMemoryUsage >
+        this.config.performanceThresholds.maxMemoryUsage * 0.8
+      ) {
+        actions.push("Recommended: Enable more aggressive cache cleanup");
         improvements.memoryReduction = current.performance.totalMemoryUsage * 0.2; // Estimate
       }
 
-      console.log(`[CacheMonitoring] Cache optimization completed: ${actions.length} actions taken`);
+      console.log(
+        `[CacheMonitoring] Cache optimization completed: ${actions.length} actions taken`
+      );
 
       return { actions, improvements };
-
     } catch (error) {
-      console.error('[CacheMonitoring] Cache optimization error:', error);
+      console.error("[CacheMonitoring] Cache optimization error:", error);
       throw error;
     }
   }
@@ -491,7 +503,7 @@ export class CacheMonitoringSystem {
   ) {
     // Calculate actual memory usage with more realistic estimates
     const baseMemoryUsage = globalMetrics.memoryUsage;
-    
+
     // Calculate agent memory usage based on actual performance data
     let agentMemoryUsage = 0;
     const agentCount = Object.keys(agentAnalytics.agentPerformance).length;
@@ -502,7 +514,7 @@ export class CacheMonitoringSystem {
       const estimatedSize = baseSize * activityMultiplier;
       agentMemoryUsage += estimatedSize;
     }
-    
+
     // Calculate API memory usage based on endpoint activity
     let apiMemoryUsage = 0;
     const endpointCount = Object.keys(apiAnalytics.endpoints).length;
@@ -513,24 +525,24 @@ export class CacheMonitoringSystem {
       const estimatedSize = baseSize * activityMultiplier;
       apiMemoryUsage += estimatedSize;
     }
-    
+
     // Dynamic baseline calculation
     let dynamicBaseline = 4 * 1024 * 1024; // Start with 4MB baseline
-    
+
     // Scale baseline with agent and endpoint count
     if (agentCount > 0) {
       dynamicBaseline += agentCount * 512 * 1024; // 512KB per agent
     }
-    
+
     if (endpointCount > 0) {
       dynamicBaseline += endpointCount * 256 * 1024; // 256KB per endpoint
     }
-    
+
     // Add cache size impact
     const cacheSizeImpact = globalMetrics.totalSize * 1024; // 1KB per cache entry
-    
+
     const totalMemoryUsage = Math.max(
-      baseMemoryUsage + agentMemoryUsage + apiMemoryUsage + cacheSizeImpact, 
+      baseMemoryUsage + agentMemoryUsage + apiMemoryUsage + cacheSizeImpact,
       dynamicBaseline
     );
 
@@ -549,27 +561,27 @@ export class CacheMonitoringSystem {
 
     // Check hit rate
     if (globalMetrics.hitRate < 50) {
-      issues.push('Very low cache hit rate');
+      issues.push("Very low cache hit rate");
     } else if (globalMetrics.hitRate < 70) {
-      warnings.push('Low cache hit rate');
+      warnings.push("Low cache hit rate");
     }
 
     // Check memory usage
     const memoryUsageMB = performance.totalMemoryUsage / 1024 / 1024;
     if (memoryUsageMB > 1000) {
-      issues.push('High memory usage');
+      issues.push("High memory usage");
     } else if (memoryUsageMB > 500) {
-      warnings.push('Elevated memory usage');
+      warnings.push("Elevated memory usage");
     }
 
     // Determine overall status
-    let status: 'healthy' | 'degraded' | 'critical';
+    let status: "healthy" | "degraded" | "critical";
     if (issues.length > 0) {
-      status = 'critical';
+      status = "critical";
     } else if (warnings.length > 0) {
-      status = 'degraded';
+      status = "degraded";
     } else {
-      status = 'healthy';
+      status = "healthy";
     }
 
     return { status, issues, warnings };
@@ -577,43 +589,48 @@ export class CacheMonitoringSystem {
 
   private analyzeHitRateTrends(current: SystemCacheMetrics, previous: SystemCacheMetrics): void {
     const hitRateChange = current.global.hitRate - previous.global.hitRate;
-    
+
     if (hitRateChange < -5) {
       this.createAlert({
-        type: 'performance',
-        severity: 'medium',
-        title: 'Declining Hit Rate',
+        type: "performance",
+        severity: "medium",
+        title: "Declining Hit Rate",
         description: `Cache hit rate decreased by ${Math.abs(hitRateChange).toFixed(1)}% in the last period`,
-        metadata: { trend: 'declining', change: hitRateChange },
+        metadata: { trend: "declining", change: hitRateChange },
       });
     }
   }
 
   private analyzeMemoryTrends(current: SystemCacheMetrics, previous: SystemCacheMetrics): void {
-    const memoryChange = current.performance.totalMemoryUsage - previous.performance.totalMemoryUsage;
+    const memoryChange =
+      current.performance.totalMemoryUsage - previous.performance.totalMemoryUsage;
     const memoryChangePercent = (memoryChange / previous.performance.totalMemoryUsage) * 100;
-    
+
     if (memoryChangePercent > 20) {
       this.createAlert({
-        type: 'memory',
-        severity: 'medium',
-        title: 'Rapid Memory Growth',
+        type: "memory",
+        severity: "medium",
+        title: "Rapid Memory Growth",
         description: `Memory usage increased by ${memoryChangePercent.toFixed(1)}% in the last period`,
-        metadata: { trend: 'increasing', change: memoryChangePercent },
+        metadata: { trend: "increasing", change: memoryChangePercent },
       });
     }
   }
 
-  private analyzeResponseTimeTrends(current: SystemCacheMetrics, previous: SystemCacheMetrics): void {
-    const responseTimeChange = current.performance.responseTimeP95 - previous.performance.responseTimeP95;
-    
+  private analyzeResponseTimeTrends(
+    current: SystemCacheMetrics,
+    previous: SystemCacheMetrics
+  ): void {
+    const responseTimeChange =
+      current.performance.responseTimeP95 - previous.performance.responseTimeP95;
+
     if (responseTimeChange > 20) {
       this.createAlert({
-        type: 'performance',
-        severity: 'low',
-        title: 'Increasing Response Time',
+        type: "performance",
+        severity: "low",
+        title: "Increasing Response Time",
         description: `P95 response time increased by ${responseTimeChange.toFixed(1)}ms`,
-        metadata: { trend: 'degrading', change: responseTimeChange },
+        metadata: { trend: "degrading", change: responseTimeChange },
       });
     }
   }
@@ -622,25 +639,30 @@ export class CacheMonitoringSystem {
     // Generate hit rate recommendations
     if (metrics.global.hitRate < 80) {
       this.addRecommendation({
-        type: 'optimization',
-        priority: 'medium',
-        title: 'Improve Cache Hit Rate',
-        description: 'Consider increasing TTL for stable data or implementing cache warming',
+        type: "optimization",
+        priority: "medium",
+        title: "Improve Cache Hit Rate",
+        description: "Consider increasing TTL for stable data or implementing cache warming",
         impact: `Potential to improve hit rate from ${metrics.global.hitRate.toFixed(1)}% to 85%+`,
-        implementation: 'Review TTL configurations and implement cache warming for frequently accessed data',
+        implementation:
+          "Review TTL configurations and implement cache warming for frequently accessed data",
         estimatedImprovement: { hitRate: 15 },
       });
     }
 
     // Generate memory recommendations
-    if (metrics.performance.totalMemoryUsage > this.config.performanceThresholds.maxMemoryUsage * 0.7) {
+    if (
+      metrics.performance.totalMemoryUsage >
+      this.config.performanceThresholds.maxMemoryUsage * 0.7
+    ) {
       this.addRecommendation({
-        type: 'cleanup',
-        priority: 'medium',
-        title: 'Optimize Memory Usage',
-        description: 'Memory usage is approaching limits, consider cleanup or size optimization',
-        impact: 'Reduce memory usage by 20-30%',
-        implementation: 'Enable more aggressive cleanup, review cache sizes, or implement LRU eviction',
+        type: "cleanup",
+        priority: "medium",
+        title: "Optimize Memory Usage",
+        description: "Memory usage is approaching limits, consider cleanup or size optimization",
+        impact: "Reduce memory usage by 20-30%",
+        implementation:
+          "Enable more aggressive cleanup, review cache sizes, or implement LRU eviction",
         estimatedImprovement: { memoryUsage: -30 },
       });
     }
@@ -648,12 +670,12 @@ export class CacheMonitoringSystem {
     // Generate recommendations based on agent performance
     if (Object.keys(metrics.agents.agentPerformance).length === 0) {
       this.addRecommendation({
-        type: 'configuration',
-        priority: 'low',
-        title: 'Enable Agent Performance Tracking',
-        description: 'No agent cache performance data available',
-        impact: 'Better visibility into cache performance',
-        implementation: 'Ensure agent cache tracking is properly configured',
+        type: "configuration",
+        priority: "low",
+        title: "Enable Agent Performance Tracking",
+        description: "No agent cache performance data available",
+        impact: "Better visibility into cache performance",
+        implementation: "Ensure agent cache tracking is properly configured",
         estimatedImprovement: {},
       });
     }
@@ -663,12 +685,12 @@ export class CacheMonitoringSystem {
     const totalRequests = metrics.global.hits + metrics.global.misses;
     if (totalRequests > 50 && metrics.global.hitRate < 50) {
       this.addRecommendation({
-        type: 'optimization',
-        priority: 'high',
-        title: 'Critical Cache Hit Rate Issue',
-        description: 'Cache hit rate is critically low, affecting system performance',
-        impact: 'Significant performance improvement possible',
-        implementation: 'Review cache invalidation strategy and TTL settings',
+        type: "optimization",
+        priority: "high",
+        title: "Critical Cache Hit Rate Issue",
+        description: "Cache hit rate is critically low, affecting system performance",
+        impact: "Significant performance improvement possible",
+        implementation: "Review cache invalidation strategy and TTL settings",
         estimatedImprovement: { hitRate: 40, responseTime: -50 },
       });
     }
@@ -676,12 +698,12 @@ export class CacheMonitoringSystem {
     // Additional recommendations for testing scenarios
     if (totalRequests > 20) {
       this.addRecommendation({
-        type: 'optimization',
-        priority: 'medium',
-        title: 'Cache Performance Optimization',
-        description: 'Consider implementing advanced cache strategies',
-        impact: 'Improve overall system performance and reduce API calls',
-        implementation: 'Review cache patterns and implement smarter invalidation',
+        type: "optimization",
+        priority: "medium",
+        title: "Cache Performance Optimization",
+        description: "Consider implementing advanced cache strategies",
+        impact: "Improve overall system performance and reduce API calls",
+        implementation: "Review cache patterns and implement smarter invalidation",
         estimatedImprovement: { hitRate: 20, responseTime: -30 },
       });
     }
@@ -690,31 +712,34 @@ export class CacheMonitoringSystem {
     const agentCount = Object.keys(metrics.agents.agentPerformance).length;
     if (agentCount > 0) {
       this.addRecommendation({
-        type: 'optimization',
-        priority: 'low',
-        title: 'Agent Cache Coordination',
-        description: 'Optimize cache coordination between multiple agents',
-        impact: 'Better resource utilization and cache efficiency',
-        implementation: 'Implement agent-specific cache strategies',
+        type: "optimization",
+        priority: "low",
+        title: "Agent Cache Coordination",
+        description: "Optimize cache coordination between multiple agents",
+        impact: "Better resource utilization and cache efficiency",
+        implementation: "Implement agent-specific cache strategies",
         estimatedImprovement: { hitRate: 10 },
       });
     }
 
     // Memory usage recommendations for high activity
-    if (metrics.performance.totalMemoryUsage > 10 * 1024 * 1024) { // 10MB
+    if (metrics.performance.totalMemoryUsage > 10 * 1024 * 1024) {
+      // 10MB
       this.addRecommendation({
-        type: 'configuration',
-        priority: 'medium',
-        title: 'Memory Usage Monitoring',
-        description: 'High memory usage detected, monitor cache efficiency',
-        impact: 'Prevent memory issues and optimize cache size',
-        implementation: 'Review cache size limits and cleanup policies',
+        type: "configuration",
+        priority: "medium",
+        title: "Memory Usage Monitoring",
+        description: "High memory usage detected, monitor cache efficiency",
+        impact: "Prevent memory issues and optimize cache size",
+        implementation: "Review cache size limits and cleanup policies",
         estimatedImprovement: { memoryUsage: -15 },
       });
     }
   }
 
-  private async createAlert(alertData: Omit<CacheAlert, 'id' | 'timestamp' | 'resolved'>): Promise<void> {
+  private async createAlert(
+    alertData: Omit<CacheAlert, "id" | "timestamp" | "resolved">
+  ): Promise<void> {
     const alert: CacheAlert = {
       id: `alert_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
       timestamp: Date.now(),
@@ -730,7 +755,7 @@ export class CacheMonitoringSystem {
     }
   }
 
-  private addRecommendation(recData: Omit<CacheRecommendation, 'id' | 'timestamp'>): void {
+  private addRecommendation(recData: Omit<CacheRecommendation, "id" | "timestamp">): void {
     const recommendation: CacheRecommendation = {
       id: `rec_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
       timestamp: Date.now(),
@@ -744,16 +769,18 @@ export class CacheMonitoringSystem {
     for (const channel of this.config.alerting.channels) {
       try {
         switch (channel) {
-          case 'console':
-            console.warn(`[CacheAlert] ${alert.severity.toUpperCase()}: ${alert.title} - ${alert.description}`);
+          case "console":
+            console.warn(
+              `[CacheAlert] ${alert.severity.toUpperCase()}: ${alert.title} - ${alert.description}`
+            );
             break;
-          case 'webhook':
+          case "webhook":
             if (this.config.alerting.webhookUrl) {
               // Implementation would send HTTP request to webhook
               console.log(`[CacheAlert] Webhook alert sent: ${alert.title}`);
             }
             break;
-          case 'email':
+          case "email":
             // Implementation would send email
             console.log(`[CacheAlert] Email alert sent: ${alert.title}`);
             break;
@@ -768,8 +795,10 @@ export class CacheMonitoringSystem {
     const totalRequests = metrics.reduce((sum, m) => sum + m.global.hits + m.global.misses, 0);
     const totalHits = metrics.reduce((sum, m) => sum + m.global.hits, 0);
     const totalMisses = metrics.reduce((sum, m) => sum + m.global.misses, 0);
-    const avgResponseTime = metrics.reduce((sum, m) => sum + m.global.averageAccessTime, 0) / metrics.length;
-    const avgMemoryUsage = metrics.reduce((sum, m) => sum + m.performance.totalMemoryUsage, 0) / metrics.length;
+    const avgResponseTime =
+      metrics.reduce((sum, m) => sum + m.global.averageAccessTime, 0) / metrics.length;
+    const avgMemoryUsage =
+      metrics.reduce((sum, m) => sum + m.performance.totalMemoryUsage, 0) / metrics.length;
 
     return {
       totalRequests,
@@ -788,9 +817,16 @@ export class CacheMonitoringSystem {
     const responseChange = last.performance.responseTimeP95 - first.performance.responseTimeP95;
 
     return {
-      hitRateTrend: hitRateChange > 5 ? 'improving' : hitRateChange < -5 ? 'declining' : 'stable' as const,
-      memoryTrend: memoryChange < -0.1 ? 'improving' : memoryChange > 0.2 ? 'increasing' : 'stable' as const,
-      responseTrend: responseChange < -10 ? 'improving' : responseChange > 10 ? 'degrading' : 'stable' as const,
+      hitRateTrend:
+        hitRateChange > 5 ? "improving" : hitRateChange < -5 ? "declining" : ("stable" as const),
+      memoryTrend:
+        memoryChange < -0.1 ? "improving" : memoryChange > 0.2 ? "increasing" : ("stable" as const),
+      responseTrend:
+        responseChange < -10
+          ? "improving"
+          : responseChange > 10
+            ? "degrading"
+            : ("stable" as const),
     };
   }
 
@@ -806,10 +842,14 @@ export class CacheMonitoringSystem {
 
   private getPriorityWeight(priority: string): number {
     switch (priority) {
-      case 'high': return 3;
-      case 'medium': return 2;
-      case 'low': return 1;
-      default: return 0;
+      case "high":
+        return 3;
+      case "medium":
+        return 2;
+      case "low":
+        return 1;
+      default:
+        return 0;
     }
   }
 
@@ -818,8 +858,8 @@ export class CacheMonitoringSystem {
       return;
     }
 
-    const cutoff = Date.now() - (this.config.metricsRetentionDays * 24 * 60 * 60 * 1000);
-    this.metricsHistory = this.metricsHistory.filter(m => m.timestamp > cutoff);
+    const cutoff = Date.now() - this.config.metricsRetentionDays * 24 * 60 * 60 * 1000;
+    this.metricsHistory = this.metricsHistory.filter((m) => m.timestamp > cutoff);
 
     // Cleanup old alerts and recommendations
     for (const [id, alert] of this.activeAlerts.entries()) {
@@ -848,7 +888,7 @@ export class CacheMonitoringSystem {
     this.activeAlerts.clear();
     this.recommendations.clear();
 
-    console.log('[CacheMonitoring] Cache monitoring system destroyed');
+    console.log("[CacheMonitoring] Cache monitoring system destroyed");
   }
 }
 
@@ -867,7 +907,7 @@ export const globalCacheMonitoring = new CacheMonitoringSystem({
   },
   alerting: {
     enabled: true,
-    channels: ['console'],
+    channels: ["console"],
   },
   enableMetricsCollection: true,
   metricsRetentionDays: 7,
@@ -881,22 +921,22 @@ export const globalCacheMonitoring = new CacheMonitoringSystem({
  * Get current cache health status
  */
 export async function getCacheHealthStatus(): Promise<{
-  status: 'healthy' | 'degraded' | 'critical';
+  status: "healthy" | "degraded" | "critical";
   summary: string;
   details: SystemCacheMetrics;
 }> {
   const details = await globalCacheMonitoring.getCurrentStatus();
-  
+
   let summary: string;
   switch (details.health.status) {
-    case 'healthy':
+    case "healthy":
       summary = `Cache system operating normally. Hit rate: ${details.global.hitRate.toFixed(1)}%`;
       break;
-    case 'degraded':
-      summary = `Cache system has minor issues. ${details.health.warnings.join(', ')}`;
+    case "degraded":
+      summary = `Cache system has minor issues. ${details.health.warnings.join(", ")}`;
       break;
-    case 'critical':
-      summary = `Cache system requires immediate attention. ${details.health.issues.join(', ')}`;
+    case "critical":
+      summary = `Cache system requires immediate attention. ${details.health.issues.join(", ")}`;
       break;
   }
 

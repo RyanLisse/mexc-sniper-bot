@@ -1,9 +1,5 @@
-import type { 
-  NotificationProvider, 
-  NotificationMessage, 
-  NotificationResult 
-} from "./index";
-import type { SelectNotificationChannel, SelectAlertInstance } from "../../db/schemas/alerts";
+import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
+import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface WebhookConfig {
   url: string;
@@ -31,7 +27,7 @@ export class WebhookProvider implements NotificationProvider {
 
   async validateConfig(config: Record<string, unknown>): Promise<boolean> {
     const webhookConfig = config as WebhookConfig;
-    
+
     if (!webhookConfig.url) {
       return false;
     }
@@ -79,7 +75,7 @@ export class WebhookProvider implements NotificationProvider {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const result = await this.makeWebhookRequest(config, alert, message);
-        
+
         if (result.success) {
           return result;
         }
@@ -92,7 +88,7 @@ export class WebhookProvider implements NotificationProvider {
         }
       } catch (error) {
         console.error(`Webhook attempt ${attempt} failed:`, error);
-        
+
         if (attempt >= maxRetries) {
           return {
             success: false,
@@ -123,7 +119,7 @@ export class WebhookProvider implements NotificationProvider {
 
       // For production, you would make an actual HTTP request
       // For now, we'll simulate the webhook call
-      
+
       console.log("Sending webhook:", {
         url: config.url,
         method,
@@ -134,16 +130,16 @@ export class WebhookProvider implements NotificationProvider {
       // In production, you would:
       // const controller = new AbortController();
       // const timeoutId = setTimeout(() => controller.abort(), timeout);
-      // 
+      //
       // const response = await fetch(config.url, {
       //   method,
       //   headers,
       //   body: this.formatPayload(payload, config.payloadFormat),
       //   signal: controller.signal
       // });
-      // 
+      //
       // clearTimeout(timeoutId);
-      // 
+      //
       // if (!response.ok) {
       //   throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       // }
@@ -268,7 +264,7 @@ export class WebhookProvider implements NotificationProvider {
       "message.body": message.body,
       "message.priority": message.priority,
       "message.alertUrl": message.alertUrl || "",
-      "timestamp": new Date().toISOString(),
+      timestamp: new Date().toISOString(),
       "system.name": "MEXC Sniper Bot",
       "system.version": "1.0.0",
       "system.environment": process.env.NODE_ENV || "production",
@@ -304,6 +300,6 @@ export class WebhookProvider implements NotificationProvider {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

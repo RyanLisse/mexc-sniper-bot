@@ -1,36 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  AreaChart,
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Activity, AlertTriangle, Percent, Shield, TrendingDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
   Area,
-  PieChart,
-  Pie,
-  Cell,
+  AreaChart,
+  Bar,
   BarChart,
-  Bar
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  AlertTriangle, 
-  Shield, 
-  Activity,
-  DollarSign,
-  Percent,
-  Target
-} from "lucide-react";
 
 // Real-time Risk Monitoring Interfaces
 interface RealTimeRiskData {
@@ -74,7 +65,7 @@ interface StressTestResult {
 
 /**
  * Real-Time Risk Monitor
- * 
+ *
  * Advanced real-time risk monitoring component that provides:
  * - Live risk metrics and trends
  * - Position-level risk analysis
@@ -95,19 +86,99 @@ export function RealTimeRiskMonitor() {
   });
 
   const [riskHistory, setRiskHistory] = useState<RealTimeRiskData[]>([
-    { timestamp: "09:00", riskScore: 18, portfolioValue: 87000, exposure: 61000, volatility: 30, var95: 3800, drawdown: -1.2 },
-    { timestamp: "09:15", riskScore: 21, portfolioValue: 87200, exposure: 61500, volatility: 32, var95: 4000, drawdown: -1.8 },
-    { timestamp: "09:30", riskScore: 19, portfolioValue: 87300, exposure: 62000, volatility: 29, var95: 3900, drawdown: -1.5 },
-    { timestamp: "09:45", riskScore: 25, portfolioValue: 87400, exposure: 62500, volatility: 36, var95: 4300, drawdown: -2.1 },
-    { timestamp: "10:00", riskScore: 23.5, portfolioValue: 87500, exposure: 62800, volatility: 34, var95: 4200, drawdown: -2.8 },
+    {
+      timestamp: "09:00",
+      riskScore: 18,
+      portfolioValue: 87000,
+      exposure: 61000,
+      volatility: 30,
+      var95: 3800,
+      drawdown: -1.2,
+    },
+    {
+      timestamp: "09:15",
+      riskScore: 21,
+      portfolioValue: 87200,
+      exposure: 61500,
+      volatility: 32,
+      var95: 4000,
+      drawdown: -1.8,
+    },
+    {
+      timestamp: "09:30",
+      riskScore: 19,
+      portfolioValue: 87300,
+      exposure: 62000,
+      volatility: 29,
+      var95: 3900,
+      drawdown: -1.5,
+    },
+    {
+      timestamp: "09:45",
+      riskScore: 25,
+      portfolioValue: 87400,
+      exposure: 62500,
+      volatility: 36,
+      var95: 4300,
+      drawdown: -2.1,
+    },
+    {
+      timestamp: "10:00",
+      riskScore: 23.5,
+      portfolioValue: 87500,
+      exposure: 62800,
+      volatility: 34,
+      var95: 4200,
+      drawdown: -2.8,
+    },
   ]);
 
   const [positionRisks, setPositionRisks] = useState<PositionRisk[]>([
-    { symbol: "BTCUSDT", size: 25000, riskContribution: 35.2, var95: 1500, correlation: 0.8, timeHeld: 4.5, pnl: 850 },
-    { symbol: "ETHUSDT", size: 18000, riskContribution: 28.6, var95: 1200, correlation: 0.7, timeHeld: 2.1, pnl: 320 },
-    { symbol: "ADAUSDT", size: 12000, riskContribution: 18.5, var95: 800, correlation: 0.6, timeHeld: 1.8, pnl: -150 },
-    { symbol: "DOTUSDT", size: 7800, riskContribution: 12.1, var95: 500, correlation: 0.5, timeHeld: 0.9, pnl: 95 },
-    { symbol: "LINKUSDT", size: 5000, riskContribution: 5.6, var95: 300, correlation: 0.4, timeHeld: 0.3, pnl: 45 },
+    {
+      symbol: "BTCUSDT",
+      size: 25000,
+      riskContribution: 35.2,
+      var95: 1500,
+      correlation: 0.8,
+      timeHeld: 4.5,
+      pnl: 850,
+    },
+    {
+      symbol: "ETHUSDT",
+      size: 18000,
+      riskContribution: 28.6,
+      var95: 1200,
+      correlation: 0.7,
+      timeHeld: 2.1,
+      pnl: 320,
+    },
+    {
+      symbol: "ADAUSDT",
+      size: 12000,
+      riskContribution: 18.5,
+      var95: 800,
+      correlation: 0.6,
+      timeHeld: 1.8,
+      pnl: -150,
+    },
+    {
+      symbol: "DOTUSDT",
+      size: 7800,
+      riskContribution: 12.1,
+      var95: 500,
+      correlation: 0.5,
+      timeHeld: 0.9,
+      pnl: 95,
+    },
+    {
+      symbol: "LINKUSDT",
+      size: 5000,
+      riskContribution: 5.6,
+      var95: 300,
+      correlation: 0.4,
+      timeHeld: 0.3,
+      pnl: 45,
+    },
   ]);
 
   const [activeAlerts, setActiveAlerts] = useState<RiskAlert[]>([
@@ -134,20 +205,50 @@ export function RealTimeRiskMonitor() {
   ]);
 
   const [stressTestResults, setStressTestResults] = useState<StressTestResult[]>([
-    { scenario: "Market Crash (-20%)", portfolioLoss: 17500, lossPercentage: 20, recoveryTime: 48, riskScore: 95 },
-    { scenario: "Flash Crash (-10%)", portfolioLoss: 8750, lossPercentage: 10, recoveryTime: 12, riskScore: 75 },
-    { scenario: "High Volatility", portfolioLoss: 4375, lossPercentage: 5, recoveryTime: 24, riskScore: 60 },
-    { scenario: "Liquidity Crisis", portfolioLoss: 6125, lossPercentage: 7, recoveryTime: 18, riskScore: 70 },
+    {
+      scenario: "Market Crash (-20%)",
+      portfolioLoss: 17500,
+      lossPercentage: 20,
+      recoveryTime: 48,
+      riskScore: 95,
+    },
+    {
+      scenario: "Flash Crash (-10%)",
+      portfolioLoss: 8750,
+      lossPercentage: 10,
+      recoveryTime: 12,
+      riskScore: 75,
+    },
+    {
+      scenario: "High Volatility",
+      portfolioLoss: 4375,
+      lossPercentage: 5,
+      recoveryTime: 24,
+      riskScore: 60,
+    },
+    {
+      scenario: "Liquidity Crisis",
+      portfolioLoss: 6125,
+      lossPercentage: 7,
+      recoveryTime: 18,
+      riskScore: 70,
+    },
   ]);
 
   // Real-time data simulation
   useEffect(() => {
     const interval = setInterval(() => {
       // Simulate real-time risk updates
-      const newRiskScore = Math.max(0, Math.min(100, currentRisk.riskScore + (Math.random() - 0.5) * 3));
-      const newVolatility = Math.max(0, Math.min(100, currentRisk.volatilityIndex + (Math.random() - 0.5) * 5));
-      
-      setCurrentRisk(prev => ({
+      const newRiskScore = Math.max(
+        0,
+        Math.min(100, currentRisk.riskScore + (Math.random() - 0.5) * 3)
+      );
+      const newVolatility = Math.max(
+        0,
+        Math.min(100, currentRisk.volatilityIndex + (Math.random() - 0.5) * 5)
+      );
+
+      setCurrentRisk((prev) => ({
         ...prev,
         riskScore: newRiskScore,
         volatilityIndex: newVolatility,
@@ -156,9 +257,9 @@ export function RealTimeRiskMonitor() {
 
       // Add new data point to history
       const now = new Date();
-      const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      
-      setRiskHistory(prev => {
+      const timeString = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+      setRiskHistory((prev) => {
         const newPoint: RealTimeRiskData = {
           timestamp: timeString,
           riskScore: newRiskScore,
@@ -168,7 +269,7 @@ export function RealTimeRiskMonitor() {
           var95: currentRisk.var95,
           drawdown: currentRisk.maxDrawdown,
         };
-        
+
         return [...prev.slice(-19), newPoint]; // Keep last 20 points
       });
     }, 5000); // Update every 5 seconds
@@ -185,11 +286,16 @@ export function RealTimeRiskMonitor() {
 
   const getAlertColor = (severity: string) => {
     switch (severity) {
-      case "low": return "bg-blue-100 text-blue-800";
-      case "medium": return "bg-yellow-100 text-yellow-800";
-      case "high": return "bg-orange-100 text-orange-800";
-      case "critical": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "low":
+        return "bg-blue-100 text-blue-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "high":
+        return "bg-orange-100 text-orange-800";
+      case "critical":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -201,7 +307,10 @@ export function RealTimeRiskMonitor() {
       {activeAlerts.length > 0 && (
         <div className="space-y-2">
           {activeAlerts.map((alert) => (
-            <Alert key={alert.id} className={`border-${alert.severity === 'critical' ? 'red' : alert.severity === 'high' ? 'orange' : 'yellow'}-500`}>
+            <Alert
+              key={alert.id}
+              className={`border-${alert.severity === "critical" ? "red" : alert.severity === "high" ? "orange" : "yellow"}-500`}
+            >
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="flex items-center justify-between">
                 <span>{alert.message}</span>
@@ -230,9 +339,13 @@ export function RealTimeRiskMonitor() {
             </div>
             <Progress value={currentRisk.riskScore} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {currentRisk.riskScore < 25 ? "Low Risk" : 
-               currentRisk.riskScore < 50 ? "Medium Risk" : 
-               currentRisk.riskScore < 75 ? "High Risk" : "Critical Risk"}
+              {currentRisk.riskScore < 25
+                ? "Low Risk"
+                : currentRisk.riskScore < 50
+                  ? "Medium Risk"
+                  : currentRisk.riskScore < 75
+                    ? "High Risk"
+                    : "Critical Risk"}
             </p>
           </CardContent>
         </Card>
@@ -273,14 +386,25 @@ export function RealTimeRiskMonitor() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${currentRisk.volatilityIndex > 50 ? 'text-red-600' : 
-              currentRisk.volatilityIndex > 30 ? 'text-yellow-600' : 'text-green-600'}`}>
+            <div
+              className={`text-2xl font-bold ${
+                currentRisk.volatilityIndex > 50
+                  ? "text-red-600"
+                  : currentRisk.volatilityIndex > 30
+                    ? "text-yellow-600"
+                    : "text-green-600"
+              }`}
+            >
               {currentRisk.volatilityIndex.toFixed(1)}
             </div>
             <Progress value={currentRisk.volatilityIndex} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {currentRisk.volatilityIndex < 30 ? "Low" : 
-               currentRisk.volatilityIndex < 50 ? "Moderate" : "High"} volatility
+              {currentRisk.volatilityIndex < 30
+                ? "Low"
+                : currentRisk.volatilityIndex < 50
+                  ? "Moderate"
+                  : "High"}{" "}
+              volatility
             </p>
           </CardContent>
         </Card>
@@ -301,12 +425,12 @@ export function RealTimeRiskMonitor() {
                 <XAxis dataKey="timestamp" />
                 <YAxis domain={[0, 100]} />
                 <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="riskScore" 
-                  stroke="#ef4444" 
+                <Line
+                  type="monotone"
+                  dataKey="riskScore"
+                  stroke="#ef4444"
                   strokeWidth={2}
-                  dot={{ fill: '#ef4444', r: 3 }}
+                  dot={{ fill: "#ef4444", r: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -330,7 +454,9 @@ export function RealTimeRiskMonitor() {
                   outerRadius={80}
                   paddingAngle={2}
                   dataKey="riskContribution"
-                  label={({ symbol, riskContribution }) => `${symbol}: ${riskContribution.toFixed(1)}%`}
+                  label={({ symbol, riskContribution }) =>
+                    `${symbol}: ${riskContribution.toFixed(1)}%`
+                  }
                 >
                   {positionRisks.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
@@ -358,11 +484,11 @@ export function RealTimeRiskMonitor() {
                 <XAxis dataKey="timestamp" />
                 <YAxis />
                 <Tooltip formatter={(value) => [`$${value?.toLocaleString()}`, "VaR 95%"]} />
-                <Area 
-                  type="monotone" 
-                  dataKey="var95" 
-                  stroke="#f59e0b" 
-                  fill="#f59e0b" 
+                <Area
+                  type="monotone"
+                  dataKey="var95"
+                  stroke="#f59e0b"
+                  fill="#f59e0b"
                   fillOpacity={0.3}
                 />
               </AreaChart>
@@ -383,11 +509,11 @@ export function RealTimeRiskMonitor() {
                 <XAxis dataKey="timestamp" />
                 <YAxis domain={[0, 100]} />
                 <Tooltip formatter={(value) => [`${value}%`, "Volatility"]} />
-                <Area 
-                  type="monotone" 
-                  dataKey="volatility" 
-                  stroke="#8b5cf6" 
-                  fill="#8b5cf6" 
+                <Area
+                  type="monotone"
+                  dataKey="volatility"
+                  stroke="#8b5cf6"
+                  fill="#8b5cf6"
                   fillOpacity={0.3}
                 />
               </AreaChart>
@@ -422,15 +548,22 @@ export function RealTimeRiskMonitor() {
                     <td className="p-2 font-medium">{position.symbol}</td>
                     <td className="p-2 text-right">${position.size.toLocaleString()}</td>
                     <td className="p-2 text-right">
-                      <span className={position.riskContribution > 30 ? 'text-red-600' : 
-                        position.riskContribution > 20 ? 'text-yellow-600' : 'text-green-600'}>
+                      <span
+                        className={
+                          position.riskContribution > 30
+                            ? "text-red-600"
+                            : position.riskContribution > 20
+                              ? "text-yellow-600"
+                              : "text-green-600"
+                        }
+                      >
                         {position.riskContribution.toFixed(1)}%
                       </span>
                     </td>
                     <td className="p-2 text-right">${position.var95.toLocaleString()}</td>
                     <td className="p-2 text-right">
-                      <span className={position.pnl >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        {position.pnl >= 0 ? '+' : ''}${position.pnl}
+                      <span className={position.pnl >= 0 ? "text-green-600" : "text-red-600"}>
+                        {position.pnl >= 0 ? "+" : ""}${position.pnl}
                       </span>
                     </td>
                     <td className="p-2 text-right">{position.timeHeld.toFixed(1)}h</td>
@@ -457,10 +590,10 @@ export function RealTimeRiskMonitor() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="scenario" />
               <YAxis />
-              <Tooltip 
+              <Tooltip
                 formatter={(value, name) => [
-                  name === 'portfolioLoss' ? `$${value?.toLocaleString()}` : `${value}%`,
-                  name === 'portfolioLoss' ? 'Portfolio Loss' : 'Loss %'
+                  name === "portfolioLoss" ? `$${value?.toLocaleString()}` : `${value}%`,
+                  name === "portfolioLoss" ? "Portfolio Loss" : "Loss %",
                 ]}
               />
               <Bar dataKey="portfolioLoss" fill="#ef4444" name="Portfolio Loss" />

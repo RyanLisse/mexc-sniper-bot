@@ -1,6 +1,6 @@
 /**
  * Database Connection Pool & Caching Manager
- * 
+ *
  * Phase 4: Connection Pooling & Caching (4h)
  * - Implements database connection pooling
  * - Adds query result caching for frequently accessed data
@@ -8,9 +8,8 @@
  * - Adds performance monitoring and metrics
  */
 
+import { clearDbCache, db, executeWithRetry } from "@/src/db";
 import { sql } from "drizzle-orm";
-import { db, clearDbCache, executeWithRetry } from "@/src/db";
-import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
 
 interface ConnectionPoolConfig {
   maxConnections: number;
@@ -87,7 +86,7 @@ export class DatabaseConnectionPool {
       enableConnectionReuse: true,
       enableQueryResultCaching: true,
       cacheMaxSize: 1000,
-      cacheTTLMs: 300000 // 5 minutes
+      cacheTTLMs: 300000, // 5 minutes
     };
 
     this.metrics = {
@@ -100,7 +99,7 @@ export class DatabaseConnectionPool {
       failedConnections: 0,
       averageConnectionTime: 0,
       peakConnections: 0,
-      connectionPoolHealth: "healthy"
+      connectionPoolHealth: "healthy",
     };
 
     this.cache = {
@@ -109,7 +108,7 @@ export class DatabaseConnectionPool {
       maxMemoryMB: 100, // 100MB cache limit
       currentMemoryMB: 0,
       ttlMs: this.config.cacheTTLMs,
-      enabled: this.config.enableQueryResultCaching
+      enabled: this.config.enableQueryResultCaching,
     };
 
     this.startHealthChecks();
@@ -150,7 +149,7 @@ export class DatabaseConnectionPool {
     // Execute query with connection management
     try {
       const result = await this.executeWithConnectionManagement(queryFn);
-      
+
       // Cache the result if caching is enabled
       if (cacheKey && this.cache.enabled) {
         this.setCachedResult(cacheKey, result, cacheTTL);
@@ -170,11 +169,9 @@ export class DatabaseConnectionPool {
   /**
    * Execute query with connection management and retries
    */
-  private async executeWithConnectionManagement<T>(
-    queryFn: () => Promise<T>
-  ): Promise<T> {
+  private async executeWithConnectionManagement<T>(queryFn: () => Promise<T>): Promise<T> {
     let lastError: any;
-    
+
     for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
       try {
         // Use the existing db connection with optimization
@@ -184,14 +181,17 @@ export class DatabaseConnectionPool {
       } catch (error) {
         lastError = error;
         this.metrics.failedConnections++;
-        
-        console.warn(`Database query failed (attempt ${attempt}/${this.config.maxRetries}):`, error);
-        
+
+        console.warn(
+          `Database query failed (attempt ${attempt}/${this.config.maxRetries}):`,
+          error
+        );
+
         if (attempt < this.config.maxRetries) {
           // Exponential backoff for retries
           const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-          await new Promise(resolve => setTimeout(resolve, delay));
-          
+          await new Promise((resolve) => setTimeout(resolve, delay));
+
           // Clear database cache on retry to get fresh connection
           if (attempt === 2) {
             clearDbCache();
@@ -208,8 +208,9 @@ export class DatabaseConnectionPool {
    */
   private updateConnectionMetrics(executionTime: number, success: boolean): void {
     if (success) {
-      this.metrics.averageConnectionTime = 
-        (this.metrics.averageConnectionTime * (this.metrics.successfulConnections - 1) + executionTime) / 
+      this.metrics.averageConnectionTime =
+        (this.metrics.averageConnectionTime * (this.metrics.successfulConnections - 1) +
+          executionTime) /
         this.metrics.successfulConnections;
     }
 
@@ -235,7 +236,7 @@ export class DatabaseConnectionPool {
    */
   private getCachedResult<T>(key: string): T | null {
     const entry = this.cache.entries.get(key);
-    
+
     if (!entry) {
       return null;
     }
@@ -265,8 +266,10 @@ export class DatabaseConnectionPool {
     const entrySizeMB = dataSize / (1024 * 1024);
 
     // Check if we have space
-    if (this.cache.entries.size >= this.cache.maxSize || 
-        this.cache.currentMemoryMB + entrySizeMB > this.cache.maxMemoryMB) {
+    if (
+      this.cache.entries.size >= this.cache.maxSize ||
+      this.cache.currentMemoryMB + entrySizeMB > this.cache.maxMemoryMB
+    ) {
       this.evictLeastRecentlyUsed();
     }
 
@@ -276,7 +279,7 @@ export class DatabaseConnectionPool {
       accessCount: 1,
       lastAccessed: Date.now(),
       size: entrySizeMB,
-      key
+      key,
     };
 
     this.cache.entries.set(key, entry);
@@ -292,12 +295,13 @@ export class DatabaseConnectionPool {
     if (this.cache.entries.size === 0) return;
 
     // Sort by last accessed time (oldest first)
-    const sortedEntries = Array.from(this.cache.entries.entries())
-      .sort(([,a], [,b]) => a.lastAccessed - b.lastAccessed);
+    const sortedEntries = Array.from(this.cache.entries.entries()).sort(
+      ([, a], [, b]) => a.lastAccessed - b.lastAccessed
+    );
 
     // Remove oldest 20% of entries
     const removeCount = Math.ceil(sortedEntries.length * 0.2);
-    
+
     for (let i = 0; i < removeCount && i < sortedEntries.length; i++) {
       const [key, entry] = sortedEntries[i];
       this.cache.entries.delete(key);
@@ -320,7 +324,7 @@ export class DatabaseConnectionPool {
    */
   invalidateCache(pattern: string): void {
     let invalidatedCount = 0;
-    
+
     for (const [key, entry] of this.cache.entries.entries()) {
       if (key.includes(pattern)) {
         this.cache.entries.delete(key);
@@ -361,12 +365,9 @@ export class DatabaseConnectionPool {
   /**
    * Execute write query (insert/update/delete) with cache invalidation
    */
-  async executeWrite<T>(
-    queryFn: () => Promise<T>,
-    invalidatePatterns: string[] = []
-  ): Promise<T> {
+  async executeWrite<T>(queryFn: () => Promise<T>, invalidatePatterns: string[] = []): Promise<T> {
     const result = await this.executeQuery(queryFn);
-    
+
     // Invalidate related cache entries
     for (const pattern of invalidatePatterns) {
       this.invalidateCache(pattern);
@@ -383,19 +384,21 @@ export class DatabaseConnectionPool {
     invalidatePatterns: string[] = []
   ): Promise<T[]> {
     const startTime = performance.now();
-    
+
     try {
       // Execute operations in parallel with concurrency limit
       const results = await this.executeConcurrentOperations(operations);
-      
+
       // Invalidate cache patterns
       for (const pattern of invalidatePatterns) {
         this.invalidateCache(pattern);
       }
 
       const executionTime = performance.now() - startTime;
-      console.log(`📦 Batch execution completed: ${operations.length} operations in ${executionTime.toFixed(2)}ms`);
-      
+      console.log(
+        `📦 Batch execution completed: ${operations.length} operations in ${executionTime.toFixed(2)}ms`
+      );
+
       return results;
     } catch (error) {
       console.error("❌ Batch execution failed:", error);
@@ -406,17 +409,13 @@ export class DatabaseConnectionPool {
   /**
    * Execute operations with concurrency control
    */
-  private async executeConcurrentOperations<T>(
-    operations: (() => Promise<T>)[]
-  ): Promise<T[]> {
+  private async executeConcurrentOperations<T>(operations: (() => Promise<T>)[]): Promise<T[]> {
     const maxConcurrency = Math.min(this.config.maxConnections / 2, 5);
     const results: T[] = [];
-    
+
     for (let i = 0; i < operations.length; i += maxConcurrency) {
       const batch = operations.slice(i, i + maxConcurrency);
-      const batchResults = await Promise.all(
-        batch.map(op => this.executeQuery(op))
-      );
+      const batchResults = await Promise.all(batch.map((op) => this.executeQuery(op)));
       results.push(...batchResults);
     }
 
@@ -442,23 +441,27 @@ export class DatabaseConnectionPool {
   private async performHealthCheck(): Promise<void> {
     try {
       const startTime = performance.now();
-      
+
       // Test database connectivity
       await db.run(sql`SELECT 1`);
-      
+
       const responseTime = performance.now() - startTime;
-      
+
       // Update health metrics
       if (responseTime > 5000) {
         this.metrics.connectionPoolHealth = "critical";
       } else if (responseTime > 2000) {
-        this.metrics.connectionPoolHealth = "degraded";  
-      } else if (this.metrics.connectionPoolHealth === "critical" || this.metrics.connectionPoolHealth === "degraded") {
+        this.metrics.connectionPoolHealth = "degraded";
+      } else if (
+        this.metrics.connectionPoolHealth === "critical" ||
+        this.metrics.connectionPoolHealth === "degraded"
+      ) {
         this.metrics.connectionPoolHealth = "healthy";
       }
 
-      console.log(`💊 Health check completed: ${responseTime.toFixed(2)}ms (${this.metrics.connectionPoolHealth})`);
-      
+      console.log(
+        `💊 Health check completed: ${responseTime.toFixed(2)}ms (${this.metrics.connectionPoolHealth})`
+      );
     } catch (error) {
       this.metrics.connectionPoolHealth = "critical";
       console.error("❌ Health check failed:", error);
@@ -509,24 +512,25 @@ export class DatabaseConnectionPool {
    * Get cache metrics
    */
   getCacheMetrics(): CacheMetrics {
-    const totalRequests = Array.from(this.cache.entries.values())
-      .reduce((sum, entry) => sum + entry.accessCount, 0);
-    
-    const oldestEntry = Array.from(this.cache.entries.values())
-      .reduce((oldest, entry) => 
-        !oldest || entry.timestamp < oldest.timestamp ? entry : oldest, 
-        null as CacheEntry<any> | null
-      );
+    const totalRequests = Array.from(this.cache.entries.values()).reduce(
+      (sum, entry) => sum + entry.accessCount,
+      0
+    );
+
+    const oldestEntry = Array.from(this.cache.entries.values()).reduce(
+      (oldest, entry) => (!oldest || entry.timestamp < oldest.timestamp ? entry : oldest),
+      null as CacheEntry<any> | null
+    );
 
     return {
       totalEntries: this.cache.entries.size,
       hitRate: 0, // Would be calculated from monitoring data
-      missRate: 0, // Would be calculated from monitoring data  
+      missRate: 0, // Would be calculated from monitoring data
       totalHits: 0, // Would come from monitoring
       totalMisses: 0, // Would come from monitoring
       avgRetrievalTime: 0, // Would be calculated from monitoring
       memoryUsageMB: this.cache.currentMemoryMB,
-      oldestEntryAge: oldestEntry ? Date.now() - oldestEntry.timestamp : 0
+      oldestEntryAge: oldestEntry ? Date.now() - oldestEntry.timestamp : 0,
     };
   }
 
@@ -539,7 +543,7 @@ export class DatabaseConnectionPool {
       connectionPool: this.getConnectionMetrics(),
       cache: this.getCacheMetrics(),
       configuration: this.config,
-      recommendations: this.generateRecommendations()
+      recommendations: this.generateRecommendations(),
     };
   }
 
@@ -549,19 +553,23 @@ export class DatabaseConnectionPool {
   private generateRecommendations(): string[] {
     const recommendations: string[] = [];
     const cacheMetrics = this.getCacheMetrics();
-    
+
     if (this.metrics.connectionPoolHealth === "critical") {
-      recommendations.push("Critical: Connection pool health is poor - investigate database connectivity");
+      recommendations.push(
+        "Critical: Connection pool health is poor - investigate database connectivity"
+      );
     }
-    
+
     if (this.metrics.averageConnectionTime > 2000) {
       recommendations.push("High: Average connection time is slow - consider query optimization");
     }
-    
+
     if (cacheMetrics.memoryUsageMB > 80) {
-      recommendations.push("Medium: Cache memory usage is high - consider reducing cache size or TTL");
+      recommendations.push(
+        "Medium: Cache memory usage is high - consider reducing cache size or TTL"
+      );
     }
-    
+
     if (this.cache.entries.size > this.cache.maxSize * 0.9) {
       recommendations.push("Medium: Cache is near capacity - consider increasing cache size");
     }
@@ -574,12 +582,12 @@ export class DatabaseConnectionPool {
    */
   updateConfig(newConfig: Partial<ConnectionPoolConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
+
     // Update cache settings
     this.cache.maxSize = this.config.cacheMaxSize;
     this.cache.ttlMs = this.config.cacheTTLMs;
     this.cache.enabled = this.config.enableQueryResultCaching;
-    
+
     console.log("⚙️ Connection pool configuration updated");
   }
 
@@ -590,11 +598,11 @@ export class DatabaseConnectionPool {
     if (this.healthCheckTimer) {
       clearInterval(this.healthCheckTimer);
     }
-    
+
     if (this.cleanupTimer) {
       clearInterval(this.cleanupTimer);
     }
-    
+
     this.clearCache();
     console.log("🔌 Connection pool shutdown completed");
   }

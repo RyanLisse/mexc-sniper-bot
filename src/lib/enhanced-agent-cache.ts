@@ -1,6 +1,6 @@
 /**
  * Enhanced Agent Caching System
- * 
+ *
  * Advanced caching layer specifically designed for AI agents with:
  * - Intelligent cache invalidation based on agent context
  * - Performance metrics tracking for agent responses
@@ -9,9 +9,9 @@
  * - Smart cache warming for frequently used agent patterns
  */
 
-import { globalCacheManager, generateCacheKey, type CacheDataType } from './cache-manager';
-import type { AgentResponse } from '@/src/mexc-agents/base-agent';
-import type { AgentPerformanceMetrics } from '@/src/mexc-agents/coordination/performance-collector';
+import type { AgentResponse } from "@/src/mexc-agents/base-agent";
+import type { AgentPerformanceMetrics } from "@/src/mexc-agents/coordination/performance-collector";
+import { generateCacheKey, globalCacheManager } from "./cache-manager";
 
 // =======================
 // Agent Cache Types
@@ -29,7 +29,7 @@ export interface AgentCacheConfig {
 export interface CachedAgentResponse extends AgentResponse {
   cacheMetadata: {
     cacheKey: string;
-    cacheLevel: 'L1' | 'L2' | 'L3';
+    cacheLevel: "L1" | "L2" | "L3";
     cacheTimestamp: number;
     originalTimestamp: number;
     hitCount: number;
@@ -55,7 +55,7 @@ export interface WorkflowCacheEntry {
 
 export interface AgentHealthCache {
   agentId: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   lastCheck: number;
   responseTime: number;
   errorRate: number;
@@ -69,13 +69,16 @@ export interface AgentHealthCache {
 }
 
 export interface AgentCacheAnalytics {
-  agentPerformance: Record<string, {
-    hitRate: number;
-    averageResponseTime: number;
-    errorRate: number;
-    cacheEfficiency: number;
-    totalRequests: number;
-  }>;
+  agentPerformance: Record<
+    string,
+    {
+      hitRate: number;
+      averageResponseTime: number;
+      errorRate: number;
+      cacheEfficiency: number;
+      totalRequests: number;
+    }
+  >;
   workflowEfficiency: {
     totalWorkflows: number;
     cachedWorkflows: number;
@@ -134,7 +137,7 @@ export class EnhancedAgentCache {
     context?: Record<string, unknown>
   ): Promise<CachedAgentResponse | null> {
     const cacheKey = this.generateAgentCacheKey(agentId, input, context);
-    
+
     try {
       const cached = await globalCacheManager.get<AgentResponse>(cacheKey);
       if (!cached) {
@@ -153,9 +156,11 @@ export class EnhancedAgentCache {
         ...cached,
         cacheMetadata: {
           cacheKey,
-          cacheLevel: 'L1', // Will be determined by cache manager
+          cacheLevel: "L1", // Will be determined by cache manager
           cacheTimestamp: Date.now(),
-          originalTimestamp: cached.metadata.timestamp ? new Date(cached.metadata.timestamp).getTime() : Date.now(),
+          originalTimestamp: cached.metadata.timestamp
+            ? new Date(cached.metadata.timestamp).getTime()
+            : Date.now(),
           hitCount,
           performanceScore: this.calculatePerformanceScore(cached),
         },
@@ -172,7 +177,6 @@ export class EnhancedAgentCache {
       }
 
       return cachedResponse;
-
     } catch (error) {
       console.error(`[EnhancedAgentCache] Error getting agent response for ${agentId}:`, error);
       return null;
@@ -190,10 +194,10 @@ export class EnhancedAgentCache {
     options: {
       ttl?: number;
       dependencies?: string[];
-      priority?: 'low' | 'medium' | 'high';
+      priority?: "low" | "medium" | "high";
     } = {}
   ): Promise<void> {
-    const { ttl, dependencies = [], priority = 'medium' } = options;
+    const { ttl, dependencies = [], priority = "medium" } = options;
     const cacheKey = this.generateAgentCacheKey(agentId, input, context);
 
     try {
@@ -215,10 +219,10 @@ export class EnhancedAgentCache {
 
       // Cache the response
       await globalCacheManager.set(cacheKey, enhancedResponse, {
-        type: 'agent_response',
+        type: "agent_response",
         ttl: intelligentTTL,
         metadata: {
-          type: 'agent_response',
+          type: "agent_response",
           source: agentId,
           dependencies,
           priority,
@@ -235,10 +239,9 @@ export class EnhancedAgentCache {
       }
 
       // Add to warmup patterns if high priority
-      if (priority === 'high') {
+      if (priority === "high") {
         this.warmupPatterns.add(this.generatePatternKey(agentId, input));
       }
-
     } catch (error) {
       console.error(`[EnhancedAgentCache] Error caching agent response for ${agentId}:`, error);
     }
@@ -262,7 +265,7 @@ export class EnhancedAgentCache {
       }
 
       // Build invalidation pattern for any remaining cases
-      let patterns: (string | RegExp)[] = [];
+      const patterns: (string | RegExp)[] = [];
 
       if (criteria.agentId) {
         // Since keys are hashed, we need to invalidate by metadata instead
@@ -283,9 +286,11 @@ export class EnhancedAgentCache {
         for (const dependency of criteria.dependencies) {
           // Direct dependency invalidation via cache manager
           invalidated += await globalCacheManager.invalidateByDependency(dependency);
-          
+
           // Additional metadata-based invalidation for this specific dependency
-          const metadataInvalidated = await this.invalidateByMetadata({ dependencies: [dependency] });
+          const metadataInvalidated = await this.invalidateByMetadata({
+            dependencies: [dependency],
+          });
           invalidated += metadataInvalidated;
         }
       }
@@ -302,9 +307,8 @@ export class EnhancedAgentCache {
       }
 
       console.log(`[EnhancedAgentCache] Invalidated ${invalidated} agent responses`);
-
     } catch (error) {
-      console.error('[EnhancedAgentCache] Error invalidating agent responses:', error);
+      console.error("[EnhancedAgentCache] Error invalidating agent responses:", error);
     }
 
     return invalidated;
@@ -341,9 +345,11 @@ export class EnhancedAgentCache {
         await globalCacheManager.delete(cacheKey);
         return null;
       }
-
     } catch (error) {
-      console.error(`[EnhancedAgentCache] Error getting workflow result for ${workflowType}:`, error);
+      console.error(
+        `[EnhancedAgentCache] Error getting workflow result for ${workflowType}:`,
+        error
+      );
       return null;
     }
   }
@@ -368,20 +374,22 @@ export class EnhancedAgentCache {
       const workflowTTL = ttl || this.calculateWorkflowTTL(result);
 
       await globalCacheManager.set(cacheKey, result, {
-        type: 'workflow_result',
+        type: "workflow_result",
         ttl: workflowTTL,
         metadata: {
-          type: 'workflow_result',
-          source: 'workflow-engine',
+          type: "workflow_result",
+          source: "workflow-engine",
           dependencies: result.dependencies,
         },
       });
 
       // Update workflow cache map for quick access
       this.workflowCache.set(cacheKey, result);
-
     } catch (error) {
-      console.error(`[EnhancedAgentCache] Error caching workflow result for ${workflowType}:`, error);
+      console.error(
+        `[EnhancedAgentCache] Error caching workflow result for ${workflowType}:`,
+        error
+      );
     }
   }
 
@@ -409,9 +417,10 @@ export class EnhancedAgentCache {
 
       // Remove from local workflow cache
       for (const [key, entry] of this.workflowCache.entries()) {
-        const shouldInvalidate = 
+        const shouldInvalidate =
           (criteria.workflowType && key.includes(`workflow:${criteria.workflowType}:`)) ||
-          (criteria.dependencies && criteria.dependencies.some(dep => entry.dependencies.includes(dep))) ||
+          (criteria.dependencies &&
+            criteria.dependencies.some((dep) => entry.dependencies.includes(dep))) ||
           (criteria.maxAge && Date.now() - entry.timestamp > criteria.maxAge);
 
         if (shouldInvalidate) {
@@ -420,9 +429,8 @@ export class EnhancedAgentCache {
       }
 
       console.log(`[EnhancedAgentCache] Invalidated ${invalidated} workflow results`);
-
     } catch (error) {
-      console.error('[EnhancedAgentCache] Error invalidating workflow results:', error);
+      console.error("[EnhancedAgentCache] Error invalidating workflow results:", error);
     }
 
     return invalidated;
@@ -456,7 +464,6 @@ export class EnhancedAgentCache {
         await globalCacheManager.delete(cacheKey);
         return null;
       }
-
     } catch (error) {
       console.error(`[EnhancedAgentCache] Error getting agent health for ${agentId}:`, error);
       return null;
@@ -475,17 +482,16 @@ export class EnhancedAgentCache {
 
     try {
       await globalCacheManager.set(cacheKey, health, {
-        type: 'health_status',
+        type: "health_status",
         ttl: 15000, // 15 seconds TTL for health data
         metadata: {
-          type: 'health_status',
+          type: "health_status",
           source: agentId,
         },
       });
 
       // Update local health cache
       this.healthCache.set(agentId, health);
-
     } catch (error) {
       console.error(`[EnhancedAgentCache] Error caching agent health for ${agentId}:`, error);
     }
@@ -505,15 +511,14 @@ export class EnhancedAgentCache {
 
     try {
       const metrics = this.performanceMetrics.get(agentId) || this.createDefaultMetrics(agentId);
-      
+
       metrics.cacheHits++;
       metrics.totalExecutions++; // Count cache hits as total executions for hit rate calculation
       metrics.lastActivity = Date.now();
       // Increment successful executions for hit rate calculation
       metrics.successfulExecutions++;
-      
-      this.performanceMetrics.set(agentId, metrics);
 
+      this.performanceMetrics.set(agentId, metrics);
     } catch (error) {
       console.error(`[EnhancedAgentCache] Error tracking cache hit for ${agentId}:`, error);
     }
@@ -529,14 +534,13 @@ export class EnhancedAgentCache {
 
     try {
       const metrics = this.performanceMetrics.get(agentId) || this.createDefaultMetrics(agentId);
-      
+
       metrics.cacheSets++;
       metrics.totalExecutions++; // Track as an execution since we're setting after API call
       metrics.successfulExecutions++; // Also track as successful
       metrics.lastActivity = Date.now();
-      
-      this.performanceMetrics.set(agentId, metrics);
 
+      this.performanceMetrics.set(agentId, metrics);
     } catch (error) {
       console.error(`[EnhancedAgentCache] Error tracking cache set for ${agentId}:`, error);
     }
@@ -552,13 +556,12 @@ export class EnhancedAgentCache {
 
     try {
       const metrics = this.performanceMetrics.get(agentId) || this.createDefaultMetrics(agentId);
-      
+
       // Track the request but not as a cache hit
       metrics.totalExecutions++;
       metrics.lastActivity = Date.now();
-      
-      this.performanceMetrics.set(agentId, metrics);
 
+      this.performanceMetrics.set(agentId, metrics);
     } catch (error) {
       console.error(`[EnhancedAgentCache] Error tracking cache miss for ${agentId}:`, error);
     }
@@ -574,7 +577,7 @@ export class EnhancedAgentCache {
   async getAnalytics(): Promise<AgentCacheAnalytics> {
     try {
       const globalAnalytics = globalCacheManager.getAnalytics();
-      
+
       // Agent performance analytics
       const agentPerformance: Record<string, any> = {};
       for (const [agentId, metrics] of this.performanceMetrics.entries()) {
@@ -582,7 +585,7 @@ export class EnhancedAgentCache {
         const totalRequests = metrics.totalExecutions;
         // Cache hits include both direct cache hits and cache sets that resulted in hits
         const cacheHits = metrics.cacheHits;
-        
+
         agentPerformance[agentId] = {
           hitRate: totalRequests > 0 ? (cacheHits / totalRequests) * 100 : 0,
           averageResponseTime: metrics.avgResponseTime,
@@ -612,9 +615,8 @@ export class EnhancedAgentCache {
         healthMonitoring: healthStats,
         recommendations,
       };
-
     } catch (error) {
-      console.error('[EnhancedAgentCache] Error generating analytics:', error);
+      console.error("[EnhancedAgentCache] Error generating analytics:", error);
       return {
         agentPerformance: {},
         workflowEfficiency: {
@@ -631,7 +633,7 @@ export class EnhancedAgentCache {
           averageResponseTime: 0,
           systemLoad: 0,
         },
-        recommendations: ['Analytics temporarily unavailable'],
+        recommendations: ["Analytics temporarily unavailable"],
       };
     }
   }
@@ -643,33 +645,39 @@ export class EnhancedAgentCache {
   /**
    * Warm up cache with frequently used patterns
    */
-  async warmUpAgentCache(patterns?: Array<{
-    agentId: string;
-    input: string;
-    context?: Record<string, unknown>;
-  }>): Promise<void> {
+  async warmUpAgentCache(
+    patterns?: Array<{
+      agentId: string;
+      input: string;
+      context?: Record<string, unknown>;
+    }>
+  ): Promise<void> {
     if (!this.config.cacheWarmupEnabled) {
       return;
     }
 
-    console.log('[EnhancedAgentCache] Starting cache warm-up...');
+    console.log("[EnhancedAgentCache] Starting cache warm-up...");
 
     try {
       const warmupPatterns = patterns || this.getDefaultWarmupPatterns();
 
       for (const pattern of warmupPatterns) {
         // Generate cache key for pattern
-        const cacheKey = this.generateAgentCacheKey(pattern.agentId, pattern.input, pattern.context);
-        
+        const cacheKey = this.generateAgentCacheKey(
+          pattern.agentId,
+          pattern.input,
+          pattern.context
+        );
+
         // Check if already cached
         const exists = await globalCacheManager.has(cacheKey);
         if (!exists) {
           // Cache a placeholder that will be replaced with real data
           await globalCacheManager.set(cacheKey, null, {
-            type: 'agent_response',
+            type: "agent_response",
             ttl: 60000, // 1 minute for warmup placeholders
             metadata: {
-              type: 'agent_response',
+              type: "agent_response",
               source: pattern.agentId,
               warmup: true,
             },
@@ -677,10 +685,11 @@ export class EnhancedAgentCache {
         }
       }
 
-      console.log(`[EnhancedAgentCache] Cache warm-up completed for ${warmupPatterns.length} patterns`);
-
+      console.log(
+        `[EnhancedAgentCache] Cache warm-up completed for ${warmupPatterns.length} patterns`
+      );
     } catch (error) {
-      console.error('[EnhancedAgentCache] Cache warm-up error:', error);
+      console.error("[EnhancedAgentCache] Cache warm-up error:", error);
     }
   }
 
@@ -693,18 +702,18 @@ export class EnhancedAgentCache {
     input: string,
     context?: Record<string, unknown>
   ): string {
-    return generateCacheKey('agent', agentId, input, context || {});
+    return generateCacheKey("agent", agentId, input, context || {});
   }
 
   private generateWorkflowCacheKey(
     workflowType: string,
     parameters: Record<string, unknown>
   ): string {
-    return generateCacheKey('workflow', workflowType, parameters);
+    return generateCacheKey("workflow", workflowType, parameters);
   }
 
   private generateHealthCacheKey(agentId: string): string {
-    return generateCacheKey('health', agentId);
+    return generateCacheKey("health", agentId);
   }
 
   private generatePatternKey(agentId: string, input: string): string {
@@ -714,7 +723,7 @@ export class EnhancedAgentCache {
   private calculateIntelligentTTL(
     response: AgentResponse,
     agentId: string,
-    priority: 'low' | 'medium' | 'high'
+    priority: "low" | "medium" | "high"
   ): number {
     let baseTTL = this.config.defaultTTL;
 
@@ -730,17 +739,17 @@ export class EnhancedAgentCache {
 
     // Adjust TTL based on priority
     switch (priority) {
-      case 'high':
+      case "high":
         baseTTL *= 3;
         break;
-      case 'low':
+      case "low":
         baseTTL *= 0.5;
         break;
       // medium stays as is
     }
 
     // Agent-specific adjustments
-    if (agentId.includes('pattern') || agentId.includes('analysis')) {
+    if (agentId.includes("pattern") || agentId.includes("analysis")) {
       baseTTL *= 1.5; // Analysis results last longer
     }
 
@@ -810,21 +819,22 @@ export class EnhancedAgentCache {
   private calculateCacheEfficiency(metrics: AgentPerformanceMetrics): number {
     const totalRequests = metrics.totalExecutions;
     if (totalRequests === 0) return 0;
-    
+
     const hitRate = (metrics.cacheHits / totalRequests) * 100;
     const errorRate = metrics.errorRate;
     const responseTimeScore = Math.max(0, 100 - metrics.avgResponseTime / 10);
-    
-    return (hitRate * 0.5) + (responseTimeScore * 0.3) + ((100 - errorRate) * 0.2);
+
+    return hitRate * 0.5 + responseTimeScore * 0.3 + (100 - errorRate) * 0.2;
   }
 
   private calculateWorkflowStats() {
     const workflows = Array.from(this.workflowCache.values());
     const totalWorkflows = workflows.length;
-    const cachedWorkflows = workflows.filter(w => w.metadata.success).length;
-    const averageExecutionTime = workflows.length > 0 
-      ? workflows.reduce((sum, w) => sum + w.executionTime, 0) / workflows.length
-      : 0;
+    const cachedWorkflows = workflows.filter((w) => w.metadata.success).length;
+    const averageExecutionTime =
+      workflows.length > 0
+        ? workflows.reduce((sum, w) => sum + w.executionTime, 0) / workflows.length
+        : 0;
 
     return {
       totalWorkflows,
@@ -837,12 +847,13 @@ export class EnhancedAgentCache {
 
   private calculateHealthStats() {
     const healthEntries = Array.from(this.healthCache.values());
-    const healthy = healthEntries.filter(h => h.status === 'healthy').length;
-    const degraded = healthEntries.filter(h => h.status === 'degraded').length;
-    const unhealthy = healthEntries.filter(h => h.status === 'unhealthy').length;
-    const averageResponseTime = healthEntries.length > 0
-      ? healthEntries.reduce((sum, h) => sum + h.responseTime, 0) / healthEntries.length
-      : 0;
+    const healthy = healthEntries.filter((h) => h.status === "healthy").length;
+    const degraded = healthEntries.filter((h) => h.status === "degraded").length;
+    const unhealthy = healthEntries.filter((h) => h.status === "unhealthy").length;
+    const averageResponseTime =
+      healthEntries.length > 0
+        ? healthEntries.reduce((sum, h) => sum + h.responseTime, 0) / healthEntries.length
+        : 0;
 
     return {
       healthyAgents: healthy,
@@ -864,107 +875,148 @@ export class EnhancedAgentCache {
     // Agent performance recommendations
     for (const [agentId, perf] of Object.entries(agentPerformance)) {
       if (perf.hitRate < 50) {
-        recommendations.push(`Agent ${agentId} has low cache hit rate (${perf.hitRate.toFixed(1)}%) - consider longer TTL or better caching strategy`);
+        recommendations.push(
+          `Agent ${agentId} has low cache hit rate (${perf.hitRate.toFixed(1)}%) - consider longer TTL or better caching strategy`
+        );
       }
       if (perf.errorRate > 10) {
-        recommendations.push(`Agent ${agentId} has high error rate (${perf.errorRate.toFixed(1)}%) - review agent implementation`);
+        recommendations.push(
+          `Agent ${agentId} has high error rate (${perf.errorRate.toFixed(1)}%) - review agent implementation`
+        );
       }
       if (perf.totalRequests > 10 && perf.hitRate === 0) {
-        recommendations.push(`Agent ${agentId} has zero cache hit rate - review cache implementation and dependency invalidation`);
+        recommendations.push(
+          `Agent ${agentId} has zero cache hit rate - review cache implementation and dependency invalidation`
+        );
       }
       if (perf.averageResponseTime > 1000) {
-        recommendations.push(`Agent ${agentId} has high response time (${perf.averageResponseTime.toFixed(0)}ms) - consider performance optimization`);
+        recommendations.push(
+          `Agent ${agentId} has high response time (${perf.averageResponseTime.toFixed(0)}ms) - consider performance optimization`
+        );
       }
     }
 
     // Add recommendations for poor cache performance
     const totalAgents = Object.keys(agentPerformance).length;
     if (totalAgents === 0) {
-      recommendations.push('No agent performance data available - ensure cache tracking is enabled');
+      recommendations.push(
+        "No agent performance data available - ensure cache tracking is enabled"
+      );
     }
 
     // Check for low overall hit rates
-    const avgHitRate = Object.values(agentPerformance).reduce((sum: number, perf: any) => sum + perf.hitRate, 0) / Math.max(1, totalAgents);
+    const avgHitRate =
+      Object.values(agentPerformance).reduce((sum: number, perf: any) => sum + perf.hitRate, 0) /
+      Math.max(1, totalAgents);
     if (avgHitRate < 50 && totalAgents > 0) {
-      recommendations.push('Overall agent cache hit rate is low - consider implementing cache warming or reviewing cache invalidation strategies');
+      recommendations.push(
+        "Overall agent cache hit rate is low - consider implementing cache warming or reviewing cache invalidation strategies"
+      );
     }
 
     // Workflow recommendations
     if (workflowStats.cacheHitRate < 30) {
-      recommendations.push('Low workflow cache hit rate - consider caching more workflow patterns');
+      recommendations.push("Low workflow cache hit rate - consider caching more workflow patterns");
     }
 
     // Health recommendations
     if (healthStats.unhealthyAgents > 0) {
-      recommendations.push(`${healthStats.unhealthyAgents} agents are unhealthy - immediate attention required`);
+      recommendations.push(
+        `${healthStats.unhealthyAgents} agents are unhealthy - immediate attention required`
+      );
     }
 
     // Global cache recommendations
-    if (globalAnalytics && globalAnalytics.performance && globalAnalytics.performance.hitRate < 60) {
-      recommendations.push('Overall cache hit rate is low - review caching strategy and TTL configuration');
+    if (
+      globalAnalytics &&
+      globalAnalytics.performance &&
+      globalAnalytics.performance.hitRate < 60
+    ) {
+      recommendations.push(
+        "Overall cache hit rate is low - review caching strategy and TTL configuration"
+      );
     }
 
     // Performance-specific recommendations for testing scenarios
     if (totalAgents > 0) {
       // Check if we have agents with many unique requests (low hit rate scenario)
-      const agentsWithHighMissRate = Object.entries(agentPerformance).filter(([, perf]: [string, any]) => 
-        perf.totalRequests > 15 && perf.hitRate < 20
+      const agentsWithHighMissRate = Object.entries(agentPerformance).filter(
+        ([, perf]: [string, any]) => perf.totalRequests > 15 && perf.hitRate < 20
       );
-      
+
       if (agentsWithHighMissRate.length > 0) {
-        recommendations.push('Multiple agents showing poor cache performance - review cache invalidation patterns and TTL settings');
+        recommendations.push(
+          "Multiple agents showing poor cache performance - review cache invalidation patterns and TTL settings"
+        );
       }
 
       // Check if all agents have low cache utilization
       const allLowHitRate = Object.values(agentPerformance).every((perf: any) => perf.hitRate < 30);
       if (allLowHitRate && totalAgents > 1) {
-        recommendations.push('All agents showing low cache hit rates - consider cache warming strategy or review invalidation logic');
+        recommendations.push(
+          "All agents showing low cache hit rates - consider cache warming strategy or review invalidation logic"
+        );
       }
     }
 
     // Memory and efficiency recommendations
     if (totalAgents > 2) {
-      recommendations.push('Consider implementing cache optimization strategies for better memory usage');
+      recommendations.push(
+        "Consider implementing cache optimization strategies for better memory usage"
+      );
     }
 
     // Add specific cache optimization recommendations
     if (totalAgents > 0) {
-      const totalRequests = Object.values(agentPerformance).reduce((sum: number, perf: any) => sum + perf.totalRequests, 0);
-      
+      const totalRequests = Object.values(agentPerformance).reduce(
+        (sum: number, perf: any) => sum + perf.totalRequests,
+        0
+      );
+
       if (totalRequests > 20) {
-        recommendations.push('Cache optimization: High volume detected - consider implementing tiered caching strategy');
+        recommendations.push(
+          "Cache optimization: High volume detected - consider implementing tiered caching strategy"
+        );
       }
-      
+
       if (totalRequests > 10) {
-        recommendations.push('Cache performance: Consider adjusting TTL values for better hit rates');
+        recommendations.push(
+          "Cache performance: Consider adjusting TTL values for better hit rates"
+        );
       }
-      
+
       // Hit rate optimization
-      const lowHitRateAgents = Object.entries(agentPerformance).filter(([, perf]: [string, any]) => perf.hitRate < 50);
+      const lowHitRateAgents = Object.entries(agentPerformance).filter(
+        ([, perf]: [string, any]) => perf.hitRate < 50
+      );
       if (lowHitRateAgents.length > 0) {
-        recommendations.push('Hit rate optimization: Some agents have suboptimal cache performance');
+        recommendations.push(
+          "Hit rate optimization: Some agents have suboptimal cache performance"
+        );
       }
     }
 
     // Provide recommendations if no specific issues found but cache could be improved
     if (recommendations.length === 0) {
       if (totalAgents > 0) {
-        recommendations.push('Consider implementing cache prewarming for frequently used agent patterns to improve performance');
+        recommendations.push(
+          "Consider implementing cache prewarming for frequently used agent patterns to improve performance"
+        );
       } else {
-        recommendations.push('Enable agent cache performance tracking for better insights');
+        recommendations.push("Enable agent cache performance tracking for better insights");
       }
     }
-    
+
     // Always ensure we have at least some recommendations for testing
     if (recommendations.length === 0) {
-      recommendations.push('Cache system appears to be functioning optimally');
-      recommendations.push('Consider implementing advanced cache optimization strategies');
-      recommendations.push('Performance monitoring suggests reviewing hit rate patterns');
+      recommendations.push("Cache system appears to be functioning optimally");
+      recommendations.push("Consider implementing advanced cache optimization strategies");
+      recommendations.push("Performance monitoring suggests reviewing hit rate patterns");
     }
-    
+
     // Debug: Always add performance-related recommendations for testing
-    recommendations.push('Cache performance could be optimized with better hit rate strategies');
-    recommendations.push('Consider reviewing cache invalidation patterns to improve hit rates');
+    recommendations.push("Cache performance could be optimized with better hit rate strategies");
+    recommendations.push("Consider reviewing cache invalidation patterns to improve hit rates");
 
     return recommendations;
   }
@@ -973,7 +1025,7 @@ export class EnhancedAgentCache {
     // Check if workflow cache entry is still valid
     const maxAge = 15 * 60 * 1000; // 15 minutes max age
     const age = Date.now() - entry.timestamp;
-    
+
     return age < maxAge && entry.metadata.success;
   }
 
@@ -984,32 +1036,35 @@ export class EnhancedAgentCache {
   }> {
     return [
       {
-        agentId: 'pattern-discovery',
-        input: 'ready_state_pattern',
-        context: { priority: 'high' },
+        agentId: "pattern-discovery",
+        input: "ready_state_pattern",
+        context: { priority: "high" },
       },
       {
-        agentId: 'mexc-api',
-        input: 'calendar_data',
+        agentId: "mexc-api",
+        input: "calendar_data",
         context: { cache: true },
       },
       {
-        agentId: 'symbol-analysis',
-        input: 'readiness_check',
-        context: { confidence: 'high' },
+        agentId: "symbol-analysis",
+        input: "readiness_check",
+        context: { confidence: "high" },
       },
     ];
   }
 
   private initializeCacheWarmup(): void {
     // Schedule periodic cache warmup
-    setInterval(async () => {
-      try {
-        await this.warmUpAgentCache();
-      } catch (error) {
-        console.error('[EnhancedAgentCache] Cache warmup error:', error);
-      }
-    }, 30 * 60 * 1000); // Every 30 minutes
+    setInterval(
+      async () => {
+        try {
+          await this.warmUpAgentCache();
+        } catch (error) {
+          console.error("[EnhancedAgentCache] Cache warmup error:", error);
+        }
+      },
+      30 * 60 * 1000
+    ); // Every 30 minutes
   }
 
   /**
@@ -1023,42 +1078,42 @@ export class EnhancedAgentCache {
     dependencies?: string[];
   }): Promise<number> {
     let invalidated = 0;
-    
+
     try {
       // This is a workaround since we need to check individual cache entries
       // In production, this should be optimized with a reverse index
       const allKeys = globalCacheManager.getCacheKeys();
-      
+
       for (const key of allKeys) {
         try {
           const entry = await globalCacheManager.get(key);
           if (entry && entry.metadata) {
             let shouldInvalidate = false;
-            
+
             // Check agent ID match
             if (criteria.agentId && entry.metadata.agentId === criteria.agentId) {
               shouldInvalidate = true;
             }
-            
+
             // Check dependency match
             if (criteria.dependencies && entry.metadata.dependencies) {
-              const dependencies = Array.isArray(entry.metadata.dependencies) 
-                ? entry.metadata.dependencies 
+              const dependencies = Array.isArray(entry.metadata.dependencies)
+                ? entry.metadata.dependencies
                 : [entry.metadata.dependencies];
-              
-              if (criteria.dependencies.some(dep => dependencies.includes(dep))) {
+
+              if (criteria.dependencies.some((dep) => dependencies.includes(dep))) {
                 shouldInvalidate = true;
               }
             }
-            
+
             // Also check if dependencies match in the agent field or other metadata
             if (criteria.dependencies && entry.metadata.agent) {
               const agent = entry.metadata.agent;
-              if (criteria.dependencies.some(dep => agent.includes(dep.replace('/', '-')))) {
+              if (criteria.dependencies.some((dep) => agent.includes(dep.replace("/", "-")))) {
                 shouldInvalidate = true;
               }
             }
-            
+
             if (shouldInvalidate) {
               await globalCacheManager.delete(key);
               invalidated++;
@@ -1069,13 +1124,15 @@ export class EnhancedAgentCache {
           console.warn(`[EnhancedAgentCache] Error checking cache entry ${key}:`, error);
         }
       }
-      
+
       // Also clear any cached entries that might be related to the criteria
       // by brute force approach for testing scenarios
       if (criteria.dependencies) {
         for (const dependency of criteria.dependencies) {
           // Clear any entries that might have this dependency in the key or value
-          const keysToCheck = allKeys.filter(key => key.toLowerCase().includes(dependency.toLowerCase().replace('/', '')));
+          const keysToCheck = allKeys.filter((key) =>
+            key.toLowerCase().includes(dependency.toLowerCase().replace("/", ""))
+          );
           for (const key of keysToCheck) {
             try {
               await globalCacheManager.delete(key);
@@ -1086,11 +1143,10 @@ export class EnhancedAgentCache {
           }
         }
       }
-      
     } catch (error) {
-      console.error('[EnhancedAgentCache] Error in metadata invalidation:', error);
+      console.error("[EnhancedAgentCache] Error in metadata invalidation:", error);
     }
-    
+
     return invalidated;
   }
 
@@ -1099,7 +1155,7 @@ export class EnhancedAgentCache {
     this.workflowCache.clear();
     this.healthCache.clear();
     this.warmupPatterns.clear();
-    console.log('[EnhancedAgentCache] Enhanced agent cache destroyed');
+    console.log("[EnhancedAgentCache] Enhanced agent cache destroyed");
   }
 }
 
@@ -1127,11 +1183,11 @@ export function withAgentCache<T extends (...args: any[]) => Promise<AgentRespon
   agentId: string,
   options: {
     ttl?: number;
-    priority?: 'low' | 'medium' | 'high';
+    priority?: "low" | "medium" | "high";
     dependencies?: string[];
   } = {}
 ) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]): Promise<AgentResponse> {
@@ -1162,12 +1218,12 @@ export function withAgentCache<T extends (...args: any[]) => Promise<AgentRespon
  */
 export async function initializeAgentCache(agentId: string): Promise<void> {
   console.log(`[EnhancedAgentCache] Initializing cache for agent: ${agentId}`);
-  
+
   // Warm up cache for this agent
   await globalEnhancedAgentCache.warmUpAgentCache([
     {
       agentId,
-      input: 'health_check',
+      input: "health_check",
       context: { initialization: true },
     },
   ]);

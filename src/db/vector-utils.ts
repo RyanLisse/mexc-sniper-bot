@@ -330,11 +330,7 @@ export class VectorUtils {
   /**
    * Get patterns by type and date range
    */
-  static async getPatternsByTypeAndDate(
-    patternType: string,
-    afterDate: Date,
-    beforeDate?: Date
-  ) {
+  static async getPatternsByTypeAndDate(patternType: string, afterDate: Date, beforeDate?: Date) {
     return executeWithRetry(async () => {
       let query = db
         .select()
@@ -344,9 +340,7 @@ export class VectorUtils {
         );
 
       if (beforeDate) {
-        query = query.where(
-          sql`discovered_at <= ${beforeDate.getTime() / 1000}`
-        );
+        query = query.where(sql`discovered_at <= ${beforeDate.getTime() / 1000}`);
       }
 
       return await query.orderBy(sql`discovered_at DESC`);
@@ -356,11 +350,7 @@ export class VectorUtils {
   /**
    * Get patterns by date range with optional type filter
    */
-  static async getPatternsByDateRange(
-    startDate: Date,
-    endDate: Date,
-    patternType?: string
-  ) {
+  static async getPatternsByDateRange(startDate: Date, endDate: Date, patternType?: string) {
     return executeWithRetry(async () => {
       let query = db
         .select()
@@ -389,7 +379,7 @@ export class VectorUtils {
         .update(patternEmbeddings)
         .set({
           isActive: false,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(
           sql`(last_seen_at <= ${cutoffDate.getTime() / 1000} OR confidence < ${lowConfidenceThreshold}) AND is_active = 1`
@@ -421,31 +411,31 @@ export class VectorUtils {
       afterDate,
       beforeDate,
       minConfidence,
-      maxResults = 50
+      maxResults = 50,
     } = options;
 
     return executeWithRetry(async () => {
       // Build WHERE conditions
       const conditions = [`is_active = 1`];
-      
+
       if (patternType) {
         conditions.push(`pattern_type = '${patternType}'`);
       }
-      
+
       if (afterDate) {
         conditions.push(`discovered_at >= ${afterDate.getTime() / 1000}`);
       }
-      
+
       if (beforeDate) {
         conditions.push(`discovered_at <= ${beforeDate.getTime() / 1000}`);
       }
-      
+
       if (minConfidence) {
         conditions.push(`confidence >= ${minConfidence}`);
       }
 
-      const whereClause = conditions.join(' AND ');
-      
+      const whereClause = conditions.join(" AND ");
+
       const patterns = await db
         .select()
         .from(patternEmbeddings)
@@ -453,7 +443,7 @@ export class VectorUtils {
         .limit(maxResults);
 
       const similarities = [];
-      
+
       for (const pattern of patterns) {
         try {
           const patternEmbedding = JSON.parse(pattern.embedding) as number[];
@@ -465,7 +455,7 @@ export class VectorUtils {
               ...pattern,
               cosineSimilarity: similarity,
               euclideanDistance: distance,
-              similarity // Alias for backward compatibility
+              similarity, // Alias for backward compatibility
             });
           }
         } catch (error) {
@@ -473,9 +463,7 @@ export class VectorUtils {
         }
       }
 
-      return similarities
-        .sort((a, b) => b.cosineSimilarity - a.cosineSimilarity)
-        .slice(0, limit);
+      return similarities.sort((a, b) => b.cosineSimilarity - a.cosineSimilarity).slice(0, limit);
     }, "Enhanced similarity search");
   }
 }

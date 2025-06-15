@@ -1,9 +1,5 @@
-import type { 
-  NotificationProvider, 
-  NotificationMessage, 
-  NotificationResult 
-} from "./index";
-import type { SelectNotificationChannel, SelectAlertInstance } from "../../db/schemas/alerts";
+import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
+import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface EmailConfig {
   smtpHost: string;
@@ -25,17 +21,26 @@ export class EmailProvider implements NotificationProvider {
 
   async validateConfig(config: Record<string, unknown>): Promise<boolean> {
     const emailConfig = config as EmailConfig;
-    
-    const required = ["smtpHost", "smtpPort", "smtpUser", "smtpPassword", "fromAddress", "toAddresses"];
-    const hasAllRequired = required.every(field => emailConfig[field] !== undefined && emailConfig[field] !== "");
-    
+
+    const required = [
+      "smtpHost",
+      "smtpPort",
+      "smtpUser",
+      "smtpPassword",
+      "fromAddress",
+      "toAddresses",
+    ];
+    const hasAllRequired = required.every(
+      (field) => emailConfig[field] !== undefined && emailConfig[field] !== ""
+    );
+
     if (!hasAllRequired) {
       return false;
     }
 
     // Validate email addresses
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (!emailRegex.test(emailConfig.fromAddress)) {
       return false;
     }
@@ -56,10 +61,10 @@ export class EmailProvider implements NotificationProvider {
   ): Promise<NotificationResult> {
     try {
       const config = JSON.parse(channel.config) as EmailConfig;
-      
+
       // For production, you would use a real SMTP library like nodemailer
       // For now, we'll simulate the email sending
-      
+
       const emailData = {
         from: `${config.fromName || "MEXC Alert System"} <${config.fromAddress}>`,
         to: config.toAddresses.join(", "),
@@ -72,7 +77,7 @@ export class EmailProvider implements NotificationProvider {
 
       // Simulate email sending (replace with actual SMTP implementation)
       console.log("Sending email:", emailData);
-      
+
       // In production, you would:
       // const nodemailer = require('nodemailer');
       // const transporter = nodemailer.createTransporter({...});
@@ -95,7 +100,7 @@ export class EmailProvider implements NotificationProvider {
   private formatEmailHTML(message: NotificationMessage, alert: SelectAlertInstance): string {
     const priorityColor = this.getPriorityColor(message.priority);
     const severityIcon = this.getSeverityIcon(alert.severity);
-    
+
     return `
       <!DOCTYPE html>
       <html>
@@ -172,22 +177,33 @@ This is an automated alert from the MEXC Sniper Bot AI System.
 
   private getPriorityColor(priority: string): string {
     switch (priority) {
-      case "critical": return "#dc2626";
-      case "high": return "#ea580c";
-      case "medium": return "#d97706";
-      case "low": return "#2563eb";
-      default: return "#6b7280";
+      case "critical":
+        return "#dc2626";
+      case "high":
+        return "#ea580c";
+      case "medium":
+        return "#d97706";
+      case "low":
+        return "#2563eb";
+      default:
+        return "#6b7280";
     }
   }
 
   private getSeverityIcon(severity: string): string {
     switch (severity) {
-      case "critical": return "🔴";
-      case "high": return "🟠";
-      case "medium": return "🟡";
-      case "low": return "🔵";
-      case "info": return "ℹ️";
-      default: return "⚪";
+      case "critical":
+        return "🔴";
+      case "high":
+        return "🟠";
+      case "medium":
+        return "🟡";
+      case "low":
+        return "🔵";
+      case "info":
+        return "ℹ️";
+      default:
+        return "⚪";
     }
   }
 }

@@ -1,51 +1,66 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell
-} from "recharts";
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  Info, 
-  XCircle,
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Activity,
+  AlertCircle,
+  AlertTriangle,
   Bell,
-  BellOff,
-  Filter,
-  Search,
+  CheckCircle,
+  Clock,
   Download,
-  Trash2,
   Eye,
   EyeOff,
-  Clock,
-  TrendingUp,
-  AlertCircle,
+  Info,
   RefreshCw,
-  Settings,
-  Users,
-  Activity
+  Search,
+  Trash2,
+  TrendingUp,
+  XCircle,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 interface Alert {
   id: string;
@@ -113,13 +128,13 @@ export function AlertCenter() {
   const [error, setError] = useState<string | null>(null);
   const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState({
-    severity: '',
-    category: '',
-    acknowledged: '',
-    search: ''
+    severity: "",
+    category: "",
+    acknowledged: "",
+    search: "",
   });
-  const [sortBy, setSortBy] = useState('timestamp');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState("timestamp");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showOnlyCritical, setShowOnlyCritical] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -138,29 +153,30 @@ export function AlertCenter() {
   const fetchAlerts = async () => {
     try {
       const params = new URLSearchParams();
-      if (filters.severity) params.append('severity', filters.severity);
-      if (filters.category) params.append('category', filters.category);
-      if (filters.acknowledged) params.append('acknowledged', filters.acknowledged);
-      
+      if (filters.severity) params.append("severity", filters.severity);
+      if (filters.category) params.append("category", filters.category);
+      if (filters.acknowledged) params.append("acknowledged", filters.acknowledged);
+
       const response = await fetch(`/api/monitoring/alerts?${params.toString()}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch alerts');
+        throw new Error("Failed to fetch alerts");
       }
-      
+
       const result = await response.json();
-      
+
       let filteredAlerts = result.alerts;
       if (filters.search) {
-        filteredAlerts = filteredAlerts.filter((alert: Alert) => 
-          alert.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-          alert.message.toLowerCase().includes(filters.search.toLowerCase()) ||
-          alert.source.toLowerCase().includes(filters.search.toLowerCase())
+        filteredAlerts = filteredAlerts.filter(
+          (alert: Alert) =>
+            alert.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+            alert.message.toLowerCase().includes(filters.search.toLowerCase()) ||
+            alert.source.toLowerCase().includes(filters.search.toLowerCase())
         );
       }
 
       if (showOnlyCritical) {
-        filteredAlerts = filteredAlerts.filter((alert: Alert) => 
-          alert.severity === 'critical' && !alert.acknowledged
+        filteredAlerts = filteredAlerts.filter(
+          (alert: Alert) => alert.severity === "critical" && !alert.acknowledged
         );
       }
 
@@ -169,7 +185,7 @@ export function AlertCenter() {
       setTrends(result.trends);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -180,7 +196,7 @@ export function AlertCenter() {
       eventSourceRef.current.close();
     }
 
-    const eventSource = new EventSource('/api/monitoring/real-time?type=alerts');
+    const eventSource = new EventSource("/api/monitoring/real-time?type=alerts");
     eventSourceRef.current = eventSource;
 
     eventSource.onopen = () => {
@@ -191,13 +207,13 @@ export function AlertCenter() {
       try {
         const update = JSON.parse(event.data);
         if (update.alerts) {
-          setAlerts(prev => {
+          setAlerts((prev) => {
             const newAlerts = [...update.alerts, ...prev.slice(0, 100)]; // Keep latest 100
             return newAlerts;
           });
         }
       } catch (err) {
-        console.error('Error parsing real-time alert data:', err);
+        console.error("Error parsing real-time alert data:", err);
       }
     };
 
@@ -209,13 +225,13 @@ export function AlertCenter() {
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case 'critical':
+      case "critical":
         return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'error':
+      case "error":
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      case 'warning':
+      case "warning":
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'info':
+      case "info":
         return <Info className="h-4 w-4 text-blue-500" />;
       default:
         return <Info className="h-4 w-4 text-gray-500" />;
@@ -224,41 +240,48 @@ export function AlertCenter() {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical':
-        return 'destructive';
-      case 'error':
-        return 'destructive';
-      case 'warning':
-        return 'secondary';
-      case 'info':
-        return 'default';
+      case "critical":
+        return "destructive";
+      case "error":
+        return "destructive";
+      case "warning":
+        return "secondary";
+      case "info":
+        return "default";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const handleAcknowledgeAlert = async (alertId: string) => {
     try {
-      const response = await fetch('/api/monitoring/alerts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/monitoring/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: 'acknowledge',
+          action: "acknowledge",
           alertId,
-          acknowledgedBy: 'admin',
-          notes: 'Acknowledged from monitoring dashboard'
-        })
+          acknowledgedBy: "admin",
+          notes: "Acknowledged from monitoring dashboard",
+        }),
       });
 
       if (response.ok) {
-        setAlerts(prev => prev.map(alert => 
-          alert.id === alertId 
-            ? { ...alert, acknowledged: true, acknowledgedBy: 'admin', acknowledgedAt: new Date().toISOString() }
-            : alert
-        ));
+        setAlerts((prev) =>
+          prev.map((alert) =>
+            alert.id === alertId
+              ? {
+                  ...alert,
+                  acknowledged: true,
+                  acknowledgedBy: "admin",
+                  acknowledgedAt: new Date().toISOString(),
+                }
+              : alert
+          )
+        );
       }
     } catch (err) {
-      console.error('Failed to acknowledge alert:', err);
+      console.error("Failed to acknowledge alert:", err);
     }
   };
 
@@ -266,71 +289,89 @@ export function AlertCenter() {
     if (selectedAlerts.size === 0) return;
 
     try {
-      const response = await fetch('/api/monitoring/alerts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/monitoring/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: 'bulk_acknowledge',
+          action: "bulk_acknowledge",
           alertIds: Array.from(selectedAlerts),
-          acknowledgedBy: 'admin',
-          notes: 'Bulk acknowledged from monitoring dashboard'
-        })
+          acknowledgedBy: "admin",
+          notes: "Bulk acknowledged from monitoring dashboard",
+        }),
       });
 
       if (response.ok) {
-        setAlerts(prev => prev.map(alert => 
-          selectedAlerts.has(alert.id)
-            ? { ...alert, acknowledged: true, acknowledgedBy: 'admin', acknowledgedAt: new Date().toISOString() }
-            : alert
-        ));
+        setAlerts((prev) =>
+          prev.map((alert) =>
+            selectedAlerts.has(alert.id)
+              ? {
+                  ...alert,
+                  acknowledged: true,
+                  acknowledgedBy: "admin",
+                  acknowledgedAt: new Date().toISOString(),
+                }
+              : alert
+          )
+        );
         setSelectedAlerts(new Set());
       }
     } catch (err) {
-      console.error('Failed to bulk acknowledge alerts:', err);
+      console.error("Failed to bulk acknowledge alerts:", err);
     }
   };
 
   const handleDismissAlert = async (alertId: string) => {
     try {
-      const response = await fetch('/api/monitoring/alerts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/monitoring/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: 'dismiss',
+          action: "dismiss",
           alertId,
-          dismissedBy: 'admin',
-          reason: 'Dismissed from monitoring dashboard'
-        })
+          dismissedBy: "admin",
+          reason: "Dismissed from monitoring dashboard",
+        }),
       });
 
       if (response.ok) {
-        setAlerts(prev => prev.filter(alert => alert.id !== alertId));
+        setAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
       }
     } catch (err) {
-      console.error('Failed to dismiss alert:', err);
+      console.error("Failed to dismiss alert:", err);
     }
   };
 
   const handleExportAlerts = () => {
     const csv = [
-      ['Timestamp', 'Severity', 'Category', 'Source', 'Title', 'Message', 'Acknowledged', 'Resolved'],
-      ...alerts.map(alert => [
+      [
+        "Timestamp",
+        "Severity",
+        "Category",
+        "Source",
+        "Title",
+        "Message",
+        "Acknowledged",
+        "Resolved",
+      ],
+      ...alerts.map((alert) => [
         alert.timestamp,
         alert.severity,
         alert.category,
         alert.source,
         alert.title,
         alert.message,
-        alert.acknowledged ? 'Yes' : 'No',
-        alert.resolved ? 'Yes' : 'No'
-      ])
-    ].map(row => row.join(',')).join('\n');
+        alert.acknowledged ? "Yes" : "No",
+        alert.resolved ? "Yes" : "No",
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
 
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `alerts-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `alerts-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -343,13 +384,13 @@ export function AlertCenter() {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMins < 1) return 'Just now';
+    if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     return `${diffDays}d ago`;
   };
 
-  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
+  const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7300"];
 
   if (loading) {
     return (
@@ -396,25 +437,29 @@ export function AlertCenter() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold">Alert Center</h2>
-          <Badge variant={isConnected ? 'default' : 'destructive'}>
+          <Badge variant={isConnected ? "default" : "destructive"}>
             {isConnected ? (
               <>
                 <Activity className="h-3 w-3 mr-1" />
                 Live
               </>
             ) : (
-              'Disconnected'
+              "Disconnected"
             )}
           </Badge>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             onClick={() => setShowOnlyCritical(!showOnlyCritical)}
-            variant={showOnlyCritical ? 'destructive' : 'outline'}
+            variant={showOnlyCritical ? "destructive" : "outline"}
             size="sm"
           >
-            {showOnlyCritical ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+            {showOnlyCritical ? (
+              <EyeOff className="h-4 w-4 mr-2" />
+            ) : (
+              <Eye className="h-4 w-4 mr-2" />
+            )}
             Critical Only
           </Button>
           <Button onClick={handleExportAlerts} variant="outline" size="sm">
@@ -491,9 +536,7 @@ export function AlertCenter() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{summary.lastHour}</div>
-              <p className="text-xs text-muted-foreground">
-                {summary.last24Hours} in 24h
-              </p>
+              <p className="text-xs text-muted-foreground">{summary.last24Hours} in 24h</p>
             </CardContent>
           </Card>
         </div>
@@ -516,12 +559,15 @@ export function AlertCenter() {
                   <Input
                     placeholder="Search alerts..."
                     value={filters.search}
-                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
                     className="w-64"
                   />
                 </div>
 
-                <Select value={filters.severity} onValueChange={(value) => setFilters(prev => ({ ...prev, severity: value }))}>
+                <Select
+                  value={filters.severity}
+                  onValueChange={(value) => setFilters((prev) => ({ ...prev, severity: value }))}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Severity" />
                   </SelectTrigger>
@@ -534,7 +580,10 @@ export function AlertCenter() {
                   </SelectContent>
                 </Select>
 
-                <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
+                <Select
+                  value={filters.category}
+                  onValueChange={(value) => setFilters((prev) => ({ ...prev, category: value }))}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
@@ -549,7 +598,12 @@ export function AlertCenter() {
                   </SelectContent>
                 </Select>
 
-                <Select value={filters.acknowledged} onValueChange={(value) => setFilters(prev => ({ ...prev, acknowledged: value }))}>
+                <Select
+                  value={filters.acknowledged}
+                  onValueChange={(value) =>
+                    setFilters((prev) => ({ ...prev, acknowledged: value }))
+                  }
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -582,7 +636,7 @@ export function AlertCenter() {
                           checked={selectedAlerts.size === alerts.length}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setSelectedAlerts(new Set(alerts.map(a => a.id)));
+                              setSelectedAlerts(new Set(alerts.map((a) => a.id)));
                             } else {
                               setSelectedAlerts(new Set());
                             }
@@ -600,7 +654,10 @@ export function AlertCenter() {
                   </TableHeader>
                   <TableBody>
                     {alerts.map((alert) => (
-                      <TableRow key={alert.id} className={alert.severity === 'critical' ? 'bg-red-50' : ''}>
+                      <TableRow
+                        key={alert.id}
+                        className={alert.severity === "critical" ? "bg-red-50" : ""}
+                      >
                         <TableCell>
                           <Checkbox
                             checked={selectedAlerts.has(alert.id)}
@@ -624,9 +681,7 @@ export function AlertCenter() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm">
-                            {formatRelativeTime(alert.timestamp)}
-                          </div>
+                          <div className="text-sm">{formatRelativeTime(alert.timestamp)}</div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">{alert.source}</Badge>
@@ -634,7 +689,9 @@ export function AlertCenter() {
                         <TableCell>
                           <div className="max-w-xs">
                             <p className="font-medium text-sm truncate">{alert.title}</p>
-                            <p className="text-xs text-muted-foreground truncate">{alert.message}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {alert.message}
+                            </p>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -673,61 +730,77 @@ export function AlertCenter() {
                                     {getSeverityIcon(alert.severity)}
                                     {alert.title}
                                   </DialogTitle>
-                                  <DialogDescription>
-                                    Alert Details and Metadata
-                                  </DialogDescription>
+                                  <DialogDescription>Alert Details and Metadata</DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4">
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
                                       <p className="text-sm font-medium">Source</p>
-                                      <p className="text-sm text-muted-foreground">{alert.source}</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {alert.source}
+                                      </p>
                                     </div>
                                     <div>
                                       <p className="text-sm font-medium">Category</p>
-                                      <p className="text-sm text-muted-foreground">{alert.category}</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {alert.category}
+                                      </p>
                                     </div>
                                     <div>
                                       <p className="text-sm font-medium">Timestamp</p>
-                                      <p className="text-sm text-muted-foreground">{new Date(alert.timestamp).toLocaleString()}</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {new Date(alert.timestamp).toLocaleString()}
+                                      </p>
                                     </div>
                                     <div>
                                       <p className="text-sm font-medium">Count</p>
-                                      <p className="text-sm text-muted-foreground">{alert.count} occurrences</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {alert.count} occurrences
+                                      </p>
                                     </div>
                                   </div>
-                                  
+
                                   <div>
                                     <p className="text-sm font-medium mb-2">Message</p>
-                                    <p className="text-sm text-muted-foreground p-3 bg-gray-50 rounded">{alert.message}</p>
+                                    <p className="text-sm text-muted-foreground p-3 bg-gray-50 rounded">
+                                      {alert.message}
+                                    </p>
                                   </div>
-                                  
+
                                   <div>
                                     <p className="text-sm font-medium mb-2">Affected Components</p>
                                     <div className="flex flex-wrap gap-2">
                                       {alert.metadata.affectedComponents.map((component, index) => (
-                                        <Badge key={index} variant="outline">{component}</Badge>
+                                        <Badge key={index} variant="outline">
+                                          {component}
+                                        </Badge>
                                       ))}
                                     </div>
                                   </div>
-                                  
+
                                   <div>
                                     <p className="text-sm font-medium mb-2">Tags</p>
                                     <div className="flex flex-wrap gap-2">
                                       {alert.tags.map((tag, index) => (
-                                        <Badge key={index} variant="secondary">{tag}</Badge>
+                                        <Badge key={index} variant="secondary">
+                                          {tag}
+                                        </Badge>
                                       ))}
                                     </div>
                                   </div>
-                                  
+
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
                                       <p className="text-sm font-medium">Impact Level</p>
-                                      <p className="text-sm text-muted-foreground capitalize">{alert.metadata.impactLevel}</p>
+                                      <p className="text-sm text-muted-foreground capitalize">
+                                        {alert.metadata.impactLevel}
+                                      </p>
                                     </div>
                                     <div>
                                       <p className="text-sm font-medium">Estimated Resolution</p>
-                                      <p className="text-sm text-muted-foreground">{alert.metadata.estimatedResolution}</p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {alert.metadata.estimatedResolution}
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -836,8 +909,11 @@ export function AlertCenter() {
                   <CardContent>
                     <div className="space-y-3">
                       {trends.patterns.map((pattern, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-                          <span className="text-sm">{pattern.pattern.replace(/_/g, ' ')}</span>
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 rounded-lg border"
+                        >
+                          <span className="text-sm">{pattern.pattern.replace(/_/g, " ")}</span>
                           <Badge variant="outline">
                             {(pattern.confidence * 100).toFixed(0)}% confidence
                           </Badge>

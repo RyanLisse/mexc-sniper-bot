@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,29 +10,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/src/components/ui/alert";
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
 import { Progress } from "@/src/components/ui/progress";
-import { 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  TrendingUp, 
-  TrendingDown,
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
+import {
   Activity,
-  Settings,
+  AlertTriangle,
   Bell,
-  Shield,
   Brain,
+  CheckCircle,
   Network,
   RefreshCw,
+  Shield,
 } from "lucide-react";
+import { useState } from "react";
 
 interface AlertInstance {
   id: string;
@@ -102,7 +94,11 @@ export function AlertsDashboard() {
   const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
 
   // Fetch system status
-  const { data: systemStatus, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
+  const {
+    data: systemStatus,
+    isLoading: statusLoading,
+    refetch: refetchStatus,
+  } = useQuery({
     queryKey: ["alerts", "system", "status"],
     queryFn: async (): Promise<SystemStatus> => {
       const response = await fetch("/api/alerts/system/status");
@@ -114,7 +110,11 @@ export function AlertsDashboard() {
   });
 
   // Fetch active alerts
-  const { data: activeAlerts, isLoading: alertsLoading, refetch: refetchAlerts } = useQuery({
+  const {
+    data: activeAlerts,
+    isLoading: alertsLoading,
+    refetch: refetchAlerts,
+  } = useQuery({
     queryKey: ["alerts", "instances", "active"],
     queryFn: async (): Promise<AlertInstance[]> => {
       const response = await fetch("/api/alerts/instances?status=active&limit=20");
@@ -139,21 +139,31 @@ export function AlertsDashboard() {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "critical": return "destructive";
-      case "high": return "destructive";
-      case "medium": return "warning";
-      case "low": return "secondary";
-      case "info": return "outline";
-      default: return "outline";
+      case "critical":
+        return "destructive";
+      case "high":
+        return "destructive";
+      case "medium":
+        return "warning";
+      case "low":
+        return "secondary";
+      case "info":
+        return "outline";
+      default:
+        return "outline";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "healthy": return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "warning": return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case "critical": return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      default: return <Activity className="h-4 w-4 text-gray-500" />;
+      case "healthy":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "warning":
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case "critical":
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Activity className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -161,7 +171,7 @@ export function AlertsDashboard() {
     const seconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) return `${hours}h ${minutes % 60}m`;
     if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
     return `${seconds}s`;
@@ -172,12 +182,12 @@ export function AlertsDashboard() {
       const response = await fetch(`/api/alerts/instances/${alertId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          action: "resolve", 
-          notes: "Manually resolved from dashboard" 
+        body: JSON.stringify({
+          action: "resolve",
+          notes: "Manually resolved from dashboard",
         }),
       });
-      
+
       if (response.ok) {
         refetchAlerts();
         refetchStatus();
@@ -236,8 +246,10 @@ export function AlertsDashboard() {
             <div className="text-2xl font-bold">{systemStatus?.overall.score || 0}%</div>
             <Progress value={systemStatus?.overall.score || 0} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-2">
-              Last checked: {systemStatus?.overall.lastChecked ? 
-                new Date(systemStatus.overall.lastChecked).toLocaleTimeString() : "Unknown"}
+              Last checked:{" "}
+              {systemStatus?.overall.lastChecked
+                ? new Date(systemStatus.overall.lastChecked).toLocaleTimeString()
+                : "Unknown"}
             </p>
           </CardContent>
         </Card>
@@ -310,7 +322,9 @@ export function AlertsDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>System Insights</CardTitle>
-                <CardDescription>AI-powered recommendations for system optimization</CardDescription>
+                <CardDescription>
+                  AI-powered recommendations for system optimization
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -335,14 +349,16 @@ export function AlertsDashboard() {
               <CardContent>
                 {analytics?.summary.alertDistribution && (
                   <div className="space-y-2">
-                    {Object.entries(analytics.summary.alertDistribution).map(([severity, count]) => (
-                      <div key={severity} className="flex justify-between items-center">
-                        <Badge variant={getSeverityColor(severity) as any}>
-                          {severity.charAt(0).toUpperCase() + severity.slice(1)}
-                        </Badge>
-                        <span className="font-mono">{count}</span>
-                      </div>
-                    ))}
+                    {Object.entries(analytics.summary.alertDistribution).map(
+                      ([severity, count]) => (
+                        <div key={severity} className="flex justify-between items-center">
+                          <Badge variant={getSeverityColor(severity) as any}>
+                            {severity.charAt(0).toUpperCase() + severity.slice(1)}
+                          </Badge>
+                          <span className="font-mono">{count}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -358,22 +374,25 @@ export function AlertsDashboard() {
                   <div className="flex justify-between">
                     <span>Average MTTR</span>
                     <span className="font-mono">
-                      {analytics?.summary.averageMTTR ? 
-                        formatDuration(analytics.summary.averageMTTR) : "N/A"}
+                      {analytics?.summary.averageMTTR
+                        ? formatDuration(analytics.summary.averageMTTR)
+                        : "N/A"}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>ML Accuracy</span>
                     <span className="font-mono">
-                      {analytics?.anomalyDetection.overallPerformance.averageAccuracy ? 
-                        `${(analytics.anomalyDetection.overallPerformance.averageAccuracy * 100).toFixed(1)}%` : "N/A"}
+                      {analytics?.anomalyDetection.overallPerformance.averageAccuracy
+                        ? `${(analytics.anomalyDetection.overallPerformance.averageAccuracy * 100).toFixed(1)}%`
+                        : "N/A"}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>False Positive Rate</span>
                     <span className="font-mono">
-                      {analytics?.anomalyDetection.overallPerformance.averageFalsePositiveRate ? 
-                        `${(analytics.anomalyDetection.overallPerformance.averageFalsePositiveRate * 100).toFixed(1)}%` : "N/A"}
+                      {analytics?.anomalyDetection.overallPerformance.averageFalsePositiveRate
+                        ? `${(analytics.anomalyDetection.overallPerformance.averageFalsePositiveRate * 100).toFixed(1)}%`
+                        : "N/A"}
                     </span>
                   </div>
                 </div>
@@ -408,19 +427,13 @@ export function AlertsDashboard() {
                           <span className="font-medium">{alert.message}</span>
                         </div>
                         <div className="text-sm text-muted-foreground mt-1">
-                          Source: {alert.source} • 
-                          Triggered: {formatDuration(Date.now() - alert.firstTriggeredAt)} ago
-                          {alert.metricValue && (
-                            <> • Value: {alert.metricValue}</>
-                          )}
+                          Source: {alert.source} • Triggered:{" "}
+                          {formatDuration(Date.now() - alert.firstTriggeredAt)} ago
+                          {alert.metricValue && <> • Value: {alert.metricValue}</>}
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => resolveAlert(alert.id)}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => resolveAlert(alert.id)}>
                           Resolve
                         </Button>
                       </div>
@@ -444,9 +457,7 @@ export function AlertsDashboard() {
                 <CardTitle>Total Alerts</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
-                  {analytics?.summary.totalAlerts || 0}
-                </div>
+                <div className="text-3xl font-bold">{analytics?.summary.totalAlerts || 0}</div>
                 <p className="text-sm text-muted-foreground">Last 24 hours</p>
               </CardContent>
             </Card>
@@ -457,8 +468,9 @@ export function AlertsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">
-                  {analytics?.summary.totalAlerts ? 
-                    `${((analytics.summary.totalResolved / analytics.summary.totalAlerts) * 100).toFixed(1)}%` : "0%"}
+                  {analytics?.summary.totalAlerts
+                    ? `${((analytics.summary.totalResolved / analytics.summary.totalAlerts) * 100).toFixed(1)}%`
+                    : "0%"}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {analytics?.summary.totalResolved || 0} resolved

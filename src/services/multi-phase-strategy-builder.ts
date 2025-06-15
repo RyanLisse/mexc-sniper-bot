@@ -1,5 +1,8 @@
-import { z } from "zod";
-import { type PriceMultiplier, type TradingStrategyConfig, PriceMultiplierSchema, TradingStrategyConfigSchema } from "./multi-phase-trading-service";
+import {
+  type PriceMultiplier,
+  type TradingStrategyConfig,
+  TradingStrategyConfigSchema,
+} from "./multi-phase-trading-service";
 
 // ===========================================
 // MULTI-PHASE STRATEGY BUILDER
@@ -9,7 +12,7 @@ export class MultiPhaseStrategyBuilder {
   private levels: PriceMultiplier[] = [];
   private id: string;
   private name: string;
-  private description: string = "";
+  private description = "";
 
   constructor(id: string, name: string) {
     this.id = id;
@@ -26,7 +29,7 @@ export class MultiPhaseStrategyBuilder {
     if (targetPercentage <= 0) {
       throw new Error("Target percentage must be positive");
     }
-    
+
     if (sellPercentage <= 0 || sellPercentage > 100) {
       throw new Error("Sell percentage must be between 0 and 100");
     }
@@ -72,7 +75,7 @@ export class MultiPhaseStrategyBuilder {
   createBalancedStrategy(
     phases: number,
     maxTarget: number,
-    totalSellPercent: number = 80
+    totalSellPercent = 80
   ): MultiPhaseStrategyBuilder {
     if (phases < 2 || phases > 10) {
       throw new Error("Number of phases must be between 2 and 10");
@@ -101,16 +104,13 @@ export class MultiPhaseStrategyBuilder {
    * @param maxTarget Maximum target for remaining position (default: 100%)
    * @returns Builder instance for chaining
    */
-  createConservativeStrategy(
-    earlyExitPercent: number = 60,
-    maxTarget: number = 100
-  ): MultiPhaseStrategyBuilder {
+  createConservativeStrategy(earlyExitPercent = 60, maxTarget = 100): MultiPhaseStrategyBuilder {
     this.levels = [];
-    
+
     // Take early profits at lower levels
-    this.addPhase(10, earlyExitPercent * 0.3)  // 18% at +10%
-      .addPhase(20, earlyExitPercent * 0.4)    // 24% at +20%
-      .addPhase(30, earlyExitPercent * 0.3)    // 18% at +30%
+    this.addPhase(10, earlyExitPercent * 0.3) // 18% at +10%
+      .addPhase(20, earlyExitPercent * 0.4) // 24% at +20%
+      .addPhase(30, earlyExitPercent * 0.3) // 18% at +30%
       .addPhase(maxTarget, 100 - earlyExitPercent); // Remaining at max target
 
     return this;
@@ -122,17 +122,14 @@ export class MultiPhaseStrategyBuilder {
    * @param maxTarget Maximum target percentage (default: 500%)
    * @returns Builder instance for chaining
    */
-  createAggressiveStrategy(
-    minTarget: number = 100,
-    maxTarget: number = 500
-  ): MultiPhaseStrategyBuilder {
+  createAggressiveStrategy(minTarget = 100, maxTarget = 500): MultiPhaseStrategyBuilder {
     this.levels = [];
-    
+
     // Aggressive targets with smaller position sales
-    this.addPhase(minTarget, 15)              // 15% at first target
-      .addPhase(minTarget * 1.5, 20)          // 20% at 1.5x first target
-      .addPhase(minTarget * 2, 25)            // 25% at 2x first target
-      .addPhase(maxTarget, 20);               // 20% at max target
+    this.addPhase(minTarget, 15) // 15% at first target
+      .addPhase(minTarget * 1.5, 20) // 20% at 1.5x first target
+      .addPhase(minTarget * 2, 25) // 25% at 2x first target
+      .addPhase(maxTarget, 20); // 20% at max target
     // Remaining 20% holds for moonshot
 
     return this;
@@ -143,15 +140,15 @@ export class MultiPhaseStrategyBuilder {
    * @param maxTarget Maximum target percentage (default: 20%)
    * @returns Builder instance for chaining
    */
-  createScalpingStrategy(maxTarget: number = 20): MultiPhaseStrategyBuilder {
+  createScalpingStrategy(maxTarget = 20): MultiPhaseStrategyBuilder {
     this.levels = [];
-    
+
     const increment = maxTarget / 4;
-    
-    this.addPhase(increment, 20)         // 20% at 5%
-      .addPhase(increment * 2, 30)       // 30% at 10%
-      .addPhase(increment * 3, 30)       // 30% at 15%
-      .addPhase(increment * 4, 20);      // 20% at 20%
+
+    this.addPhase(increment, 20) // 20% at 5%
+      .addPhase(increment * 2, 30) // 30% at 10%
+      .addPhase(increment * 3, 30) // 30% at 15%
+      .addPhase(increment * 4, 20); // 20% at 20%
 
     return this;
   }
@@ -162,13 +159,33 @@ export class MultiPhaseStrategyBuilder {
    */
   createDiamondHandsStrategy(): MultiPhaseStrategyBuilder {
     this.levels = [];
-    
+
     // Very high targets with minimal selling
-    this.addPhase(200, 10)    // 10% at +200%
-      .addPhase(500, 20)      // 20% at +500%
-      .addPhase(1000, 30)     // 30% at +1000%
-      .addPhase(2000, 20);    // 20% at +2000%
+    this.addPhase(200, 10) // 10% at +200%
+      .addPhase(500, 20) // 20% at +500%
+      .addPhase(1000, 30) // 30% at +1000%
+      .addPhase(2000, 20); // 20% at +2000%
     // Remaining 20% for absolute moonshot
+
+    return this;
+  }
+
+  /**
+   * Create a DCA (Dollar Cost Averaging) strategy with equal distributions
+   * @param phases Number of phases (default: 5)
+   * @param maxTarget Maximum target percentage (default: 100%)
+   * @returns Builder instance for chaining
+   */
+  createDCAStrategy(phases = 5, maxTarget = 100): MultiPhaseStrategyBuilder {
+    this.levels = [];
+
+    const sellPerPhase = 100 / phases; // Equal distribution
+    const targetIncrement = maxTarget / phases;
+
+    for (let i = 1; i <= phases; i++) {
+      const targetPercentage = targetIncrement * i;
+      this.addPhase(targetPercentage, sellPerPhase);
+    }
 
     return this;
   }
@@ -183,15 +200,10 @@ export class MultiPhaseStrategyBuilder {
     }
 
     // Validate total sell percentage doesn't exceed 100%
-    const totalSellPercentage = this.levels.reduce(
-      (sum, level) => sum + level.sellPercentage,
-      0
-    );
+    const totalSellPercentage = this.levels.reduce((sum, level) => sum + level.sellPercentage, 0);
 
     if (totalSellPercentage > 100) {
-      throw new Error(
-        `Total sell percentage (${totalSellPercentage.toFixed(1)}%) exceeds 100%`
-      );
+      throw new Error(`Total sell percentage (${totalSellPercentage.toFixed(1)}%) exceeds 100%`);
     }
 
     // Sort levels by percentage to ensure correct order
@@ -231,15 +243,13 @@ export class MultiPhaseStrategyBuilder {
       warnings: string[];
     };
   } {
-    const totalSellPercentage = this.levels.reduce(
-      (sum, level) => sum + level.sellPercentage,
-      0
-    );
-    
+    const totalSellPercentage = this.levels.reduce((sum, level) => sum + level.sellPercentage, 0);
+
     const remainingPercentage = 100 - totalSellPercentage;
-    const avgTarget = this.levels.length > 0 
-      ? this.levels.reduce((sum, level) => sum + level.percentage, 0) / this.levels.length
-      : 0;
+    const avgTarget =
+      this.levels.length > 0
+        ? this.levels.reduce((sum, level) => sum + level.percentage, 0) / this.levels.length
+        : 0;
 
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -300,14 +310,11 @@ export class MultiPhaseStrategyBuilder {
    * @returns New builder with cloned configuration
    */
   static fromConfig(config: TradingStrategyConfig): MultiPhaseStrategyBuilder {
-    const builder = new MultiPhaseStrategyBuilder(
-      `${config.id}-copy`,
-      `${config.name} (Copy)`
-    );
-    
+    const builder = new MultiPhaseStrategyBuilder(`${config.id}-copy`, `${config.name} (Copy)`);
+
     builder.withDescription(config.description || "");
     builder.levels = [...config.levels];
-    
+
     return builder;
   }
 }
@@ -320,11 +327,8 @@ export class StrategyPatterns {
    * @param phases Number of phases
    * @returns Strategy builder with fibonacci progression
    */
-  static fibonacci(baseTarget: number, phases: number = 5): MultiPhaseStrategyBuilder {
-    const builder = new MultiPhaseStrategyBuilder(
-      "fibonacci",
-      "Fibonacci Multi-Phase Strategy"
-    );
+  static fibonacci(baseTarget: number, phases = 5): MultiPhaseStrategyBuilder {
+    const builder = new MultiPhaseStrategyBuilder("fibonacci", "Fibonacci Multi-Phase Strategy");
 
     const fib = [1, 1, 2, 3, 5, 8, 13, 21];
     const sellPercents = [15, 20, 25, 20, 20]; // Distribute 100% across phases
@@ -389,26 +393,98 @@ export class StrategyPatterns {
       builder.createAggressiveStrategy(80, 250);
     }
 
-    return builder.withDescription(
-      `Strategy adjusted for ${positionSizePercent}% position size`
+    return builder.withDescription(`Strategy adjusted for ${positionSizePercent}% position size`);
+  }
+
+  /**
+   * Create a volatility-adjusted strategy
+   * @param volatilityRatio Market volatility ratio (0-1, where 1 is maximum volatility)
+   * @returns Strategy builder adjusted for market volatility
+   */
+  static volatilityAdjusted(volatilityRatio: number): MultiPhaseStrategyBuilder {
+    const builder = new MultiPhaseStrategyBuilder(
+      "volatility-adjusted",
+      "Volatility-Adjusted Multi-Phase Strategy"
     );
+
+    if (volatilityRatio > 0.7) {
+      // High volatility - conservative targets, quick exits
+      builder.createConservativeStrategy(60, 50);
+    } else if (volatilityRatio > 0.3) {
+      // Medium volatility - balanced approach
+      builder.createBalancedStrategy(4, 100, 75);
+    } else {
+      // Low volatility - can afford higher targets
+      builder.createBalancedStrategy(4, 200, 80);
+    }
+
+    return builder.withDescription(
+      `Strategy adjusted for ${(volatilityRatio * 100).toFixed(1)}% volatility`
+    );
+  }
+
+  /**
+   * Create a strategy based on market conditions
+   * @param condition Current market condition
+   * @returns Strategy builder adjusted for market conditions
+   */
+  static marketCondition(
+    condition: "bullish" | "bearish" | "neutral" | "sideways"
+  ): MultiPhaseStrategyBuilder {
+    const builder = new MultiPhaseStrategyBuilder(
+      `market-${condition}`,
+      `${condition.charAt(0).toUpperCase() + condition.slice(1)} Market Strategy`
+    );
+
+    switch (condition) {
+      case "bullish":
+        // Bullish - higher targets, smaller initial sells
+        builder.createAggressiveStrategy(150, 400);
+        break;
+      case "bearish":
+        // Bearish - conservative targets, larger initial sells
+        builder.createConservativeStrategy(80, 60);
+        break;
+      case "neutral":
+        // Neutral - balanced approach
+        builder.createBalancedStrategy(4, 120, 75);
+        break;
+      case "sideways":
+        // Sideways - range trading with many small targets
+        builder.createScalpingStrategy(40);
+        break;
+    }
+
+    return builder.withDescription(`Strategy optimized for ${condition} market conditions`);
   }
 }
 
 // Export commonly used strategy builders
 export const createQuickStrategies = {
-  conservative: () => new MultiPhaseStrategyBuilder("quick-conservative", "Quick Conservative")
-    .createConservativeStrategy(),
-  
-  balanced: () => new MultiPhaseStrategyBuilder("quick-balanced", "Quick Balanced")
-    .createBalancedStrategy(4, 100),
-  
-  aggressive: () => new MultiPhaseStrategyBuilder("quick-aggressive", "Quick Aggressive")
-    .createAggressiveStrategy(),
-  
-  scalping: () => new MultiPhaseStrategyBuilder("quick-scalping", "Quick Scalping")
-    .createScalpingStrategy(),
-  
-  diamond: () => new MultiPhaseStrategyBuilder("quick-diamond", "Quick Diamond Hands")
-    .createDiamondHandsStrategy(),
+  conservative: () =>
+    new MultiPhaseStrategyBuilder(
+      "quick-conservative",
+      "Quick Conservative"
+    ).createConservativeStrategy(),
+
+  balanced: () =>
+    new MultiPhaseStrategyBuilder("quick-balanced", "Quick Balanced").createBalancedStrategy(
+      4,
+      100
+    ),
+
+  aggressive: () =>
+    new MultiPhaseStrategyBuilder(
+      "quick-aggressive",
+      "Quick Aggressive"
+    ).createAggressiveStrategy(),
+
+  scalping: () =>
+    new MultiPhaseStrategyBuilder("quick-scalping", "Quick Scalping").createScalpingStrategy(),
+
+  diamond: () =>
+    new MultiPhaseStrategyBuilder(
+      "quick-diamond",
+      "Quick Diamond Hands"
+    ).createDiamondHandsStrategy(),
 };

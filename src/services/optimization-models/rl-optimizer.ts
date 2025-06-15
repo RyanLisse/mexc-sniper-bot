@@ -1,11 +1,11 @@
 /**
  * Reinforcement Learning Optimizer
- * 
+ *
  * Implements a reinforcement learning approach for parameter optimization using
  * Q-learning with function approximation and exploration strategies.
  */
 
-import { logger } from '../../lib/utils';
+import { logger } from "../../lib/utils";
 
 export interface RLConfig {
   learningRate: number;
@@ -38,7 +38,7 @@ export interface State {
 
 export interface ActionSpace {
   parameterName: string;
-  actionType: 'increase' | 'decrease' | 'set';
+  actionType: "increase" | "decrease" | "set";
   magnitude: number;
 }
 
@@ -65,11 +65,11 @@ export class ReinforcementLearningOptimizer {
       networkUpdateFrequency: 100,
       rewardShaping: true,
       doubleQLearning: true,
-      ...config
+      ...config,
     };
 
     this.initializeNetworks();
-    logger.info('Reinforcement Learning Optimizer initialized', { config: this.config });
+    logger.info("Reinforcement Learning Optimizer initialized", { config: this.config });
   }
 
   /**
@@ -79,21 +79,15 @@ export class ReinforcementLearningOptimizer {
     const stateSize = this.calculateStateSize();
     const actionSize = this.calculateActionSize();
 
-    this.qNetwork = new NeuralNetwork([
-      stateSize,
-      128,
-      256,
-      128,
-      actionSize
-    ], this.config.learningRate);
+    this.qNetwork = new NeuralNetwork(
+      [stateSize, 128, 256, 128, actionSize],
+      this.config.learningRate
+    );
 
-    this.targetNetwork = new NeuralNetwork([
-      stateSize,
-      128,
-      256,
-      128,
-      actionSize
-    ], this.config.learningRate);
+    this.targetNetwork = new NeuralNetwork(
+      [stateSize, 128, 256, 128, actionSize],
+      this.config.learningRate
+    );
 
     // Initialize target network with same weights
     this.targetNetwork.copyWeights(this.qNetwork);
@@ -104,13 +98,13 @@ export class ReinforcementLearningOptimizer {
    */
   setParameterBounds(bounds: Record<string, { min: number; max: number }>): void {
     this.parameterBounds = { ...bounds };
-    
+
     // Reinitialize networks if bounds change
     if (Object.keys(bounds).length > 0) {
       this.initializeNetworks();
     }
-    
-    logger.info('Parameter bounds set for RL optimizer', { bounds });
+
+    logger.info("Parameter bounds set for RL optimizer", { bounds });
   }
 
   /**
@@ -137,9 +131,9 @@ export class ReinforcementLearningOptimizer {
     const explorationCandidates = this.generateExplorationCandidates(2);
     candidates.push(...explorationCandidates);
 
-    logger.debug('RL candidates generated', { 
+    logger.debug("RL candidates generated", {
       count: candidates.length,
-      explorationRate: this.config.explorationRate 
+      explorationRate: this.config.explorationRate,
     });
 
     return candidates;
@@ -152,18 +146,18 @@ export class ReinforcementLearningOptimizer {
     if (!this.currentState) return;
 
     for (const result of evaluationResults) {
-      if (result.valid && result.score > -Infinity) {
+      if (result.valid && result.score > Number.NEGATIVE_INFINITY) {
         // Create experience
         const reward = this.calculateReward(result.score, result.backtestResults);
         const nextState = this.createNextState(result.parameters, result.score);
-        
+
         const experience: Experience = {
           state: this.stateToVector(this.currentState),
           action: result.parameters,
           reward,
           nextState: this.stateToVector(nextState),
           done: false,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
 
         this.addExperience(experience);
@@ -184,9 +178,9 @@ export class ReinforcementLearningOptimizer {
       this.targetNetwork.copyWeights(this.qNetwork);
     }
 
-    logger.debug('RL model updated', { 
+    logger.debug("RL model updated", {
       experiences: this.experienceBuffer.length,
-      explorationRate: this.config.explorationRate 
+      explorationRate: this.config.explorationRate,
     });
   }
 
@@ -195,7 +189,7 @@ export class ReinforcementLearningOptimizer {
    */
   private createInitialState(currentBest?: Record<string, number> | null): State {
     const defaultParameters: Record<string, number> = {};
-    
+
     for (const [param, bounds] of Object.entries(this.parameterBounds)) {
       defaultParameters[param] = currentBest?.[param] || (bounds.min + bounds.max) / 2;
     }
@@ -204,7 +198,7 @@ export class ReinforcementLearningOptimizer {
       currentParameters: defaultParameters,
       performanceHistory: [0],
       marketConditions: this.getCurrentMarketConditions(),
-      timeFeatures: this.getTimeFeatures()
+      timeFeatures: this.getTimeFeatures(),
     };
   }
 
@@ -217,7 +211,7 @@ export class ReinforcementLearningOptimizer {
     }
 
     const newPerformanceHistory = [...this.currentState.performanceHistory, performance];
-    
+
     // Keep only recent history
     if (newPerformanceHistory.length > 20) {
       newPerformanceHistory.splice(0, newPerformanceHistory.length - 20);
@@ -227,7 +221,7 @@ export class ReinforcementLearningOptimizer {
       currentParameters: newParameters,
       performanceHistory: newPerformanceHistory,
       marketConditions: this.getCurrentMarketConditions(),
-      timeFeatures: this.getTimeFeatures()
+      timeFeatures: this.getTimeFeatures(),
     };
   }
 
@@ -282,7 +276,7 @@ export class ReinforcementLearningOptimizer {
       Math.random(), // Market volatility
       Math.random(), // Volume
       Math.random(), // Trend strength
-      Math.random()  // Correlation index
+      Math.random(), // Correlation index
     ];
   }
 
@@ -294,7 +288,7 @@ export class ReinforcementLearningOptimizer {
     const hour = now.getHours() / 24;
     const dayOfWeek = now.getDay() / 7;
     const dayOfMonth = now.getDate() / 31;
-    
+
     return [hour, dayOfWeek, dayOfMonth];
   }
 
@@ -314,11 +308,11 @@ export class ReinforcementLearningOptimizer {
    */
   private selectRandomAction(): Record<string, number> {
     const action: Record<string, number> = {};
-    
+
     for (const [param, bounds] of Object.entries(this.parameterBounds)) {
       action[param] = bounds.min + Math.random() * (bounds.max - bounds.min);
     }
-    
+
     return action;
   }
 
@@ -328,7 +322,7 @@ export class ReinforcementLearningOptimizer {
   private selectGreedyAction(state: State): Record<string, number> {
     const stateVector = this.stateToVector(state);
     const qValues = this.qNetwork.forward(stateVector);
-    
+
     // Convert Q-values to parameter adjustments
     return this.qValuesToParameters(qValues, state.currentParameters);
   }
@@ -336,46 +330,52 @@ export class ReinforcementLearningOptimizer {
   /**
    * Convert Q-values to parameter values
    */
-  private qValuesToParameters(qValues: number[], currentParams: Record<string, number>): Record<string, number> {
+  private qValuesToParameters(
+    qValues: number[],
+    currentParams: Record<string, number>
+  ): Record<string, number> {
     const newParams: Record<string, number> = { ...currentParams };
     const paramNames = Object.keys(this.parameterBounds);
-    
+
     // Each parameter gets multiple Q-values for different actions
     const actionsPerParam = Math.floor(qValues.length / paramNames.length);
-    
+
     for (let i = 0; i < paramNames.length; i++) {
       const param = paramNames[i];
       const bounds = this.parameterBounds[param];
-      
+
       // Get Q-values for this parameter
       const paramQValues = qValues.slice(i * actionsPerParam, (i + 1) * actionsPerParam);
-      
+
       // Select best action
       const bestActionIndex = paramQValues.indexOf(Math.max(...paramQValues));
-      
+
       // Convert action index to parameter adjustment
       const adjustment = (bestActionIndex / (actionsPerParam - 1) - 0.5) * 0.1; // ±10% adjustment
       const newValue = currentParams[param] * (1 + adjustment);
-      
+
       newParams[param] = Math.max(bounds.min, Math.min(bounds.max, newValue));
     }
-    
+
     return newParams;
   }
 
   /**
    * Apply action to current parameters
    */
-  private applyAction(currentParams: Record<string, number>, action: Record<string, number>): Record<string, number> {
+  private applyAction(
+    currentParams: Record<string, number>,
+    action: Record<string, number>
+  ): Record<string, number> {
     const newParams: Record<string, number> = {};
-    
+
     for (const [param, bounds] of Object.entries(this.parameterBounds)) {
       const currentValue = currentParams[param] || (bounds.min + bounds.max) / 2;
       const actionValue = action[param] || currentValue;
-      
+
       newParams[param] = Math.max(bounds.min, Math.min(bounds.max, actionValue));
     }
-    
+
     return newParams;
   }
 
@@ -390,11 +390,11 @@ export class ReinforcementLearningOptimizer {
       if (backtestResults.sharpeRatio > 1.0) {
         reward += 0.1; // Bonus for good risk-adjusted return
       }
-      
+
       if (backtestResults.maxDrawdown < 0.1) {
         reward += 0.05; // Bonus for low drawdown
       }
-      
+
       if (backtestResults.winRate > 0.6) {
         reward += 0.05; // Bonus for high win rate
       }
@@ -421,7 +421,7 @@ export class ReinforcementLearningOptimizer {
    */
   private addExperience(experience: Experience): void {
     this.experienceBuffer.push(experience);
-    
+
     // Remove old experiences if buffer is full
     if (this.experienceBuffer.length > this.config.memorySize) {
       this.experienceBuffer.shift();
@@ -436,12 +436,12 @@ export class ReinforcementLearningOptimizer {
 
     // Sample random batch
     const batch = this.sampleBatch(this.config.batchSize);
-    
-    const states = batch.map(exp => exp.state);
-    const actions = batch.map(exp => exp.action);
-    const rewards = batch.map(exp => exp.reward);
-    const nextStates = batch.map(exp => exp.nextState);
-    const dones = batch.map(exp => exp.done);
+
+    const states = batch.map((exp) => exp.state);
+    const actions = batch.map((exp) => exp.action);
+    const rewards = batch.map((exp) => exp.reward);
+    const nextStates = batch.map((exp) => exp.nextState);
+    const dones = batch.map((exp) => exp.done);
 
     // Calculate target Q-values
     const targets = await this.calculateTargets(rewards, nextStates, dones);
@@ -450,10 +450,10 @@ export class ReinforcementLearningOptimizer {
     for (let i = 0; i < batch.length; i++) {
       const currentQ = this.qNetwork.forward(states[i]);
       const actionIndex = this.parametersToActionIndex(actions[i]);
-      
+
       // Update Q-value for taken action
       currentQ[actionIndex] = targets[i];
-      
+
       // Backward pass
       this.qNetwork.backward(states[i], currentQ);
     }
@@ -464,12 +464,12 @@ export class ReinforcementLearningOptimizer {
    */
   private sampleBatch(batchSize: number): Experience[] {
     const batch: Experience[] = [];
-    
+
     for (let i = 0; i < batchSize; i++) {
       const randomIndex = Math.floor(Math.random() * this.experienceBuffer.length);
       batch.push(this.experienceBuffer[randomIndex]);
     }
-    
+
     return batch;
   }
 
@@ -536,11 +536,11 @@ export class ReinforcementLearningOptimizer {
    */
   private generateExplorationCandidates(count: number): Record<string, number>[] {
     const candidates: Record<string, number>[] = [];
-    
+
     for (let i = 0; i < count; i++) {
       candidates.push(this.selectRandomAction());
     }
-    
+
     return candidates;
   }
 
@@ -552,7 +552,7 @@ export class ReinforcementLearningOptimizer {
     const performanceFeatures = 4; // mean, max, min, trend
     const marketFeatures = 4; // volatility, volume, trend, correlation
     const timeFeatures = 3; // hour, day of week, day of month
-    
+
     return paramCount + performanceFeatures + marketFeatures + timeFeatures;
   }
 
@@ -573,11 +573,14 @@ export class ReinforcementLearningOptimizer {
       experiences: this.experienceBuffer.length,
       explorationRate: this.config.explorationRate,
       episodeRewards: this.episodeRewards.slice(-50),
-      averageReward: this.episodeRewards.length > 0 
-        ? this.episodeRewards.reduce((sum, r) => sum + r, 0) / this.episodeRewards.length 
-        : 0,
-      networkUpdateCount: Math.floor(this.experienceBuffer.length / this.config.networkUpdateFrequency),
-      currentState: this.currentState
+      averageReward:
+        this.episodeRewards.length > 0
+          ? this.episodeRewards.reduce((sum, r) => sum + r, 0) / this.episodeRewards.length
+          : 0,
+      networkUpdateCount: Math.floor(
+        this.experienceBuffer.length / this.config.networkUpdateFrequency
+      ),
+      currentState: this.currentState,
     };
   }
 }
@@ -608,7 +611,7 @@ class NeuralNetwork {
       for (let j = 0; j < this.layers[i + 1]; j++) {
         const neuronWeights: number[] = [];
         for (let k = 0; k < this.layers[i]; k++) {
-          neuronWeights.push((Math.random() - 0.5) * 2 / Math.sqrt(this.layers[i]));
+          neuronWeights.push(((Math.random() - 0.5) * 2) / Math.sqrt(this.layers[i]));
         }
         layerWeights.push(neuronWeights);
         layerBiases.push(0);
@@ -644,7 +647,7 @@ class NeuralNetwork {
     // In a real implementation, this would calculate gradients and update weights
     const output = this.forward(input);
     const error = targetOutput.map((target, i) => target - output[i]);
-    
+
     // Simple weight update (placeholder)
     for (let i = 0; i < this.weights.length; i++) {
       for (let j = 0; j < this.weights[i].length; j++) {
@@ -656,10 +659,8 @@ class NeuralNetwork {
   }
 
   copyWeights(sourceNetwork: NeuralNetwork): void {
-    this.weights = sourceNetwork.weights.map(layer => 
-      layer.map(neuron => [...neuron])
-    );
-    this.biases = sourceNetwork.biases.map(layer => [...layer]);
+    this.weights = sourceNetwork.weights.map((layer) => layer.map((neuron) => [...neuron]));
+    this.biases = sourceNetwork.biases.map((layer) => [...layer]);
   }
 
   private relu(x: number): number {

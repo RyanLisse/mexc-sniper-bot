@@ -5,7 +5,7 @@
  */
 
 // Dashboard & Navigation Icons
-export { 
+export {
   LayoutDashboard,
   Settings,
   User,
@@ -19,10 +19,10 @@ export {
   Zap,
   Menu,
   X,
-  Home
+  Home,
 } from "lucide-react";
 
-// Trading & Finance Icons  
+// Trading & Finance Icons
 export {
   TrendingUp,
   TrendingDown,
@@ -34,7 +34,7 @@ export {
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
-  XCircle
+  XCircle,
 } from "lucide-react";
 
 // System & Status Icons
@@ -52,7 +52,7 @@ export {
   Clock,
   Timer,
   Calendar,
-  CalendarDays
+  CalendarDays,
 } from "lucide-react";
 
 // Action Icons
@@ -73,7 +73,7 @@ export {
   Download,
   Upload,
   Search,
-  Filter
+  Filter,
 } from "lucide-react";
 
 // Arrow & Navigation Icons
@@ -87,7 +87,7 @@ export {
   ChevronLeft,
   ChevronsUpDown,
   MoreHorizontal,
-  MoreVertical
+  MoreVertical,
 } from "lucide-react";
 
 // Data & Analytics Icons
@@ -100,7 +100,7 @@ export {
   MemoryStick,
   Monitor,
   Smartphone,
-  Tablet
+  Tablet,
 } from "lucide-react";
 
 // Communication Icons
@@ -113,7 +113,7 @@ export {
   Send,
   Share,
   Link,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 
 // File & Document Icons
@@ -126,7 +126,7 @@ export {
   Video,
   Music,
   Archive,
-  Paperclip
+  Paperclip,
 } from "lucide-react";
 
 // Security & Privacy Icons
@@ -139,7 +139,7 @@ export {
   UserCheck,
   UserX,
   Users,
-  UserPlus
+  UserPlus,
 } from "lucide-react";
 
 // Utility Icons
@@ -153,5 +153,5 @@ export {
   Bookmark,
   Flag,
   Tag,
-  Hash
+  Hash,
 } from "lucide-react";

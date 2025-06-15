@@ -1,9 +1,9 @@
 /**
  * Enhanced WebSocket Hook
- * 
+ *
  * React hook for WebSocket communication with the AI trading system.
  * Provides real-time updates for agents, trading data, and patterns.
- * 
+ *
  * Features:
  * - Automatic connection management
  * - Authentication integration
@@ -13,16 +13,16 @@
  * - Performance optimization
  */
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { webSocketClient, type WebSocketClientState } from '@/src/services/websocket-client';
-import {
-  type WebSocketMessage,
-  type WebSocketChannel,
-  type MessageHandler,
-  type SubscriptionRequest,
-  type WebSocketClientMetrics,
-} from '@/src/lib/websocket-types';
-import { useKindeBrowserClient } from '@kinde-oss/kinde-auth-nextjs';
+import type {
+  MessageHandler,
+  SubscriptionRequest,
+  WebSocketChannel,
+  WebSocketClientMetrics,
+  WebSocketMessage,
+} from "@/src/lib/websocket-types";
+import { type WebSocketClientState, webSocketClient } from "@/src/services/websocket-client";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // ======================
 // Hook Configuration
@@ -61,9 +61,13 @@ export interface UseWebSocketResult {
   /** Manual reconnect function */
   reconnect: () => void;
   /** Send a message */
-  send: <T>(message: Omit<WebSocketMessage<T>, 'messageId' | 'timestamp'>) => boolean;
+  send: <T>(message: Omit<WebSocketMessage<T>, "messageId" | "timestamp">) => boolean;
   /** Subscribe to a channel */
-  subscribe: (channel: WebSocketChannel, handler: MessageHandler, request?: SubscriptionRequest) => () => void;
+  subscribe: (
+    channel: WebSocketChannel,
+    handler: MessageHandler,
+    request?: SubscriptionRequest
+  ) => () => void;
   /** Get current subscriptions */
   subscriptions: string[];
   /** Connection ID if connected */
@@ -85,7 +89,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
   } = config;
 
   // State management
-  const [state, setState] = useState<WebSocketClientState>('disconnected');
+  const [state, setState] = useState<WebSocketClientState>("disconnected");
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [metrics, setMetrics] = useState<WebSocketClientMetrics | null>(null);
@@ -107,13 +111,13 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
     if (isAuthenticated) {
       try {
         const token = await getToken();
-        return token || '';
+        return token || "";
       } catch (error) {
-        console.warn('[WebSocket Hook] Failed to get auth token:', error);
-        return '';
+        console.warn("[WebSocket Hook] Failed to get auth token:", error);
+        return "";
       }
     }
-    return '';
+    return "";
   }, [configAuthToken, isAuthenticated, getToken]);
 
   // Connect function
@@ -125,7 +129,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
       setIsConnecting(true);
 
       const token = await authToken;
-      
+
       // Configure client if URL is provided
       if (url) {
         clientRef.current = webSocketClient;
@@ -133,17 +137,16 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
       }
 
       await clientRef.current.connect(token);
-      
-      if (debug) {
-        console.log('[WebSocket Hook] Connected successfully');
-      }
 
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Connection failed';
-      setError(errorMessage);
-      
       if (debug) {
-        console.error('[WebSocket Hook] Connection failed:', errorMessage);
+        console.log("[WebSocket Hook] Connected successfully");
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Connection failed";
+      setError(errorMessage);
+
+      if (debug) {
+        console.error("[WebSocket Hook] Connection failed:", errorMessage);
       }
     } finally {
       if (isMountedRef.current) {
@@ -155,62 +158,64 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
   // Disconnect function
   const disconnect = useCallback(() => {
     clientRef.current.disconnect();
-    
+
     if (debug) {
-      console.log('[WebSocket Hook] Disconnected');
+      console.log("[WebSocket Hook] Disconnected");
     }
   }, [debug]);
 
   // Reconnect function
   const reconnect = useCallback(() => {
     if (debug) {
-      console.log('[WebSocket Hook] Reconnecting...');
+      console.log("[WebSocket Hook] Reconnecting...");
     }
-    
+
     clientRef.current.reconnect();
   }, [debug]);
 
   // Send message function
-  const send = useCallback(<T>(message: Omit<WebSocketMessage<T>, 'messageId' | 'timestamp'>) => {
-    const success = clientRef.current.send(message);
-    
-    if (debug && !success) {
-      console.warn('[WebSocket Hook] Failed to send message:', message);
-    }
-    
-    return success;
-  }, [debug]);
+  const send = useCallback(
+    <T>(message: Omit<WebSocketMessage<T>, "messageId" | "timestamp">) => {
+      const success = clientRef.current.send(message);
+
+      if (debug && !success) {
+        console.warn("[WebSocket Hook] Failed to send message:", message);
+      }
+
+      return success;
+    },
+    [debug]
+  );
 
   // Subscribe function
-  const subscribe = useCallback((
-    channel: WebSocketChannel,
-    handler: MessageHandler,
-    request?: SubscriptionRequest
-  ) => {
-    const unsubscribe = clientRef.current.subscribe(channel, handler, request);
-    
-    // Store unsubscribe function for cleanup
-    const handlerId = `${channel}:${Date.now()}`;
-    handlersRef.current.set(handlerId, unsubscribe);
-    
-    // Update subscriptions list
-    setSubscriptions(clientRef.current.getSubscriptions());
-    
-    if (debug) {
-      console.log(`[WebSocket Hook] Subscribed to ${channel}`);
-    }
+  const subscribe = useCallback(
+    (channel: WebSocketChannel, handler: MessageHandler, request?: SubscriptionRequest) => {
+      const unsubscribe = clientRef.current.subscribe(channel, handler, request);
 
-    // Return enhanced unsubscribe function
-    return () => {
-      unsubscribe();
-      handlersRef.current.delete(handlerId);
+      // Store unsubscribe function for cleanup
+      const handlerId = `${channel}:${Date.now()}`;
+      handlersRef.current.set(handlerId, unsubscribe);
+
+      // Update subscriptions list
       setSubscriptions(clientRef.current.getSubscriptions());
-      
+
       if (debug) {
-        console.log(`[WebSocket Hook] Unsubscribed from ${channel}`);
+        console.log(`[WebSocket Hook] Subscribed to ${channel}`);
       }
-    };
-  }, [debug]);
+
+      // Return enhanced unsubscribe function
+      return () => {
+        unsubscribe();
+        handlersRef.current.delete(handlerId);
+        setSubscriptions(clientRef.current.getSubscriptions());
+
+        if (debug) {
+          console.log(`[WebSocket Hook] Unsubscribed from ${channel}`);
+        }
+      };
+    },
+    [debug]
+  );
 
   // Set up event listeners
   useEffect(() => {
@@ -219,8 +224,8 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
     const handleStateChange = ({ newState }: { newState: WebSocketClientState }) => {
       if (isMountedRef.current) {
         setState(newState);
-        setIsConnected(newState === 'connected');
-        setIsConnecting(newState === 'connecting' || newState === 'reconnecting');
+        setIsConnected(newState === "connected");
+        setIsConnecting(newState === "connecting" || newState === "reconnecting");
       }
     };
 
@@ -228,9 +233,9 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
       if (isMountedRef.current) {
         setError(null);
         setConnectionId(client.getConnectionId());
-        
+
         if (debug) {
-          console.log('[WebSocket Hook] Connection established');
+          console.log("[WebSocket Hook] Connection established");
         }
       }
     };
@@ -238,36 +243,36 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
     const handleDisconnected = () => {
       if (isMountedRef.current) {
         setConnectionId(undefined);
-        
+
         if (debug) {
-          console.log('[WebSocket Hook] Connection lost');
+          console.log("[WebSocket Hook] Connection lost");
         }
       }
     };
 
     const handleError = (error: any) => {
       if (isMountedRef.current) {
-        const errorMessage = error instanceof Error ? error.message : 'WebSocket error';
+        const errorMessage = error instanceof Error ? error.message : "WebSocket error";
         setError(errorMessage);
-        
+
         if (debug) {
-          console.error('[WebSocket Hook] WebSocket error:', errorMessage);
+          console.error("[WebSocket Hook] WebSocket error:", errorMessage);
         }
       }
     };
 
     const handleMessage = (message: WebSocketMessage) => {
       if (debug) {
-        console.log('[WebSocket Hook] Message received:', message);
+        console.log("[WebSocket Hook] Message received:", message);
       }
     };
 
     // Add event listeners
-    client.on('stateChange', handleStateChange);
-    client.on('connected', handleConnected);
-    client.on('disconnected', handleDisconnected);
-    client.on('error', handleError);
-    client.on('message', handleMessage);
+    client.on("stateChange", handleStateChange);
+    client.on("connected", handleConnected);
+    client.on("disconnected", handleDisconnected);
+    client.on("error", handleError);
+    client.on("message", handleMessage);
 
     // Initial state sync
     setState(client.getState());
@@ -276,17 +281,17 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
     setConnectionId(client.getConnectionId());
 
     return () => {
-      client.off('stateChange', handleStateChange);
-      client.off('connected', handleConnected);
-      client.off('disconnected', handleDisconnected);
-      client.off('error', handleError);
-      client.off('message', handleMessage);
+      client.off("stateChange", handleStateChange);
+      client.off("connected", handleConnected);
+      client.off("disconnected", handleDisconnected);
+      client.off("error", handleError);
+      client.off("message", handleMessage);
     };
   }, [debug]);
 
   // Auto-connect effect
   useEffect(() => {
-    if (autoConnect && !isConnected && !isConnecting && state === 'disconnected') {
+    if (autoConnect && !isConnected && !isConnecting && state === "disconnected") {
       connect();
     }
   }, [autoConnect, isConnected, isConnecting, state, connect]);
@@ -310,13 +315,13 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
-      
+
       // Cleanup all subscriptions
       for (const unsubscribe of handlersRef.current.values()) {
         unsubscribe();
       }
       handlersRef.current.clear();
-      
+
       // Disconnect if connected
       if (clientRef.current.isConnected()) {
         clientRef.current.disconnect();
@@ -355,9 +360,9 @@ export function useAgentStatus() {
   useEffect(() => {
     if (!isConnected) return;
 
-    const unsubscribe = subscribe('agents:status', (message) => {
-      if (message.type === 'agent:status') {
-        setAgentStatuses(prev => {
+    const unsubscribe = subscribe("agents:status", (message) => {
+      if (message.type === "agent:status") {
+        setAgentStatuses((prev) => {
           const newMap = new Map(prev);
           newMap.set(message.data.agentId, message.data);
           return newMap;
@@ -390,35 +395,39 @@ export function useTradingPrices(symbols?: string[]) {
     const unsubscribers: (() => void)[] = [];
 
     // Subscribe to general trading prices
-    unsubscribers.push(subscribe('trading:prices', (message) => {
-      if (message.type === 'trading:price') {
-        setPrices(prev => {
-          const newMap = new Map(prev);
-          newMap.set(message.data.symbol, message.data);
-          return newMap;
-        });
-        setLastUpdate(Date.now());
-      }
-    }));
+    unsubscribers.push(
+      subscribe("trading:prices", (message) => {
+        if (message.type === "trading:price") {
+          setPrices((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(message.data.symbol, message.data);
+            return newMap;
+          });
+          setLastUpdate(Date.now());
+        }
+      })
+    );
 
     // Subscribe to specific symbol prices if provided
     if (symbols) {
       for (const symbol of symbols) {
-        unsubscribers.push(subscribe(`trading:${symbol}:price`, (message) => {
-          if (message.type === 'trading:price') {
-            setPrices(prev => {
-              const newMap = new Map(prev);
-              newMap.set(message.data.symbol, message.data);
-              return newMap;
-            });
-            setLastUpdate(Date.now());
-          }
-        }));
+        unsubscribers.push(
+          subscribe(`trading:${symbol}:price`, (message) => {
+            if (message.type === "trading:price") {
+              setPrices((prev) => {
+                const newMap = new Map(prev);
+                newMap.set(message.data.symbol, message.data);
+                return newMap;
+              });
+              setLastUpdate(Date.now());
+            }
+          })
+        );
       }
     }
 
     return () => {
-      unsubscribers.forEach(unsub => unsub());
+      unsubscribers.forEach((unsub) => unsub());
     };
   }, [isConnected, subscribe, symbols]);
 
@@ -445,50 +454,58 @@ export function usePatternDiscovery(symbols?: string[]) {
     const unsubscribers: (() => void)[] = [];
 
     // Subscribe to pattern discovery
-    unsubscribers.push(subscribe('patterns:discovery', (message) => {
-      if (message.type === 'pattern:discovery') {
-        setPatterns(prev => [message.data, ...prev.slice(0, 99)]); // Keep last 100
-        setLastUpdate(Date.now());
-      }
-    }));
+    unsubscribers.push(
+      subscribe("patterns:discovery", (message) => {
+        if (message.type === "pattern:discovery") {
+          setPatterns((prev) => [message.data, ...prev.slice(0, 99)]); // Keep last 100
+          setLastUpdate(Date.now());
+        }
+      })
+    );
 
     // Subscribe to ready state patterns
-    unsubscribers.push(subscribe('patterns:ready_state', (message) => {
-      if (message.type === 'pattern:ready_state') {
-        setReadyStates(prev => {
-          const newMap = new Map(prev);
-          newMap.set(message.data.symbol, message.data);
-          return newMap;
-        });
-        setLastUpdate(Date.now());
-      }
-    }));
+    unsubscribers.push(
+      subscribe("patterns:ready_state", (message) => {
+        if (message.type === "pattern:ready_state") {
+          setReadyStates((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(message.data.symbol, message.data);
+            return newMap;
+          });
+          setLastUpdate(Date.now());
+        }
+      })
+    );
 
     // Subscribe to specific symbol patterns if provided
     if (symbols) {
       for (const symbol of symbols) {
-        unsubscribers.push(subscribe(`patterns:${symbol}:discovery`, (message) => {
-          if (message.type === 'pattern:discovery') {
-            setPatterns(prev => [message.data, ...prev.slice(0, 99)]);
-            setLastUpdate(Date.now());
-          }
-        }));
+        unsubscribers.push(
+          subscribe(`patterns:${symbol}:discovery`, (message) => {
+            if (message.type === "pattern:discovery") {
+              setPatterns((prev) => [message.data, ...prev.slice(0, 99)]);
+              setLastUpdate(Date.now());
+            }
+          })
+        );
 
-        unsubscribers.push(subscribe(`patterns:${symbol}:ready_state`, (message) => {
-          if (message.type === 'pattern:ready_state') {
-            setReadyStates(prev => {
-              const newMap = new Map(prev);
-              newMap.set(message.data.symbol, message.data);
-              return newMap;
-            });
-            setLastUpdate(Date.now());
-          }
-        }));
+        unsubscribers.push(
+          subscribe(`patterns:${symbol}:ready_state`, (message) => {
+            if (message.type === "pattern:ready_state") {
+              setReadyStates((prev) => {
+                const newMap = new Map(prev);
+                newMap.set(message.data.symbol, message.data);
+                return newMap;
+              });
+              setLastUpdate(Date.now());
+            }
+          })
+        );
       }
     }
 
     return () => {
-      unsubscribers.forEach(unsub => unsub());
+      unsubscribers.forEach((unsub) => unsub());
     };
   }, [isConnected, subscribe, symbols]);
 
@@ -512,9 +529,9 @@ export function useWorkflows() {
   useEffect(() => {
     if (!isConnected) return;
 
-    const unsubscribe = subscribe('agents:workflows', (message) => {
-      if (message.type === 'agent:workflow') {
-        setWorkflows(prev => {
+    const unsubscribe = subscribe("agents:workflows", (message) => {
+      if (message.type === "agent:workflow") {
+        setWorkflows((prev) => {
           const newMap = new Map(prev);
           newMap.set(message.data.workflowId, message.data);
           return newMap;
@@ -548,25 +565,29 @@ export function useNotifications(userId?: string) {
     const unsubscribers: (() => void)[] = [];
 
     // Subscribe to global notifications
-    unsubscribers.push(subscribe('notifications:global', (message) => {
-      if (message.type.startsWith('notification:')) {
-        setNotifications(prev => [message.data, ...prev.slice(0, 99)]);
-        setUnreadCount(prev => prev + 1);
-      }
-    }));
+    unsubscribers.push(
+      subscribe("notifications:global", (message) => {
+        if (message.type.startsWith("notification:")) {
+          setNotifications((prev) => [message.data, ...prev.slice(0, 99)]);
+          setUnreadCount((prev) => prev + 1);
+        }
+      })
+    );
 
     // Subscribe to user-specific notifications if userId provided
     if (userId) {
-      unsubscribers.push(subscribe(`user:${userId}:notifications`, (message) => {
-        if (message.type.startsWith('notification:')) {
-          setNotifications(prev => [message.data, ...prev.slice(0, 99)]);
-          setUnreadCount(prev => prev + 1);
-        }
-      }));
+      unsubscribers.push(
+        subscribe(`user:${userId}:notifications`, (message) => {
+          if (message.type.startsWith("notification:")) {
+            setNotifications((prev) => [message.data, ...prev.slice(0, 99)]);
+            setUnreadCount((prev) => prev + 1);
+          }
+        })
+      );
     }
 
     return () => {
-      unsubscribers.forEach(unsub => unsub());
+      unsubscribers.forEach((unsub) => unsub());
     };
   }, [isConnected, subscribe, userId]);
 

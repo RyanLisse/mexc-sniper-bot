@@ -1,9 +1,5 @@
-import type { 
-  NotificationProvider, 
-  NotificationMessage, 
-  NotificationResult 
-} from "./index";
-import type { SelectNotificationChannel, SelectAlertInstance } from "../../db/schemas/alerts";
+import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
+import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface TeamsConfig {
   webhookUrl: string;
@@ -51,13 +47,14 @@ export class TeamsProvider implements NotificationProvider {
 
   async validateConfig(config: Record<string, unknown>): Promise<boolean> {
     const teamsConfig = config as TeamsConfig;
-    
+
     if (!teamsConfig.webhookUrl) {
       return false;
     }
 
     // Validate webhook URL format for Microsoft Teams
-    const webhookRegex = /^https:\/\/[a-zA-Z0-9-]+\.webhook\.office\.com\/webhookb2\/[a-f0-9-]+@[a-f0-9-]+\/IncomingWebhook\/[a-f0-9]+\/[a-f0-9-]+$/;
+    const webhookRegex =
+      /^https:\/\/[a-zA-Z0-9-]+\.webhook\.office\.com\/webhookb2\/[a-f0-9-]+@[a-f0-9-]+\/IncomingWebhook\/[a-f0-9]+\/[a-f0-9-]+$/;
     return webhookRegex.test(teamsConfig.webhookUrl);
   }
 
@@ -68,21 +65,21 @@ export class TeamsProvider implements NotificationProvider {
   ): Promise<NotificationResult> {
     try {
       const config = JSON.parse(channel.config) as TeamsConfig;
-      
+
       const card = this.buildTeamsCard(config, alert, message);
-      
+
       // For production, you would make an actual HTTP request to Teams
       // For now, we'll simulate the Teams webhook call
-      
+
       console.log("Sending Teams notification:", card);
-      
+
       // In production, you would:
       // const response = await fetch(config.webhookUrl, {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify(card)
       // });
-      // 
+      //
       // if (!response.ok) {
       //   throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       // }
@@ -108,14 +105,14 @@ export class TeamsProvider implements NotificationProvider {
   ): TeamsCard {
     const themeColor = config.themeColor || this.getSeverityColor(alert.severity);
     const icon = this.getSeverityIcon(alert.severity);
-    
+
     // Build mentions
     let mentionsText = "";
     if (config.mentionUsers?.length) {
-      mentionsText += config.mentionUsers.map(user => `<at>${user}</at>`).join(" ");
+      mentionsText += config.mentionUsers.map((user) => `<at>${user}</at>`).join(" ");
     }
     if (config.mentionTeams?.length) {
-      mentionsText += config.mentionTeams.map(team => `<at>${team}</at>`).join(" ");
+      mentionsText += config.mentionTeams.map((team) => `<at>${team}</at>`).join(" ");
     }
 
     const sections: TeamsSection[] = [
@@ -127,28 +124,28 @@ export class TeamsProvider implements NotificationProvider {
           { name: "Severity", value: alert.severity.toUpperCase() },
           { name: "Source", value: alert.source },
           { name: "Metric Value", value: alert.metricValue?.toString() || "N/A" },
-        ]
-      }
+        ],
+      },
     ];
 
     // Add additional facts if available
     const additionalFacts: TeamsFact[] = [];
-    
+
     if (alert.threshold) {
       additionalFacts.push({ name: "Threshold", value: alert.threshold.toString() });
     }
-    
+
     if (alert.anomalyScore) {
       additionalFacts.push({ name: "Anomaly Score", value: alert.anomalyScore.toFixed(2) });
     }
-    
+
     if (alert.environment) {
       additionalFacts.push({ name: "Environment", value: alert.environment });
     }
 
     if (additionalFacts.length > 0) {
       sections.push({
-        facts: additionalFacts
+        facts: additionalFacts,
       });
     }
 
@@ -156,21 +153,21 @@ export class TeamsProvider implements NotificationProvider {
     if (alert.description) {
       sections.push({
         text: `**Description:** ${alert.description}`,
-        markdown: true
+        markdown: true,
       });
     }
 
     // Add timestamp
     sections.push({
       text: `**Triggered:** ${new Date(alert.firstTriggeredAt).toLocaleString()}`,
-      markdown: true
+      markdown: true,
     });
 
     // Add mentions if any
     if (mentionsText) {
       sections.push({
         text: mentionsText,
-        markdown: true
+        markdown: true,
       });
     }
 
@@ -191,10 +188,10 @@ export class TeamsProvider implements NotificationProvider {
           targets: [
             {
               os: "default",
-              uri: message.alertUrl
-            }
-          ]
-        }
+              uri: message.alertUrl,
+            },
+          ],
+        },
       ];
     }
 
@@ -203,23 +200,35 @@ export class TeamsProvider implements NotificationProvider {
 
   private getSeverityColor(severity: string): string {
     switch (severity) {
-      case "critical": return "#DC2626";
-      case "high": return "#EA580C";
-      case "medium": return "#D97706";
-      case "low": return "#2563EB";
-      case "info": return "#6B7280";
-      default: return "#6B7280";
+      case "critical":
+        return "#DC2626";
+      case "high":
+        return "#EA580C";
+      case "medium":
+        return "#D97706";
+      case "low":
+        return "#2563EB";
+      case "info":
+        return "#6B7280";
+      default:
+        return "#6B7280";
     }
   }
 
   private getSeverityIcon(severity: string): string {
     switch (severity) {
-      case "critical": return "🔴";
-      case "high": return "🟠";
-      case "medium": return "🟡";
-      case "low": return "🔵";
-      case "info": return "ℹ️";
-      default: return "⚪";
+      case "critical":
+        return "🔴";
+      case "high":
+        return "🟠";
+      case "medium":
+        return "🟡";
+      case "low":
+        return "🔵";
+      case "info":
+        return "ℹ️";
+      default:
+        return "⚪";
     }
   }
 }

@@ -1,18 +1,15 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { eq, and, gte, count } from "drizzle-orm";
-import { 
-  notificationChannels, 
-  alertNotifications,
-  escalationPolicies,
-  type SelectNotificationChannel,
+import { and, count, eq, gte } from "drizzle-orm";
+import {
   type SelectAlertInstance,
-  type InsertAlertNotification
+  type SelectNotificationChannel,
+  alertNotifications,
+  notificationChannels,
 } from "../../db/schemas/alerts";
 import { EmailProvider } from "./email-provider";
 import { SlackProvider } from "./slack-provider";
-import { WebhookProvider } from "./webhook-provider";
 import { SMSProvider } from "./sms-provider";
 import { TeamsProvider } from "./teams-provider";
+import { WebhookProvider } from "./webhook-provider";
 
 export interface NotificationProvider {
   send(
@@ -20,7 +17,7 @@ export interface NotificationProvider {
     alert: SelectAlertInstance,
     message: NotificationMessage
   ): Promise<NotificationResult>;
-  
+
   validateConfig(config: Record<string, unknown>): Promise<boolean>;
   getProviderType(): string;
 }
@@ -84,7 +81,7 @@ export class NotificationService {
       console.log(`Sending alert ${alert.id} to ${channels.length} channels`);
 
       // Send to each channel
-      const notificationPromises = channels.map(channel => 
+      const notificationPromises = channels.map((channel) =>
         this.sendToChannel(channel, alert, "alert")
       );
 
@@ -103,21 +100,15 @@ export class NotificationService {
       const sentNotifications = await this.db
         .select()
         .from(alertNotifications)
-        .leftJoin(
-          notificationChannels,
-          eq(alertNotifications.channelId, notificationChannels.id)
-        )
+        .leftJoin(notificationChannels, eq(alertNotifications.channelId, notificationChannels.id))
         .where(
-          and(
-            eq(alertNotifications.alertId, alert.id),
-            eq(alertNotifications.status, "sent")
-          )
+          and(eq(alertNotifications.alertId, alert.id), eq(alertNotifications.status, "sent"))
         );
 
-      const channels = sentNotifications.map(n => n.notification_channels);
+      const channels = sentNotifications.map((n) => n.notification_channels);
 
       // Send resolution notification to each channel
-      const notificationPromises = channels.map(channel => 
+      const notificationPromises = channels.map((channel) =>
         this.sendToChannel(channel, alert, "resolution")
       );
 
@@ -151,11 +142,7 @@ export class NotificationService {
       const message = this.buildNotificationMessage(alert, channel, type);
 
       // Record attempt
-      const notificationId = await this.recordNotificationAttempt(
-        alert.id, 
-        channel.id, 
-        "pending"
-      );
+      const notificationId = await this.recordNotificationAttempt(alert.id, channel.id, "pending");
 
       // Send notification
       const result = await provider.send(channel, alert, message);
@@ -184,14 +171,11 @@ export class NotificationService {
     }
 
     const steps: EscalationStep[] = JSON.parse(escalationPolicy.steps);
-    
+
     // Schedule first escalation step
     if (steps.length > 0) {
       const firstStep = steps[0];
-      setTimeout(
-        () => this.executeEscalationStep(alert, firstStep, 1),
-        firstStep.delay * 1000
-      );
+      setTimeout(() => this.executeEscalationStep(alert, firstStep, 1), firstStep.delay * 1000);
     }
   }
 
@@ -224,7 +208,7 @@ export class NotificationService {
         .from(notificationChannels)
         .where(
           and(
-            eq(notificationChannels.isEnabled, true),
+            eq(notificationChannels.isEnabled, true)
             // SQL IN clause for channel IDs
           )
         );
@@ -253,16 +237,21 @@ export class NotificationService {
   // CHANNEL MANAGEMENT
   // ==========================================
 
-  private async getChannelsForAlert(alert: SelectAlertInstance): Promise<SelectNotificationChannel[]> {
+  private async getChannelsForAlert(
+    alert: SelectAlertInstance
+  ): Promise<SelectNotificationChannel[]> {
     const channels = await this.db
       .select()
       .from(notificationChannels)
       .where(eq(notificationChannels.isEnabled, true));
 
-    return channels.filter(channel => this.channelMatchesAlert(channel, alert));
+    return channels.filter((channel) => this.channelMatchesAlert(channel, alert));
   }
 
-  private channelMatchesAlert(channel: SelectNotificationChannel, alert: SelectAlertInstance): boolean {
+  private channelMatchesAlert(
+    channel: SelectNotificationChannel,
+    alert: SelectAlertInstance
+  ): boolean {
     // Check severity filter
     if (channel.severityFilter) {
       const severities = JSON.parse(channel.severityFilter);
@@ -282,11 +271,11 @@ export class NotificationService {
     if (channel.tagFilter && alert.labels) {
       const tagFilter = JSON.parse(channel.tagFilter);
       const alertLabels = JSON.parse(alert.labels);
-      
-      const hasMatchingTag = tagFilter.some((tag: string) => 
+
+      const hasMatchingTag = tagFilter.some((tag: string) =>
         Object.values(alertLabels).includes(tag)
       );
-      
+
       if (!hasMatchingTag) {
         return false;
       }
@@ -301,7 +290,7 @@ export class NotificationService {
 
   private async isChannelRateLimited(channel: SelectNotificationChannel): Promise<boolean> {
     const oneHourAgo = Date.now() - 3600000;
-    
+
     const recentNotifications = await this.db
       .select({ count: count() })
       .from(alertNotifications)
@@ -320,18 +309,18 @@ export class NotificationService {
   private updateRateLimit(channel: SelectNotificationChannel): void {
     const now = Date.now();
     const oneHourAgo = now - 3600000;
-    
+
     if (!this.rateLimitCache.has(channel.id)) {
       this.rateLimitCache.set(channel.id, []);
     }
-    
+
     const timestamps = this.rateLimitCache.get(channel.id)!;
-    
+
     // Add current timestamp
     timestamps.push(now);
-    
+
     // Remove old timestamps
-    const filtered = timestamps.filter(ts => ts > oneHourAgo);
+    const filtered = timestamps.filter((ts) => ts > oneHourAgo);
     this.rateLimitCache.set(channel.id, filtered);
   }
 
@@ -344,11 +333,12 @@ export class NotificationService {
     channel: SelectNotificationChannel,
     type: "alert" | "resolution" | "escalation"
   ): NotificationMessage {
-    const baseTitle = type === "resolution" 
-      ? `🟢 RESOLVED: ${alert.message}`
-      : type === "escalation"
-      ? `🔺 ESCALATED: ${alert.message}`
-      : this.getSeverityEmoji(alert.severity) + " " + alert.message;
+    const baseTitle =
+      type === "resolution"
+        ? `🟢 RESOLVED: ${alert.message}`
+        : type === "escalation"
+          ? `🔺 ESCALATED: ${alert.message}`
+          : this.getSeverityEmoji(alert.severity) + " " + alert.message;
 
     const baseBody = this.buildMessageBody(alert, type);
 
@@ -367,7 +357,7 @@ export class NotificationService {
         severity: alert.severity,
         source: alert.source,
         type,
-      }
+      },
     };
   }
 
@@ -400,7 +390,11 @@ export class NotificationService {
     return sections.join("\n");
   }
 
-  private applyTemplate(template: string | null, defaultValue: string, alert: SelectAlertInstance): string {
+  private applyTemplate(
+    template: string | null,
+    defaultValue: string,
+    alert: SelectAlertInstance
+  ): string {
     if (!template) {
       return defaultValue;
     }
@@ -417,20 +411,29 @@ export class NotificationService {
 
   private getSeverityEmoji(severity: string): string {
     switch (severity) {
-      case "critical": return "🔴";
-      case "high": return "🟠";
-      case "medium": return "🟡";
-      case "low": return "🔵";
-      case "info": return "⚪";
-      default: return "⚪";
+      case "critical":
+        return "🔴";
+      case "high":
+        return "🟠";
+      case "medium":
+        return "🟡";
+      case "low":
+        return "🔵";
+      case "info":
+        return "⚪";
+      default:
+        return "⚪";
     }
   }
 
   private mapSeverityToPriority(severity: string): "low" | "medium" | "high" | "critical" {
     switch (severity) {
-      case "critical": return "critical";
-      case "high": return "high";
-      case "medium": return "medium";
+      case "critical":
+        return "critical";
+      case "high":
+        return "high";
+      case "medium":
+        return "medium";
       case "low":
       case "info":
       default:
@@ -448,7 +451,7 @@ export class NotificationService {
     status: string
   ): Promise<string> {
     const notificationId = `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     await this.db.insert(alertNotifications).values({
       id: notificationId,
       alertId,
@@ -509,7 +512,7 @@ export class NotificationService {
     } = {}
   ): Promise<string> {
     const channelId = `channel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Validate configuration with provider
     const provider = this.providers.get(type);
     if (!provider) {
@@ -590,9 +593,9 @@ export class NotificationService {
     return await provider.send(channel[0], testAlert, message);
   }
 
-  async getChannelStatistics(channelId: string, hours: number = 24) {
-    const cutoff = Date.now() - (hours * 3600000);
-    
+  async getChannelStatistics(channelId: string, hours = 24) {
+    const cutoff = Date.now() - hours * 3600000;
+
     const stats = await this.db
       .select({
         total: count(),
@@ -602,10 +605,7 @@ export class NotificationService {
       })
       .from(alertNotifications)
       .where(
-        and(
-          eq(alertNotifications.channelId, channelId),
-          gte(alertNotifications.createdAt, cutoff)
-        )
+        and(eq(alertNotifications.channelId, channelId), gte(alertNotifications.createdAt, cutoff))
       );
 
     return stats[0] || { total: 0, sent: 0, failed: 0, rateLimited: 0 };

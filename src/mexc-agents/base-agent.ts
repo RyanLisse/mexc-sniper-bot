@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
-import { ErrorLoggingService } from "@/src/services/error-logging-service";
 import { globalEnhancedAgentCache, initializeAgentCache } from "@/src/lib/enhanced-agent-cache";
+import { ErrorLoggingService } from "@/src/services/error-logging-service";
 import OpenAI from "openai";
 
 export interface AgentConfig {
@@ -62,7 +62,7 @@ export class BaseAgent {
 
     // Initialize enhanced agent cache for this agent
     if (this.config.cacheEnabled) {
-      initializeAgentCache(this.config.name).catch(error => {
+      initializeAgentCache(this.config.name).catch((error) => {
         console.error(`[${this.config.name}] Failed to initialize enhanced cache:`, error);
       });
     }
@@ -121,23 +121,23 @@ export class BaseAgent {
     options?: Partial<OpenAI.Chat.Completions.ChatCompletionCreateParams>
   ): Promise<AgentResponse> {
     const startTime = performance.now();
-    
+
     // Check enhanced agent cache first if enabled
     if (this.config.cacheEnabled) {
       const input = JSON.stringify(messages);
       const context = { options, agent: this.config.name };
-      
+
       const enhancedCached = await globalEnhancedAgentCache.getAgentResponse(
         this.config.name,
         input,
         context
       );
-      
+
       if (enhancedCached) {
         console.log(`[${this.config.name}] Enhanced cache hit for request`);
         return enhancedCached;
       }
-      
+
       // Track cache miss in enhanced cache when it returns null
       if (this.config.cacheEnabled) {
         // Inform enhanced cache about the miss
@@ -157,7 +157,7 @@ export class BaseAgent {
           JSON.stringify(messages),
           { options, agent: this.config.name }
         );
-        
+
         // If enhanced cache returns null, it means it was invalidated, so clear local cache too
         if (!enhancedCheck) {
           this.responseCache.delete(cacheKey);
@@ -194,7 +194,7 @@ export class BaseAgent {
       const content = "choices" in response ? response.choices[0]?.message?.content || "" : "";
 
       const executionTime = performance.now() - startTime;
-      
+
       const agentResponse: AgentResponse = {
         content,
         metadata: {
@@ -212,7 +212,7 @@ export class BaseAgent {
         // Cache in enhanced agent cache first
         const input = JSON.stringify(messages);
         const context = { options, agent: this.config.name };
-        
+
         await globalEnhancedAgentCache.setAgentResponse(
           this.config.name,
           input,
@@ -255,19 +255,19 @@ export class BaseAgent {
   /**
    * Determine response priority for caching
    */
-  private determineResponsePriority(response: AgentResponse): 'low' | 'medium' | 'high' {
+  private determineResponsePriority(response: AgentResponse): "low" | "medium" | "high" {
     // High priority for pattern detection and critical trading signals
-    if (this.config.name.includes('pattern') || this.config.name.includes('strategy')) {
-      return 'high';
+    if (this.config.name.includes("pattern") || this.config.name.includes("strategy")) {
+      return "high";
     }
-    
+
     // Medium priority for analysis agents
-    if (this.config.name.includes('analysis') || this.config.name.includes('calendar')) {
-      return 'medium';
+    if (this.config.name.includes("analysis") || this.config.name.includes("calendar")) {
+      return "medium";
     }
-    
+
     // Low priority for other responses
-    return 'low';
+    return "low";
   }
 
   /**
@@ -278,29 +278,29 @@ export class BaseAgent {
     options?: Partial<OpenAI.Chat.Completions.ChatCompletionCreateParams>
   ): string[] {
     const dependencies: string[] = [];
-    
+
     // Add agent-specific dependencies
     dependencies.push(this.config.name);
-    
+
     // Extract dependencies from message content
-    const messageContent = messages.map(m => m.content).join(' ');
-    
-    if (messageContent.includes('mexc') || messageContent.includes('symbol')) {
-      dependencies.push('mexc/connectivity', 'mexc/symbols');
+    const messageContent = messages.map((m) => m.content).join(" ");
+
+    if (messageContent.includes("mexc") || messageContent.includes("symbol")) {
+      dependencies.push("mexc/connectivity", "mexc/symbols");
     }
-    
-    if (messageContent.includes('calendar') || messageContent.includes('listing')) {
-      dependencies.push('mexc/calendar');
+
+    if (messageContent.includes("calendar") || messageContent.includes("listing")) {
+      dependencies.push("mexc/calendar");
     }
-    
-    if (messageContent.includes('pattern') || messageContent.includes('ready_state')) {
-      dependencies.push('pattern/detection');
+
+    if (messageContent.includes("pattern") || messageContent.includes("ready_state")) {
+      dependencies.push("pattern/detection");
     }
-    
-    if (messageContent.includes('account') || messageContent.includes('balance')) {
-      dependencies.push('mexc/account');
+
+    if (messageContent.includes("account") || messageContent.includes("balance")) {
+      dependencies.push("mexc/account");
     }
-    
+
     return dependencies;
   }
 

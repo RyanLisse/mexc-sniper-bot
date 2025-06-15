@@ -1,6 +1,8 @@
+import {
+  PREDEFINED_STRATEGIES,
+  type TradingStrategyConfig,
+} from "@/src/services/multi-phase-trading-service";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
-import { multiPhaseTradingService, type TradingStrategyConfig, PREDEFINED_STRATEGIES } from "@/src/services/multi-phase-trading-service";
-import { MultiPhaseStrategyBuilder, StrategyPatterns } from "@/src/services/multi-phase-strategy-builder";
 
 export interface StrategyRequest {
   marketData: string;
@@ -189,9 +191,12 @@ Current Strategy: ${currentStrategy.name}
 Description: ${currentStrategy.description || "No description provided"}
 
 Current Phases:
-${currentStrategy.levels.map((level, index) => 
-  `Phase ${index + 1}: ${level.sellPercentage}% at +${level.percentage}% (${level.multiplier}x)`
-).join("\n")}
+${currentStrategy.levels
+  .map(
+    (level, index) =>
+      `Phase ${index + 1}: ${level.sellPercentage}% at +${level.percentage}% (${level.multiplier}x)`
+  )
+  .join("\n")}
 
 Market Conditions:
 ${marketConditions}
@@ -231,11 +236,11 @@ Focus on maintaining the strategy's core philosophy while improving risk-adjuste
     };
 
     const response = await this.createMultiPhaseStrategy(request);
-    
+
     // Parse AI response and create structured recommendation
     // In a real implementation, you would parse the AI response more intelligently
     // For now, we'll create a recommendation based on user preferences
-    
+
     let baseStrategy: TradingStrategyConfig;
     const alternatives: TradingStrategyConfig[] = [];
 
@@ -289,16 +294,17 @@ Focus on maintaining the strategy's core philosophy while improving risk-adjuste
 
   // Helper methods for strategy analysis
   private estimateMaxDrawdown(strategy: TradingStrategyConfig, riskLevel: string): number {
-    const avgTarget = strategy.levels.reduce((sum, level) => sum + level.percentage, 0) / strategy.levels.length;
+    const avgTarget =
+      strategy.levels.reduce((sum, level) => sum + level.percentage, 0) / strategy.levels.length;
     const baseDrawdown = avgTarget * 0.2; // 20% of average target as baseline
-    
+
     const riskMultipliers = { low: 0.5, medium: 1.0, high: 1.5 };
     return baseDrawdown * (riskMultipliers[riskLevel as keyof typeof riskMultipliers] || 1.0);
   }
 
   private getTimeHorizon(strategy: TradingStrategyConfig, timeframe: string): string {
-    const maxTarget = Math.max(...strategy.levels.map(l => l.percentage));
-    
+    const maxTarget = Math.max(...strategy.levels.map((l) => l.percentage));
+
     if (timeframe === "short" || maxTarget < 50) return "1-7 days";
     if (timeframe === "medium" || maxTarget < 200) return "1-4 weeks";
     return "1-3 months";
@@ -306,18 +312,19 @@ Focus on maintaining the strategy's core philosophy while improving risk-adjuste
 
   private calculateSuitabilityScore(strategy: TradingStrategyConfig, preferences: any): number {
     let score = 80; // Base score
-    
-    const avgTarget = strategy.levels.reduce((sum, level) => sum + level.percentage, 0) / strategy.levels.length;
-    
+
+    const avgTarget =
+      strategy.levels.reduce((sum, level) => sum + level.percentage, 0) / strategy.levels.length;
+
     // Adjust based on risk tolerance alignment
     if (preferences.riskTolerance === "low" && avgTarget < 50) score += 15;
     if (preferences.riskTolerance === "medium" && avgTarget >= 50 && avgTarget < 150) score += 15;
     if (preferences.riskTolerance === "high" && avgTarget >= 150) score += 15;
-    
+
     // Adjust based on timeframe alignment
     if (preferences.timeframe === "short" && strategy.id === "scalping") score += 10;
     if (preferences.timeframe === "long" && avgTarget > 200) score += 10;
-    
+
     return Math.min(100, score);
   }
 
@@ -360,7 +367,7 @@ Focus on maintaining the strategy's core philosophy while improving risk-adjuste
       "Watch for trend breakdown signals",
     ];
 
-    const maxTarget = Math.max(...strategy.levels.map(l => l.percentage));
+    const maxTarget = Math.max(...strategy.levels.map((l) => l.percentage));
     if (maxTarget > 500) {
       criteria.push("Consider partial exits on major resistance levels");
       criteria.push("Implement trailing stops for remaining position");

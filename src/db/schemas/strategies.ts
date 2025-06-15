@@ -14,23 +14,23 @@ export const strategyTemplates = sqliteTable(
     strategyId: text("strategy_id").notNull().unique(), // e.g., "normal", "conservative", etc.
     name: text("name").notNull(),
     description: text("description"),
-    
+
     // Strategy Classification
     type: text("type").notNull(), // "multi_phase", "single_target", "scalping", etc.
     riskLevel: text("risk_level").notNull(), // "low", "medium", "high"
-    
+
     // Default Configuration
     defaultSettings: text("default_settings").notNull(), // JSON of default strategy settings
-    
+
     // Template Status
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
     isBuiltIn: integer("is_built_in", { mode: "boolean" }).notNull().default(false),
-    
+
     // Usage Statistics
     usageCount: integer("usage_count").notNull().default(0),
     successRate: real("success_rate").default(0.0),
     avgProfitPercent: real("avg_profit_percent").default(0.0),
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -51,29 +51,30 @@ export const tradingStrategies = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    strategyTemplateId: integer("strategy_template_id")
-      .references(() => strategyTemplates.id, { onDelete: "set null" }),
-    
+    strategyTemplateId: integer("strategy_template_id").references(() => strategyTemplates.id, {
+      onDelete: "set null",
+    }),
+
     // Strategy Identification
     name: text("name").notNull(),
     description: text("description"),
-    
+
     // Trading Parameters
     symbol: text("symbol").notNull(), // e.g., "BTCUSDT"
     vcoinId: text("vcoin_id"), // MEXC coin ID
-    
+
     // Entry Configuration
     entryPrice: real("entry_price").notNull(),
     positionSize: real("position_size").notNull(), // Amount in base currency
     positionSizeUsdt: real("position_size_usdt").notNull(), // Value in USDT
-    
+
     // Strategy Configuration
     levels: text("levels").notNull(), // JSON array of PriceMultiplier objects
     stopLossPercent: real("stop_loss_percent").notNull(),
-    
+
     // Execution Status
     status: text("status").notNull().default("pending"), // "pending", "active", "paused", "completed", "failed", "cancelled"
-    
+
     // Performance Tracking
     currentPrice: real("current_price"),
     unrealizedPnl: real("unrealized_pnl").default(0.0),
@@ -82,26 +83,26 @@ export const tradingStrategies = sqliteTable(
     realizedPnlPercent: real("realized_pnl_percent").default(0.0),
     totalPnl: real("total_pnl").default(0.0),
     totalPnlPercent: real("total_pnl_percent").default(0.0),
-    
+
     // Execution Metrics
     executedPhases: integer("executed_phases").notNull().default(0),
     totalPhases: integer("total_phases").notNull(),
     remainingPosition: real("remaining_position"),
-    
+
     // Risk Metrics
     maxDrawdown: real("max_drawdown").default(0.0),
     riskRewardRatio: real("risk_reward_ratio").default(0.0),
     confidenceScore: real("confidence_score").default(0.0),
-    
+
     // AI Integration
     aiInsights: text("ai_insights"),
     lastAiAnalysis: integer("last_ai_analysis", { mode: "timestamp" }),
-    
+
     // Timing
     activatedAt: integer("activated_at", { mode: "timestamp" }),
     completedAt: integer("completed_at", { mode: "timestamp" }),
     lastExecutionAt: integer("last_execution_at", { mode: "timestamp" }),
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -129,39 +130,39 @@ export const strategyPhaseExecutions = sqliteTable(
     strategyId: integer("strategy_id")
       .notNull()
       .references(() => tradingStrategies.id, { onDelete: "cascade" }),
-    
+
     // Phase Details
     phaseNumber: integer("phase_number").notNull(),
     targetPercentage: real("target_percentage").notNull(),
     targetPrice: real("target_price").notNull(),
     targetMultiplier: real("target_multiplier").notNull(),
     plannedSellPercentage: real("planned_sell_percentage").notNull(),
-    
+
     // Execution Details
     executionStatus: text("execution_status").notNull().default("pending"), // "pending", "triggered", "executed", "failed", "cancelled"
     triggerPrice: real("trigger_price"),
     executionPrice: real("execution_price"),
     executedQuantity: real("executed_quantity"),
     executedValue: real("executed_value"),
-    
+
     // Performance
     profit: real("profit"),
     profitPercent: real("profit_percent"),
     fees: real("fees"),
     slippage: real("slippage"),
-    
+
     // Exchange Integration
     exchangeOrderId: text("exchange_order_id"),
     exchangeResponse: text("exchange_response"), // JSON response from exchange
-    
+
     // Timing
     triggeredAt: integer("triggered_at", { mode: "timestamp" }),
     executedAt: integer("executed_at", { mode: "timestamp" }),
-    
+
     // Error Tracking
     errorMessage: text("error_message"),
     retryCount: integer("retry_count").notNull().default(0),
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
@@ -198,48 +199,53 @@ export const strategyPerformanceMetrics = sqliteTable(
     strategyId: integer("strategy_id")
       .notNull()
       .references(() => tradingStrategies.id, { onDelete: "cascade" }),
-    
+
     // Performance Period
     periodStart: integer("period_start", { mode: "timestamp" }).notNull(),
     periodEnd: integer("period_end", { mode: "timestamp" }).notNull(),
     periodType: text("period_type").notNull(), // "1h", "4h", "1d", "1w", "1m"
-    
+
     // Price Metrics
     highestPrice: real("highest_price"),
     lowestPrice: real("lowest_price"),
     avgPrice: real("avg_price"),
     priceVolatility: real("price_volatility"),
-    
+
     // Performance Metrics
     pnl: real("pnl"),
     pnlPercent: real("pnl_percent"),
     maxDrawdown: real("max_drawdown"),
     maxDrawdownPercent: real("max_drawdown_percent"),
-    
+
     // Risk Metrics
     sharpeRatio: real("sharpe_ratio"),
     sortRatio: real("sort_ratio"),
     calmarRatio: real("calmar_ratio"),
     valueAtRisk: real("value_at_risk"),
-    
+
     // Execution Metrics
     phasesExecuted: integer("phases_executed"),
     avgExecutionTime: real("avg_execution_time"),
     totalSlippage: real("total_slippage"),
     totalFees: real("total_fees"),
-    
+
     // Market Conditions
     marketTrend: text("market_trend"), // "bullish", "bearish", "sideways"
     marketVolatility: text("market_volatility"), // "low", "medium", "high"
-    
+
     // Timestamps
-    calculatedAt: integer("calculated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    calculatedAt: integer("calculated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
   },
   (table) => ({
     strategyIdx: index("strategy_performance_metrics_strategy_idx").on(table.strategyId),
     userIdx: index("strategy_performance_metrics_user_idx").on(table.userId),
-    periodIdx: index("strategy_performance_metrics_period_idx").on(table.periodStart, table.periodEnd),
+    periodIdx: index("strategy_performance_metrics_period_idx").on(
+      table.periodStart,
+      table.periodEnd
+    ),
     periodTypeIdx: index("strategy_performance_metrics_period_type_idx").on(table.periodType),
     // Compound indexes
     strategyPeriodIdx: index("strategy_performance_metrics_strategy_period_idx").on(
@@ -261,18 +267,18 @@ export const strategyConfigBackups = sqliteTable(
     strategyId: integer("strategy_id")
       .notNull()
       .references(() => tradingStrategies.id, { onDelete: "cascade" }),
-    
+
     // Backup Information
     backupReason: text("backup_reason").notNull(), // "created", "updated", "performance_adjustment", "manual"
     configSnapshot: text("config_snapshot").notNull(), // Full JSON snapshot of strategy config
-    
+
     // Version Control
     version: integer("version").notNull(),
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(false),
-    
+
     // Performance at time of backup
     performanceSnapshot: text("performance_snapshot"), // JSON of performance metrics
-    
+
     // Timestamps
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
   },

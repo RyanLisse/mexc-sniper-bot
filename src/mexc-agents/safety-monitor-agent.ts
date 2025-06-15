@@ -1,38 +1,38 @@
 /**
  * Safety Monitor Agent
- * 
+ *
  * Dedicated AI agent for comprehensive safety monitoring including:
  * - Agent behavior anomaly detection
- * - Performance degradation monitoring  
+ * - Performance degradation monitoring
  * - Pattern discovery validation and safety checks
  * - Multi-agent consensus requirements for high-risk trades
  * - Real-time safety protocol enforcement
  */
 
-import type { AgentConfig, AgentResponse } from "./base-agent";
+import type { AdvancedRiskEngine } from "../services/advanced-risk-engine";
+import type { EmergencySafetySystem } from "../services/emergency-safety-system";
+import type { AgentConfig } from "./base-agent";
 import { SafetyBaseAgent, type SafetyConfig } from "./safety-base-agent";
-import { AdvancedRiskEngine } from "../services/advanced-risk-engine";
-import { EmergencySafetySystem } from "../services/emergency-safety-system";
 
 // Safety Monitoring Interfaces
 export interface AgentBehaviorMetrics {
   agentId: string;
   agentType: string;
-  responseTime: number;          // milliseconds
-  successRate: number;           // percentage
-  errorRate: number;             // percentage
-  confidenceScore: number;       // 0-100
-  memoryUsage: number;          // MB
-  cacheHitRate: number;         // percentage
+  responseTime: number; // milliseconds
+  successRate: number; // percentage
+  errorRate: number; // percentage
+  confidenceScore: number; // 0-100
+  memoryUsage: number; // MB
+  cacheHitRate: number; // percentage
   lastActivity: string;
-  anomalyScore: number;         // 0-100 (higher = more anomalous)
+  anomalyScore: number; // 0-100 (higher = more anomalous)
 }
 
 export interface PatternValidationResult {
   patternId: string;
   symbol: string;
-  confidence: number;            // 0-100
-  riskScore: number;            // 0-100
+  confidence: number; // 0-100
+  riskScore: number; // 0-100
   validationSteps: Array<{
     step: string;
     passed: boolean;
@@ -42,7 +42,7 @@ export interface PatternValidationResult {
   consensus: {
     required: boolean;
     agentsConsulted: string[];
-    agreementLevel: number;      // 0-100
+    agreementLevel: number; // 0-100
     dissenting: string[];
   };
   safetyChecks: {
@@ -60,8 +60,8 @@ export interface AgentConsensusRequest {
   type: "trade_approval" | "pattern_validation" | "risk_assessment" | "emergency_response";
   data: Record<string, unknown>;
   requiredAgents: string[];
-  consensusThreshold: number;    // percentage (50-100)
-  timeout: number;              // milliseconds
+  consensusThreshold: number; // percentage (50-100)
+  timeout: number; // milliseconds
   priority: "low" | "medium" | "high" | "critical";
 }
 
@@ -98,29 +98,29 @@ export interface SafetyProtocolViolation {
 
 export interface SafetyMonitorConfig extends SafetyConfig {
   // Behavior Monitoring
-  behaviorAnomalyThreshold: number;     // 0-100
+  behaviorAnomalyThreshold: number; // 0-100
   performanceDegradationThreshold: number; // percentage drop
-  responseTimeThreshold: number;        // milliseconds
-  
+  responseTimeThreshold: number; // milliseconds
+
   // Consensus Requirements
   consensusEnabled: boolean;
-  highRiskConsensusThreshold: number;   // percentage
-  patternValidationThreshold: number;   // minimum confidence
-  
+  highRiskConsensusThreshold: number; // percentage
+  patternValidationThreshold: number; // minimum confidence
+
   // Safety Protocols
   autoShutdownEnabled: boolean;
   violationEscalationThreshold: number;
   safetyOverrideRequired: boolean;
-  
+
   // Monitoring Intervals
-  behaviorCheckInterval: number;        // minutes
-  performanceCheckInterval: number;     // minutes
-  consensusTimeout: number;             // milliseconds
+  behaviorCheckInterval: number; // minutes
+  performanceCheckInterval: number; // minutes
+  consensusTimeout: number; // milliseconds
 }
 
 /**
  * Safety Monitor Agent
- * 
+ *
  * AI-powered safety monitoring system that provides comprehensive
  * oversight of agent behavior, pattern validation, and consensus
  * mechanisms for high-risk trading decisions.
@@ -204,10 +204,10 @@ Always prioritize system safety and capital protection. When in doubt, err on th
       if (!this.agentBehaviorHistory.has(metrics.agentId)) {
         this.agentBehaviorHistory.set(metrics.agentId, []);
       }
-      
+
       const history = this.agentBehaviorHistory.get(metrics.agentId)!;
       history.push(metrics);
-      
+
       // Keep only last 100 entries per agent
       if (history.length > 100) {
         this.agentBehaviorHistory.set(metrics.agentId, history.slice(-100));
@@ -215,10 +215,10 @@ Always prioritize system safety and capital protection. When in doubt, err on th
 
       // Detect anomalies
       const anomalyResults = await this.detectBehaviorAnomalies(metrics, history);
-      
+
       if (anomalyResults.anomalous) {
         anomalies.push(metrics);
-        
+
         // Create safety violation if threshold exceeded
         if (metrics.anomalyScore > this.safetyConfig.riskManagement.circuitBreakerThreshold) {
           const violation: SafetyProtocolViolation = {
@@ -236,10 +236,10 @@ Always prioritize system safety and capital protection. When in doubt, err on th
             resolved: false,
             action: this.determineAction(metrics.anomalyScore),
           };
-          
+
           violations.push(violation);
           this.safetyViolations.push(violation);
-          
+
           // Auto-respond based on severity
           await this.handleSafetyViolation(violation);
         }
@@ -247,15 +247,21 @@ Always prioritize system safety and capital protection. When in doubt, err on th
 
       // Generate recommendations
       if (metrics.successRate < 70) {
-        recommendations.push(`Agent ${metrics.agentId}: Low success rate (${metrics.successRate}%) - investigate and retrain`);
+        recommendations.push(
+          `Agent ${metrics.agentId}: Low success rate (${metrics.successRate}%) - investigate and retrain`
+        );
       }
-      
+
       if (metrics.responseTime > 5000) {
-        recommendations.push(`Agent ${metrics.agentId}: High response time (${metrics.responseTime}ms) - optimize performance`);
+        recommendations.push(
+          `Agent ${metrics.agentId}: High response time (${metrics.responseTime}ms) - optimize performance`
+        );
       }
-      
+
       if (metrics.cacheHitRate < 50) {
-        recommendations.push(`Agent ${metrics.agentId}: Low cache hit rate (${metrics.cacheHitRate}%) - review caching strategy`);
+        recommendations.push(
+          `Agent ${metrics.agentId}: Low cache hit rate (${metrics.cacheHitRate}%) - review caching strategy`
+        );
       }
     }
 
@@ -267,7 +273,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
         "error",
         anomalies.length > 2 ? "high" : "medium",
         `Agent behavior anomalies detected: ${anomalies.length} agents`,
-        { anomalies: anomalies.map(a => a.agentId) }
+        { anomalies: anomalies.map((a) => a.agentId) }
       );
     }
 
@@ -286,7 +292,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
   ): Promise<PatternValidationResult> {
     const validationSteps: PatternValidationResult["validationSteps"] = [];
     let overallConfidence = confidence;
-    
+
     // Step 1: Confidence threshold check
     const confidenceCheck = confidence >= this.safetyConfig.reconciliation.toleranceThreshold * 100;
     validationSteps.push({
@@ -334,7 +340,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     // Step 5: Consensus requirement check
     const consensusRequired = riskScore > 50 || confidence < 80;
     let consensus: PatternValidationResult["consensus"];
-    
+
     if (consensusRequired) {
       consensus = await this.requestPatternConsensus(patternId, symbol, patternData);
       if (!consensus.required || consensus.agreementLevel < 70) {
@@ -354,14 +360,14 @@ Always prioritize system safety and capital protection. When in doubt, err on th
       marketConditions: marketCheck.suitable,
       riskLimits: riskCheck,
       correlationCheck: true, // Simplified for now
-      liquidityCheck: true,   // Simplified for now
+      liquidityCheck: true, // Simplified for now
     };
 
     // Determine recommendation
-    const allStepsPassed = validationSteps.every(step => step.passed);
-    const safetyChecksPassed = Object.values(safetyChecks).every(check => check);
+    const allStepsPassed = validationSteps.every((step) => step.passed);
+    const safetyChecksPassed = Object.values(safetyChecks).every((check) => check);
     const consensusAchieved = !consensusRequired || consensus.agreementLevel >= 70;
-    
+
     let recommendation: PatternValidationResult["recommendation"];
     if (allStepsPassed && safetyChecksPassed && consensusAchieved && overallConfidence >= 70) {
       recommendation = "proceed";
@@ -374,7 +380,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     // Generate reasoning
     const reasoning: string[] = [];
     if (!allStepsPassed) {
-      const failedSteps = validationSteps.filter(step => !step.passed).map(step => step.step);
+      const failedSteps = validationSteps.filter((step) => !step.passed).map((step) => step.step);
       reasoning.push(`Failed validation steps: ${failedSteps.join(", ")}`);
     }
     if (!safetyChecksPassed) {
@@ -407,11 +413,11 @@ Always prioritize system safety and capital protection. When in doubt, err on th
       "simulation",
       recommendation === "reject" ? "high" : "low",
       `Pattern validation ${recommendation}: ${symbol}`,
-      { 
-        patternId, 
-        confidence: overallConfidence, 
+      {
+        patternId,
+        confidence: overallConfidence,
         recommendation,
-        consensusRequired 
+        consensusRequired,
       }
     );
 
@@ -424,41 +430,48 @@ Always prioritize system safety and capital protection. When in doubt, err on th
   async requestAgentConsensus(request: AgentConsensusRequest): Promise<AgentConsensusResponse> {
     const startTime = Date.now();
     this.consensusRequests.set(request.requestId, request);
-    
+
     const agentResponses: AgentConsensusResponse["agentResponses"] = [];
     const warnings: string[] = [];
-    
+
     // AI-powered consensus analysis
     const consensusAnalysis = await this.analyzeConsensusRequest(request);
-    
+
     // Simulate agent responses (in production, would query actual agents)
     for (const agentId of request.requiredAgents) {
-      const response = await this.simulateAgentConsensusResponse(agentId, request, consensusAnalysis);
+      const response = await this.simulateAgentConsensusResponse(
+        agentId,
+        request,
+        consensusAnalysis
+      );
       agentResponses.push(response);
     }
 
     // Calculate consensus
-    const approvals = agentResponses.filter(r => r.response === "approve").length;
-    const total = agentResponses.filter(r => r.response !== "abstain").length;
+    const approvals = agentResponses.filter((r) => r.response === "approve").length;
+    const total = agentResponses.filter((r) => r.response !== "abstain").length;
     const approvalRate = total > 0 ? (approvals / total) * 100 : 0;
-    
+
     const consensusAchieved = approvalRate >= request.consensusThreshold;
-    const averageConfidence = agentResponses.length > 0 
-      ? agentResponses.reduce((sum, r) => sum + r.confidence, 0) / agentResponses.length 
-      : 0;
+    const averageConfidence =
+      agentResponses.length > 0
+        ? agentResponses.reduce((sum, r) => sum + r.confidence, 0) / agentResponses.length
+        : 0;
 
     // Generate warnings
     if (!consensusAchieved) {
-      warnings.push(`Consensus not achieved: ${approvalRate.toFixed(1)}% approval (required: ${request.consensusThreshold}%)`);
+      warnings.push(
+        `Consensus not achieved: ${approvalRate.toFixed(1)}% approval (required: ${request.consensusThreshold}%)`
+      );
     }
-    
+
     if (averageConfidence < 70) {
       warnings.push(`Low average confidence: ${averageConfidence.toFixed(1)}%`);
     }
-    
-    const dissentingAgents = agentResponses.filter(r => r.response === "reject");
+
+    const dissentingAgents = agentResponses.filter((r) => r.response === "reject");
     if (dissentingAgents.length > 0) {
-      warnings.push(`Dissenting agents: ${dissentingAgents.map(a => a.agentId).join(", ")}`);
+      warnings.push(`Dissenting agents: ${dissentingAgents.map((a) => a.agentId).join(", ")}`);
     }
 
     const response: AgentConsensusResponse = {
@@ -482,11 +495,11 @@ Always prioritize system safety and capital protection. When in doubt, err on th
       "simulation",
       consensusAchieved ? "low" : "medium",
       `Consensus ${response.consensus.finalDecision}: ${request.type}`,
-      { 
+      {
         requestId: request.requestId,
         approvalRate,
         confidence: averageConfidence,
-        processingTime: response.processingTime
+        processingTime: response.processingTime,
       }
     );
 
@@ -507,27 +520,27 @@ Always prioritize system safety and capital protection. When in doubt, err on th
 
     for (const [agentId, history] of this.agentBehaviorHistory) {
       if (history.length < 5) continue; // Need sufficient history
-      
+
       const recent = history.slice(-5);
       const older = history.slice(-15, -5);
-      
+
       if (older.length === 0) continue;
-      
+
       // Calculate performance trends
       const recentAvgSuccess = recent.reduce((sum, m) => sum + m.successRate, 0) / recent.length;
       const olderAvgSuccess = older.reduce((sum, m) => sum + m.successRate, 0) / older.length;
       const successDegradation = ((olderAvgSuccess - recentAvgSuccess) / olderAvgSuccess) * 100;
-      
+
       const recentAvgResponse = recent.reduce((sum, m) => sum + m.responseTime, 0) / recent.length;
       const olderAvgResponse = older.reduce((sum, m) => sum + m.responseTime, 0) / older.length;
       const responseDegradation = ((recentAvgResponse - olderAvgResponse) / olderAvgResponse) * 100;
-      
+
       // Check for significant degradation
       const significantDegradation = successDegradation > 20 || responseDegradation > 50;
-      
+
       if (significantDegradation) {
         degradedAgents.push(agentId);
-        
+
         const violation: SafetyProtocolViolation = {
           id: `perf-violation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: "performance_degradation",
@@ -546,14 +559,14 @@ Always prioritize system safety and capital protection. When in doubt, err on th
           resolved: false,
           action: successDegradation > 40 ? "shutdown" : "warn",
         };
-        
+
         violations.push(violation);
         this.safetyViolations.push(violation);
-        
+
         recommendations.push(
           `Agent ${agentId}: Performance degraded ${successDegradation.toFixed(1)}% - investigate and potentially retrain`
         );
-        
+
         // Handle violation
         await this.handleSafetyViolation(violation);
       }
@@ -578,29 +591,33 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     overallSafetyScore: number;
     recommendations: string[];
   } {
-    const activeViolations = this.safetyViolations.filter(v => !v.resolved);
-    const criticalViolations = activeViolations.filter(v => v.severity === "critical");
-    
+    const activeViolations = this.safetyViolations.filter((v) => !v.resolved);
+    const criticalViolations = activeViolations.filter((v) => v.severity === "critical");
+
     // Calculate overall safety score
     let safetyScore = 100;
-    
+
     // Deduct for violations
     safetyScore -= activeViolations.length * 5;
     safetyScore -= criticalViolations.length * 20;
-    
+
     // Deduct for stale checks
     const now = Date.now();
     if (now - this.lastBehaviorCheck > 600000) safetyScore -= 10; // 10 minutes
     if (now - this.lastPerformanceCheck > 1800000) safetyScore -= 15; // 30 minutes
-    
+
     safetyScore = Math.max(0, Math.min(100, safetyScore));
-    
+
     const recommendations: string[] = [];
     if (criticalViolations.length > 0) {
-      recommendations.push(`${criticalViolations.length} critical violations require immediate attention`);
+      recommendations.push(
+        `${criticalViolations.length} critical violations require immediate attention`
+      );
     }
     if (this.consensusRequests.size > 5) {
-      recommendations.push("High number of pending consensus requests - review consensus efficiency");
+      recommendations.push(
+        "High number of pending consensus requests - review consensus efficiency"
+      );
     }
     if (safetyScore < 70) {
       recommendations.push("Overall safety score is low - comprehensive system review needed");
@@ -642,7 +659,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     }
 
     // Check for unresolved violations
-    const activeViolations = this.safetyViolations.filter(v => !v.resolved);
+    const activeViolations = this.safetyViolations.filter((v) => !v.resolved);
     if (activeViolations.length > 0) {
       issues.push(`${activeViolations.length} unresolved safety violations`);
       recommendations.push("Address all safety violations before proceeding");
@@ -677,7 +694,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
       }
 
       // Check for excessive violations
-      const activeViolations = this.safetyViolations.filter(v => !v.resolved);
+      const activeViolations = this.safetyViolations.filter((v) => !v.resolved);
       if (activeViolations.length > 10) {
         issues.push("Excessive unresolved safety violations");
       }
@@ -686,7 +703,6 @@ Always prioritize system safety and capital protection. When in doubt, err on th
       if (this.consensusRequests.size > 10) {
         issues.push("High number of pending consensus requests");
       }
-
     } catch (error) {
       issues.push(`Safety monitor health check failed: ${error}`);
     }
@@ -712,7 +728,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     const avgConfidence = recent.reduce((sum, m) => sum + m.confidenceScore, 0) / recent.length;
 
     let anomalyScore = 0;
-    let reasons: string[] = [];
+    const reasons: string[] = [];
 
     // Check success rate deviation
     const successDeviation = Math.abs(current.successRate - avgSuccessRate);
@@ -757,10 +773,10 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     // In production, would check real market data
     const volatility = Math.random() * 100;
     const liquidity = Math.random() * 100;
-    
+
     const suitable = volatility < 70 && liquidity > 30;
     const confidence = suitable ? 85 : 40;
-    
+
     return {
       suitable,
       details: `Market volatility: ${volatility.toFixed(1)}%, Liquidity: ${liquidity.toFixed(1)}%`,
@@ -780,7 +796,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     // In production, would analyze historical pattern performance
     const historicalSuccess = Math.random() * 100;
     const reliable = historicalSuccess > 60;
-    
+
     return {
       reliable,
       details: `Historical pattern success rate: ${historicalSuccess.toFixed(1)}%`,
@@ -804,14 +820,14 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     };
 
     const response = await this.requestAgentConsensus(consensusRequest);
-    
+
     return {
       required: true,
-      agentsConsulted: response.agentResponses.map(r => r.agentId),
+      agentsConsulted: response.agentResponses.map((r) => r.agentId),
       agreementLevel: response.consensus.approvalRate,
       dissenting: response.agentResponses
-        .filter(r => r.response === "reject")
-        .map(r => r.agentId),
+        .filter((r) => r.response === "reject")
+        .map((r) => r.agentId),
     };
   }
 
@@ -864,24 +880,24 @@ Provide analysis in JSON format.`,
   ): Promise<AgentConsensusResponse["agentResponses"][0]> {
     // Simulate agent response based on risk level and agent type
     let approvalProbability = 0.7; // Base approval rate
-    
+
     if (analysis.riskLevel === "critical") approvalProbability = 0.3;
     else if (analysis.riskLevel === "high") approvalProbability = 0.5;
     else if (analysis.riskLevel === "low") approvalProbability = 0.9;
-    
+
     // Risk manager is more conservative
     if (agentId.includes("risk-manager")) {
       approvalProbability *= 0.8;
     }
-    
+
     const approval = Math.random() < approvalProbability;
     const confidence = 60 + Math.random() * 30; // 60-90% confidence
-    
+
     return {
       agentId,
       response: approval ? "approve" : "reject",
       confidence,
-      reasoning: approval 
+      reasoning: approval
         ? `Risk level acceptable for ${request.type}`
         : `Risk level too high for ${request.type}`,
       timestamp: new Date().toISOString(),
@@ -903,8 +919,10 @@ Provide analysis in JSON format.`,
   }
 
   private async handleSafetyViolation(violation: SafetyProtocolViolation): Promise<void> {
-    console.log(`[SafetyMonitorAgent] Handling violation: ${violation.id} - ${violation.description}`);
-    
+    console.log(
+      `[SafetyMonitorAgent] Handling violation: ${violation.id} - ${violation.description}`
+    );
+
     switch (violation.action) {
       case "shutdown":
         if (violation.agentId && this.emergencySystem) {
@@ -916,16 +934,16 @@ Provide analysis in JSON format.`,
           );
         }
         break;
-        
+
       case "restrict":
         console.warn(`[SafetyMonitorAgent] Restricting agent: ${violation.agentId}`);
         // Would implement agent restriction logic
         break;
-        
+
       case "warn":
         console.warn(`[SafetyMonitorAgent] Warning for agent: ${violation.agentId}`);
         break;
-        
+
       case "monitor":
         console.info(`[SafetyMonitorAgent] Monitoring agent: ${violation.agentId}`);
         break;
@@ -935,10 +953,10 @@ Provide analysis in JSON format.`,
       "error",
       violation.severity,
       `Safety violation: ${violation.description}`,
-      { 
+      {
         violationId: violation.id,
         agentId: violation.agentId,
-        action: violation.action 
+        action: violation.action,
       }
     );
   }

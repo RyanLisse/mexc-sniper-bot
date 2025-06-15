@@ -188,11 +188,11 @@ export class WorkflowExecutor {
       // Step 1: Enhanced Pattern Analysis using Centralized Engine
       console.log("[WorkflowExecutor] Step 1: Enhanced pattern analysis with centralized engine");
       context.currentStep = "enhanced-pattern-analysis";
-      
+
       // Prepare input for enhanced analysis
       const analysisInput: any = {
         vcoinId: request.vcoinId,
-        symbols: request.symbols
+        symbols: request.symbols,
       };
 
       // If we have symbol data, use it directly
@@ -209,15 +209,18 @@ export class WorkflowExecutor {
           {
             confidenceThreshold: 70,
             includeAgentAnalysis: true,
-            enableAdvanceDetection: true
+            enableAdvanceDetection: true,
           }
         );
         context.agentsUsed.push("pattern-detection-engine", "pattern-strategy-orchestrator");
-        
+
         console.log("[WorkflowExecutor] Enhanced pattern analysis completed successfully");
       } catch (engineError) {
-        console.warn("[WorkflowExecutor] Enhanced analysis failed, falling back to legacy:", engineError);
-        
+        console.warn(
+          "[WorkflowExecutor] Enhanced analysis failed, falling back to legacy:",
+          engineError
+        );
+
         // Fallback to legacy pattern analysis
         const patternAnalysis = await this.agentManager.getPatternDiscoveryAgent().analyzePatterns({
           vcoinId: request.vcoinId || "",
@@ -246,7 +249,7 @@ export class WorkflowExecutor {
           // Enhanced fields
           engineResult: processedAnalysis.engineResult,
           strategicRecommendations: processedAnalysis.strategicRecommendations,
-          enhancedAnalysis: !!processedAnalysis.engineResult
+          enhancedAnalysis: !!processedAnalysis.engineResult,
         },
         metadata: {
           agentsUsed: context.agentsUsed,

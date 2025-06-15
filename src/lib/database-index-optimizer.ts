@@ -1,15 +1,15 @@
 /**
  * Database Index Optimizer
- * 
+ *
  * Phase 2: Index Optimization (4h)
  * - Creates strategic indexes for frequently queried columns
- * - Optimizes existing indexes based on usage patterns  
+ * - Optimizes existing indexes based on usage patterns
  * - Adds composite indexes for complex WHERE clauses
  * - Ensures foreign key relationships are properly indexed
  */
 
-import { sql } from "drizzle-orm";
 import { db } from "@/src/db";
+import { sql } from "drizzle-orm";
 
 interface IndexDefinition {
   name: string;
@@ -52,7 +52,7 @@ export class DatabaseIndexOptimizer {
       // ======================================
       // CRITICAL INDEXES FOR AGENT OPERATIONS
       // ======================================
-      
+
       // Snipe Targets - Core trading operations
       {
         name: "idx_snipe_targets_agent_priority",
@@ -62,16 +62,16 @@ export class DatabaseIndexOptimizer {
         type: "partial",
         priority: "critical",
         expectedImprovement: "70% faster target selection",
-        agentWorkflows: ["PatternDiscoveryAgent", "StrategyAgent", "MexcApiAgent"]
+        agentWorkflows: ["PatternDiscoveryAgent", "StrategyAgent", "MexcApiAgent"],
       },
       {
         name: "idx_snipe_targets_user_active",
-        table: "snipe_targets", 
+        table: "snipe_targets",
         columns: ["user_id", "status", "priority"],
         type: "btree",
         priority: "critical",
         expectedImprovement: "60% faster user target queries",
-        agentWorkflows: ["User Dashboard", "Portfolio Management"]
+        agentWorkflows: ["User Dashboard", "Portfolio Management"],
       },
       {
         name: "idx_snipe_targets_execution_time",
@@ -79,9 +79,9 @@ export class DatabaseIndexOptimizer {
         columns: ["target_execution_time", "status"],
         where: "target_execution_time IS NOT NULL",
         type: "partial",
-        priority: "critical", 
+        priority: "critical",
         expectedImprovement: "80% faster time-based queries",
-        agentWorkflows: ["ScheduledAgent", "TimingAgent"]
+        agentWorkflows: ["ScheduledAgent", "TimingAgent"],
       },
 
       // Pattern Embeddings - AI pattern matching
@@ -93,16 +93,16 @@ export class DatabaseIndexOptimizer {
         type: "partial",
         priority: "critical",
         expectedImprovement: "75% faster pattern matching",
-        agentWorkflows: ["PatternDiscoveryAgent", "SymbolAnalysisAgent"]
+        agentWorkflows: ["PatternDiscoveryAgent", "SymbolAnalysisAgent"],
       },
       {
         name: "idx_pattern_embeddings_symbol_type",
-        table: "pattern_embeddings", 
+        table: "pattern_embeddings",
         columns: ["symbol_name", "pattern_type", "last_seen_at"],
         type: "btree",
         priority: "high",
         expectedImprovement: "65% faster symbol pattern lookup",
-        agentWorkflows: ["SymbolAnalysisAgent", "CalendarAgent"]
+        agentWorkflows: ["SymbolAnalysisAgent", "CalendarAgent"],
       },
       {
         name: "idx_pattern_embeddings_confidence_seen",
@@ -112,7 +112,7 @@ export class DatabaseIndexOptimizer {
         type: "partial",
         priority: "high",
         expectedImprovement: "50% faster confidence-based queries",
-        agentWorkflows: ["RiskManagerAgent", "ValidationAgent"]
+        agentWorkflows: ["RiskManagerAgent", "ValidationAgent"],
       },
 
       // Transaction Locks - Concurrency control
@@ -121,10 +121,10 @@ export class DatabaseIndexOptimizer {
         table: "transaction_locks",
         columns: ["resource_id", "status", "expires_at"],
         where: "status = 'active'",
-        type: "partial", 
+        type: "partial",
         priority: "critical",
         expectedImprovement: "80% faster lock acquisition",
-        agentWorkflows: ["All Agents", "Concurrent Operations"]
+        agentWorkflows: ["All Agents", "Concurrent Operations"],
       },
       {
         name: "idx_transaction_locks_idempotency",
@@ -134,7 +134,7 @@ export class DatabaseIndexOptimizer {
         type: "hash",
         priority: "critical",
         expectedImprovement: "90% faster duplicate detection",
-        agentWorkflows: ["TransactionManager", "RetryLogic"]
+        agentWorkflows: ["TransactionManager", "RetryLogic"],
       },
       {
         name: "idx_transaction_locks_owner_status",
@@ -143,7 +143,7 @@ export class DatabaseIndexOptimizer {
         type: "btree",
         priority: "high",
         expectedImprovement: "60% faster owner lock queries",
-        agentWorkflows: ["ErrorRecoveryAgent", "MonitoringAgent"]
+        agentWorkflows: ["ErrorRecoveryAgent", "MonitoringAgent"],
       },
 
       // ======================================
@@ -157,8 +157,8 @@ export class DatabaseIndexOptimizer {
         columns: ["user_id", "symbol_name", "executed_at"],
         type: "btree",
         priority: "high",
-        expectedImprovement: "55% faster trade history queries", 
-        agentWorkflows: ["ReconciliationAgent", "Portfolio Tracking"]
+        expectedImprovement: "55% faster trade history queries",
+        agentWorkflows: ["ReconciliationAgent", "Portfolio Tracking"],
       },
       {
         name: "idx_execution_history_status_action",
@@ -167,7 +167,7 @@ export class DatabaseIndexOptimizer {
         type: "btree",
         priority: "high",
         expectedImprovement: "50% faster status-based queries",
-        agentWorkflows: ["AuditAgent", "ComplianceAgent"]
+        agentWorkflows: ["AuditAgent", "ComplianceAgent"],
       },
       {
         name: "idx_execution_history_snipe_target",
@@ -177,7 +177,7 @@ export class DatabaseIndexOptimizer {
         type: "partial",
         priority: "high",
         expectedImprovement: "70% faster target-based queries",
-        agentWorkflows: ["StrategyAgent", "PerformanceAgent"]
+        agentWorkflows: ["StrategyAgent", "PerformanceAgent"],
       },
 
       // Monitored Listings - Calendar discovery
@@ -186,10 +186,10 @@ export class DatabaseIndexOptimizer {
         table: "monitored_listings",
         columns: ["has_ready_pattern", "confidence", "status"],
         where: "has_ready_pattern = true",
-        type: "partial", 
+        type: "partial",
         priority: "high",
         expectedImprovement: "65% faster ready pattern queries",
-        agentWorkflows: ["CalendarAgent", "PatternDiscoveryAgent"]
+        agentWorkflows: ["CalendarAgent", "PatternDiscoveryAgent"],
       },
       {
         name: "idx_monitored_listings_launch_time",
@@ -198,16 +198,16 @@ export class DatabaseIndexOptimizer {
         type: "btree",
         priority: "high",
         expectedImprovement: "60% faster time-based discovery",
-        agentWorkflows: ["CalendarAgent", "TimingAgent"]
+        agentWorkflows: ["CalendarAgent", "TimingAgent"],
       },
       {
         name: "idx_monitored_listings_vcoin_status",
         table: "monitored_listings",
         columns: ["vcoin_id", "status", "last_checked"],
         type: "btree",
-        priority: "high", 
+        priority: "high",
         expectedImprovement: "55% faster vcoin tracking",
-        agentWorkflows: ["MonitoringAgent", "DataFetcher"]
+        agentWorkflows: ["MonitoringAgent", "DataFetcher"],
       },
 
       // Transactions - Portfolio management
@@ -218,7 +218,7 @@ export class DatabaseIndexOptimizer {
         type: "btree",
         priority: "high",
         expectedImprovement: "50% faster user transaction queries",
-        agentWorkflows: ["Portfolio Management", "User Dashboard"]
+        agentWorkflows: ["Portfolio Management", "User Dashboard"],
       },
       {
         name: "idx_transactions_symbol_profit",
@@ -228,11 +228,11 @@ export class DatabaseIndexOptimizer {
         type: "partial",
         priority: "high",
         expectedImprovement: "60% faster P&L analysis",
-        agentWorkflows: ["AnalyticsAgent", "ReportingAgent"]
+        agentWorkflows: ["AnalyticsAgent", "ReportingAgent"],
       },
 
       // ======================================
-      // MEDIUM PRIORITY INDEXES  
+      // MEDIUM PRIORITY INDEXES
       // ======================================
 
       // Workflow Activity - System monitoring
@@ -243,17 +243,17 @@ export class DatabaseIndexOptimizer {
         type: "btree",
         priority: "medium",
         expectedImprovement: "45% faster activity queries",
-        agentWorkflows: ["MonitoringAgent", "AuditAgent"]
+        agentWorkflows: ["MonitoringAgent", "AuditAgent"],
       },
       {
         name: "idx_workflow_activity_level_time",
-        table: "workflow_activity", 
+        table: "workflow_activity",
         columns: ["level", "timestamp"],
         where: "level IN ('error', 'warning')",
         type: "partial",
         priority: "medium",
         expectedImprovement: "50% faster error tracking",
-        agentWorkflows: ["ErrorRecoveryAgent", "AlertingAgent"]
+        agentWorkflows: ["ErrorRecoveryAgent", "AlertingAgent"],
       },
 
       // API Credentials - User management
@@ -263,9 +263,9 @@ export class DatabaseIndexOptimizer {
         columns: ["user_id", "provider", "is_active"],
         where: "is_active = true",
         type: "partial",
-        priority: "medium", 
+        priority: "medium",
         expectedImprovement: "40% faster credential lookup",
-        agentWorkflows: ["AuthenticationAgent", "MexcApiAgent"]
+        agentWorkflows: ["AuthenticationAgent", "MexcApiAgent"],
       },
 
       // Pattern Similarity Cache - AI optimization
@@ -277,7 +277,7 @@ export class DatabaseIndexOptimizer {
         type: "partial",
         priority: "medium",
         expectedImprovement: "55% faster similarity queries",
-        agentWorkflows: ["PatternDiscoveryAgent", "SimilarityAgent"]
+        agentWorkflows: ["PatternDiscoveryAgent", "SimilarityAgent"],
       },
 
       // Transaction Queue - Queue management
@@ -289,8 +289,8 @@ export class DatabaseIndexOptimizer {
         type: "partial",
         priority: "medium",
         expectedImprovement: "45% faster queue processing",
-        agentWorkflows: ["QueueManager", "ConcurrencyAgent"]
-      }
+        agentWorkflows: ["QueueManager", "ConcurrencyAgent"],
+      },
     ];
   }
 
@@ -299,24 +299,24 @@ export class DatabaseIndexOptimizer {
    */
   async createStrategicIndexes(): Promise<IndexOptimizationResult> {
     console.log("🗂️ Creating strategic database indexes...");
-    
+
     const startTime = performance.now();
     const result: IndexOptimizationResult = {
       created: [],
-      failed: [], 
+      failed: [],
       dropped: [],
       analyzed: [],
       totalTime: 0,
-      estimatedImprovement: "50-70% query performance improvement"
+      estimatedImprovement: "50-70% query performance improvement",
     };
 
     const indexes = this.getStrategicIndexes();
-    
+
     // Group by priority for creation order
-    const criticalIndexes = indexes.filter(i => i.priority === "critical");
-    const highIndexes = indexes.filter(i => i.priority === "high");
-    const mediumIndexes = indexes.filter(i => i.priority === "medium");
-    
+    const criticalIndexes = indexes.filter((i) => i.priority === "critical");
+    const highIndexes = indexes.filter((i) => i.priority === "high");
+    const mediumIndexes = indexes.filter((i) => i.priority === "medium");
+
     // Create indexes in priority order
     for (const indexGroup of [criticalIndexes, highIndexes, mediumIndexes]) {
       for (const index of indexGroup) {
@@ -324,15 +324,14 @@ export class DatabaseIndexOptimizer {
           await this.createIndex(index);
           result.created.push(index.name);
           console.log(`✅ Created ${index.priority} priority index: ${index.name}`);
-          
+
           // Verify index effectiveness
           await this.analyzeIndexEffectiveness(index);
           result.analyzed.push(index.name);
-          
         } catch (error) {
           result.failed.push(index.name);
           console.error(`❌ Failed to create index ${index.name}:`, error);
-          
+
           // Continue with other indexes even if one fails
           continue;
         }
@@ -340,13 +339,13 @@ export class DatabaseIndexOptimizer {
     }
 
     result.totalTime = performance.now() - startTime;
-    
+
     console.log(`🎯 Index optimization completed:`);
     console.log(`   ✅ Created: ${result.created.length} indexes`);
     console.log(`   ❌ Failed: ${result.failed.length} indexes`);
     console.log(`   📊 Analyzed: ${result.analyzed.length} indexes`);
     console.log(`   ⏱️ Time: ${result.totalTime.toFixed(2)}ms`);
-    
+
     return result;
   }
 
@@ -354,8 +353,8 @@ export class DatabaseIndexOptimizer {
    * Create a single index
    */
   private async createIndex(index: IndexDefinition): Promise<void> {
-    let sql_statement = `CREATE ${index.unique ? 'UNIQUE ' : ''}INDEX IF NOT EXISTS ${index.name} ON ${index.table}(${index.columns.join(', ')})`;
-    
+    let sql_statement = `CREATE ${index.unique ? "UNIQUE " : ""}INDEX IF NOT EXISTS ${index.name} ON ${index.table}(${index.columns.join(", ")})`;
+
     if (index.where) {
       sql_statement += ` WHERE ${index.where}`;
     }
@@ -368,36 +367,44 @@ export class DatabaseIndexOptimizer {
    */
   async dropUnusedIndexes(): Promise<string[]> {
     console.log("🗑️ Analyzing and dropping unused indexes...");
-    
+
     const droppedIndexes: string[] = [];
-    
+
     // Get all existing indexes
     const tables = [
-      'snipe_targets', 'execution_history', 'transactions',
-      'monitored_listings', 'pattern_embeddings', 'pattern_similarity_cache',
-      'transaction_locks', 'transaction_queue', 'workflow_activity',
-      'api_credentials', 'user_preferences'
+      "snipe_targets",
+      "execution_history",
+      "transactions",
+      "monitored_listings",
+      "pattern_embeddings",
+      "pattern_similarity_cache",
+      "transaction_locks",
+      "transaction_queue",
+      "workflow_activity",
+      "api_credentials",
+      "user_preferences",
     ];
 
     for (const tableName of tables) {
       try {
         const indexes = await db.all(sql.raw(`PRAGMA index_list(${tableName})`));
-        
+
         for (const index of indexes) {
           // Skip auto-generated primary key and foreign key indexes
-          if (index.name.startsWith('sqlite_') || index.origin === 'pk' || index.origin === 'fk') {
+          if (index.name.startsWith("sqlite_") || index.origin === "pk" || index.origin === "fk") {
             continue;
           }
 
           // Check if index is in our strategic list
           const strategicIndexes = this.getStrategicIndexes();
-          const isStrategic = strategicIndexes.some(si => si.name === index.name);
-          
+          const isStrategic = strategicIndexes.some((si) => si.name === index.name);
+
           if (!isStrategic) {
             // This is a legacy or unnecessary index - consider dropping
             const effectiveness = await this.checkIndexEffectiveness(tableName, index.name);
-            
-            if (effectiveness < 20) { // Less than 20% effectiveness
+
+            if (effectiveness < 20) {
+              // Less than 20% effectiveness
               try {
                 await db.run(sql.raw(`DROP INDEX IF EXISTS ${index.name}`));
                 droppedIndexes.push(index.name);
@@ -424,18 +431,20 @@ export class DatabaseIndexOptimizer {
       // In a real implementation, this would analyze query patterns and index usage
       // For now, return a simulated effectiveness score
       const indexInfo = await db.all(sql.raw(`PRAGMA index_info(${indexName})`));
-      
+
       // Simple heuristic: single column indexes on non-selective columns are less effective
       if (indexInfo.length === 1) {
         const columnName = indexInfo[0].name;
         // Check column selectivity
         const totalRows = await db.all(sql.raw(`SELECT COUNT(*) as count FROM ${tableName}`));
-        const distinctValues = await db.all(sql.raw(`SELECT COUNT(DISTINCT ${columnName}) as count FROM ${tableName}`));
-        
+        const distinctValues = await db.all(
+          sql.raw(`SELECT COUNT(DISTINCT ${columnName}) as count FROM ${tableName}`)
+        );
+
         const selectivity = distinctValues[0]?.count / totalRows[0]?.count || 0;
         return selectivity * 100; // Convert to percentage
       }
-      
+
       return 85; // Default high effectiveness for composite indexes
     } catch (error) {
       return 50; // Default medium effectiveness if analysis fails
@@ -449,14 +458,15 @@ export class DatabaseIndexOptimizer {
     try {
       // Run sample queries to test index usage
       const testQueries = this.generateTestQueries(index);
-      
+
       for (const query of testQueries) {
         const explanation = await db.all(sql.raw(`EXPLAIN QUERY PLAN ${query}`));
-        const usesIndex = explanation.some((row: any) => 
-          row.detail?.includes(`USING INDEX ${index.name}`) ||
-          JSON.stringify(row).includes(index.name)
+        const usesIndex = explanation.some(
+          (row: any) =>
+            row.detail?.includes(`USING INDEX ${index.name}`) ||
+            JSON.stringify(row).includes(index.name)
         );
-        
+
         if (usesIndex) {
           console.log(`📈 Index ${index.name} is being used effectively`);
         } else {
@@ -473,18 +483,22 @@ export class DatabaseIndexOptimizer {
    */
   private generateTestQueries(index: IndexDefinition): string[] {
     const queries: string[] = [];
-    
+
     // Generate queries that should use this index
-    if (index.table === 'snipe_targets' && index.columns.includes('status')) {
+    if (index.table === "snipe_targets" && index.columns.includes("status")) {
       queries.push("SELECT * FROM snipe_targets WHERE status = 'pending' ORDER BY priority");
     }
-    
-    if (index.table === 'pattern_embeddings' && index.columns.includes('is_active')) {
-      queries.push("SELECT * FROM pattern_embeddings WHERE is_active = true AND pattern_type = 'ready_state'");
+
+    if (index.table === "pattern_embeddings" && index.columns.includes("is_active")) {
+      queries.push(
+        "SELECT * FROM pattern_embeddings WHERE is_active = true AND pattern_type = 'ready_state'"
+      );
     }
-    
-    if (index.table === 'transaction_locks' && index.columns.includes('resource_id')) {
-      queries.push("SELECT * FROM transaction_locks WHERE resource_id = 'test' AND status = 'active'");
+
+    if (index.table === "transaction_locks" && index.columns.includes("resource_id")) {
+      queries.push(
+        "SELECT * FROM transaction_locks WHERE resource_id = 'test' AND status = 'active'"
+      );
     }
 
     return queries;
@@ -495,16 +509,15 @@ export class DatabaseIndexOptimizer {
    */
   async rebuildIndexes(): Promise<void> {
     console.log("🔄 Rebuilding and optimizing existing indexes...");
-    
+
     try {
       // SQLite automatically optimizes indexes, but we can force optimization
       await db.run(sql.raw("PRAGMA optimize"));
       console.log("✅ Database optimization completed");
-      
+
       // Update table statistics
       await db.run(sql.raw("ANALYZE"));
       console.log("✅ Table statistics updated");
-      
     } catch (error) {
       console.error("❌ Failed to rebuild indexes:", error);
       throw error;
@@ -516,7 +529,7 @@ export class DatabaseIndexOptimizer {
    */
   async validateIndexes(): Promise<{ valid: number; invalid: number; details: any[] }> {
     console.log("🔍 Validating index integrity...");
-    
+
     const results = { valid: 0, invalid: 0, details: [] };
     const strategicIndexes = this.getStrategicIndexes();
 
@@ -525,28 +538,28 @@ export class DatabaseIndexOptimizer {
         // Check if index exists
         const indexList = await db.all(sql.raw(`PRAGMA index_list(${index.table})`));
         const exists = indexList.some((idx: any) => idx.name === index.name);
-        
+
         if (exists) {
           // Verify index integrity
           const integrityCheck = await db.all(sql.raw(`PRAGMA integrity_check(${index.name})`));
-          const isValid = integrityCheck.every((row: any) => 
-            row.integrity_check === 'ok' || JSON.stringify(row).includes('ok')
+          const isValid = integrityCheck.every(
+            (row: any) => row.integrity_check === "ok" || JSON.stringify(row).includes("ok")
           );
-          
+
           if (isValid) {
             results.valid++;
-            results.details.push({ index: index.name, status: 'valid' });
+            results.details.push({ index: index.name, status: "valid" });
           } else {
             results.invalid++;
-            results.details.push({ index: index.name, status: 'invalid', issues: integrityCheck });
+            results.details.push({ index: index.name, status: "invalid", issues: integrityCheck });
           }
         } else {
           results.invalid++;
-          results.details.push({ index: index.name, status: 'missing' });
+          results.details.push({ index: index.name, status: "missing" });
         }
       } catch (error) {
         results.invalid++;
-        results.details.push({ index: index.name, status: 'error', error: error });
+        results.details.push({ index: index.name, status: "error", error: error });
       }
     }
 
@@ -559,16 +572,16 @@ export class DatabaseIndexOptimizer {
    */
   generateIndexSQL(): string[] {
     const indexes = this.getStrategicIndexes();
-    return indexes.map(index => {
+    return indexes.map((index) => {
       let sql_statement = `-- ${index.expectedImprovement} (${index.priority} priority)\n`;
-      sql_statement += `-- Used by: ${index.agentWorkflows.join(', ')}\n`;
-      sql_statement += `CREATE ${index.unique ? 'UNIQUE ' : ''}INDEX IF NOT EXISTS ${index.name} ON ${index.table}(${index.columns.join(', ')})`;
-      
+      sql_statement += `-- Used by: ${index.agentWorkflows.join(", ")}\n`;
+      sql_statement += `CREATE ${index.unique ? "UNIQUE " : ""}INDEX IF NOT EXISTS ${index.name} ON ${index.table}(${index.columns.join(", ")})`;
+
       if (index.where) {
         sql_statement += ` WHERE ${index.where}`;
       }
-      
-      sql_statement += ';\n';
+
+      sql_statement += ";\n";
       return sql_statement;
     });
   }

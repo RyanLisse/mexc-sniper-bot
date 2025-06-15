@@ -1,10 +1,14 @@
 "use client";
-
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
 import { Label } from "@/src/components/ui/label";
-import { Switch } from "@/src/components/ui/switch";
 import { Separator } from "@/src/components/ui/separator";
+import { Switch } from "@/src/components/ui/switch";
 import { Target } from "lucide-react";
 
 interface AutomationSettings {
@@ -19,10 +23,13 @@ interface AutomationSettingsProps {
   onDirty: () => void;
 }
 
-export function UnifiedAutomationSettings({ settings, onSettingsChange, onDirty }: AutomationSettingsProps) {
-  
+export function UnifiedAutomationSettings({
+  settings,
+  onSettingsChange,
+  onDirty,
+}: AutomationSettingsProps) {
   const updateSetting = (key: string, value: boolean) => {
-    onSettingsChange(prev => ({ ...prev, [key]: value }));
+    onSettingsChange((prev) => ({ ...prev, [key]: value }));
     onDirty();
   };
 
@@ -33,9 +40,7 @@ export function UnifiedAutomationSettings({ settings, onSettingsChange, onDirty 
           <Target className="h-5 w-5" />
           Automation Settings
         </CardTitle>
-        <CardDescription>
-          Configure automated trading behaviors
-        </CardDescription>
+        <CardDescription>Configure automated trading behaviors</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
@@ -49,7 +54,7 @@ export function UnifiedAutomationSettings({ settings, onSettingsChange, onDirty 
             <Switch
               id="auto-snipe"
               checked={settings.autoSnipeEnabled}
-              onCheckedChange={(checked) => updateSetting('autoSnipeEnabled', checked)}
+              onCheckedChange={(checked) => updateSetting("autoSnipeEnabled", checked)}
             />
           </div>
 
@@ -65,7 +70,7 @@ export function UnifiedAutomationSettings({ settings, onSettingsChange, onDirty 
             <Switch
               id="auto-buy"
               checked={settings.autoBuyEnabled}
-              onCheckedChange={(checked) => updateSetting('autoBuyEnabled', checked)}
+              onCheckedChange={(checked) => updateSetting("autoBuyEnabled", checked)}
             />
           </div>
 
@@ -81,14 +86,14 @@ export function UnifiedAutomationSettings({ settings, onSettingsChange, onDirty 
             <Switch
               id="auto-sell"
               checked={settings.autoSellEnabled}
-              onCheckedChange={(checked) => updateSetting('autoSellEnabled', checked)}
+              onCheckedChange={(checked) => updateSetting("autoSellEnabled", checked)}
             />
           </div>
         </div>
 
         <div className="rounded-lg bg-yellow-50 dark:bg-yellow-950/20 p-4">
           <p className="text-sm text-yellow-600 dark:text-yellow-400">
-            <strong>Warning:</strong> Automated trading carries risks. Always monitor your positions 
+            <strong>Warning:</strong> Automated trading carries risks. Always monitor your positions
             and ensure you understand the implications of automated execution.
           </p>
         </div>

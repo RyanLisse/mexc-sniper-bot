@@ -408,23 +408,20 @@ export function apiAuthWrapper<T extends any[]>(
     try {
       // Apply basic authentication and rate limiting
       await requireApiAuth(request);
-      
+
       // Execute the handler
       return await handler(request, ...args);
     } catch (error) {
       console.error("[API Auth] Request failed:", error);
-      
+
       if (error instanceof Response) {
         return error;
       }
 
-      return new Response(
-        JSON.stringify(createErrorResponse("Internal server error")), 
-        {
-          status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify(createErrorResponse("Internal server error")), {
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        headers: { "Content-Type": "application/json" },
+      });
     }
   };
 }

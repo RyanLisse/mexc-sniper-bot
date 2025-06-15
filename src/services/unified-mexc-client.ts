@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
-import { mexcApiBreaker } from "./circuit-breaker";
 import { z } from "zod";
+import { mexcApiBreaker } from "./circuit-breaker";
 
 // ============================================================================
 // Core Configuration and Types
@@ -130,7 +130,7 @@ class RequestCache {
 
   get<T>(key: string): T | null {
     const entry = this.cache.get(key) as CacheEntry<T> | undefined;
-    
+
     if (!entry) {
       return null;
     }
@@ -158,7 +158,7 @@ class RequestCache {
       }
     }
 
-    expiredKeys.forEach(key => this.cache.delete(key));
+    expiredKeys.forEach((key) => this.cache.delete(key));
   }
 
   getStats(): { size: number; maxSize: number } {
@@ -257,19 +257,19 @@ export class UnifiedMexcClient {
         .map(([key, value]) => [key, String(value)])
     ).toString();
 
-    return crypto
-      .createHmac("sha256", this.config.secretKey)
-      .update(queryString)
-      .digest("hex");
+    return crypto.createHmac("sha256", this.config.secretKey).update(queryString).digest("hex");
   }
 
   private generateCacheKey(endpoint: string, params: Record<string, unknown> = {}): string {
     const sortedParams = Object.keys(params)
       .sort()
-      .reduce((result, key) => {
-        result[key] = params[key];
-        return result;
-      }, {} as Record<string, unknown>);
+      .reduce(
+        (result, key) => {
+          result[key] = params[key];
+          return result;
+        },
+        {} as Record<string, unknown>
+      );
 
     return `${endpoint}_${JSON.stringify(sortedParams)}`;
   }
@@ -343,7 +343,9 @@ export class UnifiedMexcClient {
               }
             });
 
-            console.log(`[UnifiedMexcClient] ${authenticated ? "Auth" : "Public"} request: ${endpoint} (attempt ${attempt}/${maxRetries}) (${requestId})`);
+            console.log(
+              `[UnifiedMexcClient] ${authenticated ? "Auth" : "Public"} request: ${endpoint} (attempt ${attempt}/${maxRetries}) (${requestId})`
+            );
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
@@ -370,7 +372,9 @@ export class UnifiedMexcClient {
               this.cache.set(cacheKey, data, this.config.cacheTTL);
             }
 
-            console.log(`[UnifiedMexcClient] Success: ${endpoint} (attempt ${attempt}) (${requestId})`);
+            console.log(
+              `[UnifiedMexcClient] Success: ${endpoint} (attempt ${attempt}) (${requestId})`
+            );
 
             return {
               success: true,
@@ -417,8 +421,8 @@ export class UnifiedMexcClient {
               const errorMessage = isTimeoutError
                 ? `MEXC API request timeout after ${this.config.timeout}ms (${maxRetries} attempts)`
                 : error instanceof Error
-                ? error.message
-                : "Unknown error occurred";
+                  ? error.message
+                  : "Unknown error occurred";
 
               return {
                 success: false,
@@ -528,7 +532,9 @@ export class UnifiedMexcClient {
 
   async getSymbolsV2(vcoinId?: string): Promise<UnifiedMexcResponse<SymbolEntry[]>> {
     try {
-      console.log(`[UnifiedMexcClient] Fetching symbols data${vcoinId ? ` for ${vcoinId}` : ""}...`);
+      console.log(
+        `[UnifiedMexcClient] Fetching symbols data${vcoinId ? ` for ${vcoinId}` : ""}...`
+      );
 
       const response = await this.makeRequest<{ data: { symbols: unknown[] } }>(
         "/api/platform/spot/market-v2/web/symbolsV2"
@@ -707,7 +713,7 @@ export class UnifiedMexcClient {
 
       // Handle both single symbol and all symbols response
       const rawData = Array.isArray(response.data) ? response.data : [response.data];
-      
+
       const validatedData = rawData
         .map((ticker): Ticker | null => {
           try {
@@ -787,7 +793,9 @@ export class UnifiedMexcClient {
     }
   }
 
-  async getAccountBalances(): Promise<UnifiedMexcResponse<{ balances: BalanceEntry[]; totalUsdtValue: number; lastUpdated: string }>> {
+  async getAccountBalances(): Promise<
+    UnifiedMexcResponse<{ balances: BalanceEntry[]; totalUsdtValue: number; lastUpdated: string }>
+  > {
     if (!this.config.apiKey || !this.config.secretKey) {
       console.error("[UnifiedMexcClient] MEXC API credentials not configured");
       return {
@@ -797,7 +805,8 @@ export class UnifiedMexcClient {
           totalUsdtValue: 0,
           lastUpdated: new Date().toISOString(),
         },
-        error: "MEXC API credentials not configured. Please add MEXC_API_KEY and MEXC_SECRET_KEY to your environment variables.",
+        error:
+          "MEXC API credentials not configured. Please add MEXC_API_KEY and MEXC_SECRET_KEY to your environment variables.",
         timestamp: new Date().toISOString(),
       };
     }
@@ -830,7 +839,7 @@ export class UnifiedMexcClient {
       // Get valid trading pairs for USDT conversion validation
       const exchangeInfo = await this.getExchangeInfo();
       const validTradingPairs = new Set(
-        exchangeInfo.success ? exchangeInfo.data.map(symbol => symbol.symbol) : []
+        exchangeInfo.success ? exchangeInfo.data.map((symbol) => symbol.symbol) : []
       );
 
       // Filter non-zero balances first
@@ -921,7 +930,7 @@ export class UnifiedMexcClient {
       };
     } catch (error) {
       console.error("[UnifiedMexcClient] Account balances failed:", error);
-      
+
       // Provide more helpful error messages for common MEXC API issues
       let errorMessage = error instanceof Error ? error.message : "Unknown error";
 
@@ -992,7 +1001,9 @@ export class UnifiedMexcClient {
     }
 
     try {
-      console.log(`[UnifiedMexcClient] Placing ${params.side} order: ${params.symbol}, quantity: ${params.quantity}`);
+      console.log(
+        `[UnifiedMexcClient] Placing ${params.side} order: ${params.symbol}, quantity: ${params.quantity}`
+      );
 
       const requestParams: Record<string, unknown> = {
         symbol: params.symbol,

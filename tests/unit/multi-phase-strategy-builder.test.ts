@@ -13,9 +13,13 @@ describe('MultiPhaseStrategyBuilder', () => {
       expect(builder).toBeDefined();
       
       const preview = builder.preview();
-      expect(preview.id).toBe('test-strategy');
-      expect(preview.name).toBe('Test Strategy');
       expect(preview.levels).toHaveLength(0);
+      
+      // Test the actual build result for id and name
+      builder.addPhase(10, 50); // Add a phase so build() doesn't throw
+      const strategy = builder.build();
+      expect(strategy.id).toBe('test-strategy');
+      expect(strategy.name).toBe('Test Strategy');
     });
 
     it('should add single phase correctly', () => {
@@ -46,9 +50,10 @@ describe('MultiPhaseStrategyBuilder', () => {
 
     it('should set description correctly', () => {
       builder.withDescription('Custom strategy description');
+      builder.addPhase(10, 50); // Add a phase so build() doesn't throw
       
-      const preview = builder.preview();
-      expect(preview.description).toBe('Custom strategy description');
+      const strategy = builder.build();
+      expect(strategy.description).toBe('Custom strategy description');
     });
 
     it('should build complete strategy', () => {

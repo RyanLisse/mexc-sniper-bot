@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/src/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,10 +9,9 @@ import {
   CardTitle,
 } from "@/src/components/ui/card";
 import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { ExternalLink, Settings } from "lucide-react";
 import { TakeProfitLevels } from "./take-profit-levels";
 import { TradingConfiguration } from "./trading-configuration";
-import { Button } from "@/src/components/ui/button";
-import { ExternalLink, Settings } from "lucide-react";
 
 interface UserPreferencesProps {
   userId: string;
@@ -50,13 +50,14 @@ export function UserPreferences({ userId }: UserPreferencesProps) {
             <div className="flex-1">
               <p className="text-sm font-medium">API Configuration Required</p>
               <p className="text-xs text-muted-foreground">
-                Configure your MEXC API credentials and system settings in System Check before using trading features
+                Configure your MEXC API credentials and system settings in System Check before using
+                trading features
               </p>
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open('/config', '_self')}
+              onClick={() => window.open("/config", "_self")}
               className="border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400"
             >
               <ExternalLink className="mr-2 h-4 w-4" />

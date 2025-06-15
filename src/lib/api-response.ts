@@ -51,7 +51,6 @@ export function createErrorResponse(error: string, meta?: ApiResponse["meta"]): 
   };
 }
 
-
 /**
  * Helper to create paginated responses
  */
@@ -129,12 +128,10 @@ export function createRateLimitErrorResponse(resetTime: number): ApiResponse {
  * Generic API response creator that handles both success and error cases
  * This is the main function used by API routes
  */
-export function createApiResponse<T>(
-  response: ApiResponse<T>, 
-  status?: number
-): Response {
-  const statusCode = status || (response.success ? HTTP_STATUS.OK : HTTP_STATUS.INTERNAL_SERVER_ERROR);
-  
+export function createApiResponse<T>(response: ApiResponse<T>, status?: number): Response {
+  const statusCode =
+    status || (response.success ? HTTP_STATUS.OK : HTTP_STATUS.INTERNAL_SERVER_ERROR);
+
   return new Response(JSON.stringify(response), {
     status: statusCode,
     headers: {
@@ -148,10 +145,10 @@ export function createApiResponse<T>(
  */
 export function handleApiError(error: unknown, defaultMessage = "An error occurred"): Response {
   console.error("API Error:", error);
-  
+
   if (error instanceof Error) {
     return createApiResponse(createErrorResponse(error.message), HTTP_STATUS.INTERNAL_SERVER_ERROR);
   }
-  
+
   return createApiResponse(createErrorResponse(defaultMessage), HTTP_STATUS.INTERNAL_SERVER_ERROR);
 }

@@ -5,70 +5,57 @@
 // a modular structure internally.
 
 // Import all table definitions from modular files
-import {
-  user,
-  session,
-  account,
-  verification,
-  userPreferences,
-} from "./schemas/auth";
+import { account, session, user, userPreferences, verification } from "./schemas/auth";
 
 import {
   apiCredentials,
-  snipeTargets,
   executionHistory,
-  transactions,
+  snipeTargets,
   transactionLocks,
   transactionQueue,
+  transactions,
 } from "./schemas/trading";
 
 import {
-  simulationSessions,
-  simulationTrades,
-  riskEvents,
+  errorIncidents,
   positionSnapshots,
   reconciliationReports,
-  errorIncidents,
+  riskEvents,
+  simulationSessions,
+  simulationTrades,
   systemHealthMetrics,
 } from "./schemas/safety";
 
-import {
-  monitoredListings,
-  patternEmbeddings,
-  patternSimilarityCache,
-} from "./schemas/patterns";
+import { monitoredListings, patternEmbeddings, patternSimilarityCache } from "./schemas/patterns";
 
-import {
-  workflowSystemStatus,
-  workflowActivity,
-} from "./schemas/workflows";
+import { workflowActivity, workflowSystemStatus } from "./schemas/workflows";
 
 import {
   agentPerformanceMetrics,
-  workflowPerformanceMetrics,
-  systemPerformanceSnapshots,
   performanceAlerts,
   performanceBaselines,
+  systemPerformanceSnapshots,
+  workflowPerformanceMetrics,
 } from "./schemas/performance";
 
 import {
-  alertRules,
-  alertInstances,
-  notificationChannels,
-  escalationPolicies,
-  alertNotifications,
+  alertAnalytics,
   alertCorrelations,
+  alertInstances,
+  alertNotifications,
+  alertRules,
   alertSuppressions,
   anomalyModels,
-  alertAnalytics,
+  escalationPolicies,
+  notificationChannels,
 } from "./schemas/alerts";
 
 import {
+  strategyConfigBackups,
+  strategyPerformanceMetrics,
+  strategyPhaseExecutions,
   strategyTemplates,
   tradingStrategies,
-  strategyPhaseExecutions,
-  strategyPerformanceMetrics,
-  strategyConfigBackups,
 } from "./schemas/strategies";
 
 // Export all tables individually for backward compatibility
@@ -79,7 +66,6 @@ export {
   account,
   verification,
   userPreferences,
-  
   // Trading tables
   apiCredentials,
   snipeTargets,
@@ -87,7 +73,6 @@ export {
   transactions,
   transactionLocks,
   transactionQueue,
-  
   // Safety tables
   simulationSessions,
   simulationTrades,
@@ -96,23 +81,19 @@ export {
   reconciliationReports,
   errorIncidents,
   systemHealthMetrics,
-  
   // Pattern tables
   monitoredListings,
   patternEmbeddings,
   patternSimilarityCache,
-  
   // Workflow tables
   workflowSystemStatus,
   workflowActivity,
-  
   // Performance tables
   agentPerformanceMetrics,
   workflowPerformanceMetrics,
   systemPerformanceSnapshots,
   performanceAlerts,
   performanceBaselines,
-  
   // Alert tables
   alertRules,
   alertInstances,
@@ -123,7 +104,6 @@ export {
   alertSuppressions,
   anomalyModels,
   alertAnalytics,
-  
   // Strategy tables
   strategyTemplates,
   tradingStrategies,
@@ -150,7 +130,7 @@ const allTables = {
   account,
   verification,
   userPreferences,
-  
+
   // Trading tables
   apiCredentials,
   snipeTargets,
@@ -158,7 +138,7 @@ const allTables = {
   transactions,
   transactionLocks,
   transactionQueue,
-  
+
   // Safety tables
   simulationSessions,
   simulationTrades,
@@ -167,23 +147,23 @@ const allTables = {
   reconciliationReports,
   errorIncidents,
   systemHealthMetrics,
-  
+
   // Pattern tables
   monitoredListings,
   patternEmbeddings,
   patternSimilarityCache,
-  
+
   // Workflow tables
   workflowSystemStatus,
   workflowActivity,
-  
+
   // Performance tables
   agentPerformanceMetrics,
   workflowPerformanceMetrics,
   systemPerformanceSnapshots,
   performanceAlerts,
   performanceBaselines,
-  
+
   // Alert tables
   alertRules,
   alertInstances,
@@ -194,7 +174,7 @@ const allTables = {
   alertSuppressions,
   anomalyModels,
   alertAnalytics,
-  
+
   // Strategy tables
   strategyTemplates,
   tradingStrategies,

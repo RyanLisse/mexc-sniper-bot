@@ -170,13 +170,12 @@ function filterUpcomingCoins(calendarData: CalendarEntry[]): CalendarEntry[] {
       const launchTime = new Date(item.firstOpenTime);
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Set to start of today (00:00:00)
-      
+
       // Only show listings within next 30 days to keep it manageable
-      const maxFutureDate = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
-      
+      const maxFutureDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+
       return (
-        launchTime.getTime() >= today.getTime() && 
-        launchTime.getTime() <= maxFutureDate.getTime()
+        launchTime.getTime() >= today.getTime() && launchTime.getTime() <= maxFutureDate.getTime()
       );
     } catch {
       return false;
@@ -266,7 +265,7 @@ function useProcessedCoinData() {
   const { data: calendarData } = useMexcCalendar();
 
   // Process calendar data with filtering and limiting
-  const upcomingCoins = Array.isArray(calendarData) 
+  const upcomingCoins = Array.isArray(calendarData)
     ? limitDisplayedListings(filterUpcomingCoins(calendarData), 50)
     : [];
   const enrichedCalendarData = enrichCalendarData(
@@ -434,7 +433,8 @@ export function CoinListingsBoard() {
             <div className="flex items-center gap-2 text-blue-400">
               <Clock className="h-4 w-4" />
               <p className="text-sm">
-                Showing top 50 listings from today to 30 days ahead. Total found: {enrichedCalendarData.length}.
+                Showing top 50 listings from today to 30 days ahead. Total found:{" "}
+                {enrichedCalendarData.length}.
               </p>
             </div>
           </CardContent>

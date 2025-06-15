@@ -1,9 +1,9 @@
 /**
  * Real-time Pattern Detection Hook
- * 
+ *
  * Specialized React hook for real-time pattern discovery and ready state monitoring.
  * Integrates with the AI agent system for live pattern updates and trading signals.
- * 
+ *
  * Features:
  * - Real-time pattern discovery streaming
  * - Ready state pattern monitoring (sts:2, st:2, tt:4)
@@ -13,14 +13,14 @@
  * - Performance analytics
  */
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { useWebSocket } from './use-websocket';
-import {
-  type PatternDiscoveryMessage,
-  type PatternReadyStateMessage,
-  type TradingSignalMessage,
-  type AgentWorkflowMessage,
-} from '@/src/lib/websocket-types';
+import type {
+  AgentWorkflowMessage,
+  PatternDiscoveryMessage,
+  PatternReadyStateMessage,
+  TradingSignalMessage,
+} from "@/src/lib/websocket-types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useWebSocket } from "./use-websocket";
 
 // ======================
 // Types and Interfaces
@@ -44,19 +44,19 @@ export interface ReadyStateStatus {
   detectedAt: number;
   estimatedLaunchTime?: number;
   advanceNotice: number;
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel: "low" | "medium" | "high";
   correlatedSymbols: string[];
   metadata?: Record<string, any>;
 }
 
 export interface PatternAlert {
   id: string;
-  type: 'pattern_discovered' | 'ready_state' | 'high_confidence' | 'execution_opportunity';
+  type: "pattern_discovered" | "ready_state" | "high_confidence" | "execution_opportunity";
   symbol: string;
   message: string;
   confidence: number;
   timestamp: number;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: "low" | "medium" | "high" | "critical";
   actionable: boolean;
   metadata?: Record<string, any>;
 }
@@ -120,7 +120,7 @@ class PatternAnalyticsEngine {
 
   addPattern(pattern: PatternDiscoveryMessage): void {
     this.patterns.unshift(pattern);
-    
+
     // Keep only last 1000 patterns for performance
     if (this.patterns.length > 1000) {
       this.patterns = this.patterns.slice(0, 1000);
@@ -136,7 +136,7 @@ class PatternAnalyticsEngine {
     this.performanceHistory.push({
       timestamp: Date.now(),
       success,
-      symbol: this.patterns.find(p => p.patternId === patternId)?.symbol || '',
+      symbol: this.patterns.find((p) => p.patternId === patternId)?.symbol || "",
     });
 
     // Keep only last 500 performance records
@@ -147,33 +147,40 @@ class PatternAnalyticsEngine {
 
   calculateMetrics(): PatternMetrics {
     const now = Date.now();
-    const last24h = now - (24 * 60 * 60 * 1000);
-    const recentPatterns = this.patterns.filter(p => p.timing.detectedAt > last24h);
-    
-    const readyStatePatterns = recentPatterns.filter(p => p.pattern.type === 'ready_state');
-    
-    const validatedCount = this.performanceHistory.filter(p => p.timestamp > last24h).length;
-    const successCount = this.performanceHistory.filter(p => p.timestamp > last24h && p.success).length;
-    
+    const last24h = now - 24 * 60 * 60 * 1000;
+    const recentPatterns = this.patterns.filter((p) => p.timing.detectedAt > last24h);
+
+    const readyStatePatterns = recentPatterns.filter((p) => p.pattern.type === "ready_state");
+
+    const validatedCount = this.performanceHistory.filter((p) => p.timestamp > last24h).length;
+    const successCount = this.performanceHistory.filter(
+      (p) => p.timestamp > last24h && p.success
+    ).length;
+
     const successRate = validatedCount > 0 ? successCount / validatedCount : 0;
-    const falsePositiveRate = validatedCount > 0 ? (validatedCount - successCount) / validatedCount : 0;
+    const falsePositiveRate =
+      validatedCount > 0 ? (validatedCount - successCount) / validatedCount : 0;
 
     const totalConfidence = recentPatterns.reduce((sum, p) => sum + p.pattern.confidence, 0);
-    const averageConfidence = recentPatterns.length > 0 ? totalConfidence / recentPatterns.length : 0;
+    const averageConfidence =
+      recentPatterns.length > 0 ? totalConfidence / recentPatterns.length : 0;
 
     const totalAdvanceNotice = recentPatterns.reduce((sum, p) => sum + p.timing.advanceNotice, 0);
-    const averageAdvanceNotice = recentPatterns.length > 0 ? totalAdvanceNotice / recentPatterns.length : 0;
+    const averageAdvanceNotice =
+      recentPatterns.length > 0 ? totalAdvanceNotice / recentPatterns.length : 0;
 
     // Calculate top performing symbols
     const symbolPerformance = new Map<string, { total: number; success: number }>();
-    this.performanceHistory.filter(p => p.timestamp > last24h).forEach(p => {
-      if (!symbolPerformance.has(p.symbol)) {
-        symbolPerformance.set(p.symbol, { total: 0, success: 0 });
-      }
-      const stats = symbolPerformance.get(p.symbol)!;
-      stats.total++;
-      if (p.success) stats.success++;
-    });
+    this.performanceHistory
+      .filter((p) => p.timestamp > last24h)
+      .forEach((p) => {
+        if (!symbolPerformance.has(p.symbol)) {
+          symbolPerformance.set(p.symbol, { total: 0, success: 0 });
+        }
+        const stats = symbolPerformance.get(p.symbol)!;
+        stats.total++;
+        if (p.success) stats.success++;
+      });
 
     const topPerformingSymbols = Array.from(symbolPerformance.entries())
       .map(([symbol, stats]) => ({
@@ -181,10 +188,10 @@ class PatternAnalyticsEngine {
         successRate: stats.success / stats.total,
         total: stats.total,
       }))
-      .filter(s => s.total >= 3) // At least 3 patterns
+      .filter((s) => s.total >= 3) // At least 3 patterns
       .sort((a, b) => b.successRate - a.successRate)
       .slice(0, 10)
-      .map(s => s.symbol);
+      .map((s) => s.symbol);
 
     return {
       totalPatterns: recentPatterns.length,
@@ -199,16 +206,18 @@ class PatternAnalyticsEngine {
   }
 
   getSymbolStats(symbol: string) {
-    const symbolPatterns = this.patterns.filter(p => p.symbol === symbol);
-    const symbolPerformance = this.performanceHistory.filter(p => p.symbol === symbol);
-    
-    const successCount = symbolPerformance.filter(p => p.success).length;
+    const symbolPatterns = this.patterns.filter((p) => p.symbol === symbol);
+    const symbolPerformance = this.performanceHistory.filter((p) => p.symbol === symbol);
+
+    const successCount = symbolPerformance.filter((p) => p.success).length;
     const successRate = symbolPerformance.length > 0 ? successCount / symbolPerformance.length : 0;
 
     return {
       totalPatterns: symbolPatterns.length,
       successRate,
-      averageConfidence: symbolPatterns.reduce((sum, p) => sum + p.pattern.confidence, 0) / symbolPatterns.length || 0,
+      averageConfidence:
+        symbolPatterns.reduce((sum, p) => sum + p.pattern.confidence, 0) / symbolPatterns.length ||
+        0,
       lastPattern: symbolPatterns[0],
       recentPerformance: symbolPerformance.slice(0, 10),
     };
@@ -229,7 +238,7 @@ class AlertManager {
   private alerts: PatternAlert[] = [];
   private readonly maxAlerts = 100;
 
-  addAlert(alert: Omit<PatternAlert, 'id' | 'timestamp'>): PatternAlert {
+  addAlert(alert: Omit<PatternAlert, "id" | "timestamp">): PatternAlert {
     const newAlert: PatternAlert = {
       ...alert,
       id: crypto.randomUUID(),
@@ -247,7 +256,7 @@ class AlertManager {
   }
 
   dismissAlert(alertId: string): void {
-    this.alerts = this.alerts.filter(alert => alert.id !== alertId);
+    this.alerts = this.alerts.filter((alert) => alert.id !== alertId);
   }
 
   getAlerts(): PatternAlert[] {
@@ -257,10 +266,9 @@ class AlertManager {
   getActiveAlerts(): PatternAlert[] {
     const now = Date.now();
     const fiveMinutes = 5 * 60 * 1000;
-    
-    return this.alerts.filter(alert => 
-      alert.priority === 'critical' || 
-      (now - alert.timestamp) < fiveMinutes
+
+    return this.alerts.filter(
+      (alert) => alert.priority === "critical" || now - alert.timestamp < fiveMinutes
     );
   }
 
@@ -273,7 +281,9 @@ class AlertManager {
 // Main Hook
 // ======================
 
-export function useRealTimePatterns(config: UseRealTimePatternsConfig = {}): UseRealTimePatternsResult {
+export function useRealTimePatterns(
+  config: UseRealTimePatternsConfig = {}
+): UseRealTimePatternsResult {
   const {
     symbols = [],
     minConfidence = 0.7,
@@ -316,55 +326,58 @@ export function useRealTimePatterns(config: UseRealTimePatternsConfig = {}): Use
   const subscriptionsRef = useRef(new Set<() => void>());
 
   // Pattern discovery handler
-  const handlePatternDiscovery = useCallback((message: any) => {
-    if (!isMountedRef.current) return;
+  const handlePatternDiscovery = useCallback(
+    (message: any) => {
+      if (!isMountedRef.current) return;
 
-    const pattern = message.data as PatternDiscoveryMessage;
-    
-    // Add to patterns list
-    setPatterns(prev => {
-      const newPatterns = [pattern, ...prev.slice(0, maxPatterns - 1)];
-      return newPatterns;
-    });
+      const pattern = message.data as PatternDiscoveryMessage;
 
-    // Add to analytics
-    if (enableAnalytics) {
-      analyticsRef.current.addPattern(pattern);
-    }
-
-    // Generate alert if high confidence
-    if (pattern.pattern.confidence >= minConfidence) {
-      const alert = alertManagerRef.current.addAlert({
-        type: 'pattern_discovered',
-        symbol: pattern.symbol,
-        message: `High confidence ${pattern.pattern.type} pattern detected (${Math.round(pattern.pattern.confidence * 100)}%)`,
-        confidence: pattern.pattern.confidence,
-        priority: pattern.pattern.confidence > 0.9 ? 'critical' : 'high',
-        actionable: true,
-        metadata: {
-          patternId: pattern.patternId,
-          patternType: pattern.pattern.type,
-          advanceNotice: pattern.timing.advanceNotice,
-        },
+      // Add to patterns list
+      setPatterns((prev) => {
+        const newPatterns = [pattern, ...prev.slice(0, maxPatterns - 1)];
+        return newPatterns;
       });
 
-      setAlerts(alertManagerRef.current.getActiveAlerts());
-    }
+      // Add to analytics
+      if (enableAnalytics) {
+        analyticsRef.current.addPattern(pattern);
+      }
 
-    // Auto-subscribe to new symbol if enabled
-    if (autoSubscribeNewSymbols && !monitoredSymbols.includes(pattern.symbol)) {
-      setMonitoredSymbols(prev => [...prev, pattern.symbol]);
-    }
+      // Generate alert if high confidence
+      if (pattern.pattern.confidence >= minConfidence) {
+        const alert = alertManagerRef.current.addAlert({
+          type: "pattern_discovered",
+          symbol: pattern.symbol,
+          message: `High confidence ${pattern.pattern.type} pattern detected (${Math.round(pattern.pattern.confidence * 100)}%)`,
+          confidence: pattern.pattern.confidence,
+          priority: pattern.pattern.confidence > 0.9 ? "critical" : "high",
+          actionable: true,
+          metadata: {
+            patternId: pattern.patternId,
+            patternType: pattern.pattern.type,
+            advanceNotice: pattern.timing.advanceNotice,
+          },
+        });
 
-    setLastUpdate(Date.now());
-  }, [minConfidence, enableAnalytics, maxPatterns, autoSubscribeNewSymbols, monitoredSymbols]);
+        setAlerts(alertManagerRef.current.getActiveAlerts());
+      }
+
+      // Auto-subscribe to new symbol if enabled
+      if (autoSubscribeNewSymbols && !monitoredSymbols.includes(pattern.symbol)) {
+        setMonitoredSymbols((prev) => [...prev, pattern.symbol]);
+      }
+
+      setLastUpdate(Date.now());
+    },
+    [minConfidence, enableAnalytics, maxPatterns, autoSubscribeNewSymbols, monitoredSymbols]
+  );
 
   // Ready state handler
   const handleReadyState = useCallback((message: any) => {
     if (!isMountedRef.current) return;
 
     const readyStateData = message.data as PatternReadyStateMessage;
-    
+
     const status: ReadyStateStatus = {
       symbol: readyStateData.symbol,
       isReady: readyStateData.readyState.isReady,
@@ -377,7 +390,7 @@ export function useRealTimePatterns(config: UseRealTimePatternsConfig = {}): Use
       metadata: readyStateData.metadata,
     };
 
-    setReadyStates(prev => {
+    setReadyStates((prev) => {
       const newMap = new Map(prev);
       newMap.set(readyStateData.symbol, status);
       return newMap;
@@ -386,11 +399,11 @@ export function useRealTimePatterns(config: UseRealTimePatternsConfig = {}): Use
     // Generate critical alert for ready state
     if (status.isReady) {
       const alert = alertManagerRef.current.addAlert({
-        type: 'ready_state',
+        type: "ready_state",
         symbol: status.symbol,
         message: `${status.symbol} is ready for trading (sts:2, st:2, tt:4)`,
         confidence: status.confidence,
-        priority: 'critical',
+        priority: "critical",
         actionable: true,
         metadata: {
           readyState: readyStateData.readyState,
@@ -406,52 +419,58 @@ export function useRealTimePatterns(config: UseRealTimePatternsConfig = {}): Use
   }, []);
 
   // Trading signal handler
-  const handleTradingSignal = useCallback((message: any) => {
-    if (!isMountedRef.current || !enableSignals) return;
+  const handleTradingSignal = useCallback(
+    (message: any) => {
+      if (!isMountedRef.current || !enableSignals) return;
 
-    const signal = message.data as TradingSignalMessage;
-    
-    setSignals(prev => [signal, ...prev.slice(0, 99)]); // Keep last 100 signals
+      const signal = message.data as TradingSignalMessage;
 
-    // Generate alert for high-strength signals
-    if (signal.strength > 80) {
-      const alert = alertManagerRef.current.addAlert({
-        type: 'execution_opportunity',
-        symbol: signal.symbol,
-        message: `High-strength ${signal.type} signal (${signal.strength}% strength)`,
-        confidence: signal.confidence,
-        priority: 'high',
-        actionable: true,
-        metadata: {
-          signalId: signal.signalId,
-          signalType: signal.type,
-          strength: signal.strength,
-          targetPrice: signal.targetPrice,
-        },
-      });
+      setSignals((prev) => [signal, ...prev.slice(0, 99)]); // Keep last 100 signals
 
-      setAlerts(alertManagerRef.current.getActiveAlerts());
-    }
+      // Generate alert for high-strength signals
+      if (signal.strength > 80) {
+        const alert = alertManagerRef.current.addAlert({
+          type: "execution_opportunity",
+          symbol: signal.symbol,
+          message: `High-strength ${signal.type} signal (${signal.strength}% strength)`,
+          confidence: signal.confidence,
+          priority: "high",
+          actionable: true,
+          metadata: {
+            signalId: signal.signalId,
+            signalType: signal.type,
+            strength: signal.strength,
+            targetPrice: signal.targetPrice,
+          },
+        });
 
-    setLastUpdate(Date.now());
-  }, [enableSignals]);
+        setAlerts(alertManagerRef.current.getActiveAlerts());
+      }
+
+      setLastUpdate(Date.now());
+    },
+    [enableSignals]
+  );
 
   // Workflow handler for pattern validation
-  const handleWorkflow = useCallback((message: any) => {
-    if (!isMountedRef.current || !enableAnalytics) return;
+  const handleWorkflow = useCallback(
+    (message: any) => {
+      if (!isMountedRef.current || !enableAnalytics) return;
 
-    const workflow = message.data as AgentWorkflowMessage;
-    
-    // Track pattern validation results
-    if (workflow.workflowType === 'pattern_analysis' && workflow.status === 'completed') {
-      const success = workflow.result?.success || false;
-      const patternId = workflow.metadata?.patternId;
-      
-      if (patternId) {
-        analyticsRef.current.validatePattern(patternId, success);
+      const workflow = message.data as AgentWorkflowMessage;
+
+      // Track pattern validation results
+      if (workflow.workflowType === "pattern_analysis" && workflow.status === "completed") {
+        const success = workflow.result?.success || false;
+        const patternId = workflow.metadata?.patternId;
+
+        if (patternId) {
+          analyticsRef.current.validatePattern(patternId, success);
+        }
       }
-    }
-  }, [enableAnalytics]);
+    },
+    [enableAnalytics]
+  );
 
   // Set up subscriptions
   useEffect(() => {
@@ -460,26 +479,26 @@ export function useRealTimePatterns(config: UseRealTimePatternsConfig = {}): Use
     const unsubscribers: (() => void)[] = [];
 
     // Subscribe to pattern discovery
-    unsubscribers.push(subscribe('patterns:discovery', handlePatternDiscovery));
-    
+    unsubscribers.push(subscribe("patterns:discovery", handlePatternDiscovery));
+
     // Subscribe to ready state patterns
-    unsubscribers.push(subscribe('patterns:ready_state', handleReadyState));
-    
+    unsubscribers.push(subscribe("patterns:ready_state", handleReadyState));
+
     // Subscribe to trading signals
     if (enableSignals) {
-      unsubscribers.push(subscribe('trading:signals', handleTradingSignal));
+      unsubscribers.push(subscribe("trading:signals", handleTradingSignal));
     }
 
     // Subscribe to workflows for validation
     if (enableAnalytics) {
-      unsubscribers.push(subscribe('agents:workflows', handleWorkflow));
+      unsubscribers.push(subscribe("agents:workflows", handleWorkflow));
     }
 
     // Subscribe to specific symbols
     for (const symbol of symbols) {
       unsubscribers.push(subscribe(`patterns:${symbol}:discovery`, handlePatternDiscovery));
       unsubscribers.push(subscribe(`patterns:${symbol}:ready_state`, handleReadyState));
-      
+
       if (enableSignals) {
         unsubscribers.push(subscribe(`trading:${symbol}:signals`, handleTradingSignal));
       }
@@ -489,7 +508,7 @@ export function useRealTimePatterns(config: UseRealTimePatternsConfig = {}): Use
     subscriptionsRef.current = new Set(unsubscribers);
 
     return () => {
-      unsubscribers.forEach(unsub => unsub());
+      unsubscribers.forEach((unsub) => unsub());
       subscriptionsRef.current.clear();
     };
   }, [
@@ -526,31 +545,37 @@ export function useRealTimePatterns(config: UseRealTimePatternsConfig = {}): Use
   }, [symbols]);
 
   // API functions
-  const searchPatterns = useCallback((criteria: Record<string, any>) => {
-    if (!isConnected) return;
+  const searchPatterns = useCallback(
+    (criteria: Record<string, any>) => {
+      if (!isConnected) return;
 
-    send({
-      type: 'agent:workflow',
-      channel: 'agents:workflows',
-      data: {
-        action: 'execute',
-        workflowType: 'pattern_analysis',
-        request: {
-          analysisType: 'search',
-          criteria,
+      send({
+        type: "agent:workflow",
+        channel: "agents:workflows",
+        data: {
+          action: "execute",
+          workflowType: "pattern_analysis",
+          request: {
+            analysisType: "search",
+            criteria,
+          },
         },
-      },
-    });
-  }, [isConnected, send]);
+      });
+    },
+    [isConnected, send]
+  );
 
-  const subscribeToSymbol = useCallback((symbol: string) => {
-    if (!monitoredSymbols.includes(symbol)) {
-      setMonitoredSymbols(prev => [...prev, symbol]);
-    }
-  }, [monitoredSymbols]);
+  const subscribeToSymbol = useCallback(
+    (symbol: string) => {
+      if (!monitoredSymbols.includes(symbol)) {
+        setMonitoredSymbols((prev) => [...prev, symbol]);
+      }
+    },
+    [monitoredSymbols]
+  );
 
   const unsubscribeFromSymbol = useCallback((symbol: string) => {
-    setMonitoredSymbols(prev => prev.filter(s => s !== symbol));
+    setMonitoredSymbols((prev) => prev.filter((s) => s !== symbol));
   }, []);
 
   const clearHistory = useCallback(() => {
@@ -566,9 +591,12 @@ export function useRealTimePatterns(config: UseRealTimePatternsConfig = {}): Use
     return analyticsRef.current.getSymbolStats(symbol);
   }, []);
 
-  const getReadyState = useCallback((symbol: string) => {
-    return readyStates.get(symbol);
-  }, [readyStates]);
+  const getReadyState = useCallback(
+    (symbol: string) => {
+      return readyStates.get(symbol);
+    },
+    [readyStates]
+  );
 
   const dismissAlert = useCallback((alertId: string) => {
     alertManagerRef.current.dismissAlert(alertId);

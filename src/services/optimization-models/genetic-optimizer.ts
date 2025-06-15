@@ -1,11 +1,11 @@
 /**
  * Genetic Algorithm Optimizer
- * 
+ *
  * Implements a genetic algorithm for parameter optimization with advanced
  * features like adaptive mutation, crossover strategies, and diversity maintenance.
  */
 
-import { logger } from '../../lib/utils';
+import { logger } from "../../lib/utils";
 
 export interface GeneticConfig {
   populationSize: number;
@@ -14,9 +14,9 @@ export interface GeneticConfig {
   elitismRate: number;
   maxGenerations: number;
   convergenceThreshold: number;
-  crossoverStrategy: 'uniform' | 'arithmetic' | 'simulated_binary';
-  mutationStrategy: 'gaussian' | 'uniform' | 'adaptive';
-  selectionStrategy: 'tournament' | 'roulette' | 'rank';
+  crossoverStrategy: "uniform" | "arithmetic" | "simulated_binary";
+  mutationStrategy: "gaussian" | "uniform" | "adaptive";
+  selectionStrategy: "tournament" | "roulette" | "rank";
   tournamentSize: number;
   diversityThreshold: number;
   adaptiveMutation: boolean;
@@ -65,16 +65,16 @@ export class GeneticOptimizer {
       elitismRate: 0.1,
       maxGenerations: 100,
       convergenceThreshold: 0.001,
-      crossoverStrategy: 'arithmetic',
-      mutationStrategy: 'adaptive',
-      selectionStrategy: 'tournament',
+      crossoverStrategy: "arithmetic",
+      mutationStrategy: "adaptive",
+      selectionStrategy: "tournament",
       tournamentSize: 3,
       diversityThreshold: 0.01,
       adaptiveMutation: true,
-      ...config
+      ...config,
     };
 
-    logger.info('Genetic Optimizer initialized', { config: this.config });
+    logger.info("Genetic Optimizer initialized", { config: this.config });
   }
 
   /**
@@ -82,7 +82,7 @@ export class GeneticOptimizer {
    */
   setParameterBounds(bounds: Record<string, { min: number; max: number }>): void {
     this.parameterBounds = { ...bounds };
-    logger.info('Parameter bounds set for genetic algorithm', { bounds });
+    logger.info("Parameter bounds set for genetic algorithm", { bounds });
   }
 
   /**
@@ -103,8 +103,8 @@ export class GeneticOptimizer {
     // Return top candidates from current population
     const sortedPopulation = [...this.currentPopulation].sort((a, b) => b.fitness - a.fitness);
     const numCandidates = Math.min(10, this.config.populationSize);
-    
-    return sortedPopulation.slice(0, numCandidates).map(individual => individual.genes);
+
+    return sortedPopulation.slice(0, numCandidates).map((individual) => individual.genes);
   }
 
   /**
@@ -113,16 +113,16 @@ export class GeneticOptimizer {
   async updateModel(evaluationResults: any[]): Promise<void> {
     // Update fitness values for current population
     let updateCount = 0;
-    
+
     for (const result of evaluationResults) {
-      if (result.valid && result.score > -Infinity) {
+      if (result.valid && result.score > Number.NEGATIVE_INFINITY) {
         // Find corresponding individual in population
         const individual = this.findIndividualByParameters(result.parameters);
         if (individual) {
           individual.fitness = result.score;
           individual.metadata = {
             backtestResults: result.backtestResults,
-            safetyValidation: result.safetyValidation
+            safetyValidation: result.safetyValidation,
           };
           updateCount++;
         }
@@ -131,17 +131,20 @@ export class GeneticOptimizer {
 
     // Update best ever individual
     const currentBest = this.getBestIndividual();
-    if (currentBest && (!this.bestEverIndividual || currentBest.fitness > this.bestEverIndividual.fitness)) {
+    if (
+      currentBest &&
+      (!this.bestEverIndividual || currentBest.fitness > this.bestEverIndividual.fitness)
+    ) {
       this.bestEverIndividual = { ...currentBest };
     }
 
     // Calculate population statistics
     this.updatePopulationStatistics();
 
-    logger.debug('Genetic model updated', { 
+    logger.debug("Genetic model updated", {
       updatedIndividuals: updateCount,
       populationSize: this.currentPopulation.length,
-      bestFitness: currentBest?.fitness || 0
+      bestFitness: currentBest?.fitness || 0,
     });
   }
 
@@ -167,9 +170,9 @@ export class GeneticOptimizer {
 
       const individual: Individual = {
         genes,
-        fitness: -Infinity,
+        fitness: Number.NEGATIVE_INFINITY,
         age: 0,
-        diversity: 0
+        diversity: 0,
       };
 
       this.currentPopulation.push(individual);
@@ -178,9 +181,9 @@ export class GeneticOptimizer {
     // Calculate initial diversity
     this.calculatePopulationDiversity();
 
-    logger.debug('Population initialized', { 
+    logger.debug("Population initialized", {
       size: this.currentPopulation.length,
-      hasSeed: !!seed 
+      hasSeed: !!seed,
     });
   }
 
@@ -190,7 +193,7 @@ export class GeneticOptimizer {
   private async evolvePopulation(): Promise<void> {
     // Calculate diversity and adapt mutation rate if enabled
     this.calculatePopulationDiversity();
-    
+
     if (this.config.adaptiveMutation) {
       this.adaptMutationRate();
     }
@@ -227,9 +230,9 @@ export class GeneticOptimizer {
       }
 
       // Reset fitness and age
-      offspring1.fitness = -Infinity;
+      offspring1.fitness = Number.NEGATIVE_INFINITY;
       offspring1.age = 0;
-      offspring2.fitness = -Infinity;
+      offspring2.fitness = Number.NEGATIVE_INFINITY;
       offspring2.age = 0;
 
       newPopulation.push(offspring1);
@@ -246,10 +249,10 @@ export class GeneticOptimizer {
     this.currentPopulation = newPopulation;
     this.calculatePopulationDiversity();
 
-    logger.debug('Population evolved', { 
+    logger.debug("Population evolved", {
       generation: this.generationHistory.length + 1,
       elites: eliteCount,
-      mutationRate: this.config.mutationRate
+      mutationRate: this.config.mutationRate,
     });
   }
 
@@ -258,7 +261,7 @@ export class GeneticOptimizer {
    */
   private selectElites(count: number): Individual[] {
     const sorted = [...this.currentPopulation].sort((a, b) => b.fitness - a.fitness);
-    return sorted.slice(0, count).map(individual => ({ ...individual }));
+    return sorted.slice(0, count).map((individual) => ({ ...individual }));
   }
 
   /**
@@ -266,11 +269,11 @@ export class GeneticOptimizer {
    */
   private selectParent(): Individual {
     switch (this.config.selectionStrategy) {
-      case 'tournament':
+      case "tournament":
         return this.tournamentSelection();
-      case 'roulette':
+      case "roulette":
         return this.rouletteSelection();
-      case 'rank':
+      case "rank":
         return this.rankSelection();
       default:
         return this.tournamentSelection();
@@ -282,29 +285,30 @@ export class GeneticOptimizer {
    */
   private tournamentSelection(): Individual {
     const tournament: Individual[] = [];
-    
+
     for (let i = 0; i < this.config.tournamentSize; i++) {
       const randomIndex = Math.floor(Math.random() * this.currentPopulation.length);
       tournament.push(this.currentPopulation[randomIndex]);
     }
 
-    return tournament.reduce((best, current) => 
-      current.fitness > best.fitness ? current : best
-    );
+    return tournament.reduce((best, current) => (current.fitness > best.fitness ? current : best));
   }
 
   /**
    * Roulette wheel selection
    */
   private rouletteSelection(): Individual {
-    const totalFitness = this.currentPopulation.reduce((sum, ind) => sum + Math.max(0, ind.fitness), 0);
-    
+    const totalFitness = this.currentPopulation.reduce(
+      (sum, ind) => sum + Math.max(0, ind.fitness),
+      0
+    );
+
     if (totalFitness === 0) {
       return this.currentPopulation[Math.floor(Math.random() * this.currentPopulation.length)];
     }
 
     let random = Math.random() * totalFitness;
-    
+
     for (const individual of this.currentPopulation) {
       random -= Math.max(0, individual.fitness);
       if (random <= 0) {
@@ -321,11 +325,11 @@ export class GeneticOptimizer {
   private rankSelection(): Individual {
     const sorted = [...this.currentPopulation].sort((a, b) => a.fitness - b.fitness);
     const totalRank = (this.currentPopulation.length * (this.currentPopulation.length + 1)) / 2;
-    
+
     let random = Math.random() * totalRank;
-    
+
     for (let i = 0; i < sorted.length; i++) {
-      random -= (i + 1);
+      random -= i + 1;
       if (random <= 0) {
         return sorted[i];
       }
@@ -342,11 +346,11 @@ export class GeneticOptimizer {
     const genes2 = { ...parent2.genes };
 
     switch (this.config.crossoverStrategy) {
-      case 'uniform':
+      case "uniform":
         return this.uniformCrossover(genes1, genes2);
-      case 'arithmetic':
+      case "arithmetic":
         return this.arithmeticCrossover(genes1, genes2);
-      case 'simulated_binary':
+      case "simulated_binary":
         return this.simulatedBinaryCrossover(genes1, genes2);
       default:
         return this.arithmeticCrossover(genes1, genes2);
@@ -371,8 +375,8 @@ export class GeneticOptimizer {
     }
 
     return [
-      { genes: offspring1, fitness: -Infinity, age: 0, diversity: 0 },
-      { genes: offspring2, fitness: -Infinity, age: 0, diversity: 0 }
+      { genes: offspring1, fitness: Number.NEGATIVE_INFINITY, age: 0, diversity: 0 },
+      { genes: offspring2, fitness: Number.NEGATIVE_INFINITY, age: 0, diversity: 0 },
     ];
   }
 
@@ -390,7 +394,7 @@ export class GeneticOptimizer {
     for (const key of Object.keys(this.parameterBounds)) {
       offspring1[key] = alpha * genes1[key] + (1 - alpha) * genes2[key];
       offspring2[key] = alpha * genes2[key] + (1 - alpha) * genes1[key];
-      
+
       // Ensure bounds
       const bounds = this.parameterBounds[key];
       offspring1[key] = Math.max(bounds.min, Math.min(bounds.max, offspring1[key]));
@@ -398,8 +402,8 @@ export class GeneticOptimizer {
     }
 
     return [
-      { genes: offspring1, fitness: -Infinity, age: 0, diversity: 0 },
-      { genes: offspring2, fitness: -Infinity, age: 0, diversity: 0 }
+      { genes: offspring1, fitness: Number.NEGATIVE_INFINITY, age: 0, diversity: 0 },
+      { genes: offspring2, fitness: Number.NEGATIVE_INFINITY, age: 0, diversity: 0 },
     ];
   }
 
@@ -426,9 +430,8 @@ export class GeneticOptimizer {
       }
 
       const u = Math.random();
-      const beta = u <= 0.5 
-        ? Math.pow(2 * u, 1 / (eta + 1))
-        : Math.pow(1 / (2 * (1 - u)), 1 / (eta + 1));
+      const beta =
+        u <= 0.5 ? Math.pow(2 * u, 1 / (eta + 1)) : Math.pow(1 / (2 * (1 - u)), 1 / (eta + 1));
 
       offspring1[key] = 0.5 * ((1 + beta) * parent1Val + (1 - beta) * parent2Val);
       offspring2[key] = 0.5 * ((1 - beta) * parent1Val + (1 + beta) * parent2Val);
@@ -439,8 +442,8 @@ export class GeneticOptimizer {
     }
 
     return [
-      { genes: offspring1, fitness: -Infinity, age: 0, diversity: 0 },
-      { genes: offspring2, fitness: -Infinity, age: 0, diversity: 0 }
+      { genes: offspring1, fitness: Number.NEGATIVE_INFINITY, age: 0, diversity: 0 },
+      { genes: offspring2, fitness: Number.NEGATIVE_INFINITY, age: 0, diversity: 0 },
     ];
   }
 
@@ -451,17 +454,18 @@ export class GeneticOptimizer {
     const mutated = { ...genes };
 
     for (const key of Object.keys(this.parameterBounds)) {
-      if (Math.random() < 0.1) { // Parameter-wise mutation probability
+      if (Math.random() < 0.1) {
+        // Parameter-wise mutation probability
         const bounds = this.parameterBounds[key];
-        
+
         switch (this.config.mutationStrategy) {
-          case 'gaussian':
+          case "gaussian":
             mutated[key] = this.gaussianMutation(mutated[key], bounds);
             break;
-          case 'uniform':
+          case "uniform":
             mutated[key] = this.uniformMutation(bounds);
             break;
-          case 'adaptive':
+          case "adaptive":
             mutated[key] = this.adaptiveMutation(mutated[key], bounds);
             break;
         }
@@ -479,7 +483,7 @@ export class GeneticOptimizer {
     const sigma = range * 0.1; // 10% of range
     const mutation = this.gaussianRandom() * sigma;
     const newValue = value + mutation;
-    
+
     return Math.max(bounds.min, Math.min(bounds.max, newValue));
   }
 
@@ -496,12 +500,12 @@ export class GeneticOptimizer {
   private adaptiveMutation(value: number, bounds: { min: number; max: number }): number {
     const populationDiversity = this.calculateAverageDiversity();
     const adaptiveFactor = populationDiversity < this.config.diversityThreshold ? 2.0 : 0.5;
-    
+
     const range = bounds.max - bounds.min;
     const sigma = range * 0.1 * adaptiveFactor;
     const mutation = this.gaussianRandom() * sigma;
     const newValue = value + mutation;
-    
+
     return Math.max(bounds.min, Math.min(bounds.max, newValue));
   }
 
@@ -509,7 +513,8 @@ export class GeneticOptimizer {
    * Generate Gaussian random number
    */
   private gaussianRandom(): number {
-    let u = 0, v = 0;
+    let u = 0,
+      v = 0;
     while (u === 0) u = Math.random();
     while (v === 0) v = Math.random();
     return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
@@ -520,11 +525,11 @@ export class GeneticOptimizer {
    */
   private generateRandomGenes(): Record<string, number> {
     const genes: Record<string, number> = {};
-    
+
     for (const [param, bounds] of Object.entries(this.parameterBounds)) {
       genes[param] = bounds.min + Math.random() * (bounds.max - bounds.min);
     }
-    
+
     return genes;
   }
 
@@ -534,7 +539,7 @@ export class GeneticOptimizer {
   private calculatePopulationDiversity(): void {
     for (let i = 0; i < this.currentPopulation.length; i++) {
       let totalDistance = 0;
-      
+
       for (let j = 0; j < this.currentPopulation.length; j++) {
         if (i !== j) {
           totalDistance += this.calculateGeneticDistance(
@@ -543,7 +548,7 @@ export class GeneticOptimizer {
           );
         }
       }
-      
+
       this.currentPopulation[i].diversity = totalDistance / (this.currentPopulation.length - 1);
     }
   }
@@ -551,15 +556,18 @@ export class GeneticOptimizer {
   /**
    * Calculate genetic distance between two individuals
    */
-  private calculateGeneticDistance(genes1: Record<string, number>, genes2: Record<string, number>): number {
+  private calculateGeneticDistance(
+    genes1: Record<string, number>,
+    genes2: Record<string, number>
+  ): number {
     let distance = 0;
-    
+
     for (const key of Object.keys(this.parameterBounds)) {
       const bounds = this.parameterBounds[key];
       const normalizedDiff = Math.abs(genes1[key] - genes2[key]) / (bounds.max - bounds.min);
       distance += normalizedDiff * normalizedDiff;
     }
-    
+
     return Math.sqrt(distance);
   }
 
@@ -568,7 +576,7 @@ export class GeneticOptimizer {
    */
   private calculateAverageDiversity(): number {
     if (this.currentPopulation.length === 0) return 0;
-    
+
     const totalDiversity = this.currentPopulation.reduce((sum, ind) => sum + ind.diversity, 0);
     return totalDiversity / this.currentPopulation.length;
   }
@@ -578,7 +586,7 @@ export class GeneticOptimizer {
    */
   private adaptMutationRate(): void {
     const averageDiversity = this.calculateAverageDiversity();
-    
+
     if (averageDiversity < this.config.diversityThreshold) {
       // Low diversity: increase mutation rate
       this.config.mutationRate = Math.min(0.3, this.config.mutationRate * 1.1);
@@ -592,18 +600,21 @@ export class GeneticOptimizer {
    * Update population statistics
    */
   private updatePopulationStatistics(): void {
-    const validIndividuals = this.currentPopulation.filter(ind => ind.fitness > -Infinity);
-    
+    const validIndividuals = this.currentPopulation.filter(
+      (ind) => ind.fitness > Number.NEGATIVE_INFINITY
+    );
+
     if (validIndividuals.length === 0) return;
 
-    const fitnesses = validIndividuals.map(ind => ind.fitness);
+    const fitnesses = validIndividuals.map((ind) => ind.fitness);
     const bestFitness = Math.max(...fitnesses);
     const averageFitness = fitnesses.reduce((sum, f) => sum + f, 0) / fitnesses.length;
     const diversity = this.calculateAverageDiversity();
-    
-    const convergenceRate = this.convergenceHistory.length > 0 
-      ? Math.abs(bestFitness - this.convergenceHistory[this.convergenceHistory.length - 1])
-      : 0;
+
+    const convergenceRate =
+      this.convergenceHistory.length > 0
+        ? Math.abs(bestFitness - this.convergenceHistory[this.convergenceHistory.length - 1])
+        : 0;
 
     this.convergenceHistory.push(bestFitness);
     this.diversityHistory.push(diversity);
@@ -615,8 +626,8 @@ export class GeneticOptimizer {
         bestFitness,
         averageFitness,
         diversity,
-        convergenceRate
-      }
+        convergenceRate,
+      },
     };
 
     this.generationHistory.push(population);
@@ -627,23 +638,27 @@ export class GeneticOptimizer {
    */
   private findIndividualByParameters(parameters: Record<string, number>): Individual | null {
     const tolerance = 1e-6;
-    
-    return this.currentPopulation.find(individual => {
-      return Object.keys(this.parameterBounds).every(key => 
-        Math.abs(individual.genes[key] - parameters[key]) < tolerance
-      );
-    }) || null;
+
+    return (
+      this.currentPopulation.find((individual) => {
+        return Object.keys(this.parameterBounds).every(
+          (key) => Math.abs(individual.genes[key] - parameters[key]) < tolerance
+        );
+      }) || null
+    );
   }
 
   /**
    * Get best individual from current population
    */
   private getBestIndividual(): Individual | null {
-    const validIndividuals = this.currentPopulation.filter(ind => ind.fitness > -Infinity);
-    
+    const validIndividuals = this.currentPopulation.filter(
+      (ind) => ind.fitness > Number.NEGATIVE_INFINITY
+    );
+
     if (validIndividuals.length === 0) return null;
-    
-    return validIndividuals.reduce((best, current) => 
+
+    return validIndividuals.reduce((best, current) =>
       current.fitness > best.fitness ? current : best
     );
   }
@@ -653,22 +668,23 @@ export class GeneticOptimizer {
    */
   getResults(): GeneticResult | null {
     const bestIndividual = this.getBestIndividual() || this.bestEverIndividual;
-    
+
     if (!bestIndividual) return null;
 
-    const currentGeneration = this.generationHistory.length > 0 
-      ? this.generationHistory[this.generationHistory.length - 1]
-      : {
-          individuals: this.currentPopulation,
-          generation: 0,
-          statistics: { bestFitness: 0, averageFitness: 0, diversity: 0, convergenceRate: 0 }
-        };
+    const currentGeneration =
+      this.generationHistory.length > 0
+        ? this.generationHistory[this.generationHistory.length - 1]
+        : {
+            individuals: this.currentPopulation,
+            generation: 0,
+            statistics: { bestFitness: 0, averageFitness: 0, diversity: 0, convergenceRate: 0 },
+          };
 
     return {
       bestIndividual,
       population: currentGeneration,
       convergenceHistory: [...this.convergenceHistory],
-      diversityHistory: [...this.diversityHistory]
+      diversityHistory: [...this.diversityHistory],
     };
   }
 
@@ -677,10 +693,10 @@ export class GeneticOptimizer {
    */
   hasConverged(): boolean {
     if (this.convergenceHistory.length < 10) return false;
-    
+
     const recentHistory = this.convergenceHistory.slice(-10);
     const improvement = Math.max(...recentHistory) - Math.min(...recentHistory);
-    
+
     return improvement < this.config.convergenceThreshold;
   }
 
@@ -689,7 +705,7 @@ export class GeneticOptimizer {
    */
   getModelStats(): any {
     const bestIndividual = this.getBestIndividual() || this.bestEverIndividual;
-    
+
     return {
       generation: this.generationHistory.length,
       populationSize: this.currentPopulation.length,
@@ -698,7 +714,7 @@ export class GeneticOptimizer {
       mutationRate: this.config.mutationRate,
       convergenceHistory: this.convergenceHistory.slice(-20),
       diversityHistory: this.diversityHistory.slice(-20),
-      hasConverged: this.hasConverged()
+      hasConverged: this.hasConverged(),
     };
   }
 }

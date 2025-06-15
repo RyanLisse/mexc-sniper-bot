@@ -1,11 +1,9 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { eq, and, gte, lte, desc, asc } from "drizzle-orm";
-import { 
-  anomalyModels,
+import { and, desc, eq } from "drizzle-orm";
+import {
   type InsertAnomalyModel,
-  type SelectAnomalyModel
+  type SelectAnomalyModel,
+  anomalyModels,
 } from "../db/schemas/alerts";
-import { agentPerformanceMetrics, systemHealthMetrics } from "../db/schema";
 
 export interface AnomalyDetectionResult {
   isAnomaly: boolean;
@@ -79,13 +77,13 @@ export class AnomalyDetectionService {
 
   async initialize(): Promise<void> {
     console.log("Initializing Anomaly Detection Service...");
-    
+
     // Load existing models from database
     await this.loadModelsFromDatabase();
-    
+
     // Start background model maintenance
     this.startModelMaintenance();
-    
+
     console.log(`Loaded ${this.models.size} anomaly detection models`);
   }
 
@@ -102,17 +100,17 @@ export class AnomalyDetectionService {
     try {
       // Get or create model for this metric
       let model = await this.getModel(metricName);
-      
+
       if (!model) {
         // Create new model if none exists
         model = await this.createModel(metricName, "statistical");
-        
+
         // Return no anomaly for new metrics until we have training data
         return {
           isAnomaly: false,
           score: 0,
           confidence: 0,
-          explanation: "Insufficient training data for anomaly detection"
+          explanation: "Insufficient training data for anomaly detection",
         };
       }
 
@@ -121,7 +119,7 @@ export class AnomalyDetectionService {
 
       // Detect anomaly based on model type
       const result = await this.detectAnomalyWithModel(model, value, features);
-      
+
       // Update model if needed
       if (this.shouldRetrainModel(metricName)) {
         this.scheduleModelRetrain(metricName);
@@ -134,7 +132,7 @@ export class AnomalyDetectionService {
         isAnomaly: false,
         score: 0,
         confidence: 0,
-        explanation: "Error during anomaly detection"
+        explanation: "Error during anomaly detection",
       };
     }
   }
@@ -145,12 +143,16 @@ export class AnomalyDetectionService {
     features?: Record<string, number>
   ): Promise<AnomalyDetectionResult> {
     const modelData = this.deserializeModel(model.modelData);
-    
+
     switch (model.modelType) {
       case "statistical":
         return this.detectStatisticalAnomaly(modelData as StatisticalModel, value);
       case "isolation_forest":
-        return this.detectIsolationForestAnomaly(modelData as IsolationForestModel, value, features);
+        return this.detectIsolationForestAnomaly(
+          modelData as IsolationForestModel,
+          value,
+          features
+        );
       case "seasonal":
         return this.detectSeasonalAnomaly(modelData as SeasonalModel, value, Date.now());
       default:
@@ -161,27 +163,27 @@ export class AnomalyDetectionService {
   private detectStatisticalAnomaly(model: StatisticalModel, value: number): AnomalyDetectionResult {
     // Z-score based detection
     const zScore = Math.abs((value - model.mean) / model.stdDev);
-    
+
     // IQR based detection for additional validation
-    const isIQROutlier = value < (model.q1 - 1.5 * model.iqr) || value > (model.q3 + 1.5 * model.iqr);
-    
+    const isIQROutlier = value < model.q1 - 1.5 * model.iqr || value > model.q3 + 1.5 * model.iqr;
+
     // Combined scoring
     const isAnomaly = zScore > 2.5 || isIQROutlier;
     const confidence = Math.min(zScore / 4.0, 1.0); // Normalize to 0-1
-    
+
     return {
       isAnomaly,
       score: zScore,
       confidence,
-      explanation: isAnomaly 
+      explanation: isAnomaly
         ? `Value ${value} is ${zScore.toFixed(2)} standard deviations from mean ${model.mean.toFixed(2)}`
         : "Value is within normal range",
       features: {
         zScore,
         mean: model.mean,
         stdDev: model.stdDev,
-        iqrOutlier: isIQROutlier ? 1 : 0
-      }
+        iqrOutlier: isIQROutlier ? 1 : 0,
+      },
     };
   }
 
@@ -192,55 +194,59 @@ export class AnomalyDetectionService {
   ): AnomalyDetectionResult {
     // Simplified isolation forest implementation
     const dataPoint = this.buildFeatureVector(value, features, model.featureNames);
-    
+
     let totalPathLength = 0;
     for (const tree of model.trees) {
       totalPathLength += this.calculatePathLength(tree, dataPoint, 0);
     }
-    
+
     const avgPathLength = totalPathLength / model.trees.length;
     const expectedPathLength = this.calculateExpectedPathLength(model.sampleSize);
-    
+
     // Anomaly score based on path length
     const anomalyScore = Math.pow(2, -avgPathLength / expectedPathLength);
     const isAnomaly = anomalyScore > 0.6; // Threshold for anomaly
-    
+
     return {
       isAnomaly,
       score: anomalyScore * 4, // Scale to match statistical model output
       confidence: anomalyScore,
-      explanation: isAnomaly 
+      explanation: isAnomaly
         ? `Isolation path length ${avgPathLength.toFixed(2)} indicates anomaly`
         : "Normal isolation path length",
       features: {
         pathLength: avgPathLength,
         anomalyScore,
-        expectedPathLength
-      }
+        expectedPathLength,
+      },
     };
   }
 
-  private detectSeasonalAnomaly(model: SeasonalModel, value: number, timestamp: number): AnomalyDetectionResult {
+  private detectSeasonalAnomaly(
+    model: SeasonalModel,
+    value: number,
+    timestamp: number
+  ): AnomalyDetectionResult {
     const date = new Date(timestamp);
     const hour = date.getHours();
     const dayOfWeek = date.getDay();
-    
+
     // Get expected value based on seasonal patterns
     const hourlyFactor = model.hourlyPatterns[hour] || 1;
     const dailyFactor = model.dailyPatterns[dayOfWeek] || 1;
-    
+
     const expectedValue = model.trend * hourlyFactor * dailyFactor;
     const deviation = Math.abs(value - expectedValue);
     const relativeDeviation = deviation / Math.max(expectedValue, 1);
-    
+
     const isAnomaly = relativeDeviation > 0.3; // 30% deviation threshold
     const score = relativeDeviation * 10; // Scale for compatibility
-    
+
     return {
       isAnomaly,
       score,
       confidence: Math.min(relativeDeviation * 2, 1.0),
-      explanation: isAnomaly 
+      explanation: isAnomaly
         ? `Value ${value} deviates ${(relativeDeviation * 100).toFixed(1)}% from expected ${expectedValue.toFixed(2)}`
         : "Value matches seasonal pattern",
       features: {
@@ -248,8 +254,8 @@ export class AnomalyDetectionService {
         deviation,
         relativeDeviation,
         hourlyFactor,
-        dailyFactor
-      }
+        dailyFactor,
+      },
     };
   }
 
@@ -257,9 +263,12 @@ export class AnomalyDetectionService {
   // MODEL MANAGEMENT
   // ==========================================
 
-  async createModel(metricName: string, modelType: "statistical" | "isolation_forest" | "seasonal"): Promise<SelectAnomalyModel> {
+  async createModel(
+    metricName: string,
+    modelType: "statistical" | "isolation_forest" | "seasonal"
+  ): Promise<SelectAnomalyModel> {
     const modelId = `model_${metricName}_${Date.now()}`;
-    
+
     const modelData: InsertAnomalyModel = {
       id: modelId,
       metricName,
@@ -277,7 +286,7 @@ export class AnomalyDetectionService {
     };
 
     await this.db.insert(anomalyModels).values(modelData);
-    
+
     const newModel = await this.db
       .select()
       .from(anomalyModels)
@@ -286,7 +295,7 @@ export class AnomalyDetectionService {
 
     this.models.set(metricName, newModel[0]);
     console.log(`Created new ${modelType} model for metric: ${metricName}`);
-    
+
     return newModel[0];
   }
 
@@ -307,8 +316,8 @@ export class AnomalyDetectionService {
         .update(anomalyModels)
         .set({
           modelData: this.serializeModel(trainedModel),
-          trainingDataFrom: Math.min(...trainingData.map(d => d.timestamp)),
-          trainingDataTo: Math.max(...trainingData.map(d => d.timestamp)),
+          trainingDataFrom: Math.min(...trainingData.map((d) => d.timestamp)),
+          trainingDataTo: Math.max(...trainingData.map((d) => d.timestamp)),
           sampleCount: trainingData.length,
           accuracy: performance.accuracy,
           precision: performance.precision,
@@ -328,16 +337,21 @@ export class AnomalyDetectionService {
         .limit(1);
 
       this.models.set(metricName, updatedModel[0]);
-      
-      console.log(`Model training completed for ${metricName}. Performance: ${performance.f1Score.toFixed(3)} F1-score`);
+
+      console.log(
+        `Model training completed for ${metricName}. Performance: ${performance.f1Score.toFixed(3)} F1-score`
+      );
     } catch (error) {
       console.error(`Error training model for ${metricName}:`, error);
     }
   }
 
-  private async performTraining(model: SelectAnomalyModel, trainingData: TrainingDataPoint[]): Promise<any> {
-    const values = trainingData.map(d => d.value);
-    
+  private async performTraining(
+    model: SelectAnomalyModel,
+    trainingData: TrainingDataPoint[]
+  ): Promise<any> {
+    const values = trainingData.map((d) => d.value);
+
     switch (model.modelType) {
       case "statistical":
         return this.trainStatisticalModel(values);
@@ -355,11 +369,11 @@ export class AnomalyDetectionService {
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
     const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
     const stdDev = Math.sqrt(variance);
-    
+
     const q1Index = Math.floor(sorted.length * 0.25);
     const q3Index = Math.floor(sorted.length * 0.75);
     const medianIndex = Math.floor(sorted.length * 0.5);
-    
+
     const q1 = sorted[q1Index];
     const q3 = sorted[q3Index];
     const median = sorted[medianIndex];
@@ -381,13 +395,20 @@ export class AnomalyDetectionService {
     const numTrees = 100;
     const sampleSize = Math.min(256, trainingData.length);
     const featureNames = ["value", "hour", "dayOfWeek"];
-    
+
     const trees: IsolationTree[] = [];
-    
+
     for (let i = 0; i < numTrees; i++) {
       const sample = this.randomSample(trainingData, sampleSize);
-      const featureVectors = sample.map(d => this.buildFeatureVector(d.value, d.features, featureNames));
-      const tree = this.buildIsolationTree(featureVectors, featureNames, 0, Math.ceil(Math.log2(sampleSize)));
+      const featureVectors = sample.map((d) =>
+        this.buildFeatureVector(d.value, d.features, featureNames)
+      );
+      const tree = this.buildIsolationTree(
+        featureVectors,
+        featureNames,
+        0,
+        Math.ceil(Math.log2(sampleSize))
+      );
       trees.push(tree);
     }
 
@@ -403,27 +424,27 @@ export class AnomalyDetectionService {
     // Group data by hour and day of week
     const hourlyGroups: number[][] = Array.from({ length: 24 }, () => []);
     const dailyGroups: number[][] = Array.from({ length: 7 }, () => []);
-    
+
     for (const point of trainingData) {
       const date = new Date(point.timestamp);
       const hour = date.getHours();
       const dayOfWeek = date.getDay();
-      
+
       hourlyGroups[hour].push(point.value);
       dailyGroups[dayOfWeek].push(point.value);
     }
 
     // Calculate average for each hour and day
-    const hourlyPatterns = hourlyGroups.map(group => 
+    const hourlyPatterns = hourlyGroups.map((group) =>
       group.length > 0 ? group.reduce((sum, val) => sum + val, 0) / group.length : 1
     );
-    
-    const dailyPatterns = dailyGroups.map(group => 
+
+    const dailyPatterns = dailyGroups.map((group) =>
       group.length > 0 ? group.reduce((sum, val) => sum + val, 0) / group.length : 1
     );
 
     // Calculate overall trend
-    const values = trainingData.map(d => d.value);
+    const values = trainingData.map((d) => d.value);
     const trend = values.reduce((sum, val) => sum + val, 0) / values.length;
 
     return {
@@ -450,12 +471,7 @@ export class AnomalyDetectionService {
     const models = await this.db
       .select()
       .from(anomalyModels)
-      .where(
-        and(
-          eq(anomalyModels.metricName, metricName),
-          eq(anomalyModels.isActive, true)
-        )
-      )
+      .where(and(eq(anomalyModels.metricName, metricName), eq(anomalyModels.isActive, true)))
       .orderBy(desc(anomalyModels.lastTrainedAt))
       .limit(1);
 
@@ -476,8 +492,11 @@ export class AnomalyDetectionService {
     queue.push(dataPoint);
 
     // Keep only recent data points
-    const cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000); // 7 days
-    this.trainingQueue.set(metricName, queue.filter(d => d.timestamp > cutoff));
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7 days
+    this.trainingQueue.set(
+      metricName,
+      queue.filter((d) => d.timestamp > cutoff)
+    );
   }
 
   private shouldRetrainModel(metricName: string): boolean {
@@ -496,17 +515,21 @@ export class AnomalyDetectionService {
     }
   }
 
-  private buildFeatureVector(value: number, features?: Record<string, number>, featureNames?: string[]): number[] {
+  private buildFeatureVector(
+    value: number,
+    features?: Record<string, number>,
+    featureNames?: string[]
+  ): number[] {
     const now = new Date();
     const baseFeatures = {
       value,
       hour: now.getHours(),
       dayOfWeek: now.getDay(),
-      ...features
+      ...features,
     };
 
     if (featureNames) {
-      return featureNames.map(name => baseFeatures[name] || 0);
+      return featureNames.map((name) => baseFeatures[name] || 0);
     }
 
     return Object.values(baseFeatures);
@@ -517,7 +540,7 @@ export class AnomalyDetectionService {
       return depth + this.calculateExpectedPathLength(tree.size);
     }
 
-    const featureIndex = tree.splitFeature ? parseInt(tree.splitFeature) : 0;
+    const featureIndex = tree.splitFeature ? Number.parseInt(tree.splitFeature) : 0;
     if (dataPoint[featureIndex] < (tree.splitValue || 0)) {
       return this.calculatePathLength(tree.left!, dataPoint, depth + 1);
     } else {
@@ -527,7 +550,7 @@ export class AnomalyDetectionService {
 
   private calculateExpectedPathLength(n: number): number {
     if (n <= 1) return 0;
-    return 2 * (Math.log(n - 1) + 0.5772156649) - (2 * (n - 1) / n);
+    return 2 * (Math.log(n - 1) + 0.5772156649) - (2 * (n - 1)) / n;
   }
 
   private buildIsolationTree(
@@ -546,10 +569,10 @@ export class AnomalyDetectionService {
 
     // Random feature selection
     const featureIndex = Math.floor(Math.random() * featureNames.length);
-    const featureValues = data.map(point => point[featureIndex]);
+    const featureValues = data.map((point) => point[featureIndex]);
     const minVal = Math.min(...featureValues);
     const maxVal = Math.max(...featureValues);
-    
+
     if (minVal === maxVal) {
       return {
         isLeaf: true,
@@ -560,9 +583,9 @@ export class AnomalyDetectionService {
 
     // Random split value
     const splitValue = minVal + Math.random() * (maxVal - minVal);
-    
-    const leftData = data.filter(point => point[featureIndex] < splitValue);
-    const rightData = data.filter(point => point[featureIndex] >= splitValue);
+
+    const leftData = data.filter((point) => point[featureIndex] < splitValue);
+    const rightData = data.filter((point) => point[featureIndex] >= splitValue);
 
     return {
       splitFeature: featureIndex.toString(),
@@ -580,7 +603,10 @@ export class AnomalyDetectionService {
     return shuffled.slice(0, size);
   }
 
-  private async evaluateModel(trainedModel: any, testData: TrainingDataPoint[]): Promise<ModelPerformanceMetrics> {
+  private async evaluateModel(
+    trainedModel: any,
+    testData: TrainingDataPoint[]
+  ): Promise<ModelPerformanceMetrics> {
     // Simplified evaluation - in production you'd use proper train/test splits
     let truePositives = 0;
     let falsePositives = 0;
@@ -590,14 +616,17 @@ export class AnomalyDetectionService {
     for (const point of testData) {
       // This is a simplified evaluation - in reality you'd need labeled anomaly data
       const result = await this.detectAnomalyWithModel(
-        { modelType: "statistical", modelData: this.serializeModel(trainedModel) } as SelectAnomalyModel,
+        {
+          modelType: "statistical",
+          modelData: this.serializeModel(trainedModel),
+        } as SelectAnomalyModel,
         point.value,
         point.features
       );
 
       // For demonstration, consider values beyond 3 standard deviations as true anomalies
       const isActualAnomaly = Math.abs(point.value - trainedModel.mean) / trainedModel.stdDev > 3;
-      
+
       if (result.isAnomaly && isActualAnomaly) truePositives++;
       else if (result.isAnomaly && !isActualAnomaly) falsePositives++;
       else if (!result.isAnomaly && !isActualAnomaly) trueNegatives++;
@@ -607,7 +636,7 @@ export class AnomalyDetectionService {
     const precision = truePositives / (truePositives + falsePositives) || 0;
     const recall = truePositives / (truePositives + falseNegatives) || 0;
     const accuracy = (truePositives + trueNegatives) / testData.length || 0;
-    const f1Score = 2 * (precision * recall) / (precision + recall) || 0;
+    const f1Score = (2 * (precision * recall)) / (precision + recall) || 0;
     const falsePositiveRate = falsePositives / (falsePositives + trueNegatives) || 0;
 
     return {
@@ -635,11 +664,27 @@ export class AnomalyDetectionService {
   private createEmptyModel(modelType: string): any {
     switch (modelType) {
       case "statistical":
-        return { mean: 0, stdDev: 1, median: 0, q1: 0, q3: 0, iqr: 0, sampleCount: 0, lastUpdated: Date.now() };
+        return {
+          mean: 0,
+          stdDev: 1,
+          median: 0,
+          q1: 0,
+          q3: 0,
+          iqr: 0,
+          sampleCount: 0,
+          lastUpdated: Date.now(),
+        };
       case "isolation_forest":
         return { trees: [], sampleSize: 256, featureNames: [], lastUpdated: Date.now() };
       case "seasonal":
-        return { hourlyPatterns: [], dailyPatterns: [], weeklyPatterns: [], seasonalFactors: [], trend: 0, lastUpdated: Date.now() };
+        return {
+          hourlyPatterns: [],
+          dailyPatterns: [],
+          weeklyPatterns: [],
+          seasonalFactors: [],
+          trend: 0,
+          lastUpdated: Date.now(),
+        };
       default:
         return {};
     }
@@ -674,9 +719,9 @@ export class AnomalyDetectionService {
 
   private async performModelMaintenance(): Promise<void> {
     console.log("Performing model maintenance...");
-    
+
     const now = Date.now();
-    
+
     for (const [metricName, model] of this.models.entries()) {
       // Check if model needs retraining due to age
       if (now - model.lastTrainedAt > this.maxModelAge) {
@@ -697,7 +742,7 @@ export class AnomalyDetectionService {
     }
 
     const queueSize = this.trainingQueue.get(metricName)?.length || 0;
-    
+
     return {
       modelId: model.id,
       modelType: model.modelType,
@@ -721,7 +766,7 @@ export class AnomalyDetectionService {
       .from(anomalyModels)
       .where(eq(anomalyModels.isActive, true));
 
-    return allModels.map(model => ({
+    return allModels.map((model) => ({
       metricName: model.metricName,
       modelType: model.modelType,
       sampleCount: model.sampleCount,
@@ -741,7 +786,10 @@ export class AnomalyDetectionService {
     return {
       modelsLoaded: this.models.size,
       trainingQueues: this.trainingQueue.size,
-      totalQueuedSamples: Array.from(this.trainingQueue.values()).reduce((sum, queue) => sum + queue.length, 0),
+      totalQueuedSamples: Array.from(this.trainingQueue.values()).reduce(
+        (sum, queue) => sum + queue.length,
+        0
+      ),
     };
   }
 }

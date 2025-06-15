@@ -252,7 +252,7 @@ export class PatternEmbeddingService {
         maxResults = 10,
         timeWindow = 168, // 7 days default
         includePerformanceMetrics = true,
-        weightBySuccess = true
+        weightBySuccess = true,
       } = options;
 
       const embedding = await this.generateEmbedding(pattern);
@@ -263,7 +263,7 @@ export class PatternEmbeddingService {
         limit: maxResults * 2, // Get more to filter by performance
         threshold: similarityThreshold,
         patternType: pattern.type,
-        afterDate: cutoffTime
+        afterDate: cutoffTime,
       });
 
       // Sort by similarity and performance if requested
@@ -274,7 +274,7 @@ export class PatternEmbeddingService {
             ...result,
             patternData: JSON.parse(result.patternData),
             performanceScore: this.calculatePerformanceScore(result),
-            compositeScore: this.calculateCompositeScore(result, similarityThreshold)
+            compositeScore: this.calculateCompositeScore(result, similarityThreshold),
           }))
           .sort((a, b) => b.compositeScore - a.compositeScore)
           .slice(0, maxResults);
@@ -306,19 +306,20 @@ export class PatternEmbeddingService {
         historicalSuccess: 0,
         marketContext: 0,
         dataQuality: 0,
-        timelyness: 0
+        timelyness: 0,
       };
 
       // Historical success rate component
       const similarPatterns = await this.findSimilarPatterns(pattern, {
         threshold: 0.8,
         sameTypeOnly: true,
-        limit: 20
+        limit: 20,
       });
 
       if (similarPatterns.length > 0) {
-        const avgSuccessRate = similarPatterns.reduce((sum: number, p: any) => 
-          sum + (p.successRate || 0), 0) / similarPatterns.length;
+        const avgSuccessRate =
+          similarPatterns.reduce((sum: number, p: any) => sum + (p.successRate || 0), 0) /
+          similarPatterns.length;
         components.historicalSuccess = avgSuccessRate * 0.3; // 30% weight
         confidence += components.historicalSuccess;
       }
@@ -330,7 +331,7 @@ export class PatternEmbeddingService {
         confidence += components.marketContext;
       }
 
-      // Data quality component  
+      // Data quality component
       const dataQualityScore = this.assessDataQuality(pattern);
       components.dataQuality = dataQualityScore * 0.15; // 15% weight
       confidence += components.dataQuality;
@@ -348,14 +349,14 @@ export class PatternEmbeddingService {
       return {
         confidence: Math.round(confidence * 100) / 100,
         components,
-        recommendations
+        recommendations,
       };
     } catch (error) {
       console.error("[PatternEmbedding] Confidence calculation failed:", error);
       return {
         confidence: pattern.confidence,
         components: { basePattern: pattern.confidence },
-        recommendations: ["Unable to calculate enhanced confidence"]
+        recommendations: ["Unable to calculate enhanced confidence"],
       };
     }
   }
@@ -384,21 +385,28 @@ export class PatternEmbeddingService {
 
       for (const windowHours of timeWindows) {
         const windowStart = new Date(Date.now() - windowHours * 60 * 60 * 1000);
-        
+
         const patterns = await vectorUtils.getPatternsByTypeAndDate(patternType, windowStart);
-        
+
         const patternCount = patterns.length;
-        const successRate = patterns.length > 0 
-          ? patterns.reduce((sum: number, p: any) => sum + (p.successRate || 0), 0) / patterns.length
-          : 0;
-        const avgConfidence = patterns.length > 0
-          ? patterns.reduce((sum: number, p: any) => sum + p.confidence, 0) / patterns.length
-          : 0;
+        const successRate =
+          patterns.length > 0
+            ? patterns.reduce((sum: number, p: any) => sum + (p.successRate || 0), 0) /
+              patterns.length
+            : 0;
+        const avgConfidence =
+          patterns.length > 0
+            ? patterns.reduce((sum: number, p: any) => sum + p.confidence, 0) / patterns.length
+            : 0;
 
         // Determine trend by comparing with previous period
         const prevWindowStart = new Date(windowStart.getTime() - windowHours * 60 * 60 * 1000);
-        const prevPatterns = await vectorUtils.getPatternsByTypeAndDate(patternType, prevWindowStart, windowStart);
-        
+        const prevPatterns = await vectorUtils.getPatternsByTypeAndDate(
+          patternType,
+          prevWindowStart,
+          windowStart
+        );
+
         let trend: "increasing" | "decreasing" | "stable" = "stable";
         if (patterns.length > prevPatterns.length * 1.2) trend = "increasing";
         else if (patterns.length < prevPatterns.length * 0.8) trend = "decreasing";
@@ -408,15 +416,19 @@ export class PatternEmbeddingService {
           patternCount,
           successRate: Math.round(successRate * 100) / 100,
           avgConfidence: Math.round(avgConfidence * 100) / 100,
-          trend
+          trend,
         });
 
         // Generate insights
         if (windowHours === 24 && trend === "increasing" && successRate > 80) {
-          insights.push(`Strong 24h trend for ${patternType} patterns with ${successRate.toFixed(1)}% success rate`);
+          insights.push(
+            `Strong 24h trend for ${patternType} patterns with ${successRate.toFixed(1)}% success rate`
+          );
         }
         if (successRate < 50) {
-          alerts.push(`Low success rate (${successRate.toFixed(1)}%) for ${patternType} in ${windowHours}h window`);
+          alerts.push(
+            `Low success rate (${successRate.toFixed(1)}%) for ${patternType} in ${windowHours}h window`
+          );
         }
       }
 
@@ -434,7 +446,7 @@ export class PatternEmbeddingService {
     patternType?: string,
     timeRange: { start: Date; end: Date } = {
       start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-      end: new Date()
+      end: new Date(),
     }
   ): Promise<{
     summary: {
@@ -467,27 +479,28 @@ export class PatternEmbeddingService {
             successRate: 0,
             avgProfit: 0,
             bestPerformingPattern: null,
-            worstPerformingPattern: null
+            worstPerformingPattern: null,
           },
           breakdown: [],
-          recommendations: ["No patterns found in specified time range"]
+          recommendations: ["No patterns found in specified time range"],
         };
       }
 
       // Calculate summary statistics
       const totalSuccesses = patterns.reduce((sum: number, p: any) => sum + p.truePositives, 0);
       const totalFailures = patterns.reduce((sum: number, p: any) => sum + p.falsePositives, 0);
-      const successRate = totalSuccesses / (totalSuccesses + totalFailures) * 100;
-      
-      const avgProfit = patterns
-        .filter((p: any) => p.avgProfit != null)
-        .reduce((sum: number, p: any) => sum + p.avgProfit, 0) / patterns.length;
+      const successRate = (totalSuccesses / (totalSuccesses + totalFailures)) * 100;
 
-      const bestPattern = patterns.reduce((best: any, current: any) => 
+      const avgProfit =
+        patterns
+          .filter((p: any) => p.avgProfit != null)
+          .reduce((sum: number, p: any) => sum + p.avgProfit, 0) / patterns.length;
+
+      const bestPattern = patterns.reduce((best: any, current: any) =>
         (current.successRate || 0) > (best.successRate || 0) ? current : best
       );
 
-      const worstPattern = patterns.reduce((worst: any, current: any) => 
+      const worstPattern = patterns.reduce((worst: any, current: any) =>
         (current.successRate || 0) < (worst.successRate || 0) ? current : worst
       );
 
@@ -505,16 +518,16 @@ export class PatternEmbeddingService {
         const patternArray = patterns as any[];
         const typeSuccesses = patternArray.reduce((sum, p) => sum + p.truePositives, 0);
         const typeFailures = patternArray.reduce((sum, p) => sum + p.falsePositives, 0);
-        const typeSuccessRate = typeSuccesses / (typeSuccesses + typeFailures) * 100;
-        const typeAvgProfit = patternArray
-          .filter(p => p.avgProfit != null)
-          .reduce((sum, p) => sum + p.avgProfit, 0) / patternArray.length;
+        const typeSuccessRate = (typeSuccesses / (typeSuccesses + typeFailures)) * 100;
+        const typeAvgProfit =
+          patternArray.filter((p) => p.avgProfit != null).reduce((sum, p) => sum + p.avgProfit, 0) /
+          patternArray.length;
 
         return {
           patternType: type,
           count: patternArray.length,
           successRate: Math.round(typeSuccessRate * 100) / 100,
-          avgProfit: Math.round(typeAvgProfit * 100) / 100
+          avgProfit: Math.round(typeAvgProfit * 100) / 100,
         };
       });
 
@@ -527,10 +540,10 @@ export class PatternEmbeddingService {
           successRate: Math.round(successRate * 100) / 100,
           avgProfit: Math.round(avgProfit * 100) / 100,
           bestPerformingPattern: bestPattern,
-          worstPerformingPattern: worstPattern
+          worstPerformingPattern: worstPattern,
         },
         breakdown,
-        recommendations
+        recommendations,
       };
     } catch (error) {
       console.error("[PatternEmbedding] Historical performance analysis failed:", error);
@@ -556,8 +569,11 @@ export class PatternEmbeddingService {
 
       // Clean up old inactive patterns
       const cutoffDate = new Date(Date.now() - inactiveDays * 24 * 60 * 60 * 1000);
-      const patternsDeactivated = await vectorUtils.deactivateOldPatterns(cutoffDate, lowConfidenceThreshold);
-      
+      const patternsDeactivated = await vectorUtils.deactivateOldPatterns(
+        cutoffDate,
+        lowConfidenceThreshold
+      );
+
       console.log(`[PatternEmbedding] Deactivated ${patternsDeactivated} old patterns`);
 
       return {
@@ -578,26 +594,29 @@ export class PatternEmbeddingService {
     const successRate = pattern.successRate || 0;
     const occurrences = pattern.occurrences || 1;
     const avgProfit = pattern.avgProfit || 0;
-    
+
     // Weight by success rate, volume, and profitability
-    return (successRate * 0.6) + 
-           (Math.min(occurrences / 10, 1) * 20) + // Max 20 points for volume
-           (Math.max(avgProfit, 0) * 0.2); // Profit contribution
+    return (
+      successRate * 0.6 +
+      Math.min(occurrences / 10, 1) * 20 + // Max 20 points for volume
+      Math.max(avgProfit, 0) * 0.2
+    ); // Profit contribution
   }
 
   private calculateCompositeScore(pattern: any, threshold: number): number {
     const similarityScore = pattern.cosineSimilarity || 0;
     const performanceScore = this.calculatePerformanceScore(pattern);
-    
+
     // Combine similarity and performance with weights
-    return (similarityScore * 0.7) + (performanceScore * 0.3);
+    return similarityScore * 0.7 + performanceScore * 0.3;
   }
 
   private assessMarketContext(pattern: PatternData, context: Record<string, any>): number {
     let score = 0;
-    
+
     // Assess market volatility
-    if (context.volatility && context.volatility < 0.3) score += 15; // Low volatility is good
+    if (context.volatility && context.volatility < 0.3)
+      score += 15; // Low volatility is good
     else if (context.volatility && context.volatility > 0.7) score -= 10; // High volatility is risky
 
     // Assess market trend
@@ -612,7 +631,7 @@ export class PatternEmbeddingService {
 
   private assessDataQuality(pattern: PatternData): number {
     let score = 0;
-    
+
     // Required fields check
     if (pattern.symbolName) score += 5;
     if (pattern.vcoinId) score += 5;
@@ -621,7 +640,12 @@ export class PatternEmbeddingService {
     if (pattern.data.tt !== undefined) score += 5;
 
     // Data completeness for specific pattern types
-    if (pattern.type === "ready_state" && pattern.data.sts === 2 && pattern.data.st === 2 && pattern.data.tt === 4) {
+    if (
+      pattern.type === "ready_state" &&
+      pattern.data.sts === 2 &&
+      pattern.data.st === 2 &&
+      pattern.data.tt === 4
+    ) {
       score += 10; // Bonus for complete ready state pattern
     }
 
@@ -639,9 +663,12 @@ export class PatternEmbeddingService {
     return 5; // Default score when time data not available
   }
 
-  private generateConfidenceRecommendations(confidence: number, components: Record<string, number>): string[] {
+  private generateConfidenceRecommendations(
+    confidence: number,
+    components: Record<string, number>
+  ): string[] {
     const recommendations: string[] = [];
-    
+
     if (confidence >= 85) {
       recommendations.push("High confidence pattern - suitable for automated trading");
     } else if (confidence >= 70) {
@@ -653,7 +680,7 @@ export class PatternEmbeddingService {
     if (components.historicalSuccess < 10) {
       recommendations.push("Limited historical data - monitor performance closely");
     }
-    
+
     if (components.dataQuality < 10) {
       recommendations.push("Incomplete pattern data - gather more information before acting");
     }
@@ -665,9 +692,12 @@ export class PatternEmbeddingService {
     return recommendations;
   }
 
-  private generatePerformanceRecommendations(breakdown: any[], overallSuccessRate: number): string[] {
+  private generatePerformanceRecommendations(
+    breakdown: any[],
+    overallSuccessRate: number
+  ): string[] {
     const recommendations: string[] = [];
-    
+
     if (overallSuccessRate > 80) {
       recommendations.push("Excellent overall performance - continue current strategy");
     } else if (overallSuccessRate > 60) {
@@ -677,19 +707,23 @@ export class PatternEmbeddingService {
     }
 
     // Find best and worst performing pattern types
-    const bestType = breakdown.reduce((best, current) => 
+    const bestType = breakdown.reduce((best, current) =>
       current.successRate > best.successRate ? current : best
     );
-    const worstType = breakdown.reduce((worst, current) => 
+    const worstType = breakdown.reduce((worst, current) =>
       current.successRate < worst.successRate ? current : worst
     );
 
     if (bestType.successRate > 80) {
-      recommendations.push(`Focus on ${bestType.patternType} patterns (${bestType.successRate}% success rate)`);
+      recommendations.push(
+        `Focus on ${bestType.patternType} patterns (${bestType.successRate}% success rate)`
+      );
     }
-    
+
     if (worstType.successRate < 50) {
-      recommendations.push(`Avoid or improve ${worstType.patternType} patterns (${worstType.successRate}% success rate)`);
+      recommendations.push(
+        `Avoid or improve ${worstType.patternType} patterns (${worstType.successRate}% success rate)`
+      );
     }
 
     return recommendations;

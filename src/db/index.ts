@@ -55,12 +55,12 @@ async function withRetry<T>(
 function createTursoClient() {
   // Support both TURSO_DATABASE_URL and TURSO_HOST patterns
   let databaseUrl = process.env.TURSO_DATABASE_URL;
-  
+
   // If we only have TURSO_HOST, construct the URL
   if (!databaseUrl && process.env.TURSO_HOST) {
     const host = process.env.TURSO_HOST;
     // Ensure the host doesn't already have a protocol
-    const cleanHost = host.replace(/^(libsql:\/\/|wss:\/\/|https:\/\/)/, '');
+    const cleanHost = host.replace(/^(libsql:\/\/|wss:\/\/|https:\/\/)/, "");
     databaseUrl = `libsql://${cleanHost}`;
   }
 
@@ -344,9 +344,9 @@ export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
 // Export schema for use in other files
 export * from "./schema";
 
+import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
 // Import optimization tools
 import { databaseOptimizationManager } from "@/src/lib/database-optimization-manager";
-import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
 import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
 
 // Database utilities with retry logic
@@ -468,13 +468,13 @@ export async function monitoredQuery<T>(
 export function closeDatabase() {
   try {
     console.log("[Database] Database connection closed");
-    
+
     // Stop performance monitoring
     queryPerformanceMonitor.stopMonitoring();
-    
+
     // Shutdown connection pool
     databaseConnectionPool.shutdown();
-    
+
     // Reset cached instances
     dbInstance = null;
     tursoClient = null;

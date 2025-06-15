@@ -5,39 +5,39 @@
  */
 
 // Date-fns optimized imports - Import only what we need
-export { format } from 'date-fns/format';
-export { parseISO } from 'date-fns/parseISO';
-export { addDays } from 'date-fns/addDays';
-export { subDays } from 'date-fns/subDays';
-export { isToday } from 'date-fns/isToday';
-export { isSameDay } from 'date-fns/isSameDay';
-export { startOfDay } from 'date-fns/startOfDay';
-export { endOfDay } from 'date-fns/endOfDay';
-export { differenceInMinutes } from 'date-fns/differenceInMinutes';
-export { differenceInHours } from 'date-fns/differenceInHours';
-export { addMinutes } from 'date-fns/addMinutes';
-export { addHours } from 'date-fns/addHours';
+export { format } from "date-fns/format";
+export { parseISO } from "date-fns/parseISO";
+export { addDays } from "date-fns/addDays";
+export { subDays } from "date-fns/subDays";
+export { isToday } from "date-fns/isToday";
+export { isSameDay } from "date-fns/isSameDay";
+export { startOfDay } from "date-fns/startOfDay";
+export { endOfDay } from "date-fns/endOfDay";
+export { differenceInMinutes } from "date-fns/differenceInMinutes";
+export { differenceInHours } from "date-fns/differenceInHours";
+export { addMinutes } from "date-fns/addMinutes";
+export { addHours } from "date-fns/addHours";
 
 // Utility function combinations for common date operations
 export const formatDateTime = (date: Date | string) => {
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  return format(dateObj, 'yyyy-MM-dd HH:mm:ss');
+  const dateObj = typeof date === "string" ? parseISO(date) : date;
+  return format(dateObj, "yyyy-MM-dd HH:mm:ss");
 };
 
 export const formatDateOnly = (date: Date | string) => {
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  return format(dateObj, 'yyyy-MM-dd');
+  const dateObj = typeof date === "string" ? parseISO(date) : date;
+  return format(dateObj, "yyyy-MM-dd");
 };
 
 export const formatTimeOnly = (date: Date | string) => {
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  return format(dateObj, 'HH:mm:ss');
+  const dateObj = typeof date === "string" ? parseISO(date) : date;
+  return format(dateObj, "HH:mm:ss");
 };
 
 // Class utility functions - Optimized imports
-export { clsx } from 'clsx';
-export { cva, type VariantProps } from 'class-variance-authority';
-export { twMerge } from 'tailwind-merge';
+export { clsx } from "clsx";
+export { cva, type VariantProps } from "class-variance-authority";
+export { twMerge } from "tailwind-merge";
 
 // Combined utility for className management
 export const cn = (...inputs: Parameters<typeof clsx>) => {
@@ -45,7 +45,7 @@ export const cn = (...inputs: Parameters<typeof clsx>) => {
 };
 
 // Zod optimized imports - Only import specific validators
-export { z } from 'zod';
+export { z } from "zod";
 
 // Common validation schemas for reuse
 export const createOptimizedSchema = {
@@ -72,7 +72,7 @@ export {
   QueryClientProvider,
   type UseQueryOptions,
   type UseMutationOptions,
-} from '@tanstack/react-query';
+} from "@tanstack/react-query";
 
 // Optimized query client configuration
 export const createOptimizedQueryClient = () => {
@@ -84,7 +84,7 @@ export const createOptimizedQueryClient = () => {
         retry: (failureCount, error) => {
           // Smart retry logic
           if (failureCount >= 3) return false;
-          if (error instanceof Error && error.message.includes('401')) return false;
+          if (error instanceof Error && error.message.includes("401")) return false;
           return true;
         },
         refetchOnWindowFocus: false,
@@ -101,41 +101,41 @@ export const createOptimizedQueryClient = () => {
 export const queryKeys = {
   // Agent-related queries
   agents: {
-    all: ['agents'] as const,
-    health: () => [...queryKeys.agents.all, 'health'] as const,
-    status: (agentId: string) => [...queryKeys.agents.all, 'status', agentId] as const,
-    performance: () => [...queryKeys.agents.all, 'performance'] as const,
+    all: ["agents"] as const,
+    health: () => [...queryKeys.agents.all, "health"] as const,
+    status: (agentId: string) => [...queryKeys.agents.all, "status", agentId] as const,
+    performance: () => [...queryKeys.agents.all, "performance"] as const,
   },
-  
+
   // MEXC API queries
   mexc: {
-    all: ['mexc'] as const,
-    account: () => [...queryKeys.mexc.all, 'account'] as const,
-    balance: () => [...queryKeys.mexc.all, 'balance'] as const,
-    symbols: () => [...queryKeys.mexc.all, 'symbols'] as const,
-    calendar: () => [...queryKeys.mexc.all, 'calendar'] as const,
+    all: ["mexc"] as const,
+    account: () => [...queryKeys.mexc.all, "account"] as const,
+    balance: () => [...queryKeys.mexc.all, "balance"] as const,
+    symbols: () => [...queryKeys.mexc.all, "symbols"] as const,
+    calendar: () => [...queryKeys.mexc.all, "calendar"] as const,
   },
-  
+
   // Trading queries
   trading: {
-    all: ['trading'] as const,
-    targets: () => [...queryKeys.trading.all, 'targets'] as const,
-    history: () => [...queryKeys.trading.all, 'history'] as const,
-    portfolio: () => [...queryKeys.trading.all, 'portfolio'] as const,
+    all: ["trading"] as const,
+    targets: () => [...queryKeys.trading.all, "targets"] as const,
+    history: () => [...queryKeys.trading.all, "history"] as const,
+    portfolio: () => [...queryKeys.trading.all, "portfolio"] as const,
   },
-  
+
   // Pattern discovery queries
   patterns: {
-    all: ['patterns'] as const,
-    ready: () => [...queryKeys.patterns.all, 'ready'] as const,
-    analysis: (symbol: string) => [...queryKeys.patterns.all, 'analysis', symbol] as const,
+    all: ["patterns"] as const,
+    ready: () => [...queryKeys.patterns.all, "ready"] as const,
+    analysis: (symbol: string) => [...queryKeys.patterns.all, "analysis", symbol] as const,
   },
-  
+
   // Bundle analysis queries
   bundle: {
-    all: ['bundle'] as const,
-    analysis: () => [...queryKeys.bundle.all, 'analysis'] as const,
-    optimization: () => [...queryKeys.bundle.all, 'optimization'] as const,
+    all: ["bundle"] as const,
+    analysis: () => [...queryKeys.bundle.all, "analysis"] as const,
+    optimization: () => [...queryKeys.bundle.all, "optimization"] as const,
   },
 };
 
@@ -157,14 +157,14 @@ export {
   type ReactNode,
   type ComponentProps,
   type ElementRef,
-} from 'react';
+} from "react";
 
 // Common custom hooks factory
 export const createOptimizedHooks = () => {
   const useLocalStorage = <T>(key: string, initialValue: T) => {
     const [storedValue, setStoredValue] = useState<T>(() => {
       try {
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           const item = window.localStorage.getItem(key);
           return item ? JSON.parse(item) : initialValue;
         }
@@ -175,17 +175,20 @@ export const createOptimizedHooks = () => {
       }
     });
 
-    const setValue = useCallback((value: T | ((val: T) => T)) => {
-      try {
-        const valueToStore = value instanceof Function ? value(storedValue) : value;
-        setStoredValue(valueToStore);
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    const setValue = useCallback(
+      (value: T | ((val: T) => T)) => {
+        try {
+          const valueToStore = value instanceof Function ? value(storedValue) : value;
+          setStoredValue(valueToStore);
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          }
+        } catch (error) {
+          console.warn(`Error setting localStorage key "${key}":`, error);
         }
-      } catch (error) {
-        console.warn(`Error setting localStorage key "${key}":`, error);
-      }
-    }, [key, storedValue]);
+      },
+      [key, storedValue]
+    );
 
     return [storedValue, setValue] as const;
   };
@@ -208,8 +211,8 @@ export const createOptimizedHooks = () => {
 
   const useToggle = (initialValue = false) => {
     const [value, setValue] = useState(initialValue);
-    
-    const toggle = useCallback(() => setValue(v => !v), []);
+
+    const toggle = useCallback(() => setValue((v) => !v), []);
     const setTrue = useCallback(() => setValue(true), []);
     const setFalse = useCallback(() => setValue(false), []);
 
@@ -229,21 +232,22 @@ export const { useLocalStorage, useDebounce, useToggle } = createOptimizedHooks(
 // Performance monitoring utilities
 export const createPerformanceMonitor = () => {
   const measureComponentRender = (componentName: string) => {
-    if (typeof window !== 'undefined' && 'performance' in window) {
+    if (typeof window !== "undefined" && "performance" in window) {
       const startTime = performance.now();
-      
+
       return () => {
         const endTime = performance.now();
         const renderTime = endTime - startTime;
-        
-        if (renderTime > 16) { // Longer than 1 frame at 60fps
+
+        if (renderTime > 16) {
+          // Longer than 1 frame at 60fps
           console.warn(`[Performance] ${componentName} render took ${renderTime.toFixed(2)}ms`);
         }
-        
+
         return renderTime;
       };
     }
-    
+
     return () => 0;
   };
 
@@ -252,19 +256,19 @@ export const createPerformanceMonitor = () => {
     operation: () => Promise<T>
   ): Promise<T> => {
     const startTime = performance.now();
-    
+
     try {
       const result = await operation();
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       console.log(`[Performance] ${operationName} completed in ${duration.toFixed(2)}ms`);
-      
+
       return result;
     } catch (error) {
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       console.error(`[Performance] ${operationName} failed after ${duration.toFixed(2)}ms:`, error);
       throw error;
     }
@@ -282,20 +286,20 @@ export const { measureComponentRender, measureAsyncOperation } = createPerforman
 // Bundle size tracking utilities
 export const bundleTracker = {
   logChunkLoad: (chunkName: string) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       console.log(`[Bundle] Loaded chunk: ${chunkName}`);
     }
   },
-  
+
   measureChunkSize: (chunkName: string, sizeBytes: number) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       const sizeKB = (sizeBytes / 1024).toFixed(2);
       console.log(`[Bundle] Chunk ${chunkName}: ${sizeKB}KB`);
     }
   },
-  
+
   trackComponentLoad: (componentName: string) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       console.log(`[Bundle] Lazy loaded component: ${componentName}`);
     }
   },
@@ -304,13 +308,13 @@ export const bundleTracker = {
 // Type-safe environment variable access
 export const getOptimizedEnv = () => {
   return {
-    isDev: process.env.NODE_ENV === 'development',
-    isProd: process.env.NODE_ENV === 'production',
-    isTest: process.env.NODE_ENV === 'test',
-    isServer: typeof window === 'undefined',
-    isClient: typeof window !== 'undefined',
-    enableBundleAnalysis: process.env.ANALYZE === 'true',
-    enablePerformanceTracking: process.env.TRACK_PERFORMANCE === 'true',
+    isDev: process.env.NODE_ENV === "development",
+    isProd: process.env.NODE_ENV === "production",
+    isTest: process.env.NODE_ENV === "test",
+    isServer: typeof window === "undefined",
+    isClient: typeof window !== "undefined",
+    enableBundleAnalysis: process.env.ANALYZE === "true",
+    enablePerformanceTracking: process.env.TRACK_PERFORMANCE === "true",
   };
 };
 

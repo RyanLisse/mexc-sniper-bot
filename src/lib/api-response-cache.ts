@@ -1,6 +1,6 @@
 /**
  * API Response Caching System
- * 
+ *
  * Intelligent caching layer for API responses with:
  * - Dynamic TTL based on API endpoint and data freshness requirements
  * - Smart invalidation for market data and trading signals
@@ -9,8 +9,7 @@
  * - Performance optimization for high-frequency trading data
  */
 
-import { globalCacheManager, generateCacheKey, type CacheDataType } from './cache-manager';
-import type { CalendarResponse, SymbolsV2Response } from '@/src/schemas/mexc-schemas';
+import { generateCacheKey, globalCacheManager } from "./cache-manager";
 
 // =======================
 // API Cache Types
@@ -33,11 +32,11 @@ export interface CachedAPIResponse<T = any> {
     parameters: Record<string, any>;
     timestamp: number;
     ttl: number;
-    freshness: 'fresh' | 'stale' | 'expired';
-    source: 'cache' | 'api' | 'fallback';
+    freshness: "fresh" | "stale" | "expired";
+    source: "cache" | "api" | "fallback";
     requestId: string;
     responseTime: number;
-    cacheLevel: 'L1' | 'L2' | 'L3';
+    cacheLevel: "L1" | "L2" | "L3";
   };
 }
 
@@ -48,20 +47,23 @@ export interface APIEndpointConfig {
   minTTL: number;
   enableStaleWhileRevalidate: boolean;
   dependencies: string[];
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  freshnessRequirement: 'strict' | 'moderate' | 'relaxed';
+  priority: "low" | "medium" | "high" | "critical";
+  freshnessRequirement: "strict" | "moderate" | "relaxed";
 }
 
 export interface APICacheAnalytics {
-  endpoints: Record<string, {
-    totalRequests: number;
-    cacheHits: number;
-    cacheMisses: number;
-    hitRate: number;
-    averageResponseTime: number;
-    lastActivity: number;
-    errorRate: number;
-  }>;
+  endpoints: Record<
+    string,
+    {
+      totalRequests: number;
+      cacheHits: number;
+      cacheMisses: number;
+      hitRate: number;
+      averageResponseTime: number;
+      lastActivity: number;
+      errorRate: number;
+    }
+  >;
   performance: {
     totalRequestsSaved: number;
     bandwidthSaved: number;
@@ -83,89 +85,89 @@ export interface APICacheAnalytics {
 
 const ENDPOINT_CONFIGS: Record<string, APIEndpointConfig> = {
   // MEXC Market Data
-  'mexc/calendar': {
-    endpoint: 'mexc/calendar',
-    baseTTL: 2 * 60 * 1000,      // 2 minutes
-    maxTTL: 10 * 60 * 1000,      // 10 minutes
-    minTTL: 30 * 1000,           // 30 seconds
+  "mexc/calendar": {
+    endpoint: "mexc/calendar",
+    baseTTL: 2 * 60 * 1000, // 2 minutes
+    maxTTL: 10 * 60 * 1000, // 10 minutes
+    minTTL: 30 * 1000, // 30 seconds
     enableStaleWhileRevalidate: true,
-    dependencies: ['mexc/connectivity'],
-    priority: 'high',
-    freshnessRequirement: 'moderate',
+    dependencies: ["mexc/connectivity"],
+    priority: "high",
+    freshnessRequirement: "moderate",
   },
-  'mexc/symbols': {
-    endpoint: 'mexc/symbols',
-    baseTTL: 1 * 60 * 1000,      // 1 minute
-    maxTTL: 5 * 60 * 1000,       // 5 minutes
-    minTTL: 10 * 1000,           // 10 seconds
+  "mexc/symbols": {
+    endpoint: "mexc/symbols",
+    baseTTL: 1 * 60 * 1000, // 1 minute
+    maxTTL: 5 * 60 * 1000, // 5 minutes
+    minTTL: 10 * 1000, // 10 seconds
     enableStaleWhileRevalidate: true,
-    dependencies: ['mexc/connectivity'],
-    priority: 'critical',
-    freshnessRequirement: 'strict',
+    dependencies: ["mexc/connectivity"],
+    priority: "critical",
+    freshnessRequirement: "strict",
   },
-  'mexc/account': {
-    endpoint: 'mexc/account',
-    baseTTL: 30 * 1000,          // 30 seconds
-    maxTTL: 2 * 60 * 1000,       // 2 minutes
-    minTTL: 5 * 1000,            // 5 seconds
+  "mexc/account": {
+    endpoint: "mexc/account",
+    baseTTL: 30 * 1000, // 30 seconds
+    maxTTL: 2 * 60 * 1000, // 2 minutes
+    minTTL: 5 * 1000, // 5 seconds
     enableStaleWhileRevalidate: false,
-    dependencies: ['mexc/connectivity', 'auth'],
-    priority: 'high',
-    freshnessRequirement: 'strict',
+    dependencies: ["mexc/connectivity", "auth"],
+    priority: "high",
+    freshnessRequirement: "strict",
   },
-  'mexc/server-time': {
-    endpoint: 'mexc/server-time',
-    baseTTL: 10 * 1000,          // 10 seconds
-    maxTTL: 30 * 1000,           // 30 seconds
-    minTTL: 1 * 1000,            // 1 second
+  "mexc/server-time": {
+    endpoint: "mexc/server-time",
+    baseTTL: 10 * 1000, // 10 seconds
+    maxTTL: 30 * 1000, // 30 seconds
+    minTTL: 1 * 1000, // 1 second
     enableStaleWhileRevalidate: true,
-    dependencies: ['mexc/connectivity'],
-    priority: 'medium',
-    freshnessRequirement: 'relaxed',
+    dependencies: ["mexc/connectivity"],
+    priority: "medium",
+    freshnessRequirement: "relaxed",
   },
-  
+
   // Pattern Detection
-  'pattern/detection': {
-    endpoint: 'pattern/detection',
-    baseTTL: 5 * 60 * 1000,      // 5 minutes
-    maxTTL: 15 * 60 * 1000,      // 15 minutes
-    minTTL: 1 * 60 * 1000,       // 1 minute
+  "pattern/detection": {
+    endpoint: "pattern/detection",
+    baseTTL: 5 * 60 * 1000, // 5 minutes
+    maxTTL: 15 * 60 * 1000, // 15 minutes
+    minTTL: 1 * 60 * 1000, // 1 minute
     enableStaleWhileRevalidate: true,
-    dependencies: ['mexc/symbols'],
-    priority: 'high',
-    freshnessRequirement: 'moderate',
+    dependencies: ["mexc/symbols"],
+    priority: "high",
+    freshnessRequirement: "moderate",
   },
-  'pattern/analysis': {
-    endpoint: 'pattern/analysis',
-    baseTTL: 10 * 60 * 1000,     // 10 minutes
-    maxTTL: 30 * 60 * 1000,      // 30 minutes
-    minTTL: 2 * 60 * 1000,       // 2 minutes
+  "pattern/analysis": {
+    endpoint: "pattern/analysis",
+    baseTTL: 10 * 60 * 1000, // 10 minutes
+    maxTTL: 30 * 60 * 1000, // 30 minutes
+    minTTL: 2 * 60 * 1000, // 2 minutes
     enableStaleWhileRevalidate: true,
-    dependencies: ['pattern/detection'],
-    priority: 'medium',
-    freshnessRequirement: 'relaxed',
+    dependencies: ["pattern/detection"],
+    priority: "medium",
+    freshnessRequirement: "relaxed",
   },
 
   // User & Session Data
-  'user/preferences': {
-    endpoint: 'user/preferences',
-    baseTTL: 15 * 60 * 1000,     // 15 minutes
-    maxTTL: 60 * 60 * 1000,      // 1 hour
-    minTTL: 5 * 60 * 1000,       // 5 minutes
+  "user/preferences": {
+    endpoint: "user/preferences",
+    baseTTL: 15 * 60 * 1000, // 15 minutes
+    maxTTL: 60 * 60 * 1000, // 1 hour
+    minTTL: 5 * 60 * 1000, // 5 minutes
     enableStaleWhileRevalidate: true,
-    dependencies: ['auth'],
-    priority: 'medium',
-    freshnessRequirement: 'relaxed',
+    dependencies: ["auth"],
+    priority: "medium",
+    freshnessRequirement: "relaxed",
   },
-  'session/data': {
-    endpoint: 'session/data',
-    baseTTL: 5 * 60 * 1000,      // 5 minutes
-    maxTTL: 30 * 60 * 1000,      // 30 minutes
-    minTTL: 1 * 60 * 1000,       // 1 minute
+  "session/data": {
+    endpoint: "session/data",
+    baseTTL: 5 * 60 * 1000, // 5 minutes
+    maxTTL: 30 * 60 * 1000, // 30 minutes
+    minTTL: 1 * 60 * 1000, // 1 minute
     enableStaleWhileRevalidate: false,
-    dependencies: ['auth'],
-    priority: 'high',
-    freshnessRequirement: 'moderate',
+    dependencies: ["auth"],
+    priority: "high",
+    freshnessRequirement: "moderate",
   },
 };
 
@@ -213,11 +215,11 @@ export class APIResponseCache {
       method?: string;
       bypassCache?: boolean;
       acceptStale?: boolean;
-      requiredFreshness?: 'strict' | 'moderate' | 'relaxed';
+      requiredFreshness?: "strict" | "moderate" | "relaxed";
     } = {}
   ): Promise<CachedAPIResponse<T> | null> {
-    const { method = 'GET', bypassCache = false, acceptStale = true, requiredFreshness } = options;
-    
+    const { method = "GET", bypassCache = false, acceptStale = true, requiredFreshness } = options;
+
     if (bypassCache) {
       return null;
     }
@@ -234,16 +236,18 @@ export class APIResponseCache {
 
       // Validate freshness based on requirements
       const freshness = this.validateFreshness(cached, config, requiredFreshness);
-      
-      if (freshness === 'expired' || (freshness === 'stale' && !acceptStale)) {
+
+      if (freshness === "expired" || (freshness === "stale" && !acceptStale)) {
         this.trackCacheMiss(endpoint);
-        
+
         // Schedule revalidation if stale-while-revalidate is enabled
-        if (freshness === 'stale' && config.enableStaleWhileRevalidate) {
+        if (freshness === "stale" && config.enableStaleWhileRevalidate) {
           this.scheduleRevalidation(endpoint, parameters, method);
         }
-        
-        return freshness === 'stale' && acceptStale ? { ...cached, metadata: { ...cached.metadata, freshness } } : null;
+
+        return freshness === "stale" && acceptStale
+          ? { ...cached, metadata: { ...cached.metadata, freshness } }
+          : null;
       }
 
       // Update cache metadata
@@ -252,14 +256,13 @@ export class APIResponseCache {
         metadata: {
           ...cached.metadata,
           freshness,
-          source: 'cache',
-          cacheLevel: 'L1', // Will be determined by cache manager
+          source: "cache",
+          cacheLevel: "L1", // Will be determined by cache manager
         },
       };
 
       this.trackCacheHit(endpoint);
       return enhancedResponse;
-
     } catch (error) {
       console.error(`[APIResponseCache] Error getting cached response for ${endpoint}:`, error);
       this.trackCacheMiss(endpoint);
@@ -281,14 +284,14 @@ export class APIResponseCache {
       forceRefresh?: boolean;
     } = {}
   ): Promise<void> {
-    const { method = 'GET', ttl, responseTime = 0, forceRefresh = false } = options;
+    const { method = "GET", ttl, responseTime = 0, forceRefresh = false } = options;
     const cacheKey = this.generateAPIKey(endpoint, method, parameters);
     const config = this.getEndpointConfig(endpoint);
 
     try {
       // Calculate intelligent TTL
       const intelligentTTL = ttl || this.calculateIntelligentTTL(endpoint, data, responseTime);
-      
+
       // Create cached response
       const cachedResponse: CachedAPIResponse<T> = {
         data,
@@ -298,20 +301,20 @@ export class APIResponseCache {
           parameters,
           timestamp: Date.now(),
           ttl: intelligentTTL,
-          freshness: 'fresh',
-          source: 'api',
+          freshness: "fresh",
+          source: "api",
           requestId: this.generateRequestId(),
           responseTime,
-          cacheLevel: 'L1',
+          cacheLevel: "L1",
         },
       };
 
       // Cache the response
       await globalCacheManager.set(cacheKey, cachedResponse, {
-        type: 'api_response',
+        type: "api_response",
         ttl: intelligentTTL,
         metadata: {
-          type: 'api_response',
+          type: "api_response",
           source: endpoint,
           dependencies: config.dependencies,
           priority: config.priority,
@@ -323,7 +326,6 @@ export class APIResponseCache {
 
       // Remove from revalidation queue if present
       this.revalidationQueue.delete(cacheKey);
-
     } catch (error) {
       console.error(`[APIResponseCache] Error caching response for ${endpoint}:`, error);
     }
@@ -344,7 +346,9 @@ export class APIResponseCache {
     try {
       // Invalidate by endpoint
       if (criteria.endpoint) {
-        const pattern = new RegExp(`^api:${criteria.endpoint.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+        const pattern = new RegExp(
+          `^api:${criteria.endpoint.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`
+        );
         invalidated += await globalCacheManager.invalidatePattern(pattern);
       }
 
@@ -366,9 +370,8 @@ export class APIResponseCache {
       }
 
       console.log(`[APIResponseCache] Invalidated ${invalidated} API responses`);
-
     } catch (error) {
-      console.error('[APIResponseCache] Error invalidating API responses:', error);
+      console.error("[APIResponseCache] Error invalidating API responses:", error);
     }
 
     return invalidated;
@@ -394,7 +397,7 @@ export class APIResponseCache {
       return await requestFn();
     }
 
-    const { method = 'GET', timeout = 30000 } = options;
+    const { method = "GET", timeout = 30000 } = options;
     const deduplicationKey = this.generateDeduplicationKey(endpoint, method, parameters);
 
     try {
@@ -408,8 +411,8 @@ export class APIResponseCache {
       // Create new request with timeout
       const requestPromise = Promise.race([
         requestFn(),
-        new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), timeout)
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Request timeout")), timeout)
         ),
       ]);
 
@@ -420,7 +423,6 @@ export class APIResponseCache {
       const result = await requestPromise;
 
       return result;
-
     } catch (error) {
       console.error(`[APIResponseCache] Request execution error for ${endpoint}:`, error);
       throw error;
@@ -437,7 +439,11 @@ export class APIResponseCache {
   /**
    * Schedule background revalidation for stale cache entries
    */
-  private scheduleRevalidation(endpoint: string, parameters: Record<string, any>, method: string): void {
+  private scheduleRevalidation(
+    endpoint: string,
+    parameters: Record<string, any>,
+    method: string
+  ): void {
     const key = this.generateAPIKey(endpoint, method, parameters);
     this.revalidationQueue.add(key);
   }
@@ -450,7 +456,9 @@ export class APIResponseCache {
       return;
     }
 
-    console.log(`[APIResponseCache] Processing ${this.revalidationQueue.size} revalidation requests`);
+    console.log(
+      `[APIResponseCache] Processing ${this.revalidationQueue.size} revalidation requests`
+    );
 
     const batch = Array.from(this.revalidationQueue).slice(0, 5); // Process 5 at a time
     this.revalidationQueue.clear();
@@ -480,7 +488,7 @@ export class APIResponseCache {
   getAnalytics(): APICacheAnalytics {
     try {
       const endpointStats: Record<string, any> = {};
-      
+
       // Process analytics for each endpoint
       for (const [endpoint, stats] of this.analytics.entries()) {
         const totalRequests = stats.hits + stats.misses;
@@ -510,9 +518,8 @@ export class APIResponseCache {
         freshness,
         recommendations,
       };
-
     } catch (error) {
-      console.error('[APIResponseCache] Error generating analytics:', error);
+      console.error("[APIResponseCache] Error generating analytics:", error);
       return {
         endpoints: {},
         performance: {
@@ -527,7 +534,7 @@ export class APIResponseCache {
           expiredResponses: 0,
           revalidations: 0,
         },
-        recommendations: ['Analytics temporarily unavailable'],
+        recommendations: ["Analytics temporarily unavailable"],
       };
     }
   }
@@ -536,11 +543,19 @@ export class APIResponseCache {
   // Helper Methods
   // =======================
 
-  private generateAPIKey(endpoint: string, method: string, parameters: Record<string, any>): string {
-    return generateCacheKey('api', endpoint, method, parameters);
+  private generateAPIKey(
+    endpoint: string,
+    method: string,
+    parameters: Record<string, any>
+  ): string {
+    return generateCacheKey("api", endpoint, method, parameters);
   }
 
-  private generateDeduplicationKey(endpoint: string, method: string, parameters: Record<string, any>): string {
+  private generateDeduplicationKey(
+    endpoint: string,
+    method: string,
+    parameters: Record<string, any>
+  ): string {
     return `dedup:${this.generateAPIKey(endpoint, method, parameters)}`;
   }
 
@@ -564,8 +579,8 @@ export class APIResponseCache {
       minTTL: this.config.defaultTTL * 0.1,
       enableStaleWhileRevalidate: this.config.staleWhileRevalidate,
       dependencies: [],
-      priority: 'medium',
-      freshnessRequirement: 'moderate',
+      priority: "medium",
+      freshnessRequirement: "moderate",
     };
   }
 
@@ -588,7 +603,8 @@ export class APIResponseCache {
 
     // Adjust TTL based on time of day (market hours)
     const hour = new Date().getHours();
-    if (hour >= 9 && hour <= 16) { // Market hours
+    if (hour >= 9 && hour <= 16) {
+      // Market hours
       ttl *= 0.7; // Shorter TTL during active hours
     }
 
@@ -599,15 +615,15 @@ export class APIResponseCache {
   private validateFreshness(
     cached: CachedAPIResponse<any>,
     config: APIEndpointConfig,
-    requiredFreshness?: 'strict' | 'moderate' | 'relaxed'
-  ): 'fresh' | 'stale' | 'expired' {
+    requiredFreshness?: "strict" | "moderate" | "relaxed"
+  ): "fresh" | "stale" | "expired" {
     const now = Date.now();
     const age = now - cached.metadata.timestamp;
     const ttl = cached.metadata.ttl;
 
     // Check if expired
     if (age > ttl) {
-      return 'expired';
+      return "expired";
     }
 
     // Check freshness requirements
@@ -615,19 +631,19 @@ export class APIResponseCache {
     const freshnessThreshold = this.getFreshnessThreshold(freshnessRequirement, ttl);
 
     if (age > freshnessThreshold) {
-      return 'stale';
+      return "stale";
     }
 
-    return 'fresh';
+    return "fresh";
   }
 
   private getFreshnessThreshold(requirement: string, ttl: number): number {
     switch (requirement) {
-      case 'strict':
+      case "strict":
         return ttl * 0.3; // 30% of TTL
-      case 'moderate':
+      case "moderate":
         return ttl * 0.6; // 60% of TTL
-      case 'relaxed':
+      case "relaxed":
         return ttl * 0.9; // 90% of TTL
       default:
         return ttl * 0.6;
@@ -722,30 +738,39 @@ export class APIResponseCache {
     };
   }
 
-  private generateCacheRecommendations(endpointStats: Record<string, any>, performance: any): string[] {
+  private generateCacheRecommendations(
+    endpointStats: Record<string, any>,
+    performance: any
+  ): string[] {
     const recommendations: string[] = [];
 
     // Check for low hit rates
     for (const [endpoint, stats] of Object.entries(endpointStats)) {
       if (stats.hitRate < 50) {
-        recommendations.push(`Low hit rate for ${endpoint} (${stats.hitRate.toFixed(1)}%) - consider increasing TTL`);
+        recommendations.push(
+          `Low hit rate for ${endpoint} (${stats.hitRate.toFixed(1)}%) - consider increasing TTL`
+        );
       }
       if (stats.averageResponseTime > 1000) {
-        recommendations.push(`High response time for ${endpoint} (${stats.averageResponseTime}ms) - increase cache priority`);
+        recommendations.push(
+          `High response time for ${endpoint} (${stats.averageResponseTime}ms) - increase cache priority`
+        );
       }
     }
 
     // Performance recommendations
     if (performance.totalRequestsSaved < 100) {
-      recommendations.push('Low cache utilization - review endpoint caching strategies');
+      recommendations.push("Low cache utilization - review endpoint caching strategies");
     }
 
     // Rate limiting recommendations
     if (performance.rateLimitingSaved > 1000) {
-      recommendations.push('Excellent rate limit savings through caching - maintain current strategy');
+      recommendations.push(
+        "Excellent rate limit savings through caching - maintain current strategy"
+      );
     }
 
-    return recommendations.length > 0 ? recommendations : ['API caching performance is optimal'];
+    return recommendations.length > 0 ? recommendations : ["API caching performance is optimal"];
   }
 
   private startRevalidationProcess(): void {
@@ -754,7 +779,7 @@ export class APIResponseCache {
       try {
         await this.processRevalidationQueue();
       } catch (error) {
-        console.error('[APIResponseCache] Revalidation process error:', error);
+        console.error("[APIResponseCache] Revalidation process error:", error);
       }
     }, 30000);
   }
@@ -766,7 +791,7 @@ export class APIResponseCache {
     this.pendingRequests.clear();
     this.analytics.clear();
     this.revalidationQueue.clear();
-    console.log('[APIResponseCache] API response cache destroyed');
+    console.log("[APIResponseCache] API response cache destroyed");
   }
 }
 
@@ -799,9 +824,9 @@ export function withAPICache<T extends (...args: any[]) => Promise<any>>(
     bypassCondition?: (...args: any[]) => boolean;
   } = {}
 ) {
-  const { ttl, method = 'GET', keyGenerator, bypassCondition } = options;
+  const { ttl, method = "GET", keyGenerator, bypassCondition } = options;
 
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]): Promise<any> {
@@ -842,11 +867,11 @@ export function withAPICache<T extends (...args: any[]) => Promise<any>>(
  */
 export async function initializeAPICache(endpoints: string[]): Promise<void> {
   console.log(`[APIResponseCache] Initializing cache for ${endpoints.length} endpoints`);
-  
+
   for (const endpoint of endpoints) {
     // Pre-warm critical endpoints
     const config = ENDPOINT_CONFIGS[endpoint];
-    if (config && config.priority === 'critical') {
+    if (config && config.priority === "critical") {
       console.log(`[APIResponseCache] Pre-warming critical endpoint: ${endpoint}`);
       // This would trigger a cache warm-up for critical endpoints
     }
@@ -858,10 +883,10 @@ export async function initializeAPICache(endpoints: string[]): Promise<void> {
  */
 export async function refreshEndpointCache(endpoint: string): Promise<void> {
   console.log(`[APIResponseCache] Refreshing cache for endpoint: ${endpoint}`);
-  
+
   // Invalidate existing cache
   await globalAPIResponseCache.invalidate({ endpoint });
-  
+
   // Trigger refresh (implementation depends on your API client)
   console.log(`[APIResponseCache] Cache refreshed for: ${endpoint}`);
 }

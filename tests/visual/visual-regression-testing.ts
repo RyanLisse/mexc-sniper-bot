@@ -525,8 +525,8 @@ export class VisualRegressionEngine {
   private async collectPerformanceMetrics(page: Page): Promise<PerformanceMetrics> {
     try {
       const metrics = await page.evaluate(() => {
-        const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-        const paint = performance.getEntriesByType('paint')
+        const navigation = performance.getEntriesByType('navigation' as any)[0] as any
+        const paint = performance.getEntriesByType('paint' as any) as any[]
         
         const fcp = paint.find(entry => entry.name === 'first-contentful-paint')
         
@@ -674,7 +674,15 @@ export class VisualRegressionEngine {
 
     // Set up color blindness simulation if enabled
     if (this.config.colorBlindnessSimulation) {
-      await page.emulateVisionDeficiency('deuteranopia')
+      // Note: emulateVisionDeficiency is not available in current Playwright version
+      // This would require a context-level setting or CSS filters
+      await page.addStyleTag({
+        content: `
+          html {
+            filter: sepia(0.5) saturate(0.8) hue-rotate(20deg);
+          }
+        `
+      })
     }
   }
 
@@ -805,7 +813,8 @@ export class VisualRegressionEngine {
   }
 
   private async cleanup(): Promise<void> {
-    for (const browser of this.browsers.values()) {
+    const browsers = Array.from(this.browsers.values())
+    for (const browser of browsers) {
       await browser.close()
     }
     this.browsers.clear()
@@ -983,7 +992,7 @@ export class ResponsiveTestingEngine extends VisualRegressionEngine {
 // ===================== ACCESSIBILITY-FOCUSED TESTING =====================
 
 export class AccessibilityTestingEngine extends VisualRegressionEngine {
-  async runAccessibilityTests(testSuite: VisualTestSuite): Promise<VisualTestReport> {
+  async runAccessibilityTestSuite(testSuite: VisualTestSuite): Promise<VisualTestReport> {
     console.log('♿ Running accessibility-focused tests...')
 
     // Override config for accessibility focus
@@ -991,7 +1000,7 @@ export class AccessibilityTestingEngine extends VisualRegressionEngine {
       ...testSuite.config,
       accessibility: {
         enabled: true,
-        standards: ['WCAG2A', 'WCAG2AA', 'WCAG2AAA'],
+        standards: ['WCAG2A', 'WCAG2AA', 'WCAG2AAA'] as Array<'WCAG2A' | 'WCAG2AA' | 'WCAG2AAA' | 'Section508'>,
         includeWarnings: true,
         includeIncomplete: true,
         colorContrast: true,

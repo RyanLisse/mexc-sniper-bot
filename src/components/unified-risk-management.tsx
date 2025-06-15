@@ -1,10 +1,20 @@
 "use client";
-
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
 import { Separator } from "@/src/components/ui/separator";
 import { Shield } from "lucide-react";
 
@@ -23,16 +33,15 @@ interface RiskManagementProps {
   onDirty: () => void;
 }
 
-export function UnifiedRiskManagement({ 
-  settings, 
-  exitStrategy, 
-  onSettingsChange, 
-  onExitStrategyChange, 
-  onDirty 
+export function UnifiedRiskManagement({
+  settings,
+  exitStrategy,
+  onSettingsChange,
+  onExitStrategyChange,
+  onDirty,
 }: RiskManagementProps) {
-  
   const updateSetting = (key: string, value: any) => {
-    onSettingsChange(prev => ({ ...prev, [key]: value }));
+    onSettingsChange((prev) => ({ ...prev, [key]: value }));
     onDirty();
   };
 
@@ -48,9 +57,7 @@ export function UnifiedRiskManagement({
           <Shield className="h-5 w-5" />
           Risk Management
         </CardTitle>
-        <CardDescription>
-          Control your risk exposure and position sizing
-        </CardDescription>
+        <CardDescription>Control your risk exposure and position sizing</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
@@ -64,7 +71,9 @@ export function UnifiedRiskManagement({
                 max="50"
                 step="0.5"
                 value={settings.stopLossPercent}
-                onChange={(e) => updateSetting('stopLossPercent', parseFloat(e.target.value) || 5)}
+                onChange={(e) =>
+                  updateSetting("stopLossPercent", Number.parseFloat(e.target.value) || 5)
+                }
               />
               <span className="text-sm text-muted-foreground">%</span>
             </div>
@@ -74,7 +83,7 @@ export function UnifiedRiskManagement({
             <Label htmlFor="risk-tolerance">Risk Tolerance</Label>
             <Select
               value={settings.riskTolerance}
-              onValueChange={(value) => updateSetting('riskTolerance', value)}
+              onValueChange={(value) => updateSetting("riskTolerance", value)}
             >
               <SelectTrigger id="risk-tolerance">
                 <SelectValue />
@@ -95,7 +104,9 @@ export function UnifiedRiskManagement({
               min="1"
               max="10"
               value={settings.maxConcurrentSnipes}
-              onChange={(e) => updateSetting('maxConcurrentSnipes', parseInt(e.target.value) || 3)}
+              onChange={(e) =>
+                updateSetting("maxConcurrentSnipes", Number.parseInt(e.target.value) || 3)
+              }
             />
           </div>
 
@@ -109,7 +120,9 @@ export function UnifiedRiskManagement({
                 max="10000"
                 step="10"
                 value={settings.defaultBuyAmount}
-                onChange={(e) => updateSetting('defaultBuyAmount', parseFloat(e.target.value) || 100)}
+                onChange={(e) =>
+                  updateSetting("defaultBuyAmount", Number.parseFloat(e.target.value) || 100)
+                }
               />
               <span className="text-sm text-muted-foreground">USDT</span>
             </div>
@@ -120,15 +133,14 @@ export function UnifiedRiskManagement({
 
         <div className="space-y-2">
           <Label htmlFor="exit-strategy">Exit Strategy</Label>
-          <Select
-            value={exitStrategy}
-            onValueChange={updateExitStrategy}
-          >
+          <Select value={exitStrategy} onValueChange={updateExitStrategy}>
             <SelectTrigger id="exit-strategy">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="conservative">Conservative - Early exits, preserve capital</SelectItem>
+              <SelectItem value="conservative">
+                Conservative - Early exits, preserve capital
+              </SelectItem>
               <SelectItem value="balanced">Balanced - Mix of safety and growth</SelectItem>
               <SelectItem value="aggressive">Aggressive - Hold for maximum gains</SelectItem>
               <SelectItem value="custom">Custom - Define your own strategy</SelectItem>

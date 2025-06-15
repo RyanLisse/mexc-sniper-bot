@@ -1,8 +1,14 @@
-import type { AgentRegistry, RegisteredAgent } from "./agent-registry";
 import type { AgentResponse } from "../base-agent";
+import type { AgentRegistry } from "./agent-registry";
 
 export type WorkflowExecutionMode = "sequential" | "parallel" | "mixed";
-export type WorkflowStepStatus = "pending" | "running" | "completed" | "failed" | "skipped" | "timeout";
+export type WorkflowStepStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "skipped"
+  | "timeout";
 export type FailureStrategy = "halt" | "continue" | "retry" | "fallback";
 
 export interface WorkflowStepConfig {
@@ -77,7 +83,7 @@ export interface WorkflowContext {
 }
 
 /**
- * Advanced workflow execution engine with dependency management, 
+ * Advanced workflow execution engine with dependency management,
  * parallel/sequential execution, and comprehensive failure handling
  */
 export class WorkflowEngine {
@@ -97,7 +103,7 @@ export class WorkflowEngine {
   registerWorkflow(definition: WorkflowDefinition): void {
     // Validate workflow definition
     this.validateWorkflowDefinition(definition);
-    
+
     this.workflowDefinitions.set(definition.id, definition);
     console.log(`[WorkflowEngine] Registered workflow: ${definition.id} (${definition.name})`);
   }
@@ -151,12 +157,12 @@ export class WorkflowEngine {
 
     try {
       console.log(`[WorkflowEngine] Starting workflow ${workflowId} (execution: ${executionId})`);
-      
+
       const result = await this.executeWorkflowSteps(definition, context);
-      
+
       // Store in history
       this.addToExecutionHistory(result);
-      
+
       return result;
     } catch (error) {
       const endTime = new Date();
@@ -236,7 +242,7 @@ export class WorkflowEngine {
       // Determine final output
       const finalStepResults = Array.from(context.stepResults.values());
       const lastSuccessfulStep = finalStepResults
-        .filter(step => step.status === "completed")
+        .filter((step) => step.status === "completed")
         .sort((a, b) => b.endTime!.getTime() - a.endTime!.getTime())[0];
 
       return {
@@ -251,7 +257,7 @@ export class WorkflowEngine {
       };
     } catch (error) {
       endTime = new Date();
-      
+
       return {
         workflowId: definition.id,
         status: "failed",
@@ -274,7 +280,7 @@ export class WorkflowEngine {
   ): Promise<void> {
     // Build dependency graph and determine execution order
     const executionOrder = this.resolveDependencies(steps);
-    
+
     for (const step of executionOrder) {
       if (context.cancelled) {
         break;
@@ -291,7 +297,7 @@ export class WorkflowEngine {
 
       // Execute step
       await this.executeStep(step, context);
-      
+
       // Check if we should continue based on failure strategy
       const stepResult = context.stepResults.get(step.id);
       if (stepResult?.status === "failed" && step.required !== false) {
@@ -311,14 +317,14 @@ export class WorkflowEngine {
   ): Promise<void> {
     // Group steps by dependency level
     const dependencyGroups = this.groupStepsByDependencyLevel(steps);
-    
+
     for (const group of dependencyGroups) {
       if (context.cancelled) {
         break;
       }
 
       // Execute all steps in current group in parallel
-      const stepPromises = group.map(step => this.executeStepWithErrorHandling(step, context));
+      const stepPromises = group.map((step) => this.executeStepWithErrorHandling(step, context));
       await Promise.allSettled(stepPromises);
     }
   }
@@ -331,7 +337,7 @@ export class WorkflowEngine {
     context: WorkflowContext
   ): Promise<void> {
     const dependencyGroups = this.groupStepsByDependencyLevel(steps);
-    
+
     for (const group of dependencyGroups) {
       if (context.cancelled) {
         break;
@@ -339,9 +345,9 @@ export class WorkflowEngine {
 
       // Execute steps in parallel within each dependency level
       const stepPromises = group
-        .filter(step => !step.condition || step.condition(context))
-        .map(step => this.executeStepWithErrorHandling(step, context));
-      
+        .filter((step) => !step.condition || step.condition(context))
+        .map((step) => this.executeStepWithErrorHandling(step, context));
+
       await Promise.allSettled(stepPromises);
     }
   }
@@ -356,7 +362,7 @@ export class WorkflowEngine {
 
     while (attempt < maxAttempts && !context.cancelled) {
       attempt++;
-      
+
       try {
         // Get agent
         const agent = this.agentRegistry.getAgentInstance(step.agentId);
@@ -376,12 +382,19 @@ export class WorkflowEngine {
                 context,
                 step.timeout || 30000
               );
-              
-              this.recordSuccessfulStep(step, startTime, output, context, attempt, step.fallbackAgentId);
+
+              this.recordSuccessfulStep(
+                step,
+                startTime,
+                output,
+                context,
+                attempt,
+                step.fallbackAgentId
+              );
               return;
             }
           }
-          
+
           throw new Error(`Agent '${step.agentId}' is not available`);
         }
 
@@ -389,22 +402,26 @@ export class WorkflowEngine {
         const input = step.transform ? step.transform(step.input, context) : step.input;
 
         // Execute with timeout
-        const output = await this.executeAgentWithTimeout(agent, { ...step, input }, context, step.timeout || 30000);
-        
+        const output = await this.executeAgentWithTimeout(
+          agent,
+          { ...step, input },
+          context,
+          step.timeout || 30000
+        );
+
         this.recordSuccessfulStep(step, startTime, output, context, attempt);
         return;
-
       } catch (error) {
         const isLastAttempt = attempt >= maxAttempts;
-        
+
         if (isLastAttempt) {
           this.recordFailedStep(step, startTime, error, context, attempt);
-          
+
           // Handle failure strategy
           if (step.failureStrategy === "fallback" && step.fallbackAgentId) {
             // Fallback was already tried above, so this is a complete failure
           }
-          
+
           if (step.required !== false) {
             throw error;
           }
@@ -413,7 +430,7 @@ export class WorkflowEngine {
 
         // Wait before retry
         if (step.retryDelay && step.retryDelay > 0) {
-          await new Promise(resolve => setTimeout(resolve, step.retryDelay));
+          await new Promise((resolve) => setTimeout(resolve, step.retryDelay));
         }
       }
     }
@@ -434,7 +451,10 @@ export class WorkflowEngine {
     });
 
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error(`Step '${step.id}' timed out after ${timeout}ms`)), timeout);
+      setTimeout(
+        () => reject(new Error(`Step '${step.id}' timed out after ${timeout}ms`)),
+        timeout
+      );
     });
 
     return Promise.race([agentPromise, timeoutPromise]);
@@ -444,7 +464,7 @@ export class WorkflowEngine {
    * Resolve step dependencies and return execution order
    */
   private resolveDependencies(steps: WorkflowStepConfig[]): WorkflowStepConfig[] {
-    const stepMap = new Map(steps.map(step => [step.id, step]));
+    const stepMap = new Map(steps.map((step) => [step.id, step]));
     const visited = new Set<string>();
     const visiting = new Set<string>();
     const result: WorkflowStepConfig[] = [];
@@ -453,7 +473,7 @@ export class WorkflowEngine {
       if (visited.has(stepId)) {
         return;
       }
-      
+
       if (visiting.has(stepId)) {
         throw new Error(`Circular dependency detected involving step '${stepId}'`);
       }
@@ -486,7 +506,7 @@ export class WorkflowEngine {
    * Group steps by dependency level for parallel execution
    */
   private groupStepsByDependencyLevel(steps: WorkflowStepConfig[]): WorkflowStepConfig[][] {
-    const stepMap = new Map(steps.map(step => [step.id, step]));
+    const stepMap = new Map(steps.map((step) => [step.id, step]));
     const levels: WorkflowStepConfig[][] = [];
     const stepLevels = new Map<string, number>();
 
@@ -522,11 +542,11 @@ export class WorkflowEngine {
     // Calculate levels for all steps
     for (const step of steps) {
       const level = getStepLevel(step.id);
-      
+
       while (levels.length <= level) {
         levels.push([]);
       }
-      
+
       levels[level].push(step);
     }
 
@@ -536,7 +556,10 @@ export class WorkflowEngine {
   /**
    * Wait for step dependencies to complete
    */
-  private async waitForDependencies(step: WorkflowStepConfig, context: WorkflowContext): Promise<void> {
+  private async waitForDependencies(
+    step: WorkflowStepConfig,
+    context: WorkflowContext
+  ): Promise<void> {
     if (!step.dependencies || step.dependencies.length === 0) {
       return;
     }
@@ -546,7 +569,7 @@ export class WorkflowEngine {
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeout) {
-      const allCompleted = step.dependencies.every(depId => {
+      const allCompleted = step.dependencies.every((depId) => {
         const depResult = context.stepResults.get(depId);
         return depResult && (depResult.status === "completed" || depResult.status === "skipped");
       });
@@ -556,7 +579,7 @@ export class WorkflowEngine {
       }
 
       // Check for failed required dependencies
-      const failedDependencies = step.dependencies.filter(depId => {
+      const failedDependencies = step.dependencies.filter((depId) => {
         const depResult = context.stepResults.get(depId);
         return depResult && depResult.status === "failed";
       });
@@ -565,7 +588,7 @@ export class WorkflowEngine {
         throw new Error(`Dependencies failed: ${failedDependencies.join(", ")}`);
       }
 
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
     }
 
     throw new Error(`Timeout waiting for dependencies: ${step.dependencies.join(", ")}`);
@@ -613,7 +636,7 @@ export class WorkflowEngine {
     };
 
     context.stepResults.set(step.id, result);
-    
+
     // Store output in context variables
     context.variables.set(`${step.id}_output`, output);
   }
@@ -675,11 +698,14 @@ export class WorkflowEngine {
     fallbacksUsed: number;
   } {
     const stepResults = Array.from(context.stepResults.values());
-    const agentsUsed = [...new Set(stepResults.map(step => step.agentId))];
-    const stepsExecuted = stepResults.filter(step => step.status === "completed").length;
-    const stepsSkipped = stepResults.filter(step => step.status === "skipped").length;
-    const stepsFailed = stepResults.filter(step => step.status === "failed").length;
-    const retriesPerformed = stepResults.reduce((sum, step) => sum + Math.max(0, step.attempt - 1), 0);
+    const agentsUsed = [...new Set(stepResults.map((step) => step.agentId))];
+    const stepsExecuted = stepResults.filter((step) => step.status === "completed").length;
+    const stepsSkipped = stepResults.filter((step) => step.status === "skipped").length;
+    const stepsFailed = stepResults.filter((step) => step.status === "failed").length;
+    const retriesPerformed = stepResults.reduce(
+      (sum, step) => sum + Math.max(0, step.attempt - 1),
+      0
+    );
     const fallbacksUsed = 0; // Would need to track this separately in actual implementation
 
     return {
@@ -705,7 +731,7 @@ export class WorkflowEngine {
     }
 
     // Check for duplicate step IDs
-    const stepIds = definition.steps.map(step => step.id);
+    const stepIds = definition.steps.map((step) => step.id);
     const uniqueStepIds = new Set(stepIds);
     if (stepIds.length !== uniqueStepIds.size) {
       throw new Error("Workflow definition contains duplicate step IDs");
@@ -735,7 +761,7 @@ export class WorkflowEngine {
    */
   private addToExecutionHistory(result: WorkflowExecutionResult): void {
     this.executionHistory.push(result);
-    
+
     // Keep only the most recent entries
     if (this.executionHistory.length > this.maxHistorySize) {
       this.executionHistory.splice(0, this.executionHistory.length - this.maxHistorySize);

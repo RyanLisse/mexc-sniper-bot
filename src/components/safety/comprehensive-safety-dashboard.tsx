@@ -1,24 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Shield, 
-  AlertTriangle, 
-  Activity, 
-  TrendingDown, 
-  Power, 
-  Eye,
-  Clock,
-  Users,
+import {
+  Activity,
+  AlertTriangle,
   Brain,
-  Zap
+  Clock,
+  Eye,
+  Power,
+  Shield,
+  TrendingDown,
+  Users,
+  Zap,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 // Safety Dashboard Interfaces
 interface SafetyOverview {
@@ -93,7 +93,7 @@ interface CircuitBreakerStatus {
 
 /**
  * Comprehensive Safety Dashboard
- * 
+ *
  * Enhanced real-time safety monitoring interface integrated with the
  * Comprehensive Safety Coordinator providing:
  * - Real-time safety system integration
@@ -215,7 +215,7 @@ export function ComprehensiveSafetyDashboard() {
   useEffect(() => {
     const interval = setInterval(() => {
       // Simulate real-time updates
-      setSafetyOverview(prev => ({
+      setSafetyOverview((prev) => ({
         ...prev,
         lastUpdate: new Date().toISOString(),
         riskScore: Math.max(0, Math.min(100, prev.riskScore + (Math.random() - 0.5) * 5)),
@@ -227,45 +227,58 @@ export function ComprehensiveSafetyDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "healthy": return "text-green-600";
-      case "degraded": return "text-yellow-600";
-      case "critical": return "text-red-600";
-      case "emergency": return "text-red-800";
-      default: return "text-gray-600";
+      case "healthy":
+        return "text-green-600";
+      case "degraded":
+        return "text-yellow-600";
+      case "critical":
+        return "text-red-600";
+      case "emergency":
+        return "text-red-800";
+      default:
+        return "text-gray-600";
     }
   };
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case "healthy": return "bg-green-100 text-green-800";
-      case "degraded": return "bg-yellow-100 text-yellow-800";
-      case "critical": return "bg-red-100 text-red-800";
-      case "emergency": return "bg-red-200 text-red-900";
-      case "offline": return "bg-gray-100 text-gray-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "healthy":
+        return "bg-green-100 text-green-800";
+      case "degraded":
+        return "bg-yellow-100 text-yellow-800";
+      case "critical":
+        return "bg-red-100 text-red-800";
+      case "emergency":
+        return "bg-red-200 text-red-900";
+      case "offline":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const handleEmergencyHalt = () => {
-    setSafetyOverview(prev => ({ ...prev, tradingHalted: true, emergencyActive: true }));
-    setEmergencyStatus(prev => ({
+    setSafetyOverview((prev) => ({ ...prev, tradingHalted: true, emergencyActive: true }));
+    setEmergencyStatus((prev) => ({
       ...prev,
       active: true,
       activeCount: 1,
       lastActivation: new Date().toISOString(),
-      currentConditions: [{
-        id: "manual-halt",
-        type: "manual_halt",
-        severity: "critical",
-        description: "Manual emergency halt activated",
-        detectedAt: new Date().toISOString(),
-      }],
+      currentConditions: [
+        {
+          id: "manual-halt",
+          type: "manual_halt",
+          severity: "critical",
+          description: "Manual emergency halt activated",
+          detectedAt: new Date().toISOString(),
+        },
+      ],
     }));
   };
 
   const handleResumeOperations = () => {
-    setSafetyOverview(prev => ({ ...prev, tradingHalted: false, emergencyActive: false }));
-    setEmergencyStatus(prev => ({
+    setSafetyOverview((prev) => ({ ...prev, tradingHalted: false, emergencyActive: false }));
+    setEmergencyStatus((prev) => ({
       ...prev,
       active: false,
       activeCount: 0,
@@ -300,7 +313,7 @@ export function ComprehensiveSafetyDashboard() {
         <Alert className="border-red-500 bg-red-50">
           <AlertTriangle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
-            <strong>EMERGENCY MODE ACTIVE</strong> - Trading operations are halted. 
+            <strong>EMERGENCY MODE ACTIVE</strong> - Trading operations are halted.
             {emergencyStatus.activeCount} active emergency condition(s) detected.
           </AlertDescription>
         </Alert>
@@ -317,8 +330,11 @@ export function ComprehensiveSafetyDashboard() {
             <div className="text-2xl font-bold">{safetyOverview.riskScore.toFixed(1)}</div>
             <Progress value={safetyOverview.riskScore} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {safetyOverview.riskScore < 30 ? "Low Risk" : 
-               safetyOverview.riskScore < 70 ? "Medium Risk" : "High Risk"}
+              {safetyOverview.riskScore < 30
+                ? "Low Risk"
+                : safetyOverview.riskScore < 70
+                  ? "Medium Risk"
+                  : "High Risk"}
             </p>
           </CardContent>
         </Card>
@@ -331,9 +347,7 @@ export function ComprehensiveSafetyDashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{safetyOverview.activeAlerts}</div>
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs text-red-600">
-                {safetyOverview.criticalAlerts} critical
-              </span>
+              <span className="text-xs text-red-600">{safetyOverview.criticalAlerts} critical</span>
               <span className="text-xs text-yellow-600">
                 {safetyOverview.activeAlerts - safetyOverview.criticalAlerts} warning
               </span>
@@ -351,12 +365,8 @@ export function ComprehensiveSafetyDashboard() {
               {agentHealth.healthyAgents}/{agentHealth.totalAgents}
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs text-yellow-600">
-                {agentHealth.degradedAgents} degraded
-              </span>
-              <span className="text-xs text-red-600">
-                {agentHealth.criticalAgents} critical
-              </span>
+              <span className="text-xs text-yellow-600">{agentHealth.degradedAgents} degraded</span>
+              <span className="text-xs text-red-600">{agentHealth.criticalAgents} critical</span>
             </div>
           </CardContent>
         </Card>
@@ -368,15 +378,14 @@ export function ComprehensiveSafetyDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {circuitBreakers.totalBreakers - circuitBreakers.openBreakers}/{circuitBreakers.totalBreakers}
+              {circuitBreakers.totalBreakers - circuitBreakers.openBreakers}/
+              {circuitBreakers.totalBreakers}
             </div>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-xs text-green-600">
                 {circuitBreakers.totalBreakers - circuitBreakers.openBreakers} closed
               </span>
-              <span className="text-xs text-red-600">
-                {circuitBreakers.openBreakers} open
-              </span>
+              <span className="text-xs text-red-600">{circuitBreakers.openBreakers} open</span>
             </div>
           </CardContent>
         </Card>
@@ -404,7 +413,11 @@ export function ComprehensiveSafetyDashboard() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Trading Engine</span>
-                    <Badge className={getStatusBadgeColor(safetyOverview.tradingHalted ? "critical" : "healthy")}>
+                    <Badge
+                      className={getStatusBadgeColor(
+                        safetyOverview.tradingHalted ? "critical" : "healthy"
+                      )}
+                    >
                       {safetyOverview.tradingHalted ? "HALTED" : "ACTIVE"}
                     </Badge>
                   </div>
@@ -418,8 +431,15 @@ export function ComprehensiveSafetyDashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Agent System</span>
-                    <Badge className={getStatusBadgeColor(agentHealth.criticalAgents > 0 ? "critical" : 
-                      agentHealth.degradedAgents > 0 ? "degraded" : "healthy")}>
+                    <Badge
+                      className={getStatusBadgeColor(
+                        agentHealth.criticalAgents > 0
+                          ? "critical"
+                          : agentHealth.degradedAgents > 0
+                            ? "degraded"
+                            : "healthy"
+                      )}
+                    >
                       {agentHealth.healthyAgents}/{agentHealth.totalAgents} HEALTHY
                     </Badge>
                   </div>
@@ -441,21 +461,29 @@ export function ComprehensiveSafetyDashboard() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Portfolio Value</span>
-                    <span className="font-medium">${riskMetrics.portfolioValue.toLocaleString()}</span>
+                    <span className="font-medium">
+                      ${riskMetrics.portfolioValue.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Total Exposure</span>
-                    <span className="font-medium">${riskMetrics.totalExposure.toLocaleString()}</span>
+                    <span className="font-medium">
+                      ${riskMetrics.totalExposure.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Daily P&L</span>
-                    <span className={`font-medium ${riskMetrics.dailyPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {riskMetrics.dailyPnL >= 0 ? '+' : ''}${riskMetrics.dailyPnL.toFixed(2)}
+                    <span
+                      className={`font-medium ${riskMetrics.dailyPnL >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {riskMetrics.dailyPnL >= 0 ? "+" : ""}${riskMetrics.dailyPnL.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Value at Risk (95%)</span>
-                    <span className="font-medium text-orange-600">${riskMetrics.valueAtRisk.toLocaleString()}</span>
+                    <span className="font-medium text-orange-600">
+                      ${riskMetrics.valueAtRisk.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Open Positions</span>
@@ -463,8 +491,15 @@ export function ComprehensiveSafetyDashboard() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Risk Percentage</span>
-                    <span className={`font-medium ${riskMetrics.riskPercentage > 80 ? 'text-red-600' : 
-                      riskMetrics.riskPercentage > 60 ? 'text-yellow-600' : 'text-green-600'}`}>
+                    <span
+                      className={`font-medium ${
+                        riskMetrics.riskPercentage > 80
+                          ? "text-red-600"
+                          : riskMetrics.riskPercentage > 60
+                            ? "text-yellow-600"
+                            : "text-green-600"
+                      }`}
+                    >
                       {riskMetrics.riskPercentage}%
                     </span>
                   </div>
@@ -486,13 +521,14 @@ export function ComprehensiveSafetyDashboard() {
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    Use these controls only in emergency situations. All actions are logged and require justification.
+                    Use these controls only in emergency situations. All actions are logged and
+                    require justification.
                   </AlertDescription>
                 </Alert>
-                
+
                 <div className="space-y-3">
-                  <Button 
-                    variant="destructive" 
+                  <Button
+                    variant="destructive"
                     className="w-full"
                     onClick={handleEmergencyHalt}
                     disabled={safetyOverview.tradingHalted}
@@ -500,26 +536,23 @@ export function ComprehensiveSafetyDashboard() {
                     <Power className="w-4 h-4 mr-2" />
                     Emergency Halt All Trading
                   </Button>
-                  
-                  <Button 
-                    variant="outline" 
+
+                  <Button
+                    variant="outline"
                     className="w-full"
                     disabled={!safetyOverview.tradingHalted}
                   >
                     <TrendingDown className="w-4 h-4 mr-2" />
                     Force Close All Positions
                   </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                  >
+
+                  <Button variant="outline" className="w-full">
                     <Users className="w-4 h-4 mr-2" />
                     Shutdown All Agents
                   </Button>
-                  
-                  <Button 
-                    variant="default" 
+
+                  <Button
+                    variant="default"
                     className="w-full"
                     onClick={handleResumeOperations}
                     disabled={!safetyOverview.emergencyActive}
@@ -551,11 +584,13 @@ export function ComprehensiveSafetyDashboard() {
                         )}
                       </AlertDescription>
                     </Alert>
-                    
+
                     {emergencyStatus.currentConditions.map((condition) => (
                       <div key={condition.id} className="border rounded-lg p-3 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">{condition.type.replace('_', ' ').toUpperCase()}</span>
+                          <span className="font-medium">
+                            {condition.type.replace("_", " ").toUpperCase()}
+                          </span>
                           <Badge className={getStatusBadgeColor(condition.severity)}>
                             {condition.severity.toUpperCase()}
                           </Badge>
@@ -598,7 +633,7 @@ export function ComprehensiveSafetyDashboard() {
                         {agent.status.toUpperCase()}
                       </Badge>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Response Time</span>
@@ -614,13 +649,20 @@ export function ComprehensiveSafetyDashboard() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">Anomaly Score</span>
-                        <p className={`font-medium ${(agent.anomalyScore || 0) > 50 ? 'text-red-600' : 
-                          (agent.anomalyScore || 0) > 30 ? 'text-yellow-600' : 'text-green-600'}`}>
+                        <p
+                          className={`font-medium ${
+                            (agent.anomalyScore || 0) > 50
+                              ? "text-red-600"
+                              : (agent.anomalyScore || 0) > 30
+                                ? "text-yellow-600"
+                                : "text-green-600"
+                          }`}
+                        >
                           {agent.anomalyScore || 0}
                         </p>
                       </div>
                     </div>
-                    
+
                     {agent.anomalyScore && agent.anomalyScore > 30 && (
                       <Alert className="mt-3">
                         <Eye className="h-4 w-4" />
@@ -652,7 +694,7 @@ export function ComprehensiveSafetyDashboard() {
                   </div>
                   <Progress value={riskMetrics.riskPercentage} />
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm">Market Volatility</span>
@@ -660,7 +702,7 @@ export function ComprehensiveSafetyDashboard() {
                   </div>
                   <Progress value={riskMetrics.volatilityIndex} />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4 pt-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-green-600">
@@ -687,18 +729,25 @@ export function ComprehensiveSafetyDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {circuitBreakers.breakers.map((breaker) => (
-                    <div key={breaker.id} className="flex items-center justify-between p-3 border rounded">
+                    <div
+                      key={breaker.id}
+                      className="flex items-center justify-between p-3 border rounded"
+                    >
                       <div>
                         <h4 className="font-medium">{breaker.name}</h4>
                         <p className="text-sm text-muted-foreground">
                           Failures: {breaker.failureCount}
                         </p>
                       </div>
-                      <Badge className={
-                        breaker.state === "CLOSED" ? "bg-green-100 text-green-800" :
-                        breaker.state === "OPEN" ? "bg-red-100 text-red-800" :
-                        "bg-yellow-100 text-yellow-800"
-                      }>
+                      <Badge
+                        className={
+                          breaker.state === "CLOSED"
+                            ? "bg-green-100 text-green-800"
+                            : breaker.state === "OPEN"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-yellow-100 text-yellow-800"
+                        }
+                      >
                         {breaker.state}
                       </Badge>
                     </div>
@@ -728,8 +777,7 @@ export function ComprehensiveSafetyDashboard() {
                   </p>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      2 hours ago
+                      <Clock className="w-3 h-3" />2 hours ago
                     </span>
                     <span>Duration: 15 minutes</span>
                     <span>Auto-resolved</span>
@@ -746,8 +794,7 @@ export function ComprehensiveSafetyDashboard() {
                   </p>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      6 hours ago
+                      <Clock className="w-3 h-3" />6 hours ago
                     </span>
                     <span>Duration: 5 minutes</span>
                     <span>Auto-resolved</span>
@@ -764,8 +811,7 @@ export function ComprehensiveSafetyDashboard() {
                   </p>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      1 day ago
+                      <Clock className="w-3 h-3" />1 day ago
                     </span>
                     <span>Duration: 2 hours</span>
                     <span>Manual resolution</span>

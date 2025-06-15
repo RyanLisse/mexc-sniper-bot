@@ -9,11 +9,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/src/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/src/components/ui/dialog";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { Progress } from "@/src/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/src/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
 import { Textarea } from "@/src/components/ui/textarea";
 import { useToast } from "@/src/components/ui/use-toast";
@@ -25,9 +38,7 @@ import {
   CheckCircle2,
   Clock,
   DollarSign,
-  Edit,
   Eye,
-  LineChart,
   Pause,
   Play,
   Plus,
@@ -241,7 +252,12 @@ export function MultiPhaseStrategyManager() {
   };
 
   const handleCreateStrategy = () => {
-    if (!createFormData.name || !createFormData.symbol || !createFormData.entryPrice || !createFormData.positionSizeUsdt) {
+    if (
+      !createFormData.name ||
+      !createFormData.symbol ||
+      !createFormData.entryPrice ||
+      !createFormData.positionSizeUsdt
+    ) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
@@ -291,7 +307,8 @@ export function MultiPhaseStrategyManager() {
               {summary.totalPnl.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {summary.avgPnlPercent > 0 ? "+" : ""}{summary.avgPnlPercent.toFixed(1)}% avg
+              {summary.avgPnlPercent > 0 ? "+" : ""}
+              {summary.avgPnlPercent.toFixed(1)}% avg
             </p>
           </CardContent>
         </Card>
@@ -318,9 +335,12 @@ export function MultiPhaseStrategyManager() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {strategies.length > 0 ? 
-                (strategies.reduce((sum: number, s: TradingStrategy) => sum + s.totalPhases, 0) / strategies.length).toFixed(1) : 
-                "0"}
+              {strategies.length > 0
+                ? (
+                    strategies.reduce((sum: number, s: TradingStrategy) => sum + s.totalPhases, 0) /
+                    strategies.length
+                  ).toFixed(1)
+                : "0"}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Per strategy</p>
           </CardContent>
@@ -335,9 +355,15 @@ export function MultiPhaseStrategyManager() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {strategies.length > 0 ? 
-                (strategies.reduce((sum: number, s: TradingStrategy) => sum + (s.confidenceScore || 0), 0) / strategies.length).toFixed(0) : 
-                "0"}%
+              {strategies.length > 0
+                ? (
+                    strategies.reduce(
+                      (sum: number, s: TradingStrategy) => sum + (s.confidenceScore || 0),
+                      0
+                    ) / strategies.length
+                  ).toFixed(0)
+                : "0"}
+              %
             </div>
             <p className="text-xs text-muted-foreground mt-1">Average confidence</p>
           </CardContent>
@@ -352,7 +378,7 @@ export function MultiPhaseStrategyManager() {
             <TabsTrigger value="completed">Completed ({completedStrategies.length})</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
           </TabsList>
-          
+
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
               <Button>
@@ -367,7 +393,7 @@ export function MultiPhaseStrategyManager() {
                   Set up a new multi-phase take profit strategy with automated execution phases.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -376,7 +402,9 @@ export function MultiPhaseStrategyManager() {
                       id="name"
                       placeholder="e.g., BTC Multi-Phase"
                       value={createFormData.name || ""}
-                      onChange={(e) => setCreateFormData(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) =>
+                        setCreateFormData((prev) => ({ ...prev, name: e.target.value }))
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -385,7 +413,12 @@ export function MultiPhaseStrategyManager() {
                       id="symbol"
                       placeholder="e.g., BTCUSDT"
                       value={createFormData.symbol || ""}
-                      onChange={(e) => setCreateFormData(prev => ({ ...prev, symbol: e.target.value.toUpperCase() }))}
+                      onChange={(e) =>
+                        setCreateFormData((prev) => ({
+                          ...prev,
+                          symbol: e.target.value.toUpperCase(),
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -399,7 +432,12 @@ export function MultiPhaseStrategyManager() {
                       step="0.01"
                       placeholder="0.00"
                       value={createFormData.entryPrice || ""}
-                      onChange={(e) => setCreateFormData(prev => ({ ...prev, entryPrice: parseFloat(e.target.value) }))}
+                      onChange={(e) =>
+                        setCreateFormData((prev) => ({
+                          ...prev,
+                          entryPrice: Number.parseFloat(e.target.value),
+                        }))
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -410,7 +448,12 @@ export function MultiPhaseStrategyManager() {
                       step="0.01"
                       placeholder="0.00"
                       value={createFormData.positionSizeUsdt || ""}
-                      onChange={(e) => setCreateFormData(prev => ({ ...prev, positionSizeUsdt: parseFloat(e.target.value) }))}
+                      onChange={(e) =>
+                        setCreateFormData((prev) => ({
+                          ...prev,
+                          positionSizeUsdt: Number.parseFloat(e.target.value),
+                        }))
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -421,7 +464,12 @@ export function MultiPhaseStrategyManager() {
                       step="0.1"
                       placeholder="15"
                       value={createFormData.stopLossPercent || ""}
-                      onChange={(e) => setCreateFormData(prev => ({ ...prev, stopLossPercent: parseFloat(e.target.value) }))}
+                      onChange={(e) =>
+                        setCreateFormData((prev) => ({
+                          ...prev,
+                          stopLossPercent: Number.parseFloat(e.target.value),
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -430,7 +478,12 @@ export function MultiPhaseStrategyManager() {
                   <Label htmlFor="strategyType">Strategy Type</Label>
                   <Select
                     value={createFormData.strategyType}
-                    onValueChange={(value) => setCreateFormData(prev => ({ ...prev, strategyType: value as "predefined" | "custom" }))}
+                    onValueChange={(value) =>
+                      setCreateFormData((prev) => ({
+                        ...prev,
+                        strategyType: value as "predefined" | "custom",
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -447,7 +500,9 @@ export function MultiPhaseStrategyManager() {
                     <Label htmlFor="template">Template</Label>
                     <Select
                       value={createFormData.templateId}
-                      onValueChange={(value) => setCreateFormData(prev => ({ ...prev, templateId: value }))}
+                      onValueChange={(value) =>
+                        setCreateFormData((prev) => ({ ...prev, templateId: value }))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a template" />
@@ -469,7 +524,9 @@ export function MultiPhaseStrategyManager() {
                     id="description"
                     placeholder="Strategy notes and objectives..."
                     value={createFormData.description || ""}
-                    onChange={(e) => setCreateFormData(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setCreateFormData((prev) => ({ ...prev, description: e.target.value }))
+                    }
                   />
                 </div>
 
@@ -550,7 +607,9 @@ export function MultiPhaseStrategyManager() {
                   <div>
                     <p className="text-muted-foreground">Current Price</p>
                     <p className="font-medium">
-                      {strategy.currentPrice ? `$${strategy.currentPrice.toLocaleString()}` : "Not available"}
+                      {strategy.currentPrice
+                        ? `$${strategy.currentPrice.toLocaleString()}`
+                        : "Not available"}
                     </p>
                   </div>
                   <div>
@@ -560,8 +619,9 @@ export function MultiPhaseStrategyManager() {
                   <div>
                     <p className="text-muted-foreground">Total P&L</p>
                     <p className={`font-medium ${getPnLColor(strategy.totalPnl || 0)}`}>
-                      ${strategy.totalPnl ? strategy.totalPnl > 0 ? "+" : "" : ""}
-                      {(strategy.totalPnl || 0).toFixed(2)} ({(strategy.totalPnlPercent || 0).toFixed(2)}%)
+                      ${strategy.totalPnl ? (strategy.totalPnl > 0 ? "+" : "") : ""}
+                      {(strategy.totalPnl || 0).toFixed(2)} (
+                      {(strategy.totalPnlPercent || 0).toFixed(2)}%)
                     </p>
                   </div>
                 </div>
@@ -588,8 +648,8 @@ export function MultiPhaseStrategyManager() {
                       <div
                         key={index}
                         className={`p-2 rounded border ${
-                          index < strategy.executedPhases 
-                            ? "bg-green-50 border-green-200 text-green-700" 
+                          index < strategy.executedPhases
+                            ? "bg-green-50 border-green-200 text-green-700"
                             : "bg-gray-50 border-gray-200"
                         }`}
                       >
@@ -652,15 +712,21 @@ export function MultiPhaseStrategyManager() {
                     <CardDescription>{strategy.symbol}</CardDescription>
                   </div>
                   <div className={`text-lg font-bold ${getPnLColor(strategy.totalPnl || 0)}`}>
-                    ${strategy.totalPnl ? strategy.totalPnl > 0 ? "+" : "" : ""}
-                    {(strategy.totalPnl || 0).toFixed(2)} ({(strategy.totalPnlPercent || 0).toFixed(2)}%)
+                    ${strategy.totalPnl ? (strategy.totalPnl > 0 ? "+" : "") : ""}
+                    {(strategy.totalPnl || 0).toFixed(2)} (
+                    {(strategy.totalPnlPercent || 0).toFixed(2)}%)
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Completed {new Date(strategy.completedAt || strategy.createdAt).toLocaleDateString()}</span>
-                  <span>{strategy.executedPhases}/{strategy.totalPhases} phases executed</span>
+                  <span>
+                    Completed{" "}
+                    {new Date(strategy.completedAt || strategy.createdAt).toLocaleDateString()}
+                  </span>
+                  <span>
+                    {strategy.executedPhases}/{strategy.totalPhases} phases executed
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -699,7 +765,7 @@ export function MultiPhaseStrategyManager() {
                           className="w-full mt-4"
                           size="sm"
                           onClick={() => {
-                            setCreateFormData(prev => ({
+                            setCreateFormData((prev) => ({
                               ...prev,
                               templateId: template.id,
                               strategyType: "predefined",

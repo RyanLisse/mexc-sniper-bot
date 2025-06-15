@@ -1,14 +1,14 @@
 /**
  * MEXC Unified Exports - Single source of truth for all MEXC API functionality
- * 
+ *
  * This module provides unified access to all MEXC API capabilities through a single,
  * consistent interface. It replaces all legacy MEXC client implementations.
- * 
+ *
  * @example
  * ```typescript
  * // New unified approach
  * import { getMexcService } from '@/src/services/mexc-unified-exports';
- * 
+ *
  * const mexc = getMexcService();
  * const calendar = await mexc.getCalendarListings();
  * const balance = await mexc.getAccountBalances();
@@ -31,16 +31,16 @@ export {
 } from "./mexc-service-layer";
 
 // Unified client types
-export {
-  type UnifiedMexcConfig,
-  type UnifiedMexcResponse,
-  type CalendarEntry,
-  type SymbolEntry,
-  type BalanceEntry,
-  type ExchangeSymbol,
-  type Ticker,
-  type OrderResult,
-  type OrderParameters,
+export type {
+  UnifiedMexcConfig,
+  UnifiedMexcResponse,
+  CalendarEntry,
+  SymbolEntry,
+  BalanceEntry,
+  ExchangeSymbol,
+  Ticker,
+  OrderResult,
+  OrderParameters,
 } from "./unified-mexc-client";
 
 // ============================================================================
@@ -69,11 +69,11 @@ export function createMexcService(config: { apiKey?: string; secretKey?: string 
 /**
  * Default export provides the MEXC service
  * This is the recommended way to import MEXC functionality
- * 
+ *
  * @example
  * ```typescript
  * import mexcService from '@/src/services/mexc-unified-exports';
- * 
+ *
  * const calendar = await mexcService.getCalendarListings();
  * ```
  */

@@ -1,9 +1,9 @@
 import { MultiPhaseExecutor } from "./multi-phase-executor";
-import { type TradingStrategy } from "./trading-strategy-manager";
+import type { TradingStrategy } from "./trading-strategy-manager";
 
 /**
  * MULTI-PHASE TRADING BOT
- * 
+ *
  * Real-time Multi-Phase Example for processing price updates and executing phases,
  * exactly matching the specification from docs/tl-systems.md
  */
@@ -14,11 +14,7 @@ export class MultiPhaseTradingBot {
   private entryPrice: number;
   private position: number;
 
-  constructor(
-    strategy: TradingStrategy,
-    entryPrice: number,
-    position: number
-  ) {
+  constructor(strategy: TradingStrategy, entryPrice: number, position: number) {
     // Convert TradingStrategy to TradingStrategyConfig format
     const strategyConfig = {
       id: strategy.id,
@@ -26,7 +22,7 @@ export class MultiPhaseTradingBot {
       description: strategy.description || "",
       levels: strategy.levels,
     };
-    
+
     this.executor = new MultiPhaseExecutor(strategyConfig, entryPrice, position);
     this.entryPrice = entryPrice;
     this.position = position;
@@ -44,18 +40,13 @@ export class MultiPhaseTradingBot {
     execution.phasesToExecute.forEach((phase) => {
       actions.push(
         `🎯 EXECUTE Phase ${phase.phase}: Sell ${phase.amount} units ` +
-        `@ ${phase.level.multiplier}x for ${phase.expectedProfit.toFixed(2)} profit`
+          `@ ${phase.level.multiplier}x for ${phase.expectedProfit.toFixed(2)} profit`
       );
-      
+
       // Record execution
-      this.executor.recordPhaseExecution(
-        phase.phase,
-        currentPrice,
-        phase.amount,
-        {
-          fees: phase.expectedProfit * 0.001, // Estimate 0.1% fees
-        }
-      );
+      this.executor.recordPhaseExecution(phase.phase, currentPrice, phase.amount, {
+        fees: phase.expectedProfit * 0.001, // Estimate 0.1% fees
+      });
     });
 
     // Get current status
@@ -73,13 +64,13 @@ export class MultiPhaseTradingBot {
         visualization,
         nextTarget: execution.summary.nextPhaseTarget
           ? `${execution.summary.nextPhaseTarget.toFixed(2)}`
-          : 'All phases completed',
+          : "All phases completed",
       },
     };
   }
 
   // Additional methods for enhanced functionality
-  
+
   // Get current bot status
   getStatus(): {
     entryPrice: number;
@@ -89,7 +80,7 @@ export class MultiPhaseTradingBot {
     completionPercentage: number;
   } {
     const phaseStatus = this.executor.getPhaseStatus();
-    
+
     return {
       entryPrice: this.entryPrice,
       position: this.position,
@@ -115,26 +106,30 @@ export class MultiPhaseTradingBot {
     efficiency: number;
   } {
     const analytics = this.executor.getExecutionAnalytics();
-    const summary = this.executor.calculateSummary ? 
-      this.executor.calculateSummary(currentPrice) : 
-      { realizedProfit: 0, unrealizedProfit: 0, totalRemaining: this.position };
+    const summary = this.executor.calculateSummary
+      ? this.executor.calculateSummary(currentPrice)
+      : { realizedProfit: 0, unrealizedProfit: 0, totalRemaining: this.position };
 
     const totalPnL = summary.realizedProfit + summary.unrealizedProfit;
-    const totalPnLPercent = ((totalPnL) / (this.entryPrice * this.position)) * 100;
+    const totalPnLPercent = (totalPnL / (this.entryPrice * this.position)) * 100;
 
     return {
       totalPnL,
       totalPnLPercent,
       realizedPnL: summary.realizedProfit,
       unrealizedPnL: summary.unrealizedProfit,
-      bestPhase: analytics.bestExecution ? {
-        phase: analytics.bestExecution.phase,
-        profit: analytics.bestExecution.profit,
-      } : null,
-      worstPhase: analytics.worstExecution ? {
-        phase: analytics.worstExecution.phase,
-        profit: analytics.worstExecution.profit,
-      } : null,
+      bestPhase: analytics.bestExecution
+        ? {
+            phase: analytics.bestExecution.phase,
+            profit: analytics.bestExecution.profit,
+          }
+        : null,
+      worstPhase: analytics.worstExecution
+        ? {
+            phase: analytics.worstExecution.phase,
+            profit: analytics.worstExecution.profit,
+          }
+        : null,
       efficiency: analytics.executionEfficiency || 0,
     };
   }
@@ -158,7 +153,7 @@ export class MultiPhaseTradingBot {
     priceMovements.forEach(({ price, description }) => {
       const result = this.onPriceUpdate(price);
       const performance = this.getPerformanceSummary(price);
-      
+
       results.push({
         price,
         description,
@@ -212,10 +207,11 @@ export class MultiPhaseTradingBot {
     const currentValue = this.position * currentPrice;
     const initialValue = this.position * this.entryPrice;
     const currentDrawdown = priceChange < 0 ? Math.abs(priceChange) : 0;
-    
+
     // Calculate max potential reward vs risk
-    const maxReward = this.executor.getPhaseStatus().phaseDetails
-      .reduce((max, phase) => Math.max(max, phase.percentage), 0);
+    const maxReward = this.executor
+      .getPhaseStatus()
+      .phaseDetails.reduce((max, phase) => Math.max(max, phase.percentage), 0);
     const stopLossPercent = 10; // Default 10% stop loss
     const riskRewardRatio = maxReward / stopLossPercent;
 
@@ -231,10 +227,10 @@ export class MultiPhaseTradingBot {
 
 // Example: Real-world multi-phase execution - EXACT implementation from docs
 export function demonstrateMultiPhaseStrategy(): void {
-  console.log('=== Multi-Phase Trading Strategy Demo ===\n');
+  console.log("=== Multi-Phase Trading Strategy Demo ===\n");
 
   // Import required strategies
-  const { TRADING_STRATEGIES } = require('./trading-strategy-manager');
+  const { TRADING_STRATEGIES } = require("./trading-strategy-manager");
 
   // Create bot with conservative strategy
   const bot = new MultiPhaseTradingBot(
@@ -245,33 +241,33 @@ export function demonstrateMultiPhaseStrategy(): void {
 
   // Simulate price movements - EXACT from docs
   const priceMovements = [
-    { price: 105, description: 'Small pump +5%' },
-    { price: 112, description: 'Momentum building +12%' },
-    { price: 122, description: 'Breaking out +22%' },
-    { price: 135, description: 'Strong rally +35%' },
-    { price: 128, description: 'Small pullback +28%' },
+    { price: 105, description: "Small pump +5%" },
+    { price: 112, description: "Momentum building +12%" },
+    { price: 122, description: "Breaking out +22%" },
+    { price: 135, description: "Strong rally +35%" },
+    { price: 128, description: "Small pullback +28%" },
   ];
 
   priceMovements.forEach(({ price, description }) => {
     console.log(`\n📊 Price Update: ${price} - ${description}`);
     const result = bot.onPriceUpdate(price);
-    
+
     // Show actions
     if (result.actions.length > 0) {
-      console.log('\n🚨 ACTIONS:');
-      result.actions.forEach(action => console.log(action));
+      console.log("\n🚨 ACTIONS:");
+      result.actions.forEach((action) => console.log(action));
     }
-    
+
     // Show status
-    console.log('\n📈 Portfolio Status:');
+    console.log("\n📈 Portfolio Status:");
     console.log(`- Price increase: ${result.status.priceIncrease}`);
     console.log(`- Completed phases: ${result.status.summary.completedPhases}`);
     console.log(`- Remaining position: ${result.status.summary.totalRemaining} tokens`);
     console.log(`- Realized profit: ${result.status.summary.realizedProfit.toFixed(2)}`);
     console.log(`- Unrealized profit: ${result.status.summary.unrealizedProfit.toFixed(2)}`);
     console.log(`- Next target: ${result.status.nextTarget}`);
-    
-    console.log('\n📋 Phase Overview:');
+
+    console.log("\n📋 Phase Overview:");
     console.log(result.status.visualization);
   });
 }
@@ -299,7 +295,7 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
 
     // Export current state
     const currentState = this.exportState();
-    
+
     // Create new bot with new strategy
     const strategyConfig = {
       id: strategy.id,
@@ -307,10 +303,10 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
       description: strategy.description || "",
       levels: strategy.levels,
     };
-    
+
     this.executor = new MultiPhaseExecutor(strategyConfig, this.entryPrice, this.position);
     this.currentStrategyId = strategyId;
-    
+
     return true;
   }
 

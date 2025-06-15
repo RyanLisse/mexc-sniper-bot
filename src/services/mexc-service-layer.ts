@@ -1,17 +1,17 @@
-import { 
-  UnifiedMexcClient, 
-  getUnifiedMexcClient,
-  type UnifiedMexcResponse,
-  type CalendarEntry,
-  type SymbolEntry,
-  type BalanceEntry,
-  type ExchangeSymbol,
-  type Ticker,
-  type OrderResult,
-  type OrderParameters,
-  type UnifiedMexcConfig
-} from "./unified-mexc-client";
 import { circuitBreakerRegistry } from "./circuit-breaker";
+import {
+  type BalanceEntry,
+  type CalendarEntry,
+  type ExchangeSymbol,
+  type OrderParameters,
+  type OrderResult,
+  type SymbolEntry,
+  type Ticker,
+  type UnifiedMexcClient,
+  type UnifiedMexcConfig,
+  type UnifiedMexcResponse,
+  getUnifiedMexcClient,
+} from "./unified-mexc-client";
 
 // ============================================================================
 // Service Layer Configuration
@@ -91,9 +91,10 @@ class MetricsCollector {
 
     // Update average latency (exponential moving average)
     const alpha = 0.1;
-    current.averageLatencyMs = current.averageLatencyMs === 0 
-      ? latencyMs 
-      : alpha * latencyMs + (1 - alpha) * current.averageLatencyMs;
+    current.averageLatencyMs =
+      current.averageLatencyMs === 0
+        ? latencyMs
+        : alpha * latencyMs + (1 - alpha) * current.averageLatencyMs;
 
     // Update cache hit rate
     if (cached) {
@@ -213,7 +214,9 @@ export class MexcServiceLayer {
       };
 
       if (this.config.enableLogging) {
-        console.log(`[MexcServiceLayer] Completed ${operation} (${operationId}) in ${executionTimeMs}ms - Success: ${response.success}`);
+        console.log(
+          `[MexcServiceLayer] Completed ${operation} (${operationId}) in ${executionTimeMs}ms - Success: ${response.success}`
+        );
       }
 
       return serviceResponse;
@@ -227,7 +230,10 @@ export class MexcServiceLayer {
       }
 
       if (this.config.enableLogging) {
-        console.error(`[MexcServiceLayer] Failed ${operation} (${operationId}) in ${executionTimeMs}ms:`, errorMessage);
+        console.error(
+          `[MexcServiceLayer] Failed ${operation} (${operationId}) in ${executionTimeMs}ms:`,
+          errorMessage
+        );
       }
 
       return {
@@ -273,13 +279,13 @@ export class MexcServiceLayer {
   async getSymbolsForVcoins(vcoinIds: string[]): Promise<ServiceResponse<SymbolEntry[]>> {
     return this.executeWithMetrics("getSymbolsForVcoins", async () => {
       const allSymbolsResponse = await this.client.getSymbolsV2();
-      
+
       if (!allSymbolsResponse.success) {
         return allSymbolsResponse;
       }
 
       // Filter symbols by vcoin IDs
-      const filteredSymbols = allSymbolsResponse.data.filter(symbol => 
+      const filteredSymbols = allSymbolsResponse.data.filter((symbol) =>
         vcoinIds.includes(symbol.cd)
       );
 
@@ -338,7 +344,9 @@ export class MexcServiceLayer {
   /**
    * Get account balances with USDT conversion
    */
-  async getAccountBalances(): Promise<ServiceResponse<{ balances: BalanceEntry[]; totalUsdtValue: number; lastUpdated: string }>> {
+  async getAccountBalances(): Promise<
+    ServiceResponse<{ balances: BalanceEntry[]; totalUsdtValue: number; lastUpdated: string }>
+  > {
     return this.executeWithMetrics("getAccountBalances", async () => {
       return await this.client.getAccountBalances();
     });
@@ -347,7 +355,9 @@ export class MexcServiceLayer {
   /**
    * Get balance for a specific asset
    */
-  async getAssetBalance(asset: string): Promise<ServiceResponse<{ free: string; locked: string } | null>> {
+  async getAssetBalance(
+    asset: string
+  ): Promise<ServiceResponse<{ free: string; locked: string } | null>> {
     return this.executeWithMetrics("getAssetBalance", async () => {
       const balance = await this.client.getAssetBalance(asset);
       return {
@@ -409,7 +419,7 @@ export class MexcServiceLayer {
       try {
         const baseAsset = params.side === "BUY" ? "USDT" : params.symbol.replace(/USDT$/, "");
         const balanceCheck = await this.client.getAssetBalance(baseAsset);
-        
+
         if (!balanceCheck) {
           const errorMessage = `Unable to verify ${baseAsset} balance before placing order`;
           return {
@@ -429,9 +439,11 @@ export class MexcServiceLayer {
         }
 
         const availableBalance = Number.parseFloat(balanceCheck.free);
-        const requiredAmount = params.side === "BUY" 
-          ? Number.parseFloat(params.quantity) * (params.price ? Number.parseFloat(params.price) : 1)
-          : Number.parseFloat(params.quantity);
+        const requiredAmount =
+          params.side === "BUY"
+            ? Number.parseFloat(params.quantity) *
+              (params.price ? Number.parseFloat(params.price) : 1)
+            : Number.parseFloat(params.quantity);
 
         if (availableBalance < requiredAmount) {
           const errorMessage = `Insufficient ${baseAsset} balance. Available: ${balanceCheck.free}, Required: ${requiredAmount.toFixed(8)}`;
@@ -452,11 +464,16 @@ export class MexcServiceLayer {
         }
 
         if (this.config.enableLogging) {
-          console.log(`[MexcServiceLayer] Balance check passed: ${baseAsset} balance: ${balanceCheck.free}`);
+          console.log(
+            `[MexcServiceLayer] Balance check passed: ${baseAsset} balance: ${balanceCheck.free}`
+          );
         }
       } catch (balanceError) {
         if (this.config.enableLogging) {
-          console.warn("[MexcServiceLayer] Balance check failed, proceeding with order:", balanceError);
+          console.warn(
+            "[MexcServiceLayer] Balance check failed, proceeding with order:",
+            balanceError
+          );
         }
         // Continue with order placement even if balance check fails
       }
@@ -469,7 +486,10 @@ export class MexcServiceLayer {
   /**
    * Place market buy order with quote quantity
    */
-  async placeMarketBuyOrder(symbol: string, quoteOrderQty: number): Promise<ServiceResponse<OrderResult>> {
+  async placeMarketBuyOrder(
+    symbol: string,
+    quoteOrderQty: number
+  ): Promise<ServiceResponse<OrderResult>> {
     const params: OrderParameters = {
       symbol,
       side: "BUY",
@@ -485,7 +505,10 @@ export class MexcServiceLayer {
   /**
    * Place market sell order
    */
-  async placeMarketSellOrder(symbol: string, quantity: number): Promise<ServiceResponse<OrderResult>> {
+  async placeMarketSellOrder(
+    symbol: string,
+    quantity: number
+  ): Promise<ServiceResponse<OrderResult>> {
     const params: OrderParameters = {
       symbol,
       side: "SELL",
@@ -501,9 +524,9 @@ export class MexcServiceLayer {
    * Place limit order
    */
   async placeLimitOrder(
-    symbol: string, 
-    side: "BUY" | "SELL", 
-    quantity: number, 
+    symbol: string,
+    side: "BUY" | "SELL",
+    quantity: number,
     price: number,
     timeInForce: "GTC" | "IOC" | "FOK" = "GTC"
   ): Promise<ServiceResponse<OrderResult>> {
@@ -526,12 +549,14 @@ export class MexcServiceLayer {
   /**
    * Detect ready state patterns (sts:2, st:2, tt:4)
    */
-  async detectReadyStatePatterns(vcoinIds?: string[]): Promise<ServiceResponse<{
-    totalSymbols: number;
-    readyStateSymbols: SymbolEntry[];
-    readyStateCount: number;
-    analysisTimestamp: string;
-  }>> {
+  async detectReadyStatePatterns(vcoinIds?: string[]): Promise<
+    ServiceResponse<{
+      totalSymbols: number;
+      readyStateSymbols: SymbolEntry[];
+      readyStateCount: number;
+      analysisTimestamp: string;
+    }>
+  > {
     return this.executeWithMetrics("detectReadyStatePatterns", async () => {
       let symbolsData: SymbolEntry[];
 
@@ -572,12 +597,14 @@ export class MexcServiceLayer {
       }
 
       // Filter for ready state pattern: sts:2, st:2, tt:4
-      const readyStateSymbols = symbolsData.filter(symbol => 
-        symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4
+      const readyStateSymbols = symbolsData.filter(
+        (symbol) => symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4
       );
 
       if (this.config.enableLogging) {
-        console.log(`[MexcServiceLayer] Pattern detection: ${readyStateSymbols.length}/${symbolsData.length} symbols in ready state`);
+        console.log(
+          `[MexcServiceLayer] Pattern detection: ${readyStateSymbols.length}/${symbolsData.length} symbols in ready state`
+        );
       }
 
       return {
@@ -596,14 +623,16 @@ export class MexcServiceLayer {
   /**
    * Get comprehensive market overview
    */
-  async getMarketOverview(): Promise<ServiceResponse<{
-    calendarCount: number;
-    totalSymbols: number;
-    readyStateCount: number;
-    exchangeSymbolsCount: number;
-    serverTime: number;
-    lastUpdated: string;
-  }>> {
+  async getMarketOverview(): Promise<
+    ServiceResponse<{
+      calendarCount: number;
+      totalSymbols: number;
+      readyStateCount: number;
+      exchangeSymbolsCount: number;
+      serverTime: number;
+      lastUpdated: string;
+    }>
+  > {
     return this.executeWithMetrics("getMarketOverview", async () => {
       const [calendar, symbols, exchangeInfo, serverTime] = await Promise.allSettled([
         this.getCalendarListings(),
@@ -612,21 +641,25 @@ export class MexcServiceLayer {
         this.getServerTime(),
       ]);
 
-      const calendarCount = calendar.status === "fulfilled" && calendar.value.success 
-        ? calendar.value.data.length : 0;
+      const calendarCount =
+        calendar.status === "fulfilled" && calendar.value.success ? calendar.value.data.length : 0;
 
-      const symbolsData = symbols.status === "fulfilled" && symbols.value.success 
-        ? symbols.value.data : [];
-      
-      const readyStateCount = symbolsData.filter(symbol => 
-        symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4
+      const symbolsData =
+        symbols.status === "fulfilled" && symbols.value.success ? symbols.value.data : [];
+
+      const readyStateCount = symbolsData.filter(
+        (symbol) => symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4
       ).length;
 
-      const exchangeSymbolsCount = exchangeInfo.status === "fulfilled" && exchangeInfo.value.success
-        ? exchangeInfo.value.data.length : 0;
+      const exchangeSymbolsCount =
+        exchangeInfo.status === "fulfilled" && exchangeInfo.value.success
+          ? exchangeInfo.value.data.length
+          : 0;
 
-      const currentServerTime = serverTime.status === "fulfilled" && serverTime.value.success
-        ? serverTime.value.data : Date.now();
+      const currentServerTime =
+        serverTime.status === "fulfilled" && serverTime.value.success
+          ? serverTime.value.data
+          : Date.now();
 
       return {
         success: true,
@@ -652,11 +685,11 @@ export class MexcServiceLayer {
    */
   async performHealthCheck(): Promise<HealthCheckResult> {
     const startTime = performance.now();
-    
+
     try {
       // Test basic connectivity
       const connectivityTest = await this.client.testConnectivity();
-      
+
       // Test authentication (if credentials are available)
       let authenticationTest = true;
       if (this.client.hasCredentials()) {
@@ -681,9 +714,11 @@ export class MexcServiceLayer {
       };
 
       this.lastHealthCheck = result;
-      
+
       if (this.config.enableLogging) {
-        console.log(`[MexcServiceLayer] Health check completed: ${result.healthy ? "HEALTHY" : "UNHEALTHY"} (${latencyMs}ms)`);
+        console.log(
+          `[MexcServiceLayer] Health check completed: ${result.healthy ? "HEALTHY" : "UNHEALTHY"} (${latencyMs}ms)`
+        );
       }
 
       return result;
@@ -727,7 +762,7 @@ export class MexcServiceLayer {
     }
 
     // Perform initial health check
-    this.performHealthCheck().catch(error => {
+    this.performHealthCheck().catch((error) => {
       if (this.config.enableLogging) {
         console.error("[MexcServiceLayer] Initial health check failed:", error);
       }
@@ -735,7 +770,7 @@ export class MexcServiceLayer {
 
     // Schedule periodic health checks (every 5 minutes)
     this.healthCheckInterval = setInterval(() => {
-      this.performHealthCheck().catch(error => {
+      this.performHealthCheck().catch((error) => {
         if (this.config.enableLogging) {
           console.error("[MexcServiceLayer] Periodic health check failed:", error);
         }
@@ -796,11 +831,18 @@ export class MexcServiceLayer {
    */
   updateConfig(newConfig: Partial<MexcServiceConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
+
     // Update client configuration if relevant properties changed
-    const clientConfigKeys = ['apiKey', 'secretKey', 'baseUrl', 'timeout', 'maxRetries', 'retryDelay'];
+    const clientConfigKeys = [
+      "apiKey",
+      "secretKey",
+      "baseUrl",
+      "timeout",
+      "maxRetries",
+      "retryDelay",
+    ];
     const clientConfigUpdates: Partial<UnifiedMexcConfig> = {};
-    
+
     for (const key of clientConfigKeys) {
       if (key in newConfig) {
         (clientConfigUpdates as any)[key] = (newConfig as any)[key];

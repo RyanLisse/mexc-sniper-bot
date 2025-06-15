@@ -1,8 +1,8 @@
-import { TradingStrategyManager, type TradingStrategy } from "./trading-strategy-manager";
+import { type TradingStrategy, TradingStrategyManager } from "./trading-strategy-manager";
 
 /**
  * ADVANCED TRADING STRATEGY
- * 
+ *
  * Advanced features including volatility adjustments and trailing stop loss,
  * exactly matching the specification from docs/tl-systems.md
  */
@@ -34,15 +34,15 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
   calculateTrailingStopLoss(
     entryPrice: number,
     highestPrice: number,
-    trailingPercentage: number = 10
+    trailingPercentage = 10
   ): number {
     const profitPercentage = ((highestPrice - entryPrice) / entryPrice) * 100;
-    
+
     // Only activate trailing stop after certain profit
     if (profitPercentage > 20) {
       return highestPrice * (1 - trailingPercentage / 100);
     }
-    
+
     // Otherwise use fixed stop loss
     return entryPrice * 0.9; // 10% stop loss
   }
@@ -67,23 +67,25 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
   } {
     // Store original strategy
     const originalStrategy = this.getActiveStrategy();
-    
+
     // Apply volatility adjustment
     this.adjustStrategyForVolatility(volatilityIndex);
     const adjustedStrategy = this.getActiveStrategy();
-    
+
     // Get adjusted recommendations
     const recommendations = this.getSellRecommendations(entryPrice, currentPrice, totalAmount);
-    
+
     // Calculate highest price for trailing stop
     const highestPrice = Math.max(currentPrice, entryPrice);
     const trailingStopLoss = this.calculateTrailingStopLoss(entryPrice, highestPrice);
-    
+
     // Add adjustment information to recommendations
     const adjustedRecommendations = recommendations.map((rec, index) => ({
       ...rec,
-      adjustment: originalStrategy.levels[index] 
-        ? ((rec.level.percentage - originalStrategy.levels[index].percentage) / originalStrategy.levels[index].percentage) * 100
+      adjustment: originalStrategy.levels[index]
+        ? ((rec.level.percentage - originalStrategy.levels[index].percentage) /
+            originalStrategy.levels[index].percentage) *
+          100
         : 0,
     }));
 
@@ -104,9 +106,9 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
     entryPrice: number,
     currentPrice: number,
     volatilityIndex: number,
-    marketTrend: 'bullish' | 'bearish' | 'sideways'
+    marketTrend: "bullish" | "bearish" | "sideways"
   ): {
-    riskLevel: 'low' | 'medium' | 'high' | 'extreme';
+    riskLevel: "low" | "medium" | "high" | "extreme";
     riskScore: number;
     recommendations: string[];
     shouldAdjustStrategy: boolean;
@@ -130,29 +132,29 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
     }
 
     // Market trend risk
-    if (marketTrend === 'bearish' && priceChange > 0) {
+    if (marketTrend === "bearish" && priceChange > 0) {
       riskScore += 20;
       recommendations.push("Bearish trend with positive position - consider early profit taking");
-    } else if (marketTrend === 'sideways' && Math.abs(priceChange) > 20) {
+    } else if (marketTrend === "sideways" && Math.abs(priceChange) > 20) {
       riskScore += 10;
       recommendations.push("Sideways market with large movement - potential reversal risk");
     }
 
     // Determine risk level
-    let riskLevel: 'low' | 'medium' | 'high' | 'extreme';
-    if (riskScore >= 70) riskLevel = 'extreme';
-    else if (riskScore >= 50) riskLevel = 'high';
-    else if (riskScore >= 25) riskLevel = 'medium';
-    else riskLevel = 'low';
+    let riskLevel: "low" | "medium" | "high" | "extreme";
+    if (riskScore >= 70) riskLevel = "extreme";
+    else if (riskScore >= 50) riskLevel = "high";
+    else if (riskScore >= 25) riskLevel = "medium";
+    else riskLevel = "low";
 
     // Strategy adjustment recommendations
     const shouldAdjustStrategy = riskScore >= 40 || volatilityIndex > 0.6;
-    
+
     if (shouldAdjustStrategy) {
       recommendations.push("Consider adjusting strategy for current market conditions");
     }
 
-    if (riskLevel === 'extreme') {
+    if (riskLevel === "extreme") {
       recommendations.push("EXTREME RISK: Consider emergency exit or position reduction");
     }
 
@@ -186,7 +188,7 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
     const baseSize = baseRiskAmount / stopLossDistance;
 
     // Volatility adjustment
-    const volatilityAdjustment = 1 - (volatilityIndex * 0.3); // Reduce size in high volatility
+    const volatilityAdjustment = 1 - volatilityIndex * 0.3; // Reduce size in high volatility
     const adjustedSize = baseSize * volatilityAdjustment;
 
     // Maximum size limits
@@ -211,9 +213,9 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
   // Dynamic strategy selection based on market conditions
   selectOptimalStrategy(
     volatilityIndex: number,
-    marketTrend: 'bullish' | 'bearish' | 'sideways',
-    timeHorizon: 'short' | 'medium' | 'long',
-    riskTolerance: 'low' | 'medium' | 'high'
+    marketTrend: "bullish" | "bearish" | "sideways",
+    timeHorizon: "short" | "medium" | "long",
+    riskTolerance: "low" | "medium" | "high"
   ): {
     recommendedStrategy: string;
     confidence: number;
@@ -222,38 +224,38 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
   } {
     const reasoning: string[] = [];
     const alternativeStrategies: string[] = [];
-    let recommendedStrategy = 'normal';
+    let recommendedStrategy = "normal";
     let confidence = 50;
 
     // Base strategy selection
-    if (riskTolerance === 'low' || timeHorizon === 'short') {
-      recommendedStrategy = 'conservative';
+    if (riskTolerance === "low" || timeHorizon === "short") {
+      recommendedStrategy = "conservative";
       confidence += 20;
       reasoning.push("Conservative approach matches low risk tolerance");
-      alternativeStrategies.push('scalping');
-    } else if (riskTolerance === 'high' && timeHorizon === 'long') {
-      recommendedStrategy = 'diamond';
+      alternativeStrategies.push("scalping");
+    } else if (riskTolerance === "high" && timeHorizon === "long") {
+      recommendedStrategy = "diamond";
       confidence += 15;
       reasoning.push("Diamond hands strategy for high risk, long-term approach");
-      alternativeStrategies.push('highPriceIncrease');
-    } else if (timeHorizon === 'short') {
-      recommendedStrategy = 'scalping';
+      alternativeStrategies.push("highPriceIncrease");
+    } else if (timeHorizon === "short") {
+      recommendedStrategy = "scalping";
       confidence += 15;
       reasoning.push("Scalping strategy optimal for short-term trades");
-      alternativeStrategies.push('conservative');
+      alternativeStrategies.push("conservative");
     }
 
     // Market trend adjustments
-    if (marketTrend === 'bullish') {
-      if (recommendedStrategy === 'conservative') {
-        recommendedStrategy = 'normal';
+    if (marketTrend === "bullish") {
+      if (recommendedStrategy === "conservative") {
+        recommendedStrategy = "normal";
         confidence += 10;
         reasoning.push("Bullish trend supports more aggressive strategy");
       }
-      alternativeStrategies.push('highPriceIncrease');
-    } else if (marketTrend === 'bearish') {
-      if (['diamond', 'highPriceIncrease'].includes(recommendedStrategy)) {
-        recommendedStrategy = 'conservative';
+      alternativeStrategies.push("highPriceIncrease");
+    } else if (marketTrend === "bearish") {
+      if (["diamond", "highPriceIncrease"].includes(recommendedStrategy)) {
+        recommendedStrategy = "conservative";
         confidence += 15;
         reasoning.push("Bearish trend requires conservative approach");
       }
@@ -263,8 +265,8 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
     if (volatilityIndex > 0.7) {
       confidence -= 10;
       reasoning.push("High volatility increases uncertainty");
-      if (!alternativeStrategies.includes('conservative')) {
-        alternativeStrategies.push('conservative');
+      if (!alternativeStrategies.includes("conservative")) {
+        alternativeStrategies.push("conservative");
       }
     } else if (volatilityIndex < 0.3) {
       confidence += 10;
@@ -273,7 +275,7 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
 
     // Ensure strategy exists
     if (!TRADING_STRATEGIES[recommendedStrategy]) {
-      recommendedStrategy = 'normal';
+      recommendedStrategy = "normal";
       confidence = 50;
       reasoning.push("Fallback to normal strategy");
     }
@@ -282,7 +284,7 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
       recommendedStrategy,
       confidence: Math.min(100, Math.max(0, confidence)),
       reasoning,
-      alternativeStrategies: alternativeStrategies.filter(s => s !== recommendedStrategy),
+      alternativeStrategies: alternativeStrategies.filter((s) => s !== recommendedStrategy),
     };
   }
 }

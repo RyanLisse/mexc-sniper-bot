@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * TRADING STRATEGY MANAGER
- * 
+ *
  * Manages multiple trading strategies with switching capabilities,
  * exactly matching the specification from docs/tl-systems.md
  */
@@ -28,57 +28,57 @@ export type TradingStrategy = z.infer<typeof TradingStrategySchema>;
 // Multi-Phase Take Profit Strategy configurations - EXACT MATCH to docs
 export const TRADING_STRATEGIES: Record<string, TradingStrategy> = {
   normal: {
-    id: 'normal',
-    name: 'Normal Multi-Phase Strategy',
-    description: 'Standaard multi-phase strategie met 4 exit punten',
+    id: "normal",
+    name: "Normal Multi-Phase Strategy",
+    description: "Standaard multi-phase strategie met 4 exit punten",
     levels: [
-      { percentage: 50, multiplier: 1.5, sellPercentage: 25 },   // Phase 1: 25% @ +50%
-      { percentage: 100, multiplier: 2.0, sellPercentage: 25 },  // Phase 2: 25% @ +100%
+      { percentage: 50, multiplier: 1.5, sellPercentage: 25 }, // Phase 1: 25% @ +50%
+      { percentage: 100, multiplier: 2.0, sellPercentage: 25 }, // Phase 2: 25% @ +100%
       { percentage: 125, multiplier: 2.25, sellPercentage: 20 }, // Phase 3: 20% @ +125%
       { percentage: 175, multiplier: 2.75, sellPercentage: 10 }, // Phase 4: 10% @ +175%
       // Remaining 20% holds for moonshot potential
     ],
   },
   highPriceIncrease: {
-    id: 'highPriceIncrease',
-    name: 'Aggressive Multi-Phase Strategy',
-    description: 'Agressieve multi-phase strategie voor hogere targets',
+    id: "highPriceIncrease",
+    name: "Aggressive Multi-Phase Strategy",
+    description: "Agressieve multi-phase strategie voor hogere targets",
     levels: [
-      { percentage: 100, multiplier: 2.0, sellPercentage: 15 },  // Phase 1: 15% @ +100%
-      { percentage: 150, multiplier: 2.5, sellPercentage: 15 },  // Phase 2: 15% @ +150%
-      { percentage: 200, multiplier: 3.0, sellPercentage: 25 },  // Phase 3: 25% @ +200%
-      { percentage: 300, multiplier: 4.0, sellPercentage: 25 },  // Phase 4: 25% @ +300%
+      { percentage: 100, multiplier: 2.0, sellPercentage: 15 }, // Phase 1: 15% @ +100%
+      { percentage: 150, multiplier: 2.5, sellPercentage: 15 }, // Phase 2: 15% @ +150%
+      { percentage: 200, multiplier: 3.0, sellPercentage: 25 }, // Phase 3: 25% @ +200%
+      { percentage: 300, multiplier: 4.0, sellPercentage: 25 }, // Phase 4: 25% @ +300%
       // Remaining 20% holds for extreme gains
     ],
   },
   conservative: {
-    id: 'conservative',
-    name: 'Conservative Multi-Phase Strategy',
-    description: 'Voorzichtige strategie met vroege winst-taking',
+    id: "conservative",
+    name: "Conservative Multi-Phase Strategy",
+    description: "Voorzichtige strategie met vroege winst-taking",
     levels: [
-      { percentage: 10, multiplier: 1.1, sellPercentage: 30 },   // Phase 1: 30% @ +10%
-      { percentage: 20, multiplier: 1.2, sellPercentage: 40 },   // Phase 2: 40% @ +20%
-      { percentage: 30, multiplier: 1.3, sellPercentage: 30 },   // Phase 3: 30% @ +30%
+      { percentage: 10, multiplier: 1.1, sellPercentage: 30 }, // Phase 1: 30% @ +10%
+      { percentage: 20, multiplier: 1.2, sellPercentage: 40 }, // Phase 2: 40% @ +20%
+      { percentage: 30, multiplier: 1.3, sellPercentage: 30 }, // Phase 3: 30% @ +30%
     ],
   },
   scalping: {
-    id: 'scalping',
-    name: 'Scalping Multi-Phase Strategy',
-    description: 'Snelle winsten met kleine targets',
+    id: "scalping",
+    name: "Scalping Multi-Phase Strategy",
+    description: "Snelle winsten met kleine targets",
     levels: [
-      { percentage: 5, multiplier: 1.05, sellPercentage: 20 },   // Phase 1: 20% @ +5%
-      { percentage: 10, multiplier: 1.1, sellPercentage: 30 },   // Phase 2: 30% @ +10%
-      { percentage: 15, multiplier: 1.15, sellPercentage: 30 },  // Phase 3: 30% @ +15%
-      { percentage: 20, multiplier: 1.2, sellPercentage: 20 },   // Phase 4: 20% @ +20%
+      { percentage: 5, multiplier: 1.05, sellPercentage: 20 }, // Phase 1: 20% @ +5%
+      { percentage: 10, multiplier: 1.1, sellPercentage: 30 }, // Phase 2: 30% @ +10%
+      { percentage: 15, multiplier: 1.15, sellPercentage: 30 }, // Phase 3: 30% @ +15%
+      { percentage: 20, multiplier: 1.2, sellPercentage: 20 }, // Phase 4: 20% @ +20%
     ],
   },
   diamond: {
-    id: 'diamond',
-    name: 'Diamond Hands Multi-Phase Strategy',
-    description: 'Voor lange termijn holds met hoge targets',
+    id: "diamond",
+    name: "Diamond Hands Multi-Phase Strategy",
+    description: "Voor lange termijn holds met hoge targets",
     levels: [
-      { percentage: 200, multiplier: 3.0, sellPercentage: 10 },   // Phase 1: 10% @ +200%
-      { percentage: 500, multiplier: 6.0, sellPercentage: 20 },   // Phase 2: 20% @ +500%
+      { percentage: 200, multiplier: 3.0, sellPercentage: 10 }, // Phase 1: 10% @ +200%
+      { percentage: 500, multiplier: 6.0, sellPercentage: 20 }, // Phase 2: 20% @ +500%
       { percentage: 1000, multiplier: 11.0, sellPercentage: 30 }, // Phase 3: 30% @ +1000%
       { percentage: 2000, multiplier: 21.0, sellPercentage: 20 }, // Phase 4: 20% @ +2000%
       // Remaining 20% for absolute moonshot
@@ -91,7 +91,7 @@ export class TradingStrategyManager {
   private strategies: Map<string, TradingStrategy>;
   private activeStrategy: TradingStrategy;
 
-  constructor(initialStrategy: string = 'normal') {
+  constructor(initialStrategy = "normal") {
     this.strategies = new Map(Object.entries(TRADING_STRATEGIES));
     this.activeStrategy = this.strategies.get(initialStrategy) || TRADING_STRATEGIES.normal;
   }
@@ -128,7 +128,7 @@ export class TradingStrategyManager {
     sellAmount: number;
   }> {
     const priceIncrease = ((currentPrice - entryPrice) / entryPrice) * 100;
-    
+
     return this.activeStrategy.levels.map((level) => {
       const targetPrice = entryPrice * level.multiplier;
       const triggered = priceIncrease >= level.percentage;
@@ -154,7 +154,7 @@ export class TradingStrategyManager {
     realizedProfit: number;
   } {
     const recommendations = this.getSellRecommendations(entryPrice, currentPrice, totalAmount);
-    
+
     let soldAmount = 0;
     let realizedProfit = 0;
 
@@ -194,7 +194,10 @@ export class TradingStrategyManager {
   }
 
   // Get sell recommendation for specific price
-  getSellRecommendation(currentPrice: number, entryPrice: number): {
+  getSellRecommendation(
+    currentPrice: number,
+    entryPrice: number
+  ): {
     shouldSell: boolean;
     phases: Array<{
       phase: number;
@@ -224,7 +227,7 @@ export class TradingStrategyManager {
       if (priceIncrease >= level.percentage) {
         // Calculate expected profit for 1 unit
         const expectedProfit = (currentPrice - entryPrice) * (level.sellPercentage / 100);
-        
+
         triggeredPhases.push({
           phase: index + 1,
           percentage: level.percentage,
@@ -234,7 +237,10 @@ export class TradingStrategyManager {
       }
     });
 
-    const totalExpectedProfit = triggeredPhases.reduce((sum, phase) => sum + phase.expectedProfit, 0);
+    const totalExpectedProfit = triggeredPhases.reduce(
+      (sum, phase) => sum + phase.expectedProfit,
+      0
+    );
 
     return {
       shouldSell: triggeredPhases.length > 0,
@@ -264,7 +270,12 @@ export class TradingStrategyManager {
 
       // Validate levels
       for (const level of strategy.levels) {
-        if (level.percentage < 0 || level.multiplier < 1 || level.sellPercentage < 0 || level.sellPercentage > 100) {
+        if (
+          level.percentage < 0 ||
+          level.multiplier < 1 ||
+          level.sellPercentage < 0 ||
+          level.sellPercentage > 100
+        ) {
           return false;
         }
       }

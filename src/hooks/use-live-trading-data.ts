@@ -1,9 +1,9 @@
 /**
  * Live Trading Data Hook
- * 
+ *
  * React hook for real-time trading data including prices, signals, and execution updates.
  * Integrates with MEXC WebSocket streams and AI trading system.
- * 
+ *
  * Features:
  * - Real-time price feeds
  * - Order book streaming
@@ -13,15 +13,15 @@
  * - Performance analytics
  */
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { useWebSocket } from './use-websocket';
-import {
-  type TradingPriceMessage,
-  type TradingSignalMessage,
-  type TradingExecutionMessage,
-  type TradingBalanceMessage,
-  type TradingPortfolioMessage,
-} from '@/src/lib/websocket-types';
+import type {
+  TradingBalanceMessage,
+  TradingExecutionMessage,
+  TradingPortfolioMessage,
+  TradingPriceMessage,
+  TradingSignalMessage,
+} from "@/src/lib/websocket-types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useWebSocket } from "./use-websocket";
 
 // ======================
 // Types and Interfaces
@@ -60,7 +60,7 @@ export interface OrderBookData {
 export interface TradingSignal {
   signalId: string;
   symbol: string;
-  type: 'buy' | 'sell' | 'hold' | 'monitor';
+  type: "buy" | "sell" | "hold" | "monitor";
   strength: number;
   confidence: number;
   source: string;
@@ -77,9 +77,9 @@ export interface TradeExecution {
   executionId: string;
   orderId: string;
   symbol: string;
-  side: 'buy' | 'sell';
-  type: 'market' | 'limit' | 'stop' | 'stop_limit';
-  status: 'pending' | 'filled' | 'partially_filled' | 'cancelled' | 'rejected';
+  side: "buy" | "sell";
+  type: "market" | "limit" | "stop" | "stop_limit";
+  status: "pending" | "filled" | "partially_filled" | "cancelled" | "rejected";
   quantity: number;
   price: number;
   executedQuantity: number;
@@ -170,9 +170,9 @@ export interface UseLiveTradingDataResult {
   /** Unsubscribe from symbol */
   unsubscribeFromSymbol: (symbol: string) => void;
   /** Get price change for timeframe */
-  getPriceChange: (symbol: string, timeframe: '1m' | '5m' | '1h' | '24h') => number;
+  getPriceChange: (symbol: string, timeframe: "1m" | "5m" | "1h" | "24h") => number;
   /** Get top movers */
-  getTopMovers: (type: 'gainers' | 'losers', limit?: number) => PriceData[];
+  getTopMovers: (type: "gainers" | "losers", limit?: number) => PriceData[];
   /** Clear historical data */
   clearHistory: () => void;
 }
@@ -205,21 +205,24 @@ class PriceAnalyticsEngine {
 
     const now = Date.now();
     const cutoff = now - timeframeMs;
-    
+
     const currentPrice = history[0].price;
-    const pastPrice = history.find(h => h.timestamp <= cutoff)?.price;
-    
+    const pastPrice = history.find((h) => h.timestamp <= cutoff)?.price;
+
     if (!pastPrice) return 0;
-    
+
     return ((currentPrice - pastPrice) / pastPrice) * 100;
   }
 
-  getTopMovers(prices: Map<string, PriceData>, type: 'gainers' | 'losers', limit = 10): PriceData[] {
+  getTopMovers(
+    prices: Map<string, PriceData>,
+    type: "gainers" | "losers",
+    limit = 10
+  ): PriceData[] {
     const sortedPrices = Array.from(prices.values())
-      .filter(p => p.changePercent !== 0)
-      .sort((a, b) => type === 'gainers' 
-        ? b.changePercent - a.changePercent 
-        : a.changePercent - b.changePercent
+      .filter((p) => p.changePercent !== 0)
+      .sort((a, b) =>
+        type === "gainers" ? b.changePercent - a.changePercent : a.changePercent - b.changePercent
       );
 
     return sortedPrices.slice(0, limit);
@@ -256,25 +259,32 @@ class TradingMetricsCalculator {
   }
 
   calculateMetrics(): TradingMetrics {
-    const completedTrades = this.executions.filter(e => e.status === 'filled');
-    const profitableTrades = completedTrades.filter(e => this.isTradeProfit(e));
-    
+    const completedTrades = this.executions.filter((e) => e.status === "filled");
+    const profitableTrades = completedTrades.filter((e) => this.isTradeProfit(e));
+
     const wins = profitableTrades.length;
     const losses = completedTrades.length - wins;
     const winRate = completedTrades.length > 0 ? wins / completedTrades.length : 0;
 
-    const profits = profitableTrades.map(e => this.getTradeProfit(e));
-    const losses_amounts = completedTrades.filter(e => !this.isTradeProfit(e)).map(e => Math.abs(this.getTradeProfit(e)));
+    const profits = profitableTrades.map((e) => this.getTradeProfit(e));
+    const losses_amounts = completedTrades
+      .filter((e) => !this.isTradeProfit(e))
+      .map((e) => Math.abs(this.getTradeProfit(e)));
 
-    const averageWin = profits.length > 0 ? profits.reduce((sum, p) => sum + p, 0) / profits.length : 0;
-    const averageLoss = losses_amounts.length > 0 ? losses_amounts.reduce((sum, l) => sum + l, 0) / losses_amounts.length : 0;
+    const averageWin =
+      profits.length > 0 ? profits.reduce((sum, p) => sum + p, 0) / profits.length : 0;
+    const averageLoss =
+      losses_amounts.length > 0
+        ? losses_amounts.reduce((sum, l) => sum + l, 0) / losses_amounts.length
+        : 0;
 
     const totalReturn = this.initialValue > 0 ? this.totalValue - this.initialValue : 0;
     const totalReturnPercent = this.initialValue > 0 ? (totalReturn / this.initialValue) * 100 : 0;
 
     const unrealizedPnl = this.positions.reduce((sum, pos) => sum + pos.unrealizedPnl, 0);
     const dayChange = unrealizedPnl; // Simplified calculation
-    const dayChangePercent = this.totalValue > 0 ? (dayChange / (this.totalValue - dayChange)) * 100 : 0;
+    const dayChangePercent =
+      this.totalValue > 0 ? (dayChange / (this.totalValue - dayChange)) * 100 : 0;
 
     return {
       totalValue: this.totalValue,
@@ -294,12 +304,14 @@ class TradingMetricsCalculator {
 
   private isTradeProfit(execution: TradeExecution): boolean {
     // Simplified - would need more complex logic for actual P&L calculation
-    return execution.side === 'sell' ? execution.executedPrice > execution.price : execution.executedPrice < execution.price;
+    return execution.side === "sell"
+      ? execution.executedPrice > execution.price
+      : execution.executedPrice < execution.price;
   }
 
   private getTradeProfit(execution: TradeExecution): number {
     // Simplified profit calculation
-    const direction = execution.side === 'buy' ? 1 : -1;
+    const direction = execution.side === "buy" ? 1 : -1;
     return direction * (execution.executedPrice - execution.price) * execution.executedQuantity;
   }
 
@@ -320,7 +332,9 @@ class TradingMetricsCalculator {
 // Main Hook
 // ======================
 
-export function useLiveTradingData(config: UseLiveTradingDataConfig = {}): UseLiveTradingDataResult {
+export function useLiveTradingData(
+  config: UseLiveTradingDataConfig = {}
+): UseLiveTradingDataResult {
   const {
     symbols = [],
     enableOrderBook = true,
@@ -372,177 +386,199 @@ export function useLiveTradingData(config: UseLiveTradingDataConfig = {}): UseLi
   const priceThrottleRef = useRef(new Map<string, number>());
 
   // Price update handler
-  const handlePriceUpdate = useCallback((message: any) => {
-    if (!isMountedRef.current) return;
+  const handlePriceUpdate = useCallback(
+    (message: any) => {
+      if (!isMountedRef.current) return;
 
-    const priceData = message.data as TradingPriceMessage;
-    const now = Date.now();
-    
-    // Throttle price updates
-    const lastUpdate = priceThrottleRef.current.get(priceData.symbol) || 0;
-    if (now - lastUpdate < priceThrottleMs) return;
-    
-    priceThrottleRef.current.set(priceData.symbol, now);
+      const priceData = message.data as TradingPriceMessage;
+      const now = Date.now();
 
-    const priceInfo: PriceData = {
-      symbol: priceData.symbol,
-      price: priceData.price,
-      change: priceData.change,
-      changePercent: priceData.changePercent,
-      volume: priceData.volume,
-      timestamp: priceData.timestamp,
-      source: priceData.source,
-      metadata: priceData.metadata,
-    };
+      // Throttle price updates
+      const lastUpdate = priceThrottleRef.current.get(priceData.symbol) || 0;
+      if (now - lastUpdate < priceThrottleMs) return;
 
-    setPrices(prev => {
-      const newMap = new Map(prev);
-      newMap.set(priceData.symbol, priceInfo);
-      return newMap;
-    });
+      priceThrottleRef.current.set(priceData.symbol, now);
 
-    // Add to analytics
-    analyticsRef.current.addPricePoint(priceData.symbol, priceData.price, priceData.timestamp);
+      const priceInfo: PriceData = {
+        symbol: priceData.symbol,
+        price: priceData.price,
+        change: priceData.change,
+        changePercent: priceData.changePercent,
+        volume: priceData.volume,
+        timestamp: priceData.timestamp,
+        source: priceData.source,
+        metadata: priceData.metadata,
+      };
 
-    // Auto-subscribe to new symbol if enabled
-    if (autoSubscribeNewSymbols && !monitoredSymbols.includes(priceData.symbol)) {
-      setMonitoredSymbols(prev => [...prev, priceData.symbol]);
-    }
+      setPrices((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(priceData.symbol, priceInfo);
+        return newMap;
+      });
 
-    setLastUpdate(now);
-  }, [priceThrottleMs, autoSubscribeNewSymbols, monitoredSymbols]);
+      // Add to analytics
+      analyticsRef.current.addPricePoint(priceData.symbol, priceData.price, priceData.timestamp);
+
+      // Auto-subscribe to new symbol if enabled
+      if (autoSubscribeNewSymbols && !monitoredSymbols.includes(priceData.symbol)) {
+        setMonitoredSymbols((prev) => [...prev, priceData.symbol]);
+      }
+
+      setLastUpdate(now);
+    },
+    [priceThrottleMs, autoSubscribeNewSymbols, monitoredSymbols]
+  );
 
   // Order book update handler
-  const handleOrderBookUpdate = useCallback((message: any) => {
-    if (!isMountedRef.current || !enableOrderBook) return;
+  const handleOrderBookUpdate = useCallback(
+    (message: any) => {
+      if (!isMountedRef.current || !enableOrderBook) return;
 
-    const orderBookData = message.data;
-    
-    const bids: OrderBookLevel[] = orderBookData.bids.map(([price, quantity]: [string, string]) => ({
-      price: parseFloat(price),
-      quantity: parseFloat(quantity),
-    }));
+      const orderBookData = message.data;
 
-    const asks: OrderBookLevel[] = orderBookData.asks.map(([price, quantity]: [string, string]) => ({
-      price: parseFloat(price),
-      quantity: parseFloat(quantity),
-    }));
+      const bids: OrderBookLevel[] = orderBookData.bids.map(
+        ([price, quantity]: [string, string]) => ({
+          price: Number.parseFloat(price),
+          quantity: Number.parseFloat(quantity),
+        })
+      );
 
-    const spread = asks[0] ? asks[0].price - bids[0].price : 0;
-    const midPrice = asks[0] && bids[0] ? (asks[0].price + bids[0].price) / 2 : 0;
-    const spreadPercent = midPrice > 0 ? (spread / midPrice) * 100 : 0;
+      const asks: OrderBookLevel[] = orderBookData.asks.map(
+        ([price, quantity]: [string, string]) => ({
+          price: Number.parseFloat(price),
+          quantity: Number.parseFloat(quantity),
+        })
+      );
 
-    const orderBook: OrderBookData = {
-      symbol: orderBookData.symbol,
-      bids: bids.slice(0, orderBookDepth),
-      asks: asks.slice(0, orderBookDepth),
-      timestamp: orderBookData.timestamp,
-      spread,
-      spreadPercent,
-    };
+      const spread = asks[0] ? asks[0].price - bids[0].price : 0;
+      const midPrice = asks[0] && bids[0] ? (asks[0].price + bids[0].price) / 2 : 0;
+      const spreadPercent = midPrice > 0 ? (spread / midPrice) * 100 : 0;
 
-    setOrderBooks(prev => {
-      const newMap = new Map(prev);
-      newMap.set(orderBookData.symbol, orderBook);
-      return newMap;
-    });
+      const orderBook: OrderBookData = {
+        symbol: orderBookData.symbol,
+        bids: bids.slice(0, orderBookDepth),
+        asks: asks.slice(0, orderBookDepth),
+        timestamp: orderBookData.timestamp,
+        spread,
+        spreadPercent,
+      };
 
-    setLastUpdate(Date.now());
-  }, [enableOrderBook, orderBookDepth]);
+      setOrderBooks((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(orderBookData.symbol, orderBook);
+        return newMap;
+      });
+
+      setLastUpdate(Date.now());
+    },
+    [enableOrderBook, orderBookDepth]
+  );
 
   // Trading signal handler
-  const handleTradingSignal = useCallback((message: any) => {
-    if (!isMountedRef.current || !enableSignals) return;
+  const handleTradingSignal = useCallback(
+    (message: any) => {
+      if (!isMountedRef.current || !enableSignals) return;
 
-    const signalData = message.data as TradingSignalMessage;
-    
-    const signal: TradingSignal = {
-      signalId: signalData.signalId,
-      symbol: signalData.symbol,
-      type: signalData.type,
-      strength: signalData.strength,
-      confidence: signalData.confidence,
-      source: signalData.source,
-      reasoning: signalData.reasoning,
-      targetPrice: signalData.targetPrice,
-      stopLoss: signalData.stopLoss,
-      takeProfit: signalData.takeProfit,
-      timeframe: signalData.timeframe,
-      timestamp: signalData.timestamp,
-      metadata: signalData.metadata,
-    };
+      const signalData = message.data as TradingSignalMessage;
 
-    setSignals(prev => [signal, ...prev.slice(0, 99)]); // Keep last 100 signals
-    setLastUpdate(Date.now());
-  }, [enableSignals]);
+      const signal: TradingSignal = {
+        signalId: signalData.signalId,
+        symbol: signalData.symbol,
+        type: signalData.type,
+        strength: signalData.strength,
+        confidence: signalData.confidence,
+        source: signalData.source,
+        reasoning: signalData.reasoning,
+        targetPrice: signalData.targetPrice,
+        stopLoss: signalData.stopLoss,
+        takeProfit: signalData.takeProfit,
+        timeframe: signalData.timeframe,
+        timestamp: signalData.timestamp,
+        metadata: signalData.metadata,
+      };
+
+      setSignals((prev) => [signal, ...prev.slice(0, 99)]); // Keep last 100 signals
+      setLastUpdate(Date.now());
+    },
+    [enableSignals]
+  );
 
   // Execution handler
-  const handleExecution = useCallback((message: any) => {
-    if (!isMountedRef.current || !enableExecutions) return;
+  const handleExecution = useCallback(
+    (message: any) => {
+      if (!isMountedRef.current || !enableExecutions) return;
 
-    const executionData = message.data as TradingExecutionMessage;
-    
-    const execution: TradeExecution = {
-      executionId: executionData.executionId,
-      orderId: executionData.orderId,
-      symbol: executionData.symbol,
-      side: executionData.side,
-      type: executionData.type,
-      status: executionData.status,
-      quantity: executionData.quantity,
-      price: executionData.price,
-      executedQuantity: executionData.executedQuantity,
-      executedPrice: executionData.executedPrice,
-      timestamp: executionData.timestamp,
-      fees: executionData.fees,
-      metadata: executionData.metadata,
-    };
+      const executionData = message.data as TradingExecutionMessage;
 
-    setExecutions(prev => {
-      const newExecutions = [execution, ...prev.slice(0, 199)]; // Keep last 200 executions
-      metricsRef.current.updateExecutions(newExecutions);
-      return newExecutions;
-    });
+      const execution: TradeExecution = {
+        executionId: executionData.executionId,
+        orderId: executionData.orderId,
+        symbol: executionData.symbol,
+        side: executionData.side,
+        type: executionData.type,
+        status: executionData.status,
+        quantity: executionData.quantity,
+        price: executionData.price,
+        executedQuantity: executionData.executedQuantity,
+        executedPrice: executionData.executedPrice,
+        timestamp: executionData.timestamp,
+        fees: executionData.fees,
+        metadata: executionData.metadata,
+      };
 
-    setLastUpdate(Date.now());
-  }, [enableExecutions]);
+      setExecutions((prev) => {
+        const newExecutions = [execution, ...prev.slice(0, 199)]; // Keep last 200 executions
+        metricsRef.current.updateExecutions(newExecutions);
+        return newExecutions;
+      });
+
+      setLastUpdate(Date.now());
+    },
+    [enableExecutions]
+  );
 
   // Portfolio handler
-  const handlePortfolio = useCallback((message: any) => {
-    if (!isMountedRef.current || !enablePortfolio) return;
+  const handlePortfolio = useCallback(
+    (message: any) => {
+      if (!isMountedRef.current || !enablePortfolio) return;
 
-    const portfolioData = message.data as TradingPortfolioMessage;
-    
-    if (userId && portfolioData.userId !== userId) return;
+      const portfolioData = message.data as TradingPortfolioMessage;
 
-    const newPositions: PortfolioPosition[] = portfolioData.portfolio.positions.map(pos => ({
-      symbol: pos.symbol,
-      quantity: pos.quantity,
-      averagePrice: pos.averagePrice,
-      currentPrice: pos.currentPrice,
-      unrealizedPnl: pos.unrealizedPnl,
-      unrealizedPnlPercent: pos.unrealizedPnlPercent,
-      marketValue: pos.quantity * pos.currentPrice,
-    }));
+      if (userId && portfolioData.userId !== userId) return;
 
-    setPositions(newPositions);
-    metricsRef.current.updatePositions(newPositions);
-    metricsRef.current.setInitialValue(portfolioData.portfolio.totalValue);
+      const newPositions: PortfolioPosition[] = portfolioData.portfolio.positions.map((pos) => ({
+        symbol: pos.symbol,
+        quantity: pos.quantity,
+        averagePrice: pos.averagePrice,
+        currentPrice: pos.currentPrice,
+        unrealizedPnl: pos.unrealizedPnl,
+        unrealizedPnlPercent: pos.unrealizedPnlPercent,
+        marketValue: pos.quantity * pos.currentPrice,
+      }));
 
-    setLastUpdate(Date.now());
-  }, [enablePortfolio, userId]);
+      setPositions(newPositions);
+      metricsRef.current.updatePositions(newPositions);
+      metricsRef.current.setInitialValue(portfolioData.portfolio.totalValue);
+
+      setLastUpdate(Date.now());
+    },
+    [enablePortfolio, userId]
+  );
 
   // Balance handler
-  const handleBalance = useCallback((message: any) => {
-    if (!isMountedRef.current || !enablePortfolio) return;
+  const handleBalance = useCallback(
+    (message: any) => {
+      if (!isMountedRef.current || !enablePortfolio) return;
 
-    const balanceData = message.data as TradingBalanceMessage;
-    
-    if (userId && balanceData.userId !== userId) return;
+      const balanceData = message.data as TradingBalanceMessage;
 
-    setBalances(balanceData.balances);
-    setLastUpdate(Date.now());
-  }, [enablePortfolio, userId]);
+      if (userId && balanceData.userId !== userId) return;
+
+      setBalances(balanceData.balances);
+      setLastUpdate(Date.now());
+    },
+    [enablePortfolio, userId]
+  );
 
   // Set up subscriptions
   useEffect(() => {
@@ -551,26 +587,26 @@ export function useLiveTradingData(config: UseLiveTradingDataConfig = {}): UseLi
     const unsubscribers: (() => void)[] = [];
 
     // Subscribe to general trading data
-    unsubscribers.push(subscribe('trading:prices', handlePriceUpdate));
+    unsubscribers.push(subscribe("trading:prices", handlePriceUpdate));
 
     if (enableSignals) {
-      unsubscribers.push(subscribe('trading:signals', handleTradingSignal));
+      unsubscribers.push(subscribe("trading:signals", handleTradingSignal));
     }
 
     if (enableExecutions) {
-      unsubscribers.push(subscribe('trading:executions', handleExecution));
+      unsubscribers.push(subscribe("trading:executions", handleExecution));
     }
 
     if (enablePortfolio && userId) {
       unsubscribers.push(subscribe(`user:${userId}:trading`, handlePortfolio));
       unsubscribers.push(subscribe(`user:${userId}:portfolio`, handlePortfolio));
-      unsubscribers.push(subscribe('trading:balance', handleBalance));
+      unsubscribers.push(subscribe("trading:balance", handleBalance));
     }
 
     // Subscribe to specific symbols
     for (const symbol of monitoredSymbols) {
       unsubscribers.push(subscribe(`trading:${symbol}:price`, handlePriceUpdate));
-      
+
       if (enableOrderBook) {
         unsubscribers.push(subscribe(`trading:${symbol}:orderbook`, handleOrderBookUpdate));
       }
@@ -581,7 +617,7 @@ export function useLiveTradingData(config: UseLiveTradingDataConfig = {}): UseLi
     }
 
     return () => {
-      unsubscribers.forEach(unsub => unsub());
+      unsubscribers.forEach((unsub) => unsub());
     };
   }, [
     isConnected,
@@ -615,42 +651,57 @@ export function useLiveTradingData(config: UseLiveTradingDataConfig = {}): UseLi
   }, []);
 
   // API functions
-  const getPrice = useCallback((symbol: string) => {
-    return prices.get(symbol);
-  }, [prices]);
+  const getPrice = useCallback(
+    (symbol: string) => {
+      return prices.get(symbol);
+    },
+    [prices]
+  );
 
-  const getOrderBook = useCallback((symbol: string) => {
-    return orderBooks.get(symbol);
-  }, [orderBooks]);
+  const getOrderBook = useCallback(
+    (symbol: string) => {
+      return orderBooks.get(symbol);
+    },
+    [orderBooks]
+  );
 
-  const getPosition = useCallback((symbol: string) => {
-    return positions.find(pos => pos.symbol === symbol);
-  }, [positions]);
+  const getPosition = useCallback(
+    (symbol: string) => {
+      return positions.find((pos) => pos.symbol === symbol);
+    },
+    [positions]
+  );
 
-  const subscribeToSymbol = useCallback((symbol: string) => {
-    if (!monitoredSymbols.includes(symbol)) {
-      setMonitoredSymbols(prev => [...prev, symbol]);
-    }
-  }, [monitoredSymbols]);
+  const subscribeToSymbol = useCallback(
+    (symbol: string) => {
+      if (!monitoredSymbols.includes(symbol)) {
+        setMonitoredSymbols((prev) => [...prev, symbol]);
+      }
+    },
+    [monitoredSymbols]
+  );
 
   const unsubscribeFromSymbol = useCallback((symbol: string) => {
-    setMonitoredSymbols(prev => prev.filter(s => s !== symbol));
+    setMonitoredSymbols((prev) => prev.filter((s) => s !== symbol));
   }, []);
 
-  const getPriceChange = useCallback((symbol: string, timeframe: '1m' | '5m' | '1h' | '24h') => {
+  const getPriceChange = useCallback((symbol: string, timeframe: "1m" | "5m" | "1h" | "24h") => {
     const timeframeMs = {
-      '1m': 60 * 1000,
-      '5m': 5 * 60 * 1000,
-      '1h': 60 * 60 * 1000,
-      '24h': 24 * 60 * 60 * 1000,
+      "1m": 60 * 1000,
+      "5m": 5 * 60 * 1000,
+      "1h": 60 * 60 * 1000,
+      "24h": 24 * 60 * 60 * 1000,
     }[timeframe];
 
     return analyticsRef.current.getPriceChange(symbol, timeframeMs);
   }, []);
 
-  const getTopMovers = useCallback((type: 'gainers' | 'losers', limit = 10) => {
-    return analyticsRef.current.getTopMovers(prices, type, limit);
-  }, [prices]);
+  const getTopMovers = useCallback(
+    (type: "gainers" | "losers", limit = 10) => {
+      return analyticsRef.current.getTopMovers(prices, type, limit);
+    },
+    [prices]
+  );
 
   const clearHistory = useCallback(() => {
     setSignals([]);

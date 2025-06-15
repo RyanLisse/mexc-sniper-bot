@@ -60,21 +60,17 @@ export function KindeAuthUI() {
       <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle className="text-foreground">Welcome back!</CardTitle>
-          <CardDescription className="text-muted-foreground">Signed in as {user?.email}</CardDescription>
+          <CardDescription className="text-muted-foreground">
+            Signed in as {user?.email}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <LogoutLink className="w-full">
-            <Button
-              variant="outline"
-              className="w-full"
-            >
+            <Button variant="outline" className="w-full">
               Sign Out
             </Button>
           </LogoutLink>
-          <Button
-            onClick={() => router.push("/dashboard")}
-            className="w-full"
-          >
+          <Button onClick={() => router.push("/dashboard")} className="w-full">
             Go to Dashboard
           </Button>
         </CardContent>
@@ -85,7 +81,9 @@ export function KindeAuthUI() {
   return (
     <Card className="bg-card border-border shadow-lg">
       <CardHeader>
-        <CardTitle className="text-foreground">{isSignUp ? "Create Account" : "Welcome Back"}</CardTitle>
+        <CardTitle className="text-foreground">
+          {isSignUp ? "Create Account" : "Welcome Back"}
+        </CardTitle>
         <CardDescription className="text-muted-foreground">
           {isSignUp ? "Sign up to start using MEXC Sniper Bot" : "Sign in to your account"}
         </CardDescription>
@@ -93,11 +91,7 @@ export function KindeAuthUI() {
       <CardContent className="space-y-4">
         {isSignUp ? (
           <>
-            <Button
-              onClick={handleSignUp}
-              className="w-full"
-              size="lg"
-            >
+            <Button onClick={handleSignUp} className="w-full" size="lg">
               Sign Up
             </Button>
             <Button
@@ -111,11 +105,7 @@ export function KindeAuthUI() {
           </>
         ) : (
           <>
-            <Button
-              onClick={handleSignIn}
-              className="w-full"
-              size="lg"
-            >
+            <Button onClick={handleSignIn} className="w-full" size="lg">
               Sign In
             </Button>
             <Button

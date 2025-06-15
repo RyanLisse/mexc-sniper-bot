@@ -7,18 +7,18 @@
 import type { BaseAgent } from "./base-agent";
 
 // Agent type definitions for type safety
-export type AgentType = 
-  | 'base'
-  | 'calendar' 
-  | 'pattern-discovery'
-  | 'symbol-analysis'
-  | 'strategy'
-  | 'mexc-api'
-  | 'safety-base'
-  | 'risk-manager'
-  | 'simulation'
-  | 'reconciliation'
-  | 'error-recovery';
+export type AgentType =
+  | "base"
+  | "calendar"
+  | "pattern-discovery"
+  | "symbol-analysis"
+  | "strategy"
+  | "mexc-api"
+  | "safety-base"
+  | "risk-manager"
+  | "simulation"
+  | "reconciliation"
+  | "error-recovery";
 
 // Agent configuration interface
 export interface DynamicAgentConfig {
@@ -58,61 +58,61 @@ export class DynamicAgentLoader {
 
     // Dynamic imports for each agent type
     switch (type) {
-      case 'base':
-        const { BaseAgent } = await import('./base-agent');
+      case "base":
+        const { BaseAgent } = await import("./base-agent");
         AgentClass = BaseAgent;
         break;
-        
-      case 'calendar':
-        const { CalendarAgent } = await import('./calendar-agent');
+
+      case "calendar":
+        const { CalendarAgent } = await import("./calendar-agent");
         AgentClass = CalendarAgent;
         break;
-        
-      case 'pattern-discovery':
-        const { PatternDiscoveryAgent } = await import('./pattern-discovery-agent');
+
+      case "pattern-discovery":
+        const { PatternDiscoveryAgent } = await import("./pattern-discovery-agent");
         AgentClass = PatternDiscoveryAgent;
         break;
-        
-      case 'symbol-analysis':
-        const { SymbolAnalysisAgent } = await import('./symbol-analysis-agent');
+
+      case "symbol-analysis":
+        const { SymbolAnalysisAgent } = await import("./symbol-analysis-agent");
         AgentClass = SymbolAnalysisAgent;
         break;
-        
-      case 'strategy':
-        const { StrategyAgent } = await import('./strategy-agent');
+
+      case "strategy":
+        const { StrategyAgent } = await import("./strategy-agent");
         AgentClass = StrategyAgent;
         break;
-        
-      case 'mexc-api':
-        const { MexcApiAgent } = await import('./mexc-api-agent');
+
+      case "mexc-api":
+        const { MexcApiAgent } = await import("./mexc-api-agent");
         AgentClass = MexcApiAgent;
         break;
-        
-      case 'safety-base':
-        const { SafetyBaseAgent } = await import('./safety-base-agent');
+
+      case "safety-base":
+        const { SafetyBaseAgent } = await import("./safety-base-agent");
         AgentClass = SafetyBaseAgent;
         break;
-        
-      case 'risk-manager':
-        const { RiskManagerAgent } = await import('./risk-manager-agent');
+
+      case "risk-manager":
+        const { RiskManagerAgent } = await import("./risk-manager-agent");
         AgentClass = RiskManagerAgent;
         break;
-        
-      case 'simulation':
-        const { SimulationAgent } = await import('./simulation-agent');
+
+      case "simulation":
+        const { SimulationAgent } = await import("./simulation-agent");
         AgentClass = SimulationAgent;
         break;
-        
-      case 'reconciliation':
-        const { ReconciliationAgent } = await import('./reconciliation-agent');
+
+      case "reconciliation":
+        const { ReconciliationAgent } = await import("./reconciliation-agent");
         AgentClass = ReconciliationAgent;
         break;
-        
-      case 'error-recovery':
-        const { ErrorRecoveryAgent } = await import('./error-recovery-agent');
+
+      case "error-recovery":
+        const { ErrorRecoveryAgent } = await import("./error-recovery-agent");
         AgentClass = ErrorRecoveryAgent;
         break;
-        
+
       default:
         throw new Error(`Unknown agent type: ${type}`);
     }
@@ -120,7 +120,7 @@ export class DynamicAgentLoader {
     // Instantiate and cache the agent
     const agent = new AgentClass();
     agentCache.set(type, agent);
-    
+
     return agent;
   }
 
@@ -142,10 +142,10 @@ export class DynamicAgentLoader {
    */
   async preloadCoreAgents(): Promise<void> {
     const coreAgents: AgentType[] = [
-      'mexc-api',
-      'pattern-discovery', 
-      'symbol-analysis',
-      'safety-base'
+      "mexc-api",
+      "pattern-discovery",
+      "symbol-analysis",
+      "safety-base",
     ];
 
     await this.loadAgents(coreAgents);
@@ -164,7 +164,7 @@ export class DynamicAgentLoader {
   getCacheStats(): { size: number; types: AgentType[] } {
     return {
       size: agentCache.size,
-      types: Array.from(agentCache.keys())
+      types: Array.from(agentCache.keys()),
     };
   }
 

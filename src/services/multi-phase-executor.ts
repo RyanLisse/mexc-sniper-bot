@@ -1,6 +1,6 @@
-import { type PriceMultiplier, type TradingStrategyConfig } from "./multi-phase-trading-service";
+import type { TradingStrategy } from "@/src/db/schemas/strategies";
+import type { PriceMultiplier, TradingStrategyConfig } from "./multi-phase-trading-service";
 import { multiPhaseTradingService } from "./multi-phase-trading-service";
-import { type TradingStrategy } from "@/src/db/schemas/strategies";
 
 // ===========================================
 // MULTI-PHASE STRATEGY EXECUTOR
@@ -107,7 +107,7 @@ export class MultiPhaseExecutor {
     // Check which phases should be executed
     this.strategy.levels.forEach((level, index) => {
       const phaseNumber = index + 1;
-      
+
       // Skip if already executed
       if (this.executedPhases.has(phaseNumber)) {
         return;
@@ -178,9 +178,9 @@ export class MultiPhaseExecutor {
     }
   ): Promise<void> {
     const profit = amount * (executionPrice - this.entryPrice) - (options?.fees || 0);
-    
+
     this.executedPhases.add(phaseNumber);
-    
+
     const executionRecord: PhaseExecutionHistory = {
       phase: phaseNumber,
       price: executionPrice,
@@ -190,7 +190,7 @@ export class MultiPhaseExecutor {
       executionLatency: options?.latency,
       slippage: options?.slippage,
     };
-    
+
     this.phaseHistory.push(executionRecord);
 
     // Persist to database if strategy ID and user ID are available
@@ -231,8 +231,8 @@ export class MultiPhaseExecutor {
 
     const phaseDetails: PhaseStatus[] = this.strategy.levels.map((level, index) => {
       const phaseNumber = index + 1;
-      const execution = this.phaseHistory.find(h => h.phase === phaseNumber);
-      
+      const execution = this.phaseHistory.find((h) => h.phase === phaseNumber);
+
       return {
         phase: phaseNumber,
         target: `+${level.percentage}% (${level.multiplier}x)`,
@@ -245,7 +245,7 @@ export class MultiPhaseExecutor {
       };
     });
 
-    const nextPhase = phaseDetails.find(p => p.status === "pending") || null;
+    const nextPhase = phaseDetails.find((p) => p.status === "pending") || null;
 
     return {
       totalPhases,
@@ -268,16 +268,19 @@ export class MultiPhaseExecutor {
     const unrealizedProfit = totalRemaining * (currentPrice - this.entryPrice);
     const totalFees = this.phaseHistory.reduce((sum, phase) => {
       // Estimate fees if not recorded (0.1% typical)
-      return sum + (phase.profit * 0.001);
+      return sum + phase.profit * 0.001;
     }, 0);
 
-    const avgSlippage = this.phaseHistory.length > 0 ? 
-      this.phaseHistory.reduce((sum, phase) => sum + (phase.slippage || 0), 0) / this.phaseHistory.length : 0;
+    const avgSlippage =
+      this.phaseHistory.length > 0
+        ? this.phaseHistory.reduce((sum, phase) => sum + (phase.slippage || 0), 0) /
+          this.phaseHistory.length
+        : 0;
 
     // Calculate execution efficiency (how close to target prices we executed)
     let executionEfficiency = 100;
     if (this.phaseHistory.length > 0) {
-      const efficiencies = this.phaseHistory.map(phase => {
+      const efficiencies = this.phaseHistory.map((phase) => {
         const targetPrice = this.entryPrice * this.strategy.levels[phase.phase - 1].multiplier;
         const efficiency = Math.min(100, (phase.price / targetPrice) * 100);
         return efficiency;
@@ -314,15 +317,16 @@ export class MultiPhaseExecutor {
    */
   getPhaseVisualization(currentPrice: number): string {
     const priceIncrease = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
-    
+
     const phases = this.strategy.levels.map((level, index) => {
       const phaseNum = index + 1;
       const isExecuted = this.executedPhases.has(phaseNum);
       const isNext = !isExecuted && priceIncrease < level.percentage;
-      
-      let status = '⬜'; // Pending
-      if (isExecuted) status = '✅'; // Completed
-      else if (isNext) status = '🎯'; // Next target
+
+      let status = "⬜"; // Pending
+      if (isExecuted)
+        status = "✅"; // Completed
+      else if (isNext) status = "🎯"; // Next target
 
       return `${status} Phase ${phaseNum}: ${level.sellPercentage}% @ +${level.percentage}%`;
     });
@@ -332,7 +336,7 @@ export class MultiPhaseExecutor {
     phases.push(`💰 Realized P&L: ${summary.realizedProfit.toFixed(2)}`);
     phases.push(`📈 Unrealized P&L: ${summary.unrealizedProfit.toFixed(2)}`);
     phases.push(`🎯 Completed: ${summary.completedPhases}/${this.strategy.levels.length}`);
-    
+
     if (summary.nextPhaseTarget) {
       phases.push(`⏭️ Next Target: ${summary.nextPhaseTarget.toFixed(2)}`);
     }
@@ -350,15 +354,16 @@ export class MultiPhaseExecutor {
       const phaseNum = index + 1;
       const isExecuted = this.executedPhases.has(phaseNum);
       const isNext = !isExecuted && currentPricePercentage < level.percentage;
-      
-      let status = '⬜'; // Pending
-      if (isExecuted) status = '✅'; // Completed
-      else if (isNext) status = '🎯'; // Next target
+
+      let status = "⬜"; // Pending
+      if (isExecuted)
+        status = "✅"; // Completed
+      else if (isNext) status = "🎯"; // Next target
 
       return `${status} Phase ${phaseNum}: ${level.sellPercentage}% @ +${level.percentage}%`;
     });
 
-    return phases.join('\n');
+    return phases.join("\n");
   }
 
   /**
@@ -388,32 +393,38 @@ export class MultiPhaseExecutor {
       };
     }
 
-    const avgExecutionTime = this.phaseHistory
-      .filter(h => h.executionLatency)
-      .reduce((sum, h) => sum + (h.executionLatency || 0), 0) / this.phaseHistory.length;
+    const avgExecutionTime =
+      this.phaseHistory
+        .filter((h) => h.executionLatency)
+        .reduce((sum, h) => sum + (h.executionLatency || 0), 0) / this.phaseHistory.length;
 
-    const avgSlippage = this.phaseHistory
-      .filter(h => h.slippage !== undefined)
-      .reduce((sum, h) => sum + (h.slippage || 0), 0) / this.phaseHistory.length;
+    const avgSlippage =
+      this.phaseHistory
+        .filter((h) => h.slippage !== undefined)
+        .reduce((sum, h) => sum + (h.slippage || 0), 0) / this.phaseHistory.length;
 
     const totalProfitRealized = this.phaseHistory.reduce((sum, h) => sum + h.profit, 0);
-    
-    const bestExecution = this.phaseHistory.reduce((best, current) => 
-      !best || current.profit > best.profit ? current : best, null as PhaseExecutionHistory | null);
-    
-    const worstExecution = this.phaseHistory.reduce((worst, current) => 
-      !worst || current.profit < worst.profit ? current : worst, null as PhaseExecutionHistory | null);
+
+    const bestExecution = this.phaseHistory.reduce(
+      (best, current) => (!best || current.profit > best.profit ? current : best),
+      null as PhaseExecutionHistory | null
+    );
+
+    const worstExecution = this.phaseHistory.reduce(
+      (worst, current) => (!worst || current.profit < worst.profit ? current : worst),
+      null as PhaseExecutionHistory | null
+    );
 
     // Determine execution trend based on recent performance
     let executionTrend: "improving" | "declining" | "stable" = "stable";
     if (this.phaseHistory.length >= 3) {
       const recent = this.phaseHistory.slice(-3);
       const earlier = this.phaseHistory.slice(-6, -3);
-      
+
       if (recent.length === 3 && earlier.length === 3) {
         const recentAvgProfit = recent.reduce((sum, h) => sum + h.profit, 0) / 3;
         const earlierAvgProfit = earlier.reduce((sum, h) => sum + h.profit, 0) / 3;
-        
+
         if (recentAvgProfit > earlierAvgProfit * 1.1) executionTrend = "improving";
         else if (recentAvgProfit < earlierAvgProfit * 0.9) executionTrend = "declining";
       }
@@ -508,18 +519,15 @@ export async function createExecutorFromStrategy(
   };
 
   // Get existing executions
-  const executions = await multiPhaseTradingService.getStrategyPhaseExecutions(
-    strategy.id,
-    userId
-  );
+  const executions = await multiPhaseTradingService.getStrategyPhaseExecutions(strategy.id, userId);
 
   const executedPhases = executions
-    .filter(exec => exec.executionStatus === "executed")
-    .map(exec => exec.phaseNumber);
+    .filter((exec) => exec.executionStatus === "executed")
+    .map((exec) => exec.phaseNumber);
 
   const existingHistory: PhaseExecutionHistory[] = executions
-    .filter(exec => exec.executionStatus === "executed")
-    .map(exec => ({
+    .filter((exec) => exec.executionStatus === "executed")
+    .map((exec) => ({
       phase: exec.phaseNumber,
       price: exec.executionPrice || 0,
       amount: exec.executedQuantity || 0,
@@ -529,15 +537,10 @@ export async function createExecutorFromStrategy(
       slippage: exec.slippage || undefined,
     }));
 
-  return new MultiPhaseExecutor(
-    strategyConfig,
-    strategy.entryPrice,
-    strategy.positionSize,
-    {
-      strategyId: strategy.id,
-      userId,
-      executedPhases,
-      existingHistory,
-    }
-  );
+  return new MultiPhaseExecutor(strategyConfig, strategy.entryPrice, strategy.positionSize, {
+    strategyId: strategy.id,
+    userId,
+    executedPhases,
+    existingHistory,
+  });
 }

@@ -1,9 +1,9 @@
 /**
  * WebSocket Types and Message Definitions
- * 
+ *
  * Type-safe WebSocket message definitions for the AI trading system.
  * Supports real-time communication between agents, trading data, and UI components.
- * 
+ *
  * Features:
  * - Type-safe message schemas
  * - Agent status broadcasting
@@ -19,7 +19,7 @@
 export interface WebSocketConnection {
   id: string;
   userId?: string;
-  clientType: 'dashboard' | 'agent' | 'admin' | 'mobile';
+  clientType: "dashboard" | "agent" | "admin" | "mobile";
   subscriptions: Set<string>;
   lastActivity: number;
   isAuthenticated: boolean;
@@ -37,48 +37,48 @@ export interface WebSocketMessage<T = any> {
   error?: string;
 }
 
-export type WebSocketMessageType = 
+export type WebSocketMessageType =
   // System Messages
-  | 'system:connect'
-  | 'system:disconnect' 
-  | 'system:heartbeat'
-  | 'system:error'
-  | 'system:ack'
-  
+  | "system:connect"
+  | "system:disconnect"
+  | "system:heartbeat"
+  | "system:error"
+  | "system:ack"
+
   // Agent Status Messages
-  | 'agent:status'
-  | 'agent:health'
-  | 'agent:performance'
-  | 'agent:workflow'
-  | 'agent:error'
-  | 'agent:cache'
-  
+  | "agent:status"
+  | "agent:health"
+  | "agent:performance"
+  | "agent:workflow"
+  | "agent:error"
+  | "agent:cache"
+
   // Trading Data Messages
-  | 'trading:price'
-  | 'trading:signal'
-  | 'trading:execution'
-  | 'trading:balance'
-  | 'trading:portfolio'
-  | 'trading:orderbook'
-  
+  | "trading:price"
+  | "trading:signal"
+  | "trading:execution"
+  | "trading:balance"
+  | "trading:portfolio"
+  | "trading:orderbook"
+
   // Pattern Discovery Messages
-  | 'pattern:discovery'
-  | 'pattern:validation'
-  | 'pattern:confidence'
-  | 'pattern:alert'
-  | 'pattern:ready_state'
-  
+  | "pattern:discovery"
+  | "pattern:validation"
+  | "pattern:confidence"
+  | "pattern:alert"
+  | "pattern:ready_state"
+
   // User Notifications
-  | 'notification:info'
-  | 'notification:warning'
-  | 'notification:error'
-  | 'notification:success'
-  | 'notification:trade'
-  
+  | "notification:info"
+  | "notification:warning"
+  | "notification:error"
+  | "notification:success"
+  | "notification:trade"
+
   // Subscription Management
-  | 'subscription:subscribe'
-  | 'subscription:unsubscribe'
-  | 'subscription:list';
+  | "subscription:subscribe"
+  | "subscription:unsubscribe"
+  | "subscription:list";
 
 // ======================
 // Agent Message Types
@@ -87,7 +87,7 @@ export type WebSocketMessageType =
 export interface AgentStatusMessage {
   agentId: string;
   agentType: string;
-  status: 'healthy' | 'degraded' | 'unhealthy' | 'offline';
+  status: "healthy" | "degraded" | "unhealthy" | "offline";
   lastActivity: number;
   responseTime: number;
   errorCount: number;
@@ -104,7 +104,7 @@ export interface AgentStatusMessage {
 export interface AgentHealthMessage {
   agentId: string;
   health: {
-    status: 'healthy' | 'degraded' | 'unhealthy';
+    status: "healthy" | "degraded" | "unhealthy";
     issues: string[];
     recommendations: string[];
     performanceMetrics: {
@@ -144,8 +144,8 @@ export interface AgentPerformanceMessage {
 
 export interface AgentWorkflowMessage {
   workflowId: string;
-  workflowType: 'calendar_discovery' | 'symbol_analysis' | 'pattern_analysis' | 'trading_strategy';
-  status: 'started' | 'running' | 'completed' | 'failed' | 'cancelled';
+  workflowType: "calendar_discovery" | "symbol_analysis" | "pattern_analysis" | "trading_strategy";
+  status: "started" | "running" | "completed" | "failed" | "cancelled";
   progress: number; // 0-100
   agentsInvolved: string[];
   currentAgent?: string;
@@ -162,11 +162,11 @@ export interface AgentWorkflowMessage {
 export interface AgentErrorMessage {
   agentId: string;
   error: {
-    type: 'api_error' | 'timeout' | 'rate_limit' | 'network' | 'validation' | 'unknown';
+    type: "api_error" | "timeout" | "rate_limit" | "network" | "validation" | "unknown";
     message: string;
     stack?: string;
     timestamp: number;
-    severity: 'low' | 'medium' | 'high' | 'critical';
+    severity: "low" | "medium" | "high" | "critical";
   };
   context?: {
     workflowId?: string;
@@ -187,7 +187,7 @@ export interface TradingPriceMessage {
   changePercent: number;
   volume: number;
   timestamp: number;
-  source: 'mexc_ws' | 'mexc_api' | 'cached';
+  source: "mexc_ws" | "mexc_api" | "cached";
   metadata?: {
     high24h?: number;
     low24h?: number;
@@ -199,10 +199,10 @@ export interface TradingPriceMessage {
 export interface TradingSignalMessage {
   signalId: string;
   symbol: string;
-  type: 'buy' | 'sell' | 'hold' | 'monitor';
+  type: "buy" | "sell" | "hold" | "monitor";
   strength: number; // 0-100
   confidence: number; // 0-100
-  source: 'pattern_discovery' | 'symbol_analysis' | 'strategy_agent' | 'manual';
+  source: "pattern_discovery" | "symbol_analysis" | "strategy_agent" | "manual";
   reasoning: string;
   targetPrice?: number;
   stopLoss?: number;
@@ -212,7 +212,7 @@ export interface TradingSignalMessage {
   metadata?: {
     patterns?: string[];
     indicators?: Record<string, number>;
-    riskLevel?: 'low' | 'medium' | 'high';
+    riskLevel?: "low" | "medium" | "high";
     expectedDuration?: number;
   };
 }
@@ -221,9 +221,9 @@ export interface TradingExecutionMessage {
   executionId: string;
   orderId: string;
   symbol: string;
-  side: 'buy' | 'sell';
-  type: 'market' | 'limit' | 'stop' | 'stop_limit';
-  status: 'pending' | 'filled' | 'partially_filled' | 'cancelled' | 'rejected';
+  side: "buy" | "sell";
+  type: "market" | "limit" | "stop" | "stop_limit";
+  status: "pending" | "filled" | "partially_filled" | "cancelled" | "rejected";
   quantity: number;
   price: number;
   executedQuantity: number;
@@ -254,7 +254,7 @@ export interface TradingBalanceMessage {
     btc: number;
   };
   lastUpdate: number;
-  source: 'mexc_api' | 'calculated';
+  source: "mexc_api" | "calculated";
 }
 
 export interface TradingPortfolioMessage {
@@ -289,7 +289,7 @@ export interface PatternDiscoveryMessage {
   patternId: string;
   symbol: string;
   pattern: {
-    type: 'ready_state' | 'breakout' | 'reversal' | 'continuation' | 'custom';
+    type: "ready_state" | "breakout" | "reversal" | "continuation" | "custom";
     name: string;
     description: string;
     confidence: number; // 0-100
@@ -303,8 +303,8 @@ export interface PatternDiscoveryMessage {
   };
   criteria: {
     sts?: number; // Symbol Trading Status
-    st?: number;  // Status
-    tt?: number;  // Trading Time
+    st?: number; // Status
+    tt?: number; // Trading Time
     additional?: Record<string, any>;
   };
   metadata?: {
@@ -319,7 +319,7 @@ export interface PatternValidationMessage {
   patternId: string;
   symbol: string;
   validation: {
-    status: 'validated' | 'invalidated' | 'pending' | 'expired';
+    status: "validated" | "invalidated" | "pending" | "expired";
     confidence: number;
     score: number;
     reasons: string[];
@@ -327,7 +327,7 @@ export interface PatternValidationMessage {
   execution: {
     executed: boolean;
     executionTime?: number;
-    result?: 'success' | 'failure' | 'partial';
+    result?: "success" | "failure" | "partial";
     actualPrice?: number;
     expectedPrice?: number;
   };
@@ -347,7 +347,7 @@ export interface PatternReadyStateMessage {
   };
   analysis: {
     advanceNotice: number; // milliseconds
-    riskLevel: 'low' | 'medium' | 'high';
+    riskLevel: "low" | "medium" | "high";
     expectedVolatility: number;
     correlatedSymbols: string[];
   };
@@ -366,11 +366,11 @@ export interface PatternReadyStateMessage {
 export interface NotificationMessage {
   notificationId: string;
   userId?: string;
-  type: 'info' | 'warning' | 'error' | 'success' | 'trade';
+  type: "info" | "warning" | "error" | "success" | "trade";
   title: string;
   message: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  category: 'system' | 'trading' | 'agent' | 'pattern' | 'security';
+  priority: "low" | "medium" | "high" | "critical";
+  category: "system" | "trading" | "agent" | "pattern" | "security";
   timestamp: number;
   expiresAt?: number;
   actionable?: boolean;
@@ -397,7 +397,7 @@ export interface SubscriptionRequest {
   filters?: Record<string, any>;
   options?: {
     throttleMs?: number;
-    priority?: 'low' | 'medium' | 'high';
+    priority?: "low" | "medium" | "high";
     bufferSize?: number;
   };
 }
@@ -413,56 +413,56 @@ export interface SubscriptionResponse {
 // Channel Definitions
 // ======================
 
-export type WebSocketChannel = 
+export type WebSocketChannel =
   // System Channels
-  | 'system'
-  | 'system:health'
-  
+  | "system"
+  | "system:health"
+
   // Agent Channels
-  | 'agents:status'
-  | 'agents:health'
-  | 'agents:performance'
-  | 'agents:workflows'
-  | 'agents:errors'
-  
+  | "agents:status"
+  | "agents:health"
+  | "agents:performance"
+  | "agents:workflows"
+  | "agents:errors"
+
   // Specific Agent Channels
   | `agent:${string}:status`
   | `agent:${string}:workflow`
   | `agent:${string}:performance`
-  
+
   // Trading Channels
-  | 'trading:prices'
-  | 'trading:signals'
-  | 'trading:executions'
-  | 'trading:balance'
-  | 'trading:portfolio'
-  
-  // Symbol-specific Trading Channels  
+  | "trading:prices"
+  | "trading:signals"
+  | "trading:executions"
+  | "trading:balance"
+  | "trading:portfolio"
+
+  // Symbol-specific Trading Channels
   | `trading:${string}:price`
   | `trading:${string}:signals`
   | `trading:${string}:orderbook`
-  
+
   // Pattern Discovery Channels
-  | 'patterns:discovery'
-  | 'patterns:validation'
-  | 'patterns:ready_state'
-  | 'patterns:alerts'
-  
+  | "patterns:discovery"
+  | "patterns:validation"
+  | "patterns:ready_state"
+  | "patterns:alerts"
+
   // Symbol-specific Pattern Channels
   | `patterns:${string}:discovery`
   | `patterns:${string}:ready_state`
-  
+
   // User-specific Channels
   | `user:${string}:notifications`
   | `user:${string}:trading`
   | `user:${string}:portfolio`
   | `user:${string}:alerts`
-  
+
   // Notification Channels
-  | 'notifications:global'
-  | 'notifications:trading'
-  | 'notifications:system'
-  | 'notifications:agents';
+  | "notifications:global"
+  | "notifications:trading"
+  | "notifications:system"
+  | "notifications:agents";
 
 // ======================
 // WebSocket Events
@@ -470,23 +470,23 @@ export type WebSocketChannel =
 
 export interface WebSocketEventMap {
   // Connection Events
-  'connection:open': { connectionId: string; userId?: string };
-  'connection:close': { connectionId: string; reason: string };
-  'connection:error': { connectionId: string; error: string };
-  
+  "connection:open": { connectionId: string; userId?: string };
+  "connection:close": { connectionId: string; reason: string };
+  "connection:error": { connectionId: string; error: string };
+
   // Message Events
-  'message:received': { message: WebSocketMessage; connectionId: string };
-  'message:sent': { message: WebSocketMessage; connectionId: string };
-  'message:error': { error: string; connectionId: string; messageId?: string };
-  
+  "message:received": { message: WebSocketMessage; connectionId: string };
+  "message:sent": { message: WebSocketMessage; connectionId: string };
+  "message:error": { error: string; connectionId: string; messageId?: string };
+
   // Subscription Events
-  'subscription:added': { channel: string; connectionId: string };
-  'subscription:removed': { channel: string; connectionId: string };
-  
+  "subscription:added": { channel: string; connectionId: string };
+  "subscription:removed": { channel: string; connectionId: string };
+
   // System Events
-  'system:health_check': { timestamp: number; healthy: boolean };
-  'system:agent_status': { agentId: string; status: string };
-  'system:performance': { metrics: any };
+  "system:health_check": { timestamp: number; healthy: boolean };
+  "system:agent_status": { agentId: string; status: string };
+  "system:performance": { metrics: any };
 }
 
 // ======================
@@ -515,7 +515,7 @@ export interface WebSocketServerConfig {
   };
   monitoring: {
     metricsEnabled: boolean;
-    loggingLevel: 'debug' | 'info' | 'warn' | 'error';
+    loggingLevel: "debug" | "info" | "warn" | "error";
     healthCheckInterval: number;
   };
 }
@@ -583,16 +583,16 @@ export interface WebSocketError {
   recoverable: boolean;
 }
 
-export type WebSocketErrorCode = 
-  | 'AUTH_FAILED'
-  | 'AUTH_REQUIRED'
-  | 'RATE_LIMITED'
-  | 'INVALID_MESSAGE'
-  | 'CHANNEL_NOT_FOUND'
-  | 'SUBSCRIPTION_FAILED'
-  | 'CONNECTION_LOST'
-  | 'SERVER_ERROR'
-  | 'CLIENT_ERROR'
-  | 'TIMEOUT'
-  | 'PAYLOAD_TOO_LARGE'
-  | 'UNSUPPORTED_OPERATION';
+export type WebSocketErrorCode =
+  | "AUTH_FAILED"
+  | "AUTH_REQUIRED"
+  | "RATE_LIMITED"
+  | "INVALID_MESSAGE"
+  | "CHANNEL_NOT_FOUND"
+  | "SUBSCRIPTION_FAILED"
+  | "CONNECTION_LOST"
+  | "SERVER_ERROR"
+  | "CLIENT_ERROR"
+  | "TIMEOUT"
+  | "PAYLOAD_TOO_LARGE"
+  | "UNSUPPORTED_OPERATION";

@@ -1,9 +1,5 @@
-import type { 
-  NotificationProvider, 
-  NotificationMessage, 
-  NotificationResult 
-} from "./index";
-import type { SelectNotificationChannel, SelectAlertInstance } from "../../db/schemas/alerts";
+import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
+import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface SlackConfig {
   webhookUrl: string;
@@ -36,13 +32,14 @@ export class SlackProvider implements NotificationProvider {
 
   async validateConfig(config: Record<string, unknown>): Promise<boolean> {
     const slackConfig = config as SlackConfig;
-    
+
     if (!slackConfig.webhookUrl) {
       return false;
     }
 
     // Validate webhook URL format
-    const webhookRegex = /^https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[a-zA-Z0-9]+$/;
+    const webhookRegex =
+      /^https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[a-zA-Z0-9]+$/;
     return webhookRegex.test(slackConfig.webhookUrl);
   }
 
@@ -53,14 +50,14 @@ export class SlackProvider implements NotificationProvider {
   ): Promise<NotificationResult> {
     try {
       const config = JSON.parse(channel.config) as SlackConfig;
-      
+
       const payload = this.buildSlackPayload(config, alert, message);
-      
+
       // For production, you would make an actual HTTP request to Slack
       // For now, we'll simulate the Slack API call
-      
+
       console.log("Sending Slack notification:", payload);
-      
+
       // In production, you would:
       // const response = await fetch(config.webhookUrl, {
       //   method: 'POST',
@@ -89,14 +86,14 @@ export class SlackProvider implements NotificationProvider {
   ): Record<string, unknown> {
     const color = this.getSeverityColor(alert.severity);
     const icon = this.getSeverityIcon(alert.severity);
-    
+
     // Build mentions
     let mentions = "";
     if (config.mentionUsers?.length) {
-      mentions += config.mentionUsers.map(user => `<@${user}>`).join(" ");
+      mentions += config.mentionUsers.map((user) => `<@${user}>`).join(" ");
     }
     if (config.mentionChannels?.length) {
-      mentions += config.mentionChannels.map(ch => `<#${ch}>`).join(" ");
+      mentions += config.mentionChannels.map((ch) => `<#${ch}>`).join(" ");
     }
 
     const blocks: SlackBlock[] = [
@@ -104,53 +101,53 @@ export class SlackProvider implements NotificationProvider {
         type: "header",
         text: {
           type: "plain_text",
-          text: `${icon} ${message.title}`
-        }
+          text: `${icon} ${message.title}`,
+        },
       },
       {
         type: "section",
         fields: [
           {
             type: "mrkdwn",
-            text: `*Alert ID:*\n${alert.id}`
+            text: `*Alert ID:*\n${alert.id}`,
           },
           {
             type: "mrkdwn",
-            text: `*Severity:*\n${alert.severity.toUpperCase()}`
+            text: `*Severity:*\n${alert.severity.toUpperCase()}`,
           },
           {
             type: "mrkdwn",
-            text: `*Source:*\n${alert.source}`
+            text: `*Source:*\n${alert.source}`,
           },
           {
             type: "mrkdwn",
-            text: `*Metric Value:*\n${alert.metricValue}`
-          }
-        ]
-      }
+            text: `*Metric Value:*\n${alert.metricValue}`,
+          },
+        ],
+      },
     ];
 
     // Add threshold and anomaly score if available
     if (alert.threshold || alert.anomalyScore) {
       const additionalFields = [];
-      
+
       if (alert.threshold) {
         additionalFields.push({
           type: "mrkdwn",
-          text: `*Threshold:*\n${alert.threshold}`
+          text: `*Threshold:*\n${alert.threshold}`,
         });
       }
-      
+
       if (alert.anomalyScore) {
         additionalFields.push({
           type: "mrkdwn",
-          text: `*Anomaly Score:*\n${alert.anomalyScore.toFixed(2)}`
+          text: `*Anomaly Score:*\n${alert.anomalyScore.toFixed(2)}`,
         });
       }
 
       blocks.push({
         type: "section",
-        fields: additionalFields
+        fields: additionalFields,
       });
     }
 
@@ -160,8 +157,8 @@ export class SlackProvider implements NotificationProvider {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*Description:*\n${alert.description}`
-        }
+          text: `*Description:*\n${alert.description}`,
+        },
       });
     }
 
@@ -171,9 +168,9 @@ export class SlackProvider implements NotificationProvider {
       elements: [
         {
           type: "mrkdwn",
-          text: `Triggered: <!date^${Math.floor(alert.firstTriggeredAt / 1000)}^{date_short_pretty} at {time}|${new Date(alert.firstTriggeredAt).toISOString()}>`
-        }
-      ]
+          text: `Triggered: <!date^${Math.floor(alert.firstTriggeredAt / 1000)}^{date_short_pretty} at {time}|${new Date(alert.firstTriggeredAt).toISOString()}>`,
+        },
+      ],
     });
 
     // Add action buttons if alert URL is available
@@ -185,12 +182,12 @@ export class SlackProvider implements NotificationProvider {
             type: "button",
             text: {
               type: "plain_text",
-              text: "View Alert Details"
+              text: "View Alert Details",
             },
             url: message.alertUrl,
-            style: this.getButtonStyle(alert.severity)
-          }
-        ]
+            style: this.getButtonStyle(alert.severity),
+          },
+        ],
       });
     }
 
@@ -201,8 +198,8 @@ export class SlackProvider implements NotificationProvider {
         {
           color,
           fallback: message.title,
-        }
-      ]
+        },
+      ],
     };
 
     // Add channel-specific configuration
@@ -234,23 +231,35 @@ export class SlackProvider implements NotificationProvider {
 
   private getSeverityColor(severity: string): string {
     switch (severity) {
-      case "critical": return "#dc2626";
-      case "high": return "#ea580c";
-      case "medium": return "#d97706";
-      case "low": return "#2563eb";
-      case "info": return "#6b7280";
-      default: return "#6b7280";
+      case "critical":
+        return "#dc2626";
+      case "high":
+        return "#ea580c";
+      case "medium":
+        return "#d97706";
+      case "low":
+        return "#2563eb";
+      case "info":
+        return "#6b7280";
+      default:
+        return "#6b7280";
     }
   }
 
   private getSeverityIcon(severity: string): string {
     switch (severity) {
-      case "critical": return "🔴";
-      case "high": return "🟠";
-      case "medium": return "🟡";
-      case "low": return "🔵";
-      case "info": return "ℹ️";
-      default: return "⚪";
+      case "critical":
+        return "🔴";
+      case "high":
+        return "🟠";
+      case "medium":
+        return "🟡";
+      case "low":
+        return "🔵";
+      case "info":
+        return "ℹ️";
+      default:
+        return "⚪";
     }
   }
 

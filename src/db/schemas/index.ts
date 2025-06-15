@@ -5,7 +5,7 @@
 // Authentication Schema
 export * from "./auth";
 
-// Trading Schema  
+// Trading Schema
 export * from "./trading";
 
 // Safety System Schema
@@ -19,9 +19,9 @@ export * from "./workflows";
 
 // Re-export all table definitions for easy access
 import * as authTables from "./auth";
-import * as tradingTables from "./trading";
-import * as safetyTables from "./safety";
 import * as patternTables from "./patterns";
+import * as safetyTables from "./safety";
+import * as tradingTables from "./trading";
 import * as workflowTables from "./workflows";
 
 // Grouped exports by domain
@@ -39,7 +39,7 @@ export const allTables = {
   account: authTables.account,
   verification: authTables.verification,
   userPreferences: authTables.userPreferences,
-  
+
   // Trading tables
   apiCredentials: tradingTables.apiCredentials,
   snipeTargets: tradingTables.snipeTargets,
@@ -47,7 +47,7 @@ export const allTables = {
   transactions: tradingTables.transactions,
   transactionLocks: tradingTables.transactionLocks,
   transactionQueue: tradingTables.transactionQueue,
-  
+
   // Safety tables
   simulationSessions: safetyTables.simulationSessions,
   simulationTrades: safetyTables.simulationTrades,
@@ -56,12 +56,12 @@ export const allTables = {
   reconciliationReports: safetyTables.reconciliationReports,
   errorIncidents: safetyTables.errorIncidents,
   systemHealthMetrics: safetyTables.systemHealthMetrics,
-  
+
   // Pattern tables
   monitoredListings: patternTables.monitoredListings,
   patternEmbeddings: patternTables.patternEmbeddings,
   patternSimilarityCache: patternTables.patternSimilarityCache,
-  
+
   // Workflow tables
   workflowSystemStatus: workflowTables.workflowSystemStatus,
   workflowActivity: workflowTables.workflowActivity,
@@ -72,7 +72,7 @@ export type {
   // Auth types
   User,
   NewUser,
-  Session, 
+  Session,
   NewSession,
   Account,
   NewAccount,

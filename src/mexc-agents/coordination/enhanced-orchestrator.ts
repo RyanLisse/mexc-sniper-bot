@@ -1,23 +1,19 @@
-import type { 
-  AgentRegistry, 
-  RegisteredAgent 
-} from "./agent-registry";
-import type { 
-  WorkflowEngine, 
-  WorkflowDefinition, 
-  WorkflowExecutionResult,
-  WorkflowStepConfig 
-} from "./workflow-engine";
-import type { PerformanceCollector } from "./performance-collector";
 import { AgentMonitoringService } from "../../services/agent-monitoring-service";
 import type {
-  CalendarDiscoveryWorkflowRequest,
-  SymbolAnalysisWorkflowRequest,
-  PatternAnalysisWorkflowRequest,
-  TradingStrategyWorkflowRequest,
-  MexcWorkflowResult,
   AgentOrchestrationMetrics,
+  CalendarDiscoveryWorkflowRequest,
+  MexcWorkflowResult,
+  PatternAnalysisWorkflowRequest,
+  SymbolAnalysisWorkflowRequest,
+  TradingStrategyWorkflowRequest,
 } from "../orchestrator-types";
+import type { AgentRegistry } from "./agent-registry";
+import type { PerformanceCollector } from "./performance-collector";
+import type {
+  WorkflowDefinition,
+  WorkflowEngine,
+  WorkflowExecutionResult,
+} from "./workflow-engine";
 
 /**
  * Enhanced orchestrator that uses the new coordination system
@@ -71,7 +67,6 @@ export class EnhancedMexcOrchestrator {
 
       this.isInitialized = true;
       console.log("[EnhancedMexcOrchestrator] Initialization completed with health monitoring");
-
     } catch (error) {
       console.error("[EnhancedMexcOrchestrator] Initialization failed:", error);
       throw error;
@@ -91,9 +86,11 @@ export class EnhancedMexcOrchestrator {
       // Check agent availability before starting
       const requiredAgents = ["mexc-api", "calendar", "pattern-discovery"];
       const availabilityCheck = this.checkAgentAvailability(requiredAgents);
-      
+
       if (!availabilityCheck.allAvailable) {
-        throw new Error(`Required agents not available: ${availabilityCheck.unavailableAgents.join(", ")}`);
+        throw new Error(
+          `Required agents not available: ${availabilityCheck.unavailableAgents.join(", ")}`
+        );
       }
 
       // Execute workflow using enhanced engine
@@ -111,13 +108,12 @@ export class EnhancedMexcOrchestrator {
 
       // Convert to legacy format for backward compatibility
       const mexcResult = this.convertToMexcWorkflowResult(workflowResult);
-      
+
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
-
     } catch (error) {
       console.error("[EnhancedMexcOrchestrator] Calendar discovery workflow failed:", error);
-      
+
       const errorResult: MexcWorkflowResult = {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -145,12 +141,14 @@ export class EnhancedMexcOrchestrator {
       // Check agent availability
       const requiredAgents = ["symbol-analysis", "pattern-discovery", "mexc-api"];
       const availabilityCheck = this.checkAgentAvailability(requiredAgents);
-      
+
       if (!availabilityCheck.allAvailable) {
         // Try to find alternative agents or use fallbacks
         const alternativeAgents = this.findAlternativeAgents(availabilityCheck.unavailableAgents);
         if (alternativeAgents.length === 0) {
-          throw new Error(`No available agents for symbol analysis: ${availabilityCheck.unavailableAgents.join(", ")}`);
+          throw new Error(
+            `No available agents for symbol analysis: ${availabilityCheck.unavailableAgents.join(", ")}`
+          );
         }
       }
 
@@ -173,10 +171,12 @@ export class EnhancedMexcOrchestrator {
       const mexcResult = this.convertToMexcWorkflowResult(workflowResult);
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
-
     } catch (error) {
-      console.error(`[EnhancedMexcOrchestrator] Symbol analysis workflow failed for ${request.vcoinId}:`, error);
-      
+      console.error(
+        `[EnhancedMexcOrchestrator] Symbol analysis workflow failed for ${request.vcoinId}:`,
+        error
+      );
+
       const errorResult: MexcWorkflowResult = {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -217,10 +217,9 @@ export class EnhancedMexcOrchestrator {
       const mexcResult = this.convertToMexcWorkflowResult(workflowResult);
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
-
     } catch (error) {
       console.error("[EnhancedMexcOrchestrator] Pattern analysis workflow failed:", error);
-      
+
       const errorResult: MexcWorkflowResult = {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -262,10 +261,12 @@ export class EnhancedMexcOrchestrator {
       const mexcResult = this.convertToMexcWorkflowResult(workflowResult);
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
-
     } catch (error) {
-      console.error(`[EnhancedMexcOrchestrator] Trading strategy workflow failed for ${request.vcoinId}:`, error);
-      
+      console.error(
+        `[EnhancedMexcOrchestrator] Trading strategy workflow failed for ${request.vcoinId}:`,
+        error
+      );
+
       const errorResult: MexcWorkflowResult = {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -301,7 +302,7 @@ export class EnhancedMexcOrchestrator {
   }> {
     const registryStats = this.agentRegistry.getStats();
     const allAgents = this.agentRegistry.getAllAgents();
-    
+
     // Check core agents specifically
     const coreAgentHealth = {
       mexcApi: this.agentRegistry.isAgentAvailable("mexc-api"),
@@ -337,10 +338,11 @@ export class EnhancedMexcOrchestrator {
   } {
     const performanceSummary = this.performanceCollector.getCurrentSummary();
     const workflowHistory = this.workflowEngine.getExecutionHistory(100);
-    
-    const avgWorkflowDuration = workflowHistory.length > 0
-      ? workflowHistory.reduce((sum, w) => sum + w.duration, 0) / workflowHistory.length
-      : 0;
+
+    const avgWorkflowDuration =
+      workflowHistory.length > 0
+        ? workflowHistory.reduce((sum, w) => sum + w.duration, 0) / workflowHistory.length
+        : 0;
 
     return {
       ...this.metrics,
@@ -368,13 +370,13 @@ export class EnhancedMexcOrchestrator {
   } {
     const registryStats = this.agentRegistry.getStats();
     const allAgents = this.agentRegistry.getAllAgents();
-    const availableAgents = allAgents.filter(agent => 
+    const availableAgents = allAgents.filter((agent) =>
       this.agentRegistry.isAgentAvailable(agent.id)
     );
 
     return {
       totalAgents: registryStats.totalAgents,
-      agentTypes: allAgents.map(agent => agent.type),
+      agentTypes: allAgents.map((agent) => agent.type),
       initialized: this.isInitialized,
       coordination: {
         registeredAgents: registryStats.totalAgents,
@@ -393,21 +395,20 @@ export class EnhancedMexcOrchestrator {
       const registryStats = this.agentRegistry.getStats();
       const runningWorkflows = this.workflowEngine.getRunningWorkflows();
       const monitoringStats = this.monitoringService.getStats();
-      
+
       // Check if we have at least some healthy agents
       const hasHealthyAgents = registryStats.healthyAgents > 0;
-      
+
       // Check if workflow engine is not overloaded
       const workflowEngineHealthy = runningWorkflows.length < 20;
-      
+
       // Check if monitoring service is running and not overloaded with alerts
       const monitoringHealthy = monitoringStats.isRunning && monitoringStats.criticalAlerts < 5;
-      
+
       // Check if coordination system is responsive
       const coordinationHealthy = this.isInitialized && hasHealthyAgents;
 
       return coordinationHealthy && workflowEngineHealthy && monitoringHealthy;
-      
     } catch (error) {
       console.error("[EnhancedMexcOrchestrator] Health check failed:", error);
       return false;
@@ -432,45 +433,60 @@ export class EnhancedMexcOrchestrator {
     const monitoringStats = this.monitoringService.getStats();
     const alerts = this.monitoringService.getAlerts(false); // Only unresolved
     const runningWorkflows = this.workflowEngine.getRunningWorkflows();
-    
+
     // Determine overall health status
     let overallStatus: "healthy" | "degraded" | "unhealthy" | "unknown" = "healthy";
-    
-    const unhealthyPercentage = registryStats.totalAgents > 0 
-      ? (registryStats.unhealthyAgents / registryStats.totalAgents) * 100 
-      : 0;
-    
+
+    const unhealthyPercentage =
+      registryStats.totalAgents > 0
+        ? (registryStats.unhealthyAgents / registryStats.totalAgents) * 100
+        : 0;
+
     if (unhealthyPercentage > 30 || monitoringStats.criticalAlerts > 3) {
       overallStatus = "unhealthy";
-    } else if (unhealthyPercentage > 10 || monitoringStats.criticalAlerts > 1 || runningWorkflows.length > 15) {
+    } else if (
+      unhealthyPercentage > 10 ||
+      monitoringStats.criticalAlerts > 1 ||
+      runningWorkflows.length > 15
+    ) {
       overallStatus = "degraded";
     }
-    
+
     // Generate recommendations
     const recommendations: string[] = [];
-    
+
     if (registryStats.unhealthyAgents > 0) {
-      recommendations.push(`${registryStats.unhealthyAgents} agents are unhealthy - investigate and resolve issues`);
+      recommendations.push(
+        `${registryStats.unhealthyAgents} agents are unhealthy - investigate and resolve issues`
+      );
     }
-    
+
     if (monitoringStats.criticalAlerts > 0) {
       recommendations.push(`${monitoringStats.criticalAlerts} critical alerts need attention`);
     }
-    
+
     if (runningWorkflows.length > 10) {
-      recommendations.push(`High number of running workflows (${runningWorkflows.length}) - monitor for bottlenecks`);
+      recommendations.push(
+        `High number of running workflows (${runningWorkflows.length}) - monitor for bottlenecks`
+      );
     }
-    
+
     if (registryStats.averageResponseTime > 3000) {
-      recommendations.push("High average response time detected - consider performance optimization");
+      recommendations.push(
+        "High average response time detected - consider performance optimization"
+      );
     }
-    
+
     return {
       overall: overallStatus,
       systems: {
         agentRegistry: {
-          status: registryStats.unhealthyAgents === 0 ? "healthy" : 
-                  registryStats.unhealthyAgents < registryStats.totalAgents * 0.3 ? "degraded" : "unhealthy",
+          status:
+            registryStats.unhealthyAgents === 0
+              ? "healthy"
+              : registryStats.unhealthyAgents < registryStats.totalAgents * 0.3
+                ? "degraded"
+                : "unhealthy",
           totalAgents: registryStats.totalAgents,
           healthyAgents: registryStats.healthyAgents,
           degradedAgents: registryStats.degradedAgents,
@@ -478,14 +494,22 @@ export class EnhancedMexcOrchestrator {
           averageResponseTime: registryStats.averageResponseTime,
         },
         workflowEngine: {
-          status: runningWorkflows.length < 10 ? "healthy" : 
-                  runningWorkflows.length < 20 ? "degraded" : "unhealthy",
+          status:
+            runningWorkflows.length < 10
+              ? "healthy"
+              : runningWorkflows.length < 20
+                ? "degraded"
+                : "unhealthy",
           runningWorkflows: runningWorkflows.length,
           registeredWorkflows: 4, // Our registered workflows
         },
         monitoring: {
-          status: monitoringStats.isRunning && monitoringStats.criticalAlerts < 3 ? "healthy" :
-                  monitoringStats.isRunning && monitoringStats.criticalAlerts < 5 ? "degraded" : "unhealthy",
+          status:
+            monitoringStats.isRunning && monitoringStats.criticalAlerts < 3
+              ? "healthy"
+              : monitoringStats.isRunning && monitoringStats.criticalAlerts < 5
+                ? "degraded"
+                : "unhealthy",
           isRunning: monitoringStats.isRunning,
           totalAlerts: monitoringStats.totalAlerts,
           unresolvedAlerts: monitoringStats.unresolvedAlerts,
@@ -510,25 +534,24 @@ export class EnhancedMexcOrchestrator {
    */
   async shutdown(): Promise<void> {
     console.log("[EnhancedMexcOrchestrator] Shutting down...");
-    
+
     try {
       // Stop monitoring systems
       this.agentRegistry.stopHealthMonitoring();
       this.performanceCollector.stopCollection();
-      
+
       // Cancel running workflows
       const runningWorkflows = this.workflowEngine.getRunningWorkflows();
       for (const workflowId of runningWorkflows) {
         this.workflowEngine.cancelWorkflow(workflowId);
       }
-      
+
       // Cleanup registries
       this.agentRegistry.destroy();
       this.performanceCollector.destroy();
-      
+
       this.isInitialized = false;
       console.log("[EnhancedMexcOrchestrator] Shutdown completed");
-      
     } catch (error) {
       console.error("[EnhancedMexcOrchestrator] Shutdown error:", error);
     }
@@ -713,7 +736,7 @@ export class EnhancedMexcOrchestrator {
    */
   private findAlternativeAgents(unavailableAgents: string[]): string[] {
     const alternatives: string[] = [];
-    
+
     for (const agentId of unavailableAgents) {
       // Look for agents of the same type that are available
       const agent = this.agentRegistry.getAgent(agentId);

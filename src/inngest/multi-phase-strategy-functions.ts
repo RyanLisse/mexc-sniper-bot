@@ -1,11 +1,17 @@
-import { inngest } from "./client";
-import { multiPhaseTradingService, PREDEFINED_STRATEGIES } from "@/src/services/multi-phase-trading-service";
-import { MultiPhaseStrategyBuilder, StrategyPatterns } from "@/src/services/multi-phase-strategy-builder";
-import { createExecutorFromStrategy } from "@/src/services/multi-phase-executor";
-import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
-import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
 import { RiskManagerAgent } from "@/src/mexc-agents/risk-manager-agent";
+import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
+import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
+import { createExecutorFromStrategy } from "@/src/services/multi-phase-executor";
+import {
+  MultiPhaseStrategyBuilder,
+  StrategyPatterns,
+} from "@/src/services/multi-phase-strategy-builder";
+import {
+  PREDEFINED_STRATEGIES,
+  multiPhaseTradingService,
+} from "@/src/services/multi-phase-trading-service";
+import { inngest } from "./client";
 
 // ===========================================
 // MULTI-PHASE STRATEGY INNGEST WORKFLOWS
@@ -16,7 +22,17 @@ export const createMultiPhaseStrategy = inngest.createFunction(
   { id: "multi-phase-strategy-create", name: "Create Multi-Phase Strategy" },
   { event: "multi-phase-strategy/create" },
   async ({ event, step }) => {
-    const { userId, symbol, marketData, riskTolerance, timeframe, capital, entryPrice, aiRecommendation, workflowId } = event.data;
+    const {
+      userId,
+      symbol,
+      marketData,
+      riskTolerance,
+      timeframe,
+      capital,
+      entryPrice,
+      aiRecommendation,
+      workflowId,
+    } = event.data;
 
     // Step 1: Initialize AI agents
     const agents = await step.run("initialize-agents", async () => {
@@ -49,10 +65,10 @@ export const createMultiPhaseStrategy = inngest.createFunction(
     // Step 3: Generate strategy recommendation
     const strategyRecommendation = await step.run("generate-strategy", async () => {
       const { strategyAgent } = agents;
-      
+
       // Determine optimal strategy based on analysis
       let recommendedTemplate = "normal";
-      
+
       if (riskTolerance === "low") {
         recommendedTemplate = "conservative";
       } else if (riskTolerance === "high" && timeframe === "long") {
@@ -62,7 +78,7 @@ export const createMultiPhaseStrategy = inngest.createFunction(
       }
 
       const baseStrategy = PREDEFINED_STRATEGIES[recommendedTemplate];
-      
+
       // Create custom strategy if needed
       const builder = new MultiPhaseStrategyBuilder(
         `${symbol}-${recommendedTemplate}-${Date.now()}`,
@@ -70,31 +86,42 @@ export const createMultiPhaseStrategy = inngest.createFunction(
       );
 
       // Adjust strategy based on market conditions and risk tolerance
-      if (marketAnalysis.analysis.includes("high volatility") || marketAnalysis.analysis.includes("volatile")) {
+      if (
+        marketAnalysis.analysis.includes("high volatility") ||
+        marketAnalysis.analysis.includes("volatile")
+      ) {
         // Use volatility-adjusted strategy
         const volatilityStrategy = StrategyPatterns.momentum("high");
         const preview = volatilityStrategy.preview();
-        builder.addPhases(preview.levels.map(l => [l.percentage, l.sellPercentage] as [number, number]));
+        builder.addPhases(
+          preview.levels.map((l) => [l.percentage, l.sellPercentage] as [number, number])
+        );
       } else {
         // Use base strategy levels
-        builder.addPhases(baseStrategy.levels.map(l => [l.percentage, l.sellPercentage] as [number, number]));
+        builder.addPhases(
+          baseStrategy.levels.map((l) => [l.percentage, l.sellPercentage] as [number, number])
+        );
       }
 
       const customStrategy = builder
-        .withDescription(`AI-generated strategy for ${symbol} based on ${riskTolerance} risk tolerance and ${timeframe} timeframe`)
+        .withDescription(
+          `AI-generated strategy for ${symbol} based on ${riskTolerance} risk tolerance and ${timeframe} timeframe`
+        )
         .build();
 
       return {
         strategy: customStrategy,
         templateUsed: recommendedTemplate,
-        adjustments: marketAnalysis.analysis.includes("volatile") ? "volatility-adjusted" : "standard",
+        adjustments: marketAnalysis.analysis.includes("volatile")
+          ? "volatility-adjusted"
+          : "standard",
       };
     });
 
     // Step 4: Risk assessment and position sizing
     const riskAssessment = await step.run("assess-risk", async () => {
       const { riskManagerAgent } = agents;
-      
+
       const riskAnalysis = await riskManagerAgent.process(
         `Strategy: ${strategyRecommendation.strategy.name}
          Symbol: ${symbol}
@@ -110,9 +137,13 @@ export const createMultiPhaseStrategy = inngest.createFunction(
       );
 
       // Calculate position sizing
-      const recommendedPosition = capital && entryPrice ? 
-        Math.min(capital * 0.05, capital * (riskTolerance === "low" ? 0.02 : riskTolerance === "high" ? 0.1 : 0.05)) : 
-        null;
+      const recommendedPosition =
+        capital && entryPrice
+          ? Math.min(
+              capital * 0.05,
+              capital * (riskTolerance === "low" ? 0.02 : riskTolerance === "high" ? 0.1 : 0.05)
+            )
+          : null;
 
       return {
         riskAnalysis: riskAnalysis.content,
@@ -165,7 +196,7 @@ export const createMultiPhaseStrategy = inngest.createFunction(
     // Step 6: Generate execution plan
     const executionPlan = await step.run("generate-execution-plan", async () => {
       const { strategyAgent } = agents;
-      
+
       const plan = await strategyAgent.process(
         `Create an execution plan for ${strategyRecommendation.strategy.name} on ${symbol}`,
         {
@@ -205,16 +236,18 @@ export const createMultiPhaseStrategy = inngest.createFunction(
         databaseStored: strategyCreated.created,
         strategyId: strategyCreated.created ? strategyCreated.strategyId : null,
       },
-      nextSteps: strategyCreated.created ? [
-        "Monitor market conditions for entry signal",
-        "Set up automated phase execution",
-        "Track strategy performance",
-        "Adjust based on market changes",
-      ] : [
-        "Provide missing parameters (entry price, capital)",
-        "Complete strategy setup",
-        "Initialize monitoring system",
-      ],
+      nextSteps: strategyCreated.created
+        ? [
+            "Monitor market conditions for entry signal",
+            "Set up automated phase execution",
+            "Track strategy performance",
+            "Adjust based on market changes",
+          ]
+        : [
+            "Provide missing parameters (entry price, capital)",
+            "Complete strategy setup",
+            "Initialize monitoring system",
+          ],
     };
   }
 );
@@ -269,7 +302,10 @@ export const analyzeMultiPhaseStrategy = inngest.createFunction(
       const performanceMetrics = await Promise.all(
         strategies.map(async (strategy) => {
           try {
-            const metrics = await multiPhaseTradingService.calculatePerformanceMetrics(strategy.id, userId);
+            const metrics = await multiPhaseTradingService.calculatePerformanceMetrics(
+              strategy.id,
+              userId
+            );
             const executor = await createExecutorFromStrategy(strategy, userId);
             const analytics = executor.getExecutionAnalytics();
 
@@ -295,8 +331,10 @@ export const analyzeMultiPhaseStrategy = inngest.createFunction(
         hasStrategies: true,
         count: strategies.length,
         performanceMetrics,
-        topPerformer: performanceMetrics.reduce((best, current) => 
-          (current.metrics?.totalPnlPercent || 0) > (best.metrics?.totalPnlPercent || 0) ? current : best
+        topPerformer: performanceMetrics.reduce((best, current) =>
+          (current.metrics?.totalPnlPercent || 0) > (best.metrics?.totalPnlPercent || 0)
+            ? current
+            : best
         ),
       };
     });
@@ -304,7 +342,7 @@ export const analyzeMultiPhaseStrategy = inngest.createFunction(
     // Step 4: Generate recommendations
     const recommendations = await step.run("generate-recommendations", async () => {
       const strategyAgent = new StrategyAgent();
-      
+
       const analysisContent = `
 Market Analysis: ${marketAnalysis.marketInsights}
 Symbol Analysis: ${marketAnalysis.symbolAnalysis}
@@ -343,7 +381,7 @@ Current Market Data: ${marketData}
       summary: {
         strategiesAnalyzed: strategies.length,
         marketConfidence: marketAnalysis.marketConfidence,
-        hasActiveStrategies: strategies.some(s => s.status === "active"),
+        hasActiveStrategies: strategies.some((s) => s.status === "active"),
         overallHealth: performanceAnalysis.hasStrategies ? "good" : "no_data",
       },
       timestamp: new Date().toISOString(),
@@ -356,7 +394,8 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
   { id: "multi-phase-strategy-optimize", name: "Optimize Multi-Phase Strategy" },
   { event: "multi-phase-strategy/optimize" },
   async ({ event, step }) => {
-    const { userId, strategyId, currentStrategy, marketConditions, performanceData, workflowId } = event.data;
+    const { userId, strategyId, currentStrategy, marketConditions, performanceData, workflowId } =
+      event.data;
 
     // Step 1: Get current strategy and performance
     const strategyAnalysis = await step.run("analyze-current-strategy", async () => {
@@ -365,7 +404,10 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
 
       const executor = await createExecutorFromStrategy(strategy, userId);
       const analytics = executor.getExecutionAnalytics();
-      const performanceMetrics = await multiPhaseTradingService.calculatePerformanceMetrics(strategyId, userId);
+      const performanceMetrics = await multiPhaseTradingService.calculatePerformanceMetrics(
+        strategyId,
+        userId
+      );
 
       return {
         strategy,
@@ -380,7 +422,7 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
     // Step 2: AI-powered optimization analysis
     const optimizationAnalysis = await step.run("ai-optimization-analysis", async () => {
       const strategyAgent = new StrategyAgent();
-      
+
       const optimization = await strategyAgent.optimizeExistingStrategy(
         currentStrategy,
         marketConditions || "Current market conditions analysis needed",
@@ -402,7 +444,7 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
       if (marketConditions?.includes("volatile") || marketConditions?.includes("high volatility")) {
         const volatilityBuilder = StrategyPatterns.momentum("high");
         const volatilityPreview = volatilityBuilder.preview();
-        
+
         variations.push({
           name: "Volatility-Adjusted Strategy",
           type: "volatility_optimized",
@@ -418,9 +460,9 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
           `${currentStrategy.id}-conservative`,
           `${currentStrategy.name} (Conservative)`
         ).createConservativeStrategy(70, 80);
-        
+
         const conservativeStrategy = conservativeBuilder.build();
-        
+
         variations.push({
           name: "Conservative Optimization",
           type: "performance_optimized",
@@ -435,7 +477,7 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
         (strategyAnalysis.strategy.positionSizeUsdt / 10000) * 100 // Approximate position size percentage
       );
       const riskAdjustedPreview = riskAdjustedBuilder.preview();
-      
+
       variations.push({
         name: "Risk-Adjusted Strategy",
         type: "risk_optimized",
@@ -450,7 +492,7 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
     // Step 4: Risk assessment of optimizations
     const riskAssessment = await step.run("assess-optimization-risks", async () => {
       const riskAgent = new RiskManagerAgent();
-      
+
       const riskAnalysis = await riskAgent.process(
         `Assess risks of strategy optimizations for ${currentStrategy.name}`,
         {
@@ -477,7 +519,7 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
     // Step 5: Generate implementation plan
     const implementationPlan = await step.run("create-implementation-plan", async () => {
       const strategyAgent = new StrategyAgent();
-      
+
       const plan = await strategyAgent.process(
         `Create implementation plan for strategy optimization: ${optimizationAnalysis.optimizationInsights}`,
         {
@@ -544,10 +586,10 @@ export const recommendMultiPhaseStrategy = inngest.createFunction(
 
       const [calendarData, symbolAnalysis, marketInsights] = await Promise.all([
         calendarAgent.process(`Get calendar information for ${symbol}`, { symbol }),
-        symbolAgent.process(`Analyze ${symbol} for trading strategy recommendation`, { 
-          symbol, 
+        symbolAgent.process(`Analyze ${symbol} for trading strategy recommendation`, {
+          symbol,
           marketData,
-          analysisType: "strategy_recommendation" 
+          analysisType: "strategy_recommendation",
         }),
         strategyAgent.process(marketData, {
           marketData,
@@ -570,22 +612,25 @@ export const recommendMultiPhaseStrategy = inngest.createFunction(
     });
 
     // Step 2: Generate personalized strategy recommendation
-    const strategyRecommendation = await step.run("generate-personalized-recommendation", async () => {
-      const strategyAgent = new StrategyAgent();
-      
-      const recommendation = await strategyAgent.recommendStrategyForSymbol(
-        symbol,
-        marketData,
-        userPreferences
-      );
+    const strategyRecommendation = await step.run(
+      "generate-personalized-recommendation",
+      async () => {
+        const strategyAgent = new StrategyAgent();
 
-      return recommendation;
-    });
+        const recommendation = await strategyAgent.recommendStrategyForSymbol(
+          symbol,
+          marketData,
+          userPreferences
+        );
+
+        return recommendation;
+      }
+    );
 
     // Step 3: Validate recommendation with additional analysis
     const validationAnalysis = await step.run("validate-recommendation", async () => {
       const riskAgent = new RiskManagerAgent();
-      
+
       const validation = await riskAgent.process(
         `Validate strategy recommendation for ${symbol}: ${strategyRecommendation.reasoning}`,
         {
@@ -614,7 +659,7 @@ export const recommendMultiPhaseStrategy = inngest.createFunction(
           "conservative-alternative",
           "Conservative Alternative"
         ).createConservativeStrategy();
-        
+
         scenarios.push({
           name: "Conservative Alternative",
           strategy: conservativeBuilder.build(),
@@ -624,12 +669,15 @@ export const recommendMultiPhaseStrategy = inngest.createFunction(
       }
 
       // Scenario 2: Market-adapted alternative
-      if (marketAnalysis.marketInsights.includes("bullish") || marketAnalysis.marketInsights.includes("strong uptrend")) {
+      if (
+        marketAnalysis.marketInsights.includes("bullish") ||
+        marketAnalysis.marketInsights.includes("strong uptrend")
+      ) {
         const aggressiveBuilder = new MultiPhaseStrategyBuilder(
           "bullish-alternative",
           "Bullish Market Alternative"
         ).createAggressiveStrategy();
-        
+
         scenarios.push({
           name: "Bullish Market Strategy",
           strategy: aggressiveBuilder.build(),
@@ -643,7 +691,7 @@ export const recommendMultiPhaseStrategy = inngest.createFunction(
         marketAnalysis.marketInsights.includes("volatile") ? "high" : "medium"
       );
       const volatilityPreview = volatilityBuilder.preview();
-      
+
       scenarios.push({
         name: "Volatility-Adapted Strategy",
         strategy: {
@@ -670,7 +718,7 @@ export const recommendMultiPhaseStrategy = inngest.createFunction(
           confidence: strategyRecommendation.riskAssessment.suitabilityScore,
         },
         alternatives: [
-          ...strategyRecommendation.alternativeStrategies.map(alt => ({
+          ...strategyRecommendation.alternativeStrategies.map((alt) => ({
             name: alt.name,
             strategy: alt,
             suitability: "Predefined alternative strategy",
@@ -720,7 +768,7 @@ export const initializeStrategyTemplates = inngest.createFunction(
   async ({ step }) => {
     return await step.run("initialize-predefined-strategies", async () => {
       await multiPhaseTradingService.initializePredefinedStrategies();
-      
+
       return {
         success: true,
         message: "Predefined strategy templates initialized",
@@ -764,19 +812,14 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
       // Step 4: Execute phases if any are triggered
       const executionResults = await step.run("execute-phases", async () => {
         const results = [];
-        
+
         for (const phase of execution.phasesToExecute) {
           try {
             // Record phase execution
-            await executor.recordPhaseExecution(
-              phase.phase,
-              currentPrice,
-              phase.amount,
-              {
-                fees: phase.expectedProfit * 0.001, // 0.1% fee estimate
-                latency: 50, // Estimate 50ms latency
-              }
-            );
+            await executor.recordPhaseExecution(phase.phase, currentPrice, phase.amount, {
+              fees: phase.expectedProfit * 0.001, // 0.1% fee estimate
+              latency: 50, // Estimate 50ms latency
+            });
 
             results.push({
               phase: phase.phase,
@@ -804,25 +847,15 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
       // Step 5: Update strategy status
       await step.run("update-strategy", async () => {
         if (executor.isComplete()) {
-          await multiPhaseTradingService.updateStrategyStatus(
-            strategyId,
-            userId,
-            "completed",
-            {
-              currentPrice,
-              completedAt: new Date(),
-            }
-          );
+          await multiPhaseTradingService.updateStrategyStatus(strategyId, userId, "completed", {
+            currentPrice,
+            completedAt: new Date(),
+          });
         } else {
-          await multiPhaseTradingService.updateStrategyStatus(
-            strategyId,
-            userId,
-            "active",
-            {
-              currentPrice,
-              lastExecutionAt: new Date(),
-            }
-          );
+          await multiPhaseTradingService.updateStrategyStatus(strategyId, userId, "active", {
+            currentPrice,
+            lastExecutionAt: new Date(),
+          });
         }
       });
 
@@ -831,25 +864,19 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
         strategyId,
         symbol,
         currentPrice,
-        executedPhases: executionResults.filter(r => r.success).length,
+        executedPhases: executionResults.filter((r) => r.success).length,
         totalProfit: executionResults.reduce((sum, r) => sum + r.profit, 0),
         execution,
         isComplete: executor.isComplete(),
       };
-
     } catch (error) {
       console.error("Error executing multi-phase strategy:", error);
-      
+
       // Update strategy status to failed
-      await multiPhaseTradingService.updateStrategyStatus(
-        strategyId,
-        userId,
-        "failed",
-        {
-          currentPrice,
-          errorMessage: error instanceof Error ? error.message : "Unknown error",
-        }
-      );
+      await multiPhaseTradingService.updateStrategyStatus(strategyId, userId, "failed", {
+        currentPrice,
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
+      });
 
       throw error;
     }
@@ -864,7 +891,8 @@ export const strategyHealthCheck = inngest.createFunction(
     try {
       // Step 1: Get all active strategies
       const allActiveStrategies = await step.run("get-all-active-strategies", async () => {
-        return await db.select()
+        return await db
+          .select()
           .from(tradingStrategies)
           .where(eq(tradingStrategies.status, "active"));
       });
@@ -874,12 +902,12 @@ export const strategyHealthCheck = inngest.createFunction(
         const results = [];
 
         for (const strategy of allActiveStrategies) {
-          const timeSinceLastExecution = strategy.lastExecutionAt 
+          const timeSinceLastExecution = strategy.lastExecutionAt
             ? Date.now() - new Date(strategy.lastExecutionAt).getTime()
             : Date.now() - new Date(strategy.activatedAt || strategy.createdAt).getTime();
 
           const hoursStale = timeSinceLastExecution / (1000 * 60 * 60);
-          
+
           let healthStatus = "healthy";
           const issues = [];
 
@@ -933,7 +961,8 @@ export const strategyHealthCheck = inngest.createFunction(
             actions.push(`Paused stale strategy ${result.strategyId}`);
           } else if (result.healthStatus === "underperforming") {
             // Update AI insights for underperforming strategies
-            await db.update(tradingStrategies)
+            await db
+              .update(tradingStrategies)
               .set({
                 aiInsights: `⚠️ Strategy underperforming. Current P&L: ${result.currentPnl.toFixed(2)}. Consider review.`,
                 lastAiAnalysis: new Date(),
@@ -953,13 +982,12 @@ export const strategyHealthCheck = inngest.createFunction(
         healthResults,
         correctiveActions,
         summary: {
-          healthy: healthResults.filter(r => r.healthStatus === "healthy").length,
-          stale: healthResults.filter(r => r.healthStatus === "stale").length,
-          inactive: healthResults.filter(r => r.healthStatus === "inactive").length,
-          underperforming: healthResults.filter(r => r.healthStatus === "underperforming").length,
+          healthy: healthResults.filter((r) => r.healthStatus === "healthy").length,
+          stale: healthResults.filter((r) => r.healthStatus === "stale").length,
+          inactive: healthResults.filter((r) => r.healthStatus === "inactive").length,
+          underperforming: healthResults.filter((r) => r.healthStatus === "underperforming").length,
         },
       };
-
     } catch (error) {
       console.error("Error in strategy health check:", error);
       throw error;

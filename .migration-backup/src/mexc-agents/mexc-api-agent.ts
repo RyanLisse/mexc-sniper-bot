@@ -1,13 +1,6 @@
-import {
-  READY_STATE_PATTERN,
-  type SymbolV2Entry,
-  hasCompleteData,
-  isValidForSnipe,
-  matchesReadyPattern,
-  validateSymbolV2Entry,
-} from "../schemas/mexc-schemas";
-import { getMexcService, type ServiceResponse } from "../services/mexc-service-layer";
-import { type CalendarEntry, type SymbolEntry, type BalanceEntry } from "../services/unified-mexc-client";
+import type { SymbolV2Entry } from "../schemas/mexc-schemas";
+import { type ServiceResponse, getMexcService } from "../services/mexc-service-layer";
+import type { CalendarEntry, SymbolEntry } from "../services/unified-mexc-client";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 export interface MexcApiParams {
@@ -308,7 +301,9 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
       // Add AI analysis to the response
       const enhancedResponse = await this.enhanceServiceResponseWithAI(serviceResponse, endpoint);
 
-      console.log(`[MexcApiAgent] Service call successful: ${endpoint} - Success: ${serviceResponse.success}`);
+      console.log(
+        `[MexcApiAgent] Service call successful: ${endpoint} - Success: ${serviceResponse.success}`
+      );
       return enhancedResponse;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -353,7 +348,10 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
   }
 
   // Enhance service response with AI analysis
-  private async enhanceServiceResponseWithAI(serviceResponse: ServiceResponse<unknown>, endpoint: string): Promise<unknown> {
+  private async enhanceServiceResponseWithAI(
+    serviceResponse: ServiceResponse<unknown>,
+    endpoint: string
+  ): Promise<unknown> {
     try {
       if (!serviceResponse.success || !serviceResponse.data) {
         return serviceResponse; // Return as-is if not successful
@@ -364,7 +362,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
 
       if (endpoint.includes("calendar")) {
         // Convert CalendarEntry to MexcCalendarEntry for legacy analysis
-        const calendarData = (serviceResponse.data as CalendarEntry[]).map(entry => ({
+        const calendarData = (serviceResponse.data as CalendarEntry[]).map((entry) => ({
           vcoinId: entry.vcoinId,
           symbolName: entry.symbol,
           projectName: entry.projectName,
@@ -375,12 +373,14 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
         aiAnalysis = await this.analyzeCalendarData(calendarData);
       } else if (endpoint.includes("symbols")) {
         // Convert SymbolEntry to MexcSymbolData for legacy analysis
-        const symbolData = (serviceResponse.data as SymbolEntry[]).map(entry => ({
+        const symbolData = (serviceResponse.data as SymbolEntry[]).map((entry) => ({
           symbol: `${entry.cd}USDT`,
           vcoinId: entry.cd,
           status: entry.sts === 2 ? "ready" : "pending",
           isTrading: entry.sts === 2 && entry.st === 2 && entry.tt === 4,
-          hasCompleteData: Boolean(entry.cd && entry.sts !== undefined && entry.st !== undefined && entry.tt !== undefined),
+          hasCompleteData: Boolean(
+            entry.cd && entry.sts !== undefined && entry.st !== undefined && entry.tt !== undefined
+          ),
         }));
         aiAnalysis = await this.analyzeSymbolData(symbolData);
       } else if (endpoint.includes("market-overview")) {
@@ -531,7 +531,9 @@ Focus on actionable operational insights and proactive monitoring recommendation
     ]);
   }
 
-  private async assessServiceResponseQuality(serviceResponse: ServiceResponse<unknown>): Promise<AgentResponse> {
+  private async assessServiceResponseQuality(
+    serviceResponse: ServiceResponse<unknown>
+  ): Promise<AgentResponse> {
     const responseJson = JSON.stringify(serviceResponse, null, 2);
 
     const userMessage = `
@@ -641,14 +643,18 @@ Focus on actionable trading signals with performance-aware recommendations.
       ]);
 
       return {
-        content: `${aiResponse.content}\n\n**Enhanced Pattern Analysis Data:**\n${JSON.stringify({
-          ...patternData,
-          performanceMetrics: {
-            executionTimeMs: patternResponse.executionTimeMs,
-            cached: patternResponse.cached,
-            circuitBreakerState: circuitBreakerStatus.state,
+        content: `${aiResponse.content}\n\n**Enhanced Pattern Analysis Data:**\n${JSON.stringify(
+          {
+            ...patternData,
+            performanceMetrics: {
+              executionTimeMs: patternResponse.executionTimeMs,
+              cached: patternResponse.cached,
+              circuitBreakerState: circuitBreakerStatus.state,
+            },
           },
-        }, null, 2)}`,
+          null,
+          2
+        )}`,
         metadata: {
           ...aiResponse.metadata,
           performanceMetrics: patternResponse.executionTimeMs,
@@ -693,12 +699,14 @@ Focus on actionable trading signals with performance-aware recommendations.
 
       const symbols = serviceResponse.data;
       // Convert SymbolEntry to MexcSymbolData for legacy analysis
-      const symbolData = symbols.map(entry => ({
+      const symbolData = symbols.map((entry) => ({
         symbol: `${entry.cd}USDT`,
         vcoinId: entry.cd,
         status: entry.sts === 2 ? "ready" : "pending",
         isTrading: entry.sts === 2 && entry.st === 2 && entry.tt === 4,
-        hasCompleteData: Boolean(entry.cd && entry.sts !== undefined && entry.st !== undefined && entry.tt !== undefined),
+        hasCompleteData: Boolean(
+          entry.cd && entry.sts !== undefined && entry.st !== undefined && entry.tt !== undefined
+        ),
       }));
       const analysis = await this.analyzeSymbolData(symbolData);
 
@@ -741,7 +749,8 @@ Focus on actionable trading signals with performance-aware recommendations.
         health: healthCheck.status === "fulfilled" ? healthCheck.value : null,
         metrics: metrics.status === "fulfilled" ? metrics.value : {},
         cache: cacheStats.status === "fulfilled" ? cacheStats.value : null,
-        circuitBreaker: circuitBreakerStatus.status === "fulfilled" ? circuitBreakerStatus.value : null,
+        circuitBreaker:
+          circuitBreakerStatus.status === "fulfilled" ? circuitBreakerStatus.value : null,
         hasCredentials: this.mexcService.hasCredentials(),
         timestamp: new Date().toISOString(),
       };
@@ -812,8 +821,10 @@ Focus on actionable operational insights and performance optimization recommenda
   private async directMexcApiCall(endpoint: string, params?: MexcApiParams): Promise<unknown> {
     try {
       // Note: This method is deprecated and should use the service layer instead
-      console.warn(`[MexcApiAgent] Direct API call fallback used for: ${endpoint}. Consider using service layer.`);
-      
+      console.warn(
+        `[MexcApiAgent] Direct API call fallback used for: ${endpoint}. Consider using service layer.`
+      );
+
       // Use public MEXC endpoints that don't require authentication
       let apiUrl: string;
 
@@ -838,9 +849,11 @@ Focus on actionable operational insights and performance optimization recommenda
 
         return await response.json();
       }
-      
+
       // For other endpoints, fallback to service layer to avoid authentication issues
-      throw new Error(`Direct API call not supported for endpoint: ${endpoint}. Use service layer instead.`);
+      throw new Error(
+        `Direct API call not supported for endpoint: ${endpoint}. Use service layer instead.`
+      );
     } catch (error) {
       console.error(`[MexcApiAgent] Direct API call failed:`, error);
       throw error;

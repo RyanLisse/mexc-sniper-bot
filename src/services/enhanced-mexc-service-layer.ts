@@ -1,18 +1,15 @@
-import { 
-  MexcServiceLayer,
-  type MexcServiceConfig,
-  type ServiceResponse,
-  type HealthCheckResult,
-  getRecommendedMexcService
-} from "./mexc-service-layer";
 import {
-  type CalendarEntry,
-  type SymbolEntry,
-  type BalanceEntry,
-  type ExchangeSymbol,
-  type Ticker,
-  type OrderResult,
-  type OrderParameters,
+  type MexcServiceConfig,
+  MexcServiceLayer,
+  type ServiceResponse,
+} from "./mexc-service-layer";
+import type {
+  BalanceEntry,
+  CalendarEntry,
+  OrderParameters,
+  OrderResult,
+  SymbolEntry,
+  Ticker,
 } from "./unified-mexc-client";
 
 // ============================================================================
@@ -183,7 +180,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
       // This would typically call the MEXC cancel order API
       // For now, return a mock response since the unified client doesn't have this yet
       console.log(`[EnhancedMexcServiceLayer] Cancel order request: ${orderId} for ${symbol}`);
-      
+
       return {
         success: true,
         data: true,
@@ -200,7 +197,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
       // This would typically call the MEXC order query API
       // For now, return a mock response since the unified client doesn't have this yet
       console.log(`[EnhancedMexcServiceLayer] Order status request: ${orderId} for ${symbol}`);
-      
+
       const mockOrderStatus: OrderStatus = {
         orderId,
         symbol,
@@ -228,7 +225,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
   async getAllOpenOrders(symbol?: string): Promise<ServiceResponse<OrderStatus[]>> {
     return this.executeWithMetrics("getAllOpenOrders", async () => {
       console.log(`[EnhancedMexcServiceLayer] Get open orders${symbol ? ` for ${symbol}` : ""}`);
-      
+
       return {
         success: true,
         data: [], // No open orders for now
@@ -243,7 +240,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
   async batchPlaceOrders(orders: OrderParameters[]): Promise<ServiceResponse<OrderResult[]>> {
     return this.executeWithMetrics("batchPlaceOrders", async () => {
       const results: OrderResult[] = [];
-      
+
       for (const order of orders) {
         try {
           const result = await this.placeOrder(order);
@@ -291,12 +288,18 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
   async getMarketDepth(symbol: string, limit = 100): Promise<ServiceResponse<OrderBook>> {
     return this.executeWithMetrics("getMarketDepth", async () => {
       console.log(`[EnhancedMexcServiceLayer] Get market depth for ${symbol}`);
-      
+
       // This would typically call the MEXC depth API
       const mockOrderBook: OrderBook = {
         symbol,
-        bids: [["50000", "1.5"], ["49999", "2.0"]],
-        asks: [["50001", "1.0"], ["50002", "1.8"]],
+        bids: [
+          ["50000", "1.5"],
+          ["49999", "2.0"],
+        ],
+        asks: [
+          ["50001", "1.0"],
+          ["50002", "1.8"],
+        ],
         timestamp: Date.now(),
       };
 
@@ -312,20 +315,20 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
    * Get kline/candlestick data
    */
   async getKlineData(
-    symbol: string, 
+    symbol: string,
     interval: "1m" | "5m" | "15m" | "30m" | "1h" | "4h" | "1d" = "1h",
     limit = 500
   ): Promise<ServiceResponse<Kline[]>> {
     return this.executeWithMetrics("getKlineData", async () => {
       console.log(`[EnhancedMexcServiceLayer] Get kline data for ${symbol} (${interval})`);
-      
+
       // This would typically call the MEXC klines API
       const mockKlines: Kline[] = [];
       const now = Date.now();
       const intervalMs = this.getIntervalMs(interval);
 
       for (let i = limit - 1; i >= 0; i--) {
-        const openTime = now - (i * intervalMs);
+        const openTime = now - i * intervalMs;
         mockKlines.push({
           openTime,
           open: "50000",
@@ -358,27 +361,41 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
         this.getCalendarListings(),
       ]);
 
-      const tickers = tickerData.status === "fulfilled" && tickerData.value.success 
-        ? tickerData.value.data : [];
-      
-      const exchangeSymbols = exchangeInfo.status === "fulfilled" && exchangeInfo.value.success
-        ? exchangeInfo.value.data : [];
+      const tickers =
+        tickerData.status === "fulfilled" && tickerData.value.success ? tickerData.value.data : [];
 
-      const calendar = calendarData.status === "fulfilled" && calendarData.value.success
-        ? calendarData.value.data : [];
+      const exchangeSymbols =
+        exchangeInfo.status === "fulfilled" && exchangeInfo.value.success
+          ? exchangeInfo.value.data
+          : [];
+
+      const calendar =
+        calendarData.status === "fulfilled" && calendarData.value.success
+          ? calendarData.value.data
+          : [];
 
       // Calculate market statistics
-      const totalVolume24h = tickers.reduce((sum, ticker) => 
-        sum + Number.parseFloat(ticker.volume || "0"), 0);
+      const totalVolume24h = tickers.reduce(
+        (sum, ticker) => sum + Number.parseFloat(ticker.volume || "0"),
+        0
+      );
 
       const topGainers = tickers
-        .filter(t => Number.parseFloat(t.priceChangePercent || "0") > 0)
-        .sort((a, b) => Number.parseFloat(b.priceChangePercent || "0") - Number.parseFloat(a.priceChangePercent || "0"))
+        .filter((t) => Number.parseFloat(t.priceChangePercent || "0") > 0)
+        .sort(
+          (a, b) =>
+            Number.parseFloat(b.priceChangePercent || "0") -
+            Number.parseFloat(a.priceChangePercent || "0")
+        )
         .slice(0, 10);
 
       const topLosers = tickers
-        .filter(t => Number.parseFloat(t.priceChangePercent || "0") < 0)
-        .sort((a, b) => Number.parseFloat(a.priceChangePercent || "0") - Number.parseFloat(b.priceChangePercent || "0"))
+        .filter((t) => Number.parseFloat(t.priceChangePercent || "0") < 0)
+        .sort(
+          (a, b) =>
+            Number.parseFloat(a.priceChangePercent || "0") -
+            Number.parseFloat(b.priceChangePercent || "0")
+        )
         .slice(0, 10);
 
       const marketStats: MarketStats = {
@@ -389,7 +406,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
         topGainers,
         topLosers,
         newListings: calendar.slice(0, 5),
-        trendingPairs: topGainers.slice(0, 5).map(t => t.symbol),
+        trendingPairs: topGainers.slice(0, 5).map((t) => t.symbol),
       };
 
       return {
@@ -411,7 +428,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
     return this.executeWithMetrics("analyzeMarketPatterns", async () => {
       const cacheKey = "market_patterns";
       const cached = this.patternCache.get(cacheKey);
-      
+
       if (cached && Date.now() - cached.timestamp < this.patternCacheTTL) {
         return {
           success: true,
@@ -426,31 +443,35 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
         this.getTickerData(),
       ]);
 
-      const symbols = symbolsData.status === "fulfilled" && symbolsData.value.success 
-        ? symbolsData.value.data : [];
-      
-      const tickers = tickerData.status === "fulfilled" && tickerData.value.success
-        ? tickerData.value.data : [];
+      const symbols =
+        symbolsData.status === "fulfilled" && symbolsData.value.success
+          ? symbolsData.value.data
+          : [];
+
+      const tickers =
+        tickerData.status === "fulfilled" && tickerData.value.success ? tickerData.value.data : [];
 
       // Analyze ready state patterns
-      const readyStateSymbols = symbols.filter(s => s.sts === 2 && s.st === 2 && s.tt === 4);
-      const readyStatePercentage = symbols.length > 0 ? (readyStateSymbols.length / symbols.length) * 100 : 0;
+      const readyStateSymbols = symbols.filter((s) => s.sts === 2 && s.st === 2 && s.tt === 4);
+      const readyStatePercentage =
+        symbols.length > 0 ? (readyStateSymbols.length / symbols.length) * 100 : 0;
 
       // Analyze volume patterns
-      const sortedByVolume = tickers.sort((a, b) => 
-        Number.parseFloat(b.volume || "0") - Number.parseFloat(a.volume || "0"));
-      
-      const highVolume = sortedByVolume.slice(0, 20).map(t => t.symbol);
-      const emergingVolume = sortedByVolume.slice(20, 50).map(t => t.symbol);
+      const sortedByVolume = tickers.sort(
+        (a, b) => Number.parseFloat(b.volume || "0") - Number.parseFloat(a.volume || "0")
+      );
+
+      const highVolume = sortedByVolume.slice(0, 20).map((t) => t.symbol);
+      const emergingVolume = sortedByVolume.slice(20, 50).map((t) => t.symbol);
 
       // Analyze price patterns (simplified)
       const breakouts = tickers
-        .filter(t => Number.parseFloat(t.priceChangePercent || "0") > 10)
-        .map(t => t.symbol);
-      
+        .filter((t) => Number.parseFloat(t.priceChangePercent || "0") > 10)
+        .map((t) => t.symbol);
+
       const reversals = tickers
-        .filter(t => Number.parseFloat(t.priceChangePercent || "0") < -10)
-        .map(t => t.symbol);
+        .filter((t) => Number.parseFloat(t.priceChangePercent || "0") < -10)
+        .map((t) => t.symbol);
 
       const patternAnalysis: PatternAnalysis = {
         readyStatePatterns: {
@@ -466,7 +487,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
           breakouts,
           reversals,
         },
-        confidence: Math.min(95, Math.max(50, 70 + (readyStateSymbols.length * 5))),
+        confidence: Math.min(95, Math.max(50, 70 + readyStateSymbols.length * 5)),
         analysisTime: new Date().toISOString(),
       };
 
@@ -490,7 +511,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
   async detectTradingOpportunities(): Promise<ServiceResponse<TradingOpportunity[]>> {
     return this.executeWithMetrics("detectTradingOpportunities", async () => {
       const patternResponse = await this.analyzeMarketPatterns();
-      
+
       if (!patternResponse.success) {
         return {
           success: false,
@@ -504,7 +525,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
       const opportunities: TradingOpportunity[] = [];
 
       // Ready state opportunities
-      patterns.readyStatePatterns.symbols.forEach(symbol => {
+      patterns.readyStatePatterns.symbols.forEach((symbol) => {
         opportunities.push({
           symbol: `${symbol.cd}USDT`,
           type: "pattern_match",
@@ -515,7 +536,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
       });
 
       // Volume surge opportunities
-      patterns.volumePatterns.emergingVolume.slice(0, 5).forEach(symbol => {
+      patterns.volumePatterns.emergingVolume.slice(0, 5).forEach((symbol) => {
         opportunities.push({
           symbol,
           type: "volume_surge",
@@ -526,7 +547,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
       });
 
       // Breakout opportunities
-      patterns.pricePatterns.breakouts.slice(0, 3).forEach(symbol => {
+      patterns.pricePatterns.breakouts.slice(0, 3).forEach((symbol) => {
         opportunities.push({
           symbol,
           type: "breakout",
@@ -554,7 +575,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
   async getPortfolioSummary(): Promise<ServiceResponse<Portfolio>> {
     return this.executeWithMetrics("getPortfolioSummary", async () => {
       const balanceResponse = await this.getAccountBalances();
-      
+
       if (!balanceResponse.success) {
         return {
           success: false,
@@ -572,10 +593,10 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
       }
 
       const { balances, totalUsdtValue } = balanceResponse.data;
-      
+
       // Calculate allocation percentages
       const allocation: Record<string, number> = {};
-      balances.forEach(balance => {
+      balances.forEach((balance) => {
         if (balance.usdtValue && totalUsdtValue > 0) {
           allocation[balance.asset] = (balance.usdtValue / totalUsdtValue) * 100;
         }
@@ -583,7 +604,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
 
       // Get top holdings (by value)
       const topHoldings = balances
-        .filter(b => b.usdtValue && b.usdtValue > 0)
+        .filter((b) => b.usdtValue && b.usdtValue > 0)
         .sort((a, b) => (b.usdtValue || 0) - (a.usdtValue || 0))
         .slice(0, 10);
 
@@ -614,7 +635,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
   async validateTradingRisk(params: OrderParameters): Promise<ServiceResponse<RiskAssessment>> {
     return this.executeWithMetrics("validateTradingRisk", async () => {
       const portfolioResponse = await this.getPortfolioSummary();
-      
+
       if (!portfolioResponse.success) {
         return {
           success: false,
@@ -636,16 +657,19 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
       }
 
       const portfolio = portfolioResponse.data;
-      const orderValue = Number.parseFloat(params.quantity) * (params.price ? Number.parseFloat(params.price) : 1);
+      const orderValue =
+        Number.parseFloat(params.quantity) * (params.price ? Number.parseFloat(params.price) : 1);
       const portfolioValue = portfolio.totalValue;
 
       // Calculate risk factors
-      const positionSizeRisk = portfolioValue > 0 ? Math.min(100, (orderValue / portfolioValue) * 100 * 2) : 100;
+      const positionSizeRisk =
+        portfolioValue > 0 ? Math.min(100, (orderValue / portfolioValue) * 100 * 2) : 100;
       const liquidityRisk = 30; // Would need market depth data
       const volatilityRisk = 50; // Would need price history
       const concentrationRisk = 40; // Based on current allocation
 
-      const overallRisk = (positionSizeRisk + liquidityRisk + volatilityRisk + concentrationRisk) / 4;
+      const overallRisk =
+        (positionSizeRisk + liquidityRisk + volatilityRisk + concentrationRisk) / 4;
 
       let riskLevel: "LOW" | "MEDIUM" | "HIGH" | "EXTREME";
       if (overallRisk < 25) riskLevel = "LOW";

@@ -1,9 +1,9 @@
 /**
  * WebSocket Client Service
- * 
+ *
  * Client-side WebSocket management for real-time communication.
  * Handles connection management, authentication, and message routing.
- * 
+ *
  * Features:
  * - Automatic reconnection with exponential backoff
  * - Authentication integration
@@ -13,20 +13,18 @@
  * - TypeScript type safety
  */
 
-import { EventEmitter } from 'events';
-import {
-  type WebSocketMessage,
-  type WebSocketChannel,
-  type WebSocketClientConfig,
-  type WebSocketError,
-  type MessageHandler,
-  type SubscriptionRequest,
-  type SubscriptionResponse,
-  type AgentStatusMessage,
-  type TradingPriceMessage,
-  type PatternDiscoveryMessage,
-  type NotificationMessage,
-} from '@/src/lib/websocket-types';
+import { EventEmitter } from "events";
+import type {
+  AgentStatusMessage,
+  MessageHandler,
+  NotificationMessage,
+  PatternDiscoveryMessage,
+  SubscriptionRequest,
+  TradingPriceMessage,
+  WebSocketChannel,
+  WebSocketClientConfig,
+  WebSocketMessage,
+} from "@/src/lib/websocket-types";
 
 // ======================
 // Message Queue
@@ -90,11 +88,14 @@ class MessageQueue {
 // ======================
 
 class SubscriptionManager {
-  private subscriptions = new Map<string, {
-    filters?: Record<string, any>;
-    handlers: Set<MessageHandler>;
-    options?: SubscriptionRequest['options'];
-  }>();
+  private subscriptions = new Map<
+    string,
+    {
+      filters?: Record<string, any>;
+      handlers: Set<MessageHandler>;
+      options?: SubscriptionRequest["options"];
+    }
+  >();
 
   subscribe(channel: string, handler: MessageHandler, request?: SubscriptionRequest): void {
     if (!this.subscriptions.has(channel)) {
@@ -175,7 +176,9 @@ class ConnectionManager {
     }
 
     const delay = this.getReconnectDelay();
-    console.log(`[WebSocket Client] Scheduling reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
+    console.log(
+      `[WebSocket Client] Scheduling reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`
+    );
 
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
@@ -212,7 +215,12 @@ class ConnectionManager {
 // Main WebSocket Client
 // ======================
 
-export type WebSocketClientState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
+export type WebSocketClientState =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "error";
 
 export interface WebSocketClientMetrics {
   connectionId?: string;
@@ -232,7 +240,7 @@ export class WebSocketClientService extends EventEmitter {
   private static instance: WebSocketClientService;
   private ws: WebSocket | null = null;
   private config: WebSocketClientConfig;
-  private state: WebSocketClientState = 'disconnected';
+  private state: WebSocketClientState = "disconnected";
   private connectionId?: string;
   private subscriptionManager = new SubscriptionManager();
   private messageQueue = new MessageQueue();
@@ -245,9 +253,9 @@ export class WebSocketClientService extends EventEmitter {
     super();
 
     this.config = {
-      url: 'ws://localhost:8080/ws',
+      url: "ws://localhost:8080/ws",
       authentication: {
-        token: '',
+        token: "",
         autoRefresh: true,
       },
       reconnection: {
@@ -266,7 +274,7 @@ export class WebSocketClientService extends EventEmitter {
     };
 
     this.metrics = {
-      state: 'disconnected',
+      state: "disconnected",
       messagesSent: 0,
       messagesReceived: 0,
       queuedMessages: 0,
@@ -291,7 +299,7 @@ export class WebSocketClientService extends EventEmitter {
   // ======================
 
   async connect(authToken?: string): Promise<void> {
-    if (this.state === 'connecting' || this.state === 'connected') {
+    if (this.state === "connecting" || this.state === "connected") {
       return;
     }
 
@@ -299,13 +307,13 @@ export class WebSocketClientService extends EventEmitter {
       this.authToken = authToken;
     }
 
-    this.setState('connecting');
+    this.setState("connecting");
 
     try {
       const url = this.buildWebSocketUrl();
-      
+
       if (this.config.debug) {
-        console.log('[WebSocket Client] Connecting to:', url);
+        console.log("[WebSocket Client] Connecting to:", url);
       }
 
       this.ws = new WebSocket(url);
@@ -314,7 +322,7 @@ export class WebSocketClientService extends EventEmitter {
       // Wait for connection to open or fail
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('Connection timeout'));
+          reject(new Error("Connection timeout"));
         }, 10000);
 
         this.ws!.onopen = () => {
@@ -327,10 +335,9 @@ export class WebSocketClientService extends EventEmitter {
           reject(error);
         };
       });
-
     } catch (error) {
-      console.error('[WebSocket Client] Connection failed:', error);
-      this.setState('error');
+      console.error("[WebSocket Client] Connection failed:", error);
+      this.setState("error");
       this.handleConnectionError(error);
       throw error;
     }
@@ -339,25 +346,25 @@ export class WebSocketClientService extends EventEmitter {
   disconnect(): void {
     this.connectionManager.cancelReconnect();
     this.stopHeartbeat();
-    
+
     if (this.ws) {
-      this.ws.close(1000, 'Client disconnect');
+      this.ws.close(1000, "Client disconnect");
       this.ws = null;
     }
 
-    this.setState('disconnected');
+    this.setState("disconnected");
     this.metrics.disconnectedAt = Date.now();
-    this.emit('disconnected');
+    this.emit("disconnected");
   }
 
   reconnect(): void {
-    if (this.state === 'connecting' || this.state === 'reconnecting') {
+    if (this.state === "connecting" || this.state === "reconnecting") {
       return;
     }
 
-    this.setState('reconnecting');
+    this.setState("reconnecting");
     this.disconnect();
-    
+
     setTimeout(() => {
       this.connect();
     }, 1000);
@@ -367,26 +374,26 @@ export class WebSocketClientService extends EventEmitter {
   // Message Handling
   // ======================
 
-  send<T>(message: Omit<WebSocketMessage<T>, 'messageId' | 'timestamp'>): boolean {
+  send<T>(message: Omit<WebSocketMessage<T>, "messageId" | "timestamp">): boolean {
     const fullMessage: WebSocketMessage<T> = {
       ...message,
       messageId: crypto.randomUUID(),
       timestamp: Date.now(),
     };
 
-    if (this.state === 'connected' && this.ws?.readyState === WebSocket.OPEN) {
+    if (this.state === "connected" && this.ws?.readyState === WebSocket.OPEN) {
       try {
         this.ws.send(JSON.stringify(fullMessage));
         this.metrics.messagesSent++;
         this.updateActivity();
-        
+
         if (this.config.debug) {
-          console.log('[WebSocket Client] Message sent:', fullMessage);
+          console.log("[WebSocket Client] Message sent:", fullMessage);
         }
-        
+
         return true;
       } catch (error) {
-        console.error('[WebSocket Client] Failed to send message:', error);
+        console.error("[WebSocket Client] Failed to send message:", error);
         this.messageQueue.enqueue(fullMessage);
         this.metrics.queuedMessages = this.messageQueue.size();
         return false;
@@ -403,14 +410,18 @@ export class WebSocketClientService extends EventEmitter {
   // Subscription Management
   // ======================
 
-  subscribe(channel: WebSocketChannel, handler: MessageHandler, request?: SubscriptionRequest): () => void {
+  subscribe(
+    channel: WebSocketChannel,
+    handler: MessageHandler,
+    request?: SubscriptionRequest
+  ): () => void {
     this.subscriptionManager.subscribe(channel, handler, request);
     this.metrics.subscriptions = this.subscriptionManager.getSubscriptions().length;
 
     // Send subscription request to server
     this.send({
-      type: 'subscription:subscribe',
-      channel: 'system',
+      type: "subscription:subscribe",
+      channel: "system",
       data: { channel, ...request },
     });
 
@@ -426,8 +437,8 @@ export class WebSocketClientService extends EventEmitter {
 
     // Send unsubscription request to server
     this.send({
-      type: 'subscription:unsubscribe',
-      channel: 'system',
+      type: "subscription:unsubscribe",
+      channel: "system",
       data: { channel },
     });
   }
@@ -437,15 +448,15 @@ export class WebSocketClientService extends EventEmitter {
   // ======================
 
   subscribeToAgentStatus(handler: MessageHandler<AgentStatusMessage>): () => void {
-    return this.subscribe('agents:status', handler);
+    return this.subscribe("agents:status", handler);
   }
 
   subscribeToAgentHealth(handler: MessageHandler): () => void {
-    return this.subscribe('agents:health', handler);
+    return this.subscribe("agents:health", handler);
   }
 
   subscribeToTradingPrices(handler: MessageHandler<TradingPriceMessage>): () => void {
-    return this.subscribe('trading:prices', handler);
+    return this.subscribe("trading:prices", handler);
   }
 
   subscribeToSymbolPrice(symbol: string, handler: MessageHandler<TradingPriceMessage>): () => void {
@@ -453,23 +464,26 @@ export class WebSocketClientService extends EventEmitter {
   }
 
   subscribeToPatternDiscovery(handler: MessageHandler<PatternDiscoveryMessage>): () => void {
-    return this.subscribe('patterns:discovery', handler);
+    return this.subscribe("patterns:discovery", handler);
   }
 
   subscribeToPatternReadyState(handler: MessageHandler): () => void {
-    return this.subscribe('patterns:ready_state', handler);
+    return this.subscribe("patterns:ready_state", handler);
   }
 
   subscribeToNotifications(handler: MessageHandler<NotificationMessage>): () => void {
-    return this.subscribe('notifications:global', handler);
+    return this.subscribe("notifications:global", handler);
   }
 
-  subscribeToUserNotifications(userId: string, handler: MessageHandler<NotificationMessage>): () => void {
+  subscribeToUserNotifications(
+    userId: string,
+    handler: MessageHandler<NotificationMessage>
+  ): () => void {
     return this.subscribe(`user:${userId}:notifications`, handler);
   }
 
   subscribeToWorkflows(handler: MessageHandler): () => void {
-    return this.subscribe('agents:workflows', handler);
+    return this.subscribe("agents:workflows", handler);
   }
 
   // ======================
@@ -478,9 +492,9 @@ export class WebSocketClientService extends EventEmitter {
 
   private buildWebSocketUrl(): string {
     const url = new URL(this.config.url);
-    
+
     if (this.authToken) {
-      url.searchParams.set('token', this.authToken);
+      url.searchParams.set("token", this.authToken);
     }
 
     return url.toString();
@@ -496,9 +510,9 @@ export class WebSocketClientService extends EventEmitter {
   }
 
   private handleOpen(): void {
-    console.log('[WebSocket Client] Connected to server');
-    
-    this.setState('connected');
+    console.log("[WebSocket Client] Connected to server");
+
+    this.setState("connected");
     this.connectionManager.resetReconnect();
     this.metrics.connectedAt = Date.now();
     this.metrics.reconnectInfo = this.connectionManager.getReconnectInfo();
@@ -507,22 +521,22 @@ export class WebSocketClientService extends EventEmitter {
     this.processMessageQueue();
     this.resubscribeAll();
 
-    this.emit('connected');
+    this.emit("connected");
   }
 
   private handleMessage(event: MessageEvent): void {
     try {
       const message: WebSocketMessage = JSON.parse(event.data);
-      
+
       this.metrics.messagesReceived++;
       this.updateActivity();
 
       if (this.config.debug) {
-        console.log('[WebSocket Client] Message received:', message);
+        console.log("[WebSocket Client] Message received:", message);
       }
 
       // Handle system messages
-      if (message.type === 'system:connect') {
+      if (message.type === "system:connect") {
         this.connectionId = message.data.connectionId;
         this.metrics.connectionId = this.connectionId;
       }
@@ -530,26 +544,29 @@ export class WebSocketClientService extends EventEmitter {
       // Route message to handlers
       this.routeMessage(message);
 
-      this.emit('message', message);
-
+      this.emit("message", message);
     } catch (error) {
-      console.error('[WebSocket Client] Failed to handle message:', error);
+      console.error("[WebSocket Client] Failed to handle message:", error);
     }
   }
 
   private handleClose(event: CloseEvent): void {
     console.log(`[WebSocket Client] Connection closed: ${event.code} - ${event.reason}`);
-    
+
     this.stopHeartbeat();
-    this.setState('disconnected');
+    this.setState("disconnected");
     this.metrics.disconnectedAt = Date.now();
     this.ws = null;
 
-    this.emit('disconnected', { code: event.code, reason: event.reason });
+    this.emit("disconnected", { code: event.code, reason: event.reason });
 
     // Attempt reconnection if enabled and not a normal closure
-    if (this.config.reconnection.enabled && event.code !== 1000 && this.connectionManager.shouldReconnect()) {
-      this.setState('reconnecting');
+    if (
+      this.config.reconnection.enabled &&
+      event.code !== 1000 &&
+      this.connectionManager.shouldReconnect()
+    ) {
+      this.setState("reconnecting");
       this.connectionManager.scheduleReconnect(() => {
         this.connect();
       });
@@ -557,13 +574,13 @@ export class WebSocketClientService extends EventEmitter {
   }
 
   private handleError(event: Event): void {
-    console.error('[WebSocket Client] Connection error:', event);
-    this.emit('error', event);
+    console.error("[WebSocket Client] Connection error:", event);
+    this.emit("error", event);
   }
 
   private handleConnectionError(error: any): void {
     if (this.config.reconnection.enabled && this.connectionManager.shouldReconnect()) {
-      this.setState('reconnecting');
+      this.setState("reconnecting");
       this.connectionManager.scheduleReconnect(() => {
         this.connect();
       });
@@ -572,12 +589,12 @@ export class WebSocketClientService extends EventEmitter {
 
   private routeMessage(message: WebSocketMessage): void {
     const handlers = this.subscriptionManager.getHandlers(message.channel);
-    
+
     for (const handler of handlers) {
       try {
         handler(message);
       } catch (error) {
-        console.error('[WebSocket Client] Handler error:', error);
+        console.error("[WebSocket Client] Handler error:", error);
       }
     }
   }
@@ -599,13 +616,13 @@ export class WebSocketClientService extends EventEmitter {
 
   private resubscribeAll(): void {
     const subscriptions = this.subscriptionManager.getSubscriptions();
-    
+
     for (const channel of subscriptions) {
       const info = this.subscriptionManager.getSubscriptionInfo(channel);
       this.send({
-        type: 'subscription:subscribe',
-        channel: 'system',
-        data: { 
+        type: "subscription:subscribe",
+        channel: "system",
+        data: {
           channel,
           filters: info?.filters,
           options: info?.options,
@@ -619,8 +636,8 @@ export class WebSocketClientService extends EventEmitter {
 
     this.heartbeatInterval = setInterval(() => {
       this.send({
-        type: 'system:heartbeat',
-        channel: 'system',
+        type: "system:heartbeat",
+        channel: "system",
         data: { timestamp: Date.now() },
       });
     }, 30000);
@@ -639,7 +656,7 @@ export class WebSocketClientService extends EventEmitter {
     this.metrics.state = newState;
 
     if (oldState !== newState) {
-      this.emit('stateChange', { oldState, newState });
+      this.emit("stateChange", { oldState, newState });
     }
   }
 
@@ -665,7 +682,7 @@ export class WebSocketClientService extends EventEmitter {
   }
 
   isConnected(): boolean {
-    return this.state === 'connected' && this.ws?.readyState === WebSocket.OPEN;
+    return this.state === "connected" && this.ws?.readyState === WebSocket.OPEN;
   }
 
   getConnectionId(): string | undefined {

@@ -1,20 +1,20 @@
 /**
  * Database Optimization Manager
- * 
+ *
  * Comprehensive database optimization system that orchestrates all phases:
  * - Phase 1: Query Performance Analysis
- * - Phase 2: Index Optimization  
+ * - Phase 2: Index Optimization
  * - Phase 3: Query Optimization
  * - Phase 4: Connection Pooling & Caching
- * 
+ *
  * Achieves 50%+ query performance improvement as targeted.
  */
 
-import { databasePerformanceAnalyzer } from "./database-performance-analyzer";
-import { databaseIndexOptimizer } from "./database-index-optimizer";
-import { databaseQueryOptimizer } from "./database-query-optimizer";
-import { databaseConnectionPool } from "./database-connection-pool";
 import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
+import { databaseConnectionPool } from "./database-connection-pool";
+import { databaseIndexOptimizer } from "./database-index-optimizer";
+import { databasePerformanceAnalyzer } from "./database-performance-analyzer";
+import { databaseQueryOptimizer } from "./database-query-optimizer";
 
 interface OptimizationPhaseResult {
   phase: string;
@@ -72,7 +72,7 @@ export class DatabaseOptimizationManager {
 
     console.log("🚀 Starting comprehensive database optimization...");
     console.log("📊 Target: 50%+ query performance improvement");
-    
+
     this.isOptimizing = true;
     const startTime = new Date();
     const phases: OptimizationPhaseResult[] = [];
@@ -87,7 +87,7 @@ export class DatabaseOptimizationManager {
       const phase1 = await this.runPhase1();
       phases.push(phase1);
 
-      // Phase 2: Index Optimization (4h target) 
+      // Phase 2: Index Optimization (4h target)
       console.log("\n🗂️ Phase 2: Index Optimization");
       const phase2 = await this.runPhase2();
       phases.push(phase2);
@@ -114,22 +114,21 @@ export class DatabaseOptimizationManager {
         totalDuration,
         phases,
         overallImprovement: this.calculateOverallImprovement(beforeMetrics, afterMetrics),
-        successfulPhases: phases.filter(p => p.success).length,
-        failedPhases: phases.filter(p => !p.success).length,
+        successfulPhases: phases.filter((p) => p.success).length,
+        failedPhases: phases.filter((p) => !p.success).length,
         recommendations: this.generateFinalRecommendations(phases, beforeMetrics, afterMetrics),
         beforeMetrics,
-        afterMetrics
+        afterMetrics,
       };
 
       this.lastOptimization = endTime;
-      
+
       console.log("\n✅ Database optimization completed!");
       console.log(`📈 Overall improvement: ${report.overallImprovement}`);
       console.log(`⏱️ Total time: ${(totalDuration / 1000).toFixed(2)}s`);
       console.log(`✅ Successful phases: ${report.successfulPhases}/4`);
 
       return report;
-
     } catch (error) {
       console.error("❌ Database optimization failed:", error);
       throw error;
@@ -149,18 +148,24 @@ export class DatabaseOptimizationManager {
     try {
       // Start performance monitoring
       queryPerformanceMonitor.startMonitoring();
-      
+
       // Run comprehensive analysis
       const analysisResults = await databasePerformanceAnalyzer.runComprehensiveAnalysis();
-      
+
       improvements.push(`Analyzed ${analysisResults.totalQueries} queries`);
       improvements.push(`Identified ${analysisResults.slowQueries} slow queries`);
-      improvements.push(`Generated ${analysisResults.recommendations.length} optimization recommendations`);
+      improvements.push(
+        `Generated ${analysisResults.recommendations.length} optimization recommendations`
+      );
       improvements.push(`Average query time: ${analysisResults.averageExecutionTime.toFixed(2)}ms`);
 
       // Log critical findings
-      const criticalRecommendations = analysisResults.recommendations.filter(r => r.priority === 'high');
-      improvements.push(`Found ${criticalRecommendations.length} critical optimization opportunities`);
+      const criticalRecommendations = analysisResults.recommendations.filter(
+        (r) => r.priority === "high"
+      );
+      improvements.push(
+        `Found ${criticalRecommendations.length} critical optimization opportunities`
+      );
 
       return {
         phase: "Query Performance Analysis",
@@ -168,18 +173,17 @@ export class DatabaseOptimizationManager {
         duration: performance.now() - startTime,
         improvements,
         metrics: analysisResults,
-        errors
+        errors,
       };
-
     } catch (error) {
       errors.push(`Analysis failed: ${error}`);
       return {
-        phase: "Query Performance Analysis", 
+        phase: "Query Performance Analysis",
         success: false,
         duration: performance.now() - startTime,
         improvements,
         metrics: null,
-        errors
+        errors,
       };
     }
   }
@@ -195,7 +199,7 @@ export class DatabaseOptimizationManager {
     try {
       // Create strategic indexes
       const indexResults = await databaseIndexOptimizer.createStrategicIndexes();
-      
+
       improvements.push(`Created ${indexResults.created.length} strategic indexes`);
       improvements.push(`Failed to create ${indexResults.failed.length} indexes`);
       improvements.push(`Analyzed ${indexResults.analyzed.length} index effectiveness`);
@@ -212,7 +216,7 @@ export class DatabaseOptimizationManager {
       // Validate indexes
       const validation = await databaseIndexOptimizer.validateIndexes();
       improvements.push(`Validated ${validation.valid} indexes successfully`);
-      
+
       if (validation.invalid > 0) {
         errors.push(`${validation.invalid} indexes failed validation`);
       }
@@ -223,9 +227,8 @@ export class DatabaseOptimizationManager {
         duration: performance.now() - startTime,
         improvements,
         metrics: { indexResults, validation, droppedIndexes },
-        errors
+        errors,
       };
-
     } catch (error) {
       errors.push(`Index optimization failed: ${error}`);
       return {
@@ -234,7 +237,7 @@ export class DatabaseOptimizationManager {
         duration: performance.now() - startTime,
         improvements,
         metrics: null,
-        errors
+        errors,
       };
     }
   }
@@ -255,7 +258,7 @@ export class DatabaseOptimizationManager {
         enableCaching: true,
         cacheTimeout: 300000, // 5 minutes
         enablePreparedStatements: true,
-        maxConcurrentQueries: 10
+        maxConcurrentQueries: 10,
       });
 
       improvements.push("Configured query optimizer for maximum performance");
@@ -270,7 +273,9 @@ export class DatabaseOptimizationManager {
       improvements.push("Cleared query cache for fresh optimization");
 
       const cacheStats = databaseQueryOptimizer.getCacheStats();
-      improvements.push(`Cache configuration: ${cacheStats.maxSize} entries, ${cacheStats.timeout}ms TTL`);
+      improvements.push(
+        `Cache configuration: ${cacheStats.maxSize} entries, ${cacheStats.timeout}ms TTL`
+      );
 
       return {
         phase: "Query Optimization",
@@ -278,9 +283,8 @@ export class DatabaseOptimizationManager {
         duration: performance.now() - startTime,
         improvements,
         metrics: { testResults, cacheStats },
-        errors
+        errors,
       };
-
     } catch (error) {
       errors.push(`Query optimization failed: ${error}`);
       return {
@@ -289,7 +293,7 @@ export class DatabaseOptimizationManager {
         duration: performance.now() - startTime,
         improvements,
         metrics: null,
-        errors
+        errors,
       };
     }
   }
@@ -314,7 +318,7 @@ export class DatabaseOptimizationManager {
         enableConnectionReuse: true,
         enableQueryResultCaching: true,
         cacheMaxSize: 1000,
-        cacheTTLMs: 300000
+        cacheTTLMs: 300000,
       });
 
       improvements.push("Configured connection pool for optimal performance");
@@ -322,7 +326,9 @@ export class DatabaseOptimizationManager {
       // Test connection pool performance
       const connectionMetrics = databaseConnectionPool.getConnectionMetrics();
       improvements.push(`Connection pool health: ${connectionMetrics.connectionPoolHealth}`);
-      improvements.push(`Average connection time: ${connectionMetrics.averageConnectionTime.toFixed(2)}ms`);
+      improvements.push(
+        `Average connection time: ${connectionMetrics.averageConnectionTime.toFixed(2)}ms`
+      );
 
       // Test caching performance
       const cacheMetrics = databaseConnectionPool.getCacheMetrics();
@@ -339,9 +345,8 @@ export class DatabaseOptimizationManager {
         duration: performance.now() - startTime,
         improvements,
         metrics: { connectionMetrics, cacheMetrics },
-        errors
+        errors,
       };
-
     } catch (error) {
       errors.push(`Connection pooling setup failed: ${error}`);
       return {
@@ -350,7 +355,7 @@ export class DatabaseOptimizationManager {
         duration: performance.now() - startTime,
         improvements,
         metrics: null,
-        errors
+        errors,
       };
     }
   }
@@ -366,27 +371,26 @@ export class DatabaseOptimizationManager {
       // Test batch operations
       console.log("Testing batch operations...");
       const batchStartTime = performance.now();
-      
+
       // This would be actual batch operations in real implementation
-      await new Promise(resolve => setTimeout(resolve, 100)); // Simulate
-      
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate
+
       const batchTime = performance.now() - batchStartTime;
       improvements.push(`Batch operations tested: ${batchTime.toFixed(2)}ms`);
 
       // Test caching effectiveness
       console.log("Testing query caching...");
       const cacheTestStart = performance.now();
-      
+
       // Simulate cache test
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
       const cacheTime = performance.now() - cacheTestStart;
       improvements.push(`Query caching tested: ${cacheTime.toFixed(2)}ms`);
 
       // Test N+1 query optimization
       improvements.push("N+1 query patterns optimized");
       improvements.push("Prepared statements configured");
-
     } catch (error) {
       errors.push(`Query optimization test failed: ${error}`);
     }
@@ -408,7 +412,7 @@ export class DatabaseOptimizationManager {
       totalQueries: monitoringStats.totalQueries,
       cacheHitRate: cacheMetrics.hitRate,
       connectionHealth: connectionMetrics.connectionPoolHealth,
-      indexUtilization: 85 // Estimated based on optimization
+      indexUtilization: 85, // Estimated based on optimization
     };
   }
 
@@ -423,9 +427,12 @@ export class DatabaseOptimizationManager {
       return "Unable to calculate - insufficient baseline data";
     }
 
-    const queryTimeImprovement = ((before.avgQueryTime - after.avgQueryTime) / before.avgQueryTime) * 100;
-    const slowQueryImprovement = before.slowQueries > 0 ? 
-      ((before.slowQueries - after.slowQueries) / before.slowQueries) * 100 : 0;
+    const queryTimeImprovement =
+      ((before.avgQueryTime - after.avgQueryTime) / before.avgQueryTime) * 100;
+    const slowQueryImprovement =
+      before.slowQueries > 0
+        ? ((before.slowQueries - after.slowQueries) / before.slowQueries) * 100
+        : 0;
 
     const overallImprovement = (queryTimeImprovement + slowQueryImprovement) / 2;
 
@@ -449,17 +456,24 @@ export class DatabaseOptimizationManager {
     const recommendations: string[] = [];
 
     // Check if target improvement was achieved
-    const queryTimeImprovement = beforeMetrics.avgQueryTime > 0 ? 
-      ((beforeMetrics.avgQueryTime - afterMetrics.avgQueryTime) / beforeMetrics.avgQueryTime) * 100 : 0;
+    const queryTimeImprovement =
+      beforeMetrics.avgQueryTime > 0
+        ? ((beforeMetrics.avgQueryTime - afterMetrics.avgQueryTime) / beforeMetrics.avgQueryTime) *
+          100
+        : 0;
 
     if (queryTimeImprovement >= 50) {
       recommendations.push("🎯 SUCCESS: Achieved 50%+ query performance improvement target!");
-      recommendations.push("🔧 Monitor performance metrics regularly to maintain optimization gains");
+      recommendations.push(
+        "🔧 Monitor performance metrics regularly to maintain optimization gains"
+      );
       recommendations.push("📊 Consider implementing automated performance monitoring alerts");
     } else {
       recommendations.push("⚠️ Performance target not fully met - consider additional optimization");
       if (afterMetrics.slowQueries > 5) {
-        recommendations.push("🐌 High number of slow queries remain - focus on query-specific optimization");
+        recommendations.push(
+          "🐌 High number of slow queries remain - focus on query-specific optimization"
+        );
       }
       if (afterMetrics.connectionHealth !== "healthy") {
         recommendations.push("🔌 Connection pool health needs attention");
@@ -467,15 +481,23 @@ export class DatabaseOptimizationManager {
     }
 
     // Phase-specific recommendations
-    const failedPhases = phases.filter(p => !p.success);
+    const failedPhases = phases.filter((p) => !p.success);
     if (failedPhases.length > 0) {
-      recommendations.push(`❌ ${failedPhases.length} optimization phases failed - review and retry`);
+      recommendations.push(
+        `❌ ${failedPhases.length} optimization phases failed - review and retry`
+      );
     }
 
     // Agent-specific recommendations
-    recommendations.push("🤖 Agent workloads optimized for pattern discovery and trading operations");
-    recommendations.push("🔄 Consider implementing query result caching for frequently accessed pattern data");
-    recommendations.push("📈 Set up automated performance regression testing for future deployments");
+    recommendations.push(
+      "🤖 Agent workloads optimized for pattern discovery and trading operations"
+    );
+    recommendations.push(
+      "🔄 Consider implementing query result caching for frequently accessed pattern data"
+    );
+    recommendations.push(
+      "📈 Set up automated performance regression testing for future deployments"
+    );
 
     return recommendations;
   }
@@ -492,14 +514,14 @@ export class DatabaseOptimizationManager {
       batchSize: 50, // Smaller batches for faster agent responses
       enableCaching: true,
       cacheTimeout: 180000, // 3 minutes for pattern data
-      maxConcurrentQueries: 15 // Higher concurrency for 11 agents
+      maxConcurrentQueries: 15, // Higher concurrency for 11 agents
     });
 
     databaseConnectionPool.updateConfig({
       maxConnections: 25, // Higher for agent concurrency
       enableQueryResultCaching: true,
       cacheMaxSize: 2000, // Larger cache for pattern embeddings
-      cacheTTLMs: 180000 // 3 minutes for agent data
+      cacheTTLMs: 180000, // 3 minutes for agent data
     });
 
     console.log("✅ Database optimized for AI agent workloads");
@@ -513,7 +535,7 @@ export class DatabaseOptimizationManager {
       isOptimizing: this.isOptimizing,
       lastOptimization: this.lastOptimization,
       baselineMetrics: this.baselineMetrics,
-      currentMetrics: this.lastOptimization ? "Available after optimization" : "Not available"
+      currentMetrics: this.lastOptimization ? "Available after optimization" : "Not available",
     };
   }
 
@@ -523,7 +545,7 @@ export class DatabaseOptimizationManager {
   async exportOptimizationReport(): Promise<any> {
     const performanceReport = databaseConnectionPool.exportPerformanceReport();
     const analysisReport = databasePerformanceAnalyzer.exportResults();
-    
+
     return {
       timestamp: new Date().toISOString(),
       version: "1.0.0",
@@ -531,20 +553,20 @@ export class DatabaseOptimizationManager {
       optimization: {
         status: this.getOptimizationStatus(),
         performance: performanceReport,
-        analysis: analysisReport
+        analysis: analysisReport,
       },
       implementation: {
         indexesCreated: "20+ strategic indexes for agent operations",
         queriesOptimized: "N+1 query elimination, batch operations, prepared statements",
         cachingImplemented: "Query result caching, connection pooling",
-        monitoringSetup: "Performance monitoring, health checks, metrics collection"
+        monitoringSetup: "Performance monitoring, health checks, metrics collection",
       },
       benefits: {
-        agentPerformance: "70% faster pattern discovery operations", 
+        agentPerformance: "70% faster pattern discovery operations",
         tradingLatency: "60% reduction in trade execution time",
         systemThroughput: "50% increase in concurrent operation handling",
-        memoryEfficiency: "40% reduction in database connection overhead"
-      }
+        memoryEfficiency: "40% reduction in database connection overhead",
+      },
     };
   }
 }

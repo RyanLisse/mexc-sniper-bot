@@ -4,7 +4,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { multiPhaseTradingService } from "@/src/services/multi-phase-trading-service";
 import { createExecutorFromStrategy } from "@/src/services/multi-phase-executor";
 import { rateLimiter } from "@/src/lib/rate-limiter";
-import { ApiResponse } from "@/src/lib/api-response";
+import { createApiResponse, createSuccessResponse, createErrorResponse } from "@/src/lib/api-response";
 
 // ===========================================
 // INDIVIDUAL STRATEGY MANAGEMENT
@@ -38,7 +38,7 @@ export async function GET(
     // Rate limiting
     const rateLimitResult = await rateLimiter.check(request, "strategies_read", 100, 60);
     if (!rateLimitResult.success) {
-      return ApiResponse.error("Rate limit exceeded", 429);
+      return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }
 
     // Authentication
@@ -46,18 +46,18 @@ export async function GET(
     const user = await getUser();
     
     if (!user?.id) {
-      return ApiResponse.error("Unauthorized", 401);
+      return createApiResponse(createErrorResponse("Unauthorized"), 401);
     }
 
     const strategyId = parseInt(params.id);
     if (isNaN(strategyId)) {
-      return ApiResponse.error("Invalid strategy ID", 400);
+      return createApiResponse(createErrorResponse("Invalid strategy ID"), 400);
     }
 
     // Get strategy
     const strategy = await multiPhaseTradingService.getStrategyById(strategyId, user.id);
     if (!strategy) {
-      return ApiResponse.error("Strategy not found", 404);
+      return createApiResponse(createErrorResponse("Strategy not found"), 404);
     }
 
     // Get phase executions
@@ -88,18 +88,18 @@ export async function GET(
       };
     }
 
-    return ApiResponse.success({
+    return createApiResponse(createSuccessResponse({
       strategy,
       executions,
       phaseStatus,
       analytics,
       performanceMetrics,
       currentAnalysis,
-    });
+    }));
 
   } catch (error) {
     console.error("Error fetching strategy:", error);
-    return ApiResponse.error("Failed to fetch strategy", 500);
+    return createApiResponse(createErrorResponse("Failed to fetch strategy"), 500);
   }
 }
 
@@ -112,7 +112,7 @@ export async function PUT(
     // Rate limiting
     const rateLimitResult = await rateLimiter.check(request, "strategies_update", 30, 60);
     if (!rateLimitResult.success) {
-      return ApiResponse.error("Rate limit exceeded", 429);
+      return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }
 
     // Authentication
@@ -120,12 +120,12 @@ export async function PUT(
     const user = await getUser();
     
     if (!user?.id) {
-      return ApiResponse.error("Unauthorized", 401);
+      return createApiResponse(createErrorResponse("Unauthorized"), 401);
     }
 
     const strategyId = parseInt(params.id);
     if (isNaN(strategyId)) {
-      return ApiResponse.error("Invalid strategy ID", 400);
+      return createApiResponse(createErrorResponse("Invalid strategy ID"), 400);
     }
 
     // Parse request body
@@ -165,24 +165,19 @@ export async function PUT(
     );
 
     if (!updatedStrategy) {
-      return ApiResponse.error("Strategy not found", 404);
+      return createApiResponse(createErrorResponse("Strategy not found"), 404);
     }
 
-    return ApiResponse.success(
-      { strategy: updatedStrategy },
-      "Strategy updated successfully"
-    );
+    return createApiResponse(createSuccessResponse({ strategy: updatedStrategy }));
 
   } catch (error) {
     console.error("Error updating strategy:", error);
     
     if (error instanceof z.ZodError) {
-      return ApiResponse.error("Invalid request data", 400, {
-        details: error.errors
-      });
+      return createApiResponse(createErrorResponse("Invalid request data"), 400);
     }
 
-    return ApiResponse.error("Failed to update strategy", 500);
+    return createApiResponse(createErrorResponse("Failed to update strategy"), 500);
   }
 }
 
@@ -195,7 +190,7 @@ export async function POST(
     // Rate limiting
     const rateLimitResult = await rateLimiter.check(request, "strategies_execute", 20, 60);
     if (!rateLimitResult.success) {
-      return ApiResponse.error("Rate limit exceeded", 429);
+      return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }
 
     // Authentication
@@ -203,12 +198,12 @@ export async function POST(
     const user = await getUser();
     
     if (!user?.id) {
-      return ApiResponse.error("Unauthorized", 401);
+      return createApiResponse(createErrorResponse("Unauthorized"), 401);
     }
 
     const strategyId = parseInt(params.id);
     if (isNaN(strategyId)) {
-      return ApiResponse.error("Invalid strategy ID", 400);
+      return createApiResponse(createErrorResponse("Invalid strategy ID"), 400);
     }
 
     // Parse request body
@@ -217,7 +212,7 @@ export async function POST(
 
     const strategy = await multiPhaseTradingService.getStrategyById(strategyId, user.id);
     if (!strategy) {
-      return ApiResponse.error("Strategy not found", 404);
+      return createApiResponse(createErrorResponse("Strategy not found"), 404);
     }
 
     const executor = await createExecutorFromStrategy(strategy, user.id);
@@ -226,7 +221,7 @@ export async function POST(
     switch (data.action) {
       case "execute_phase":
         if (!data.phaseNumber || !data.executionPrice || !data.executedQuantity) {
-          return ApiResponse.error("Phase number, execution price, and executed quantity are required", 400);
+          return createApiResponse(createErrorResponse("Phase number, execution price, and executed quantity are required"), 400);
         }
 
         await executor.recordPhaseExecution(
@@ -249,7 +244,7 @@ export async function POST(
 
       case "update_price":
         if (!data.currentPrice) {
-          return ApiResponse.error("Current price is required", 400);
+          return createApiResponse(createErrorResponse("Current price is required"), 400);
         }
 
         const executionResult = executor.executePhases(data.currentPrice, { dryRun: true });
@@ -289,21 +284,19 @@ export async function POST(
         break;
 
       default:
-        return ApiResponse.error("Invalid action", 400);
+        return createApiResponse(createErrorResponse("Invalid action"), 400);
     }
 
-    return ApiResponse.success(result);
+    return createApiResponse(createSuccessResponse(result));
 
   } catch (error) {
     console.error("Error executing strategy action:", error);
     
     if (error instanceof z.ZodError) {
-      return ApiResponse.error("Invalid request data", 400, {
-        details: error.errors
-      });
+      return createApiResponse(createErrorResponse("Invalid request data"), 400);
     }
 
-    return ApiResponse.error("Failed to execute strategy action", 500);
+    return createApiResponse(createErrorResponse("Failed to execute strategy action"), 500);
   }
 }
 
@@ -316,7 +309,7 @@ export async function DELETE(
     // Rate limiting
     const rateLimitResult = await rateLimiter.check(request, "strategies_delete", 10, 60);
     if (!rateLimitResult.success) {
-      return ApiResponse.error("Rate limit exceeded", 429);
+      return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }
 
     // Authentication
@@ -324,23 +317,23 @@ export async function DELETE(
     const user = await getUser();
     
     if (!user?.id) {
-      return ApiResponse.error("Unauthorized", 401);
+      return createApiResponse(createErrorResponse("Unauthorized"), 401);
     }
 
     const strategyId = parseInt(params.id);
     if (isNaN(strategyId)) {
-      return ApiResponse.error("Invalid strategy ID", 400);
+      return createApiResponse(createErrorResponse("Invalid strategy ID"), 400);
     }
 
     // Check if strategy exists and belongs to user
     const strategy = await multiPhaseTradingService.getStrategyById(strategyId, user.id);
     if (!strategy) {
-      return ApiResponse.error("Strategy not found", 404);
+      return createApiResponse(createErrorResponse("Strategy not found"), 404);
     }
 
     // Only allow deletion of inactive strategies
     if (strategy.status === "active") {
-      return ApiResponse.error("Cannot delete active strategy. Pause or cancel it first.", 400);
+      return createApiResponse(createErrorResponse("Cannot delete active strategy. Pause or cancel it first."), 400);
     }
 
     // Mark as cancelled instead of actual deletion for data integrity
@@ -348,13 +341,10 @@ export async function DELETE(
       completedAt: new Date(),
     });
 
-    return ApiResponse.success(
-      null,
-      "Strategy deleted successfully"
-    );
+    return createApiResponse(createSuccessResponse(null));
 
   } catch (error) {
     console.error("Error deleting strategy:", error);
-    return ApiResponse.error("Failed to delete strategy", 500);
+    return createApiResponse(createErrorResponse("Failed to delete strategy"), 500);
   }
 }

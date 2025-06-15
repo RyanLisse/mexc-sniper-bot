@@ -1,10 +1,10 @@
 /**
  * MEXC WebSocket Stream Service
- * 
+ *
  * Real-time MEXC exchange data streaming integration.
  * Provides live price feeds, market data, and trading updates.
  * Integrates with the AI agent system for pattern discovery.
- * 
+ *
  * Features:
  * - Real-time price feeds from MEXC WebSocket
  * - Market depth and order book streaming
@@ -14,77 +14,75 @@
  * - Connection management and error recovery
  */
 
-import { EventEmitter } from 'events';
-import WebSocket from 'ws';
-import { webSocketServer } from '@/src/services/websocket-server';
-import { webSocketAgentBridge } from '@/src/mexc-agents/websocket-agent-bridge';
-import {
-  type TradingPriceMessage,
-  type TradingSignalMessage,
-  type TradingExecutionMessage,
-  type PatternReadyStateMessage,
-  type NotificationMessage,
-} from '@/src/lib/websocket-types';
+import { EventEmitter } from "events";
+import type {
+  NotificationMessage,
+  TradingPriceMessage,
+  TradingSignalMessage,
+} from "@/src/lib/websocket-types";
+import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
+import { webSocketServer } from "@/src/services/websocket-server";
+import WebSocket from "ws";
 
 // ======================
 // MEXC WebSocket Types
 // ======================
 
 interface MexcTickerData {
-  s: string;    // symbol
-  c: string;    // close price
-  h: string;    // high price  
-  l: string;    // low price
-  v: string;    // volume
-  q: string;    // quote volume
-  o: string;    // open price
-  P: string;    // price change percent
-  p: string;    // price change
-  t: number;    // timestamp
+  s: string; // symbol
+  c: string; // close price
+  h: string; // high price
+  l: string; // low price
+  v: string; // volume
+  q: string; // quote volume
+  o: string; // open price
+  P: string; // price change percent
+  p: string; // price change
+  t: number; // timestamp
 }
 
 interface MexcDepthData {
-  s: string;           // symbol
+  s: string; // symbol
   bids: [string, string][]; // [price, quantity]
   asks: [string, string][]; // [price, quantity]
-  ts: number;          // timestamp
+  ts: number; // timestamp
 }
 
 interface MexcTradeData {
-  s: string;    // symbol
-  p: string;    // price
-  q: string;    // quantity
-  T: number;    // trade time
-  m: boolean;   // is buyer maker
+  s: string; // symbol
+  p: string; // price
+  q: string; // quantity
+  T: number; // trade time
+  m: boolean; // is buyer maker
 }
 
 interface MexcKlineData {
-  s: string;    // symbol
+  s: string; // symbol
   k: {
-    t: number;  // open time
-    T: number;  // close time
-    s: string;  // symbol
-    i: string;  // interval
-    o: string;  // open price
-    c: string;  // close price
-    h: string;  // high price
-    l: string;  // low price
-    v: string;  // volume
-    n: number;  // number of trades
+    t: number; // open time
+    T: number; // close time
+    s: string; // symbol
+    i: string; // interval
+    o: string; // open price
+    c: string; // close price
+    h: string; // high price
+    l: string; // low price
+    v: string; // volume
+    n: number; // number of trades
     x: boolean; // is kline closed
-    q: string;  // quote volume
-    V: string;  // taker buy volume
-    Q: string;  // taker buy quote volume
+    q: string; // quote volume
+    V: string; // taker buy volume
+    Q: string; // taker buy quote volume
   };
 }
 
 interface SymbolStatusData {
-  s: string;    // symbol
-  sts: number;  // symbol trading status
-  st: number;   // status
-  tt: number;   // trading time
-  cs: number;   // close status
-  ts: number;   // timestamp
+  s: string; // symbol
+  sts: number; // symbol trading status
+  st: number; // status
+  tt: number; // trading time
+  cs: number; // close status
+  ts: number; // timestamp
 }
 
 // ======================
@@ -100,35 +98,35 @@ class MarketDataManager {
   updatePrice(ticker: MexcTickerData): void {
     const priceMessage: TradingPriceMessage = {
       symbol: ticker.s,
-      price: parseFloat(ticker.c),
-      change: parseFloat(ticker.p),
-      changePercent: parseFloat(ticker.P),
-      volume: parseFloat(ticker.v),
+      price: Number.parseFloat(ticker.c),
+      change: Number.parseFloat(ticker.p),
+      changePercent: Number.parseFloat(ticker.P),
+      volume: Number.parseFloat(ticker.v),
       timestamp: ticker.t || Date.now(),
-      source: 'mexc_ws',
+      source: "mexc_ws",
       metadata: {
-        high24h: parseFloat(ticker.h),
-        low24h: parseFloat(ticker.l),
-        volume24h: parseFloat(ticker.v),
+        high24h: Number.parseFloat(ticker.h),
+        low24h: Number.parseFloat(ticker.l),
+        volume24h: Number.parseFloat(ticker.v),
         lastUpdate: Date.now(),
       },
     };
 
     this.priceCache.set(ticker.s, priceMessage);
-    
+
     // Broadcast to WebSocket clients
     webSocketServer.broadcastTradingPrice(priceMessage);
-    
+
     // Check for pattern updates
     this.checkForPatternUpdates(ticker.s, priceMessage);
   }
 
   updateDepth(depth: MexcDepthData): void {
     this.depthCache.set(depth.s, depth);
-    
+
     // Broadcast order book updates
     webSocketServer.broadcast({
-      type: 'trading:orderbook',
+      type: "trading:orderbook",
       channel: `trading:${depth.s}:orderbook`,
       data: {
         symbol: depth.s,
@@ -145,8 +143,9 @@ class MarketDataManager {
 
     // Check for ready state pattern (sts:2, st:2, tt:4)
     const isReady = status.sts === 2 && status.st === 2 && status.tt === 4;
-    const wasReady = previousStatus ? 
-      (previousStatus.sts === 2 && previousStatus.st === 2 && previousStatus.tt === 4) : false;
+    const wasReady = previousStatus
+      ? previousStatus.sts === 2 && previousStatus.st === 2 && previousStatus.tt === 4
+      : false;
 
     if (isReady && !wasReady) {
       // Symbol just became ready - broadcast pattern
@@ -155,7 +154,7 @@ class MarketDataManager {
 
     // Broadcast status update
     webSocketServer.broadcast({
-      type: 'trading:status',
+      type: "trading:status",
       channel: `trading:${status.s}:status`,
       data: {
         symbol: status.s,
@@ -177,30 +176,31 @@ class MarketDataManager {
     const previousPrice = this.priceCache.get(symbol);
     if (previousPrice) {
       const priceChangePercent = Math.abs(price.changePercent);
-      
+
       // Generate trading signal for significant movements
-      if (priceChangePercent > 5) { // 5% movement
+      if (priceChangePercent > 5) {
+        // 5% movement
         const signal: TradingSignalMessage = {
           signalId: crypto.randomUUID(),
           symbol,
-          type: price.change > 0 ? 'buy' : 'sell',
+          type: price.change > 0 ? "buy" : "sell",
           strength: Math.min(priceChangePercent * 10, 100), // Scale to 0-100
           confidence: 0.6, // Base confidence for price movement signals
-          source: 'price_movement',
-          reasoning: `Significant ${price.change > 0 ? 'upward' : 'downward'} price movement of ${priceChangePercent.toFixed(2)}%`,
-          timeframe: '1m',
+          source: "price_movement",
+          reasoning: `Significant ${price.change > 0 ? "upward" : "downward"} price movement of ${priceChangePercent.toFixed(2)}%`,
+          timeframe: "1m",
           timestamp: Date.now(),
           metadata: {
             priceChange: price.change,
             priceChangePercent: price.changePercent,
             volume: price.volume,
-            riskLevel: priceChangePercent > 10 ? 'high' : 'medium',
+            riskLevel: priceChangePercent > 10 ? "high" : "medium",
           },
         };
 
         webSocketServer.broadcast({
-          type: 'trading:signal',
-          channel: 'trading:signals',
+          type: "trading:signal",
+          channel: "trading:signals",
           data: signal,
         });
 
@@ -212,7 +212,7 @@ class MarketDataManager {
 
   private broadcastReadyStatePattern(status: SymbolStatusData): void {
     const priceData = this.priceCache.get(status.s);
-    
+
     const readyStateData = {
       symbol: status.s,
       vcoinId: status.s, // Use symbol as vcoinId if not available
@@ -220,12 +220,12 @@ class MarketDataManager {
       st: status.st,
       tt: status.tt,
       confidence: 0.95, // High confidence for exact match
-      riskLevel: 'medium' as const,
+      riskLevel: "medium" as const,
       expectedVolatility: priceData ? Math.abs(priceData.changePercent) / 100 : 0.1,
       correlatedSymbols: [], // Would need to calculate
       metadata: {
         detectedAt: Date.now(),
-        source: 'mexc_websocket',
+        source: "mexc_websocket",
         priceAtDetection: priceData?.price,
       },
     };
@@ -236,22 +236,22 @@ class MarketDataManager {
     // Send high-priority notification
     const notification: NotificationMessage = {
       notificationId: crypto.randomUUID(),
-      type: 'success',
-      title: 'Ready State Pattern Detected',
+      type: "success",
+      title: "Ready State Pattern Detected",
       message: `${status.s} is ready for trading (sts:2, st:2, tt:4)`,
-      priority: 'critical',
-      category: 'pattern',
+      priority: "critical",
+      category: "pattern",
       timestamp: Date.now(),
       actionable: true,
       actions: [
         {
-          label: 'Monitor Price',
-          action: 'monitor_price',
+          label: "Monitor Price",
+          action: "monitor_price",
           params: { symbol: status.s },
         },
         {
-          label: 'Create Strategy',
-          action: 'create_strategy',
+          label: "Create Strategy",
+          action: "create_strategy",
           params: { symbol: status.s },
         },
       ],
@@ -315,32 +315,31 @@ class MexcConnectionManager {
     this.isConnecting = true;
 
     try {
-      console.log('[MEXC WebSocket] Connecting to MEXC WebSocket...');
-      
+      console.log("[MEXC WebSocket] Connecting to MEXC WebSocket...");
+
       this.ws = new WebSocket(this.url);
-      
-      this.ws.on('open', this.handleOpen.bind(this));
-      this.ws.on('message', this.handleMessage.bind(this));
-      this.ws.on('close', this.handleClose.bind(this));
-      this.ws.on('error', this.handleError.bind(this));
+
+      this.ws.on("open", this.handleOpen.bind(this));
+      this.ws.on("message", this.handleMessage.bind(this));
+      this.ws.on("close", this.handleClose.bind(this));
+      this.ws.on("error", this.handleError.bind(this));
 
       // Wait for connection
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('Connection timeout'));
+          reject(new Error("Connection timeout"));
         }, 10000);
 
-        this.ws!.once('open', () => {
+        this.ws!.once("open", () => {
           clearTimeout(timeout);
           resolve();
         });
 
-        this.ws!.once('error', (error) => {
+        this.ws!.once("error", (error) => {
           clearTimeout(timeout);
           reject(error);
         });
       });
-
     } catch (error) {
       this.isConnecting = false;
       throw error;
@@ -349,9 +348,9 @@ class MexcConnectionManager {
 
   disconnect(): void {
     this.stopHeartbeat();
-    
+
     if (this.ws) {
-      this.ws.close(1000, 'Client disconnect');
+      this.ws.close(1000, "Client disconnect");
       this.ws = null;
     }
 
@@ -368,19 +367,19 @@ class MexcConnectionManager {
       this.ws.send(JSON.stringify(message));
       return true;
     } catch (error) {
-      console.error('[MEXC WebSocket] Failed to send message:', error);
+      console.error("[MEXC WebSocket] Failed to send message:", error);
       return false;
     }
   }
 
   private handleOpen(): void {
-    console.log('[MEXC WebSocket] Connected to MEXC');
-    
+    console.log("[MEXC WebSocket] Connected to MEXC");
+
     this.isConnected = true;
     this.isConnecting = false;
     this.reconnectAttempts = 0;
     this.reconnectDelay = 1000;
-    
+
     this.startHeartbeat();
   }
 
@@ -389,13 +388,13 @@ class MexcConnectionManager {
       const message = JSON.parse(data.toString());
       this.onMessage(message);
     } catch (error) {
-      console.error('[MEXC WebSocket] Failed to parse message:', error);
+      console.error("[MEXC WebSocket] Failed to parse message:", error);
     }
   }
 
   private handleClose(code: number, reason: Buffer): void {
     console.log(`[MEXC WebSocket] Connection closed: ${code} - ${reason.toString()}`);
-    
+
     this.stopHeartbeat();
     this.isConnected = false;
     this.isConnecting = false;
@@ -408,19 +407,21 @@ class MexcConnectionManager {
   }
 
   private handleError(error: Error): void {
-    console.error('[MEXC WebSocket] Connection error:', error);
+    console.error("[MEXC WebSocket] Connection error:", error);
     this.onError(error);
   }
 
   private scheduleReconnect(): void {
     this.reconnectAttempts++;
     const delay = Math.min(this.reconnectDelay, this.maxReconnectDelay);
-    
-    console.log(`[MEXC WebSocket] Scheduling reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-    
+
+    console.log(
+      `[MEXC WebSocket] Scheduling reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+    );
+
     setTimeout(() => {
       this.connect().catch((error) => {
-        console.error('[MEXC WebSocket] Reconnection failed:', error);
+        console.error("[MEXC WebSocket] Reconnection failed:", error);
       });
     }, delay);
 
@@ -466,11 +467,11 @@ export class MexcWebSocketStreamService extends EventEmitter {
   private connectionManager: MexcConnectionManager;
   private subscriptions = new Set<string>();
   private isRunning = false;
-  private readonly mexcWsUrl = 'wss://wbs.mexc.com/ws';
+  private readonly mexcWsUrl = "wss://wbs.mexc.com/ws";
 
   constructor() {
     super();
-    
+
     this.connectionManager = new MexcConnectionManager(
       this.mexcWsUrl,
       this.handleMexcMessage.bind(this),
@@ -488,20 +489,19 @@ export class MexcWebSocketStreamService extends EventEmitter {
   async start(): Promise<void> {
     if (this.isRunning) return;
 
-    console.log('[MEXC Stream] Starting MEXC WebSocket stream service...');
+    console.log("[MEXC Stream] Starting MEXC WebSocket stream service...");
 
     try {
       await this.connectionManager.connect();
       this.isRunning = true;
-      
+
       // Subscribe to all symbol tickers for market overview
       this.subscribeToAllTickers();
-      
-      console.log('[MEXC Stream] MEXC WebSocket stream service started');
-      this.emit('started');
 
+      console.log("[MEXC Stream] MEXC WebSocket stream service started");
+      this.emit("started");
     } catch (error) {
-      console.error('[MEXC Stream] Failed to start MEXC WebSocket stream:', error);
+      console.error("[MEXC Stream] Failed to start MEXC WebSocket stream:", error);
       throw error;
     }
   }
@@ -509,14 +509,14 @@ export class MexcWebSocketStreamService extends EventEmitter {
   stop(): void {
     if (!this.isRunning) return;
 
-    console.log('[MEXC Stream] Stopping MEXC WebSocket stream service...');
+    console.log("[MEXC Stream] Stopping MEXC WebSocket stream service...");
 
     this.connectionManager.disconnect();
     this.subscriptions.clear();
     this.isRunning = false;
 
-    console.log('[MEXC Stream] MEXC WebSocket stream service stopped');
-    this.emit('stopped');
+    console.log("[MEXC Stream] MEXC WebSocket stream service stopped");
+    this.emit("stopped");
   }
 
   // ======================
@@ -538,20 +538,20 @@ export class MexcWebSocketStreamService extends EventEmitter {
     this.subscribe(stream);
   }
 
-  subscribeToSymbolKlines(symbol: string, interval = '1m'): void {
+  subscribeToSymbolKlines(symbol: string, interval = "1m"): void {
     const stream = `${symbol.toLowerCase()}@kline_${interval}`;
     this.subscribe(stream);
   }
 
   subscribeToAllTickers(): void {
-    this.subscribe('!ticker@arr');
+    this.subscribe("!ticker@arr");
   }
 
   private subscribe(stream: string): void {
     if (this.subscriptions.has(stream)) return;
 
     const subscribeMessage = {
-      method: 'SUBSCRIPTION',
+      method: "SUBSCRIPTION",
       params: [stream],
       id: Date.now(),
     };
@@ -568,7 +568,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
     if (!this.subscriptions.has(stream)) return;
 
     const unsubscribeMessage = {
-      method: 'UNSUBSCRIBE',
+      method: "UNSUBSCRIBE",
       params: [stream],
       id: Date.now(),
     };
@@ -599,7 +599,8 @@ export class MexcWebSocketStreamService extends EventEmitter {
       // Handle ticker array data
       if (Array.isArray(message)) {
         for (const ticker of message) {
-          if (ticker.s) { // Has symbol
+          if (ticker.s) {
+            // Has symbol
             this.marketDataManager.updatePrice(ticker);
           }
         }
@@ -609,28 +610,26 @@ export class MexcWebSocketStreamService extends EventEmitter {
       if (message.ping) {
         this.connectionManager.send({ pong: message.ping });
       }
-
     } catch (error) {
-      console.error('[MEXC Stream] Error handling message:', error);
+      console.error("[MEXC Stream] Error handling message:", error);
     }
   }
 
   private routeStreamData(stream: string, data: any): void {
     try {
-      if (stream.includes('@ticker')) {
+      if (stream.includes("@ticker")) {
         this.marketDataManager.updatePrice(data);
-      } else if (stream.includes('@depth')) {
+      } else if (stream.includes("@depth")) {
         this.marketDataManager.updateDepth(data);
-      } else if (stream.includes('@trade')) {
+      } else if (stream.includes("@trade")) {
         this.handleTradeData(data);
-      } else if (stream.includes('@kline')) {
+      } else if (stream.includes("@kline")) {
         this.handleKlineData(data);
-      } else if (stream.includes('@symbolStatus')) {
+      } else if (stream.includes("@symbolStatus")) {
         this.marketDataManager.updateSymbolStatus(data);
       }
 
-      this.emit('data', { stream, data });
-
+      this.emit("data", { stream, data });
     } catch (error) {
       console.error(`[MEXC Stream] Error routing stream data for ${stream}:`, error);
     }
@@ -639,12 +638,12 @@ export class MexcWebSocketStreamService extends EventEmitter {
   private handleTradeData(trade: MexcTradeData): void {
     // Broadcast individual trade data
     webSocketServer.broadcast({
-      type: 'trading:trade',
+      type: "trading:trade",
       channel: `trading:${trade.s}:trades`,
       data: {
         symbol: trade.s,
-        price: parseFloat(trade.p),
-        quantity: parseFloat(trade.q),
+        price: Number.parseFloat(trade.p),
+        quantity: Number.parseFloat(trade.q),
         timestamp: trade.T,
         isBuyerMaker: trade.m,
       },
@@ -656,18 +655,18 @@ export class MexcWebSocketStreamService extends EventEmitter {
     if (!kline.k.x) return;
 
     webSocketServer.broadcast({
-      type: 'trading:kline',
+      type: "trading:kline",
       channel: `trading:${kline.s}:klines`,
       data: {
         symbol: kline.k.s,
         interval: kline.k.i,
         openTime: kline.k.t,
         closeTime: kline.k.T,
-        open: parseFloat(kline.k.o),
-        close: parseFloat(kline.k.c),
-        high: parseFloat(kline.k.h),
-        low: parseFloat(kline.k.l),
-        volume: parseFloat(kline.k.v),
+        open: Number.parseFloat(kline.k.o),
+        close: Number.parseFloat(kline.k.c),
+        high: Number.parseFloat(kline.k.h),
+        low: Number.parseFloat(kline.k.l),
+        volume: Number.parseFloat(kline.k.v),
         trades: kline.k.n,
         isClosed: kline.k.x,
       },
@@ -675,25 +674,25 @@ export class MexcWebSocketStreamService extends EventEmitter {
   }
 
   private handleMexcError(error: Error): void {
-    console.error('[MEXC Stream] MEXC WebSocket error:', error);
-    
+    console.error("[MEXC Stream] MEXC WebSocket error:", error);
+
     // Broadcast error notification
     const notification: NotificationMessage = {
       notificationId: crypto.randomUUID(),
-      type: 'error',
-      title: 'MEXC Connection Error',
+      type: "error",
+      title: "MEXC Connection Error",
       message: `MEXC WebSocket connection error: ${error.message}`,
-      priority: 'medium',
-      category: 'system',
+      priority: "medium",
+      category: "system",
       timestamp: Date.now(),
       metadata: {
-        service: 'mexc_websocket',
-        errorType: 'connection_error',
+        service: "mexc_websocket",
+        errorType: "connection_error",
       },
     };
 
     webSocketServer.broadcastNotification(notification);
-    this.emit('error', error);
+    this.emit("error", error);
   }
 
   // ======================
@@ -704,9 +703,9 @@ export class MexcWebSocketStreamService extends EventEmitter {
     for (const symbol of symbols) {
       this.subscribeToSymbolTicker(symbol);
       this.subscribeToSymbolDepth(symbol);
-      
+
       // Add small delay to avoid overwhelming the connection
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 
@@ -718,15 +717,15 @@ export class MexcWebSocketStreamService extends EventEmitter {
         // Get new symbols from calendar agent
         // This would be implemented to call the calendar agent
         const newSymbols = await this.getNewListingsFromAgent();
-        
+
         for (const symbol of newSymbols) {
           this.subscribeToSymbolTicker(symbol);
           this.subscribeToSymbolDepth(symbol);
-          
+
           console.log(`[MEXC Stream] Started monitoring new listing: ${symbol}`);
         }
       } catch (error) {
-        console.error('[MEXC Stream] Error monitoring new listings:', error);
+        console.error("[MEXC Stream] Error monitoring new listings:", error);
       }
     }, 60000); // Check every minute
   }

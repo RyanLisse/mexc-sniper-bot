@@ -1,6 +1,6 @@
 /**
  * Database Query Optimizer
- * 
+ *
  * Phase 3: Query Optimization (4h)
  * - Optimizes N+1 query problems in agent operations
  * - Implements efficient batch operations
@@ -8,13 +8,17 @@
  * - Optimizes pattern discovery database operations
  */
 
-import { sql, eq, and, or, inArray, desc, asc, gte, lte, isNull, isNotNull } from "drizzle-orm";
 import { db } from "@/src/db";
 import {
-  snipeTargets, executionHistory, transactions, monitoredListings,
-  patternEmbeddings, transactionLocks, workflowActivity, apiCredentials,
-  type SnipeTarget, type ExecutionHistory, type PatternEmbedding
+  type PatternEmbedding,
+  type SnipeTarget,
+  executionHistory,
+  patternEmbeddings,
+  snipeTargets,
+  transactionLocks,
+  transactions,
 } from "@/src/db/schema";
+import { and, asc, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 
 interface QueryOptimizationConfig {
   enableBatching: boolean;
@@ -52,7 +56,7 @@ export class DatabaseQueryOptimizer {
       enableCaching: true,
       cacheTimeout: 300000, // 5 minutes
       enablePreparedStatements: true,
-      maxConcurrentQueries: 10
+      maxConcurrentQueries: 10,
     };
   }
 
@@ -71,7 +75,7 @@ export class DatabaseQueryOptimizer {
    * Get pending snipe targets optimized for agent workflows
    */
   async getPendingSnipeTargetsOptimized(
-    userId: string, 
+    userId: string,
     limit = 50
   ): Promise<OptimizedQueryResult<SnipeTarget[]>> {
     const cacheKey = `pending_snipe_targets_${userId}_${limit}`;
@@ -85,7 +89,7 @@ export class DatabaseQueryOptimizer {
           data: cached,
           executionTime: performance.now() - startTime,
           cacheHit: true,
-          queryComplexity: "simple"
+          queryComplexity: "simple",
         };
       }
     }
@@ -97,16 +101,10 @@ export class DatabaseQueryOptimizer {
       .where(
         and(
           eq(snipeTargets.userId, userId),
-          or(
-            eq(snipeTargets.status, "pending"),
-            eq(snipeTargets.status, "ready")
-          )
+          or(eq(snipeTargets.status, "pending"), eq(snipeTargets.status, "ready"))
         )
       )
-      .orderBy(
-        asc(snipeTargets.priority),
-        asc(snipeTargets.targetExecutionTime)
-      )
+      .orderBy(asc(snipeTargets.priority), asc(snipeTargets.targetExecutionTime))
       .limit(limit);
 
     const executionTime = performance.now() - startTime;
@@ -120,7 +118,7 @@ export class DatabaseQueryOptimizer {
       data: targets,
       executionTime,
       cacheHit: false,
-      queryComplexity: "moderate"
+      queryComplexity: "moderate",
     };
   }
 
@@ -133,7 +131,7 @@ export class DatabaseQueryOptimizer {
     additionalFields?: Partial<SnipeTarget>
   ): Promise<OptimizedQueryResult<void>> {
     const startTime = performance.now();
-    
+
     if (!this.config.enableBatching || targetIds.length <= 5) {
       // Small batch - use single query
       await db
@@ -141,21 +139,21 @@ export class DatabaseQueryOptimizer {
         .set({
           status: newStatus,
           updatedAt: new Date(),
-          ...additionalFields
+          ...additionalFields,
         })
         .where(inArray(snipeTargets.id, targetIds));
     } else {
       // Large batch - chunk into smaller batches
       const chunks = this.chunkArray(targetIds, this.config.batchSize);
-      
+
       await Promise.all(
-        chunks.map(chunk =>
+        chunks.map((chunk) =>
           db
             .update(snipeTargets)
             .set({
               status: newStatus,
               updatedAt: new Date(),
-              ...additionalFields
+              ...additionalFields,
             })
             .where(inArray(snipeTargets.id, chunk))
         )
@@ -163,14 +161,14 @@ export class DatabaseQueryOptimizer {
     }
 
     // Invalidate related cache entries
-    this.invalidateCache('pending_snipe_targets_');
+    this.invalidateCache("pending_snipe_targets_");
 
     return {
       data: undefined,
       executionTime: performance.now() - startTime,
       cacheHit: false,
       batchSize: targetIds.length,
-      queryComplexity: "moderate"
+      queryComplexity: "moderate",
     };
   }
 
@@ -181,7 +179,7 @@ export class DatabaseQueryOptimizer {
     userId: string,
     symbolName?: string
   ): Promise<OptimizedQueryResult<any[]>> {
-    const cacheKey = `snipe_targets_history_${userId}_${symbolName || 'all'}`;
+    const cacheKey = `snipe_targets_history_${userId}_${symbolName || "all"}`;
     const startTime = performance.now();
 
     if (this.config.enableCaching) {
@@ -191,7 +189,7 @@ export class DatabaseQueryOptimizer {
           data: cached,
           executionTime: performance.now() - startTime,
           cacheHit: true,
-          queryComplexity: "complex"
+          queryComplexity: "complex",
         };
       }
     }
@@ -205,18 +203,12 @@ export class DatabaseQueryOptimizer {
     const results = await db
       .select({
         target: snipeTargets,
-        history: executionHistory
+        history: executionHistory,
       })
       .from(snipeTargets)
-      .leftJoin(
-        executionHistory,
-        eq(snipeTargets.id, executionHistory.snipeTargetId)
-      )
+      .leftJoin(executionHistory, eq(snipeTargets.id, executionHistory.snipeTargetId))
       .where(and(...whereConditions))
-      .orderBy(
-        desc(snipeTargets.createdAt),
-        desc(executionHistory.executedAt)
-      );
+      .orderBy(desc(snipeTargets.createdAt), desc(executionHistory.executedAt));
 
     // Group results by target to avoid N+1 issues
     const groupedResults = this.groupExecutionHistoryByTarget(results);
@@ -231,7 +223,7 @@ export class DatabaseQueryOptimizer {
       data: groupedResults,
       executionTime,
       cacheHit: false,
-      queryComplexity: "complex"
+      queryComplexity: "complex",
     };
   }
 
@@ -257,7 +249,7 @@ export class DatabaseQueryOptimizer {
           data: cached,
           executionTime: performance.now() - startTime,
           cacheHit: true,
-          queryComplexity: "moderate"
+          queryComplexity: "moderate",
         };
       }
     }
@@ -273,10 +265,7 @@ export class DatabaseQueryOptimizer {
           gte(patternEmbeddings.confidence, minConfidence)
         )
       )
-      .orderBy(
-        desc(patternEmbeddings.confidence),
-        desc(patternEmbeddings.lastSeenAt)
-      )
+      .orderBy(desc(patternEmbeddings.confidence), desc(patternEmbeddings.lastSeenAt))
       .limit(limit);
 
     const executionTime = performance.now() - startTime;
@@ -289,7 +278,7 @@ export class DatabaseQueryOptimizer {
       data: patterns,
       executionTime,
       cacheHit: false,
-      queryComplexity: "moderate"
+      queryComplexity: "moderate",
     };
   }
 
@@ -306,28 +295,24 @@ export class DatabaseQueryOptimizer {
         data: undefined,
         executionTime: 0,
         cacheHit: false,
-        queryComplexity: "simple"
+        queryComplexity: "simple",
       };
     }
 
     // Batch insert with chunking for large datasets
     const chunks = this.chunkArray(patterns, this.config.batchSize);
-    
-    await Promise.all(
-      chunks.map(chunk =>
-        db.insert(patternEmbeddings).values(chunk as any[])
-      )
-    );
+
+    await Promise.all(chunks.map((chunk) => db.insert(patternEmbeddings).values(chunk as any[])));
 
     // Invalidate pattern cache
-    this.invalidateCache('similar_patterns_');
+    this.invalidateCache("similar_patterns_");
 
     return {
       data: undefined,
       executionTime: performance.now() - startTime,
       cacheHit: false,
       batchSize: patterns.length,
-      queryComplexity: "moderate"
+      queryComplexity: "moderate",
     };
   }
 
@@ -341,30 +326,30 @@ export class DatabaseQueryOptimizer {
 
     // Use prepared statement for better performance
     const chunks = this.chunkArray(updates, this.config.batchSize);
-    
+
     await Promise.all(
-      chunks.map(async chunk => {
+      chunks.map(async (chunk) => {
         for (const update of chunk) {
           await db
             .update(patternEmbeddings)
             .set({
               confidence: update.confidence,
               successRate: update.successRate,
-              updatedAt: new Date()
+              updatedAt: new Date(),
             })
             .where(eq(patternEmbeddings.patternId, update.patternId));
         }
       })
     );
 
-    this.invalidateCache('similar_patterns_');
+    this.invalidateCache("similar_patterns_");
 
     return {
       data: undefined,
       executionTime: performance.now() - startTime,
       cacheHit: false,
       batchSize: updates.length,
-      queryComplexity: "moderate"
+      queryComplexity: "moderate",
     };
   }
 
@@ -375,10 +360,8 @@ export class DatabaseQueryOptimizer {
   /**
    * Get active transaction locks efficiently
    */
-  async getActiveLocksOptimized(
-    resourceIds?: string[]
-  ): Promise<OptimizedQueryResult<any[]>> {
-    const cacheKey = `active_locks_${resourceIds?.join(',') || 'all'}`;
+  async getActiveLocksOptimized(resourceIds?: string[]): Promise<OptimizedQueryResult<any[]>> {
+    const cacheKey = `active_locks_${resourceIds?.join(",") || "all"}`;
     const startTime = performance.now();
 
     if (this.config.enableCaching) {
@@ -388,15 +371,15 @@ export class DatabaseQueryOptimizer {
           data: cached,
           executionTime: performance.now() - startTime,
           cacheHit: true,
-          queryComplexity: "simple"
+          queryComplexity: "simple",
         };
       }
     }
 
     const now = new Date();
-    let whereConditions = [
+    const whereConditions = [
       eq(transactionLocks.status, "active"),
-      gte(transactionLocks.expiresAt, now)
+      gte(transactionLocks.expiresAt, now),
     ];
 
     if (resourceIds && resourceIds.length > 0) {
@@ -420,7 +403,7 @@ export class DatabaseQueryOptimizer {
       data: locks,
       executionTime,
       cacheHit: false,
-      queryComplexity: "simple"
+      queryComplexity: "simple",
     };
   }
 
@@ -436,23 +419,18 @@ export class DatabaseQueryOptimizer {
       .update(transactionLocks)
       .set({
         status: "expired",
-        updatedAt: now
+        updatedAt: now,
       })
-      .where(
-        and(
-          eq(transactionLocks.status, "active"),
-          lte(transactionLocks.expiresAt, now)
-        )
-      );
+      .where(and(eq(transactionLocks.status, "active"), lte(transactionLocks.expiresAt, now)));
 
     // Invalidate lock cache
-    this.invalidateCache('active_locks_');
+    this.invalidateCache("active_locks_");
 
     return {
       data: result.changes || 0,
       executionTime: performance.now() - startTime,
       cacheHit: false,
-      queryComplexity: "simple"
+      queryComplexity: "simple",
     };
   }
 
@@ -477,13 +455,13 @@ export class DatabaseQueryOptimizer {
           data: cached,
           executionTime: performance.now() - startTime,
           cacheHit: true,
-          queryComplexity: "complex"
+          queryComplexity: "complex",
         };
       }
     }
 
-    let whereConditions = [eq(transactions.userId, userId)];
-    
+    const whereConditions = [eq(transactions.userId, userId)];
+
     if (timeRange) {
       whereConditions.push(
         gte(transactions.transactionTime, timeRange.start),
@@ -500,7 +478,7 @@ export class DatabaseQueryOptimizer {
         successfulTrades: sql<number>`SUM(CASE WHEN ${transactions.profitLoss} > 0 THEN 1 ELSE 0 END)`,
         avgProfitPerTrade: sql<number>`AVG(COALESCE(${transactions.profitLoss}, 0))`,
         bestTrade: sql<number>`MAX(COALESCE(${transactions.profitLoss}, 0))`,
-        worstTrade: sql<number>`MIN(COALESCE(${transactions.profitLoss}, 0))`
+        worstTrade: sql<number>`MIN(COALESCE(${transactions.profitLoss}, 0))`,
       })
       .from(transactions)
       .where(and(...whereConditions));
@@ -516,7 +494,7 @@ export class DatabaseQueryOptimizer {
     const portfolio = {
       stats: portfolioStats[0],
       recentTransactions,
-      calculatedAt: new Date()
+      calculatedAt: new Date(),
     };
 
     const executionTime = performance.now() - startTime;
@@ -529,7 +507,7 @@ export class DatabaseQueryOptimizer {
       data: portfolio,
       executionTime,
       cacheHit: false,
-      queryComplexity: "complex"
+      queryComplexity: "complex",
     };
   }
 
@@ -553,21 +531,21 @@ export class DatabaseQueryOptimizer {
    */
   private groupExecutionHistoryByTarget(results: any[]): any[] {
     const grouped = new Map();
-    
+
     for (const result of results) {
       const targetId = result.target.id;
       if (!grouped.has(targetId)) {
         grouped.set(targetId, {
           target: result.target,
-          executionHistory: []
+          executionHistory: [],
         });
       }
-      
+
       if (result.history) {
         grouped.get(targetId).executionHistory.push(result.history);
       }
     }
-    
+
     return Array.from(grouped.values());
   }
 
@@ -585,7 +563,7 @@ export class DatabaseQueryOptimizer {
   private setCachedResult(key: string, data: any, customTimeout?: number): void {
     this.queryCache.set(key, {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // Clean up old cache entries periodically
@@ -626,7 +604,7 @@ export class DatabaseQueryOptimizer {
       size: this.queryCache.size,
       maxSize: 1000,
       timeout: this.config.cacheTimeout,
-      enabled: this.config.enableCaching
+      enabled: this.config.enableCaching,
     };
   }
 

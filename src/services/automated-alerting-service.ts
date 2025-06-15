@@ -1,22 +1,16 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { eq, and, or, desc, gte, lte, isNull, isNotNull, count, avg, sql } from "drizzle-orm";
-import { 
-  alertRules, 
-  alertInstances, 
-  notificationChannels, 
-  alertCorrelations,
-  alertSuppressions,
-  anomalyModels,
-  alertAnalytics,
-  type InsertAlertRule,
+import { and, count, desc, eq, gte, isNull, lte } from "drizzle-orm";
+import {
   type InsertAlertInstance,
-  type SelectAlertRule,
   type SelectAlertInstance,
+  type SelectAlertRule,
+  alertAnalytics,
+  alertInstances,
+  alertRules,
+  alertSuppressions,
 } from "../db/schemas/alerts";
-import { agentPerformanceMetrics, systemHealthMetrics } from "../db/schema";
-import { NotificationService } from "./notification-providers";
-import { AnomalyDetectionService } from "./anomaly-detection-service";
 import { AlertCorrelationEngine } from "./alert-correlation-engine";
+import { AnomalyDetectionService } from "./anomaly-detection-service";
+import { NotificationService } from "./notification-providers";
 
 export interface AlertMetric {
   name: string;
@@ -57,10 +51,7 @@ export class AutomatedAlertingService {
   private isRunning = false;
   private metricBuffer: Map<string, AlertMetric[]> = new Map();
 
-  constructor(
-    database: any,
-    config: Partial<AlertingConfig> = {}
-  ) {
+  constructor(database: any, config: Partial<AlertingConfig> = {}) {
     this.db = database;
     this.config = {
       evaluationIntervalMs: 30000, // 30 seconds
@@ -69,7 +60,7 @@ export class AutomatedAlertingService {
       enableCorrelation: true,
       maxAlertsPerHour: 1000,
       defaultSuppressionDuration: 300,
-      ...config
+      ...config,
     };
 
     this.notificationService = new NotificationService(database);
@@ -101,7 +92,9 @@ export class AutomatedAlertingService {
       this.config.evaluationIntervalMs
     );
 
-    console.log(`Alerting service started with ${this.config.evaluationIntervalMs}ms evaluation interval`);
+    console.log(
+      `Alerting service started with ${this.config.evaluationIntervalMs}ms evaluation interval`
+    );
   }
 
   async stop(): Promise<void> {
@@ -126,7 +119,7 @@ export class AutomatedAlertingService {
 
   async ingestMetric(metric: AlertMetric): Promise<void> {
     const metricKey = `${metric.source}:${metric.name}`;
-    
+
     if (!this.metricBuffer.has(metricKey)) {
       this.metricBuffer.set(metricKey, []);
     }
@@ -136,7 +129,10 @@ export class AutomatedAlertingService {
 
     // Keep only recent metrics in buffer (last 10 minutes)
     const cutoff = Date.now() - 600000;
-    this.metricBuffer.set(metricKey, buffer.filter(m => m.timestamp > cutoff));
+    this.metricBuffer.set(
+      metricKey,
+      buffer.filter((m) => m.timestamp > cutoff)
+    );
 
     // Immediate evaluation for critical metrics
     if (this.isCriticalMetric(metric)) {
@@ -157,9 +153,9 @@ export class AutomatedAlertingService {
       "agent_failure_rate",
       "api_connectivity",
       "balance_discrepancy",
-      "emergency_stop_triggered"
+      "emergency_stop_triggered",
     ];
-    
+
     return criticalMetrics.includes(metric.name);
   }
 
@@ -172,19 +168,16 @@ export class AutomatedAlertingService {
 
     try {
       console.log("Starting alert evaluation cycle...");
-      
+
       // Get all enabled alert rules
-      const rules = await this.db
-        .select()
-        .from(alertRules)
-        .where(eq(alertRules.isEnabled, true));
+      const rules = await this.db.select().from(alertRules).where(eq(alertRules.isEnabled, true));
 
       console.log(`Evaluating ${rules.length} alert rules`);
 
       // Process rules in batches
       for (let i = 0; i < rules.length; i += this.config.batchSize) {
         const batch = rules.slice(i, i + this.config.batchSize);
-        await Promise.all(batch.map(rule => this.evaluateRule(rule)));
+        await Promise.all(batch.map((rule) => this.evaluateRule(rule)));
       }
 
       // Run correlation analysis
@@ -206,12 +199,7 @@ export class AutomatedAlertingService {
     const rules = await this.db
       .select()
       .from(alertRules)
-      .where(
-        and(
-          eq(alertRules.isEnabled, true),
-          eq(alertRules.metricName, metric.name)
-        )
-      );
+      .where(and(eq(alertRules.isEnabled, true), eq(alertRules.metricName, metric.name)));
 
     for (const rule of rules) {
       await this.evaluateRule(rule, metric);
@@ -221,7 +209,7 @@ export class AutomatedAlertingService {
   private async evaluateRule(rule: SelectAlertRule, providedMetric?: AlertMetric): Promise<void> {
     try {
       // Get metric data
-      const metrics = providedMetric 
+      const metrics = providedMetric
         ? [providedMetric]
         : await this.getMetricData(rule.metricName, rule.aggregationWindow);
 
@@ -242,7 +230,7 @@ export class AutomatedAlertingService {
       // Evaluate each metric
       for (const metric of metrics) {
         const result = await this.evaluateMetricAgainstRule(metric, rule);
-        
+
         if (result.shouldAlert) {
           await this.createAlert(rule, metric, result);
         } else {
@@ -256,7 +244,7 @@ export class AutomatedAlertingService {
   }
 
   private async evaluateMetricAgainstRule(
-    metric: AlertMetric, 
+    metric: AlertMetric,
     rule: SelectAlertRule
   ): Promise<AlertEvaluationResult> {
     const result: AlertEvaluationResult = {
@@ -264,16 +252,12 @@ export class AutomatedAlertingService {
       alertLevel: rule.severity as any,
       message: "",
       metricValue: metric.value,
-      threshold: rule.threshold || 0
+      threshold: rule.threshold || 0,
     };
 
     // Standard threshold evaluation
     if (rule.operator && rule.threshold !== null) {
-      const thresholdMet = this.evaluateThreshold(
-        metric.value, 
-        rule.operator, 
-        rule.threshold
-      );
+      const thresholdMet = this.evaluateThreshold(metric.value, rule.operator, rule.threshold);
 
       if (thresholdMet) {
         result.shouldAlert = true;
@@ -295,7 +279,7 @@ export class AutomatedAlertingService {
         result.anomalyScore = anomalyResult.score;
         result.message = this.generateAlertMessage(metric, rule, "anomaly");
         result.description = `Anomaly detected with score ${anomalyResult.score.toFixed(2)}`;
-        
+
         // Escalate severity for high anomaly scores
         if (anomalyResult.score > 3.0) {
           result.alertLevel = "critical";
@@ -310,12 +294,18 @@ export class AutomatedAlertingService {
 
   private evaluateThreshold(value: number, operator: string, threshold: number): boolean {
     switch (operator) {
-      case "gt": return value > threshold;
-      case "gte": return value >= threshold;
-      case "lt": return value < threshold;
-      case "lte": return value <= threshold;
-      case "eq": return Math.abs(value - threshold) < 0.001;
-      default: return false;
+      case "gt":
+        return value > threshold;
+      case "gte":
+        return value >= threshold;
+      case "lt":
+        return value < threshold;
+      case "lte":
+        return value <= threshold;
+      case "eq":
+        return Math.abs(value - threshold) < 0.001;
+      default:
+        return false;
     }
   }
 
@@ -406,10 +396,7 @@ export class AutomatedAlertingService {
       .where(eq(alertInstances.id, existingAlert.id));
   }
 
-  private async checkAlertResolution(
-    rule: SelectAlertRule,
-    metric: AlertMetric
-  ): Promise<void> {
+  private async checkAlertResolution(rule: SelectAlertRule, metric: AlertMetric): Promise<void> {
     const activeAlerts = await this.db
       .select()
       .from(alertInstances)
@@ -425,20 +412,16 @@ export class AutomatedAlertingService {
     for (const alert of activeAlerts) {
       // Check if conditions are no longer met
       const evaluation = await this.evaluateMetricAgainstRule(metric, rule);
-      
+
       if (!evaluation.shouldAlert) {
         await this.resolveAlert(alert.id, "auto_resolved", "Conditions no longer met");
       }
     }
   }
 
-  async resolveAlert(
-    alertId: string, 
-    resolvedBy: string, 
-    notes?: string
-  ): Promise<void> {
+  async resolveAlert(alertId: string, resolvedBy: string, notes?: string): Promise<void> {
     const now = Date.now();
-    
+
     await this.db
       .update(alertInstances)
       .set({
@@ -469,7 +452,7 @@ export class AutomatedAlertingService {
 
   private async isRuleSuppressed(rule: SelectAlertRule): Promise<boolean> {
     const now = Date.now();
-    
+
     const suppressions = await this.db
       .select()
       .from(alertSuppressions)
@@ -525,7 +508,7 @@ export class AutomatedAlertingService {
     createdBy: string
   ): Promise<string> {
     const suppressionId = `suppression_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     await this.db.insert(alertSuppressions).values({
       id: suppressionId,
       name,
@@ -552,15 +535,12 @@ export class AutomatedAlertingService {
 
   private async isRateLimited(rule: SelectAlertRule): Promise<boolean> {
     const oneHourAgo = Date.now() - 3600000;
-    
+
     const recentAlerts = await this.db
       .select({ count: count() })
       .from(alertInstances)
       .where(
-        and(
-          eq(alertInstances.ruleId, rule.id),
-          gte(alertInstances.firstTriggeredAt, oneHourAgo)
-        )
+        and(eq(alertInstances.ruleId, rule.id), gte(alertInstances.firstTriggeredAt, oneHourAgo))
       );
 
     const alertCount = recentAlerts[0]?.count || 0;
@@ -576,13 +556,13 @@ export class AutomatedAlertingService {
   private async updateAnalytics(): Promise<void> {
     const now = Date.now();
     const hourBucket = Math.floor(now / 3600000) * 3600000;
-    
+
     // Calculate metrics for the current hour
     const hourStart = hourBucket;
     const hourEnd = hourBucket + 3600000;
 
     const metrics = await this.calculateHourlyMetrics(hourStart, hourEnd);
-    
+
     // Upsert analytics record
     await this.db
       .insert(alertAnalytics)
@@ -609,25 +589,25 @@ export class AutomatedAlertingService {
         )
       );
 
-    const resolved = alerts.filter(a => a.resolvedAt);
+    const resolved = alerts.filter((a) => a.resolvedAt);
     const totalResolutionTime = resolved.reduce((sum, alert) => {
       return sum + ((alert.resolvedAt || 0) - alert.firstTriggeredAt);
     }, 0);
 
     return {
       totalAlerts: alerts.length,
-      criticalAlerts: alerts.filter(a => a.severity === "critical").length,
-      highAlerts: alerts.filter(a => a.severity === "high").length,
-      mediumAlerts: alerts.filter(a => a.severity === "medium").length,
-      lowAlerts: alerts.filter(a => a.severity === "low").length,
+      criticalAlerts: alerts.filter((a) => a.severity === "critical").length,
+      highAlerts: alerts.filter((a) => a.severity === "high").length,
+      mediumAlerts: alerts.filter((a) => a.severity === "medium").length,
+      lowAlerts: alerts.filter((a) => a.severity === "low").length,
       resolvedAlerts: resolved.length,
       averageResolutionTime: resolved.length > 0 ? totalResolutionTime / resolved.length : 0,
       mttr: resolved.length > 0 ? totalResolutionTime / resolved.length : 0,
-      tradingAlerts: alerts.filter(a => a.source.includes("trading")).length,
-      safetyAlerts: alerts.filter(a => a.source.includes("safety")).length,
-      performanceAlerts: alerts.filter(a => a.source.includes("performance")).length,
-      systemAlerts: alerts.filter(a => a.source.includes("system")).length,
-      agentAlerts: alerts.filter(a => a.source.includes("agent")).length,
+      tradingAlerts: alerts.filter((a) => a.source.includes("trading")).length,
+      safetyAlerts: alerts.filter((a) => a.source.includes("safety")).length,
+      performanceAlerts: alerts.filter((a) => a.source.includes("performance")).length,
+      systemAlerts: alerts.filter((a) => a.source.includes("system")).length,
+      agentAlerts: alerts.filter((a) => a.source.includes("agent")).length,
     };
   }
 
@@ -636,13 +616,13 @@ export class AutomatedAlertingService {
   // ==========================================
 
   private async getMetricData(metricName: string, windowSeconds: number): Promise<AlertMetric[]> {
-    const cutoff = Date.now() - (windowSeconds * 1000);
+    const cutoff = Date.now() - windowSeconds * 1000;
     const metrics: AlertMetric[] = [];
 
     // Get from buffer first
     for (const [key, buffer] of this.metricBuffer.entries()) {
       if (key.endsWith(`:${metricName}`)) {
-        metrics.push(...buffer.filter(m => m.timestamp > cutoff));
+        metrics.push(...buffer.filter((m) => m.timestamp > cutoff));
       }
     }
 
@@ -653,20 +633,22 @@ export class AutomatedAlertingService {
   }
 
   private generateAlertMessage(
-    metric: AlertMetric, 
-    rule: SelectAlertRule, 
+    metric: AlertMetric,
+    rule: SelectAlertRule,
     type: "threshold" | "anomaly"
   ): string {
     if (type === "anomaly") {
       return `Anomaly detected in ${metric.name} from ${metric.source}: ${metric.value}`;
     }
-    
+
     return `${rule.name}: ${metric.name} is ${metric.value} (threshold: ${rule.operator} ${rule.threshold})`;
   }
 
   private generateAlertDescription(metric: AlertMetric, rule: SelectAlertRule): string {
-    return `Alert triggered for metric ${metric.name} from source ${metric.source}. ` +
-           `Current value: ${metric.value}. Rule: ${rule.description || rule.name}`;
+    return (
+      `Alert triggered for metric ${metric.name} from source ${metric.source}. ` +
+      `Current value: ${metric.value}. Rule: ${rule.description || rule.name}`
+    );
   }
 
   // ==========================================
@@ -682,12 +664,7 @@ export class AutomatedAlertingService {
     let query = this.db
       .select()
       .from(alertInstances)
-      .where(
-        and(
-          eq(alertInstances.status, "firing"),
-          isNull(alertInstances.resolvedAt)
-        )
-      )
+      .where(and(eq(alertInstances.status, "firing"), isNull(alertInstances.resolvedAt)))
       .orderBy(desc(alertInstances.firstTriggeredAt));
 
     if (filters?.limit) {
@@ -697,9 +674,9 @@ export class AutomatedAlertingService {
     return await query;
   }
 
-  async getAlertHistory(hours: number = 24): Promise<SelectAlertInstance[]> {
-    const cutoff = Date.now() - (hours * 3600000);
-    
+  async getAlertHistory(hours = 24): Promise<SelectAlertInstance[]> {
+    const cutoff = Date.now() - hours * 3600000;
+
     return await this.db
       .select()
       .from(alertInstances)
@@ -707,7 +684,7 @@ export class AutomatedAlertingService {
       .orderBy(desc(alertInstances.firstTriggeredAt));
   }
 
-  async getAlertAnalytics(bucket: "hourly" | "daily" = "hourly", limit: number = 24) {
+  async getAlertAnalytics(bucket: "hourly" | "daily" = "hourly", limit = 24) {
     return await this.db
       .select()
       .from(alertAnalytics)
@@ -720,7 +697,10 @@ export class AutomatedAlertingService {
     return {
       isRunning: this.isRunning,
       evaluationInterval: this.config.evaluationIntervalMs,
-      metricsInBuffer: Array.from(this.metricBuffer.values()).reduce((sum, buffer) => sum + buffer.length, 0),
+      metricsInBuffer: Array.from(this.metricBuffer.values()).reduce(
+        (sum, buffer) => sum + buffer.length,
+        0
+      ),
       anomalyDetectionEnabled: this.config.enableAnomalyDetection,
       correlationEnabled: this.config.enableCorrelation,
     };

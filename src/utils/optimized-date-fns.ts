@@ -48,30 +48,30 @@ export { endOfMonth } from "date-fns/endOfMonth";
 export const DATE_FORMATS = {
   display: "MMM dd, yyyy",
   full: "EEEE, MMMM dd, yyyy",
-  short: "MM/dd/yyyy", 
+  short: "MM/dd/yyyy",
   time: "HH:mm:ss",
   datetime: "MMM dd, yyyy HH:mm",
   iso: "yyyy-MM-dd",
   trading: "yyyy-MM-dd HH:mm:ss",
-  calendar: "EEEE, MMMM do, yyyy"
+  calendar: "EEEE, MMMM do, yyyy",
 } as const;
 
 // Helper functions for common trading operations
 import { format } from "date-fns/format";
-import { parseISO } from "date-fns/parseISO";
 import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
+import { parseISO } from "date-fns/parseISO";
 
 export function formatTradingTime(date: Date | string): string {
-  const d = typeof date === 'string' ? parseISO(date) : date;
+  const d = typeof date === "string" ? parseISO(date) : date;
   return format(d, DATE_FORMATS.trading);
 }
 
 export function formatCalendarDate(date: Date | string): string {
-  const d = typeof date === 'string' ? parseISO(date) : date;
+  const d = typeof date === "string" ? parseISO(date) : date;
   return format(d, DATE_FORMATS.calendar);
 }
 
 export function formatRelativeTime(date: Date | string): string {
-  const d = typeof date === 'string' ? parseISO(date) : date;
+  const d = typeof date === "string" ? parseISO(date) : date;
   return formatDistanceToNow(d, { addSuffix: true });
 }

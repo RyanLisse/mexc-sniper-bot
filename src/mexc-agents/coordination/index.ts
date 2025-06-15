@@ -1,6 +1,6 @@
 /**
  * Agent Coordination System
- * 
+ *
  * This module provides centralized coordination for the multi-agent system including:
  * - Agent registry and health monitoring
  * - Workflow execution engine with dependency management
@@ -9,7 +9,11 @@
  */
 
 // Core coordination components
-export { AgentRegistry, getGlobalAgentRegistry, initializeGlobalAgentRegistry } from "./agent-registry";
+export {
+  AgentRegistry,
+  getGlobalAgentRegistry,
+  initializeGlobalAgentRegistry,
+} from "./agent-registry";
 export type {
   AgentStatus,
   AgentHealth,
@@ -62,10 +66,13 @@ export async function createCoordinationSystem(options?: {
   const workflowEngine = new (await import("./workflow-engine")).WorkflowEngine(agentRegistry);
 
   // Create performance collector
-  const performanceCollector = new (await import("./performance-collector")).PerformanceCollector(agentRegistry, {
-    collectionInterval: options?.performanceCollectionInterval || 60000,
-    maxHistorySize: options?.maxHistorySize || 1000,
-  });
+  const performanceCollector = new (await import("./performance-collector")).PerformanceCollector(
+    agentRegistry,
+    {
+      collectionInterval: options?.performanceCollectionInterval || 60000,
+      maxHistorySize: options?.maxHistorySize || 1000,
+    }
+  );
 
   // Create enhanced orchestrator
   const orchestrator = new (await import("./enhanced-orchestrator")).EnhancedMexcOrchestrator(
@@ -86,7 +93,10 @@ export async function createCoordinationSystem(options?: {
 }
 
 // Utility function to register common agent types
-export function registerCommonAgents(agentRegistry: import("./agent-registry").AgentRegistry, agentManager: any): void {
+export function registerCommonAgents(
+  agentRegistry: import("./agent-registry").AgentRegistry,
+  agentManager: any
+): void {
   try {
     // Register core trading agents
     agentRegistry.registerAgent("mexc-api", agentManager.getMexcApiAgent(), {
@@ -172,7 +182,6 @@ export function registerCommonAgents(agentRegistry: import("./agent-registry").A
     });
 
     console.log("[Coordination] Registered 9 agents successfully");
-
   } catch (error) {
     console.error("[Coordination] Failed to register agents:", error);
     throw error;
@@ -197,7 +206,6 @@ export async function shutdownCoordinationSystem(components: {
     components.agentRegistry.destroy();
 
     console.log("[Coordination] Graceful shutdown completed");
-
   } catch (error) {
     console.error("[Coordination] Shutdown error:", error);
     throw error;
@@ -237,10 +245,9 @@ export async function checkCoordinationSystemHealth(components: {
     const orchestratorHealth = await components.orchestrator.healthCheck();
 
     // Determine overall health
-    const healthyRatio = registryStats.totalAgents > 0 
-      ? registryStats.healthyAgents / registryStats.totalAgents 
-      : 0;
-    
+    const healthyRatio =
+      registryStats.totalAgents > 0 ? registryStats.healthyAgents / registryStats.totalAgents : 0;
+
     let overall: "healthy" | "degraded" | "unhealthy";
     if (healthyRatio >= 0.8 && orchestratorHealth) {
       overall = "healthy";
@@ -269,7 +276,6 @@ export async function checkCoordinationSystemHealth(components: {
       },
       orchestrator: orchestratorHealth,
     };
-
   } catch (error) {
     console.error("[Coordination] Health check failed:", error);
     return {
