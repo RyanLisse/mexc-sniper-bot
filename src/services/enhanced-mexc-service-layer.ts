@@ -743,6 +743,6 @@ export function resetEnhancedMexcService(): void {
   }
 }
 
-// Export for compatibility - using the enhanced service as the default
-export { getEnhancedMexcService as getMexcService };
+// Export for compatibility - enhanced service provides additional functionality
+// Use getMexcService from mexc-unified-exports.ts for the standard interface
 export default EnhancedMexcServiceLayer;

@@ -376,3 +376,18 @@ if (typeof window === "undefined") {
     5 * 60 * 1000
   );
 }
+
+// Default export for backward compatibility
+export const rateLimiter = {
+  checkRateLimit,
+  getClientIP,
+  createRateLimitResponse,
+  logSecurityEvent,
+  getSecurityEvents,
+  getRateLimitStats,
+  isIPSuspicious,
+  getIPAnalysis,
+  cleanupExpiredEntries,
+  clearAllRateLimitData,
+  clearSecurityEvents,
+};
