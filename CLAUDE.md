@@ -1,13 +1,13 @@
 # Claude Code Configuration - MEXC Sniper Bot AI System
 
 ## Project Overview
-This is a sophisticated TypeScript-based cryptocurrency trading bot featuring an advanced **Multi-Agent AI Architecture** designed for MEXC exchange. The system employs **12 specialized AI agents** orchestrated through **Inngest workflows** for automated pattern discovery, risk management, and trading strategy execution.
+This is a sophisticated TypeScript-based cryptocurrency trading bot featuring an advanced **Multi-Agent AI Architecture** designed for MEXC exchange. The system employs **16+ specialized AI agents** orchestrated through **Inngest workflows** for automated pattern discovery, risk management, and trading strategy execution.
 
 ## AI Agent Architecture Overview
 
 ### 🤖 **Multi-Agent System** (`src/mexc-agents/`)
 
-The system features **12 specialized AI agents** powered by **OpenAI GPT-4** with intelligent caching, error recovery, and coordinated workflows:
+The system features **16+ specialized AI agents** powered by **OpenAI GPT-4** with intelligent caching, error recovery, and coordinated workflows:
 
 #### **Core Trading Agents**
 1. **BaseAgent** (`base-agent.ts`) - Foundation class with OpenAI integration, caching, and error handling
@@ -32,7 +32,7 @@ The system features **12 specialized AI agents** powered by **OpenAI GPT-4** wit
 
 ### Standard Build Commands
 - `npm run build`: Build the project
-- `npm run test`: Run the test suite (280+ tests with high pass rate)
+- `npm run test`: Run the test suite (293 tests with 96%+ pass rate)
 - `npm run lint`: Run linter and format checks
 - `npm run typecheck`: Run TypeScript type checking
 

@@ -4,7 +4,7 @@ An intelligent cryptocurrency trading bot powered by specialized AI agents that 
 
 ## 🚀 Key Features
 
-- **🤖 Multi-Agent AI System**: 12 specialized TypeScript agents working together for comprehensive analysis
+- **🤖 Multi-Agent AI System**: 16+ specialized TypeScript agents working together for comprehensive analysis
 - **🔍 Intelligent Pattern Discovery**: AI-powered detection of MEXC ready state patterns (sts:2, st:2, tt:4)
 - **⏰ Advanced Timing**: 3.5+ hour advance detection for optimal position entry
 - **📊 Real-time Analysis**: Continuous symbol monitoring with dynamic confidence scoring
@@ -14,7 +14,7 @@ An intelligent cryptocurrency trading bot powered by specialized AI agents that 
 - **📈 Confidence Scoring**: 0-100% reliability metrics for every trading signal
 - **⚙️ User Configurable**: Customizable take profit levels and risk management
 - **🔐 Secure Authentication**: Kinde Auth integration with protected routes
-- **🧪 Comprehensive Testing**: Unit tests, Playwright E2E, and Stagehand AI-powered testing
+- **🧪 Comprehensive Testing**: 293 tests with 96%+ pass rate (Vitest, Playwright, Stagehand AI-powered testing)
 
 ## 🏗️ Multi-Agent Architecture
 
@@ -42,21 +42,29 @@ Revolutionary TypeScript-based system with specialized AI agents:
                  └────────┘
 ```
 
-### 🎯 **Specialized Agents**
+### 🎯 **Specialized Agents (16+ Active)**
 
 **Core Trading Agents:**
 - **📅 CalendarAgent**: New listing discovery and launch timing analysis
-- **🔍 PatternDiscoveryAgent**: Ready state detection and pattern validation
+- **🔍 PatternDiscoveryAgent**: Ready state detection and pattern validation (`sts:2, st:2, tt:4`)
 - **📊 SymbolAnalysisAgent**: Real-time readiness assessment and market analysis
 - **🌐 MexcApiAgent**: API interactions and trading signal analysis
-- **🎭 MexcOrchestrator**: Multi-agent workflow coordination
+- **🎯 StrategyAgent**: AI-powered trading strategy creation and optimization
 
-**Supporting Agents:**
-- **🛡️ SafetyBaseAgent**: Risk monitoring and circuit breaker functionality
-- **🔧 ErrorRecoveryAgent**: Intelligent error handling and recovery
-- **⚖️ RiskManagerAgent**: Position sizing and risk assessment
-- **🔄 ReconciliationAgent**: Data consistency and validation
-- **🧪 SimulationAgent**: Strategy testing and backtesting
+**Risk Management & Safety Agents:**
+- **🛡️ SafetyBaseAgent**: Core safety monitoring and circuit breaker controls
+- **📊 SafetyMonitorAgent**: Real-time safety monitoring and alerts
+- **⚖️ RiskManagerAgent**: Position sizing, risk metrics, and circuit breakers
+- **🔄 ReconciliationAgent**: Balance verification and position tracking
+- **🧪 SimulationAgent**: Strategy backtesting and paper trading validation
+- **🔧 ErrorRecoveryAgent**: System health monitoring and automatic recovery
+
+**Orchestration & Coordination:**
+- **🎭 MultiAgentOrchestrator**: Workflow coordination and result synthesis
+- **🎪 MexcOrchestrator**: Specialized MEXC workflow execution
+- **👨‍💼 AgentManager**: Agent lifecycle and health management
+- **🌐 WebSocketAgentBridge**: Real-time data integration bridge
+- **📋 Additional specialized agents** for pattern embedding, data fetching, and analysis
 
 ### 🚀 **Technology Stack**
 
@@ -65,8 +73,8 @@ Revolutionary TypeScript-based system with specialized AI agents:
 - **Authentication**: Kinde Auth with secure session management
 - **Workflows**: Inngest for reliable background task orchestration
 - **Database**: Drizzle ORM with TursoDB (distributed SQLite) for global edge performance
-- **Data Management**: TanStack Query for real-time data fetching and caching
-- **Testing**: Vitest (unit), Playwright (E2E), Stagehand (AI-powered E2E)
+- **Data Management**: TanStack Query v5.80.6 for real-time data fetching and caching
+- **Testing**: Vitest (unit), Playwright (E2E), Stagehand v2.3.0 (AI-powered E2E)
 - **Code Quality**: Biome.js for formatting and linting, TypeScript for type safety
 - **Deployment**: Vercel with automatic scaling and edge optimization
 
@@ -157,7 +165,7 @@ Use the convenient Makefile commands:
 make dev
 
 # Or start individually:
-make dev-next    # Next.js on port 3000
+make dev-next    # Next.js on port 3008
 make dev-inngest # Inngest dev server on port 8288
 ```
 
@@ -363,7 +371,7 @@ For detailed deployment instructions, see [docs/deployment/DEPLOYMENT.md](docs/d
 
 ### Testing Framework
 
-The project includes comprehensive testing with multiple frameworks:
+The project includes comprehensive testing with **293 tests achieving 96%+ pass rate** across multiple frameworks:
 
 #### **Unit Tests (Vitest)**
 ```bash

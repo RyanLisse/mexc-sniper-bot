@@ -38,21 +38,29 @@ bun run type-check            # TypeScript validation
 - `.env.example` - Environment variable template
 
 ## 🧠 Agent Architecture
-8+ specialized TypeScript agents with OpenAI GPT-4 integration for MEXC trading automation.
+16+ specialized TypeScript agents with OpenAI GPT-4 integration for MEXC trading automation.
 
 ### Core Trading Agents
+- **BaseAgent**: Foundation class with OpenAI integration and caching
 - **MexcApiAgent**: Intelligent API integration and data analysis
 - **PatternDiscoveryAgent**: Ready state pattern detection (sts:2, st:2, tt:4)
 - **CalendarAgent**: New listing discovery and launch timing
 - **SymbolAnalysisAgent**: Real-time readiness assessment
-- **MexcOrchestrator**: Multi-agent workflow coordination
+- **StrategyAgent**: AI-powered trading strategy creation
 
-### Supporting Agents
-- **SafetyBaseAgent**: Risk monitoring and circuit breakers
-- **ErrorRecoveryAgent**: Intelligent error handling and recovery
-- **RiskManagerAgent**: Position sizing and risk assessment
-- **ReconciliationAgent**: Data consistency validation
-- **SimulationAgent**: Strategy testing and backtesting
+### Risk Management & Safety Agents
+- **SafetyBaseAgent**: Core safety monitoring and circuit breaker controls
+- **SafetyMonitorAgent**: Real-time safety monitoring and alerts
+- **RiskManagerAgent**: Position sizing, risk metrics, and circuit breakers
+- **ErrorRecoveryAgent**: System health monitoring and automatic recovery
+- **ReconciliationAgent**: Balance verification and position tracking
+- **SimulationAgent**: Strategy backtesting and paper trading validation
+
+### Orchestration & Coordination
+- **MultiAgentOrchestrator**: Workflow coordination and result synthesis
+- **MexcOrchestrator**: Specialized MEXC workflow execution
+- **AgentManager**: Agent lifecycle and health management
+- **WebSocketAgentBridge**: Real-time data integration bridge
 
 ## ⚡ Testing & Quality
 Comprehensive testing framework with multiple approaches:
@@ -62,7 +70,7 @@ Comprehensive testing framework with multiple approaches:
 - **Integration Tests**: `tests/integration/` (Agent system testing)
 
 **Quality Standards:**
-- ✅ All 96 tests must pass
+- ✅ 293 tests with 96%+ pass rate
 - ✅ TypeScript compiles with 0 errors
 - ✅ Build completes successfully
 - ✅ Linting passes (some warnings OK)

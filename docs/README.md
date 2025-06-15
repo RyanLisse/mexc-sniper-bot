@@ -60,7 +60,7 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 ## 🔍 Key Features Documentation
 
 ### Multi-Agent AI System
-- 8+ specialized TypeScript agents for comprehensive trading automation
+- 16+ specialized TypeScript agents for comprehensive trading automation
 - OpenAI GPT-4 integration for intelligent decision making
 - Event-driven workflows with Inngest for reliable background processing
 - Real-time MEXC pattern recognition (sts:2, st:2, tt:4)
@@ -84,7 +84,7 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 - **Concurrency**: Transaction locking system for safe operations
 - **Protection**: Rate limiting and CSRF protection
 - **Testing**: Comprehensive test suite with Vitest, Playwright, and Stagehand
-- **Quality**: 100% test pass rate requirement with TypeScript strict mode
+- **Quality**: 96%+ test pass rate (293 tests) with TypeScript strict mode
 
 ## 📝 Documentation Standards
 
@@ -119,7 +119,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for general contribution guidelines.
 This documentation is continuously updated to reflect the current system architecture.
 
 **Latest Updates (January 2025):**
-- ✅ Updated to reflect 8+ specialized TypeScript agents
+- ✅ Updated to reflect 16+ specialized TypeScript agents
 - ✅ Added comprehensive Stagehand E2E testing documentation
 - ✅ Documented Kinde Auth integration and security features
 - ✅ Updated technology stack (Next.js 15, React 19, TanStack Query)
