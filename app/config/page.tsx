@@ -27,6 +27,7 @@ import {
 import { useState, useEffect } from "react";
 import { useAuth } from "@/src/lib/kinde-auth-client";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
+import { ApiCredentialsForm } from "@/src/components/api-credentials-form";
 
 // TypeScript interfaces for system status
 interface SystemStatus {
@@ -943,6 +944,12 @@ export default function SystemCheckPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* API Credentials Form */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Configure API Credentials</h3>
+                <ApiCredentialsForm userId={getUserId()} />
               </div>
 
               {/* Security Notice */}
