@@ -163,13 +163,14 @@ interface CalendarEntry {
   projectName?: string;
 }
 
-// Helper function to filter upcoming coins
+// Helper function to filter upcoming coins - only show listings starting from today and newer
 function filterUpcomingCoins(calendarData: CalendarEntry[]): CalendarEntry[] {
   return calendarData.filter((item) => {
     try {
       const launchTime = new Date(item.firstOpenTime);
-      const now = new Date();
-      return launchTime.getTime() > now.getTime();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to start of today (00:00:00)
+      return launchTime.getTime() >= today.getTime();
     } catch {
       return false;
     }

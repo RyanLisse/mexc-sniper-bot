@@ -4,7 +4,7 @@ An intelligent cryptocurrency trading bot powered by specialized AI agents that 
 
 ## 🚀 Key Features
 
-- **🤖 Multi-Agent AI System**: 8+ specialized TypeScript agents working together for comprehensive analysis
+- **🤖 Multi-Agent AI System**: 12 specialized TypeScript agents working together for comprehensive analysis
 - **🔍 Intelligent Pattern Discovery**: AI-powered detection of MEXC ready state patterns (sts:2, st:2, tt:4)
 - **⏰ Advanced Timing**: 3.5+ hour advance detection for optimal position entry
 - **📊 Real-time Analysis**: Continuous symbol monitoring with dynamic confidence scoring

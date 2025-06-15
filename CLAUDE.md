@@ -1,13 +1,13 @@
 # Claude Code Configuration - MEXC Sniper Bot AI System
 
 ## Project Overview
-This is a sophisticated TypeScript-based cryptocurrency trading bot featuring an advanced **Multi-Agent AI Architecture** designed for MEXC exchange. The system employs **11 specialized AI agents** orchestrated through **Inngest workflows** for automated pattern discovery, risk management, and trading strategy execution.
+This is a sophisticated TypeScript-based cryptocurrency trading bot featuring an advanced **Multi-Agent AI Architecture** designed for MEXC exchange. The system employs **12 specialized AI agents** orchestrated through **Inngest workflows** for automated pattern discovery, risk management, and trading strategy execution.
 
 ## AI Agent Architecture Overview
 
 ### 🤖 **Multi-Agent System** (`src/mexc-agents/`)
 
-The system features **11 specialized AI agents** powered by **OpenAI GPT-4** with intelligent caching, error recovery, and coordinated workflows:
+The system features **12 specialized AI agents** powered by **OpenAI GPT-4** with intelligent caching, error recovery, and coordinated workflows:
 
 #### **Core Trading Agents**
 1. **BaseAgent** (`base-agent.ts`) - Foundation class with OpenAI integration, caching, and error handling
@@ -19,10 +19,11 @@ The system features **11 specialized AI agents** powered by **OpenAI GPT-4** wit
 
 #### **Risk Management & Safety Agents**  
 7. **SafetyBaseAgent** (`safety-base-agent.ts`) - Core safety monitoring and circuit breaker controls
-8. **RiskManagerAgent** (`risk-manager-agent.ts`) - Position sizing, risk metrics, and circuit breakers
-9. **SimulationAgent** (`simulation-agent.ts`) - Strategy backtesting and paper trading validation
-10. **ReconciliationAgent** (`reconciliation-agent.ts`) - Balance verification and position tracking
-11. **ErrorRecoveryAgent** (`error-recovery-agent.ts`) - System health monitoring and automatic recovery
+8. **SafetyMonitorAgent** (`safety-monitor-agent.ts`) - Real-time safety monitoring and alerts
+9. **RiskManagerAgent** (`risk-manager-agent.ts`) - Position sizing, risk metrics, and circuit breakers
+10. **SimulationAgent** (`simulation-agent.ts`) - Strategy backtesting and paper trading validation
+11. **ReconciliationAgent** (`reconciliation-agent.ts`) - Balance verification and position tracking
+12. **ErrorRecoveryAgent** (`error-recovery-agent.ts`) - System health monitoring and automatic recovery
 
 #### **Orchestration & Coordination**
 - **MultiAgentOrchestrator** (`multi-agent-orchestrator.ts`) - Workflow coordination and result synthesis
@@ -31,7 +32,7 @@ The system features **11 specialized AI agents** powered by **OpenAI GPT-4** wit
 
 ### Standard Build Commands
 - `npm run build`: Build the project
-- `npm run test`: Run the test suite (96 tests with 100% pass rate)
+- `npm run test`: Run the test suite (280+ tests with high pass rate)
 - `npm run lint`: Run linter and format checks
 - `npm run typecheck`: Run TypeScript type checking
 
@@ -127,7 +128,7 @@ interface AgentWorkflowResult {
 ## 🧪 **Testing & Quality Assurance**
 
 ### Testing Strategy
-- **96 tests with 100% pass rate** - Comprehensive test coverage across all systems
+- **280+ tests with high pass rate** - Comprehensive test coverage across all systems
 - **Unit Tests** (`tests/unit/`) - Individual agent and service testing
 - **Integration Tests** (`tests/integration/`) - Multi-agent workflow testing
 - **E2E Tests** (`tests/e2e/`) - Full system and UI testing with Playwright
@@ -419,7 +420,7 @@ curl http://localhost:3008/api/query-performance
 - **Fault Tolerance** - Comprehensive error recovery and circuit breaker patterns
 - **Real-time Processing** - TanStack Query for live data synchronization
 - **Type Safety** - Strict TypeScript with zero compilation errors
-- **Comprehensive Testing** - 96 tests covering all agent interactions and workflows
+- **Comprehensive Testing** - 280+ tests covering all agent interactions and workflows
 
 ### Agent Communication Flow
 ```
@@ -433,7 +434,7 @@ Safety Monitoring ← Reconciliation Agent ← Error Recovery Agent
 ```
 
 ### Key Features
-- **11 Specialized AI Agents** with distinct roles and expertise
+- **12 Specialized AI Agents** with distinct roles and expertise
 - **Pattern Detection Algorithm** - `sts:2, st:2, tt:4` ready state recognition
 - **3.5+ Hour Advance Detection** - Early opportunity identification
 - **Multi-Layer Safety System** - Risk management and circuit breakers
@@ -443,7 +444,7 @@ Safety Monitoring ← Reconciliation Agent ← Error Recovery Agent
 ## 📋 **Important Development Notes**
 
 ### Before Making Changes
-- **Run all tests** (`npm run test`) - 96 tests must pass
+- **Run all tests** (`npm run test`) - 280+ tests must pass
 - **Check TypeScript** (`npm run type-check`) - Zero errors required
 - **Verify agent health** - Ensure OpenAI API access and agent caches
 - **Test workflows** - Validate Inngest integration and multi-agent coordination
