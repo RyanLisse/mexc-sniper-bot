@@ -1,6 +1,6 @@
-import { db, apiCredentials } from '@/src/db';
-import { eq, and } from 'drizzle-orm';
-import { getEncryptionService } from './secure-encryption-service';
+import { apiCredentials, db } from "@/src/db";
+import { and, eq } from "drizzle-orm";
+import { getEncryptionService } from "./secure-encryption-service";
 
 export interface DecryptedCredentials {
   apiKey: string;
@@ -15,27 +15,26 @@ export interface DecryptedCredentials {
  * Get decrypted API credentials for a specific user and provider
  */
 export async function getUserCredentials(
-  userId: string, 
-  provider: string = 'mexc'
+  userId: string,
+  provider = "mexc"
 ): Promise<DecryptedCredentials | null> {
   try {
     // Query the database for user credentials
     const result = await db
       .select()
       .from(apiCredentials)
-      .where(and(
-        eq(apiCredentials.userId, userId),
-        eq(apiCredentials.provider, provider)
-      ))
+      .where(and(eq(apiCredentials.userId, userId), eq(apiCredentials.provider, provider)))
       .limit(1);
 
     if (result.length === 0) {
-      console.log(`[UserCredentialsService] No credentials found for user ${userId} and provider ${provider}`);
+      console.log(
+        `[UserCredentialsService] No credentials found for user ${userId} and provider ${provider}`
+      );
       return null;
     }
 
     const creds = result[0];
-    
+
     if (!creds.isActive) {
       console.log(`[UserCredentialsService] Credentials found but inactive for user ${userId}`);
       return null;
@@ -51,13 +50,16 @@ export async function getUserCredentials(
     try {
       apiKey = encryptionService.decrypt(creds.encryptedApiKey);
       secretKey = encryptionService.decrypt(creds.encryptedSecretKey);
-      
+
       if (creds.encryptedPassphrase) {
         passphrase = encryptionService.decrypt(creds.encryptedPassphrase);
       }
     } catch (decryptError) {
-      console.error(`[UserCredentialsService] Failed to decrypt credentials for user ${userId}:`, decryptError);
-      throw new Error('Failed to decrypt API credentials');
+      console.error(
+        `[UserCredentialsService] Failed to decrypt credentials for user ${userId}:`,
+        decryptError
+      );
+      throw new Error("Failed to decrypt API credentials");
     }
 
     // Update last used timestamp
@@ -74,7 +76,6 @@ export async function getUserCredentials(
       isActive: creds.isActive,
       lastUsed: creds.lastUsed || undefined,
     };
-
   } catch (error) {
     console.error(`[UserCredentialsService] Error getting credentials for user ${userId}:`, error);
     throw error;
@@ -84,19 +85,18 @@ export async function getUserCredentials(
 /**
  * Check if user has active credentials for a provider
  */
-export async function hasUserCredentials(
-  userId: string, 
-  provider: string = 'mexc'
-): Promise<boolean> {
+export async function hasUserCredentials(userId: string, provider = "mexc"): Promise<boolean> {
   try {
     const result = await db
       .select({ id: apiCredentials.id })
       .from(apiCredentials)
-      .where(and(
-        eq(apiCredentials.userId, userId),
-        eq(apiCredentials.provider, provider),
-        eq(apiCredentials.isActive, true)
-      ))
+      .where(
+        and(
+          eq(apiCredentials.userId, userId),
+          eq(apiCredentials.provider, provider),
+          eq(apiCredentials.isActive, true)
+        )
+      )
       .limit(1);
 
     return result.length > 0;

@@ -114,7 +114,9 @@ function createDatabase() {
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
 
   if (!hasNeonConfig()) {
-    throw new Error("NeonDB configuration required: DATABASE_URL must be set with postgresql:// protocol");
+    throw new Error(
+      "NeonDB configuration required: DATABASE_URL must be set with postgresql:// protocol"
+    );
   }
 
   // Debug logging (remove in production)

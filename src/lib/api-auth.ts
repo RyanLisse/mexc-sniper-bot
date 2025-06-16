@@ -1,4 +1,5 @@
 import { HTTP_STATUS, createErrorResponse } from "@/src/lib/api-response";
+import { shouldBypassRateLimit } from "@/src/lib/bypass-rate-limit";
 import { getSession, requireAuth } from "@/src/lib/kinde-auth";
 import {
   checkRateLimit,
@@ -7,7 +8,6 @@ import {
   isIPSuspicious,
   logSecurityEvent,
 } from "@/src/lib/rate-limiter";
-import { shouldBypassRateLimit } from "@/src/lib/bypass-rate-limit";
 import type { NextRequest } from "next/server";
 
 /**

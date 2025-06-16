@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface ApiCredentials {
   id?: number;
@@ -28,7 +28,7 @@ export interface SaveApiCredentialsRequest {
 // Fetch API credentials for a user and provider
 export function useApiCredentials(userId: string, provider = "mexc") {
   const { user, isAuthenticated } = useAuth();
-  
+
   return useQuery({
     queryKey: ["api-credentials", userId, provider],
     queryFn: async (): Promise<ApiCredentials | null> => {
@@ -62,7 +62,7 @@ export function useSaveApiCredentials() {
       if (!isAuthenticated || !user?.id) {
         throw new Error("Authentication required to save credentials");
       }
-      
+
       // Ensure user can only save their own credentials
       if (user.id !== data.userId) {
         throw new Error("Access denied: You can only save your own credentials");
@@ -103,7 +103,7 @@ export function useDeleteApiCredentials() {
       if (!isAuthenticated || !user?.id) {
         throw new Error("Authentication required to delete credentials");
       }
-      
+
       // Ensure user can only delete their own credentials
       if (user.id !== userId) {
         throw new Error("Access denied: You can only delete your own credentials");
@@ -142,7 +142,7 @@ export function useTestApiCredentials() {
       if (!isAuthenticated || !user?.id) {
         throw new Error("Authentication required to test credentials");
       }
-      
+
       // Ensure user can only test their own credentials
       if (user.id !== userId) {
         throw new Error("Access denied: You can only test your own credentials");

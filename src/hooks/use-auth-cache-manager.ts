@@ -1,5 +1,5 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 /**
@@ -15,14 +15,14 @@ export function useAuthCacheManager() {
       // When a user is authenticated, clear any caches that might contain
       // data from previous sessions or anonymous users
       const userId = user.id;
-      
+
       // Clear any old localStorage entries that might conflict
       const keysToRemove = [
         "mexc-user-id", // Random user ID cache
         "pattern-sniper-monitoring", // If it contains user-specific data
       ];
-      
-      keysToRemove.forEach(key => {
+
+      keysToRemove.forEach((key) => {
         const existing = localStorage.getItem(key);
         if (existing && existing !== userId) {
           localStorage.removeItem(key);
@@ -38,17 +38,15 @@ export function useAuthCacheManager() {
             const queryKey = query.queryKey;
             // Clear queries that include user-related data
             return (
-              Array.isArray(queryKey) && 
-              (
-                queryKey.includes("api-credentials") ||
+              Array.isArray(queryKey) &&
+              (queryKey.includes("api-credentials") ||
                 queryKey.includes("account-balance") ||
                 queryKey.includes("user-preferences") ||
-                queryKey.includes("transactions")
-              )
+                queryKey.includes("transactions"))
             );
-          }
+          },
         });
-        
+
         // Mark as cleared for this session
         sessionStorage.setItem(`cache-cleared-${userId}`, "true");
       }
@@ -61,13 +59,13 @@ export function useAuthCacheManager() {
       queryClient.clear();
       localStorage.removeItem("mexc-user-id");
       localStorage.removeItem("pattern-sniper-monitoring");
-      
+
       // Clear all session markers
-      Object.keys(sessionStorage).forEach(key => {
-        if (key.startsWith('cache-cleared-')) {
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.startsWith("cache-cleared-")) {
           sessionStorage.removeItem(key);
         }
       });
-    }
+    },
   };
 }

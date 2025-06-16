@@ -96,17 +96,41 @@ export async function createTestDatabase(): Promise<TestDbSetup> {
 
 /**
  * Create a test user for foreign key requirements
+ * Handles existing users to prevent duplicate key violations
  */
 export async function createTestUser(
   db: ReturnType<typeof drizzle>, 
   userId: string = 'test-user'
 ) {
-  return await db.insert(schema.user).values({
-    id: userId,
-    name: 'Test User',
-    email: `${userId}@example.com`,
-    emailVerified: false,
-  }).returning();
+  try {
+    // Check if user already exists
+    const existingUser = await db.query.user?.findFirst({
+      where: eq(schema.user.id, userId)
+    });
+    
+    if (existingUser) {
+      console.log(`[Test] User ${userId} already exists, returning existing user`);
+      return [existingUser];
+    }
+    
+    // Create new user if doesn't exist
+    return await db.insert(schema.user).values({
+      id: userId,
+      name: 'Test User',
+      email: `${userId}@example.com`,
+      emailVerified: false,
+    }).returning();
+  } catch (error: any) {
+    // If duplicate key error, try to fetch existing user
+    if (error?.message?.includes('duplicate key') || error?.message?.includes('unique constraint')) {
+      console.log(`[Test] User ${userId} exists (duplicate key), fetching existing user`);
+      const existingUser = await db.query.user?.findFirst({
+        where: eq(schema.user.id, userId)
+      });
+      return existingUser ? [existingUser] : [];
+    }
+    throw error;
+  }
 }
 
 /**

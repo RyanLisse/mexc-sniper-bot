@@ -273,30 +273,30 @@ const defaultMultiLevelConfig: MultiLevelTakeProfitConfig = {
       level: "TP1",
       profitPercentage: 30,
       sellPortion: 25,
-      actionWhenReached: "Sell 25%"
+      actionWhenReached: "Sell 25%",
     },
     {
-      id: "tp2", 
+      id: "tp2",
       level: "TP2",
       profitPercentage: 50,
       sellPortion: 25,
-      actionWhenReached: "Sell another 25%"
+      actionWhenReached: "Sell another 25%",
     },
     {
       id: "tp3",
-      level: "TP3", 
+      level: "TP3",
       profitPercentage: 75,
       sellPortion: 25,
-      actionWhenReached: "Sell another 25%"
+      actionWhenReached: "Sell another 25%",
     },
     {
       id: "tp4",
       level: "TP4",
       profitPercentage: 100,
       sellPortion: 25,
-      actionWhenReached: "Sell final 25%"
-    }
-  ]
+      actionWhenReached: "Sell final 25%",
+    },
+  ],
 };
 
 // Hook to get multi-level take-profit configuration

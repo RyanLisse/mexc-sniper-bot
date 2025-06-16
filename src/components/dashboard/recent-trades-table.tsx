@@ -96,7 +96,7 @@ export function RecentTradesTable({ userId }: RecentTradesTableProps) {
       const params = new URLSearchParams({
         userId,
         limit: "10",
-        transactionType: "complete_trade"
+        transactionType: "complete_trade",
       });
       const response = await fetch(`/api/transactions?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch trades");
