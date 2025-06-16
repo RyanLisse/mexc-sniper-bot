@@ -31,6 +31,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/src/lib/kinde-auth-client";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { ApiCredentialsForm } from "@/src/components/api-credentials-form";
+import { EditableTakeProfitTable } from "@/src/components/editable-take-profit-table";
+import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "@/src/hooks/use-user-preferences";
 
 // TypeScript interfaces for system status
 interface SystemStatus {
@@ -1347,7 +1349,103 @@ export default function SystemCheckPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Test Section: Editable Take-Profit Table */}
+        <TestEditableTakeProfitSection userId={getUserId()} />
       </div>
     </DashboardLayout>
+  );
+}
+
+// Test component for the editable take-profit table
+function TestEditableTakeProfitSection({ userId }: { userId: string }) {
+  const { config: multiLevelConfig } = useMultiLevelTakeProfit(userId);
+  const updateMultiLevelTakeProfit = useUpdateMultiLevelTakeProfit();
+
+  const handleSave = async (levels: any[]) => {
+    console.log('Saving take-profit levels:', levels);
+    
+    // Update the multi-level configuration
+    const updatedConfig = {
+      ...multiLevelConfig,
+      levels: levels.map((level, index) => ({
+        ...level,
+        level: level.level || `TP${index + 1}`, // Ensure level is set
+      })),
+      enabled: true, // Enable when levels are saved
+    };
+
+    try {
+      await updateMultiLevelTakeProfit.mutateAsync({
+        userId,
+        config: updatedConfig,
+      });
+      console.log('✅ Successfully saved take-profit configuration');
+    } catch (error) {
+      console.error('❌ Failed to save take-profit configuration:', error);
+      throw error; // Re-throw to trigger error handling in component
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-orange-500/10 rounded-lg">
+            <Target className="h-5 w-5 text-orange-500" />
+          </div>
+          <div>
+            <CardTitle className="text-xl">🧪 Test: Editable Take-Profit Table</CardTitle>
+            <CardDescription>
+              Test the new editable take-profit levels functionality with comprehensive validation
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-start space-x-2">
+              <Target className="h-5 w-5 text-blue-500 mt-0.5" />
+              <div className="text-sm text-blue-700 dark:text-blue-300">
+                <div className="font-medium">Agent 5 Testing - Features to Test:</div>
+                <div className="mt-1 space-y-1">
+                  <div>• ✅ Comprehensive input validation (profit %, sell portions, entry price)</div>
+                  <div>• ✅ Real-time error highlighting and user feedback</div>
+                  <div>• ✅ Dynamic target price calculations</div>
+                  <div>• ✅ Save integration with user preferences system</div>
+                  <div>• ✅ Logical progression validation (increasing profit targets)</div>
+                  <div>• ✅ 100% sell portion requirement validation</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <EditableTakeProfitTable
+            entryPrice={0.0125}
+            levels={multiLevelConfig?.levels || []}
+            onSave={handleSave}
+            isLoading={updateMultiLevelTakeProfit.isPending}
+            className="mt-4"
+          />
+
+          {/* Test Status */}
+          <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="text-sm">
+              <div className="font-medium text-green-700 dark:text-green-300 mb-2">
+                Testing Instructions:
+              </div>
+              <div className="space-y-1 text-green-600 dark:text-green-400">
+                <div>1. Click "Edit Table" to start editing</div>
+                <div>2. Try invalid values (negative numbers, profit % decreasing, portions not totaling 100%)</div>
+                <div>3. Observe real-time validation errors and field highlighting</div>
+                <div>4. Enter valid configuration and save</div>
+                <div>5. Check browser console for save success/error messages</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

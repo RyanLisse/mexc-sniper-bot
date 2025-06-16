@@ -419,6 +419,17 @@ export class MultiPhaseTradingService {
     return PREDEFINED_STRATEGIES;
   }
 
+  // Validate a trading strategy configuration
+  validateStrategy(strategyConfig: TradingStrategyConfig): boolean {
+    try {
+      TradingStrategyConfigSchema.parse(strategyConfig);
+      return true;
+    } catch (error) {
+      console.error("Strategy validation failed:", error);
+      return false;
+    }
+  }
+
   // Helper method to determine risk level from strategy levels
   private determineRiskLevel(levels: PriceMultiplier[]): "low" | "medium" | "high" {
     const avgTarget = levels.reduce((sum, level) => sum + level.percentage, 0) / levels.length;

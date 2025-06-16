@@ -11,6 +11,23 @@ export interface TakeProfitLevels {
   custom?: number; // User-defined custom level
 }
 
+// New interface for multi-level take-profit configuration
+export interface MultiLevelTakeProfitLevel {
+  id: string;
+  level: string;
+  profitPercentage: number;
+  sellPortion: number;
+  actionWhenReached: string;
+}
+
+export interface MultiLevelTakeProfitConfig {
+  enabled: boolean;
+  entryPrice?: number;
+  levels: MultiLevelTakeProfitLevel[];
+  trailingStopEnabled: boolean;
+  trailingStopPercentage?: number;
+}
+
 export interface UserTradingPreferences {
   userId: string;
   defaultBuyAmountUsdt: number;
@@ -29,6 +46,8 @@ export interface UserTradingPreferences {
   autoBuyEnabled: boolean; // Auto-buy on ready state
   autoSellEnabled: boolean; // Auto-sell at targets
   autoSnipeEnabled: boolean; // Auto-snipe by default
+  // Multi-Level Take-Profit Configuration
+  multiLevelTakeProfit?: MultiLevelTakeProfitConfig;
 }
 
 // Hook to get user preferences
@@ -237,6 +256,71 @@ export function useUpdateExitStrategyPreferences() {
         autoBuyEnabled: data.autoBuyEnabled,
         autoSellEnabled: data.autoSellEnabled,
         autoSnipeEnabled: data.autoSnipeEnabled,
+      });
+    },
+  });
+}
+
+// Default multi-level take-profit configuration
+const defaultMultiLevelConfig: MultiLevelTakeProfitConfig = {
+  enabled: false,
+  entryPrice: 0.01,
+  trailingStopEnabled: false,
+  trailingStopPercentage: 5,
+  levels: [
+    {
+      id: "tp1",
+      level: "TP1",
+      profitPercentage: 30,
+      sellPortion: 25,
+      actionWhenReached: "Sell 25%"
+    },
+    {
+      id: "tp2", 
+      level: "TP2",
+      profitPercentage: 50,
+      sellPortion: 25,
+      actionWhenReached: "Sell another 25%"
+    },
+    {
+      id: "tp3",
+      level: "TP3", 
+      profitPercentage: 75,
+      sellPortion: 25,
+      actionWhenReached: "Sell another 25%"
+    },
+    {
+      id: "tp4",
+      level: "TP4",
+      profitPercentage: 100,
+      sellPortion: 25,
+      actionWhenReached: "Sell final 25%"
+    }
+  ]
+};
+
+// Hook to get multi-level take-profit configuration
+export function useMultiLevelTakeProfit(userId: string) {
+  const { data: preferences } = useUserPreferences(userId);
+
+  return {
+    config: preferences?.multiLevelTakeProfit || defaultMultiLevelConfig,
+    isEnabled: preferences?.multiLevelTakeProfit?.enabled || false,
+  };
+}
+
+// Hook to update multi-level take-profit configuration
+export function useUpdateMultiLevelTakeProfit() {
+  const updatePreferences = useUpdateUserPreferences();
+
+  return useMutation({
+    mutationFn: async (data: {
+      userId: string;
+      config: MultiLevelTakeProfitConfig;
+    }) => {
+      return updatePreferences.mutateAsync({
+        userId: data.userId,
+        multiLevelTakeProfit: data.config,
       });
     },
   });
