@@ -2,8 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install --legacy-peer-deps",
+  "installCommand": "npm ci",
   "framework": "nextjs",
+  "runtime": "nodejs20.x",
   "env": {
     "ENVIRONMENT": "production",
     "NODE_ENV": "production"
@@ -11,7 +12,9 @@
   "build": {
     "env": {
       "TURBO_CACHE": "1",
-      "VERCEL_SKIP_USAGE_INSIGHTS": "1"
+      "VERCEL_SKIP_USAGE_INSIGHTS": "1",
+      "SKIP_ENV_VALIDATION": "1",
+      "NEXT_TELEMETRY_DISABLED": "1"
     }
   },
   "headers": [
