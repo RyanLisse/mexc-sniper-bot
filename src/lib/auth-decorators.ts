@@ -63,15 +63,84 @@ export function userBodyRoute<T extends any[]>(
   return withAuthOptions(
     async (request: NextRequest, user: any, ...args: T) => {
       try {
-        const body = await request.json();
+        // Check Content-Type header
+        const contentType = request.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+          return new Response(
+            JSON.stringify(
+              createErrorResponse("Invalid content type", {
+                message: "Request must use Content-Type: application/json",
+                code: "INVALID_CONTENT_TYPE",
+                received: contentType || 'none'
+              })
+            ),
+            {
+              status: HTTP_STATUS.BAD_REQUEST,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+
+        // Enhanced request debugging
+        console.log('[DEBUG] Request details:', {
+          method: request.method,
+          contentType: request.headers.get('content-type'),
+          hasBody: request.body !== null,
+          userAgent: request.headers.get('user-agent'),
+          userId: user?.id,
+          timestamp: new Date().toISOString()
+        });
+
+        let body: any;
+        try {
+          body = await request.json();
+          console.log('[DEBUG] JSON parsing successful, body keys:', Object.keys(body || {}));
+        } catch (jsonError) {
+          console.error('[DEBUG] JSON parsing failed:', {
+            error: jsonError instanceof Error ? jsonError.message : String(jsonError),
+            errorType: jsonError?.constructor?.name,
+            contentType: request.headers.get('content-type'),
+            bodyConsumed: request.bodyUsed
+          });
+          
+          let errorDetails = "Request body must be valid JSON";
+          if (jsonError instanceof SyntaxError) {
+            errorDetails = `JSON parsing failed: ${jsonError.message}`;
+          }
+
+          return new Response(
+            JSON.stringify(
+              createErrorResponse("Invalid request body", {
+                message: errorDetails,
+                code: "INVALID_JSON",
+                details: jsonError instanceof Error ? jsonError.message : String(jsonError),
+                debug: {
+                  contentType: request.headers.get('content-type'),
+                  bodyUsed: request.bodyUsed,
+                  hasBody: request.body !== null
+                }
+              })
+            ),
+            {
+              status: HTTP_STATUS.BAD_REQUEST,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+
         const userId = body.userId;
 
         if (!userId) {
+          console.log('[DEBUG] Missing userId in body:', Object.keys(body || {}));
           return new Response(
             JSON.stringify(
               createErrorResponse("User ID required", {
                 message: "userId field is required in request body",
                 code: "MISSING_USER_ID",
+                debug: {
+                  receivedFields: Object.keys(body || {}),
+                  bodyType: typeof body
+                }
               })
             ),
             {
@@ -82,6 +151,10 @@ export function userBodyRoute<T extends any[]>(
         }
 
         if (user.id !== userId) {
+          console.log('[DEBUG] User ID mismatch:', { 
+            authenticatedUserId: user.id, 
+            bodyUserId: userId 
+          });
           return new Response(
             JSON.stringify(
               createErrorResponse("Access denied", {
@@ -96,21 +169,29 @@ export function userBodyRoute<T extends any[]>(
           );
         }
 
+        console.log('[DEBUG] Request validation successful, proceeding to handler');
         return await handler(request, user, body, ...args);
       } catch (error) {
         if (error instanceof Response) {
           return error;
         }
 
+        console.error('[DEBUG] Unexpected error in userBodyRoute:', {
+          error: error instanceof Error ? error.message : String(error),
+          errorType: error?.constructor?.name,
+          stack: error instanceof Error ? error.stack : undefined
+        });
+
         return new Response(
           JSON.stringify(
-            createErrorResponse("Invalid request body", {
-              message: "Request body must be valid JSON",
-              code: "INVALID_JSON",
+            createErrorResponse("Internal server error", {
+              message: "An unexpected error occurred while processing the request",
+              code: "INTERNAL_ERROR",
+              details: error instanceof Error ? error.message : String(error)
             })
           ),
           {
-            status: HTTP_STATUS.BAD_REQUEST,
+            status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
             headers: { "Content-Type": "application/json" },
           }
         );

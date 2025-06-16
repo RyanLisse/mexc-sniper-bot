@@ -68,17 +68,49 @@ export function useSaveApiCredentials() {
         throw new Error("Access denied: You can only save your own credentials");
       }
 
+      // Enhanced debugging for request
+      const requestPayload = JSON.stringify(data);
+      console.log('[DEBUG] Sending API credentials request:', {
+        url: '/api/api-credentials',
+        method: 'POST',
+        contentType: 'application/json',
+        userId: data.userId,
+        provider: data.provider || 'mexc',
+        hasApiKey: !!data.apiKey,
+        hasSecretKey: !!data.secretKey,
+        payloadLength: requestPayload.length,
+        timestamp: new Date().toISOString()
+      });
+
       const response = await fetch("/api/api-credentials", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: requestPayload,
+      });
+
+      console.log('[DEBUG] API credentials response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to save API credentials");
+        let errorDetails;
+        try {
+          errorDetails = await response.json();
+          console.error('[DEBUG] API credentials error response:', errorDetails);
+        } catch (parseError) {
+          console.error('[DEBUG] Failed to parse error response:', parseError);
+          errorDetails = { 
+            error: `HTTP ${response.status}: ${response.statusText}`,
+            details: 'Failed to parse error response'
+          };
+        }
+        
+        throw new Error(errorDetails.error || errorDetails.message || "Failed to save API credentials");
       }
 
       return response.json();
