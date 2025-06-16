@@ -443,7 +443,7 @@ export class DatabaseConnectionPool {
       const startTime = performance.now();
 
       // Test database connectivity
-      await db.run(sql`SELECT 1`);
+      await db.execute(sql`SELECT 1`);
 
       const responseTime = performance.now() - startTime;
 

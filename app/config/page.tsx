@@ -160,27 +160,47 @@ export default function SystemCheckPage() {
     }
   };
 
-  // Check MEXC API connectivity
+  // Check MEXC API connectivity and credentials
   const checkMexcApi = async (): Promise<SystemStatus> => {
     try {
       const response = await fetch('/api/mexc/connectivity');
       const data = await response.json();
       
-      if (data.connected) {
-        return {
-          status: 'healthy',
-          message: 'MEXC API is accessible',
-          details: data,
-          lastChecked: new Date().toISOString()
-        };
-      } else {
+      // Determine status based on connection and credentials
+      if (!data.connected) {
         return {
           status: 'unhealthy',
-          message: data.error || 'MEXC API not accessible',
+          message: data.error || 'MEXC API not reachable',
           details: data,
           lastChecked: new Date().toISOString()
         };
       }
+      
+      if (!data.hasCredentials) {
+        return {
+          status: 'warning',
+          message: 'MEXC API reachable but no credentials configured',
+          details: data,
+          lastChecked: new Date().toISOString()
+        };
+      }
+      
+      if (!data.credentialsValid) {
+        return {
+          status: 'unhealthy',
+          message: `MEXC credentials invalid: ${data.error || 'Authentication failed'}`,
+          details: data,
+          lastChecked: new Date().toISOString()
+        };
+      }
+      
+      // Fully connected with valid credentials
+      return {
+        status: 'healthy',
+        message: 'MEXC API fully connected with valid credentials',
+        details: data,
+        lastChecked: new Date().toISOString()
+      };
     } catch (error) {
       return {
         status: 'error',
@@ -717,7 +737,8 @@ export default function SystemCheckPage() {
                     <>
                       <Icon className={`h-4 w-4 ${color} ${systemState.mexcApi.status === 'loading' ? 'animate-spin' : ''}`} />
                       <span className="font-medium">
-                        {systemState.mexcApi.status === 'healthy' ? 'Connected' : 
+                        {systemState.mexcApi.status === 'healthy' ? 'Fully Connected' : 
+                         systemState.mexcApi.status === 'warning' ? 'Network Only' :
                          systemState.mexcApi.status === 'loading' ? 'Testing...' : 'Connection Failed'}
                       </span>
                     </>
@@ -727,13 +748,27 @@ export default function SystemCheckPage() {
               <p className="text-sm text-muted-foreground">
                 {systemState.mexcApi.message || 'Testing MEXC API connectivity...'}
               </p>
-              {systemState.credentials.mexc && (
-                <div className="mt-3 text-xs text-muted-foreground">
-                  <div>API Key: {systemState.credentials.mexc.hasApiKey ? '✓ Configured' : '✗ Missing'}</div>
-                  <div>Secret Key: {systemState.credentials.mexc.hasSecretKey ? '✓ Configured' : '✗ Missing'}</div>
-                  <div>Mode: {systemState.credentials.mexc.isTestnet ? 'Testnet' : 'Live'}</div>
-                </div>
-              )}
+              <div className="mt-3 text-xs text-muted-foreground">
+                {systemState.mexcApi.details?.hasCredentials !== undefined ? (
+                  <>
+                    <div>Credentials: {systemState.mexcApi.details.hasCredentials ? '✓ Configured' : '✗ Missing'}</div>
+                    {systemState.mexcApi.details.hasCredentials && (
+                      <div>Valid: {systemState.mexcApi.details.credentialsValid ? '✓ Authentication Success' : '✗ Authentication Failed'}</div>
+                    )}
+                    <div>Network: {systemState.mexcApi.details.connected ? '✓ MEXC API Reachable' : '✗ Network Issues'}</div>
+                    <div>Status: {systemState.mexcApi.details.status || 'Unknown'}</div>
+                  </>
+                ) : (
+                  // Fallback to old format if available
+                  systemState.credentials.mexc && (
+                    <>
+                      <div>API Key: {systemState.credentials.mexc.hasApiKey ? '✓ Configured' : '✗ Missing'}</div>
+                      <div>Secret Key: {systemState.credentials.mexc.hasSecretKey ? '✓ Configured' : '✗ Missing'}</div>
+                      <div>Mode: {systemState.credentials.mexc.isTestnet ? 'Testnet' : 'Live'}</div>
+                    </>
+                  )
+                )}
+              </div>
             </CardContent>
           </Card>
 
