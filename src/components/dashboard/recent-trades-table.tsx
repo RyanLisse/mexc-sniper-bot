@@ -85,16 +85,26 @@ function TradeRows({
   );
 }
 
-export function RecentTradesTable() {
+interface RecentTradesTableProps {
+  userId: string;
+}
+
+export function RecentTradesTable({ userId }: RecentTradesTableProps) {
   const { data: trades, isLoading } = useQuery<Trade[]>({
-    queryKey: ["recent-trades"],
+    queryKey: ["recent-trades", userId],
     queryFn: async () => {
-      const response = await fetch("/api/transactions?limit=10&type=complete_trade");
+      const params = new URLSearchParams({
+        userId,
+        limit: "10",
+        transactionType: "complete_trade"
+      });
+      const response = await fetch(`/api/transactions?${params.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch trades");
       const result = await response.json();
-      return result.data || [];
+      return result.data?.transactions || [];
     },
     refetchInterval: 30000, // Refresh every 30 seconds
+    enabled: !!userId, // Only run query if userId is provided
   });
 
   const getProfitLossIcon = (percentage: number | null) => {

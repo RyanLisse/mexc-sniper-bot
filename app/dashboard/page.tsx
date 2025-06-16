@@ -125,7 +125,7 @@ export default function DashboardPage() {
                 />
               </div>
             </div>
-            <RecentTradesTable />
+            <RecentTradesTable userId={userId} />
           </TabsContent>
 
           <TabsContent value="listings" className="space-y-4">
@@ -137,7 +137,7 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="trades" className="space-y-4">
-            <RecentTradesTable />
+            <RecentTradesTable userId={userId} />
           </TabsContent>
 
           <TabsContent value="patterns" className="space-y-4">
