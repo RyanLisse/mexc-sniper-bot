@@ -481,7 +481,37 @@ export class UnifiedMexcClient {
       // Parse and validate the response
       let calendarData: CalendarEntry[] = [];
 
-      if (response.data?.data && Array.isArray(response.data.data)) {
+      // Handle the actual MEXC API response structure: data.newCoins
+      if (response.data?.data?.newCoins && Array.isArray(response.data.data.newCoins)) {
+        calendarData = response.data.data.newCoins
+          .filter(
+            (entry: unknown): entry is Record<string, unknown> =>
+              typeof entry === "object" &&
+              entry !== null &&
+              "vcoinId" in entry &&
+              Boolean(entry.vcoinId) &&
+              "vcoinName" in entry &&
+              Boolean(entry.vcoinName) &&
+              "firstOpenTime" in entry &&
+              Boolean(entry.firstOpenTime)
+          )
+          .map((entry): CalendarEntry | undefined => {
+            try {
+              return CalendarEntrySchema.parse({
+                vcoinId: String(entry.vcoinId),
+                symbol: String(entry.vcoinName),        // MEXC uses vcoinName for symbol
+                projectName: String(entry.vcoinNameFull || entry.vcoinName), // MEXC uses vcoinNameFull for full project name
+                firstOpenTime: Number(entry.firstOpenTime),
+              });
+            } catch (error) {
+              console.warn("[UnifiedMexcClient] Invalid calendar entry:", entry);
+              return undefined;
+            }
+          })
+          .filter((entry): entry is CalendarEntry => entry !== undefined);
+      }
+      // Fallback: check if data is directly an array (for backward compatibility)
+      else if (response.data?.data && Array.isArray(response.data.data)) {
         calendarData = response.data.data
           .filter(
             (entry: unknown): entry is Record<string, unknown> =>
@@ -513,7 +543,7 @@ export class UnifiedMexcClient {
       console.log(`[UnifiedMexcClient] Retrieved ${calendarData.length} calendar entries`);
 
       return {
-        success: calendarData.length > 0,
+        success: true, // API call successful regardless of data count
         data: calendarData,
         timestamp: new Date().toISOString(),
         cached: response.cached,
