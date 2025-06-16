@@ -28,15 +28,15 @@ const securityEvents: SecurityEvent[] = [];
 const RATE_LIMITS = {
   auth: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5, // 5 attempts per 15 minutes
+    maxRequests: 50, // Increased from 5 to 50 for development
   },
   authStrict: {
     windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 10, // 10 attempts per hour for repeated failures
+    maxRequests: 100, // Increased from 10 to 100 for development
   },
   general: {
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 100, // 100 requests per minute
+    maxRequests: 500, // Increased from 100 to 500 for development
   },
 };
 

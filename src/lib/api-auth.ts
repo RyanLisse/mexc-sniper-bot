@@ -7,6 +7,7 @@ import {
   isIPSuspicious,
   logSecurityEvent,
 } from "@/src/lib/rate-limiter";
+import { shouldBypassRateLimit } from "@/src/lib/bypass-rate-limit";
 import type { NextRequest } from "next/server";
 
 /**
@@ -29,8 +30,8 @@ export async function requireApiAuth(
   const userAgent = request.headers.get("user-agent") || undefined;
   const endpoint = new URL(request.url).pathname;
 
-  // Check for suspicious IP before proceeding
-  if (isIPSuspicious(ip)) {
+  // Check for suspicious IP before proceeding (bypass in development)
+  if (!shouldBypassRateLimit(ip) && isIPSuspicious(ip)) {
     logSecurityEvent({
       type: "SUSPICIOUS_ACTIVITY",
       ip,
@@ -56,8 +57,8 @@ export async function requireApiAuth(
     );
   }
 
-  // Apply rate limiting unless explicitly skipped
-  if (!options?.skipRateLimit) {
+  // Apply rate limiting unless explicitly skipped or bypassed
+  if (!options?.skipRateLimit && !shouldBypassRateLimit(ip)) {
     const rateLimitType = options?.rateLimitType || "auth";
     const rateLimitResult = checkRateLimit(ip, endpoint, rateLimitType, userAgent);
 
