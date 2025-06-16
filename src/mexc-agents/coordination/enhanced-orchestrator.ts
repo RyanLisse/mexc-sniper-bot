@@ -301,7 +301,7 @@ export class EnhancedMexcOrchestrator {
     };
   }> {
     const registryStats = this.agentRegistry.getStats();
-    const allAgents = this.agentRegistry.getAllAgents();
+    const _allAgents = this.agentRegistry.getAllAgents();
 
     // Check core agents specifically
     const coreAgentHealth = {

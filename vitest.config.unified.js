@@ -13,8 +13,8 @@ import path from 'path'
  */
 export default defineConfig({
   test: {
-    // Environment setup
-    environment: 'node',
+    // Environment setup - Use jsdom for React component tests
+    environment: 'jsdom',
     globals: true,
     
     // Test discovery and inclusion

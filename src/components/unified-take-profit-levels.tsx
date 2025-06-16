@@ -65,7 +65,7 @@ export function UnifiedTakeProfitLevels({
   };
 
   // Get level description and risk info
-  const getLevelInfo = (levelNum: number, percentage: number) => {
+  const getLevelInfo = (levelNum: number, _percentage: number) => {
     const descriptions = {
       1: {
         name: "Conservative",

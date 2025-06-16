@@ -263,7 +263,7 @@ class TradingMetricsCalculator {
     const profitableTrades = completedTrades.filter((e) => this.isTradeProfit(e));
 
     const wins = profitableTrades.length;
-    const losses = completedTrades.length - wins;
+    const _losses = completedTrades.length - wins;
     const winRate = completedTrades.length > 0 ? wins / completedTrades.length : 0;
 
     const profits = profitableTrades.map((e) => this.getTradeProfit(e));

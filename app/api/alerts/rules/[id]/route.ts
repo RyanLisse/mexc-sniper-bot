@@ -15,10 +15,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const rule = await alertConfigService.getAlertRule(params.id);
     
@@ -54,10 +52,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const body = await request.json();
 
@@ -106,10 +102,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     // Check if rule exists
     const existingRule = await alertConfigService.getAlertRule(params.id);

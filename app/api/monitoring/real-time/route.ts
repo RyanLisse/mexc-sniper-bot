@@ -234,7 +234,7 @@ async function getTransactionLockStatus() {
         status: l.status,
         acquiredAt: l.createdAt,
         duration: Date.now() - new Date(l.createdAt).getTime(),
-        priority: l.priority || 1
+        priority: (l as any).priority || 1
       }))
     };
   } catch (error) {

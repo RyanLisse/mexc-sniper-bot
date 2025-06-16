@@ -304,6 +304,118 @@ function useProcessedCoinData() {
   };
 }
 
+// Stats Overview Component
+interface StatsOverviewProps {
+  stats: {
+    totalListings: number;
+    pendingDetection: number;
+    readyToSnipe: number;
+    successRate?: number;
+  };
+}
+
+const StatsOverview = ({ stats }: StatsOverviewProps) => {
+  return (
+    <div className="grid gap-4 md:grid-cols-4">
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Total Listings</p>
+              <p className="text-2xl font-bold">{stats.totalListings}</p>
+            </div>
+            <Clock className="h-8 w-8 text-blue-400 opacity-50" />
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Monitoring</p>
+              <p className="text-2xl font-bold text-yellow-400">{stats.pendingDetection}</p>
+            </div>
+            <Eye className="h-8 w-8 text-yellow-400 opacity-50" />
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Ready to Snipe</p>
+              <p className="text-2xl font-bold text-green-400">{stats.readyToSnipe}</p>
+            </div>
+            <Target className="h-8 w-8 text-green-400 opacity-50" />
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
+              <p className="text-2xl font-bold text-purple-400">
+                {stats.successRate?.toFixed(1) || 0}%
+              </p>
+            </div>
+            <CheckCircle2 className="h-8 w-8 text-purple-400 opacity-50" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// System Control Bar Component
+interface SystemControlBarProps {
+  isMonitoring: boolean;
+  isLoading: boolean;
+  startMonitoring: () => void;
+  stopMonitoring: () => void;
+  forceRefresh: () => void;
+}
+
+const SystemControlBar = ({
+  isMonitoring,
+  isLoading,
+  startMonitoring,
+  stopMonitoring,
+  forceRefresh,
+}: SystemControlBarProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              Pattern Sniper System
+            </CardTitle>
+            <CardDescription>Real-time pattern detection for new MEXC listings</CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={isMonitoring ? "default" : "secondary"} className="px-3 py-1">
+              <Activity className={`h-3 w-3 mr-1 ${isMonitoring ? "animate-pulse" : ""}`} />
+              {isMonitoring ? "Active" : "Inactive"}
+            </Badge>
+            <Button
+              onClick={isMonitoring ? stopMonitoring : startMonitoring}
+              variant={isMonitoring ? "destructive" : "default"}
+              disabled={isLoading}
+            >
+              {isMonitoring ? "Stop Monitoring" : "Start Monitoring"}
+            </Button>
+            <Button onClick={forceRefresh} variant="outline" disabled={isLoading}>
+              Refresh
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
+  );
+};
+
 export function CoinListingsBoard() {
   const {
     isMonitoring,
@@ -326,85 +438,16 @@ export function CoinListingsBoard() {
   return (
     <div className="space-y-6">
       {/* System Control Bar */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <CardTitle className="flex items-center gap-2">
-                <Bot className="h-5 w-5" />
-                Pattern Sniper System
-              </CardTitle>
-              <CardDescription>Real-time pattern detection for new MEXC listings</CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={isMonitoring ? "default" : "secondary"} className="px-3 py-1">
-                <Activity className={`h-3 w-3 mr-1 ${isMonitoring ? "animate-pulse" : ""}`} />
-                {isMonitoring ? "Active" : "Inactive"}
-              </Badge>
-              <Button
-                onClick={isMonitoring ? stopMonitoring : startMonitoring}
-                variant={isMonitoring ? "destructive" : "default"}
-                disabled={isLoading}
-              >
-                {isMonitoring ? "Stop Monitoring" : "Start Monitoring"}
-              </Button>
-              <Button onClick={forceRefresh} variant="outline" disabled={isLoading}>
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+      <SystemControlBar
+        isMonitoring={isMonitoring}
+        isLoading={isLoading}
+        startMonitoring={startMonitoring}
+        stopMonitoring={stopMonitoring}
+        forceRefresh={forceRefresh}
+      />
 
       {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Listings</p>
-                <p className="text-2xl font-bold">{stats.totalListings}</p>
-              </div>
-              <Clock className="h-8 w-8 text-blue-400 opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Monitoring</p>
-                <p className="text-2xl font-bold text-yellow-400">{stats.pendingDetection}</p>
-              </div>
-              <Eye className="h-8 w-8 text-yellow-400 opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Ready to Snipe</p>
-                <p className="text-2xl font-bold text-green-400">{stats.readyToSnipe}</p>
-              </div>
-              <Target className="h-8 w-8 text-green-400 opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
-                <p className="text-2xl font-bold text-purple-400">
-                  {stats.successRate?.toFixed(1) || 0}%
-                </p>
-              </div>
-              <CheckCircle2 className="h-8 w-8 text-purple-400 opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <StatsOverview stats={stats} />
 
       {/* Errors Display */}
       {(errors.calendar || errors.symbols) && (

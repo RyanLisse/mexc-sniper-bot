@@ -15,10 +15,8 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const result = await notificationService.testNotificationChannel(params.id);
 

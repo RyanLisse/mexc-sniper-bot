@@ -345,7 +345,7 @@ export function useRealTimePatterns(
 
       // Generate alert if high confidence
       if (pattern.pattern.confidence >= minConfidence) {
-        const alert = alertManagerRef.current.addAlert({
+        const _alert = alertManagerRef.current.addAlert({
           type: "pattern_discovered",
           symbol: pattern.symbol,
           message: `High confidence ${pattern.pattern.type} pattern detected (${Math.round(pattern.pattern.confidence * 100)}%)`,
@@ -398,7 +398,7 @@ export function useRealTimePatterns(
 
     // Generate critical alert for ready state
     if (status.isReady) {
-      const alert = alertManagerRef.current.addAlert({
+      const _alert = alertManagerRef.current.addAlert({
         type: "ready_state",
         symbol: status.symbol,
         message: `${status.symbol} is ready for trading (sts:2, st:2, tt:4)`,
@@ -429,7 +429,7 @@ export function useRealTimePatterns(
 
       // Generate alert for high-strength signals
       if (signal.strength > 80) {
-        const alert = alertManagerRef.current.addAlert({
+        const _alert = alertManagerRef.current.addAlert({
           type: "execution_opportunity",
           symbol: signal.symbol,
           message: `High-strength ${signal.type} signal (${signal.strength}% strength)`,

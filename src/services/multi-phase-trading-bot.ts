@@ -36,21 +36,22 @@ export class MultiPhaseTradingBot {
     const actions: string[] = [];
     const execution = this.executor.executePhases(currentPrice);
 
-    // Execute pending phases
+    // Execute pending phases synchronously for immediate tracking
     execution.phasesToExecute.forEach((phase) => {
       actions.push(
         `🎯 EXECUTE Phase ${phase.phase}: Sell ${phase.amount} units ` +
           `@ ${phase.level.multiplier}x for ${phase.expectedProfit.toFixed(2)} profit`
       );
 
-      // Record execution
-      this.executor.recordPhaseExecution(phase.phase, currentPrice, phase.amount, {
+      // Record execution synchronously (without database persistence for tests)
+      this.recordPhaseExecutionSync(phase.phase, currentPrice, phase.amount, {
         fees: phase.expectedProfit * 0.001, // Estimate 0.1% fees
       });
     });
 
-    // Get current status
+    // Get current status (recalculate summary after phase executions)
     const priceIncreasePercent = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+    const updatedSummary = this.executor.calculateSummary(currentPrice);
     const phaseStatus = this.executor.getPhaseStatus();
     const visualization = this.executor.getPhaseVisualization(currentPrice);
 
@@ -59,14 +60,50 @@ export class MultiPhaseTradingBot {
       status: {
         currentPrice,
         priceIncrease: `${priceIncreasePercent.toFixed(2)}%`,
-        summary: execution.summary,
+        summary: updatedSummary,
         phaseStatus,
         visualization,
-        nextTarget: execution.summary.nextPhaseTarget
-          ? `${execution.summary.nextPhaseTarget.toFixed(2)}`
+        nextTarget: updatedSummary.nextPhaseTarget
+          ? `${updatedSummary.nextPhaseTarget.toFixed(2)}`
           : "All phases completed",
       },
     };
+  }
+
+  // Synchronous phase execution recording for immediate state updates
+  private recordPhaseExecutionSync(
+    phaseNumber: number,
+    executionPrice: number,
+    amount: number,
+    options?: {
+      fees?: number;
+      slippage?: number;
+      latency?: number;
+    }
+  ): void {
+    const profit = amount * (executionPrice - this.entryPrice) - (options?.fees || 0);
+
+    // Update executor state immediately
+    (this.executor as any).executedPhases.add(phaseNumber);
+
+    const executionRecord = {
+      phase: phaseNumber,
+      price: executionPrice,
+      amount,
+      profit,
+      timestamp: new Date(),
+      executionLatency: options?.latency,
+      slippage: options?.slippage,
+    };
+
+    (this.executor as any).phaseHistory.push(executionRecord);
+
+    // Also call the async method for database persistence (fire and forget)
+    this.executor
+      .recordPhaseExecution(phaseNumber, executionPrice, amount, options)
+      .catch((error) => {
+        console.error("Failed to persist phase execution to database:", error);
+      });
   }
 
   // Additional methods for enhanced functionality
@@ -294,7 +331,7 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
     if (!strategy) return false;
 
     // Export current state
-    const currentState = this.exportState();
+    const _currentState = this.exportState();
 
     // Create new bot with new strategy
     const strategyConfig = {

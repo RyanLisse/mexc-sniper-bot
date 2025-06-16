@@ -1,3 +1,4 @@
+import { PERFORMANCE_CONSTANTS, TIME_CONSTANTS } from "@/src/lib/constants";
 import type { AgentRegistry } from "./agent-registry";
 import type { WorkflowExecutionResult } from "./workflow-engine";
 
@@ -102,11 +103,11 @@ export class PerformanceCollector {
   private agentRegistry: AgentRegistry;
   private collectionInterval: NodeJS.Timeout | null = null;
   private isCollecting = false;
-  private collectionIntervalMs = 60000; // 1 minute
+  private collectionIntervalMs = PERFORMANCE_CONSTANTS.COLLECTION_INTERVAL_MS;
   private agentMetricsHistory: Map<string, AgentPerformanceMetrics[]> = new Map();
   private workflowMetricsHistory: WorkflowPerformanceMetrics[] = [];
   private systemSnapshotHistory: SystemPerformanceSnapshot[] = [];
-  private maxHistorySize = 10000;
+  private maxHistorySize = PERFORMANCE_CONSTANTS.MAX_HISTORY_SIZE;
 
   constructor(
     agentRegistry: AgentRegistry,
@@ -230,7 +231,7 @@ export class PerformanceCollector {
 
     const healthHistory = this.agentRegistry.getAgentHealthHistory(agentId, 100);
     const recentHistory = healthHistory.filter(
-      (h) => timestamp.getTime() - h.timestamp.getTime() < 60 * 60 * 1000 // Last hour
+      (h) => timestamp.getTime() - h.timestamp.getTime() < TIME_CONSTANTS.HOUR_MS
     );
 
     // Calculate basic metrics
@@ -253,7 +254,7 @@ export class PerformanceCollector {
     const p99ResponseTime = this.calculatePercentile(sortedResponseTimes, 99);
 
     // Calculate throughput (requests per minute)
-    const timeWindow = 60 * 1000; // 1 minute
+    const timeWindow = TIME_CONSTANTS.MINUTE_MS;
     const recentRequests = recentHistory.filter(
       (h) => timestamp.getTime() - h.timestamp.getTime() < timeWindow
     );
@@ -615,7 +616,7 @@ export class PerformanceCollector {
     return Math.max(10, cacheStats.size * 0.001); // MB
   }
 
-  private estimateCpuUsage(agent: any, healthHistory: any[]): number {
+  private estimateCpuUsage(_agent: any, healthHistory: any[]): number {
     // Simplified CPU estimation based on response times
     const recentResponseTimes = healthHistory.slice(-10).map((h) => h.responseTime);
     const avgResponseTime =

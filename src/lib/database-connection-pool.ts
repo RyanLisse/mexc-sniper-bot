@@ -189,7 +189,7 @@ export class DatabaseConnectionPool {
 
         if (attempt < this.config.maxRetries) {
           // Exponential backoff for retries
-          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          const delay = Math.min(1000 * 2 ** (attempt - 1), 5000);
           await new Promise((resolve) => setTimeout(resolve, delay));
 
           // Clear database cache on retry to get fresh connection
@@ -258,7 +258,7 @@ export class DatabaseConnectionPool {
   /**
    * Set cached query result
    */
-  private setCachedResult<T>(key: string, data: T, customTTL?: number): void {
+  private setCachedResult<T>(key: string, data: T, _customTTL?: number): void {
     if (!this.cache.enabled) return;
 
     // Estimate memory size (rough calculation)
@@ -512,7 +512,7 @@ export class DatabaseConnectionPool {
    * Get cache metrics
    */
   getCacheMetrics(): CacheMetrics {
-    const totalRequests = Array.from(this.cache.entries.values()).reduce(
+    const _totalRequests = Array.from(this.cache.entries.values()).reduce(
       (sum, entry) => sum + entry.accessCount,
       0
     );

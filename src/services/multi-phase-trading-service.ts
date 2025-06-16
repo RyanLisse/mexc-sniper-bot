@@ -384,7 +384,7 @@ export class MultiPhaseTradingService {
     if (!strategy) return;
 
     const totalRealizedPnl = executions.reduce((sum, exec) => sum + (exec.profit || 0), 0);
-    const totalFees = executions.reduce((sum, exec) => sum + (exec.fees || 0), 0);
+    const _totalFees = executions.reduce((sum, exec) => sum + (exec.fees || 0), 0);
     const executedPhases = executions.filter((exec) => exec.executionStatus === "executed").length;
 
     await db

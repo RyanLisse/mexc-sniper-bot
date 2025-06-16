@@ -260,8 +260,8 @@ export class AdvancedTestFramework {
         })
         
         // Test advance detection (3.5+ hours)
-        if (result?.detectionTime && expected?.scheduledTime) {
-          const advanceTime = expected.scheduledTime - result.detectionTime
+        if (result?.detectionTime && (expected as any)?.scheduledTime) {
+          const advanceTime = (expected as any).scheduledTime - result.detectionTime
           const isAdvanceDetection = advanceTime >= timeWindow
           
           assertions.push({

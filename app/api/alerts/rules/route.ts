@@ -13,10 +13,8 @@ const alertConfigService = new AlertConfigurationService(db);
 // ==========================================
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category") || undefined;
@@ -54,10 +52,8 @@ export async function GET(request: NextRequest) {
 // ==========================================
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const body = await request.json();
     
@@ -72,7 +68,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const ruleId = await alertConfigService.createAlertRule(body, authResult.user.id);
+    const ruleId = await alertConfigService.createAlertRule(body, user.id);
 
     return NextResponse.json({
       success: true,
@@ -91,10 +87,8 @@ export async function POST(request: NextRequest) {
 // ==========================================
 export async function DELETE(request: NextRequest) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const body = await request.json();
     const { ruleIds } = z.object({

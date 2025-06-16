@@ -1,7 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { db } from '@/src/db';
-import { user, userPreferences, apiCredentials } from '@/src/db/schema';
-import { eq } from 'drizzle-orm';
 
 // Test configuration
 const TEST_EMAIL = `authtest-${Date.now()}@example.com`;

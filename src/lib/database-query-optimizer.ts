@@ -560,7 +560,7 @@ export class DatabaseQueryOptimizer {
     return null;
   }
 
-  private setCachedResult(key: string, data: any, customTimeout?: number): void {
+  private setCachedResult(key: string, data: any, _customTimeout?: number): void {
     this.queryCache.set(key, {
       data,
       timestamp: Date.now(),

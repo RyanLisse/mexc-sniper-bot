@@ -53,8 +53,6 @@ export class DatabaseOptimizationManager {
   private lastOptimization: Date | null = null;
   private baselineMetrics: PerformanceBenchmark | null = null;
 
-  constructor() {}
-
   static getInstance(): DatabaseOptimizationManager {
     if (!DatabaseOptimizationManager.instance) {
       DatabaseOptimizationManager.instance = new DatabaseOptimizationManager();
@@ -438,11 +436,11 @@ export class DatabaseOptimizationManager {
 
     if (overallImprovement >= 50) {
       return `${overallImprovement.toFixed(1)}% improvement - TARGET ACHIEVED! 🎯`;
-    } else if (overallImprovement >= 30) {
-      return `${overallImprovement.toFixed(1)}% improvement - Good progress`;
-    } else {
-      return `${overallImprovement.toFixed(1)}% improvement - More optimization needed`;
     }
+    if (overallImprovement >= 30) {
+      return `${overallImprovement.toFixed(1)}% improvement - Good progress`;
+    }
+    return `${overallImprovement.toFixed(1)}% improvement - More optimization needed`;
   }
 
   /**

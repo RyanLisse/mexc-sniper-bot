@@ -204,7 +204,7 @@ export class AnomalyDetectionService {
     const expectedPathLength = this.calculateExpectedPathLength(model.sampleSize);
 
     // Anomaly score based on path length
-    const anomalyScore = Math.pow(2, -avgPathLength / expectedPathLength);
+    const anomalyScore = 2 ** (-avgPathLength / expectedPathLength);
     const isAnomaly = anomalyScore > 0.6; // Threshold for anomaly
 
     return {
@@ -367,7 +367,7 @@ export class AnomalyDetectionService {
   private trainStatisticalModel(values: number[]): StatisticalModel {
     const sorted = [...values].sort((a, b) => a - b);
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+    const variance = values.reduce((sum, val) => sum + (val - mean) ** 2, 0) / values.length;
     const stdDev = Math.sqrt(variance);
 
     const q1Index = Math.floor(sorted.length * 0.25);
@@ -543,9 +543,8 @@ export class AnomalyDetectionService {
     const featureIndex = tree.splitFeature ? Number.parseInt(tree.splitFeature) : 0;
     if (dataPoint[featureIndex] < (tree.splitValue || 0)) {
       return this.calculatePathLength(tree.left!, dataPoint, depth + 1);
-    } else {
-      return this.calculatePathLength(tree.right!, dataPoint, depth + 1);
     }
+    return this.calculatePathLength(tree.right!, dataPoint, depth + 1);
   }
 
   private calculateExpectedPathLength(n: number): number {

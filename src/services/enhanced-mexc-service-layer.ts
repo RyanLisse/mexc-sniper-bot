@@ -285,7 +285,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
   /**
    * Get market depth/order book
    */
-  async getMarketDepth(symbol: string, limit = 100): Promise<ServiceResponse<OrderBook>> {
+  async getMarketDepth(symbol: string, _limit = 100): Promise<ServiceResponse<OrderBook>> {
     return this.executeWithMetrics("getMarketDepth", async () => {
       console.log(`[EnhancedMexcServiceLayer] Get market depth for ${symbol}`);
 

@@ -19,7 +19,14 @@ vi.mock('../../src/lib/api-auth', () => ({
   withAuth: vi.fn((handler) => handler),
   withUserAuth: vi.fn((handler) => handler),
   withAdminAuth: vi.fn((handler) => handler),
-  withAuthOptions: vi.fn((handler) => handler),
+  withAuthOptions: vi.fn((handler, options) => {
+    // Return a function that calls the handler with a mock user
+    return async (request: any, ...args: any[]) => {
+      const mockUser = { id: 'user123', email: 'test@example.com' };
+      // Only pass the user once - the decorators handle the user parameter
+      return await handler(request, mockUser);
+    };
+  }),
   getUserIdFromQuery: vi.fn(() => 'user123'),
   getUserIdFromBody: vi.fn(() => Promise.resolve('user123')),
 }));
@@ -202,23 +209,34 @@ describe('Authentication Consolidation', () => {
         userId: 'user123',
         data: 'test'
       });
-      
+
       const requestWithBody = {
         ...mockRequest,
         json: mockJson,
+        headers: {
+          get: vi.fn((name: string) => {
+            if (name === 'content-type') return 'application/json';
+            if (name === 'user-agent') return 'test-agent';
+            return null;
+          })
+        },
+        method: 'POST',
+        bodyUsed: false,
+        body: '{"userId":"user123","data":"test"}'
       } as any;
 
       const handler = vi.fn().mockResolvedValue(new Response('success'));
       const decoratedHandler = userBodyRoute(handler);
 
-      const response = await decoratedHandler(requestWithBody, mockUser);
-      
+      const response = await decoratedHandler(requestWithBody);
+
       expect(mockJson).toHaveBeenCalled();
       expect(handler).toHaveBeenCalledWith(
-        requestWithBody, 
-        mockUser, 
+        requestWithBody,
+        mockUser,
         { userId: 'user123', data: 'test' }
       );
+      expect(response).toBeInstanceOf(Response);
     });
   });
 });

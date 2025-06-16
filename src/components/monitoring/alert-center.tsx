@@ -133,8 +133,8 @@ export function AlertCenter() {
     acknowledged: "",
     search: "",
   });
-  const [sortBy, setSortBy] = useState("timestamp");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [_sortBy, _setSortBy] = useState("timestamp");
+  const [_sortOrder, _setSortOrder] = useState<"asc" | "desc">("desc");
   const [showOnlyCritical, setShowOnlyCritical] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -863,7 +863,7 @@ export function AlertCenter() {
                         nameKey="category"
                         label={({ category, count }) => `${category}: ${count}`}
                       >
-                        {summary.topCategories.map((entry, index) => (
+                        {summary.topCategories.map((_entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>

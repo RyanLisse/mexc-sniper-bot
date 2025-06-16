@@ -94,9 +94,11 @@ export function useMexcConnectivity() {
       const result = await response.json();
       return result;
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 5 * 60 * 1000, // Auto-refetch every 5 minutes
-    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes - increased for better performance
+    refetchInterval: false, // Disabled automatic refetch for better performance
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchOnReconnect: true, // Refetch when network reconnects
+    retry: 2, // Reduced retry attempts
   });
 }
 
@@ -107,7 +109,7 @@ export function useMexcConnectivityStatus() {
     data: data?.connected,
     isConnected: data?.connected || false,
     hasCredentials: data?.hasCredentials || false,
-    isValid: data?.credentialsValid || false
+    isValid: data?.credentialsValid || false,
   };
 }
 

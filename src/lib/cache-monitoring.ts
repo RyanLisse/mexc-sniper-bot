@@ -185,7 +185,7 @@ export class CacheMonitoringSystem {
 
       // Collect global cache metrics
       const globalMetrics = globalCacheManager.getMetrics();
-      const globalAnalytics = globalCacheManager.getAnalytics();
+      const _globalAnalytics = globalCacheManager.getAnalytics();
       const sizeBreakdown = globalCacheManager.getSizeBreakdown();
 
       // Collect agent cache metrics
@@ -507,7 +507,7 @@ export class CacheMonitoringSystem {
     // Calculate agent memory usage based on actual performance data
     let agentMemoryUsage = 0;
     const agentCount = Object.keys(agentAnalytics.agentPerformance).length;
-    for (const [agentId, perf] of Object.entries(agentAnalytics.agentPerformance)) {
+    for (const [_agentId, perf] of Object.entries(agentAnalytics.agentPerformance)) {
       // More dynamic memory calculation based on actual cache activity
       const baseSize = Math.max(perf.totalRequests * 4096, 256 * 1024); // At least 256KB per agent
       const activityMultiplier = Math.max(1, perf.totalRequests / 10); // Scale with activity
@@ -518,7 +518,7 @@ export class CacheMonitoringSystem {
     // Calculate API memory usage based on endpoint activity
     let apiMemoryUsage = 0;
     const endpointCount = Object.keys(apiAnalytics.endpoints).length;
-    for (const [endpoint, stats] of Object.entries(apiAnalytics.endpoints)) {
+    for (const [_endpoint, stats] of Object.entries(apiAnalytics.endpoints)) {
       // Estimate memory based on endpoint usage with activity scaling
       const baseSize = Math.max(stats.totalRequests * 2048, 128 * 1024); // At least 128KB per endpoint
       const activityMultiplier = Math.max(1, stats.totalRequests / 5);
@@ -681,7 +681,7 @@ export class CacheMonitoringSystem {
     }
 
     // Performance recommendations for low hit rates
-    const totalHits = metrics.global.hits;
+    const _totalHits = metrics.global.hits;
     const totalRequests = metrics.global.hits + metrics.global.misses;
     if (totalRequests > 50 && metrics.global.hitRate < 50) {
       this.addRecommendation({
@@ -830,7 +830,7 @@ export class CacheMonitoringSystem {
     };
   }
 
-  private calculateBreakdown(metrics: SystemCacheMetrics[]) {
+  private calculateBreakdown(_metrics: SystemCacheMetrics[]) {
     // Calculate breakdown by agents, APIs, and cache levels
     const agents: Record<string, any> = {};
     const apis: Record<string, any> = {};

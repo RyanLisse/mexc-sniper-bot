@@ -14,18 +14,16 @@ const notificationService = new NotificationService(db);
 // ==========================================
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     console.log("Deploying built-in alert rules and notification channels...");
 
     // Deploy built-in alert rules
-    const deployedRules = await alertConfigService.deployBuiltInRules(authResult.user.id);
+    const deployedRules = await alertConfigService.deployBuiltInRules(user.id);
 
     // Deploy example notification channels
-    const deployedChannels = await deployExampleNotificationChannels(authResult.user.id);
+    const deployedChannels = await deployExampleNotificationChannels(user.id);
 
     return NextResponse.json({
       success: true,
@@ -61,7 +59,7 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
         fromName: "MEXC Sniper Alert System",
         toAddresses: [process.env.ADMIN_EMAIL || "admin@example.com"],
       },
-      severityFilter: ["critical"],
+      severityFilter: ["critical" as const],
       rateLimitPerHour: 20,
       titleTemplate: "🚨 CRITICAL: {{alert.message}}",
       messageTemplate: "URGENT ACTION REQUIRED\n\n{{alert.description}}\n\nSource: {{alert.source}}\nTriggered: {{timestamp}}",
@@ -89,7 +87,7 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
           username: "MEXC Sniper Bot",
           iconEmoji: ":warning:",
         },
-        severityFilter: ["critical", "high", "medium"],
+        severityFilter: ["critical" as const, "high" as const, "medium" as const],
         rateLimitPerHour: 100,
         titleTemplate: "{{alert.severity}} Alert: {{alert.message}}",
       };
@@ -154,7 +152,7 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
           toPhoneNumbers: [process.env.ADMIN_PHONE],
           maxMessageLength: 160,
         },
-        severityFilter: ["critical"],
+        severityFilter: ["critical" as const],
         rateLimitPerHour: 5,
         titleTemplate: "URGENT: {{alert.message}}",
       };

@@ -17,18 +17,19 @@ describe('Transactions Table', () => {
     // Create test database with migrations
     testSetup = await createTestDatabase();
     db = testSetup.db;
-    
+
     console.log('Test database migrations applied successfully');
 
     // Create test user for foreign key constraint
     await createTestUser(db, testUserId);
+
+    // Clean up any existing test data for this user
+    await db.delete(transactions).where(eq(transactions.userId, testUserId));
   });
 
   afterEach(async () => {
-    // Clean up test data
-    for (const id of createdTransactionIds) {
-      await db.delete(transactions).where(eq(transactions.id, id));
-    }
+    // Clean up ALL test data for this user to ensure test isolation
+    await db.delete(transactions).where(eq(transactions.userId, testUserId));
     createdTransactionIds = [];
   });
 
@@ -151,6 +152,10 @@ describe('Transactions Table', () => {
 
   describe('Transaction Queries', () => {
     beforeEach(async () => {
+      // Ensure clean state before each test in this section
+      await db.delete(transactions).where(eq(transactions.userId, testUserId));
+      createdTransactionIds = [];
+
       // Insert test data
       const testTransactions: NewTransaction[] = [
         {

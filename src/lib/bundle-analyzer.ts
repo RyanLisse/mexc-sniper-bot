@@ -57,10 +57,10 @@ export class BundleAnalyzer {
   private constructor() {}
 
   static getInstance(): BundleAnalyzer {
-    if (!this.instance) {
-      this.instance = new BundleAnalyzer();
+    if (!BundleAnalyzer.instance) {
+      BundleAnalyzer.instance = new BundleAnalyzer();
     }
-    return this.instance;
+    return BundleAnalyzer.instance;
   }
 
   /**
@@ -440,7 +440,7 @@ export class BundleAnalyzer {
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   }
 }
 

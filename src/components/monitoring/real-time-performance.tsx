@@ -213,14 +213,14 @@ export function RealTimePerformance() {
   const getTrendIcon = (trend: string, change: number) => {
     if (trend === "improving" || change > 0) {
       return <TrendingUp className="h-4 w-4 text-green-600" />;
-    } else if (trend === "degrading" || change < 0) {
-      return <TrendingDown className="h-4 w-4 text-red-600" />;
-    } else {
-      return <Minus className="h-4 w-4 text-gray-600" />;
     }
+    if (trend === "degrading" || change < 0) {
+      return <TrendingDown className="h-4 w-4 text-red-600" />;
+    }
+    return <Minus className="h-4 w-4 text-gray-600" />;
   };
 
-  const formatDuration = (ms: number) => {
+  const _formatDuration = (ms: number) => {
     if (ms < 1000) return `${ms}ms`;
     if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
     return `${(ms / 60000).toFixed(1)}m`;
@@ -642,7 +642,7 @@ export function RealTimePerformance() {
                       dataKey="count"
                       nameKey="type"
                     >
-                      {data.patternDiscoveryAnalytics.patternTypes.map((entry, index) => (
+                      {data.patternDiscoveryAnalytics.patternTypes.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

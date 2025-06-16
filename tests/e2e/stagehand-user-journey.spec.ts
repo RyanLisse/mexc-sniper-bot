@@ -2,9 +2,8 @@ import { test, expect } from '@playwright/test';
 import { Stagehand } from "@browserbasehq/stagehand";
 import StagehandConfig from "../../stagehand.config.unified";
 import { z } from "zod";
-import { db } from '@/src/db';
-import { user, userPreferences, apiCredentials } from '@/src/db/schema';
-import { eq } from 'drizzle-orm';
+// Database imports removed for E2E tests - use API endpoints instead
+// Database imports removed for E2E tests - use API endpoints instead
 
 // Complete user journey testing with AI-powered verification
 test.describe('Complete User Journey (Stagehand Enhanced)', () => {

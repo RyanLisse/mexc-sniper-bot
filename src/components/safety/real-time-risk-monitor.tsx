@@ -133,7 +133,7 @@ export function RealTimeRiskMonitor() {
     },
   ]);
 
-  const [positionRisks, setPositionRisks] = useState<PositionRisk[]>([
+  const [positionRisks, _setPositionRisks] = useState<PositionRisk[]>([
     {
       symbol: "BTCUSDT",
       size: 25000,
@@ -181,7 +181,7 @@ export function RealTimeRiskMonitor() {
     },
   ]);
 
-  const [activeAlerts, setActiveAlerts] = useState<RiskAlert[]>([
+  const [activeAlerts, _setActiveAlerts] = useState<RiskAlert[]>([
     {
       id: "alert-1",
       type: "volatility_spike",
@@ -204,7 +204,7 @@ export function RealTimeRiskMonitor() {
     },
   ]);
 
-  const [stressTestResults, setStressTestResults] = useState<StressTestResult[]>([
+  const [stressTestResults, _setStressTestResults] = useState<StressTestResult[]>([
     {
       scenario: "Market Crash (-20%)",
       portfolioLoss: 17500,

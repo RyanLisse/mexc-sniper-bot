@@ -143,7 +143,7 @@ export type ApiHandler = (request: NextRequest, context: ApiContext) => Promise<
  */
 export function createApiHandler(config: MiddlewareConfig = {}) {
   return (handler: ApiHandler) =>
-    async (request: NextRequest, ...args: any[]): Promise<Response> => {
+    async (request: NextRequest, ..._args: any[]): Promise<Response> => {
       const startTime = Date.now();
       const context: Partial<ApiContext> = {
         clientIP: getClientIP(request),
@@ -274,12 +274,12 @@ async function applyCacheMiddleware(
     }
 
     // Check bypass condition
-    if (config.bypassCondition && config.bypassCondition(request, context)) {
+    if (config.bypassCondition?.(request, context)) {
       return null;
     }
 
     // Generate cache key
-    const cacheKey = config.keyGenerator
+    const _cacheKey = config.keyGenerator
       ? config.keyGenerator(request, context)
       : generateDefaultCacheKey(request, context);
 
@@ -334,7 +334,7 @@ async function cacheResponse(
     }
 
     // Check bypass condition
-    if (config.bypassCondition && config.bypassCondition(request, context)) {
+    if (config.bypassCondition?.(request, context)) {
       return;
     }
 
@@ -401,7 +401,7 @@ async function applyCorsMiddleware(
 }
 
 async function applyRateLimitMiddleware(
-  request: NextRequest,
+  _request: NextRequest,
   context: Partial<ApiContext>,
   rateLimitConfig: NonNullable<MiddlewareConfig["rateLimit"]>
 ): Promise<Response | null> {
@@ -554,7 +554,8 @@ async function parseRequestBody(request: NextRequest): Promise<any> {
 
     if (contentType.includes("application/json")) {
       return await request.json();
-    } else if (contentType.includes("application/x-www-form-urlencoded")) {
+    }
+    if (contentType.includes("application/x-www-form-urlencoded")) {
       const formData = await request.formData();
       const body: Record<string, any> = {};
       for (const [key, value] of formData.entries()) {
@@ -564,7 +565,7 @@ async function parseRequestBody(request: NextRequest): Promise<any> {
     }
 
     return null;
-  } catch (error) {
+  } catch (_error) {
     throw new ValidationError("Invalid request body format");
   }
 }
@@ -580,11 +581,14 @@ function validateWithSchema(data: Record<string, any>, schema: ValidationSchema)
     if (value !== undefined && value !== null) {
       if (rule === "string" && typeof value !== "string") {
         throw new ValidationError(`${field} must be a string`, field);
-      } else if (rule === "number" && typeof value !== "number") {
+      }
+      if (rule === "number" && typeof value !== "number") {
         throw new ValidationError(`${field} must be a number`, field);
-      } else if (rule === "email" && !isValidEmail(value)) {
+      }
+      if (rule === "email" && !isValidEmail(value)) {
         throw new ValidationError(`${field} must be a valid email`, field);
-      } else if (typeof rule === "function") {
+      }
+      if (typeof rule === "function") {
         data[field] = rule(value, field, data);
       }
     }

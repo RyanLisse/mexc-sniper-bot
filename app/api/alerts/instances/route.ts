@@ -13,10 +13,8 @@ const alertingService = new AutomatedAlertingService(db);
 // ==========================================
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || undefined;
@@ -90,10 +88,8 @@ export async function GET(request: NextRequest) {
 // ==========================================
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const body = await request.json();
     const { metricName, value, source, sourceId, features } = z.object({
@@ -111,7 +107,7 @@ export async function POST(request: NextRequest) {
       source,
       sourceId,
       timestamp: Date.now(),
-      labels: { test: "true", triggeredBy: authResult.user.id },
+      labels: { test: "true", triggeredBy: user.id },
       additionalData: features,
     };
 

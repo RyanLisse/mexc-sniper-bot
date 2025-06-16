@@ -610,7 +610,7 @@ export function TradingAnalyticsDashboard() {
                       nameKey="asset"
                       label={({ asset, percentage }) => `${asset}: ${percentage}%`}
                     >
-                      {data.portfolioMetrics.allocations.map((entry, index) => (
+                      {data.portfolioMetrics.allocations.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

@@ -40,20 +40,6 @@ export {
   type MexcWorkflowResult,
 } from "./orchestrator";
 
-// Convenience function to create a pre-configured MEXC orchestrator
-// export function createMexcOrchestrator(): MexcOrchestrator {
-//   return new MexcOrchestrator();
-// }
-
-// MEXC agent factory functions for easy instantiation
-// export const createMexcAgents = {
-//   api: () => new MexcApiAgent(),
-//   patternDiscovery: () => new PatternDiscoveryAgent(),
-//   calendar: () => new CalendarAgent(),
-//   symbolAnalysis: () => new SymbolAnalysisAgent(),
-//   orchestrator: () => new MexcOrchestrator(),
-// };
-
 // Workflow presets for common MEXC operations
 export const mexcWorkflowPresets = {
   calendarDiscovery: {

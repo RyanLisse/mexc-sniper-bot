@@ -654,12 +654,11 @@ export class AgentRegistry {
       if (value < thresholds.critical) return "critical";
       if (value < thresholds.warning) return "warning";
       return "healthy";
-    } else {
-      // For metrics like response time where higher values are worse
-      if (value > thresholds.critical) return "critical";
-      if (value > thresholds.warning) return "warning";
-      return "healthy";
     }
+    // For metrics like response time where higher values are worse
+    if (value > thresholds.critical) return "critical";
+    if (value > thresholds.warning) return "warning";
+    return "healthy";
   }
 
   /**

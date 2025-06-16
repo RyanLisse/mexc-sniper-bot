@@ -182,7 +182,7 @@ export class MutationTestingEngine {
       endTime: 0,
       config: this.config,
       fileStats: { totalFiles: 0, processedFiles: 0, skippedFiles: 0, totalLines: 0, processedLines: 0 },
-      mutationStats: { totalMutations: 0, appliedMutations: 0, killedMutations: 0, survivedMutations: 0, timeoutMutations: 0, errorMutations: 0, skippedMutations: 0 },
+      mutationStats: { totalMutations: 0, appliedMutations: 0, killedMutations: 0, survivedMutations: 0, timeoutMutations: 0, errorMutations: 0, skippedMutations: 0, mutationScore: 0 },
       results: [],
       summary: { mutationScore: 0, coverage: 0, testEffectiveness: 0, recommendations: [], worstPerformingFiles: [], operatorEffectiveness: {} }
     }

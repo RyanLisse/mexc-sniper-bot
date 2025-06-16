@@ -203,37 +203,74 @@ test.describe('API Key Management', () => {
     }
   })
 
-  test('should handle API key testing/validation functionality', async ({ page }) => {
-    // Click to show preferences
-    const preferencesButton = page.locator('button:has-text("Preferences"), button:has-text("Show Preferences")')
-    if (await preferencesButton.count() > 0) {
-      await preferencesButton.first().click()
-    } else {
-      console.log('Preferences button not found, skipping test')
-      return
+  test('should handle API key testing/validation functionality without contradictory messages', async ({ page }) => {
+    // Navigate to system check page where API credentials are managed
+    await page.goto('/config')
+
+    // Wait for page to load
+    await page.waitForTimeout(2000)
+
+    // Look for API credentials form
+    const apiCredentialsSection = page.locator('text="MEXC API Configuration"')
+    if (await apiCredentialsSection.count() > 0) {
+      console.log('Found API credentials configuration section')
+
+      // Look for test connection buttons
+      const testButtons = page.locator('button:has-text("Test Connection"), button:has-text("Test"), button:has-text("Validate")')
+      const testButtonCount = await testButtons.count()
+
+      if (testButtonCount > 0) {
+        console.log(`Found ${testButtonCount} test/validation buttons`)
+
+        // Click the test button
+        const firstTestButton = testButtons.first()
+        await firstTestButton.click()
+
+        // Wait for response
+        await page.waitForTimeout(3000)
+
+        // Check for status messages
+        const successMessages = page.locator('text*="success", text*="valid", text*="connected"')
+        const errorMessages = page.locator('text*="failed", text*="invalid", text*="error"')
+
+        const successCount = await successMessages.count()
+        const errorCount = await errorMessages.count()
+
+        console.log(`Found ${successCount} success messages and ${errorCount} error messages`)
+
+        // Ensure we don't have contradictory messages
+        if (successCount > 0 && errorCount > 0) {
+          // Check if they're referring to different things
+          const successText = await successMessages.first().textContent()
+          const errorText = await errorMessages.first().textContent()
+
+          console.log('Success message:', successText)
+          console.log('Error message:', errorText)
+
+          // This should not happen - we shouldn't see both success and error for the same operation
+          expect(successText?.toLowerCase().includes('saved') && errorText?.toLowerCase().includes('invalid')).toBe(false)
+        }
+
+        // At least one status message should be visible
+        expect(successCount + errorCount).toBeGreaterThan(0)
+      }
     }
-    
-    // Look for test connection or validate buttons
-    const testButtons = page.locator('button:has-text("Test"), button:has-text("Validate"), button:has-text("Check Connection")')
-    const testButtonCount = await testButtons.count()
-    
-    if (testButtonCount > 0) {
-      console.log(`Found ${testButtonCount} test/validation buttons`)
-      
-      // Try clicking a test button
-      const firstTestButton = testButtons.first()
-      await firstTestButton.click()
-      
-      // Wait for any response
-      await page.waitForTimeout(2000)
-      
-      // Check for success/error messages
-      const statusMessages = page.locator('text=success, text=valid, text=connected, text=failed, text=invalid, text=error')
-      const statusCount = await statusMessages.count()
-      
+
+    // Check the enhanced credential status component
+    const credentialStatus = page.locator('text="MEXC API Status"')
+    if (await credentialStatus.count() > 0) {
+      console.log('Found enhanced credential status component')
+
+      // Look for overall status indicators
+      const statusIndicators = page.locator('text="Fully Connected", text="Network Disconnected", text="No Credentials", text="Invalid Credentials"')
+      const statusCount = await statusIndicators.count()
+
       if (statusCount > 0) {
-        console.log('API key validation system is working')
-        await expect(statusMessages.first()).toBeVisible()
+        const statusText = await statusIndicators.first().textContent()
+        console.log('Overall status:', statusText)
+
+        // Verify status is clear and not contradictory
+        expect(statusText).toBeTruthy()
       }
     }
   })

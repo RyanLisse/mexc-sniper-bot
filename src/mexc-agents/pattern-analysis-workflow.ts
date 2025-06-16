@@ -609,8 +609,6 @@ export class PatternAnalysisWorkflow {
         return "prepare";
       case "monitor_closely":
         return "monitor";
-      case "wait":
-      case "avoid":
       default:
         return "skip";
     }

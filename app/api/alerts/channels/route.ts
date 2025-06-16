@@ -15,10 +15,8 @@ const alertConfigService = new AlertConfigurationService(db);
 // ==========================================
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || undefined;
@@ -37,7 +35,7 @@ export async function GET(request: NextRequest) {
       categoryFilter: channel.categoryFilter ? JSON.parse(channel.categoryFilter) : null,
       tagFilter: channel.tagFilter ? JSON.parse(channel.tagFilter) : null,
       // Hide sensitive configuration details
-      configSummary: this.getConfigSummary(channel.type, JSON.parse(channel.config)),
+      configSummary: getConfigSummary(channel.type, JSON.parse(channel.config)),
     }));
 
     return NextResponse.json({
@@ -56,14 +54,12 @@ export async function GET(request: NextRequest) {
 // ==========================================
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const body = await request.json();
     
-    const channelId = await alertConfigService.createNotificationChannel(body, authResult.user.id);
+    const channelId = await alertConfigService.createNotificationChannel(body, user.id);
 
     return NextResponse.json({
       success: true,

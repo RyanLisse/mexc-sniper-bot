@@ -114,7 +114,7 @@ export function ComprehensiveSafetyDashboard() {
     lastUpdate: new Date().toISOString(),
   });
 
-  const [riskMetrics, setRiskMetrics] = useState<RiskMetrics>({
+  const [riskMetrics, _setRiskMetrics] = useState<RiskMetrics>({
     portfolioValue: 45000,
     totalExposure: 32000,
     dailyPnL: 450,
@@ -132,7 +132,7 @@ export function ComprehensiveSafetyDashboard() {
     responseActions: [],
   });
 
-  const [agentHealth, setAgentHealth] = useState<AgentHealthStatus>({
+  const [agentHealth, _setAgentHealth] = useState<AgentHealthStatus>({
     totalAgents: 11,
     healthyAgents: 9,
     degradedAgents: 2,
@@ -186,7 +186,7 @@ export function ComprehensiveSafetyDashboard() {
     ],
   });
 
-  const [circuitBreakers, setCircuitBreakers] = useState<CircuitBreakerStatus>({
+  const [circuitBreakers, _setCircuitBreakers] = useState<CircuitBreakerStatus>({
     totalBreakers: 8,
     openBreakers: 0,
     breakers: [
@@ -225,7 +225,7 @@ export function ComprehensiveSafetyDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const getStatusColor = (status: string) => {
+  const _getStatusColor = (status: string) => {
     switch (status) {
       case "healthy":
         return "text-green-600";

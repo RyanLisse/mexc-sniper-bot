@@ -71,8 +71,8 @@ export function ParameterOptimizationDashboard() {
   const [activeOptimizations, setActiveOptimizations] = useState<OptimizationStatus[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
-  const [selectedOptimization, setSelectedOptimization] = useState<string | null>(null);
-  const [refreshInterval, setRefreshInterval] = useState(5000); // 5 seconds
+  const [_selectedOptimization, _setSelectedOptimization] = useState<string | null>(null);
+  const [refreshInterval, _setRefreshInterval] = useState(5000); // 5 seconds
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch dashboard data
@@ -171,7 +171,7 @@ export function ParameterOptimizationDashboard() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
           <p className="mt-4 text-gray-600">Loading optimization dashboard...</p>
         </div>
       </div>

@@ -5,7 +5,7 @@
  * historical simulation before application to live trading.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { logger } from "../lib/utils";
 
 export interface BacktestConfig {
@@ -273,7 +273,8 @@ export class BacktestingFramework extends EventEmitter {
 
     if (confidence >= threshold && priceChange > 0) {
       return { signal: "buy", confidence };
-    } else if (confidence >= threshold && priceChange < 0) {
+    }
+    if (confidence >= threshold && priceChange < 0) {
       return { signal: "sell", confidence };
     }
 
@@ -289,7 +290,7 @@ export class BacktestingFramework extends EventEmitter {
     parameters: Record<string, any>
   ): number {
     const maxPositionSize = parameters.max_position_size || 0.1;
-    const riskPerTrade = parameters.risk_per_trade || 0.02;
+    const _riskPerTrade = parameters.risk_per_trade || 0.02;
     const stopLossPercent = parameters.stop_loss_percentage || 0.05;
 
     // Kelly criterion-based position sizing
@@ -338,7 +339,7 @@ export class BacktestingFramework extends EventEmitter {
 
     // Trailing stop
     if (parameters.use_trailing_stop && changePercent > 0.05) {
-      const trailingStop = parameters.trailing_stop_percentage || 0.03;
+      const _trailingStop = parameters.trailing_stop_percentage || 0.03;
       // This would require tracking the highest price since entry
       // Simplified implementation
       if (changePercent >= 0.1 && Math.random() < 0.1) {
@@ -553,7 +554,7 @@ export class BacktestingFramework extends EventEmitter {
     };
   }
 
-  private calculateDailyReturns(trades: Trade[], marketData: MarketData[]): number[] {
+  private calculateDailyReturns(_trades: Trade[], marketData: MarketData[]): number[] {
     // Simplified daily returns calculation
     return marketData
       .slice(1)
@@ -564,8 +565,7 @@ export class BacktestingFramework extends EventEmitter {
     if (returns.length < 2) return 0;
 
     const mean = returns.reduce((sum, r) => sum + r, 0) / returns.length;
-    const variance =
-      returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / (returns.length - 1);
+    const variance = returns.reduce((sum, r) => sum + (r - mean) ** 2, 0) / (returns.length - 1);
     return Math.sqrt(variance) * Math.sqrt(252); // Annualized
   }
 
@@ -594,7 +594,7 @@ export class BacktestingFramework extends EventEmitter {
     if (completedTrades.length === 0) return 0;
 
     const totalDuration = completedTrades.reduce((sum, trade) => {
-      const duration = (trade.exitTime!.getTime() - trade.entryTime.getTime()) / (1000 * 60 * 60);
+      const duration = (trade.exitTime?.getTime() - trade.entryTime.getTime()) / (1000 * 60 * 60);
       return sum + duration;
     }, 0);
 
@@ -634,7 +634,7 @@ export class BacktestingFramework extends EventEmitter {
   }
 
   // Additional risk metric calculations (simplified implementations)
-  private calculateBeta(returns: number[], marketData: MarketData[]): number {
+  private calculateBeta(_returns: number[], _marketData: MarketData[]): number {
     // Simplified beta calculation
     return 0.8 + Math.random() * 0.4; // Mock beta between 0.8 and 1.2
   }
@@ -644,7 +644,7 @@ export class BacktestingFramework extends EventEmitter {
     return portfolioReturn - (this.riskFreeRate + beta * (marketReturn - this.riskFreeRate));
   }
 
-  private calculateInformationRatio(returns: number[], marketData: MarketData[]): number {
+  private calculateInformationRatio(_returns: number[], _marketData: MarketData[]): number {
     // Simplified information ratio
     return Math.random() * 2 - 1; // Mock value between -1 and 1
   }
@@ -663,7 +663,7 @@ export class BacktestingFramework extends EventEmitter {
     return beta > 0 ? (portfolioReturn - this.riskFreeRate) / beta : 0;
   }
 
-  private calculateTrackingError(returns: number[], marketData: MarketData[]): number {
+  private calculateTrackingError(_returns: number[], _marketData: MarketData[]): number {
     // Simplified tracking error
     return Math.random() * 0.05; // Mock value between 0 and 5%
   }
@@ -676,12 +676,12 @@ export class BacktestingFramework extends EventEmitter {
     return Math.sqrt(variance);
   }
 
-  private calculateUpCaptureRatio(returns: number[], marketData: MarketData[]): number {
+  private calculateUpCaptureRatio(_returns: number[], _marketData: MarketData[]): number {
     // Simplified up capture ratio
     return 0.8 + Math.random() * 0.4; // Mock value between 0.8 and 1.2
   }
 
-  private calculateDownCaptureRatio(returns: number[], marketData: MarketData[]): number {
+  private calculateDownCaptureRatio(_returns: number[], _marketData: MarketData[]): number {
     // Simplified down capture ratio
     return 0.7 + Math.random() * 0.4; // Mock value between 0.7 and 1.1
   }
@@ -760,7 +760,7 @@ export class BacktestingFramework extends EventEmitter {
   private calculateRiskMetrics(
     performance: BacktestPerformance,
     trades: Trade[],
-    marketData: MarketData[]
+    _marketData: MarketData[]
   ): Record<string, number> {
     return {
       var_95: this.calculateVaR(trades, 0.95),
@@ -775,8 +775,8 @@ export class BacktestingFramework extends EventEmitter {
   }
 
   private async runScenarioAnalysis(
-    config: BacktestConfig,
-    trades: Trade[]
+    _config: BacktestConfig,
+    _trades: Trade[]
   ): Promise<Record<string, any>> {
     // Placeholder for scenario analysis
     return {
@@ -882,7 +882,7 @@ export class BacktestingFramework extends EventEmitter {
     return performance.maxDrawdown > 0 ? performance.annualizedReturn / performance.maxDrawdown : 0;
   }
 
-  private calculateBurkeRatio(performance: BacktestPerformance, trades: Trade[]): number {
+  private calculateBurkeRatio(performance: BacktestPerformance, _trades: Trade[]): number {
     // Simplified Burke ratio
     return performance.maxDrawdown > 0
       ? performance.annualizedReturn / Math.sqrt(performance.maxDrawdown)

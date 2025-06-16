@@ -311,7 +311,7 @@ export class AlertCorrelationEngine {
         return alert.escalationLevel;
       case "timeWindow":
         return Date.now() - alert.firstTriggeredAt;
-      case "category":
+      case "category": {
         // Get category from rule
         const rule = await this.db
           .select({ category: alertRules.category })
@@ -319,6 +319,7 @@ export class AlertCorrelationEngine {
           .where(eq(alertRules.id, alert.ruleId))
           .limit(1);
         return rule[0]?.category;
+      }
       case "labels":
         return alert.labels ? JSON.parse(alert.labels) : {};
       default:
@@ -567,7 +568,7 @@ export class AlertCorrelationEngine {
       if (!groupedAlerts.has(alert.source)) {
         groupedAlerts.set(alert.source, []);
       }
-      groupedAlerts.get(alert.source)!.push(alert);
+      groupedAlerts.get(alert.source)?.push(alert);
     }
 
     this.recentAlerts = groupedAlerts;

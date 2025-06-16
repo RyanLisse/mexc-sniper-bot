@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { getSession } from "@/src/lib/kinde-auth";
 import { db } from "@/src/db";
 import { AutomatedAlertingService } from "@/src/services/automated-alerting-service";
 import { AnomalyDetectionService } from "@/src/services/anomaly-detection-service";
@@ -17,10 +17,8 @@ const correlationEngine = new AlertCorrelationEngine(db);
 // ==========================================
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const { searchParams } = new URL(request.url);
     const bucket = (searchParams.get("bucket") as "hourly" | "daily") || "hourly";

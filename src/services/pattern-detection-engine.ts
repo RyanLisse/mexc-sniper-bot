@@ -131,8 +131,8 @@ export class PatternDetectionEngine {
         matches.push({
           patternType: "ready_state",
           confidence,
-          symbol: symbol.cd || symbol.symbol || "unknown",
-          vcoinId: symbol.vcoinId,
+          symbol: symbol.cd || "unknown",
+          vcoinId: (symbol as any).vcoinId,
           indicators: {
             sts: symbol.sts,
             st: symbol.st,
@@ -184,9 +184,9 @@ export class PatternDetectionEngine {
             symbol: entry.symbol,
             vcoinId: entry.vcoinId,
             indicators: {
-              sts: entry.sts,
-              st: entry.st,
-              tt: entry.tt,
+              sts: (entry as any).sts,
+              st: (entry as any).st,
+              tt: (entry as any).tt,
               advanceHours,
               marketConditions: {
                 projectType: this.classifyProject(entry.projectName || entry.symbol),
@@ -223,8 +223,8 @@ export class PatternDetectionEngine {
         matches.push({
           patternType: "pre_ready",
           confidence: preReadyScore.confidence,
-          symbol: symbol.cd || symbol.symbol || "unknown",
-          vcoinId: symbol.vcoinId,
+          symbol: symbol.cd || "unknown",
+          vcoinId: (symbol as any).vcoinId,
           indicators: {
             sts: symbol.sts,
             st: symbol.st,
@@ -249,7 +249,7 @@ export class PatternDetectionEngine {
     const correlations: CorrelationAnalysis[] = [];
 
     // Group symbols by similar patterns
-    const groupedByStatus = this.groupSymbolsByStatus(symbolData);
+    const _groupedByStatus = this.groupSymbolsByStatus(symbolData);
 
     // Analyze launch timing correlations
     const launchCorrelations = await this.analyzeLaunchTimingCorrelations(symbolData);
@@ -373,8 +373,8 @@ export class PatternDetectionEngine {
 
     // Data completeness
     if (entry.projectName) confidence += 5;
-    if (entry.tradingPairs && entry.tradingPairs.length > 1) confidence += 5;
-    if (entry.sts !== undefined) confidence += 10;
+    if ((entry as any).tradingPairs && (entry as any).tradingPairs.length > 1) confidence += 5;
+    if ((entry as any).sts !== undefined) confidence += 10;
 
     // Market timing
     const timing = this.assessLaunchTiming(
@@ -432,7 +432,7 @@ export class PatternDetectionEngine {
   }
 
   private assessAdvanceOpportunityRisk(
-    entry: CalendarEntry,
+    _entry: CalendarEntry,
     advanceHours: number
   ): "low" | "medium" | "high" {
     // High risk: Very early or very late
@@ -526,7 +526,7 @@ export class PatternDetectionEngine {
     const statusPattern = symbols.filter((s) => s.sts === 2).length / symbols.length;
 
     return {
-      symbols: symbols.map((s) => s.cd || s.symbol || "unknown"),
+      symbols: symbols.map((s) => s.cd || "unknown"),
       correlationType: "launch_timing",
       strength: statusPattern,
       insights: [`${Math.round(statusPattern * 100)}% of symbols showing similar status patterns`],
@@ -540,7 +540,7 @@ export class PatternDetectionEngine {
   private async analyzeSectorCorrelations(symbols: SymbolEntry[]): Promise<CorrelationAnalysis> {
     // Simplified sector analysis
     return {
-      symbols: symbols.map((s) => s.cd || s.symbol || "unknown"),
+      symbols: symbols.map((s) => s.cd || "unknown"),
       correlationType: "market_sector",
       strength: 0.3, // Default moderate correlation
       insights: ["Sector correlation analysis completed"],

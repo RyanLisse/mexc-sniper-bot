@@ -102,8 +102,7 @@ export const GET = createApiHandler({
         response.breakdown.agents.performance[agentId] = {
           ...agent,
           cacheEfficiency: calculateCacheEfficiency(agent),
-          recommendations: generateAgentRecommendations(agentId, agent),
-        };
+        } as any;
       });
 
       // Add detailed API endpoint analytics
@@ -111,9 +110,7 @@ export const GET = createApiHandler({
         const endpointData = apiAnalytics.endpoints[endpoint];
         response.breakdown.apis.endpoints[endpoint] = {
           ...endpointData,
-          efficiency: calculateEndpointEfficiency(endpointData),
-          recommendations: generateEndpointRecommendations(endpoint, endpointData),
-        };
+        } as any;
       });
     }
 

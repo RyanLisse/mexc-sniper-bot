@@ -467,7 +467,7 @@ export class APIResponseCache {
       try {
         // Extract endpoint info from cache key
         const cached = await globalCacheManager.get(key);
-        if (cached && cached.metadata) {
+        if (cached?.metadata) {
           // This would trigger a background refresh of the API data
           // Implementation depends on your specific API client
           console.log(`[APIResponseCache] Revalidating: ${cached.metadata.endpoint}`);
@@ -650,7 +650,7 @@ export class APIResponseCache {
     }
   }
 
-  private async invalidateOlderThan(maxAge: number): Promise<void> {
+  private async invalidateOlderThan(_maxAge: number): Promise<void> {
     // This would need to be implemented with a more sophisticated approach
     // For now, we'll use the global cache manager's cleanup functionality
     globalCacheManager.cleanup();
@@ -685,7 +685,7 @@ export class APIResponseCache {
     this.analytics.set(endpoint, stats);
   }
 
-  private trackCacheSet(endpoint: string, responseTime: number, ttl: number): void {
+  private trackCacheSet(endpoint: string, responseTime: number, _ttl: number): void {
     const stats = this.analytics.get(endpoint) || this.createDefaultStats();
     stats.sets++;
     stats.totalResponseTime += responseTime;
@@ -815,7 +815,7 @@ export const globalAPIResponseCache = new APIResponseCache({
 /**
  * Cache decorator for API methods
  */
-export function withAPICache<T extends (...args: any[]) => Promise<any>>(
+export function withAPICache<_T extends (...args: any[]) => Promise<any>>(
   endpoint: string,
   options: {
     ttl?: number;
@@ -826,12 +826,12 @@ export function withAPICache<T extends (...args: any[]) => Promise<any>>(
 ) {
   const { ttl, method = "GET", keyGenerator, bypassCondition } = options;
 
-  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  return (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]): Promise<any> {
       // Check bypass condition
-      if (bypassCondition && bypassCondition(...args)) {
+      if (bypassCondition?.(...args)) {
         return await originalMethod.apply(this, args);
       }
 

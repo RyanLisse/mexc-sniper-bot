@@ -58,60 +58,71 @@ export class DynamicAgentLoader {
 
     // Dynamic imports for each agent type
     switch (type) {
-      case "base":
+      case "base": {
         const { BaseAgent } = await import("./base-agent");
         AgentClass = BaseAgent;
         break;
+      }
 
-      case "calendar":
+      case "calendar": {
         const { CalendarAgent } = await import("./calendar-agent");
         AgentClass = CalendarAgent;
         break;
+      }
 
-      case "pattern-discovery":
+      case "pattern-discovery": {
         const { PatternDiscoveryAgent } = await import("./pattern-discovery-agent");
         AgentClass = PatternDiscoveryAgent;
         break;
+      }
 
-      case "symbol-analysis":
+      case "symbol-analysis": {
         const { SymbolAnalysisAgent } = await import("./symbol-analysis-agent");
         AgentClass = SymbolAnalysisAgent;
         break;
+      }
 
-      case "strategy":
+      case "strategy": {
         const { StrategyAgent } = await import("./strategy-agent");
         AgentClass = StrategyAgent;
         break;
+      }
 
-      case "mexc-api":
+      case "mexc-api": {
         const { MexcApiAgent } = await import("./mexc-api-agent");
         AgentClass = MexcApiAgent;
         break;
+      }
 
-      case "safety-base":
+      case "safety-base": {
         const { SafetyBaseAgent } = await import("./safety-base-agent");
         AgentClass = SafetyBaseAgent;
         break;
+      }
 
-      case "risk-manager":
+      case "risk-manager": {
         const { RiskManagerAgent } = await import("./risk-manager-agent");
         AgentClass = RiskManagerAgent;
         break;
+      }
 
-      case "simulation":
+      case "simulation": {
         const { SimulationAgent } = await import("./simulation-agent");
         AgentClass = SimulationAgent;
         break;
+      }
 
-      case "reconciliation":
+      case "reconciliation": {
         const { ReconciliationAgent } = await import("./reconciliation-agent");
         AgentClass = ReconciliationAgent;
         break;
+      }
 
-      case "error-recovery":
+      case "error-recovery": {
         const { ErrorRecoveryAgent } = await import("./error-recovery-agent");
         AgentClass = ErrorRecoveryAgent;
         break;
+      }
 
       default:
         throw new Error(`Unknown agent type: ${type}`);

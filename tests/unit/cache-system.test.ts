@@ -576,7 +576,7 @@ describe('Cache Monitoring System', () => {
         expect(report).toHaveProperty('recommendations');
       } catch (error) {
         // If no metrics are available, that's also acceptable for a test environment
-        expect(error.message).toContain('No metrics available');
+        expect((error as Error).message).toContain('No metrics available');
       }
     });
   });

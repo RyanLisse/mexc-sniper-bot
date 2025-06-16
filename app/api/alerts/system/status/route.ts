@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "@/src/db";
+import { sql } from "drizzle-orm";
 import { AutomatedAlertingService } from "@/src/services/automated-alerting-service";
 import { AnomalyDetectionService } from "@/src/services/anomaly-detection-service";
 import { AlertCorrelationEngine } from "@/src/services/alert-correlation-engine";
@@ -21,10 +22,8 @@ const configService = new AlertConfigurationService(db);
 // ==========================================
 export async function GET(request: NextRequest) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     // Get health status from all services
     const [
@@ -156,11 +155,11 @@ async function getRecentAlertCount(hours: number): Promise<number> {
     const { gte } = await import("drizzle-orm");
     
     const result = await db
-      .select({ count: "count(*)" })
+      .select({ count: sql<number>`count(*)` })
       .from(alertInstances)
-      .where(gte(alertInstances.firstTriggeredAt, cutoff));
+      .where(gte(alertInstances.firstTriggeredAt, new Date(cutoff)));
     
-    return parseInt(result[0]?.count as string) || 0;
+    return result[0]?.count || 0;
   } catch (error) {
     console.error("Error getting recent alert count:", error);
     return 0;
@@ -179,7 +178,7 @@ async function getTopAlertSources(): Promise<Array<{ source: string; count: numb
         count: sql<number>`count(*)`,
       })
       .from(alertInstances)
-      .where(gte(alertInstances.firstTriggeredAt, cutoff))
+      .where(gte(alertInstances.firstTriggeredAt, new Date(cutoff)))
       .groupBy(alertInstances.source)
       .orderBy(sql`count(*) desc`)
       .limit(5);

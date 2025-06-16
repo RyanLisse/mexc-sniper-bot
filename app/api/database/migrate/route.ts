@@ -18,14 +18,16 @@ export async function POST(request: NextRequest) {
     
     if (!isProduction) {
       return apiResponse(
-        createErrorResponse("Database migrations should only be run in production", HTTP_STATUS.FORBIDDEN)
+        createErrorResponse("Database migrations should only be run in production"),
+        HTTP_STATUS.FORBIDDEN
       );
     }
 
     // Verify NeonDB configuration
     if (!process.env.DATABASE_URL?.startsWith('postgresql://')) {
       return apiResponse(
-        createErrorResponse("NeonDB configuration missing", HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        createErrorResponse("NeonDB configuration missing"),
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
       );
     }
 
@@ -63,9 +65,9 @@ export async function POST(request: NextRequest) {
     
     return apiResponse(
       createErrorResponse(
-        `Migration failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        HTTP_STATUS.INTERNAL_SERVER_ERROR
-      )
+        `Migration failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      ),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }

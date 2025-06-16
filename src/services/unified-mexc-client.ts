@@ -248,7 +248,7 @@ export class UnifiedMexcClient {
 
     // Create a copy of params excluding the signature parameter
     const signatureParams = { ...params };
-    delete signatureParams.signature;
+    signatureParams.signature = undefined;
 
     const queryString = new URLSearchParams(
       Object.entries(signatureParams)
@@ -482,8 +482,11 @@ export class UnifiedMexcClient {
       let calendarData: CalendarEntry[] = [];
 
       // Handle the actual MEXC API response structure: data.newCoins
-      if (response.data?.data?.newCoins && Array.isArray(response.data.data.newCoins)) {
-        calendarData = response.data.data.newCoins
+      if (
+        (response.data as any)?.data?.newCoins &&
+        Array.isArray((response.data as any).data.newCoins)
+      ) {
+        calendarData = (response.data as any).data.newCoins
           .filter(
             (entry: unknown): entry is Record<string, unknown> =>
               typeof entry === "object" &&
@@ -503,7 +506,7 @@ export class UnifiedMexcClient {
                 projectName: String(entry.vcoinNameFull || entry.vcoinName), // MEXC uses vcoinNameFull for full project name
                 firstOpenTime: Number(entry.firstOpenTime),
               });
-            } catch (error) {
+            } catch (_error) {
               console.warn("[UnifiedMexcClient] Invalid calendar entry:", entry);
               return undefined;
             }
@@ -532,7 +535,7 @@ export class UnifiedMexcClient {
                 projectName: String(entry.projectName || entry.symbol),
                 firstOpenTime: Number(entry.firstOpenTime),
               });
-            } catch (error) {
+            } catch (_error) {
               console.warn("[UnifiedMexcClient] Invalid calendar entry:", entry);
               return undefined;
             }
@@ -616,7 +619,7 @@ export class UnifiedMexcClient {
                 qs: entry.qs as Record<string, unknown>,
                 ot: entry.ot as Record<string, unknown>,
               });
-            } catch (error) {
+            } catch (_error) {
               console.warn("[UnifiedMexcClient] Invalid symbol entry:", entry);
               return null;
             }
@@ -697,7 +700,7 @@ export class UnifiedMexcClient {
         .map((symbol): ExchangeSymbol | null => {
           try {
             return ExchangeSymbolSchema.parse(symbol);
-          } catch (error) {
+          } catch (_error) {
             console.warn("[UnifiedMexcClient] Invalid exchange symbol:", symbol);
             return null;
           }
@@ -748,7 +751,7 @@ export class UnifiedMexcClient {
         .map((ticker): Ticker | null => {
           try {
             return TickerSchema.parse(ticker);
-          } catch (error) {
+          } catch (_error) {
             console.warn("[UnifiedMexcClient] Invalid ticker data:", ticker);
             return null;
           }
@@ -933,7 +936,7 @@ export class UnifiedMexcClient {
               total,
               usdtValue,
             });
-          } catch (error) {
+          } catch (_error) {
             console.warn("[UnifiedMexcClient] Invalid balance entry:", balance);
             return null;
           }

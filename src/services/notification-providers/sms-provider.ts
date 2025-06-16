@@ -86,7 +86,7 @@ export class SMSProvider implements NotificationProvider {
   }
 
   private formatSMSMessage(
-    message: NotificationMessage,
+    _message: NotificationMessage,
     alert: SelectAlertInstance,
     maxLength: number
   ): string {
@@ -116,7 +116,7 @@ export class SMSProvider implements NotificationProvider {
       // Truncate to fit length limit
       const availableSpace = maxLength - text.length - 3; // 3 for "..."
       if (availableSpace > 10) {
-        text += " - " + detailsText.slice(0, availableSpace) + "...";
+        text += ` - ${detailsText.slice(0, availableSpace)}...`;
       }
     }
 

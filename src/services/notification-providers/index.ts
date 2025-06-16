@@ -1,4 +1,4 @@
-import { and, count, eq, gte } from "drizzle-orm";
+import { and, count, eq, gte, inArray } from "drizzle-orm";
 import {
   type SelectAlertInstance,
   type SelectNotificationChannel,
@@ -208,8 +208,8 @@ export class NotificationService {
         .from(notificationChannels)
         .where(
           and(
-            eq(notificationChannels.isEnabled, true)
-            // SQL IN clause for channel IDs
+            eq(notificationChannels.isEnabled, true),
+            inArray(notificationChannels.id, step.channels)
           )
         );
 
@@ -262,7 +262,7 @@ export class NotificationService {
 
     // Check category filter
     if (channel.categoryFilter) {
-      const categories = JSON.parse(channel.categoryFilter);
+      const _categories = JSON.parse(channel.categoryFilter);
       // Get rule to check category
       // TODO: Join with alert rules table to get category
     }
@@ -338,7 +338,7 @@ export class NotificationService {
         ? `🟢 RESOLVED: ${alert.message}`
         : type === "escalation"
           ? `🔺 ESCALATED: ${alert.message}`
-          : this.getSeverityEmoji(alert.severity) + " " + alert.message;
+          : `${this.getSeverityEmoji(alert.severity)} ${alert.message}`;
 
     const baseBody = this.buildMessageBody(alert, type);
 
@@ -434,8 +434,6 @@ export class NotificationService {
         return "high";
       case "medium":
         return "medium";
-      case "low":
-      case "info":
       default:
         return "low";
     }
@@ -486,7 +484,7 @@ export class NotificationService {
       .where(eq(alertNotifications.id, notificationId));
   }
 
-  private async getEscalationPolicy(alert: SelectAlertInstance) {
+  private async getEscalationPolicy(_alert: SelectAlertInstance) {
     // TODO: Implement escalation policy lookup
     // This would typically be based on alert severity, source, or other criteria
     return null;

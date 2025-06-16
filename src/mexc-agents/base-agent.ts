@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { CACHE_CONSTANTS } from "@/src/lib/constants";
 import { globalEnhancedAgentCache, initializeAgentCache } from "@/src/lib/enhanced-agent-cache";
 import { ErrorLoggingService } from "@/src/services/error-logging-service";
 import OpenAI from "openai";
@@ -43,7 +44,7 @@ export class BaseAgent {
   protected openai: OpenAI;
   protected config: AgentConfig;
   protected responseCache: Map<string, CachedResponse>;
-  private readonly defaultCacheTTL = 5 * 60 * 1000; // 5 minutes default
+  private readonly defaultCacheTTL = CACHE_CONSTANTS.AGENT_CACHE_TTL_MS;
   private cacheCleanupInterval?: NodeJS.Timeout;
 
   constructor(config: AgentConfig) {
@@ -255,7 +256,7 @@ export class BaseAgent {
   /**
    * Determine response priority for caching
    */
-  private determineResponsePriority(response: AgentResponse): "low" | "medium" | "high" {
+  private determineResponsePriority(_response: AgentResponse): "low" | "medium" | "high" {
     // High priority for pattern detection and critical trading signals
     if (this.config.name.includes("pattern") || this.config.name.includes("strategy")) {
       return "high";
@@ -275,7 +276,7 @@ export class BaseAgent {
    */
   private extractDependencies(
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-    options?: Partial<OpenAI.Chat.Completions.ChatCompletionCreateParams>
+    _options?: Partial<OpenAI.Chat.Completions.ChatCompletionCreateParams>
   ): string[] {
     const dependencies: string[] = [];
 

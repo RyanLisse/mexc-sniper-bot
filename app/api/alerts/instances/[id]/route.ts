@@ -18,10 +18,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const alert = await db
       .select()
@@ -47,8 +45,8 @@ export async function GET(
       formattedLastTriggered: new Date(alertInstance.lastTriggeredAt).toISOString(),
       formattedResolvedAt: alertInstance.resolvedAt ? new Date(alertInstance.resolvedAt).toISOString() : null,
       isResolved: !!alertInstance.resolvedAt,
-      resolutionTime: alertInstance.resolvedAt ? alertInstance.resolvedAt - alertInstance.firstTriggeredAt : null,
-      duration: Date.now() - alertInstance.firstTriggeredAt,
+      resolutionTime: alertInstance.resolvedAt ? new Date(alertInstance.resolvedAt).getTime() - new Date(alertInstance.firstTriggeredAt).getTime() : null,
+      duration: Date.now() - new Date(alertInstance.firstTriggeredAt).getTime(),
     };
 
     return NextResponse.json({
@@ -69,10 +67,8 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authResult = await validateRequest(request);
-    if (!authResult.isAuthenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await validateRequest(request);
+    // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const body = await request.json();
     const { action, notes } = z.object({
@@ -107,7 +103,7 @@ export async function PATCH(
 
         await alertingService.resolveAlert(
           params.id,
-          authResult.user.id,
+          user.id,
           notes || "Manually resolved by user"
         );
 

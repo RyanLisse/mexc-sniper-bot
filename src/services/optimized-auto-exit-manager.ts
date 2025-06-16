@@ -52,10 +52,6 @@ export class OptimizedAutoExitManager {
   private readonly PRICE_CACHE_TTL = 10000; // 10 seconds cache
   private priceCache = new Map<string, { price: number; timestamp: number }>();
 
-  constructor() {
-    // Service is already initialized as a class property
-  }
-
   /**
    * Start monitoring with optimized batch processing
    */

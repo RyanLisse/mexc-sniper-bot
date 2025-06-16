@@ -35,8 +35,6 @@ interface IndexOptimizationResult {
 export class DatabaseIndexOptimizer {
   private static instance: DatabaseIndexOptimizer;
 
-  constructor() {}
-
   static getInstance(): DatabaseIndexOptimizer {
     if (!DatabaseIndexOptimizer.instance) {
       DatabaseIndexOptimizer.instance = new DatabaseIndexOptimizer();
@@ -331,9 +329,6 @@ export class DatabaseIndexOptimizer {
         } catch (error) {
           result.failed.push(index.name);
           console.error(`❌ Failed to create index ${index.name}:`, error);
-
-          // Continue with other indexes even if one fails
-          continue;
         }
       }
     }
@@ -446,7 +441,7 @@ export class DatabaseIndexOptimizer {
       }
 
       return 85; // Default high effectiveness for composite indexes
-    } catch (error) {
+    } catch (_error) {
       return 50; // Default medium effectiveness if analysis fails
     }
   }

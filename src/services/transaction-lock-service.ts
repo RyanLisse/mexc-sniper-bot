@@ -569,22 +569,51 @@ export class TransactionLockService {
    * Release a lock by resource ID and owner ID
    */
   async releaseLockByResource(resourceId: string, ownerId: string): Promise<boolean> {
-    const result = await db
-      .update(transactionLocks)
-      .set({
-        status: "released",
-        releasedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
+    try {
+      // First, check if the lock exists
+      const existingLock = await db.query.transactionLocks.findFirst({
+        where: and(
           eq(transactionLocks.resourceId, resourceId),
           eq(transactionLocks.ownerId, ownerId),
           eq(transactionLocks.status, "active")
-        )
-      );
+        ),
+      });
 
-    return ((result as { changes?: number }).changes || 0) > 0;
+      if (!existingLock) {
+        return false;
+      }
+
+      // Update the lock status
+      const _result = await db
+        .update(transactionLocks)
+        .set({
+          status: "released",
+          releasedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(transactionLocks.resourceId, resourceId),
+            eq(transactionLocks.ownerId, ownerId),
+            eq(transactionLocks.status, "active")
+          )
+        );
+
+      // For PostgreSQL with Drizzle, we need to check if the update was successful
+      // by verifying the lock was actually updated
+      const updatedLock = await db.query.transactionLocks.findFirst({
+        where: and(
+          eq(transactionLocks.resourceId, resourceId),
+          eq(transactionLocks.ownerId, ownerId),
+          eq(transactionLocks.status, "released")
+        ),
+      });
+
+      return updatedLock !== undefined;
+    } catch (error) {
+      console.error("Error releasing lock by resource:", error);
+      return false;
+    }
   }
 }
 

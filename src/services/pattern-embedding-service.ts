@@ -603,7 +603,7 @@ export class PatternEmbeddingService {
     ); // Profit contribution
   }
 
-  private calculateCompositeScore(pattern: any, threshold: number): number {
+  private calculateCompositeScore(pattern: any, _threshold: number): number {
     const similarityScore = pattern.cosineSimilarity || 0;
     const performanceScore = this.calculatePerformanceScore(pattern);
 
@@ -611,7 +611,7 @@ export class PatternEmbeddingService {
     return similarityScore * 0.7 + performanceScore * 0.3;
   }
 
-  private assessMarketContext(pattern: PatternData, context: Record<string, any>): number {
+  private assessMarketContext(_pattern: PatternData, context: Record<string, any>): number {
     let score = 0;
 
     // Assess market volatility

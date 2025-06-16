@@ -423,8 +423,8 @@ export class CacheManager {
   async has(key: string): Promise<boolean> {
     return (
       this.l1Cache.has(key) ||
-      (this.l2Cache.has(key) && Date.now() <= this.l2Cache.get(key)!.expiresAt) ||
-      (this.l3Cache.has(key) && Date.now() <= this.l3Cache.get(key)!.expiresAt)
+      (this.l2Cache.has(key) && Date.now() <= this.l2Cache.get(key)?.expiresAt) ||
+      (this.l3Cache.has(key) && Date.now() <= this.l3Cache.get(key)?.expiresAt)
     );
   }
 
@@ -959,7 +959,7 @@ export class CacheManager {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
-    this.eventListeners.get(event)!.add(listener);
+    this.eventListeners.get(event)?.add(listener);
   }
 
   off(event: string, listener: (key: string, value: any) => void): void {

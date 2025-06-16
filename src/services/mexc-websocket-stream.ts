@@ -14,7 +14,7 @@
  * - Connection management and error recovery
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type {
   NotificationMessage,
   TradingPriceMessage,
@@ -330,12 +330,12 @@ class MexcConnectionManager {
           reject(new Error("Connection timeout"));
         }, 10000);
 
-        this.ws!.once("open", () => {
+        this.ws?.once("open", () => {
           clearTimeout(timeout);
           resolve();
         });
 
-        this.ws!.once("error", (error) => {
+        this.ws?.once("error", (error) => {
           clearTimeout(timeout);
           reject(error);
         });

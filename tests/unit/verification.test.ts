@@ -97,7 +97,7 @@ describe('Project Verification Tests', () => {
 
     it('should have testing infrastructure', () => {
       const testFiles = [
-        'vitest.config.js',
+        'vitest.config.unified.js',
         'tests/unit/utils.test.ts',
         'tests/unit/mexc-api-client.test.ts',
         'tests/integration/agent-system.test.ts'

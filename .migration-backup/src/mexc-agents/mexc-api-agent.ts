@@ -275,7 +275,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
           serviceResponse = await this.mexcService.getAccountBalances();
           break;
 
-        case "/health":
+        case "/health": {
           console.log(`[MexcApiAgent] Performing health check via service layer`);
           const healthResult = await this.mexcService.performHealthCheck();
           serviceResponse = {
@@ -285,6 +285,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
             metadata: { operation: "health-check" },
           };
           break;
+        }
 
         default:
           console.warn(`[MexcApiAgent] Unknown endpoint: ${endpoint}, using fallback`);
@@ -341,9 +342,9 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
 
     // Check for expected structure
     return (
-      response.hasOwnProperty("success") &&
-      response.hasOwnProperty("data") &&
-      response.hasOwnProperty("timestamp")
+      Object.hasOwn(response, "success") &&
+      Object.hasOwn(response, "data") &&
+      Object.hasOwn(response, "timestamp")
     );
   }
 
@@ -818,7 +819,7 @@ Focus on actionable operational insights and performance optimization recommenda
   }
 
   // Direct MEXC API call as fallback (no longer uses private properties)
-  private async directMexcApiCall(endpoint: string, params?: MexcApiParams): Promise<unknown> {
+  private async directMexcApiCall(endpoint: string, _params?: MexcApiParams): Promise<unknown> {
     try {
       // Note: This method is deprecated and should use the service layer instead
       console.warn(

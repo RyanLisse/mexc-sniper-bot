@@ -104,7 +104,7 @@ export async function createTestUser(
 ) {
   try {
     // Check if user already exists
-    const existingUser = await db.query.user?.findFirst({
+    const existingUser = await (db.query as any).user?.findFirst({
       where: eq(schema.user.id, userId)
     });
     
@@ -124,7 +124,7 @@ export async function createTestUser(
     // If duplicate key error, try to fetch existing user
     if (error?.message?.includes('duplicate key') || error?.message?.includes('unique constraint')) {
       console.log(`[Test] User ${userId} exists (duplicate key), fetching existing user`);
-      const existingUser = await db.query.user?.findFirst({
+      const existingUser = await (db.query as any).user?.findFirst({
         where: eq(schema.user.id, userId)
       });
       return existingUser ? [existingUser] : [];

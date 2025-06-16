@@ -52,10 +52,17 @@ import {
 // Connection Status Component
 // ======================
 
+interface ConnectionMetrics {
+  latency?: number;
+  messageCount?: number;
+  reconnectCount?: number;
+  lastMessageTime?: string;
+}
+
 interface ConnectionStatusProps {
   isConnected: boolean;
   state: string;
-  metrics: any;
+  metrics: ConnectionMetrics;
   error: string | null;
   onReconnect: () => void;
 }
@@ -507,7 +514,7 @@ function PatternDiscoveryPanel() {
 // ======================
 
 function WorkflowPanel() {
-  const { workflows, lastUpdate } = useWorkflows();
+  const { workflows } = useWorkflows();
   const activeWorkflows = Array.from(workflows.values()).filter(
     (w) => w.status === "running" || w.status === "started"
   );

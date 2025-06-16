@@ -146,7 +146,7 @@ export class AdvancedRiskEngine {
    */
   async assessTradeRisk(
     symbol: string,
-    side: "buy" | "sell",
+    _side: "buy" | "sell",
     quantity: number,
     price: number,
     marketData?: Record<string, unknown>
@@ -352,7 +352,7 @@ export class AdvancedRiskEngine {
    */
   calculateDynamicStopLoss(
     symbol: string,
-    entryPrice: number,
+    _entryPrice: number,
     currentPrice: number
   ): { stopLossPrice: number; reasoning: string } {
     const position = this.positions.get(symbol);
@@ -393,7 +393,7 @@ export class AdvancedRiskEngine {
    */
   calculateDynamicTakeProfit(
     symbol: string,
-    entryPrice: number,
+    _entryPrice: number,
     currentPrice: number
   ): { takeProfitPrice: number; reasoning: string } {
     const position = this.positions.get(symbol);
@@ -524,19 +524,19 @@ export class AdvancedRiskEngine {
     return Math.min(sizeRatio * 100, 100);
   }
 
-  private calculateConcentrationRisk(symbol: string, tradeValue: number): number {
+  private calculateConcentrationRisk(_symbol: string, tradeValue: number): number {
     const portfolioValue = this.calculatePortfolioValue();
     const concentrationRatio = tradeValue / portfolioValue;
     return Math.min(concentrationRatio * 200, 100); // Scale up concentration risk
   }
 
-  private calculateCorrelationRisk(symbol: string, tradeValue: number): number {
+  private calculateCorrelationRisk(_symbol: string, _tradeValue: number): number {
     // For now, use market correlation risk
     // In production, would calculate actual position correlations
     return this.marketConditions.correlationRisk * 100;
   }
 
-  private calculateMarketRisk(symbol: string, marketData?: Record<string, unknown>): number {
+  private calculateMarketRisk(_symbol: string, _marketData?: Record<string, unknown>): number {
     let risk = this.marketConditions.volatilityIndex;
 
     // Adjust for market sentiment
@@ -549,7 +549,7 @@ export class AdvancedRiskEngine {
     return Math.min(risk, 100);
   }
 
-  private calculateLiquidityRisk(symbol: string, quantity: number): number {
+  private calculateLiquidityRisk(_symbol: string, _quantity: number): number {
     const liquidityScore = this.marketConditions.liquidityIndex;
     return Math.max(0, 100 - liquidityScore);
   }
@@ -581,7 +581,7 @@ export class AdvancedRiskEngine {
     }
   }
 
-  private calculateMaxAllowedSize(symbol: string, riskScore: number): number {
+  private calculateMaxAllowedSize(_symbol: string, riskScore: number): number {
     let baseSize = this.config.maxSinglePositionSize;
 
     // Reduce size based on risk score
@@ -650,7 +650,7 @@ export class AdvancedRiskEngine {
     return true;
   }
 
-  private calculateTradeVaR(tradeValue: number, symbol: string): number {
+  private calculateTradeVaR(tradeValue: number, _symbol: string): number {
     const volatility = this.marketConditions.volatilityIndex / 100;
     const confidenceMultiplier = this.config.confidenceLevel === 0.95 ? 1.645 : 1.96;
     return tradeValue * volatility * confidenceMultiplier;

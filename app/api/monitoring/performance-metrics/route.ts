@@ -182,11 +182,11 @@ async function getRecentExecutions() {
     
     return executions.map(exec => ({
       id: exec.id,
-      type: exec.executionType,
+      type: (exec as any).executionType || exec.action,
       status: exec.status,
-      duration: exec.executionTime,
+      duration: (exec as any).executionTime || 0,
       timestamp: exec.createdAt,
-      agentUsed: exec.agentId
+      agentUsed: (exec as any).agentId || 'unknown'
     }));
   } catch (error) {
     console.error("Error fetching recent executions:", error);

@@ -99,8 +99,8 @@ export class BayesianOptimizer {
    * Generate candidate parameters using acquisition function
    */
   async generateCandidates(
-    currentBest?: Record<string, number> | null,
-    convergenceHistory?: number[]
+    _currentBest?: Record<string, number> | null,
+    _convergenceHistory?: number[]
   ): Promise<Record<string, number>[]> {
     if (this.observations.length === 0) {
       // Generate random initial candidates
@@ -229,10 +229,11 @@ export class BayesianOptimizer {
       case "rbf":
         return Math.exp(-squaredDistance / (2 * this.config.lengthScale * this.config.lengthScale));
 
-      case "matern":
+      case "matern": {
         const r = Math.sqrt(squaredDistance);
         const scaledR = (Math.sqrt(3) * r) / this.config.lengthScale;
         return (1 + scaledR) * Math.exp(-scaledR);
+      }
 
       case "linear":
         return keys.reduce((sum, key) => sum + (params1[key] || 0) * (params2[key] || 0), 0);
@@ -316,7 +317,7 @@ export class BayesianOptimizer {
    */
   private calculateAcquisitionValue(
     prediction: { mean: number; variance: number },
-    parameters: Record<string, number>
+    _parameters: Record<string, number>
   ): number {
     const { mean, variance } = prediction;
     const sigma = Math.sqrt(variance);
@@ -326,7 +327,8 @@ export class BayesianOptimizer {
     }
 
     switch (this.config.acquisitionFunction) {
-      case "ei": // Expected Improvement
+      case "ei": {
+        // Expected Improvement
         if (!this.currentBest) return mean;
 
         const improvement = mean - this.currentBest.objective;
@@ -335,15 +337,18 @@ export class BayesianOptimizer {
         const pdf = this.normalPDF(z);
 
         return improvement * phi + sigma * pdf;
+      }
 
       case "ucb": // Upper Confidence Bound
         return mean + this.config.explorationFactor * sigma;
 
-      case "poi": // Probability of Improvement
+      case "poi": {
+        // Probability of Improvement
         if (!this.currentBest) return 0.5;
 
         const z_poi = (mean - this.currentBest.objective) / sigma;
         return this.normalCDF(z_poi);
+      }
 
       default:
         return mean + this.config.explorationFactor * sigma;
@@ -409,11 +414,11 @@ export class BayesianOptimizer {
 
     if (secondAvg > firstAvg + improvementThreshold) {
       return "improving";
-    } else if (secondAvg < firstAvg - improvementThreshold) {
-      return "declining";
-    } else {
-      return "stable";
     }
+    if (secondAvg < firstAvg - improvementThreshold) {
+      return "declining";
+    }
+    return "stable";
   }
 
   // Utility methods for linear algebra operations

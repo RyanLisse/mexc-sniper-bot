@@ -5,7 +5,7 @@
  * experiments, statistical significance testing, and gradual rollout capabilities.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { logger } from "../lib/utils";
 
 export interface ABTestConfig {
@@ -75,10 +75,6 @@ export class ABTestingFramework extends EventEmitter {
   private testHistory: ABTestResult[] = [];
   private userAssignments = new Map<string, Map<string, string>>(); // userId -> testId -> variant
 
-  constructor() {
-    super();
-  }
-
   /**
    * Start a new A/B test
    */
@@ -123,7 +119,7 @@ export class ABTestingFramework extends EventEmitter {
       });
 
       // Simulate test execution (in real implementation, this would run over time)
-      const result = await this.simulateTestExecution(testId);
+      const _result = await this.simulateTestExecution(testId);
 
       // Analyze results
       const analysis = await this.analyzeTest(testId);
@@ -166,7 +162,7 @@ export class ABTestingFramework extends EventEmitter {
     if (!this.userAssignments.has(userId)) {
       this.userAssignments.set(userId, new Map());
     }
-    this.userAssignments.get(userId)!.set(testId, assignment.group);
+    this.userAssignments.get(userId)?.set(testId, assignment.group);
 
     return assignment;
   }
@@ -391,8 +387,7 @@ export class ABTestingFramework extends EventEmitter {
   }
 
   private calculateStdDev(values: number[], mean: number): number {
-    const variance =
-      values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (values.length - 1);
+    const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (values.length - 1);
     return Math.sqrt(variance);
   }
 
@@ -427,8 +422,8 @@ export class ABTestingFramework extends EventEmitter {
 
     // Welch-Satterthwaite equation for degrees of freedom
     const degreesOfFreedom =
-      Math.pow(variance1 / n1 + variance2 / n2, 2) /
-      (Math.pow(variance1 / n1, 2) / (n1 - 1) + Math.pow(variance2 / n2, 2) / (n2 - 1));
+      (variance1 / n1 + variance2 / n2) ** 2 /
+      ((variance1 / n1) ** 2 / (n1 - 1) + (variance2 / n2) ** 2 / (n2 - 1));
 
     // Two-tailed p-value (simplified calculation)
     const pValue = 2 * (1 - this.tCDF(Math.abs(tStatistic), degreesOfFreedom));
@@ -469,7 +464,7 @@ export class ABTestingFramework extends EventEmitter {
     const zAlpha = this.normalInverse(1 - alpha / 2);
     const zBeta = this.normalInverse(power);
 
-    const n = 2 * Math.pow((zAlpha + zBeta) / effectSize, 2);
+    const n = 2 * ((zAlpha + zBeta) / effectSize) ** 2;
 
     return Math.ceil(n);
   }
@@ -485,7 +480,6 @@ export class ABTestingFramework extends EventEmitter {
       case "benjamini_hochberg":
         // Simplified BH correction
         return alpha * (1 / numTests);
-      case "none":
       default:
         return alpha;
     }
@@ -694,7 +688,7 @@ export class ABTestingFramework extends EventEmitter {
   }
 
   // Statistical distribution functions (simplified implementations)
-  private tCDF(t: number, df: number): number {
+  private tCDF(t: number, _df: number): number {
     // Simplified t-distribution CDF approximation
     return 0.5 + 0.5 * this.erf(t / Math.sqrt(2));
   }

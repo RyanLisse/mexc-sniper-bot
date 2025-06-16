@@ -90,7 +90,7 @@ export class GeneticOptimizer {
    */
   async generateCandidates(
     currentBest?: Record<string, number> | null,
-    convergenceHistory?: number[]
+    _convergenceHistory?: number[]
   ): Promise<Record<string, number>[]> {
     if (this.currentPopulation.length === 0) {
       // Initialize population
@@ -213,7 +213,8 @@ export class GeneticOptimizer {
       const parent2 = this.selectParent();
 
       // Crossover
-      let offspring1, offspring2;
+      let offspring1;
+      let offspring2;
       if (Math.random() < this.config.crossoverRate) {
         [offspring1, offspring2] = this.crossover(parent1, parent2);
       } else {
@@ -430,8 +431,7 @@ export class GeneticOptimizer {
       }
 
       const u = Math.random();
-      const beta =
-        u <= 0.5 ? Math.pow(2 * u, 1 / (eta + 1)) : Math.pow(1 / (2 * (1 - u)), 1 / (eta + 1));
+      const beta = u <= 0.5 ? (2 * u) ** (1 / (eta + 1)) : (1 / (2 * (1 - u))) ** (1 / (eta + 1));
 
       offspring1[key] = 0.5 * ((1 + beta) * parent1Val + (1 - beta) * parent2Val);
       offspring2[key] = 0.5 * ((1 - beta) * parent1Val + (1 + beta) * parent2Val);
@@ -513,8 +513,8 @@ export class GeneticOptimizer {
    * Generate Gaussian random number
    */
   private gaussianRandom(): number {
-    let u = 0,
-      v = 0;
+    let u = 0;
+    let v = 0;
     while (u === 0) u = Math.random();
     while (v === 0) v = Math.random();
     return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);

@@ -637,7 +637,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
   }
 
   // Implementation of abstract methods from SafetyBaseAgent
-  async performSafetyCheck(data: unknown): Promise<{
+  async performSafetyCheck(_data: unknown): Promise<{
     passed: boolean;
     issues: string[];
     recommendations: string[];
@@ -764,7 +764,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     };
   }
 
-  private async validateMarketConditions(symbol: string): Promise<{
+  private async validateMarketConditions(_symbol: string): Promise<{
     suitable: boolean;
     details: string;
     confidence: number;
@@ -785,8 +785,8 @@ Always prioritize system safety and capital protection. When in doubt, err on th
   }
 
   private async validateHistoricalPerformance(
-    symbol: string,
-    patternData: Record<string, unknown>
+    _symbol: string,
+    _patternData: Record<string, unknown>
   ): Promise<{
     reliable: boolean;
     details: string;

@@ -385,10 +385,10 @@ describe('Cache-Agent Integration', () => {
       
       // Fix the mock and try again
       vi.mocked(errorAgent['openai'].chat.completions.create).mockResolvedValueOnce({
-        choices: [{ message: { content: 'Success response' } }],
-        usage: { total_tokens: 50 },
+        choices: [{ message: { content: 'Success response', role: 'assistant', refusal: null } }],
+        usage: { total_tokens: 50, completion_tokens: 30, prompt_tokens: 20 },
         model: 'gpt-4o',
-      });
+      } as any);
       
       const response = await errorAgent.process(input);
       expect(response.content).toBe('Success response');

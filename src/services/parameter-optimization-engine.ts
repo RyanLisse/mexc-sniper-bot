@@ -6,7 +6,7 @@
  * metrics, market conditions, and historical data analysis.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { ParameterManager } from "../lib/parameter-management";
 import { logger } from "../lib/utils";
 import { ABTestingFramework } from "./ab-testing-framework";
@@ -212,7 +212,7 @@ export class ParameterOptimizationEngine extends EventEmitter {
       await this.finalizeOptimization(optimization);
     } catch (error) {
       optimization.status = "failed";
-      optimization.error = error.message;
+      optimization.error = (error as Error).message;
       logger.error("Optimization failed:", error);
       this.emit("optimizationFailed", { optimizationId: optimization.id, error });
     }
@@ -249,11 +249,14 @@ export class ParameterOptimizationEngine extends EventEmitter {
         const backtestResults = await this.backtestingFramework.runBacktest({
           parameters: candidate,
           period: request.backtestingPeriod,
-          objectives: request.objectives,
+          objectives: request.objectives as any,
         });
 
         // Calculate objective score
-        const score = this.calculateObjectiveScore(backtestResults.performance, request.objectives);
+        const score = this.calculateObjectiveScore(
+          backtestResults.performance as any,
+          request.objectives
+        );
 
         results.push({
           parameters: candidate,
@@ -267,7 +270,7 @@ export class ParameterOptimizationEngine extends EventEmitter {
         results.push({
           parameters: candidate,
           score: Number.NEGATIVE_INFINITY,
-          error: error.message,
+          error: (error as Error).message,
           valid: false,
         });
       }
@@ -343,7 +346,7 @@ export class ParameterOptimizationEngine extends EventEmitter {
       logger.error("Safety constraint validation failed:", error);
       return {
         passed: false,
-        violations: ["Safety validation error: " + error.message],
+        violations: [`Safety validation error: ${(error as Error).message}`],
       };
     }
   }
@@ -351,7 +354,7 @@ export class ParameterOptimizationEngine extends EventEmitter {
   /**
    * Select best candidate from evaluation results
    */
-  private selectBestCandidate(results: any[], objectives: OptimizationObjective[]): any {
+  private selectBestCandidate(results: any[], _objectives: OptimizationObjective[]): any {
     const validResults = results.filter((r) => r.valid && r.score > Number.NEGATIVE_INFINITY);
 
     if (validResults.length === 0) {
@@ -423,7 +426,7 @@ export class ParameterOptimizationEngine extends EventEmitter {
       });
     } catch (error) {
       optimization.status = "failed";
-      optimization.error = error.message;
+      optimization.error = (error as Error).message;
       logger.error("Failed to finalize optimization:", error);
       throw error;
     }

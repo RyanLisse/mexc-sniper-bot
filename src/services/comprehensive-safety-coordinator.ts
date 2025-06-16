@@ -16,7 +16,7 @@
  * - Emergency response coordination
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type { WebSocketMessage } from "../lib/websocket-types";
 import {
   type AgentBehaviorMetrics,
@@ -685,7 +685,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
       const behaviorAnalysis = await this.safetyMonitor.monitorAgentBehavior(mockMetrics);
 
       // Check performance degradation
-      const performanceCheck = await this.safetyMonitor.checkPerformanceDegradation();
+      const _performanceCheck = await this.safetyMonitor.checkPerformanceDegradation();
 
       // Update agent status
       this.currentStatus.agents = {

@@ -119,7 +119,7 @@ interface CreateStrategyData {
 export function MultiPhaseStrategyManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedStrategy, setSelectedStrategy] = useState<number | null>(null);
+  const [_selectedStrategy, setSelectedStrategy] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("active");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [createFormData, setCreateFormData] = useState<Partial<CreateStrategyData>>({

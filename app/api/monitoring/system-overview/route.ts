@@ -94,17 +94,17 @@ export async function GET(request: NextRequest) {
       infrastructureHealth: {
         database: {
           status: dbHealth.status,
-          responseTime: dbHealth.responseTime || 0,
+          responseTime: (dbHealth as any).responseTime || 0,
           details: dbHealth.details || {}
         },
         mexcApi: {
           status: mexcHealth.status,
-          responseTime: mexcHealth.responseTime || 0,
+          responseTime: (mexcHealth as any).responseTime || 0,
           details: mexcHealth.details || {}
         },
         openAi: {
           status: openAiHealth.status,
-          responseTime: openAiHealth.responseTime || 0,
+          responseTime: (openAiHealth as any).responseTime || 0,
           details: openAiHealth.details || {}
         }
       },

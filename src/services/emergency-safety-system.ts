@@ -201,7 +201,7 @@ export class EmergencySafetySystem {
             ? "critical"
             : "degraded";
           if (healthCheck.components.riskEngine === "critical") {
-            healthCheck.criticalIssues.push("Risk engine: " + riskHealth.issues.join(", "));
+            healthCheck.criticalIssues.push(`Risk engine: ${riskHealth.issues.join(", ")}`);
           } else {
             healthCheck.degradedComponents.push("Risk engine");
           }
@@ -253,7 +253,7 @@ export class EmergencySafetySystem {
    * Detect market anomalies that could trigger emergency responses
    */
   async detectMarketAnomalies(
-    marketData: Record<string, unknown>
+    _marketData: Record<string, unknown>
   ): Promise<MarketAnomalyDetection> {
     return await this.circuitBreaker.execute(async () => {
       const anomalies: MarketAnomalyDetection = {
@@ -487,7 +487,7 @@ export class EmergencySafetySystem {
 
     // Halt all circuit breakers
     const allBreakers = circuitBreakerRegistry.getAllBreakers();
-    for (const [name, breaker] of allBreakers) {
+    for (const [_name, breaker] of allBreakers) {
       breaker.forceOpen();
     }
 
@@ -518,7 +518,7 @@ export class EmergencySafetySystem {
 
       // Reset circuit breakers
       const allBreakers = circuitBreakerRegistry.getAllBreakers();
-      for (const [name, breaker] of allBreakers) {
+      for (const [_name, breaker] of allBreakers) {
         if (breaker.getState() === "OPEN") {
           breaker.forceClosed();
         }
@@ -599,7 +599,7 @@ export class EmergencySafetySystem {
   }
 
   private generateResponseActions(
-    conditionType: EmergencyCondition["type"],
+    _conditionType: EmergencyCondition["type"],
     severity: EmergencyCondition["severity"]
   ): EmergencyAction[] {
     const actions: EmergencyAction[] = [];

@@ -13,7 +13,7 @@
  * - Error and alert distribution
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type {
   AgentErrorMessage,
   AgentHealthMessage,
@@ -169,11 +169,11 @@ class RealTimeDataStreamer extends EventEmitter {
 
     if (errorRate > 0.2 || responseTime > 5000 || successRate < 0.8) {
       return "unhealthy";
-    } else if (errorRate > 0.1 || responseTime > 3000 || successRate < 0.9) {
-      return "degraded";
-    } else {
-      return "healthy";
     }
+    if (errorRate > 0.1 || responseTime > 3000 || successRate < 0.9) {
+      return "degraded";
+    }
+    return "healthy";
   }
 
   private broadcastAgentStatuses(): void {
@@ -914,7 +914,7 @@ export class WebSocketAgentBridge extends EventEmitter {
       initialized: this.isInitialized,
       running: this.isRunning,
       connectedClients: serverMetrics.totalConnections,
-      dataStreaming: this.dataStreamer["isStreaming"],
+      dataStreaming: this.dataStreamer.isStreaming,
     };
   }
 }

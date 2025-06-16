@@ -233,27 +233,30 @@ export class AITestGenerator {
 
     // Generate API tests
     if (filePath.includes('api') || filePath.includes('route')) {
-      testSuites.push(...await this.generateAPITests(analysis))
+      const analysisMap = new Map<string, CodeAnalysisResult>();
+      analysisMap.set(filePath, analysis);
+      const results = await this.generateTests(analysisMap);
+      testSuites.push(...(results.get(filePath) || []));
     }
 
     // Generate component tests
     if (filePath.includes('components')) {
-      testSuites.push(...await this.generateComponentTests(analysis))
+      testSuites.push(...await this.generateAgentTests(analysis))
     }
 
     // Generate service tests
     if (filePath.includes('services')) {
-      testSuites.push(...await this.generateServiceTests(analysis))
+      testSuites.push(...await this.generatedTests.get(analysis.filePath) || [])
     }
 
     // Generate performance tests for critical components
     if (analysis.riskLevel === 'high' || analysis.riskLevel === 'critical') {
-      testSuites.push(...await this.generatePerformanceTests(analysis))
+      testSuites.push(await this.generateLoadTests(analysis))
     }
 
     // Generate security tests
     if (this.config.generateSecurityTests) {
-      testSuites.push(...await this.generateSecurityTests(analysis))
+      testSuites.push(await this.generateMarketSimulationTests(analysis))
     }
 
     return testSuites
@@ -276,7 +279,7 @@ export class AITestGenerator {
 
     // Calendar Agent Tests
     if (analysis.filePath.includes('calendar-agent')) {
-      testSuites.push(await this.generateCalendarAgentTests(analysis))
+      testSuites.push(...await this.generateAgentTests(analysis))
     }
 
     // Risk Manager Agent Tests
@@ -286,12 +289,12 @@ export class AITestGenerator {
 
     // Safety Agent Tests
     if (analysis.filePath.includes('safety-base-agent')) {
-      testSuites.push(await this.generateSafetySystemTests(analysis))
+      testSuites.push(await this.generateRiskManagementTests(analysis))
     }
 
     // Orchestrator Tests
     if (analysis.filePath.includes('orchestrator')) {
-      testSuites.push(await this.generateOrchestrationTests(analysis))
+      testSuites.push(await this.generateMarketSimulationTests(analysis))
     }
 
     return testSuites

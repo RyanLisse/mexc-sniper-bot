@@ -117,7 +117,7 @@ export const SnipeTargetCreateSchema: ValidationSchema = {
   entryPrice: "number",
   positionSizeUsdt: (value: any) => {
     const num = Number(value);
-    if (isNaN(num) || num <= 0) {
+    if (Number.isNaN(num) || num <= 0) {
       throw new Error("Position size must be a positive number");
     }
     return num;
@@ -176,7 +176,7 @@ export const TradingOrderSchema: ValidationSchema = {
   },
   quantity: (value: any) => {
     const qty = Number(value);
-    if (isNaN(qty) || qty <= 0) {
+    if (Number.isNaN(qty) || qty <= 0) {
       throw new Error("Quantity must be a positive number");
     }
     return qty;
@@ -184,7 +184,7 @@ export const TradingOrderSchema: ValidationSchema = {
   price: (value: any) => {
     if (value === undefined || value === null) return undefined;
     const price = Number(value);
-    if (isNaN(price) || price <= 0) {
+    if (Number.isNaN(price) || price <= 0) {
       throw new Error("Price must be a positive number");
     }
     return price;
@@ -239,7 +239,7 @@ export const PaginationSchema: ValidationSchema = {
  */
 export const validateTakeProfitLevelsOrder: ValidationFunction = (
   value: any,
-  field: string,
+  _field: string,
   data: any
 ) => {
   const levels = [
@@ -263,7 +263,7 @@ export const validateTakeProfitLevelsOrder: ValidationFunction = (
  */
 export const validateTradingParameters: ValidationFunction = (
   value: any,
-  field: string,
+  _field: string,
   data: any
 ) => {
   if (data.type === "LIMIT" && !data.price) {
@@ -276,7 +276,7 @@ export const validateTradingParameters: ValidationFunction = (
  * Validates user ID matches authenticated user
  */
 export const validateUserIdMatch = (authenticatedUserId: string): ValidationFunction => {
-  return (value: any, field: string) => {
+  return (value: any, _field: string) => {
     if (value !== authenticatedUserId) {
       throw new Error("You can only access your own data");
     }
@@ -307,7 +307,7 @@ export const validateISODate: ValidationFunction = (value: any, field: string) =
   if (!value) return undefined;
 
   const date = new Date(value);
-  if (isNaN(date.getTime())) {
+  if (Number.isNaN(date.getTime())) {
     throw new Error(`${field} must be a valid ISO date string`);
   }
 
@@ -321,7 +321,7 @@ export const validateFutureDate: ValidationFunction = (value: any, field: string
   if (!value) return undefined;
 
   const date = new Date(value);
-  if (isNaN(date.getTime())) {
+  if (Number.isNaN(date.getTime())) {
     throw new Error(`${field} must be a valid date`);
   }
 

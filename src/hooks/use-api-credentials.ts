@@ -68,19 +68,21 @@ export function useSaveApiCredentials() {
         throw new Error("Access denied: You can only save your own credentials");
       }
 
-      // Enhanced debugging for request
+      // Enhanced debugging for request (development only)
       const requestPayload = JSON.stringify(data);
-      console.log('[DEBUG] Sending API credentials request:', {
-        url: '/api/api-credentials',
-        method: 'POST',
-        contentType: 'application/json',
-        userId: data.userId,
-        provider: data.provider || 'mexc',
-        hasApiKey: !!data.apiKey,
-        hasSecretKey: !!data.secretKey,
-        payloadLength: requestPayload.length,
-        timestamp: new Date().toISOString()
-      });
+      if (process.env.NODE_ENV === "development") {
+        console.log("[DEBUG] Sending API credentials request:", {
+          url: "/api/api-credentials",
+          method: "POST",
+          contentType: "application/json",
+          userId: data.userId,
+          provider: data.provider || "mexc",
+          hasApiKey: !!data.apiKey,
+          hasSecretKey: !!data.secretKey,
+          payloadLength: requestPayload.length,
+          timestamp: new Date().toISOString(),
+        });
+      }
 
       const response = await fetch("/api/api-credentials", {
         method: "POST",
@@ -90,35 +92,43 @@ export function useSaveApiCredentials() {
         body: requestPayload,
       });
 
-      console.log('[DEBUG] API credentials response:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
-      });
+      if (process.env.NODE_ENV === "development") {
+        console.log("[DEBUG] API credentials response:", {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          headers: Object.fromEntries(response.headers.entries()),
+        });
+      }
 
       if (!response.ok) {
-        let errorDetails;
+        let errorDetails: any;
         try {
           errorDetails = await response.json();
-          console.error('[DEBUG] API credentials error response:', errorDetails);
+          console.error("[DEBUG] API credentials error response:", errorDetails);
         } catch (parseError) {
-          console.error('[DEBUG] Failed to parse error response:', parseError);
-          errorDetails = { 
+          console.error("[DEBUG] Failed to parse error response:", parseError);
+          errorDetails = {
             error: `HTTP ${response.status}: ${response.statusText}`,
-            details: 'Failed to parse error response'
+            details: "Failed to parse error response",
           };
         }
-        
-        throw new Error(errorDetails.error || errorDetails.message || "Failed to save API credentials");
+
+        throw new Error(
+          errorDetails.error || errorDetails.message || "Failed to save API credentials"
+        );
       }
 
       return response.json();
     },
-    onSuccess: (_, variables) => {
-      // Invalidate and refetch API credentials
+    onSuccess: (data, variables) => {
+      // Optimized: Update cache directly instead of invalidating
+      const queryKey = ["api-credentials", variables.userId, variables.provider || "mexc"];
+      queryClient.setQueryData(queryKey, data);
+
+      // Also invalidate connectivity status to reflect changes
       queryClient.invalidateQueries({
-        queryKey: ["api-credentials", variables.userId, variables.provider || "mexc"],
+        queryKey: ["mexc", "connectivity"],
       });
     },
   });
@@ -180,25 +190,53 @@ export function useTestApiCredentials() {
         throw new Error("Access denied: You can only test your own credentials");
       }
 
-      // This would normally test the API connection
-      // For now, just simulate a test
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Simulate random success/failure for testing
-      const success = Math.random() > 0.3;
-
-      if (!success) {
-        throw new Error("API credentials test failed: Invalid key or network error");
+      if (process.env.NODE_ENV === "development") {
+        console.log("[DEBUG] Testing API credentials:", {
+          userId,
+          provider,
+          timestamp: new Date().toISOString(),
+        });
       }
+
+      const response = await fetch("/api/api-credentials/test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, provider }),
+      });
+
+      console.log("[DEBUG] API credentials test response:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      if (!response.ok) {
+        let errorDetails: any;
+        try {
+          errorDetails = await response.json();
+          console.error("[DEBUG] API credentials test error:", errorDetails);
+        } catch (parseError) {
+          console.error("[DEBUG] Failed to parse test error response:", parseError);
+          errorDetails = {
+            error: `HTTP ${response.status}: ${response.statusText}`,
+            message: "Failed to parse error response",
+          };
+        }
+
+        throw new Error(
+          errorDetails.error || errorDetails.message || "API credentials test failed"
+        );
+      }
+
+      const result = await response.json();
+      console.log("[DEBUG] API credentials test success:", result);
 
       return {
         success: true,
-        message: "API credentials are valid and connection successful",
-        accountInfo: {
-          accountType: "spot",
-          canTrade: true,
-          permissions: ["spot", "futures"],
-        },
+        message: result.message || "API credentials are valid and connection successful",
+        ...result.data,
       };
     },
   });

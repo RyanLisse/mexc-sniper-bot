@@ -340,11 +340,10 @@ export class EnhancedAgentCache {
       // Check if cached workflow is still valid
       if (this.isWorkflowCacheValid(cached)) {
         return cached;
-      } else {
-        // Remove invalid cache entry
-        await globalCacheManager.delete(cacheKey);
-        return null;
       }
+      // Remove invalid cache entry
+      await globalCacheManager.delete(cacheKey);
+      return null;
     } catch (error) {
       console.error(
         `[EnhancedAgentCache] Error getting workflow result for ${workflowType}:`,
@@ -419,8 +418,7 @@ export class EnhancedAgentCache {
       for (const [key, entry] of this.workflowCache.entries()) {
         const shouldInvalidate =
           (criteria.workflowType && key.includes(`workflow:${criteria.workflowType}:`)) ||
-          (criteria.dependencies &&
-            criteria.dependencies.some((dep) => entry.dependencies.includes(dep))) ||
+          criteria.dependencies?.some((dep) => entry.dependencies.includes(dep)) ||
           (criteria.maxAge && Date.now() - entry.timestamp > criteria.maxAge);
 
         if (shouldInvalidate) {
@@ -459,11 +457,10 @@ export class EnhancedAgentCache {
       // Check if health data is fresh enough (max 30 seconds old)
       if (Date.now() - cached.lastCheck < 30000) {
         return cached;
-      } else {
-        // Remove stale health data
-        await globalCacheManager.delete(cacheKey);
-        return null;
       }
+      // Remove stale health data
+      await globalCacheManager.delete(cacheKey);
+      return null;
     } catch (error) {
       console.error(`[EnhancedAgentCache] Error getting agent health for ${agentId}:`, error);
       return null;
@@ -504,7 +501,7 @@ export class EnhancedAgentCache {
   /**
    * Track cache hit for performance metrics
    */
-  private async trackCacheHit(agentId: string, cacheKey: string): Promise<void> {
+  private async trackCacheHit(agentId: string, _cacheKey: string): Promise<void> {
     if (!this.config.enablePerformanceTracking) {
       return;
     }
@@ -527,7 +524,7 @@ export class EnhancedAgentCache {
   /**
    * Track cache set for performance metrics
    */
-  private async trackCacheSet(agentId: string, cacheKey: string, ttl: number): Promise<void> {
+  private async trackCacheSet(agentId: string, _cacheKey: string, _ttl: number): Promise<void> {
     if (!this.config.enablePerformanceTracking) {
       return;
     }
@@ -795,7 +792,7 @@ export class EnhancedAgentCache {
     return Math.min(100, Math.max(0, score));
   }
 
-  private async incrementHitCount(cacheKey: string): Promise<number> {
+  private async incrementHitCount(_cacheKey: string): Promise<number> {
     // This would need to be implemented with persistent storage in production
     // For now, return a mock value
     return Math.floor(Math.random() * 10) + 1;
@@ -927,11 +924,7 @@ export class EnhancedAgentCache {
     }
 
     // Global cache recommendations
-    if (
-      globalAnalytics &&
-      globalAnalytics.performance &&
-      globalAnalytics.performance.hitRate < 60
-    ) {
+    if (globalAnalytics?.performance && globalAnalytics.performance.hitRate < 60) {
       recommendations.push(
         "Overall cache hit rate is low - review caching strategy and TTL configuration"
       );
@@ -1087,7 +1080,7 @@ export class EnhancedAgentCache {
       for (const key of allKeys) {
         try {
           const entry = await globalCacheManager.get(key);
-          if (entry && entry.metadata) {
+          if (entry?.metadata) {
             let shouldInvalidate = false;
 
             // Check agent ID match
@@ -1137,7 +1130,7 @@ export class EnhancedAgentCache {
             try {
               await globalCacheManager.delete(key);
               invalidated++;
-            } catch (error) {
+            } catch (_error) {
               // Ignore individual delete errors
             }
           }
@@ -1179,7 +1172,7 @@ export const globalEnhancedAgentCache = new EnhancedAgentCache({
 /**
  * Enhanced cache decorator for agent methods
  */
-export function withAgentCache<T extends (...args: any[]) => Promise<AgentResponse>>(
+export function withAgentCache<_T extends (...args: any[]) => Promise<AgentResponse>>(
   agentId: string,
   options: {
     ttl?: number;
@@ -1187,7 +1180,7 @@ export function withAgentCache<T extends (...args: any[]) => Promise<AgentRespon
     dependencies?: string[];
   } = {}
 ) {
-  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  return (_target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]): Promise<AgentResponse> {

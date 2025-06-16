@@ -115,7 +115,7 @@ export class WebhookProvider implements NotificationProvider {
       const headers = this.buildHeaders(config);
       const payload = this.buildPayload(config, alert, message);
       const method = config.method || "POST";
-      const timeout = config.timeout || 30000;
+      const _timeout = config.timeout || 30000;
 
       // For production, you would make an actual HTTP request
       // For now, we'll simulate the webhook call
@@ -172,12 +172,13 @@ export class WebhookProvider implements NotificationProvider {
       const auth = config.authentication;
       switch (auth.type) {
         case "bearer":
-          headers["Authorization"] = `Bearer ${auth.token}`;
+          headers.Authorization = `Bearer ${auth.token}`;
           break;
-        case "basic":
+        case "basic": {
           const credentials = Buffer.from(`${auth.username}:${auth.password}`).toString("base64");
-          headers["Authorization"] = `Basic ${credentials}`;
+          headers.Authorization = `Basic ${credentials}`;
           break;
+        }
         case "api_key":
           headers[auth.apiKeyHeader!] = auth.apiKey!;
           break;
@@ -293,7 +294,6 @@ export class WebhookProvider implements NotificationProvider {
       case "custom":
         // For custom format, the payload should already be formatted
         return typeof payload === "string" ? payload : JSON.stringify(payload);
-      case "json":
       default:
         return JSON.stringify(payload);
     }

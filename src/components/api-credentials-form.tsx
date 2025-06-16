@@ -17,9 +17,19 @@ import {
   useSaveApiCredentials,
   useTestApiCredentials,
 } from "@/src/hooks/use-api-credentials";
-import { AlertCircle, CheckCircle, Eye, EyeOff, Key, Loader2, Shield, Database, Settings, Globe } from "lucide-react";
-import { useState } from "react";
 import { useMexcConnectivity } from "@/src/hooks/use-mexc-data";
+import {
+  AlertCircle,
+  CheckCircle,
+  Database,
+  Eye,
+  EyeOff,
+  Key,
+  Loader2,
+  Settings,
+  Shield,
+} from "lucide-react";
+import { useState } from "react";
 
 interface ApiCredentialsFormProps {
   userId: string;
@@ -36,9 +46,11 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
   const [showSecretKey, setShowSecretKey] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [secretKeyInput, setSecretKeyInput] = useState("");
-  const [testResult, setTestResult] = useState<{ success?: boolean; message?: string } | null>(
-    null
-  );
+  const [testResult, setTestResult] = useState<{
+    success?: boolean;
+    message?: string;
+    details?: string;
+  } | null>(null);
 
   const handleSaveApiKeys = async () => {
     if (!apiKeyInput.trim() || !secretKeyInput.trim()) {
@@ -47,16 +59,28 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
     }
 
     try {
-      await saveApiCredentials.mutateAsync({
+      // Clear any previous test results
+      setTestResult(null);
+
+      const result = await saveApiCredentials.mutateAsync({
         userId,
         apiKey: apiKeyInput.trim(),
         secretKey: secretKeyInput.trim(),
         provider: "mexc",
       });
+
       setEditingApiKeys(false);
       setApiKeyInput("");
       setSecretKeyInput("");
-      setTestResult({ success: true, message: "API credentials saved successfully!" });
+
+      // Show success message with masked credentials for verification
+      setTestResult({
+        success: true,
+        message: `API credentials saved successfully! API Key: ${result.maskedApiKey}, Secret: ${result.maskedSecretKey}`,
+      });
+
+      // Auto-clear success message after 5 seconds
+      setTimeout(() => setTestResult(null), 5000);
     } catch (error) {
       setTestResult({
         success: false,
@@ -79,14 +103,29 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
 
   const handleTestApiKeys = async () => {
     try {
+      // Clear any previous test results
       setTestResult(null);
+
       const result = await testApiCredentials.mutateAsync({ userId, provider: "mexc" });
-      setTestResult({ success: true, message: result.message });
+
+      setTestResult({
+        success: true,
+        message: result.message,
+        details: result.accountType
+          ? `Account Type: ${result.accountType}, Can Trade: ${result.canTrade ? "Yes" : "No"}`
+          : undefined,
+      });
+
+      // Auto-clear success message after 10 seconds
+      setTimeout(() => setTestResult(null), 10000);
     } catch (error) {
       setTestResult({
         success: false,
         message: error instanceof Error ? error.message : "API test failed",
       });
+
+      // Auto-clear error message after 15 seconds
+      setTimeout(() => setTestResult(null), 15000);
     }
   };
 
@@ -119,7 +158,7 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
           <>
             {/* Current API Status */}
             <ApiCredentialsStatus apiCredentials={apiCredentials ?? null} />
-            
+
             {/* Enhanced Credential Source Information */}
             <CredentialSourceAlert />
 
@@ -359,22 +398,29 @@ function ApiCredentialsDisplay({
 function ApiCredentialsTestResult({
   testResult,
 }: {
-  testResult: { success?: boolean; message?: string };
+  testResult: { success?: boolean; message?: string; details?: string };
 }) {
   return (
     <div
-      className={`flex items-center space-x-2 p-3 rounded-lg ${
+      className={`p-3 rounded-lg border ${
         testResult.success
-          ? "bg-green-50 text-green-700 border border-green-200"
-          : "bg-red-50 text-red-700 border border-red-200"
+          ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-300 dark:border-green-800"
+          : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-300 dark:border-red-800"
       }`}
     >
-      {testResult.success ? (
-        <CheckCircle className="h-4 w-4" />
-      ) : (
-        <AlertCircle className="h-4 w-4" />
-      )}
-      <span className="text-sm">{testResult.message}</span>
+      <div className="flex items-center space-x-2">
+        {testResult.success ? (
+          <CheckCircle className="h-4 w-4 flex-shrink-0" />
+        ) : (
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+        )}
+        <div className="flex-1">
+          <div className="text-sm font-medium">{testResult.message}</div>
+          {testResult.details && (
+            <div className="text-xs mt-1 opacity-80">{testResult.details}</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -395,16 +441,17 @@ function CredentialSourceAlert() {
           description: "API credentials are loaded from your secure user profile settings",
           color: "text-blue-600",
           bgColor: "bg-blue-50",
-          borderColor: "border-blue-200"
+          borderColor: "border-blue-200",
         };
       case "environment":
         return {
           icon: Settings,
           title: "Using Environment Credentials",
-          description: "API credentials are loaded from server environment variables (MEXC_API_KEY, MEXC_SECRET_KEY)",
+          description:
+            "API credentials are loaded from server environment variables (MEXC_API_KEY, MEXC_SECRET_KEY)",
           color: "text-green-600",
           bgColor: "bg-green-50",
-          borderColor: "border-green-200"
+          borderColor: "border-green-200",
         };
       default:
         return {
@@ -413,7 +460,7 @@ function CredentialSourceAlert() {
           description: "Please add your MEXC API credentials below to enable trading features",
           color: "text-yellow-600",
           bgColor: "bg-yellow-50",
-          borderColor: "border-yellow-200"
+          borderColor: "border-yellow-200",
         };
     }
   };
@@ -427,9 +474,7 @@ function CredentialSourceAlert() {
         <Icon className={`h-5 w-5 ${config.color} mt-0.5`} />
         <div className={`text-sm ${config.color}`}>
           <div className="font-medium">{config.title}</div>
-          <div className="mt-1 text-sm opacity-80">
-            {config.description}
-          </div>
+          <div className="mt-1 text-sm opacity-80">{config.description}</div>
           {connectivity.credentialSource !== "none" && (
             <div className="mt-2 text-xs opacity-70">
               Last checked: {new Date(connectivity.timestamp).toLocaleString()}

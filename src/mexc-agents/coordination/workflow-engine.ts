@@ -243,7 +243,7 @@ export class WorkflowEngine {
       const finalStepResults = Array.from(context.stepResults.values());
       const lastSuccessfulStep = finalStepResults
         .filter((step) => step.status === "completed")
-        .sort((a, b) => b.endTime!.getTime() - a.endTime!.getTime())[0];
+        .sort((a, b) => b.endTime?.getTime() - a.endTime?.getTime())[0];
 
       return {
         workflowId: definition.id,

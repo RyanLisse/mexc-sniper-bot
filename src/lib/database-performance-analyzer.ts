@@ -60,8 +60,6 @@ export class DatabasePerformanceAnalyzer {
   private static instance: DatabasePerformanceAnalyzer;
   private analysisResults: Map<string, any> = new Map();
 
-  constructor() {}
-
   static getInstance(): DatabasePerformanceAnalyzer {
     if (!DatabasePerformanceAnalyzer.instance) {
       DatabasePerformanceAnalyzer.instance = new DatabasePerformanceAnalyzer();
@@ -151,7 +149,7 @@ export class DatabasePerformanceAnalyzer {
         const explanation = await this.explainQuery(queryInfo.query);
 
         // Measure execution time
-        const result = await this.executeQuery(queryInfo.query, queryInfo.params);
+        const _result = await this.executeQuery(queryInfo.query, queryInfo.params);
 
         const executionTime = performance.now() - startTime;
 
@@ -318,7 +316,7 @@ export class DatabasePerformanceAnalyzer {
     for (const tableName of tables) {
       try {
         // Get table info
-        const tableInfo = await db.all(sql.raw(`PRAGMA table_info(${tableName})`));
+        const _tableInfo = await db.all(sql.raw(`PRAGMA table_info(${tableName})`));
         const indexList = await db.all(sql.raw(`PRAGMA index_list(${tableName})`));
 
         // Simulate scan statistics (in real implementation, this would come from monitoring)
@@ -348,7 +346,7 @@ export class DatabasePerformanceAnalyzer {
     try {
       const result = await db.all(sql.raw(`SELECT COUNT(*) as count FROM ${tableName}`));
       return result[0]?.count || 0;
-    } catch (error) {
+    } catch (_error) {
       return 0;
     }
   }
@@ -378,7 +376,7 @@ export class DatabasePerformanceAnalyzer {
         const indexes = await db.all(sql.raw(`PRAGMA index_list(${tableName})`));
 
         for (const index of indexes) {
-          const indexInfo = await db.all(sql.raw(`PRAGMA index_info(${index.name})`));
+          const _indexInfo = await db.all(sql.raw(`PRAGMA index_info(${index.name})`));
 
           indexStats.push({
             tableName,
@@ -401,8 +399,8 @@ export class DatabasePerformanceAnalyzer {
    */
   generateRecommendations(
     expensiveQueries: ExpensiveQuery[],
-    tableStats: TableScanStats[],
-    indexStats: IndexUsageStats[]
+    _tableStats: TableScanStats[],
+    _indexStats: IndexUsageStats[]
   ): OptimizationRecommendation[] {
     const recommendations: OptimizationRecommendation[] = [];
 
@@ -503,7 +501,7 @@ export class DatabasePerformanceAnalyzer {
 
     // Get current monitoring data
     const monitoringStats = queryPerformanceMonitor.getPerformanceStats(60);
-    const queryPatterns = queryPerformanceMonitor.analyzeQueryPatterns(60);
+    const _queryPatterns = queryPerformanceMonitor.analyzeQueryPatterns(60);
 
     // Run our detailed analysis
     const [expensiveQueries, tableStats, indexStats] = await Promise.all([

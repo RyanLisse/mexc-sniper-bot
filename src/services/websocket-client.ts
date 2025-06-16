@@ -13,7 +13,7 @@
  * - TypeScript type safety
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type {
   AgentStatusMessage,
   MessageHandler,
@@ -578,7 +578,7 @@ export class WebSocketClientService extends EventEmitter {
     this.emit("error", event);
   }
 
-  private handleConnectionError(error: any): void {
+  private handleConnectionError(_error: any): void {
     if (this.config.reconnection.enabled && this.connectionManager.shouldReconnect()) {
       this.setState("reconnecting");
       this.connectionManager.scheduleReconnect(() => {

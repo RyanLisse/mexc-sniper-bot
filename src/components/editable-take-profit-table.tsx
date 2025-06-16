@@ -104,33 +104,145 @@ export function EditableTakeProfitTable({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Comprehensive validation function
+  // Validation helper functions - extracted to reduce complexity
+  const validateEntryPrice = (entryPrice: number): ValidationError[] => {
+    const errors: ValidationError[] = [];
+
+    if (entryPrice <= 0) {
+      errors.push({
+        field: "entryPrice",
+        message: "Entry price must be greater than 0",
+        type: "error",
+      });
+    }
+    if (entryPrice < 0.0001) {
+      errors.push({
+        field: "entryPrice",
+        message: "Entry price seems unusually low. Please verify.",
+        type: "warning",
+      });
+    }
+    if (entryPrice > 10000) {
+      errors.push({
+        field: "entryPrice",
+        message: "Entry price seems unusually high. Please verify.",
+        type: "warning",
+      });
+    }
+
+    return errors;
+  };
+
+  const validateProfitPercentage = (level: TakeProfitLevel): ValidationError[] => {
+    const errors: ValidationError[] = [];
+
+    if (level.profitPercentage <= 0) {
+      errors.push({
+        field: "profitPercentage",
+        levelId: level.id,
+        message: `${level.level}: Profit percentage must be greater than 0%`,
+        type: "error",
+      });
+    }
+    if (level.profitPercentage < 5) {
+      errors.push({
+        field: "profitPercentage",
+        levelId: level.id,
+        message: `${level.level}: Profit percentage below 5% may not be profitable after fees`,
+        type: "warning",
+      });
+    }
+    if (level.profitPercentage > 1000) {
+      errors.push({
+        field: "profitPercentage",
+        levelId: level.id,
+        message: `${level.level}: Profit percentage above 1000% seems unrealistic`,
+        type: "warning",
+      });
+    }
+
+    return errors;
+  };
+
+  const validateSellPortion = (level: TakeProfitLevel): ValidationError[] => {
+    const errors: ValidationError[] = [];
+
+    if (level.sellPortion <= 0) {
+      errors.push({
+        field: "sellPortion",
+        levelId: level.id,
+        message: `${level.level}: Sell portion must be greater than 0%`,
+        type: "error",
+      });
+    }
+    if (level.sellPortion > 100) {
+      errors.push({
+        field: "sellPortion",
+        levelId: level.id,
+        message: `${level.level}: Sell portion cannot exceed 100%`,
+        type: "error",
+      });
+    }
+
+    return errors;
+  };
+
+  const validateLevelProgression = (
+    level: TakeProfitLevel,
+    sortedLevels: TakeProfitLevel[]
+  ): ValidationError[] => {
+    const errors: ValidationError[] = [];
+
+    const currentIndex = sortedLevels.findIndex((l) => l.id === level.id);
+    if (currentIndex > 0) {
+      const prevLevel = sortedLevels[currentIndex - 1];
+      if (prevLevel && level.profitPercentage <= prevLevel.profitPercentage) {
+        errors.push({
+          field: "profitPercentage",
+          levelId: level.id,
+          message: `${level.level}: Should have higher profit % than previous levels`,
+          type: "warning",
+        });
+      }
+    }
+
+    return errors;
+  };
+
+  const validateActionDescription = (level: TakeProfitLevel): ValidationError[] => {
+    const errors: ValidationError[] = [];
+
+    if (!level.actionWhenReached.trim()) {
+      errors.push({
+        field: "actionWhenReached",
+        levelId: level.id,
+        message: `${level.level}: Action description is required`,
+        type: "error",
+      });
+    }
+
+    return errors;
+  };
+
+  const validateSingleLevel = (
+    level: TakeProfitLevel,
+    sortedLevels: TakeProfitLevel[]
+  ): ValidationError[] => {
+    return [
+      ...validateProfitPercentage(level),
+      ...validateSellPortion(level),
+      ...validateLevelProgression(level, sortedLevels),
+      ...validateActionDescription(level),
+    ];
+  };
+
+  // Simplified validation function
   const validateConfiguration = useCallback(
     (levels: TakeProfitLevel[], entryPrice: number): ValidationError[] => {
       const errors: ValidationError[] = [];
 
       // Validate entry price
-      if (entryPrice <= 0) {
-        errors.push({
-          field: "entryPrice",
-          message: "Entry price must be greater than 0",
-          type: "error",
-        });
-      }
-      if (entryPrice < 0.0001) {
-        errors.push({
-          field: "entryPrice",
-          message: "Entry price seems unusually low. Please verify.",
-          type: "warning",
-        });
-      }
-      if (entryPrice > 10000) {
-        errors.push({
-          field: "entryPrice",
-          message: "Entry price seems unusually high. Please verify.",
-          type: "warning",
-        });
-      }
+      errors.push(...validateEntryPrice(entryPrice));
 
       // Validate levels array
       if (levels.length === 0) {
@@ -145,74 +257,9 @@ export function EditableTakeProfitTable({
       // Sort levels by profit percentage for validation
       const sortedLevels = [...levels].sort((a, b) => a.profitPercentage - b.profitPercentage);
 
-      // Validate each level
-      levels.forEach((level, index) => {
-        // Profit percentage validation
-        if (level.profitPercentage <= 0) {
-          errors.push({
-            field: "profitPercentage",
-            levelId: level.id,
-            message: `${level.level}: Profit percentage must be greater than 0%`,
-            type: "error",
-          });
-        }
-        if (level.profitPercentage < 5) {
-          errors.push({
-            field: "profitPercentage",
-            levelId: level.id,
-            message: `${level.level}: Profit percentage below 5% may not be profitable after fees`,
-            type: "warning",
-          });
-        }
-        if (level.profitPercentage > 1000) {
-          errors.push({
-            field: "profitPercentage",
-            levelId: level.id,
-            message: `${level.level}: Profit percentage above 1000% seems unrealistic`,
-            type: "warning",
-          });
-        }
-
-        // Sell portion validation
-        if (level.sellPortion <= 0) {
-          errors.push({
-            field: "sellPortion",
-            levelId: level.id,
-            message: `${level.level}: Sell portion must be greater than 0%`,
-            type: "error",
-          });
-        }
-        if (level.sellPortion > 100) {
-          errors.push({
-            field: "sellPortion",
-            levelId: level.id,
-            message: `${level.level}: Sell portion cannot exceed 100%`,
-            type: "error",
-          });
-        }
-
-        // Logical progression validation
-        if (index > 0) {
-          const prevLevel = sortedLevels[sortedLevels.findIndex((l) => l.id === level.id) - 1];
-          if (prevLevel && level.profitPercentage <= prevLevel.profitPercentage) {
-            errors.push({
-              field: "profitPercentage",
-              levelId: level.id,
-              message: `${level.level}: Should have higher profit % than previous levels`,
-              type: "warning",
-            });
-          }
-        }
-
-        // Action description validation
-        if (!level.actionWhenReached.trim()) {
-          errors.push({
-            field: "actionWhenReached",
-            levelId: level.id,
-            message: `${level.level}: Action description is required`,
-            type: "error",
-          });
-        }
+      // Validate each level using extracted functions
+      levels.forEach((level) => {
+        errors.push(...validateSingleLevel(level, sortedLevels));
       });
 
       // Total sell portion validation
@@ -255,7 +302,7 @@ export function EditableTakeProfitTable({
     return validationErrors.some((error) => error.type === "error");
   }, [validationErrors]);
 
-  const hasWarnings = useMemo(() => {
+  const _hasWarnings = useMemo(() => {
     return validationErrors.some((error) => error.type === "warning");
   }, [validationErrors]);
 

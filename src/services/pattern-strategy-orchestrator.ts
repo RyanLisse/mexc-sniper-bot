@@ -314,7 +314,7 @@ export class PatternStrategyOrchestrator {
 
           const symbolAnalysis = await this.symbolAgent.analyzeSymbolReadiness(
             candidate.vcoinId || candidate.symbol,
-            symbolData
+            symbolData as any
           );
 
           results.agentResponses![`symbol-${candidate.symbol}`] = symbolAnalysis;
@@ -373,7 +373,7 @@ export class PatternStrategyOrchestrator {
       for (const pattern of readyPatterns) {
         const validationResponse = await this.patternAgent.validateReadyState({
           vcoinId: pattern.vcoinId || pattern.symbol,
-          symbolData: request.input.symbolData!.filter((s) => s.cd === pattern.symbol),
+          symbolData: request.input.symbolData?.filter((s) => s.cd === pattern.symbol),
           count: 1,
         });
 
@@ -484,7 +484,7 @@ export class PatternStrategyOrchestrator {
 
   private determineAction(
     pattern: PatternMatch,
-    workflowType: string
+    _workflowType: string
   ): StrategicRecommendation["action"] {
     // Ready state patterns with high confidence
     if (pattern.patternType === "ready_state" && pattern.confidence >= 85) {
@@ -677,7 +677,7 @@ export class PatternStrategyOrchestrator {
     return { current: 30, approaching: 15, critical: 5 };
   }
 
-  private generateEscalationTriggers(pattern: PatternMatch): string[] {
+  private generateEscalationTriggers(_pattern: PatternMatch): string[] {
     return [
       "Status change detected",
       "Confidence drops below 60%",

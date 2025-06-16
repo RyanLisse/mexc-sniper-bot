@@ -21,7 +21,7 @@ class Logger {
   }
 
   private shouldLog(level: keyof LogLevel): boolean {
-    const levels: LogLevel = { ERROR: "error", WARN: "warn", INFO: "info", DEBUG: "debug" };
+    const _levels: LogLevel = { ERROR: "error", WARN: "warn", INFO: "info", DEBUG: "debug" };
     const logLevels = ["ERROR", "WARN", "INFO", "DEBUG"];
     const currentLevelIndex = logLevels.indexOf(this.logLevel);
     const messageLevelIndex = logLevels.indexOf(level);

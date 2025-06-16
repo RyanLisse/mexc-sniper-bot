@@ -112,7 +112,7 @@ export class ReinforcementLearningOptimizer {
    */
   async generateCandidates(
     currentBest?: Record<string, number> | null,
-    convergenceHistory?: number[]
+    _convergenceHistory?: number[]
   ): Promise<Record<string, number>[]> {
     if (!this.currentState) {
       this.currentState = this.createInitialState(currentBest);
@@ -298,9 +298,8 @@ export class ReinforcementLearningOptimizer {
   private selectAction(state: State): Record<string, number> {
     if (Math.random() < this.config.explorationRate) {
       return this.selectRandomAction();
-    } else {
-      return this.selectGreedyAction(state);
     }
+    return this.selectGreedyAction(state);
   }
 
   /**

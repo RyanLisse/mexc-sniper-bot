@@ -13,9 +13,9 @@
  * - Integration with 11-agent system
  */
 
-import crypto from "crypto";
-import { EventEmitter } from "events";
-import type { IncomingMessage } from "http";
+import crypto from "node:crypto";
+import { EventEmitter } from "node:events";
+import type { IncomingMessage } from "node:http";
 import type {
   AgentStatusMessage,
   ConnectionMetrics,
@@ -68,7 +68,7 @@ class ConnectionManager {
       if (!this.userConnections.has(userId)) {
         this.userConnections.set(userId, new Set());
       }
-      this.userConnections.get(userId)!.add(connectionId);
+      this.userConnections.get(userId)?.add(connectionId);
     }
 
     // Initialize metrics
@@ -144,7 +144,7 @@ class ConnectionManager {
     if (!this.channelSubscriptions.has(channel)) {
       this.channelSubscriptions.set(channel, new Set());
     }
-    this.channelSubscriptions.get(channel)!.add(connectionId);
+    this.channelSubscriptions.get(channel)?.add(connectionId);
 
     // Update metrics
     const metrics = this.connectionMetrics.get(connectionId);
@@ -334,14 +334,14 @@ class MessageRouter {
     if (!this.handlers.has(channel)) {
       this.handlers.set(channel, []);
     }
-    this.handlers.get(channel)!.push(handler);
+    this.handlers.get(channel)?.push(handler);
   }
 
   addGlobalHandler(handler: MessageHandler): void {
     this.globalHandlers.push(handler);
   }
 
-  async routeMessage(message: WebSocketMessage, connectionId: string): Promise<void> {
+  async routeMessage(message: WebSocketMessage, _connectionId: string): Promise<void> {
     try {
       // Execute global handlers first
       for (const handler of this.globalHandlers) {
