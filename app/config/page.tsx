@@ -398,11 +398,15 @@ export default function SystemCheckPage() {
     return {};
   };
 
-  // Generate a simple user ID (in production, use proper authentication)
+  // Get the authenticated user ID
   const getUserId = () => {
+    if (user?.id) {
+      return user.id;
+    }
+    // Fallback for unauthenticated users (demo mode)
     let userId = localStorage.getItem("mexc-user-id");
     if (!userId) {
-      userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      userId = `demo-user`;
       localStorage.setItem("mexc-user-id", userId);
     }
     return userId;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
+import { getUserCredentials } from "@/src/services/user-credentials-service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,16 +14,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const mexcService = getRecommendedMexcService();
+    // Get user-specific credentials first
+    const userCredentials = await getUserCredentials(userId, 'mexc');
+    
+    let mexcService;
+    if (userCredentials) {
+      // Create service with user's credentials
+      mexcService = getRecommendedMexcService({
+        apiKey: userCredentials.apiKey,
+        secretKey: userCredentials.secretKey
+      });
+    } else {
+      // Fallback to environment credentials if no user credentials
+      mexcService = getRecommendedMexcService();
+    }
 
     // Check if service has credentials
     if (!mexcService.hasCredentials()) {
+      const message = userCredentials 
+        ? "User MEXC API credentials are invalid or incomplete"
+        : "No MEXC API credentials found. Please configure your API keys in the settings.";
+      
       return NextResponse.json({
         success: false,
         error: "MEXC API credentials not configured",
         balances: [],
         hasCredentials: false,
-        message: "Configure MEXC API keys in environment variables to view account balance",
+        hasUserCredentials: !!userCredentials,
+        message,
         serviceLayer: true,
         timestamp: new Date().toISOString()
       });
@@ -49,13 +68,18 @@ export async function GET(request: NextRequest) {
     const { balances, totalUsdtValue, lastUpdated } = balancesResponse.data;
     console.log(`✅ MEXC Account Service Success - Found ${balances.length} balances with total value: ${totalUsdtValue.toFixed(2)} USDT`);
 
+    const message = userCredentials
+      ? `Using user API credentials - ${balances.length} assets with balance`
+      : `Using environment credentials - ${balances.length} assets with balance`;
+
     return NextResponse.json({
       success: true,
       hasCredentials: true,
+      hasUserCredentials: !!userCredentials,
       balances,
       totalUsdtValue,
       lastUpdated,
-      message: `Real MEXC account data - ${balances.length} assets with balance`,
+      message,
       serviceLayer: true,
       cached: balancesResponse.cached,
       executionTimeMs: balancesResponse.executionTimeMs,
