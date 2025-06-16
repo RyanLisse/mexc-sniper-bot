@@ -747,6 +747,20 @@ export class MexcServiceLayer {
   }
 
   /**
+   * Test basic connectivity to MEXC API
+   */
+  async testConnectivity(): Promise<boolean> {
+    try {
+      return await this.client.testConnectivity();
+    } catch (error) {
+      if (this.config.enableLogging) {
+        console.error("[MexcServiceLayer] Connectivity test failed:", error);
+      }
+      return false;
+    }
+  }
+
+  /**
    * Get the last health check result
    */
   getLastHealthCheck(): HealthCheckResult | null {
