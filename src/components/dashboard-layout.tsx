@@ -145,7 +145,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start h-auto p-2">
                   <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src="/placeholder-user.jpg" />
+                    <AvatarImage src={user?.picture} />
                     <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start text-sm">
