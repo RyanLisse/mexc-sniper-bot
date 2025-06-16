@@ -8,69 +8,13 @@ describe("TransactionLockService", () => {
   let lockService: TransactionLockService;
 
   beforeEach(async () => {
-    // Force SQLite for tests
-    process.env.DATABASE_URL = "sqlite:///./test-mexc.db";
-    process.env.FORCE_SQLITE = "true";
+    // Use NeonDB PostgreSQL for tests
+    process.env.DATABASE_URL = process.env.DATABASE_URL?.startsWith('postgresql://') 
+      ? process.env.DATABASE_URL 
+      : 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+    process.env.FORCE_SQLITE = "false";
     
-    // DISABLE foreign key constraints for testing to avoid constraint issues
-    // This is acceptable for unit tests as we're testing business logic, not database integrity
-    await db.run(sql`PRAGMA foreign_keys = OFF`);
-    
-    // Create tables if they don't exist (in case migrations didn't run)
-    try {
-      // Create transaction_locks table
-      await db.run(sql`
-        CREATE TABLE IF NOT EXISTS transaction_locks (
-          id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-          lock_id TEXT NOT NULL UNIQUE,
-          resource_id TEXT NOT NULL,
-          idempotency_key TEXT NOT NULL UNIQUE,
-          owner_id TEXT NOT NULL,
-          owner_type TEXT NOT NULL,
-          acquired_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-          expires_at INTEGER NOT NULL,
-          released_at INTEGER,
-          status TEXT DEFAULT 'active' NOT NULL,
-          lock_type TEXT DEFAULT 'exclusive' NOT NULL,
-          transaction_type TEXT NOT NULL,
-          transaction_data TEXT NOT NULL,
-          max_retries INTEGER DEFAULT 3 NOT NULL,
-          current_retries INTEGER DEFAULT 0 NOT NULL,
-          timeout_ms INTEGER DEFAULT 30000 NOT NULL,
-          result TEXT,
-          error_message TEXT,
-          created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-          updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
-        )
-      `);
-
-      // Create transaction_queue table
-      await db.run(sql`
-        CREATE TABLE IF NOT EXISTS transaction_queue (
-          id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-          queue_id TEXT NOT NULL UNIQUE,
-          lock_id TEXT,
-          resource_id TEXT NOT NULL,
-          priority INTEGER DEFAULT 5 NOT NULL,
-          transaction_type TEXT NOT NULL,
-          transaction_data TEXT NOT NULL,
-          idempotency_key TEXT NOT NULL,
-          status TEXT DEFAULT 'pending' NOT NULL,
-          queued_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-          processing_started_at INTEGER,
-          completed_at INTEGER,
-          result TEXT,
-          error_message TEXT,
-          attempts INTEGER DEFAULT 0 NOT NULL,
-          owner_id TEXT NOT NULL,
-          owner_type TEXT NOT NULL,
-          created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-          updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
-        )
-      `);
-    } catch (error) {
-      console.warn("Failed to create tables:", error);
-    }
+    // Clean existing test data (tables should exist from migrations)
     
     // Clean up any existing locks and queue items
     try {

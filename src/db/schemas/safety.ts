@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  real,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 // ===========================================
@@ -7,7 +16,7 @@ import { user } from "./auth";
 // ===========================================
 
 // Simulation Sessions Table
-export const simulationSessions = sqliteTable(
+export const simulationSessions = pgTable(
   "simulation_sessions",
   {
     id: text("id").primaryKey(), // sim-{timestamp}-{random}
@@ -16,8 +25,8 @@ export const simulationSessions = sqliteTable(
       .references(() => user.id, { onDelete: "cascade" }),
 
     // Session Configuration
-    startTime: integer("start_time", { mode: "timestamp" }).notNull(),
-    endTime: integer("end_time", { mode: "timestamp" }),
+    startTime: timestamp("start_time").notNull(),
+    endTime: timestamp("end_time"),
     virtualBalance: real("virtual_balance").notNull(), // Starting balance in USDT
 
     // Session Results
@@ -38,8 +47,8 @@ export const simulationSessions = sqliteTable(
     slippage: real("slippage").notNull().default(0.0005), // 0.05%
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("simulation_sessions_user_id_idx").on(table.userId),
@@ -49,7 +58,7 @@ export const simulationSessions = sqliteTable(
 );
 
 // Simulation Trades Table
-export const simulationTrades = sqliteTable(
+export const simulationTrades = pgTable(
   "simulation_trades",
   {
     id: text("id").primaryKey(), // trade-{timestamp}-{random}
@@ -66,21 +75,21 @@ export const simulationTrades = sqliteTable(
     fees: real("fees").notNull(),
 
     // Execution Details
-    timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
+    timestamp: timestamp("timestamp").notNull(),
     strategy: text("strategy").notNull(), // Which strategy triggered this trade
 
     // P&L Tracking (for closed positions)
-    realized: integer("realized", { mode: "boolean" }).notNull().default(false),
+    realized: boolean("realized").notNull().default(false),
     profitLoss: real("profit_loss"), // Set when position is closed
     exitPrice: real("exit_price"), // Price when position was closed
-    exitTimestamp: integer("exit_timestamp", { mode: "timestamp" }),
+    exitTimestamp: timestamp("exit_timestamp"),
 
     // Metadata
     slippagePercent: real("slippage_percent"),
     marketImpactPercent: real("market_impact_percent"),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     sessionIdIdx: index("simulation_trades_session_id_idx").on(table.sessionId),
@@ -92,7 +101,7 @@ export const simulationTrades = sqliteTable(
 );
 
 // Risk Events Table
-export const riskEvents = sqliteTable(
+export const riskEvents = pgTable(
   "risk_events",
   {
     id: text("id").primaryKey(), // risk-{timestamp}-{random}
@@ -118,13 +127,13 @@ export const riskEvents = sqliteTable(
     actionDetails: text("action_details"), // JSON with additional action details
 
     // Resolution
-    resolved: integer("resolved", { mode: "boolean" }).notNull().default(false),
-    resolvedAt: integer("resolved_at", { mode: "timestamp" }),
+    resolved: boolean("resolved").notNull().default(false),
+    resolvedAt: timestamp("resolved_at"),
     resolution: text("resolution"),
 
     // Timestamps
-    timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    timestamp: timestamp("timestamp").notNull(),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("risk_events_user_id_idx").on(table.userId),
@@ -139,10 +148,10 @@ export const riskEvents = sqliteTable(
 );
 
 // Position Snapshots Table (for reconciliation)
-export const positionSnapshots = sqliteTable(
+export const positionSnapshots = pgTable(
   "position_snapshots",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -169,8 +178,8 @@ export const positionSnapshots = sqliteTable(
     reconciliationId: text("reconciliation_id"), // Links to reconciliation report
 
     // Timestamps
-    timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    timestamp: timestamp("timestamp").notNull(),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("position_snapshots_user_id_idx").on(table.userId),
@@ -191,15 +200,15 @@ export const positionSnapshots = sqliteTable(
 );
 
 // Reconciliation Reports Table
-export const reconciliationReports = sqliteTable(
+export const reconciliationReports = pgTable(
   "reconciliation_reports",
   {
     id: text("id").primaryKey(), // recon-{timestamp}-{random}
     userId: text("user_id").notNull().default("default"),
 
     // Report Details
-    startTime: integer("start_time", { mode: "timestamp" }).notNull(),
-    endTime: integer("end_time", { mode: "timestamp" }).notNull(),
+    startTime: timestamp("start_time").notNull(),
+    endTime: timestamp("end_time").notNull(),
 
     // Reconciliation Results
     totalChecks: integer("total_checks").notNull(),
@@ -220,7 +229,7 @@ export const reconciliationReports = sqliteTable(
     processingTimeMs: integer("processing_time_ms"),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("reconciliation_reports_user_id_idx").on(table.userId),
@@ -231,7 +240,7 @@ export const reconciliationReports = sqliteTable(
 );
 
 // Error Incidents Table
-export const errorIncidents = sqliteTable(
+export const errorIncidents = pgTable(
   "error_incidents",
   {
     id: text("id").primaryKey(), // incident-{timestamp}-{random}
@@ -247,25 +256,25 @@ export const errorIncidents = sqliteTable(
     context: text("context").notNull(), // JSON with error context
 
     // Occurrence Tracking
-    firstOccurrence: integer("first_occurrence", { mode: "timestamp" }).notNull(),
-    lastOccurrence: integer("last_occurrence", { mode: "timestamp" }).notNull(),
+    firstOccurrence: timestamp("first_occurrence").notNull(),
+    lastOccurrence: timestamp("last_occurrence").notNull(),
     occurrenceCount: integer("occurrence_count").notNull().default(1),
 
     // Recovery Status
-    recovered: integer("recovered", { mode: "boolean" }).notNull().default(false),
+    recovered: boolean("recovered").notNull().default(false),
     recoveryAttempts: integer("recovery_attempts").notNull().default(0),
     resolution: text("resolution"),
     preventionStrategy: text("prevention_strategy"),
 
     // Recovery Details
-    lastRecoveryAttempt: integer("last_recovery_attempt", { mode: "timestamp" }),
+    lastRecoveryAttempt: timestamp("last_recovery_attempt"),
     averageRecoveryTime: integer("average_recovery_time"), // milliseconds
     successfulRecoveries: integer("successful_recoveries").notNull().default(0),
     failedRecoveries: integer("failed_recoveries").notNull().default(0),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     typeIdx: index("error_incidents_type_idx").on(table.type),
@@ -287,10 +296,10 @@ export const errorIncidents = sqliteTable(
 );
 
 // System Health Metrics Table
-export const systemHealthMetrics = sqliteTable(
+export const systemHealthMetrics = pgTable(
   "system_health_metrics",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
 
     // Service Identification
     service: text("service").notNull(), // "mexc_api", "database", "inngest", "openai", "overall"
@@ -314,9 +323,7 @@ export const systemHealthMetrics = sqliteTable(
     criticalErrors: integer("critical_errors").notNull().default(0),
 
     // Circuit Breaker Status
-    circuitBreakerOpen: integer("circuit_breaker_open", { mode: "boolean" })
-      .notNull()
-      .default(false),
+    circuitBreakerOpen: boolean("circuit_breaker_open").notNull().default(false),
     circuitBreakerFailures: integer("circuit_breaker_failures").notNull().default(0),
 
     // Additional Metadata
@@ -324,8 +331,8 @@ export const systemHealthMetrics = sqliteTable(
     alertsActive: integer("alerts_active").notNull().default(0),
 
     // Timestamps
-    timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    timestamp: timestamp("timestamp").notNull(),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     serviceIdx: index("system_health_metrics_service_idx").on(table.service),

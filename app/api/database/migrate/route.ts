@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { migrate } from "drizzle-orm/libsql/migrator";
-import { drizzle } from "drizzle-orm/libsql";
-import { createClient } from "@libsql/client";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "@/src/db/schema";
 import { 
   createSuccessResponse, 
@@ -22,19 +22,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify TursoDB configuration
-    if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
+    // Verify NeonDB configuration
+    if (!process.env.DATABASE_URL?.startsWith('postgresql://')) {
       return apiResponse(
-        createErrorResponse("TursoDB configuration missing", HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        createErrorResponse("NeonDB configuration missing", HTTP_STATUS.INTERNAL_SERVER_ERROR)
       );
     }
 
     console.log("[Migration] Starting database migration in production...");
     
-    // Create TursoDB client
-    const client = createClient({
-      url: process.env.TURSO_DATABASE_URL,
-      authToken: process.env.TURSO_AUTH_TOKEN,
+    // Create PostgreSQL client
+    const client = postgres(process.env.DATABASE_URL, {
+      ssl: 'require',
+      max: 1, // Single connection for migrations
     });
 
     // Create Drizzle instance with schema
@@ -46,12 +46,15 @@ export async function POST(request: NextRequest) {
     
     console.log("[Migration] Migrations completed successfully");
     
+    // Close the client connection
+    await client.end();
+    
     return apiResponse(
       createSuccessResponse({
         message: "Database migrations completed successfully",
         timestamp: new Date().toISOString(),
         environment: "production",
-        database: "turso"
+        database: "neondb"
       })
     );
 

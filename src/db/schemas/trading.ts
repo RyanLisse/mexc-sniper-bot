@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  real,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 // ===========================================
@@ -7,10 +16,10 @@ import { user } from "./auth";
 // ===========================================
 
 // API Credentials Table
-export const apiCredentials = sqliteTable(
+export const apiCredentials = pgTable(
   "api_credentials",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -22,12 +31,12 @@ export const apiCredentials = sqliteTable(
     encryptedPassphrase: text("encrypted_passphrase"), // For some exchanges
 
     // Status
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-    lastUsed: integer("last_used", { mode: "timestamp" }),
+    isActive: boolean("is_active").notNull().default(true),
+    lastUsed: timestamp("last_used"),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userProviderIdx: index("api_credentials_user_provider_idx").on(table.userId, table.provider),
@@ -35,10 +44,10 @@ export const apiCredentials = sqliteTable(
 );
 
 // Snipe Targets Table
-export const snipeTargets = sqliteTable(
+export const snipeTargets = pgTable(
   "snipe_targets",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -62,8 +71,8 @@ export const snipeTargets = sqliteTable(
     currentRetries: integer("current_retries").notNull().default(0),
 
     // Timing
-    targetExecutionTime: integer("target_execution_time", { mode: "timestamp" }),
-    actualExecutionTime: integer("actual_execution_time", { mode: "timestamp" }),
+    targetExecutionTime: timestamp("target_execution_time"),
+    actualExecutionTime: timestamp("actual_execution_time"),
 
     // Results
     executionPrice: real("execution_price"),
@@ -76,8 +85,8 @@ export const snipeTargets = sqliteTable(
     riskLevel: text("risk_level").notNull().default("medium"),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdx: index("snipe_targets_user_idx").on(table.userId),
@@ -98,10 +107,10 @@ export const snipeTargets = sqliteTable(
 );
 
 // Execution History Table
-export const executionHistory = sqliteTable(
+export const executionHistory = pgTable(
   "execution_history",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -141,9 +150,9 @@ export const executionHistory = sqliteTable(
     errorMessage: text("error_message"),
 
     // Timestamps
-    requestedAt: integer("requested_at", { mode: "timestamp" }).notNull(),
-    executedAt: integer("executed_at", { mode: "timestamp" }),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    requestedAt: timestamp("requested_at").notNull(),
+    executedAt: timestamp("executed_at"),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdx: index("execution_history_user_idx").on(table.userId),
@@ -171,10 +180,10 @@ export const executionHistory = sqliteTable(
 );
 
 // Transactions Table - Simplified profit/loss tracking
-export const transactions = sqliteTable(
+export const transactions = pgTable(
   "transactions",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -188,14 +197,14 @@ export const transactions = sqliteTable(
     buyPrice: real("buy_price"),
     buyQuantity: real("buy_quantity"),
     buyTotalCost: real("buy_total_cost"), // Including fees
-    buyTimestamp: integer("buy_timestamp", { mode: "timestamp" }),
+    buyTimestamp: timestamp("buy_timestamp"),
     buyOrderId: text("buy_order_id"),
 
     // Sell Transaction Details
     sellPrice: real("sell_price"),
     sellQuantity: real("sell_quantity"),
     sellTotalRevenue: real("sell_total_revenue"), // After fees
-    sellTimestamp: integer("sell_timestamp", { mode: "timestamp" }),
+    sellTimestamp: timestamp("sell_timestamp"),
     sellOrderId: text("sell_order_id"),
 
     // Profit/Loss Calculation
@@ -213,11 +222,9 @@ export const transactions = sqliteTable(
     notes: text("notes"), // Optional notes about the transaction
 
     // Timestamps
-    transactionTime: integer("transaction_time", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    transactionTime: timestamp("transaction_time").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdx: index("transactions_user_idx").on(table.userId),
@@ -236,10 +243,10 @@ export const transactions = sqliteTable(
 );
 
 // Transaction Lock Tables
-export const transactionLocks = sqliteTable(
+export const transactionLocks = pgTable(
   "transaction_locks",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     lockId: text("lock_id").notNull().unique(), // UUID for the lock
     resourceId: text("resource_id").notNull(), // What we're locking (e.g., "trade:BTCUSDT:BUY")
     idempotencyKey: text("idempotency_key").notNull().unique(), // Prevent duplicate requests
@@ -249,9 +256,9 @@ export const transactionLocks = sqliteTable(
     ownerType: text("owner_type").notNull(), // "user", "system", "workflow"
 
     // Lock timing
-    acquiredAt: integer("acquired_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
-    releasedAt: integer("released_at", { mode: "timestamp" }),
+    acquiredAt: timestamp("acquired_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    expiresAt: timestamp("expires_at").notNull(),
+    releasedAt: timestamp("released_at"),
 
     // Lock status
     status: text("status").notNull().default("active"), // "active", "released", "expired", "failed"
@@ -271,8 +278,8 @@ export const transactionLocks = sqliteTable(
     errorMessage: text("error_message"),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     resourceIdIdx: index("transaction_locks_resource_id_idx").on(table.resourceId),
@@ -290,10 +297,10 @@ export const transactionLocks = sqliteTable(
 );
 
 // Transaction Queue Table
-export const transactionQueue = sqliteTable(
+export const transactionQueue = pgTable(
   "transaction_queue",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     queueId: text("queue_id").notNull().unique(), // UUID for the queue item
     lockId: text("lock_id").references(() => transactionLocks.lockId, { onDelete: "set null" }),
 
@@ -310,9 +317,9 @@ export const transactionQueue = sqliteTable(
     status: text("status").notNull().default("pending"), // "pending", "processing", "completed", "failed", "cancelled"
 
     // Timing
-    queuedAt: integer("queued_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    processingStartedAt: integer("processing_started_at", { mode: "timestamp" }),
-    completedAt: integer("completed_at", { mode: "timestamp" }),
+    queuedAt: timestamp("queued_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    processingStartedAt: timestamp("processing_started_at"),
+    completedAt: timestamp("completed_at"),
 
     // Result
     result: text("result"), // JSON result
@@ -324,8 +331,8 @@ export const transactionQueue = sqliteTable(
     ownerType: text("owner_type").notNull(),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     resourceIdIdx: index("transaction_queue_resource_id_idx").on(table.resourceId),

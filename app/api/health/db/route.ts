@@ -13,8 +13,7 @@ export async function GET() {
     const envCheck = {
       AUTH_SECRET: !!process.env.AUTH_SECRET,
       DATABASE_URL: !!process.env.DATABASE_URL,
-      TURSO_DATABASE_URL: !!process.env.TURSO_DATABASE_URL,
-      TURSO_AUTH_TOKEN: !!process.env.TURSO_AUTH_TOKEN,
+      DATABASE_URL_PROTOCOL: process.env.DATABASE_URL?.split('://')[0] || 'unknown',
       NODE_ENV: process.env.NODE_ENV || 'development',
     };
     

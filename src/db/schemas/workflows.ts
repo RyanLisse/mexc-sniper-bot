@@ -1,20 +1,20 @@
 import { sql } from "drizzle-orm";
-import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, pgTable, real, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 // ===========================================
 // WORKFLOW ORCHESTRATION SCHEMA MODULE
 // ===========================================
 
 // Workflow System Status Table
-export const workflowSystemStatus = sqliteTable(
+export const workflowSystemStatus = pgTable(
   "workflow_system_status",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id").notNull().default("default"), // Support multi-user in future
 
     // System Status
     systemStatus: text("system_status").notNull().default("stopped"), // "running", "stopped", "error"
-    lastUpdate: integer("last_update", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    lastUpdate: timestamp("last_update").notNull().default(sql`CURRENT_TIMESTAMP`),
 
     // Active Workflows
     activeWorkflows: text("active_workflows").notNull().default("[]"), // JSON array of workflow IDs
@@ -29,8 +29,8 @@ export const workflowSystemStatus = sqliteTable(
     bestTrade: real("best_trade").notNull().default(0),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("workflow_system_status_user_id_idx").on(table.userId),
@@ -38,10 +38,10 @@ export const workflowSystemStatus = sqliteTable(
 );
 
 // Workflow Activity Log Table
-export const workflowActivity = sqliteTable(
+export const workflowActivity = pgTable(
   "workflow_activity",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id").notNull().default("default"),
     activityId: text("activity_id").notNull().unique(), // UUID
 
@@ -58,8 +58,8 @@ export const workflowActivity = sqliteTable(
     level: text("level").notNull().default("info"), // "info", "warning", "error", "success"
 
     // Timestamps
-    timestamp: integer("timestamp", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    timestamp: timestamp("timestamp").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("workflow_activity_user_id_idx").on(table.userId),

@@ -1,11 +1,12 @@
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
+import { boolean, integer, pgTable, real, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 // Agent Performance Metrics Table
-export const agentPerformanceMetrics = sqliteTable("agent_performance_metrics", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const agentPerformanceMetrics = pgTable("agent_performance_metrics", {
+  id: serial("id").primaryKey(),
   agentId: text("agent_id").notNull(),
-  timestamp: integer("timestamp").notNull(), // Unix timestamp
+  timestamp: timestamp("timestamp").notNull(),
   responseTime: real("response_time").notNull(),
   successRate: real("success_rate").notNull(),
   errorRate: real("error_rate").notNull(),
@@ -21,15 +22,15 @@ export const agentPerformanceMetrics = sqliteTable("agent_performance_metrics", 
   uptime: real("uptime").notNull(),
   lastError: text("last_error"),
   metadata: text("metadata"), // JSON string
-  createdAt: integer("created_at").notNull().default(Date.now()),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Workflow Performance Metrics Table
-export const workflowPerformanceMetrics = sqliteTable("workflow_performance_metrics", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const workflowPerformanceMetrics = pgTable("workflow_performance_metrics", {
+  id: serial("id").primaryKey(),
   workflowId: text("workflow_id").notNull(),
   executionId: text("execution_id").notNull(),
-  timestamp: integer("timestamp").notNull(), // Unix timestamp
+  timestamp: timestamp("timestamp").notNull(),
   duration: integer("duration").notNull(),
   status: text("status").notNull(), // "completed" | "failed" | "timeout" | "cancelled"
   stepsExecuted: integer("steps_executed").notNull(),
@@ -47,13 +48,13 @@ export const workflowPerformanceMetrics = sqliteTable("workflow_performance_metr
   peakCpu: real("peak_cpu").notNull(),
   averageCpu: real("average_cpu").notNull(),
   metadata: text("metadata"), // JSON string
-  createdAt: integer("created_at").notNull().default(Date.now()),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // System Performance Snapshots Table
-export const systemPerformanceSnapshots = sqliteTable("system_performance_snapshots", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  timestamp: integer("timestamp").notNull(), // Unix timestamp
+export const systemPerformanceSnapshots = pgTable("system_performance_snapshots", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull(),
   totalAgents: integer("total_agents").notNull(),
   healthyAgents: integer("healthy_agents").notNull(),
   degradedAgents: integer("degraded_agents").notNull(),
@@ -70,12 +71,12 @@ export const systemPerformanceSnapshots = sqliteTable("system_performance_snapsh
   errorRate: real("error_rate").notNull(),
   uptime: integer("uptime").notNull(),
   metadata: text("metadata"), // JSON string
-  createdAt: integer("created_at").notNull().default(Date.now()),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Performance Alerts Table
-export const performanceAlerts = sqliteTable("performance_alerts", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const performanceAlerts = pgTable("performance_alerts", {
+  id: serial("id").primaryKey(),
   alertType: text("alert_type").notNull(), // "agent_degraded" | "workflow_failed" | "system_overload"
   severity: text("severity").notNull(), // "low" | "medium" | "high" | "critical"
   targetId: text("target_id").notNull(), // Agent ID, Workflow ID, or "system"
@@ -83,17 +84,17 @@ export const performanceAlerts = sqliteTable("performance_alerts", {
   message: text("message").notNull(),
   threshold: real("threshold"),
   actualValue: real("actual_value"),
-  isResolved: integer("is_resolved").notNull().default(0),
-  resolvedAt: integer("resolved_at"),
+  isResolved: boolean("is_resolved").notNull().default(false),
+  resolvedAt: timestamp("resolved_at"),
   resolvedBy: text("resolved_by"),
   metadata: text("metadata"), // JSON string
-  createdAt: integer("created_at").notNull().default(Date.now()),
-  updatedAt: integer("updated_at").notNull().default(Date.now()),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Performance Baselines Table (for comparison and trend analysis)
-export const performanceBaselines = sqliteTable("performance_baselines", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const performanceBaselines = pgTable("performance_baselines", {
+  id: serial("id").primaryKey(),
   targetId: text("target_id").notNull(), // Agent ID, Workflow ID, or "system"
   targetType: text("target_type").notNull(), // "agent" | "workflow" | "system"
   metricName: text("metric_name").notNull(), // "response_time" | "success_rate" | "throughput"
@@ -102,10 +103,10 @@ export const performanceBaselines = sqliteTable("performance_baselines", {
   sampleCount: integer("sample_count").notNull(),
   standardDeviation: real("standard_deviation"),
   confidenceInterval: real("confidence_interval"), // 95% confidence interval
-  calculatedAt: integer("calculated_at").notNull(),
-  validUntil: integer("valid_until"), // When baseline should be recalculated
+  calculatedAt: timestamp("calculated_at").notNull(),
+  validUntil: timestamp("valid_until"), // When baseline should be recalculated
   metadata: text("metadata"), // JSON string
-  createdAt: integer("created_at").notNull().default(Date.now()),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Zod schemas for validation (simplified without drizzle-zod dependency)

@@ -72,7 +72,7 @@ Revolutionary TypeScript-based system with specialized AI agents:
 - **Agent System**: Pure TypeScript with OpenAI GPT-4 integration
 - **Authentication**: Kinde Auth with secure session management
 - **Workflows**: Inngest for reliable background task orchestration
-- **Database**: Drizzle ORM with TursoDB (distributed SQLite) for global edge performance
+- **Database**: Drizzle ORM with NeonDB (serverless PostgreSQL) for global edge performance
 - **Data Management**: TanStack Query v5.80.6 for real-time data fetching and caching
 - **Testing**: Vitest (unit), Playwright (E2E), Stagehand v2.3.0 (AI-powered E2E)
 - **Code Quality**: Biome.js for formatting and linting, TypeScript for type safety
@@ -84,7 +84,7 @@ Revolutionary TypeScript-based system with specialized AI agents:
 - **OpenAI API key** (required for AI agents and Stagehand testing)
 - **Kinde Auth account** (required for authentication)
 - **MEXC API credentials** (optional, for authenticated endpoints)
-- **TursoDB account** (optional, for production database)
+- **NeonDB account** (optional, for production database)
 
 ## 🛠️ Quick Start
 
@@ -127,9 +127,8 @@ MEXC_BASE_URL=https://api.mexc.com
 # Option 1: Local SQLite (default for development)
 DATABASE_URL=sqlite:///./mexc_sniper.db
 
-# Option 2: TursoDB (recommended for production)
-# TURSO_DATABASE_URL=libsql://your-database.turso.io
-# TURSO_AUTH_TOKEN=your-auth-token
+# Option 2: NeonDB (recommended for production)
+# DATABASE_URL=postgresql://username:password@hostname/database?sslmode=require
 
 # Optional - Workflow Orchestration (auto-generated if not provided)
 # INNGEST_SIGNING_KEY=your_signing_key
@@ -301,10 +300,10 @@ The system uses Drizzle ORM with the following key tables:
 
 1. Push your code to GitHub
 2. Import project in Vercel Dashboard
-3. Add environment variables (including TursoDB credentials)
+3. Add environment variables (including NeonDB credentials)
 4. Deploy
 
-**Important**: The system is optimized for Vercel's edge infrastructure with TursoDB for global low-latency data access.
+**Important**: The system is optimized for Vercel's edge infrastructure with NeonDB for global low-latency data access.
 
 ### Alternative: Deploy to Railway
 
@@ -320,17 +319,15 @@ railway init
 railway up
 ```
 
-### Database Setup with TursoDB
+### Database Setup with NeonDB
 
-```bash
-# Install Turso CLI
-curl -sSfL https://get.tur.so/install.sh | bash
-
-# Setup production database
-turso auth login
-turso db create mexc-sniper-prod --location iad1
-turso db tokens create mexc-sniper-prod
-```
+1. Visit [Neon.tech](https://neon.tech) and create an account
+2. Create a new project and database
+3. Get your connection string from the project dashboard
+4. Add the connection string to your environment variables:
+   ```bash
+   DATABASE_URL=postgresql://username:password@hostname/database?sslmode=require
+   ```
 
 ### Manual Deployment
 
@@ -359,7 +356,7 @@ For detailed deployment instructions, see [docs/deployment/DEPLOYMENT.md](docs/d
 
 ### Deployment & Operations
 - [Deployment Guide](docs/deployment/DEPLOYMENT.md) - Production deployment
-- [TursoDB Best Practices](docs/deployment/turso-best-practices.md) - Database optimization
+- [NeonDB Best Practices](docs/deployment/neon-best-practices.md) - Database optimization
 - [Vercel Configuration](docs/vercel-configuration.md) - Serverless deployment
 
 ### Development

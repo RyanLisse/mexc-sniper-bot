@@ -1,15 +1,24 @@
 import { sql } from "drizzle-orm";
-import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  real,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 // ===========================================
 // PATTERN ANALYSIS SCHEMA MODULE
 // ===========================================
 
 // Monitored Listings Table
-export const monitoredListings = sqliteTable(
+export const monitoredListings = pgTable(
   "monitored_listings",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     vcoinId: text("vcoin_id").notNull().unique(),
     symbolName: text("symbol_name").notNull(),
     projectName: text("project_name"),
@@ -26,15 +35,11 @@ export const monitoredListings = sqliteTable(
     patternSts: integer("pattern_sts"), // Symbol trading status
     patternSt: integer("pattern_st"), // Symbol state
     patternTt: integer("pattern_tt"), // Trading time status
-    hasReadyPattern: integer("has_ready_pattern", { mode: "boolean" }).notNull().default(false),
+    hasReadyPattern: boolean("has_ready_pattern").notNull().default(false),
 
     // Discovery Information
-    discoveredAt: integer("discovered_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-    lastChecked: integer("last_checked", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
+    discoveredAt: timestamp("discovered_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    lastChecked: timestamp("last_checked").notNull().default(sql`CURRENT_TIMESTAMP`),
 
     // Trading Data
     tradingPairs: text("trading_pairs"), // JSON array of trading pairs
@@ -42,8 +47,8 @@ export const monitoredListings = sqliteTable(
     volumeData: text("volume_data"), // JSON volume information
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     vcoinIdIdx: index("monitored_listings_vcoin_id_idx").on(table.vcoinId),
@@ -54,10 +59,10 @@ export const monitoredListings = sqliteTable(
 );
 
 // Pattern Embeddings Table for Vector Search
-export const patternEmbeddings = sqliteTable(
+export const patternEmbeddings = pgTable(
   "pattern_embeddings",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
 
     // Pattern Identification
     patternId: text("pattern_id").notNull().unique(), // embed-{timestamp}-{random}
@@ -80,8 +85,8 @@ export const patternEmbeddings = sqliteTable(
     avgProfit: real("avg_profit"), // Average profit when this pattern appears
 
     // Discovery Information
-    discoveredAt: integer("discovered_at", { mode: "timestamp" }).notNull(),
-    lastSeenAt: integer("last_seen_at", { mode: "timestamp" }).notNull(),
+    discoveredAt: timestamp("discovered_at").notNull(),
+    lastSeenAt: timestamp("last_seen_at").notNull(),
 
     // Performance Metrics
     similarityThreshold: real("similarity_threshold").notNull().default(0.85), // Threshold for pattern matching
@@ -89,11 +94,11 @@ export const patternEmbeddings = sqliteTable(
     truePositives: integer("true_positives").notNull().default(0),
 
     // Status
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    isActive: boolean("is_active").notNull().default(true),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     patternTypeIdx: index("pattern_embeddings_pattern_type_idx").on(table.patternType),
@@ -114,10 +119,10 @@ export const patternEmbeddings = sqliteTable(
 );
 
 // Pattern Similarity Cache Table
-export const patternSimilarityCache = sqliteTable(
+export const patternSimilarityCache = pgTable(
   "pattern_similarity_cache",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
 
     // Pattern References
     patternId1: text("pattern_id_1")
@@ -132,11 +137,11 @@ export const patternSimilarityCache = sqliteTable(
     euclideanDistance: real("euclidean_distance").notNull(), // 0 to infinity
 
     // Cache Metadata
-    calculatedAt: integer("calculated_at", { mode: "timestamp" }).notNull(),
-    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(), // Cache expiry
+    calculatedAt: timestamp("calculated_at").notNull(),
+    expiresAt: timestamp("expires_at").notNull(), // Cache expiry
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     pattern1Idx: index("pattern_similarity_cache_pattern1_idx").on(table.patternId1),

@@ -1,4 +1,6 @@
 "use client";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -16,9 +18,7 @@ import {
   SelectValue,
 } from "@/src/components/ui/select";
 import { Separator } from "@/src/components/ui/separator";
-import { Badge } from "@/src/components/ui/badge";
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
-import { TrendingUp, Info, DollarSign, Target, AlertTriangle } from "lucide-react";
+import { AlertTriangle, DollarSign, Info, Target, TrendingUp } from "lucide-react";
 
 interface TakeProfitLevels {
   level1: number;
@@ -57,7 +57,7 @@ export function UnifiedTakeProfitLevels({
 
   // Calculate multiplier and profit estimate for display
   const calculateProfitInfo = (percentage: number) => {
-    const multiplier = 1 + (percentage / 100);
+    const multiplier = 1 + percentage / 100;
     return {
       multiplier: multiplier.toFixed(2),
       dollarProfit: ((multiplier - 1) * 1000).toFixed(0), // Example with $1000 investment
@@ -67,10 +67,30 @@ export function UnifiedTakeProfitLevels({
   // Get level description and risk info
   const getLevelInfo = (levelNum: number, percentage: number) => {
     const descriptions = {
-      1: { name: "Conservative", risk: "Low Risk", color: "bg-green-100 text-green-800", icon: <Target className="h-4 w-4" /> },
-      2: { name: "Moderate", risk: "Medium Risk", color: "bg-blue-100 text-blue-800", icon: <TrendingUp className="h-4 w-4" /> },
-      3: { name: "Aggressive", risk: "High Risk", color: "bg-orange-100 text-orange-800", icon: <DollarSign className="h-4 w-4" /> },
-      4: { name: "Very Aggressive", risk: "Very High Risk", color: "bg-red-100 text-red-800", icon: <AlertTriangle className="h-4 w-4" /> },
+      1: {
+        name: "Conservative",
+        risk: "Low Risk",
+        color: "bg-green-100 text-green-800",
+        icon: <Target className="h-4 w-4" />,
+      },
+      2: {
+        name: "Moderate",
+        risk: "Medium Risk",
+        color: "bg-blue-100 text-blue-800",
+        icon: <TrendingUp className="h-4 w-4" />,
+      },
+      3: {
+        name: "Aggressive",
+        risk: "High Risk",
+        color: "bg-orange-100 text-orange-800",
+        icon: <DollarSign className="h-4 w-4" />,
+      },
+      4: {
+        name: "Very Aggressive",
+        risk: "Very High Risk",
+        color: "bg-red-100 text-red-800",
+        icon: <AlertTriangle className="h-4 w-4" />,
+      },
     };
     return descriptions[levelNum as keyof typeof descriptions];
   };
@@ -83,7 +103,8 @@ export function UnifiedTakeProfitLevels({
           Take Profit Configuration
         </CardTitle>
         <CardDescription>
-          Configure when and how much profit to take automatically. Higher percentages = higher risk but potentially bigger rewards.
+          Configure when and how much profit to take automatically. Higher percentages = higher risk
+          but potentially bigger rewards.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -91,9 +112,9 @@ export function UnifiedTakeProfitLevels({
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>How Take Profit Works:</strong> When a token reaches your target profit percentage, 
-            the bot will automatically sell your position. For example, if you set 10% and buy at $1.00, 
-            it will sell when the price reaches $1.10 (+10% profit).
+            <strong>How Take Profit Works:</strong> When a token reaches your target profit
+            percentage, the bot will automatically sell your position. For example, if you set 10%
+            and buy at $1.00, it will sell when the price reaches $1.10 (+10% profit).
           </AlertDescription>
         </Alert>
         <div className="grid gap-6 md:grid-cols-2">
@@ -227,9 +248,12 @@ export function UnifiedTakeProfitLevels({
         {/* Default Level Selection */}
         <div className="space-y-4">
           <div className="space-y-3">
-            <Label htmlFor="default-tp" className="text-base font-medium">Default Take Profit Level</Label>
+            <Label htmlFor="default-tp" className="text-base font-medium">
+              Default Take Profit Level
+            </Label>
             <p className="text-sm text-muted-foreground">
-              This level will be used automatically for new trades unless you manually select a different one.
+              This level will be used automatically for new trades unless you manually select a
+              different one.
             </p>
             <Select
               value={levels.defaultLevel.toString()}
@@ -245,7 +269,9 @@ export function UnifiedTakeProfitLevels({
                       <Target className="h-4 w-4 text-green-600" />
                       <span>Level 1 - Conservative ({levels.level1}%)</span>
                     </div>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 ml-2">Low Risk</Badge>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 ml-2">
+                      Low Risk
+                    </Badge>
                   </div>
                 </SelectItem>
                 <SelectItem value="2" className="h-12">
@@ -254,7 +280,9 @@ export function UnifiedTakeProfitLevels({
                       <TrendingUp className="h-4 w-4 text-blue-600" />
                       <span>Level 2 - Moderate ({levels.level2}%)</span>
                     </div>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 ml-2">Medium Risk</Badge>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 ml-2">
+                      Medium Risk
+                    </Badge>
                   </div>
                 </SelectItem>
                 <SelectItem value="3" className="h-12">
@@ -263,7 +291,9 @@ export function UnifiedTakeProfitLevels({
                       <DollarSign className="h-4 w-4 text-orange-600" />
                       <span>Level 3 - Aggressive ({levels.level3}%)</span>
                     </div>
-                    <Badge variant="secondary" className="bg-orange-100 text-orange-800 ml-2">High Risk</Badge>
+                    <Badge variant="secondary" className="bg-orange-100 text-orange-800 ml-2">
+                      High Risk
+                    </Badge>
                   </div>
                 </SelectItem>
                 <SelectItem value="4" className="h-12">
@@ -272,7 +302,9 @@ export function UnifiedTakeProfitLevels({
                       <AlertTriangle className="h-4 w-4 text-red-600" />
                       <span>Level 4 - Very Aggressive ({levels.level4}%)</span>
                     </div>
-                    <Badge variant="secondary" className="bg-red-100 text-red-800 ml-2">Very High Risk</Badge>
+                    <Badge variant="secondary" className="bg-red-100 text-red-800 ml-2">
+                      Very High Risk
+                    </Badge>
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -285,10 +317,13 @@ export function UnifiedTakeProfitLevels({
               <Label htmlFor="custom-tp" className="text-base font-medium">
                 Custom Take Profit (Optional)
               </Label>
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800">Custom</Badge>
+              <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                Custom
+              </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              Set a specific percentage that's not covered by the preset levels. Leave empty to use preset levels only.
+              Set a specific percentage that's not covered by the preset levels. Leave empty to use
+              preset levels only.
             </p>
             <div className="flex items-center gap-2">
               <Input
@@ -320,8 +355,8 @@ export function UnifiedTakeProfitLevels({
         <Alert className="border-orange-200 bg-orange-50">
           <AlertTriangle className="h-4 w-4 text-orange-600" />
           <AlertDescription className="text-orange-800">
-            <strong>Risk Warning:</strong> Higher profit targets mean the bot waits longer to sell, 
-            increasing the chance that prices may drop before reaching your target. Always consider 
+            <strong>Risk Warning:</strong> Higher profit targets mean the bot waits longer to sell,
+            increasing the chance that prices may drop before reaching your target. Always consider
             your risk tolerance and never invest more than you can afford to lose.
           </AlertDescription>
         </Alert>

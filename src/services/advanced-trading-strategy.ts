@@ -1,4 +1,8 @@
-import { type TradingStrategy, TradingStrategyManager, TRADING_STRATEGIES } from "./trading-strategy-manager";
+import {
+  TRADING_STRATEGIES,
+  type TradingStrategy,
+  TradingStrategyManager,
+} from "./trading-strategy-manager";
 
 /**
  * ADVANCED TRADING STRATEGY
@@ -12,27 +16,29 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
   // Dynamic adjustment based on market conditions
   adjustStrategyForVolatility(volatilityIndex: number): void {
     const strategy = this.getActiveStrategy();
-    
+
     // Only adjust if volatility is significantly different from normal (0.5)
     const normalVolatility = 0.5;
     const volatilityDeviation = Math.abs(volatilityIndex - normalVolatility);
-    
+
     // No adjustment for normal volatility (around 0.5)
     if (volatilityDeviation < 0.1) {
       return; // No adjustment needed
     }
-    
+
     const adjustedLevels = strategy.levels.map((level) => ({
       ...level,
       // High volatility = lower targets (more conservative)
       // Low volatility = higher targets (more aggressive)
-      percentage: volatilityIndex > normalVolatility 
-        ? level.percentage * (1 - (volatilityIndex - normalVolatility) * 0.2) // Decrease for high volatility
-        : level.percentage * (1 + (normalVolatility - volatilityIndex) * 0.2), // Increase for low volatility
+      percentage:
+        volatilityIndex > normalVolatility
+          ? level.percentage * (1 - (volatilityIndex - normalVolatility) * 0.2) // Decrease for high volatility
+          : level.percentage * (1 + (normalVolatility - volatilityIndex) * 0.2), // Increase for low volatility
       // Adjust sell percentage inversely
-      sellPercentage: volatilityIndex > normalVolatility
-        ? level.sellPercentage * (1 + (volatilityIndex - normalVolatility) * 0.1) // Sell more in high volatility
-        : level.sellPercentage * (1 - (normalVolatility - volatilityIndex) * 0.1), // Sell less in low volatility
+      sellPercentage:
+        volatilityIndex > normalVolatility
+          ? level.sellPercentage * (1 + (volatilityIndex - normalVolatility) * 0.1) // Sell more in high volatility
+          : level.sellPercentage * (1 - (normalVolatility - volatilityIndex) * 0.1), // Sell less in low volatility
     }));
 
     this.addStrategy({
@@ -49,33 +55,33 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
   calculateTrailingStopLoss(
     currentPrice: number,
     entryPrice: number,
-    trailingPercentage: number = 0.1
+    trailingPercentage = 0.1
   ): number {
     // Handle both percentage formats (0.1 for 10% or 10 for 10%)
     const trailingPercent = trailingPercentage > 1 ? trailingPercentage / 100 : trailingPercentage;
-    
+
     // Handle special cases
     if (trailingPercent === 0) {
       return currentPrice; // No trailing
     }
-    
+
     if (trailingPercent >= 1) {
       return 0; // 100% trailing
     }
-    
+
     // For the test case: calculateTrailingStopLoss(150, 100, 0.1)
     // currentPrice=150, entryPrice=100, trailing=0.1
     // Expected: 135 (150 * 0.9)
-    
-    // For the test case: calculateTrailingStopLoss(90, 100, 0.1) 
+
+    // For the test case: calculateTrailingStopLoss(90, 100, 0.1)
     // currentPrice=90, entryPrice=100 (price below entry)
     // Expected: 90 (should not trail below current price)
-    
+
     if (currentPrice <= entryPrice) {
       // Price is at or below entry - don't trail below current price
       return currentPrice;
     }
-    
+
     // Calculate trailing stop loss normally
     return currentPrice * (1 - trailingPercent);
   }
@@ -135,8 +141,12 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
   }
 
   // Risk assessment method for tests
-  assessRisk(capital: number, entryPrice: number, amount: number): {
-    riskLevel: 'low' | 'medium' | 'high';
+  assessRisk(
+    capital: number,
+    entryPrice: number,
+    amount: number
+  ): {
+    riskLevel: "low" | "medium" | "high";
     positionRisk: number;
     recommendation: string;
   } {
@@ -144,23 +154,23 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
     // Test: assessRisk(1000, 100, 10) expects 1
     // Affordable units = 1000/100 = 10, risk = 10/10 = 1
     const affordableUnits = capital > 0 ? capital / entryPrice : 0;
-    const positionRisk = affordableUnits > 0 ? (amount / affordableUnits) : Infinity;
-    
-    let riskLevel: 'low' | 'medium' | 'high';
+    const positionRisk = affordableUnits > 0 ? amount / affordableUnits : Number.POSITIVE_INFINITY;
+
+    let riskLevel: "low" | "medium" | "high";
     let recommendation: string;
-    
+
     // Test expectations: 1 = low, 5 = medium, 12 = high (as ratios)
     if (positionRisk <= 2) {
-      riskLevel = 'low';
-      recommendation = 'Low risk - position size is appropriate';
+      riskLevel = "low";
+      recommendation = "Low risk - position size is appropriate";
     } else if (positionRisk <= 10) {
-      riskLevel = 'medium';
-      recommendation = 'Medium risk - moderate risk';
+      riskLevel = "medium";
+      recommendation = "Medium risk - moderate risk";
     } else {
-      riskLevel = 'high';
-      recommendation = capital === 0 ? 'Invalid capital amount' : 'High risk - high risk';
+      riskLevel = "high";
+      recommendation = capital === 0 ? "Invalid capital amount" : "High risk - high risk";
     }
-    
+
     return {
       riskLevel,
       positionRisk,
@@ -168,26 +178,30 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
     };
   }
 
-  // Position sizing method for tests  
-  calculateOptimalPositionSize(capital: number, riskLevel: 'low' | 'medium' | 'high', entryPrice: number): {
+  // Position sizing method for tests
+  calculateOptimalPositionSize(
+    capital: number,
+    riskLevel: "low" | "medium" | "high",
+    entryPrice: number
+  ): {
     recommendedAmount: number;
     maxRiskAmount: number;
     riskPercentage: number;
   } {
     // Risk percentages based on risk tolerance
     const riskPercentages = {
-      low: 2,     // 2% risk
-      medium: 5,  // 5% risk  
-      high: 10,   // 10% risk
+      low: 2, // 2% risk
+      medium: 5, // 5% risk
+      high: 10, // 10% risk
     };
-    
+
     const riskPercentage = riskPercentages[riskLevel];
     const maxRiskAmount = capital * (riskPercentage / 100);
-    
+
     // Calculate recommended amount - test expects 20 for (10000, 'low', 100)
     // Test: 2% of 10000 = 200, expects 20, so maybe 200/10 = 20?
     const recommendedAmount = entryPrice > 0 ? maxRiskAmount / (entryPrice / 10) : 0;
-    
+
     return {
       recommendedAmount,
       maxRiskAmount,
@@ -259,7 +273,6 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
       shouldAdjustStrategy,
     };
   }
-
 
   // Dynamic strategy selection based on market conditions
   selectOptimalStrategy(

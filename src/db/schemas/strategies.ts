@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  real,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 // ===========================================
@@ -7,10 +16,10 @@ import { user } from "./auth";
 // ===========================================
 
 // Trading Strategy Templates Table
-export const strategyTemplates = sqliteTable(
+export const strategyTemplates = pgTable(
   "strategy_templates",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     strategyId: text("strategy_id").notNull().unique(), // e.g., "normal", "conservative", etc.
     name: text("name").notNull(),
     description: text("description"),
@@ -23,8 +32,8 @@ export const strategyTemplates = sqliteTable(
     defaultSettings: text("default_settings").notNull(), // JSON of default strategy settings
 
     // Template Status
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-    isBuiltIn: integer("is_built_in", { mode: "boolean" }).notNull().default(false),
+    isActive: boolean("is_active").notNull().default(true),
+    isBuiltIn: boolean("is_built_in").notNull().default(false),
 
     // Usage Statistics
     usageCount: integer("usage_count").notNull().default(0),
@@ -32,8 +41,8 @@ export const strategyTemplates = sqliteTable(
     avgProfitPercent: real("avg_profit_percent").default(0.0),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     strategyIdIdx: index("strategy_templates_strategy_id_idx").on(table.strategyId),
@@ -44,10 +53,10 @@ export const strategyTemplates = sqliteTable(
 );
 
 // Active Trading Strategies Table
-export const tradingStrategies = sqliteTable(
+export const tradingStrategies = pgTable(
   "trading_strategies",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -96,16 +105,16 @@ export const tradingStrategies = sqliteTable(
 
     // AI Integration
     aiInsights: text("ai_insights"),
-    lastAiAnalysis: integer("last_ai_analysis", { mode: "timestamp" }),
+    lastAiAnalysis: timestamp("last_ai_analysis"),
 
     // Timing
-    activatedAt: integer("activated_at", { mode: "timestamp" }),
-    completedAt: integer("completed_at", { mode: "timestamp" }),
-    lastExecutionAt: integer("last_execution_at", { mode: "timestamp" }),
+    activatedAt: timestamp("activated_at"),
+    completedAt: timestamp("completed_at"),
+    lastExecutionAt: timestamp("last_execution_at"),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdx: index("trading_strategies_user_idx").on(table.userId),
@@ -120,10 +129,10 @@ export const tradingStrategies = sqliteTable(
 );
 
 // Strategy Phase Executions Table
-export const strategyPhaseExecutions = sqliteTable(
+export const strategyPhaseExecutions = pgTable(
   "strategy_phase_executions",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -156,16 +165,16 @@ export const strategyPhaseExecutions = sqliteTable(
     exchangeResponse: text("exchange_response"), // JSON response from exchange
 
     // Timing
-    triggeredAt: integer("triggered_at", { mode: "timestamp" }),
-    executedAt: integer("executed_at", { mode: "timestamp" }),
+    triggeredAt: timestamp("triggered_at"),
+    executedAt: timestamp("executed_at"),
 
     // Error Tracking
     errorMessage: text("error_message"),
     retryCount: integer("retry_count").notNull().default(0),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     strategyIdx: index("strategy_phase_executions_strategy_idx").on(table.strategyId),
@@ -189,10 +198,10 @@ export const strategyPhaseExecutions = sqliteTable(
 );
 
 // Strategy Performance Analytics Table
-export const strategyPerformanceMetrics = sqliteTable(
+export const strategyPerformanceMetrics = pgTable(
   "strategy_performance_metrics",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -201,8 +210,8 @@ export const strategyPerformanceMetrics = sqliteTable(
       .references(() => tradingStrategies.id, { onDelete: "cascade" }),
 
     // Performance Period
-    periodStart: integer("period_start", { mode: "timestamp" }).notNull(),
-    periodEnd: integer("period_end", { mode: "timestamp" }).notNull(),
+    periodStart: timestamp("period_start").notNull(),
+    periodEnd: timestamp("period_end").notNull(),
     periodType: text("period_type").notNull(), // "1h", "4h", "1d", "1w", "1m"
 
     // Price Metrics
@@ -234,10 +243,8 @@ export const strategyPerformanceMetrics = sqliteTable(
     marketVolatility: text("market_volatility"), // "low", "medium", "high"
 
     // Timestamps
-    calculatedAt: integer("calculated_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    calculatedAt: timestamp("calculated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     strategyIdx: index("strategy_performance_metrics_strategy_idx").on(table.strategyId),
@@ -260,10 +267,10 @@ export const strategyPerformanceMetrics = sqliteTable(
 );
 
 // Strategy Configuration Backups Table (for version control)
-export const strategyConfigBackups = sqliteTable(
+export const strategyConfigBackups = pgTable(
   "strategy_config_backups",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     strategyId: integer("strategy_id")
       .notNull()
       .references(() => tradingStrategies.id, { onDelete: "cascade" }),
@@ -274,13 +281,13 @@ export const strategyConfigBackups = sqliteTable(
 
     // Version Control
     version: integer("version").notNull(),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(false),
+    isActive: boolean("is_active").notNull().default(false),
 
     // Performance at time of backup
     performanceSnapshot: text("performance_snapshot"), // JSON of performance metrics
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     strategyIdx: index("strategy_config_backups_strategy_idx").on(table.strategyId),

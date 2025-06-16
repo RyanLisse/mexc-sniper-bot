@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/src/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -7,17 +8,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card";
-import { Badge } from "@/src/components/ui/badge";
 import { Separator } from "@/src/components/ui/separator";
-import { 
-  HelpCircle, 
-  TrendingUp, 
-  Target, 
-  DollarSign, 
-  AlertTriangle, 
-  Clock, 
+import {
+  AlertTriangle,
   BarChart3,
-  Calculator
+  Calculator,
+  Clock,
+  DollarSign,
+  HelpCircle,
+  Target,
+  TrendingUp,
 } from "lucide-react";
 
 export function TakeProfitHelp() {
@@ -33,7 +33,6 @@ export function TakeProfitHelp() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        
         {/* Basic Concept */}
         <div className="space-y-3">
           <h3 className="font-semibold flex items-center gap-2">
@@ -41,9 +40,9 @@ export function TakeProfitHelp() {
             Basic Concept
           </h3>
           <p className="text-sm text-muted-foreground">
-            Take profit is an automated selling mechanism that locks in your gains when a token 
-            reaches your target price. Instead of manually watching prices 24/7, the bot sells 
-            your position automatically when your profit target is hit.
+            Take profit is an automated selling mechanism that locks in your gains when a token
+            reaches your target price. Instead of manually watching prices 24/7, the bot sells your
+            position automatically when your profit target is hit.
           </p>
         </div>
 
@@ -94,7 +93,7 @@ export function TakeProfitHelp() {
               </div>
               <Badge className="bg-green-100 text-green-800">Low Risk</Badge>
             </div>
-            
+
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-blue-600" />
@@ -105,7 +104,7 @@ export function TakeProfitHelp() {
               </div>
               <Badge className="bg-blue-100 text-blue-800">Medium Risk</Badge>
             </div>
-            
+
             <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-orange-600" />
@@ -116,7 +115,7 @@ export function TakeProfitHelp() {
               </div>
               <Badge className="bg-orange-100 text-orange-800">High Risk</Badge>
             </div>
-            
+
             <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-red-600" />
@@ -148,7 +147,7 @@ export function TakeProfitHelp() {
                 <div className="font-medium text-green-600">Profit: $150</div>
               </div>
             </div>
-            
+
             <div className="p-3 bg-gray-50 rounded-lg border">
               <div className="font-medium text-sm mb-2">Example: 30% Take Profit</div>
               <div className="space-y-1 text-xs text-muted-foreground">
@@ -169,7 +168,9 @@ export function TakeProfitHelp() {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-green-600">✓</span>
-              <span>Start with conservative levels (5-10%) until you understand market behavior</span>
+              <span>
+                Start with conservative levels (5-10%) until you understand market behavior
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-600">✓</span>
@@ -195,14 +196,17 @@ export function TakeProfitHelp() {
           <h3 className="font-semibold text-purple-600">🚀 Advanced Features</h3>
           <div className="space-y-2 text-sm text-muted-foreground">
             <p>
-              <strong>Exit Strategies:</strong> Use the Exit Strategy selector for partial selling at multiple price levels.
-              This allows you to take profits gradually instead of selling everything at once.
+              <strong>Exit Strategies:</strong> Use the Exit Strategy selector for partial selling
+              at multiple price levels. This allows you to take profits gradually instead of selling
+              everything at once.
             </p>
             <p>
-              <strong>Custom Levels:</strong> Set unique percentages for specific opportunities that don't fit preset levels.
+              <strong>Custom Levels:</strong> Set unique percentages for specific opportunities that
+              don't fit preset levels.
             </p>
             <p>
-              <strong>Auto-Sell Controls:</strong> Enable/disable automatic selling while keeping profit monitoring active.
+              <strong>Auto-Sell Controls:</strong> Enable/disable automatic selling while keeping
+              profit monitoring active.
             </p>
           </div>
         </div>

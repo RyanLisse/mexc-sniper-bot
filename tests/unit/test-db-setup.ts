@@ -4,143 +4,89 @@
  * This utility provides a clean database setup for tests that handles
  * migration issues and ensures proper foreign key constraints.
  * 
- * Uses TursoDB embedded replicas for consistent testing environment.
+ * Uses NeonDB PostgreSQL for consistent testing environment.
  */
 
-import { createClient, type Client } from "@libsql/client";
-import { drizzle } from 'drizzle-orm/libsql';
-import { migrate } from 'drizzle-orm/libsql/migrator';
-import { eq } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { eq, sql } from 'drizzle-orm';
+import postgres from 'postgres';
 import * as schema from '@/src/db/schema';
 
 export interface TestDbSetup {
-  client: ReturnType<typeof createClient>;
+  client: postgres.Sql;
   db: ReturnType<typeof drizzle>;
-  cleanup: () => void;
+  cleanup: () => Promise<void>;
 }
 
 /**
  * Create a clean test database with all migrations applied
- * Uses TursoDB embedded replica for testing
+ * Uses NeonDB PostgreSQL for testing
  */
 export async function createTestDatabase(): Promise<TestDbSetup> {
-  // Use TursoDB configuration for consistent testing, fallback to local SQLite
-  const databaseUrl = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+  // Use NeonDB PostgreSQL for testing
+  const databaseUrl = process.env.DATABASE_URL?.startsWith('postgresql://') 
+    ? process.env.DATABASE_URL 
+    : 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
   
-  let client: Client;
-  
-  if (databaseUrl && authToken) {
-    // Use TursoDB if configured
-    const testId = `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const testDbPath = `./data/test_${testId}.db`;
-    
-    client = createClient({
-      url: `file:${testDbPath}`,
-      syncUrl: databaseUrl,
-      authToken: authToken,
-      syncInterval: 1, // Very fast sync for tests
-    });
-  } else {
-    // Fallback to local SQLite for tests when TursoDB is not configured
-    const testId = `test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const testDbPath = `./data/test_${testId}.db`;
-    
-    client = createClient({
-      url: `file:${testDbPath}`,
-    });
-  }
+  // Create PostgreSQL client with test-optimized settings
+  const client = postgres(databaseUrl, {
+    max: 2, // Limit connections for tests
+    idle_timeout: 10,
+    connect_timeout: 15,
+    ssl: 'require'
+  });
   
   const db = drizzle(client, { schema });
   
-  // Enable foreign keys and optimize for tests
+  // Test database connection
   try {
-    await db.run(sql`PRAGMA foreign_keys = ON`);
-    await db.run(sql`PRAGMA journal_mode = MEMORY`);
-    await db.run(sql`PRAGMA synchronous = OFF`); // Faster for tests
-    await db.run(sql`PRAGMA cache_size = -32000`); // 32MB cache
+    await db.execute(sql`SELECT 1 as ping`);
+    console.log(`[Test] Connected to NeonDB test database`);
   } catch (error) {
-    console.warn('Failed to set test database pragmas:', error);
+    console.error('Failed to connect to test database:', error);
+    await client.end();
+    throw error;
   }
   
   // Apply migrations with safe error handling
   try {
-    // First try to apply migrations normally
+    // Try to apply migrations normally
     await migrate(db, { migrationsFolder: './src/db/migrations' });
-    console.log(`[Test] Applied migrations to test database`);
+    console.log(`[Test] Applied migrations to NeonDB test database`);
   } catch (error) {
-    console.warn('Test migration had issues, trying fallback approach:', error);
+    console.warn('Test migration had issues, checking if tables exist:', error);
     
-    // Fallback: Create tables directly from schema instead of using problematic migrations
+    // Check if tables already exist (migrations may have been applied already)
     try {
-      // Enable foreign keys
-      await db.run(sql`PRAGMA foreign_keys = ON`);
-      
-      // Create minimal required tables for tests
-      await db.run(sql`
-        CREATE TABLE IF NOT EXISTS user (
-          id TEXT PRIMARY KEY,
-          email TEXT NOT NULL UNIQUE,
-          name TEXT NOT NULL,
-          username TEXT UNIQUE,
-          emailVerified INTEGER NOT NULL DEFAULT 0,
-          image TEXT,
-          legacyBetterAuthId TEXT UNIQUE,
-          createdAt INTEGER NOT NULL DEFAULT (unixepoch()),
-          updatedAt INTEGER NOT NULL DEFAULT (unixepoch())
-        )
+      const tablesResult = await db.execute(sql`
+        SELECT table_name FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        ORDER BY table_name
       `);
+      const tables = tablesResult.map((row: any) => row.table_name);
       
-      await db.run(sql`
-        CREATE TABLE IF NOT EXISTS transactions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id TEXT NOT NULL,
-          transaction_type TEXT NOT NULL,
-          symbol_name TEXT NOT NULL,
-          vcoin_id TEXT,
-          buy_price REAL,
-          buy_quantity REAL,
-          buy_total_cost REAL,
-          buy_timestamp INTEGER,
-          buy_order_id TEXT,
-          sell_price REAL,
-          sell_quantity REAL,
-          sell_total_revenue REAL,
-          sell_timestamp INTEGER,
-          sell_order_id TEXT,
-          profit_loss REAL,
-          profit_loss_percentage REAL,
-          fees REAL,
-          status TEXT DEFAULT 'pending' NOT NULL,
-          snipe_target_id INTEGER,
-          notes TEXT,
-          transaction_time INTEGER DEFAULT (unixepoch()) NOT NULL,
-          created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-          updated_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-          FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
-        )
-      `);
-      
-      console.log(`[Test] Used fallback schema creation for test database`);
-    } catch (fallbackError) {
-      console.error('Fallback schema creation failed:', fallbackError);
-      try {
-        client.close();
-      } catch (closeError) {
-        console.warn('Error closing test client:', closeError);
+      if (tables.length > 0) {
+        console.log(`[Test] Found ${tables.length} existing tables, skipping migration`);
+      } else {
+        console.error('[Test] No tables found and migration failed');
+        await client.end();
+        throw error;
       }
-      throw fallbackError;
+    } catch (checkError) {
+      console.error('Failed to check existing tables:', checkError);
+      await client.end();
+      throw checkError;
     }
   }
   
   return {
     client,
     db,
-    cleanup: () => {
+    cleanup: async () => {
       try {
-        client.close();
-        console.log(`[Test] Cleaned up test database`);
+        await client.end();
+        console.log(`[Test] Cleaned up NeonDB test database connection`);
       } catch (error) {
         console.warn('Error closing test database:', error);
       }
@@ -217,7 +163,7 @@ export async function cleanupTestData(
         }
       } catch (error: any) {
         // Only warn for actual errors, not "table doesn't exist" errors
-        if (!error?.message?.includes('no such table')) {
+        if (!error?.message?.includes('does not exist')) {
           console.warn(`Failed to clean ${tableName}:`, error);
         }
       }
@@ -231,5 +177,29 @@ export async function cleanupTestData(
     } catch (error) {
       console.warn('Failed to clean user:', error);
     }
+  }
+}
+
+/**
+ * Create a clean test schema (for PostgreSQL)
+ * This ensures we have a fresh test environment
+ */
+export async function createTestSchema(db: ReturnType<typeof drizzle>) {
+  try {
+    // Clean existing test data (be careful in production!)
+    if (process.env.NODE_ENV === 'test') {
+      // Only clean test data if we're in test environment
+      const testUserIds = await db.execute(sql`
+        SELECT id FROM "user" WHERE email LIKE '%@example.com' OR email LIKE '%test%'
+      `);
+      
+      for (const user of testUserIds) {
+        await cleanupTestData(db, (user as any).id, [], false);
+      }
+    }
+    
+    console.log('[Test] Test schema prepared');
+  } catch (error) {
+    console.warn('Error preparing test schema:', error);
   }
 }

@@ -15,7 +15,7 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 
 ### 🚀 Deployment & Operations
 - [**Production Deployment Guide**](deployment/DEPLOYMENT.md) - Complete deployment instructions for Vercel & Railway
-- [**TursoDB Best Practices**](deployment/TURSO_BEST_PRACTICES_ANALYSIS.md) - Database optimization and configuration
+- [**NeonDB Best Practices**](deployment/neon-best-practices.md) - Database optimization and configuration
 - [**Vercel Configuration**](vercel-configuration.md) - Platform-specific settings
 - [**Deployment Verification**](deployment-verification-report.md) - Post-deployment checklist
 
@@ -54,7 +54,7 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 
 ### For DevOps
 1. Follow [Deployment Guide](deployment/DEPLOYMENT.md)
-2. Configure [TursoDB Best Practices](deployment/TURSO_BEST_PRACTICES_ANALYSIS.md)
+2. Configure [NeonDB Best Practices](deployment/neon-best-practices.md)
 3. Review [Vercel Configuration](vercel-configuration.md)
 
 ## 🔍 Key Features Documentation
@@ -67,7 +67,7 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 - Kinde Auth secure authentication system
 
 ### Database Architecture
-- TursoDB distributed SQLite
+- NeonDB serverless PostgreSQL
 - Global edge replication
 - Drizzle ORM type safety
 - Automatic migrations

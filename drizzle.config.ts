@@ -1,31 +1,14 @@
 import { defineConfig } from 'drizzle-kit';
 
-// Determine if we're in production or using Railway
-const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
-const isRailway = process.env.RAILWAY_ENVIRONMENT === 'production';
-const hasTursoConfig = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
+// Determine if we have NeonDB configuration
+const hasNeonConfig = process.env.DATABASE_URL?.startsWith('postgresql://');
 
-// Use Turso in production environments or when explicitly configured
-const useTurso = (isProduction || isRailway || hasTursoConfig) && !process.env.FORCE_SQLITE;
+// Use SQLite as fallback for development if no NeonDB config
+const useSQLite = !hasNeonConfig || process.env.FORCE_SQLITE === 'true';
 
 export default defineConfig(
-  useTurso
+  useSQLite
     ? {
-        schema: './src/db/schema.ts',
-        out: './src/db/migrations',
-        dialect: 'turso',
-        dbCredentials: {
-          url: process.env.TURSO_DATABASE_URL!,
-          authToken: process.env.TURSO_AUTH_TOKEN!,
-        },
-        verbose: true,
-        strict: true,
-        // Enable better table introspection
-        tablesFilter: ['!libsql_*', '!_litestream_*', '!sqlite_*'],
-        // Breakpoints for safer migrations
-        breakpoints: true,
-      }
-    : {
         schema: './src/db/schema.ts',
         out: './src/db/migrations',
         dialect: 'sqlite',
@@ -36,6 +19,19 @@ export default defineConfig(
         strict: true,
         // SQLite specific optimizations
         tablesFilter: ['!sqlite_*'],
+        breakpoints: true,
+      }
+    : {
+        schema: './src/db/schema.ts',
+        out: './src/db/migrations',
+        dialect: 'postgresql',
+        dbCredentials: {
+          url: process.env.DATABASE_URL!,
+        },
+        verbose: true,
+        strict: true,
+        // PostgreSQL specific optimizations
+        tablesFilter: ['!pg_*', '!information_schema*'],
         breakpoints: true,
       }
 );

@@ -375,9 +375,7 @@ INNGEST_SIGNING_KEY=auto-generated   # Workflow security
 INNGEST_EVENT_KEY=auto-generated     # Event authentication
 
 # Database Configuration
-DATABASE_URL=sqlite:///./mexc_sniper.db  # Default SQLite
-TURSO_DATABASE_URL=your-turso-url        # Optional TursoDB
-TURSO_AUTH_TOKEN=your-turso-token        # Optional TursoDB auth
+DATABASE_URL=postgresql://your-username:password@ep-endpoint.neon.tech/dbname  # NeonDB PostgreSQL
 ```
 
 ### Development vs Production Settings

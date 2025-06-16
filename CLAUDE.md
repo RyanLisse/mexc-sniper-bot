@@ -175,7 +175,7 @@ npm run test:stagehand
 
 ### Memory and State Management
 - **Agent Caching** - 5-minute intelligent response caching with SHA-256 keys
-- **Database State** - Drizzle ORM with SQLite/TursoDB persistence
+- **Database State** - Drizzle ORM with NeonDB PostgreSQL persistence
 - **Workflow State** - Inngest-managed stateful workflows with recovery
 - **User Preferences** - Persistent trading configuration and risk settings
 
@@ -297,10 +297,8 @@ KINDE_SITE_URL=http://localhost:3008
 KINDE_POST_LOGOUT_REDIRECT_URL=http://localhost:3008
 KINDE_POST_LOGIN_REDIRECT_URL=http://localhost:3008/dashboard
 
-# Database (SQLite default, TursoDB optional)
-DATABASE_URL=sqlite:///./mexc_sniper.db
-TURSO_DATABASE_URL=libsql://your-database.turso.io
-TURSO_AUTH_TOKEN=your-turso-token
+# Database (NeonDB PostgreSQL)
+DATABASE_URL=postgresql://username:password@hostname/database?sslmode=require
 
 # MEXC API (Optional)
 MEXC_API_KEY=your-mexc-api-key

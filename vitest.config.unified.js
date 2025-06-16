@@ -127,8 +127,9 @@ export default defineConfig({
       MEXC_SECRET_KEY: 'test-mexc-secret-vitest',
       MEXC_BASE_URL: 'https://api.mexc.com',
       
-      // Database configuration
-      DATABASE_URL: 'file:./test.db',
+      // Database configuration - Use NeonDB PostgreSQL for testing
+      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
+      FORCE_SQLITE: 'false',
       TURSO_DATABASE_URL: undefined,
       TURSO_AUTH_TOKEN: undefined,
       

@@ -1,4 +1,4 @@
-import { blob, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { boolean, integer, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import type { z } from "zod";
 
@@ -7,7 +7,7 @@ import type { z } from "zod";
 // ==========================================
 
 // Alert Rules Configuration
-export const alertRules = sqliteTable("alert_rules", {
+export const alertRules = pgTable("alert_rules", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
@@ -22,12 +22,12 @@ export const alertRules = sqliteTable("alert_rules", {
   evaluationInterval: integer("evaluation_interval").default(60), // seconds
 
   // ML Anomaly Detection
-  useAnomalyDetection: integer("use_anomaly_detection", { mode: "boolean" }).default(false),
+  useAnomalyDetection: boolean("use_anomaly_detection").default(false),
   anomalyThreshold: real("anomaly_threshold").default(2.0), // standard deviations
   learningWindow: integer("learning_window").default(86400), // seconds
 
   // Alert Behavior
-  isEnabled: integer("is_enabled", { mode: "boolean" }).default(true),
+  isEnabled: boolean("is_enabled").default(true),
   suppressionDuration: integer("suppression_duration").default(300), // seconds
   escalationDelay: integer("escalation_delay").default(1800), // seconds
   maxAlerts: integer("max_alerts").default(10), // per hour
@@ -41,13 +41,13 @@ export const alertRules = sqliteTable("alert_rules", {
   customFields: text("custom_fields"), // JSON object
 
   // Timestamps
-  createdAt: integer("created_at").notNull(),
-  updatedAt: integer("updated_at").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
   createdBy: text("created_by").notNull(),
 });
 
 // Alert Instances
-export const alertInstances = sqliteTable("alert_instances", {
+export const alertInstances = pgTable("alert_instances", {
   id: text("id").primaryKey(),
   ruleId: text("rule_id")
     .notNull()
@@ -75,16 +75,16 @@ export const alertInstances = sqliteTable("alert_instances", {
 
   // Escalation
   escalationLevel: integer("escalation_level").default(0),
-  lastEscalatedAt: integer("last_escalated_at"),
+  lastEscalatedAt: timestamp("last_escalated_at"),
 
   // Resolution
-  resolvedAt: integer("resolved_at"),
+  resolvedAt: timestamp("resolved_at"),
   resolvedBy: text("resolved_by"),
   resolutionNotes: text("resolution_notes"),
 
   // Timestamps
-  firstTriggeredAt: integer("first_triggered_at").notNull(),
-  lastTriggeredAt: integer("last_triggered_at").notNull(),
+  firstTriggeredAt: timestamp("first_triggered_at").notNull(),
+  lastTriggeredAt: timestamp("last_triggered_at").notNull(),
 
   // Metadata
   additionalData: text("additional_data"), // JSON object
@@ -92,7 +92,7 @@ export const alertInstances = sqliteTable("alert_instances", {
 });
 
 // Notification Channels
-export const notificationChannels = sqliteTable("notification_channels", {
+export const notificationChannels = pgTable("notification_channels", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type").notNull(), // email, slack, webhook, sms, teams
@@ -107,8 +107,8 @@ export const notificationChannels = sqliteTable("notification_channels", {
   tagFilter: text("tag_filter"), // JSON array of tags
 
   // Behavior
-  isEnabled: integer("is_enabled", { mode: "boolean" }).default(true),
-  isDefault: integer("is_default", { mode: "boolean" }).default(false),
+  isEnabled: boolean("is_enabled").default(true),
+  isDefault: boolean("is_default").default(false),
   rateLimitPerHour: integer("rate_limit_per_hour").default(100),
 
   // Formatting
@@ -116,13 +116,13 @@ export const notificationChannels = sqliteTable("notification_channels", {
   titleTemplate: text("title_template"),
 
   // Timestamps
-  createdAt: integer("created_at").notNull(),
-  updatedAt: integer("updated_at").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
   createdBy: text("created_by").notNull(),
 });
 
 // Escalation Policies
-export const escalationPolicies = sqliteTable("escalation_policies", {
+export const escalationPolicies = pgTable("escalation_policies", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
@@ -131,16 +131,16 @@ export const escalationPolicies = sqliteTable("escalation_policies", {
   steps: text("steps").notNull(), // JSON array of escalation steps
 
   // Behavior
-  isEnabled: integer("is_enabled", { mode: "boolean" }).default(true),
+  isEnabled: boolean("is_enabled").default(true),
 
   // Timestamps
-  createdAt: integer("created_at").notNull(),
-  updatedAt: integer("updated_at").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
   createdBy: text("created_by").notNull(),
 });
 
 // Alert Notifications (tracking sent notifications)
-export const alertNotifications = sqliteTable("alert_notifications", {
+export const alertNotifications = pgTable("alert_notifications", {
   id: text("id").primaryKey(),
   alertId: text("alert_id")
     .notNull()
@@ -152,8 +152,8 @@ export const alertNotifications = sqliteTable("alert_notifications", {
   // Notification Details
   status: text("status").notNull(), // pending, sent, failed, rate_limited
   attempts: integer("attempts").default(0),
-  lastAttemptAt: integer("last_attempt_at"),
-  sentAt: integer("sent_at"),
+  lastAttemptAt: timestamp("last_attempt_at"),
+  sentAt: timestamp("sent_at"),
 
   // Content
   subject: text("subject"),
@@ -164,11 +164,11 @@ export const alertNotifications = sqliteTable("alert_notifications", {
   errorMessage: text("error_message"),
 
   // Timestamps
-  createdAt: integer("created_at").notNull(),
+  createdAt: timestamp("created_at").notNull(),
 });
 
 // Alert Correlations (for grouping related alerts)
-export const alertCorrelations = sqliteTable("alert_correlations", {
+export const alertCorrelations = pgTable("alert_correlations", {
   id: text("id").primaryKey(),
   correlationKey: text("correlation_key").notNull(),
 
@@ -186,13 +186,13 @@ export const alertCorrelations = sqliteTable("alert_correlations", {
   confidence: real("confidence"), // 0-1 confidence score
 
   // Timestamps
-  firstAlertAt: integer("first_alert_at").notNull(),
-  lastAlertAt: integer("last_alert_at").notNull(),
-  resolvedAt: integer("resolved_at"),
+  firstAlertAt: timestamp("first_alert_at").notNull(),
+  lastAlertAt: timestamp("last_alert_at").notNull(),
+  resolvedAt: timestamp("resolved_at"),
 });
 
 // Alert Suppressions (for planned maintenance, etc.)
-export const alertSuppressions = sqliteTable("alert_suppressions", {
+export const alertSuppressions = pgTable("alert_suppressions", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   reason: text("reason").notNull(),
@@ -205,19 +205,19 @@ export const alertSuppressions = sqliteTable("alert_suppressions", {
   tagFilter: text("tag_filter"), // JSON array of tags
 
   // Schedule
-  startsAt: integer("starts_at").notNull(),
-  endsAt: integer("ends_at").notNull(),
+  startsAt: timestamp("starts_at").notNull(),
+  endsAt: timestamp("ends_at").notNull(),
 
   // Status
-  isActive: integer("is_active", { mode: "boolean" }).default(true),
+  isActive: boolean("is_active").default(true),
 
   // Timestamps
-  createdAt: integer("created_at").notNull(),
+  createdAt: timestamp("created_at").notNull(),
   createdBy: text("created_by").notNull(),
 });
 
 // ML Anomaly Models (for storing trained models)
-export const anomalyModels = sqliteTable("anomaly_models", {
+export const anomalyModels = pgTable("anomaly_models", {
   id: text("id").primaryKey(),
   metricName: text("metric_name").notNull(),
 
@@ -226,8 +226,8 @@ export const anomalyModels = sqliteTable("anomaly_models", {
   parameters: text("parameters").notNull(), // JSON object
 
   // Training Data
-  trainingDataFrom: integer("training_data_from").notNull(),
-  trainingDataTo: integer("training_data_to").notNull(),
+  trainingDataFrom: timestamp("training_data_from").notNull(),
+  trainingDataTo: timestamp("training_data_to").notNull(),
   sampleCount: integer("sample_count").notNull(),
 
   // Performance Metrics
@@ -238,25 +238,25 @@ export const anomalyModels = sqliteTable("anomaly_models", {
   falsePositiveRate: real("false_positive_rate"),
 
   // Model Data
-  modelData: blob("model_data"), // serialized model
+  modelData: text("model_data"), // serialized model data (base64 encoded)
   features: text("features"), // JSON array of feature names
 
   // Status
-  isActive: integer("is_active", { mode: "boolean" }).default(true),
-  lastTrainedAt: integer("last_trained_at").notNull(),
+  isActive: boolean("is_active").default(true),
+  lastTrainedAt: timestamp("last_trained_at").notNull(),
 
   // Timestamps
-  createdAt: integer("created_at").notNull(),
-  updatedAt: integer("updated_at").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
 });
 
 // Alert Analytics (for tracking performance and trends)
-export const alertAnalytics = sqliteTable("alert_analytics", {
+export const alertAnalytics = pgTable("alert_analytics", {
   id: text("id").primaryKey(),
 
   // Time Bucket
   bucket: text("bucket").notNull(), // hourly, daily, weekly
-  timestamp: integer("timestamp").notNull(),
+  timestamp: timestamp("timestamp").notNull(),
 
   // Metrics
   totalAlerts: integer("total_alerts").default(0),

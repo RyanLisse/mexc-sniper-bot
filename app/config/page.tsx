@@ -617,7 +617,7 @@ export default function SystemCheckPage() {
                   </div>
                   <div>
                     <CardTitle className="text-lg">Database Connection</CardTitle>
-                    <CardDescription>TursoDB/SQLite connectivity and health</CardDescription>
+                    <CardDescription>NeonDB/PostgreSQL connectivity and health</CardDescription>
                   </div>
                 </div>
                 <Button
@@ -1231,7 +1231,7 @@ export default function SystemCheckPage() {
                     <h4 className="font-medium text-red-700">Database Issues</h4>
                     <p className="text-sm text-red-600 mt-1">{systemState.database.message}</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Check your DATABASE_URL or TURSO_* environment variables and ensure the database is accessible.
+                      Check your DATABASE_URL environment variable and ensure the NeonDB database is accessible.
                     </p>
                   </div>
                 )}

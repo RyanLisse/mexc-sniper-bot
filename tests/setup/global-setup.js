@@ -63,8 +63,11 @@ async function validateEnvironment() {
     console.warn(`⚠️ Missing environment variables: ${missingVars.join(', ')}`)
     // Set defaults for testing
     if (!process.env.NODE_ENV) process.env.NODE_ENV = 'test'
-    if (!process.env.DATABASE_URL) process.env.DATABASE_URL = 'sqlite://test.db'
+    if (!process.env.DATABASE_URL) process.env.DATABASE_URL = 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require'
   }
+  
+  // Ensure PostgreSQL mode for testing
+  if (!process.env.FORCE_SQLITE) process.env.FORCE_SQLITE = 'false'
   
   // Validate Node.js version
   const nodeVersion = process.version

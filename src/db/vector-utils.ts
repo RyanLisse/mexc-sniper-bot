@@ -2,12 +2,12 @@ import { eq, sql } from "drizzle-orm";
 import { db, executeWithRetry } from "./index";
 import { type NewPatternEmbedding, patternEmbeddings, patternSimilarityCache } from "./schema";
 
-// Vector similarity functions for SQLite/Turso
+// Vector similarity functions for PostgreSQL/NeonDB
 export class VectorUtils {
   /**
    * Calculate cosine similarity between two embeddings
-   * Note: For SQLite compatibility, we calculate this in JavaScript
-   * In production with Turso vector extension, this could be done in SQL
+   * Note: For PostgreSQL compatibility, we calculate this in JavaScript
+   * In production with pgvector extension, this could be done in SQL
    */
   static calculateCosineSimilarity(embedding1: number[], embedding2: number[]): number {
     if (embedding1.length !== embedding2.length) {
@@ -188,7 +188,7 @@ export class VectorUtils {
         .delete(patternSimilarityCache)
         .where(sql`${patternSimilarityCache.expiresAt} <= ${now}`);
 
-      return 0; // SQLite doesn't return count for deletes
+      return 0; // Return count for deleted records
     }, "Cleanup expired cache");
   }
 

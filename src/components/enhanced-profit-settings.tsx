@@ -1,24 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { UnifiedTakeProfitLevels } from "./unified-take-profit-levels";
-import { ExitStrategySelector } from "./exit-strategy-selector";
-import { TakeProfitHelp } from "./take-profit-help";
 import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import { Badge } from "@/src/components/ui/badge";
-import { 
-  TrendingUp, 
-  Target, 
-  HelpCircle, 
-  Settings, 
-  Save,
-  AlertTriangle,
-  CheckCircle
-} from "lucide-react";
+import { Button } from "@/src/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
 import type { ExitStrategy } from "@/src/types/exit-strategies";
+import {
+  AlertTriangle,
+  CheckCircle,
+  HelpCircle,
+  Save,
+  Settings,
+  Target,
+  TrendingUp,
+} from "lucide-react";
+import { useState } from "react";
+import { ExitStrategySelector } from "./exit-strategy-selector";
+import { TakeProfitHelp } from "./take-profit-help";
+import { UnifiedTakeProfitLevels } from "./unified-take-profit-levels";
 
 interface TakeProfitLevels {
   level1: number;
@@ -33,7 +39,7 @@ interface EnhancedProfitSettingsProps {
   // Take Profit Props
   levels: TakeProfitLevels;
   onLevelsChange: (updater: (prev: TakeProfitLevels) => TakeProfitLevels) => void;
-  
+
   // Exit Strategy Props
   selectedStrategy: string;
   customStrategy?: ExitStrategy;
@@ -43,7 +49,7 @@ interface EnhancedProfitSettingsProps {
   onCustomStrategyChange: (strategy: ExitStrategy) => void;
   onAutoBuyToggle: (enabled: boolean) => void;
   onAutoSellToggle: (enabled: boolean) => void;
-  
+
   // Common Props
   onSave: () => void;
   isSaving: boolean;
@@ -63,7 +69,7 @@ export function EnhancedProfitSettings({
   onAutoSellToggle,
   onSave,
   isSaving,
-  isDirty
+  isDirty,
 }: EnhancedProfitSettingsProps) {
   const [activeTab, setActiveTab] = useState("basic");
 
@@ -75,11 +81,11 @@ export function EnhancedProfitSettings({
     const hasBasicConfig = levels.defaultLevel > 0;
     const hasAutomation = autoBuyEnabled || autoSellEnabled;
     const hasStrategy = selectedStrategy !== "";
-    
+
     return {
       isComplete: hasBasicConfig && hasAutomation && hasStrategy,
       completedSteps: [hasBasicConfig, hasAutomation, hasStrategy].filter(Boolean).length,
-      totalSteps: 3
+      totalSteps: 3,
     };
   };
 
@@ -95,7 +101,7 @@ export function EnhancedProfitSettings({
               <Settings className="h-5 w-5 text-blue-600" />
               Profit Management Configuration
             </div>
-            <Badge 
+            <Badge
               variant={status.isComplete ? "default" : "secondary"}
               className={status.isComplete ? "bg-green-600" : "bg-orange-600"}
             >
@@ -103,7 +109,8 @@ export function EnhancedProfitSettings({
             </Badge>
           </CardTitle>
           <CardDescription>
-            Configure when and how to take profits automatically. Complete all sections for optimal trading.
+            Configure when and how to take profits automatically. Complete all sections for optimal
+            trading.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -179,7 +186,7 @@ export function EnhancedProfitSettings({
         {/* Help & Guide Tab */}
         <TabsContent value="help" className="space-y-6">
           <TakeProfitHelp />
-          
+
           {/* Quick Setup Guide */}
           <Card className="border-green-200 bg-green-50/50">
             <CardHeader>
@@ -194,31 +201,47 @@ export function EnhancedProfitSettings({
             <CardContent>
               <div className="space-y-3 text-sm">
                 <div className="flex items-start gap-3">
-                  <Badge className="bg-green-600 text-white min-w-[24px] h-6 flex items-center justify-center">1</Badge>
+                  <Badge className="bg-green-600 text-white min-w-[24px] h-6 flex items-center justify-center">
+                    1
+                  </Badge>
                   <div>
                     <div className="font-medium">Set Your Risk Level</div>
-                    <div className="text-muted-foreground">Choose Level 2 (Moderate) for balanced risk/reward as your default</div>
+                    <div className="text-muted-foreground">
+                      Choose Level 2 (Moderate) for balanced risk/reward as your default
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Badge className="bg-green-600 text-white min-w-[24px] h-6 flex items-center justify-center">2</Badge>
+                  <Badge className="bg-green-600 text-white min-w-[24px] h-6 flex items-center justify-center">
+                    2
+                  </Badge>
                   <div>
                     <div className="font-medium">Enable Auto-Trading</div>
-                    <div className="text-muted-foreground">Turn on Auto-Buy and Auto-Sell in the Exit Strategies tab</div>
+                    <div className="text-muted-foreground">
+                      Turn on Auto-Buy and Auto-Sell in the Exit Strategies tab
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Badge className="bg-green-600 text-white min-w-[24px] h-6 flex items-center justify-center">3</Badge>
+                  <Badge className="bg-green-600 text-white min-w-[24px] h-6 flex items-center justify-center">
+                    3
+                  </Badge>
                   <div>
                     <div className="font-medium">Choose Exit Strategy</div>
-                    <div className="text-muted-foreground">Select "Balanced 3x Target" for gradual profit taking</div>
+                    <div className="text-muted-foreground">
+                      Select "Balanced 3x Target" for gradual profit taking
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Badge className="bg-green-600 text-white min-w-[24px] h-6 flex items-center justify-center">4</Badge>
+                  <Badge className="bg-green-600 text-white min-w-[24px] h-6 flex items-center justify-center">
+                    4
+                  </Badge>
                   <div>
                     <div className="font-medium">Save & Test</div>
-                    <div className="text-muted-foreground">Save your settings and start with small amounts to test</div>
+                    <div className="text-muted-foreground">
+                      Save your settings and start with small amounts to test
+                    </div>
                   </div>
                 </div>
               </div>
@@ -233,8 +256,8 @@ export function EnhancedProfitSettings({
           <AlertTriangle className="h-4 w-4 text-blue-600" />
           <AlertDescription className="flex items-center justify-between w-full">
             <span className="text-blue-800">You have unsaved changes to your profit settings.</span>
-            <Button 
-              onClick={onSave} 
+            <Button
+              onClick={onSave}
               disabled={isSaving}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >

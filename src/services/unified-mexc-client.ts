@@ -499,7 +499,7 @@ export class UnifiedMexcClient {
             try {
               return CalendarEntrySchema.parse({
                 vcoinId: String(entry.vcoinId),
-                symbol: String(entry.vcoinName),        // MEXC uses vcoinName for symbol
+                symbol: String(entry.vcoinName), // MEXC uses vcoinName for symbol
                 projectName: String(entry.vcoinNameFull || entry.vcoinName), // MEXC uses vcoinNameFull for full project name
                 firstOpenTime: Number(entry.firstOpenTime),
               });

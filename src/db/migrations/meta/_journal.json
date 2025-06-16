@@ -1,89 +1,12 @@
 {
   "version": "7",
-  "dialect": "sqlite",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1749512533023,
-      "tag": "0000_tidy_ozymandias",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1749513705966,
-      "tag": "0001_chemical_hercules",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1749751991884,
-      "tag": "0002_tearful_cyclops",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1749752077713,
-      "tag": "0003_living_spectrum",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1749804364363,
-      "tag": "0004_slow_captain_stacy",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1749818000000,
-      "tag": "0005_fix_foreign_keys",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1749827579620,
-      "tag": "0006_rainy_blink",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1766006400000,
-      "tag": "0007_add_transaction_lock_tables",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "6",
-      "when": 1766006500000,
-      "tag": "0008_cleanup_execution_history",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "6",
-      "when": 1766006600000,
-      "tag": "0009_add_foreign_keys_and_indexes",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "6",
-      "when": 1766006700000,
-      "tag": "0010_fix_transaction_queue_foreign_key",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "6",
-      "when": 1766006800000,
-      "tag": "0011_add_missing_tables",
+      "version": "7",
+      "when": 1750070829531,
+      "tag": "0000_past_rachel_grey",
       "breakpoints": true
     }
   ]

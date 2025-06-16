@@ -248,11 +248,7 @@
     "data": {
       "isCorrectHomepage": true,
       "title": "MEXC Sniper Bot - AI Trading Platform",
-      "availableActions": [
-        "Sign In",
-        "Get Started",
-        "Sign Up Now"
-      ],
+      "availableActions": ["Sign In", "Get Started", "Sign Up Now"],
       "hasLoadingState": false
     },
     "timestamp": 1750065035647,
@@ -333,9 +329,7 @@
           "elementId": 1,
           "description": "The email input field where users can enter their email address.",
           "method": "fill",
-          "arguments": [
-            "stagehand-auth-1750065022949@example.com"
-          ]
+          "arguments": ["stagehand-auth-1750065022949@example.com"]
         }
       ]
     },
@@ -349,9 +343,7 @@
           "elementId": 1,
           "description": "the password field where the user can enter their password",
           "method": "fill",
-          "arguments": [
-            "TestPass123!"
-          ]
+          "arguments": ["TestPass123!"]
         }
       ]
     },

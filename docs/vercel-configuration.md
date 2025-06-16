@@ -9,7 +9,7 @@ Our `vercel.json` is optimized for a TypeScript multi-agent trading system with 
 - TypeScript multi-agent workflows (Inngest)
 - MEXC API integrations
 - Real-time WebSocket connections
-- Database operations (SQLite/TursoDB)
+- Database operations (PostgreSQL/NeonDB)
 - Edge-compatible serverless functions
 
 ## Configuration Properties
@@ -207,8 +207,7 @@ The following environment variables should be configured in the Vercel dashboard
 ### Required
 ```bash
 # Database
-TURSO_DATABASE_URL=libsql://your-database.turso.io
-TURSO_AUTH_TOKEN=your-auth-token
+DATABASE_URL=postgresql://your-username:password@ep-endpoint.neon.tech/dbname
 
 # AI Integration
 OPENAI_API_KEY=sk-your-openai-key

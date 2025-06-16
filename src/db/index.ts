@@ -1,7 +1,6 @@
-import { createClient } from "@libsql/client";
 import { sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { drizzle as drizzleTurso } from "drizzle-orm/libsql";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "./schema";
 
 // Retry configuration
@@ -15,8 +14,8 @@ interface ConnectionPoolConfig {
   connectionTimeout?: number;
 }
 
-// Turso client cache for connection pooling
-let tursoClient: ReturnType<typeof createClient> | null = null;
+// Client cache for connection pooling
+let postgresClient: ReturnType<typeof postgres> | null = null;
 
 // Sleep utility for retry logic
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -51,270 +50,125 @@ async function withRetry<T>(
   throw lastError;
 }
 
-// Create Turso client with better error handling and URL scheme fallback
-function createTursoClient() {
-  // Support both TURSO_DATABASE_URL and TURSO_HOST patterns
-  let databaseUrl = process.env.TURSO_DATABASE_URL;
+// Check if we have NeonDB/PostgreSQL configuration
+const hasNeonConfig = () => !!process.env.DATABASE_URL?.startsWith("postgresql://");
 
-  // If we only have TURSO_HOST, construct the URL
-  if (!databaseUrl && process.env.TURSO_HOST) {
-    const host = process.env.TURSO_HOST;
-    // Ensure the host doesn't already have a protocol
-    const cleanHost = host.replace(/^(libsql:\/\/|wss:\/\/|https:\/\/)/, "");
-    databaseUrl = `libsql://${cleanHost}`;
-  }
-
-  if (!databaseUrl || !process.env.TURSO_AUTH_TOKEN) {
-    throw new Error(
-      "Turso configuration missing: need TURSO_DATABASE_URL (or TURSO_HOST) and TURSO_AUTH_TOKEN"
-    );
+// Create PostgreSQL client with connection pooling
+function createPostgresClient() {
+  if (!process.env.DATABASE_URL?.startsWith("postgresql://")) {
+    throw new Error("NeonDB configuration missing: need DATABASE_URL with postgresql:// protocol");
   }
 
   // Return cached client if available
-  if (tursoClient) {
-    return tursoClient;
+  if (postgresClient) {
+    return postgresClient;
   }
 
-  const isRailway = process.env.RAILWAY_ENVIRONMENT === "production";
-  const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL || isRailway;
+  const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
 
-  // Try different URL schemes for better compatibility
-  const urlSchemes = [
-    databaseUrl, // Original (libsql://)
-    databaseUrl.replace("libsql://", "wss://"), // WebSocket scheme
-  ];
+  // PostgreSQL connection configuration
+  const connectionConfig = {
+    // Connection pool settings
+    max: isProduction ? 20 : 5, // Max connections
+    idle_timeout: 20, // 20 seconds idle timeout
+    connect_timeout: 30, // 30 seconds connect timeout
 
-  // Use embedded replicas for local development and testing for better performance
-  const embeddedPath = process.env.TURSO_EMBEDDED_PATH || "./data/mexc_sniper_replica.db";
-  const syncInterval = Number.parseInt(process.env.TURSO_SYNC_INTERVAL || "30");
+    // SSL/TLS settings for NeonDB
+    ssl: isProduction ? "require" : "prefer",
 
-  if (
-    (!isProduction && process.env.USE_EMBEDDED_REPLICA !== "false") ||
-    process.env.USE_EMBEDDED_REPLICA === "true"
-  ) {
-    // Enable embedded replica with local SQLite file
-    const clientConfig: Parameters<typeof createClient>[0] = {
-      url: `file:${embeddedPath}`,
-      syncUrl: databaseUrl,
-      syncInterval: syncInterval,
-      authToken: process.env.TURSO_AUTH_TOKEN,
-    };
+    // Performance optimizations
+    prepare: !isTest, // Prepared statements (disabled in tests for compatibility)
 
-    console.log(
-      `[Database] Using TursoDB embedded replica at ${embeddedPath} (sync every ${syncInterval}s)`
-    );
+    // Connection handling
+    connection: {
+      application_name: "mexc-sniper-bot",
+      statement_timeout: 30000, // 30 seconds
+      idle_in_transaction_session_timeout: 30000, // 30 seconds
+    },
 
-    // For tests, use shorter sync intervals for faster updates
-    if (isTest) {
-      clientConfig.syncInterval = 5; // 5 seconds for tests
-    }
+    // Transform for compatibility
+    transform: {
+      undefined: null,
+    },
 
-    // Try to create client with fallback URL schemes
-    for (const syncUrl of urlSchemes) {
-      try {
-        clientConfig.syncUrl = syncUrl;
-        tursoClient = createClient(clientConfig);
-        console.log(`[Database] Embedded replica sync URL: ${syncUrl}`);
-        return tursoClient;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.warn(`[Database] Failed to create embedded replica with ${syncUrl}:`, errorMessage);
-      }
-    }
-  } else {
-    // Production uses direct connection to TursoDB with URL scheme fallback
-    console.log("[Database] Using direct TursoDB connection");
+    // Debug settings (only in development)
+    debug: process.env.NODE_ENV === "development" && process.env.DATABASE_DEBUG === "true",
+  };
 
-    for (const url of urlSchemes) {
-      try {
-        const clientConfig: Parameters<typeof createClient>[0] = {
-          url: url,
-          authToken: process.env.TURSO_AUTH_TOKEN,
-        };
-
-        // Add Vercel-specific optimizations
-        if (process.env.VERCEL) {
-          // Use WebSocket scheme for Vercel Edge Functions compatibility
-          if (url.startsWith("libsql://")) {
-            clientConfig.url = url.replace("libsql://", "wss://");
-          }
-          console.log("[Database] Using Vercel-optimized configuration with WebSocket");
-        }
-
-        // Add replica-specific configuration for Railway and Vercel
-        if (isRailway && process.env.TURSO_REPLICA_URL) {
-          clientConfig.syncUrl = url;
-          clientConfig.url = process.env.TURSO_REPLICA_URL;
-          console.log("[Database] Using Railway-optimized replica configuration");
-        }
-
-        tursoClient = createClient(clientConfig);
-        console.log(
-          `[Database] Direct connection established with URL scheme: ${clientConfig.url}`
-        );
-        return tursoClient;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.warn(`[Database] Failed to connect with URL scheme ${url}:`, errorMessage);
-      }
-    }
+  try {
+    postgresClient = postgres(process.env.DATABASE_URL, connectionConfig);
+    console.log(`[Database] PostgreSQL connection established with NeonDB`);
+    return postgresClient;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`[Database] Failed to create PostgreSQL client:`, errorMessage);
+    throw new Error(`Failed to create PostgreSQL client: ${errorMessage}`);
   }
-
-  // If all schemes fail, throw the last error
-  throw new Error("Failed to create TursoDB client with any URL scheme");
 }
 
-// Check if we have TursoDB configuration
-const hasTursoConfig = () =>
-  !!(process.env.TURSO_DATABASE_URL || process.env.TURSO_HOST) && !!process.env.TURSO_AUTH_TOKEN;
-
-// Environment-specific database configuration
+// PostgreSQL-only database configuration for NeonDB
 function createDatabase() {
   const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
   const isRailway = process.env.RAILWAY_ENVIRONMENT === "production";
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
-  const tursoConfigured = hasTursoConfig();
-  const forceSQLite = process.env.FORCE_SQLITE === "true";
+
+  if (!hasNeonConfig()) {
+    throw new Error("NeonDB configuration required: DATABASE_URL must be set with postgresql:// protocol");
+  }
 
   // Debug logging (remove in production)
   if (process.env.NODE_ENV !== "production") {
-    console.log("[Database] Configuration debug:");
-    console.log("- isProduction:", isProduction);
-    console.log("- USE_EMBEDDED_REPLICA:", process.env.USE_EMBEDDED_REPLICA);
-    console.log("- forceSQLite:", forceSQLite);
-    console.log("- tursoConfigured:", tursoConfigured);
+    console.log("[Database] Using NeonDB PostgreSQL database");
   }
 
-  // Use SQLite if explicitly forced (for legacy compatibility)
-  if (forceSQLite) {
-    console.log("[Database] Using SQLite for development (FORCE_SQLITE=true)");
-    try {
-      const Database = require("better-sqlite3");
-      const sqlite = new Database("./mexc_sniper.db");
-      sqlite.pragma("journal_mode = WAL");
-      sqlite.pragma("foreign_keys = ON");
-      sqlite.pragma("busy_timeout = 5000"); // 5 second timeout
-      sqlite.pragma("synchronous = NORMAL"); // Better performance
-      sqlite.pragma("cache_size = -64000"); // 64MB cache
-      sqlite.pragma("temp_store = MEMORY"); // Use memory for temp tables
-      return drizzle(sqlite, { schema });
-    } catch (error) {
-      console.error("[Database] SQLite initialization error:", error);
-      throw error;
+  try {
+    const client = createPostgresClient();
+    const db = drizzle(client, { schema });
+
+    // Test connection immediately to catch auth issues early
+    if (isProduction || isRailway) {
+      console.log("[Database] Testing NeonDB connection in production...");
     }
-  }
 
-  // Prefer TursoDB with embedded replicas for better local development experience
-  if (tursoConfigured) {
-    try {
-      const client = createTursoClient();
-      const db = drizzleTurso(client, { schema });
-
-      // Test connection immediately to catch auth issues early
-      if (isProduction || isRailway) {
-        // In production, test the connection synchronously
-        console.log("[Database] Testing TursoDB connection in production...");
-        // We'll handle the async test in a non-blocking way
-      }
-
-      // Enable AI/embeddings features for TursoDB
-      if (!isTest) {
-        // Initialize vector extension and FTS5 for AI features
-        // Note: This will be attempted but may not be available in all TursoDB instances
-        setTimeout(async () => {
-          try {
-            await db.run(sql`SELECT load_extension('vector')`);
-            console.log("[Database] Vector extension loaded for AI/embeddings support");
-          } catch (_error) {
-            console.log("[Database] Vector extension not available, AI features limited");
-          }
-
-          try {
-            // Test FTS5 availability for full-text search
-            await db.run(sql`SELECT fts5_version()`);
-            console.log("[Database] FTS5 extension available for full-text search");
-          } catch (_error) {
-            console.log("[Database] FTS5 extension not available");
-          }
-        }, 1000);
-      }
-
-      return db;
-    } catch (error) {
-      console.error("[Database] TursoDB initialization error:", error);
-
-      // Enhanced error handling for production
-      if (isProduction || isRailway) {
-        console.error("[Database] TursoDB failed in production environment");
-        console.error("[Database] Error details:", {
-          message: error instanceof Error ? error.message : String(error),
-          code: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
-          env: {
-            hasUrl: !!process.env.TURSO_DATABASE_URL,
-            hasToken: !!process.env.TURSO_AUTH_TOKEN,
-            tokenLength: process.env.TURSO_AUTH_TOKEN ? process.env.TURSO_AUTH_TOKEN.length : 0,
-            isVercel: !!process.env.VERCEL,
-            nodeEnv: process.env.NODE_ENV,
-          },
-        });
-
-        // In production, we need to fail gracefully
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        throw new Error(
-          `TursoDB connection failed in production: ${errorMessage}. Check environment variables and token validity.`
-        );
-      }
-
-      // Fallback to SQLite if TursoDB fails and we're not in production
-      if (!isProduction && !isRailway) {
-        console.log("[Database] Falling back to SQLite due to TursoDB error");
-        const Database = require("better-sqlite3");
-        const sqlite = new Database("./mexc_sniper.db");
-        sqlite.pragma("journal_mode = WAL");
-        sqlite.pragma("foreign_keys = ON");
-        sqlite.pragma("busy_timeout = 5000");
-        sqlite.pragma("synchronous = NORMAL");
-        sqlite.pragma("cache_size = -64000");
-        sqlite.pragma("temp_store = MEMORY");
-        return drizzle(sqlite, { schema });
-      }
-
-      // This should not be reached
-      throw error;
+    // Initialize PostgreSQL extensions if needed
+    if (!isTest) {
+      setTimeout(async () => {
+        try {
+          // Test basic connectivity
+          await db.execute(sql`SELECT 1 as test`);
+          console.log("[Database] NeonDB connection verified successfully");
+        } catch (error) {
+          console.error("[Database] NeonDB connection test failed:", error);
+        }
+      }, 1000);
     }
-  }
 
-  // Use SQLite if TursoDB is not configured
-  if (!tursoConfigured) {
-    console.log("[Database] Using SQLite (no TursoDB configuration found)");
-    try {
-      const Database = require("better-sqlite3");
-      const sqlite = new Database("./mexc_sniper.db");
-      sqlite.pragma("journal_mode = WAL");
-      sqlite.pragma("foreign_keys = ON");
-      sqlite.pragma("busy_timeout = 5000");
-      sqlite.pragma("synchronous = NORMAL");
-      sqlite.pragma("cache_size = -64000");
-      sqlite.pragma("temp_store = MEMORY");
-      return drizzle(sqlite, { schema });
-    } catch (error) {
-      console.error("[Database] SQLite initialization error:", error);
-      throw error;
+    return db;
+  } catch (error) {
+    console.error("[Database] NeonDB initialization error:", error);
+
+    // Enhanced error handling for production
+    if (isProduction || isRailway) {
+      console.error("[Database] NeonDB failed in production environment");
+      console.error("[Database] Error details:", {
+        message: error instanceof Error ? error.message : String(error),
+        code: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        env: {
+          hasUrl: !!process.env.DATABASE_URL,
+          urlProtocol: process.env.DATABASE_URL?.split("://")[0],
+          isVercel: !!process.env.VERCEL,
+          nodeEnv: process.env.NODE_ENV,
+        },
+      });
     }
-  }
 
-  // Default fallback
-  console.log("[Database] Using SQLite (default fallback)");
-  const Database = require("better-sqlite3");
-  const sqlite = new Database("./mexc_sniper.db");
-  sqlite.pragma("journal_mode = WAL");
-  sqlite.pragma("foreign_keys = ON");
-  sqlite.pragma("busy_timeout = 5000");
-  sqlite.pragma("synchronous = NORMAL");
-  sqlite.pragma("cache_size = -64000");
-  sqlite.pragma("temp_store = MEMORY");
-  return drizzle(sqlite, { schema });
+    // In production, we need to fail gracefully
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `NeonDB connection failed: ${errorMessage}. Check DATABASE_URL and connection settings.`
+    );
+  }
 }
 
 // Create database instance with retry logic
@@ -330,7 +184,7 @@ export function getDb() {
 // Clear cached database instance (for testing)
 export function clearDbCache() {
   dbInstance = null;
-  tursoClient = null;
+  postgresClient = null;
 }
 
 // Lazy initialization - db instance created when first accessed
@@ -353,23 +207,21 @@ import { queryPerformanceMonitor } from "@/src/services/query-performance-monito
 export async function initializeDatabase() {
   return withRetry(
     async () => {
-      console.log("[Database] Initializing database...");
+      console.log("[Database] Initializing NeonDB database...");
 
       // Test connection with a simple query
-      const result = await db.run(sql`SELECT 1`);
+      const result = await db.execute(sql`SELECT 1`);
       if (result) {
-        console.log("[Database] Database connection successful");
+        console.log("[Database] NeonDB connection successful");
       }
 
-      // For Turso, enable vector extension if available
-      if (hasTursoConfig()) {
-        try {
-          await db.run(sql`SELECT load_extension('vector')`);
-          console.log("[Database] Vector extension loaded successfully");
-        } catch (_error) {
-          // Vector extension might not be available, continue without it
-          console.log("[Database] Vector extension not available, continuing without it");
-        }
+      // Check available PostgreSQL extensions
+      try {
+        // Check for vector extension (pgvector)
+        await db.execute(sql`SELECT 1 FROM pg_available_extensions WHERE name = 'vector'`);
+        console.log("[Database] Vector extension (pgvector) available for embeddings");
+      } catch (_error) {
+        console.log("[Database] Vector extension not available, AI features may be limited");
       }
 
       // Initialize performance monitoring
@@ -407,7 +259,7 @@ export async function executeWithRetry<T>(
 export async function healthCheck() {
   try {
     const startTime = Date.now();
-    await db.run(sql`SELECT 1`);
+    await db.execute(sql`SELECT 1`);
     const responseTime = Date.now() - startTime;
 
     const isHealthy = responseTime < 1000; // Less than 1 second is healthy
@@ -416,14 +268,14 @@ export async function healthCheck() {
     return {
       status,
       responseTime,
-      database: hasTursoConfig() ? "turso" : "sqlite",
+      database: "neondb",
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
     return {
       status: "offline",
       error: error instanceof Error ? error.message : "Unknown error",
-      database: hasTursoConfig() ? "turso" : "sqlite",
+      database: "neondb",
       timestamp: new Date().toISOString(),
     };
   }
@@ -475,11 +327,15 @@ export function closeDatabase() {
     // Shutdown connection pool
     databaseConnectionPool.shutdown();
 
+    // Close PostgreSQL connection if exists
+    if (postgresClient) {
+      postgresClient.end({ timeout: 5000 }); // 5 second timeout
+      console.log("[Database] NeonDB PostgreSQL connection closed");
+    }
+
     // Reset cached instances
     dbInstance = null;
-    tursoClient = null;
-    // Note: TursoDB connections are automatically managed
-    // SQLite connections would be closed here in development
+    postgresClient = null;
   } catch (error) {
     console.error("[Database] Error closing database:", error);
   }

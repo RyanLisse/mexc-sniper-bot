@@ -1,31 +1,40 @@
 import { sql } from "drizzle-orm";
-import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  real,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 // ===========================================
 // AUTHENTICATION SCHEMA MODULE
 // ===========================================
 
 // Kinde Auth Compatible User Table
-export const user = sqliteTable("user", {
+export const user = pgTable("user", {
   id: text("id").primaryKey(), // Kinde user ID
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   username: text("username").unique(),
-  emailVerified: integer("emailVerified", { mode: "boolean" }).notNull().default(false),
+  emailVerified: boolean("emailVerified").notNull().default(false),
   image: text("image"),
   // Store mapping to old better-auth ID for migration compatibility
   legacyBetterAuthId: text("legacyBetterAuthId").unique(),
-  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Session Management
-export const session = sqliteTable("session", {
+export const session = pgTable("session", {
   id: text("id").primaryKey(),
   expiresAt: integer("expiresAt").notNull(),
   token: text("token").notNull().unique(),
-  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`),
   ipAddress: text("ipAddress"),
   userAgent: text("userAgent"),
   userId: text("userId")
@@ -34,7 +43,7 @@ export const session = sqliteTable("session", {
 });
 
 // External Account Linking
-export const account = sqliteTable("account", {
+export const account = pgTable("account", {
   id: text("id").primaryKey(),
   accountId: text("accountId").notNull(),
   providerId: text("providerId").notNull(),
@@ -48,25 +57,25 @@ export const account = sqliteTable("account", {
   refreshTokenExpiresAt: integer("refreshTokenExpiresAt"),
   scope: text("scope"),
   password: text("password"),
-  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // Email/Phone Verification
-export const verification = sqliteTable("verification", {
+export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
   expiresAt: integer("expiresAt").notNull(),
-  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
 // User Preferences Table
-export const userPreferences = sqliteTable(
+export const userPreferences = pgTable(
   "user_preferences",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .unique()
@@ -91,21 +100,21 @@ export const userPreferences = sqliteTable(
     // Pattern Discovery Settings
     readyStatePattern: text("ready_state_pattern").notNull().default("2,2,4"), // sts:2, st:2, tt:4
     targetAdvanceHours: real("target_advance_hours").notNull().default(3.5),
-    autoSnipeEnabled: integer("auto_snipe_enabled", { mode: "boolean" }).notNull().default(true), // Auto-snipe by default
+    autoSnipeEnabled: boolean("auto_snipe_enabled").notNull().default(true), // Auto-snipe by default
 
     // Exit Strategy Settings
     selectedExitStrategy: text("selected_exit_strategy").notNull().default("balanced"), // "conservative", "balanced", "aggressive", "custom"
     customExitStrategy: text("custom_exit_strategy"), // JSON string of custom strategy levels
-    autoBuyEnabled: integer("auto_buy_enabled", { mode: "boolean" }).notNull().default(true), // Auto-buy on ready state
-    autoSellEnabled: integer("auto_sell_enabled", { mode: "boolean" }).notNull().default(true), // Auto-sell at targets
+    autoBuyEnabled: boolean("auto_buy_enabled").notNull().default(true), // Auto-buy on ready state
+    autoSellEnabled: boolean("auto_sell_enabled").notNull().default(true), // Auto-sell at targets
 
     // Monitoring Intervals
     calendarPollIntervalSeconds: integer("calendar_poll_interval_seconds").notNull().default(300),
     symbolsPollIntervalSeconds: integer("symbols_poll_interval_seconds").notNull().default(30),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("user_preferences_user_id_idx").on(table.userId),
