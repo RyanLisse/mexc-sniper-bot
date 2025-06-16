@@ -86,12 +86,12 @@ describe('Enhanced Rate Limiter', () => {
       expect(result1.success).toBe(true);
       expect(result1.isFirstViolation).toBe(false);
 
-      // Make multiple attempts
-      for (let i = 0; i < 4; i++) {
+      // Make multiple attempts to exceed the current limit (50 for auth)
+      for (let i = 0; i < 49; i++) {
         checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
-      // This should exceed the limit (5 attempts)
+      // This should exceed the limit (51st attempt)
       const result2 = checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       expect(result2.success).toBe(false);
       expect(result2.isFirstViolation).toBe(true);
@@ -117,8 +117,8 @@ describe('Enhanced Rate Limiter', () => {
     });
 
     it('should log rate limit violations', () => {
-      // Exceed rate limit
-      for (let i = 0; i < 6; i++) {
+      // Exceed rate limit (current limit is 50 for auth)
+      for (let i = 0; i < 51; i++) {
         checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
@@ -128,8 +128,9 @@ describe('Enhanced Rate Limiter', () => {
     });
 
     it('should detect suspicious activity', () => {
-      // Make many attempts to trigger suspicious activity detection
-      for (let i = 0; i < 12; i++) {
+      // Make many attempts to trigger suspicious activity detection (need > 2 * limit)
+      // Current auth limit is 50, so we need > 100 attempts
+      for (let i = 0; i < 101; i++) {
         checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
@@ -142,8 +143,8 @@ describe('Enhanced Rate Limiter', () => {
   describe('IP Analysis', () => {
     it('should identify suspicious IPs', () => {
       // Create enough violations for an IP to be suspicious (need >3 violations)
-      // Auth limit is 5 per 15 minutes, so 10 attempts will cause 5 violations
-      for (let i = 0; i < 10; i++) {
+      // Auth limit is 50 per 15 minutes, so 55 attempts will cause 5 violations
+      for (let i = 0; i < 55; i++) {
         checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
@@ -152,13 +153,13 @@ describe('Enhanced Rate Limiter', () => {
     });
 
     it('should provide detailed IP analysis', () => {
-      // Generate some activity for an IP
-      for (let i = 0; i < 3; i++) {
+      // Generate some activity for an IP (within limit)
+      for (let i = 0; i < 49; i++) {
         checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
-      // Exceed rate limit
-      for (let i = 0; i < 3; i++) {
+      // Exceed rate limit to create violations
+      for (let i = 0; i < 5; i++) {
         checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
@@ -177,16 +178,16 @@ describe('Enhanced Rate Limiter', () => {
       expect(analysis.riskLevel).toBe('low');
 
       // Medium risk - some violations (need >2 violations for medium)
-      // Auth limit is 5 per 15 minutes, so 8 attempts will cause 3 violations
-      for (let i = 0; i < 8; i++) {
+      // Auth limit is 50 per 15 minutes, so 53 attempts will cause 3 violations
+      for (let i = 0; i < 53; i++) {
         checkRateLimit('192.168.1.2', '/api/auth', 'auth');
       }
       analysis = getIPAnalysis('192.168.1.2');
       expect(analysis.riskLevel).toBe('medium');
 
       // High risk - many violations (need >5 violations for high)
-      // 12 attempts will cause 7 violations
-      for (let i = 0; i < 12; i++) {
+      // 56 attempts will cause 6 violations
+      for (let i = 0; i < 56; i++) {
         checkRateLimit('192.168.1.3', '/api/auth', 'auth');
       }
       analysis = getIPAnalysis('192.168.1.3');
@@ -200,8 +201,8 @@ describe('Enhanced Rate Limiter', () => {
       checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       checkRateLimit('192.168.1.2', '/api/auth', 'auth');
 
-      // Cause a violation
-      for (let i = 0; i < 6; i++) {
+      // Cause a violation (need 51 attempts to exceed current limit of 50)
+      for (let i = 0; i < 51; i++) {
         checkRateLimit('192.168.1.3', '/api/auth', 'auth');
       }
 
@@ -213,12 +214,12 @@ describe('Enhanced Rate Limiter', () => {
     });
 
     it('should identify top offenders', () => {
-      // Create violations for multiple IPs
-      for (let i = 0; i < 8; i++) {
+      // Create violations for multiple IPs (need to exceed limit of 50)
+      for (let i = 0; i < 53; i++) {
         checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 51; i++) {
         checkRateLimit('192.168.1.2', '/api/auth', 'auth');
       }
 

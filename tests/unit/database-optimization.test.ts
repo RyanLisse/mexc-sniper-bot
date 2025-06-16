@@ -375,41 +375,47 @@ describe("Database Optimization", () => {
 // Helper function to ensure test tables exist
 async function ensureTestTables(database: any) {
   try {
-    // Ensure snipe_targets table exists
-    await database.run(sql`
+    // For PostgreSQL, use execute instead of run
+    const executeQuery = database.execute || database.run;
+    if (!executeQuery) {
+      console.warn('Database execute method not available, skipping table creation');
+      return;
+    }
+    
+    // Ensure snipe_targets table exists (PostgreSQL syntax)
+    await executeQuery(sql`
       CREATE TABLE IF NOT EXISTS snipe_targets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id TEXT NOT NULL,
         vcoin_id TEXT NOT NULL,
         symbol_name TEXT NOT NULL,
         entry_strategy TEXT DEFAULT 'market' NOT NULL,
-        entry_price REAL,
-        position_size_usdt REAL NOT NULL,
+        entry_price DECIMAL,
+        position_size_usdt DECIMAL NOT NULL,
         take_profit_level INTEGER DEFAULT 2 NOT NULL,
-        take_profit_custom REAL,
-        stop_loss_percent REAL NOT NULL,
+        take_profit_custom DECIMAL,
+        stop_loss_percent DECIMAL NOT NULL,
         status TEXT DEFAULT 'pending' NOT NULL,
         priority INTEGER DEFAULT 1 NOT NULL,
         max_retries INTEGER DEFAULT 3 NOT NULL,
         current_retries INTEGER DEFAULT 0 NOT NULL,
-        target_execution_time INTEGER,
-        actual_execution_time INTEGER,
-        execution_price REAL,
-        actual_position_size REAL,
+        target_execution_time BIGINT,
+        actual_execution_time BIGINT,
+        execution_price DECIMAL,
+        actual_position_size DECIMAL,
         execution_status TEXT,
         error_message TEXT,
-        confidence_score REAL DEFAULT 0 NOT NULL,
+        confidence_score DECIMAL DEFAULT 0 NOT NULL,
         risk_level TEXT DEFAULT 'medium' NOT NULL,
-        created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-        updated_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       )
     `);
 
-    // Ensure execution_history table exists
-    await database.run(sql`
+    // Ensure execution_history table exists (PostgreSQL syntax)
+    await executeQuery(sql`
       CREATE TABLE IF NOT EXISTS execution_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id TEXT NOT NULL,
         snipe_target_id INTEGER,
         vcoin_id TEXT NOT NULL,
@@ -417,31 +423,30 @@ async function ensureTestTables(database: any) {
         action TEXT NOT NULL,
         order_type TEXT NOT NULL,
         order_side TEXT NOT NULL,
-        requested_quantity REAL NOT NULL,
-        requested_price REAL,
-        executed_quantity REAL,
-        executed_price REAL,
-        total_cost REAL,
-        fees REAL,
+        requested_quantity DECIMAL NOT NULL,
+        requested_price DECIMAL,
+        executed_quantity DECIMAL,
+        executed_price DECIMAL,
+        total_cost DECIMAL,
+        fees DECIMAL,
         exchange_order_id TEXT,
         exchange_status TEXT,
         exchange_response TEXT,
         execution_latency_ms INTEGER,
-        slippage_percent REAL,
+        slippage_percent DECIMAL,
         status TEXT NOT NULL,
         error_code TEXT,
         error_message TEXT,
-        requested_at INTEGER NOT NULL,
-        executed_at INTEGER,
-        created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+        requested_at BIGINT NOT NULL,
+        executed_at BIGINT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       )
     `);
 
-    // Ensure pattern_embeddings table exists with full schema
-    await database.run(sql`
+    // Ensure pattern_embeddings table exists with full schema (PostgreSQL syntax)
+    await executeQuery(sql`
       CREATE TABLE IF NOT EXISTS pattern_embeddings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         pattern_id TEXT,
         pattern_type TEXT NOT NULL,
         symbol_name TEXT,
@@ -450,18 +455,18 @@ async function ensureTestTables(database: any) {
         embedding TEXT,
         embedding_dimension INTEGER,
         embedding_model TEXT,
-        confidence REAL DEFAULT 0 NOT NULL,
+        confidence DECIMAL DEFAULT 0 NOT NULL,
         occurrences INTEGER DEFAULT 0,
-        success_rate REAL DEFAULT 0,
-        avg_profit REAL DEFAULT 0,
-        discovered_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-        last_seen_at INTEGER,
-        similarity_threshold REAL DEFAULT 0.8,
+        success_rate DECIMAL DEFAULT 0,
+        avg_profit DECIMAL DEFAULT 0,
+        discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        last_seen_at TIMESTAMP,
+        similarity_threshold DECIMAL DEFAULT 0.8,
         false_positives INTEGER DEFAULT 0,
         true_positives INTEGER DEFAULT 0,
         is_active INTEGER DEFAULT 1,
-        created_at INTEGER DEFAULT (unixepoch()) NOT NULL,
-        updated_at INTEGER DEFAULT (unixepoch()) NOT NULL
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       )
     `);
 

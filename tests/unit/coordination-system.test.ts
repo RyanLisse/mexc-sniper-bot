@@ -112,7 +112,8 @@ describe("Agent Coordination System", () => {
       const result = await registry.checkAgentHealth("agent1");
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
-      expect(result.responseTime).toBeGreaterThan(0);
+      // Allow responseTime to be 0 for very fast mock operations
+      expect(result.responseTime).toBeGreaterThanOrEqual(0);
     });
   });
 
