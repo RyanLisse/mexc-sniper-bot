@@ -17,8 +17,9 @@ import {
   useSaveApiCredentials,
   useTestApiCredentials,
 } from "@/src/hooks/use-api-credentials";
-import { AlertCircle, CheckCircle, Eye, EyeOff, Key, Loader2, Shield } from "lucide-react";
+import { AlertCircle, CheckCircle, Eye, EyeOff, Key, Loader2, Shield, Database, Settings, Globe } from "lucide-react";
 import { useState } from "react";
+import { useMexcConnectivity } from "@/src/hooks/use-mexc-data";
 
 interface ApiCredentialsFormProps {
   userId: string;
@@ -118,6 +119,9 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
           <>
             {/* Current API Status */}
             <ApiCredentialsStatus apiCredentials={apiCredentials ?? null} />
+            
+            {/* Enhanced Credential Source Information */}
+            <CredentialSourceAlert />
 
             {/* API Key Management Form */}
             {editingApiKeys ? (
@@ -371,6 +375,68 @@ function ApiCredentialsTestResult({
         <AlertCircle className="h-4 w-4" />
       )}
       <span className="text-sm">{testResult.message}</span>
+    </div>
+  );
+}
+
+function CredentialSourceAlert() {
+  const { data: connectivity, isLoading } = useMexcConnectivity();
+
+  if (isLoading || !connectivity) {
+    return null;
+  }
+
+  const getSourceConfig = () => {
+    switch (connectivity.credentialSource) {
+      case "database":
+        return {
+          icon: Database,
+          title: "Using Your Saved Credentials",
+          description: "API credentials are loaded from your secure user profile settings",
+          color: "text-blue-600",
+          bgColor: "bg-blue-50",
+          borderColor: "border-blue-200"
+        };
+      case "environment":
+        return {
+          icon: Settings,
+          title: "Using Environment Credentials",
+          description: "API credentials are loaded from server environment variables (MEXC_API_KEY, MEXC_SECRET_KEY)",
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+          borderColor: "border-green-200"
+        };
+      default:
+        return {
+          icon: AlertCircle,
+          title: "No Credentials Configured",
+          description: "Please add your MEXC API credentials below to enable trading features",
+          color: "text-yellow-600",
+          bgColor: "bg-yellow-50",
+          borderColor: "border-yellow-200"
+        };
+    }
+  };
+
+  const config = getSourceConfig();
+  const Icon = config.icon;
+
+  return (
+    <div className={`${config.bgColor} ${config.borderColor} border rounded-lg p-4`}>
+      <div className="flex items-start space-x-2">
+        <Icon className={`h-5 w-5 ${config.color} mt-0.5`} />
+        <div className={`text-sm ${config.color}`}>
+          <div className="font-medium">{config.title}</div>
+          <div className="mt-1 text-sm opacity-80">
+            {config.description}
+          </div>
+          {connectivity.credentialSource !== "none" && (
+            <div className="mt-2 text-xs opacity-70">
+              Last checked: {new Date(connectivity.timestamp).toLocaleString()}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

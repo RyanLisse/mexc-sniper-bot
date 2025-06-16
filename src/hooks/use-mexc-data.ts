@@ -69,21 +69,46 @@ export function useMexcServerTime() {
   });
 }
 
-// MEXC Connectivity Test Hook
+// MEXC Connectivity Test Hook with Enhanced Source Information
+export interface MexcConnectivityResult {
+  connected: boolean;
+  hasCredentials: boolean;
+  credentialsValid: boolean;
+  credentialSource: "database" | "environment" | "none";
+  hasUserCredentials: boolean;
+  hasEnvironmentCredentials: boolean;
+  message: string;
+  timestamp: string;
+  status: "fully_connected" | "no_credentials" | "invalid_credentials" | "network_error" | "error";
+  error?: string;
+}
+
 export function useMexcConnectivity() {
-  return useQuery({
-    queryKey: ["mexc", "connectivity"],
+  return useQuery<MexcConnectivityResult>({
+    queryKey: ["mexc", "connectivity", "enhanced"],
     queryFn: async () => {
       const response = await fetch("/api/mexc/connectivity");
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const result = await response.json();
-      return result.connected;
+      return result;
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: 5 * 60 * 1000, // Auto-refetch every 5 minutes
     retry: 3,
   });
+}
+
+// Legacy hook for backward compatibility (returns only connection status)
+export function useMexcConnectivityStatus() {
+  const { data } = useMexcConnectivity();
+  return {
+    data: data?.connected,
+    isConnected: data?.connected || false,
+    hasCredentials: data?.hasCredentials || false,
+    isValid: data?.credentialsValid || false
+  };
 }
 
 // Mutation for Manual Calendar Refresh

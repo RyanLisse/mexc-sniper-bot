@@ -32,6 +32,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/src/lib/kinde-auth-client";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { ApiCredentialsForm } from "@/src/components/api-credentials-form";
+import { EnhancedCredentialStatus } from "@/src/components/enhanced-credential-status";
 
 // TypeScript interfaces for system status
 interface SystemStatus {
@@ -749,71 +750,8 @@ export default function SystemCheckPage() {
             </CardContent>
           </Card>
 
-          {/* MEXC API */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-lg ${getStatusDisplay(systemState.mexcApi.status).bg}`}>
-                    <Server className={`h-5 w-5 ${getStatusDisplay(systemState.mexcApi.status).color}`} />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">MEXC API</CardTitle>
-                    <CardDescription>Exchange API connectivity</CardDescription>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => testComponent('mexcApi')}
-                  disabled={systemState.mexcApi.status === 'loading'}
-                >
-                  <TestTube className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2 mb-3">
-                {(() => {
-                  const { icon: Icon, color } = getStatusDisplay(systemState.mexcApi.status);
-                  return (
-                    <>
-                      <Icon className={`h-4 w-4 ${color} ${systemState.mexcApi.status === 'loading' ? 'animate-spin' : ''}`} />
-                      <span className="font-medium">
-                        {systemState.mexcApi.status === 'healthy' ? 'Fully Connected' : 
-                         systemState.mexcApi.status === 'warning' ? 'Network Only' :
-                         systemState.mexcApi.status === 'loading' ? 'Testing...' : 'Connection Failed'}
-                      </span>
-                    </>
-                  );
-                })()}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {systemState.mexcApi.message || 'Testing MEXC API connectivity...'}
-              </p>
-              <div className="mt-3 text-xs text-muted-foreground">
-                {systemState.mexcApi.details?.hasCredentials !== undefined ? (
-                  <>
-                    <div>Credentials: {systemState.mexcApi.details.hasCredentials ? '✓ Configured' : '✗ Missing'}</div>
-                    {systemState.mexcApi.details.hasCredentials && (
-                      <div>Valid: {systemState.mexcApi.details.credentialsValid ? '✓ Authentication Success' : '✗ Authentication Failed'}</div>
-                    )}
-                    <div>Network: {systemState.mexcApi.details.connected ? '✓ MEXC API Reachable' : '✗ Network Issues'}</div>
-                    <div>Status: {systemState.mexcApi.details.status || 'Unknown'}</div>
-                  </>
-                ) : (
-                  // Fallback to old format if available
-                  systemState.credentials.mexc && (
-                    <>
-                      <div>API Key: {systemState.credentials.mexc.hasApiKey ? '✓ Configured' : '✗ Missing'}</div>
-                      <div>Secret Key: {systemState.credentials.mexc.hasSecretKey ? '✓ Configured' : '✗ Missing'}</div>
-                      <div>Mode: {systemState.credentials.mexc.isTestnet ? 'Testnet' : 'Live'}</div>
-                    </>
-                  )
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {/* MEXC API - Enhanced Credential Status */}
+          <EnhancedCredentialStatus showDetailsButton={true} />
 
           {/* OpenAI API */}
           <Card>
