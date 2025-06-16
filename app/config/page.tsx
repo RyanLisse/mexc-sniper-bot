@@ -401,6 +401,8 @@ export default function SystemCheckPage() {
   // Get the authenticated user ID
   const getUserId = () => {
     if (user?.id) {
+      // Clear any cached random user IDs when we have a real authenticated user
+      localStorage.removeItem("mexc-user-id");
       return user.id;
     }
     // Fallback for unauthenticated users (demo mode)

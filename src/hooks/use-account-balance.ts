@@ -22,8 +22,8 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       lastUpdated: string;
     }> => {
       const url = userId
-        ? `/api/account/balance?userId=${encodeURIComponent(userId)}`
-        : "/api/account/balance";
+        ? `/api/mexc/account?userId=${encodeURIComponent(userId)}`
+        : "/api/mexc/account";
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -41,7 +41,11 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
         throw new Error(data.error || "Failed to fetch account balance");
       }
 
-      return data.data;
+      return {
+        balances: data.balances || [],
+        totalUsdtValue: data.totalUsdtValue || 0,
+        lastUpdated: data.lastUpdated || new Date().toISOString(),
+      };
     },
     enabled: enabled,
     refetchInterval: refreshInterval,
