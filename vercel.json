@@ -4,7 +4,6 @@
   "devCommand": "npm run dev",
   "installCommand": "npm ci",
   "framework": "nextjs",
-  "runtime": "nodejs20.x",
   "env": {
     "ENVIRONMENT": "production",
     "NODE_ENV": "production"
@@ -14,7 +13,8 @@
       "TURBO_CACHE": "1",
       "VERCEL_SKIP_USAGE_INSIGHTS": "1",
       "SKIP_ENV_VALIDATION": "1",
-      "NEXT_TELEMETRY_DISABLED": "1"
+      "NEXT_TELEMETRY_DISABLED": "1",
+      "NODE_VERSION": "20"
     }
   },
   "headers": [
