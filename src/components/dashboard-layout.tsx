@@ -37,6 +37,7 @@ import {
   Zap,
 } from "@/src/components/ui/optimized-icons";
 import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuthCacheManager } from "@/src/hooks/use-auth-cache-manager";
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -48,6 +49,9 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  
+  // Manage authentication cache clearing
+  useAuthCacheManager();
 
   const mainNavItems = [
     {
