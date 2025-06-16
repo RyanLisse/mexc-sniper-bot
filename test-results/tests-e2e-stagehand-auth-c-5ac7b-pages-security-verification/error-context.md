@@ -1,17 +1,51 @@
 # Page snapshot
 
 ```yaml
-- heading "Deze site is niet bereikbaar" [level=1]
-- paragraph:
-  - strong: localhost
-  - text: heeft de verbinding geweigerd.
-- paragraph: "Probeer dit eens:"
+- text: MEXC Sniper
 - list:
-  - listitem: Controleer de verbinding
   - listitem:
-    - link "Controleer de proxy en firewall":
-      - /url: "#buttons"
-- text: ERR_CONNECTION_REFUSED
-- button "Opnieuw laden"
-- button "Details"
+    - link "Dashboard":
+      - /url: /dashboard
+  - listitem:
+    - link "Safety":
+      - /url: /safety
+  - listitem:
+    - link "Agents":
+      - /url: /agents
+  - listitem:
+    - link "Workflows":
+      - /url: /workflows
+  - listitem:
+    - link "Strategies":
+      - /url: /strategies
+- text: Management
+- list:
+  - listitem:
+    - link "Trading Settings":
+      - /url: /settings
+  - listitem:
+    - link "System Check":
+      - /url: /config
+- button "U User user@example.com"
+- main:
+  - button "Toggle Sidebar"
+  - heading [level=1]
+  - heading "Safety Dashboard" [level=1]
+  - paragraph: Comprehensive system safety monitoring and emergency controls
+  - text: "HEALTHY Last updated: 5:11:15 AM Risk Score 15.0"
+  - progressbar
+  - paragraph: Low Risk
+  - text: Active Alerts 2 0 critical 2 warning Agent Health 9/11 2 degraded 0 critical Circuit Breakers 8/8 8 closed 0 open
+  - tablist:
+    - tab "Overview" [selected]
+    - tab "Emergency Control"
+    - tab "Agent Monitoring"
+    - tab "Risk Analysis"
+    - tab "Safety History"
+  - tabpanel "Overview": System Health Overview Real-time system component status Trading Engine ACTIVE Risk Management ACTIVE Safety Monitoring ACTIVE Agent System 9/11 HEALTHY Data Connectivity CONNECTED Risk Metrics Summary Current portfolio risk exposure Portfolio Value $45,000 Total Exposure $32,000 Daily P&L +$450.00 Value at Risk (95%) $2,100 Open Positions 5 Risk Percentage 71%
+- button "Open Tanstack query devtools":
+  - img
+- alert
+- button "Open Next.js Dev Tools":
+  - img
 ```

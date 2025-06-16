@@ -55,9 +55,18 @@ const nextConfig: NextConfig = {
   },
   
   webpack: (config, { isServer, dev }) => {
+    // Add module resolution for problematic dependencies
+    config.module.rules.push({
+      test: /[\\/]node_modules[\\/]expo-modules-core[\\/]/,
+      use: 'null-loader',
+    });
+    
     if (isServer) {
       // For server-side, mark better-sqlite3 as external
       config.externals.push("better-sqlite3");
+      // Also exclude expo modules on server side
+      config.externals.push("expo-modules-core");
+      config.externals.push("expo-secure-store");
     } else {
       // For client-side, completely exclude Node.js modules
       config.resolve.fallback = {
@@ -78,20 +87,8 @@ const nextConfig: NextConfig = {
         '@react-native-async-storage/async-storage': false,
       };
 
-      // Add specific ignorePlugin for expo modules
+      // Keep minimal fallbacks for client-side exclusions
       const webpack = require('webpack');
-      config.plugins = config.plugins || [];
-      config.plugins.push(
-        new webpack.IgnorePlugin({
-          checkResource(resource, context) {
-            // Ignore expo modules being imported
-            if (resource.startsWith('expo-')) return true;
-            // Ignore specific problematic kinde utility imports
-            if (resource.includes('expoSecureStore') || resource.includes('expo-secure-store')) return true;
-            return false;
-          }
-        })
-      );
       
       // Ensure these packages never make it to the client bundle
       config.resolve.alias = {

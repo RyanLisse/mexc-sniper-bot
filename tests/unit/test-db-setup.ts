@@ -164,20 +164,19 @@ export async function createTestUser(
 }
 
 /**
- * Clean up test data by user ID
+ * Clean up test data by user ID with safe table checking
  */
 export async function cleanupTestData(
   db: ReturnType<typeof drizzle>,
   userId: string,
-  tableNames: Array<keyof typeof schema> = []
+  tableNames: Array<keyof typeof schema> = [],
+  preserveUser: boolean = false
 ) {
   // Default tables to clean (in dependency order)
   const defaultTables: Array<keyof typeof schema> = [
     'transactions',
     'executionHistory', 
     'snipeTargets',
-    'userPreferences',
-    'apiCredentials',
   ];
   
   const tablesToClean = tableNames.length > 0 ? tableNames : defaultTables;
@@ -197,23 +196,40 @@ export async function cleanupTestData(
           case 'snipeTargets':
             await db.delete(schema.snipeTargets).where(eq(schema.snipeTargets.userId, userId));
             break;
-          case 'userPreferences':
-            await db.delete(schema.userPreferences).where(eq(schema.userPreferences.userId, userId));
+          case 'strategyPhaseExecutions':
+            // Handle strategies schema table
+            if ('strategyPhaseExecutions' in schema) {
+              await db.delete((schema as any).strategyPhaseExecutions).where(eq((schema as any).strategyPhaseExecutions.userId, userId));
+            }
             break;
+          case 'tradingStrategies':
+            // Handle strategies schema table
+            if ('tradingStrategies' in schema) {
+              await db.delete((schema as any).tradingStrategies).where(eq((schema as any).tradingStrategies.userId, userId));
+            }
+            break;
+          // Skip tables that may not exist in all environments
+          case 'userPreferences':
           case 'apiCredentials':
-            await db.delete(schema.apiCredentials).where(eq(schema.apiCredentials.userId, userId));
+            // These tables might not exist in test environment - skip them
+            console.log(`[Test] Skipping cleanup of ${tableName} (table may not exist in test environment)`);
             break;
         }
-      } catch (error) {
-        console.warn(`Failed to clean ${tableName}:`, error);
+      } catch (error: any) {
+        // Only warn for actual errors, not "table doesn't exist" errors
+        if (!error?.message?.includes('no such table')) {
+          console.warn(`Failed to clean ${tableName}:`, error);
+        }
       }
     }
   }
   
-  // Clean user last (after dependencies)
-  try {
-    await db.delete(schema.user).where(eq(schema.user.id, userId));
-  } catch (error) {
-    console.warn('Failed to clean user:', error);
+  // Clean user last (after dependencies) - only if not preserving
+  if (!preserveUser) {
+    try {
+      await db.delete(schema.user).where(eq(schema.user.id, userId));
+    } catch (error) {
+      console.warn('Failed to clean user:', error);
+    }
   }
 }

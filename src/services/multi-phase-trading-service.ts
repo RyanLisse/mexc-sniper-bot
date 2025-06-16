@@ -414,6 +414,11 @@ export class MultiPhaseTradingService {
     return template || null;
   }
 
+  // Get predefined strategies
+  getPredefinedStrategies(): Record<string, TradingStrategyConfig> {
+    return PREDEFINED_STRATEGIES;
+  }
+
   // Helper method to determine risk level from strategy levels
   private determineRiskLevel(levels: PriceMultiplier[]): "low" | "medium" | "high" {
     const avgTarget = levels.reduce((sum, level) => sum + level.percentage, 0) / levels.length;

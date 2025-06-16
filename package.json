@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "AI-powered MEXC cryptocurrency trading bot with pattern detection and automated execution",
   "scripts": {
+    "postinstall": "patch-package && ./scripts/safe-migrate.sh",
     "dev": "next dev -p 3008",
     "dev:turbo": "next dev --turbopack -p 3008",
     "build": "next build",
@@ -78,8 +79,7 @@
     "db:optimize": "tsx scripts/optimize-sqlite-database.ts",
     "db:setup:turso": "tsx scripts/setup-turso-database.ts",
     "agents:test": "bun test src/mexc-agents/**/*.test.ts",
-    "agents:health": "bun run src/mexc-agents/health-check.ts",
-    "postinstall": "./scripts/safe-migrate.sh"
+    "agents:health": "bun run src/mexc-agents/health-check.ts"
   },
   "dependencies": {
     "@browserbasehq/stagehand": "^2.3.0",
@@ -142,6 +142,9 @@
     "better-sqlite3": "^11.10.0",
     "jsdom": "^26.1.0",
     "lightningcss": "^1.30.1",
+    "null-loader": "^4.0.1",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "tailwindcss": "^4.1.10",
     "tsx": "^4.20.3",
     "typescript": "^5",
