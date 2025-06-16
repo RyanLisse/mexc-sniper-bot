@@ -183,9 +183,29 @@ export function ExitStrategySelector({
             <Target className="h-5 w-5 text-blue-400" />
             <span>Exit Strategy Configuration</span>
           </CardTitle>
-          <CardDescription>Configure your exit strategy and trading parameters</CardDescription>
+          <CardDescription>
+            Advanced profit-taking with multiple exit levels. Sell portions of your position at different price targets to maximize profits while reducing risk.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* How Exit Strategies Work */}
+          <div className="p-4 bg-blue-900/20 border border-blue-700 rounded-lg">
+            <h4 className="font-medium text-blue-300 mb-2 flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              How Exit Strategies Work
+            </h4>
+            <p className="text-sm text-blue-200 mb-3">
+              Exit strategies automatically sell portions of your position at different price levels. 
+              This reduces risk by taking profits gradually instead of waiting for one high target.
+            </p>
+            <div className="text-xs text-blue-300 space-y-1">
+              <div><strong>Example:</strong> Conservative 2x Strategy</div>
+              <div>• Sell 20% at 1.3x (+30% profit) - Quick gains</div>
+              <div>• Sell 52% at 2.0x (+100% profit) - Main target</div>
+              <div>• Sell 28% at 2.5x (+150% profit) - Bonus upside</div>
+            </div>
+          </div>
+
           {/* Strategy Selection Form */}
           <div className="space-y-4">
             <div className="space-y-2">
