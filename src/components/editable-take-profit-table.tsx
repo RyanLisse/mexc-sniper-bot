@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
 import { Separator } from "@/src/components/ui/separator";
 import {
   Table,
@@ -23,7 +22,6 @@ import {
 } from "@/src/components/ui/table";
 import {
   AlertTriangle,
-  Calculator,
   CheckCircle2,
   Edit3,
   Info,
@@ -43,7 +41,6 @@ interface TakeProfitLevel {
 }
 
 interface EditableTakeProfitTableProps {
-  entryPrice?: number;
   levels?: TakeProfitLevel[];
   onLevelsChange?: (levels: TakeProfitLevel[]) => void;
   onSave?: (levels: TakeProfitLevel[]) => Promise<void>;
@@ -90,7 +87,6 @@ const defaultLevels: TakeProfitLevel[] = [
 ];
 
 export function EditableTakeProfitTable({
-  entryPrice = 0.01,
   levels = defaultLevels,
   onLevelsChange,
   onSave,
@@ -99,39 +95,11 @@ export function EditableTakeProfitTable({
 }: EditableTakeProfitTableProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingLevels, setEditingLevels] = useState<TakeProfitLevel[]>(levels);
-  const [currentEntryPrice, setCurrentEntryPrice] = useState(entryPrice);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Validation helper functions - extracted to reduce complexity
-  const validateEntryPrice = useCallback((entryPrice: number): ValidationError[] => {
-    const errors: ValidationError[] = [];
-
-    if (entryPrice <= 0) {
-      errors.push({
-        field: "entryPrice",
-        message: "Entry price must be greater than 0",
-        type: "error",
-      });
-    }
-    if (entryPrice < 0.0001) {
-      errors.push({
-        field: "entryPrice",
-        message: "Entry price seems unusually low. Please verify.",
-        type: "warning",
-      });
-    }
-    if (entryPrice > 10000) {
-      errors.push({
-        field: "entryPrice",
-        message: "Entry price seems unusually high. Please verify.",
-        type: "warning",
-      });
-    }
-
-    return errors;
-  }, []);
 
   const validateProfitPercentage = (level: TakeProfitLevel): ValidationError[] => {
     const errors: ValidationError[] = [];
@@ -237,65 +205,52 @@ export function EditableTakeProfitTable({
   };
 
   // Simplified validation function
-  const validateConfiguration = useCallback(
-    (levels: TakeProfitLevel[], entryPrice: number): ValidationError[] => {
-      const errors: ValidationError[] = [];
+  const validateConfiguration = useCallback((levels: TakeProfitLevel[]): ValidationError[] => {
+    const errors: ValidationError[] = [];
 
-      // Validate entry price
-      errors.push(...validateEntryPrice(entryPrice));
-
-      // Validate levels array
-      if (levels.length === 0) {
-        errors.push({
-          field: "levels",
-          message: "At least one take-profit level is required",
-          type: "error",
-        });
-        return errors;
-      }
-
-      // Sort levels by profit percentage for validation
-      const sortedLevels = [...levels].sort((a, b) => a.profitPercentage - b.profitPercentage);
-
-      // Validate each level using extracted functions
-      levels.forEach((level) => {
-        errors.push(...validateSingleLevel(level, sortedLevels));
+    // Validate levels array
+    if (levels.length === 0) {
+      errors.push({
+        field: "levels",
+        message: "At least one take-profit level is required",
+        type: "error",
       });
-
-      // Total sell portion validation
-      const totalSellPortion = levels.reduce((sum, level) => sum + level.sellPortion, 0);
-      if (Math.abs(totalSellPortion - 100) > 0.01) {
-        errors.push({
-          field: "totalSellPortion",
-          message: `Total sell portions must equal 100% (currently ${totalSellPortion.toFixed(1)}%)`,
-          type: "error",
-        });
-      }
-
       return errors;
-    },
-    [validateEntryPrice]
-  );
+    }
+
+    // Sort levels by profit percentage for validation
+    const sortedLevels = [...levels].sort((a, b) => a.profitPercentage - b.profitPercentage);
+
+    // Validate each level using extracted functions
+    levels.forEach((level) => {
+      errors.push(...validateSingleLevel(level, sortedLevels));
+    });
+
+    // Total sell portion validation
+    const totalSellPortion = levels.reduce((sum, level) => sum + level.sellPortion, 0);
+    if (Math.abs(totalSellPortion - 100) > 0.01) {
+      errors.push({
+        field: "totalSellPortion",
+        message: `Total sell portions must equal 100% (currently ${totalSellPortion.toFixed(1)}%)`,
+        type: "error",
+      });
+    }
+
+    return errors;
+  }, []);
 
   // Update editing levels when props change
   useEffect(() => {
     setEditingLevels(levels);
   }, [levels]);
 
-  // Validate configuration whenever levels or entry price change
+  // Validate configuration whenever levels change
   useEffect(() => {
     if (isEditing) {
-      const errors = validateConfiguration(editingLevels, currentEntryPrice);
+      const errors = validateConfiguration(editingLevels);
       setValidationErrors(errors);
     }
-  }, [editingLevels, currentEntryPrice, isEditing, validateConfiguration]);
-
-  // Calculate target price based on entry price and profit percentage
-  const calculateTargetPrice = (profitPercentage: number): string => {
-    if (!currentEntryPrice || currentEntryPrice <= 0) return "0.0000";
-    const targetPrice = currentEntryPrice * (1 + profitPercentage / 100);
-    return targetPrice.toFixed(4);
-  };
+  }, [editingLevels, isEditing, validateConfiguration]);
 
   // Validation: Check for errors and warnings
   const hasErrors = useMemo(() => {
@@ -348,7 +303,6 @@ export function EditableTakeProfitTable({
   // Handle cancel
   const handleCancel = () => {
     setEditingLevels(levels);
-    setCurrentEntryPrice(entryPrice);
     setValidationErrors([]);
     setSaveError(null);
     setIsEditing(false);
@@ -433,33 +387,6 @@ export function EditableTakeProfitTable({
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Entry Price Configuration */}
-        {isEditing && (
-          <div className="space-y-2">
-            <Label htmlFor="entry-price" className="flex items-center gap-2">
-              <Calculator className="h-4 w-4" />
-              Entry Price (USDT)
-            </Label>
-            <Input
-              id="entry-price"
-              type="number"
-              value={currentEntryPrice}
-              onChange={(e) => setCurrentEntryPrice(Number.parseFloat(e.target.value) || 0)}
-              step="0.0001"
-              min="0"
-              placeholder="0.0100"
-              className={`max-w-xs ${
-                hasFieldError("entryPrice")
-                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                  : ""
-              }`}
-            />
-            <p className="text-sm text-muted-foreground">
-              This price will be used to calculate target prices for each level
-            </p>
-          </div>
-        )}
-
         {/* How It Works Info */}
         <Alert>
           <Info className="h-4 w-4" />
@@ -478,7 +405,6 @@ export function EditableTakeProfitTable({
                 <TableHead className="w-[120px]">Take-Profit Level</TableHead>
                 <TableHead className="w-[120px]">Profit (%)</TableHead>
                 <TableHead className="w-[140px]">Sell Portion (%)</TableHead>
-                <TableHead className="w-[140px]">Target Price (USDT)</TableHead>
                 <TableHead>Action When Reached</TableHead>
               </TableRow>
             </TableHeader>
@@ -545,13 +471,6 @@ export function EditableTakeProfitTable({
                     ) : (
                       <span className="font-mono">{level.sellPortion}%</span>
                     )}
-                  </TableCell>
-
-                  {/* Target Price - Calculated */}
-                  <TableCell>
-                    <span className="font-mono text-green-600">
-                      {calculateTargetPrice(level.profitPercentage)}
-                    </span>
                   </TableCell>
 
                   {/* Action When Reached - Auto-generated or Editable */}
@@ -658,11 +577,8 @@ export function EditableTakeProfitTable({
               <div key={level.id} className="flex items-center gap-2 text-muted-foreground">
                 <span>•</span>
                 <span>
-                  At{" "}
-                  <strong className="font-mono text-green-600">
-                    {calculateTargetPrice(level.profitPercentage)}
-                  </strong>
-                  ,{level.actionWhenReached.toLowerCase()}.
+                  At <strong className="text-green-600">{level.profitPercentage}% profit</strong>,{" "}
+                  {level.actionWhenReached.toLowerCase()}.
                 </span>
               </div>
             ))}

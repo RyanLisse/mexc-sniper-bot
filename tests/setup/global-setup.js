@@ -80,23 +80,53 @@ async function validateEnvironment() {
 }
 
 /**
- * Prepare database for testing
+ * Prepare database for testing with NeonDB branching
  */
 async function prepareDatabaseForTesting() {
-  console.log('🗄️ Preparing database for testing...')
+  console.log('🗄️ Preparing database for testing with NeonDB branches...')
   
   try {
-    // Import database utilities
-    const { db } = await import('@/src/db/index.js')
+    // Check if we should use test branches
+    const useTestBranches = process.env.USE_TEST_BRANCHES === 'true'
     
-    // Test database connection
-    if (db) {
-      console.log('📦 Database connection verified')
+    if (useTestBranches && process.env.NEON_API_KEY) {
+      console.log('🌿 Setting up isolated NeonDB test branch...')
       
-      // Optional: Clear test data if needed
-      if (process.env.CLEAR_TEST_DATA === 'true') {
-        console.log('🧹 Clearing existing test data...')
-        // Add database clearing logic here if needed
+      // Import branch setup utilities
+      const { setupVitestBranch } = await import('@/src/lib/test-branch-setup.js')
+      
+      try {
+        // Create isolated test branch for this test run
+        global.testBranchContext = await setupVitestBranch()
+        console.log(`✅ Test branch created: ${global.testBranchContext.branchName}`)
+        
+        // Import and run migrations on the test branch
+        const { migrateTestBranch } = await import('@/src/lib/test-branch-setup.js')
+        await migrateTestBranch(global.testBranchContext)
+        console.log('📦 Test branch migrations completed')
+        
+      } catch (error) {
+        console.warn('⚠️ Failed to setup test branch, falling back to main database:', error.message)
+        // Fall back to main database connection
+        useTestBranches = false
+      }
+    }
+    
+    if (!useTestBranches) {
+      console.log('📦 Using main database connection for testing')
+      
+      // Import database utilities
+      const { db } = await import('@/src/db/index.js')
+      
+      // Test database connection
+      if (db) {
+        console.log('📦 Database connection verified')
+        
+        // Optional: Clear test data if needed
+        if (process.env.CLEAR_TEST_DATA === 'true') {
+          console.log('🧹 Clearing existing test data...')
+          // Add database clearing logic here if needed
+        }
       }
     }
     
@@ -287,6 +317,30 @@ export async function globalTeardown() {
   console.log('🧹 Running global test cleanup...')
   
   try {
+    // Cleanup test branch if it was created
+    if (global.testBranchContext) {
+      console.log('🌿 Cleaning up test branch...')
+      try {
+        const { cleanupTestBranch } = await import('@/src/lib/test-branch-setup.js')
+        await cleanupTestBranch(global.testBranchContext)
+        global.testBranchContext = null
+        console.log('✅ Test branch cleanup completed')
+      } catch (error) {
+        console.warn('⚠️ Test branch cleanup warning:', error.message)
+      }
+    }
+    
+    // Emergency cleanup of any orphaned test branches
+    if (process.env.USE_TEST_BRANCHES === 'true' && process.env.NEON_API_KEY) {
+      try {
+        const { cleanupAllTestBranches } = await import('@/src/lib/test-branch-setup.js')
+        await cleanupAllTestBranches()
+        console.log('🧹 Emergency branch cleanup completed')
+      } catch (error) {
+        console.warn('⚠️ Emergency branch cleanup warning:', error.message)
+      }
+    }
+    
     // Performance report
     if (global.testPerformance) {
       const report = global.testPerformance.getReport()

@@ -115,20 +115,20 @@ pre-commit: lint type-check ## Run all pre-commit checks
 # ==================== Testing Commands ====================
 
 .PHONY: test
-test: kill-ports ## Run all unit tests (kills ports first)
-	@echo -e "${BLUE}Running unit tests...${NC}"
+test: kill-ports ## Run all unit tests with isolated database branches
+	@echo -e "${BLUE}Running unit tests with isolated branches...${NC}"
 	@$(NODE) run test
 	@echo -e "${GREEN}✓ Unit tests completed${NC}"
 
 .PHONY: test-unit
-test-unit: ## Run unit tests only (no port killing)
-	@echo -e "${BLUE}Running unit tests only...${NC}"
+test-unit: ## Run unit tests only with branch isolation
+	@echo -e "${BLUE}Running unit tests with branch isolation...${NC}"
 	@bunx vitest run tests/unit/
 	@echo -e "${GREEN}✓ Unit tests completed${NC}"
 
 .PHONY: test-integration
-test-integration: ## Run integration tests only
-	@echo -e "${BLUE}Running integration tests only...${NC}"
+test-integration: ## Run integration tests with isolated database branches
+	@echo -e "${BLUE}Running integration tests with isolated branches...${NC}"
 	@bunx vitest run tests/integration/
 	@echo -e "${GREEN}✓ Integration tests completed${NC}"
 
@@ -333,6 +333,47 @@ db-reset: ## Reset database (WARNING: destroys all data)
 	else \
 		echo -e "${YELLOW}Database reset cancelled${NC}"; \
 	fi
+
+# ==================== NeonDB Branch Management ====================
+
+.PHONY: branch-create
+branch-create: ## Create a new test branch
+	@echo -e "${BLUE}Creating new test branch...${NC}"
+	@$(NODE) run branch:create
+	@echo -e "${GREEN}✓ Test branch created${NC}"
+
+.PHONY: branch-list
+branch-list: ## List all test branches
+	@echo -e "${BLUE}Listing test branches...${NC}"
+	@$(NODE) run branch:list
+
+.PHONY: branch-cleanup
+branch-cleanup: ## Cleanup old test branches (24h+)
+	@echo -e "${BLUE}Cleaning up old test branches...${NC}"
+	@$(NODE) run branch:cleanup
+	@echo -e "${GREEN}✓ Branch cleanup completed${NC}"
+
+.PHONY: branch-cleanup-all
+branch-cleanup-all: ## Emergency cleanup of all test branches
+	@echo -e "${YELLOW}Emergency cleanup of ALL test branches...${NC}"
+	@$(NODE) run branch:cleanup 0
+	@echo -e "${GREEN}✓ Emergency cleanup completed${NC}"
+
+.PHONY: branch-help
+branch-help: ## Show branch management help
+	@$(NODE) run branch:help
+
+.PHONY: branch-setup
+branch-setup: ## Setup and validate branch testing environment
+	@echo -e "${BLUE}Setting up branch testing environment...${NC}"
+	@$(NODE) run branch:setup:validate
+	@echo -e "${GREEN}✓ Branch testing setup completed${NC}"
+
+.PHONY: branch-test
+branch-test: ## Test complete branch workflow
+	@echo -e "${BLUE}Testing branch workflow...${NC}"
+	@$(NODE) run branch:setup:test
+	@echo -e "${GREEN}✓ Branch workflow test completed${NC}"
 
 # ==================== Utility Commands ====================
 

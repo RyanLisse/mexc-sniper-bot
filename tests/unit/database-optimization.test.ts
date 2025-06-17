@@ -29,38 +29,32 @@ describe("Database Optimization", () => {
   let testUserId: string;
 
   beforeAll(async () => {
-    // Setup test database with proper migrations
-    testDb = await createTestDatabase();
+    // Use main database connection for better compatibility
     testUserId = 'test-user-db-optimization';
     
     // Create test user for foreign key requirements
-    await createTestUser(testDb.db, testUserId);
+    await createTestUser(db, testUserId);
     
     // Ensure required tables exist for optimization tests
-    await ensureTestTables(testDb.db);
+    await ensureTestTables(db);
     
     // Start performance monitoring
     queryPerformanceMonitor.startMonitoring();
     
-    // Capture baseline metrics using test database
-    baselineMetrics = await captureBaselineMetrics(testDb.db);
+    // Capture baseline metrics using main database
+    baselineMetrics = await captureBaselineMetrics(db);
     console.log("📊 Baseline metrics captured:", baselineMetrics);
   });
 
   afterAll(async () => {
     // Cleanup test data
-    if (testDb && testUserId) {
-      await cleanupTestData(testDb.db, testUserId);
+    if (testUserId) {
+      await cleanupTestData(db, testUserId);
     }
     
     // Cleanup
     queryPerformanceMonitor.stopMonitoring();
     databaseConnectionPool.shutdown();
-    
-    // Close test database
-    if (testDb) {
-      testDb.cleanup();
-    }
   });
 
   describe("Phase 1: Query Performance Analysis", () => {
@@ -180,7 +174,7 @@ describe("Database Optimization", () => {
       const startTime = performance.now();
       
       const result = await executeOptimizedSelect(
-        () => testDb.db.select().from(snipeTargets).limit(5),
+        () => db.select().from(snipeTargets).limit(5),
         "test_snipe_targets",
         60000 // 1 minute cache
       );
@@ -290,7 +284,7 @@ describe("Database Optimization", () => {
     it("should wrap queries with monitoring", async () => {
       const result = await monitoredQuery(
         "test_query",
-        () => testDb.db.select().from(snipeTargets).limit(1),
+        () => db.select().from(snipeTargets).limit(1),
         {
           query: "SELECT * FROM snipe_targets LIMIT 1",
           userId: testUserId

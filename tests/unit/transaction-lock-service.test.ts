@@ -66,11 +66,13 @@ describe("TransactionLockService", () => {
         ownerType: "user" as const,
         transactionType: "trade" as const,
         transactionData: { symbol: "BTCUSDT", side: "BUY", quantity: "100" },
+        timeoutMs: 60000, // 1 minute timeout to ensure lock doesn't expire
       };
 
       // First acquisition should succeed
       const result1 = await lockService.acquireLock(config);
       expect(result1.success).toBe(true);
+      expect(result1.lockId).toBeDefined();
 
       // Second acquisition with same config should fail
       const result2 = await lockService.acquireLock(config);
