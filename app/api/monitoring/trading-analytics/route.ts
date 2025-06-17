@@ -148,14 +148,14 @@ async function getTradingPerformanceMetrics() {
       .orderBy(desc(transactions.createdAt));
 
     const totalTrades = trades.length;
-    const successfulTrades = trades.filter(t => t.status === 'completed' && (t.pnl || 0) > 0).length;
+    const successfulTrades = trades.filter(t => t.status === 'completed' && (t.profitLoss || 0) > 0).length;
     const successRate = totalTrades > 0 ? (successfulTrades / totalTrades) * 100 : 0;
-    
-    const averageTradeSize = trades.reduce((sum, t) => sum + (t.amount || 0), 0) / totalTrades || 0;
-    const tradingVolume = trades.reduce((sum, t) => sum + (t.amount || 0), 0);
-    
-    const profits = trades.filter(t => (t.pnl || 0) > 0).map(t => t.pnl || 0);
-    const losses = trades.filter(t => (t.pnl || 0) < 0).map(t => Math.abs(t.pnl || 0));
+
+    const averageTradeSize = trades.reduce((sum, t) => sum + (t.buyTotalCost || 0), 0) / totalTrades || 0;
+    const tradingVolume = trades.reduce((sum, t) => sum + (t.buyTotalCost || 0), 0);
+
+    const profits = trades.filter(t => (t.profitLoss || 0) > 0).map(t => t.profitLoss || 0);
+    const losses = trades.filter(t => (t.profitLoss || 0) < 0).map(t => Math.abs(t.profitLoss || 0));
     
     const averageProfit = profits.reduce((sum, p) => sum + p, 0) / profits.length || 0;
     const averageLoss = losses.reduce((sum, l) => sum + l, 0) / losses.length || 0;
@@ -206,9 +206,9 @@ async function getPortfolioMetrics() {
       new Date(p.timestamp).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000
     );
 
-    const currentValue = current?.totalValue || 10000;
-    const dayChange = dayAgo ? ((currentValue - (dayAgo.totalValue || 10000)) / (dayAgo.totalValue || 10000)) * 100 : 0;
-    const weekChange = weekAgo ? ((currentValue - (weekAgo.totalValue || 10000)) / (weekAgo.totalValue || 10000)) * 100 : 0;
+    const currentValue = current?.totalBalance || 10000;
+    const dayChange = dayAgo ? ((currentValue - (dayAgo.totalBalance || 10000)) / (dayAgo.totalBalance || 10000)) * 100 : 0;
+    const weekChange = weekAgo ? ((currentValue - (weekAgo.totalBalance || 10000)) / (weekAgo.totalBalance || 10000)) * 100 : 0;
 
     return {
       currentValue,
