@@ -32,9 +32,10 @@ const ExecutionActionSchema = z.object({
 // GET /api/strategies/[id] - Get specific strategy with detailed information
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Rate limiting
     const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_read");
     if (!rateLimitResult.success) {
@@ -49,7 +50,7 @@ export async function GET(
       return createApiResponse(createErrorResponse("Unauthorized"), 401);
     }
 
-    const strategyId = parseInt(params.id);
+    const strategyId = parseInt(id);
     if (isNaN(strategyId)) {
       return createApiResponse(createErrorResponse("Invalid strategy ID"), 400);
     }
@@ -106,9 +107,10 @@ export async function GET(
 // PUT /api/strategies/[id] - Update strategy
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Rate limiting
     const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_update");
     if (!rateLimitResult.success) {
@@ -123,7 +125,7 @@ export async function PUT(
       return createApiResponse(createErrorResponse("Unauthorized"), 401);
     }
 
-    const strategyId = parseInt(params.id);
+    const strategyId = parseInt(id);
     if (isNaN(strategyId)) {
       return createApiResponse(createErrorResponse("Invalid strategy ID"), 400);
     }
@@ -184,9 +186,10 @@ export async function PUT(
 // POST /api/strategies/[id]/execute - Execute strategy actions
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Rate limiting
     const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_execute");
     if (!rateLimitResult.success) {
@@ -201,7 +204,7 @@ export async function POST(
       return createApiResponse(createErrorResponse("Unauthorized"), 401);
     }
 
-    const strategyId = parseInt(params.id);
+    const strategyId = parseInt(id);
     if (isNaN(strategyId)) {
       return createApiResponse(createErrorResponse("Invalid strategy ID"), 400);
     }
@@ -303,9 +306,10 @@ export async function POST(
 // DELETE /api/strategies/[id] - Delete strategy
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Rate limiting
     const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_delete");
     if (!rateLimitResult.success) {
@@ -320,7 +324,7 @@ export async function DELETE(
       return createApiResponse(createErrorResponse("Unauthorized"), 401);
     }
 
-    const strategyId = parseInt(params.id);
+    const strategyId = parseInt(id);
     if (isNaN(strategyId)) {
       return createApiResponse(createErrorResponse("Invalid strategy ID"), 400);
     }

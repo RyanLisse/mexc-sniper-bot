@@ -129,10 +129,10 @@ export default defineConfig({
       
       // NeonDB branch configuration for isolated testing
       DATABASE_URL: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
-      NEON_API_KEY: process.env.NEON_API_KEY || 'napi_c2sulxv4haz3qgj3obefsx6lu8f4389a28vc2wqtlvatp6j3y873ctxkti6ifj5s',
+      NEON_API_KEY: process.env.NEON_API_KEY || 'test-neon-api-key-for-mocking',
       NEON_PROJECT_ID: process.env.NEON_PROJECT_ID || 'silent-firefly-a1l3mkrm',
       USE_TEST_BRANCHES: 'true',
-      SKIP_NEON_INTEGRATION: 'true',
+      SKIP_NEON_INTEGRATION: 'false',
       FORCE_SQLITE: 'false',
       TURSO_DATABASE_URL: undefined,
       TURSO_AUTH_TOKEN: undefined,

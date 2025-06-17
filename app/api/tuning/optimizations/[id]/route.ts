@@ -17,10 +17,11 @@ const optimizationEngine = new ParameterOptimizationEngine();
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const optimizationId = params.id;
+    const { id } = await params;
+    const optimizationId = id;
     
     if (!optimizationId) {
       return NextResponse.json(
@@ -67,10 +68,11 @@ export async function GET(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const optimizationId = params.id;
+    const { id } = await params;
+    const optimizationId = id;
     
     if (!optimizationId) {
       return NextResponse.json(
@@ -104,10 +106,11 @@ export async function DELETE(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const optimizationId = params.id;
+    const { id } = await params;
+    const optimizationId = id;
     const body = await request.json();
     
     if (!optimizationId) {

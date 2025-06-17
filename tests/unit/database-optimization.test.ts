@@ -22,7 +22,7 @@ import { snipeTargets, executionHistory, patternEmbeddings, user } from "@/src/d
 import { eq, sql } from "drizzle-orm";
 import { createTestDatabase, createTestUser, cleanupTestData, type TestDbSetup } from "./test-db-setup";
 
-describe.skip("Database Optimization", () => {
+describe("Database Optimization", () => {
   let baselineMetrics: any;
   let optimizationResults: any;
   let testDb: TestDbSetup;
@@ -301,110 +301,119 @@ describe.skip("Database Optimization", () => {
 // Helper function to ensure test tables exist
 async function ensureTestTables(database: any) {
   try {
-    // For PostgreSQL, use execute instead of run
-    const executeQuery = database.execute || database.run;
-    if (!executeQuery || !database) {
-      console.warn('Database execute method not available, skipping table creation');
-      return;
-    }
-
-    // Check if database has dialect property to ensure it's properly initialized
-    if (!database.dialect && !database._ && !database.$) {
-      console.warn('Database not properly initialized, skipping table creation');
-      return;
-    }
+    // Check if tables already exist using PostgreSQL information_schema
+    const checkTablesResult = await database.execute(sql`
+      SELECT table_name FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name IN ('snipe_targets', 'execution_history', 'pattern_embeddings')
+    `);
     
-    // Ensure snipe_targets table exists (PostgreSQL syntax)
-    await executeQuery(sql`
-      CREATE TABLE IF NOT EXISTS snipe_targets (
-        id SERIAL PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        vcoin_id TEXT NOT NULL,
-        symbol_name TEXT NOT NULL,
-        entry_strategy TEXT DEFAULT 'market' NOT NULL,
-        entry_price DECIMAL,
-        position_size_usdt DECIMAL NOT NULL,
-        take_profit_level INTEGER DEFAULT 2 NOT NULL,
-        take_profit_custom DECIMAL,
-        stop_loss_percent DECIMAL NOT NULL,
-        status TEXT DEFAULT 'pending' NOT NULL,
-        priority INTEGER DEFAULT 1 NOT NULL,
-        max_retries INTEGER DEFAULT 3 NOT NULL,
-        current_retries INTEGER DEFAULT 0 NOT NULL,
-        target_execution_time BIGINT,
-        actual_execution_time BIGINT,
-        execution_price DECIMAL,
-        actual_position_size DECIMAL,
-        execution_status TEXT,
-        error_message TEXT,
-        confidence_score DECIMAL DEFAULT 0 NOT NULL,
-        risk_level TEXT DEFAULT 'medium' NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-      )
-    `);
+    const existingTables = Array.isArray(checkTablesResult) 
+      ? checkTablesResult.map((row: any) => row.table_name)
+      : (checkTablesResult as any).rows?.map((row: any) => row.table_name) || [];
+    
+    if (existingTables.length >= 3) {
+      console.log("✅ Test tables already exist, skipping creation");
+      return;
+    }
 
-    // Ensure execution_history table exists (PostgreSQL syntax)
-    await executeQuery(sql`
-      CREATE TABLE IF NOT EXISTS execution_history (
-        id SERIAL PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        snipe_target_id INTEGER,
-        vcoin_id TEXT NOT NULL,
-        symbol_name TEXT NOT NULL,
-        action TEXT NOT NULL,
-        order_type TEXT NOT NULL,
-        order_side TEXT NOT NULL,
-        requested_quantity DECIMAL NOT NULL,
-        requested_price DECIMAL,
-        executed_quantity DECIMAL,
-        executed_price DECIMAL,
-        total_cost DECIMAL,
-        fees DECIMAL,
-        exchange_order_id TEXT,
-        exchange_status TEXT,
-        exchange_response TEXT,
-        execution_latency_ms INTEGER,
-        slippage_percent DECIMAL,
-        status TEXT NOT NULL,
-        error_code TEXT,
-        error_message TEXT,
-        requested_at BIGINT NOT NULL,
-        executed_at BIGINT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-      )
-    `);
+    console.log("📝 Creating missing test tables...");
+    
+    // Only create tables that don't exist
+    if (!existingTables.includes('snipe_targets')) {
+      await database.execute(sql`
+        CREATE TABLE IF NOT EXISTS snipe_targets (
+          id SERIAL PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          vcoin_id TEXT NOT NULL,
+          symbol_name TEXT NOT NULL,
+          entry_strategy TEXT DEFAULT 'market' NOT NULL,
+          entry_price DECIMAL,
+          position_size_usdt DECIMAL NOT NULL,
+          take_profit_level INTEGER DEFAULT 2 NOT NULL,
+          take_profit_custom DECIMAL,
+          stop_loss_percent DECIMAL NOT NULL,
+          status TEXT DEFAULT 'pending' NOT NULL,
+          priority INTEGER DEFAULT 1 NOT NULL,
+          max_retries INTEGER DEFAULT 3 NOT NULL,
+          current_retries INTEGER DEFAULT 0 NOT NULL,
+          target_execution_time BIGINT,
+          actual_execution_time BIGINT,
+          execution_price DECIMAL,
+          actual_position_size DECIMAL,
+          execution_status TEXT,
+          error_message TEXT,
+          confidence_score DECIMAL DEFAULT 0 NOT NULL,
+          risk_level TEXT DEFAULT 'medium' NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )
+      `);
+    }
 
-    // Ensure pattern_embeddings table exists with full schema (PostgreSQL syntax)
-    await executeQuery(sql`
-      CREATE TABLE IF NOT EXISTS pattern_embeddings (
-        id SERIAL PRIMARY KEY,
-        pattern_id TEXT,
-        pattern_type TEXT NOT NULL,
-        symbol_name TEXT,
-        vcoin_id TEXT,
-        pattern_data TEXT,
-        embedding TEXT,
-        embedding_dimension INTEGER,
-        embedding_model TEXT,
-        confidence DECIMAL DEFAULT 0 NOT NULL,
-        occurrences INTEGER DEFAULT 0,
-        success_rate DECIMAL DEFAULT 0,
-        avg_profit DECIMAL DEFAULT 0,
-        discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        last_seen_at TIMESTAMP,
-        similarity_threshold DECIMAL DEFAULT 0.8,
-        false_positives INTEGER DEFAULT 0,
-        true_positives INTEGER DEFAULT 0,
-        is_active INTEGER DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-      )
-    `);
+    if (!existingTables.includes('execution_history')) {
+      await database.execute(sql`
+        CREATE TABLE IF NOT EXISTS execution_history (
+          id SERIAL PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          snipe_target_id INTEGER,
+          vcoin_id TEXT NOT NULL,
+          symbol_name TEXT NOT NULL,
+          action TEXT NOT NULL,
+          order_type TEXT NOT NULL,
+          order_side TEXT NOT NULL,
+          requested_quantity DECIMAL NOT NULL,
+          requested_price DECIMAL,
+          executed_quantity DECIMAL,
+          executed_price DECIMAL,
+          total_cost DECIMAL,
+          fees DECIMAL,
+          exchange_order_id TEXT,
+          exchange_status TEXT,
+          exchange_response TEXT,
+          execution_latency_ms INTEGER,
+          slippage_percent DECIMAL,
+          status TEXT NOT NULL,
+          error_code TEXT,
+          error_message TEXT,
+          requested_at BIGINT NOT NULL,
+          executed_at BIGINT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )
+      `);
+    }
+
+    if (!existingTables.includes('pattern_embeddings')) {
+      await database.execute(sql`
+        CREATE TABLE IF NOT EXISTS pattern_embeddings (
+          id SERIAL PRIMARY KEY,
+          pattern_id TEXT,
+          pattern_type TEXT NOT NULL,
+          symbol_name TEXT,
+          vcoin_id TEXT,
+          pattern_data TEXT,
+          embedding TEXT,
+          embedding_dimension INTEGER,
+          embedding_model TEXT,
+          confidence DECIMAL DEFAULT 0 NOT NULL,
+          occurrences INTEGER DEFAULT 0,
+          success_rate DECIMAL DEFAULT 0,
+          avg_profit DECIMAL DEFAULT 0,
+          discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          last_seen_at TIMESTAMP,
+          similarity_threshold DECIMAL DEFAULT 0.8,
+          false_positives INTEGER DEFAULT 0,
+          true_positives INTEGER DEFAULT 0,
+          is_active INTEGER DEFAULT 1,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        )
+      `);
+    }
 
     console.log("✅ Test tables ensured");
   } catch (error) {
-    console.warn("Warning creating test tables:", error);
+    console.warn("Warning ensuring test tables:", error);
+    // Continue anyway as tables might exist from migrations
   }
 }
 

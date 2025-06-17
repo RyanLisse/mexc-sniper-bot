@@ -818,9 +818,17 @@ export class CacheMonitoringSystem {
 
     return {
       hitRateTrend:
-        hitRateChange > 5 ? ("improving" as const) : hitRateChange < -5 ? ("declining" as const) : ("stable" as const),
+        hitRateChange > 5
+          ? ("improving" as const)
+          : hitRateChange < -5
+            ? ("declining" as const)
+            : ("stable" as const),
       memoryTrend:
-        memoryChange < -0.1 ? ("improving" as const) : memoryChange > 0.2 ? ("increasing" as const) : ("stable" as const),
+        memoryChange < -0.1
+          ? ("improving" as const)
+          : memoryChange > 0.2
+            ? ("increasing" as const)
+            : ("stable" as const),
       responseTrend:
         responseChange < -10
           ? ("improving" as const)

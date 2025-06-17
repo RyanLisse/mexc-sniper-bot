@@ -1,11 +1,11 @@
 import {
-  UnifiedMexcClient,
   type BalanceEntry,
   type CalendarEntry,
   type OrderParameters,
   type OrderResult,
   type SymbolEntry,
   type Ticker,
+  UnifiedMexcClient,
 } from "./unified-mexc-client";
 
 // ============================================================================
@@ -29,6 +29,8 @@ export interface ServiceResponse<T = any> {
   timestamp: string;
   requestId?: string;
   responseTime?: number;
+  cached?: boolean;
+  executionTimeMs?: number;
 }
 
 // ============================================================================
@@ -778,15 +780,17 @@ export class EnhancedMexcServiceLayer {
   ): Promise<ServiceResponse<T>> {
     const startTime = Date.now();
     const requestId = `${operation}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    
+
     console.log(`[EnhancedMexcServiceLayer] Starting ${operation} (${requestId})`);
-    
+
     try {
       const result = await fn();
       const responseTime = Date.now() - startTime;
-      
-      console.log(`[EnhancedMexcServiceLayer] Completed ${operation} in ${responseTime}ms (${requestId})`);
-      
+
+      console.log(
+        `[EnhancedMexcServiceLayer] Completed ${operation} in ${responseTime}ms (${requestId})`
+      );
+
       return {
         ...result,
         requestId,
@@ -795,9 +799,12 @@ export class EnhancedMexcServiceLayer {
     } catch (error) {
       const responseTime = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      
-      console.error(`[EnhancedMexcServiceLayer] Failed ${operation} after ${responseTime}ms (${requestId}):`, errorMessage);
-      
+
+      console.error(
+        `[EnhancedMexcServiceLayer] Failed ${operation} after ${responseTime}ms (${requestId}):`,
+        errorMessage
+      );
+
       return {
         success: false,
         error: errorMessage,
@@ -806,6 +813,106 @@ export class EnhancedMexcServiceLayer {
         responseTime,
       };
     }
+  }
+
+  // ============================================================================
+  // Basic API Methods (delegated to UnifiedMexcClient)
+  // ============================================================================
+
+  /**
+   * Test connectivity to MEXC exchange
+   */
+  async testConnectivity(): Promise<ServiceResponse<boolean>> {
+    return this.executeWithMetrics("testConnectivity", async () => {
+      const isConnected = await this.mexcClient.testConnectivity();
+      return {
+        success: isConnected,
+        data: isConnected,
+        timestamp: new Date().toISOString(),
+      };
+    });
+  }
+
+  /**
+   * Get account balances
+   */
+  async getAccountBalances(): Promise<ServiceResponse<BalanceEntry[]>> {
+    return this.executeWithMetrics("getAccountBalances", async () => {
+      const response = await this.mexcClient.getAccountBalances();
+      return {
+        success: response.success,
+        data: response.data || [],
+        error: response.error,
+        timestamp: new Date().toISOString(),
+      };
+    });
+  }
+
+  /**
+   * Get calendar listings
+   */
+  async getCalendarListings(): Promise<ServiceResponse<CalendarEntry[]>> {
+    return this.executeWithMetrics("getCalendarListings", async () => {
+      const response = await this.mexcClient.getCalendarListings();
+      return {
+        success: response.success,
+        data: response.data || [],
+        error: response.error,
+        timestamp: new Date().toISOString(),
+      };
+    });
+  }
+
+  /**
+   * Get symbols for specific vcoins
+   */
+  async getSymbolsForVcoins(vcoinIds: string[]): Promise<ServiceResponse<SymbolEntry[]>> {
+    return this.executeWithMetrics("getSymbolsForVcoins", async () => {
+      const allSymbols: SymbolEntry[] = [];
+
+      for (const vcoinId of vcoinIds) {
+        const response = await this.mexcClient.getSymbolsV2(vcoinId);
+        if (response.success && response.data) {
+          allSymbols.push(...response.data);
+        }
+      }
+
+      return {
+        success: true,
+        data: allSymbols,
+        timestamp: new Date().toISOString(),
+      };
+    });
+  }
+
+  /**
+   * Get symbols data
+   */
+  async getSymbolsData(): Promise<ServiceResponse<SymbolEntry[]>> {
+    return this.executeWithMetrics("getSymbolsData", async () => {
+      const response = await this.mexcClient.getSymbolsV2();
+      return {
+        success: response.success,
+        data: response.data || [],
+        error: response.error,
+        timestamp: new Date().toISOString(),
+      };
+    });
+  }
+
+  /**
+   * Place order (delegated to mexcClient)
+   */
+  async placeOrder(params: OrderParameters): Promise<ServiceResponse<OrderResult>> {
+    return this.executeWithMetrics("placeOrder", async () => {
+      const response = await this.mexcClient.placeOrder(params);
+      return {
+        success: response.success,
+        data: response.data,
+        error: response.error,
+        timestamp: new Date().toISOString(),
+      };
+    });
   }
 
   /**

@@ -73,7 +73,7 @@ export const GET = publicHandler({
 
     return context.success(status, {
       cached: false,
-      timestamp: Date.now(),
+      timestamp: new Date().toISOString(),
     });
 
   } catch (error) {
@@ -154,7 +154,7 @@ export const POST = authenticatedHandler({
       case 'broadcast_message':
         const { channel, type, data } = params;
         if (!channel || !type || !data) {
-          return context.validationError('channel, type, and data are required for broadcast');
+          return context.validationError('broadcast_message', 'channel, type, and data are required for broadcast');
         }
 
         webSocketServer.broadcast({
@@ -172,7 +172,7 @@ export const POST = authenticatedHandler({
       case 'subscribe_symbols':
         const { symbols } = params;
         if (!Array.isArray(symbols)) {
-          return context.validationError('symbols must be an array');
+          return context.validationError('symbols', 'symbols must be an array');
         }
 
         await mexcWebSocketStream.subscribeToSymbolList(symbols);
@@ -264,7 +264,7 @@ export const PUT = authenticatedHandler({
         }
 
         const success = webSocketServer.sendMessage(connectionId, {
-          type: 'system:message',
+          type: 'system:ack',
           channel: 'system',
           data: message,
           messageId: crypto.randomUUID(),
@@ -296,7 +296,7 @@ export const PUT = authenticatedHandler({
 
 export const PATCH = authenticatedHandler({
   parseBody: true,
-  auth: 'admin', // Admin only operations
+  // Admin only operations - auth is handled by authenticatedHandler
 })(async (request, context) => {
   try {
     const { operation, ...params } = context.body;

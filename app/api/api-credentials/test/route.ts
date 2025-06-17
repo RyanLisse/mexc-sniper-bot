@@ -99,7 +99,7 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
             authentication: true,
             accountType: "spot",
             canTrade: true,
-            balanceCount: accountResult.data?.balances?.length || 0,
+            balanceCount: accountResult.data?.length || 0,
             credentialSource: "database"
           }, {
             message: "API credentials are valid and working correctly",

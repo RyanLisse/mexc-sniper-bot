@@ -237,12 +237,12 @@ describe('Authentication Environment Management', () => {
       process.env.KINDE_CLIENT_ID = originalValue;
     });
 
-    it.skip('should detect invalid URL formats', () => {
+    it('should detect invalid URL formats', () => {
       envManager.switchEnvironment('test');
       
       // Set invalid URL that will definitely fail URL constructor
       const originalUrl = process.env.KINDE_ISSUER_URL;
-      process.env.KINDE_ISSUER_URL = 'not://a/valid/url/format';
+      process.env.KINDE_ISSUER_URL = 'invalid-url-without-protocol';
 
       const validation = envManager.validateEnvironment();
 

@@ -66,6 +66,204 @@ beforeAll(async () => {
     }
   }))
   
+  // Mock Neon API and Branch Manager
+  vi.mock('@/src/lib/neon-branch-manager', () => {
+    const mockBranches = new Map()
+    let branchIdCounter = 1
+    
+    return {
+      NeonBranchManager: vi.fn().mockImplementation(() => ({
+        createTestBranch: vi.fn().mockImplementation(async (options = {}) => {
+          const branchId = `mock-branch-${branchIdCounter++}`
+          const branchName = options.name || `test-${Date.now()}`
+          const connectionString = `postgresql://mock_user:mock_pass@mock-endpoint-${branchId}.mock.neon.tech:5432/neondb?sslmode=require`
+          
+          const branch = {
+            id: branchId,
+            name: branchName,
+            connectionString,
+            projectId: 'mock-project-id',
+            createdAt: new Date(),
+            endpoint: {
+              id: `mock-endpoint-${branchId}`,
+              host: `mock-endpoint-${branchId}.mock.neon.tech`,
+              port: 5432
+            }
+          }
+          
+          mockBranches.set(branchId, branch)
+          return branch
+        }),
+        deleteTestBranch: vi.fn().mockImplementation(async (branchId) => {
+          mockBranches.delete(branchId)
+          return Promise.resolve()
+        }),
+        getBranchConnectionString: vi.fn().mockImplementation(async (branchId) => {
+          const branch = mockBranches.get(branchId)
+          return branch ? branch.connectionString : `postgresql://mock_user:mock_pass@mock-endpoint-${branchId}.mock.neon.tech:5432/neondb?sslmode=require`
+        }),
+        listTestBranches: vi.fn().mockResolvedValue([]),
+        cleanupOldTestBranches: vi.fn().mockResolvedValue(),
+        cleanupAllTrackedBranches: vi.fn().mockResolvedValue(),
+        getActiveBranchCount: vi.fn().mockReturnValue(0),
+        getActiveBranches: vi.fn().mockReturnValue([]),
+        getProject: vi.fn().mockResolvedValue({
+          id: 'mock-project-id',
+          name: 'Mock Project',
+          database_host: 'mock-host.neon.tech',
+          database_name: 'neondb',
+          database_user: 'neondb_owner',
+          database_password: 'mock-password'
+        })
+      })),
+      neonBranchManager: {
+        createTestBranch: vi.fn().mockImplementation(async (options = {}) => {
+          const branchId = `mock-branch-${Date.now()}`
+          const branchName = options.name || `test-${Date.now()}`
+          const connectionString = `postgresql://mock_user:mock_pass@mock-endpoint-${branchId}.mock.neon.tech:5432/neondb?sslmode=require`
+          
+          return {
+            id: branchId,
+            name: branchName,
+            connectionString,
+            projectId: 'mock-project-id',
+            createdAt: new Date(),
+            endpoint: {
+              id: `mock-endpoint-${branchId}`,
+              host: `mock-endpoint-${branchId}.mock.neon.tech`,
+              port: 5432
+            }
+          }
+        }),
+        deleteTestBranch: vi.fn().mockResolvedValue(),
+        getBranchConnectionString: vi.fn().mockResolvedValue('postgresql://mock_user:mock_pass@mock-endpoint.mock.neon.tech:5432/neondb?sslmode=require'),
+        listTestBranches: vi.fn().mockResolvedValue([]),
+        cleanupOldTestBranches: vi.fn().mockResolvedValue(),
+        cleanupAllTrackedBranches: vi.fn().mockResolvedValue(),
+        getActiveBranchCount: vi.fn().mockReturnValue(0),
+        getActiveBranches: vi.fn().mockReturnValue([])
+      }
+    }
+  })
+  
+  // Mock test-branch-setup utilities
+  vi.mock('@/src/lib/test-branch-setup', () => {
+    let mockTestBranchContext = null
+    
+    const mockSetupTestBranch = vi.fn().mockImplementation(async (options = {}) => {
+      const branchId = `mock-test-branch-${Date.now()}`
+      const branchName = `${options.testSuite || 'test'}-${Date.now()}`
+      const connectionString = `postgresql://mock_user:mock_pass@mock-test-endpoint-${branchId}.mock.neon.tech:5432/neondb?sslmode=require`
+      
+      mockTestBranchContext = {
+        branchId,
+        branchName,
+        connectionString,
+        originalDatabaseUrl: process.env.DATABASE_URL || 'postgresql://original@host/db',
+        cleanup: vi.fn().mockResolvedValue()
+      }
+      
+      return mockTestBranchContext
+    })
+    
+    const mockCleanupTestBranch = vi.fn().mockResolvedValue()
+    const mockMigrateTestBranch = vi.fn().mockResolvedValue()
+    
+    return {
+      setupTestBranch: mockSetupTestBranch,
+      cleanupTestBranch: mockCleanupTestBranch,
+      getCurrentTestBranch: vi.fn().mockImplementation(() => mockTestBranchContext),
+      withTestBranch: vi.fn().mockImplementation(async (testFn, options) => {
+        const context = await mockSetupTestBranch(options)
+        try {
+          return await testFn(context)
+        } finally {
+          await mockCleanupTestBranch(context)
+        }
+      }),
+      setupVitestBranch: vi.fn().mockImplementation(async () => {
+        return mockSetupTestBranch({ testSuite: 'vitest', timeout: 120000 })
+      }),
+      cleanupAllTestBranches: vi.fn().mockResolvedValue(),
+      migrateTestBranch: mockMigrateTestBranch,
+      checkTestBranchHealth: vi.fn().mockResolvedValue(true),
+      createIntegrationTestDb: vi.fn().mockImplementation(async () => {
+        const context = await mockSetupTestBranch({ testSuite: 'integration', timeout: 180000 })
+        await mockMigrateTestBranch(context)
+        return context
+      }),
+      createUnitTestDb: vi.fn().mockImplementation(async () => {
+        return mockSetupTestBranch({ testSuite: 'unit', timeout: 60000 })
+      }),
+      recoverFromBranchError: vi.fn().mockResolvedValue()
+    }
+  })
+  
+  // Mock database functions for isolated testing
+  vi.mock('@/src/db', () => {
+    const mockDb = {
+      execute: vi.fn().mockResolvedValue([{ test_value: 1, count: '1' }]),
+      query: vi.fn().mockResolvedValue([]),
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: 'mock-id' }])
+        })
+      }),
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+          limit: vi.fn().mockResolvedValue([]),
+          orderBy: vi.fn().mockResolvedValue([])
+        })
+      }),
+      update: vi.fn().mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([])
+        })
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([])
+      }),
+      transaction: vi.fn().mockImplementation(async (cb) => {
+        return cb(mockDb)
+      })
+    }
+    
+    return {
+      db: mockDb,
+      getDb: vi.fn().mockReturnValue(mockDb),
+      clearDbCache: vi.fn().mockImplementation(() => {
+        // Mock implementation - no actual cache to clear
+      }),
+      initializeDatabase: vi.fn().mockResolvedValue(true),
+      healthCheck: vi.fn().mockResolvedValue({
+        status: 'healthy',
+        responseTime: 50,
+        database: 'mock-neondb',
+        timestamp: new Date().toISOString()
+      }),
+      executeWithRetry: vi.fn().mockImplementation(async (queryFn) => {
+        return queryFn()
+      }),
+      closeDatabase: vi.fn().mockImplementation(() => {
+        // Mock implementation - no actual database to close
+      }),
+      // Database optimization functions
+      executeOptimizedSelect: vi.fn().mockImplementation(async (queryFn, cacheKey, cacheTTL) => {
+        return queryFn()
+      }),
+      executeOptimizedWrite: vi.fn().mockImplementation(async (queryFn, invalidatePatterns) => {
+        return queryFn()
+      }),
+      executeBatchOperations: vi.fn().mockImplementation(async (operations, invalidatePatterns) => {
+        return Promise.all(operations.map(op => op()))
+      }),
+      monitoredQuery: vi.fn().mockImplementation(async (queryName, queryFn, options) => {
+        return queryFn()
+      })
+    }
+  })
+  
   // Note: Not mocking encryption service globally so unit tests can test actual implementation
   // Individual tests can mock if needed
   

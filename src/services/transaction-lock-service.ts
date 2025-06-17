@@ -92,14 +92,115 @@ export class TransactionLockService {
     const expiresAt = new Date(now.getTime() + (config.timeoutMs || 30000));
 
     try {
-      // Check for existing lock with same idempotency key
-      const existingLock = await db.query.transactionLocks.findFirst({
-        where: eq(transactionLocks.idempotencyKey, idempotencyKey),
-      });
+      // Use database transaction for atomicity
+      return await db.transaction(async (tx) => {
+        // Check for existing lock with same idempotency key
+        const existingLocks = await tx
+          .select()
+          .from(transactionLocks)
+          .where(eq(transactionLocks.idempotencyKey, idempotencyKey));
 
-      if (existingLock) {
-        // If lock is still active and not expired, return existing result or retry status
-        if (existingLock.status === "active" && new Date(existingLock.expiresAt) > now) {
+        const existingLock = existingLocks[0];
+
+        if (existingLock) {
+          // If lock is still active and not expired, return existing result or retry status
+          if (existingLock.status === "active" && new Date(existingLock.expiresAt) > now) {
+            return {
+              success: false,
+              error: "Transaction already in progress",
+              isRetry: true,
+              lockId: existingLock.lockId,
+            };
+          }
+
+          // If transaction completed successfully, return the existing result
+          if (existingLock.status === "released" && existingLock.result) {
+            return {
+              success: false,
+              error: "Transaction already completed",
+              existingResult: JSON.parse(existingLock.result),
+              isRetry: true,
+              lockId: existingLock.lockId,
+            };
+          }
+        }
+
+        // Check for active locks on the same resource (but different idempotency key)
+        const activeLocks = await tx
+          .select()
+          .from(transactionLocks)
+          .where(
+            and(
+              eq(transactionLocks.resourceId, config.resourceId),
+              eq(transactionLocks.status, "active"),
+              gte(transactionLocks.expiresAt, now)
+            )
+          );
+
+        if (activeLocks.length > 0) {
+          // Check if any of the active locks have the same idempotency key
+          const duplicateLock = activeLocks.find((lock) => lock.idempotencyKey === idempotencyKey);
+          if (duplicateLock) {
+            return {
+              success: false,
+              error: "Transaction already in progress",
+              isRetry: true,
+              lockId: duplicateLock.lockId,
+            };
+          }
+
+          // Add to queue instead of rejecting (different transaction on same resource)
+          const queueItem = await this.addToQueue(config, idempotencyKey);
+          return {
+            success: false,
+            error: "Resource locked, added to queue",
+            queuePosition: queueItem.position,
+          };
+        }
+
+        // Acquire the lock using INSERT ... RETURNING to ensure atomicity
+        const insertedLocks = await tx
+          .insert(transactionLocks)
+          .values({
+            lockId,
+            resourceId: config.resourceId,
+            idempotencyKey,
+            ownerId: config.ownerId,
+            ownerType: config.ownerType,
+            expiresAt,
+            status: "active",
+            lockType: "exclusive",
+            transactionType: config.transactionType,
+            transactionData: JSON.stringify(config.transactionData),
+            maxRetries: config.maxRetries || 3,
+            timeoutMs: config.timeoutMs || 30000,
+          })
+          .returning({ lockId: transactionLocks.lockId });
+
+        if (insertedLocks.length === 0) {
+          throw new Error("Failed to insert lock - no rows returned");
+        }
+
+        return {
+          success: true,
+          lockId,
+        };
+      });
+    } catch (error) {
+      // Handle unique constraint violations (concurrent access to same idempotency key)
+      if (
+        error instanceof Error &&
+        error.message.includes("unique") &&
+        error.message.includes("idempotency_key")
+      ) {
+        // Race condition detected - another process acquired the lock first
+        const existingLocks = await db
+          .select()
+          .from(transactionLocks)
+          .where(eq(transactionLocks.idempotencyKey, idempotencyKey));
+
+        const existingLock = existingLocks[0];
+        if (existingLock) {
           return {
             success: false,
             error: "Transaction already in progress",
@@ -107,59 +208,8 @@ export class TransactionLockService {
             lockId: existingLock.lockId,
           };
         }
-
-        // If transaction completed successfully, return the existing result
-        if (existingLock.status === "released" && existingLock.result) {
-          return {
-            success: false,
-            error: "Transaction already completed",
-            existingResult: JSON.parse(existingLock.result),
-            isRetry: true,
-            lockId: existingLock.lockId,
-          };
-        }
       }
 
-      // Check for active locks on the same resource
-      const activeLocks = await db.query.transactionLocks.findMany({
-        where: and(
-          eq(transactionLocks.resourceId, config.resourceId),
-          eq(transactionLocks.status, "active"),
-          gte(transactionLocks.expiresAt, now)
-        ),
-      });
-
-      if (activeLocks.length > 0) {
-        // Add to queue instead of rejecting
-        const queueItem = await this.addToQueue(config, idempotencyKey);
-        return {
-          success: false,
-          error: "Resource locked, added to queue",
-          queuePosition: queueItem.position,
-        };
-      }
-
-      // Acquire the lock
-      await db.insert(transactionLocks).values({
-        lockId,
-        resourceId: config.resourceId,
-        idempotencyKey,
-        ownerId: config.ownerId,
-        ownerType: config.ownerType,
-        expiresAt,
-        status: "active",
-        lockType: "exclusive",
-        transactionType: config.transactionType,
-        transactionData: JSON.stringify(config.transactionData),
-        maxRetries: config.maxRetries || 3,
-        timeoutMs: config.timeoutMs || 30000,
-      });
-
-      return {
-        success: true,
-        lockId,
-      };
-    } catch (error) {
       console.error("Failed to acquire lock:", error);
       return {
         success: false,
@@ -189,13 +239,12 @@ export class TransactionLockService {
         .where(eq(transactionLocks.lockId, lockId));
 
       // Process next item in queue for this resource
-      await this.processQueueForResource(
-        (
-          await db.query.transactionLocks.findFirst({
-            where: eq(transactionLocks.lockId, lockId),
-          })
-        )?.resourceId || ""
-      );
+      const lockResults = await db
+        .select()
+        .from(transactionLocks)
+        .where(eq(transactionLocks.lockId, lockId));
+
+      await this.processQueueForResource(lockResults[0]?.resourceId || "");
 
       return true;
     } catch (err) {
@@ -214,12 +263,15 @@ export class TransactionLockService {
     const queueId = crypto.randomUUID();
 
     // Check current queue position
-    const queuedItems = await db.query.transactionQueue.findMany({
-      where: and(
-        eq(transactionQueue.resourceId, config.resourceId),
-        eq(transactionQueue.status, "pending")
-      ),
-    });
+    const queuedItems = await db
+      .select()
+      .from(transactionQueue)
+      .where(
+        and(
+          eq(transactionQueue.resourceId, config.resourceId),
+          eq(transactionQueue.status, "pending")
+        )
+      );
 
     await db.insert(transactionQueue).values({
       queueId,
@@ -247,14 +299,15 @@ export class TransactionLockService {
     if (!resourceId) return;
 
     // Get next pending item from queue
-    const nextItem = await db.query.transactionQueue.findFirst({
-      where: and(
-        eq(transactionQueue.resourceId, resourceId),
-        eq(transactionQueue.status, "pending")
-      ),
-      orderBy: [transactionQueue.priority, transactionQueue.queuedAt],
-    });
+    const nextItems = await db
+      .select()
+      .from(transactionQueue)
+      .where(
+        and(eq(transactionQueue.resourceId, resourceId), eq(transactionQueue.status, "pending"))
+      )
+      .orderBy(transactionQueue.priority, transactionQueue.queuedAt);
 
+    const nextItem = nextItems[0];
     if (!nextItem) return;
 
     // Try to acquire lock for queued item
@@ -308,6 +361,16 @@ export class TransactionLockService {
         result: lockResult.existingResult,
         lockId: lockResult.lockId || "",
         executionTimeMs: 0,
+      };
+    }
+
+    // If this is a retry (duplicate idempotency key) and it's not just queued, return failure
+    if (lockResult.isRetry && lockResult.error?.includes("Transaction already in progress")) {
+      return {
+        success: false,
+        error: lockResult.error,
+        lockId: lockResult.lockId || "",
+        executionTimeMs: Date.now() - startTime,
       };
     }
 
@@ -378,13 +441,16 @@ export class TransactionLockService {
    * Check if a resource is currently locked
    */
   async isResourceLocked(resourceId: string): Promise<boolean> {
-    const activeLocks = await db.query.transactionLocks.findMany({
-      where: and(
-        eq(transactionLocks.resourceId, resourceId),
-        eq(transactionLocks.status, "active"),
-        gte(transactionLocks.expiresAt, new Date())
-      ),
-    });
+    const activeLocks = await db
+      .select()
+      .from(transactionLocks)
+      .where(
+        and(
+          eq(transactionLocks.resourceId, resourceId),
+          eq(transactionLocks.status, "active"),
+          gte(transactionLocks.expiresAt, new Date())
+        )
+      );
 
     return activeLocks.length > 0;
   }
@@ -407,20 +473,23 @@ export class TransactionLockService {
   }> {
     const now = new Date();
 
-    const activeLocks = await db.query.transactionLocks.findMany({
-      where: and(
-        eq(transactionLocks.resourceId, resourceId),
-        eq(transactionLocks.status, "active"),
-        gte(transactionLocks.expiresAt, now)
-      ),
-    });
+    const activeLocks = await db
+      .select()
+      .from(transactionLocks)
+      .where(
+        and(
+          eq(transactionLocks.resourceId, resourceId),
+          eq(transactionLocks.status, "active"),
+          gte(transactionLocks.expiresAt, now)
+        )
+      );
 
-    const queuedItems = await db.query.transactionQueue.findMany({
-      where: and(
-        eq(transactionQueue.resourceId, resourceId),
-        eq(transactionQueue.status, "pending")
-      ),
-    });
+    const queuedItems = await db
+      .select()
+      .from(transactionQueue)
+      .where(
+        and(eq(transactionQueue.resourceId, resourceId), eq(transactionQueue.status, "pending"))
+      );
 
     return {
       isLocked: activeLocks.length > 0,
@@ -513,28 +582,34 @@ export class TransactionLockService {
    * Get queue position for a transaction
    */
   async getQueuePosition(idempotencyKey: string): Promise<number | null> {
-    const queueItem = await db.query.transactionQueue.findFirst({
-      where: eq(transactionQueue.idempotencyKey, idempotencyKey),
-    });
+    const queueItems = await db
+      .select()
+      .from(transactionQueue)
+      .where(eq(transactionQueue.idempotencyKey, idempotencyKey));
+
+    const queueItem = queueItems[0];
 
     if (!queueItem || queueItem.status !== "pending") {
       return null;
     }
 
     // Count items ahead in queue
-    const itemsAhead = await db.query.transactionQueue.findMany({
-      where: and(
-        eq(transactionQueue.resourceId, queueItem.resourceId),
-        eq(transactionQueue.status, "pending"),
-        or(
-          lte(transactionQueue.priority, queueItem.priority),
-          and(
-            eq(transactionQueue.priority, queueItem.priority),
-            lte(transactionQueue.queuedAt, queueItem.queuedAt)
+    const itemsAhead = await db
+      .select()
+      .from(transactionQueue)
+      .where(
+        and(
+          eq(transactionQueue.resourceId, queueItem.resourceId),
+          eq(transactionQueue.status, "pending"),
+          or(
+            lte(transactionQueue.priority, queueItem.priority),
+            and(
+              eq(transactionQueue.priority, queueItem.priority),
+              lte(transactionQueue.queuedAt, queueItem.queuedAt)
+            )
           )
         )
-      ),
-    });
+      );
 
     return itemsAhead.length;
   }
@@ -560,9 +635,7 @@ export class TransactionLockService {
    * Get all active locks
    */
   async getActiveLocks() {
-    return await db.query.transactionLocks.findMany({
-      where: eq(transactionLocks.status, "active"),
-    });
+    return await db.select().from(transactionLocks).where(eq(transactionLocks.status, "active"));
   }
 
   /**
@@ -571,13 +644,18 @@ export class TransactionLockService {
   async releaseLockByResource(resourceId: string, ownerId: string): Promise<boolean> {
     try {
       // First, check if the lock exists
-      const existingLock = await db.query.transactionLocks.findFirst({
-        where: and(
-          eq(transactionLocks.resourceId, resourceId),
-          eq(transactionLocks.ownerId, ownerId),
-          eq(transactionLocks.status, "active")
-        ),
-      });
+      const existingLocks = await db
+        .select()
+        .from(transactionLocks)
+        .where(
+          and(
+            eq(transactionLocks.resourceId, resourceId),
+            eq(transactionLocks.ownerId, ownerId),
+            eq(transactionLocks.status, "active")
+          )
+        );
+
+      const existingLock = existingLocks[0];
 
       if (!existingLock) {
         return false;
@@ -601,15 +679,18 @@ export class TransactionLockService {
 
       // For PostgreSQL with Drizzle, we need to check if the update was successful
       // by verifying the lock was actually updated
-      const updatedLock = await db.query.transactionLocks.findFirst({
-        where: and(
-          eq(transactionLocks.resourceId, resourceId),
-          eq(transactionLocks.ownerId, ownerId),
-          eq(transactionLocks.status, "released")
-        ),
-      });
+      const updatedLocks = await db
+        .select()
+        .from(transactionLocks)
+        .where(
+          and(
+            eq(transactionLocks.resourceId, resourceId),
+            eq(transactionLocks.ownerId, ownerId),
+            eq(transactionLocks.status, "released")
+          )
+        );
 
-      return updatedLock !== undefined;
+      return updatedLocks.length > 0;
     } catch (error) {
       console.error("Error releasing lock by resource:", error);
       return false;

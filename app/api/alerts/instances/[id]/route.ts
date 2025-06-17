@@ -15,16 +15,17 @@ const alertingService = new AutomatedAlertingService(db);
 // ==========================================
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await validateRequest(request);
+    const { id } = await params;
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const alert = await db
       .select()
       .from(alertInstances)
-      .where(eq(alertInstances.id, params.id))
+      .where(eq(alertInstances.id, id))
       .limit(1);
 
     if (alert.length === 0) {
@@ -64,10 +65,11 @@ export async function GET(
 // ==========================================
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await validateRequest(request);
+    const { id } = await params;
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const body = await request.json();
@@ -80,7 +82,7 @@ export async function PATCH(
     const existingAlert = await db
       .select()
       .from(alertInstances)
-      .where(eq(alertInstances.id, params.id))
+      .where(eq(alertInstances.id, id))
       .limit(1);
 
     if (existingAlert.length === 0) {
@@ -102,7 +104,7 @@ export async function PATCH(
         }
 
         await alertingService.resolveAlert(
-          params.id,
+          id,
           user.id,
           notes || "Manually resolved by user"
         );
@@ -120,7 +122,7 @@ export async function PATCH(
             status: "acknowledged",
             resolutionNotes: notes,
           })
-          .where(eq(alertInstances.id, params.id));
+          .where(eq(alertInstances.id, id));
 
         return NextResponse.json({
           success: true,
@@ -135,7 +137,7 @@ export async function PATCH(
             status: "suppressed",
             resolutionNotes: notes,
           })
-          .where(eq(alertInstances.id, params.id));
+          .where(eq(alertInstances.id, id));
 
         return NextResponse.json({
           success: true,

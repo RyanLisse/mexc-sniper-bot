@@ -2,7 +2,6 @@ import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import {
   type InsertAlertRule,
-  type InsertNotificationChannel,
   type SelectAlertRule,
   type SelectNotificationChannel,
   alertRules,

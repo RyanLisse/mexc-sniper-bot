@@ -46,7 +46,7 @@ async function resetDatabase() {
           await client`DROP TABLE IF EXISTS ${client(tableName)} CASCADE`;
           console.log(`✅ Dropped table: ${tableName}`);
         } catch (error) {
-          console.warn(`⚠️ Failed to drop ${tableName}:`, error.message);
+          console.warn(`⚠️ Failed to drop ${tableName}:`, error instanceof Error ? error.message : String(error));
         }
       }
     }

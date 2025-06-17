@@ -109,14 +109,14 @@ interface AlertAnalytics {
 // Helper functions moved outside component to reduce complexity
 const getSeverityColor = (
   severity: string
-): "destructive" | "warning" | "secondary" | "outline" | "default" => {
+): "destructive" | "secondary" | "outline" | "default" => {
   switch (severity) {
     case "critical":
       return "destructive";
     case "high":
       return "destructive";
     case "medium":
-      return "warning";
+      return "outline";
     case "low":
       return "secondary";
     case "info":

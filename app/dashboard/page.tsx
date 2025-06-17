@@ -133,7 +133,7 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="strategies" className="space-y-4">
-            <MultiPhaseStrategyManager userId={userId} />
+            <MultiPhaseStrategyManager />
           </TabsContent>
 
           <TabsContent value="trades" className="space-y-4">

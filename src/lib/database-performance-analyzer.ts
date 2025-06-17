@@ -176,10 +176,13 @@ export class DatabasePerformanceAnalyzer {
    */
   private async explainQuery(query: string): Promise<string> {
     try {
-      const result = await db.all(sql.raw(`EXPLAIN QUERY PLAN ${query}`));
-      return result
-        .map((row: any) => `${row.detail || row.notused || JSON.stringify(row)}`)
-        .join("\n");
+      // Use PostgreSQL EXPLAIN instead of SQLite EXPLAIN QUERY PLAN
+      const result = await db.execute(sql.raw(`EXPLAIN ANALYZE ${query}`));
+      return Array.isArray(result)
+        ? result
+            .map((row: any) => `${row["QUERY PLAN"] || row.plan || JSON.stringify(row)}`)
+            .join("\n")
+        : JSON.stringify(result);
     } catch (error) {
       return `Error explaining query: ${error}`;
     }
@@ -199,7 +202,8 @@ export class DatabasePerformanceAnalyzer {
         );
       });
 
-      return await db.all(sql.raw(analyzedQuery));
+      const result = await db.execute(sql.raw(analyzedQuery));
+      return Array.isArray(result) ? result : (result as any).rows || [];
     } catch (error) {
       console.warn(`Query execution failed during analysis: ${error}`);
       return [];
@@ -315,9 +319,28 @@ export class DatabasePerformanceAnalyzer {
 
     for (const tableName of tables) {
       try {
-        // Get table info
-        const _tableInfo = await db.all(sql.raw(`PRAGMA table_info(${tableName})`));
-        const indexList = await db.all(sql.raw(`PRAGMA index_list(${tableName})`));
+        // Get table info using PostgreSQL information_schema
+        const tableInfoResult = await db.execute(
+          sql.raw(`
+          SELECT column_name, data_type 
+          FROM information_schema.columns 
+          WHERE table_name = '${tableName}' AND table_schema = 'public'
+        `)
+        );
+        const tableInfo = Array.isArray(tableInfoResult)
+          ? tableInfoResult
+          : (tableInfoResult as any).rows || [];
+
+        const indexListResult = await db.execute(
+          sql.raw(`
+          SELECT indexname 
+          FROM pg_indexes 
+          WHERE tablename = '${tableName}' AND schemaname = 'public'
+        `)
+        );
+        const indexList = Array.isArray(indexListResult)
+          ? indexListResult
+          : (indexListResult as any).rows || [];
 
         // Simulate scan statistics (in real implementation, this would come from monitoring)
         const rowCount = await this.getTableRowCount(tableName);
@@ -344,8 +367,9 @@ export class DatabasePerformanceAnalyzer {
    */
   private async getTableRowCount(tableName: string): Promise<number> {
     try {
-      const result = await db.all(sql.raw(`SELECT COUNT(*) as count FROM ${tableName}`));
-      return result[0]?.count || 0;
+      const result = await db.execute(sql.raw(`SELECT COUNT(*) as count FROM ${tableName}`));
+      const rows = Array.isArray(result) ? result : (result as any).rows || [];
+      return rows[0]?.count || 0;
     } catch (_error) {
       return 0;
     }
@@ -373,14 +397,35 @@ export class DatabasePerformanceAnalyzer {
 
     for (const tableName of tables) {
       try {
-        const indexes = await db.all(sql.raw(`PRAGMA index_list(${tableName})`));
+        const indexesResult = await db.execute(
+          sql.raw(`
+          SELECT indexname, indexdef
+          FROM pg_indexes 
+          WHERE tablename = '${tableName}' AND schemaname = 'public'
+        `)
+        );
+        const indexes = Array.isArray(indexesResult)
+          ? indexesResult
+          : (indexesResult as any).rows || [];
 
         for (const index of indexes) {
-          const _indexInfo = await db.all(sql.raw(`PRAGMA index_info(${index.name})`));
+          // Get index details using PostgreSQL system catalogs
+          const indexInfoResult = await db.execute(
+            sql.raw(`
+            SELECT a.attname 
+            FROM pg_class c
+            JOIN pg_index i ON c.oid = i.indexrelid
+            JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+            WHERE c.relname = '${index.indexname}'
+          `)
+          );
+          const _indexInfo = Array.isArray(indexInfoResult)
+            ? indexInfoResult
+            : (indexInfoResult as any).rows || [];
 
           indexStats.push({
             tableName,
-            indexName: index.name,
+            indexName: index.indexname,
             isUsed: true, // Would be determined from query plan analysis
             scanCount: 0, // Would come from monitoring
             effectiveness: 85, // Would be calculated from usage patterns

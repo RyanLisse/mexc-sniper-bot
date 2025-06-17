@@ -200,7 +200,15 @@ export const mockKindeSDK = {
         throw new Error('Not authenticated');
       }
       return { access_token: 'new-mock-access-token' };
-    })
+    }),
+    getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+    getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+    getIdToken: vi.fn().mockResolvedValue(isCurrentlyAuthenticated ? 'mock-id-token' : null),
+    getIdTokenRaw: vi.fn().mockResolvedValue(isCurrentlyAuthenticated ? 'mock-id-token-raw' : null),
+    getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+    getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+    logout: vi.fn().mockResolvedValue(null),
+    createOrg: vi.fn().mockResolvedValue(null)
   }),
 
   /**
@@ -215,7 +223,15 @@ export const mockKindeSDK = {
     getUserOrganizations: vi.fn().mockRejectedValue(new Error(errorMessage)),
     getClaim: vi.fn().mockRejectedValue(new Error(errorMessage)),
     getAccessToken: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    refreshTokens: vi.fn().mockRejectedValue(new Error(errorMessage))
+    refreshTokens: vi.fn().mockRejectedValue(new Error(errorMessage)),
+    getBooleanFlag: vi.fn().mockRejectedValue(new Error(errorMessage)),
+    getFlag: vi.fn().mockRejectedValue(new Error(errorMessage)),
+    getIdToken: vi.fn().mockRejectedValue(new Error(errorMessage)),
+    getIdTokenRaw: vi.fn().mockRejectedValue(new Error(errorMessage)),
+    getStringFlag: vi.fn().mockRejectedValue(new Error(errorMessage)),
+    getIntegerFlag: vi.fn().mockRejectedValue(new Error(errorMessage)),
+    logout: vi.fn().mockRejectedValue(new Error(errorMessage)),
+    createOrg: vi.fn().mockRejectedValue(new Error(errorMessage))
   })
 };
 

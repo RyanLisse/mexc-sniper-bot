@@ -40,7 +40,7 @@ export async function setupTestBranch(
 
     // Check if required Neon credentials are available
     const neonApiKey = process.env.NEON_API_KEY;
-    if (!neonApiKey || neonApiKey === 'test-neon-key' || neonApiKey === '') {
+    if (!neonApiKey || neonApiKey === "test-neon-key" || neonApiKey === "") {
       console.warn(`[TestBranch] Neon API key not properly configured. Skipping branch creation.`);
       throw new Error("NEON_API_KEY not configured for branch testing");
     }

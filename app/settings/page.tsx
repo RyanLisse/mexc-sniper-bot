@@ -303,7 +303,6 @@ export default function SettingsPage() {
                   </div>
 
                   <EditableTakeProfitTable
-                    entryPrice={0.0125}
                     levels={multiLevelConfig?.levels || []}
                     onSave={handleSaveMultiLevelTakeProfit}
                     isLoading={updateMultiLevelTakeProfit.isPending}

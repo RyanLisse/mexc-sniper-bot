@@ -502,7 +502,7 @@ export class WebSocketAgentBridge extends EventEmitter {
   private orchestrator?: EnhancedMexcOrchestrator;
   private agentRegistry?: AgentRegistry;
   private isInitialized = false;
-  private isRunning = false;
+  private _isRunning = false;
 
   constructor() {
     super();
@@ -542,12 +542,12 @@ export class WebSocketAgentBridge extends EventEmitter {
   }
 
   start(): void {
-    if (!this.isInitialized || this.isRunning) return;
+    if (!this.isInitialized || this._isRunning) return;
 
     console.log("[WebSocket Bridge] Starting real-time communication...");
 
     this.dataStreamer.start();
-    this.isRunning = true;
+    this._isRunning = true;
 
     // Start periodic agent health broadcasts
     this.startHealthBroadcasts();
@@ -557,12 +557,12 @@ export class WebSocketAgentBridge extends EventEmitter {
   }
 
   stop(): void {
-    if (!this.isRunning) return;
+    if (!this._isRunning) return;
 
     console.log("[WebSocket Bridge] Stopping real-time communication...");
 
     this.dataStreamer.stop();
-    this.isRunning = false;
+    this._isRunning = false;
 
     console.log("[WebSocket Bridge] Real-time communication stopped");
     this.emit("stopped");
@@ -573,7 +573,7 @@ export class WebSocketAgentBridge extends EventEmitter {
   // ======================
 
   broadcastAgentUpdate(agentId: string, agentType: string, data: any): void {
-    if (!this.isRunning) return;
+    if (!this._isRunning) return;
 
     this.dataStreamer.updateAgentStatus(agentId, agentType, data);
   }
@@ -587,7 +587,7 @@ export class WebSocketAgentBridge extends EventEmitter {
     currentAgent?: string,
     metadata?: Record<string, any>
   ): void {
-    if (!this.isRunning) return;
+    if (!this._isRunning) return;
 
     this.dataStreamer.updateWorkflowStatus(
       workflowId,
@@ -601,7 +601,7 @@ export class WebSocketAgentBridge extends EventEmitter {
   }
 
   broadcastPatternDiscovery(pattern: any): void {
-    if (!this.isRunning) return;
+    if (!this._isRunning) return;
 
     this.patternStreamer.broadcastPatternDiscovery({
       patternId: pattern.id || crypto.randomUUID(),
@@ -619,7 +619,7 @@ export class WebSocketAgentBridge extends EventEmitter {
   }
 
   broadcastReadyStatePattern(symbol: string, data: any): void {
-    if (!this.isRunning) return;
+    if (!this._isRunning) return;
 
     this.patternStreamer.broadcastReadyStatePattern({
       symbol,
@@ -637,7 +637,7 @@ export class WebSocketAgentBridge extends EventEmitter {
   }
 
   broadcastTradingSignal(signal: any): void {
-    if (!this.isRunning) return;
+    if (!this._isRunning) return;
 
     this.signalStreamer.broadcastTradingSignal({
       signalId: signal.id || crypto.randomUUID(),
@@ -656,7 +656,7 @@ export class WebSocketAgentBridge extends EventEmitter {
   }
 
   broadcastAgentError(agentId: string, error: any): void {
-    if (!this.isRunning) return;
+    if (!this._isRunning) return;
 
     const errorMessage: AgentErrorMessage = {
       agentId,
@@ -895,7 +895,7 @@ export class WebSocketAgentBridge extends EventEmitter {
   // ======================
 
   isRunning(): boolean {
-    return this.isRunning;
+    return this._isRunning;
   }
 
   isInitialized(): boolean {
@@ -912,7 +912,7 @@ export class WebSocketAgentBridge extends EventEmitter {
 
     return {
       initialized: this.isInitialized,
-      running: this.isRunning,
+      running: this._isRunning,
       connectedClients: serverMetrics.totalConnections,
       dataStreaming: this.dataStreamer.isStreaming,
     };

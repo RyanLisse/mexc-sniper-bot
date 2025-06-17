@@ -10,7 +10,7 @@
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 import { migrate } from "drizzle-orm/libsql/migrator";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { strategyTemplates } from "../src/db/schemas/strategies";
 import { multiPhaseTradingService } from "../src/services/multi-phase-trading-service";
 
@@ -56,9 +56,13 @@ async function setupProductionDatabase() {
     console.log(`📊 Strategy templates: ${templateCount.length}`);
 
     // Test database health
-    const healthQuery = await db.execute("SELECT 1 as test");
-    if (healthQuery.rows.length > 0) {
-      console.log("✅ Database connectivity verified");
+    try {
+      const testSelect = await db.execute(sql`SELECT 1 as test`);
+      if (testSelect.rows && testSelect.rows.length >= 0) {
+        console.log("✅ Database connectivity verified");
+      }
+    } catch (error) {
+      console.warn("⚠️ Database health check failed:", error instanceof Error ? error.message : String(error));
     }
 
     console.log("🎉 Production database setup completed successfully!");

@@ -20,7 +20,7 @@ async function runComprehensiveDatabaseDiagnostic() {
     // 1. Test basic database connectivity
     console.log("\n1. Testing Basic Database Connectivity...");
     const startTime = Date.now();
-    const basicResult = await db.run(sql`SELECT 1 as test`);
+    const basicResult = await db.execute(sql`SELECT 1 as test`);
     const responseTime = Date.now() - startTime;
     console.log(`✅ Basic connectivity test passed (${responseTime}ms)`);
 
@@ -99,7 +99,7 @@ async function runComprehensiveDatabaseDiagnostic() {
 
       for (const test of tableTests) {
         try {
-          await db.run(test.query);
+          await db.execute(test.query);
           console.log(`   - ${test.name} table: ✅ Accessible`);
         } catch (error) {
           console.log(`   - ${test.name} table: ❌ Error - ${(error as Error).message}`);
@@ -113,7 +113,7 @@ async function runComprehensiveDatabaseDiagnostic() {
     console.log("\n7. Performance Metrics...");
     const perfStartTime = Date.now();
     for (let i = 0; i < 5; i++) {
-      await db.run(sql`SELECT 1`);
+      await db.execute(sql`SELECT 1`);
     }
     const avgResponseTime = (Date.now() - perfStartTime) / 5;
     console.log(`⚡ Average Response Time: ${avgResponseTime.toFixed(2)}ms`);

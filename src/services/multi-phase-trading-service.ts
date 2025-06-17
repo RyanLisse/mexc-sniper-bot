@@ -129,8 +129,7 @@ export class MultiPhaseTradingService {
       const existing = await db
         .select()
         .from(strategyTemplates)
-        .where(eq(strategyTemplates.strategyId, strategyId))
-        .limit(1);
+        .where(eq(strategyTemplates.strategyId, strategyId));
 
       if (existing.length === 0) {
         await db.insert(strategyTemplates).values({

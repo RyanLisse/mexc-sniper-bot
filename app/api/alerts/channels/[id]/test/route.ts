@@ -12,13 +12,14 @@ const notificationService = new NotificationService(db);
 // ==========================================
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
-    const result = await notificationService.testNotificationChannel(params.id);
+    const result = await notificationService.testNotificationChannel(id);
 
     if (result.success) {
       return NextResponse.json({

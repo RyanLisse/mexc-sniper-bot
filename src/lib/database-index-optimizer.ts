@@ -382,30 +382,39 @@ export class DatabaseIndexOptimizer {
 
     for (const tableName of tables) {
       try {
-        const indexes = await db.all(sql.raw(`PRAGMA index_list(${tableName})`));
+        const indexesResult = await db.execute(
+          sql.raw(`
+          SELECT indexname, indexdef
+          FROM pg_indexes 
+          WHERE tablename = '${tableName}' AND schemaname = 'public'
+        `)
+        );
+        const indexes = Array.isArray(indexesResult)
+          ? indexesResult
+          : (indexesResult as any).rows || [];
 
         for (const index of indexes) {
           // Skip auto-generated primary key and foreign key indexes
-          if (index.name.startsWith("sqlite_") || index.origin === "pk" || index.origin === "fk") {
+          if (index.indexname.includes("_pkey") || index.indexname.includes("_fkey")) {
             continue;
           }
 
           // Check if index is in our strategic list
           const strategicIndexes = this.getStrategicIndexes();
-          const isStrategic = strategicIndexes.some((si) => si.name === index.name);
+          const isStrategic = strategicIndexes.some((si) => si.name === index.indexname);
 
           if (!isStrategic) {
             // This is a legacy or unnecessary index - consider dropping
-            const effectiveness = await this.checkIndexEffectiveness(tableName, index.name);
+            const effectiveness = await this.checkIndexEffectiveness(tableName, index.indexname);
 
             if (effectiveness < 20) {
               // Less than 20% effectiveness
               try {
-                await db.execute(sql.raw(`DROP INDEX IF EXISTS ${index.name}`));
-                droppedIndexes.push(index.name);
-                console.log(`🗑️ Dropped ineffective index: ${index.name}`);
+                await db.execute(sql.raw(`DROP INDEX IF EXISTS ${index.indexname}`));
+                droppedIndexes.push(index.indexname);
+                console.log(`🗑️ Dropped ineffective index: ${index.indexname}`);
               } catch (error) {
-                console.warn(`Failed to drop index ${index.name}:`, error);
+                console.warn(`Failed to drop index ${index.indexname}:`, error);
               }
             }
           }
@@ -425,16 +434,36 @@ export class DatabaseIndexOptimizer {
     try {
       // In a real implementation, this would analyze query patterns and index usage
       // For now, return a simulated effectiveness score
-      const indexInfo = await db.all(sql.raw(`PRAGMA index_info(${indexName})`));
+      const indexInfoResult = await db.execute(
+        sql.raw(`
+        SELECT a.attname 
+        FROM pg_class c
+        JOIN pg_index i ON c.oid = i.indexrelid
+        JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+        WHERE c.relname = '${indexName}'
+      `)
+      );
+      const indexInfo = Array.isArray(indexInfoResult)
+        ? indexInfoResult
+        : (indexInfoResult as any).rows || [];
 
       // Simple heuristic: single column indexes on non-selective columns are less effective
       if (indexInfo.length === 1) {
-        const columnName = indexInfo[0].name;
+        const columnName = indexInfo[0].attname;
         // Check column selectivity
-        const totalRows = await db.all(sql.raw(`SELECT COUNT(*) as count FROM ${tableName}`));
-        const distinctValues = await db.all(
+        const totalRowsResult = await db.execute(
+          sql.raw(`SELECT COUNT(*) as count FROM ${tableName}`)
+        );
+        const totalRows = Array.isArray(totalRowsResult)
+          ? totalRowsResult
+          : (totalRowsResult as any).rows || [];
+
+        const distinctValuesResult = await db.execute(
           sql.raw(`SELECT COUNT(DISTINCT ${columnName}) as count FROM ${tableName}`)
         );
+        const distinctValues = Array.isArray(distinctValuesResult)
+          ? distinctValuesResult
+          : (distinctValuesResult as any).rows || [];
 
         const selectivity = distinctValues[0]?.count / totalRows[0]?.count || 0;
         return selectivity * 100; // Convert to percentage
@@ -455,11 +484,13 @@ export class DatabaseIndexOptimizer {
       const testQueries = this.generateTestQueries(index);
 
       for (const query of testQueries) {
-        const explanation = await db.all(sql.raw(`EXPLAIN QUERY PLAN ${query}`));
+        const explanationResult = await db.execute(sql.raw(`EXPLAIN ${query}`));
+        const explanation = Array.isArray(explanationResult)
+          ? explanationResult
+          : (explanationResult as any).rows || [];
         const usesIndex = explanation.some(
           (row: any) =>
-            row.detail?.includes(`USING INDEX ${index.name}`) ||
-            JSON.stringify(row).includes(index.name)
+            row["QUERY PLAN"]?.includes(index.name) || JSON.stringify(row).includes(index.name)
         );
 
         if (usesIndex) {
@@ -506,13 +537,13 @@ export class DatabaseIndexOptimizer {
     console.log("🔄 Rebuilding and optimizing existing indexes...");
 
     try {
-      // SQLite automatically optimizes indexes, but we can force optimization
-      await db.execute(sql.raw("PRAGMA optimize"));
-      console.log("✅ Database optimization completed");
-
-      // Update table statistics
+      // PostgreSQL: Update table statistics
       await db.execute(sql.raw("ANALYZE"));
       console.log("✅ Table statistics updated");
+
+      // PostgreSQL: VACUUM to optimize the database
+      await db.execute(sql.raw("VACUUM ANALYZE"));
+      console.log("✅ Database optimization completed");
     } catch (error) {
       console.error("❌ Failed to rebuild indexes:", error);
       throw error;
@@ -530,16 +561,33 @@ export class DatabaseIndexOptimizer {
 
     for (const index of strategicIndexes) {
       try {
-        // Check if index exists
-        const indexList = await db.all(sql.raw(`PRAGMA index_list(${index.table})`));
-        const exists = indexList.some((idx: any) => idx.name === index.name);
+        // Check if index exists using PostgreSQL system catalogs
+        const indexListResult = await db.execute(
+          sql.raw(`
+          SELECT indexname 
+          FROM pg_indexes 
+          WHERE tablename = '${index.table}' AND schemaname = 'public' AND indexname = '${index.name}'
+        `)
+        );
+        const indexList = Array.isArray(indexListResult)
+          ? indexListResult
+          : (indexListResult as any).rows || [];
+        const exists = indexList.length > 0;
 
         if (exists) {
-          // Verify index integrity
-          const integrityCheck = await db.all(sql.raw(`PRAGMA integrity_check(${index.name})`));
-          const isValid = integrityCheck.every(
-            (row: any) => row.integrity_check === "ok" || JSON.stringify(row).includes("ok")
+          // For PostgreSQL, we can check if the index is valid
+          const integrityCheckResult = await db.execute(
+            sql.raw(`
+            SELECT indisvalid 
+            FROM pg_index 
+            JOIN pg_class ON pg_class.oid = pg_index.indexrelid 
+            WHERE pg_class.relname = '${index.name}'
+          `)
           );
+          const integrityCheck = Array.isArray(integrityCheckResult)
+            ? integrityCheckResult
+            : (integrityCheckResult as any).rows || [];
+          const isValid = integrityCheck.length === 0 || integrityCheck[0]?.indisvalid !== false;
 
           if (isValid) {
             results.valid++;

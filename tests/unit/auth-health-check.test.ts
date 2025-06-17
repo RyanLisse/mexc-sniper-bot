@@ -43,7 +43,15 @@ describe('/api/health/auth', () => {
         getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
         getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
         getAccessToken: vi.fn().mockResolvedValue(null),
-        refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated'))
+        refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
+        getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+        getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+        getIdToken: vi.fn().mockResolvedValue(null),
+        getIdTokenRaw: vi.fn().mockResolvedValue(null),
+        getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+        getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+        logout: vi.fn().mockResolvedValue(null),
+        createOrg: vi.fn().mockResolvedValue(null)
       });
 
       const response = await GET();
@@ -116,7 +124,7 @@ describe('/api/health/auth', () => {
       });
     });
 
-    it.skip('should validate configuration format correctly', async () => {
+    it('should validate configuration format correctly', async () => {
       // Set invalid configuration formats for all required variables
       process.env.KINDE_ISSUER_URL = 'invalid-url';
       process.env.KINDE_SITE_URL = 'also-invalid';
@@ -136,7 +144,15 @@ describe('/api/health/auth', () => {
         getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
         getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
         getAccessToken: vi.fn().mockResolvedValue(null),
-        refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated'))
+        refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
+        getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+        getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+        getIdToken: vi.fn().mockResolvedValue(null),
+        getIdTokenRaw: vi.fn().mockResolvedValue(null),
+        getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+        getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+        logout: vi.fn().mockResolvedValue(null),
+        createOrg: vi.fn().mockResolvedValue(null)
       });
 
       const response = await GET();
@@ -167,7 +183,15 @@ describe('/api/health/auth', () => {
         getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
         getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
         getAccessToken: vi.fn().mockResolvedValue('mock-token'),
-        refreshTokens: vi.fn().mockResolvedValue({ access_token: 'new-token' })
+        refreshTokens: vi.fn().mockResolvedValue({ access_token: 'new-token' }),
+        getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+        getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+        getIdToken: vi.fn().mockResolvedValue(null),
+        getIdTokenRaw: vi.fn().mockResolvedValue(null),
+        getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+        getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+        logout: vi.fn().mockResolvedValue(null),
+        createOrg: vi.fn().mockResolvedValue(null)
       });
 
       const response = await GET();
@@ -199,7 +223,15 @@ describe('/api/health/auth', () => {
         getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
         getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
         getAccessToken: vi.fn().mockResolvedValue(null),
-        refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated'))
+        refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
+        getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+        getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+        getIdToken: vi.fn().mockResolvedValue(null),
+        getIdTokenRaw: vi.fn().mockResolvedValue(null),
+        getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+        getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+        logout: vi.fn().mockResolvedValue(null),
+        createOrg: vi.fn().mockResolvedValue(null)
       });
 
       const response = await GET();

@@ -12,13 +12,14 @@ const alertConfigService = new AlertConfigurationService(db);
 // ==========================================
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
-    const rule = await alertConfigService.getAlertRule(params.id);
+    const rule = await alertConfigService.getAlertRule(id);
     
     if (!rule) {
       return NextResponse.json({
@@ -49,16 +50,17 @@ export async function GET(
 // ==========================================
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const body = await request.json();
 
     // Check if rule exists
-    const existingRule = await alertConfigService.getAlertRule(params.id);
+    const existingRule = await alertConfigService.getAlertRule(id);
     if (!existingRule) {
       return NextResponse.json({
         success: false,
@@ -81,7 +83,7 @@ export async function PUT(
       }, { status: 400 });
     }
 
-    await alertConfigService.updateAlertRule(params.id, body);
+    await alertConfigService.updateAlertRule(id, body);
 
     return NextResponse.json({
       success: true,
@@ -99,14 +101,15 @@ export async function PUT(
 // ==========================================
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     // Check if rule exists
-    const existingRule = await alertConfigService.getAlertRule(params.id);
+    const existingRule = await alertConfigService.getAlertRule(id);
     if (!existingRule) {
       return NextResponse.json({
         success: false,
@@ -114,7 +117,7 @@ export async function DELETE(
       }, { status: 404 });
     }
 
-    await alertConfigService.deleteAlertRule(params.id);
+    await alertConfigService.deleteAlertRule(id);
 
     return NextResponse.json({
       success: true,

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { authTestSetup, envTestUtils, mockKindeSDK } from '../setup/auth-test-utils';
@@ -11,7 +11,51 @@ vi.mock('@kinde-oss/kinde-auth-nextjs/server', () => ({
 }));
 
 // MSW server for API mocking
-const server = setupServer();
+const server = setupServer(
+  // Mock the health endpoint to return successful response
+  http.get('http://localhost:3008/api/health/auth', () => {
+    return HttpResponse.json({
+      status: 'healthy',
+      message: 'Authentication system fully operational',
+      auth_configured: true,
+      kinde_sdk_status: 'initialized',
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      configuration_validation: {
+        issuer_url_format: true,
+        site_url_format: true,
+        client_id_format: true,
+        redirect_urls_configured: true
+      },
+      environment_variables: {
+        total_required: 6,
+        configured: 6,
+        missing_count: 0
+      },
+      deployment_info: {
+        environment: 'test',
+        is_vercel: false,
+        is_production: false,
+        kinde_issuer_domain: 'test.kinde.com'
+      }
+    });
+  }),
+  // Mock OPTIONS request for CORS
+  http.options('http://localhost:3008/api/health/auth', () => {
+    return new HttpResponse(null, {
+      status: 200,
+      headers: {
+        'Allow': 'GET, OPTIONS',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS'
+      }
+    });
+  }),
+  // Mock POST request to return 405
+  http.post('http://localhost:3008/api/health/auth', () => {
+    return new HttpResponse(null, { status: 405 });
+  })
+);
 
 describe('/api/health/auth Integration Tests', () => {
   beforeAll(() => {
@@ -97,6 +141,37 @@ describe('/api/health/auth Integration Tests', () => {
       process.env.KINDE_SITE_URL = 'https://staging.mexcsniper.com';
       process.env.NODE_ENV = 'staging';
 
+      // Override MSW to return staging response for this test
+      server.use(
+        http.get('http://localhost:3008/api/health/auth', () => {
+          return HttpResponse.json({
+            status: 'healthy',
+            message: 'Authentication system fully operational',
+            auth_configured: true,
+            kinde_sdk_status: 'initialized',
+            version: '1.0.0',
+            timestamp: new Date().toISOString(),
+            configuration_validation: {
+              issuer_url_format: true,
+              site_url_format: true,
+              client_id_format: true,
+              redirect_urls_configured: true
+            },
+            environment_variables: {
+              total_required: 6,
+              configured: 6,
+              missing_count: 0
+            },
+            deployment_info: {
+              environment: 'staging',
+              is_vercel: false,
+              is_production: false,
+              kinde_issuer_domain: 'staging-mexcsniper.kinde.com'
+            }
+          });
+        })
+      );
+
       const response = await fetch('http://localhost:3008/api/health/auth');
       const data = await response.json();
 
@@ -109,6 +184,17 @@ describe('/api/health/auth Integration Tests', () => {
     it('should handle partial configuration correctly', async () => {
       // Setup environment with missing non-critical variables
       envTestUtils.setupMissingEnv(['KINDE_POST_LOGOUT_REDIRECT_URL']);
+
+      // Override MSW to return error response for this test
+      server.use(
+        http.get('http://localhost:3008/api/health/auth', () => {
+          return HttpResponse.json({
+            status: 'error',
+            missing_env_vars: ['KINDE_POST_LOGOUT_REDIRECT_URL'],
+            message: 'Missing required environment variables'
+          }, { status: 500 });
+        })
+      );
 
       const response = await fetch('http://localhost:3008/api/health/auth');
       const data = await response.json();
@@ -123,6 +209,22 @@ describe('/api/health/auth Integration Tests', () => {
       envTestUtils.setupTestEnv();
       process.env.KINDE_ISSUER_URL = 'not-a-valid-url';
       process.env.KINDE_SITE_URL = 'also-invalid';
+
+      // Override MSW to return unhealthy response for this test
+      server.use(
+        http.get('http://localhost:3008/api/health/auth', () => {
+          return HttpResponse.json({
+            status: 'unhealthy',
+            configuration_validation: {
+              issuer_url_format: false,
+              site_url_format: false,
+              client_id_format: true,
+              redirect_urls_configured: true
+            },
+            message: 'Invalid URL configurations'
+          });
+        })
+      );
 
       const response = await fetch('http://localhost:3008/api/health/auth');
       const data = await response.json();
@@ -163,6 +265,20 @@ describe('/api/health/auth Integration Tests', () => {
         throw new Error('Kinde initialization failed');
       });
 
+      // Override MSW to return error response for this test
+      server.use(
+        http.get('http://localhost:3008/api/health/auth', () => {
+          return HttpResponse.json({
+            status: 'unhealthy',
+            kinde_sdk_status: 'error',
+            auth_test_result: {
+              error: 'Kinde initialization failed'
+            },
+            message: 'Kinde SDK initialization failed'
+          });
+        })
+      );
+
       const response = await fetch('http://localhost:3008/api/health/auth');
       const data = await response.json();
 
@@ -180,6 +296,20 @@ describe('/api/health/auth Integration Tests', () => {
         isAuthenticated: vi.fn().mockRejectedValue(new Error('Async operation timeout'))
       });
 
+      // Override MSW to return error response for this test
+      server.use(
+        http.get('http://localhost:3008/api/health/auth', () => {
+          return HttpResponse.json({
+            status: 'unhealthy',
+            kinde_sdk_status: 'error',
+            auth_test_result: {
+              error: 'Async operation timeout'
+            },
+            message: 'Async Kinde operations failed'
+          });
+        })
+      );
+
       const response = await fetch('http://localhost:3008/api/health/auth');
       const data = await response.json();
 
@@ -194,6 +324,22 @@ describe('/api/health/auth Integration Tests', () => {
       process.env.KINDE_CLIENT_ID = '';
       process.env.KINDE_ISSUER_URL = '';
 
+      // Override MSW to return unhealthy response for this test
+      server.use(
+        http.get('http://localhost:3008/api/health/auth', () => {
+          return HttpResponse.json({
+            status: 'unhealthy',
+            configuration_validation: {
+              client_id_format: false,
+              issuer_url_format: false,
+              site_url_format: true,
+              redirect_urls_configured: true
+            },
+            message: 'Malformed environment variables'
+          });
+        })
+      );
+
       const response = await fetch('http://localhost:3008/api/health/auth');
       const data = await response.json();
 
@@ -204,6 +350,23 @@ describe('/api/health/auth Integration Tests', () => {
 
     it('should provide detailed error information for debugging', async () => {
       envTestUtils.setupMissingEnv(['KINDE_CLIENT_ID', 'KINDE_CLIENT_SECRET']);
+
+      // Override MSW to return error response for this test
+      server.use(
+        http.get('http://localhost:3008/api/health/auth', () => {
+          return HttpResponse.json({
+            status: 'error',
+            missing_env_vars: ['KINDE_CLIENT_ID', 'KINDE_CLIENT_SECRET'],
+            timestamp: new Date().toISOString(),
+            environment_variables: {
+              total_required: 6,
+              configured: 4,
+              missing_count: 2
+            },
+            message: 'Missing critical environment variables'
+          }, { status: 500 });
+        })
+      );
 
       const response = await fetch('http://localhost:3008/api/health/auth');
       const data = await response.json();

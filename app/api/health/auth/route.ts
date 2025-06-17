@@ -2,6 +2,22 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextResponse } from "next/server";
 
 /**
+ * Validates URL format and protocol
+ */
+function validateUrlFormat(url: string | undefined, allowedProtocols: string[]): boolean {
+  if (!url) {
+    return false;
+  }
+  
+  try {
+    const parsedUrl = new URL(url);
+    return allowedProtocols.includes(parsedUrl.protocol.slice(0, -1)); // Remove trailing ':'
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Health check endpoint for Kinde Auth configuration and functionality
  * 
  * This endpoint validates:
@@ -23,8 +39,8 @@ export async function GET() {
       'KINDE_POST_LOGIN_REDIRECT_URL'
     ];
 
-    // Check for missing environment variables
-    const missing = requiredEnvs.filter(env => !process.env[env]);
+    // Check for missing environment variables (undefined/null, not empty strings)
+    const missing = requiredEnvs.filter(env => process.env[env] === undefined);
     
     if (missing.length > 0) {
       return NextResponse.json(
@@ -63,11 +79,11 @@ export async function GET() {
       };
     }
 
-    // Validate configuration values
+    // Validate configuration values with proper URL validation
     const configValidation = {
-      issuer_url_format: process.env.KINDE_ISSUER_URL?.startsWith('https://'),
-      site_url_format: process.env.KINDE_SITE_URL?.startsWith('http'),
-      client_id_format: process.env.KINDE_CLIENT_ID?.length > 0,
+      issuer_url_format: validateUrlFormat(process.env.KINDE_ISSUER_URL, ['https']),
+      site_url_format: validateUrlFormat(process.env.KINDE_SITE_URL, ['http', 'https']),
+      client_id_format: Boolean(process.env.KINDE_CLIENT_ID && process.env.KINDE_CLIENT_ID.length > 0),
       redirect_urls_configured: Boolean(
         process.env.KINDE_POST_LOGIN_REDIRECT_URL && 
         process.env.KINDE_POST_LOGOUT_REDIRECT_URL
@@ -92,12 +108,20 @@ export async function GET() {
     }
 
     // Additional deployment environment info
+    let kindeIssuerDomain = null;
+    if (process.env.KINDE_ISSUER_URL) {
+      try {
+        kindeIssuerDomain = new URL(process.env.KINDE_ISSUER_URL).hostname;
+      } catch {
+        kindeIssuerDomain = 'invalid-url';
+      }
+    }
+    
     const deploymentInfo = {
       environment: process.env.NODE_ENV || 'development',
       is_vercel: Boolean(process.env.VERCEL),
       is_production: process.env.NODE_ENV === 'production',
-      kinde_issuer_domain: process.env.KINDE_ISSUER_URL ? 
-        new URL(process.env.KINDE_ISSUER_URL).hostname : null
+      kinde_issuer_domain: kindeIssuerDomain
     };
 
     return NextResponse.json({
