@@ -1,16 +1,35 @@
 import {
-  type MexcServiceConfig,
-  MexcServiceLayer,
-  type ServiceResponse,
-} from "./mexc-service-layer";
-import type {
-  BalanceEntry,
-  CalendarEntry,
-  OrderParameters,
-  OrderResult,
-  SymbolEntry,
-  Ticker,
+  UnifiedMexcClient,
+  type BalanceEntry,
+  type CalendarEntry,
+  type OrderParameters,
+  type OrderResult,
+  type SymbolEntry,
+  type Ticker,
 } from "./unified-mexc-client";
+
+// ============================================================================
+// Base Types (previously from mexc-service-layer)
+// ============================================================================
+
+export interface MexcServiceConfig {
+  apiKey?: string;
+  secretKey?: string;
+  baseUrl?: string;
+  timeout?: number;
+  enableCircuitBreaker?: boolean;
+  enableMetrics?: boolean;
+}
+
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  code?: string;
+  timestamp: string;
+  requestId?: string;
+  responseTime?: number;
+}
 
 // ============================================================================
 // Enhanced Types for Advanced Features
@@ -141,12 +160,18 @@ export interface RiskMetrics {
 // Enhanced MEXC Service Layer
 // ============================================================================
 
-export class EnhancedMexcServiceLayer extends MexcServiceLayer {
+export class EnhancedMexcServiceLayer {
+  private mexcClient: UnifiedMexcClient;
   private patternCache = new Map<string, { data: PatternAnalysis; timestamp: number }>();
   private readonly patternCacheTTL = 300000; // 5 minutes
 
   constructor(config: MexcServiceConfig = {}) {
-    super(config);
+    this.mexcClient = new UnifiedMexcClient({
+      apiKey: config.apiKey,
+      secretKey: config.secretKey,
+      baseUrl: config.baseUrl,
+      timeout: config.timeout,
+    });
     console.log("[EnhancedMexcServiceLayer] Initialized with advanced features");
   }
 
@@ -169,7 +194,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
       quoteOrderQty: params.quoteOrderQty,
     };
 
-    return this.placeOrder(standardParams);
+    return this.mexcClient.placeOrder(standardParams);
   }
 
   /**
@@ -243,7 +268,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
 
       for (const order of orders) {
         try {
-          const result = await this.placeOrder(order);
+          const result = await this.mexcClient.placeOrder(order);
           if (result.success) {
             results.push(result.data);
           } else {
@@ -356,9 +381,9 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
   async getDetailedMarketStats(): Promise<ServiceResponse<MarketStats>> {
     return this.executeWithMetrics("getDetailedMarketStats", async () => {
       const [tickerData, exchangeInfo, calendarData] = await Promise.allSettled([
-        this.getTickerData(),
-        this.getExchangeInfo(),
-        this.getCalendarListings(),
+        this.mexcClient.get24hrTicker(),
+        this.mexcClient.getExchangeInfo(),
+        this.mexcClient.getCalendarListings(),
       ]);
 
       const tickers =
@@ -439,8 +464,8 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
       }
 
       const [symbolsData, tickerData] = await Promise.allSettled([
-        this.getSymbolsData(),
-        this.getTickerData(),
+        this.mexcClient.getSymbolsV2(),
+        this.mexcClient.get24hrTicker(),
       ]);
 
       const symbols =
@@ -574,7 +599,7 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
    */
   async getPortfolioSummary(): Promise<ServiceResponse<Portfolio>> {
     return this.executeWithMetrics("getPortfolioSummary", async () => {
-      const balanceResponse = await this.getAccountBalances();
+      const balanceResponse = await this.mexcClient.getAccountBalances();
 
       if (!balanceResponse.success) {
         return {
@@ -742,6 +767,67 @@ export class EnhancedMexcServiceLayer extends MexcServiceLayer {
       size: this.patternCache.size,
       entries: Array.from(this.patternCache.keys()),
     };
+  }
+
+  /**
+   * Execute a function with metrics tracking
+   */
+  private async executeWithMetrics<T>(
+    operation: string,
+    fn: () => Promise<ServiceResponse<T>>
+  ): Promise<ServiceResponse<T>> {
+    const startTime = Date.now();
+    const requestId = `${operation}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    
+    console.log(`[EnhancedMexcServiceLayer] Starting ${operation} (${requestId})`);
+    
+    try {
+      const result = await fn();
+      const responseTime = Date.now() - startTime;
+      
+      console.log(`[EnhancedMexcServiceLayer] Completed ${operation} in ${responseTime}ms (${requestId})`);
+      
+      return {
+        ...result,
+        requestId,
+        responseTime,
+      };
+    } catch (error) {
+      const responseTime = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
+      console.error(`[EnhancedMexcServiceLayer] Failed ${operation} after ${responseTime}ms (${requestId}):`, errorMessage);
+      
+      return {
+        success: false,
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+        requestId,
+        responseTime,
+      };
+    }
+  }
+
+  /**
+   * Update configuration
+   */
+  updateConfig(config: MexcServiceConfig): void {
+    this.mexcClient.updateConfig({
+      apiKey: config.apiKey,
+      secretKey: config.secretKey,
+      baseUrl: config.baseUrl,
+      timeout: config.timeout,
+    });
+    console.log("[EnhancedMexcServiceLayer] Configuration updated");
+  }
+
+  /**
+   * Dispose of resources and clean up
+   */
+  dispose(): void {
+    this.clearPatternCache();
+    this.mexcClient.clearCache();
+    console.log("[EnhancedMexcServiceLayer] Resources disposed");
   }
 }
 
