@@ -105,7 +105,7 @@ export function EditableTakeProfitTable({
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Validation helper functions - extracted to reduce complexity
-  const validateEntryPrice = (entryPrice: number): ValidationError[] => {
+  const validateEntryPrice = useCallback((entryPrice: number): ValidationError[] => {
     const errors: ValidationError[] = [];
 
     if (entryPrice <= 0) {
@@ -131,7 +131,7 @@ export function EditableTakeProfitTable({
     }
 
     return errors;
-  };
+  }, []);
 
   const validateProfitPercentage = (level: TakeProfitLevel): ValidationError[] => {
     const errors: ValidationError[] = [];
@@ -274,7 +274,7 @@ export function EditableTakeProfitTable({
 
       return errors;
     },
-    []
+    [validateEntryPrice]
   );
 
   // Update editing levels when props change
@@ -309,7 +309,7 @@ export function EditableTakeProfitTable({
   const isValidConfiguration = !hasErrors;
 
   // Update a specific level
-  const updateLevel = (levelId: string, field: keyof TakeProfitLevel, value: any) => {
+  const updateLevel = (levelId: string, field: keyof TakeProfitLevel, value: string | number) => {
     const updatedLevels = editingLevels.map((level) =>
       level.id === levelId ? { ...level, [field]: value } : level
     );
