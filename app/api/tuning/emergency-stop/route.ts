@@ -45,14 +45,14 @@ export async function POST(request: NextRequest) {
           // await optimizationEngine.stopOptimization(optimization.id);
           emergencyReport.actionsPerformed.push(`Stopped optimization: ${optimization.id}`);
         } catch (error) {
-          emergencyReport.errors.push(`Failed to stop optimization ${optimization.id}: ${error.message}`);
+          emergencyReport.errors.push(`Failed to stop optimization ${optimization.id}: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
 
       emergencyReport.actionsPerformed.push(`Stopped ${activeOptimizations.length} active optimizations`);
 
     } catch (error) {
-      emergencyReport.errors.push(`Failed to stop optimizations: ${error.message}`);
+      emergencyReport.errors.push(`Failed to stop optimizations: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     try {
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       }
 
     } catch (error) {
-      emergencyReport.errors.push(`Failed to revert parameters: ${error.message}`);
+      emergencyReport.errors.push(`Failed to revert parameters: ${error instanceof Error ? error.message : String(error)}`);
       emergencyReport.success = false;
     }
 
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       emergencyReport.actionsPerformed.push('Disabled automatic parameter updates');
 
     } catch (error) {
-      emergencyReport.errors.push(`Failed to disable auto-updates: ${error.message}`);
+      emergencyReport.errors.push(`Failed to disable auto-updates: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     try {
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       }
 
     } catch (error) {
-      emergencyReport.errors.push(`Failed to send notifications: ${error.message}`);
+      emergencyReport.errors.push(`Failed to send notifications: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     try {
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       emergencyReport.actionsPerformed.push('Logged emergency event to audit trail');
 
     } catch (error) {
-      emergencyReport.errors.push(`Failed to log emergency event: ${error.message}`);
+      emergencyReport.errors.push(`Failed to log emergency event: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     // 6. Return emergency report
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'Emergency stop encountered critical errors',
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       criticalFailure: true,
       immediateActions: [
         'Contact system administrator immediately',

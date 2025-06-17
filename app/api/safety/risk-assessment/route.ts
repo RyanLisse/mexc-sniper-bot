@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     console.error("[Risk Assessment] GET Error:", error);
     return apiResponse.error(
       "Failed to get risk assessment",
-      error instanceof Error ? error.message : "Unknown error"
+      500
     );
   }
 }
@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
     console.error("[Risk Assessment] POST Error:", error);
     return apiResponse.error(
       "Failed to perform risk assessment",
-      error instanceof Error ? error.message : "Unknown error"
+      500
     );
   }
 }

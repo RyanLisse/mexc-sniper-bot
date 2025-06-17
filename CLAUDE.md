@@ -92,12 +92,27 @@ The system operates entirely in TypeScript with no Python dependencies, designed
 
 ## Environment Setup
 
-Key environment variables:
+### Required Environment Variables
+
+#### Authentication (Kinde Auth)
+- `KINDE_CLIENT_ID`: Kinde application client ID
+- `KINDE_CLIENT_SECRET`: Kinde application client secret
+- `KINDE_ISSUER_URL`: Kinde domain URL (e.g., https://your-domain.kinde.com)
+- `KINDE_SITE_URL`: Your application URL
+- `KINDE_POST_LOGOUT_REDIRECT_URL`: Where to redirect after logout
+- `KINDE_POST_LOGIN_REDIRECT_URL`: Where to redirect after login
+
+#### Core Services
 - `DATABASE_URL`: PostgreSQL connection string
 - `OPENAI_API_KEY`: Required for AI agents
 - `MEXC_API_KEY` / `MEXC_SECRET_KEY`: MEXC exchange API
-- `KINDE_*`: Authentication configuration
 - `ENCRYPTION_MASTER_KEY`: For secure credential storage
+
+#### Environment Files
+- `.env.local`: Local development (not committed)
+- `.env.test`: Test environment configuration
+- `.env.staging`: Staging environment configuration
+- `.env.example`: Template with all available variables
 
 See `.env.example` for complete configuration.
 

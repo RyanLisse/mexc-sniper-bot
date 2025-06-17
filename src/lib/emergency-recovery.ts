@@ -453,7 +453,7 @@ export class EmergencyRecoveryService {
 
   private async testDatabaseConnection(): Promise<RecoveryResult> {
     try {
-      await db.run(sql`SELECT 1`);
+      await db.execute(sql`SELECT 1`);
       return {
         success: true,
         message: "Database connection test successful",

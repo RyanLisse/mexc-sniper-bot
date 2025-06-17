@@ -393,7 +393,7 @@ export class BundleAnalyzer {
    */
   async generateOptimizationReport(): Promise<{
     analysis: BundleAnalysis;
-    progress: Awaited<ReturnType<typeof this.getOptimizationProgress>>;
+    progress: any;
     summary: {
       currentBundleSize: string;
       potentialSavings: string;

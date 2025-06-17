@@ -557,7 +557,7 @@ export class AlertConfigurationService {
     const validated = NotificationChannelConfigSchema.parse(config);
     const channelId = `channel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    const channelData: InsertNotificationChannel = {
+    const channelData = {
       id: channelId,
       name: validated.name,
       type: validated.type,

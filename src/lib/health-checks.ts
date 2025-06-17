@@ -25,7 +25,7 @@ export async function checkDatabaseHealth(): Promise<HealthStatus> {
 
   try {
     // Simple connectivity test
-    await db.run(sql`SELECT 1`);
+    await db.execute(sql`SELECT 1`);
 
     // Performance test - check query time
     const latency = Date.now() - startTime;

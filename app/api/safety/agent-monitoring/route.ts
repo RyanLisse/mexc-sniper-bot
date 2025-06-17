@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
     console.error("[Agent Monitoring] GET Error:", error);
     return apiResponse.error(
       "Failed to get agent monitoring data",
-      error instanceof Error ? error.message : "Unknown error"
+      500
     );
   }
 }
@@ -305,7 +305,7 @@ export async function POST(request: NextRequest) {
     console.error("[Agent Monitoring] POST Error:", error);
     return apiResponse.error(
       "Failed to execute agent monitoring action",
-      error instanceof Error ? error.message : "Unknown error"
+      500
     );
   }
 }

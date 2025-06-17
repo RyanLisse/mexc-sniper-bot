@@ -350,12 +350,12 @@ async function getPositionAnalytics() {
     return {
       activePositions: activeTargets.length,
       positionSizes: activeTargets.map(t => ({
-        symbol: t.symbol,
-        size: t.targetAmount || 0,
+        symbol: t.symbolName,
+        size: t.positionSizeUsdt || 0,
         percentage: Math.random() * 10 + 2 // 2-12% mock
       })),
       positionDurations: activeTargets.map(t => ({
-        symbol: t.symbol,
+        symbol: t.symbolName,
         duration: Math.floor((Date.now() - new Date(t.createdAt).getTime()) / (1000 * 60 * 60)) // hours
       })),
       sectorExposure: [

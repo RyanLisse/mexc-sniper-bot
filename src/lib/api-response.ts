@@ -77,6 +77,40 @@ export function apiResponse<T>(response: ApiResponse<T>, status = 200) {
   return NextResponse.json(response, { status });
 }
 
+// Add helper methods to apiResponse
+apiResponse.success = <T>(data: T, meta?: ApiResponse<T>["meta"], status: number = HTTP_STATUS.OK) => {
+  const { NextResponse } = require("next/server");
+  return NextResponse.json(createSuccessResponse(data, meta), { status });
+};
+
+apiResponse.error = (error: string, status: number = HTTP_STATUS.INTERNAL_SERVER_ERROR, details?: any) => {
+  const { NextResponse } = require("next/server");
+  const response = createErrorResponse(error);
+  if (details) {
+    response.details = details;
+  }
+  return NextResponse.json(response, { status });
+};
+
+apiResponse.unauthorized = (message = "Unauthorized") => {
+  const { NextResponse } = require("next/server");
+  return NextResponse.json(createAuthErrorResponse(message), { status: HTTP_STATUS.UNAUTHORIZED });
+};
+
+apiResponse.badRequest = (error: string, details?: any) => {
+  const { NextResponse } = require("next/server");
+  const response = createErrorResponse(error);
+  if (details) {
+    response.details = details;
+  }
+  return NextResponse.json(response, { status: HTTP_STATUS.BAD_REQUEST });
+};
+
+apiResponse.validationError = (field: string, message: string) => {
+  const { NextResponse } = require("next/server");
+  return NextResponse.json(createValidationErrorResponse(field, message), { status: HTTP_STATUS.BAD_REQUEST });
+};
+
 /**
  * Common HTTP status codes for API responses
  */

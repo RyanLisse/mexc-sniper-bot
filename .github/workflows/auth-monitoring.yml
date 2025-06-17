@@ -1,0 +1,438 @@
+name: Authentication Monitoring & Alerting
+
+on:
+  # Scheduled monitoring runs
+  schedule:
+    # Run every 15 minutes during business hours (9 AM - 6 PM UTC)
+    - cron: '*/15 9-18 * * 1-5'
+    # Run every hour outside business hours
+    - cron: '0 */1 * * *'
+  
+  # Manual trigger for immediate monitoring
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to monitor'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+      
+      alert_threshold:
+        description: 'Alert threshold (seconds)'
+        required: false
+        default: '5'
+        type: string
+      
+      comprehensive_check:
+        description: 'Run comprehensive monitoring'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  FORCE_COLOR: 3
+  CI: true
+
+jobs:
+  # Core authentication monitoring
+  auth-health-monitoring:
+    name: Authentication Health Monitoring
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        environment:
+          - production
+          - staging
+        monitor-type:
+          - health-check
+          - response-time
+          - availability
+    
+    steps:
+      - name: Set environment URLs
+        id: env-setup
+        run: |
+          case "${{ matrix.environment }}" in
+            production)
+              echo "base_url=https://mexcsniper.com" >> $GITHUB_OUTPUT
+              echo "expected_domain=mexcsniper.kinde.com" >> $GITHUB_OUTPUT
+              ;;
+            staging)
+              echo "base_url=https://staging.mexcsniper.com" >> $GITHUB_OUTPUT
+              echo "expected_domain=staging-mexcsniper.kinde.com" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Health Check Monitoring
+        if: matrix.monitor-type == 'health-check'
+        run: |
+          echo "🏥 Monitoring auth health for ${{ matrix.environment }}"
+          URL="${{ steps.env-setup.outputs.base_url }}/api/health/auth"
+          
+          response=$(curl -s -w "HTTPSTATUS:%{http_code}" "$URL")
+          http_status=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+          body=$(echo $response | sed -e 's/HTTPSTATUS\:.*//g')
+          
+          echo "HTTP Status: $http_status"
+          
+          if [ "$http_status" != "200" ]; then
+            echo "❌ Health check failed with status: $http_status"
+            echo "Response: $body"
+            exit 1
+          fi
+          
+          # Parse health data
+          status=$(echo "$body" | jq -r '.status')
+          auth_configured=$(echo "$body" | jq -r '.auth_configured')
+          kinde_status=$(echo "$body" | jq -r '.kinde_sdk_status')
+          
+          echo "✅ Health Status: $status"
+          echo "🔧 Auth Configured: $auth_configured"
+          echo "📡 Kinde SDK: $kinde_status"
+          
+          # Check for critical issues
+          if [ "$status" = "unhealthy" ]; then
+            echo "❌ CRITICAL: Auth system unhealthy"
+            exit 1
+          fi
+          
+          if [ "$auth_configured" = "false" ]; then
+            echo "❌ CRITICAL: Auth not configured"
+            exit 1
+          fi
+          
+          if [ "$kinde_status" = "error" ]; then
+            echo "⚠️ WARNING: Kinde SDK error detected"
+          fi
+
+      - name: Response Time Monitoring
+        if: matrix.monitor-type == 'response-time'
+        run: |
+          echo "⚡ Monitoring response time for ${{ matrix.environment }}"
+          URL="${{ steps.env-setup.outputs.base_url }}/api/health/auth"
+          
+          # Measure response time
+          response_time=$(curl -w "%{time_total}" -s -o /dev/null "$URL")
+          http_status=$(curl -w "%{http_code}" -s -o /dev/null "$URL")
+          
+          echo "Response time: ${response_time}s"
+          echo "HTTP status: $http_status"
+          
+          # Alert thresholds
+          alert_threshold=${{ github.event.inputs.alert_threshold || '5' }}
+          warning_threshold=$(echo "$alert_threshold * 0.8" | bc -l)
+          
+          if (( $(echo "$response_time > $alert_threshold" | bc -l) )); then
+            echo "❌ CRITICAL: Response time ${response_time}s exceeds threshold ${alert_threshold}s"
+            exit 1
+          elif (( $(echo "$response_time > $warning_threshold" | bc -l) )); then
+            echo "⚠️ WARNING: Response time ${response_time}s approaching threshold"
+          else
+            echo "✅ Response time acceptable: ${response_time}s"
+          fi
+
+      - name: Availability Monitoring
+        if: matrix.monitor-type == 'availability'
+        run: |
+          echo "🌐 Monitoring availability for ${{ matrix.environment }}"
+          BASE_URL="${{ steps.env-setup.outputs.base_url }}"
+          
+          # Test multiple endpoints
+          endpoints=(
+            "/api/health/auth"
+            "/api/auth/login"
+            "/api/auth/logout"
+          )
+          
+          failed_endpoints=0
+          total_endpoints=${#endpoints[@]}
+          
+          for endpoint in "${endpoints[@]}"; do
+            url="${BASE_URL}${endpoint}"
+            echo "Testing: $url"
+            
+            http_status=$(curl -w "%{http_code}" -s -o /dev/null --max-time 10 "$url")
+            
+            # Accept 200, 302, 307 as valid responses
+            if [[ "$http_status" =~ ^(200|302|307)$ ]]; then
+              echo "✅ $endpoint: $http_status"
+            else
+              echo "❌ $endpoint: $http_status"
+              ((failed_endpoints++))
+            fi
+          done
+          
+          availability=$(echo "scale=2; ($total_endpoints - $failed_endpoints) * 100 / $total_endpoints" | bc)
+          echo "📊 Availability: ${availability}%"
+          
+          if [ "$failed_endpoints" -gt 0 ]; then
+            if [ "$failed_endpoints" -eq "$total_endpoints" ]; then
+              echo "❌ CRITICAL: All endpoints down"
+              exit 1
+            else
+              echo "⚠️ WARNING: $failed_endpoints/$total_endpoints endpoints failing"
+            fi
+          else
+            echo "✅ All endpoints available"
+          fi
+
+  # Performance monitoring
+  performance-monitoring:
+    name: Performance Monitoring
+    runs-on: ubuntu-latest
+    needs: auth-health-monitoring
+    if: always() && github.event.inputs.comprehensive_check != 'false'
+    
+    steps:
+      - name: Authentication Flow Performance Test
+        run: |
+          echo "⚡ Testing authentication flow performance"
+          
+          # Test production environment
+          PROD_URL="https://mexcsniper.com"
+          
+          # Measure login page load time
+          login_time=$(curl -w "%{time_total}" -s -o /dev/null "${PROD_URL}/api/auth/login")
+          
+          # Measure health endpoint time
+          health_time=$(curl -w "%{time_total}" -s -o /dev/null "${PROD_URL}/api/health/auth")
+          
+          echo "Login endpoint time: ${login_time}s"
+          echo "Health endpoint time: ${health_time}s"
+          
+          # Performance thresholds
+          if (( $(echo "$login_time > 3.0" | bc -l) )); then
+            echo "⚠️ Login endpoint slow: ${login_time}s"
+          fi
+          
+          if (( $(echo "$health_time > 2.0" | bc -l) )); then
+            echo "⚠️ Health endpoint slow: ${health_time}s"
+          fi
+
+      - name: Concurrent Load Test
+        run: |
+          echo "🔄 Testing concurrent load handling"
+          PROD_URL="https://mexcsniper.com/api/health/auth"
+          
+          # Test with 10 concurrent requests
+          start_time=$(date +%s.%N)
+          
+          for i in {1..10}; do
+            curl -s -o /dev/null "$PROD_URL" &
+          done
+          wait
+          
+          end_time=$(date +%s.%N)
+          total_time=$(echo "$end_time - $start_time" | bc)
+          
+          echo "10 concurrent requests completed in: ${total_time}s"
+          
+          if (( $(echo "$total_time > 10.0" | bc -l) )); then
+            echo "⚠️ Concurrent load handling degraded"
+          else
+            echo "✅ Concurrent load handling acceptable"
+          fi
+
+  # Security monitoring
+  security-monitoring:
+    name: Security Monitoring
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Security Headers Check
+        run: |
+          echo "🔒 Checking security headers"
+          PROD_URL="https://mexcsniper.com"
+          
+          headers=$(curl -I -s "$PROD_URL")
+          
+          # Check for security headers
+          security_score=0
+          max_score=5
+          
+          if echo "$headers" | grep -i "strict-transport-security"; then
+            echo "✅ HSTS header present"
+            ((security_score++))
+          else
+            echo "⚠️ HSTS header missing"
+          fi
+          
+          if echo "$headers" | grep -i "x-frame-options"; then
+            echo "✅ X-Frame-Options header present"
+            ((security_score++))
+          else
+            echo "⚠️ X-Frame-Options header missing"
+          fi
+          
+          if echo "$headers" | grep -i "x-content-type-options"; then
+            echo "✅ X-Content-Type-Options header present"
+            ((security_score++))
+          else
+            echo "⚠️ X-Content-Type-Options header missing"
+          fi
+          
+          if echo "$headers" | grep -i "referrer-policy"; then
+            echo "✅ Referrer-Policy header present"
+            ((security_score++))
+          else
+            echo "⚠️ Referrer-Policy header missing"
+          fi
+          
+          if echo "$headers" | grep -i "content-security-policy"; then
+            echo "✅ Content-Security-Policy header present"
+            ((security_score++))
+          else
+            echo "⚠️ Content-Security-Policy header missing"
+          fi
+          
+          echo "🔒 Security Score: $security_score/$max_score"
+          
+          if [ "$security_score" -lt 3 ]; then
+            echo "⚠️ Security headers below recommended threshold"
+          fi
+
+      - name: SSL Certificate Check
+        run: |
+          echo "🔐 Checking SSL certificate"
+          
+          # Check production certificate
+          cert_info=$(echo | openssl s_client -servername mexcsniper.com -connect mexcsniper.com:443 2>/dev/null | openssl x509 -noout -dates)
+          
+          if [ $? -eq 0 ]; then
+            echo "✅ SSL certificate valid"
+            echo "$cert_info"
+            
+            # Check expiration (simplified check)
+            not_after=$(echo "$cert_info" | grep "notAfter" | cut -d= -f2)
+            echo "Certificate expires: $not_after"
+          else
+            echo "❌ SSL certificate issue detected"
+            exit 1
+          fi
+
+  # Alert generation and reporting
+  monitoring-summary:
+    name: Monitoring Summary & Alerting
+    runs-on: ubuntu-latest
+    needs: [auth-health-monitoring, performance-monitoring, security-monitoring]
+    if: always()
+    
+    steps:
+      - name: Generate Monitoring Report
+        run: |
+          echo "📊 Generating monitoring summary"
+          
+          # Check job results
+          health_result="${{ needs.auth-health-monitoring.result }}"
+          perf_result="${{ needs.performance-monitoring.result }}"
+          security_result="${{ needs.security-monitoring.result }}"
+          
+          echo "## 📋 Authentication Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment || 'production,staging' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Monitoring Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Health Monitoring: ${{ needs.auth-health-monitoring.result == 'success' && '✅' || '❌' }} $health_result" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance Monitoring: ${{ needs.performance-monitoring.result == 'success' && '✅' || '❌' }} $perf_result" >> $GITHUB_STEP_SUMMARY
+          echo "- Security Monitoring: ${{ needs.security-monitoring.result == 'success' && '✅' || '❌' }} $security_result" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Determine overall status
+          if [[ "$health_result" == "success" && "$perf_result" == "success" && "$security_result" == "success" ]]; then
+            echo "**Overall Status:** ✅ All systems operational" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$health_result" == "failure" ]]; then
+            echo "**Overall Status:** ❌ Critical auth system issues detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Overall Status:** ⚠️ Some monitoring issues detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Create Issue for Critical Failures
+        if: needs.auth-health-monitoring.result == 'failure'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const title = `🚨 Critical Authentication System Alert - ${new Date().toISOString()}`;
+            const body = `
+            ## Critical Authentication System Alert
+            
+            **Alert Time:** ${new Date().toISOString()}
+            **Environment:** ${{ github.event.inputs.environment || 'production,staging' }}
+            **Workflow:** ${{ github.workflow }}
+            **Run ID:** ${{ github.run_id }}
+            
+            ### Issue Details
+            Critical authentication system monitoring failures detected:
+            
+            - **Health Monitoring:** ${{ needs.auth-health-monitoring.result }}
+            - **Performance Monitoring:** ${{ needs.performance-monitoring.result }}
+            - **Security Monitoring:** ${{ needs.security-monitoring.result }}
+            
+            ### Immediate Actions Required
+            1. Check auth health endpoint status
+            2. Verify Kinde configuration
+            3. Review authentication flow functionality
+            4. Check for any recent deployments or changes
+            
+            ### Troubleshooting Links
+            - [Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [Health Endpoint](https://mexcsniper.com/api/health/auth)
+            - [Monitoring Dashboard](https://mexcsniper.com/admin/monitoring)
+            
+            This issue was automatically created by the authentication monitoring system.
+            `;
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['critical', 'authentication', 'monitoring', 'auto-generated']
+            });
+
+  # Cleanup old monitoring issues
+  cleanup-monitoring-issues:
+    name: Cleanup Old Monitoring Issues
+    runs-on: ubuntu-latest
+    if: needs.auth-health-monitoring.result == 'success' && needs.performance-monitoring.result == 'success'
+    needs: [auth-health-monitoring, performance-monitoring, security-monitoring, monitoring-summary]
+    
+    steps:
+      - name: Close resolved monitoring issues
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Get open monitoring issues
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'monitoring,auto-generated',
+              state: 'open'
+            });
+            
+            // Close issues that are older than 1 hour if all systems are healthy
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+            
+            for (const issue of issues.data) {
+              const issueDate = new Date(issue.created_at);
+              if (issueDate < oneHourAgo) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed'
+                });
+                
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: '🚀 Automatically resolved: All authentication monitoring checks are now passing.'
+                });
+              }
+            }

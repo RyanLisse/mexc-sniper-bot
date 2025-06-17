@@ -74,12 +74,27 @@ export class MultiPhaseExecutor {
     this.strategyId = options?.strategyId;
     this.userId = options?.userId;
 
+    // Validate entry price immediately
+    this.validateEntryPrice();
+
     // Load existing execution state if provided
     if (options?.executedPhases) {
       this.executedPhases = new Set(options.executedPhases);
     }
     if (options?.existingHistory) {
       this.phaseHistory = [...options.existingHistory];
+    }
+  }
+
+  /**
+   * Validates that entry price is valid for calculations
+   * @throws Error if entry price is invalid
+   */
+  private validateEntryPrice(): void {
+    if (!this.entryPrice || this.entryPrice <= 0) {
+      throw new Error(
+        `Invalid entry price (${this.entryPrice}) - must be a positive number greater than 0`
+      );
     }
   }
 

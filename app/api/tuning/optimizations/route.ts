@@ -157,15 +157,17 @@ export async function POST(request: NextRequest) {
     // Validate full optimization request
     const validatedRequest = OptimizationRequestSchema.parse(body);
 
-    // Convert string dates to Date objects
-    const optimizationRequest = {
-      ...validatedRequest,
+    // Convert string dates to Date objects and transform for OptimizationRequest
+    const optimizationRequest: any = {
+      parameterCategories: validatedRequest.parameterCategories || [],
       backtestingPeriod: {
         start: new Date(validatedRequest.backtestingPeriod.start),
         end: new Date(validatedRequest.backtestingPeriod.end)
       },
       objectives: validatedRequest.objectives.map(obj => ({
-        ...obj,
+        name: obj.name || 'performance',
+        weight: obj.weight || 1,
+        direction: obj.direction || 'maximize',
         metric: (performance: any) => {
           switch (obj.metric) {
             case 'profitability': return performance.profitability;
@@ -176,7 +178,16 @@ export async function POST(request: NextRequest) {
             default: return 0;
           }
         }
-      }))
+      })),
+      strategy: validatedRequest.strategy || {
+        algorithm: 'bayesian',
+        maxIterations: 100,
+        convergenceThreshold: 0.01,
+        parallelEvaluations: 4,
+        explorationRate: 0.1
+      },
+      safetyConstraints: validatedRequest.safetyConstraints || {},
+      abTestConfig: validatedRequest.abTestConfig
     };
 
     // Start optimization

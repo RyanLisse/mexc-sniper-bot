@@ -174,9 +174,34 @@ export async function POST(request: NextRequest) {
       transactionData.profitLossPercentage = (transactionData.profitLoss / transactionData.buyTotalCost) * 100;
     }
 
+    // Ensure proper type matching for database insertion
+    const insertData: NewTransaction = {
+      userId: transactionData.userId,
+      transactionType: transactionData.transactionType,
+      symbolName: transactionData.symbolName,
+      vcoinId: transactionData.vcoinId,
+      buyPrice: transactionData.buyPrice,
+      buyQuantity: transactionData.buyQuantity,
+      buyTotalCost: transactionData.buyTotalCost,
+      buyTimestamp: transactionData.buyTimestamp ? new Date(transactionData.buyTimestamp) : undefined,
+      buyOrderId: transactionData.buyOrderId,
+      sellPrice: transactionData.sellPrice,
+      sellQuantity: transactionData.sellQuantity,
+      sellTotalRevenue: transactionData.sellTotalRevenue,
+      sellTimestamp: transactionData.sellTimestamp ? new Date(transactionData.sellTimestamp) : undefined,
+      sellOrderId: transactionData.sellOrderId,
+      profitLoss: transactionData.profitLoss,
+      profitLossPercentage: transactionData.profitLossPercentage,
+      fees: transactionData.fees,
+      status: transactionData.status,
+      snipeTargetId: transactionData.snipeTargetId,
+      notes: transactionData.notes,
+      transactionTime: new Date(),
+    };
+
     const [created] = await db
       .insert(transactions)
-      .values(transactionData as NewTransaction)
+      .values(insertData)
       .returning();
 
     return apiResponse(

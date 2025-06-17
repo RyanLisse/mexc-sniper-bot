@@ -5,7 +5,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { multiPhaseTradingService } from "@/src/services/multi-phase-trading-service";
 import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { rateLimiter } from "@/src/lib/rate-limiter";
-import { ApiResponse } from "@/src/lib/api-response";
+import { apiResponse } from "@/src/lib/api-response";
 
 // ===========================================
 // MULTI-PHASE STRATEGY CREATION TRIGGER
@@ -43,9 +43,9 @@ const TriggerSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimiter.check(request, "strategy_triggers", 30, 60);
+    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategy_triggers");
     if (!rateLimitResult.success) {
-      return ApiResponse.error("Rate limit exceeded", 429);
+      return apiResponse.error("Rate limit exceeded", 429);
     }
 
     // Authentication
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     const user = await getUser();
     
     if (!user?.id) {
-      return ApiResponse.error("Unauthorized", 401);
+      return apiResponse.error("Unauthorized", 401);
     }
 
     // Parse request body
@@ -62,14 +62,14 @@ export async function POST(request: NextRequest) {
 
     // Handle test requests
     if (data.test) {
-      return ApiResponse.success(
+      return apiResponse.success(
         {
           message: "Multi-phase strategy system is operational",
           userId: user.id,
           timestamp: new Date().toISOString(),
           availableActions: ["create", "analyze", "optimize", "recommend"],
         },
-        "Test successful"
+        { message: "Test successful" }
       );
     }
 
@@ -93,21 +93,19 @@ export async function POST(request: NextRequest) {
         break;
         
       default:
-        return ApiResponse.error("Invalid action", 400);
+        return apiResponse.error("Invalid action", 400);
     }
 
-    return ApiResponse.success(result, `Strategy ${data.action} completed successfully`);
+    return apiResponse.success(result, { message: `Strategy ${data.action} completed successfully` });
 
   } catch (error) {
     console.error("Error in multi-phase strategy trigger:", error);
     
     if (error instanceof z.ZodError) {
-      return ApiResponse.error("Invalid request data", 400, {
-        details: error.errors
-      });
+      return apiResponse.error("Invalid request data", 400, error.errors);
     }
 
-    return ApiResponse.error("Failed to process strategy request", 500);
+    return apiResponse.error("Failed to process strategy request", 500);
   }
 }
 
@@ -333,9 +331,9 @@ async function handleStrategyRecommendation(data: any, userId: string) {
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimiter.check(request, "strategy_status", 60, 60);
+    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategy_status");
     if (!rateLimitResult.success) {
-      return ApiResponse.error("Rate limit exceeded", 429);
+      return apiResponse.error("Rate limit exceeded", 429);
     }
 
     // Authentication
@@ -343,14 +341,14 @@ export async function GET(request: NextRequest) {
     const user = await getUser();
     
     if (!user?.id) {
-      return ApiResponse.error("Unauthorized", 401);
+      return apiResponse.error("Unauthorized", 401);
     }
 
     // Get user's strategies summary
     const strategies = await multiPhaseTradingService.getUserStrategies(user.id, { limit: 10 });
     const templates = await multiPhaseTradingService.getStrategyTemplates();
 
-    return ApiResponse.success({
+    return apiResponse.success({
       status: "operational",
       capabilities: {
         actions: ["create", "analyze", "optimize", "recommend"],
@@ -382,6 +380,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error("Error getting strategy system status:", error);
-    return ApiResponse.error("Failed to get system status", 500);
+    return apiResponse.error("Failed to get system status", 500);
   }
 }

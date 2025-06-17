@@ -1,0 +1,305 @@
+# Authentication Monitoring Configuration
+# 
+# Defines monitoring rules, alert thresholds, and escalation policies
+# for the MEXC Sniper Bot authentication system.
+
+version: "1.0.0"
+environment: ${NODE_ENV:-production}
+
+# Global monitoring settings
+global:
+  monitoring_interval: 60s
+  data_retention: 30d
+  alert_evaluation_interval: 15s
+  
+# Health check configurations
+health_checks:
+  auth_endpoint:
+    url: "${BASE_URL}/api/health/auth"
+    method: GET
+    timeout: 10s
+    interval: 30s
+    expected_status: 200
+    expected_response:
+      status: "healthy"
+      auth_configured: true
+    
+  kinde_connectivity:
+    url: "${KINDE_ISSUER_URL}/.well-known/jwks.json"
+    method: GET
+    timeout: 5s
+    interval: 60s
+    expected_status: 200
+    
+  auth_flow:
+    url: "${BASE_URL}/api/auth/login"
+    method: GET
+    timeout: 15s
+    interval: 300s # 5 minutes
+    expected_status: [302, 307] # Redirect to Kinde
+    follow_redirects: false
+
+# Performance monitoring thresholds
+performance:
+  response_time:
+    warning_threshold: 2s
+    critical_threshold: 5s
+    
+  availability:
+    warning_threshold: 99.0%
+    critical_threshold: 95.0%
+    
+  error_rate:
+    warning_threshold: 1.0%
+    critical_threshold: 5.0%
+    
+  concurrent_users:
+    warning_threshold: 1000
+    critical_threshold: 2000
+
+# Alert rules and conditions
+alerts:
+  # Critical alerts - immediate response required
+  critical:
+    auth_system_down:
+      condition: "auth_endpoint.status != 200"
+      duration: 1m
+      description: "Authentication endpoint is not responding"
+      severity: critical
+      escalation: immediate
+      
+    kinde_connectivity_failure:
+      condition: "kinde_connectivity.status != 200"
+      duration: 2m
+      description: "Cannot connect to Kinde authentication service"
+      severity: critical
+      escalation: immediate
+      
+    auth_configuration_invalid:
+      condition: "auth_endpoint.response.auth_configured != true"
+      duration: 30s
+      description: "Authentication system configuration is invalid"
+      severity: critical
+      escalation: immediate
+      
+    high_error_rate:
+      condition: "error_rate > 5.0"
+      duration: 5m
+      description: "Authentication error rate exceeds critical threshold"
+      severity: critical
+      escalation: 5m
+  
+  # Warning alerts - attention required
+  warning:
+    slow_response_time:
+      condition: "response_time > 2s"
+      duration: 3m
+      description: "Authentication response time is degraded"
+      severity: warning
+      escalation: 15m
+      
+    degraded_availability:
+      condition: "availability < 99.0"
+      duration: 5m
+      description: "Authentication system availability is degraded"
+      severity: warning
+      escalation: 10m
+      
+    increased_error_rate:
+      condition: "error_rate > 1.0"
+      duration: 10m
+      description: "Authentication error rate is elevated"
+      severity: warning
+      escalation: 20m
+      
+    kinde_sdk_warnings:
+      condition: "auth_endpoint.response.kinde_sdk_status == 'warning'"
+      duration: 2m
+      description: "Kinde SDK reporting warnings"
+      severity: warning
+      escalation: 30m
+
+# Notification channels
+notifications:
+  channels:
+    slack_critical:
+      type: slack
+      webhook_url: "${SLACK_WEBHOOK_CRITICAL}"
+      channel: "#alerts-critical"
+      mentions: ["@on-call", "@auth-team"]
+      
+    slack_warnings:
+      type: slack
+      webhook_url: "${SLACK_WEBHOOK_WARNINGS}"
+      channel: "#alerts-warnings"
+      mentions: ["@auth-team"]
+      
+    email_critical:
+      type: email
+      recipients: ["ops@mexcsniper.com", "auth-team@mexcsniper.com"]
+      smtp_server: "${SMTP_SERVER}"
+      from: "monitoring@mexcsniper.com"
+      
+    github_issues:
+      type: github
+      repository: "mexc-sniper-bot"
+      labels: ["monitoring", "authentication", "auto-generated"]
+      
+  # Routing rules
+  routing:
+    critical:
+      - slack_critical
+      - email_critical
+      - github_issues
+      
+    warning:
+      - slack_warnings
+      
+    escalation:
+      5m: [email_critical]
+      15m: [slack_critical]
+      30m: [github_issues]
+
+# Environment-specific configurations
+environments:
+  production:
+    monitoring_interval: 30s
+    alert_evaluation_interval: 10s
+    escalation_enabled: true
+    
+    health_checks:
+      auth_endpoint:
+        interval: 30s
+        timeout: 5s
+        
+    performance:
+      response_time:
+        warning_threshold: 1s
+        critical_threshold: 3s
+        
+  staging:
+    monitoring_interval: 60s
+    alert_evaluation_interval: 30s
+    escalation_enabled: false
+    
+    notifications:
+      routing:
+        critical: [slack_warnings]
+        warning: [slack_warnings]
+        
+  test:
+    monitoring_interval: 300s # 5 minutes
+    alert_evaluation_interval: 60s
+    escalation_enabled: false
+    
+    # Relaxed thresholds for test environment
+    performance:
+      response_time:
+        warning_threshold: 5s
+        critical_threshold: 10s
+        
+    notifications:
+      routing:
+        critical: []
+        warning: []
+
+# Security monitoring
+security:
+  suspicious_activity:
+    failed_login_threshold: 10
+    failed_login_window: 5m
+    
+    rate_limiting:
+      requests_per_minute: 60
+      burst_limit: 100
+      
+    blocked_ips:
+      auto_block_threshold: 50
+      block_duration: 1h
+      
+  alerts:
+    brute_force_attempt:
+      condition: "failed_logins > 10 in 5m"
+      severity: warning
+      
+    rate_limit_exceeded:
+      condition: "requests_per_minute > 100"
+      severity: warning
+      
+    suspicious_ip_activity:
+      condition: "unique_failed_ips > 5 in 10m"
+      severity: warning
+
+# Maintenance windows
+maintenance:
+  # Suppress alerts during maintenance
+  windows:
+    - name: "Weekly maintenance"
+      schedule: "0 2 * * SUN" # Sunday 2 AM UTC
+      duration: 2h
+      suppress_alerts: [warning]
+      
+    - name: "Emergency maintenance"
+      manual_trigger: true
+      suppress_alerts: [warning, critical]
+
+# Integration with external monitoring
+integrations:
+  prometheus:
+    enabled: true
+    endpoint: "/api/monitoring/auth"
+    metrics_format: prometheus
+    scrape_interval: 30s
+    
+  datadog:
+    enabled: false
+    api_key: "${DATADOG_API_KEY}"
+    
+  newrelic:
+    enabled: false
+    license_key: "${NEWRELIC_LICENSE_KEY}"
+    
+  grafana:
+    enabled: true
+    dashboard_url: "${GRAFANA_DASHBOARD_URL}"
+
+# Runbook automation
+runbooks:
+  auth_system_down:
+    steps:
+      - check_deployment_status
+      - verify_environment_variables
+      - check_kinde_service_status
+      - restart_application_if_needed
+      - escalate_to_oncall
+      
+  kinde_connectivity_failure:
+    steps:
+      - check_dns_resolution
+      - verify_network_connectivity
+      - check_kinde_status_page
+      - validate_api_credentials
+      - contact_kinde_support
+      
+  high_error_rate:
+    steps:
+      - analyze_error_logs
+      - check_recent_deployments
+      - verify_configuration_changes
+      - rollback_if_necessary
+
+# Compliance and auditing
+compliance:
+  audit_logs:
+    enabled: true
+    retention: 90d
+    
+  sla_targets:
+    availability: 99.9%
+    response_time: 1s
+    error_rate: 0.1%
+    
+  reporting:
+    monthly_sla_report: true
+    incident_summary: true
+    performance_trends: true

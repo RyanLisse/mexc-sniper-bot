@@ -76,6 +76,20 @@ export class OptimizedAutoExitManager {
   }
 
   /**
+   * Start monitoring (alias for startMonitoring)
+   */
+  start(): Promise<void> {
+    return this.startMonitoring();
+  }
+
+  /**
+   * Stop monitoring (alias for stopMonitoring)
+   */
+  stop(): void {
+    this.stopMonitoring();
+  }
+
+  /**
    * Stop monitoring
    */
   stopMonitoring(): void {
@@ -452,3 +466,6 @@ export class OptimizedAutoExitManager {
     };
   }
 }
+
+// Export singleton instance
+export const exitManagerService = new OptimizedAutoExitManager();

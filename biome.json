@@ -78,7 +78,12 @@
       "**/*.min.js",
       "**/coverage",
       "**/.venv",
-      "**/__pycache__"
+      "**/__pycache__",
+      "**/test-results.json",
+      "**/test-results/**",
+      "**/test-screenshots/**",
+      "**/.claude/**",
+      "**/docs/*.md"
     ]
   },
   "vcs": {

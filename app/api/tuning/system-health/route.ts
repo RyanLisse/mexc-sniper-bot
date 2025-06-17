@@ -69,11 +69,16 @@ async function checkComponentHealth(): Promise<{
   backtesting: 'healthy' | 'degraded' | 'down';
   abTesting: 'healthy' | 'degraded' | 'down';
 }> {
-  const results = {
-    optimizationEngine: 'healthy' as const,
-    parameterManager: 'healthy' as const,
-    backtesting: 'healthy' as const,
-    abTesting: 'healthy' as const
+  const results: {
+    optimizationEngine: 'healthy' | 'degraded' | 'down';
+    parameterManager: 'healthy' | 'degraded' | 'down';
+    backtesting: 'healthy' | 'degraded' | 'down';
+    abTesting: 'healthy' | 'degraded' | 'down';
+  } = {
+    optimizationEngine: 'healthy',
+    parameterManager: 'healthy',
+    backtesting: 'healthy',
+    abTesting: 'healthy'
   };
 
   try {

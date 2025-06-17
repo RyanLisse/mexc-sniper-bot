@@ -7,7 +7,7 @@ import { neonBranchManager } from "./neon-branch-manager";
  * Each test run gets its own database branch to ensure complete isolation.
  */
 
-interface TestBranchContext {
+export interface TestBranchContext {
   branchId: string;
   branchName: string;
   connectionString: string;

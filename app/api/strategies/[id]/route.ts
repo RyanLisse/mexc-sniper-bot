@@ -36,7 +36,7 @@ export async function GET(
 ) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimiter.check(request, "strategies_read", 100, 60);
+    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_read");
     if (!rateLimitResult.success) {
       return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }
@@ -110,7 +110,7 @@ export async function PUT(
 ) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimiter.check(request, "strategies_update", 30, 60);
+    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_update");
     if (!rateLimitResult.success) {
       return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }
@@ -188,7 +188,7 @@ export async function POST(
 ) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimiter.check(request, "strategies_execute", 20, 60);
+    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_execute");
     if (!rateLimitResult.success) {
       return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }
@@ -307,7 +307,7 @@ export async function DELETE(
 ) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimiter.check(request, "strategies_delete", 10, 60);
+    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_delete");
     if (!rateLimitResult.success) {
       return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }

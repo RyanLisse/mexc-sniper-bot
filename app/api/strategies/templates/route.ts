@@ -4,7 +4,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { multiPhaseTradingService, PREDEFINED_STRATEGIES } from "@/src/services/multi-phase-trading-service";
 import { MultiPhaseStrategyBuilder, StrategyPatterns, createQuickStrategies } from "@/src/services/multi-phase-strategy-builder";
 import { rateLimiter } from "@/src/lib/rate-limiter";
-import { ApiResponse } from "@/src/lib/api-response";
+import { apiResponse } from "@/src/lib/api-response";
 
 // ===========================================
 // STRATEGY TEMPLATES API
@@ -41,9 +41,9 @@ const BuilderRequestSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimiter.check(request, "templates_read", 100, 60);
+    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "templates_read");
     if (!rateLimitResult.success) {
-      return ApiResponse.error("Rate limit exceeded", 429);
+      return apiResponse.error("Rate limit exceeded", 429);
     }
 
     // Get predefined strategies
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
       },
     ];
 
-    return ApiResponse.success({
+    return apiResponse.success({
       predefined: predefinedStrategies,
       database: dbTemplates,
       quickStart: quickStrategies,
@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error("Error fetching templates:", error);
-    return ApiResponse.error("Failed to fetch templates", 500);
+    return apiResponse.error("Failed to fetch templates", 500);
   }
 }
 
@@ -172,9 +172,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimiter.check(request, "templates_build", 30, 60);
+    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "templates_build");
     if (!rateLimitResult.success) {
-      return ApiResponse.error("Rate limit exceeded", 429);
+      return apiResponse.error("Rate limit exceeded", 429);
     }
 
     // Authentication
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
     const user = await getUser();
     
     if (!user?.id) {
-      return ApiResponse.error("Unauthorized", 401);
+      return apiResponse.error("Unauthorized", 401);
     }
 
     // Parse request body
@@ -253,7 +253,7 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        return ApiResponse.error("Invalid strategy type", 400);
+        return apiResponse.error("Invalid strategy type", 400);
     }
 
     // Add description if provided
@@ -268,30 +268,28 @@ export async function POST(request: NextRequest) {
     if (preview.validation.isValid) {
       const strategy = builder.build();
       
-      return ApiResponse.success({
+      return apiResponse.success({
         strategy,
         preview,
         builderType: data.type,
         isValid: true,
-      }, "Strategy built successfully");
+      }, { message: "Strategy built successfully" });
     } else {
-      return ApiResponse.success({
+      return apiResponse.success({
         preview,
         builderType: data.type,
         isValid: false,
-      }, "Strategy preview generated with validation errors");
+      }, { message: "Strategy preview generated with validation errors" });
     }
 
   } catch (error) {
     console.error("Error building strategy:", error);
     
     if (error instanceof z.ZodError) {
-      return ApiResponse.error("Invalid request data", 400, {
-        details: error.errors
-      });
+      return apiResponse.error("Invalid request data", 400, error.errors);
     }
 
-    return ApiResponse.error("Failed to build strategy", 500);
+    return apiResponse.error("Failed to build strategy", 500);
   }
 }
 

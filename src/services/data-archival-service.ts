@@ -218,10 +218,10 @@ export class DataArchivalService {
       console.log("🧹 Running database vacuum to reclaim space...");
 
       // Run VACUUM to reclaim space from deleted records
-      await db.run(sql`VACUUM`);
+      await db.execute(sql`VACUUM`);
 
       // Run ANALYZE to update query planner statistics
-      await db.run(sql`ANALYZE`);
+      await db.execute(sql`ANALYZE`);
 
       console.log("✅ Database vacuum completed");
     } catch (error) {

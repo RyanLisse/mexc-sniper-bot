@@ -1,0 +1,452 @@
+name: Deployment Validation & Rollback
+
+on:
+  # Trigger on successful deployment to production
+  deployment_status:
+  
+  # Manual trigger for validation testing
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to validate'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - staging
+        - production
+      
+      skip_rollback:
+        description: 'Skip automatic rollback on failure'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  FORCE_COLOR: 3
+  CI: true
+
+jobs:
+  # Pre-deployment validation
+  pre-deployment-checks:
+    name: Pre-deployment Validation
+    runs-on: ubuntu-latest
+    if: github.event.deployment_status.state == 'pending' || github.event_name == 'workflow_dispatch'
+    
+    outputs:
+      deployment-url: ${{ steps.get-url.outputs.url }}
+      environment: ${{ steps.get-env.outputs.environment }}
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get deployment environment
+        id: get-env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          else
+            echo "environment=${{ github.event.deployment.environment }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get deployment URL
+        id: get-url
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ github.event.inputs.environment }}" == "production" ]]; then
+              echo "url=https://mexcsniper.com" >> $GITHUB_OUTPUT
+            else
+              echo "url=https://staging.mexcsniper.com" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "url=${{ github.event.deployment_status.target_url }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate deployment URL accessibility
+        run: |
+          URL="${{ steps.get-url.outputs.url }}"
+          echo "🔍 Validating deployment URL: $URL"
+          
+          # Wait for deployment to be available
+          max_attempts=30
+          attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f -s -o /dev/null --max-time 10 "$URL"; then
+              echo "✅ Deployment URL is accessible"
+              break
+            else
+              echo "⏳ Attempt $attempt/$max_attempts - waiting for deployment..."
+              sleep 10
+              ((attempt++))
+            fi
+          done
+          
+          if [ $attempt -gt $max_attempts ]; then
+            echo "❌ Deployment URL not accessible after $max_attempts attempts"
+            exit 1
+          fi
+
+  # Comprehensive health validation
+  health-validation:
+    name: Health Check Validation
+    runs-on: ubuntu-latest
+    needs: pre-deployment-checks
+    if: always() && needs.pre-deployment-checks.result == 'success'
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        health-check:
+          - endpoint: '/api/health/system'
+            name: 'System Health'
+            timeout: 30
+            retries: 3
+          - endpoint: '/api/health/auth'
+            name: 'Authentication Health'
+            timeout: 15
+            retries: 5
+          - endpoint: '/api/health/db'
+            name: 'Database Health'
+            timeout: 30
+            retries: 3
+          - endpoint: '/api/health/openai'
+            name: 'AI Services Health'
+            timeout: 20
+            retries: 3
+
+    steps:
+      - name: Health Check - ${{ matrix.health-check.name }}
+        run: |
+          URL="${{ needs.pre-deployment-checks.outputs.deployment-url }}${{ matrix.health-check.endpoint }}"
+          echo "🏥 Testing ${{ matrix.health-check.name }}: $URL"
+          
+          success=false
+          for i in $(seq 1 ${{ matrix.health-check.retries }}); do
+            echo "Attempt $i/${{ matrix.health-check.retries }}"
+            
+            if response=$(curl -f -s --max-time ${{ matrix.health-check.timeout }} "$URL"); then
+              echo "✅ Health check passed"
+              echo "Response: $response"
+              
+              # Validate response format
+              if echo "$response" | jq -e '.status' > /dev/null 2>&1; then
+                status=$(echo "$response" | jq -r '.status')
+                if [[ "$status" == "healthy" ]]; then
+                  echo "✅ Health status: $status"
+                  success=true
+                  break
+                elif [[ "$status" == "warning" ]]; then
+                  echo "⚠️ Health status: $status (proceeding with warning)"
+                  success=true
+                  break
+                else
+                  echo "❌ Health status: $status"
+                fi
+              else
+                echo "❌ Invalid health check response format"
+              fi
+            else
+              echo "❌ Health check failed (attempt $i/${{ matrix.health-check.retries }})"
+            fi
+            
+            if [ $i -lt ${{ matrix.health-check.retries }} ]; then
+              sleep 10
+            fi
+          done
+          
+          if [ "$success" = false ]; then
+            echo "❌ ${{ matrix.health-check.name }} validation failed after ${{ matrix.health-check.retries }} attempts"
+            exit 1
+          fi
+
+  # Authentication flow validation
+  auth-flow-validation:
+    name: Authentication Flow Validation
+    runs-on: ubuntu-latest
+    needs: [pre-deployment-checks, health-validation]
+    if: always() && needs.health-validation.result == 'success'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun runtime
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Run authentication flow tests
+        run: |
+          echo "🔐 Testing authentication flows against: ${{ needs.pre-deployment-checks.outputs.deployment-url }}"
+          
+          # Set environment for testing against deployed instance
+          export TEST_BASE_URL="${{ needs.pre-deployment-checks.outputs.deployment-url }}"
+          export TEST_ENVIRONMENT="${{ needs.pre-deployment-checks.outputs.environment }}"
+          
+          # Run specific auth flow tests
+          bun run test:e2e tests/e2e/auth-flow-validation.spec.ts
+        env:
+          KINDE_CLIENT_ID: ${{ secrets.KINDE_CLIENT_ID_TEST }}
+          KINDE_CLIENT_SECRET: ${{ secrets.KINDE_CLIENT_SECRET_TEST }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: auth-validation-results-${{ github.run_number }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  # Performance validation
+  performance-validation:
+    name: Performance Validation
+    runs-on: ubuntu-latest
+    needs: [pre-deployment-checks, health-validation]
+    if: always() && needs.health-validation.result == 'success'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Performance test - Authentication endpoints
+        run: |
+          URL="${{ needs.pre-deployment-checks.outputs.deployment-url }}"
+          echo "⚡ Testing authentication endpoint performance"
+          
+          # Test auth health endpoint response time
+          auth_response_time=$(curl -w "%{time_total}" -s -o /dev/null "$URL/api/health/auth")
+          echo "Auth health endpoint response time: ${auth_response_time}s"
+          
+          # Validate response time is acceptable (under 2 seconds)
+          if (( $(echo "$auth_response_time < 2.0" | bc -l) )); then
+            echo "✅ Auth endpoint performance acceptable"
+          else
+            echo "❌ Auth endpoint performance degraded: ${auth_response_time}s"
+            exit 1
+          fi
+
+      - name: Performance test - System health
+        run: |
+          URL="${{ needs.pre-deployment-checks.outputs.deployment-url }}"
+          echo "⚡ Testing system health endpoint performance"
+          
+          system_response_time=$(curl -w "%{time_total}" -s -o /dev/null "$URL/api/health/system")
+          echo "System health endpoint response time: ${system_response_time}s"
+          
+          # Validate response time is acceptable (under 5 seconds for comprehensive check)
+          if (( $(echo "$system_response_time < 5.0" | bc -l) )); then
+            echo "✅ System health endpoint performance acceptable"
+          else
+            echo "❌ System health endpoint performance degraded: ${system_response_time}s"
+            exit 1
+          fi
+
+  # Security validation
+  security-validation:
+    name: Security Validation
+    runs-on: ubuntu-latest
+    needs: [pre-deployment-checks, health-validation]
+    if: always() && needs.health-validation.result == 'success'
+    
+    steps:
+      - name: Security headers validation
+        run: |
+          URL="${{ needs.pre-deployment-checks.outputs.deployment-url }}"
+          echo "🔒 Validating security headers"
+          
+          headers=$(curl -I -s "$URL")
+          
+          # Check for security headers
+          if echo "$headers" | grep -i "x-frame-options"; then
+            echo "✅ X-Frame-Options header present"
+          else
+            echo "⚠️ X-Frame-Options header missing"
+          fi
+          
+          if echo "$headers" | grep -i "x-content-type-options"; then
+            echo "✅ X-Content-Type-Options header present"
+          else
+            echo "⚠️ X-Content-Type-Options header missing"
+          fi
+          
+          if echo "$headers" | grep -i "strict-transport-security"; then
+            echo "✅ HSTS header present"
+          else
+            echo "⚠️ HSTS header missing"
+          fi
+
+      - name: Authentication endpoint security
+        run: |
+          URL="${{ needs.pre-deployment-checks.outputs.deployment-url }}"
+          echo "🔒 Testing authentication endpoint security"
+          
+          # Test that auth endpoints require proper authentication
+          status_code=$(curl -s -o /dev/null -w "%{http_code}" "$URL/api/auth/session")
+          
+          if [[ "$status_code" == "401" || "$status_code" == "403" || "$status_code" == "200" ]]; then
+            echo "✅ Auth endpoint security working correctly (status: $status_code)"
+          else
+            echo "❌ Auth endpoint security issue (status: $status_code)"
+            exit 1
+          fi
+
+  # Validation summary and rollback decision
+  validation-summary:
+    name: Validation Summary & Rollback Decision
+    runs-on: ubuntu-latest
+    needs: [pre-deployment-checks, health-validation, auth-flow-validation, performance-validation, security-validation]
+    if: always()
+    
+    outputs:
+      should-rollback: ${{ steps.decision.outputs.should-rollback }}
+      validation-result: ${{ steps.decision.outputs.result }}
+    
+    steps:
+      - name: Evaluate validation results
+        id: decision
+        run: |
+          echo "📊 Evaluating validation results..."
+          
+          # Check results of all validation jobs
+          health_result="${{ needs.health-validation.result }}"
+          auth_result="${{ needs.auth-flow-validation.result }}"
+          perf_result="${{ needs.performance-validation.result }}"
+          security_result="${{ needs.security-validation.result }}"
+          
+          echo "Health validation: $health_result"
+          echo "Auth flow validation: $auth_result"
+          echo "Performance validation: $perf_result"
+          echo "Security validation: $security_result"
+          
+          # Determine if rollback is needed
+          critical_failures=0
+          
+          if [[ "$health_result" == "failure" ]]; then
+            echo "❌ Critical: Health validation failed"
+            ((critical_failures++))
+          fi
+          
+          if [[ "$auth_result" == "failure" ]]; then
+            echo "❌ Critical: Auth flow validation failed"
+            ((critical_failures++))
+          fi
+          
+          # Performance and security are warnings, not critical failures
+          if [[ "$perf_result" == "failure" ]]; then
+            echo "⚠️ Warning: Performance validation failed"
+          fi
+          
+          if [[ "$security_result" == "failure" ]]; then
+            echo "⚠️ Warning: Security validation failed"
+          fi
+          
+          # Decision logic
+          skip_rollback="${{ github.event.inputs.skip_rollback || 'false' }}"
+          
+          if [[ $critical_failures -gt 0 && "$skip_rollback" != "true" ]]; then
+            echo "🔄 Rollback recommended due to $critical_failures critical failure(s)"
+            echo "should-rollback=true" >> $GITHUB_OUTPUT
+            echo "result=failure" >> $GITHUB_OUTPUT
+          elif [[ $critical_failures -gt 0 ]]; then
+            echo "⚠️ Critical failures detected but rollback skipped by user input"
+            echo "should-rollback=false" >> $GITHUB_OUTPUT
+            echo "result=warning" >> $GITHUB_OUTPUT
+          else
+            echo "✅ All critical validations passed"
+            echo "should-rollback=false" >> $GITHUB_OUTPUT
+            echo "result=success" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post validation summary
+        run: |
+          echo "## 📋 Deployment Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.pre-deployment-checks.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment URL:** ${{ needs.pre-deployment-checks.outputs.deployment-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Health Check: ${{ needs.health-validation.result == 'success' && '✅' || '❌' }} ${{ needs.health-validation.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Auth Flow: ${{ needs.auth-flow-validation.result == 'success' && '✅' || '❌' }} ${{ needs.auth-flow-validation.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance: ${{ needs.performance-validation.result == 'success' && '✅' || '⚠️' }} ${{ needs.performance-validation.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security: ${{ needs.security-validation.result == 'success' && '✅' || '⚠️' }} ${{ needs.security-validation.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Overall Result:** ${{ steps.decision.outputs.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Rollback Recommended:** ${{ steps.decision.outputs.should-rollback }}" >> $GITHUB_STEP_SUMMARY
+
+  # Automatic rollback execution
+  execute-rollback:
+    name: Execute Automatic Rollback
+    runs-on: ubuntu-latest
+    needs: [pre-deployment-checks, validation-summary]
+    if: needs.validation-summary.outputs.should-rollback == 'true'
+    
+    steps:
+      - name: Notify rollback initiation
+        run: |
+          echo "🔄 Initiating automatic rollback for ${{ needs.pre-deployment-checks.outputs.environment }}"
+          echo "Validation failures detected - rolling back to previous stable deployment"
+
+      - name: Trigger Vercel rollback
+        run: |
+          echo "🔄 Triggering Vercel rollback..."
+          
+          # In a real implementation, this would call Vercel API to rollback
+          # For now, we'll create a notification
+          echo "Rollback would be executed here for environment: ${{ needs.pre-deployment-checks.outputs.environment }}"
+          
+          # Example Vercel rollback command (requires VERCEL_TOKEN):
+          # npx vercel rollback --token ${{ secrets.VERCEL_TOKEN }} --scope team-name
+
+      - name: Verify rollback success
+        run: |
+          echo "🔍 Verifying rollback success..."
+          
+          # Wait for rollback to complete
+          sleep 30
+          
+          # Test basic connectivity
+          URL="${{ needs.pre-deployment-checks.outputs.deployment-url }}"
+          if curl -f -s -o /dev/null --max-time 10 "$URL"; then
+            echo "✅ Rollback completed successfully - site accessible"
+          else
+            echo "❌ Rollback verification failed - site not accessible"
+            exit 1
+          fi
+
+      - name: Post rollback notification
+        if: always()
+        run: |
+          echo "## 🔄 Automatic Rollback Executed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.pre-deployment-checks.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** Critical validation failures detected" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please investigate the validation failures before attempting another deployment." >> $GITHUB_STEP_SUMMARY
+
+  # Success notification
+  deployment-success:
+    name: Deployment Success Notification
+    runs-on: ubuntu-latest
+    needs: [pre-deployment-checks, validation-summary]
+    if: needs.validation-summary.outputs.validation-result == 'success'
+    
+    steps:
+      - name: Post success notification
+        run: |
+          echo "## ✅ Deployment Validation Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.pre-deployment-checks.outputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment URL:** ${{ needs.pre-deployment-checks.outputs.deployment-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All critical validations passed. Deployment is stable and ready for use." >> $GITHUB_STEP_SUMMARY

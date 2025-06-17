@@ -264,7 +264,7 @@ export function useUpdateExitStrategyPreferences() {
 // Default multi-level take-profit configuration
 const defaultMultiLevelConfig: MultiLevelTakeProfitConfig = {
   enabled: false,
-  entryPrice: 0.01,
+  entryPrice: undefined, // Entry price will be set when position is entered
   trailingStopEnabled: false,
   trailingStopPercentage: 5,
   levels: [

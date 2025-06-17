@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
     console.error("[Safety System Status] Error:", error);
     return apiResponse.error(
       "Failed to get safety system status",
-      error instanceof Error ? error.message : "Unknown error"
+      500
     );
   }
 }
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     console.error("[Safety System Status] POST Error:", error);
     return apiResponse.error(
       "Failed to execute safety system action",
-      error instanceof Error ? error.message : "Unknown error"
+      500
     );
   }
 }

@@ -1,0 +1,561 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "MEXC Sniper Bot - Authentication Monitoring",
+    "description": "Comprehensive monitoring dashboard for authentication system health, performance, and security metrics",
+    "tags": ["authentication", "kinde", "monitoring", "mexc"],
+    "style": "dark",
+    "timezone": "UTC",
+    "editable": true,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+    },
+    "refresh": "30s",
+    "version": 1,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Authentication System Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "auth_status{environment=\"$environment\"}",
+            "legendFormat": "System Status",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "DOWN",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "HEALTHY",
+                    "color": "green"
+                  }
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "System Uptime",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "auth_uptime_percent{environment=\"$environment\"}",
+            "legendFormat": "Uptime %",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 95
+                },
+                {
+                  "color": "green",
+                  "value": 99
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Average Response Time",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "auth_response_time_seconds{environment=\"$environment\"} * 1000",
+            "legendFormat": "Response Time",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 1000
+                },
+                {
+                  "color": "red",
+                  "value": 3000
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "auth_error_rate{environment=\"$environment\"} * 100",
+            "legendFormat": "Error Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 1
+                },
+                {
+                  "color": "red",
+                  "value": 5
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        }
+      },
+      {
+        "id": 5,
+        "title": "Response Time Trends",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "auth_response_time_seconds{environment=\"$environment\"} * 1000",
+            "legendFormat": "Response Time (ms)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "pointSize": 3,
+              "fillOpacity": 10
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 4
+        }
+      },
+      {
+        "id": 6,
+        "title": "Request Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "auth_requests_per_minute{environment=\"$environment\"}",
+            "legendFormat": "Requests/min",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 20
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 4
+        }
+      },
+      {
+        "id": 7,
+        "title": "Authentication Events",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "increase(auth_login_total{environment=\"$environment\"}[5m])",
+            "legendFormat": "Successful Logins",
+            "refId": "A"
+          },
+          {
+            "expr": "increase(auth_login_failed_total{environment=\"$environment\"}[5m])",
+            "legendFormat": "Failed Logins",
+            "refId": "B"
+          },
+          {
+            "expr": "increase(auth_logout_total{environment=\"$environment\"}[5m])",
+            "legendFormat": "Logouts",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "bars",
+              "fillOpacity": 80
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 12
+        }
+      },
+      {
+        "id": 8,
+        "title": "System Health Check Results",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "auth_health_check_status",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "__name__": true,
+                "job": true,
+                "instance": true
+              },
+              "renameByName": {
+                "check_name": "Health Check",
+                "environment": "Environment",
+                "Value": "Status"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "color-background",
+              "filterable": true
+            },
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "FAIL",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "PASS",
+                    "color": "green"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 20
+        }
+      },
+      {
+        "id": 9,
+        "title": "Error Breakdown",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "auth_errors_total by (error_type)",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              }
+            }
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        }
+      },
+      {
+        "id": 10,
+        "title": "Kinde SDK Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "kinde_sdk_status{environment=\"$environment\"}",
+            "legendFormat": "SDK Status",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "DOWN",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "DEGRADED",
+                    "color": "yellow"
+                  },
+                  "2": {
+                    "text": "OPERATIONAL",
+                    "color": "green"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 8,
+          "x": 0,
+          "y": 26
+        }
+      },
+      {
+        "id": 11,
+        "title": "Configuration Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "auth_configuration_valid{environment=\"$environment\"}",
+            "legendFormat": "Config Valid",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "INVALID",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "VALID",
+                    "color": "green"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 8,
+          "x": 8,
+          "y": 26
+        }
+      },
+      {
+        "id": 12,
+        "title": "Active Sessions",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "auth_active_sessions{environment=\"$environment\"}",
+            "legendFormat": "Active Sessions",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 100
+                },
+                {
+                  "color": "red",
+                  "value": 500
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 8,
+          "x": 16,
+          "y": 26
+        }
+      },
+      {
+        "id": 13,
+        "title": "Security Alerts",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "{job=\"auth-monitoring\", level=\"error\", environment=\"$environment\"}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 30
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "query": "label_values(auth_status, environment)",
+          "current": {
+            "value": "production",
+            "text": "production"
+          },
+          "options": [
+            {
+              "text": "production",
+              "value": "production"
+            },
+            {
+              "text": "staging",
+              "value": "staging"
+            },
+            {
+              "text": "test",
+              "value": "test"
+            }
+          ],
+          "refresh": 1,
+          "includeAll": false,
+          "multi": false
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "expr": "changes(auth_deployment_info[1h])",
+          "textFormat": "Deployment: {{version}}",
+          "titleFormat": "New Deployment",
+          "iconColor": "blue"
+        },
+        {
+          "name": "Alerts",
+          "datasource": "prometheus",
+          "expr": "ALERTS{alertname=~\"Auth.*\", environment=\"$environment\"}",
+          "textFormat": "{{alertname}}: {{summary}}",
+          "titleFormat": "Alert",
+          "iconColor": "red"
+        }
+      ]
+    }
+  }
+}

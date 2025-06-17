@@ -354,7 +354,7 @@ export class DatabaseIndexOptimizer {
       sql_statement += ` WHERE ${index.where}`;
     }
 
-    await db.run(sql.raw(sql_statement));
+    await db.execute(sql.raw(sql_statement));
   }
 
   /**
@@ -401,7 +401,7 @@ export class DatabaseIndexOptimizer {
             if (effectiveness < 20) {
               // Less than 20% effectiveness
               try {
-                await db.run(sql.raw(`DROP INDEX IF EXISTS ${index.name}`));
+                await db.execute(sql.raw(`DROP INDEX IF EXISTS ${index.name}`));
                 droppedIndexes.push(index.name);
                 console.log(`🗑️ Dropped ineffective index: ${index.name}`);
               } catch (error) {
@@ -507,11 +507,11 @@ export class DatabaseIndexOptimizer {
 
     try {
       // SQLite automatically optimizes indexes, but we can force optimization
-      await db.run(sql.raw("PRAGMA optimize"));
+      await db.execute(sql.raw("PRAGMA optimize"));
       console.log("✅ Database optimization completed");
 
       // Update table statistics
-      await db.run(sql.raw("ANALYZE"));
+      await db.execute(sql.raw("ANALYZE"));
       console.log("✅ Table statistics updated");
     } catch (error) {
       console.error("❌ Failed to rebuild indexes:", error);

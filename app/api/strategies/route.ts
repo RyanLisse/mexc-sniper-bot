@@ -4,7 +4,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { multiPhaseTradingService, TradingStrategyConfigSchema, PREDEFINED_STRATEGIES } from "@/src/services/multi-phase-trading-service";
 import { MultiPhaseStrategyBuilder } from "@/src/services/multi-phase-strategy-builder";
 import { rateLimiter } from "@/src/lib/rate-limiter";
-import { ApiResponse } from "@/src/lib/api-response";
+import { apiResponse } from "@/src/lib/api-response";
 
 // ===========================================
 // TRADING STRATEGIES API ENDPOINTS
@@ -43,9 +43,12 @@ const QuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimiter.check(request, "strategies_read", 60, 60);
+    const rateLimitResult = rateLimiter.checkRateLimit(
+      rateLimiter.getClientIP(request), 
+      "strategies_read"
+    );
     if (!rateLimitResult.success) {
-      return ApiResponse.error("Rate limit exceeded", 429);
+      return apiResponse.error("Rate limit exceeded", 429);
     }
 
     // Authentication
@@ -53,7 +56,7 @@ export async function GET(request: NextRequest) {
     const user = await getUser();
     
     if (!user?.id) {
-      return ApiResponse.error("Unauthorized", 401);
+      return apiResponse.error("Unauthorized", 401);
     }
 
     // Parse query parameters
@@ -74,7 +77,7 @@ export async function GET(request: NextRequest) {
     const totalPnl = strategies.reduce((sum, s) => sum + (s.totalPnl || 0), 0);
     const totalInvested = strategies.reduce((sum, s) => sum + s.positionSizeUsdt, 0);
 
-    return ApiResponse.success({
+    return apiResponse.success({
       strategies,
       summary: {
         total: totalStrategies,
@@ -92,7 +95,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error("Error fetching strategies:", error);
-    return ApiResponse.error("Failed to fetch strategies", 500);
+    return apiResponse.error("Failed to fetch strategies", 500);
   }
 }
 
@@ -100,9 +103,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = await rateLimiter.check(request, "strategies_create", 10, 60);
+    const rateLimitResult = rateLimiter.checkRateLimit(
+      rateLimiter.getClientIP(request), 
+      "strategies_create"
+    );
     if (!rateLimitResult.success) {
-      return ApiResponse.error("Rate limit exceeded", 429);
+      return apiResponse.error("Rate limit exceeded", 429);
     }
 
     // Authentication
@@ -110,7 +116,7 @@ export async function POST(request: NextRequest) {
     const user = await getUser();
     
     if (!user?.id) {
-      return ApiResponse.error("Unauthorized", 401);
+      return apiResponse.error("Unauthorized", 401);
     }
 
     // Parse request body
@@ -122,13 +128,13 @@ export async function POST(request: NextRequest) {
     if (data.strategyType === "predefined") {
       // Use predefined strategy
       if (!data.templateId || !PREDEFINED_STRATEGIES[data.templateId]) {
-        return ApiResponse.error("Invalid template ID", 400);
+        return apiResponse.error("Invalid template ID", 400);
       }
       strategyConfig = PREDEFINED_STRATEGIES[data.templateId];
     } else {
       // Use custom strategy
       if (!data.customLevels || data.customLevels.length === 0) {
-        return ApiResponse.error("Custom levels are required for custom strategies", 400);
+        return apiResponse.error("Custom levels are required for custom strategies", 400);
       }
 
       strategyConfig = {
@@ -142,7 +148,7 @@ export async function POST(request: NextRequest) {
       try {
         TradingStrategyConfigSchema.parse(strategyConfig);
       } catch (validationError) {
-        return ApiResponse.error("Invalid strategy configuration", 400);
+        return apiResponse.error("Invalid strategy configuration", 400);
       }
     }
 
@@ -160,9 +166,9 @@ export async function POST(request: NextRequest) {
       description: data.description,
     });
 
-    return ApiResponse.success(
+    return apiResponse.success(
       { strategy },
-      "Strategy created successfully",
+      { message: "Strategy created successfully" },
       201
     );
 
@@ -170,11 +176,9 @@ export async function POST(request: NextRequest) {
     console.error("Error creating strategy:", error);
     
     if (error instanceof z.ZodError) {
-      return ApiResponse.error("Invalid request data", 400, { 
-        details: error.errors 
-      });
+      return apiResponse.error("Invalid request data", 400, error.errors);
     }
 
-    return ApiResponse.error("Failed to create strategy", 500);
+    return apiResponse.error("Failed to create strategy", 500);
   }
 }
