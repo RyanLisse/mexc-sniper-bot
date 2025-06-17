@@ -38,6 +38,13 @@ export async function setupTestBranch(
       throw new Error("DATABASE_URL environment variable is required");
     }
 
+    // Check if required Neon credentials are available
+    const neonApiKey = process.env.NEON_API_KEY;
+    if (!neonApiKey || neonApiKey === 'test-neon-key' || neonApiKey === '') {
+      console.warn(`[TestBranch] Neon API key not properly configured. Skipping branch creation.`);
+      throw new Error("NEON_API_KEY not configured for branch testing");
+    }
+
     // Create a new branch
     const branch = await Promise.race([
       neonBranchManager.createTestBranch({

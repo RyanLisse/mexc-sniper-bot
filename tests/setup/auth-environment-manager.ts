@@ -132,7 +132,19 @@ export class AuthEnvironmentManager {
   rollbackEnvironment(): void {
     const previousEnv = this.environmentHistory.pop();
     if (previousEnv) {
-      this.switchEnvironment(previousEnv as keyof typeof authEnvironments);
+      // Set environment directly without adding to history to avoid corruption
+      this.currentEnvironment = previousEnv;
+      const env = authEnvironments[previousEnv as keyof typeof authEnvironments];
+      
+      // Update environment variables
+      process.env.KINDE_ISSUER_URL = env.kindeIssuerUrl;
+      process.env.KINDE_SITE_URL = env.kindeSiteUrl;
+      process.env.KINDE_CLIENT_ID = env.kindeClientId;
+      process.env.KINDE_CLIENT_SECRET = env.kindeClientSecret;
+      process.env.KINDE_POST_LOGIN_REDIRECT_URL = `${env.kindeSiteUrl}/dashboard`;
+      process.env.KINDE_POST_LOGOUT_REDIRECT_URL = env.kindeSiteUrl;
+
+      console.log(`🔄 Rolled back to ${env.name} environment: ${env.description}`);
     }
   }
 
@@ -263,17 +275,21 @@ export class AuthEnvironmentManager {
       }
     }
 
-    // Validate URL formats
-    try {
-      new URL(currentEnv.kindeIssuerUrl);
-    } catch {
-      errors.push(`Invalid KINDE_ISSUER_URL format: ${currentEnv.kindeIssuerUrl}`);
+    // Validate URL formats using actual environment variables
+    if (process.env.KINDE_ISSUER_URL) {
+      try {
+        new URL(process.env.KINDE_ISSUER_URL);
+      } catch {
+        errors.push(`Invalid KINDE_ISSUER_URL format: ${process.env.KINDE_ISSUER_URL}`);
+      }
     }
 
-    try {
-      new URL(currentEnv.kindeSiteUrl);
-    } catch {
-      errors.push(`Invalid KINDE_SITE_URL format: ${currentEnv.kindeSiteUrl}`);
+    if (process.env.KINDE_SITE_URL) {
+      try {
+        new URL(process.env.KINDE_SITE_URL);
+      } catch {
+        errors.push(`Invalid KINDE_SITE_URL format: ${process.env.KINDE_SITE_URL}`);
+      }
     }
 
     return {
