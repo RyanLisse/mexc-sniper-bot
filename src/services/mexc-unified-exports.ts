@@ -17,7 +17,7 @@
  */
 
 // Import for re-export with different name
-import { getRecommendedMexcService } from "./mexc-service-layer";
+import { getEnhancedMexcService } from "./enhanced-mexc-service-layer";
 import { getUnifiedMexcClient } from "./unified-mexc-client";
 
 // ============================================================================
@@ -26,13 +26,12 @@ import { getUnifiedMexcClient } from "./unified-mexc-client";
 
 // Main service layer - contains all functionality
 export {
-  MexcServiceLayer,
-  getRecommendedMexcService,
-  resetMexcService,
+  EnhancedMexcServiceLayer as MexcServiceLayer,
+  getEnhancedMexcService as getRecommendedMexcService,
+  resetEnhancedMexcService as resetMexcService,
   type MexcServiceConfig,
   type ServiceResponse,
-  type HealthCheckResult,
-} from "./mexc-service-layer";
+} from "./enhanced-mexc-service-layer";
 
 // Unified client types and functions
 export {
@@ -66,18 +65,18 @@ export {
 // ============================================================================
 
 /**
- * Get a configured MEXC service instance (alias for getRecommendedMexcService)
+ * Get a configured MEXC service instance (alias for getEnhancedMexcService)
  * This is the recommended way to access MEXC functionality
  */
 export function getMexcService(config?: { apiKey?: string; secretKey?: string }) {
-  return getRecommendedMexcService(config);
+  return getEnhancedMexcService(config);
 }
 
 /**
  * Create a new MEXC service instance with specific configuration
  */
 export function createMexcService(config: { apiKey?: string; secretKey?: string } = {}) {
-  return getRecommendedMexcService(config);
+  return getEnhancedMexcService(config);
 }
 
 /**
@@ -102,4 +101,4 @@ export function getMexcClient(config?: { apiKey?: string; secretKey?: string }) 
  * const calendar = await mexcService.getCalendarListings();
  * ```
  */
-export default getRecommendedMexcService;
+export default getEnhancedMexcService;
