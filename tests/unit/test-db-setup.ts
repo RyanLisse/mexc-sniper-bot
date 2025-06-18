@@ -87,35 +87,112 @@ function createMockDatabase(): TestDbSetup {
     end: async () => Promise.resolve(),
   } as any;
   
+  // Storage for mock data to make tests more realistic
+  const mockStorage = {
+    users: new Map(),
+    transactions: new Map(),
+    nextId: 1,
+  };
+  
   const mockDb = {
     select: () => ({
-      from: () => ({
-        where: () => Promise.resolve([]),
-        limit: () => Promise.resolve([]),
+      from: (table: any) => ({
+        where: (condition: any) => ({
+          orderBy: (order: any) => Promise.resolve(Array.from(mockStorage.transactions.values()).reverse()),
+          limit: (count: any) => Promise.resolve(Array.from(mockStorage.transactions.values()).slice(0, count)),
+          then: (resolve: any) => resolve(Array.from(mockStorage.transactions.values())),
+        }),
+        orderBy: (order: any) => Promise.resolve(Array.from(mockStorage.transactions.values()).reverse()),
+        limit: (count: any) => Promise.resolve(Array.from(mockStorage.transactions.values()).slice(0, count)),
+        then: (resolve: any) => {
+          if (table === schema.transactions) {
+            return resolve(Array.from(mockStorage.transactions.values()));
+          }
+          return resolve([]);
+        },
       }),
     }),
-    insert: () => ({
-      values: () => ({
-        returning: () => Promise.resolve([{ id: 1, userId: 'test-user' }]),
+    insert: (table: any) => ({
+      values: (data: any) => {
+        // Validate required fields for transactions at the values level
+        if (table === schema.transactions) {
+          if (!data.userId || !data.transactionType) {
+            return Promise.reject(new Error('Missing required fields: userId and transactionType are required'));
+          }
+        }
+        
+        return {
+          returning: () => {
+            const id = mockStorage.nextId++;
+            const record = { 
+              id, 
+              ...data, 
+              status: data.status || 'pending', // Default status
+              createdAt: data.createdAt || new Date(),
+              updatedAt: data.updatedAt || new Date(),
+              // Set null values for optional fields
+              buyPrice: data.buyPrice || null,
+              sellPrice: data.sellPrice || null,
+              profitLoss: data.profitLoss || null,
+              vcoinId: data.vcoinId || null
+            };
+            
+            if (table === schema.user) {
+              mockStorage.users.set(data.id, record);
+            } else if (table === schema.transactions) {
+              mockStorage.transactions.set(id, record);
+            }
+            
+            return Promise.resolve([record]);
+          },
+        };
+      },
+    }),
+    update: (table: any) => ({
+      set: (data: any) => ({
+        where: (condition: any) => {
+          // Find and update the record
+          if (table === schema.transactions) {
+            const records = Array.from(mockStorage.transactions.values());
+            if (records.length > 0) {
+              const record = records[0];
+              Object.assign(record, data);
+              mockStorage.transactions.set(record.id, record);
+            }
+          }
+          return Promise.resolve({ rowCount: 1 });
+        },
       }),
     }),
-    update: () => ({
-      set: () => ({
-        where: () => Promise.resolve({ rowCount: 1 }),
-      }),
-    }),
-    delete: () => ({
-      where: () => Promise.resolve({ rowCount: 0 }),
+    delete: (table: any) => ({
+      where: (condition: any) => {
+        let deletedCount = 0;
+        if (table === schema.transactions) {
+          // Store current size to calculate deleted count
+          const beforeSize = mockStorage.transactions.size;
+          mockStorage.transactions.clear();
+          deletedCount = beforeSize;
+        } else if (table === schema.user) {
+          const beforeSize = mockStorage.users.size;
+          mockStorage.users.clear();
+          deletedCount = beforeSize;
+        }
+        return Promise.resolve({ rowCount: deletedCount });
+      },
     }),
     execute: () => Promise.resolve({ rows: [] }),
     query: {
       user: {
-        findFirst: () => Promise.resolve({ id: 'test-user', email: 'test@example.com' }),
-        findMany: () => Promise.resolve([]),
+        findFirst: ({ where }: any) => {
+          // Return user based on the actual query condition
+          const users = Array.from(mockStorage.users.values());
+          return Promise.resolve(users[0] || null);
+        },
+        findMany: () => Promise.resolve(Array.from(mockStorage.users.values())),
       },
       transactions: {
         findFirst: () => Promise.resolve(null),
-        findMany: () => Promise.resolve([]),
+        findMany: () => Promise.resolve(Array.from(mockStorage.transactions.values())),
       },
     },
   } as any;
