@@ -126,7 +126,7 @@ async function testMexcCredentials() {
         topBalances.forEach(balance => {
           const total = parseFloat(balance.free) + parseFloat(balance.locked);
           if (total > 0) {
-            console.log(`   ${balance.coin}: ${total.toFixed(8)} (${balance.usdtValue?.toFixed(2) || '0.00'} USDT)`);
+            console.log(`   ${balance.asset}: ${total.toFixed(8)} (${balance.usdtValue?.toFixed(2) || '0.00'} USDT)`);
           }
         });
       } else {
