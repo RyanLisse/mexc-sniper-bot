@@ -53,23 +53,32 @@ async function testMexcCredentials() {
     });
     console.log("✅ MEXC service created successfully");
 
-    // Test 2: Check credentials loaded
+    // Test 2: Check credentials loaded by testing account info
     console.log("\n🔍 Test 2: Checking credential loading...");
-    const hasCredentials = mexcService.hasCredentials();
-    if (hasCredentials) {
-      console.log("✅ Credentials loaded successfully");
-    } else {
-      console.log("❌ Credentials not properly loaded");
+    try {
+      // Try to get account info to validate credentials are loaded
+      const accountInfoResult = await mexcService.getAccountInfo();
+      if (accountInfoResult.success) {
+        console.log("✅ Credentials loaded and validated successfully");
+      } else {
+        console.log("❌ Credentials not properly loaded or invalid");
+        console.log(`   Error: ${accountInfoResult.error}`);
+        process.exit(1);
+      }
+    } catch (credError) {
+      console.log("❌ Failed to validate credentials");
+      console.log(`   Error: ${credError instanceof Error ? credError.message : String(credError)}`);
       process.exit(1);
     }
 
     // Test 3: Basic connectivity
     console.log("\n🌐 Test 3: Testing basic connectivity...");
     const connectivityResult = await mexcService.testConnectivity();
-    if (connectivityResult) {
+    if (connectivityResult.success && connectivityResult.data) {
       console.log("✅ MEXC API is reachable");
     } else {
       console.log("❌ MEXC API is not reachable");
+      console.log(`   Error: ${connectivityResult.error || 'Unknown connectivity error'}`);
       process.exit(1);
     }
 

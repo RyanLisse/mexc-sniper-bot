@@ -84,17 +84,34 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
       );
     }
 
-    // Test 1: Check if service has credentials
-    const hasCredentials = mexcService.hasCredentials();
-    console.log('[DEBUG] Service has credentials:', hasCredentials);
-
-    if (!hasCredentials) {
+    // Test 1: Check if service has credentials by testing account access
+    console.log('[DEBUG] Testing credential loading via account info...');
+    let hasCredentials = false;
+    try {
+      const accountInfoResult = await mexcService.getAccountInfo();
+      hasCredentials = accountInfoResult.success;
+      console.log('[DEBUG] Account info test result:', {
+        success: accountInfoResult.success,
+        error: accountInfoResult.error
+      });
+      
+      if (!hasCredentials) {
+        return apiResponse(
+          createErrorResponse('Credentials not properly loaded', {
+            message: accountInfoResult.error || 'MEXC service could not validate the provided credentials',
+            code: 'CREDENTIALS_NOT_LOADED'
+          }),
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
+    } catch (credCheckError) {
+      console.error('[DEBUG] Credential check failed:', credCheckError);
       return apiResponse(
-        createErrorResponse('Credentials not properly loaded', {
-          message: 'MEXC service could not load the provided credentials',
-          code: 'CREDENTIALS_NOT_LOADED'
+        createErrorResponse('Failed to validate credentials', {
+          message: 'Could not test credential loading',
+          code: 'CREDENTIAL_CHECK_ERROR'
         }),
-        HTTP_STATUS.BAD_REQUEST
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
       );
     }
 
@@ -116,10 +133,10 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
       );
     }
 
-    if (!connectivityResult) {
+    if (!connectivityResult.success || !connectivityResult.data) {
       return apiResponse(
         createErrorResponse('MEXC API unreachable', {
-          message: 'MEXC API endpoints are not responding',
+          message: connectivityResult.error || 'MEXC API endpoints are not responding',
           code: 'API_UNREACHABLE'
         }),
         HTTP_STATUS.SERVICE_UNAVAILABLE
