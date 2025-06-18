@@ -40,7 +40,17 @@ export async function getUserCredentials(
       return null;
     }
 
-    const encryptionService = getEncryptionService();
+    // Check if encryption service is available
+    let encryptionService;
+    try {
+      encryptionService = getEncryptionService();
+    } catch (encryptionError) {
+      console.error(
+        `[UserCredentialsService] Encryption service initialization failed for user ${userId}:`,
+        encryptionError
+      );
+      throw new Error("Encryption service unavailable - check ENCRYPTION_MASTER_KEY environment variable");
+    }
 
     // Decrypt the credentials
     let apiKey: string;
@@ -59,7 +69,7 @@ export async function getUserCredentials(
         `[UserCredentialsService] Failed to decrypt credentials for user ${userId}:`,
         decryptError
       );
-      throw new Error("Failed to decrypt API credentials");
+      throw new Error("Failed to decrypt API credentials - encryption key may be incorrect");
     }
 
     // Update last used timestamp

@@ -17,10 +17,13 @@ import { RecentTradesTable } from "@/src/components/dashboard/recent-trades-tabl
 import { UpcomingCoinsSection } from "@/src/components/dashboard/upcoming-coins-section";
 import { OptimizedAccountBalance } from "@/src/components/optimized-account-balance";
 import { MultiPhaseStrategyManager } from "@/src/components/multi-phase-strategy-manager";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
 export default function DashboardPage() {
-  // Using a dummy userId for now - in production this should come from auth
-  const userId = "demo-user";
+  const { user, isLoading: userLoading } = useKindeBrowserClient();
+  
+  // Use authenticated user ID
+  const userId = user?.id;
   const { data: accountBalance, isLoading: balanceLoading } = useAccountBalance({ userId });
   const { data: portfolio } = usePortfolio(userId);
   const { data: calendarData } = useMexcCalendar();

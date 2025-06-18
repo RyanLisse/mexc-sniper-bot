@@ -25,12 +25,14 @@ import { UnifiedRiskManagement } from "@/src/components/unified-risk-management"
 import { UnifiedAutomationSettings } from "@/src/components/unified-automation-settings";
 import { EditableTakeProfitTable } from "@/src/components/editable-take-profit-table";
 import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "@/src/hooks/use-user-preferences";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { user, isLoading: userLoading } = useKindeBrowserClient();
   
-  // Using a dummy userId for now - in production this should come from auth
-  const userId = "demo-user";
+  // Use authenticated user ID
+  const userId = user?.id;
   
   const userPreferencesQuery = useUserPreferences(userId);
   const preferences = userPreferencesQuery.data;

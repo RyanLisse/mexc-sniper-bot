@@ -15,7 +15,26 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user-specific credentials first
-    const userCredentials = await getUserCredentials(userId, 'mexc');
+    let userCredentials = null;
+    try {
+      userCredentials = await getUserCredentials(userId, 'mexc');
+    } catch (error) {
+      console.error(`Error retrieving credentials for user ${userId}:`, error);
+      // Check if it's an encryption service error
+      if (error instanceof Error && error.message.includes("Encryption service unavailable")) {
+        return NextResponse.json({
+          success: false,
+          error: "Encryption service unavailable - please contact support",
+          balances: [],
+          hasCredentials: false,
+          hasUserCredentials: false,
+          message: "Unable to access stored credentials due to server configuration issue",
+          serviceLayer: true,
+          timestamp: new Date().toISOString()
+        }, { status: 500 });
+      }
+      // For other errors, userCredentials remains null and we'll fall back to environment
+    }
     
     let mexcService;
     if (userCredentials) {

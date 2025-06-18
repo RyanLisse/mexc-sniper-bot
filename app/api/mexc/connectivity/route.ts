@@ -20,6 +20,22 @@ export async function GET() {
         userCredentials = await getUserCredentials(userId, 'mexc');
         hasUserCredentials = !!userCredentials;
       } catch (error) {
+        console.error("Error retrieving user credentials:", error);
+        // Check if it's an encryption service error
+        if (error instanceof Error && error.message.includes("Encryption service unavailable")) {
+          return NextResponse.json({
+            connected: false,
+            hasCredentials: false,
+            credentialsValid: false,
+            credentialSource: "none",
+            hasUserCredentials: false,
+            hasEnvironmentCredentials: false,
+            error: "Encryption service unavailable - please contact support",
+            message: "Unable to access stored credentials due to server configuration issue",
+            timestamp: new Date().toISOString(),
+            status: "encryption_error"
+          }, { status: 500 });
+        }
         console.log("No user credentials found, checking environment");
       }
     }
