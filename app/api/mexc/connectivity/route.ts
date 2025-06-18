@@ -138,6 +138,11 @@ export async function GET() {
     
   } catch (error) {
     console.error("MEXC connectivity check failed:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      type: error?.constructor?.name
+    });
     
     return NextResponse.json(
       {
@@ -148,6 +153,7 @@ export async function GET() {
         hasUserCredentials: false,
         hasEnvironmentCredentials: false,
         error: error instanceof Error ? error.message : "Unknown error",
+        errorType: error?.constructor?.name || "Unknown",
         timestamp: new Date().toISOString(),
         status: "error"
       },
