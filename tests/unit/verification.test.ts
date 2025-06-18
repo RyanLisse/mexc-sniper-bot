@@ -129,7 +129,7 @@ describe('Project Verification Tests', () => {
 
       // Verify testing scripts are present
       expect(packageJson.scripts).toHaveProperty('test')
-      expect(packageJson.scripts).toHaveProperty('test:run')
+      expect(packageJson.scripts).toHaveProperty('test:unit')
       expect(packageJson.scripts).toHaveProperty('test:watch')
     })
 

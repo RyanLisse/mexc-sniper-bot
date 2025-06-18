@@ -324,7 +324,7 @@ describe("Transaction Lock Integration Tests", () => {
 });
 
 // Real-world scenario test
-describe.skip("Pattern Sniper Integration with Locks", () => {
+describe("Pattern Sniper Integration with Locks", () => {
   itWithServer("should handle rapid snipe executions with lock protection", async () => {
     // Simulate pattern sniper detecting multiple ready tokens
     const snipeTargets = [

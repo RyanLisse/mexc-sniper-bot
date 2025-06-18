@@ -25,7 +25,7 @@ describe('Transactions Table', () => {
 
     // Clean up any existing test data for this user
     await db.delete(transactions).where(eq(transactions.userId, testUserId));
-  });
+  }, 30000); // Increase timeout to 30 seconds for database setup
 
   afterEach(async () => {
     // Clean up ALL test data for this user to ensure test isolation
