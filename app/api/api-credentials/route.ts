@@ -20,9 +20,22 @@ import {
 // GET /api/api-credentials?userId=xxx&provider=mexc
 export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) => {
   try {
+    console.log('[DEBUG] GET api-credentials endpoint called', {
+      userAuthenticated: !!user,
+      userId: user?.id,
+      timestamp: new Date().toISOString()
+    });
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const provider = searchParams.get('provider') || 'mexc';
+
+    console.log('[DEBUG] GET request details', {
+      searchParamsUserId: userId,
+      authenticatedUserId: user?.id,
+      provider,
+      allSearchParams: Object.fromEntries(searchParams.entries())
+    });
 
     if (!userId) {
       return apiResponse(
@@ -129,7 +142,25 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
 // POST /api/api-credentials
 export const POST = userBodyRoute(async (request: NextRequest, user: any, body: any) => {
   try {
+    console.log('[DEBUG] POST api-credentials endpoint called', {
+      userAuthenticated: !!user,
+      userId: user?.id,
+      bodyKeys: Object.keys(body || {}),
+      timestamp: new Date().toISOString()
+    });
+
     const { userId, provider = 'mexc', apiKey, secretKey, passphrase } = body;
+    
+    console.log('[DEBUG] Credential save request', {
+      providedUserId: userId,
+      authenticatedUserId: user?.id,
+      provider,
+      hasApiKey: !!apiKey,
+      hasSecretKey: !!secretKey,
+      hasPassphrase: !!passphrase,
+      apiKeyLength: apiKey?.length || 0,
+      secretKeyLength: secretKey?.length || 0
+    });
 
   // Validate required fields
   const missingField = validateRequiredFields(body, ['userId', 'apiKey', 'secretKey']);

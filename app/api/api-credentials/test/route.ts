@@ -17,12 +17,26 @@ import {
 // POST /api/api-credentials/test
 export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) => {
   try {
+    console.log('[DEBUG] API credentials test endpoint called', {
+      userAuthenticated: !!user,
+      userId: user?.id,
+      timestamp: new Date().toISOString()
+    });
+
     const body = await request.json();
     const { userId, provider = 'mexc' } = body;
+
+    console.log('[DEBUG] Test request body received', {
+      bodyKeys: Object.keys(body),
+      providedUserId: userId,
+      authenticatedUserId: user?.id,
+      provider
+    });
 
     // Validate required fields
     const missingField = validateRequiredFields(body, ['userId']);
     if (missingField) {
+      console.log('[DEBUG] Missing required field:', missingField);
       return apiResponse(
         createValidationErrorResponse('required_fields', missingField),
         HTTP_STATUS.BAD_REQUEST
