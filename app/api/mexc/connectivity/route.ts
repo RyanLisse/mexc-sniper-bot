@@ -17,8 +17,15 @@ export async function GET() {
     
     if (userId) {
       try {
+        console.log(`[DEBUG] Fetching credentials for user: ${userId}`);
         userCredentials = await getUserCredentials(userId, 'mexc');
         hasUserCredentials = !!userCredentials;
+        console.log(`[DEBUG] User credentials found: ${!!userCredentials}`, {
+          hasApiKey: !!userCredentials?.apiKey,
+          hasSecretKey: !!userCredentials?.secretKey,
+          apiKeyLength: userCredentials?.apiKey?.length || 0,
+          secretKeyLength: userCredentials?.secretKey?.length || 0
+        });
       } catch (error) {
         console.error("Error retrieving user credentials:", error);
         // Check if it's an encryption service error
@@ -55,11 +62,18 @@ export async function GET() {
     // Initialize service with appropriate credentials
     let mexcService;
     if (userCredentials) {
+      console.log(`[DEBUG] Initializing MEXC service with user credentials`, {
+        hasApiKey: !!userCredentials.apiKey,
+        hasSecretKey: !!userCredentials.secretKey,
+        apiKeyMasked: userCredentials.apiKey ? `${userCredentials.apiKey.substring(0, 6)}...${userCredentials.apiKey.substring(userCredentials.apiKey.length - 4)}` : 'none',
+        secretKeyMasked: userCredentials.secretKey ? `${userCredentials.secretKey.substring(0, 6)}...${userCredentials.secretKey.substring(userCredentials.secretKey.length - 4)}` : 'none'
+      });
       mexcService = getRecommendedMexcService({
         apiKey: userCredentials.apiKey,
         secretKey: userCredentials.secretKey
       });
     } else {
+      console.log(`[DEBUG] Initializing MEXC service with environment credentials`);
       mexcService = getRecommendedMexcService();
     }
     
