@@ -53,16 +53,16 @@ async function testMexcCredentials() {
     });
     console.log("✅ MEXC service created successfully");
 
-    // Test 2: Check credentials loaded by testing account info
+    // Test 2: Check credentials loaded by testing account balances
     console.log("\n🔍 Test 2: Checking credential loading...");
     try {
-      // Try to get account info to validate credentials are loaded
-      const accountInfoResult = await mexcService.getAccountInfo();
-      if (accountInfoResult.success) {
+      // Try to get account balances to validate credentials are loaded
+      const balanceTestResult = await mexcService.getAccountBalances();
+      if (balanceTestResult.success) {
         console.log("✅ Credentials loaded and validated successfully");
       } else {
         console.log("❌ Credentials not properly loaded or invalid");
-        console.log(`   Error: ${accountInfoResult.error}`);
+        console.log(`   Error: ${balanceTestResult.error}`);
         process.exit(1);
       }
     } catch (credError) {

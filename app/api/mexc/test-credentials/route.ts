@@ -84,21 +84,21 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
       );
     }
 
-    // Test 1: Check if service has credentials by testing account access
-    console.log('[DEBUG] Testing credential loading via account info...');
+    // Test 1: Check if service has credentials by testing account balances
+    console.log('[DEBUG] Testing credential loading via account balances...');
     let hasCredentials = false;
     try {
-      const accountInfoResult = await mexcService.getAccountInfo();
-      hasCredentials = accountInfoResult.success;
-      console.log('[DEBUG] Account info test result:', {
-        success: accountInfoResult.success,
-        error: accountInfoResult.error
+      const balanceTestResult = await mexcService.getAccountBalances();
+      hasCredentials = balanceTestResult.success;
+      console.log('[DEBUG] Account balance test result:', {
+        success: balanceTestResult.success,
+        error: balanceTestResult.error
       });
       
       if (!hasCredentials) {
         return apiResponse(
           createErrorResponse('Credentials not properly loaded', {
-            message: accountInfoResult.error || 'MEXC service could not validate the provided credentials',
+            message: balanceTestResult.error || 'MEXC service could not validate the provided credentials',
             code: 'CREDENTIALS_NOT_LOADED'
           }),
           HTTP_STATUS.BAD_REQUEST
