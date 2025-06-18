@@ -14,13 +14,13 @@
  */
 
 import type {
+  ConnectionMetrics,
   MessageHandler,
   SubscriptionRequest,
   WebSocketChannel,
-  WebSocketClientMetrics,
   WebSocketMessage,
-} from "@/src/lib/websocket-types";
-import { type WebSocketClientState, webSocketClient } from "@/src/services/websocket-client";
+} from "../lib/websocket-types";
+import { type WebSocketClientState, webSocketClient } from "../services/websocket-client";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -51,7 +51,7 @@ export interface UseWebSocketResult {
   /** Whether currently attempting to connect */
   isConnecting: boolean;
   /** Connection metrics and statistics */
-  metrics: WebSocketClientMetrics | null;
+  metrics: ConnectionMetrics | null;
   /** Last connection error */
   error: string | null;
   /** Manual connect function */
@@ -92,7 +92,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
   const [state, setState] = useState<WebSocketClientState>("disconnected");
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [metrics, setMetrics] = useState<WebSocketClientMetrics | null>(null);
+  const [metrics, setMetrics] = useState<ConnectionMetrics | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [subscriptions, setSubscriptions] = useState<string[]>([]);
   const [connectionId, setConnectionId] = useState<string | undefined>();
@@ -300,7 +300,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
   useEffect(() => {
     const updateMetrics = () => {
       if (isMountedRef.current) {
-        setMetrics(clientRef.current.getMetrics());
+        setMetrics(clientRef.current.getMetrics() as any);
       }
     };
 

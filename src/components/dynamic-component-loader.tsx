@@ -6,7 +6,7 @@
 
 "use client";
 
-import { Skeleton } from "@/src/components/ui/optimized-exports";
+import { Skeleton } from "./ui/optimized-exports";
 import { Suspense, lazy } from "react";
 
 // Loading fallback components
@@ -61,7 +61,7 @@ export const SafetyMonitoringDashboard = lazy(() =>
 
 export const PatternSniper = lazy(() =>
   import("./pattern-sniper").then((module) => ({
-    default: module.default || module.PatternSniper,
+    default: module.default || module.PatternSniperComponent,
   }))
 );
 

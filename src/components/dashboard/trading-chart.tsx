@@ -6,9 +6,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { ChartContainer, ChartTooltip } from "@/src/components/ui/chart";
-import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+} from "../ui/card";
+import { ChartContainer, ChartTooltip } from "../ui/chart";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 

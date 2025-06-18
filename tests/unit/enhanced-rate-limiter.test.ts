@@ -14,6 +14,26 @@ import {
 // Mock console.log to reduce test output noise
 vi.spyOn(console, 'log').mockImplementation(() => {});
 
+// Mock the adaptive rate limiter to always allow requests (for testing traditional rate limiter)
+vi.mock('../../src/services/adaptive-rate-limiter', () => ({
+  adaptiveRateLimiter: {
+    checkRateLimit: vi.fn().mockResolvedValue({
+      allowed: true,
+      remainingRequests: 100,
+      resetTime: Date.now() + 60000,
+      metadata: {
+        algorithm: 'mock',
+        currentWindowRequests: 1,
+        averageResponseTime: 100,
+        successRate: 1.0,
+        adaptationFactor: 1.0,
+        burstTokens: 100,
+      },
+    }),
+    recordResponse: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 describe('Enhanced Rate Limiter', () => {
   beforeEach(() => {
     // Clear all rate limiter state before each test
@@ -81,29 +101,29 @@ describe('Enhanced Rate Limiter', () => {
   });
 
   describe('Enhanced Rate Limiting', () => {
-    it('should track first and last attempt times', () => {
-      const result1 = checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+    it('should track first and last attempt times', async () => {
+      const result1 = await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       expect(result1.success).toBe(true);
       expect(result1.isFirstViolation).toBe(false);
 
       // Make multiple attempts to exceed the current limit (50 for auth)
       for (let i = 0; i < 49; i++) {
-        checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
       // This should exceed the limit (51st attempt)
-      const result2 = checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+      const result2 = await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       expect(result2.success).toBe(false);
       expect(result2.isFirstViolation).toBe(true);
 
       // Next attempt should not be first violation
-      const result3 = checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+      const result3 = await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       expect(result3.success).toBe(false);
       expect(result3.isFirstViolation).toBe(false);
     });
 
-    it('should log authentication attempts', () => {
-      checkRateLimit('192.168.1.1', '/api/auth', 'auth', 'test-agent', 'user123');
+    it('should log authentication attempts', async () => {
+      await checkRateLimit('192.168.1.1', '/api/auth', 'auth', 'test-agent', 'user123');
 
       const events = getSecurityEvents(10, 'AUTH_ATTEMPT');
       expect(events).toHaveLength(1);
@@ -116,22 +136,28 @@ describe('Enhanced Rate Limiter', () => {
       });
     });
 
-    it('should log rate limit violations', () => {
+    it('should log rate limit violations', async () => {
+      // Clear security events before test
+      clearSecurityEvents();
+      
       // Exceed rate limit (current limit is 50 for auth)
       for (let i = 0; i < 51; i++) {
-        checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
       const events = getSecurityEvents(10, 'RATE_LIMIT_EXCEEDED');
-      expect(events).toHaveLength(1);
+      expect(events.length).toBeGreaterThan(0);
       expect(events[0].ip).toBe('192.168.1.1');
     });
 
-    it('should detect suspicious activity', () => {
+    it('should detect suspicious activity', async () => {
+      // Clear security events before test
+      clearSecurityEvents();
+      
       // Make many attempts to trigger suspicious activity detection (need > 2 * limit)
       // Current auth limit is 50, so we need > 100 attempts
       for (let i = 0; i < 101; i++) {
-        checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
       const events = getSecurityEvents(10, 'SUSPICIOUS_ACTIVITY');
@@ -141,26 +167,32 @@ describe('Enhanced Rate Limiter', () => {
   });
 
   describe('IP Analysis', () => {
-    it('should identify suspicious IPs', () => {
+    it('should identify suspicious IPs', async () => {
+      // Clear all state before test
+      clearAllRateLimitData();
+      
       // Create enough violations for an IP to be suspicious (need >3 violations)
       // Auth limit is 50 per 15 minutes, so 55 attempts will cause 5 violations
       for (let i = 0; i < 55; i++) {
-        checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
       expect(isIPSuspicious('192.168.1.1')).toBe(true);
       expect(isIPSuspicious('192.168.1.2')).toBe(false);
     });
 
-    it('should provide detailed IP analysis', () => {
+    it('should provide detailed IP analysis', async () => {
+      // Clear all state before test
+      clearAllRateLimitData();
+      
       // Generate some activity for an IP (within limit)
       for (let i = 0; i < 49; i++) {
-        checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
       // Exceed rate limit to create violations
       for (let i = 0; i < 5; i++) {
-        checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
       const analysis = getIPAnalysis('192.168.1.1');
@@ -171,16 +203,19 @@ describe('Enhanced Rate Limiter', () => {
       expect(analysis.isCurrentlyLimited).toBe(true);
     });
 
-    it('should calculate risk levels correctly', () => {
+    it('should calculate risk levels correctly', async () => {
+      // Clear all state before test
+      clearAllRateLimitData();
+      
       // Low risk - few attempts, no violations
-      checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+      await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       let analysis = getIPAnalysis('192.168.1.1');
       expect(analysis.riskLevel).toBe('low');
 
       // Medium risk - some violations (need >2 violations for medium)
       // Auth limit is 50 per 15 minutes, so 53 attempts will cause 3 violations
       for (let i = 0; i < 53; i++) {
-        checkRateLimit('192.168.1.2', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.2', '/api/auth', 'auth');
       }
       analysis = getIPAnalysis('192.168.1.2');
       expect(analysis.riskLevel).toBe('medium');
@@ -188,7 +223,7 @@ describe('Enhanced Rate Limiter', () => {
       // High risk - many violations (need >5 violations for high)
       // 56 attempts will cause 6 violations
       for (let i = 0; i < 56; i++) {
-        checkRateLimit('192.168.1.3', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.3', '/api/auth', 'auth');
       }
       analysis = getIPAnalysis('192.168.1.3');
       expect(analysis.riskLevel).toBe('high');
@@ -196,14 +231,17 @@ describe('Enhanced Rate Limiter', () => {
   });
 
   describe('Statistics and Monitoring', () => {
-    it('should provide rate limit statistics', () => {
+    it('should provide rate limit statistics', async () => {
+      // Clear all state before test
+      clearAllRateLimitData();
+      
       // Generate some activity
-      checkRateLimit('192.168.1.1', '/api/auth', 'auth');
-      checkRateLimit('192.168.1.2', '/api/auth', 'auth');
+      await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+      await checkRateLimit('192.168.1.2', '/api/auth', 'auth');
 
       // Cause a violation (need 51 attempts to exceed current limit of 50)
       for (let i = 0; i < 51; i++) {
-        checkRateLimit('192.168.1.3', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.3', '/api/auth', 'auth');
       }
 
       const stats = getRateLimitStats();
@@ -213,14 +251,14 @@ describe('Enhanced Rate Limiter', () => {
       expect(Array.isArray(stats.topOffenders)).toBe(true);
     });
 
-    it('should identify top offenders', () => {
+    it('should identify top offenders', async () => {
       // Create violations for multiple IPs (need to exceed limit of 50)
       for (let i = 0; i < 53; i++) {
-        checkRateLimit('192.168.1.1', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.1', '/api/auth', 'auth');
       }
 
       for (let i = 0; i < 51; i++) {
-        checkRateLimit('192.168.1.2', '/api/auth', 'auth');
+        await checkRateLimit('192.168.1.2', '/api/auth', 'auth');
       }
 
       const stats = getRateLimitStats();

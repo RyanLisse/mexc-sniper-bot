@@ -8,7 +8,7 @@
  * - Ensures foreign key relationships are properly indexed
  */
 
-import { db } from "@/src/db";
+import { db } from "../db";
 import { sql } from "drizzle-orm";
 
 interface IndexDefinition {

@@ -319,7 +319,7 @@ export class AutomatedAlertingService {
     evaluation: AlertEvaluationResult
   ): Promise<string> {
     const alertId = `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const now = Date.now();
+    const now = new Date();
 
     // Check for existing active alert
     const existingAlert = await this.db
@@ -372,8 +372,17 @@ export class AutomatedAlertingService {
 
     await this.db.insert(alertInstances).values(alertData);
 
-    // Send notifications
-    await this.notificationService.sendAlertNotifications(alertData);
+    // Get the inserted alert for notifications
+    const insertedAlert = await this.db
+      .select()
+      .from(alertInstances)
+      .where(eq(alertInstances.id, alertId))
+      .limit(1);
+
+    if (insertedAlert.length > 0) {
+      // Send notifications
+      await this.notificationService.sendAlertNotifications(insertedAlert[0]);
+    }
 
     // Log alert creation
     console.log(`Created alert: ${alertId} - ${evaluation.message}`);
@@ -384,7 +393,7 @@ export class AutomatedAlertingService {
   private async updateExistingAlert(
     existingAlert: SelectAlertInstance,
     evaluation: AlertEvaluationResult,
-    timestamp: number
+    timestamp: Date
   ): Promise<void> {
     await this.db
       .update(alertInstances)
@@ -420,7 +429,7 @@ export class AutomatedAlertingService {
   }
 
   async resolveAlert(alertId: string, resolvedBy: string, notes?: string): Promise<void> {
-    const now = Date.now();
+    const now = new Date();
 
     await this.db
       .update(alertInstances)
@@ -451,7 +460,7 @@ export class AutomatedAlertingService {
   // ==========================================
 
   private async isRuleSuppressed(rule: SelectAlertRule): Promise<boolean> {
-    const now = Date.now();
+    const now = new Date();
 
     const suppressions = await this.db
       .select()
@@ -534,7 +543,7 @@ export class AutomatedAlertingService {
   // ==========================================
 
   private async isRateLimited(rule: SelectAlertRule): Promise<boolean> {
-    const oneHourAgo = Date.now() - 3600000;
+    const oneHourAgo = new Date(Date.now() - 3600000);
 
     const recentAlerts = await this.db
       .select({ count: count() })
@@ -554,8 +563,8 @@ export class AutomatedAlertingService {
   // ==========================================
 
   private async updateAnalytics(): Promise<void> {
-    const now = Date.now();
-    const hourBucket = Math.floor(now / 3600000) * 3600000;
+    const now = new Date();
+    const hourBucket = Math.floor(now.getTime() / 3600000) * 3600000;
 
     // Calculate metrics for the current hour
     const hourStart = hourBucket;
@@ -579,19 +588,24 @@ export class AutomatedAlertingService {
   }
 
   private async calculateHourlyMetrics(startTime: number, endTime: number) {
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+    
     const alerts = await this.db
       .select()
       .from(alertInstances)
       .where(
         and(
-          gte(alertInstances.firstTriggeredAt, startTime),
-          lte(alertInstances.firstTriggeredAt, endTime)
+          gte(alertInstances.firstTriggeredAt, startDate),
+          lte(alertInstances.firstTriggeredAt, endDate)
         )
       );
 
     const resolved = alerts.filter((a) => a.resolvedAt);
     const totalResolutionTime = resolved.reduce((sum, alert) => {
-      return sum + ((alert.resolvedAt || 0) - alert.firstTriggeredAt);
+      const resolvedTime = alert.resolvedAt ? alert.resolvedAt.getTime() : 0;
+      const triggeredTime = alert.firstTriggeredAt.getTime();
+      return sum + (resolvedTime - triggeredTime);
     }, 0);
 
     return {
@@ -675,7 +689,7 @@ export class AutomatedAlertingService {
   }
 
   async getAlertHistory(hours = 24): Promise<SelectAlertInstance[]> {
-    const cutoff = Date.now() - hours * 3600000;
+    const cutoff = new Date(Date.now() - hours * 3600000);
 
     return await this.db
       .select()

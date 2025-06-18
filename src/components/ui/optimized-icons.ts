@@ -14,6 +14,7 @@ export {
   LogOut,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronUpIcon,
@@ -21,6 +22,12 @@ export {
   PanelLeftIcon,
   ExternalLink,
   Info,
+  LayoutDashboard,
+  GitBranch,
+  Brain,
+  Bot,
+  Shield,
+  Zap,
 } from "lucide-react";
 
 // Status & Alert Icons (Actually Used)
@@ -69,8 +76,7 @@ export {
 
 // System & Bot Icons (Actually Used)
 export {
-  Bot,
-  Shield,
-  Zap,
   Calendar,
+  Wifi,
+  WifiOff,
 } from "lucide-react";

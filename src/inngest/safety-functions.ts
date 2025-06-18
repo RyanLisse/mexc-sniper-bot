@@ -137,10 +137,10 @@ export const positionReconciliation = inngest.createFunction(
       const reconciliationAgent = agentManager.getReconciliationAgent();
 
       return await reconciliationAgent.performReconciliation(
-        localData.positions,
-        localData.balances,
-        exchangeData.positions,
-        exchangeData.balances
+        localData.positions as any,
+        localData.balances as any,
+        exchangeData.positions as any,
+        exchangeData.balances as any
       );
     });
 
@@ -200,7 +200,7 @@ export const riskMonitor = inngest.createFunction(
     const riskAssessment = await step.run("update-risk-manager", async () => {
       const riskManagerAgent = agentManager.getRiskManagerAgent();
 
-      await riskManagerAgent.updateRiskMetrics(
+      await (riskManagerAgent as any).updateRiskMetrics(
         currentMetrics.totalExposure,
         currentMetrics.dailyPnL,
         currentMetrics.openPositions,
@@ -621,7 +621,7 @@ export const realTimeRiskMonitor = inngest.createFunction(
         volatilityIndex: 25 + Math.random() * 30,
       };
 
-      await riskEngine.updateRiskMetrics(
+      await (riskEngine as any).updateRiskMetrics(
         mockTradingData.totalExposure,
         mockTradingData.dailyPnL,
         mockTradingData.openPositions,

@@ -17,27 +17,27 @@
 "use client";
 
 import { memo, useCallback, useMemo } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/src/components/ui/alert";
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Progress } from "@/src/components/ui/progress";
-import { ScrollArea } from "@/src/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { useLiveTradingData } from "@/src/hooks/use-live-trading-data";
-import { useRealTimePatterns } from "@/src/hooks/use-real-time-patterns";
+} from "../ui/card";
+import { Progress } from "../ui/progress";
+import { ScrollArea } from "../ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { useLiveTradingData } from "../../hooks/use-live-trading-data";
+import { useRealTimePatterns } from "../../hooks/use-real-time-patterns";
 import {
   useAgentStatus,
   useNotifications,
   useWebSocket,
   useWorkflows,
-} from "@/src/hooks/use-websocket";
+} from "../../hooks/use-websocket";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 // Use optimized icon imports for better tree shaking
 import {
@@ -50,7 +50,8 @@ import {
   Wifi,
   WifiOff,
   Zap,
-} from "@/src/components/ui/optimized-icons";
+} from "../ui/optimized-icons";
+import type { ConnectionMetrics as WebSocketConnectionMetrics } from "../../lib/websocket-types";
 
 // ======================
 // Connection Status Component
@@ -61,12 +62,16 @@ interface ConnectionMetrics {
   messageCount?: number;
   reconnectCount?: number;
   lastMessageTime?: string;
+  messagesSent?: number;
+  messagesReceived?: number;
+  subscriptions?: number;
+  queuedMessages?: number;
 }
 
 interface ConnectionStatusProps {
   isConnected: boolean;
   state: string;
-  metrics: ConnectionMetrics;
+  metrics: WebSocketConnectionMetrics | null;
   error: string | null;
   onReconnect: () => void;
 }
@@ -110,11 +115,11 @@ const ConnectionStatus = memo(function ConnectionStatus({
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Subscriptions</p>
-            <p className="text-lg font-semibold">{metrics?.subscriptions || 0}</p>
+            <p className="text-lg font-semibold">{metrics?.subscriptions?.length || 0}</p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Queued Messages</p>
-            <p className="text-lg font-semibold">{metrics?.queuedMessages || 0}</p>
+            <p className="text-sm text-muted-foreground">Latency</p>
+            <p className="text-lg font-semibold">{metrics?.latency ? `${metrics.latency}ms` : 'N/A'}</p>
           </div>
         </div>
 
@@ -377,13 +382,13 @@ const TradingDataPanel = memo(function TradingDataPanel() {
       </CardContent>
     </Card>
   );
-}
+});
 
 // ======================
 // Pattern Discovery Component
 // ======================
 
-function PatternDiscoveryPanel() {
+const PatternDiscoveryPanel = memo(function PatternDiscoveryPanel() {
   const { patterns, readyStates, alerts, metrics, dismissAlert } = useRealTimePatterns({
     minConfidence: 0.7,
     enableSignals: true,
@@ -534,13 +539,13 @@ function PatternDiscoveryPanel() {
       </CardContent>
     </Card>
   );
-}
+});
 
 // ======================
 // Workflow Status Component
 // ======================
 
-function WorkflowPanel() {
+const WorkflowPanel = memo(function WorkflowPanel() {
   const { workflows } = useWorkflows();
   const activeWorkflows = Array.from(workflows.values()).filter(
     (w) => w.status === "running" || w.status === "started"
@@ -588,7 +593,7 @@ function WorkflowPanel() {
       </CardContent>
     </Card>
   );
-}
+});
 
 // ======================
 // Main Dashboard Component

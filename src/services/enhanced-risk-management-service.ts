@@ -877,7 +877,73 @@ export class EnhancedRiskManagementService {
       correlationCache: this.correlationCache.size,
     };
   }
+
+  /**
+   * Initialize the service (required for integrated service compatibility)
+   */
+  async initialize(): Promise<void> {
+    console.log('[Enhanced Risk Management] Initializing service...');
+    try {
+      // Clear any stale cache on initialization
+      this.clearCache();
+      
+      // Test basic connectivity to MEXC for risk assessment
+      const mexcClient = getUnifiedMexcClient();
+      await mexcClient.testConnectivity();
+      
+      console.log('[Enhanced Risk Management] Service initialized successfully');
+    } catch (error) {
+      console.error('[Enhanced Risk Management] Service initialization failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Perform health check for the risk management service
+   */
+  async performHealthCheck(): Promise<{
+    healthy: boolean;
+    error?: string;
+    metrics?: {
+      portfolioCacheSize: number;
+      correlationCacheSize: number;
+      defaultRiskProfile: any;
+    };
+  }> {
+    try {
+      // Test basic functionality
+      const testUserId = 'health_check_test';
+      const testOrderParams: OrderParameters = {
+        symbol: 'BTCUSDT',
+        side: 'BUY',
+        type: 'MARKET',
+        quantity: '0.001',
+      };
+
+      // Perform a dry-run risk assessment
+      const assessment = await this.assessTradingRisk(testUserId, testOrderParams);
+      
+      const metrics = {
+        portfolioCacheSize: this.portfolioCache.size,
+        correlationCacheSize: this.correlationCache.size,
+        defaultRiskProfile: this.defaultRiskProfile,
+      };
+
+      return {
+        healthy: assessment !== null && typeof assessment.riskLevel === 'string',
+        metrics,
+      };
+    } catch (error) {
+      return {
+        healthy: false,
+        error: error instanceof Error ? error.message : 'Health check failed',
+      };
+    }
+  }
 }
 
 // Export singleton instance
 export const enhancedRiskManagementService = EnhancedRiskManagementService.getInstance();
+
+// Export with alternative name for backward compatibility
+export const enhancedRiskManagement = enhancedRiskManagementService;

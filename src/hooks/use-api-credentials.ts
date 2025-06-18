@@ -1,4 +1,4 @@
-import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "../lib/kinde-auth-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface ApiCredentials {

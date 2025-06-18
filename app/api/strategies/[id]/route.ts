@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { multiPhaseTradingService } from "@/src/services/multi-phase-trading-service";
-import { createExecutorFromStrategy } from "@/src/services/multi-phase-executor";
-import { rateLimiter } from "@/src/lib/rate-limiter";
-import { createApiResponse, createSuccessResponse, createErrorResponse } from "@/src/lib/api-response";
+import { multiPhaseTradingService } from "../../../../src/services/multi-phase-trading-service";
+import { createExecutorFromStrategy } from "../../../../src/services/multi-phase-executor";
+import { rateLimiter } from "../../../../src/lib/rate-limiter";
+import { createApiResponse, createSuccessResponse, createErrorResponse } from "../../../../src/lib/api-response";
 
 // ===========================================
 // INDIVIDUAL STRATEGY MANAGEMENT
@@ -37,7 +37,7 @@ export async function GET(
   try {
     const { id } = await params;
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_read");
+    const rateLimitResult = await rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_read");
     if (!rateLimitResult.success) {
       return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }
@@ -112,7 +112,7 @@ export async function PUT(
   try {
     const { id } = await params;
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_update");
+    const rateLimitResult = await rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_update");
     if (!rateLimitResult.success) {
       return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }
@@ -191,7 +191,7 @@ export async function POST(
   try {
     const { id } = await params;
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_execute");
+    const rateLimitResult = await rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_execute");
     if (!rateLimitResult.success) {
       return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }
@@ -311,7 +311,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_delete");
+    const rateLimitResult = await rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategies_delete");
     if (!rateLimitResult.success) {
       return createApiResponse(createErrorResponse("Rate limit exceeded"), 429);
     }

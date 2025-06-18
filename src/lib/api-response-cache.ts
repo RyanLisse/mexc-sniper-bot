@@ -317,7 +317,6 @@ export class APIResponseCache {
           type: "api_response",
           source: endpoint,
           dependencies: config.dependencies,
-          priority: config.priority,
         },
       });
 

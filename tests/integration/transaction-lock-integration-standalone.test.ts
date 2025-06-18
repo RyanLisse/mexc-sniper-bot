@@ -1,7 +1,71 @@
 import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from "vitest";
-import { db } from "@/src/db";
-import { transactionLocks, transactionQueue } from "@/src/db/schema";
-import { TransactionLockService } from "@/src/services/transaction-lock-service";
+
+// Override the global database mock for transaction lock integration tests
+vi.mock('@/src/db', () => {
+  let mockIdCounter = 1;
+  const mockStoredData = {
+    locks: new Map(),
+    queue: new Map()
+  };
+  
+  const mockDb = {
+    insert: vi.fn().mockImplementation(() => ({
+      values: vi.fn().mockImplementation((data) => ({
+        returning: vi.fn().mockImplementation(() => {
+          const id = (mockIdCounter++).toString();
+          const fullData = { ...data, id, createdAt: new Date(), updatedAt: new Date() };
+          
+          // Store based on data structure
+          if (data.resourceId) {
+            mockStoredData.locks.set(data.resourceId, fullData);
+          }
+          if (data.requestId) {
+            mockStoredData.queue.set(data.requestId, fullData);
+          }
+          
+          return Promise.resolve([fullData]);
+        })
+      }))
+    })),
+    select: vi.fn().mockImplementation(() => ({
+      from: vi.fn().mockImplementation(() => ({
+        where: vi.fn().mockImplementation((condition) => {
+          // Return locks or queue items based on the condition
+          return Promise.resolve(Array.from(mockStoredData.locks.values()));
+        }),
+        limit: vi.fn().mockImplementation(() => Promise.resolve(Array.from(mockStoredData.locks.values()))),
+        orderBy: vi.fn().mockImplementation(() => Promise.resolve(Array.from(mockStoredData.locks.values())))
+      }))
+    })),
+    update: vi.fn().mockImplementation(() => ({
+      set: vi.fn().mockImplementation(() => ({
+        where: vi.fn().mockImplementation(() => Promise.resolve([]))
+      }))
+    })),
+    delete: vi.fn().mockImplementation(() => ({
+      where: vi.fn().mockImplementation(() => {
+        // Clear the appropriate data when deleting
+        mockStoredData.locks.clear();
+        mockStoredData.queue.clear();
+        return Promise.resolve([]);
+      })
+    })),
+    transaction: vi.fn().mockImplementation(async (cb) => {
+      return cb(mockDb);
+    }),
+    execute: vi.fn().mockResolvedValue([]),
+    query: vi.fn().mockResolvedValue([])
+  };
+  
+  return {
+    db: mockDb,
+    getDb: vi.fn().mockReturnValue(mockDb)
+  };
+});
+
+import { db } from "../../src/db";
+import { transactionLocks, transactionQueue } from "../../src/db/schema";
+import { TransactionLockService } from "../../src/services/transaction-lock-service";
 
 // Mock fetch for API testing without server
 const mockFetch = vi.fn();

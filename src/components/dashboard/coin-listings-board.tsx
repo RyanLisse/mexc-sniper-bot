@@ -1,17 +1,17 @@
 "use client";
 
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { useMexcCalendar } from "@/src/hooks/use-mexc-data";
-import { usePatternSniper } from "@/src/hooks/use-pattern-sniper";
+} from "../ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { useMexcCalendar } from "../../hooks/use-mexc-data";
+import { usePatternSniper } from "../../hooks/use-pattern-sniper";
 import {
   Activity,
   AlertTriangle,
@@ -157,9 +157,9 @@ function CoinListingCard({ coin, onExecute, onRemove }: CoinListingCardProps) {
 }
 
 interface CalendarEntry {
-  vcoinId: string;
-  symbol: string;
-  firstOpenTime: string | number;
+  vcoinId?: string;
+  symbol?: string;
+  firstOpenTime?: string | number;
   projectName?: string;
 }
 
@@ -167,6 +167,7 @@ interface CalendarEntry {
 function filterUpcomingCoins(calendarData: CalendarEntry[]): CalendarEntry[] {
   return calendarData.filter((item) => {
     try {
+      if (!item.firstOpenTime || !item.vcoinId) return false;
       const launchTime = new Date(item.firstOpenTime);
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Set to start of today (00:00:00)
@@ -197,14 +198,19 @@ interface EnrichedCoin {
 function enrichCalendarData(
   calendarData: CalendarEntry[],
   pendingDetection: string[],
-  readyTargets: Array<{ vcoinId: string }>,
+  readyTargets: Array<{ vcoinId?: string }>,
   executedTargets: string[]
 ): EnrichedCoin[] {
   return calendarData
+    .filter((item) => item.vcoinId && item.symbol && item.firstOpenTime)
     .map((item) => {
-      const isPending = pendingDetection.includes(item.vcoinId);
-      const isReady = readyTargets.some((target) => target.vcoinId === item.vcoinId);
-      const isExecuted = executedTargets.includes(item.vcoinId);
+      const vcoinId = item.vcoinId!;
+      const symbol = item.symbol!;
+      const firstOpenTime = item.firstOpenTime!;
+      
+      const isPending = pendingDetection.includes(vcoinId);
+      const isReady = readyTargets.some((target) => target.vcoinId && target.vcoinId === vcoinId);
+      const isExecuted = executedTargets.includes(vcoinId);
 
       let status: "calendar" | "monitoring" | "ready" | "executed" = "calendar";
       if (isExecuted) status = "executed";
@@ -212,9 +218,12 @@ function enrichCalendarData(
       else if (isPending) status = "monitoring";
 
       return {
-        ...item,
+        vcoinId,
+        symbol,
+        firstOpenTime,
+        projectName: item.projectName,
         status,
-        launchTime: new Date(item.firstOpenTime),
+        launchTime: new Date(firstOpenTime),
       };
     })
     .sort((a, b) => a.launchTime.getTime() - b.launchTime.getTime());
@@ -241,7 +250,11 @@ function processExecutedTargets(
 // Helper function to limit and sort displayed listings
 function limitDisplayedListings(listings: CalendarEntry[], maxCount = 50): CalendarEntry[] {
   return listings
-    .sort((a, b) => new Date(a.firstOpenTime).getTime() - new Date(b.firstOpenTime).getTime())
+    .sort((a, b) => {
+      const timeA = a.firstOpenTime ? new Date(a.firstOpenTime).getTime() : 0;
+      const timeB = b.firstOpenTime ? new Date(b.firstOpenTime).getTime() : 0;
+      return timeA - timeB;
+    })
     .slice(0, maxCount);
 }
 
@@ -278,17 +291,32 @@ function useProcessedCoinData() {
   const calendarTargets = enrichedCalendarData.filter((c) => c.status === "calendar");
   const monitoringTargets = enrichedCalendarData.filter((c) => c.status === "monitoring");
   const readyTargetsEnriched = readyTargets.map((target) => ({
-    ...target,
+    vcoinId: target.vcoinId || '',
+    symbol: target.symbol || '',
+    projectName: target.projectName,
+    launchTime: target.launchTime || new Date(),
     status: "ready" as const,
+    confidence: target.confidence,
+    hoursAdvanceNotice: target.hoursAdvanceNotice,
+    priceDecimalPlaces: target.priceDecimalPlaces,
+    quantityDecimalPlaces: target.quantityDecimalPlaces,
+    discoveredAt: target.discoveredAt,
     targetTime: target.launchTime?.toISOString() || new Date().toISOString(),
-    // launchTime is already available from the schema SnipeTarget
   }));
   const executedTargetsEnriched = processExecutedTargets(executedTargets, enrichedCalendarData);
+
+  // Transform stats to match expected interface
+  const transformedStats = {
+    totalListings: stats?.totalListings || enrichedCalendarData.length,
+    pendingDetection: stats?.pendingDetection || monitoringTargets.length,
+    readyToSnipe: stats?.readyToSnipe || readyTargetsEnriched.length,
+    successRate: stats?.successRate,
+  };
 
   return {
     isMonitoring,
     isLoading,
-    stats,
+    stats: transformedStats,
     errors,
     startMonitoring,
     stopMonitoring,

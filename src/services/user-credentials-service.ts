@@ -1,4 +1,4 @@
-import { apiCredentials, db } from "@/src/db";
+import { apiCredentials, db } from "../db";
 import { and, eq } from "drizzle-orm";
 import { getEncryptionService } from "./secure-encryption-service";
 

@@ -351,8 +351,8 @@ export class AlertConfigurationService {
       parentRuleId: validated.parentRuleId,
       tags: JSON.stringify(validated.tags),
       customFields: JSON.stringify(validated.customFields),
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       createdBy,
     };
 
@@ -366,7 +366,7 @@ export class AlertConfigurationService {
     updates: Partial<z.infer<typeof AlertRuleConfigSchema>>
   ): Promise<void> {
     const updateData: Partial<InsertAlertRule> = {
-      updatedAt: Date.now(),
+      updatedAt: new Date(),
     };
 
     if (updates.name) updateData.name = updates.name;
@@ -398,7 +398,7 @@ export class AlertConfigurationService {
   async deleteAlertRule(ruleId: string): Promise<void> {
     await this.db
       .update(alertRules)
-      .set({ isEnabled: false, updatedAt: Date.now() })
+      .set({ isEnabled: false, updatedAt: new Date() })
       .where(eq(alertRules.id, ruleId));
 
     console.log(`Disabled alert rule: ${ruleId}`);
@@ -569,8 +569,8 @@ export class AlertConfigurationService {
       rateLimitPerHour: validated.rateLimitPerHour,
       messageTemplate: validated.messageTemplate,
       titleTemplate: validated.titleTemplate,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       createdBy,
     };
 

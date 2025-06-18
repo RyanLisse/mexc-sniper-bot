@@ -1,4 +1,4 @@
-import type { snipeTargets } from "@/src/db/schema";
+import type { snipeTargets } from "../db/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export interface PortfolioPosition {

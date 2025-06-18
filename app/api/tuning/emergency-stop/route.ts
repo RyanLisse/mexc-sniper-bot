@@ -5,9 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-// import { ParameterOptimizationEngine } from '@/src/services/parameter-optimization-engine';
-import { ParameterManager } from '@/src/lib/parameter-management';
-import { logger } from '@/src/lib/utils';
+// import { ParameterOptimizationEngine } from "../../../../src/services/parameter-optimization-engine";
+import { ParameterManager } from "../../../../src/lib/parameter-management";
+import { logger } from "../../../../src/lib/utils";
 
 // Initialize components
 // const optimizationEngine = new ParameterOptimizationEngine();

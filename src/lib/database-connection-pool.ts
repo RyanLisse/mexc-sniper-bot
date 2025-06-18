@@ -8,7 +8,7 @@
  * - Adds performance monitoring and metrics
  */
 
-import { clearDbCache, db, executeWithRetry } from "@/src/db";
+import { clearDbCache, db, executeWithRetry } from "../db";
 import { sql } from "drizzle-orm";
 
 interface ConnectionPoolConfig {

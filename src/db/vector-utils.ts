@@ -332,18 +332,21 @@ export class VectorUtils {
    */
   static async getPatternsByTypeAndDate(patternType: string, afterDate: Date, beforeDate?: Date) {
     return executeWithRetry(async () => {
-      let query = db
-        .select()
-        .from(patternEmbeddings)
-        .where(
-          sql`pattern_type = ${patternType} AND is_active = 1 AND discovered_at >= ${afterDate.getTime() / 1000}`
-        );
+      const conditions = [
+        sql`pattern_type = ${patternType}`,
+        sql`is_active = 1`,
+        sql`discovered_at >= ${afterDate.getTime() / 1000}`
+      ];
 
       if (beforeDate) {
-        query = query.where(sql`discovered_at <= ${beforeDate.getTime() / 1000}`);
+        conditions.push(sql`discovered_at <= ${beforeDate.getTime() / 1000}`);
       }
 
-      return await query.orderBy(sql`discovered_at DESC`);
+      return await db
+        .select()
+        .from(patternEmbeddings)
+        .where(sql.join(conditions, sql` AND `))
+        .orderBy(sql`discovered_at DESC`);
     }, "Get patterns by type and date");
   }
 
@@ -352,18 +355,21 @@ export class VectorUtils {
    */
   static async getPatternsByDateRange(startDate: Date, endDate: Date, patternType?: string) {
     return executeWithRetry(async () => {
-      let query = db
-        .select()
-        .from(patternEmbeddings)
-        .where(
-          sql`is_active = 1 AND discovered_at >= ${startDate.getTime() / 1000} AND discovered_at <= ${endDate.getTime() / 1000}`
-        );
+      const conditions = [
+        sql`is_active = 1`,
+        sql`discovered_at >= ${startDate.getTime() / 1000}`,
+        sql`discovered_at <= ${endDate.getTime() / 1000}`
+      ];
 
       if (patternType) {
-        query = query.where(sql`pattern_type = ${patternType}`);
+        conditions.push(sql`pattern_type = ${patternType}`);
       }
 
-      return await query.orderBy(sql`discovered_at DESC`);
+      return await db
+        .select()
+        .from(patternEmbeddings)
+        .where(sql.join(conditions, sql` AND `))
+        .orderBy(sql`discovered_at DESC`);
     }, "Get patterns by date range");
   }
 
@@ -385,7 +391,7 @@ export class VectorUtils {
           sql`(last_seen_at <= ${cutoffDate.getTime() / 1000} OR confidence < ${lowConfidenceThreshold}) AND is_active = 1`
         );
 
-      return result.changes || 0;
+      return (result as any).changes || (result as any).rowsAffected || 0;
     }, "Deactivate old patterns");
   }
 

@@ -1,5 +1,5 @@
-import { db } from "@/src/db";
-import { user } from "@/src/db/schema";
+import { db } from "../db";
+import { user } from "../db/schema";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { eq } from "drizzle-orm";
 

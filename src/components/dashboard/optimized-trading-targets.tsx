@@ -1,15 +1,15 @@
 "use client";
 
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { useTimeFormatting } from "@/src/hooks/use-time-formatting";
+} from "../ui/card";
+import { useTimeFormatting } from "../../hooks/use-time-formatting";
 import { AlertTriangle, Clock, Eye, Target, Trash2, TrendingUp, Zap } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
 

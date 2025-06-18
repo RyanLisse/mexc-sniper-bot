@@ -1,4 +1,4 @@
-import type { UserTradingPreferences } from "@/src/hooks/use-user-preferences";
+import type { UserTradingPreferences } from "./use-user-preferences";
 import {
   type CalendarEntry,
   type OrderParameters as SchemaOrderParameters,
@@ -6,7 +6,7 @@ import {
   type SniperStats,
   type SymbolV2Entry,
   isValidForSnipe,
-} from "@/src/schemas/mexc-schemas";
+} from "../schemas/mexc-schemas";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 

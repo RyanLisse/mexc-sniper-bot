@@ -8,7 +8,7 @@
  * @example
  * ```typescript
  * // New unified approach
- * import { getMexcService } from '@/src/services/mexc-unified-exports';
+ * import { getMexcService } from "./mexc-unified-exports";
  *
  * const mexc = getMexcService();
  * const calendar = await mexc.getCalendarListings();
@@ -150,7 +150,7 @@ export type AdvancedOrderParameters = OrderParameters;
  *
  * @example
  * ```typescript
- * import mexcService from '@/src/services/mexc-unified-exports';
+ * import mexcService from "./mexc-unified-exports";
  *
  * const calendar = await mexcService.getCalendarListings();
  * ```

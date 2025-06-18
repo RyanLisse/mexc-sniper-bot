@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { patternDetectionEngine } from "@/src/services/pattern-detection-engine";
-import { patternStrategyOrchestrator } from "@/src/services/pattern-strategy-orchestrator";
-import { patternEmbeddingService } from "@/src/services/pattern-embedding-service";
-import { apiAuthWrapper } from "@/src/lib/api-auth";
-import { createApiResponse } from "@/src/lib/api-response";
+import { patternDetectionEngine } from "../../../src/services/pattern-detection-engine";
+import { patternStrategyOrchestrator } from "../../../src/services/pattern-strategy-orchestrator";
+import { patternEmbeddingService } from "../../../src/services/pattern-embedding-service";
+import { apiAuthWrapper } from "../../../src/lib/api-auth";
+import { createApiResponse } from "../../../src/lib/api-response";
 import { z } from "zod";
 
 // Import schemas from unified client
-import { CalendarEntrySchema, SymbolEntrySchema } from "@/src/services/unified-mexc-client";
+import { CalendarEntrySchema, SymbolEntrySchema } from "../../../src/services/unified-mexc-client";
 
 // Request schemas
 const PatternDetectionRequestSchema = z.object({
@@ -70,7 +70,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       return createApiResponse({
         success: false,
         error: "Invalid request format",
-        details: error.errors
+        details: { issues: error.errors }
       }, 400);
     }
 

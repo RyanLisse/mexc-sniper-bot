@@ -4,8 +4,8 @@ import {
   withAuth,
   withAuthOptions,
   withUserAuth,
-} from "@/src/lib/api-auth";
-import { HTTP_STATUS, createErrorResponse } from "@/src/lib/api-response";
+} from "./api-auth";
+import { HTTP_STATUS, createErrorResponse } from "./api-response";
 import type { NextRequest } from "next/server";
 
 /**

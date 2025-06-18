@@ -302,7 +302,7 @@ export class AdvancedTradingStrategy extends TradingStrategyManager {
       confidence += 15;
       reasoning.push("Diamond hands strategy for high risk, long-term approach");
       alternativeStrategies.push("highPriceIncrease");
-    } else if (timeHorizon === "short") {
+    } else if (timeHorizon !== "medium" && timeHorizon !== "long") {
       recommendedStrategy = "scalping";
       confidence += 15;
       reasoning.push("Scalping strategy optimal for short-term trades");

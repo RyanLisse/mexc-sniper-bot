@@ -17,10 +17,18 @@ export * from "./patterns";
 // Workflow Orchestration Schema
 export * from "./workflows";
 
+// Performance Metrics Schema
+export * from "./performance";
+
+// Trading Strategies Schema
+export * from "./strategies";
+
 // Re-export all table definitions for easy access
 import * as authTables from "./auth";
 import * as patternTables from "./patterns";
+import * as performanceTables from "./performance";
 import * as safetyTables from "./safety";
+import * as strategiesTables from "./strategies";
 import * as tradingTables from "./trading";
 import * as workflowTables from "./workflows";
 
@@ -30,6 +38,8 @@ export const trading = tradingTables;
 export const safety = safetyTables;
 export const patterns = patternTables;
 export const workflows = workflowTables;
+export const performance = performanceTables;
+export const strategies = strategiesTables;
 
 // All tables for migration and database operations
 export const allTables = {
@@ -65,6 +75,20 @@ export const allTables = {
   // Workflow tables
   workflowSystemStatus: workflowTables.workflowSystemStatus,
   workflowActivity: workflowTables.workflowActivity,
+
+  // Performance tables
+  agentPerformanceMetrics: performanceTables.agentPerformanceMetrics,
+  workflowPerformanceMetrics: performanceTables.workflowPerformanceMetrics,
+  systemPerformanceSnapshots: performanceTables.systemPerformanceSnapshots,
+  performanceAlerts: performanceTables.performanceAlerts,
+  performanceBaselines: performanceTables.performanceBaselines,
+
+  // Strategy tables
+  strategyTemplates: strategiesTables.strategyTemplates,
+  tradingStrategies: strategiesTables.tradingStrategies,
+  strategyPhaseExecutions: strategiesTables.strategyPhaseExecutions,
+  strategyPerformanceMetrics: strategiesTables.strategyPerformanceMetrics,
+  strategyConfigBackups: strategiesTables.strategyConfigBackups,
 };
 
 // All types for easy importing
@@ -133,3 +157,31 @@ export type {
   WorkflowActivity,
   NewWorkflowActivity,
 } from "./workflows";
+
+export type {
+  // Performance types
+  AgentPerformanceMetric,
+  NewAgentPerformanceMetric,
+  WorkflowPerformanceMetric,
+  NewWorkflowPerformanceMetric,
+  SystemPerformanceSnapshot,
+  NewSystemPerformanceSnapshot,
+  PerformanceAlert,
+  NewPerformanceAlert,
+  PerformanceBaseline,
+  NewPerformanceBaseline,
+} from "./performance";
+
+export type {
+  // Strategy types
+  StrategyTemplate,
+  NewStrategyTemplate,
+  TradingStrategy,
+  NewTradingStrategy,
+  StrategyPhaseExecution,
+  NewStrategyPhaseExecution,
+  StrategyPerformanceMetrics,
+  NewStrategyPerformanceMetrics,
+  StrategyConfigBackup,
+  NewStrategyConfigBackup,
+} from "./strategies";

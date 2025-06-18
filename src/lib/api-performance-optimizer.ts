@@ -158,19 +158,19 @@ export class ApiPerformanceOptimizer extends EventEmitter {
 
     // Execute critical requests immediately with high concurrency
     if (criticalRequests.length > 0) {
-      const criticalResults = await this.executeParallelBatch(criticalRequests, this.config.maxConcurrency);
+      const criticalResults = await this.executeParallelBatch<T>(criticalRequests, this.config.maxConcurrency);
       results.push(...criticalResults);
     }
 
     // Execute high priority requests with medium concurrency
     if (highPriorityRequests.length > 0) {
-      const highResults = await this.executeParallelBatch(highPriorityRequests, Math.ceil(this.config.maxConcurrency * 0.7));
+      const highResults = await this.executeParallelBatch<T>(highPriorityRequests, Math.ceil(this.config.maxConcurrency * 0.7));
       results.push(...highResults);
     }
 
     // Execute regular requests with controlled concurrency
     if (regularRequests.length > 0) {
-      const regularResults = await this.executeParallelBatch(regularRequests, Math.ceil(this.config.maxConcurrency * 0.5));
+      const regularResults = await this.executeParallelBatch<T>(regularRequests, Math.ceil(this.config.maxConcurrency * 0.5));
       results.push(...regularResults);
     }
 
@@ -196,12 +196,12 @@ export class ApiPerformanceOptimizer extends EventEmitter {
       }
 
       const promise = this.executeOptimizedRequest<T>(request)
-        .then(result => {
+        .then((result: T) => {
           results[i] = result;
         })
         .catch(error => {
           console.error(`Batch request failed:`, error);
-          results[i] = null as any; // Handle failed requests gracefully
+          results[i] = null as T; // Handle failed requests gracefully
         })
         .finally(() => {
           const index = executing.indexOf(promise);

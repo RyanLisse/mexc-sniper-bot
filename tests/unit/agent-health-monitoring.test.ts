@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { AgentRegistry, getGlobalAgentRegistry, initializeGlobalAgentRegistry } from "@/src/mexc-agents/coordination/agent-registry";
-import { AgentMonitoringService } from "@/src/services/agent-monitoring-service";
-import { BaseAgent } from "@/src/mexc-agents/base-agent";
-import type { AgentConfig, AgentResponse } from "@/src/mexc-agents/base-agent";
+import { AgentRegistry, getGlobalAgentRegistry, initializeGlobalAgentRegistry } from "../../src/mexc-agents/coordination/agent-registry";
+import { AgentMonitoringService } from "../../src/services/agent-monitoring-service";
+import { BaseAgent } from "../../src/mexc-agents/base-agent";
+import type { AgentConfig, AgentResponse } from "../../src/mexc-agents/base-agent";
 
 // Mock OpenAI
 vi.mock("openai", () => ({

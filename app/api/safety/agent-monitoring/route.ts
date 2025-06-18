@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/src/lib/kinde-auth";
-import { apiResponse } from "@/src/lib/api-response";
-import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
-import type { AgentBehaviorMetrics } from "@/src/mexc-agents/safety-monitor-agent";
+import { requireAuth } from "../../../../src/lib/kinde-auth";
+import { apiResponse } from "../../../../src/lib/api-response";
+import { SafetyMonitorAgent } from "../../../../src/mexc-agents/safety-monitor-agent";
+import type { AgentBehaviorMetrics } from "../../../../src/mexc-agents/safety-monitor-agent";
 
 /**
  * Agent Monitoring API

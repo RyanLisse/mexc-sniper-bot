@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
-import { getUserCredentials } from "@/src/services/user-credentials-service";
+import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
+import { getUserCredentials } from "../../../../src/services/user-credentials-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import {
   createSuccessResponse,
@@ -8,11 +8,11 @@ import {
   apiResponse,
   HTTP_STATUS,
   createValidationErrorResponse
-} from '@/src/lib/api-response';
+} from "../../../../src/lib/api-response";
 import {
   sensitiveDataRoute,
   validateRequiredFields
-} from '@/src/lib/auth-decorators';
+} from "../../../../src/lib/auth-decorators";
 
 // POST /api/api-credentials/test
 export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) => {
@@ -113,7 +113,7 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
             authentication: true,
             accountType: "spot",
             canTrade: true,
-            balanceCount: accountResult.data?.length || 0,
+            balanceCount: accountResult.data?.balances?.length || 0,
             credentialSource: "database"
           }, {
             message: "API credentials are valid and working correctly",

@@ -1,24 +1,24 @@
 "use client";
 
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { ScrollArea } from "@/src/components/ui/scroll-area";
+} from "./ui/card";
+import { ScrollArea } from "./ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { useToast } from "@/src/components/ui/use-toast";
+} from "./ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { useToast } from "./ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,

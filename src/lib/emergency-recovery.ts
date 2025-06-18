@@ -1,5 +1,5 @@
-import { db } from "@/src/db";
-import { executionHistory } from "@/src/db/schema";
+import { db } from "../db";
+import { executionHistory } from "../db/schema";
 import { sql } from "drizzle-orm";
 import { getConnectivityStatus, performSystemHealthCheck } from "./health-checks";
 

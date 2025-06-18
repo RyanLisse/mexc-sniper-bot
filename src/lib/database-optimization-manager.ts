@@ -10,7 +10,7 @@
  * Achieves 50%+ query performance improvement as targeted.
  */
 
-import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
+import { queryPerformanceMonitor } from "../services/query-performance-monitor";
 import { databaseConnectionPool } from "./database-connection-pool";
 import { databaseIndexOptimizer } from "./database-index-optimizer";
 import { databasePerformanceAnalyzer } from "./database-performance-analyzer";

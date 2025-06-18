@@ -96,15 +96,15 @@ export async function createCoordinationSystem(options?: {
 export function registerCommonAgents(
   agentRegistry: import("./agent-registry").AgentRegistry,
   agentManager: {
-    getMexcApiAgent: () => unknown;
-    getPatternDiscoveryAgent: () => unknown;
-    getCalendarAgent: () => unknown;
-    getSymbolAnalysisAgent: () => unknown;
-    getStrategyAgent: () => unknown;
-    getSimulationAgent: () => unknown;
-    getRiskManagerAgent: () => unknown;
-    getReconciliationAgent: () => unknown;
-    getErrorRecoveryAgent: () => unknown;
+    getMexcApiAgent: () => import("../base-agent").BaseAgent;
+    getPatternDiscoveryAgent: () => import("../base-agent").BaseAgent;
+    getCalendarAgent: () => import("../base-agent").BaseAgent;
+    getSymbolAnalysisAgent: () => import("../base-agent").BaseAgent;
+    getStrategyAgent: () => import("../base-agent").BaseAgent;
+    getSimulationAgent: () => import("../base-agent").BaseAgent;
+    getRiskManagerAgent: () => import("../base-agent").BaseAgent;
+    getReconciliationAgent: () => import("../base-agent").BaseAgent;
+    getErrorRecoveryAgent: () => import("../base-agent").BaseAgent;
   }
 ): void {
   try {

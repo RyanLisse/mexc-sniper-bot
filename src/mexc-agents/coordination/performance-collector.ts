@@ -1,4 +1,4 @@
-import { PERFORMANCE_CONSTANTS, TIME_CONSTANTS } from "@/src/lib/constants";
+import { PERFORMANCE_CONSTANTS, TIME_CONSTANTS } from "../../lib/constants";
 import type { AgentRegistry } from "./agent-registry";
 import type { WorkflowExecutionResult } from "./workflow-engine";
 
@@ -107,7 +107,7 @@ export class PerformanceCollector {
   private agentMetricsHistory: Map<string, AgentPerformanceMetrics[]> = new Map();
   private workflowMetricsHistory: WorkflowPerformanceMetrics[] = [];
   private systemSnapshotHistory: SystemPerformanceSnapshot[] = [];
-  private maxHistorySize = PERFORMANCE_CONSTANTS.MAX_HISTORY_SIZE;
+  private maxHistorySize: number = PERFORMANCE_CONSTANTS.MAX_HISTORY_SIZE;
 
   constructor(
     agentRegistry: AgentRegistry,

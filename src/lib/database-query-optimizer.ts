@@ -8,7 +8,7 @@
  * - Optimizes pattern discovery database operations
  */
 
-import { db } from "@/src/db";
+import { db } from "../db";
 import {
   type PatternEmbedding,
   type SnipeTarget,
@@ -17,7 +17,7 @@ import {
   snipeTargets,
   transactionLocks,
   transactions,
-} from "@/src/db/schema";
+} from "../db/schema";
 import { and, asc, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 
 interface QueryOptimizationConfig {
@@ -427,7 +427,7 @@ export class DatabaseQueryOptimizer {
     this.invalidateCache("active_locks_");
 
     return {
-      data: result.changes || 0,
+      data: (result as any).changes || (result as any).rowsAffected || 0,
       executionTime: performance.now() - startTime,
       cacheHit: false,
       queryComplexity: "simple",

@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { DashboardLayout } from "@/src/components/dashboard-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { useToast } from "@/src/components/ui/use-toast";
+import { DashboardLayout } from "../../src/components/dashboard-layout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../src/components/ui/card";
+import { Badge } from "../../src/components/ui/badge";
+import { Button } from "../../src/components/ui/button";
+import { Input } from "../../src/components/ui/input";
+import { Label } from "../../src/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../src/components/ui/tabs";
+import { useToast } from "../../src/components/ui/use-toast";
 import { 
   Save,
   Shield,
@@ -19,12 +19,12 @@ import {
   RefreshCw,
   ExternalLink
 } from "lucide-react";
-import { useUserPreferences, useUpdateUserPreferences } from "@/src/hooks/use-user-preferences";
-import { UnifiedTakeProfitLevels } from "@/src/components/unified-take-profit-levels";
-import { UnifiedRiskManagement } from "@/src/components/unified-risk-management";
-import { UnifiedAutomationSettings } from "@/src/components/unified-automation-settings";
-import { EditableTakeProfitTable } from "@/src/components/editable-take-profit-table";
-import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "@/src/hooks/use-user-preferences";
+import { useUserPreferences, useUpdateUserPreferences } from "../../src/hooks/use-user-preferences";
+import { UnifiedTakeProfitLevels } from "../../src/components/unified-take-profit-levels";
+import { UnifiedRiskManagement } from "../../src/components/unified-risk-management";
+import { UnifiedAutomationSettings } from "../../src/components/unified-automation-settings";
+import { EditableTakeProfitTable } from "../../src/components/editable-take-profit-table";
+import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "../../src/hooks/use-user-preferences";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
 export default function SettingsPage() {

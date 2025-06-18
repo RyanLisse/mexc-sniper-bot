@@ -10,10 +10,10 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import { CacheManager, generateCacheKey, globalCacheManager } from '@/src/lib/cache-manager';
-import { EnhancedAgentCache, globalEnhancedAgentCache } from '@/src/lib/enhanced-agent-cache';
-import { APIResponseCache, globalAPIResponseCache } from '@/src/lib/api-response-cache';
-import { CacheMonitoringSystem } from '@/src/lib/cache-monitoring';
+import { CacheManager, generateCacheKey, globalCacheManager } from "../../src/lib/cache-manager";
+import { EnhancedAgentCache, globalEnhancedAgentCache } from "../../src/lib/enhanced-agent-cache";
+import { APIResponseCache, globalAPIResponseCache } from "../../src/lib/api-response-cache";
+import { CacheMonitoringSystem } from "../../src/lib/cache-monitoring";
 
 // Mock dependencies
 vi.mock('@/src/services/error-logging-service', () => ({

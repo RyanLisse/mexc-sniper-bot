@@ -19,9 +19,9 @@ import type {
   NotificationMessage,
   TradingPriceMessage,
   TradingSignalMessage,
-} from "@/src/lib/websocket-types";
-import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
-import { webSocketServer } from "@/src/services/websocket-server";
+} from "../lib/websocket-types";
+import { webSocketAgentBridge } from "../mexc-agents/websocket-agent-bridge";
+import { webSocketServer } from "./websocket-server";
 import WebSocket from "ws";
 
 // ======================

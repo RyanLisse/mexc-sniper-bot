@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
-import { getUserCredentials } from "@/src/services/user-credentials-service";
+import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
+import { getUserCredentials } from "../../../../src/services/user-credentials-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { ErrorFactory } from "@/src/lib/error-types";
-import { errorHandler } from "@/src/lib/error-handler-service";
+import { ErrorFactory } from "../../../../src/lib/error-types";
+import { errorHandler } from "../../../../src/lib/error-handler-service";
 
 interface ConnectivityResponse {
   connected: boolean;
@@ -119,9 +119,15 @@ async function getUserCredentialsWithFallback(userId?: string) {
   };
 }
 
-async function testMexcConnectivity(mexcService: { testConnectivity: () => Promise<boolean> }): Promise<boolean> {
+async function testMexcConnectivity(mexcService: { testConnectivity: () => Promise<any> }): Promise<boolean> {
   try {
-    return await mexcService.testConnectivity();
+    const result = await mexcService.testConnectivity();
+    // Handle both boolean and MexcServiceResponse types
+    if (typeof result === 'boolean') {
+      return result;
+    }
+    // If it's a MexcServiceResponse, check the success property
+    return result?.success === true;
   } catch (error) {
     console.error("MEXC connectivity test failed:", error);
     return false;

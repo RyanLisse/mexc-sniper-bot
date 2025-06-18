@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import * as crypto from "node:crypto";
 import { z } from "zod";
 import { mexcApiBreaker } from "./circuit-breaker";
 

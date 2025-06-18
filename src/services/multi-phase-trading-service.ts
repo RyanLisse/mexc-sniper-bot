@@ -1,4 +1,4 @@
-import { db } from "@/src/db";
+import { db } from "../db";
 import {
   type NewStrategyPhaseExecution,
   type NewTradingStrategy,
@@ -8,7 +8,7 @@ import {
   strategyPhaseExecutions,
   strategyTemplates,
   tradingStrategies,
-} from "@/src/db/schemas/strategies";
+} from "../db/schemas/strategies";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -188,17 +188,21 @@ export class MultiPhaseTradingService {
       limit?: number;
     }
   ): Promise<TradingStrategy[]> {
-    let query = db.select().from(tradingStrategies).where(eq(tradingStrategies.userId, userId));
+    const conditions = [eq(tradingStrategies.userId, userId)];
 
     if (options?.status) {
-      query = query.where(eq(tradingStrategies.status, options.status));
+      conditions.push(eq(tradingStrategies.status, options.status));
     }
 
     if (options?.symbol) {
-      query = query.where(eq(tradingStrategies.symbol, options.symbol));
+      conditions.push(eq(tradingStrategies.symbol, options.symbol));
     }
 
-    query = query.orderBy(desc(tradingStrategies.createdAt));
+    let query = db
+      .select()
+      .from(tradingStrategies)
+      .where(and(...conditions))
+      .orderBy(desc(tradingStrategies.createdAt));
 
     if (options?.limit) {
       query = query.limit(options.limit);

@@ -1,23 +1,23 @@
 "use client";
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
-import { Badge } from "@/src/components/ui/badge";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
+} from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Separator } from "@/src/components/ui/separator";
+} from "./ui/select";
+import { Separator } from "./ui/separator";
 import { AlertTriangle, DollarSign, Info, Target, TrendingUp } from "lucide-react";
 
 interface TakeProfitLevels {

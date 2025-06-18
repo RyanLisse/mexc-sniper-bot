@@ -12,14 +12,14 @@
  */
 
 import { NextRequest } from 'next/server';
-import { webSocketServer } from '@/src/services/websocket-server';
-import { mexcWebSocketStream } from '@/src/services/mexc-websocket-stream';
-import { webSocketAgentBridge } from '@/src/mexc-agents/websocket-agent-bridge';
+import { webSocketServer } from "../../../src/services/websocket-server";
+import { mexcWebSocketStream } from "../../../src/services/mexc-websocket-stream";
+import { webSocketAgentBridge } from "../../../src/mexc-agents/websocket-agent-bridge";
 import { 
   createApiHandler,
   publicHandler,
   authenticatedHandler,
-} from '@/src/lib/api-middleware';
+} from "../../../src/lib/api-middleware";
 
 // ======================
 // WebSocket Server Status

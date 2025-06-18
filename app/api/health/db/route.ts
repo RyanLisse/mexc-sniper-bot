@@ -1,4 +1,4 @@
-import { checkDatabaseHealth, checkAuthTables } from "@/src/lib/db-health-check";
+import { checkDatabaseHealth, checkAuthTables } from "../../../../src/lib/db-health-check";
 import { NextResponse } from "next/server";
 
 export async function GET() {

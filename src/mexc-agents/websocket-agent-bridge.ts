@@ -23,13 +23,13 @@ import type {
   PatternDiscoveryMessage,
   PatternReadyStateMessage,
   TradingSignalMessage,
-} from "@/src/lib/websocket-types";
-import type { AgentRegistry } from "@/src/mexc-agents/coordination/agent-registry";
-import type { EnhancedMexcOrchestrator } from "@/src/mexc-agents/coordination/enhanced-orchestrator";
-import type { PerformanceCollector } from "@/src/mexc-agents/coordination/performance-collector";
-import type { WorkflowEngine } from "@/src/mexc-agents/coordination/workflow-engine";
-import type { MexcWorkflowResult } from "@/src/mexc-agents/orchestrator-types";
-import { webSocketServer } from "@/src/services/websocket-server";
+} from "../lib/websocket-types";
+import type { AgentRegistry } from "./coordination/agent-registry";
+import type { EnhancedMexcOrchestrator } from "./coordination/enhanced-orchestrator";
+import type { PerformanceCollector } from "./coordination/performance-collector";
+import type { WorkflowEngine } from "./coordination/workflow-engine";
+import type { MexcWorkflowResult } from "./orchestrator-types";
+import { webSocketServer } from "../services/websocket-server";
 
 // ======================
 // Agent Status Tracker
@@ -360,7 +360,7 @@ class PatternDiscoveryStreamer {
       metadata: {
         symbol: pattern.symbol,
         patternId: pattern.patternId,
-      },
+      } as any,
     };
 
     webSocketServer.broadcastNotification(notification);
@@ -391,7 +391,7 @@ class PatternDiscoveryStreamer {
       metadata: {
         symbol: readyState.symbol,
         vcoinId: readyState.vcoinId,
-      },
+      } as any,
     };
 
     webSocketServer.broadcastNotification(notification);
@@ -483,7 +483,7 @@ class TradingSignalStreamer {
         signalId: signal.signalId,
         strength: signal.strength,
         confidence: signal.confidence,
-      },
+      } as any,
     };
 
     webSocketServer.broadcastNotification(notification);
@@ -689,7 +689,7 @@ export class WebSocketAgentBridge extends EventEmitter {
         metadata: {
           agentId,
           errorType: error.type,
-        },
+        } as any,
       };
 
       webSocketServer.broadcastNotification(notification);
@@ -706,16 +706,16 @@ export class WebSocketAgentBridge extends EventEmitter {
     performanceCollector: PerformanceCollector
   ): void {
     // Listen for agent status changes
-    agentRegistry.on?.("agent:status_changed", (data) => {
+    (agentRegistry as any).on?.("agent:status_changed", (data: any) => {
       this.broadcastAgentUpdate(data.agentId, data.agentType, data.status);
     });
 
-    agentRegistry.on?.("agent:error", (data) => {
+    (agentRegistry as any).on?.("agent:error", (data: any) => {
       this.broadcastAgentError(data.agentId, data.error);
     });
 
     // Listen for workflow events
-    workflowEngine.on?.("workflow:started", (data) => {
+    (workflowEngine as any).on?.("workflow:started", (data: any) => {
       this.broadcastWorkflowProgress(
         data.workflowId,
         data.workflowType,
@@ -727,7 +727,7 @@ export class WebSocketAgentBridge extends EventEmitter {
       );
     });
 
-    workflowEngine.on?.("workflow:progress", (data) => {
+    (workflowEngine as any).on?.("workflow:progress", (data: any) => {
       this.broadcastWorkflowProgress(
         data.workflowId,
         data.workflowType,
@@ -739,7 +739,7 @@ export class WebSocketAgentBridge extends EventEmitter {
       );
     });
 
-    workflowEngine.on?.("workflow:completed", (data) => {
+    (workflowEngine as any).on?.("workflow:completed", (data: any) => {
       this.broadcastWorkflowProgress(
         data.workflowId,
         data.workflowType,
@@ -751,7 +751,7 @@ export class WebSocketAgentBridge extends EventEmitter {
       );
     });
 
-    workflowEngine.on?.("workflow:failed", (data) => {
+    (workflowEngine as any).on?.("workflow:failed", (data: any) => {
       this.broadcastWorkflowProgress(
         data.workflowId,
         data.workflowType,
@@ -764,7 +764,7 @@ export class WebSocketAgentBridge extends EventEmitter {
     });
 
     // Listen for performance updates
-    performanceCollector.on?.("metrics:updated", (data) => {
+    (performanceCollector as any).on?.("metrics:updated", (data: any) => {
       for (const [agentId, metrics] of Object.entries(data.agentMetrics || {})) {
         this.broadcastAgentUpdate(agentId, "unknown", metrics);
       }
@@ -898,7 +898,7 @@ export class WebSocketAgentBridge extends EventEmitter {
     return this._isRunning;
   }
 
-  isInitialized(): boolean {
+  getInitializationStatus(): boolean {
     return this.isInitialized;
   }
 
@@ -914,7 +914,7 @@ export class WebSocketAgentBridge extends EventEmitter {
       initialized: this.isInitialized,
       running: this._isRunning,
       connectedClients: serverMetrics.totalConnections,
-      dataStreaming: this.dataStreamer.isStreaming,
+      dataStreaming: (this.dataStreamer as any).isStreaming,
     };
   }
 }

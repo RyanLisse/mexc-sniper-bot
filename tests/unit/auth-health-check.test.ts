@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { GET, OPTIONS } from '@/app/api/health/auth/route';
+import { GET, OPTIONS } from '../../app/api/health/auth/route';
 
 // Mock the Kinde server session
 vi.mock('@kinde-oss/kinde-auth-nextjs/server', () => ({
@@ -50,8 +50,8 @@ describe('/api/health/auth', () => {
         getIdTokenRaw: vi.fn().mockResolvedValue(null),
         getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
         getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
-        logout: vi.fn().mockResolvedValue(null),
-        createOrg: vi.fn().mockResolvedValue(null)
+        getAccessTokenRaw: vi.fn().mockResolvedValue(null),
+        getRoles: vi.fn().mockResolvedValue({ roles: [] }),
       });
 
       const response = await GET();
@@ -151,8 +151,8 @@ describe('/api/health/auth', () => {
         getIdTokenRaw: vi.fn().mockResolvedValue(null),
         getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
         getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
-        logout: vi.fn().mockResolvedValue(null),
-        createOrg: vi.fn().mockResolvedValue(null)
+        getAccessTokenRaw: vi.fn().mockResolvedValue(null),
+        getRoles: vi.fn().mockResolvedValue({ roles: [] }),
       });
 
       const response = await GET();
@@ -169,7 +169,7 @@ describe('/api/health/auth', () => {
     });
 
     it('should include deployment information', async () => {
-      process.env.NODE_ENV = 'production';
+      process.env = { ...process.env, NODE_ENV: 'production' };
       process.env.VERCEL = '1';
 
       // Mock successful SDK
@@ -190,8 +190,8 @@ describe('/api/health/auth', () => {
         getIdTokenRaw: vi.fn().mockResolvedValue(null),
         getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
         getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
-        logout: vi.fn().mockResolvedValue(null),
-        createOrg: vi.fn().mockResolvedValue(null)
+        getAccessTokenRaw: vi.fn().mockResolvedValue(null),
+        getRoles: vi.fn().mockResolvedValue({ roles: [] }),
       });
 
       const response = await GET();
@@ -230,8 +230,8 @@ describe('/api/health/auth', () => {
         getIdTokenRaw: vi.fn().mockResolvedValue(null),
         getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
         getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
-        logout: vi.fn().mockResolvedValue(null),
-        createOrg: vi.fn().mockResolvedValue(null)
+        getAccessTokenRaw: vi.fn().mockResolvedValue(null),
+        getRoles: vi.fn().mockResolvedValue({ roles: [] }),
       });
 
       const response = await GET();

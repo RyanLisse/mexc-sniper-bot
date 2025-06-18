@@ -1,14 +1,14 @@
 "use client";
 
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
+} from "./ui/card";
 import {
   Dialog,
   DialogContent,
@@ -16,20 +16,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/src/components/ui/dialog";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Progress } from "@/src/components/ui/progress";
+} from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Progress } from "./ui/progress";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { Textarea } from "@/src/components/ui/textarea";
-import { useToast } from "@/src/components/ui/use-toast";
+} from "./ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Textarea } from "./ui/textarea";
+import { useToast } from "./ui/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,

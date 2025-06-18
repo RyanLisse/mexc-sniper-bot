@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getUnifiedMexcClient } from "@/src/services/mexc-unified-exports";
+import { getUnifiedMexcClient } from "../../../../src/services/mexc-unified-exports";
 
 export async function GET() {
   try {

@@ -196,8 +196,8 @@ export class WorkflowExecutor {
       };
 
       // If we have symbol data, use it directly
-      if (request.symbolData && request.symbolData.length > 0) {
-        analysisInput.symbolData = request.symbolData;
+      if ((request as any).symbolData && (request as any).symbolData.length > 0) {
+        analysisInput.symbolData = (request as any).symbolData;
       }
 
       // Try enhanced analysis first

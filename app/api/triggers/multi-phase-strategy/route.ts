@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { inngest } from "@/src/inngest/client";
+import { inngest } from "../../../../src/inngest/client";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { multiPhaseTradingService } from "@/src/services/multi-phase-trading-service";
-import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
-import { rateLimiter } from "@/src/lib/rate-limiter";
-import { apiResponse } from "@/src/lib/api-response";
+import { multiPhaseTradingService } from "../../../../src/services/multi-phase-trading-service";
+import { StrategyAgent } from "../../../../src/mexc-agents/strategy-agent";
+import { rateLimiter } from "../../../../src/lib/rate-limiter";
+import { apiResponse } from "../../../../src/lib/api-response";
 
 // ===========================================
 // MULTI-PHASE STRATEGY CREATION TRIGGER
@@ -43,7 +43,7 @@ const TriggerSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategy_triggers");
+    const rateLimitResult = await rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategy_triggers");
     if (!rateLimitResult.success) {
       return apiResponse.error("Rate limit exceeded", 429);
     }
@@ -331,7 +331,7 @@ async function handleStrategyRecommendation(data: any, userId: string) {
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategy_status");
+    const rateLimitResult = await rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategy_status");
     if (!rateLimitResult.success) {
       return apiResponse.error("Rate limit exceeded", 429);
     }

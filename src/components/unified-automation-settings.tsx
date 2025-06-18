@@ -5,10 +5,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Label } from "@/src/components/ui/label";
-import { Separator } from "@/src/components/ui/separator";
-import { Switch } from "@/src/components/ui/switch";
+} from "./ui/card";
+import { Label } from "./ui/label";
+import { Separator } from "./ui/separator";
+import { Switch } from "./ui/switch";
 import { Target } from "lucide-react";
 
 interface AutomationSettings {

@@ -13,8 +13,8 @@
  * - Comprehensive test results
  */
 
-import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
-import { getUserCredentials } from "@/src/services/user-credentials-service";
+import { getRecommendedMexcService } from "../services/mexc-unified-exports";
+import { getUserCredentials } from "../services/user-credentials-service";
 import { 
   createCredentialResponse, 
   type CredentialValidationResult,
@@ -311,9 +311,9 @@ export class UnifiedMexcValidationService {
       const result = await mexcService.testConnectivity();
       
       return {
-        connected: result.success,
+        connected: result as boolean,
         responseTime: Date.now() - startTime,
-        error: result.error
+        error: result ? undefined : 'Connection test failed'
       };
     } catch (error) {
       return {
@@ -453,7 +453,7 @@ export class UnifiedMexcValidationService {
         : getRecommendedMexcService();
 
       // Use Promise.race to implement timeout
-      const connectivityPromise = mexcService.testConnectivity();
+      const connectivityPromise = mexcService.testConnectivityWithResponse();
       const timeoutPromise = new Promise<{ success: boolean; error: string }>((_, reject) => {
         setTimeout(() => reject(new Error('Connectivity test timeout')), timeoutMs);
       });

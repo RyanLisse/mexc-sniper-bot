@@ -1,17 +1,17 @@
 "use client";
 
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import type { ExitStrategy } from "@/src/types/exit-strategies";
+} from "./ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import type { ExitStrategy } from "../types/exit-strategies";
 import {
   AlertTriangle,
   CheckCircle,

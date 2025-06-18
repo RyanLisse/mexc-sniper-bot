@@ -1,8 +1,8 @@
-import type { ApiResponse } from "@/src/lib/api-response";
-import { queryKeys } from "@/src/lib/query-client";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
+import type { ApiResponse } from "../lib/api-response";
+import { queryKeys } from "../lib/query-client";
+import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "../lib/kinde-auth-client";
 
 // MEXC Calendar Data Hook
 export function useMexcCalendar() {

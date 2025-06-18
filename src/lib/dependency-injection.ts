@@ -152,7 +152,7 @@ export class DIContainer {
     this.resolutionStack.push(identifier);
 
     try {
-      return this.createInstance(registration, scopeId);
+      return this.createInstance(registration, scopeId) as T;
     } finally {
       this.resolutionStack.pop();
     }
@@ -165,7 +165,7 @@ export class DIContainer {
     switch (registration.lifetime) {
       case ServiceLifetime.SINGLETON:
         if (!registration.instance) {
-          registration.instance = registration.factory();
+          registration.instance = registration.factory() as T;
         }
         return registration.instance as T;
 
@@ -372,7 +372,7 @@ export function registerService<T>(
   const serviceId = identifier || constructor;
   const dependencies = (constructor as unknown as { __dependencies?: ServiceIdentifier[] }).__dependencies || [];
   
-  container.registerClass(serviceId, lifetime, dependencies);
+  container.registerClass(constructor, lifetime, dependencies);
 }
 
 /**

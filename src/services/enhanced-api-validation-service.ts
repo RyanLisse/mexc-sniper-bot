@@ -718,7 +718,104 @@ export class EnhancedApiValidationService {
       entries: Array.from(this.validationCache.keys()),
     };
   }
+
+  /**
+   * Initialize the service (required for integrated service compatibility)
+   */
+  async initialize(): Promise<void> {
+    console.log('[Enhanced API Validation] Initializing service...');
+    try {
+      // Clear any stale cache on initialization
+      this.clearCache();
+      
+      // Test basic connectivity
+      await this.testNetworkConnectivity();
+      
+      console.log('[Enhanced API Validation] Service initialized successfully');
+    } catch (error) {
+      console.error('[Enhanced API Validation] Service initialization failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Perform comprehensive validation for integrated service
+   */
+  async performComprehensiveValidation(
+    userId: string,
+    credentials?: { apiKey: string; secretKey: string; passphrase?: string }
+  ): Promise<{
+    credentialsValid: boolean;
+    securityRisks: string[];
+    recommendations: string[];
+    validationDetails?: ValidationResult;
+  }> {
+    if (!credentials) {
+      return {
+        credentialsValid: false,
+        securityRisks: ['No credentials provided'],
+        recommendations: ['Provide valid MEXC API credentials'],
+      };
+    }
+
+    try {
+      const validationResult = await this.validateApiCredentials({
+        apiKey: credentials.apiKey,
+        secretKey: credentials.secretKey,
+        passphrase: credentials.passphrase,
+        validateIpAllowlist: true,
+        performanceBenchmark: false,
+        securityChecks: true,
+      });
+
+      const securityRisks: string[] = [];
+      if (validationResult.details.securityAnalysis?.riskLevel === 'high') {
+        securityRisks.push('High security risk level detected');
+      }
+      if (!validationResult.details.ipAllowlisting) {
+        securityRisks.push('IP allowlisting validation failed');
+      }
+
+      return {
+        credentialsValid: validationResult.valid,
+        securityRisks,
+        recommendations: validationResult.recommendations,
+        validationDetails: validationResult,
+      };
+    } catch (error) {
+      console.error('[Enhanced API Validation] Comprehensive validation failed:', error);
+      return {
+        credentialsValid: false,
+        securityRisks: ['Validation system error'],
+        recommendations: ['Check system logs and try again'],
+      };
+    }
+  }
+
+  /**
+   * Perform quick validation for health checks
+   */
+  async performQuickValidation(): Promise<{
+    systemHealthy: boolean;
+    error?: string;
+  }> {
+    try {
+      const connectivityResult = await this.testNetworkConnectivity();
+      return {
+        systemHealthy: connectivityResult.success,
+        error: connectivityResult.error,
+      };
+    } catch (error) {
+      return {
+        systemHealthy: false,
+        error: error instanceof Error ? error.message : 'Quick validation failed',
+      };
+    }
+  }
 }
 
 // Export singleton instance
 export const enhancedApiValidationService = EnhancedApiValidationService.getInstance();
+
+// Export with alternative name for backward compatibility
+export const enhancedApiValidation = enhancedApiValidationService;

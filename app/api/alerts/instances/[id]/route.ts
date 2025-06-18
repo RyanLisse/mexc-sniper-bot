@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { db } from "@/src/db";
-import { AutomatedAlertingService } from "@/src/services/automated-alerting-service";
-import { validateRequest } from "@/src/lib/api-auth";
-import { handleApiError } from "@/src/lib/api-response";
-import { alertInstances } from "@/src/db/schemas/alerts";
+import { db } from "../../../../../src/db";
+import { AutomatedAlertingService } from "../../../../../src/services/automated-alerting-service";
+import { validateRequest } from "../../../../../src/lib/api-auth";
+import { handleApiError } from "../../../../../src/lib/api-response";
+import { alertInstances } from "../../../../../src/db/schemas/alerts";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 

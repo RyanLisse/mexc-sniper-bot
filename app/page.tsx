@@ -1,11 +1,11 @@
 "use client";
 
-import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "../src/lib/kinde-auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Badge } from "@/src/components/ui/badge";
+import { Button } from "../src/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../src/components/ui/card";
+import { Badge } from "../src/components/ui/badge";
 import { Zap, Bot, Brain, BarChart3, Target, TrendingUp, Clock, Shield } from "lucide-react";
 
 export default function HomePage() {

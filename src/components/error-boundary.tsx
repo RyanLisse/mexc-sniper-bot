@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/src/components/ui/button";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { cn } from "@/src/lib/utils";
+} from "./ui/card";
+import { cn } from "../lib/utils";
 import { AlertCircle, ChevronDown, ChevronUp, Home, RefreshCcw } from "lucide-react";
 import type React from "react";
 import { Component, type ErrorInfo, type ReactNode } from "react";

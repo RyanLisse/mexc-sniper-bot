@@ -13,11 +13,11 @@
  * - Integration with rate limiting and circuit breaker systems
  */
 
-import { db } from "@/src/db";
-import { userCredentials } from "@/src/db/schema";
+import { db } from "../db";
+import { apiCredentials } from "../db/schema";
 import { getUserCredentials, updateUserCredentials } from "./user-credentials-service";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
-import { logSecurityEvent, getSecurityEvents, isIPSuspicious } from "@/src/lib/rate-limiter";
+import { logSecurityEvent, getSecurityEvents, isIPSuspicious } from "../lib/rate-limiter";
 import { mexcApiBreaker } from "./circuit-breaker";
 import { eq, and, lt, desc } from "drizzle-orm";
 

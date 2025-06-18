@@ -5,7 +5,7 @@ import {
   getIPAnalysis, 
   isIPSuspicious,
   getSecurityEvents 
-} from '@/src/lib/rate-limiter';
+} from "../../../../src/lib/rate-limiter";
 
 export async function GET(request: NextRequest) {
   const ip = getClientIP(request);

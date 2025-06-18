@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-import { transactions, type NewTransaction, type Transaction } from '@/src/db/schema';
+import { transactions, type NewTransaction, type Transaction } from "../../src/db/schema";
 import { eq, desc } from 'drizzle-orm';
 import { createTestDatabase, createTestUser, type TestDbSetup } from './test-db-setup';
 

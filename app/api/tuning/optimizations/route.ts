@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { ParameterOptimizationEngine } from '@/src/services/parameter-optimization-engine';
-import { logger } from '@/src/lib/utils';
+import { ParameterOptimizationEngine } from "../../../../src/services/parameter-optimization-engine";
+import { logger } from "../../../../src/lib/utils";
 
 // Initialize optimization engine
 const optimizationEngine = new ParameterOptimizationEngine();

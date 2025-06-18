@@ -1,7 +1,7 @@
 "use client";
 
-import { useSafetyMonitoring } from "@/src/hooks/use-safety-monitoring";
-import { cn } from "@/src/lib/utils";
+import { useSafetyMonitoring } from "../hooks/use-safety-monitoring";
+import { cn } from "../lib/utils";
 import {
   Activity,
   AlertCircle,

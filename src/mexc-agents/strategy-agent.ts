@@ -1,7 +1,7 @@
 import {
   PREDEFINED_STRATEGIES,
   type TradingStrategyConfig,
-} from "@/src/services/multi-phase-trading-service";
+} from "../services/multi-phase-trading-service";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 export interface StrategyRequest {

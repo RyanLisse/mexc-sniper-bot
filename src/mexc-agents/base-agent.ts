@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
-import { CACHE_CONSTANTS, TIME_CONSTANTS } from "@/src/lib/constants";
-import { globalEnhancedAgentCache, initializeAgentCache } from "@/src/lib/enhanced-agent-cache";
-import { ErrorLoggingService } from "@/src/services/error-logging-service";
+import { CACHE_CONSTANTS, TIME_CONSTANTS } from "../lib/constants";
+import { globalEnhancedAgentCache, initializeAgentCache } from "../lib/enhanced-agent-cache";
+import { ErrorLoggingService } from "../services/error-logging-service";
 import OpenAI from "openai";
 
 export interface AgentConfig {
@@ -22,6 +22,7 @@ export interface CachedResponse {
 
 export interface AgentResponse {
   content: string;
+  data?: any; // Add data property for service responses
   metadata: {
     agent: string;
     timestamp: string;
@@ -39,6 +40,8 @@ export interface AgentResponse {
     [key: string]: unknown; // Allow additional metadata properties
   };
 }
+
+export type AgentStatus = 'idle' | 'running' | 'error' | 'offline';
 
 export class BaseAgent {
   protected openai: OpenAI;
@@ -262,6 +265,13 @@ export class BaseAgent {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async process(_input: string, _context?: Record<string, unknown>): Promise<AgentResponse> {
     throw new Error("Process method must be implemented by subclass");
+  }
+
+  /**
+   * Get agent status
+   */
+  getStatus(): AgentStatus {
+    return 'idle'; // Default implementation, subclasses can override
   }
 
   /**

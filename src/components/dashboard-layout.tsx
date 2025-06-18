@@ -22,7 +22,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-} from "@/src/components/ui/optimized-exports";
+} from "./ui/optimized-exports";
 import {
   Bot,
   Brain,
@@ -35,9 +35,9 @@ import {
   Shield,
   User,
   Zap,
-} from "@/src/components/ui/optimized-icons";
-import { useAuthCacheManager } from "@/src/hooks/use-auth-cache-manager";
-import { useAuth } from "@/src/lib/kinde-auth-client";
+} from "./ui/optimized-icons";
+import { useAuthCacheManager } from "../hooks/use-auth-cache-manager";
+import { useAuth } from "../lib/kinde-auth-client";
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

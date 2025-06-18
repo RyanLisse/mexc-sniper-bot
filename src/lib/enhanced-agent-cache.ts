@@ -9,8 +9,7 @@
  * - Smart cache warming for frequently used agent patterns
  */
 
-import type { AgentResponse } from "@/src/mexc-agents/base-agent";
-import type { AgentPerformanceMetrics } from "@/src/mexc-agents/coordination/performance-collector";
+import type { AgentResponse } from "../mexc-agents/base-agent";
 import { generateCacheKey, globalCacheManager } from "./cache-manager";
 
 // =======================
@@ -24,6 +23,19 @@ export interface AgentCacheConfig {
   enableWorkflowCaching: boolean;
   enableHealthCaching: boolean;
   cacheWarmupEnabled: boolean;
+}
+
+export interface AgentCacheMetrics {
+  agentId: string;
+  totalExecutions: number;
+  successfulExecutions: number;
+  failedExecutions: number;
+  avgResponseTime: number;
+  errorRate: number;
+  lastActivity: number;
+  cacheHits: number;
+  cacheSets: number;
+  throughput: number;
 }
 
 export interface CachedAgentResponse extends AgentResponse {
@@ -102,7 +114,7 @@ export interface AgentCacheAnalytics {
 
 export class EnhancedAgentCache {
   private config: AgentCacheConfig;
-  private performanceMetrics: Map<string, AgentPerformanceMetrics> = new Map();
+  private performanceMetrics: Map<string, AgentCacheMetrics> = new Map();
   private workflowCache: Map<string, WorkflowCacheEntry> = new Map();
   private healthCache: Map<string, AgentHealthCache> = new Map();
   private warmupPatterns: Set<string> = new Set();
@@ -212,7 +224,6 @@ export class EnhancedAgentCache {
           cacheKey,
           cachedAt: new Date().toISOString(),
           dependencies,
-          priority,
           agentId,
         },
       };
@@ -225,11 +236,6 @@ export class EnhancedAgentCache {
           type: "agent_response",
           source: agentId,
           dependencies,
-          priority,
-          // Store the original key components for easier invalidation
-          agentId,
-          input: input.substring(0, 100), // Store first 100 chars for identification
-          keyComponents: { agentId, input, context },
         },
       });
 
@@ -676,7 +682,6 @@ export class EnhancedAgentCache {
             metadata: {
               type: "agent_response",
               source: pattern.agentId,
-              warmup: true,
             },
           });
         }
@@ -798,7 +803,7 @@ export class EnhancedAgentCache {
     return Math.floor(Math.random() * 10) + 1;
   }
 
-  private createDefaultMetrics(agentId: string): AgentPerformanceMetrics {
+  private createDefaultMetrics(agentId: string): AgentCacheMetrics {
     return {
       agentId,
       totalExecutions: 0,
@@ -813,7 +818,7 @@ export class EnhancedAgentCache {
     };
   }
 
-  private calculateCacheEfficiency(metrics: AgentPerformanceMetrics): number {
+  private calculateCacheEfficiency(metrics: AgentCacheMetrics): number {
     const totalRequests = metrics.totalExecutions;
     if (totalRequests === 0) return 0;
 

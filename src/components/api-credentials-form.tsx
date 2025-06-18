@@ -1,23 +1,23 @@
 "use client";
 
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Input } from "@/src/components/ui/input";
+} from "./ui/card";
+import { Input } from "./ui/input";
 import {
   type ApiCredentials,
   useApiCredentials,
   useDeleteApiCredentials,
   useSaveApiCredentials,
   useTestApiCredentials,
-} from "@/src/hooks/use-api-credentials";
-import { useMexcConnectivity } from "@/src/hooks/use-mexc-data";
+} from "../hooks/use-api-credentials";
+import { useMexcConnectivity } from "../hooks/use-mexc-data";
 import {
   AlertCircle,
   CheckCircle,

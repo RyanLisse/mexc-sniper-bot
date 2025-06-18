@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/src/lib/kinde-auth";
-import { db } from "@/src/db";
-import { AutomatedAlertingService } from "@/src/services/automated-alerting-service";
-import { AnomalyDetectionService } from "@/src/services/anomaly-detection-service";
-import { AlertCorrelationEngine } from "@/src/services/alert-correlation-engine";
-import { validateRequest } from "@/src/lib/api-auth";
-import { handleApiError } from "@/src/lib/api-response";
+import { getSession } from "../../../../src/lib/kinde-auth";
+import { db } from "../../../../src/db";
+import { AutomatedAlertingService } from "../../../../src/services/automated-alerting-service";
+import { AnomalyDetectionService } from "../../../../src/services/anomaly-detection-service";
+import { AlertCorrelationEngine } from "../../../../src/services/alert-correlation-engine";
+import { validateRequest } from "../../../../src/lib/api-auth";
+import { handleApiError } from "../../../../src/lib/api-response";
 import { z } from "zod";
 
 const alertingService = new AutomatedAlertingService(db);
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
           severity: correlation.severity,
           firstAlert: new Date(correlation.firstAlertAt).toISOString(),
           lastAlert: new Date(correlation.lastAlertAt).toISOString(),
-          duration: correlation.lastAlertAt - correlation.firstAlertAt,
+          duration: new Date(correlation.lastAlertAt).getTime() - new Date(correlation.firstAlertAt).getTime(),
         })),
       },
       

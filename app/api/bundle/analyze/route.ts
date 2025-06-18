@@ -5,8 +5,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createApiHandler } from '@/src/lib/api-middleware';
-import { bundleAnalyzer, generateBundleReport, getBundleAnalysis, getOptimizationRecommendations } from '@/src/lib/bundle-analyzer';
+import { createApiHandler } from "../../../../src/lib/api-middleware";
+import { bundleAnalyzer, generateBundleReport, getBundleAnalysis, getOptimizationRecommendations } from "../../../../src/lib/bundle-analyzer";
 
 /**
  * GET /api/bundle/analyze

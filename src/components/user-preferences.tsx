@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/src/components/ui/button";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { useUserPreferences } from "@/src/hooks/use-user-preferences";
+} from "./ui/card";
+import { useUserPreferences } from "../hooks/use-user-preferences";
 import { ExternalLink, Settings } from "lucide-react";
 import { TakeProfitLevels } from "./take-profit-levels";
 import { TradingConfiguration } from "./trading-configuration";

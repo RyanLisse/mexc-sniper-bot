@@ -14,7 +14,7 @@
  * - Performance tracking
  */
 
-import { useCallback, useEffect, useRef } from "react";
+// Memory leak optimizer - standalone JavaScript implementation
 
 // ============================================================================
 // Memory Leak Detection and Prevention
@@ -292,160 +292,91 @@ export class MemoryLeakDetector {
 }
 
 // ============================================================================
-// React Hook Memory Optimizations
+// Timer Memory Management
 // ============================================================================
 
 /**
- * Enhanced useEffect that automatically tracks and cleans up resources
+ * Memory-safe timer managers
  */
-export function useMemoryOptimizedEffect(
-  effect: () => void | (() => void),
-  deps?: React.DependencyList,
+export function createMemoryOptimizedTimeout(
+  callback: () => void,
+  delay: number | null,
   componentName?: string
-): void {
+): {
+  start: () => void;
+  clear: () => void;
+  isActive: () => boolean;
+} {
   const detector = MemoryLeakDetector.getInstance();
-  const cleanupRef = useRef<(() => void) | null>(null);
+  let timeoutId: NodeJS.Timeout | null = null;
 
-  useEffect(() => {
-    // Register component if provided
-    if (componentName) {
-      detector.registerComponent(componentName);
-    }
+  if (componentName) {
+    detector.registerComponent(componentName);
+  }
 
-    // Execute effect
-    const cleanup = effect();
-
-    if (cleanup && typeof cleanup === "function") {
-      cleanupRef.current = cleanup;
+  return {
+    start: () => {
+      if (delay === null || timeoutId) return;
       
-      // Register cleanup function
-      if (componentName) {
-        detector.registerEventListener(componentName, cleanup);
-      }
-    }
-
-    return () => {
-      // Execute cleanup
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        
-        // Unregister cleanup
-        if (componentName) {
-          detector.unregisterEventListener(componentName, cleanupRef.current);
+      timeoutId = setTimeout(() => {
+        callback();
+        if (timeoutId) {
+          detector.unregisterTimer(timeoutId);
+          timeoutId = null;
         }
-        
-        cleanupRef.current = null;
+      }, delay);
+      
+      detector.registerTimer(timeoutId);
+    },
+    clear: () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        detector.unregisterTimer(timeoutId);
+        timeoutId = null;
       }
-
-      // Unregister component
-      if (componentName) {
-        detector.unregisterComponent(componentName);
-      }
-    };
-  }, deps);
+    },
+    isActive: () => timeoutId !== null
+  };
 }
 
-/**
- * Memory-safe timer hooks
- */
-export function useMemoryOptimizedTimeout(
+export function createMemoryOptimizedInterval(
   callback: () => void,
   delay: number | null,
   componentName?: string
-): void {
+): {
+  start: () => void;
+  clear: () => void;
+  isActive: () => boolean;
+} {
   const detector = MemoryLeakDetector.getInstance();
-  const callbackRef = useRef(callback);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  let intervalId: NodeJS.Timeout | null = null;
 
-  // Update callback ref
-  callbackRef.current = callback;
+  if (componentName) {
+    detector.registerComponent(componentName);
+  }
 
-  useEffect(() => {
-    if (delay === null) return;
-
-    const timer = setTimeout(() => {
-      callbackRef.current();
-      if (timeoutRef.current) {
-        detector.unregisterTimer(timeoutRef.current);
-        timeoutRef.current = null;
+  return {
+    start: () => {
+      if (delay === null || intervalId) return;
+      
+      intervalId = setInterval(callback, delay);
+      detector.registerInterval(intervalId);
+    },
+    clear: () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        detector.unregisterInterval(intervalId);
+        intervalId = null;
       }
-    }, delay);
-
-    timeoutRef.current = timer;
-    detector.registerTimer(timer);
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        detector.unregisterTimer(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    };
-  }, [delay, detector]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        detector.unregisterTimer(timeoutRef.current);
-      }
-      if (componentName) {
-        detector.cleanupComponent(componentName);
-      }
-    };
-  }, [detector, componentName]);
-}
-
-export function useMemoryOptimizedInterval(
-  callback: () => void,
-  delay: number | null,
-  componentName?: string
-): void {
-  const detector = MemoryLeakDetector.getInstance();
-  const callbackRef = useRef(callback);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Update callback ref
-  callbackRef.current = callback;
-
-  useEffect(() => {
-    if (delay === null) return;
-
-    const interval = setInterval(() => {
-      callbackRef.current();
-    }, delay);
-
-    intervalRef.current = interval;
-    detector.registerInterval(interval);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        detector.unregisterInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [delay, detector]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        detector.unregisterInterval(intervalRef.current);
-      }
-      if (componentName) {
-        detector.cleanupComponent(componentName);
-      }
-    };
-  }, [detector, componentName]);
+    },
+    isActive: () => intervalId !== null
+  };
 }
 
 /**
- * Memory-safe WebSocket hook
+ * Memory-safe WebSocket manager
  */
-export function useMemoryOptimizedWebSocket(
+export function createMemoryOptimizedWebSocket(
   url: string | null,
   options?: {
     onOpen?: (event: Event) => void;
@@ -465,109 +396,88 @@ export function useMemoryOptimizedWebSocket(
   close: () => void;
 } {
   const detector = MemoryLeakDetector.getInstance();
-  const webSocketRef = useRef<WebSocket | null>(null);
-  const [readyState, setReadyState] = useState<number>(WebSocket.CLOSED);
-  const optionsRef = useRef(options);
-  const reconnectAttemptsRef = useRef(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  let webSocket: WebSocket | null = null;
+  let readyState: number = WebSocket.CLOSED;
+  let reconnectAttempts = 0;
+  let reconnectTimeout: NodeJS.Timeout | null = null;
 
-  // Update options ref
-  optionsRef.current = options;
-
-  const connect = useCallback(() => {
-    if (!url || webSocketRef.current?.readyState === WebSocket.OPEN) return;
+  const connect = () => {
+    if (!url || webSocket?.readyState === WebSocket.OPEN) return;
 
     try {
       const ws = new WebSocket(url, options?.protocols);
-      webSocketRef.current = ws;
+      webSocket = ws;
       detector.registerWebSocket(ws);
 
       ws.onopen = (event) => {
-        setReadyState(WebSocket.OPEN);
-        reconnectAttemptsRef.current = 0;
-        optionsRef.current?.onOpen?.(event);
+        readyState = WebSocket.OPEN;
+        reconnectAttempts = 0;
+        options?.onOpen?.(event);
       };
 
       ws.onmessage = (event) => {
-        optionsRef.current?.onMessage?.(event);
+        options?.onMessage?.(event);
       };
 
       ws.onerror = (event) => {
-        optionsRef.current?.onError?.(event);
+        options?.onError?.(event);
       };
 
       ws.onclose = (event) => {
-        setReadyState(WebSocket.CLOSED);
+        readyState = WebSocket.CLOSED;
         detector.unregisterWebSocket(ws);
-        optionsRef.current?.onClose?.(event);
+        options?.onClose?.(event);
 
         // Auto-reconnect logic
         if (options?.shouldReconnect && 
-            reconnectAttemptsRef.current < (options.maxReconnectAttempts || 5)) {
-          reconnectAttemptsRef.current++;
+            reconnectAttempts < (options.maxReconnectAttempts || 5)) {
+          reconnectAttempts++;
           
-          reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectTimeout = setTimeout(() => {
             connect();
           }, options.reconnectDelay || 3000);
           
-          detector.registerTimer(reconnectTimeoutRef.current);
+          detector.registerTimer(reconnectTimeout);
         }
       };
 
-      ws.onopen = ws.onopen;
-      setReadyState(ws.readyState);
+      readyState = ws.readyState;
 
     } catch (error) {
       console.error("WebSocket connection failed:", error);
-      setReadyState(WebSocket.CLOSED);
+      readyState = WebSocket.CLOSED;
     }
-  }, [url, options?.protocols, options?.shouldReconnect, options?.reconnectDelay, options?.maxReconnectAttempts, detector]);
+  };
 
-  const send = useCallback((data: string | ArrayBufferLike | Blob | ArrayBufferView) => {
-    if (webSocketRef.current?.readyState === WebSocket.OPEN) {
-      webSocketRef.current.send(data);
+  const send = (data: string | ArrayBufferLike | Blob | ArrayBufferView) => {
+    if (webSocket?.readyState === WebSocket.OPEN) {
+      webSocket.send(data);
     } else {
       console.warn("WebSocket not connected, message not sent");
     }
-  }, []);
+  };
 
-  const close = useCallback(() => {
-    if (webSocketRef.current) {
-      webSocketRef.current.close();
-      detector.unregisterWebSocket(webSocketRef.current);
-      webSocketRef.current = null;
+  const close = () => {
+    if (webSocket) {
+      webSocket.close();
+      detector.unregisterWebSocket(webSocket);
+      webSocket = null;
     }
     
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      detector.unregisterTimer(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+      detector.unregisterTimer(reconnectTimeout);
+      reconnectTimeout = null;
     }
-  }, [detector]);
+  };
 
-  // Connect on mount or URL change
-  useEffect(() => {
-    if (url) {
-      connect();
-    }
-    
-    return () => {
-      close();
-    };
-  }, [url, connect, close]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      close();
-      if (componentName) {
-        detector.cleanupComponent(componentName);
-      }
-    };
-  }, [close, componentName, detector]);
+  // Auto-connect if URL is provided
+  if (url) {
+    connect();
+  }
 
   return {
-    webSocket: webSocketRef.current,
+    webSocket,
     readyState,
     send,
     close,
@@ -575,73 +485,69 @@ export function useMemoryOptimizedWebSocket(
 }
 
 /**
- * Memory-safe event listener hook
+ * Memory-safe event listener manager
  */
-export function useMemoryOptimizedEventListener<T extends keyof WindowEventMap>(
+export function createMemoryOptimizedEventListener<T extends keyof WindowEventMap>(
   eventType: T,
   listener: (event: WindowEventMap[T]) => void,
   target: EventTarget = window,
   options?: boolean | AddEventListenerOptions,
   componentName?: string
-): void {
+): {
+  cleanup: () => void;
+} {
   const detector = MemoryLeakDetector.getInstance();
-  const listenerRef = useRef(listener);
 
-  // Update listener ref
-  listenerRef.current = listener;
+  const eventListener = (event: Event) => {
+    listener(event as WindowEventMap[T]);
+  };
 
-  useEffect(() => {
-    const eventListener = (event: Event) => {
-      listenerRef.current(event as WindowEventMap[T]);
-    };
+  target.addEventListener(eventType, eventListener, options);
 
-    target.addEventListener(eventType, eventListener, options);
-
-    // Register with detector
-    const cleanup = () => {
-      target.removeEventListener(eventType, eventListener, options);
-    };
-
+  // Register with detector
+  const cleanup = () => {
+    target.removeEventListener(eventType, eventListener, options);
     if (componentName) {
-      detector.registerEventListener(componentName, cleanup);
+      detector.cleanupComponent(componentName);
     }
+  };
 
-    return cleanup;
-  }, [eventType, target, options, detector, componentName]);
+  if (componentName) {
+    detector.registerEventListener(componentName, cleanup);
+  }
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (componentName) {
-        detector.cleanupComponent(componentName);
-      }
-    };
-  }, [componentName, detector]);
+  return { cleanup };
 }
 
 /**
- * Memory-optimized state with automatic cleanup
+ * Memory-optimized state manager with automatic cleanup
  */
-export function useMemoryOptimizedState<T>(
+export function createMemoryOptimizedState<T>(
   initialValue: T,
   componentName?: string
-): [T, React.Dispatch<React.SetStateAction<T>>] {
+): {
+  get: () => T;
+  set: (value: T | ((prev: T) => T)) => void;
+  cleanup: () => void;
+} {
   const detector = MemoryLeakDetector.getInstance();
-  const [state, setState] = useState<T>(initialValue);
+  let state = initialValue;
+  
+  if (componentName) {
+    detector.registerComponent(componentName);
+  }
 
-  useEffect(() => {
-    if (componentName) {
-      detector.registerComponent(componentName);
-    }
-
-    return () => {
+  return {
+    get: () => state,
+    set: (value: T | ((prev: T) => T)) => {
+      state = typeof value === 'function' ? (value as (prev: T) => T)(state) : value;
+    },
+    cleanup: () => {
       if (componentName) {
         detector.unregisterComponent(componentName);
       }
-    };
-  }, [componentName, detector]);
-
-  return [state, setState];
+    }
+  };
 }
 
 // ============================================================================
@@ -698,7 +604,7 @@ export const memoryManager = {
     console.log("⚡ Performance optimization completed");
   },
 
-  private isElementVisible(element: HTMLElement): boolean {
+  isElementVisible(element: HTMLElement): boolean {
     const rect = element.getBoundingClientRect();
     const windowHeight = window.innerHeight || document.documentElement.clientHeight;
     const windowWidth = window.innerWidth || document.documentElement.clientWidth;
@@ -745,28 +651,6 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
 }
 
 // ============================================================================
-// React Component Memory Wrapper
 // ============================================================================
-
-/**
- * HOC for automatic memory management
- */
-export function withMemoryOptimization<P extends object>(
-  Component: React.ComponentType<P>,
-  componentName?: string
-) {
-  return function MemoryOptimizedComponent(props: P) {
-    const detector = MemoryLeakDetector.getInstance();
-    const name = componentName || Component.displayName || Component.name || "UnknownComponent";
-
-    useEffect(() => {
-      detector.registerComponent(name);
-      
-      return () => {
-        detector.cleanupComponent(name);
-      };
-    }, [detector, name]);
-
-    return <Component {...props} />;
-  };
-}
+// End of Memory Leak Optimizer
+// ============================================================================

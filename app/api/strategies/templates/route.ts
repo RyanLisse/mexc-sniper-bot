@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { multiPhaseTradingService, PREDEFINED_STRATEGIES } from "@/src/services/multi-phase-trading-service";
-import { MultiPhaseStrategyBuilder, StrategyPatterns, createQuickStrategies } from "@/src/services/multi-phase-strategy-builder";
-import { rateLimiter } from "@/src/lib/rate-limiter";
-import { apiResponse } from "@/src/lib/api-response";
+import { multiPhaseTradingService, PREDEFINED_STRATEGIES } from "../../../../src/services/multi-phase-trading-service";
+import { MultiPhaseStrategyBuilder, StrategyPatterns, createQuickStrategies } from "../../../../src/services/multi-phase-strategy-builder";
+import { rateLimiter } from "../../../../src/lib/rate-limiter";
+import { apiResponse } from "../../../../src/lib/api-response";
 
 // ===========================================
 // STRATEGY TEMPLATES API
@@ -41,7 +41,7 @@ const BuilderRequestSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "templates_read");
+    const rateLimitResult = await rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "templates_read");
     if (!rateLimitResult.success) {
       return apiResponse.error("Rate limit exceeded", 429);
     }
@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "templates_build");
+    const rateLimitResult = await rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "templates_build");
     if (!rateLimitResult.success) {
       return apiResponse.error("Rate limit exceeded", 429);
     }

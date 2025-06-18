@@ -1,13 +1,13 @@
-import { db } from "@/src/db";
+import { db } from "../db";
 import {
   type NewExecutionHistory,
   executionHistory,
   snipeTargets,
   userPreferences,
-} from "@/src/db/schema";
-import { getMexcService } from "@/src/services/mexc-unified-exports";
-import type { ExitLevel, ExitStrategy } from "@/src/types/exit-strategies";
-import { EXIT_STRATEGIES } from "@/src/types/exit-strategies";
+} from "../db/schema";
+import { getMexcService } from "./mexc-unified-exports";
+import type { ExitLevel, ExitStrategy } from "../types/exit-strategies";
+import { EXIT_STRATEGIES } from "../types/exit-strategies";
 import { and, eq } from "drizzle-orm";
 
 export interface ActivePosition {

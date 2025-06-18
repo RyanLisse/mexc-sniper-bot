@@ -19,7 +19,7 @@ import type {
   TradingPortfolioMessage,
   TradingPriceMessage,
   TradingSignalMessage,
-} from "@/src/lib/websocket-types";
+} from "../lib/websocket-types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocket } from "./use-websocket";
 

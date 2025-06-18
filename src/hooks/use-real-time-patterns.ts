@@ -18,7 +18,7 @@ import type {
   PatternDiscoveryMessage,
   PatternReadyStateMessage,
   TradingSignalMessage,
-} from "@/src/lib/websocket-types";
+} from "../lib/websocket-types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocket } from "./use-websocket";
 
@@ -462,7 +462,7 @@ export function useRealTimePatterns(
       // Track pattern validation results
       if (workflow.workflowType === "pattern_analysis" && workflow.status === "completed") {
         const success = workflow.result?.success || false;
-        const patternId = workflow.metadata?.patternId;
+        const patternId = (workflow.metadata as any)?.patternId;
 
         if (patternId) {
           analyticsRef.current.validatePattern(patternId, success);

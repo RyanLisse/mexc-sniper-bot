@@ -260,8 +260,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
         case "/api/v3/etf/symbols":
         case "/symbols": {
           console.log(`[MexcApiAgent] Fetching symbols data via service layer`);
-          const vcoinId = params?.vcoin_id || params?.vcoinId;
-          serviceResponse = await this.mexcService.getSymbolsData(vcoinId);
+          serviceResponse = await this.mexcService.getSymbolsData();
           break;
         }
 
@@ -282,7 +281,6 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
             success: healthResult.healthy,
             data: healthResult,
             timestamp: healthResult.timestamp,
-            metadata: { operation: "health-check" },
           };
           break;
         }
@@ -294,7 +292,6 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
             data: null,
             error: `Unsupported endpoint: ${endpoint}`,
             timestamp: new Date().toISOString(),
-            metadata: { operation: "unknown-endpoint" },
           };
           break;
       }
@@ -402,7 +399,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
           performanceMetrics: {
             executionTimeMs: serviceResponse.executionTimeMs,
             cached: serviceResponse.cached,
-            circuitBreakerState: this.mexcService.getCircuitBreakerStatus().state,
+            circuitBreakerState: 'unknown', // Circuit breaker state requires async call
           },
         },
       };
@@ -581,15 +578,15 @@ Provide actionable insights for service quality improvement and reliability enha
       console.log(`[MexcApiAgent] Detecting ready state patterns via service layer`);
 
       // Use service layer for pattern detection
-      const patternResponse = await this.mexcService.detectReadyStatePatterns(vcoinIds);
+      const patternResponse = await this.mexcService.detectReadyStatePatterns();
 
       if (!patternResponse.success) {
         throw new Error(`Pattern detection failed: ${patternResponse.error}`);
       }
 
       const patternData = patternResponse.data;
-      const performanceMetrics = this.mexcService.getMetrics("detectReadyStatePatterns");
-      const circuitBreakerStatus = this.mexcService.getCircuitBreakerStatus();
+      const performanceMetrics = await this.mexcService.getMetrics();
+      const circuitBreakerStatus = await this.mexcService.getCircuitBreakerStatus();
 
       // Generate AI analysis of patterns with enhanced context
       const aiResponse = await this.callOpenAI([
@@ -650,7 +647,7 @@ Focus on actionable trading signals with performance-aware recommendations.
             performanceMetrics: {
               executionTimeMs: patternResponse.executionTimeMs,
               cached: patternResponse.cached,
-              circuitBreakerState: circuitBreakerStatus.state,
+              circuitBreakerState: circuitBreakerStatus.data?.status || 'unknown',
             },
           },
           null,
@@ -741,9 +738,9 @@ Focus on actionable trading signals with performance-aware recommendations.
 
       const [healthCheck, metrics, cacheStats, circuitBreakerStatus] = await Promise.allSettled([
         this.mexcService.performHealthCheck(),
-        Promise.resolve(this.mexcService.getMetrics()),
-        Promise.resolve(this.mexcService.getCacheStats()),
-        Promise.resolve(this.mexcService.getCircuitBreakerStatus()),
+        this.mexcService.getMetrics(),
+        this.mexcService.getCacheStats(),
+        this.mexcService.getCircuitBreakerStatus(),
       ]);
 
       const serviceStatus = {

@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { DashboardLayout } from "@/src/components/dashboard-layout";
-import { AgentDashboard } from "@/src/components/agent-dashboard";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Badge } from "@/src/components/ui/badge";
+import { DashboardLayout } from "../../src/components/dashboard-layout";
+import { AgentDashboard } from "../../src/components/agent-dashboard";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../src/components/ui/card";
+import { Badge } from "../../src/components/ui/badge";
 import { Bot, Calendar, Target, BarChart3, Settings } from "lucide-react";
 
 export default function AgentsPage() {

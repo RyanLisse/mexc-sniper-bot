@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/src/db";
+import { db } from "../../../../src/db";
 import { 
   transactions, 
   snipeTargets, 
   patternEmbeddings, 
   positionSnapshots,
   executionHistory 
-} from "@/src/db/schema";
+} from "../../../../src/db/schema";
 import { desc, gte, sql, eq, and } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {

@@ -93,7 +93,7 @@ async function prepareDatabaseForTesting() {
       console.log('🌿 Setting up isolated NeonDB test branch...')
       
       // Import branch setup utilities
-      const { setupVitestBranch } = await import('@/src/lib/test-branch-setup.js')
+      const { setupVitestBranch } = await import('../../src/lib/test-branch-setup')
       
       try {
         // Create isolated test branch for this test run
@@ -101,7 +101,7 @@ async function prepareDatabaseForTesting() {
         console.log(`✅ Test branch created: ${global.testBranchContext.branchName}`)
         
         // Import and run migrations on the test branch
-        const { migrateTestBranch } = await import('@/src/lib/test-branch-setup.js')
+        const { migrateTestBranch } = await import('../../src/lib/test-branch-setup')
         await migrateTestBranch(global.testBranchContext)
         console.log('📦 Test branch migrations completed')
         
@@ -116,7 +116,7 @@ async function prepareDatabaseForTesting() {
       console.log('📦 Using main database connection for testing')
       
       // Import database utilities
-      const { db } = await import('@/src/db/index.js')
+      const { db } = await import('../../src/db/index')
       
       // Test database connection
       if (db) {
@@ -321,7 +321,7 @@ export async function globalTeardown() {
     if (global.testBranchContext) {
       console.log('🌿 Cleaning up test branch...')
       try {
-        const { cleanupTestBranch } = await import('@/src/lib/test-branch-setup.js')
+        const { cleanupTestBranch } = await import('../../src/lib/test-branch-setup')
         await cleanupTestBranch(global.testBranchContext)
         global.testBranchContext = null
         console.log('✅ Test branch cleanup completed')
@@ -333,7 +333,7 @@ export async function globalTeardown() {
     // Emergency cleanup of any orphaned test branches
     if (process.env.USE_TEST_BRANCHES === 'true' && process.env.NEON_API_KEY) {
       try {
-        const { cleanupAllTestBranches } = await import('@/src/lib/test-branch-setup.js')
+        const { cleanupAllTestBranches } = await import('../../src/lib/test-branch-setup')
         await cleanupAllTestBranches()
         console.log('🧹 Emergency branch cleanup completed')
       } catch (error) {

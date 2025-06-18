@@ -120,7 +120,7 @@ export class AlertCorrelationEngine {
   }
 
   private async detectNewCorrelation(
-    alert: InsertAlertInstance
+    alert: InsertAlertInstance | SelectAlertInstance
   ): Promise<CorrelationResult | null> {
     const recentAlerts = this.getRecentAlertsFromCache();
 
@@ -139,13 +139,13 @@ export class AlertCorrelationEngine {
   }
 
   private async detectDynamicCorrelation(
-    alert: InsertAlertInstance,
+    alert: InsertAlertInstance | SelectAlertInstance,
     recentAlerts: SelectAlertInstance[]
   ): Promise<CorrelationResult | null> {
     // Time-based correlation (alerts within short time window)
     const timeWindow = 300000; // 5 minutes
     const timeCorrelated = recentAlerts.filter(
-      (a) => Math.abs(a.firstTriggeredAt - alert.firstTriggeredAt) < timeWindow
+      (a) => Math.abs(a.firstTriggeredAt.getTime() - alert.firstTriggeredAt.getTime()) < timeWindow
     );
 
     if (timeCorrelated.length >= 2) {
@@ -223,10 +223,10 @@ export class AlertCorrelationEngine {
   // ==========================================
 
   private async findAlertsMatchingPattern(
-    alerts: SelectAlertInstance[],
+    alerts: (InsertAlertInstance | SelectAlertInstance)[],
     pattern: CorrelationPattern
-  ): Promise<SelectAlertInstance[]> {
-    const matching: SelectAlertInstance[] = [];
+  ): Promise<(InsertAlertInstance | SelectAlertInstance)[]> {
+    const matching: (InsertAlertInstance | SelectAlertInstance)[] = [];
 
     for (const alert of alerts) {
       if (await this.alertMatchesPattern(alert, pattern)) {
@@ -238,7 +238,7 @@ export class AlertCorrelationEngine {
   }
 
   private async alertMatchesPattern(
-    alert: SelectAlertInstance,
+    alert: InsertAlertInstance | SelectAlertInstance,
     pattern: CorrelationPattern
   ): Promise<boolean> {
     let totalWeight = 0;
@@ -383,7 +383,7 @@ export class AlertCorrelationEngine {
 
   private async buildCorrelationResult(
     pattern: CorrelationPattern,
-    alerts: SelectAlertInstance[]
+    alerts: (InsertAlertInstance | SelectAlertInstance)[]
   ): Promise<CorrelationResult> {
     const correlationId = `correlation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -402,13 +402,13 @@ export class AlertCorrelationEngine {
 
   private generateCorrelationSummary(
     pattern: CorrelationPattern,
-    alerts: SelectAlertInstance[]
+    alerts: (InsertAlertInstance | SelectAlertInstance)[]
   ): string {
     const sources = [...new Set(alerts.map((a) => a.source))];
     const severities = [...new Set(alerts.map((a) => a.severity))];
     const timeSpan =
-      Math.max(...alerts.map((a) => a.lastTriggeredAt)) -
-      Math.min(...alerts.map((a) => a.firstTriggeredAt));
+      Math.max(...alerts.map((a) => a.lastTriggeredAt.getTime())) -
+      Math.min(...alerts.map((a) => a.firstTriggeredAt.getTime()));
 
     let summary = `${pattern.name}: ${alerts.length} alerts`;
 
@@ -436,7 +436,7 @@ export class AlertCorrelationEngine {
 
   private generateRecommendations(
     pattern: CorrelationPattern,
-    alerts: SelectAlertInstance[]
+    alerts: (InsertAlertInstance | SelectAlertInstance)[]
   ): string[] {
     const recommendations: string[] = [];
 

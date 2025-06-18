@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMexcCalendar } from "@/src/hooks/use-mexc-data";
+import { useMexcCalendar } from "../hooks/use-mexc-data";
 import React, { useCallback, useMemo } from "react";
 import { useState } from "react";
 

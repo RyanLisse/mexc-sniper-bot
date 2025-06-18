@@ -24,7 +24,7 @@ import type {
   WebSocketChannel,
   WebSocketClientConfig,
   WebSocketMessage,
-} from "@/src/lib/websocket-types";
+} from "../lib/websocket-types";
 
 // ======================
 // Message Queue

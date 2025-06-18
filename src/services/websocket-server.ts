@@ -28,7 +28,7 @@ import type {
   WebSocketConnection,
   WebSocketMessage,
   WebSocketServerConfig,
-} from "@/src/lib/websocket-types";
+} from "../lib/websocket-types";
 import { WebSocket, WebSocketServer } from "ws";
 
 // ======================

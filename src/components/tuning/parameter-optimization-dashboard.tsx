@@ -67,6 +67,82 @@ interface SystemHealth {
   lastOptimization: Date | null;
 }
 
+// Mock data for development/demo purposes
+const mockPerformanceMetrics = [
+  {
+    timestamp: new Date().toISOString(),
+    operation: "parameter_optimization",
+    responseTime: 250,
+    throughput: 12.5,
+    errorRate: 0.02,
+    successRate: 0.98,
+    cpuUsage: 45,
+    memoryUsage: 512,
+    activeConnections: 8
+  }
+];
+
+const mockABTests = [
+  {
+    id: "test-1",
+    name: "Take Profit Optimization",
+    description: "Testing different take profit strategies",
+    status: "completed" as const,
+    startDate: "2024-01-01",
+    endDate: "2024-01-15",
+    variants: [],
+    metrics: {
+      totalParticipants: 1000,
+      duration: 14,
+      significance: 95.2,
+      improvementPercent: 12.5
+    }
+  }
+];
+
+const mockSafetyConstraints = [
+  {
+    id: "max-position-size",
+    name: "Maximum Position Size",
+    description: "Limit maximum position size to prevent overexposure",
+    type: "threshold" as const,
+    category: "risk" as const,
+    severity: "critical" as const,
+    enabled: true,
+    locked: true,
+    value: 10000,
+    defaultValue: 5000,
+    validation: { min: 1000, max: 50000 },
+    currentStatus: "ok" as const,
+    lastChecked: new Date().toISOString(),
+    violationCount: 0
+  }
+];
+
+const mockOptimizationRuns = [
+  {
+    id: "run-1",
+    name: "Risk Parameter Optimization",
+    algorithm: "Bayesian Optimization",
+    status: "completed" as const,
+    startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    endTime: new Date().toISOString(),
+    progress: 100,
+    currentIteration: 50,
+    maxIterations: 50,
+    bestScore: 0.85,
+    improvementPercent: 15.2,
+    parameters: { "riskThreshold": 0.05, "positionSize": 5000 },
+    objective: "Maximize Sharpe Ratio",
+    metadata: {
+      totalEvaluations: 500,
+      convergenceReached: true,
+      executionTime: 3600,
+      resourceUsage: { cpu: 45, memory: 512 }
+    }
+  }
+];
+
 export function ParameterOptimizationDashboard() {
   const [activeOptimizations, setActiveOptimizations] = useState<OptimizationStatus[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
@@ -348,19 +424,19 @@ export function ParameterOptimizationDashboard() {
         </TabsContent>
 
         <TabsContent value="performance">
-          <PerformanceMetricsView metrics={performanceMetrics} />
+          <PerformanceMetricsView metrics={mockPerformanceMetrics} />
         </TabsContent>
 
         <TabsContent value="ab-testing">
-          <ABTestResults />
+          <ABTestResults tests={mockABTests} />
         </TabsContent>
 
         <TabsContent value="safety">
-          <SafetyConstraints />
+          <SafetyConstraints constraints={mockSafetyConstraints} />
         </TabsContent>
 
         <TabsContent value="history">
-          <OptimizationHistory />
+          <OptimizationHistory runs={mockOptimizationRuns} />
         </TabsContent>
       </Tabs>
 

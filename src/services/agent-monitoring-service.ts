@@ -1,9 +1,9 @@
-import { getGlobalAgentRegistry } from "@/src/mexc-agents/coordination/agent-registry";
+import { getGlobalAgentRegistry } from "../mexc-agents/coordination/agent-registry";
 import type {
   AgentRegistryStats,
   AgentStatus,
   RegisteredAgent,
-} from "@/src/mexc-agents/coordination/agent-registry";
+} from "../mexc-agents/coordination/agent-registry";
 import { ErrorLoggingService } from "./error-logging-service";
 
 export interface MonitoringAlert {

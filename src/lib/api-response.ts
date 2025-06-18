@@ -250,7 +250,7 @@ export function createHealthResponse(
 export interface CredentialValidationResult {
   hasCredentials: boolean;
   credentialsValid: boolean;
-  credentialSource: 'database' | 'environment' | 'none';
+  credentialSource: 'database' | 'environment' | 'none' | 'provided';
   connected?: boolean;
   error?: string;
   details?: any;

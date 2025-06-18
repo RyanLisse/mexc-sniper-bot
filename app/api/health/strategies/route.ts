@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { multiPhaseTradingService } from "@/src/services/multi-phase-trading-service";
-import { db } from "@/src/db";
-import { strategyTemplates, tradingStrategies } from "@/src/db/schemas/strategies";
+import { multiPhaseTradingService } from "../../../../src/services/multi-phase-trading-service";
+import { db } from "../../../../src/db";
+import { strategyTemplates, tradingStrategies } from "../../../../src/db/schemas/strategies";
 import { count } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {

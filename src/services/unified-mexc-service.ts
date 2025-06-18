@@ -2,9 +2,8 @@
  * Unified MEXC Service for MEXC Sniper Bot
  *
  * This service consolidates all MEXC-related functionality from:
- * - enhanced-mexc-service-layer.ts
  * - unified-mexc-client.ts  
- * - mexc-trading-api.ts
+ * - Previous legacy implementations (now consolidated)
  * 
  * Into a single, comprehensive service with clear boundaries and responsibilities.
  *
@@ -18,7 +17,7 @@
  * - Type safety with Zod validation
  */
 
-import crypto from "node:crypto";
+import * as crypto from "node:crypto";
 import { z } from "zod";
 
 // ============================================================================
@@ -28,6 +27,7 @@ import { z } from "zod";
 export interface UnifiedMexcConfig {
   apiKey?: string;
   secretKey?: string;
+  passphrase?: string;
   baseUrl?: string;
   timeout?: number;
   maxRetries?: number;
@@ -396,6 +396,7 @@ export class UnifiedMexcService {
     this.config = {
       apiKey: config.apiKey || process.env.MEXC_API_KEY || '',
       secretKey: config.secretKey || process.env.MEXC_SECRET_KEY || '',
+      passphrase: config.passphrase || process.env.MEXC_PASSPHRASE || '',
       baseUrl: config.baseUrl || 'https://api.mexc.com',
       timeout: config.timeout || 10000,
       maxRetries: config.maxRetries || 3,
@@ -545,9 +546,21 @@ export class UnifiedMexcService {
   // ============================================================================
 
   /**
-   * Test connectivity to MEXC API
+   * Test connectivity to MEXC API (returns boolean for API route compatibility)
    */
-  async testConnectivity(): Promise<MexcServiceResponse<{ serverTime: number }>> {
+  async testConnectivity(): Promise<boolean> {
+    try {
+      const response = await this.makeRequest('GET', '/api/v3/time');
+      return response.success;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Test connectivity to MEXC API (returns full response)
+   */
+  async testConnectivityWithResponse(): Promise<MexcServiceResponse<{ serverTime: number }>> {
     return this.makeRequest('GET', '/api/v3/time');
   }
 
@@ -589,7 +602,18 @@ export class UnifiedMexcService {
     });
     
     if (response.success && response.data) {
-      response.data.timestamp = Date.now();
+      const rawData = response.data as any;
+      const orderBook: OrderBook = {
+        symbol,
+        bids: rawData.bids || [],
+        asks: rawData.asks || [],
+        timestamp: Date.now()
+      };
+      
+      return {
+        ...response,
+        data: orderBook
+      };
     }
     
     return response;
@@ -640,6 +664,51 @@ export class UnifiedMexcService {
     return this.makeRequest('GET', '/open/api/v2/market/symbols');
   }
 
+  /**
+   * Get symbols data (alias for getSymbolData for backward compatibility)
+   */
+  async getSymbolsData(): Promise<MexcServiceResponse<SymbolEntry[]>> {
+    return this.getSymbolData();
+  }
+
+  /**
+   * Get symbols for specific vcoins
+   */
+  async getSymbolsForVcoins(vcoinIds: string[]): Promise<MexcServiceResponse<SymbolEntry[]>> {
+    try {
+      // For MEXC, we'll fetch all symbol data and filter by vcoin IDs
+      const allSymbolsResponse = await this.getSymbolData();
+      
+      if (!allSymbolsResponse.success) {
+        return allSymbolsResponse;
+      }
+
+      const symbols = allSymbolsResponse.data || [];
+      
+      // Filter symbols by vcoin IDs
+      // Note: This assumes symbol.cd matches vcoin IDs - adjust if needed
+      const filteredSymbols = symbols.filter(symbol => 
+        vcoinIds.some(vcoinId => 
+          symbol.cd === vcoinId || 
+          symbol.cd.toLowerCase() === vcoinId.toLowerCase()
+        )
+      );
+
+      return {
+        success: true,
+        data: filteredSymbols,
+        timestamp: new Date().toISOString(),
+        cached: allSymbolsResponse.cached
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch symbols for vcoins',
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
   // ============================================================================
   // Private API - Account Management
   // ============================================================================
@@ -660,13 +729,14 @@ export class UnifiedMexcService {
   }>> {
     const response = await this.makeRequest('GET', '/api/v3/account', {}, true);
     
-    if (response.success && response.data?.balances) {
+    if (response.success && response.data && typeof response.data === 'object' && 'balances' in response.data) {
+      const rawData = response.data as any;
       // Process balances to include USDT values
-      const balances = response.data.balances.map((balance: any) => ({
-        asset: balance.asset,
-        free: balance.free,
-        locked: balance.locked,
-        total: parseFloat(balance.free) + parseFloat(balance.locked),
+      const balances = (rawData.balances || []).map((balance: any) => ({
+        asset: balance.asset || '',
+        free: balance.free || '0',
+        locked: balance.locked || '0',
+        total: parseFloat(balance.free || '0') + parseFloat(balance.locked || '0'),
         usdtValue: 0 // Would need price data to calculate this
       }));
 
@@ -675,10 +745,18 @@ export class UnifiedMexcService {
         sum + (balance.usdtValue || 0), 0
       );
 
-      response.data = { balances, totalUsdtValue };
+      return {
+        ...response,
+        data: { balances, totalUsdtValue }
+      };
     }
     
-    return response;
+    return {
+      success: false,
+      error: response.error || 'Failed to fetch account balances',
+      timestamp: new Date().toISOString(),
+      data: { balances: [], totalUsdtValue: 0 }
+    };
   }
 
   // ============================================================================
@@ -689,28 +767,62 @@ export class UnifiedMexcService {
    * Place a new order
    */
   async placeOrder(params: OrderParameters): Promise<MexcServiceResponse<OrderResult>> {
-    // Validate parameters
-    const validatedParams = OrderParametersSchema.parse(params);
-    
-    const response = await this.makeRequest('POST', '/api/v3/order', validatedParams, true);
-    
-    if (response.success) {
-      // Transform response to match our OrderResult schema
-      const orderResult: OrderResult = {
-        success: true,
-        orderId: response.data?.orderId?.toString(),
-        symbol: validatedParams.symbol,
-        side: validatedParams.side,
-        quantity: validatedParams.quantity,
-        price: validatedParams.price,
-        status: response.data?.status,
-        timestamp: new Date().toISOString()
-      };
+    try {
+      // Validate parameters
+      const validatedParams = OrderParametersSchema.parse(params);
       
-      response.data = orderResult;
+      const response = await this.makeRequest('POST', '/api/v3/order', validatedParams, true);
+      
+      if (response.success && response.data) {
+        const rawData = response.data as any;
+        // Transform response to match our OrderResult schema
+        const orderResult: OrderResult = {
+          success: true,
+          orderId: rawData?.orderId?.toString() || '',
+          symbol: validatedParams.symbol,
+          side: validatedParams.side,
+          quantity: validatedParams.quantity,
+          price: validatedParams.price,
+          status: rawData?.status || 'UNKNOWN',
+          timestamp: new Date().toISOString()
+        };
+        
+        return {
+          ...response,
+          data: orderResult
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.error || 'Order placement failed',
+        timestamp: new Date().toISOString(),
+        data: {
+          success: false,
+          symbol: validatedParams.symbol,
+          side: validatedParams.side,
+          quantity: validatedParams.quantity,
+          price: validatedParams.price,
+          error: response.error || 'Order placement failed',
+          timestamp: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Order validation failed',
+        timestamp: new Date().toISOString(),
+        data: {
+          success: false,
+          symbol: params.symbol,
+          side: params.side,
+          quantity: params.quantity,
+          price: params.price,
+          error: error instanceof Error ? error.message : 'Order validation failed',
+          timestamp: new Date().toISOString()
+        }
+      };
     }
-    
-    return response;
   }
 
   /**
@@ -897,10 +1009,25 @@ export class UnifiedMexcService {
     const balancesResponse = await this.getAccountBalances();
     
     if (!balancesResponse.success) {
-      return balancesResponse;
+      return {
+        success: false,
+        error: balancesResponse.error || 'Failed to fetch portfolio data',
+        timestamp: new Date().toISOString(),
+        data: {
+          totalValue: 0,
+          totalValueBTC: 0,
+          totalValueUSDT: 0,
+          balances: [],
+          allocation: {},
+          performance24h: {
+            change: 0,
+            changePercent: 0
+          }
+        }
+      };
     }
 
-    const { balances, totalUsdtValue } = balancesResponse.data!;
+    const { balances, totalUsdtValue } = balancesResponse.data;
 
     // Calculate allocation percentages
     const allocation: Record<string, number> = {};
@@ -938,6 +1065,134 @@ export class UnifiedMexcService {
    */
   clearCache(): void {
     this.cache.clear();
+  }
+
+  // ============================================================================
+  // Missing Methods for Agent Integration
+  // ============================================================================
+
+  /**
+   * Get market overview
+   */
+  async getMarketOverview(): Promise<MexcServiceResponse<any>> {
+    try {
+      const [tickers, symbols] = await Promise.all([
+        this.getAllTickers(),
+        this.getExchangeInfo()
+      ]);
+
+      return {
+        success: true,
+        data: {
+          tickers: tickers.data || [],
+          symbols: symbols.data?.symbols || [],
+          timestamp: new Date().toISOString()
+        },
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get market overview',
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Perform health check
+   */
+  async performHealthCheck(): Promise<{ healthy: boolean; timestamp: string; details?: any }> {
+    try {
+      const serverTime = await this.getServerTime();
+      return {
+        healthy: serverTime.success,
+        timestamp: new Date().toISOString(),
+        details: {
+          connectivity: serverTime.success,
+          serverTime: serverTime.data?.serverTime
+        }
+      };
+    } catch (error) {
+      return {
+        healthy: false,
+        timestamp: new Date().toISOString(),
+        details: {
+          error: error instanceof Error ? error.message : 'Health check failed'
+        }
+      };
+    }
+  }
+
+  /**
+   * Get circuit breaker status
+   */
+  async getCircuitBreakerStatus(): Promise<MexcServiceResponse<any>> {
+    return {
+      success: true,
+      data: {
+        enabled: this.config.enableCircuitBreaker,
+        status: this.circuitBreaker?.isOpen() ? 'OPEN' : 'CLOSED',
+        failures: this.circuitBreaker?.getFailureCount() || 0,
+        timestamp: new Date().toISOString()
+      },
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Get metrics
+   */
+  async getMetrics(): Promise<MexcServiceResponse<any>> {
+    return {
+      success: true,
+      data: {
+        requestCount: this.metrics.requestCount,
+        errorCount: this.metrics.errorCount,
+        averageResponseTime: this.metrics.totalResponseTime / Math.max(this.metrics.requestCount, 1),
+        cacheHitRate: this.metrics.cacheHits / Math.max(this.metrics.requestCount, 1),
+        timestamp: new Date().toISOString()
+      },
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Get cache stats
+   */
+  async getCacheStats(): Promise<MexcServiceResponse<any>> {
+    return {
+      success: true,
+      data: {
+        size: this.cache.size,
+        hitRate: this.metrics.cacheHits / Math.max(this.metrics.requestCount, 1),
+        timestamp: new Date().toISOString()
+      },
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Detect ready state patterns
+   */
+  async detectReadyStatePatterns(): Promise<MexcServiceResponse<any>> {
+    try {
+      const symbols = await this.getSymbolsData();
+      return {
+        success: true,
+        data: {
+          patterns: symbols.data?.filter((s: any) => s.sts === 1) || [],
+          timestamp: new Date().toISOString()
+        },
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to detect patterns',
+        timestamp: new Date().toISOString()
+      };
+    }
   }
 
   /**

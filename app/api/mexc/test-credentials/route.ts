@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
-import { enhancedApiValidationService } from "@/src/services/enhanced-api-validation-service";
+import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
+import { enhancedApiValidationService } from "../../../../src/services/enhanced-api-validation-service";
 import {
   createSuccessResponse,
   createErrorResponse,
   apiResponse,
   HTTP_STATUS
-} from "@/src/lib/api-response";
-import { authenticatedRoute } from "@/src/lib/auth-decorators";
+} from "../../../../src/lib/api-response";
+import { authenticatedRoute } from "../../../../src/lib/auth-decorators";
 
 // POST /api/mexc/test-credentials
 export const POST = authenticatedRoute(async (request: NextRequest, user: any) => {
@@ -88,7 +88,7 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
 
     if (!validationResult.valid) {
       // Determine appropriate HTTP status based on validation stage
-      let status = HTTP_STATUS.BAD_REQUEST;
+      let status: number = HTTP_STATUS.BAD_REQUEST;
       let code = 'VALIDATION_FAILED';
       
       switch (validationResult.stage) {

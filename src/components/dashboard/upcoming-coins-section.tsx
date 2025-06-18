@@ -1,27 +1,27 @@
 "use client";
 
-import { Badge } from "@/src/components/ui/badge";
+import { Badge } from "../ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { useUpcomingLaunches } from "@/src/hooks/use-mexc-data";
+} from "../ui/card";
+import { useUpcomingLaunches } from "../../hooks/use-mexc-data";
 import { Calendar, Clock, RefreshCw, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 
-interface CalendarEntry {
-  firstOpenTime: string | number;
-  vcoinId: string;
-  symbol: string;
+interface UpcomingCalendarEntry {
+  firstOpenTime?: string | number;
+  vcoinId?: string;
+  symbol?: string;
   projectName?: string;
 }
 
 interface GroupedLaunches {
-  today: CalendarEntry[];
-  tomorrow: CalendarEntry[];
+  today: UpcomingCalendarEntry[];
+  tomorrow: UpcomingCalendarEntry[];
 }
 
 export function UpcomingCoinsSection() {
@@ -38,11 +38,12 @@ export function UpcomingCoinsSection() {
     const startOfTomorrow = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
     const endOfTomorrow = new Date(startOfTomorrow.getTime() + 24 * 60 * 60 * 1000);
 
-    const today: CalendarEntry[] = [];
-    const tomorrow: CalendarEntry[] = [];
+    const today: UpcomingCalendarEntry[] = [];
+    const tomorrow: UpcomingCalendarEntry[] = [];
 
-    upcomingLaunches.forEach((entry: CalendarEntry) => {
+    upcomingLaunches.forEach((entry: UpcomingCalendarEntry) => {
       try {
+        if (!entry.firstOpenTime) return;
         const launchTime = new Date(entry.firstOpenTime);
 
         if (launchTime >= startOfToday && launchTime < startOfTomorrow) {
@@ -56,9 +57,9 @@ export function UpcomingCoinsSection() {
     });
 
     // Sort by earliest launch time (ascending)
-    const sortByLaunchTime = (a: CalendarEntry, b: CalendarEntry) => {
-      const timeA = new Date(a.firstOpenTime).getTime();
-      const timeB = new Date(b.firstOpenTime).getTime();
+    const sortByLaunchTime = (a: UpcomingCalendarEntry, b: UpcomingCalendarEntry) => {
+      const timeA = a.firstOpenTime ? new Date(a.firstOpenTime).getTime() : 0;
+      const timeB = b.firstOpenTime ? new Date(b.firstOpenTime).getTime() : 0;
       return timeA - timeB;
     };
 

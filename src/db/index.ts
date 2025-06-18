@@ -75,7 +75,7 @@ function createPostgresClient() {
     connect_timeout: 30, // 30 seconds connect timeout
 
     // SSL/TLS settings for NeonDB
-    ssl: isProduction ? "require" : "prefer",
+    ssl: isProduction ? "require" : "prefer" as any,
 
     // Performance optimizations
     prepare: !isTest, // Prepared statements (disabled in tests for compatibility)
@@ -200,10 +200,10 @@ export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
 // Export schema for use in other files
 export * from "./schema";
 
-import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
+import { databaseConnectionPool } from "../lib/database-connection-pool";
 // Import optimization tools
-import { databaseOptimizationManager } from "@/src/lib/database-optimization-manager";
-import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
+import { databaseOptimizationManager } from "../lib/database-optimization-manager";
+import { queryPerformanceMonitor } from "../services/query-performance-monitor";
 
 // Database utilities with retry logic
 export async function initializeDatabase() {

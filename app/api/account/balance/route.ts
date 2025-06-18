@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMexcService } from "@/src/services/mexc-unified-exports";
-import { db, apiCredentials } from '@/src/db';
+import { getMexcService } from "../../../../src/services/mexc-unified-exports";
+import { db, apiCredentials } from "../../../../src/db";
 import { eq, and } from 'drizzle-orm';
-import { getEncryptionService } from '@/src/services/secure-encryption-service';
+import { getEncryptionService } from "../../../../src/services/secure-encryption-service";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
    
   apiResponse, 
   HTTP_STATUS 
-} from '@/src/lib/api-response';
+} from "../../../../src/lib/api-response";
 
 export async function GET(request: NextRequest) {
   try {

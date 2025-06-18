@@ -21,7 +21,7 @@ import {
   getUserIdFromQuery,
   requireApiAuth,
   validateUserAccess,
-} from "@/src/lib/api-auth";
+} from "./api-auth";
 import {
   type ApiResponse,
   HTTP_STATUS,
@@ -30,16 +30,16 @@ import {
   createErrorResponse,
   createSuccessResponse,
   createValidationErrorResponse,
-} from "@/src/lib/api-response";
-import { globalAPIResponseCache } from "@/src/lib/api-response-cache";
-import { generateCacheKey } from "@/src/lib/cache-manager";
-import { handleApiError } from "@/src/lib/error-handler";
+} from "./api-response";
+import { globalAPIResponseCache } from "./api-response-cache";
+import { generateCacheKey } from "./cache-manager";
+import { handleApiError } from "./error-handler";
 import {
   checkRateLimit,
   createRateLimitResponse,
   getClientIP,
   logSecurityEvent,
-} from "@/src/lib/rate-limiter";
+} from "./rate-limiter";
 import type { NextRequest } from "next/server";
 
 // =======================
@@ -411,7 +411,7 @@ async function applyRateLimitMiddleware(
   if (config.skip) return null;
 
   const rateLimitType = typeof config === "string" ? config : config.type;
-  const rateLimitResult = checkRateLimit(
+  const rateLimitResult = await checkRateLimit(
     context.clientIP!,
     context.endpoint!,
     rateLimitType as "general" | "auth" | "authStrict",

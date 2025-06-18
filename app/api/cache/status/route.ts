@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { createApiHandler } from '@/src/lib/api-middleware';
-import { getCacheHealthStatus, getCacheDashboardData } from '@/src/lib/cache-monitoring';
-import { globalCacheMonitoring } from '@/src/lib/cache-monitoring';
+import { createApiHandler } from "../../../../src/lib/api-middleware";
+import { getCacheHealthStatus, getCacheDashboardData } from "../../../../src/lib/cache-monitoring";
+import { globalCacheMonitoring } from "../../../../src/lib/cache-monitoring";
 
 /**
  * GET /api/cache/status

@@ -1,4 +1,4 @@
-import type { TradingStrategy } from "@/src/db/schemas/strategies";
+import type { TradingStrategy } from "../db/schemas/strategies";
 import type { PriceMultiplier, TradingStrategyConfig } from "./multi-phase-trading-service";
 import { multiPhaseTradingService } from "./multi-phase-trading-service";
 
@@ -525,7 +525,8 @@ export async function createExecutorFromStrategy(
   strategy: TradingStrategy,
   userId: string
 ): Promise<MultiPhaseExecutor> {
-  const levels = JSON.parse(strategy.levels) as PriceMultiplier[];
+  // Handle the case where levels might be undefined (e.g., in tests)
+  const levels = strategy.levels ? JSON.parse(strategy.levels) as PriceMultiplier[] : [];
   const strategyConfig: TradingStrategyConfig = {
     id: strategy.id.toString(),
     name: strategy.name,

@@ -1,5 +1,5 @@
 "use client";
-import { cn } from "@/src/lib/utils";
+import { cn } from "../../lib/utils";
 import * as Dialog from "@radix-ui/react-dialog";
 
 interface DrawerProps extends Dialog.DialogProps {

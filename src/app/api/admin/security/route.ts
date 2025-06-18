@@ -3,14 +3,14 @@ import {
   apiResponse,
   createErrorResponse,
   createSuccessResponse,
-} from "@/src/lib/api-response";
-import { adminRoute } from "@/src/lib/auth-decorators";
+} from "../../../../lib/api-response";
+import { adminRoute } from "../../../../lib/auth-decorators";
 import {
   getIPAnalysis,
   getRateLimitStats,
   getSecurityEvents,
   isIPSuspicious,
-} from "@/src/lib/rate-limiter";
+} from "../../../../lib/rate-limiter";
 import type { NextRequest } from "next/server";
 
 /**

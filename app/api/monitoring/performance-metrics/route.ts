@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
-import { AgentManager } from "@/src/mexc-agents/agent-manager";
-import { db } from "@/src/db";
-import { executionHistory, patternEmbeddings, workflowActivity } from "@/src/db/schema";
+import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
+import { AgentManager } from "../../../../src/mexc-agents/agent-manager";
+import { db } from "../../../../src/db";
+import { executionHistory, patternEmbeddings, workflowActivity } from "../../../../src/db/schema";
 import { desc, gte, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {

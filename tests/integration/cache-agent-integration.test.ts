@@ -10,10 +10,10 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import { BaseAgent, type AgentConfig, type AgentResponse } from '@/src/mexc-agents/base-agent';
-import { globalEnhancedAgentCache } from '@/src/lib/enhanced-agent-cache';
-import { globalCacheManager } from '@/src/lib/cache-manager';
-import { globalCacheMonitoring } from '@/src/lib/cache-monitoring';
+import { BaseAgent, type AgentConfig, type AgentResponse } from '../../src/mexc-agents/base-agent';
+import { globalEnhancedAgentCache } from '../../src/lib/enhanced-agent-cache';
+import { globalCacheManager } from '../../src/lib/cache-manager';
+import { globalCacheMonitoring } from '../../src/lib/cache-monitoring';
 
 // Mock OpenAI
 vi.mock('openai', () => {

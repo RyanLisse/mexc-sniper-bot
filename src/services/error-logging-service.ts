@@ -6,7 +6,7 @@
  * external monitoring services.
  */
 
-import { ApplicationError } from "@/src/lib/errors";
+import { ApplicationError } from "../lib/errors";
 
 export interface ErrorLogEntry {
   id?: string;

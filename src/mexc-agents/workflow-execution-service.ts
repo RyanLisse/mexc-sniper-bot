@@ -200,7 +200,7 @@ export class WorkflowExecutionService {
         agentsUsed,
         context,
         timestamp: new Date().toISOString(),
-      },
+      } as any,
     };
   }
 }

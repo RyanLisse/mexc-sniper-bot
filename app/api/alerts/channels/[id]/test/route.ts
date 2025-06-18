@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { db } from "@/src/db";
-import { NotificationService } from "@/src/services/notification-providers";
-import { validateRequest } from "@/src/lib/api-auth";
-import { handleApiError } from "@/src/lib/api-response";
+import { db } from "../../../../../../src/db";
+import { NotificationService } from "../../../../../../src/services/notification-providers";
+import { validateRequest } from "../../../../../../src/lib/api-auth";
+import { handleApiError } from "../../../../../../src/lib/api-response";
 
 const notificationService = new NotificationService(db);
 

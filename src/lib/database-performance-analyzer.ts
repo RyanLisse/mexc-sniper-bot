@@ -8,8 +8,8 @@
  * - Documents current performance metrics
  */
 
-import { db } from "@/src/db";
-import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
+import { db } from "../db";
+import { queryPerformanceMonitor } from "../services/query-performance-monitor";
 import { sql } from "drizzle-orm";
 
 interface DatabaseStats {
@@ -256,7 +256,7 @@ export class DatabasePerformanceAnalyzer {
    * Extract WHERE clause columns
    */
   private extractWhereColumns(query: string): string[] {
-    const whereMatch = query.match(/WHERE\s+(.+?)(?:\s+ORDER\s+BY|\s+GROUP\s+BY|\s+LIMIT|$)/is);
+    const whereMatch = query.match(/WHERE\s+(.+?)(?:\s+ORDER\s+BY|\s+GROUP\s+BY|\s+LIMIT|$)/i);
     if (!whereMatch) return [];
 
     const whereClause = whereMatch[1];
@@ -280,7 +280,7 @@ export class DatabasePerformanceAnalyzer {
    * Extract ORDER BY columns
    */
   private extractOrderByColumns(query: string): string[] {
-    const orderMatch = query.match(/ORDER\s+BY\s+(.+?)(?:\s+LIMIT|$)/is);
+    const orderMatch = query.match(/ORDER\s+BY\s+(.+?)(?:\s+LIMIT|$)/i);
     if (!orderMatch) return [];
 
     return orderMatch[1]

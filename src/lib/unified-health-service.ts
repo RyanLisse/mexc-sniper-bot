@@ -23,8 +23,8 @@ import {
   type ConfigValidationResult
 } from "./api-response";
 import { checkDatabaseHealth, checkAuthTables } from "./db-health-check";
-import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
-import { getUserCredentials } from "@/src/services/user-credentials-service";
+import { getRecommendedMexcService } from "../services/mexc-unified-exports";
+import { getUserCredentials } from "../services/user-credentials-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import OpenAI from "openai";
 
@@ -625,7 +625,7 @@ export class UnifiedHealthService {
       
       case 'environment':
       case 'env':
-        return HealthCheckComponents.checkEnvironment();
+        return HealthCheckComponents.checkEnvironment() as unknown as Promise<HealthCheckResult>;
       
       case 'workflows':
       case 'agents':
@@ -661,6 +661,5 @@ export class UnifiedHealthService {
 // ============================================================================
 
 export {
-  HealthCheckComponents,
   UnifiedHealthService as default
 };

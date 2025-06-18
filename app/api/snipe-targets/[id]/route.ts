@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/src/db";
-import { snipeTargets } from "@/src/db/schema";
+import { db } from "../../../../src/db";
+import { snipeTargets } from "../../../../src/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function PATCH(

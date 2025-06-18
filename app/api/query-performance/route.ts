@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
+import { queryPerformanceMonitor } from "../../../src/services/query-performance-monitor";
 
 export async function GET(request: NextRequest) {
   try {

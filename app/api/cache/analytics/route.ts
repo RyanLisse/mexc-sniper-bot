@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { createApiHandler } from '@/src/lib/api-middleware';
-import { globalCacheManager } from '@/src/lib/cache-manager';
-import { globalEnhancedAgentCache } from '@/src/lib/enhanced-agent-cache';
-import { globalAPIResponseCache } from '@/src/lib/api-response-cache';
-import { globalCacheMonitoring } from '@/src/lib/cache-monitoring';
+import { createApiHandler } from "../../../../src/lib/api-middleware";
+import { globalCacheManager } from "../../../../src/lib/cache-manager";
+import { globalEnhancedAgentCache } from "../../../../src/lib/enhanced-agent-cache";
+import { globalAPIResponseCache } from "../../../../src/lib/api-response-cache";
+import { globalCacheMonitoring } from "../../../../src/lib/cache-monitoring";
 
 /**
  * GET /api/cache/analytics

@@ -1,12 +1,12 @@
-import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 import type {
   PatternAnalysisResult as EngineResult,
   PatternMatch,
-} from "@/src/services/pattern-detection-engine";
+} from "../services/pattern-detection-engine";
 import {
   type PatternWorkflowRequest,
   patternStrategyOrchestrator,
-} from "@/src/services/pattern-strategy-orchestrator";
+} from "../services/pattern-strategy-orchestrator";
 import type { AgentResponse } from "./base-agent";
 
 export interface PatternAnalysisResult {
@@ -118,7 +118,7 @@ export class PatternAnalysisWorkflow {
 
       // Fallback to legacy analysis
       return await this.analyzePatternsLegacy(
-        { content: `Analysis failed: ${error}`, metadata: { timestamp: new Date().toISOString() } },
+        { content: `Analysis failed: ${error}`, metadata: { agent: "pattern-analysis-workflow", timestamp: new Date().toISOString() } },
         [],
         analysisType
       );

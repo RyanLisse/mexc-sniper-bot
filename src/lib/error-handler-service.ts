@@ -1,4 +1,4 @@
-import { ErrorLoggingService } from "@/src/services/error-logging-service";
+import { ErrorLoggingService } from "../services/error-logging-service";
 import { AppError, ErrorCode, ErrorSeverity, isAppError, toAppError } from "./error-types";
 
 export interface ErrorHandlerConfig {
@@ -66,7 +66,8 @@ export class ErrorHandlerService {
 
     // Add context if provided
     if (context) {
-      appError.context = { ...appError.context, ...context };
+      const newAppError = { ...appError, context: { ...appError.context, ...context } };
+      Object.assign(appError, newAppError);
     }
 
     // Log error if enabled

@@ -1,5 +1,5 @@
-import { db } from "@/src/db";
-import { executionHistory, workflowActivity } from "@/src/db/schema";
+import { db } from "../db";
+import { executionHistory, workflowActivity } from "../db/schema";
 import { lte, sql } from "drizzle-orm";
 
 /**

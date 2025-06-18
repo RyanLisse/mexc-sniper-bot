@@ -1,4 +1,4 @@
-import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "../lib/kinde-auth-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 

@@ -1,14 +1,14 @@
 "use client";
 
-import { Badge } from "@/src/components/ui/badge";
+import { Badge } from "../ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Skeleton } from "@/src/components/ui/skeleton";
+} from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/src/components/ui/table";
+} from "../ui/table";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowDownRight, ArrowUpRight, Minus, TrendingDown, TrendingUp } from "lucide-react";

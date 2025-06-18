@@ -1,5 +1,5 @@
-import type { NewPatternEmbedding } from "@/src/db/schema";
-import { vectorUtils } from "@/src/db/vector-utils";
+import type { NewPatternEmbedding } from "../db/schema";
+import { vectorUtils } from "../db/vector-utils";
 import OpenAI from "openai";
 
 export interface PatternData {

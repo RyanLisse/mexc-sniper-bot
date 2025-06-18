@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { TransactionLockService } from "@/src/services/transaction-lock-service";
-import { db } from "@/src/db";
-import { transactionLocks, transactionQueue } from "@/src/db/schema";
+import { TransactionLockService } from "../../src/services/transaction-lock-service";
+import { db } from "../../src/db";
+import { transactionLocks, transactionQueue } from "../../src/db/schema";
 import { eq, sql } from "drizzle-orm";
 import crypto from "node:crypto";
 
@@ -285,18 +285,27 @@ describe("TransactionLockService", () => {
       })
     }) as any);
     
-    // Setup delete mock
-    vi.mocked(db.delete).mockImplementation((table: any) => ({
-      where: (condition: any) => {
-        if (table === transactionLocks) {
-          mockLocks.clear();
-        }
-        if (table === transactionQueue) {
-          mockQueue.clear();
-        }
-        return Promise.resolve({ changes: 1 });
-      }
-    }));
+    // Setup delete mock - return proper Drizzle delete object
+    vi.mocked(db.delete).mockImplementation((table: any) => {
+      return {
+        where: (condition: any) => {
+          if (table === transactionLocks) {
+            mockLocks.clear();
+          }
+          if (table === transactionQueue) {
+            mockQueue.clear();
+          }
+          return Promise.resolve({ changes: 1 });
+        },
+        // Add required properties from PgDeleteBase
+        _: {},
+        session: {},
+        dialect: {},
+        config: {},
+        execute: vi.fn().mockResolvedValue({ changes: 1 }),
+        toSQL: vi.fn().mockReturnValue({ sql: '', params: [] }),
+      } as any;
+    });
     
     // Create a fresh instance for each test
     lockService = new TransactionLockService();

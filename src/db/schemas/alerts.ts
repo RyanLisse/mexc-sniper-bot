@@ -1,5 +1,4 @@
 import { boolean, integer, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import type { z } from "zod";
 
 // ==========================================
@@ -292,35 +291,275 @@ export const alertAnalytics = pgTable("alert_analytics", {
 });
 
 // ==========================================
-// ZOD SCHEMAS FOR VALIDATION
+// TYPESCRIPT TYPES
 // ==========================================
 
-export const insertAlertRuleSchema = createInsertSchema(alertRules);
-export const selectAlertRuleSchema = createSelectSchema(alertRules);
-export type InsertAlertRule = z.infer<typeof insertAlertRuleSchema>;
-export type SelectAlertRule = z.infer<typeof selectAlertRuleSchema>;
+export type InsertAlertRule = {
+  id: string;
+  name: string;
+  description?: string | null;
+  category: string;
+  severity: string;
+  metricName: string;
+  operator: string;
+  threshold?: number | null;
+  aggregationWindow?: number | null;
+  evaluationInterval?: number | null;
+  useAnomalyDetection?: boolean | null;
+  anomalyThreshold?: number | null;
+  learningWindow?: number | null;
+  isEnabled?: boolean | null;
+  suppressionDuration?: number | null;
+  escalationDelay?: number | null;
+  maxAlerts?: number | null;
+  correlationKey?: string | null;
+  parentRuleId?: string | null;
+  tags?: string | null;
+  customFields?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+};
 
-export const insertAlertInstanceSchema = createInsertSchema(alertInstances);
-export const selectAlertInstanceSchema = createSelectSchema(alertInstances);
-export type InsertAlertInstance = z.infer<typeof insertAlertInstanceSchema>;
-export type SelectAlertInstance = z.infer<typeof selectAlertInstanceSchema>;
+export type SelectAlertRule = {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  severity: string;
+  metricName: string;
+  operator: string;
+  threshold: number | null;
+  aggregationWindow: number | null;
+  evaluationInterval: number | null;
+  useAnomalyDetection: boolean | null;
+  anomalyThreshold: number | null;
+  learningWindow: number | null;
+  isEnabled: boolean | null;
+  suppressionDuration: number | null;
+  escalationDelay: number | null;
+  maxAlerts: number | null;
+  correlationKey: string | null;
+  parentRuleId: string | null;
+  tags: string | null;
+  customFields: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+};
 
-export const insertNotificationChannelSchema = createInsertSchema(notificationChannels);
-export const selectNotificationChannelSchema = createSelectSchema(notificationChannels);
-export type InsertNotificationChannel = z.infer<typeof insertNotificationChannelSchema>;
-export type SelectNotificationChannel = z.infer<typeof selectNotificationChannelSchema>;
+export type InsertAlertInstance = {
+  id: string;
+  ruleId: string;
+  status: string;
+  severity: string;
+  message: string;
+  description?: string | null;
+  metricValue?: number | null;
+  threshold?: number | null;
+  anomalyScore?: number | null;
+  source: string;
+  sourceId?: string | null;
+  environment?: string | null;
+  correlationId?: string | null;
+  parentAlertId?: string | null;
+  escalationLevel?: number | null;
+  lastEscalatedAt?: Date | null;
+  resolvedAt?: Date | null;
+  resolvedBy?: string | null;
+  resolutionNotes?: string | null;
+  firstTriggeredAt: Date;
+  lastTriggeredAt: Date;
+  additionalData?: string | null;
+  labels?: string | null;
+};
 
-export const insertEscalationPolicySchema = createInsertSchema(escalationPolicies);
-export const selectEscalationPolicySchema = createSelectSchema(escalationPolicies);
-export type InsertEscalationPolicy = z.infer<typeof insertEscalationPolicySchema>;
-export type SelectEscalationPolicy = z.infer<typeof selectEscalationPolicySchema>;
+export type SelectAlertInstance = {
+  id: string;
+  ruleId: string;
+  status: string;
+  severity: string;
+  message: string;
+  description: string | null;
+  metricValue: number | null;
+  threshold: number | null;
+  anomalyScore: number | null;
+  source: string;
+  sourceId: string | null;
+  environment: string | null;
+  correlationId: string | null;
+  parentAlertId: string | null;
+  escalationLevel: number | null;
+  lastEscalatedAt: Date | null;
+  resolvedAt: Date | null;
+  resolvedBy: string | null;
+  resolutionNotes: string | null;
+  firstTriggeredAt: Date;
+  lastTriggeredAt: Date;
+  additionalData: string | null;
+  labels: string | null;
+};
 
-export const insertAlertSuppressionSchema = createInsertSchema(alertSuppressions);
-export const selectAlertSuppressionSchema = createSelectSchema(alertSuppressions);
-export type InsertAlertSuppression = z.infer<typeof insertAlertSuppressionSchema>;
-export type SelectAlertSuppression = z.infer<typeof selectAlertSuppressionSchema>;
+export type InsertNotificationChannel = {
+  id: string;
+  name: string;
+  type: string;
+  config: string;
+  headers?: string | null;
+  severityFilter?: string | null;
+  categoryFilter?: string | null;
+  tagFilter?: string | null;
+  isEnabled?: boolean | null;
+  isDefault?: boolean | null;
+  rateLimitPerHour?: number | null;
+  messageTemplate?: string | null;
+  titleTemplate?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+};
 
-export const insertAnomalyModelSchema = createInsertSchema(anomalyModels);
-export const selectAnomalyModelSchema = createSelectSchema(anomalyModels);
-export type InsertAnomalyModel = z.infer<typeof insertAnomalyModelSchema>;
-export type SelectAnomalyModel = z.infer<typeof selectAnomalyModelSchema>;
+export type SelectNotificationChannel = {
+  id: string;
+  name: string;
+  type: string;
+  config: string;
+  headers: string | null;
+  severityFilter: string | null;
+  categoryFilter: string | null;
+  tagFilter: string | null;
+  isEnabled: boolean | null;
+  isDefault: boolean | null;
+  rateLimitPerHour: number | null;
+  messageTemplate: string | null;
+  titleTemplate: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+};
+
+export type InsertEscalationPolicy = {
+  id: string;
+  name: string;
+  description?: string | null;
+  steps: string;
+  isEnabled?: boolean | null;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+};
+
+export type SelectEscalationPolicy = {
+  id: string;
+  name: string;
+  description: string | null;
+  steps: string;
+  isEnabled: boolean | null;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+};
+
+export type InsertAlertSuppression = {
+  id: string;
+  name: string;
+  reason: string;
+  ruleIds?: string | null;
+  categoryFilter?: string | null;
+  severityFilter?: string | null;
+  sourceFilter?: string | null;
+  tagFilter?: string | null;
+  startsAt: Date;
+  endsAt: Date;
+  isActive?: boolean | null;
+  createdAt: Date;
+  createdBy: string;
+};
+
+export type SelectAlertSuppression = {
+  id: string;
+  name: string;
+  reason: string;
+  ruleIds: string | null;
+  categoryFilter: string | null;
+  severityFilter: string | null;
+  sourceFilter: string | null;
+  tagFilter: string | null;
+  startsAt: Date;
+  endsAt: Date;
+  isActive: boolean | null;
+  createdAt: Date;
+  createdBy: string;
+};
+
+export type InsertAnomalyModel = {
+  id: string;
+  metricName: string;
+  modelType: string;
+  parameters: string;
+  trainingDataFrom: Date;
+  trainingDataTo: Date;
+  sampleCount: number;
+  accuracy?: number | null;
+  precision?: number | null;
+  recall?: number | null;
+  f1Score?: number | null;
+  falsePositiveRate?: number | null;
+  modelData?: string | null;
+  features?: string | null;
+  isActive?: boolean | null;
+  lastTrainedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type SelectAnomalyModel = {
+  id: string;
+  metricName: string;
+  modelType: string;
+  parameters: string;
+  trainingDataFrom: Date;
+  trainingDataTo: Date;
+  sampleCount: number;
+  accuracy: number | null;
+  precision: number | null;
+  recall: number | null;
+  f1Score: number | null;
+  falsePositiveRate: number | null;
+  modelData: string | null;
+  features: string | null;
+  isActive: boolean | null;
+  lastTrainedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type InsertAlertCorrelation = {
+  id: string;
+  correlationKey: string;
+  title: string;
+  description?: string | null;
+  severity: string;
+  status: string;
+  alertCount?: number | null;
+  pattern?: string | null;
+  confidence?: number | null;
+  firstAlertAt: Date;
+  lastAlertAt: Date;
+  resolvedAt?: Date | null;
+};
+
+export type SelectAlertCorrelation = {
+  id: string;
+  correlationKey: string;
+  title: string;
+  description: string | null;
+  severity: string;
+  status: string;
+  alertCount: number | null;
+  pattern: string | null;
+  confidence: number | null;
+  firstAlertAt: Date;
+  lastAlertAt: Date;
+  resolvedAt: Date | null;
+};

@@ -1,5 +1,5 @@
-import { db } from "@/src/db";
-import { account, session, user, verification } from "@/src/db/schema";
+import { db } from "../db";
+import { account, session, user, verification } from "../db/schema";
 
 export async function checkDatabaseHealth() {
   try {

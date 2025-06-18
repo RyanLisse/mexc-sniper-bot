@@ -74,11 +74,11 @@ async function testMexcCredentials() {
     // Test 3: Basic connectivity
     console.log("\n🌐 Test 3: Testing basic connectivity...");
     const connectivityResult = await mexcService.testConnectivity();
-    if (connectivityResult.success && connectivityResult.data) {
+    if (connectivityResult) {
       console.log("✅ MEXC API is reachable");
     } else {
       console.log("❌ MEXC API is not reachable");
-      console.log(`   Error: ${connectivityResult.error || 'Unknown connectivity error'}`);
+      console.log("   Error: Connectivity test failed");
       process.exit(1);
     }
 

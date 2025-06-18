@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { ParameterManager } from '@/src/lib/parameter-management';
-import { logger } from '@/src/lib/utils';
+import { ParameterManager } from "../../../../src/lib/parameter-management";
+import { logger } from "../../../../src/lib/utils";
 
 // Initialize parameter manager
 const parameterManager = new ParameterManager();

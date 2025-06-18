@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { db } from "@/src/db";
+import { db } from "../db";
 import {
   type NewWorkflowActivity,
   type NewWorkflowSystemStatus,
@@ -7,7 +7,7 @@ import {
   type WorkflowSystemStatus,
   workflowActivity,
   workflowSystemStatus,
-} from "@/src/db/schema";
+} from "../db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { databaseBreaker } from "./circuit-breaker";
 

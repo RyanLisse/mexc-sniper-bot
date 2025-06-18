@@ -1,22 +1,22 @@
 "use client";
 
 import React from "react";
-import { DashboardLayout } from "@/src/components/dashboard-layout";
-import { MetricCard } from "@/src/components/dashboard/metric-card";
-import { TradingChart } from "@/src/components/dashboard/trading-chart";
-import { CoinListingsBoard } from "@/src/components/dashboard/coin-listings-board";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { Button } from "@/src/components/ui/button";
+import { DashboardLayout } from "../../src/components/dashboard-layout";
+import { MetricCard } from "../../src/components/dashboard/metric-card";
+import { TradingChart } from "../../src/components/dashboard/trading-chart";
+import { CoinListingsBoard } from "../../src/components/dashboard/coin-listings-board";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../src/components/ui/tabs";
+import { Button } from "../../src/components/ui/button";
 import { Plus } from "lucide-react";
-import { useMexcCalendar, useReadyTargets } from "@/src/hooks/use-mexc-data";
-import { usePortfolio } from "@/src/hooks/use-portfolio";
-import { useAccountBalance } from "@/src/hooks/use-account-balance";
-import { OptimizedActivityFeed } from "@/src/components/dashboard/optimized-activity-feed";
-import { OptimizedTradingTargets } from "@/src/components/dashboard/optimized-trading-targets";
-import { RecentTradesTable } from "@/src/components/dashboard/recent-trades-table";
-import { UpcomingCoinsSection } from "@/src/components/dashboard/upcoming-coins-section";
-import { OptimizedAccountBalance } from "@/src/components/optimized-account-balance";
-import { MultiPhaseStrategyManager } from "@/src/components/multi-phase-strategy-manager";
+import { useMexcCalendar, useReadyTargets } from "../../src/hooks/use-mexc-data";
+import { usePortfolio } from "../../src/hooks/use-portfolio";
+import { useAccountBalance } from "../../src/hooks/use-account-balance";
+import { OptimizedActivityFeed } from "../../src/components/dashboard/optimized-activity-feed";
+import { OptimizedTradingTargets } from "../../src/components/dashboard/optimized-trading-targets";
+import { RecentTradesTable } from "../../src/components/dashboard/recent-trades-table";
+import { UpcomingCoinsSection } from "../../src/components/dashboard/upcoming-coins-section";
+import { OptimizedAccountBalance } from "../../src/components/optimized-account-balance";
+import { MultiPhaseStrategyManager } from "../../src/components/multi-phase-strategy-manager";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
 export default function DashboardPage() {

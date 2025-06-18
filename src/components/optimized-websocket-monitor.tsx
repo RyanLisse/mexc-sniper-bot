@@ -3,8 +3,8 @@
  * Uses React.memo, composition, and custom hooks for better performance
  */
 
-import { useCurrencyFormatting } from "@/src/hooks/use-currency-formatting";
-import { webSocketPriceService } from "@/src/services/websocket-price-service";
+import { useCurrencyFormatting } from "../hooks/use-currency-formatting";
+import { webSocketPriceService } from "../services/websocket-price-service";
 import React, { useCallback, useMemo } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";

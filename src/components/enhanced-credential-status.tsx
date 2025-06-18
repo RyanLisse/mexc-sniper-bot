@@ -1,16 +1,16 @@
 "use client";
 
-import { Alert, AlertDescription } from "@/src/components/ui/alert";
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { type MexcConnectivityResult, useMexcConnectivity } from "@/src/hooks/use-mexc-data";
+} from "./ui/card";
+import { type MexcConnectivityResult, useMexcConnectivity } from "../hooks/use-mexc-data";
 import {
   AlertTriangle,
   CheckCircle,

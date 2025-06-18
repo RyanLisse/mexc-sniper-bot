@@ -11,10 +11,10 @@ import {
   setupTestBranch, 
   cleanupTestBranch, 
   migrateTestBranch,
-  checkTestBranchHealth,
-  type TestBranchContext 
-} from '@/src/lib/test-branch-setup';
-import { getDb, clearDbCache } from '@/src/db';
+  checkTestBranchHealth
+} from "../../src/lib/test-branch-setup";
+import type { TestBranchContext } from "../../src/lib/test-branch-setup";
+import { getDb, clearDbCache } from "../../src/db";
 
 describe('NeonDB Branch Integration', () => {
   let testBranchContext: TestBranchContext | null = null;
@@ -230,7 +230,7 @@ describe('Branch Testing Utilities', () => {
 
     try {
       // With mocks, the neonBranchManager should always be available
-      const { neonBranchManager } = await import('@/src/lib/neon-branch-manager');
+      const { neonBranchManager } = await import('../../src/lib/neon-branch-manager');
       
       // The manager should be mocked and available
       expect(neonBranchManager).toBeTruthy();
@@ -256,7 +256,7 @@ describe('Branch Testing Utilities', () => {
 
   it('should provide branch context information', async () => {
     // With mocks and proper environment setup, this should always work
-    const { getCurrentTestBranch } = await import('@/src/lib/test-branch-setup');
+    const { getCurrentTestBranch } = await import('../../src/lib/test-branch-setup');
     const context = getCurrentTestBranch();
     
     // Test context should be available from the setup in the first describe block

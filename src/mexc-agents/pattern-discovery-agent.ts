@@ -1,4 +1,4 @@
-import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 // Extended calendar entry for pattern analysis
@@ -253,7 +253,7 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Extract pattern-relevant data from calendar entries
-  private extractPatternsFromCalendarData(calendarEntries: CalendarEntry[]): CalendarEntry[] {
+  private extractPatternsFromCalendarData(calendarEntries: CalendarEntry[]): PatternCalendarEntry[] {
     const now = Date.now();
 
     return calendarEntries
@@ -291,8 +291,8 @@ Provide specific pattern matches with confidence scores and actionable recommend
           urgencyLevel: this.calculateUrgencyLevel(advanceHours),
 
           // Trading readiness indicators
-          expectedTradingPairs: entry.tradingPairs || [`${entry.symbol}USDT`],
-          infrastructureReady: entry.sts === 2 && entry.st === 2,
+          expectedTradingPairs: (entry as any).tradingPairs || [`${entry.symbol}USDT`],
+          infrastructureReady: (entry as any).sts === 2 && (entry as any).st === 2,
           patternConfidence: this.calculatePatternConfidence(entry, advanceHours, projectType),
 
           // Risk indicators
@@ -410,8 +410,8 @@ Provide specific pattern matches with confidence scores and actionable recommend
 
     // Data completeness
     if (entry.projectName) confidence += 5;
-    if (entry.tradingPairs && entry.tradingPairs.length > 1) confidence += 5;
-    if (entry.sts !== undefined) confidence += 10;
+    if ((entry as any).tradingPairs && (entry as any).tradingPairs.length > 1) confidence += 5;
+    if ((entry as any).sts !== undefined) confidence += 10;
 
     return Math.min(Math.round(confidence), 95);
   }
@@ -435,7 +435,7 @@ Provide specific pattern matches with confidence scores and actionable recommend
       riskLevel = "medium";
     }
 
-    if (entry.sts === undefined || entry.st === undefined) {
+    if ((entry as any).sts === undefined || (entry as any).st === undefined) {
       factors.push("missing-technical-status");
       riskLevel = "high";
     }
@@ -444,7 +444,7 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Generate pattern analysis summary
-  private generatePatternSummary(processedData: CalendarEntry[]): Record<string, unknown> {
+  private generatePatternSummary(processedData: PatternCalendarEntry[]): Record<string, unknown> {
     const upcomingOpportunities = processedData.filter((d) => d.isUpcoming);
     const highConfidenceMatches = processedData.filter((d) => (d.patternConfidence || 0) >= 80);
     const optimalAdvanceNotice = processedData.filter((d) => d.hasOptimalAdvance === true);

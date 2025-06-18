@@ -1,13 +1,13 @@
-import { HTTP_STATUS, createErrorResponse } from "@/src/lib/api-response";
-import { shouldBypassRateLimit } from "@/src/lib/bypass-rate-limit";
-import { getSession, requireAuth } from "@/src/lib/kinde-auth";
+import { HTTP_STATUS, createErrorResponse } from "./api-response";
+import { shouldBypassRateLimit } from "./bypass-rate-limit";
+import { getSession, requireAuth } from "./kinde-auth";
 import {
   checkRateLimit,
   createRateLimitResponse,
   getClientIP,
   isIPSuspicious,
   logSecurityEvent,
-} from "@/src/lib/rate-limiter";
+} from "./rate-limiter";
 import type { NextRequest } from "next/server";
 
 /**
@@ -60,7 +60,7 @@ export async function requireApiAuth(
   // Apply rate limiting unless explicitly skipped or bypassed
   if (!options?.skipRateLimit && !shouldBypassRateLimit(ip)) {
     const rateLimitType = options?.rateLimitType || "auth";
-    const rateLimitResult = checkRateLimit(ip, endpoint, rateLimitType, userAgent);
+    const rateLimitResult = await checkRateLimit(ip, endpoint, rateLimitType, userAgent);
 
     if (!rateLimitResult.success) {
       // Log additional security event for repeated violations

@@ -1,8 +1,8 @@
 "use client";
 
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { Badge } from "../../src/components/ui/badge";
+import { Button } from "../../src/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../src/components/ui/card";
 import { 
   CheckCircle, 
   XCircle, 
@@ -29,10 +29,10 @@ import {
   Globe
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/src/lib/kinde-auth-client";
-import { DashboardLayout } from "@/src/components/dashboard-layout";
-import { ApiCredentialsForm } from "@/src/components/api-credentials-form";
-import { EnhancedCredentialStatus } from "@/src/components/enhanced-credential-status";
+import { useAuth } from "../../src/lib/kinde-auth-client";
+import { DashboardLayout } from "../../src/components/dashboard-layout";
+import { ApiCredentialsForm } from "../../src/components/api-credentials-form";
+import { EnhancedCredentialStatus } from "../../src/components/enhanced-credential-status";
 
 // TypeScript interfaces for system status
 interface SystemStatus {

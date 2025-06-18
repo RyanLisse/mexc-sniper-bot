@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { multiPhaseTradingService, TradingStrategyConfigSchema, PREDEFINED_STRATEGIES } from "@/src/services/multi-phase-trading-service";
-import { MultiPhaseStrategyBuilder } from "@/src/services/multi-phase-strategy-builder";
-import { rateLimiter } from "@/src/lib/rate-limiter";
-import { apiResponse } from "@/src/lib/api-response";
+import { multiPhaseTradingService, TradingStrategyConfigSchema, PREDEFINED_STRATEGIES } from "../../../src/services/multi-phase-trading-service";
+import { MultiPhaseStrategyBuilder } from "../../../src/services/multi-phase-strategy-builder";
+import { rateLimiter } from "../../../src/lib/rate-limiter";
+import { apiResponse } from "../../../src/lib/api-response";
 
 // ===========================================
 // TRADING STRATEGIES API ENDPOINTS
@@ -43,7 +43,7 @@ const QuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkRateLimit(
+    const rateLimitResult = await rateLimiter.checkRateLimit(
       rateLimiter.getClientIP(request), 
       "strategies_read"
     );
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const rateLimitResult = rateLimiter.checkRateLimit(
+    const rateLimitResult = await rateLimiter.checkRateLimit(
       rateLimiter.getClientIP(request), 
       "strategies_create"
     );

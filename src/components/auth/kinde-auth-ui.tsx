@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/src/components/ui/button";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { signIn, signUp, useAuth } from "@/src/lib/kinde-auth-client";
+} from "../ui/card";
+import { signIn, signUp, useAuth } from "../../lib/kinde-auth-client";
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

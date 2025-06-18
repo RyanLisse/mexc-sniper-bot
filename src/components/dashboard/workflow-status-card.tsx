@@ -1,8 +1,8 @@
 "use client";
 
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Activity, AlertTriangle, Bot, Loader2, Pause, Play, RefreshCw } from "lucide-react";
 
 interface WorkflowStatus {

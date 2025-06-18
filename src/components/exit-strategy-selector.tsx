@@ -1,30 +1,30 @@
 "use client";
 
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
+} from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
+} from "./ui/select";
 import {
   EXIT_STRATEGIES,
   type ExitLevel,
   type ExitStrategy,
   createCustomStrategy,
   validateExitStrategy,
-} from "@/src/types/exit-strategies";
+} from "../types/exit-strategies";
 import { Plus, Shield, Target, Trash2, TrendingUp, Zap } from "lucide-react";
 import { useCallback } from "react";
 import { useEffect, useState } from "react";

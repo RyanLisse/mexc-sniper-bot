@@ -1,5 +1,21 @@
 import { defineConfig } from 'vitest/config'
 import path from 'path'
+import { config } from 'dotenv'
+import { fileURLToPath } from 'url'
+import tsconfigPaths from 'vite-tsconfig-paths'
+
+// ES module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Load test environment variables
+config({ path: '.env.test', override: true })
+
+// Verify critical environment variables are loaded
+if (!process.env.DATABASE_URL) {
+  // Set fallback for DATABASE_URL if not loaded from .env.test
+  process.env.DATABASE_URL = 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require'
+}
 
 /**
  * Unified Vitest Configuration for MEXC Sniper Bot
@@ -12,6 +28,7 @@ import path from 'path'
  * - Parallel execution for faster test runs
  */
 export default defineConfig({
+  plugins: [tsconfigPaths()],
   test: {
     // Environment setup - Use jsdom for React component tests
     environment: 'jsdom',
@@ -128,7 +145,7 @@ export default defineConfig({
       MEXC_BASE_URL: 'https://api.mexc.com',
       
       // NeonDB branch configuration for isolated testing
-      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
+      DATABASE_URL: process.env.DATABASE_URL,
       NEON_API_KEY: process.env.NEON_API_KEY || 'test-neon-api-key-for-mocking',
       NEON_PROJECT_ID: process.env.NEON_PROJECT_ID || 'silent-firefly-a1l3mkrm',
       USE_TEST_BRANCHES: 'true',
@@ -189,19 +206,7 @@ export default defineConfig({
     }
   },
   
-  // Module resolution
-  resolve: {
-    alias: {
-      '@': path.resolve(process.cwd(), './'),
-      '@/src': path.resolve(process.cwd(), './src'),
-      '@/app': path.resolve(process.cwd(), './app'),
-      '@/components': path.resolve(process.cwd(), './src/components'),
-      '@/lib': path.resolve(process.cwd(), './src/lib'),
-      '@/hooks': path.resolve(process.cwd(), './src/hooks'),
-      '@/types': path.resolve(process.cwd(), './src/types'),
-      '@/utils': path.resolve(process.cwd(), './src/utils'),
-    },
-  },
+  // Module resolution - remove manual aliases to let vite-tsconfig-paths handle them
   
   // Build configuration for testing
   esbuild: {
