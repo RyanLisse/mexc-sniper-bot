@@ -19,27 +19,43 @@ import {
 
 // GET /api/api-credentials?userId=xxx&provider=mexc
 export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) => {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
-  const provider = searchParams.get('provider') || 'mexc';
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const provider = searchParams.get('provider') || 'mexc';
 
-  if (!userId) {
-    return apiResponse(
-      createValidationErrorResponse('userId', 'userId parameter is required'),
-      HTTP_STATUS.BAD_REQUEST
-    );
-  }
+    if (!userId) {
+      return apiResponse(
+        createValidationErrorResponse('userId', 'userId parameter is required'),
+        HTTP_STATUS.BAD_REQUEST
+      );
+    }
 
-  // Ensure user can only access their own credentials
-  if (user.id !== userId) {
-    return apiResponse(
-      createErrorResponse("Access denied", {
-        message: "You can only access your own API credentials",
-        code: "ACCESS_DENIED"
-      }),
-      HTTP_STATUS.FORBIDDEN
-    );
-  }
+    // Ensure user can only access their own credentials
+    if (user.id !== userId) {
+      return apiResponse(
+        createErrorResponse("Access denied", {
+          message: "You can only access your own API credentials",
+          code: "ACCESS_DENIED"
+        }),
+        HTTP_STATUS.FORBIDDEN
+      );
+    }
+
+    // Check if encryption service is available
+    let encryptionService;
+    try {
+      encryptionService = getEncryptionService();
+    } catch (encryptionError) {
+      console.error('[API] Encryption service initialization failed:', encryptionError);
+      return apiResponse(
+        createErrorResponse('Encryption service unavailable', {
+          message: 'Unable to decrypt credentials. Please contact support.',
+          code: 'ENCRYPTION_SERVICE_ERROR'
+        }),
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
+    }
 
     const result = await db
       .select()
@@ -59,7 +75,6 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
     }
 
     const creds = result[0];
-    const encryptionService = getEncryptionService();
 
     // Decrypt keys securely
     let apiKey = '';
@@ -99,11 +114,22 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
     return apiResponse(
       createSuccessResponse(response)
     );
+  } catch (error) {
+    console.error('[API] GET api-credentials failed:', error);
+    return apiResponse(
+      createErrorResponse('Failed to retrieve credentials', {
+        message: 'An unexpected error occurred while retrieving API credentials',
+        code: 'GET_CREDENTIALS_ERROR'
+      }),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
+    );
+  }
 });
 
 // POST /api/api-credentials
 export const POST = userBodyRoute(async (request: NextRequest, user: any, body: any) => {
-  const { userId, provider = 'mexc', apiKey, secretKey, passphrase } = body;
+  try {
+    const { userId, provider = 'mexc', apiKey, secretKey, passphrase } = body;
 
   // Validate required fields
   const missingField = validateRequiredFields(body, ['userId', 'apiKey', 'secretKey']);
@@ -130,7 +156,20 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
     );
   }
 
-  const encryptionService = getEncryptionService();
+  // Check if encryption service is available
+  let encryptionService;
+  try {
+    encryptionService = getEncryptionService();
+  } catch (encryptionError) {
+    console.error('[API] Encryption service initialization failed:', encryptionError);
+    return apiResponse(
+      createErrorResponse('Encryption service unavailable', {
+        message: 'Unable to encrypt credentials. Please contact support.',
+        code: 'ENCRYPTION_SERVICE_ERROR'
+      }),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
+    );
+  }
 
   // Encrypt the credentials securely
   let encryptedApiKey: string;
@@ -194,6 +233,16 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
     }),
     HTTP_STATUS.CREATED
   );
+  } catch (error) {
+    console.error('[API] POST api-credentials failed:', error);
+    return apiResponse(
+      createErrorResponse('Failed to save credentials', {
+        message: 'An unexpected error occurred while saving API credentials',
+        code: 'SAVE_CREDENTIALS_ERROR'
+      }),
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
+    );
+  }
 });
 
 // DELETE /api/api-credentials
