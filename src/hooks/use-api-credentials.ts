@@ -26,12 +26,16 @@ export interface SaveApiCredentialsRequest {
 }
 
 // Fetch API credentials for a user and provider
-export function useApiCredentials(userId: string, provider = "mexc") {
+export function useApiCredentials(userId?: string, provider = "mexc") {
   const { user, isAuthenticated } = useAuth();
 
   return useQuery({
-    queryKey: ["api-credentials", userId, provider],
+    queryKey: ["api-credentials", userId || "anonymous", provider],
     queryFn: async (): Promise<ApiCredentials | null> => {
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+      
       const response = await fetch(
         `/api/api-credentials?userId=${encodeURIComponent(userId)}&provider=${encodeURIComponent(provider)}`
       );

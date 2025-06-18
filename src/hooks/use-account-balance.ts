@@ -1,5 +1,6 @@
 import type { BalanceEntry } from "@/src/services/mexc-unified-exports";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/src/lib/kinde-auth-client";
 
 interface UseAccountBalanceOptions {
   userId?: string;
@@ -13,17 +14,21 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
     refreshInterval = 30000, // Refresh every 30 seconds
     enabled = true,
   } = options;
+  
+  const { user, isAuthenticated } = useAuth();
 
   return useQuery({
-    queryKey: ["account-balance", userId],
+    queryKey: ["account-balance", userId || "anonymous"],
     queryFn: async (): Promise<{
       balances: BalanceEntry[];
       totalUsdtValue: number;
       lastUpdated: string;
     }> => {
-      const url = userId
-        ? `/api/mexc/account?userId=${encodeURIComponent(userId)}`
-        : "/api/mexc/account";
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+      
+      const url = `/api/mexc/account?userId=${encodeURIComponent(userId)}`;
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -47,7 +52,8 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
         lastUpdated: data.lastUpdated || new Date().toISOString(),
       };
     },
-    enabled: enabled,
+    // Only fetch if user is authenticated and we have a valid userId
+    enabled: enabled && !!userId && isAuthenticated && (user?.id === userId || !user?.id),
     refetchInterval: refreshInterval,
     staleTime: 25000, // Consider data stale after 25 seconds
     retry: 3,

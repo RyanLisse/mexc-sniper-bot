@@ -2,6 +2,7 @@ import type { ApiResponse } from "@/src/lib/api-response";
 import { queryKeys } from "@/src/lib/query-client";
 import type { ExitStrategy } from "@/src/types/exit-strategies";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/src/lib/kinde-auth-client";
 
 export interface TakeProfitLevels {
   level1: number; // Default: 5%
@@ -51,10 +52,16 @@ export interface UserTradingPreferences {
 }
 
 // Hook to get user preferences
-export function useUserPreferences(userId: string) {
+export function useUserPreferences(userId?: string) {
+  const { user, isAuthenticated } = useAuth();
+  
   return useQuery({
-    queryKey: queryKeys.userPreferences(userId),
+    queryKey: queryKeys.userPreferences(userId || "anonymous"),
     queryFn: async (): Promise<UserTradingPreferences | null> => {
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+      
       try {
         const response = await fetch(`/api/user-preferences?userId=${encodeURIComponent(userId)}`);
 
@@ -74,6 +81,8 @@ export function useUserPreferences(userId: string) {
         throw error;
       }
     },
+    // Only fetch if user is authenticated and accessing their own data
+    enabled: !!userId && isAuthenticated && user?.id === userId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
