@@ -752,7 +752,7 @@ Focus on actionable trading signals with performance-aware recommendations.
         cache: cacheStats.status === "fulfilled" ? cacheStats.value : null,
         circuitBreaker:
           circuitBreakerStatus.status === "fulfilled" ? circuitBreakerStatus.value : null,
-        hasCredentials: this.mexcService.hasCredentials(),
+        hasCredentials: !!(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY),
         timestamp: new Date().toISOString(),
       };
 

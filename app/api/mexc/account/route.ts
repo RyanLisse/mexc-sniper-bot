@@ -48,11 +48,12 @@ export async function GET(request: NextRequest) {
       mexcService = getRecommendedMexcService();
     }
 
-    // Check if service has credentials
-    if (!mexcService.hasCredentials()) {
-      const message = userCredentials 
-        ? "User MEXC API credentials are invalid or incomplete"
-        : "No MEXC API credentials found. Please configure your API keys in the settings.";
+    // Check if service has credentials by testing if we have user credentials or environment credentials
+    const hasEnvironmentCredentials = !!(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY);
+    const hasAnyCredentials = !!userCredentials || hasEnvironmentCredentials;
+    
+    if (!hasAnyCredentials) {
+      const message = "No MEXC API credentials found. Please configure your API keys in the settings.";
       
       return NextResponse.json({
         success: false,

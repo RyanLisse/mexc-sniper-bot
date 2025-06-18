@@ -80,13 +80,11 @@ export async function GET() {
       });
     }
 
-    // Check if credentials are configured
-    const hasCredentials = mexcService.hasCredentials();
+    // Check if credentials are configured by testing if we have any credentials loaded
+    const hasCredentials = credentialSource !== "none";
     
     if (!hasCredentials) {
-      const noCredsMessage = credentialSource === "none" 
-        ? "MEXC API reachable but no credentials configured. Please add API credentials in your user settings or set environment variables (MEXC_API_KEY, MEXC_SECRET_KEY)."
-        : "MEXC API reachable but credentials not properly loaded";
+      const noCredsMessage = "MEXC API reachable but no credentials configured. Please add API credentials in your user settings or set environment variables (MEXC_API_KEY, MEXC_SECRET_KEY).";
         
       return NextResponse.json({
         connected: true, // Network is fine
