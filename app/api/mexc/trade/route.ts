@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
 import { type OrderParameters } from "@/src/services/unified-mexc-client";
+import { enhancedRiskManagementService } from "@/src/services/enhanced-risk-management-service";
 import { transactionLockService } from "@/src/services/transaction-lock-service";
 import { 
   createSuccessResponse, 
@@ -100,6 +101,82 @@ export async function POST(request: NextRequest) {
       ...(price && { price: price.toString() }),
       timeInForce: 'IOC' // Immediate or Cancel for safety
     };
+
+    // Enhanced Risk Assessment (if not skipped)
+    if (!skipLock) {
+      console.log(`🎯 Risk Assessment: Evaluating trade risk for ${userId} - ${symbol} ${side}`);
+      
+      try {
+        const riskAssessment = await enhancedRiskManagementService.assessTradingRisk(
+          userId, 
+          orderParams
+        );
+
+        console.log(`🎯 Risk Assessment Result:`, {
+          approved: riskAssessment.approved,
+          riskLevel: riskAssessment.riskLevel,
+          riskScore: riskAssessment.riskScore,
+          errors: riskAssessment.errors.length,
+          warnings: riskAssessment.warnings.length,
+        });
+
+        if (!riskAssessment.approved) {
+          return apiResponse(
+            createErrorResponse("Trade blocked by risk management", {
+              message: "Trade does not meet risk management criteria",
+              code: 'RISK_MANAGEMENT_BLOCK',
+              riskAssessment: {
+                riskLevel: riskAssessment.riskLevel,
+                riskScore: riskAssessment.riskScore,
+                errors: riskAssessment.errors,
+                warnings: riskAssessment.warnings,
+                recommendations: riskAssessment.recommendations,
+                limits: riskAssessment.limits,
+                compliance: riskAssessment.compliance,
+              },
+            }),
+            HTTP_STATUS.FORBIDDEN
+          );
+        }
+
+        // Log warnings even for approved trades
+        if (riskAssessment.warnings.length > 0) {
+          console.warn(`⚠️ Risk Management Warnings for ${symbol}:`, riskAssessment.warnings);
+        }
+
+        // Add risk metadata to order for tracking
+        (orderParams as any).riskMetadata = {
+          riskLevel: riskAssessment.riskLevel,
+          riskScore: riskAssessment.riskScore,
+          assessmentTime: riskAssessment.metadata.assessmentTime,
+          portfolioImpact: riskAssessment.limits.portfolioImpact,
+        };
+
+      } catch (riskError) {
+        console.error(`❌ Risk Assessment Failed for ${symbol}:`, riskError);
+        
+        // On risk assessment failure, block the trade for safety
+        return apiResponse(
+          createErrorResponse("Risk assessment system error", {
+            message: "Unable to assess trade risk - blocking for safety",
+            code: 'RISK_ASSESSMENT_ERROR',
+            details: riskError instanceof Error ? riskError.message : "Unknown risk assessment error"
+          }),
+          HTTP_STATUS.INTERNAL_SERVER_ERROR
+        );
+      }
+    } else {
+      console.log(`⚠️ Risk Assessment: Skipped for ${symbol} (skipLock=true)`);
+      
+      // Add minimal risk metadata for emergency trades
+      (orderParams as any).riskMetadata = {
+        riskLevel: 'unknown',
+        riskScore: 0,
+        assessmentTime: new Date().toISOString(),
+        portfolioImpact: 0,
+        emergencyTrade: true,
+      };
+    }
 
     // Execute with lock protection
     const executeTrade = async () => {

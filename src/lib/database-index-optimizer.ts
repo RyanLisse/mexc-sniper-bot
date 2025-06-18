@@ -43,257 +43,220 @@ export class DatabaseIndexOptimizer {
   }
 
   /**
-   * Get all strategic index definitions optimized for AI agent workloads
+   * Get all strategic index definitions optimized for MEXC AI agent workloads
+   * 
+   * PERFORMANCE TARGET: 60% query improvement for agent operations
+   * Focus areas: Pattern discovery, trading signals, real-time data, user sessions
    */
   getStrategicIndexes(): IndexDefinition[] {
     return [
       // ======================================
-      // CRITICAL INDEXES FOR AGENT OPERATIONS
+      // CRITICAL INDEXES - Agent Core Operations
       // ======================================
-
-      // Snipe Targets - Core trading operations
+      
+      // Pattern Discovery Agent optimizations
       {
-        name: "idx_snipe_targets_agent_priority",
-        table: "snipe_targets",
-        columns: ["status", "priority", "target_execution_time"],
-        where: "status IN ('pending', 'ready')",
-        type: "partial",
-        priority: "critical",
-        expectedImprovement: "70% faster target selection",
-        agentWorkflows: ["PatternDiscoveryAgent", "StrategyAgent", "MexcApiAgent"],
-      },
-      {
-        name: "idx_snipe_targets_user_active",
-        table: "snipe_targets",
-        columns: ["user_id", "status", "priority"],
+        name: "idx_patterns_symbol_timestamp",
+        table: "patterns",
+        columns: ["symbol", "created_at", "confidence"],
         type: "btree",
         priority: "critical",
-        expectedImprovement: "60% faster user target queries",
-        agentWorkflows: ["User Dashboard", "Portfolio Management"],
+        expectedImprovement: "70% faster pattern discovery queries",
+        agentWorkflows: ["pattern-discovery", "symbol-analysis", "trading-strategy"]
       },
+      
       {
-        name: "idx_snipe_targets_execution_time",
-        table: "snipe_targets",
-        columns: ["target_execution_time", "status"],
-        where: "target_execution_time IS NOT NULL",
+        name: "idx_patterns_confidence_ready",
+        table: "patterns", 
+        columns: ["confidence", "is_ready", "pattern_type"],
+        where: "confidence > 0.7 AND is_ready = true",
         type: "partial",
         priority: "critical",
-        expectedImprovement: "80% faster time-based queries",
-        agentWorkflows: ["ScheduledAgent", "TimingAgent"],
+        expectedImprovement: "80% faster ready pattern lookups",
+        agentWorkflows: ["pattern-discovery", "trading-strategy"]
       },
 
-      // Pattern Embeddings - AI pattern matching
+      // Trading Operations - High Frequency Access
       {
-        name: "idx_pattern_embeddings_active_type_confidence",
-        table: "pattern_embeddings",
-        columns: ["is_active", "pattern_type", "confidence"],
+        name: "idx_snipe_targets_user_status",
+        table: "snipe_targets",
+        columns: ["user_id", "status", "created_at"],
+        type: "btree", 
+        priority: "critical",
+        expectedImprovement: "65% faster user target queries",
+        agentWorkflows: ["trading-strategy", "mexc-api", "symbol-analysis"]
+      },
+
+      {
+        name: "idx_strategies_active_user",
+        table: "strategies",
+        columns: ["user_id", "is_active", "strategy_type", "updated_at"],
+        type: "btree",
+        priority: "critical", 
+        expectedImprovement: "60% faster active strategy lookups",
+        agentWorkflows: ["trading-strategy", "risk-manager"]
+      },
+
+      // Real-time Data Access
+      {
+        name: "idx_transactions_user_timestamp",
+        table: "transactions",
+        columns: ["user_id", "created_at", "status"],
+        type: "btree",
+        priority: "high",
+        expectedImprovement: "50% faster transaction history queries", 
+        agentWorkflows: ["reconciliation", "safety-monitor"]
+      },
+
+      // ======================================
+      // HIGH PRIORITY - Agent Coordination
+      // ======================================
+
+      // Agent Health & Monitoring
+      {
+        name: "idx_agent_health_status_time",
+        table: "agent_health",
+        columns: ["agent_type", "status", "last_heartbeat"],
+        type: "btree",
+        priority: "high",
+        expectedImprovement: "70% faster health check queries",
+        agentWorkflows: ["health-monitor", "orchestrator"]
+      },
+
+      // Performance Metrics for Optimization
+      {
+        name: "idx_performance_metrics_agent_time",
+        table: "performance_metrics", 
+        columns: ["agent_id", "metric_type", "timestamp"],
+        type: "btree",
+        priority: "high",
+        expectedImprovement: "55% faster performance analytics",
+        agentWorkflows: ["performance-collector", "safety-monitor"]
+      },
+
+      // Workflow Execution Tracking
+      {
+        name: "idx_workflows_status_priority",
+        table: "workflows",
+        columns: ["status", "priority", "scheduled_at"],
+        where: "status IN ('pending', 'running')",
+        type: "partial",
+        priority: "high", 
+        expectedImprovement: "60% faster workflow queue processing",
+        agentWorkflows: ["workflow-engine", "orchestrator"]
+      },
+
+      // ======================================
+      // MEDIUM PRIORITY - User & Session Data  
+      // ======================================
+
+      // User Session & Auth
+      {
+        name: "idx_user_sessions_active",
+        table: "user_sessions",
+        columns: ["user_id", "is_active", "expires_at"],
+        where: "is_active = true AND expires_at > NOW()",
+        type: "partial",
+        priority: "medium",
+        expectedImprovement: "40% faster session validation",
+        agentWorkflows: ["auth", "user-manager"]
+      },
+
+      // User Preferences for Personalization
+      {
+        name: "idx_user_preferences_key_user",
+        table: "user_preferences", 
+        columns: ["user_id", "preference_key", "updated_at"],
+        type: "btree",
+        priority: "medium",
+        expectedImprovement: "45% faster preference lookups",
+        agentWorkflows: ["user-manager", "personalization"]
+      },
+
+      // ======================================
+      // SAFETY & RISK MANAGEMENT
+      // ======================================
+
+      // Risk Assessment Data
+      {
+        name: "idx_risk_assessments_user_level",
+        table: "risk_assessments",
+        columns: ["user_id", "risk_level", "assessed_at"],
+        type: "btree", 
+        priority: "high",
+        expectedImprovement: "65% faster risk calculations",
+        agentWorkflows: ["risk-manager", "safety-monitor"]
+      },
+
+      // Emergency Stop Mechanisms  
+      {
+        name: "idx_emergency_stops_active",
+        table: "emergency_stops",
+        columns: ["is_active", "trigger_type", "created_at"],
         where: "is_active = true",
         type: "partial",
         priority: "critical",
-        expectedImprovement: "75% faster pattern matching",
-        agentWorkflows: ["PatternDiscoveryAgent", "SymbolAnalysisAgent"],
-      },
-      {
-        name: "idx_pattern_embeddings_symbol_type",
-        table: "pattern_embeddings",
-        columns: ["symbol_name", "pattern_type", "last_seen_at"],
-        type: "btree",
-        priority: "high",
-        expectedImprovement: "65% faster symbol pattern lookup",
-        agentWorkflows: ["SymbolAnalysisAgent", "CalendarAgent"],
-      },
-      {
-        name: "idx_pattern_embeddings_confidence_seen",
-        table: "pattern_embeddings",
-        columns: ["confidence", "last_seen_at"],
-        where: "confidence > 70",
-        type: "partial",
-        priority: "high",
-        expectedImprovement: "50% faster confidence-based queries",
-        agentWorkflows: ["RiskManagerAgent", "ValidationAgent"],
+        expectedImprovement: "90% faster emergency response",
+        agentWorkflows: ["safety-monitor", "emergency-recovery"]
       },
 
-      // Transaction Locks - Concurrency control
+      // ======================================
+      // ANALYTICS & REPORTING
+      // ======================================
+
+      // Trading Analytics
       {
-        name: "idx_transaction_locks_resource_active",
-        table: "transaction_locks",
-        columns: ["resource_id", "status", "expires_at"],
-        where: "status = 'active'",
-        type: "partial",
+        name: "idx_trading_analytics_symbol_date",
+        table: "trading_analytics",
+        columns: ["symbol", "date", "metric_type"],
+        type: "btree",
+        priority: "medium", 
+        expectedImprovement: "50% faster analytics queries",
+        agentWorkflows: ["analytics", "reporting"]
+      },
+
+      // Alerts & Notifications
+      {
+        name: "idx_alerts_user_status_priority",
+        table: "alerts", 
+        columns: ["user_id", "status", "priority", "created_at"],
+        type: "btree",
+        priority: "medium",
+        expectedImprovement: "40% faster alert processing",
+        agentWorkflows: ["alert-manager", "notification"]
+      },
+
+      // ======================================
+      // COMPOSITE INDEXES - Multi-column Queries
+      // ======================================
+
+      // Complex Trading Queries
+      {
+        name: "idx_complex_trading_lookup", 
+        table: "snipe_targets",
+        columns: ["user_id", "symbol", "status", "target_price", "created_at"],
+        type: "btree",
+        priority: "high",
+        expectedImprovement: "75% faster complex trading queries",
+        agentWorkflows: ["trading-strategy", "mexc-api", "symbol-analysis", "pattern-discovery"]
+      },
+
+      // Pattern Analysis Composite
+      {
+        name: "idx_pattern_analysis_composite",
+        table: "patterns",
+        columns: ["symbol", "pattern_type", "confidence", "is_ready", "created_at"],
+        type: "btree",
         priority: "critical",
-        expectedImprovement: "80% faster lock acquisition",
-        agentWorkflows: ["All Agents", "Concurrent Operations"],
-      },
-      {
-        name: "idx_transaction_locks_idempotency",
-        table: "transaction_locks",
-        columns: ["idempotency_key"],
-        unique: true,
-        type: "hash",
-        priority: "critical",
-        expectedImprovement: "90% faster duplicate detection",
-        agentWorkflows: ["TransactionManager", "RetryLogic"],
-      },
-      {
-        name: "idx_transaction_locks_owner_status",
-        table: "transaction_locks",
-        columns: ["owner_id", "status", "created_at"],
-        type: "btree",
-        priority: "high",
-        expectedImprovement: "60% faster owner lock queries",
-        agentWorkflows: ["ErrorRecoveryAgent", "MonitoringAgent"],
-      },
-
-      // ======================================
-      // HIGH PRIORITY INDEXES
-      // ======================================
-
-      // Execution History - Trade tracking
-      {
-        name: "idx_execution_history_user_symbol_time",
-        table: "execution_history",
-        columns: ["user_id", "symbol_name", "executed_at"],
-        type: "btree",
-        priority: "high",
-        expectedImprovement: "55% faster trade history queries",
-        agentWorkflows: ["ReconciliationAgent", "Portfolio Tracking"],
-      },
-      {
-        name: "idx_execution_history_status_action",
-        table: "execution_history",
-        columns: ["status", "action", "executed_at"],
-        type: "btree",
-        priority: "high",
-        expectedImprovement: "50% faster status-based queries",
-        agentWorkflows: ["AuditAgent", "ComplianceAgent"],
-      },
-      {
-        name: "idx_execution_history_snipe_target",
-        table: "execution_history",
-        columns: ["snipe_target_id", "status", "action"],
-        where: "snipe_target_id IS NOT NULL",
-        type: "partial",
-        priority: "high",
-        expectedImprovement: "70% faster target-based queries",
-        agentWorkflows: ["StrategyAgent", "PerformanceAgent"],
-      },
-
-      // Monitored Listings - Calendar discovery
-      {
-        name: "idx_monitored_listings_ready_confidence",
-        table: "monitored_listings",
-        columns: ["has_ready_pattern", "confidence", "status"],
-        where: "has_ready_pattern = true",
-        type: "partial",
-        priority: "high",
-        expectedImprovement: "65% faster ready pattern queries",
-        agentWorkflows: ["CalendarAgent", "PatternDiscoveryAgent"],
-      },
-      {
-        name: "idx_monitored_listings_launch_time",
-        table: "monitored_listings",
-        columns: ["first_open_time", "status", "confidence"],
-        type: "btree",
-        priority: "high",
-        expectedImprovement: "60% faster time-based discovery",
-        agentWorkflows: ["CalendarAgent", "TimingAgent"],
-      },
-      {
-        name: "idx_monitored_listings_vcoin_status",
-        table: "monitored_listings",
-        columns: ["vcoin_id", "status", "last_checked"],
-        type: "btree",
-        priority: "high",
-        expectedImprovement: "55% faster vcoin tracking",
-        agentWorkflows: ["MonitoringAgent", "DataFetcher"],
-      },
-
-      // Transactions - Portfolio management
-      {
-        name: "idx_transactions_user_time_status",
-        table: "transactions",
-        columns: ["user_id", "transaction_time", "status"],
-        type: "btree",
-        priority: "high",
-        expectedImprovement: "50% faster user transaction queries",
-        agentWorkflows: ["Portfolio Management", "User Dashboard"],
-      },
-      {
-        name: "idx_transactions_symbol_profit",
-        table: "transactions",
-        columns: ["symbol_name", "profit_loss", "transaction_time"],
-        where: "profit_loss IS NOT NULL",
-        type: "partial",
-        priority: "high",
-        expectedImprovement: "60% faster P&L analysis",
-        agentWorkflows: ["AnalyticsAgent", "ReportingAgent"],
-      },
-
-      // ======================================
-      // MEDIUM PRIORITY INDEXES
-      // ======================================
-
-      // Workflow Activity - System monitoring
-      {
-        name: "idx_workflow_activity_user_type_time",
-        table: "workflow_activity",
-        columns: ["user_id", "type", "timestamp"],
-        type: "btree",
-        priority: "medium",
-        expectedImprovement: "45% faster activity queries",
-        agentWorkflows: ["MonitoringAgent", "AuditAgent"],
-      },
-      {
-        name: "idx_workflow_activity_level_time",
-        table: "workflow_activity",
-        columns: ["level", "timestamp"],
-        where: "level IN ('error', 'warning')",
-        type: "partial",
-        priority: "medium",
-        expectedImprovement: "50% faster error tracking",
-        agentWorkflows: ["ErrorRecoveryAgent", "AlertingAgent"],
-      },
-
-      // API Credentials - User management
-      {
-        name: "idx_api_credentials_user_provider_active",
-        table: "api_credentials",
-        columns: ["user_id", "provider", "is_active"],
-        where: "is_active = true",
-        type: "partial",
-        priority: "medium",
-        expectedImprovement: "40% faster credential lookup",
-        agentWorkflows: ["AuthenticationAgent", "MexcApiAgent"],
-      },
-
-      // Pattern Similarity Cache - AI optimization
-      {
-        name: "idx_pattern_similarity_cache_pattern1_similarity",
-        table: "pattern_similarity_cache",
-        columns: ["pattern_id_1", "cosine_similarity"],
-        where: "cosine_similarity > 0.8",
-        type: "partial",
-        priority: "medium",
-        expectedImprovement: "55% faster similarity queries",
-        agentWorkflows: ["PatternDiscoveryAgent", "SimilarityAgent"],
-      },
-
-      // Transaction Queue - Queue management
-      {
-        name: "idx_transaction_queue_status_priority_queued",
-        table: "transaction_queue",
-        columns: ["status", "priority", "queued_at"],
-        where: "status IN ('pending', 'processing')",
-        type: "partial",
-        priority: "medium",
-        expectedImprovement: "45% faster queue processing",
-        agentWorkflows: ["QueueManager", "ConcurrencyAgent"],
-      },
+        expectedImprovement: "80% faster pattern analysis workflows", 
+        agentWorkflows: ["pattern-discovery", "symbol-analysis", "trading-strategy"]
+      }
     ];
   }
 
   /**
-   * Create all strategic indexes
+   * Create all strategic indexes for optimal agent performance
+   * TARGET: 60% query performance improvement
    */
   async createStrategicIndexes(): Promise<IndexOptimizationResult> {
     console.log("🗂️ Creating strategic database indexes...");

@@ -2,174 +2,183 @@ import { NextResponse } from "next/server";
 import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
 import { getUserCredentials } from "@/src/services/user-credentials-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { ErrorFactory } from "@/src/lib/error-types";
+import { errorHandler } from "@/src/lib/error-handler-service";
+
+interface ConnectivityResponse {
+  connected: boolean;
+  hasCredentials: boolean;
+  credentialsValid: boolean;
+  credentialSource: "database" | "environment" | "none";
+  hasUserCredentials: boolean;
+  hasEnvironmentCredentials: boolean;
+  message?: string;
+  error?: string;
+  timestamp: string;
+  status: string;
+}
 
 export async function GET() {
+  const requestId = `conn_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  
   try {
     const { getUser } = getKindeServerSession();
     const user = await getUser();
     const userId = user?.id;
     
-    // Check for user-specific credentials first
-    let userCredentials = null;
-    let credentialSource = "none";
-    let hasUserCredentials = false;
-    let hasEnvironmentCredentials = false;
+    const credentials = await getUserCredentialsWithFallback(userId);
+    const mexcService = getRecommendedMexcService(credentials.userCredentials || undefined);
     
-    if (userId) {
-      try {
-        console.log(`[DEBUG] Fetching credentials for user: ${userId}`);
-        userCredentials = await getUserCredentials(userId, 'mexc');
-        hasUserCredentials = !!userCredentials;
-        console.log(`[DEBUG] User credentials found: ${!!userCredentials}`, {
+    // Test basic connectivity first
+    const isConnected = await testMexcConnectivity(mexcService);
+    if (!isConnected) {
+      return createConnectivityResponse({
+        connected: false,
+        hasCredentials: false,
+        credentialsValid: false,
+        credentialSource: credentials.source,
+        hasUserCredentials: credentials.hasUserCredentials,
+        hasEnvironmentCredentials: credentials.hasEnvironmentCredentials,
+        error: "MEXC API unreachable",
+        status: "network_error",
+      });
+    }
+
+    // Test credentials if available
+    const credentialsResult = await testCredentials(mexcService, credentials);
+    
+    return createConnectivityResponse({
+      connected: true,
+      hasCredentials: credentialsResult.hasCredentials,
+      credentialsValid: credentialsResult.isValid,
+      credentialSource: credentials.source,
+      hasUserCredentials: credentials.hasUserCredentials,
+      hasEnvironmentCredentials: credentials.hasEnvironmentCredentials,
+      message: credentialsResult.message,
+      error: credentialsResult.error,
+      status: credentialsResult.status,
+    });
+    
+  } catch (error) {
+    const appError = await errorHandler.handleError(error, {
+      operation: "mexc-connectivity-check",
+      requestId,
+    });
+    
+    console.error("MEXC connectivity check failed:", appError.toJSON());
+    
+    return NextResponse.json(
+      errorHandler.createErrorResponse(appError, { requestId }),
+      { status: 500 }
+    );
+  }
+}
+
+async function getUserCredentialsWithFallback(userId?: string) {
+  let userCredentials = null;
+  let hasUserCredentials = false;
+  let credentialSource: "database" | "environment" | "none" = "none";
+  
+  if (userId) {
+    try {
+      console.log(`[DEBUG] Fetching credentials for user: ${userId}`);
+      userCredentials = await getUserCredentials(userId, 'mexc');
+      hasUserCredentials = !!userCredentials;
+      
+      if (hasUserCredentials) {
+        credentialSource = "database";
+        console.log(`[DEBUG] User credentials found`, {
           hasApiKey: !!userCredentials?.apiKey,
           hasSecretKey: !!userCredentials?.secretKey,
           apiKeyLength: userCredentials?.apiKey?.length || 0,
           secretKeyLength: userCredentials?.secretKey?.length || 0
         });
-      } catch (error) {
-        console.error("Error retrieving user credentials:", error);
-        // Check if it's an encryption service error
-        if (error instanceof Error && error.message.includes("Encryption service unavailable")) {
-          return NextResponse.json({
-            connected: false,
-            hasCredentials: false,
-            credentialsValid: false,
-            credentialSource: "none",
-            hasUserCredentials: false,
-            hasEnvironmentCredentials: false,
-            error: "Encryption service unavailable - please contact support",
-            message: "Unable to access stored credentials due to server configuration issue",
-            timestamp: new Date().toISOString(),
-            status: "encryption_error"
-          }, { status: 500 });
-        }
-        console.log("No user credentials found, checking environment");
       }
-    }
-    
-    // Check environment credentials
-    hasEnvironmentCredentials = !!(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY);
-    
-    // Determine credential source
-    if (hasUserCredentials) {
-      credentialSource = "database";
-    } else if (hasEnvironmentCredentials) {
-      credentialSource = "environment";
-    } else {
-      credentialSource = "none";
-    }
-    
-    // Initialize service with appropriate credentials
-    let mexcService;
-    if (userCredentials) {
-      console.log(`[DEBUG] Initializing MEXC service with user credentials`, {
-        hasApiKey: !!userCredentials.apiKey,
-        hasSecretKey: !!userCredentials.secretKey,
-        apiKeyMasked: userCredentials.apiKey ? `${userCredentials.apiKey.substring(0, 6)}...${userCredentials.apiKey.substring(userCredentials.apiKey.length - 4)}` : 'none',
-        secretKeyMasked: userCredentials.secretKey ? `${userCredentials.secretKey.substring(0, 6)}...${userCredentials.secretKey.substring(userCredentials.secretKey.length - 4)}` : 'none'
-      });
-      mexcService = getRecommendedMexcService({
-        apiKey: userCredentials.apiKey,
-        secretKey: userCredentials.secretKey
-      });
-    } else {
-      console.log(`[DEBUG] Initializing MEXC service with environment credentials`);
-      mexcService = getRecommendedMexcService();
-    }
-    
-    // First check basic connectivity (network)
-    const basicConnectivity = await mexcService.testConnectivity();
-    
-    if (!basicConnectivity) {
-      return NextResponse.json({
-        connected: false,
-        hasCredentials: false,
-        credentialsValid: false,
-        credentialSource,
-        hasUserCredentials,
-        hasEnvironmentCredentials,
-        error: "MEXC API unreachable",
-        timestamp: new Date().toISOString(),
-        status: "network_error"
-      });
-    }
-
-    // Check if credentials are configured by testing if we have any credentials loaded
-    const hasCredentials = credentialSource !== "none";
-    
-    if (!hasCredentials) {
-      const noCredsMessage = "MEXC API reachable but no credentials configured. Please add API credentials in your user settings or set environment variables (MEXC_API_KEY, MEXC_SECRET_KEY).";
-        
-      return NextResponse.json({
-        connected: true, // Network is fine
-        hasCredentials: false,
-        credentialsValid: false,
-        credentialSource,
-        hasUserCredentials,
-        hasEnvironmentCredentials,
-        message: noCredsMessage,
-        timestamp: new Date().toISOString(),
-        status: "no_credentials"
-      });
-    }
-
-    // Test actual credentials by trying to get account info
-    try {
-      const accountResult = await mexcService.getAccountBalances();
+    } catch (error) {
+      // Handle encryption service errors specifically
+      if (error instanceof Error && error.message.includes("Encryption service unavailable")) {
+        throw ErrorFactory.encryption("Unable to access stored credentials due to server configuration issue");
+      }
       
-      const successMessage = accountResult.success
-        ? `MEXC API connected with valid credentials from ${credentialSource === "database" ? "user settings" : "environment variables"}`
-        : `Credentials invalid (source: ${credentialSource}): ${accountResult.error}`;
-      
-      return NextResponse.json({
-        connected: true,
-        hasCredentials: true,
-        credentialsValid: accountResult.success,
-        credentialSource,
-        hasUserCredentials,
-        hasEnvironmentCredentials,
-        message: successMessage,
-        timestamp: new Date().toISOString(),
-        status: accountResult.success ? "fully_connected" : "invalid_credentials",
-        error: accountResult.success ? undefined : accountResult.error
-      });
-    } catch (credentialError) {
-      return NextResponse.json({
-        connected: true,
-        hasCredentials: true,
-        credentialsValid: false,
-        credentialSource,
-        hasUserCredentials,
-        hasEnvironmentCredentials,
-        error: credentialError instanceof Error ? credentialError.message : "Credential validation failed",
-        message: `Credential validation failed (source: ${credentialSource}): ${credentialError instanceof Error ? credentialError.message : "Unknown error"}`,
-        timestamp: new Date().toISOString(),
-        status: "invalid_credentials"
-      });
+      console.warn("Failed to retrieve user credentials:", error);
+      // Continue to check environment credentials
     }
-    
-  } catch (error) {
-    console.error("MEXC connectivity check failed:", error);
-    console.error("Error details:", {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      type: error?.constructor?.name
-    });
-    
-    return NextResponse.json(
-      {
-        connected: false,
-        hasCredentials: false,
-        credentialsValid: false,
-        credentialSource: "none",
-        hasUserCredentials: false,
-        hasEnvironmentCredentials: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        errorType: error?.constructor?.name || "Unknown",
-        timestamp: new Date().toISOString(),
-        status: "error"
-      },
-      { status: 500 }
-    );
   }
+  
+  const hasEnvironmentCredentials = !!(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY);
+  
+  if (!hasUserCredentials && hasEnvironmentCredentials) {
+    credentialSource = "environment";
+  }
+  
+  return {
+    userCredentials,
+    hasUserCredentials,
+    hasEnvironmentCredentials,
+    source: credentialSource,
+  };
+}
+
+async function testMexcConnectivity(mexcService: { testConnectivity: () => Promise<boolean> }): Promise<boolean> {
+  try {
+    return await mexcService.testConnectivity();
+  } catch (error) {
+    console.error("MEXC connectivity test failed:", error);
+    return false;
+  }
+}
+
+async function testCredentials(
+  mexcService: { getAccountBalances: () => Promise<{ success: boolean; error?: string }> }, 
+  credentials: { source: string }
+) {
+  const hasCredentials = credentials.source !== "none";
+  
+  if (!hasCredentials) {
+    return {
+      hasCredentials: false,
+      isValid: false,
+      message: "MEXC API reachable but no credentials configured. Please add API credentials in your user settings or set environment variables (MEXC_API_KEY, MEXC_SECRET_KEY).",
+      status: "no_credentials",
+    };
+  }
+
+  try {
+    const accountResult = await mexcService.getAccountBalances();
+    
+    return {
+      hasCredentials: true,
+      isValid: accountResult.success,
+      message: accountResult.success
+        ? `MEXC API connected with valid credentials from ${credentials.source === "database" ? "user settings" : "environment variables"}`
+        : `Credentials invalid (source: ${credentials.source}): ${accountResult.error}`,
+      status: accountResult.success ? "fully_connected" : "invalid_credentials",
+      error: accountResult.success ? undefined : accountResult.error,
+    };
+  } catch (error) {
+    return {
+      hasCredentials: true,
+      isValid: false,
+      message: `Credential validation failed (source: ${credentials.source}): ${error instanceof Error ? error.message : "Unknown error"}`,
+      status: "invalid_credentials",
+      error: error instanceof Error ? error.message : "Credential validation failed",
+    };
+  }
+}
+
+function createConnectivityResponse(data: Partial<ConnectivityResponse>): NextResponse {
+  const response: ConnectivityResponse = {
+    connected: data.connected ?? false,
+    hasCredentials: data.hasCredentials ?? false,
+    credentialsValid: data.credentialsValid ?? false,
+    credentialSource: data.credentialSource ?? "none",
+    hasUserCredentials: data.hasUserCredentials ?? false,
+    hasEnvironmentCredentials: data.hasEnvironmentCredentials ?? false,
+    message: data.message,
+    error: data.error,
+    timestamp: new Date().toISOString(),
+    status: data.status ?? "unknown",
+  };
+  
+  return NextResponse.json(response);
 }

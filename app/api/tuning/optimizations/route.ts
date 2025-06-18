@@ -22,14 +22,11 @@ const OptimizationRequestSchema = z.object({
     metric: z.string()
   })).min(1),
   strategy: z.object({
-    algorithm: z.enum(['bayesian', 'genetic', 'reinforcement_learning', 'multi_objective']),
+    algorithm: z.enum(['simple', 'grid_search', 'random_search']),
     maxIterations: z.number().min(1).max(1000),
     convergenceThreshold: z.number().min(0.0001).max(0.1),
     parallelEvaluations: z.number().min(1).max(10),
-    explorationRate: z.number().min(0.1).max(1.0),
-    populationSize: z.number().min(10).max(200).optional(),
-    acquisitionFunction: z.enum(['ei', 'ucb', 'poi']).optional(),
-    learningRate: z.number().min(0.0001).max(0.1).optional()
+    explorationRate: z.number().min(0.1).max(1.0)
   }),
   safetyConstraints: z.object({
     maxRiskLevel: z.number().min(0).max(1),
@@ -62,7 +59,7 @@ export async function GET() {
       {
         id: 'opt_1234567890',
         status: 'running',
-        algorithm: 'Bayesian Optimization',
+        algorithm: 'Simple Optimization',
         progress: 65,
         currentIteration: 65,
         maxIterations: 100,
@@ -74,7 +71,7 @@ export async function GET() {
       {
         id: 'opt_0987654321',
         status: 'completed',
-        algorithm: 'Genetic Algorithm',
+        algorithm: 'Random Search',
         progress: 100,
         currentIteration: 50,
         maxIterations: 50,
@@ -129,7 +126,7 @@ export async function POST(request: NextRequest) {
           }
         ],
         strategy: {
-          algorithm: 'bayesian' as const,
+          algorithm: 'simple' as const,
           maxIterations: 50,
           convergenceThreshold: 0.01,
           parallelEvaluations: 3,
@@ -180,7 +177,7 @@ export async function POST(request: NextRequest) {
         }
       })),
       strategy: validatedRequest.strategy || {
-        algorithm: 'bayesian',
+        algorithm: 'simple',
         maxIterations: 100,
         convergenceThreshold: 0.01,
         parallelEvaluations: 4,

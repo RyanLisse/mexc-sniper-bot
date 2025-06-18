@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { CACHE_CONSTANTS } from "@/src/lib/constants";
+import { CACHE_CONSTANTS, TIME_CONSTANTS } from "@/src/lib/constants";
 import { globalEnhancedAgentCache, initializeAgentCache } from "@/src/lib/enhanced-agent-cache";
 import { ErrorLoggingService } from "@/src/services/error-logging-service";
 import OpenAI from "openai";
@@ -59,7 +59,7 @@ export class BaseAgent {
     this.responseCache = new Map();
 
     // Clean up expired cache entries every 10 minutes
-    this.cacheCleanupInterval = setInterval(() => this.cleanupExpiredCache(), 10 * 60 * 1000);
+    this.cacheCleanupInterval = setInterval(() => this.cleanupExpiredCache(), TIME_CONSTANTS.MINUTE_MS * 10);
 
     // Initialize enhanced agent cache for this agent
     if (this.config.cacheEnabled) {
@@ -142,8 +142,9 @@ export class BaseAgent {
       // Track cache miss in enhanced cache when it returns null
       if (this.config.cacheEnabled) {
         // Inform enhanced cache about the miss
-        await globalEnhancedAgentCache.trackCacheMiss(this.config.name).catch(() => {
-          // Ignore errors in tracking
+        await globalEnhancedAgentCache.trackCacheMiss(this.config.name).catch((error) => {
+          console.warn(`[${this.config.name}] Failed to track cache miss:`, error);
+          // Continue execution - cache tracking is not critical
         });
       }
 
@@ -239,12 +240,22 @@ export class BaseAgent {
       return agentResponse;
     } catch (error) {
       const errorLoggingService = ErrorLoggingService.getInstance();
-      await errorLoggingService.logError(error as Error, {
+      const agentError = new Error(
+        `Agent ${this.config.name} failed to process request: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+      
+      // Log with proper context
+      await errorLoggingService.logError(agentError, {
         agent: this.config.name,
         operation: "processWithOpenAI",
         messages: messages.length,
+        originalError: error instanceof Error ? error.message : String(error),
+        stackTrace: error instanceof Error ? error.stack : undefined,
       });
-      throw new Error(`Agent ${this.config.name} failed: ${error}`);
+      
+      throw agentError;
     }
   }
 

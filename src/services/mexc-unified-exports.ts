@@ -2,7 +2,8 @@
  * MEXC Unified Exports - Single source of truth for all MEXC API functionality
  *
  * This module provides unified access to all MEXC API capabilities through a single,
- * consistent interface. It replaces all legacy MEXC client implementations.
+ * consistent interface. All legacy MEXC client implementations have been consolidated
+ * into the UnifiedMexcService.
  *
  * @example
  * ```typescript
@@ -16,29 +17,13 @@
  * ```
  */
 
-// Import for re-export with different name
-import { getEnhancedMexcService } from "./enhanced-mexc-service-layer";
-import { getUnifiedMexcClient } from "./unified-mexc-client";
-
-// ============================================================================
-// Primary Exports - Use These
-// ============================================================================
-
-// Main service layer - contains all functionality
-export {
-  EnhancedMexcServiceLayer as MexcServiceLayer,
-  getEnhancedMexcService as getRecommendedMexcService,
-  resetEnhancedMexcService as resetMexcService,
-  type MexcServiceConfig,
-  type ServiceResponse,
-} from "./enhanced-mexc-service-layer";
-
-// Unified client types and functions
-export {
-  UnifiedMexcClient,
-  getUnifiedMexcClient,
+// Import the new unified service
+import { 
+  getUnifiedMexcService, 
+  resetUnifiedMexcService,
+  UnifiedMexcService,
   type UnifiedMexcConfig,
-  type UnifiedMexcResponse,
+  type MexcServiceResponse,
   type CalendarEntry,
   type SymbolEntry,
   type BalanceEntry,
@@ -46,52 +31,121 @@ export {
   type Ticker,
   type OrderResult,
   type OrderParameters,
-} from "./unified-mexc-client";
+  type OrderStatus,
+  type OrderBook,
+  type Kline,
+  type MarketStats,
+  type PatternAnalysis,
+  type TradingOpportunity,
+  type Portfolio,
+  type RiskAssessment
+} from "./unified-mexc-service";
 
-// Enhanced service layer types and functions
+// ============================================================================
+// Primary Exports - Use These (Updated to use UnifiedMexcService)
+// ============================================================================
+
+// Main service class and factory function
 export {
-  EnhancedMexcServiceLayer,
-  getEnhancedMexcService,
-  resetEnhancedMexcService,
-  type AdvancedOrderParameters,
+  UnifiedMexcService as MexcServiceLayer,
+  getUnifiedMexcService as getRecommendedMexcService,
+  resetUnifiedMexcService as resetMexcService,
+  type UnifiedMexcConfig as MexcServiceConfig,
+  type MexcServiceResponse as ServiceResponse,
+};
+
+// Core types for trading and market data
+export {
+  type CalendarEntry,
+  type SymbolEntry,
+  type BalanceEntry,
+  type ExchangeSymbol,
+  type Ticker,
+  type OrderResult,
+  type OrderParameters,
+  type OrderStatus,
+  type OrderBook,
+  type Kline,
+};
+
+// Advanced analytics and trading types
+export {
+  type MarketStats,
   type PatternAnalysis,
   type TradingOpportunity,
   type Portfolio,
   type RiskAssessment,
-} from "./enhanced-mexc-service-layer";
+};
 
 // ============================================================================
 // Convenience Functions and Aliases
 // ============================================================================
 
 /**
- * Get a configured MEXC service instance (alias for getEnhancedMexcService)
+ * Get a configured MEXC service instance
  * This is the recommended way to access MEXC functionality
  */
-export function getMexcService(config?: { apiKey?: string; secretKey?: string }) {
-  return getEnhancedMexcService(config);
+export function getMexcService(config?: { apiKey?: string; secretKey?: string }): UnifiedMexcService {
+  return getUnifiedMexcService(config);
 }
 
 /**
  * Create a new MEXC service instance with specific configuration
  */
-export function createMexcService(config: { apiKey?: string; secretKey?: string } = {}) {
-  return getEnhancedMexcService(config);
+export function createMexcService(config: { apiKey?: string; secretKey?: string } = {}): UnifiedMexcService {
+  return getUnifiedMexcService(config);
 }
 
 /**
- * Get MEXC client (alias for getUnifiedMexcClient) - legacy compatibility
+ * Get MEXC client (alias for backward compatibility)
  */
-export function getMexcClient(config?: { apiKey?: string; secretKey?: string }) {
-  return getUnifiedMexcClient(config);
+export function getMexcClient(config?: { apiKey?: string; secretKey?: string }): UnifiedMexcService {
+  return getUnifiedMexcService(config);
 }
+
+/**
+ * Legacy compatibility - Enhanced MEXC Service
+ * @deprecated Use getUnifiedMexcService instead
+ */
+export function getEnhancedMexcService(config?: { apiKey?: string; secretKey?: string }): UnifiedMexcService {
+  console.warn('getEnhancedMexcService is deprecated. Use getUnifiedMexcService instead.');
+  return getUnifiedMexcService(config);
+}
+
+/**
+ * Legacy compatibility - Reset Enhanced MEXC Service
+ * @deprecated Use resetUnifiedMexcService instead
+ */
+export function resetEnhancedMexcService(): void {
+  console.warn('resetEnhancedMexcService is deprecated. Use resetUnifiedMexcService instead.');
+  resetUnifiedMexcService();
+}
+
+/**
+ * Legacy compatibility - Unified MEXC Client
+ * @deprecated Use getUnifiedMexcService instead
+ */
+export function getUnifiedMexcClient(config?: { apiKey?: string; secretKey?: string }): UnifiedMexcService {
+  console.warn('getUnifiedMexcClient is deprecated. Use getUnifiedMexcService instead.');
+  return getUnifiedMexcService(config);
+}
+
+// ============================================================================
+// Legacy Type Aliases for Backward Compatibility
+// ============================================================================
+
+/** @deprecated Use UnifiedMexcConfig instead */
+export type UnifiedMexcResponse<T> = MexcServiceResponse<T>;
+
+/** @deprecated Use OrderParameters instead */
+export type AdvancedOrderParameters = OrderParameters;
 
 // ============================================================================
 // Default Export
 // ============================================================================
 
 /**
- * Default export provides the MEXC service
+ * Default export provides the unified MEXC service
  * This is the recommended way to import MEXC functionality
  *
  * @example
@@ -101,4 +155,4 @@ export function getMexcClient(config?: { apiKey?: string; secretKey?: string }) 
  * const calendar = await mexcService.getCalendarListings();
  * ```
  */
-export default getEnhancedMexcService;
+export default getUnifiedMexcService;

@@ -95,7 +95,17 @@ export async function createCoordinationSystem(options?: {
 // Utility function to register common agent types
 export function registerCommonAgents(
   agentRegistry: import("./agent-registry").AgentRegistry,
-  agentManager: any
+  agentManager: {
+    getMexcApiAgent: () => unknown;
+    getPatternDiscoveryAgent: () => unknown;
+    getCalendarAgent: () => unknown;
+    getSymbolAnalysisAgent: () => unknown;
+    getStrategyAgent: () => unknown;
+    getSimulationAgent: () => unknown;
+    getRiskManagerAgent: () => unknown;
+    getReconciliationAgent: () => unknown;
+    getErrorRecoveryAgent: () => unknown;
+  }
 ): void {
   try {
     // Register core trading agents

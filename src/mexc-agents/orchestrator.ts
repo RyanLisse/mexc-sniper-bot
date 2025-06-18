@@ -9,16 +9,9 @@ export type {
 } from "./orchestrator-types";
 
 import { AgentManager } from "./agent-manager";
-import {
-  type AgentRegistry,
-  type EnhancedMexcOrchestrator,
-  type PerformanceCollector,
-  type WorkflowEngine,
-  checkCoordinationSystemHealth,
-  createCoordinationSystem,
-  registerCommonAgents,
-} from "./coordination";
+import { CoordinationSystemManager, type CoordinationSystemConfig } from "./coordination-manager";
 import { DataFetcher } from "./data-fetcher";
+import { OrchestrationMetricsManager } from "./metrics-manager";
 import type {
   AgentOrchestrationMetrics,
   CalendarDiscoveryWorkflowRequest,
@@ -27,48 +20,46 @@ import type {
   SymbolAnalysisWorkflowRequest,
   TradingStrategyWorkflowRequest,
 } from "./orchestrator-types";
-import { WorkflowExecutor } from "./workflow-executor";
+import { WorkflowExecutionService } from "./workflow-execution-service";
 
+export interface MexcOrchestratorOptions {
+  useEnhancedCoordination?: boolean;
+  coordinationConfig?: CoordinationSystemConfig;
+}
+
+/**
+ * Main orchestrator for MEXC trading workflows
+ * Refactored to follow Single Responsibility Principle and reduce complexity
+ */
 export class MexcOrchestrator {
   private agentManager: AgentManager;
   private dataFetcher: DataFetcher;
-  private workflowExecutor: WorkflowExecutor;
-  private metrics: AgentOrchestrationMetrics;
+  private coordinationManager: CoordinationSystemManager;
+  private metricsManager: OrchestrationMetricsManager;
+  private workflowExecutionService: WorkflowExecutionService;
 
-  // Enhanced coordination system (optional, for improved features)
-  private coordinationSystem: {
-    agentRegistry: AgentRegistry;
-    workflowEngine: WorkflowEngine;
-    performanceCollector: PerformanceCollector;
-    orchestrator: EnhancedMexcOrchestrator;
-  } | null = null;
-  private useEnhancedCoordination = false;
-
-  constructor(options?: { useEnhancedCoordination?: boolean }) {
-    // Initialize core components (for backward compatibility)
+  constructor(options: MexcOrchestratorOptions = {}) {
+    // Initialize core components
     this.agentManager = new AgentManager();
     this.dataFetcher = new DataFetcher(this.agentManager.getMexcApiAgent());
-    this.workflowExecutor = new WorkflowExecutor(this.agentManager, this.dataFetcher);
-
-    // Initialize metrics
-    this.metrics = {
-      totalExecutions: 0,
-      successRate: 0,
-      averageDuration: 0,
-      errorRate: 0,
-      lastExecution: new Date().toISOString(),
-    };
+    this.coordinationManager = new CoordinationSystemManager();
+    this.metricsManager = new OrchestrationMetricsManager();
+    
+    // Initialize workflow execution service with all dependencies
+    this.workflowExecutionService = new WorkflowExecutionService(
+      this.agentManager,
+      this.dataFetcher,
+      this.coordinationManager,
+      this.metricsManager
+    );
 
     // Optionally enable enhanced coordination
-    this.useEnhancedCoordination = options?.useEnhancedCoordination || false;
-
-    if (this.useEnhancedCoordination) {
-      this.initializeCoordinationSystem().catch((error) => {
+    if (options.useEnhancedCoordination) {
+      this.initializeEnhancedCoordination(options.coordinationConfig).catch((error) => {
         console.warn(
-          "[MexcOrchestrator] Failed to initialize coordination system, falling back to legacy mode:",
+          "[MexcOrchestrator] Failed to initialize coordination system, using legacy mode:",
           error
         );
-        this.useEnhancedCoordination = false;
       });
     }
   }
@@ -76,186 +67,49 @@ export class MexcOrchestrator {
   /**
    * Initialize the enhanced coordination system
    */
-  private async initializeCoordinationSystem(): Promise<void> {
-    try {
-      console.log("[MexcOrchestrator] Initializing enhanced coordination system...");
-
-      // Create coordination system
-      this.coordinationSystem = await createCoordinationSystem({
-        healthCheckInterval: 30000, // 30 seconds
-        performanceCollectionInterval: 60000, // 1 minute
-        maxHistorySize: 1000,
-      });
-
-      // Register existing agents with the coordination system
-      registerCommonAgents(this.coordinationSystem.agentRegistry, this.agentManager);
-
-      console.log("[MexcOrchestrator] Enhanced coordination system initialized successfully");
-    } catch (error) {
-      console.error("[MexcOrchestrator] Failed to initialize coordination system:", error);
-      throw error;
-    }
+  private async initializeEnhancedCoordination(config?: CoordinationSystemConfig): Promise<void> {
+    await this.coordinationManager.initialize(this.agentManager, config);
   }
 
+  /**
+   * Executes calendar discovery workflow
+   */
   async executeCalendarDiscoveryWorkflow(
     request: CalendarDiscoveryWorkflowRequest
   ): Promise<MexcWorkflowResult> {
-    // Use enhanced coordination system if available
-    if (this.useEnhancedCoordination && this.coordinationSystem) {
-      try {
-        return await this.coordinationSystem.orchestrator.executeCalendarDiscoveryWorkflow(request);
-      } catch (error) {
-        console.warn(
-          "[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:",
-          error
-        );
-        // Fall through to legacy execution
-      }
-    }
-
-    // Legacy execution path
-    const startTime = Date.now();
-    this.metrics.totalExecutions++;
-
-    try {
-      const result = await this.workflowExecutor.executeCalendarDiscoveryWorkflow(request);
-      this.updateMetrics(result, startTime);
-      return result;
-    } catch (error) {
-      console.error("[MexcOrchestrator] Calendar discovery workflow failed:", error);
-      const errorResult = {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        metadata: {
-          agentsUsed: ["mexc-api", "calendar", "pattern-discovery"],
-        },
-      };
-      this.updateMetrics(errorResult, startTime);
-      return errorResult;
-    }
+    return await this.workflowExecutionService.executeCalendarDiscoveryWorkflow(request);
   }
 
+  /**
+   * Executes symbol analysis workflow
+   */
   async executeSymbolAnalysisWorkflow(
     request: SymbolAnalysisWorkflowRequest
   ): Promise<MexcWorkflowResult> {
-    // Use enhanced coordination system if available
-    if (this.useEnhancedCoordination && this.coordinationSystem) {
-      try {
-        return await this.coordinationSystem.orchestrator.executeSymbolAnalysisWorkflow(request);
-      } catch (error) {
-        console.warn(
-          "[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:",
-          error
-        );
-        // Fall through to legacy execution
-      }
-    }
-
-    // Legacy execution path
-    const startTime = Date.now();
-    this.metrics.totalExecutions++;
-
-    try {
-      const result = await this.workflowExecutor.executeSymbolAnalysisWorkflow(request);
-      this.updateMetrics(result, startTime);
-      return result;
-    } catch (error) {
-      console.error(
-        `[MexcOrchestrator] Symbol analysis workflow failed for ${request.vcoinId}:`,
-        error
-      );
-      const errorResult = {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        metadata: {
-          agentsUsed: ["symbol-analysis", "pattern-discovery", "mexc-api"],
-        },
-      };
-      this.updateMetrics(errorResult, startTime);
-      return errorResult;
-    }
+    return await this.workflowExecutionService.executeSymbolAnalysisWorkflow(request);
   }
 
+  /**
+   * Executes pattern analysis workflow
+   */
   async executePatternAnalysisWorkflow(
     request: PatternAnalysisWorkflowRequest
   ): Promise<MexcWorkflowResult> {
-    // Use enhanced coordination system if available
-    if (this.useEnhancedCoordination && this.coordinationSystem) {
-      try {
-        return await this.coordinationSystem.orchestrator.executePatternAnalysisWorkflow(request);
-      } catch (error) {
-        console.warn(
-          "[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:",
-          error
-        );
-        // Fall through to legacy execution
-      }
-    }
-
-    // Legacy execution path
-    const startTime = Date.now();
-    this.metrics.totalExecutions++;
-
-    try {
-      const result = await this.workflowExecutor.executePatternAnalysisWorkflow(request);
-      this.updateMetrics(result, startTime);
-      return result;
-    } catch (error) {
-      console.error(`[MexcOrchestrator] Pattern analysis workflow failed:`, error);
-      const errorResult = {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        metadata: {
-          agentsUsed: ["pattern-discovery"],
-        },
-      };
-      this.updateMetrics(errorResult, startTime);
-      return errorResult;
-    }
+    return await this.workflowExecutionService.executePatternAnalysisWorkflow(request);
   }
 
+  /**
+   * Executes trading strategy workflow
+   */
   async executeTradingStrategyWorkflow(
     request: TradingStrategyWorkflowRequest
   ): Promise<MexcWorkflowResult> {
-    // Use enhanced coordination system if available
-    if (this.useEnhancedCoordination && this.coordinationSystem) {
-      try {
-        return await this.coordinationSystem.orchestrator.executeTradingStrategyWorkflow(request);
-      } catch (error) {
-        console.warn(
-          "[MexcOrchestrator] Enhanced coordination failed, falling back to legacy mode:",
-          error
-        );
-        // Fall through to legacy execution
-      }
-    }
-
-    // Legacy execution path
-    const startTime = Date.now();
-    this.metrics.totalExecutions++;
-
-    try {
-      const result = await this.workflowExecutor.executeTradingStrategyWorkflow(request);
-      this.updateMetrics(result, startTime);
-      return result;
-    } catch (error) {
-      console.error(
-        `[MexcOrchestrator] Trading strategy workflow failed for ${request.vcoinId}:`,
-        error
-      );
-      const errorResult = {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        metadata: {
-          agentsUsed: ["strategy"],
-        },
-      };
-      this.updateMetrics(errorResult, startTime);
-      return errorResult;
-    }
+    return await this.workflowExecutionService.executeTradingStrategyWorkflow(request);
   }
 
-  // Public utility methods
+  /**
+   * Gets agent health status with enhanced/legacy fallback
+   */
   async getAgentHealth(): Promise<{
     mexcApi: boolean;
     patternDiscovery: boolean;
@@ -264,16 +118,9 @@ export class MexcOrchestrator {
     strategy: boolean;
   }> {
     // Use enhanced coordination system if available
-    if (this.useEnhancedCoordination && this.coordinationSystem) {
+    if (this.coordinationManager.isCoordinationEnabled()) {
       try {
-        const enhancedHealth = await this.coordinationSystem.orchestrator.getAgentHealth();
-        return {
-          mexcApi: enhancedHealth.mexcApi,
-          patternDiscovery: enhancedHealth.patternDiscovery,
-          calendar: enhancedHealth.calendar,
-          symbolAnalysis: enhancedHealth.symbolAnalysis,
-          strategy: enhancedHealth.strategy,
-        };
+        return await this.coordinationManager.getAgentHealth();
       } catch (error) {
         console.warn(
           "[MexcOrchestrator] Enhanced health check failed, falling back to legacy mode:",
@@ -286,19 +133,14 @@ export class MexcOrchestrator {
     return await this.agentManager.checkAgentHealth();
   }
 
+  /**
+   * Gets orchestration metrics
+   */
   getOrchestrationMetrics(): AgentOrchestrationMetrics {
     // Use enhanced coordination system if available
-    if (this.useEnhancedCoordination && this.coordinationSystem) {
+    if (this.coordinationManager.isCoordinationEnabled()) {
       try {
-        const enhancedMetrics = this.coordinationSystem.orchestrator.getOrchestrationMetrics();
-        // Return base metrics for backward compatibility
-        return {
-          totalExecutions: enhancedMetrics.totalExecutions,
-          successRate: enhancedMetrics.successRate,
-          averageDuration: enhancedMetrics.averageDuration,
-          errorRate: enhancedMetrics.errorRate,
-          lastExecution: enhancedMetrics.lastExecution,
-        };
+        return this.coordinationManager.getOrchestrationMetrics();
       } catch (error) {
         console.warn(
           "[MexcOrchestrator] Enhanced metrics failed, falling back to legacy mode:",
@@ -307,23 +149,21 @@ export class MexcOrchestrator {
       }
     }
 
-    return { ...this.metrics };
+    return this.metricsManager.getMetrics();
   }
 
+  /**
+   * Gets agent summary
+   */
   getAgentSummary(): {
     totalAgents: number;
     agentTypes: string[];
     initialized: boolean;
   } {
     // Use enhanced coordination system if available
-    if (this.useEnhancedCoordination && this.coordinationSystem) {
+    if (this.coordinationManager.isCoordinationEnabled()) {
       try {
-        const enhancedSummary = this.coordinationSystem.orchestrator.getAgentSummary();
-        return {
-          totalAgents: enhancedSummary.totalAgents,
-          agentTypes: enhancedSummary.agentTypes,
-          initialized: enhancedSummary.initialized,
-        };
+        return this.coordinationManager.getAgentSummary();
       } catch (error) {
         console.warn(
           "[MexcOrchestrator] Enhanced summary failed, falling back to legacy mode:",
@@ -335,11 +175,14 @@ export class MexcOrchestrator {
     return this.agentManager.getAgentSummary();
   }
 
+  /**
+   * Performs overall health check
+   */
   async healthCheck(): Promise<boolean> {
     // Use enhanced coordination system if available
-    if (this.useEnhancedCoordination && this.coordinationSystem) {
+    if (this.coordinationManager.isCoordinationEnabled()) {
       try {
-        return await this.coordinationSystem.orchestrator.healthCheck();
+        return await this.coordinationManager.healthCheck();
       } catch (error) {
         console.warn(
           "[MexcOrchestrator] Enhanced health check failed, falling back to legacy mode:",
@@ -363,71 +206,40 @@ export class MexcOrchestrator {
   /**
    * Enable enhanced coordination system
    */
-  async enableEnhancedCoordination(): Promise<void> {
-    if (this.useEnhancedCoordination) {
+  async enableEnhancedCoordination(config?: CoordinationSystemConfig): Promise<void> {
+    if (this.coordinationManager.isCoordinationEnabled()) {
       console.warn("[MexcOrchestrator] Enhanced coordination is already enabled");
       return;
     }
 
-    this.useEnhancedCoordination = true;
-    await this.initializeCoordinationSystem();
+    await this.coordinationManager.initialize(this.agentManager, config);
   }
 
   /**
    * Disable enhanced coordination system
    */
   async disableEnhancedCoordination(): Promise<void> {
-    if (!this.useEnhancedCoordination || !this.coordinationSystem) {
-      console.warn("[MexcOrchestrator] Enhanced coordination is not enabled");
-      return;
-    }
-
-    this.useEnhancedCoordination = false;
-    await this.coordinationSystem.orchestrator.shutdown();
-    this.coordinationSystem = null;
-
-    console.log("[MexcOrchestrator] Enhanced coordination disabled, using legacy mode");
+    await this.coordinationManager.shutdown();
   }
 
   /**
-   * Get coordination system health (if enabled)
+   * Get coordination system health status
    */
-  async getCoordinationHealth(): Promise<any> {
-    if (!this.useEnhancedCoordination || !this.coordinationSystem) {
-      return { enabled: false, message: "Enhanced coordination not enabled" };
-    }
-
-    try {
-      return await checkCoordinationSystemHealth(this.coordinationSystem);
-    } catch (error) {
-      return {
-        enabled: true,
-        healthy: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
+  async getCoordinationHealth() {
+    return await this.coordinationManager.getHealth();
   }
 
-  // Private utility methods
-  private updateMetrics(result: MexcWorkflowResult, startTime: number): void {
-    const duration = Date.now() - startTime;
+  /**
+   * Gets performance summary for monitoring
+   */
+  getPerformanceSummary() {
+    return this.metricsManager.getPerformanceSummary();
+  }
 
-    // Update success/error rates
-    if (result.success) {
-      const successCount = Math.round(
-        this.metrics.successRate * (this.metrics.totalExecutions - 1)
-      );
-      this.metrics.successRate = (successCount + 1) / this.metrics.totalExecutions;
-    } else {
-      const errorCount = Math.round(this.metrics.errorRate * (this.metrics.totalExecutions - 1));
-      this.metrics.errorRate = (errorCount + 1) / this.metrics.totalExecutions;
-    }
-
-    // Update average duration
-    const totalDuration = this.metrics.averageDuration * (this.metrics.totalExecutions - 1);
-    this.metrics.averageDuration = (totalDuration + duration) / this.metrics.totalExecutions;
-
-    // Update last execution timestamp
-    this.metrics.lastExecution = new Date().toISOString();
+  /**
+   * Resets metrics to initial state
+   */
+  resetMetrics(): void {
+    this.metricsManager.reset();
   }
 }

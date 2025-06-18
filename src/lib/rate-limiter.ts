@@ -1,7 +1,10 @@
 /**
  * Enhanced rate limiter for authentication endpoints with audit logging
+ * Integrates with adaptive rate limiting for intelligent throttling
  * In production, consider using Redis or a distributed cache
  */
+
+import { adaptiveRateLimiter } from '@/src/services/adaptive-rate-limiter';
 
 interface RateLimitEntry {
   count: number;
@@ -76,18 +79,65 @@ export function getRateLimitKey(ip: string, endpoint: string): string {
   return `${ip}:${endpoint}`;
 }
 
-export function checkRateLimit(
+export async function checkRateLimit(
   ip: string,
   endpoint: string,
   limitType: keyof typeof RATE_LIMITS = "general",
   userAgent?: string,
   userId?: string
-): { success: boolean; remaining: number; resetTime: number; isFirstViolation: boolean } {
+): Promise<{ 
+  success: boolean; 
+  remaining: number; 
+  resetTime: number; 
+  isFirstViolation: boolean;
+  adaptiveDelay?: number;
+  adaptiveMetrics?: any;
+}> {
   const key = getRateLimitKey(ip, endpoint);
   const limit = RATE_LIMITS[limitType];
   const now = Date.now();
 
-  // Clean up expired entries
+  // First check adaptive rate limiter for intelligent throttling
+  let adaptiveResult;
+  try {
+    adaptiveResult = await adaptiveRateLimiter.checkRateLimit(
+      endpoint,
+      userId,
+      userAgent,
+      { ip, limitType }
+    );
+
+    // If adaptive rate limiter blocks, respect it
+    if (!adaptiveResult.allowed) {
+      logSecurityEvent({
+        type: "RATE_LIMIT_EXCEEDED",
+        ip,
+        endpoint,
+        userAgent,
+        userId,
+        metadata: {
+          source: "adaptive_rate_limiter",
+          algorithm: adaptiveResult.metadata.algorithm,
+          adaptationFactor: adaptiveResult.metadata.adaptationFactor,
+          retryAfter: adaptiveResult.retryAfter,
+        },
+      });
+
+      return {
+        success: false,
+        remaining: adaptiveResult.remainingRequests,
+        resetTime: adaptiveResult.resetTime,
+        isFirstViolation: false,
+        adaptiveDelay: adaptiveResult.adaptiveDelay,
+        adaptiveMetrics: adaptiveResult.metadata,
+      };
+    }
+  } catch (error) {
+    console.error('[Rate Limiter] Adaptive rate limiter failed:', error);
+    // Continue with traditional rate limiting on adaptive failure
+  }
+
+  // Traditional rate limiting (legacy compatibility)
   const entry = requestCounts.get(key);
 
   if (!entry || now > entry.resetTime) {
@@ -108,7 +158,11 @@ export function checkRateLimit(
         endpoint,
         userAgent,
         userId,
-        metadata: { attemptNumber: 1, windowStart: now },
+        metadata: { 
+          attemptNumber: 1, 
+          windowStart: now,
+          adaptiveMetrics: adaptiveResult?.metadata,
+        },
       });
     }
 
@@ -117,6 +171,8 @@ export function checkRateLimit(
       remaining: limit.maxRequests - 1,
       resetTime: newEntry.resetTime,
       isFirstViolation: false,
+      adaptiveDelay: adaptiveResult?.adaptiveDelay,
+      adaptiveMetrics: adaptiveResult?.metadata,
     };
   }
 
@@ -137,10 +193,12 @@ export function checkRateLimit(
       userAgent,
       userId,
       metadata: {
+        source: "traditional_rate_limiter",
         attemptCount: entry.count,
         windowDuration: now - entry.firstAttempt,
         limitType,
         isFirstViolation,
+        adaptiveMetrics: adaptiveResult?.metadata,
       },
     });
 
@@ -156,6 +214,7 @@ export function checkRateLimit(
           attemptCount: entry.count,
           pattern: "excessive_auth_attempts",
           severity: "high",
+          adaptiveMetrics: adaptiveResult?.metadata,
         },
       });
     }
@@ -165,6 +224,8 @@ export function checkRateLimit(
       remaining: 0,
       resetTime: entry.resetTime,
       isFirstViolation,
+      adaptiveDelay: adaptiveResult?.adaptiveDelay,
+      adaptiveMetrics: adaptiveResult?.metadata,
     };
   }
 
@@ -176,7 +237,11 @@ export function checkRateLimit(
       endpoint,
       userAgent,
       userId,
-      metadata: { attemptNumber: entry.count, windowStart: entry.firstAttempt },
+      metadata: { 
+        attemptNumber: entry.count, 
+        windowStart: entry.firstAttempt,
+        adaptiveMetrics: adaptiveResult?.metadata,
+      },
     });
   }
 
@@ -185,6 +250,8 @@ export function checkRateLimit(
     remaining: limit.maxRequests - entry.count,
     resetTime: entry.resetTime,
     isFirstViolation: false,
+    adaptiveDelay: adaptiveResult?.adaptiveDelay,
+    adaptiveMetrics: adaptiveResult?.metadata,
   };
 }
 

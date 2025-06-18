@@ -382,59 +382,8 @@ export class EnhancedMexcServiceLayer {
    */
   async getDetailedMarketStats(): Promise<ServiceResponse<MarketStats>> {
     return this.executeWithMetrics("getDetailedMarketStats", async () => {
-      const [tickerData, exchangeInfo, calendarData] = await Promise.allSettled([
-        this.mexcClient.get24hrTicker(),
-        this.mexcClient.getExchangeInfo(),
-        this.mexcClient.getCalendarListings(),
-      ]);
-
-      const tickers =
-        tickerData.status === "fulfilled" && tickerData.value.success ? tickerData.value.data : [];
-
-      const exchangeSymbols =
-        exchangeInfo.status === "fulfilled" && exchangeInfo.value.success
-          ? exchangeInfo.value.data
-          : [];
-
-      const calendar =
-        calendarData.status === "fulfilled" && calendarData.value.success
-          ? calendarData.value.data
-          : [];
-
-      // Calculate market statistics
-      const totalVolume24h = tickers.reduce(
-        (sum, ticker) => sum + Number.parseFloat(ticker.volume || "0"),
-        0
-      );
-
-      const topGainers = tickers
-        .filter((t) => Number.parseFloat(t.priceChangePercent || "0") > 0)
-        .sort(
-          (a, b) =>
-            Number.parseFloat(b.priceChangePercent || "0") -
-            Number.parseFloat(a.priceChangePercent || "0")
-        )
-        .slice(0, 10);
-
-      const topLosers = tickers
-        .filter((t) => Number.parseFloat(t.priceChangePercent || "0") < 0)
-        .sort(
-          (a, b) =>
-            Number.parseFloat(a.priceChangePercent || "0") -
-            Number.parseFloat(b.priceChangePercent || "0")
-        )
-        .slice(0, 10);
-
-      const marketStats: MarketStats = {
-        totalPairs: exchangeSymbols.length,
-        activePairs: tickers.length,
-        totalVolume24h,
-        totalMarketCap: totalVolume24h * 50000, // Rough estimate
-        topGainers,
-        topLosers,
-        newListings: calendar.slice(0, 5),
-        trendingPairs: topGainers.slice(0, 5).map((t) => t.symbol),
-      };
+      const rawData = await this.fetchMarketRawData();
+      const marketStats = this.calculateMarketStatistics(rawData);
 
       return {
         success: true,
@@ -442,6 +391,85 @@ export class EnhancedMexcServiceLayer {
         timestamp: new Date().toISOString(),
       };
     });
+  }
+
+  /**
+   * Fetch raw market data from multiple sources
+   */
+  private async fetchMarketRawData() {
+    const [tickerData, exchangeInfo, calendarData] = await Promise.allSettled([
+      this.mexcClient.get24hrTicker(),
+      this.mexcClient.getExchangeInfo(),
+      this.mexcClient.getCalendarListings(),
+    ]);
+
+    return {
+      tickers: tickerData.status === "fulfilled" && tickerData.value.success ? tickerData.value.data : [],
+      exchangeSymbols: exchangeInfo.status === "fulfilled" && exchangeInfo.value.success
+        ? exchangeInfo.value.data
+        : [],
+      calendar: calendarData.status === "fulfilled" && calendarData.value.success
+        ? calendarData.value.data
+        : [],
+    };
+  }
+
+  /**
+   * Calculate market statistics from raw data
+   */
+  private calculateMarketStatistics(rawData: {
+    tickers: Ticker[];
+    exchangeSymbols: SymbolEntry[];
+    calendar: CalendarEntry[];
+  }): MarketStats {
+    const { tickers, exchangeSymbols, calendar } = rawData;
+
+    const totalVolume24h = this.calculateTotalVolume(tickers);
+    const topGainers = this.getTopPerformers(tickers, "gainers");
+    const topLosers = this.getTopPerformers(tickers, "losers");
+
+    return {
+      totalPairs: exchangeSymbols.length,
+      activePairs: tickers.length,
+      totalVolume24h,
+      totalMarketCap: totalVolume24h * 50000, // Rough estimate
+      topGainers,
+      topLosers,
+      newListings: calendar.slice(0, 5),
+      trendingPairs: topGainers.slice(0, 5).map((t) => t.symbol),
+    };
+  }
+
+  /**
+   * Calculate total 24h volume from tickers
+   */
+  private calculateTotalVolume(tickers: Ticker[]): number {
+    return tickers.reduce(
+      (sum, ticker) => sum + Number.parseFloat(ticker.volume || "0"),
+      0
+    );
+  }
+
+  /**
+   * Get top performing assets (gainers or losers)
+   */
+  private getTopPerformers(tickers: Ticker[], type: "gainers" | "losers"): Ticker[] {
+    const filterFn = type === "gainers"
+      ? (t: Ticker) => Number.parseFloat(t.priceChangePercent || "0") > 0
+      : (t: Ticker) => Number.parseFloat(t.priceChangePercent || "0") < 0;
+
+    const sortFn = type === "gainers"
+      ? (a: Ticker, b: Ticker) =>
+          Number.parseFloat(b.priceChangePercent || "0") -
+          Number.parseFloat(a.priceChangePercent || "0")
+      : (a: Ticker, b: Ticker) =>
+          Number.parseFloat(a.priceChangePercent || "0") -
+          Number.parseFloat(b.priceChangePercent || "0");
+
+    return tickers
+      .filter(filterFn)
+      .sort(sortFn)
+      .slice(0, 10);
   }
 
   // ============================================================================

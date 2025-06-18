@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRecommendedMexcService } from "@/src/services/mexc-unified-exports";
+import { enhancedApiValidationService } from "@/src/services/enhanced-api-validation-service";
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -62,162 +63,106 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
       );
     }
 
-    console.log('[DEBUG] Testing credentials with format validation passed');
+    console.log('[DEBUG] Testing credentials with enhanced validation service...');
 
-    // Create MEXC service with provided credentials (never log the actual credentials)
-    let mexcService;
-    try {
-      mexcService = getRecommendedMexcService({
-        apiKey: apiKey.trim(),
-        secretKey: secretKey.trim(),
-        passphrase: passphrase?.trim() || undefined
-      });
-      console.log('[DEBUG] MEXC service created successfully');
-    } catch (serviceError) {
-      console.error('[DEBUG] Failed to create MEXC service:', serviceError);
-      return apiResponse(
-        createErrorResponse('Failed to initialize MEXC service', {
-          message: 'Could not create MEXC API service with provided credentials',
-          code: 'SERVICE_INIT_ERROR'
-        }),
-        HTTP_STATUS.INTERNAL_SERVER_ERROR
-      );
-    }
+    // Use enhanced validation service for comprehensive testing
+    const validationConfig = {
+      apiKey: apiKey.trim(),
+      secretKey: secretKey.trim(),
+      passphrase: passphrase?.trim(),
+      testNetwork: false,
+      validateIpAllowlist: true,
+      performanceBenchmark: true,
+      securityChecks: true,
+    };
 
-    // Test 1: Check if service has credentials by testing account balances
-    console.log('[DEBUG] Testing credential loading via account balances...');
-    let hasCredentials = false;
-    try {
-      const balanceTestResult = await mexcService.getAccountBalances();
-      hasCredentials = balanceTestResult.success;
-      console.log('[DEBUG] Account balance test result:', {
-        success: balanceTestResult.success,
-        error: balanceTestResult.error
-      });
+    const validationResult = await enhancedApiValidationService.validateApiCredentials(validationConfig);
+    
+    console.log('[DEBUG] Enhanced validation result:', {
+      valid: validationResult.valid,
+      stage: validationResult.stage,
+      error: validationResult.error,
+      details: validationResult.details,
+      recommendations: validationResult.recommendations.length
+    });
+
+    if (!validationResult.valid) {
+      // Determine appropriate HTTP status based on validation stage
+      let status = HTTP_STATUS.BAD_REQUEST;
+      let code = 'VALIDATION_FAILED';
       
-      if (!hasCredentials) {
-        return apiResponse(
-          createErrorResponse('Credentials not properly loaded', {
-            message: balanceTestResult.error || 'MEXC service could not validate the provided credentials',
-            code: 'CREDENTIALS_NOT_LOADED'
-          }),
-          HTTP_STATUS.BAD_REQUEST
-        );
+      switch (validationResult.stage) {
+        case 'credential_format':
+          status = HTTP_STATUS.BAD_REQUEST;
+          code = 'INVALID_FORMAT';
+          break;
+        case 'network_connectivity':
+          status = HTTP_STATUS.SERVICE_UNAVAILABLE;
+          code = 'CONNECTIVITY_ERROR';
+          break;
+        case 'api_authentication':
+          status = HTTP_STATUS.UNAUTHORIZED;
+          code = 'AUTHENTICATION_FAILED';
+          break;
+        case 'permission_checks':
+          status = HTTP_STATUS.FORBIDDEN;
+          code = 'INSUFFICIENT_PERMISSIONS';
+          break;
+        case 'ip_allowlisting':
+          status = HTTP_STATUS.FORBIDDEN;
+          code = 'IP_NOT_ALLOWLISTED';
+          break;
+        default:
+          status = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+          code = 'VALIDATION_ERROR';
       }
-    } catch (credCheckError) {
-      console.error('[DEBUG] Credential check failed:', credCheckError);
-      return apiResponse(
-        createErrorResponse('Failed to validate credentials', {
-          message: 'Could not test credential loading',
-          code: 'CREDENTIAL_CHECK_ERROR'
-        }),
-        HTTP_STATUS.INTERNAL_SERVER_ERROR
-      );
-    }
 
-    // Test 2: Basic connectivity test
-    console.log('[DEBUG] Testing basic connectivity...');
-    let connectivityResult;
-    try {
-      connectivityResult = await mexcService.testConnectivity();
-      console.log('[DEBUG] Connectivity test result:', connectivityResult);
-    } catch (connectError) {
-      console.error('[DEBUG] Connectivity test failed:', connectError);
       return apiResponse(
-        createErrorResponse('MEXC API connectivity failed', {
-          message: 'Unable to reach MEXC API endpoints',
-          code: 'CONNECTIVITY_ERROR',
-          details: connectError instanceof Error ? connectError.message : String(connectError)
-        }),
-        HTTP_STATUS.SERVICE_UNAVAILABLE
-      );
-    }
-
-    if (!connectivityResult.success || !connectivityResult.data) {
-      return apiResponse(
-        createErrorResponse('MEXC API unreachable', {
-          message: connectivityResult.error || 'MEXC API endpoints are not responding',
-          code: 'API_UNREACHABLE'
-        }),
-        HTTP_STATUS.SERVICE_UNAVAILABLE
-      );
-    }
-
-    // Test 3: Credential validation (account info)
-    console.log('[DEBUG] Testing credential validation...');
-    let accountResult;
-    try {
-      accountResult = await mexcService.getAccountBalances();
-      console.log('[DEBUG] Account balances test result:', {
-        success: accountResult.success,
-        error: accountResult.error,
-        hasData: !!accountResult.data
-      });
-    } catch (credError) {
-      console.error('[DEBUG] Account balances test failed:', credError);
-      return apiResponse(
-        createErrorResponse('Credential validation failed', {
-          message: 'Failed to authenticate with MEXC using provided credentials',
-          code: 'CREDENTIAL_VALIDATION_ERROR',
-          details: credError instanceof Error ? credError.message : String(credError)
-        }),
-        HTTP_STATUS.UNAUTHORIZED
-      );
-    }
-
-    // Analyze results
-    if (!accountResult.success) {
-      const errorMsg = accountResult.error || 'Unknown error';
-      console.log('[DEBUG] Account validation failed:', errorMsg);
-      
-      // Provide specific error messages based on common issues
-      let userMessage = 'Invalid API credentials';
-      let code = 'INVALID_CREDENTIALS';
-      
-      if (errorMsg.includes('signature')) {
-        userMessage = 'API signature validation failed. Check if your secret key is correct and your server time is synchronized.';
-        code = 'SIGNATURE_ERROR';
-      } else if (errorMsg.includes('key')) {
-        userMessage = 'API key is invalid or has insufficient permissions.';
-        code = 'INVALID_API_KEY';
-      } else if (errorMsg.includes('IP')) {
-        userMessage = 'Your server IP address is not allowlisted in your MEXC API settings.';
-        code = 'IP_NOT_ALLOWLISTED';
-      } else if (errorMsg.includes('permission')) {
-        userMessage = 'API key does not have required permissions. Enable trading and wallet permissions.';
-        code = 'INSUFFICIENT_PERMISSIONS';
-      }
-      
-      return apiResponse(
-        createErrorResponse(userMessage, {
-          message: userMessage,
+        createErrorResponse(validationResult.error || 'API validation failed', {
+          message: validationResult.error || 'Comprehensive API validation failed',
           code: code,
-          originalError: errorMsg
+          stage: validationResult.stage,
+          details: validationResult.details,
+          recommendations: validationResult.recommendations
         }),
-        HTTP_STATUS.UNAUTHORIZED
+        status
       );
     }
 
-    // Success!
-    const { balances, totalUsdtValue } = accountResult.data;
-    console.log('[DEBUG] Credential test successful - balances found:', balances?.length || 0);
+    // Get final account data for success response
+    const mexcService = getRecommendedMexcService({
+      apiKey: apiKey.trim(),
+      secretKey: secretKey.trim(),
+      passphrase: passphrase?.trim() || undefined
+    });
+    
+    const accountResult = await mexcService.getAccountBalances();
+    const { balances, totalUsdtValue } = accountResult.data || { balances: [], totalUsdtValue: 0 };
+    
+    console.log('[DEBUG] Enhanced credential validation successful - balances found:', balances?.length || 0);
 
     return apiResponse(
       createSuccessResponse({
         credentialsValid: true,
-        connectivity: true,
-        accountAccess: true,
+        validationStage: validationResult.stage,
+        connectivity: validationResult.details.networkConnectivity,
+        accountAccess: validationResult.details.apiAuthentication,
         balanceCount: balances?.length || 0,
         totalValue: totalUsdtValue || 0,
-        testResults: {
-          hasCredentials: true,
-          connectivityPassed: true,
-          authenticationPassed: true,
-          accountDataRetrieved: true
+        enhancedValidation: {
+          networkConnectivity: validationResult.details.networkConnectivity,
+          credentialFormat: validationResult.details.credentialFormat,
+          apiAuthentication: validationResult.details.apiAuthentication,
+          permissionChecks: validationResult.details.permissionChecks,
+          ipAllowlisting: validationResult.details.ipAllowlisting,
+          performanceMetrics: validationResult.details.performanceMetrics,
+          securityAnalysis: validationResult.details.securityAnalysis,
         },
-        message: 'All credential tests passed successfully!'
+        recommendations: validationResult.recommendations,
+        timestamp: validationResult.timestamp,
+        message: 'Enhanced API validation completed successfully!'
       }, {
-        message: 'MEXC API credentials are valid and working correctly'
+        message: 'MEXC API credentials are fully validated and optimized for trading'
       })
     );
 

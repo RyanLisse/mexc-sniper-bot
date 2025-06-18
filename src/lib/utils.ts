@@ -28,25 +28,25 @@ class Logger {
     return messageLevelIndex <= currentLevelIndex;
   }
 
-  error(message: string, ...args: any[]) {
+  error(message: string, ...args: unknown[]) {
     if (this.shouldLog("ERROR")) {
       console.error(`[ERROR] ${message}`, ...args);
     }
   }
 
-  warn(message: string, ...args: any[]) {
+  warn(message: string, ...args: unknown[]) {
     if (this.shouldLog("WARN")) {
       console.warn(`[WARN] ${message}`, ...args);
     }
   }
 
-  info(message: string, ...args: any[]) {
+  info(message: string, ...args: unknown[]) {
     if (this.shouldLog("INFO")) {
       console.log(`[INFO] ${message}`, ...args);
     }
   }
 
-  debug(message: string, ...args: any[]) {
+  debug(message: string, ...args: unknown[]) {
     if (this.shouldLog("DEBUG")) {
       console.log(`[DEBUG] ${message}`, ...args);
     }
