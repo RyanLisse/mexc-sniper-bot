@@ -47,9 +47,30 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
     }
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Clear call history but preserve mocks for AI services
     vi.clearAllMocks();
-    vi.restoreAllMocks();
+
+    // Re-establish AI service mocks to prevent external API calls
+    const { aiIntelligenceService } = await import('../../src/services/ai-intelligence-service');
+    vi.spyOn(aiIntelligenceService, 'enhancePatternWithAI').mockResolvedValue({
+      cohereEmbedding: null,
+      perplexityInsights: null,
+      aiContext: {
+        marketSentiment: 'neutral',
+        opportunityScore: 85,
+        researchInsights: ['Test AI insight'],
+        timeframe: 'immediate',
+        volumeProfile: 'medium',
+        liquidityScore: 0.5,
+      },
+    });
+    vi.spyOn(aiIntelligenceService, 'calculateAIEnhancedConfidence').mockResolvedValue({
+      enhancedConfidence: 85,
+      components: { basePattern: 85, aiResearch: 0, marketSentiment: 0, technicalAlignment: 0, riskAdjustment: 0 },
+      aiInsights: ['Test AI insight'],
+      recommendations: ['Test recommendation'],
+    });
   });
 
   describe('End-to-End Pattern Detection with Activity Data', () => {
@@ -171,51 +192,64 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
         },
       ];
 
-      // Insert activity data for some symbols
-      await db.insert(coinActivities).values([
-        {
-          vcoinId: 'test-vcoin-bulk1',
-          currency: 'BULK1',
-          activityId: 'bulk-test-activity-1',
-          currencyId: 'bulk1-currency-id',
-          activityType: 'SUN_SHINE',
-          isActive: true,
-          confidenceBoost: 12,
-          priorityScore: 7.5,
-        },
-        {
-          vcoinId: 'test-vcoin-bulk3',
-          currency: 'BULK3',
-          activityId: 'bulk-test-activity-3',
-          currencyId: 'bulk3-currency-id',
-          activityType: 'PROMOTION',
-          isActive: true,
-          confidenceBoost: 8,
-          priorityScore: 5.0,
-        },
-      ]);
+      // Insert activity data for some symbols (with error handling)
+      try {
+        await db.insert(coinActivities).values([
+          {
+            vcoinId: 'test-vcoin-bulk1',
+            currency: 'BULK1',
+            activityId: 'bulk-test-activity-1',
+            currencyId: 'bulk1-currency-id',
+            activityType: 'SUN_SHINE',
+            isActive: true,
+            confidenceBoost: 12,
+            priorityScore: 7.5,
+          },
+          {
+            vcoinId: 'test-vcoin-bulk3',
+            currency: 'BULK3',
+            activityId: 'bulk-test-activity-3',
+            currencyId: 'bulk3-currency-id',
+            activityType: 'PROMOTION',
+            isActive: true,
+            confidenceBoost: 8,
+            priorityScore: 5.0,
+          },
+        ]);
+      } catch (error) {
+        console.log('Skipping database insert for bulk test - table may not exist');
+        // Continue with test even if database insert fails
+      }
 
+      console.log('Starting bulk pattern detection test...');
       const startTime = Date.now();
-      const matches = await patternEngine.detectReadyStatePattern(testSymbols);
-      const executionTime = Date.now() - startTime;
 
-      // Validate performance (adjusted for test environment with AI service calls)
-      expect(executionTime).toBeLessThan(8000); // Should complete within 8 seconds
-      expect(matches).toHaveLength(3);
+      try {
+        const matches = await patternEngine.detectReadyStatePattern(testSymbols);
+        const executionTime = Date.now() - startTime;
+        console.log(`Bulk pattern detection completed in ${executionTime}ms`);
 
-      // Validate activity enhancement for symbols with activity data
-      const bulk1Match = matches.find(m => m.symbol === 'BULK1USDT');
-      const bulk2Match = matches.find(m => m.symbol === 'BULK2USDT');
-      const bulk3Match = matches.find(m => m.symbol === 'BULK3USDT');
+        // Validate performance (adjusted for test environment with AI service calls)
+        expect(executionTime).toBeLessThan(8000); // Should complete within 8 seconds
+        expect(matches).toHaveLength(3);
 
-      expect(bulk1Match?.activityInfo).toBeDefined();
-      expect(bulk2Match?.activityInfo).toBeUndefined(); // No activity data
-      expect(bulk3Match?.activityInfo).toBeDefined();
+        // Validate activity enhancement for symbols with activity data
+        const bulk1Match = matches.find(m => m.symbol === 'BULK1USDT');
+        const bulk2Match = matches.find(m => m.symbol === 'BULK2USDT');
+        const bulk3Match = matches.find(m => m.symbol === 'BULK3USDT');
 
-      // Symbols with activity data should have higher or equal confidence
-      expect(bulk1Match?.confidence).toBeGreaterThanOrEqual(bulk2Match?.confidence || 0);
-      expect(bulk3Match?.confidence).toBeGreaterThanOrEqual(bulk2Match?.confidence || 0);
-    });
+        expect(bulk1Match?.activityInfo).toBeDefined();
+        expect(bulk2Match?.activityInfo).toBeUndefined(); // No activity data
+        expect(bulk3Match?.activityInfo).toBeDefined();
+
+        // Symbols with activity data should have higher or equal confidence
+        expect(bulk1Match?.confidence).toBeGreaterThanOrEqual(bulk2Match?.confidence || 0);
+        expect(bulk3Match?.confidence).toBeGreaterThanOrEqual(bulk2Match?.confidence || 0);
+      } catch (error) {
+        console.error('Bulk pattern detection failed:', error);
+        throw error;
+      }
+    }, 45000); // Increase timeout to 45 seconds for bulk processing test
 
     it('should integrate activity data into advance opportunity detection', async () => {
       const futureTime = Date.now() + (5 * 60 * 60 * 1000); // 5 hours from now

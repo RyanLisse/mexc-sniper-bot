@@ -23,8 +23,7 @@ import { useUserPreferences, useUpdateUserPreferences } from "../../src/hooks/us
 
 import { UnifiedRiskManagement } from "../../src/components/unified-risk-management";
 import { UnifiedAutomationSettings } from "../../src/components/unified-automation-settings";
-import { EditableTakeProfitTable } from "../../src/components/editable-take-profit-table";
-import { EnhancedTakeProfitConfig } from "../../src/components/enhanced-take-profit-config";
+import { UnifiedTakeProfitSettings } from "../../src/components/unified-take-profit-settings";
 import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "../../src/hooks/use-user-preferences";
 import { TakeProfitStrategy, TAKE_PROFIT_STRATEGIES, getTakeProfitStrategyById } from "../../src/types/take-profit-strategies";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
@@ -265,76 +264,13 @@ export default function SettingsPage() {
 
           {/* Take Profit Tab */}
           <TabsContent value="profit" className="space-y-4">
-            {/* Enhanced Take Profit Configuration */}
-            <EnhancedTakeProfitConfig
+            <UnifiedTakeProfitSettings
               selectedStrategy={takeProfitStrategy}
               customStrategy={customTakeProfitStrategy}
               onStrategyChange={handleTakeProfitStrategyChange}
               onCustomStrategyChange={handleCustomTakeProfitStrategyChange}
               investmentAmount={riskSettings.defaultBuyAmount}
-              className="mb-6"
             />
-
-
-
-            {/* Advanced Multi-Level Take-Profit Configuration */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-orange-500/10 rounded-lg">
-                    <Target className="h-5 w-5 text-orange-500" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl">Advanced Multi-Level Take-Profit</CardTitle>
-                    <CardDescription>
-                      Configure sophisticated take-profit levels with custom entry prices and precise sell portions
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <div className="flex items-start space-x-2">
-                      <Target className="h-5 w-5 text-blue-500 mt-0.5" />
-                      <div className="text-sm text-blue-700 dark:text-blue-300">
-                        <div className="font-medium">Advanced Features:</div>
-                        <div className="mt-1 space-y-1">
-                          <div>• ✅ Comprehensive input validation (profit %, sell portions, entry price)</div>
-                          <div>• ✅ Real-time error highlighting and user feedback</div>
-                          <div>• ✅ Dynamic target price calculations</div>
-                          <div>• ✅ Logical progression validation (increasing profit targets)</div>
-                          <div>• ✅ 100% sell portion requirement validation</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <EditableTakeProfitTable
-                    levels={multiLevelConfig?.levels || []}
-                    onSave={handleSaveMultiLevelTakeProfit}
-                    isLoading={updateMultiLevelTakeProfit.isPending}
-                    className="mt-4"
-                  />
-
-                  {/* Usage Instructions */}
-                  <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <div className="text-sm">
-                      <div className="font-medium text-green-700 dark:text-green-300 mb-2">
-                        How to Use:
-                      </div>
-                      <div className="space-y-1 text-green-600 dark:text-green-400">
-                        <div>1. Click "Edit Table" to start configuring advanced take-profit levels</div>
-                        <div>2. Set your entry price and customize profit percentages for each level</div>
-                        <div>3. Adjust sell portions to control how much to sell at each target</div>
-                        <div>4. Ensure all portions add up to 100% for complete position closure</div>
-                        <div>5. Save configuration to apply to your trading strategies</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Risk Management Tab */}

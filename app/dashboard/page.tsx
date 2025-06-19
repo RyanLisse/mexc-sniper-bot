@@ -18,16 +18,28 @@ import { UpcomingCoinsSection } from "../../src/components/dashboard/upcoming-co
 import { OptimizedAccountBalance } from "../../src/components/optimized-account-balance";
 import { MultiPhaseStrategyManager } from "../../src/components/multi-phase-strategy-manager";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { AIServiceStatusPanel } from "../../src/components/dashboard/ai-intelligence/ai-service-status-panel";
+import { AIEnhancedPatternDisplay } from "../../src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
+import { CacheWarmingControlPanel } from "../../src/components/dashboard/cache-warming/cache-warming-control-panel";
+import { Phase3ConfigurationPanel } from "../../src/components/dashboard/phase3-config/phase3-configuration-panel";
+import PerformanceMonitoringDashboard from "../../src/components/dashboard/performance-monitoring-dashboard";
+import { useEnhancedPatterns } from "../../src/hooks/use-enhanced-patterns";
+import { Phase3IntegrationSummary } from "../../src/components/dashboard/phase3-integration-summary";
 
 export default function DashboardPage() {
   const { user, isLoading: userLoading } = useKindeBrowserClient();
-  
+
   // Use authenticated user ID
   const userId = user?.id;
   const { data: accountBalance, isLoading: balanceLoading } = useAccountBalance({ userId });
   const { data: portfolio } = usePortfolio(userId);
   const { data: calendarData } = useMexcCalendar();
   const { data: readyTargets } = useReadyTargets();
+  const { data: enhancedPatterns, isLoading: patternsLoading } = useEnhancedPatterns({
+    enableAI: true,
+    confidenceThreshold: 70,
+    includeAdvanceDetection: true,
+  });
 
   // Handler functions for trading targets
   const handleExecuteSnipe = (target: any) => {
@@ -54,9 +66,9 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Total Balance"
-            value={`$${totalBalance.toLocaleString("en-US", { 
-              minimumFractionDigits: 2, 
-              maximumFractionDigits: 2 
+            value={`$${totalBalance.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
             })}`}
             change={balanceChange}
             changeLabel="Trending up this month"
@@ -103,6 +115,7 @@ export default function DashboardPage() {
                 </span>
               </TabsTrigger>
               <TabsTrigger value="strategies">Trading Strategies</TabsTrigger>
+              <TabsTrigger value="ai-performance">AI & Performance</TabsTrigger>
               <TabsTrigger value="trades">Recent Trades</TabsTrigger>
               <TabsTrigger value="patterns">Pattern Detection</TabsTrigger>
             </TabsList>
@@ -122,7 +135,7 @@ export default function DashboardPage() {
               </div>
               <div className="space-y-4">
                 <OptimizedAccountBalance userId={userId} />
-                <OptimizedTradingTargets 
+                <OptimizedTradingTargets
                   onExecuteSnipe={handleExecuteSnipe}
                   onRemoveTarget={handleRemoveTarget}
                 />
@@ -137,6 +150,32 @@ export default function DashboardPage() {
 
           <TabsContent value="strategies" className="space-y-4">
             <MultiPhaseStrategyManager />
+          </TabsContent>
+
+          <TabsContent value="ai-performance" className="space-y-4">
+            <div className="grid gap-6">
+              {/* Integration Summary */}
+              <Phase3IntegrationSummary />
+
+              {/* AI Intelligence Section */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <AIServiceStatusPanel />
+                <AIEnhancedPatternDisplay
+                  patterns={enhancedPatterns?.patterns || []}
+                  isLoading={patternsLoading}
+                  showAdvanceDetection={true}
+                />
+              </div>
+
+              {/* Cache and Performance Section */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <CacheWarmingControlPanel />
+                <PerformanceMonitoringDashboard refreshInterval={30000} />
+              </div>
+
+              {/* Configuration Section */}
+              <Phase3ConfigurationPanel />
+            </div>
           </TabsContent>
 
           <TabsContent value="trades" className="space-y-4">
