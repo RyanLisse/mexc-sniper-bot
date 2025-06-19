@@ -319,7 +319,7 @@ export async function monitoredQuery<T>(
   return queryPerformanceMonitor.wrapQuery(queryName, queryFn, options);
 }
 
-export function closeDatabase() {
+export async function closeDatabase() {
   try {
     console.log("[Database] Database connection closed");
 
@@ -331,8 +331,18 @@ export function closeDatabase() {
 
     // Close PostgreSQL connection if exists
     if (postgresClient) {
-      postgresClient.end({ timeout: 5000 }); // 5 second timeout
-      console.log("[Database] NeonDB PostgreSQL connection closed");
+      try {
+        await Promise.race([
+          postgresClient.end({ timeout: 5 }),
+          new Promise((resolve) => setTimeout(() => {
+            console.warn("[Database] PostgreSQL close timed out, forcing shutdown");
+            resolve(undefined);
+          }, 5000))
+        ]);
+        console.log("[Database] NeonDB PostgreSQL connection closed");
+      } catch (error) {
+        console.warn("[Database] Error closing PostgreSQL connection:", error);
+      }
     }
 
     // Reset cached instances

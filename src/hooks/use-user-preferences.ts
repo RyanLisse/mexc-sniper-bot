@@ -12,6 +12,14 @@ export interface TakeProfitLevels {
   custom?: number; // User-defined custom level
 }
 
+export interface TakeProfitSellQuantities {
+  level1: number; // Default: 25%
+  level2: number; // Default: 25%
+  level3: number; // Default: 25%
+  level4: number; // Default: 25%
+  custom?: number; // Default: 100%
+}
+
 // New interface for multi-level take-profit configuration
 export interface MultiLevelTakeProfitLevel {
   id: string;
@@ -34,6 +42,7 @@ export interface UserTradingPreferences {
   defaultBuyAmountUsdt: number;
   maxConcurrentSnipes: number;
   takeProfitLevels: TakeProfitLevels;
+  takeProfitSellQuantities?: TakeProfitSellQuantities; // New: sell quantities for each level
   defaultTakeProfitLevel: number; // Which level to use by default (1-4)
   stopLossPercent: number;
   riskTolerance: "low" | "medium" | "high";
@@ -41,7 +50,10 @@ export interface UserTradingPreferences {
   targetAdvanceHours: number;
   calendarPollIntervalSeconds: number;
   symbolsPollIntervalSeconds: number;
-  // Exit Strategy Settings
+  // Enhanced Take Profit Strategy Settings
+  takeProfitStrategy?: string; // "conservative", "balanced", "aggressive", "custom"
+  takeProfitLevelsConfig?: string; // JSON string for multi-level configuration
+  // Legacy Exit Strategy Settings (for backward compatibility)
   selectedExitStrategy: string; // "conservative", "balanced", "aggressive", "custom"
   customExitStrategy?: ExitStrategy; // Custom strategy if selectedExitStrategy is "custom"
   autoBuyEnabled: boolean; // Auto-buy on ready state
@@ -54,14 +66,14 @@ export interface UserTradingPreferences {
 // Hook to get user preferences
 export function useUserPreferences(userId?: string) {
   const { user, isAuthenticated } = useAuth();
-  
+
   return useQuery({
     queryKey: queryKeys.userPreferences(userId || "anonymous"),
     queryFn: async (): Promise<UserTradingPreferences | null> => {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      
+
       try {
         const response = await fetch(`/api/user-preferences?userId=${encodeURIComponent(userId)}`);
 
@@ -214,6 +226,13 @@ export function useResetUserPreferences() {
           level3: 15.0,
           level4: 25.0,
         },
+        takeProfitSellQuantities: {
+          level1: 25.0,
+          level2: 25.0,
+          level3: 25.0,
+          level4: 25.0,
+          custom: 100.0,
+        },
         defaultTakeProfitLevel: 2,
         stopLossPercent: 5.0,
         riskTolerance: "medium",
@@ -221,6 +240,7 @@ export function useResetUserPreferences() {
         targetAdvanceHours: 3.5,
         calendarPollIntervalSeconds: 300,
         symbolsPollIntervalSeconds: 30,
+        takeProfitStrategy: "balanced",
         selectedExitStrategy: "balanced",
         autoBuyEnabled: true,
         autoSellEnabled: true,

@@ -62,20 +62,12 @@ export default defineConfig({
       'all-tests/**/*',
     ],
     
-    // Test execution configuration
-    poolOptions: {
-      threads: {
-        singleThread: false,
-        maxThreads: process.env.CI ? 2 : 4, // Limit threads in CI
-        minThreads: 1,
-        useAtomics: true
-      }
-    },
+    // Test execution configuration - removed duplicate, see poolOptions below
     
     // Timeouts and retries
     testTimeout: 30000, // 30 seconds per test
-    hookTimeout: 10000, // 10 seconds for hooks
-    teardownTimeout: 10000,
+    hookTimeout: 20000, // 20 seconds for hooks (database setup needs more time)
+    teardownTimeout: 15000, // 15 seconds for teardown (database cleanup)
     
     // Retry configuration
     retry: process.env.CI ? 2 : 0,
@@ -165,6 +157,10 @@ export default defineConfig({
       ENABLE_DEBUG_LOGGING: 'false',
       ENABLE_PERFORMANCE_MONITORING: 'true',
       SKIP_AUTH_IN_TESTS: 'true',
+      
+      // Database test settings
+      FORCE_MOCK_DB: 'false', // Allow real database connections
+      TEST_DB_TIMEOUT: '20000', // 20 second timeout for database operations
     },
     
     // Setup files
@@ -199,6 +195,18 @@ export default defineConfig({
     // Performance monitoring
     logHeapUsage: process.env.CI,
     isolate: true, // Isolate tests for better reliability
+    
+    // Pool management - prevent hanging connections
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        isolate: true,
+        singleThread: false,
+        useAtomics: true,
+        maxThreads: process.env.CI ? 1 : 2, // Reduce thread count to avoid connection leaks
+        minThreads: 1,
+      }
+    },
     
     // Experimental features
     experimentalOptimizer: {

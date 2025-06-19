@@ -1,58 +1,28 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GET, OPTIONS } from '../../app/api/health/auth/route';
+import { authTestSetup, mockKindeSDK, envTestUtils } from '../setup/auth-test-utils';
 
-// Mock the Kinde server session
+// Mock the Kinde server session at module level to prevent real network calls
 vi.mock('@kinde-oss/kinde-auth-nextjs/server', () => ({
   getKindeServerSession: vi.fn()
 }));
 
 describe('/api/health/auth', () => {
-  const originalEnv = process.env;
-
   beforeEach(() => {
-    // Reset environment variables to a clean state
-    process.env = {
-      ...originalEnv,
-      KINDE_CLIENT_ID: 'test-client-id',
-      KINDE_CLIENT_SECRET: 'test-client-secret',
-      KINDE_ISSUER_URL: 'https://test.kinde.com',
-      KINDE_SITE_URL: 'http://localhost:3008',
-      KINDE_POST_LOGOUT_REDIRECT_URL: 'http://localhost:3008',
-      KINDE_POST_LOGIN_REDIRECT_URL: 'http://localhost:3008/dashboard',
-      NODE_ENV: 'test'
-    };
-
-    // Clear all mocks
-    vi.clearAllMocks();
+    // Use standardized auth test setup
+    authTestSetup.beforeEach();
   });
 
   afterEach(() => {
-    process.env = originalEnv;
+    // Use standardized auth test cleanup
+    authTestSetup.afterEach();
   });
 
   describe('GET /api/health/auth', () => {
     it('should return healthy status with all environment variables configured', async () => {
-      // Mock successful Kinde SDK
+      // Mock successful Kinde SDK using standardized mock
       const { getKindeServerSession } = await import('@kinde-oss/kinde-auth-nextjs/server');
-      vi.mocked(getKindeServerSession).mockReturnValue({
-        isAuthenticated: vi.fn().mockResolvedValue(false),
-        getUser: vi.fn().mockResolvedValue(null),
-        getPermissions: vi.fn().mockResolvedValue({ permissions: [] }),
-        getPermission: vi.fn().mockResolvedValue({ isGranted: false }),
-        getOrganization: vi.fn().mockResolvedValue(null),
-        getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
-        getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
-        getAccessToken: vi.fn().mockResolvedValue(null),
-        refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
-        getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
-        getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
-        getIdToken: vi.fn().mockResolvedValue(null),
-        getIdTokenRaw: vi.fn().mockResolvedValue(null),
-        getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
-        getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
-        getAccessTokenRaw: vi.fn().mockResolvedValue(null),
-        getRoles: vi.fn().mockResolvedValue({ roles: [] }),
-      });
+      vi.mocked(getKindeServerSession).mockReturnValue(mockKindeSDK.createSuccessfulMock());
 
       const response = await GET();
       const data = await response.json();
@@ -88,9 +58,8 @@ describe('/api/health/auth', () => {
     });
 
     it('should return error status when required environment variables are missing', async () => {
-      // Remove required environment variables
-      delete process.env.KINDE_CLIENT_ID;
-      delete process.env.KINDE_CLIENT_SECRET;
+      // Use standardized environment setup for missing variables
+      envTestUtils.setupMissingEnv(['KINDE_CLIENT_ID', 'KINDE_CLIENT_SECRET']);
 
       const response = await GET();
       const data = await response.json();
@@ -105,7 +74,10 @@ describe('/api/health/auth', () => {
     });
 
     it('should return unhealthy status when Kinde SDK throws error', async () => {
-      // Mock Kinde SDK to throw error
+      // Mock console.error to suppress expected error messages during test
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
+      // Mock Kinde SDK to throw error during initialization
       const { getKindeServerSession } = await import('@kinde-oss/kinde-auth-nextjs/server');
       vi.mocked(getKindeServerSession).mockImplementation(() => {
         throw new Error('Kinde SDK connection failed');
@@ -122,10 +94,14 @@ describe('/api/health/auth', () => {
         sdk_accessible: false,
         error: 'Kinde SDK connection failed'
       });
+      
+      // Restore console.error
+      consoleSpy.mockRestore();
     });
 
     it('should validate configuration format correctly', async () => {
-      // Set invalid configuration formats for all required variables
+      // Setup test environment first, then override specific values with invalid formats
+      envTestUtils.setupTestEnv();
       process.env.KINDE_ISSUER_URL = 'invalid-url';
       process.env.KINDE_SITE_URL = 'also-invalid';
       process.env.KINDE_CLIENT_ID = '';
@@ -135,25 +111,7 @@ describe('/api/health/auth', () => {
 
       // Mock successful SDK (to isolate config validation)
       const { getKindeServerSession } = await import('@kinde-oss/kinde-auth-nextjs/server');
-      vi.mocked(getKindeServerSession).mockReturnValue({
-        isAuthenticated: vi.fn().mockResolvedValue(false),
-        getUser: vi.fn().mockResolvedValue(null),
-        getPermissions: vi.fn().mockResolvedValue({ permissions: [] }),
-        getPermission: vi.fn().mockResolvedValue({ isGranted: false }),
-        getOrganization: vi.fn().mockResolvedValue(null),
-        getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
-        getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
-        getAccessToken: vi.fn().mockResolvedValue(null),
-        refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
-        getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
-        getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
-        getIdToken: vi.fn().mockResolvedValue(null),
-        getIdTokenRaw: vi.fn().mockResolvedValue(null),
-        getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
-        getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
-        getAccessTokenRaw: vi.fn().mockResolvedValue(null),
-        getRoles: vi.fn().mockResolvedValue({ roles: [] }),
-      });
+      vi.mocked(getKindeServerSession).mockReturnValue(mockKindeSDK.createSuccessfulMock());
 
       const response = await GET();
       const data = await response.json();
@@ -169,30 +127,21 @@ describe('/api/health/auth', () => {
     });
 
     it('should include deployment information', async () => {
-      process.env = { ...process.env, NODE_ENV: 'production' };
+      // Setup test environment and override specific deployment settings
+      envTestUtils.setupTestEnv();
+      process.env.NODE_ENV = 'production';
       process.env.VERCEL = '1';
 
-      // Mock successful SDK
+      // Mock successful SDK with authenticated user
       const { getKindeServerSession } = await import('@kinde-oss/kinde-auth-nextjs/server');
-      vi.mocked(getKindeServerSession).mockReturnValue({
-        isAuthenticated: vi.fn().mockResolvedValue(true),
-        getUser: vi.fn().mockResolvedValue({ id: 'test-user' }),
-        getPermissions: vi.fn().mockResolvedValue({ permissions: [] }),
-        getPermission: vi.fn().mockResolvedValue({ isGranted: false }),
-        getOrganization: vi.fn().mockResolvedValue(null),
-        getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
-        getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
-        getAccessToken: vi.fn().mockResolvedValue('mock-token'),
-        refreshTokens: vi.fn().mockResolvedValue({ access_token: 'new-token' }),
-        getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
-        getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
-        getIdToken: vi.fn().mockResolvedValue(null),
-        getIdTokenRaw: vi.fn().mockResolvedValue(null),
-        getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
-        getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
-        getAccessTokenRaw: vi.fn().mockResolvedValue(null),
-        getRoles: vi.fn().mockResolvedValue({ roles: [] }),
-      });
+      const authenticatedMock = mockKindeSDK.createSuccessfulMock();
+      // Override specific methods to simulate authenticated state
+      authenticatedMock.isAuthenticated.mockResolvedValue(true);
+      authenticatedMock.getUser.mockResolvedValue({ id: 'test-user' });
+      authenticatedMock.getAccessToken.mockResolvedValue('mock-token');
+      authenticatedMock.refreshTokens.mockResolvedValue({ access_token: 'new-token' });
+      
+      vi.mocked(getKindeServerSession).mockReturnValue(authenticatedMock);
 
       const response = await GET();
       const data = await response.json();
@@ -212,27 +161,12 @@ describe('/api/health/auth', () => {
     });
 
     it('should handle unexpected errors gracefully', async () => {
-      // Mock getKindeServerSession to throw during call
+      // Mock console.error to suppress expected error messages during test
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
+      // Mock Kinde SDK to fail during async operations (not initialization)
       const { getKindeServerSession } = await import('@kinde-oss/kinde-auth-nextjs/server');
-      vi.mocked(getKindeServerSession).mockReturnValue({
-        isAuthenticated: vi.fn().mockRejectedValue(new Error('Network timeout')),
-        getUser: vi.fn().mockResolvedValue(null),
-        getPermissions: vi.fn().mockResolvedValue({ permissions: [] }),
-        getPermission: vi.fn().mockResolvedValue({ isGranted: false }),
-        getOrganization: vi.fn().mockResolvedValue(null),
-        getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
-        getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
-        getAccessToken: vi.fn().mockResolvedValue(null),
-        refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
-        getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
-        getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
-        getIdToken: vi.fn().mockResolvedValue(null),
-        getIdTokenRaw: vi.fn().mockResolvedValue(null),
-        getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
-        getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
-        getAccessTokenRaw: vi.fn().mockResolvedValue(null),
-        getRoles: vi.fn().mockResolvedValue({ roles: [] }),
-      });
+      vi.mocked(getKindeServerSession).mockReturnValue(mockKindeSDK.createFailedMock('Network timeout'));
 
       const response = await GET();
       const data = await response.json();
@@ -240,6 +174,36 @@ describe('/api/health/auth', () => {
       expect(data.status).toBe('unhealthy');
       expect(data.kinde_sdk_status).toBe('error');
       expect(data.auth_test_result.error).toBe('Network timeout');
+      
+      // Restore console.error
+      consoleSpy.mockRestore();
+    });
+
+    it('should ensure no real network connections are attempted', async () => {
+      // This test verifies that all Kinde SDK calls are properly mocked
+      const { getKindeServerSession } = await import('@kinde-oss/kinde-auth-nextjs/server');
+      const mockSession = mockKindeSDK.createSuccessfulMock();
+      vi.mocked(getKindeServerSession).mockReturnValue(mockSession);
+      
+      const response = await GET();
+      const data = await response.json();
+
+      // Verify the mock was called
+      expect(vi.mocked(getKindeServerSession)).toHaveBeenCalled();
+      expect(mockSession.isAuthenticated).toHaveBeenCalled();
+      
+      // Verify successful response (indicates mocks worked)
+      expect(response.status).toBe(200);
+      expect(data.status).toBe('healthy');
+      expect(data.kinde_sdk_status).toBe('initialized');
+      
+      // Verify fetch was not called with real Kinde URLs (would indicate network attempt)
+      const fetchCalls = vi.mocked(global.fetch).mock.calls;
+      const kindeNetworkCalls = fetchCalls.filter(call => {
+        const url = typeof call[0] === 'string' ? call[0] : call[0]?.toString() || '';
+        return url.includes('kinde.com') && !url.includes('localhost');
+      });
+      expect(kindeNetworkCalls).toHaveLength(0);
     });
   });
 

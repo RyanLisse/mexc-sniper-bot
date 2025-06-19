@@ -25,7 +25,7 @@ describe('Transactions Table', () => {
 
     // Clean up any existing test data for this user
     await db.delete(transactions).where(eq(transactions.userId, testUserId));
-  }, 30000); // Increase timeout to 30 seconds for database setup
+  }, 45000); // Increase timeout to 45 seconds for database setup
 
   afterEach(async () => {
     // Clean up ALL test data for this user to ensure test isolation
@@ -33,9 +33,11 @@ describe('Transactions Table', () => {
     createdTransactionIds = [];
   });
 
-  afterAll(() => {
-    // Close the test database
-    testSetup?.cleanup();
+  afterAll(async () => {
+    // Close the test database with proper cleanup
+    if (testSetup?.cleanup) {
+      await testSetup.cleanup();
+    }
   });
 
   describe('Transaction Creation', () => {

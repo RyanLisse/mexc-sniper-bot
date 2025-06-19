@@ -9,7 +9,7 @@ import { Input } from "../../src/components/ui/input";
 import { Label } from "../../src/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../src/components/ui/tabs";
 import { useToast } from "../../src/components/ui/use-toast";
-import { 
+import {
   Save,
   Shield,
   TrendingUp,
@@ -24,20 +24,22 @@ import { UnifiedTakeProfitLevels } from "../../src/components/unified-take-profi
 import { UnifiedRiskManagement } from "../../src/components/unified-risk-management";
 import { UnifiedAutomationSettings } from "../../src/components/unified-automation-settings";
 import { EditableTakeProfitTable } from "../../src/components/editable-take-profit-table";
+import { EnhancedTakeProfitConfig } from "../../src/components/enhanced-take-profit-config";
 import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "../../src/hooks/use-user-preferences";
+import { TakeProfitStrategy, TAKE_PROFIT_STRATEGIES, getTakeProfitStrategyById } from "../../src/types/take-profit-strategies";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const { user, isLoading: userLoading } = useKindeBrowserClient();
-  
+
   // Use authenticated user ID
   const userId = user?.id;
-  
+
   const userPreferencesQuery = useUserPreferences(userId);
   const preferences = userPreferencesQuery.data;
   const prefsLoading = userPreferencesQuery.isLoading;
-  
+
   const updatePreferencesMutation = useUpdateUserPreferences();
 
   // Multi-level take profit hooks
@@ -47,7 +49,7 @@ export default function SettingsPage() {
   // State for form values
   const [isDirty, setIsDirty] = useState(false);
 
-  // Take profit levels
+  // Take profit levels (legacy)
   const [takeProfitLevels, setTakeProfitLevels] = useState({
     level1: preferences?.takeProfitLevels?.level1 || 5,
     level2: preferences?.takeProfitLevels?.level2 || 10,
@@ -57,6 +59,14 @@ export default function SettingsPage() {
     defaultLevel: preferences?.defaultTakeProfitLevel || 2
   });
 
+  // Enhanced take profit strategy
+  const [takeProfitStrategy, setTakeProfitStrategy] = useState(
+    preferences?.takeProfitStrategy || "balanced"
+  );
+  const [customTakeProfitStrategy, setCustomTakeProfitStrategy] = useState<TakeProfitStrategy | undefined>(
+    preferences?.takeProfitLevelsConfig ? JSON.parse(preferences.takeProfitLevelsConfig) : undefined
+  );
+
   // Risk management
   const [riskSettings, setRiskSettings] = useState({
     stopLossPercent: preferences?.stopLossPercent || 5,
@@ -64,6 +74,17 @@ export default function SettingsPage() {
     maxConcurrentSnipes: preferences?.maxConcurrentSnipes || 3,
     defaultBuyAmount: preferences?.defaultBuyAmountUsdt || 100
   });
+
+  // Enhanced take profit handlers
+  const handleTakeProfitStrategyChange = (strategyId: string) => {
+    setTakeProfitStrategy(strategyId);
+    setIsDirty(true);
+  };
+
+  const handleCustomTakeProfitStrategyChange = (strategy: TakeProfitStrategy) => {
+    setCustomTakeProfitStrategy(strategy);
+    setIsDirty(true);
+  };
 
   // Exit strategies
   const [exitStrategy, setExitStrategy] = useState(preferences?.selectedExitStrategy || "balanced");
@@ -86,16 +107,16 @@ export default function SettingsPage() {
         custom: preferences.takeProfitLevels?.custom || null,
         defaultLevel: preferences.defaultTakeProfitLevel || 2
       });
-      
+
       setRiskSettings({
         stopLossPercent: preferences.stopLossPercent || 5,
         riskTolerance: preferences.riskTolerance || "medium",
         maxConcurrentSnipes: preferences.maxConcurrentSnipes || 3,
         defaultBuyAmount: preferences.defaultBuyAmountUsdt || 100
       });
-      
+
       setExitStrategy(preferences.selectedExitStrategy || "balanced");
-      
+
       setAutoSettings({
         autoSnipeEnabled: preferences.autoSnipeEnabled ?? true,
         autoBuyEnabled: preferences.autoBuyEnabled ?? true,
@@ -107,7 +128,7 @@ export default function SettingsPage() {
   // Handle saving editable take-profit table
   const handleSaveMultiLevelTakeProfit = async (levels: any[]) => {
     console.log('Saving multi-level take-profit levels:', levels);
-    
+
     // Update the multi-level configuration
     const updatedConfig = {
       ...multiLevelConfig,
@@ -123,22 +144,22 @@ export default function SettingsPage() {
         userId,
         config: updatedConfig,
       });
-      
+
       toast({
         title: "Multi-Level Take-Profit Saved",
         description: "Your advanced take-profit configuration has been updated successfully.",
       });
-      
+
       console.log('✅ Successfully saved multi-level take-profit configuration');
     } catch (error) {
       console.error('❌ Failed to save multi-level take-profit configuration:', error);
-      
+
       toast({
         title: "Error saving take-profit configuration",
         description: "Failed to save your multi-level take-profit configuration. Please try again.",
         variant: "destructive"
       });
-      
+
       throw error; // Re-throw to trigger error handling in component
     }
   };
@@ -157,6 +178,9 @@ export default function SettingsPage() {
           custom: takeProfitLevels.custom || undefined,
         },
         defaultTakeProfitLevel: takeProfitLevels.defaultLevel,
+        // Enhanced take profit strategy
+        takeProfitStrategy: takeProfitStrategy,
+        takeProfitLevelsConfig: customTakeProfitStrategy,
         stopLossPercent: riskSettings.stopLossPercent,
         riskTolerance: riskSettings.riskTolerance as "low" | "medium" | "high",
         maxConcurrentSnipes: riskSettings.maxConcurrentSnipes,
@@ -180,9 +204,11 @@ export default function SettingsPage() {
       });
     }
   }, [
-    takeProfitLevels, 
-    riskSettings, 
-    exitStrategy, 
+    takeProfitLevels,
+    takeProfitStrategy,
+    customTakeProfitStrategy,
+    riskSettings,
+    exitStrategy,
     autoSettings,
     updatePreferencesMutation.mutateAsync,
     toast,
@@ -219,7 +245,7 @@ export default function SettingsPage() {
                 Unsaved changes
               </Badge>
             )}
-            <Button 
+            <Button
               onClick={handleSave}
               disabled={updatePreferencesMutation.isPending || !isDirty}
             >
@@ -265,11 +291,39 @@ export default function SettingsPage() {
 
           {/* Take Profit Tab */}
           <TabsContent value="profit" className="space-y-4">
-            <UnifiedTakeProfitLevels
-              levels={takeProfitLevels}
-              onLevelsChange={setTakeProfitLevels}
-              onDirty={() => setIsDirty(true)}
+            {/* Enhanced Take Profit Configuration */}
+            <EnhancedTakeProfitConfig
+              selectedStrategy={takeProfitStrategy}
+              customStrategy={customTakeProfitStrategy}
+              onStrategyChange={handleTakeProfitStrategyChange}
+              onCustomStrategyChange={handleCustomTakeProfitStrategyChange}
+              investmentAmount={riskSettings.defaultBuyAmount}
+              className="mb-6"
             />
+
+            {/* Legacy Take Profit Levels (for backward compatibility) */}
+            <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
+              <CardHeader>
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-amber-500/10 rounded-lg">
+                    <Target className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Legacy Take Profit Levels</CardTitle>
+                    <CardDescription>
+                      Simple take profit configuration (maintained for backward compatibility)
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <UnifiedTakeProfitLevels
+                  levels={takeProfitLevels}
+                  onLevelsChange={setTakeProfitLevels}
+                  onDirty={() => setIsDirty(true)}
+                />
+              </CardContent>
+            </Card>
 
             {/* Advanced Multi-Level Take-Profit Configuration */}
             <Card>

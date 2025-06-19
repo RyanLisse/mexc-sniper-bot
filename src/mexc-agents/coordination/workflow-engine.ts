@@ -92,6 +92,7 @@ export class WorkflowEngine {
   private workflowDefinitions: Map<string, WorkflowDefinition> = new Map();
   private executionHistory: WorkflowExecutionResult[] = [];
   private maxHistorySize = 1000;
+  private deferredWarnings: string[] = [];
 
   constructor(agentRegistry: AgentRegistry) {
     this.agentRegistry = agentRegistry;
@@ -210,6 +211,50 @@ export class WorkflowEngine {
    */
   getExecutionHistory(limit?: number): WorkflowExecutionResult[] {
     return limit ? this.executionHistory.slice(-limit) : [...this.executionHistory];
+  }
+
+  /**
+   * Validate all registered workflows against current agent registry
+   * and clear any resolved warnings
+   */
+  validateRegisteredWorkflows(): {
+    resolvedWarnings: string[];
+    remainingWarnings: string[];
+  } {
+    const resolvedWarnings: string[] = [];
+    const remainingWarnings: string[] = [];
+
+    // Check each deferred warning
+    for (const warning of this.deferredWarnings) {
+      // Extract agent ID from warning message
+      const match = warning.match(/Agent '([^']+)'/);
+      if (match) {
+        const agentId = match[1];
+        if (this.agentRegistry.getAgent(agentId)) {
+          resolvedWarnings.push(warning);
+        } else {
+          remainingWarnings.push(warning);
+        }
+      } else {
+        remainingWarnings.push(warning);
+      }
+    }
+
+    // Update deferred warnings to only include remaining ones
+    this.deferredWarnings = remainingWarnings;
+
+    // Log resolved warnings for debugging
+    if (resolvedWarnings.length > 0) {
+      console.debug(`[WorkflowEngine] Resolved ${resolvedWarnings.length} agent registration warnings`);
+    }
+
+    // Log remaining warnings if any
+    if (remainingWarnings.length > 0) {
+      console.warn(`[WorkflowEngine] ${remainingWarnings.length} agent registration warnings remain:`);
+      remainingWarnings.forEach(warning => console.warn(`  - ${warning}`));
+    }
+
+    return { resolvedWarnings, remainingWarnings };
   }
 
   /**
@@ -748,10 +793,11 @@ export class WorkflowEngine {
       }
     }
 
-    // Check for agent existence
+    // Check for agent existence during registration
     for (const step of definition.steps) {
       if (!this.agentRegistry.getAgent(step.agentId)) {
-        console.warn(`Warning: Agent '${step.agentId}' for step '${step.id}' is not registered`);
+        // Store the warning but don't print it immediately to avoid spam during tests
+        this.deferredWarnings.push(`Agent '${step.agentId}' for step '${step.id}' is not registered`);
       }
     }
   }

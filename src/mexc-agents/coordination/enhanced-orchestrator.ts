@@ -65,6 +65,9 @@ export class EnhancedMexcOrchestrator {
       this.performanceCollector.startCollection();
       this.monitoringService.start();
 
+      // Validate workflows after initialization
+      this.workflowEngine.validateRegisteredWorkflows();
+
       this.isInitialized = true;
       console.log("[EnhancedMexcOrchestrator] Initialization completed with health monitoring");
     } catch (error) {

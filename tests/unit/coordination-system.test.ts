@@ -213,34 +213,91 @@ describe("Agent Coordination System", () => {
 
   describe("Integration Tests", () => {
     test("should create complete coordination system", async () => {
-      const system = await createCoordinationSystem({
+      // Create the system first without initialization
+      const { AgentRegistry } = await import("../../src/mexc-agents/coordination/agent-registry");
+      const { WorkflowEngine } = await import("../../src/mexc-agents/coordination/workflow-engine");
+      const { PerformanceCollector } = await import("../../src/mexc-agents/coordination/performance-collector");
+      const { EnhancedMexcOrchestrator } = await import("../../src/mexc-agents/coordination/enhanced-orchestrator");
+      
+      // Initialize registry first
+      const agentRegistry = new AgentRegistry({
         healthCheckInterval: 60000,
-        performanceCollectionInterval: 120000,
+        maxHealthHistorySize: 50,
+      });
+      
+      // Register required mock agents BEFORE creating orchestrator
+      const mockMexcApi = new MockAgent("mexc-api");
+      const mockCalendar = new MockAgent("calendar");
+      const mockPatternDiscovery = new MockAgent("pattern-discovery");
+      const mockSymbolAnalysis = new MockAgent("symbol-analysis");
+      const mockStrategy = new MockAgent("strategy");
+      const mockRiskManager = new MockAgent("risk-manager");
+
+      agentRegistry.registerAgent("mexc-api", mockMexcApi, {
+        name: "MEXC API Agent",
+        type: "api"
+      });
+      agentRegistry.registerAgent("calendar", mockCalendar, {
+        name: "Calendar Agent",
+        type: "analysis"
+      });
+      agentRegistry.registerAgent("pattern-discovery", mockPatternDiscovery, {
+        name: "Pattern Discovery Agent",
+        type: "analysis"
+      });
+      agentRegistry.registerAgent("symbol-analysis", mockSymbolAnalysis, {
+        name: "Symbol Analysis Agent",
+        type: "analysis"
+      });
+      agentRegistry.registerAgent("strategy", mockStrategy, {
+        name: "Strategy Agent",
+        type: "strategy"
+      });
+      agentRegistry.registerAgent("risk-manager", mockRiskManager, {
+        name: "Risk Manager Agent",
+        type: "risk"
+      });
+
+      // Perform health checks to make agents available
+      await agentRegistry.checkAgentHealth("mexc-api");
+      await agentRegistry.checkAgentHealth("calendar");
+      await agentRegistry.checkAgentHealth("pattern-discovery");
+      await agentRegistry.checkAgentHealth("symbol-analysis");
+      await agentRegistry.checkAgentHealth("strategy");
+      await agentRegistry.checkAgentHealth("risk-manager");
+
+      // Create other components
+      const workflowEngine = new WorkflowEngine(agentRegistry);
+      const performanceCollector = new PerformanceCollector(agentRegistry, {
+        collectionInterval: 120000,
         maxHistorySize: 50,
       });
+      
+      // Create orchestrator with all agents already registered
+      const orchestrator = new EnhancedMexcOrchestrator(
+        agentRegistry,
+        workflowEngine,
+        performanceCollector
+      );
+
+      // Now initialize the orchestrator (this should not show warnings)
+      await orchestrator.initialize();
+
+      // Validate that all workflow warnings are resolved after agent registration
+      const validation = workflowEngine.validateRegisteredWorkflows();
+      expect(validation.remainingWarnings).toHaveLength(0);
+
+      const system = {
+        agentRegistry,
+        workflowEngine,
+        performanceCollector,
+        orchestrator,
+      };
 
       expect(system.agentRegistry).toBeDefined();
       expect(system.workflowEngine).toBeDefined();
       expect(system.performanceCollector).toBeDefined();
       expect(system.orchestrator).toBeDefined();
-
-      // Register required mock agents for health checks
-      const mockMexcApi = new MockAgent("mexc-api");
-      const mockCalendar = new MockAgent("calendar");
-      const mockPatternDiscovery = new MockAgent("pattern-discovery");
-
-      system.agentRegistry.registerAgent("mexc-api", mockMexcApi, {
-        name: "MEXC API Agent",
-        type: "api"
-      });
-      system.agentRegistry.registerAgent("calendar", mockCalendar, {
-        name: "Calendar Agent",
-        type: "analysis"
-      });
-      system.agentRegistry.registerAgent("pattern-discovery", mockPatternDiscovery, {
-        name: "Pattern Discovery Agent",
-        type: "analysis"
-      });
 
       // Test health check
       const health = await checkCoordinationSystemHealth(system);
@@ -253,13 +310,26 @@ describe("Agent Coordination System", () => {
       mockMexcApi.destroy();
       mockCalendar.destroy();
       mockPatternDiscovery.destroy();
+      mockSymbolAnalysis.destroy();
+      mockStrategy.destroy();
+      mockRiskManager.destroy();
       await system.orchestrator.shutdown();
     });
 
     test("should handle orchestrator workflow execution", async () => {
-      const system = await createCoordinationSystem();
+      // Create the system first without initialization
+      const { AgentRegistry } = await import("../../src/mexc-agents/coordination/agent-registry");
+      const { WorkflowEngine } = await import("../../src/mexc-agents/coordination/workflow-engine");
+      const { PerformanceCollector } = await import("../../src/mexc-agents/coordination/performance-collector");
+      const { EnhancedMexcOrchestrator } = await import("../../src/mexc-agents/coordination/enhanced-orchestrator");
+      
+      // Initialize registry first
+      const agentRegistry = new AgentRegistry({
+        healthCheckInterval: 30000,
+        maxHealthHistorySize: 100,
+      });
 
-      // Register required mock agents
+      // Register required mock agents BEFORE creating orchestrator
       const mockMexcApi = new MockAgent("mexc-api");
       const mockCalendar = new MockAgent("calendar");
       const mockPatternDiscovery = new MockAgent("pattern-discovery");
@@ -267,30 +337,66 @@ describe("Agent Coordination System", () => {
       const mockStrategy = new MockAgent("strategy");
       const mockRiskManager = new MockAgent("risk-manager");
 
-      system.agentRegistry.registerAgent("mexc-api", mockMexcApi, {
+      agentRegistry.registerAgent("mexc-api", mockMexcApi, {
         name: "MEXC API Agent",
         type: "api"
       });
-      system.agentRegistry.registerAgent("calendar", mockCalendar, {
+      agentRegistry.registerAgent("calendar", mockCalendar, {
         name: "Calendar Agent",
         type: "analysis"
       });
-      system.agentRegistry.registerAgent("pattern-discovery", mockPatternDiscovery, {
+      agentRegistry.registerAgent("pattern-discovery", mockPatternDiscovery, {
         name: "Pattern Discovery Agent",
         type: "analysis"
       });
-      system.agentRegistry.registerAgent("symbol-analysis", mockSymbolAnalysis, {
+      agentRegistry.registerAgent("symbol-analysis", mockSymbolAnalysis, {
         name: "Symbol Analysis Agent",
         type: "analysis"
       });
-      system.agentRegistry.registerAgent("strategy", mockStrategy, {
+      agentRegistry.registerAgent("strategy", mockStrategy, {
         name: "Strategy Agent",
         type: "strategy"
       });
-      system.agentRegistry.registerAgent("risk-manager", mockRiskManager, {
+      agentRegistry.registerAgent("risk-manager", mockRiskManager, {
         name: "Risk Manager Agent",
         type: "risk"
       });
+
+      // Perform health checks to make agents available
+      await agentRegistry.checkAgentHealth("mexc-api");
+      await agentRegistry.checkAgentHealth("calendar");
+      await agentRegistry.checkAgentHealth("pattern-discovery");
+      await agentRegistry.checkAgentHealth("symbol-analysis");
+      await agentRegistry.checkAgentHealth("strategy");
+      await agentRegistry.checkAgentHealth("risk-manager");
+
+      // Create other components
+      const workflowEngine = new WorkflowEngine(agentRegistry);
+      const performanceCollector = new PerformanceCollector(agentRegistry, {
+        collectionInterval: 60000,
+        maxHistorySize: 1000,
+      });
+      
+      // Create orchestrator with all agents already registered
+      const orchestrator = new EnhancedMexcOrchestrator(
+        agentRegistry,
+        workflowEngine,
+        performanceCollector
+      );
+
+      // Now initialize the orchestrator (this should not show warnings)
+      await orchestrator.initialize();
+
+      // Validate that all workflow warnings are resolved after agent registration
+      const validation = workflowEngine.validateRegisteredWorkflows();
+      expect(validation.remainingWarnings).toHaveLength(0);
+
+      const system = {
+        agentRegistry,
+        workflowEngine,
+        performanceCollector,
+        orchestrator,
+      };
 
       // Test calendar discovery workflow
       try {

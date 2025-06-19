@@ -66,6 +66,76 @@ beforeAll(async () => {
     }
   }))
   
+  // Mock Kinde Auth SDK to prevent real network calls
+  vi.mock('@kinde-oss/kinde-auth-nextjs/server', () => ({
+    getKindeServerSession: vi.fn(() => ({
+      isAuthenticated: vi.fn().mockResolvedValue(false),
+      getUser: vi.fn().mockResolvedValue(null),
+      getPermissions: vi.fn().mockResolvedValue({ permissions: [] }),
+      getPermission: vi.fn().mockResolvedValue({ isGranted: false }),
+      getOrganization: vi.fn().mockResolvedValue(null),
+      getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
+      getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
+      getAccessToken: vi.fn().mockResolvedValue(null),
+      refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
+      getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+      getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+      getIdToken: vi.fn().mockResolvedValue(null),
+      getIdTokenRaw: vi.fn().mockResolvedValue(null),
+      getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+      getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+      getAccessTokenRaw: vi.fn().mockResolvedValue(null),
+      getRoles: vi.fn().mockResolvedValue({ roles: [] }),
+      logout: vi.fn().mockResolvedValue(null),
+      createOrg: vi.fn().mockResolvedValue(null)
+    }))
+  }))
+  
+  // Mock Kinde Auth client-side SDK as well
+  vi.mock('@kinde-oss/kinde-auth-nextjs', () => ({
+    useKindeBrowserClient: vi.fn(() => ({
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+      isAuthenticated: false,
+      user: null,
+      isLoading: false,
+      error: null,
+      getUser: vi.fn().mockReturnValue(null),
+      getUserOrganizations: vi.fn().mockReturnValue({ orgCodes: [] }),
+      getPermissions: vi.fn().mockReturnValue({ permissions: [] }),
+      getPermission: vi.fn().mockReturnValue({ isGranted: false }),
+      getOrganization: vi.fn().mockReturnValue(null),
+      getClaim: vi.fn().mockReturnValue({ name: 'test', value: null }),
+      getAccessToken: vi.fn().mockReturnValue(null),
+      getBooleanFlag: vi.fn().mockReturnValue({ value: false, isDefault: true }),
+      getFlag: vi.fn().mockReturnValue({ value: null, isDefault: true }),
+      getStringFlag: vi.fn().mockReturnValue({ value: '', isDefault: true }),
+      getIntegerFlag: vi.fn().mockReturnValue({ value: 0, isDefault: true })
+    })),
+    getKindeServerSession: vi.fn(() => ({
+      isAuthenticated: vi.fn().mockResolvedValue(false),
+      getUser: vi.fn().mockResolvedValue(null),
+      getPermissions: vi.fn().mockResolvedValue({ permissions: [] }),
+      getPermission: vi.fn().mockResolvedValue({ isGranted: false }),
+      getOrganization: vi.fn().mockResolvedValue(null),
+      getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
+      getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
+      getAccessToken: vi.fn().mockResolvedValue(null),
+      refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
+      getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+      getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+      getIdToken: vi.fn().mockResolvedValue(null),
+      getIdTokenRaw: vi.fn().mockResolvedValue(null),
+      getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+      getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+      getAccessTokenRaw: vi.fn().mockResolvedValue(null),
+      getRoles: vi.fn().mockResolvedValue({ roles: [] }),
+      logout: vi.fn().mockResolvedValue(null),
+      createOrg: vi.fn().mockResolvedValue(null)
+    }))
+  }))
+
   // Mock Neon API and Branch Manager
   vi.mock('@/src/lib/neon-branch-manager', () => {
     const mockBranches = new Map()
@@ -312,9 +382,30 @@ beforeAll(async () => {
     }
   }
   
-  // Mock fetch for API calls
+  // Mock fetch for API calls with special handling for Kinde URLs
   global.fetch = vi.fn().mockImplementation((url, options) => {
-    // Default mock response
+    // Convert URL to string if it's a URL object
+    const urlString = typeof url === 'string' ? url : url.toString();
+    
+    // Handle Kinde-specific endpoints
+    if (urlString.includes('kinde.com') || urlString.includes('kinde')) {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: () => Promise.resolve({ 
+          keys: [], // Mock JWKS response
+          success: true,
+          message: 'Mock Kinde API response'
+        }),
+        text: () => Promise.resolve('{}'),
+        headers: new Headers({
+          'content-type': 'application/json'
+        })
+      });
+    }
+    
+    // Default mock response for all other URLs
     return Promise.resolve({
       ok: true,
       status: 200,
@@ -359,14 +450,30 @@ afterEach(async () => {
 afterAll(async () => {
   console.log('🧹 Cleaning up Vitest environment...')
   
-  // Close database connections
+  // Close database connections with timeout
   try {
-    if (db) {
-      // Add database cleanup if needed
+    if (db && typeof db.closeDatabase === 'function') {
+      await Promise.race([
+        db.closeDatabase(),
+        new Promise((resolve) => setTimeout(() => {
+          console.warn('⚠️ Database cleanup timed out')
+          resolve(undefined)
+        }, 5000))
+      ])
       console.log('📦 Database connections closed')
     }
   } catch (error) {
     console.warn('⚠️ Database cleanup warning:', error.message)
+  }
+  
+  // Force close any remaining connections
+  try {
+    // Clear any cached database instances
+    if (typeof clearDbCache === 'function') {
+      clearDbCache()
+    }
+  } catch (error) {
+    console.warn('⚠️ Database cache cleanup warning:', error.message)
   }
   
   // Restore all mocks

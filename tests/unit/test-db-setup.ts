@@ -21,61 +21,126 @@ export interface TestDbSetup {
 
 /**
  * Create a clean test database with all migrations applied
- * Uses NeonDB PostgreSQL for testing
+ * Uses NeonDB PostgreSQL for testing with improved retry logic
  */
 export async function createTestDatabase(): Promise<TestDbSetup> {
-  // Try to connect to real database, fallback to mock if unavailable
-  try {
-    // Use NeonDB PostgreSQL for testing
-    const databaseUrl = process.env.DATABASE_URL?.startsWith('postgresql://') 
-      ? process.env.DATABASE_URL 
-      : 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
-    
-    // Create PostgreSQL client with test-optimized settings
-    const client = postgres(databaseUrl, {
-      max: 2, // Limit connections for tests
-      idle_timeout: 5, // Shorter timeout for tests
-      connect_timeout: 5, // Shorter connection timeout
-      ssl: 'require'
-    });
-    
-    const db = drizzle(client, { schema });
-    
-    // Test database connection with shorter timeout
-    await Promise.race([
-      db.execute(sql`SELECT 1 as ping`),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 3000))
-    ]);
-    
-    console.log(`[Test] Connected to NeonDB test database`);
-    
-    // Apply migrations with safe error handling
-    try {
-      await migrate(db, { migrationsFolder: './src/db/migrations' });
-      console.log(`[Test] Applied migrations to NeonDB test database`);
-    } catch (error) {
-      console.warn('Test migration had issues, proceeding with existing schema:', error instanceof Error ? error.message : error);
-    }
-    
-    return { 
-      client, 
-      db, 
-      cleanup: async () => {
-        try {
-          await client.end();
-          console.log(`[Test] Cleaned up NeonDB test database connection`);
-        } catch (error) {
-          console.warn('Error closing test database:', error);
-        }
-      }
-    };
-    
-  } catch (error) {
-    console.warn(`[Test] Database connection failed, using mock database for tests:`, error instanceof Error ? error.message : error);
-    
-    // Return mock database setup that allows tests to pass
+  // Get database URL from environment
+  const databaseUrl = process.env.DATABASE_URL?.startsWith('postgresql://') 
+    ? process.env.DATABASE_URL 
+    : 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+  
+  // Force real database for tests - don't fallback to mock anymore
+  const forceMock = process.env.FORCE_MOCK_DB === 'true';
+  
+  if (forceMock) {
+    console.log('[Test] FORCE_MOCK_DB enabled, using mock database');
     return createMockDatabase();
   }
+  
+  let client: postgres.Sql | null = null;
+  let retryCount = 0;
+  const maxRetries = 3;
+  
+  while (retryCount < maxRetries) {
+    try {
+      console.log(`[Test] Attempting database connection (attempt ${retryCount + 1}/${maxRetries})...`);
+      
+      // Create PostgreSQL client with test-optimized settings
+      client = postgres(databaseUrl, {
+        max: 3, // Limit connections for tests
+        idle_timeout: 30, // Longer timeout for tests (30 seconds)
+        connect_timeout: 20, // Even longer connection timeout (20 seconds)
+        ssl: 'require',
+        prepare: false, // Disable prepared statements for tests
+        transform: {
+          undefined: null,
+        },
+        connection: {
+          application_name: "mexc-sniper-test",
+          statement_timeout: 20000, // 20 seconds
+          idle_in_transaction_session_timeout: 20000,
+        },
+        // Add retry options at the postgres client level
+        fetch: retryCount > 0 ? {
+          ...global.fetch,
+          timeout: 10000, // 10 second fetch timeout on retries
+        } : undefined
+      });
+      
+      const db = drizzle(client, { schema });
+      
+      // Test database connection with progressively longer timeout
+      const timeoutMs = 10000 + (retryCount * 5000); // 10s, 15s, 20s
+      await Promise.race([
+        db.execute(sql`SELECT 1 as ping`),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection timeout')), timeoutMs)
+        )
+      ]);
+      
+      console.log(`[Test] Connected to NeonDB test database successfully`);
+      
+      // Apply migrations with safe error handling
+      try {
+        await migrate(db, { migrationsFolder: './src/db/migrations' });
+        console.log(`[Test] Applied migrations to NeonDB test database`);
+      } catch (error) {
+        console.warn('Test migration had issues, proceeding with existing schema:', error instanceof Error ? error.message : error);
+      }
+      
+      return { 
+        client, 
+        db, 
+        cleanup: async () => {
+          try {
+            if (client) {
+              // Force close with timeout to prevent hanging
+              await Promise.race([
+                client.end({ timeout: 5 }),
+                new Promise((resolve) => setTimeout(() => {
+                  console.warn('[Test] Database cleanup timed out, forcing close');
+                  resolve(undefined);
+                }, 5000))
+              ]);
+              console.log(`[Test] Cleaned up NeonDB test database connection`);
+            }
+          } catch (error) {
+            console.warn('Error closing test database:', error);
+          }
+        }
+      };
+      
+    } catch (error) {
+      retryCount++;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn(`[Test] Database connection attempt ${retryCount} failed: ${errorMessage}`);
+      
+      // Clean up failed client
+      if (client) {
+        try {
+          await client.end({ timeout: 1 });
+        } catch (_) {
+          // Ignore cleanup errors on failed connections
+        }
+        client = null;
+      }
+      
+      // If this is the last retry, fall back to mock
+      if (retryCount >= maxRetries) {
+        console.warn(`[Test] All database connection attempts failed, using mock database for tests`);
+        return createMockDatabase();
+      }
+      
+      // Wait before retry with exponential backoff
+      const delay = 1000 * retryCount; // 1s, 2s, 3s
+      console.log(`[Test] Retrying database connection in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  // This should never be reached, but TypeScript needs it
+  console.warn(`[Test] Unexpected fallback to mock database`);
+  return createMockDatabase();
 }
 
 /**

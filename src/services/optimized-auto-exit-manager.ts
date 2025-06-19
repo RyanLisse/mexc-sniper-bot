@@ -8,6 +8,7 @@ import {
 import { getMexcService } from "./mexc-unified-exports";
 import type { ExitLevel, ExitStrategy } from "../types/exit-strategies";
 import { EXIT_STRATEGIES } from "../types/exit-strategies";
+import { TakeProfitStrategy, getTakeProfitStrategyById } from "../types/take-profit-strategies";
 import { and, eq } from "drizzle-orm";
 
 export interface ActivePosition {
@@ -334,12 +335,12 @@ export class OptimizedAutoExitManager {
   }
 
   /**
-   * OPTIMIZED: Evaluate exit condition without external calls
+   * OPTIMIZED: Evaluate exit condition with enhanced take profit strategy support
    */
   private async evaluateExitCondition(
     position: ActivePosition,
     currentPrice: number
-  ): Promise<{ shouldExit: boolean; reason?: string; quantityToSell?: number }> {
+  ): Promise<{ shouldExit: boolean; reason?: string; quantityToSell?: number; takeProfitLevel?: string }> {
     const priceMultiplier = currentPrice / position.entryPrice;
     const profitPercent = (priceMultiplier - 1) * 100;
 
@@ -357,6 +358,15 @@ export class OptimizedAutoExitManager {
       };
     }
 
+    // Check enhanced take profit strategy if configured
+    const enhancedTakeProfitResult = await this.evaluateEnhancedTakeProfitStrategy(
+      position,
+      profitPercent
+    );
+    if (enhancedTakeProfitResult.shouldExit) {
+      return enhancedTakeProfitResult;
+    }
+
     // Check take-profit levels
     const exitLevel = this.getTriggeredExitLevel(position.exitStrategy, priceMultiplier);
     if (exitLevel) {
@@ -369,6 +379,82 @@ export class OptimizedAutoExitManager {
     }
 
     return { shouldExit: false };
+  }
+
+  /**
+   * Evaluate enhanced take profit strategy
+   */
+  private async evaluateEnhancedTakeProfitStrategy(
+    position: ActivePosition,
+    profitPercent: number
+  ): Promise<{ shouldExit: boolean; reason?: string; quantityToSell?: number; takeProfitLevel?: string }> {
+    try {
+      // Get user preferences to check for enhanced take profit strategy
+      const userPrefs = await db
+        .select()
+        .from(userPreferences)
+        .where(eq(userPreferences.userId, position.userId))
+        .limit(1);
+
+      if (userPrefs.length === 0) {
+        return { shouldExit: false };
+      }
+
+      const prefs = userPrefs[0];
+
+      // Check if enhanced take profit strategy is configured
+      if (!prefs.takeProfitStrategy || !prefs.takeProfitLevelsConfig) {
+        return { shouldExit: false };
+      }
+
+      let strategy: TakeProfitStrategy;
+
+      // Get strategy configuration
+      if (prefs.takeProfitStrategy === "custom") {
+        try {
+          strategy = JSON.parse(prefs.takeProfitLevelsConfig);
+        } catch (error) {
+          console.error("❌ Error parsing custom take profit strategy:", error);
+          return { shouldExit: false };
+        }
+      } else {
+        const presetStrategy = getTakeProfitStrategyById(prefs.takeProfitStrategy);
+        if (!presetStrategy) {
+          return { shouldExit: false };
+        }
+        strategy = presetStrategy;
+      }
+
+      // Find the highest triggered level
+      let triggeredLevel = null;
+      for (const level of strategy.levels) {
+        if (level.isActive && profitPercent >= level.profitPercentage) {
+          if (!triggeredLevel || level.profitPercentage > triggeredLevel.profitPercentage) {
+            triggeredLevel = level;
+          }
+        }
+      }
+
+      if (triggeredLevel) {
+        const quantityToSell = (position.quantity * triggeredLevel.sellQuantity) / 100;
+
+        console.log(
+          `🎯 Enhanced take profit triggered for ${position.symbol}: Level ${triggeredLevel.profitPercentage}%, selling ${triggeredLevel.sellQuantity}% (${quantityToSell} units)`
+        );
+
+        return {
+          shouldExit: true,
+          reason: "enhanced_take_profit",
+          quantityToSell,
+          takeProfitLevel: triggeredLevel.id,
+        };
+      }
+
+      return { shouldExit: false };
+    } catch (error) {
+      console.error("❌ Error evaluating enhanced take profit strategy:", error);
+      return { shouldExit: false };
+    }
   }
 
   /**

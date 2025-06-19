@@ -93,6 +93,17 @@ export const userPreferences = pgTable(
     takeProfitCustom: real("take_profit_custom"), // Custom %
     defaultTakeProfitLevel: integer("default_take_profit_level").notNull().default(2), // Use level 2 (10%) by default
 
+    // Enhanced Take Profit Strategy Configuration
+    takeProfitStrategy: text("take_profit_strategy").notNull().default("balanced"), // "conservative", "balanced", "aggressive", "custom"
+    takeProfitLevelsConfig: text("take_profit_levels_config"), // JSON string for multi-level configuration
+
+    // Sell Quantity Configuration for each level (percentage of position to sell)
+    sellQuantityLevel1: real("sell_quantity_level_1").notNull().default(25.0), // 25% of position
+    sellQuantityLevel2: real("sell_quantity_level_2").notNull().default(25.0), // 25% of position
+    sellQuantityLevel3: real("sell_quantity_level_3").notNull().default(25.0), // 25% of position
+    sellQuantityLevel4: real("sell_quantity_level_4").notNull().default(25.0), // 25% of position
+    sellQuantityCustom: real("sell_quantity_custom").default(100.0), // 100% for custom level
+
     // Risk Management
     stopLossPercent: real("stop_loss_percent").notNull().default(5.0),
     riskTolerance: text("risk_tolerance").notNull().default("medium"), // "low", "medium", "high"

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, userPreferences, type NewUserPreferences } from "../../../src/db";
 import { eq } from 'drizzle-orm';
-import { 
-  createSuccessResponse, 
-  createErrorResponse, 
-  apiResponse, 
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  apiResponse,
   HTTP_STATUS,
   createValidationErrorResponse
 } from "../../../src/lib/api-response";
@@ -51,6 +51,13 @@ export async function GET(request: NextRequest) {
         level4: prefs.takeProfitLevel4,
         custom: prefs.takeProfitCustom || undefined,
       },
+      takeProfitSellQuantities: {
+        level1: prefs.sellQuantityLevel1 || 25.0,
+        level2: prefs.sellQuantityLevel2 || 25.0,
+        level3: prefs.sellQuantityLevel3 || 25.0,
+        level4: prefs.sellQuantityLevel4 || 25.0,
+        custom: prefs.sellQuantityCustom || 100.0,
+      },
       takeProfitCustom: prefs.takeProfitCustom,
       defaultTakeProfitLevel: prefs.defaultTakeProfitLevel,
       stopLossPercent: prefs.stopLossPercent,
@@ -59,7 +66,10 @@ export async function GET(request: NextRequest) {
       targetAdvanceHours: prefs.targetAdvanceHours,
       calendarPollIntervalSeconds: prefs.calendarPollIntervalSeconds,
       symbolsPollIntervalSeconds: prefs.symbolsPollIntervalSeconds,
-      // Exit Strategy Settings
+      // Enhanced Take Profit Strategy Settings
+      takeProfitStrategy: prefs.takeProfitStrategy || "balanced",
+      takeProfitLevelsConfig: prefs.takeProfitLevelsConfig ? JSON.parse(prefs.takeProfitLevelsConfig) : undefined,
+      // Legacy Exit Strategy Settings (for backward compatibility)
       selectedExitStrategy: prefs.selectedExitStrategy || "balanced",
       customExitStrategy: prefs.customExitStrategy ? JSON.parse(prefs.customExitStrategy) : undefined,
       autoBuyEnabled: prefs.autoBuyEnabled ?? true,
@@ -106,7 +116,7 @@ export async function POST(request: NextRequest) {
     if (data.maxConcurrentSnipes !== undefined) {
       updateData.maxConcurrentSnipes = data.maxConcurrentSnipes;
     }
-    
+
     // Handle take profit levels - support both structured and direct field access
     if (data.takeProfitLevels) {
       updateData.takeProfitLevel1 = data.takeProfitLevels.level1;
@@ -115,7 +125,16 @@ export async function POST(request: NextRequest) {
       updateData.takeProfitLevel4 = data.takeProfitLevels.level4;
       updateData.takeProfitCustom = data.takeProfitLevels.custom;
     }
-    
+
+    // Handle take profit sell quantities
+    if (data.takeProfitSellQuantities) {
+      updateData.sellQuantityLevel1 = data.takeProfitSellQuantities.level1;
+      updateData.sellQuantityLevel2 = data.takeProfitSellQuantities.level2;
+      updateData.sellQuantityLevel3 = data.takeProfitSellQuantities.level3;
+      updateData.sellQuantityLevel4 = data.takeProfitSellQuantities.level4;
+      updateData.sellQuantityCustom = data.takeProfitSellQuantities.custom;
+    }
+
     // Support direct field access for individual take profit levels with validation
     if (data.takeProfitLevel1 !== undefined) {
       if (data.takeProfitLevel1 < 0) {
@@ -162,7 +181,7 @@ export async function POST(request: NextRequest) {
       }
       updateData.takeProfitCustom = data.takeProfitCustom;
     }
-    
+
     if (data.defaultTakeProfitLevel !== undefined) {
       updateData.defaultTakeProfitLevel = data.defaultTakeProfitLevel;
     }
@@ -184,8 +203,16 @@ export async function POST(request: NextRequest) {
     if (data.symbolsPollIntervalSeconds !== undefined) {
       updateData.symbolsPollIntervalSeconds = data.symbolsPollIntervalSeconds;
     }
-    
-    // Exit Strategy Settings
+
+    // Enhanced Take Profit Strategy Settings
+    if (data.takeProfitStrategy !== undefined) {
+      updateData.takeProfitStrategy = data.takeProfitStrategy;
+    }
+    if (data.takeProfitLevelsConfig !== undefined) {
+      updateData.takeProfitLevelsConfig = JSON.stringify(data.takeProfitLevelsConfig);
+    }
+
+    // Legacy Exit Strategy Settings (for backward compatibility)
     if (data.selectedExitStrategy !== undefined) {
       updateData.selectedExitStrategy = data.selectedExitStrategy;
     }

@@ -198,6 +198,29 @@ export function registerCommonAgents(
   }
 }
 
+// Utility function to register agents and validate workflows
+export function registerAgentsAndValidate(
+  agentRegistry: import("./agent-registry").AgentRegistry,
+  workflowEngine: import("./workflow-engine").WorkflowEngine,
+  agentManager: {
+    getMexcApiAgent: () => import("../base-agent").BaseAgent;
+    getPatternDiscoveryAgent: () => import("../base-agent").BaseAgent;
+    getCalendarAgent: () => import("../base-agent").BaseAgent;
+    getSymbolAnalysisAgent: () => import("../base-agent").BaseAgent;
+    getStrategyAgent: () => import("../base-agent").BaseAgent;
+    getSimulationAgent: () => import("../base-agent").BaseAgent;
+    getRiskManagerAgent: () => import("../base-agent").BaseAgent;
+    getReconciliationAgent: () => import("../base-agent").BaseAgent;
+    getErrorRecoveryAgent: () => import("../base-agent").BaseAgent;
+  }
+): void {
+  // Register all agents first
+  registerCommonAgents(agentRegistry, agentManager);
+  
+  // Then validate all registered workflows
+  workflowEngine.validateRegisteredWorkflows();
+}
+
 // Utility function for graceful system shutdown
 export async function shutdownCoordinationSystem(components: {
   agentRegistry: import("./agent-registry").AgentRegistry;
