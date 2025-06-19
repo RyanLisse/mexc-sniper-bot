@@ -37,22 +37,25 @@ vi.mock('../../src/db', () => {
     { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
   ];
 
-  return {
-    db: {
-      select: vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue(mockData),
-            orderBy: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue(mockData),
-            }),
-          }),
-          orderBy: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue(mockData),
-          }),
+  // Create a completely static mock that doesn't call itself
+  const mockQueryBuilder = {
+    from: vi.fn().mockReturnValue({
+      where: vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue(mockData),
+        orderBy: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue(mockData),
         }),
       }),
+      orderBy: vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue(mockData),
+      }),
+      limit: vi.fn().mockResolvedValue(mockData),
+    }),
+  };
+
+  return {
+    db: {
+      select: vi.fn().mockReturnValue(mockQueryBuilder),
     },
   };
 });
@@ -357,7 +360,39 @@ describe('CacheWarmingService', () => {
   });
 
   describe('Metrics and Monitoring', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+      // Clear all mocks to prevent recursion
+      vi.clearAllMocks();
+
+      // Mock the database queries specifically for this test to avoid recursion
+      const { db } = await import('../../src/db');
+      vi.mocked(db.select).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([
+              { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
+              { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
+            ]),
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([
+                { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
+                { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
+              ]),
+            }),
+          }),
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([
+              { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
+              { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
+            ]),
+          }),
+          limit: vi.fn().mockResolvedValue([
+            { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
+            { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
+          ]),
+        }),
+      } as any);
+
       warmingService = new CacheWarmingService({
         enableAutoWarming: false,
       });
