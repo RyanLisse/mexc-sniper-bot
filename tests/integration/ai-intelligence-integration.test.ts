@@ -8,7 +8,7 @@
  * - End-to-end AI-enhanced confidence scoring
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { aiIntelligenceService } from "../../src/services/ai-intelligence-service";
 import { patternDetectionEngine } from "../../src/services/pattern-detection-engine";
 import { patternEmbeddingService } from "../../src/services/pattern-embedding-service";
@@ -60,7 +60,8 @@ vi.mock("../../src/services/ai-intelligence-service", async () => {
   return {
     ...actual,
     aiIntelligenceService: {
-      enhancePatternWithAI: vi.fn().mockResolvedValue({
+      enhancePatternWithAI: vi.fn().mockImplementation((pattern) => Promise.resolve({
+        ...pattern,
         cohereEmbedding: [0.1, 0.2, 0.3, 0.4, 0.5],
         perplexityInsights: {
           summary: "Test research summary",
@@ -69,10 +70,12 @@ vi.mock("../../src/services/ai-intelligence-service", async () => {
           riskAssessment: { level: "low" }
         },
         aiContext: { marketSentiment: "bullish" }
-      }),
+      })),
       calculateAIEnhancedConfidence: vi.fn().mockResolvedValue({
         enhancedConfidence: 95,
-        recommendations: ["Test recommendation"]
+        recommendations: ["Test recommendation"],
+        components: { aiResearch: 15 },
+        aiInsights: ["Strong bullish momentum"]
       }),
       generateCohereEmbedding: vi.fn().mockResolvedValue([0.1, 0.2, 0.3]),
       generatePatternEmbedding: vi.fn().mockResolvedValue([0.1, 0.2, 0.3]),
