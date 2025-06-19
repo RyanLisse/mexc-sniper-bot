@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { HTTP_STATUS, createErrorResponse } from "./api-response";
 import { shouldBypassRateLimit } from "./bypass-rate-limit";
 import { getSession, requireAuth } from "./kinde-auth";
@@ -8,7 +9,6 @@ import {
   isIPSuspicious,
   logSecurityEvent,
 } from "./rate-limiter";
-import type { NextRequest } from "next/server";
 
 /**
  * Alias for requireApiAuth to maintain compatibility

@@ -16,6 +16,7 @@
 import crypto from "node:crypto";
 import { EventEmitter } from "node:events";
 import type { IncomingMessage } from "node:http";
+import { WebSocket, WebSocketServer } from "ws";
 import type {
   AgentStatusMessage,
   ConnectionMetrics,
@@ -29,7 +30,6 @@ import type {
   WebSocketMessage,
   WebSocketServerConfig,
 } from "../lib/websocket-types";
-import { WebSocket, WebSocketServer } from "ws";
 
 // ======================
 // Connection Management

@@ -1,9 +1,9 @@
 /**
  * Memory Leak Optimizer
- * 
+ *
  * Phase 4: Memory Management (2h)
  * TARGET: Eliminate memory leaks and optimize memory usage
- * 
+ *
  * Features:
  * - React hook memory leak prevention
  * - WebSocket connection cleanup
@@ -94,7 +94,8 @@ export class MemoryLeakDetector {
     };
 
     this.memoryHistory.push(stats);
-    if (this.memoryHistory.length > 60) { // Keep last 60 readings (30 minutes)
+    if (this.memoryHistory.length > 60) {
+      // Keep last 60 readings (30 minutes)
       this.memoryHistory.shift();
     }
 
@@ -118,8 +119,9 @@ export class MemoryLeakDetector {
     if (this.memoryHistory.length >= 10) {
       const recent = this.memoryHistory.slice(-10);
       const trend = this.calculateMemoryTrend(recent);
-      
-      if (trend > 0.1) { // Memory growing by more than 10% over recent samples
+
+      if (trend > 0.1) {
+        // Memory growing by more than 10% over recent samples
         console.warn("📈 Memory leak suspected - increasing usage trend detected");
         this.analyzeLeakSources();
       }
@@ -128,10 +130,10 @@ export class MemoryLeakDetector {
 
   private calculateMemoryTrend(samples: MemoryStats[]): number {
     if (samples.length < 2) return 0;
-    
+
     const first = samples[0].usedJSHeapSize;
     const last = samples[samples.length - 1].usedJSHeapSize;
-    
+
     return (last - first) / first;
   }
 
@@ -175,8 +177,7 @@ export class MemoryLeakDetector {
   }
 
   private getTotalEventListeners(): number {
-    return Array.from(this.eventListeners.values())
-      .reduce((sum, set) => sum + set.size, 0);
+    return Array.from(this.eventListeners.values()).reduce((sum, set) => sum + set.size, 0);
   }
 
   // Component tracking
@@ -209,7 +210,7 @@ export class MemoryLeakDetector {
   cleanupComponent(component: string): void {
     const listeners = this.eventListeners.get(component);
     if (listeners) {
-      listeners.forEach(cleanup => cleanup());
+      listeners.forEach((cleanup) => cleanup());
       this.eventListeners.delete(component);
     }
     this.components.delete(component);
@@ -270,9 +271,9 @@ export class MemoryLeakDetector {
     console.log("🚨 Performing emergency memory cleanup");
 
     // Clear all tracked resources
-    this.timers.forEach(timer => clearTimeout(timer));
-    this.intervals.forEach(interval => clearInterval(interval));
-    this.webSockets.forEach(ws => {
+    this.timers.forEach((timer) => clearTimeout(timer));
+    this.intervals.forEach((interval) => clearInterval(interval));
+    this.webSockets.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.close();
       }
@@ -317,7 +318,7 @@ export function createMemoryOptimizedTimeout(
   return {
     start: () => {
       if (delay === null || timeoutId) return;
-      
+
       timeoutId = setTimeout(() => {
         callback();
         if (timeoutId) {
@@ -325,7 +326,7 @@ export function createMemoryOptimizedTimeout(
           timeoutId = null;
         }
       }, delay);
-      
+
       detector.registerTimer(timeoutId);
     },
     clear: () => {
@@ -335,7 +336,7 @@ export function createMemoryOptimizedTimeout(
         timeoutId = null;
       }
     },
-    isActive: () => timeoutId !== null
+    isActive: () => timeoutId !== null,
   };
 }
 
@@ -358,7 +359,7 @@ export function createMemoryOptimizedInterval(
   return {
     start: () => {
       if (delay === null || intervalId) return;
-      
+
       intervalId = setInterval(callback, delay);
       detector.registerInterval(intervalId);
     },
@@ -369,7 +370,7 @@ export function createMemoryOptimizedInterval(
         intervalId = null;
       }
     },
-    isActive: () => intervalId !== null
+    isActive: () => intervalId !== null,
   };
 }
 
@@ -429,20 +430,18 @@ export function createMemoryOptimizedWebSocket(
         options?.onClose?.(event);
 
         // Auto-reconnect logic
-        if (options?.shouldReconnect && 
-            reconnectAttempts < (options.maxReconnectAttempts || 5)) {
+        if (options?.shouldReconnect && reconnectAttempts < (options.maxReconnectAttempts || 5)) {
           reconnectAttempts++;
-          
+
           reconnectTimeout = setTimeout(() => {
             connect();
           }, options.reconnectDelay || 3000);
-          
+
           detector.registerTimer(reconnectTimeout);
         }
       };
 
       readyState = ws.readyState;
-
     } catch (error) {
       console.error("WebSocket connection failed:", error);
       readyState = WebSocket.CLOSED;
@@ -463,7 +462,7 @@ export function createMemoryOptimizedWebSocket(
       detector.unregisterWebSocket(webSocket);
       webSocket = null;
     }
-    
+
     if (reconnectTimeout) {
       clearTimeout(reconnectTimeout);
       detector.unregisterTimer(reconnectTimeout);
@@ -532,7 +531,7 @@ export function createMemoryOptimizedState<T>(
 } {
   const detector = MemoryLeakDetector.getInstance();
   let state = initialValue;
-  
+
   if (componentName) {
     detector.registerComponent(componentName);
   }
@@ -540,13 +539,13 @@ export function createMemoryOptimizedState<T>(
   return {
     get: () => state,
     set: (value: T | ((prev: T) => T)) => {
-      state = typeof value === 'function' ? (value as (prev: T) => T)(state) : value;
+      state = typeof value === "function" ? (value as (prev: T) => T)(state) : value;
     },
     cleanup: () => {
       if (componentName) {
         detector.unregisterComponent(componentName);
       }
-    }
+    },
   };
 }
 
@@ -597,7 +596,8 @@ export const memoryManager = {
     const images = document.querySelectorAll("img");
     images.forEach((img) => {
       if (!this.isElementVisible(img)) {
-        img.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InRyYW5zcGFyZW50Ii8+PC9zdmc+";
+        img.src =
+          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB2aWV3Qm94PSIwIDAgMSAxIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InRyYW5zcGFyZW50Ii8+PC9zdmc+";
       }
     });
 
@@ -610,10 +610,7 @@ export const memoryManager = {
     const windowWidth = window.innerWidth || document.documentElement.clientWidth;
 
     return (
-      rect.bottom >= 0 &&
-      rect.right >= 0 &&
-      rect.top <= windowHeight &&
-      rect.left <= windowWidth
+      rect.bottom >= 0 && rect.right >= 0 && rect.top <= windowHeight && rect.left <= windowWidth
     );
   },
 
@@ -634,7 +631,7 @@ export const memoryManager = {
   initDevelopmentMonitoring() {
     if (process.env.NODE_ENV === "development") {
       this.startMonitoring();
-      
+
       // Log memory usage every minute in development
       setInterval(() => {
         this.logMemoryUsage();

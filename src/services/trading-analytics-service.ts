@@ -1,9 +1,9 @@
 /**
  * Trading Analytics and Logging Service
- * 
+ *
  * Provides comprehensive structured logging and performance analytics
  * for all trading operations and MEXC API interactions.
- * 
+ *
  * Features:
  * - Structured logging with multiple output formats (JSON, human-readable)
  * - Performance metrics collection and analysis
@@ -24,7 +24,7 @@ export const TradingEventSchema = z.object({
   timestamp: z.string(),
   eventType: z.enum([
     "TRADE_PLACED",
-    "TRADE_FILLED", 
+    "TRADE_FILLED",
     "TRADE_CANCELLED",
     "TRADE_FAILED",
     "API_CALL",
@@ -32,7 +32,7 @@ export const TradingEventSchema = z.object({
     "PATTERN_DETECTED",
     "RISK_ASSESSMENT",
     "CREDENTIAL_ROTATION",
-    "SYSTEM_ERROR"
+    "SYSTEM_ERROR",
   ]),
   userId: z.string().optional(),
   metadata: z.record(z.unknown()),
@@ -84,12 +84,14 @@ export const TradingAnalyticsReportSchema = z.object({
     byTimeOfDay: z.record(z.number()),
     byErrorType: z.record(z.number()),
   }),
-  anomalies: z.array(z.object({
-    type: z.string(),
-    description: z.string(),
-    severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
-    detectedAt: z.string(),
-  })),
+  anomalies: z.array(
+    z.object({
+      type: z.string(),
+      description: z.string(),
+      severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+      detectedAt: z.string(),
+    })
+  ),
   recommendations: z.array(z.string()),
 });
 
@@ -186,7 +188,6 @@ export class TradingAnalyticsService {
 
       // Update performance metrics
       this.updatePerformanceMetrics(validatedEvent);
-
     } catch (error) {
       console.error("[TradingAnalytics] Failed to log trading event:", error);
     }
@@ -270,39 +271,41 @@ export class TradingAnalyticsService {
     const end = endTime || new Date();
 
     // Filter events by time range and filters
-    let filteredEvents = this.events.filter(event => {
+    let filteredEvents = this.events.filter((event) => {
       const eventTime = new Date(event.timestamp);
       return eventTime >= start && eventTime <= end;
     });
 
     if (filters?.userId) {
-      filteredEvents = filteredEvents.filter(event => event.userId === filters.userId);
+      filteredEvents = filteredEvents.filter((event) => event.userId === filters.userId);
     }
 
     if (filters?.eventType) {
-      filteredEvents = filteredEvents.filter(event => event.eventType === filters.eventType);
+      filteredEvents = filteredEvents.filter((event) => event.eventType === filters.eventType);
     }
 
     if (filters?.onlyErrors) {
-      filteredEvents = filteredEvents.filter(event => !event.success);
+      filteredEvents = filteredEvents.filter((event) => !event.success);
     }
 
     // Calculate summary metrics
     const totalEvents = filteredEvents.length;
-    const successfulEvents = filteredEvents.filter(event => event.success).length;
+    const successfulEvents = filteredEvents.filter((event) => event.success).length;
     const failedEvents = totalEvents - successfulEvents;
-    
-    const tradeEvents = filteredEvents.filter(event => 
+
+    const tradeEvents = filteredEvents.filter((event) =>
       ["TRADE_PLACED", "TRADE_FILLED", "TRADE_CANCELLED", "TRADE_FAILED"].includes(event.eventType)
     );
-    
+
     const totalTrades = tradeEvents.length;
-    const successfulTrades = tradeEvents.filter(event => event.success).length;
+    const successfulTrades = tradeEvents.filter((event) => event.success).length;
     const failedTrades = totalTrades - successfulTrades;
 
-    const averageResponseTime = filteredEvents.length > 0
-      ? filteredEvents.reduce((sum, event) => sum + event.performance.responseTimeMs, 0) / filteredEvents.length
-      : 0;
+    const averageResponseTime =
+      filteredEvents.length > 0
+        ? filteredEvents.reduce((sum, event) => sum + event.performance.responseTimeMs, 0) /
+          filteredEvents.length
+        : 0;
 
     const errorRate = totalEvents > 0 ? failedEvents / totalEvents : 0;
 
@@ -318,7 +321,7 @@ export class TradingAnalyticsService {
     const byTimeOfDay: Record<string, number> = {};
     const byErrorType: Record<string, number> = {};
 
-    filteredEvents.forEach(event => {
+    filteredEvents.forEach((event) => {
       // By event type
       byEventType[event.eventType] = (byEventType[event.eventType] || 0) + 1;
 
@@ -391,7 +394,7 @@ export class TradingAnalyticsService {
     }
 
     // Calculate new metrics
-    const relevantEvents = this.events.filter(event => {
+    const relevantEvents = this.events.filter((event) => {
       const eventTime = new Date(event.timestamp).getTime();
       return eventTime > since && (operation ? event.metadata.operation === operation : true);
     });
@@ -405,19 +408,22 @@ export class TradingAnalyticsService {
 
     // Calculate metrics for each minute in the window
     for (let i = windowMinutes - 1; i >= 0; i--) {
-      const windowStart = since + (i * 60000);
+      const windowStart = since + i * 60000;
       const windowEnd = windowStart + 60000;
-      
-      const windowEvents = relevantEvents.filter(event => {
+
+      const windowEvents = relevantEvents.filter((event) => {
         const eventTime = new Date(event.timestamp).getTime();
         return eventTime >= windowStart && eventTime < windowEnd;
       });
 
       if (windowEvents.length > 0) {
-        const successfulEvents = windowEvents.filter(event => event.success);
+        const successfulEvents = windowEvents.filter((event) => event.success);
         const errorRate = (windowEvents.length - successfulEvents.length) / windowEvents.length;
-        const avgResponseTime = windowEvents.reduce((sum, e) => sum + e.performance.responseTimeMs, 0) / windowEvents.length;
-        const avgRetries = windowEvents.reduce((sum, e) => sum + e.performance.retryCount, 0) / windowEvents.length;
+        const avgResponseTime =
+          windowEvents.reduce((sum, e) => sum + e.performance.responseTimeMs, 0) /
+          windowEvents.length;
+        const avgRetries =
+          windowEvents.reduce((sum, e) => sum + e.performance.retryCount, 0) / windowEvents.length;
 
         metrics.push({
           operation: operation || "all",
@@ -505,13 +511,11 @@ export class TradingAnalyticsService {
     const oneDayAgo = now - 24 * 60 * 60 * 1000;
 
     const eventsLast24h = this.events.filter(
-      event => new Date(event.timestamp).getTime() > oneDayAgo
+      (event) => new Date(event.timestamp).getTime() > oneDayAgo
     ).length;
 
     const totalEvents = this.events.length;
-    const averageEventSize = totalEvents > 0 
-      ? JSON.stringify(this.events).length / totalEvents 
-      : 0;
+    const averageEventSize = totalEvents > 0 ? JSON.stringify(this.events).length / totalEvents : 0;
 
     return {
       totalEvents,
@@ -534,7 +538,7 @@ export class TradingAnalyticsService {
   private logToConsole(event: TradingEvent): void {
     const level = event.success ? "info" : "error";
     const prefix = `[TradingAnalytics] ${event.eventType}`;
-    
+
     if (process.env.NODE_ENV === "development") {
       // Human-readable format for development
       console[level](`${prefix} - ${event.success ? "SUCCESS" : "FAILURE"}`, {
@@ -546,22 +550,24 @@ export class TradingAnalyticsService {
       });
     } else {
       // Structured JSON for production
-      console[level](JSON.stringify({
-        timestamp: event.timestamp,
-        level: level.toUpperCase(),
-        service: "trading-analytics",
-        event,
-      }));
+      console[level](
+        JSON.stringify({
+          timestamp: event.timestamp,
+          level: level.toUpperCase(),
+          service: "trading-analytics",
+          event,
+        })
+      );
     }
   }
 
   private updatePerformanceMetrics(event: TradingEvent): void {
-    const operation = event.metadata.operation as string || event.eventType;
-    
+    const operation = (event.metadata.operation as string) || event.eventType;
+
     // Update real-time metrics cache
     const key = `${operation}-realtime`;
     const currentMetrics = this.metricsCache.get(key) || [];
-    
+
     // Add current event to metrics (simplified)
     const now = new Date().toISOString();
     currentMetrics.push({
@@ -594,7 +600,9 @@ export class TradingAnalyticsService {
     // Check for alert conditions
     const alerts: string[] = [];
 
-    if (event.performance.responseTimeMs > ANALYTICS_CONFIG.performance.alertThresholds.responseTime) {
+    if (
+      event.performance.responseTimeMs > ANALYTICS_CONFIG.performance.alertThresholds.responseTime
+    ) {
       alerts.push(`High response time: ${event.performance.responseTimeMs}ms`);
     }
 
@@ -608,7 +616,7 @@ export class TradingAnalyticsService {
 
     // Trigger custom alert callbacks
     if (alerts.length > 0) {
-      this.alertCallbacks.forEach(callback => {
+      this.alertCallbacks.forEach((callback) => {
         try {
           callback(event);
         } catch (error) {
@@ -634,7 +642,7 @@ export class TradingAnalyticsService {
     const eventCount = this.events.length;
     if (eventCount > 0) {
       console.log(`[TradingAnalytics] Flushing ${eventCount} events to persistent storage`);
-      
+
       // Simulate persistent storage by keeping only recent events
       const keepRecent = ANALYTICS_CONFIG.storage.maxEvents * 0.8;
       if (this.events.length > keepRecent) {
@@ -646,7 +654,9 @@ export class TradingAnalyticsService {
   private setupDefaultAlerts(): void {
     this.addAlertCallback((event: TradingEvent) => {
       if (!event.success && event.eventType.includes("TRADE")) {
-        console.warn(`[TradingAnalytics] ALERT: Trading operation failed for user ${event.userId}: ${event.error}`);
+        console.warn(
+          `[TradingAnalytics] ALERT: Trading operation failed for user ${event.userId}: ${event.error}`
+        );
       }
     });
   }
@@ -661,23 +671,24 @@ export class TradingAnalyticsService {
     const now = new Date().toISOString();
 
     // High error rate anomaly
-    const errorRate = events.filter(e => !e.success).length / Math.max(1, events.length);
+    const errorRate = events.filter((e) => !e.success).length / Math.max(1, events.length);
     if (errorRate > 0.2) {
       anomalies.push({
         type: "HIGH_ERROR_RATE",
         description: `Error rate of ${(errorRate * 100).toFixed(1)}% detected`,
-        severity: errorRate > 0.5 ? "CRITICAL" : "HIGH" as const,
+        severity: errorRate > 0.5 ? "CRITICAL" : ("HIGH" as const),
         detectedAt: now,
       });
     }
 
     // Response time anomaly
-    const avgResponseTime = events.reduce((sum, e) => sum + e.performance.responseTimeMs, 0) / Math.max(1, events.length);
+    const avgResponseTime =
+      events.reduce((sum, e) => sum + e.performance.responseTimeMs, 0) / Math.max(1, events.length);
     if (avgResponseTime > 10000) {
       anomalies.push({
         type: "HIGH_RESPONSE_TIME",
         description: `Average response time of ${avgResponseTime.toFixed(0)}ms detected`,
-        severity: avgResponseTime > 30000 ? "CRITICAL" : "HIGH" as const,
+        severity: avgResponseTime > 30000 ? "CRITICAL" : ("HIGH" as const),
         detectedAt: now,
       });
     }
@@ -686,26 +697,34 @@ export class TradingAnalyticsService {
   }
 
   private generateRecommendations(
-    events: TradingEvent[], 
+    events: TradingEvent[],
     metrics: { errorRate: number; averageResponseTime: number; totalTrades: number }
   ): string[] {
     const recommendations = [];
 
     if (metrics.errorRate > 0.1) {
-      recommendations.push("High error rate detected - review API credential validity and connection stability");
+      recommendations.push(
+        "High error rate detected - review API credential validity and connection stability"
+      );
     }
 
     if (metrics.averageResponseTime > 5000) {
-      recommendations.push("High response times detected - consider implementing request caching and connection pooling");
+      recommendations.push(
+        "High response times detected - consider implementing request caching and connection pooling"
+      );
     }
 
     if (metrics.totalTrades === 0 && events.length > 0) {
-      recommendations.push("No successful trades detected - review trading strategy and market conditions");
+      recommendations.push(
+        "No successful trades detected - review trading strategy and market conditions"
+      );
     }
 
-    const retryEvents = events.filter(e => e.performance.retryCount > 0);
+    const retryEvents = events.filter((e) => e.performance.retryCount > 0);
     if (retryEvents.length > events.length * 0.3) {
-      recommendations.push("High retry rate detected - review rate limiting configuration and API quotas");
+      recommendations.push(
+        "High retry rate detected - review rate limiting configuration and API quotas"
+      );
     }
 
     return recommendations;
@@ -713,7 +732,7 @@ export class TradingAnalyticsService {
 
   private categorizeError(error: string): string {
     const errorLower = error.toLowerCase();
-    
+
     if (errorLower.includes("timeout") || errorLower.includes("connection")) {
       return "CONNECTION_ERROR";
     }
@@ -744,7 +763,7 @@ export class TradingAnalyticsService {
       ["Error Rate (%)", (report.summary.errorRate * 100).toFixed(2)],
     ];
 
-    return [headers, ...rows].map(row => row.join(",")).join("\n");
+    return [headers, ...rows].map((row) => row.join(",")).join("\n");
   }
 
   private generateHumanReadableReport(report: TradingAnalyticsReport): string {
@@ -768,18 +787,22 @@ Error Rate: ${(report.summary.errorRate * 100).toFixed(2)}%
 BREAKDOWNS
 ----------
 By Event Type:
-${Object.entries(report.breakdowns.byEventType).map(([type, count]) => `  ${type}: ${count}`).join("\n")}
+${Object.entries(report.breakdowns.byEventType)
+  .map(([type, count]) => `  ${type}: ${count}`)
+  .join("\n")}
 
 By Error Type:
-${Object.entries(report.breakdowns.byErrorType).map(([type, count]) => `  ${type}: ${count}`).join("\n")}
+${Object.entries(report.breakdowns.byErrorType)
+  .map(([type, count]) => `  ${type}: ${count}`)
+  .join("\n")}
 
 ANOMALIES
 ---------
-${report.anomalies.length > 0 ? report.anomalies.map(a => `[${a.severity}] ${a.type}: ${a.description}`).join("\n") : "No anomalies detected"}
+${report.anomalies.length > 0 ? report.anomalies.map((a) => `[${a.severity}] ${a.type}: ${a.description}`).join("\n") : "No anomalies detected"}
 
 RECOMMENDATIONS
 ---------------
-${report.recommendations.length > 0 ? report.recommendations.map(r => `• ${r}`).join("\n") : "No recommendations at this time"}
+${report.recommendations.length > 0 ? report.recommendations.map((r) => `• ${r}`).join("\n") : "No recommendations at this time"}
     `.trim();
   }
 

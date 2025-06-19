@@ -6,8 +6,8 @@
 
 "use client";
 
-import { Skeleton } from "./ui/optimized-exports";
 import { Suspense, lazy } from "react";
+import { Skeleton } from "./ui/optimized-exports";
 
 // Loading fallback components
 const ComponentSkeleton = ({ className = "" }: { className?: string }) => (

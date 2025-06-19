@@ -11,10 +11,10 @@ const nextConfig: NextConfig = {
     "better-sqlite3",
     "expo-secure-store",
     "expo-modules-core",
-    "react-native", 
+    "react-native",
     "@react-native-async-storage/async-storage"
   ],
-  
+
   // TypeScript configuration
   typescript: {
     // Allow builds for deployment - fix types in development
@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: [
       '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu', 
+      '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-select',
       '@radix-ui/react-tabs',
       '@radix-ui/react-tooltip',
@@ -53,17 +53,15 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
     gzipSize: true,
   },
-  
+
   webpack: (config, { isServer, dev }) => {
     // Add module resolution for problematic dependencies
     config.module.rules.push({
       test: /[\\/]node_modules[\\/]expo-modules-core[\\/]/,
       use: 'null-loader',
     });
-    
+
     if (isServer) {
-      // For server-side, mark better-sqlite3 as external
-      config.externals.push("better-sqlite3");
       // Also exclude expo modules on server side
       config.externals.push("expo-modules-core");
       config.externals.push("expo-secure-store");
@@ -89,12 +87,10 @@ const nextConfig: NextConfig = {
 
       // Keep minimal fallbacks for client-side exclusions
       const webpack = require('webpack');
-      
+
       // Ensure these packages never make it to the client bundle
       config.resolve.alias = {
         ...config.resolve.alias,
-        'better-sqlite3': false,
-        'drizzle-orm/better-sqlite3': false,
         // Explicitly exclude React Native and Expo dependencies
         'expo-secure-store': false,
         'expo-modules-core': false,
@@ -256,7 +252,7 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  
+
   // Note: serverComponentsExternalPackages has been moved to serverExternalPackages
 };
 

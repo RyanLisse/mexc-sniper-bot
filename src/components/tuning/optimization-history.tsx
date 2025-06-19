@@ -7,11 +7,21 @@
  * showing progress, results, and trends over time.
  */
 
-import { Clock, TrendingUp, TrendingDown, Target, Play, Pause, CheckCircle2, XCircle, Settings } from "lucide-react";
-import React, { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  CheckCircle2,
+  Clock,
+  Pause,
+  Play,
+  Settings,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  XCircle,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
@@ -19,7 +29,7 @@ interface OptimizationRun {
   id: string;
   name: string;
   algorithm: string;
-  status: 'running' | 'completed' | 'failed' | 'paused';
+  status: "running" | "completed" | "failed" | "paused";
   startTime: string;
   endTime?: string;
   progress: number;
@@ -43,35 +53,35 @@ interface OptimizationRun {
 interface OptimizationHistoryProps {
   runs: OptimizationRun[];
   onRunSelect?: (runId: string) => void;
-  onRunAction?: (runId: string, action: 'pause' | 'resume' | 'stop' | 'restart') => void;
+  onRunAction?: (runId: string, action: "pause" | "resume" | "stop" | "restart") => void;
   selectedRunId?: string;
 }
 
-export function OptimizationHistory({ 
-  runs, 
-  onRunSelect, 
-  onRunAction, 
-  selectedRunId 
+export function OptimizationHistory({
+  runs,
+  onRunSelect,
+  onRunAction,
+  selectedRunId,
 }: OptimizationHistoryProps) {
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('startTime');
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("startTime");
 
   const filteredAndSortedRuns = useMemo(() => {
     let filtered = runs;
-    
-    if (filterStatus !== 'all') {
-      filtered = runs.filter(run => run.status === filterStatus);
+
+    if (filterStatus !== "all") {
+      filtered = runs.filter((run) => run.status === filterStatus);
     }
-    
+
     return filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'startTime':
+        case "startTime":
           return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
-        case 'bestScore':
+        case "bestScore":
           return b.bestScore - a.bestScore;
-        case 'improvement':
+        case "improvement":
           return b.improvementPercent - a.improvementPercent;
-        case 'name':
+        case "name":
           return a.name.localeCompare(b.name);
         default:
           return 0;
@@ -79,23 +89,23 @@ export function OptimizationHistory({
     });
   }, [runs, filterStatus, sortBy]);
 
-  const selectedRun = useMemo(() => 
-    runs.find(run => run.id === selectedRunId), 
+  const selectedRun = useMemo(
+    () => runs.find((run) => run.id === selectedRunId),
     [runs, selectedRunId]
   );
 
-  const runningRuns = runs.filter(run => run.status === 'running');
-  const completedRuns = runs.filter(run => run.status === 'completed');
+  const runningRuns = runs.filter((run) => run.status === "running");
+  const completedRuns = runs.filter((run) => run.status === "completed");
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'running':
+      case "running":
         return <Play className="h-4 w-4 text-blue-500" />;
-      case 'completed':
+      case "completed":
         return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'failed':
+      case "failed":
         return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'paused':
+      case "paused":
         return <Pause className="h-4 w-4 text-yellow-500" />;
       default:
         return <Settings className="h-4 w-4 text-gray-500" />;
@@ -104,16 +114,16 @@ export function OptimizationHistory({
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'running':
-        return 'default';
-      case 'completed':
-        return 'default';
-      case 'failed':
-        return 'destructive';
-      case 'paused':
-        return 'secondary';
+      case "running":
+        return "default";
+      case "completed":
+        return "default";
+      case "failed":
+        return "destructive";
+      case "paused":
+        return "secondary";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
@@ -123,7 +133,7 @@ export function OptimizationHistory({
     const diffMs = endTime.getTime() - startTime.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (diffHours > 0) {
       return `${diffHours}h ${diffMinutes}m`;
     }
@@ -140,9 +150,7 @@ export function OptimizationHistory({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{runs.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {runningRuns.length} active
-            </p>
+            <p className="text-xs text-muted-foreground">{runningRuns.length} active</p>
           </CardContent>
         </Card>
 
@@ -164,29 +172,32 @@ export function OptimizationHistory({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {completedRuns.length > 0 
-                ? Math.max(...completedRuns.map(r => r.bestScore)).toFixed(2)
-                : 'N/A'}
+              {completedRuns.length > 0
+                ? Math.max(...completedRuns.map((r) => r.bestScore)).toFixed(2)
+                : "N/A"}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Highest achieved
-            </p>
+            <p className="text-xs text-muted-foreground">Highest achieved</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Avg Improvement</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Avg Improvement
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              +{completedRuns.length > 0 
-                ? (completedRuns.reduce((sum, r) => sum + r.improvementPercent, 0) / completedRuns.length).toFixed(1)
-                : 0}%
+              +
+              {completedRuns.length > 0
+                ? (
+                    completedRuns.reduce((sum, r) => sum + r.improvementPercent, 0) /
+                    completedRuns.length
+                  ).toFixed(1)
+                : 0}
+              %
             </div>
-            <p className="text-xs text-muted-foreground">
-              Performance gain
-            </p>
+            <p className="text-xs text-muted-foreground">Performance gain</p>
           </CardContent>
         </Card>
       </div>
@@ -236,7 +247,7 @@ export function OptimizationHistory({
                 <div
                   key={run.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedRunId === run.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                    selectedRunId === run.id ? "border-primary bg-primary/5" : "hover:bg-muted/50"
                   }`}
                   onClick={() => onRunSelect?.(run.id)}
                 >
@@ -245,9 +256,7 @@ export function OptimizationHistory({
                       {getStatusIcon(run.status)}
                       <h4 className="font-medium">{run.name}</h4>
                     </div>
-                    <Badge variant={getStatusBadgeVariant(run.status)}>
-                      {run.status}
-                    </Badge>
+                    <Badge variant={getStatusBadgeVariant(run.status)}>{run.status}</Badge>
                   </div>
 
                   <div className="space-y-2">
@@ -255,7 +264,7 @@ export function OptimizationHistory({
                       <span className="text-muted-foreground">Algorithm:</span>
                       <span className="font-medium">{run.algorithm}</span>
                     </div>
-                    
+
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Best Score:</span>
                       <span className="font-medium">{run.bestScore.toFixed(3)}</span>
@@ -263,9 +272,11 @@ export function OptimizationHistory({
 
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Improvement:</span>
-                      <span className={`font-medium flex items-center gap-1 ${
-                        run.improvementPercent > 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
+                      <span
+                        className={`font-medium flex items-center gap-1 ${
+                          run.improvementPercent > 0 ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
                         {run.improvementPercent > 0 ? (
                           <TrendingUp className="h-3 w-3" />
                         ) : (
@@ -282,25 +293,27 @@ export function OptimizationHistory({
                   </div>
 
                   {/* Progress Bar for Running Tests */}
-                  {run.status === 'running' && (
+                  {run.status === "running" && (
                     <div className="mt-3 pt-3 border-t">
                       <div className="flex items-center justify-between text-sm mb-1">
                         <span className="text-muted-foreground">Progress:</span>
-                        <span>{run.currentIteration}/{run.maxIterations} iterations</span>
+                        <span>
+                          {run.currentIteration}/{run.maxIterations} iterations
+                        </span>
                       </div>
                       <Progress value={run.progress} className="h-2" />
                     </div>
                   )}
 
                   {/* Action Buttons for Running Tests */}
-                  {run.status === 'running' && onRunAction && (
+                  {run.status === "running" && onRunAction && (
                     <div className="mt-3 pt-3 border-t flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onRunAction(run.id, 'pause');
+                          onRunAction(run.id, "pause");
                         }}
                       >
                         <Pause className="h-3 w-3 mr-1" />
@@ -311,7 +324,7 @@ export function OptimizationHistory({
                         variant="outline"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onRunAction(run.id, 'stop');
+                          onRunAction(run.id, "stop");
                         }}
                       >
                         <XCircle className="h-3 w-3 mr-1" />
@@ -386,12 +399,14 @@ export function OptimizationHistory({
                       <span className="text-sm text-muted-foreground">Best Score:</span>
                       <span className="text-lg font-bold">{selectedRun.bestScore.toFixed(4)}</span>
                     </div>
-                    
+
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Improvement:</span>
-                      <span className={`text-lg font-bold flex items-center gap-1 ${
-                        selectedRun.improvementPercent > 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
+                      <span
+                        className={`text-lg font-bold flex items-center gap-1 ${
+                          selectedRun.improvementPercent > 0 ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
                         {selectedRun.improvementPercent > 0 ? (
                           <TrendingUp className="h-4 w-4" />
                         ) : (
@@ -401,11 +416,13 @@ export function OptimizationHistory({
                       </span>
                     </div>
 
-                    {selectedRun.status === 'running' && (
+                    {selectedRun.status === "running" && (
                       <div>
                         <div className="flex justify-between text-sm mb-1">
                           <span className="text-muted-foreground">Progress:</span>
-                          <span>{selectedRun.currentIteration}/{selectedRun.maxIterations}</span>
+                          <span>
+                            {selectedRun.currentIteration}/{selectedRun.maxIterations}
+                          </span>
                         </div>
                         <Progress value={selectedRun.progress} className="h-2" />
                       </div>
@@ -460,10 +477,9 @@ export function OptimizationHistory({
                     <span className="font-medium text-sm">Convergence Status</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {selectedRun.metadata.convergenceReached 
+                    {selectedRun.metadata.convergenceReached
                       ? "Optimization has converged to an optimal solution."
-                      : "Optimization is still searching for better solutions."
-                    }
+                      : "Optimization is still searching for better solutions."}
                   </p>
                 </div>
               </div>

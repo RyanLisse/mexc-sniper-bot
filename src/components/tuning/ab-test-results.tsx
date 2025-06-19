@@ -7,17 +7,24 @@
  * Helps users understand which parameter configurations perform better.
  */
 
-import { TrendingUp, TrendingDown, Target, BarChart3, CheckCircle2, AlertTriangle } from "lucide-react";
-import React, { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  AlertTriangle,
+  BarChart3,
+  CheckCircle2,
+  Target,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
+import { useMemo } from "react";
 import { Badge } from "../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
 
 interface ABTestResult {
   id: string;
   name: string;
   description: string;
-  status: 'running' | 'completed' | 'paused';
+  status: "running" | "completed" | "paused";
   startDate: string;
   endDate?: string;
   variants: Array<{
@@ -47,13 +54,13 @@ interface ABTestResultsProps {
 }
 
 export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestResultsProps) {
-  const selectedTest = useMemo(() => 
-    tests.find(test => test.id === selectedTestId), 
+  const selectedTest = useMemo(
+    () => tests.find((test) => test.id === selectedTestId),
     [tests, selectedTestId]
   );
 
-  const completedTests = tests.filter(test => test.status === 'completed');
-  const runningTests = tests.filter(test => test.status === 'running');
+  const completedTests = tests.filter((test) => test.status === "completed");
+  const runningTests = tests.filter((test) => test.status === "running");
 
   return (
     <div className="space-y-6">
@@ -73,33 +80,42 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Avg Improvement</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Avg Improvement
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              +{completedTests.length > 0 
-                ? (completedTests.reduce((sum, test) => sum + test.metrics.improvementPercent, 0) / completedTests.length).toFixed(1)
-                : 0}%
+              +
+              {completedTests.length > 0
+                ? (
+                    completedTests.reduce((sum, test) => sum + test.metrics.improvementPercent, 0) /
+                    completedTests.length
+                  ).toFixed(1)
+                : 0}
+              %
             </div>
-            <p className="text-xs text-muted-foreground">
-              Across completed tests
-            </p>
+            <p className="text-xs text-muted-foreground">Across completed tests</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Significance</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Significance
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {completedTests.length > 0 
-                ? (completedTests.reduce((sum, test) => sum + test.metrics.significance, 0) / completedTests.length).toFixed(1)
-                : 0}%
+              {completedTests.length > 0
+                ? (
+                    completedTests.reduce((sum, test) => sum + test.metrics.significance, 0) /
+                    completedTests.length
+                  ).toFixed(1)
+                : 0}
+              %
             </div>
-            <p className="text-xs text-muted-foreground">
-              Statistical confidence
-            </p>
+            <p className="text-xs text-muted-foreground">Statistical confidence</p>
           </CardContent>
         </Card>
       </div>
@@ -119,7 +135,7 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
                 <div
                   key={test.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedTestId === test.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                    selectedTestId === test.id ? "border-primary bg-primary/5" : "hover:bg-muted/50"
                   }`}
                   onClick={() => onTestSelect?.(test.id)}
                 >
@@ -128,7 +144,15 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
                       <h4 className="font-medium">{test.name}</h4>
                       <p className="text-sm text-muted-foreground">{test.description}</p>
                     </div>
-                    <Badge variant={test.status === 'completed' ? 'default' : test.status === 'running' ? 'secondary' : 'outline'}>
+                    <Badge
+                      variant={
+                        test.status === "completed"
+                          ? "default"
+                          : test.status === "running"
+                            ? "secondary"
+                            : "outline"
+                      }
+                    >
                       {test.status}
                     </Badge>
                   </div>
@@ -136,7 +160,9 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground">Participants:</span>
-                      <span className="ml-1 font-medium">{test.metrics.totalParticipants.toLocaleString()}</span>
+                      <span className="ml-1 font-medium">
+                        {test.metrics.totalParticipants.toLocaleString()}
+                      </span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Duration:</span>
@@ -144,14 +170,14 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
                     </div>
                   </div>
 
-                  {test.status === 'completed' && (
+                  {test.status === "completed" && (
                     <div className="mt-3 pt-3 border-t">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">
                           {test.metrics.improvementPercent > 0 ? (
                             <span className="text-green-600 flex items-center gap-1">
-                              <TrendingUp className="h-4 w-4" />
-                              +{test.metrics.improvementPercent.toFixed(1)}%
+                              <TrendingUp className="h-4 w-4" />+
+                              {test.metrics.improvementPercent.toFixed(1)}%
                             </span>
                           ) : (
                             <span className="text-red-600 flex items-center gap-1">
@@ -189,7 +215,9 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Status:</span>
-                      <Badge variant={selectedTest.status === 'completed' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={selectedTest.status === "completed" ? "default" : "secondary"}
+                      >
                         {selectedTest.status}
                       </Badge>
                     </div>
@@ -220,7 +248,9 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{variant.name}</span>
                             {variant.isControl && (
-                              <Badge variant="outline" className="text-xs">Control</Badge>
+                              <Badge variant="outline" className="text-xs">
+                                Control
+                              </Badge>
                             )}
                             {variant.isWinner && (
                               <Badge variant="default" className="text-xs">
@@ -235,11 +265,8 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
                         </div>
 
                         <div className="space-y-2">
-                          <Progress 
-                            value={variant.conversionRate} 
-                            className="h-2" 
-                          />
-                          
+                          <Progress value={variant.conversionRate} className="h-2" />
+
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                               <span className="text-muted-foreground">Participants:</span>
@@ -262,7 +289,9 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
 
                         {/* Parameter Configuration */}
                         <div className="mt-3 pt-3 border-t">
-                          <span className="text-xs text-muted-foreground font-medium">Parameters:</span>
+                          <span className="text-xs text-muted-foreground font-medium">
+                            Parameters:
+                          </span>
                           <div className="mt-1 flex flex-wrap gap-1">
                             {Object.entries(variant.parameters).map(([key, value]) => (
                               <Badge key={key} variant="outline" className="text-xs">
@@ -277,7 +306,7 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
                 </div>
 
                 {/* Statistical Significance */}
-                {selectedTest.status === 'completed' && (
+                {selectedTest.status === "completed" && (
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       {selectedTest.metrics.significance >= 95 ? (
@@ -288,11 +317,11 @@ export function ABTestResults({ tests, onTestSelect, selectedTestId }: ABTestRes
                       <span className="font-medium text-sm">Statistical Significance</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      This test achieved {selectedTest.metrics.significance.toFixed(1)}% statistical confidence.
-                      {selectedTest.metrics.significance >= 95 
+                      This test achieved {selectedTest.metrics.significance.toFixed(1)}% statistical
+                      confidence.
+                      {selectedTest.metrics.significance >= 95
                         ? " The results are statistically significant and reliable."
-                        : " Consider running the test longer for more reliable results."
-                      }
+                        : " Consider running the test longer for more reliable results."}
                     </p>
                   </div>
                 )}

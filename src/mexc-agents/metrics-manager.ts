@@ -39,7 +39,8 @@ export class OrchestrationMetricsManager {
 
     // Update average duration using running average formula
     const previousTotalDuration = this.metrics.averageDuration * (this.metrics.totalExecutions - 1);
-    this.metrics.averageDuration = (previousTotalDuration + duration) / this.metrics.totalExecutions;
+    this.metrics.averageDuration =
+      (previousTotalDuration + duration) / this.metrics.totalExecutions;
 
     // Update last execution timestamp
     this.metrics.lastExecution = new Date().toISOString();

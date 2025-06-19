@@ -1,5 +1,5 @@
-import { db } from "../db";
 import { eq } from "drizzle-orm";
+import { db } from "../db";
 import { tradingStrategies } from "../db/schemas/strategies";
 import { CalendarAgent } from "../mexc-agents/calendar-agent";
 import { RiskManagerAgent } from "../mexc-agents/risk-manager-agent";
@@ -88,10 +88,7 @@ export const createMultiPhaseStrategy = inngest.createFunction(
 
       // Adjust strategy based on market conditions and risk tolerance
       const analysisText = String(marketAnalysis.analysis || "");
-      if (
-        analysisText.includes("high volatility") ||
-        analysisText.includes("volatile")
-      ) {
+      if (analysisText.includes("high volatility") || analysisText.includes("volatile")) {
         // Use volatility-adjusted strategy
         const volatilityStrategy = StrategyPatterns.momentum("high");
         const preview = volatilityStrategy.preview();
@@ -114,9 +111,7 @@ export const createMultiPhaseStrategy = inngest.createFunction(
       return {
         strategy: customStrategy,
         templateUsed: recommendedTemplate,
-        adjustments: analysisText.includes("volatile")
-          ? "volatility-adjusted"
-          : "standard",
+        adjustments: analysisText.includes("volatile") ? "volatility-adjusted" : "standard",
       };
     });
 
@@ -124,7 +119,9 @@ export const createMultiPhaseStrategy = inngest.createFunction(
     const riskAssessment = await step.run("assess-risk", async () => {
       const { riskManagerAgent } = agents;
 
-      const strategyName = String((strategyRecommendation.strategy as any)?.name || "Unknown Strategy");
+      const strategyName = String(
+        (strategyRecommendation.strategy as any)?.name || "Unknown Strategy"
+      );
       const riskAnalysis = await riskManagerAgent.process(
         `Strategy: ${strategyName}
          Symbol: ${symbol}
@@ -166,7 +163,8 @@ export const createMultiPhaseStrategy = inngest.createFunction(
         };
       }
 
-      const positionSizeUsdt = Number(riskAssessment.recommendedPositionSize) || Number(capital) * 0.05;
+      const positionSizeUsdt =
+        Number(riskAssessment.recommendedPositionSize) || Number(capital) * 0.05;
       const positionSize = positionSizeUsdt / Number(entryPrice);
 
       try {
@@ -232,7 +230,9 @@ export const createMultiPhaseStrategy = inngest.createFunction(
       },
       summary: {
         strategyName: String((strategyRecommendation.strategy as any)?.name || "Unknown Strategy"),
-        phases: Array.isArray((strategyRecommendation.strategy as any)?.levels) ? (strategyRecommendation.strategy as any).levels.length : 0,
+        phases: Array.isArray((strategyRecommendation.strategy as any)?.levels)
+          ? (strategyRecommendation.strategy as any).levels.length
+          : 0,
         riskLevel: riskTolerance,
         timeframe,
         confidence: (marketAnalysis as any).confidence || 75,
@@ -969,7 +969,9 @@ export const strategyHealthCheck = inngest.createFunction(
                 updatedAt: new Date(),
               })
               .where(eq(tradingStrategies.id, (result as any).strategyId));
-            actions.push(`Updated insights for underperforming strategy ${(result as any).strategyId}`);
+            actions.push(
+              `Updated insights for underperforming strategy ${(result as any).strategyId}`
+            );
           }
         }
 

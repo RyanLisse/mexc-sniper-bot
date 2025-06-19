@@ -87,10 +87,7 @@ export class AppError extends Error {
   public readonly timestamp: string;
   public readonly cause?: Error;
 
-  constructor(
-    message: string,
-    metadata: Partial<ErrorMetadata> & { code: ErrorCode }
-  ) {
+  constructor(message: string, metadata: Partial<ErrorMetadata> & { code: ErrorCode }) {
     super(message);
     this.name = "AppError";
 
@@ -193,12 +190,7 @@ export class NetworkError extends AppError {
 }
 
 export class MexcApiError extends AppError {
-  constructor(
-    message: string,
-    apiCode?: string,
-    context?: ErrorContext,
-    cause?: Error
-  ) {
+  constructor(message: string, apiCode?: string, context?: ErrorContext, cause?: Error) {
     super(message, {
       code: ErrorCode.MEXC_API_ERROR,
       severity: ErrorSeverity.HIGH,
@@ -224,12 +216,7 @@ export class DatabaseError extends AppError {
 }
 
 export class AgentError extends AppError {
-  constructor(
-    message: string,
-    agentName: string,
-    context?: ErrorContext,
-    cause?: Error
-  ) {
+  constructor(message: string, agentName: string, context?: ErrorContext, cause?: Error) {
     super(message, {
       code: ErrorCode.AGENT_ERROR,
       severity: ErrorSeverity.MEDIUM,
@@ -242,12 +229,7 @@ export class AgentError extends AppError {
 }
 
 export class WorkflowError extends AppError {
-  constructor(
-    message: string,
-    workflowType: string,
-    context?: ErrorContext,
-    cause?: Error
-  ) {
+  constructor(message: string, workflowType: string, context?: ErrorContext, cause?: Error) {
     super(message, {
       code: ErrorCode.WORKFLOW_ERROR,
       severity: ErrorSeverity.HIGH,

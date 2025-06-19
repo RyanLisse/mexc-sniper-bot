@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { useTimeFormatting } from "../../hooks/use-time-formatting";
 import { Activity, ArrowUpRight, Bot, Clock, Eye, Zap } from "lucide-react";
 import React, { useMemo } from "react";
+import { useTimeFormatting } from "../../hooks/use-time-formatting";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 interface ActivityItem {
   id: string;

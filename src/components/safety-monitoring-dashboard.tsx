@@ -1,7 +1,5 @@
 "use client";
 
-import { useSafetyMonitoring } from "../hooks/use-safety-monitoring";
-import { cn } from "../lib/utils";
 import {
   Activity,
   AlertCircle,
@@ -17,6 +15,8 @@ import {
   Zap,
 } from "lucide-react";
 import { useCallback, useState } from "react";
+import { useSafetyMonitoring } from "../hooks/use-safety-monitoring";
+import { cn } from "../lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";

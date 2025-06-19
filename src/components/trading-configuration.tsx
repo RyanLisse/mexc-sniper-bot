@@ -1,14 +1,8 @@
 "use client";
 
-import { Badge } from "./ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
 import type { UserTradingPreferences } from "../hooks/use-user-preferences";
+import { Badge } from "./ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 interface TradingConfigurationProps {
   preferences: UserTradingPreferences | null;

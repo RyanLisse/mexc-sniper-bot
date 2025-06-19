@@ -84,16 +84,16 @@ export class ParameterOptimizationEngine extends EventEmitter {
    */
   async startOptimization(request: OptimizationRequest): Promise<string> {
     const optimizationId = `opt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const optimization = {
       id: optimizationId,
       request,
-      status: 'running',
+      status: "running",
       startTime: new Date(),
       currentIteration: 0,
       maxIterations: request.strategy.maxIterations,
       bestScore: 0,
-      parameters: {}
+      parameters: {},
     };
 
     this.activeOptimizations.set(optimizationId, optimization);
@@ -118,7 +118,7 @@ export class ParameterOptimizationEngine extends EventEmitter {
   async stopOptimization(optimizationId: string): Promise<void> {
     const optimization = this.activeOptimizations.get(optimizationId);
     if (optimization) {
-      optimization.status = 'stopped';
+      optimization.status = "stopped";
       optimization.endTime = new Date();
       this.activeOptimizations.delete(optimizationId);
       logger.info("Optimization stopped", { optimizationId });
@@ -157,27 +157,27 @@ export class ParameterOptimizationEngine extends EventEmitter {
     try {
       // Simple parameter search with random variations
       for (let i = 0; i < optimization.maxIterations; i++) {
-        if (optimization.status !== 'running') break;
+        if (optimization.status !== "running") break;
 
         optimization.currentIteration = i + 1;
-        
+
         // Generate random parameter variations
         const parameters = this.generateRandomParameters();
-        
+
         // Simulate evaluation (in real implementation, this would test the parameters)
         const score = Math.random() * 0.8 + 0.1; // Random score between 0.1-0.9
-        
+
         if (score > optimization.bestScore) {
           optimization.bestScore = score;
           optimization.parameters = parameters;
         }
 
         // Emit progress update
-        this.emit('optimizationProgress', {
+        this.emit("optimizationProgress", {
           optimizationId,
           iteration: i + 1,
           score,
-          bestScore: optimization.bestScore
+          bestScore: optimization.bestScore,
         });
 
         // Check convergence
@@ -186,30 +186,29 @@ export class ParameterOptimizationEngine extends EventEmitter {
         }
 
         // Small delay to simulate processing
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Mark as completed
-      optimization.status = 'completed';
+      optimization.status = "completed";
       optimization.endTime = new Date();
-      
+
       // Add to history
       this.optimizationHistory.push({
         ...optimization,
         result: {
           optimizedParameters: optimization.parameters,
           performanceImprovement: optimization.bestScore,
-          iterations: optimization.currentIteration
-        }
+          iterations: optimization.currentIteration,
+        },
       });
 
-      this.emit('optimizationCompleted', { optimizationId, result: optimization });
+      this.emit("optimizationCompleted", { optimizationId, result: optimization });
       logger.info("Optimization completed", { optimizationId, score: optimization.bestScore });
-
     } catch (error) {
-      optimization.status = 'failed';
+      optimization.status = "failed";
       optimization.error = error;
-      this.emit('optimizationFailed', { optimizationId, error });
+      this.emit("optimizationFailed", { optimizationId, error });
       logger.error("Optimization failed", { optimizationId, error });
     }
   }

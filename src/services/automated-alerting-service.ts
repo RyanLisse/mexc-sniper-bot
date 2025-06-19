@@ -590,7 +590,7 @@ export class AutomatedAlertingService {
   private async calculateHourlyMetrics(startTime: number, endTime: number) {
     const startDate = new Date(startTime);
     const endDate = new Date(endTime);
-    
+
     const alerts = await this.db
       .select()
       .from(alertInstances)

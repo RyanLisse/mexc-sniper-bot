@@ -1,9 +1,9 @@
 /**
  * Algorithm Optimizer
- * 
+ *
  * Phase 5: Data Structure & Algorithm Optimization (2h)
  * TARGET: 70% lookup performance improvement
- * 
+ *
  * Features:
  * - Optimized data structures (Map, Set, Trees)
  * - Efficient search algorithms (Binary search, Hash tables)
@@ -44,7 +44,7 @@ export class OptimizedLRUCache<K, V> {
     // Move to end (most recently used) - O(1) operation with Map
     this.cache.delete(key);
     this.cache.set(key, entry);
-    
+
     return entry.value;
   }
 
@@ -108,11 +108,11 @@ export class OptimizedLRUCache<K, V> {
   getStats(): { size: number; hitRate: number; oldestEntry: number } {
     const entries = Array.from(this.cache.values());
     const now = Date.now();
-    
+
     return {
       size: this.cache.size,
       hitRate: 0, // Would need to track hits/misses
-      oldestEntry: entries.length > 0 ? Math.min(...entries.map(e => e.timestamp)) : now,
+      oldestEntry: entries.length > 0 ? Math.min(...entries.map((e) => e.timestamp)) : now,
     };
   }
 }
@@ -228,7 +228,9 @@ export class OptimizedHashSet<T> {
 
   constructor(initialCapacity = 16, hashFn?: (value: T) => number) {
     this.bucketCount = initialCapacity;
-    this.buckets = Array(this.bucketCount).fill(null).map(() => []);
+    this.buckets = Array(this.bucketCount)
+      .fill(null)
+      .map(() => []);
     this.hashFn = hashFn || this.defaultHash;
   }
 
@@ -237,7 +239,7 @@ export class OptimizedHashSet<T> {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
     return Math.abs(hash);
@@ -288,7 +290,9 @@ export class OptimizedHashSet<T> {
   private resize(): void {
     const oldBuckets = this.buckets;
     this.bucketCount *= 2;
-    this.buckets = Array(this.bucketCount).fill(null).map(() => []);
+    this.buckets = Array(this.bucketCount)
+      .fill(null)
+      .map(() => []);
     this.size = 0;
 
     for (const bucket of oldBuckets) {
@@ -311,7 +315,9 @@ export class OptimizedHashSet<T> {
   }
 
   clear(): void {
-    this.buckets = Array(this.bucketCount).fill(null).map(() => []);
+    this.buckets = Array(this.bucketCount)
+      .fill(null)
+      .map(() => []);
     this.size = 0;
   }
 }
@@ -328,7 +334,7 @@ export class BinarySearchOptimizer {
    * Standard binary search - O(log n)
    */
   static search<T>(sortedArray: T[], target: T, compareFn?: (a: T, b: T) => number): number {
-    const compare = compareFn || ((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const compare = compareFn || ((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     let left = 0;
     let right = sortedArray.length - 1;
 
@@ -348,7 +354,7 @@ export class BinarySearchOptimizer {
    * Find first occurrence of target
    */
   static findFirst<T>(sortedArray: T[], target: T, compareFn?: (a: T, b: T) => number): number {
-    const compare = compareFn || ((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const compare = compareFn || ((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     let left = 0;
     let right = sortedArray.length - 1;
     let result = -1;
@@ -374,7 +380,7 @@ export class BinarySearchOptimizer {
    * Find last occurrence of target
    */
   static findLast<T>(sortedArray: T[], target: T, compareFn?: (a: T, b: T) => number): number {
-    const compare = compareFn || ((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const compare = compareFn || ((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     let left = 0;
     let right = sortedArray.length - 1;
     let result = -1;
@@ -400,7 +406,7 @@ export class BinarySearchOptimizer {
    * Find insertion point (lower bound)
    */
   static lowerBound<T>(sortedArray: T[], target: T, compareFn?: (a: T, b: T) => number): number {
-    const compare = compareFn || ((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const compare = compareFn || ((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     let left = 0;
     let right = sortedArray.length;
 
@@ -420,19 +426,19 @@ export class BinarySearchOptimizer {
    * Range search - find all indices in range [minVal, maxVal]
    */
   static rangeSearch<T>(
-    sortedArray: T[], 
-    minVal: T, 
-    maxVal: T, 
+    sortedArray: T[],
+    minVal: T,
+    maxVal: T,
     compareFn?: (a: T, b: T) => number
   ): number[] {
     const firstIndex = this.lowerBound(sortedArray, minVal, compareFn);
     const lastIndex = this.lowerBound(sortedArray, maxVal, compareFn);
-    
+
     const result: number[] = [];
     for (let i = firstIndex; i < lastIndex; i++) {
       result.push(i);
     }
-    
+
     return result;
   }
 }
@@ -478,7 +484,7 @@ export class StringSearchOptimizer {
 
   private static buildBadCharTable(pattern: string): Map<string, number> {
     const table = new Map<string, number>();
-    
+
     for (let i = 0; i < pattern.length - 1; i++) {
       table.set(pattern[i], pattern.length - 1 - i);
     }
@@ -553,7 +559,9 @@ export class StringSearchOptimizer {
     const n = str2.length;
 
     // Create a 2D array for dynamic programming
-    const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+    const dp: number[][] = Array(m + 1)
+      .fill(null)
+      .map(() => Array(n + 1).fill(0));
 
     // Initialize base cases
     for (let i = 0; i <= m; i++) dp[i][0] = i;
@@ -566,9 +574,9 @@ export class StringSearchOptimizer {
           dp[i][j] = dp[i - 1][j - 1];
         } else {
           dp[i][j] = Math.min(
-            dp[i - 1][j] + 1,     // deletion
-            dp[i][j - 1] + 1,     // insertion
-            dp[i - 1][j - 1] + 1  // substitution
+            dp[i - 1][j] + 1, // deletion
+            dp[i][j - 1] + 1, // insertion
+            dp[i - 1][j - 1] + 1 // substitution
           );
         }
       }
@@ -605,7 +613,7 @@ export class SortingOptimizer {
    * Excellent for small or nearly sorted arrays
    */
   static insertionSort<T>(array: T[], compareFn?: (a: T, b: T) => number): T[] {
-    const compare = compareFn || ((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const compare = compareFn || ((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     const result = [...array];
 
     for (let i = 1; i < result.length; i++) {
@@ -627,17 +635,17 @@ export class SortingOptimizer {
    * Quick sort with median-of-three pivot selection
    */
   static quickSort<T>(array: T[], compareFn?: (a: T, b: T) => number): T[] {
-    const compare = compareFn || ((a, b) => a < b ? -1 : a > b ? 1 : 0);
+    const compare = compareFn || ((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     const result = [...array];
-    
+
     this.quickSortInPlace(result, 0, result.length - 1, compare);
     return result;
   }
 
   private static quickSortInPlace<T>(
-    array: T[], 
-    low: number, 
-    high: number, 
+    array: T[],
+    low: number,
+    high: number,
     compare: (a: T, b: T) => number
   ): void {
     if (low < high) {
@@ -648,9 +656,9 @@ export class SortingOptimizer {
   }
 
   private static partition<T>(
-    array: T[], 
-    low: number, 
-    high: number, 
+    array: T[],
+    low: number,
+    high: number,
     compare: (a: T, b: T) => number
   ): number {
     // Use median-of-three for better pivot selection
@@ -690,7 +698,9 @@ export class SortingOptimizer {
     const maxDigits = Math.floor(Math.log10(Math.abs(max))) + 1;
 
     for (let digit = 0; digit < maxDigits; digit++) {
-      const buckets: number[][] = Array(10).fill(null).map(() => []);
+      const buckets: number[][] = Array(10)
+        .fill(null)
+        .map(() => []);
 
       for (const num of result) {
         const digitValue = Math.floor(Math.abs(num) / Math.pow(10, digit)) % 10;
@@ -713,7 +723,9 @@ export class SortingOptimizer {
     const max = Math.max(...array);
     const bucketSize = (max - min) / bucketCount;
 
-    const buckets: number[][] = Array(bucketCount).fill(null).map(() => []);
+    const buckets: number[][] = Array(bucketCount)
+      .fill(null)
+      .map(() => []);
 
     for (const num of array) {
       const bucketIndex = Math.min(Math.floor((num - min) / bucketSize), bucketCount - 1);
@@ -763,8 +775,8 @@ export class TradingDataOptimizer {
 
     const prices = bst.toSortedArray();
     const index = BinarySearchOptimizer.lowerBound(
-      prices, 
-      { price: 0, timestamp }, 
+      prices,
+      { price: 0, timestamp },
       (a, b) => a.timestamp - b.timestamp
     );
 
@@ -774,7 +786,11 @@ export class TradingDataOptimizer {
   /**
    * Get price range for time period - O(log n + k) where k is result size
    */
-  getPriceRange(symbol: string, startTime: number, endTime: number): Array<{ price: number; timestamp: number }> {
+  getPriceRange(
+    symbol: string,
+    startTime: number,
+    endTime: number
+  ): Array<{ price: number; timestamp: number }> {
     const bst = this.priceIndex.get(symbol);
     if (!bst) return [];
 
@@ -808,7 +824,7 @@ export class TradingDataOptimizer {
    */
   calculateVWAP(symbol: string, timeWindow: number): number | null {
     const cacheKey = `${symbol}:${timeWindow}:${Math.floor(Date.now() / 60000)}`; // 1-minute buckets
-    
+
     if (this.volumeCache.has(cacheKey)) {
       return this.volumeCache.get(cacheKey)!;
     }
@@ -830,7 +846,11 @@ export class TradingDataOptimizer {
   /**
    * Find top movers using optimized sorting
    */
-  getTopMovers(symbols: string[], timeframe: number, limit = 10): Array<{ symbol: string; change: number }> {
+  getTopMovers(
+    symbols: string[],
+    timeframe: number,
+    limit = 10
+  ): Array<{ symbol: string; change: number }> {
     const movements: Array<{ symbol: string; change: number }> = [];
     const now = Date.now();
 
@@ -881,7 +901,10 @@ export class TradingDataOptimizer {
 
       // Fuzzy match for typos
       if (StringSearchOptimizer.fuzzyMatch(query.toUpperCase(), symbol.toUpperCase(), 2)) {
-        const distance = StringSearchOptimizer.levenshteinDistance(query.toUpperCase(), symbol.toUpperCase());
+        const distance = StringSearchOptimizer.levenshteinDistance(
+          query.toUpperCase(),
+          symbol.toUpperCase()
+        );
         results.push({ symbol, score: Math.max(1, 50 - distance * 10) });
       }
     }
@@ -889,7 +912,7 @@ export class TradingDataOptimizer {
     // Sort by score and return top results
     return SortingOptimizer.quickSort(results, (a, b) => b.score - a.score)
       .slice(0, maxResults)
-      .map(r => r.symbol);
+      .map((r) => r.symbol);
   }
 
   /**
@@ -907,7 +930,9 @@ export class TradingDataOptimizer {
         const recentPrices = allPrices.slice(-5000); // Keep last 5000 points
 
         // Rebuild BST with recent data
-        const newBST = new OptimizedBST<{ price: number; timestamp: number }>((a, b) => a.timestamp - b.timestamp);
+        const newBST = new OptimizedBST<{ price: number; timestamp: number }>(
+          (a, b) => a.timestamp - b.timestamp
+        );
         for (const price of recentPrices) {
           newBST.insert(price);
         }
@@ -931,7 +956,10 @@ export class TradingDataOptimizer {
     totalSymbols: number;
   } {
     return {
-      priceIndexSize: Array.from(this.priceIndex.values()).reduce((sum, bst) => sum + bst.getSize(), 0),
+      priceIndexSize: Array.from(this.priceIndex.values()).reduce(
+        (sum, bst) => sum + bst.getSize(),
+        0
+      ),
       volumeCacheStats: this.volumeCache.getStats(),
       patternCacheSize: this.patternCache.getSize(),
       totalSymbols: this.priceIndex.size,
@@ -964,7 +992,7 @@ export const algorithmOptimizer = {
     const start = performance.now();
     const result = fn();
     const end = performance.now();
-    
+
     console.log(`⚡ ${name} took ${(end - start).toFixed(2)}ms`);
     return result;
   },
@@ -972,25 +1000,26 @@ export const algorithmOptimizer = {
   // Benchmark different algorithm approaches
   benchmark(name: string, functions: { [key: string]: () => any }, iterations = 1000): void {
     console.log(`🏁 Benchmarking ${name}:`);
-    
+
     const results: { [key: string]: number } = {};
-    
+
     for (const [funcName, func] of Object.entries(functions)) {
       const start = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         func();
       }
-      
+
       const end = performance.now();
       results[funcName] = (end - start) / iterations;
     }
 
     // Sort results by performance
     const sorted = Object.entries(results).sort(([, a], [, b]) => a - b);
-    
+
     sorted.forEach(([name, time], index) => {
-      const improvement = index === 0 ? "baseline" : `${((time / sorted[0][1] - 1) * 100).toFixed(1)}% slower`;
+      const improvement =
+        index === 0 ? "baseline" : `${((time / sorted[0][1] - 1) * 100).toFixed(1)}% slower`;
       console.log(`  ${index + 1}. ${name}: ${time.toFixed(4)}ms (${improvement})`);
     });
   },

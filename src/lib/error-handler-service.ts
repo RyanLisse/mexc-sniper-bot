@@ -283,10 +283,7 @@ export class ErrorHandlerService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private getCircuitBreakerState(
-    key: string,
-    options: CircuitBreakerOptions
-  ): CircuitBreakerState {
+  private getCircuitBreakerState(key: string, options: CircuitBreakerOptions): CircuitBreakerState {
     let state = this.circuitBreakers.get(key);
 
     if (!state) {

@@ -9,8 +9,8 @@
  * - Efficient state updates without creating new objects
  */
 
-import { webSocketPriceService } from "../services/websocket-price-service";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { webSocketPriceService } from "../services/websocket-price-service";
 
 interface PriceUpdate {
   symbol: string;

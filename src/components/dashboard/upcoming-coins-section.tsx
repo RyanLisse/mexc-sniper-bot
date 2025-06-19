@@ -1,16 +1,10 @@
 "use client";
 
-import { Badge } from "../ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { useUpcomingLaunches } from "../../hooks/use-mexc-data";
 import { Calendar, Clock, RefreshCw, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
+import { useUpcomingLaunches } from "../../hooks/use-mexc-data";
+import { Badge } from "../ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
 interface UpcomingCalendarEntry {
   firstOpenTime?: string | number;

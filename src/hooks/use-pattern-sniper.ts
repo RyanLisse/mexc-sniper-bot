@@ -1,4 +1,5 @@
-import type { UserTradingPreferences } from "./use-user-preferences";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
 import {
   type CalendarEntry,
   type OrderParameters as SchemaOrderParameters,
@@ -7,8 +8,7 @@ import {
   type SymbolV2Entry,
   isValidForSnipe,
 } from "../schemas/mexc-schemas";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import type { UserTradingPreferences } from "./use-user-preferences";
 
 // API client functions that use backend routes
 const apiClient = {

@@ -155,7 +155,7 @@ export default function SettingsPage() {
         userId,
         // Enhanced take profit strategy
         takeProfitStrategy: takeProfitStrategy,
-        takeProfitLevelsConfig: customTakeProfitStrategy,
+        takeProfitLevelsConfig: JSON.stringify(customTakeProfitStrategy),
         stopLossPercent: riskSettings.stopLossPercent,
         riskTolerance: riskSettings.riskTolerance as "low" | "medium" | "high",
         maxConcurrentSnipes: riskSettings.maxConcurrentSnipes,

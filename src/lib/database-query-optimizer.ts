@@ -8,6 +8,7 @@
  * - Optimizes pattern discovery database operations
  */
 
+import { and, asc, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   type PatternEmbedding,
@@ -18,7 +19,6 @@ import {
   transactionLocks,
   transactions,
 } from "../db/schema";
-import { and, asc, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 
 interface QueryOptimizationConfig {
   enableBatching: boolean;

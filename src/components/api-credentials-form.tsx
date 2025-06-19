@@ -1,23 +1,5 @@
 "use client";
 
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { Input } from "./ui/input";
-import {
-  type ApiCredentials,
-  useApiCredentials,
-  useDeleteApiCredentials,
-  useSaveApiCredentials,
-  useTestApiCredentials,
-} from "../hooks/use-api-credentials";
-import { useMexcConnectivity } from "../hooks/use-mexc-data";
 import {
   AlertCircle,
   CheckCircle,
@@ -30,6 +12,18 @@ import {
   Shield,
 } from "lucide-react";
 import { useState } from "react";
+import {
+  type ApiCredentials,
+  useApiCredentials,
+  useDeleteApiCredentials,
+  useSaveApiCredentials,
+  useTestApiCredentials,
+} from "../hooks/use-api-credentials";
+import { useMexcConnectivity } from "../hooks/use-mexc-data";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Input } from "./ui/input";
 
 interface ApiCredentialsFormProps {
   userId: string;

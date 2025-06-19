@@ -1,17 +1,11 @@
 "use client";
 
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { AlertCircle, CheckCircle, Clock, Lock, Unlock, XCircle } from "lucide-react";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 interface TransactionLock {
   lockId: string;

@@ -1,5 +1,5 @@
-import { inngest } from "../inngest/client";
 import type { NextRequest } from "next/server";
+import { inngest } from "../inngest/client";
 import { createErrorResponse, createSuccessResponse } from "./api-response";
 
 /**

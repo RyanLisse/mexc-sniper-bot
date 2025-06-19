@@ -1,5 +1,5 @@
-import { apiCredentials, db } from "../db";
 import { and, eq } from "drizzle-orm";
+import { apiCredentials, db } from "../db";
 import { getEncryptionService } from "./secure-encryption-service";
 
 export interface DecryptedCredentials {
@@ -49,7 +49,9 @@ export async function getUserCredentials(
         `[UserCredentialsService] Encryption service initialization failed for user ${userId}:`,
         encryptionError
       );
-      throw new Error("Encryption service unavailable - check ENCRYPTION_MASTER_KEY environment variable");
+      throw new Error(
+        "Encryption service unavailable - check ENCRYPTION_MASTER_KEY environment variable"
+      );
     }
 
     // Decrypt the credentials

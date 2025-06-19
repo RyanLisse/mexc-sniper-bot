@@ -1,16 +1,5 @@
 "use client";
 
-import { Alert, AlertDescription } from "./ui/alert";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { type MexcConnectivityResult, useMexcConnectivity } from "../hooks/use-mexc-data";
 import {
   AlertTriangle,
   CheckCircle,
@@ -25,6 +14,11 @@ import {
   XCircle,
 } from "lucide-react";
 import React, { useState } from "react";
+import { type MexcConnectivityResult, useMexcConnectivity } from "../hooks/use-mexc-data";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 interface EnhancedCredentialStatusProps {
   showDetailsButton?: boolean;

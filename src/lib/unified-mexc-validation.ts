@@ -15,17 +15,12 @@
 
 import { getRecommendedMexcService } from "../services/mexc-unified-exports";
 import { getUserCredentials } from "../services/user-credentials-service";
-import { 
-  createCredentialResponse, 
+import {
+  type ApiResponse,
   type CredentialValidationResult,
-  ApiResponse 
+  createCredentialResponse,
 } from "./api-response";
-import { 
-  ValidationError,
-  NetworkError,
-  ApiError,
-  AuthenticationError 
-} from "./errors";
+import { NetworkError, ValidationError } from "./errors";
 
 // ============================================================================
 // Types and Interfaces
@@ -92,19 +87,19 @@ class MexcValidationCache {
     this.cache.set(key, {
       result,
       timestamp: now,
-      expiresAt: now + (ttl || this.defaultTTL)
+      expiresAt: now + (ttl || this.defaultTTL),
     });
   }
 
   get(key: string): ComprehensiveValidationResult | null {
     const cached = this.cache.get(key);
     if (!cached) return null;
-    
+
     if (Date.now() > cached.expiresAt) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return cached.result;
   }
 
@@ -118,14 +113,14 @@ class MexcValidationCache {
       const hash = this.simpleHash(credentials.apiKey + credentials.secretKey);
       return `credentials-${hash}`;
     }
-    return `user-${userId || 'anonymous'}`;
+    return `user-${userId || "anonymous"}`;
   }
 
   private simpleHash(str: string): string {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(36);
@@ -153,7 +148,7 @@ export class UnifiedMexcValidationService {
       includeAccountInfo = true,
       performDiagnostics = true,
       skipCache = false,
-      timeoutMs = 30000
+      timeoutMs = 30000,
     } = options;
 
     // Check cache first
@@ -173,7 +168,7 @@ export class UnifiedMexcValidationService {
 
       // Step 2: Determine credential source and load credentials
       const { credentials, source } = await this.loadCredentials(userId, providedCredentials);
-      
+
       // Step 3: Test network connectivity
       const connectivityStart = Date.now();
       const connectivityResult = await this.testConnectivity(credentials, timeoutMs);
@@ -190,19 +185,23 @@ export class UnifiedMexcValidationService {
             networkConnectivity: false,
             credentialLoading: credentials !== null,
             accountAccess: false,
-            balanceRetrieval: false
+            balanceRetrieval: false,
           },
           {
             connectivityTestMs: connectivityTime,
             accountTestMs: 0,
-            totalTestMs: Date.now() - startTime
+            totalTestMs: Date.now() - startTime,
           }
         );
       }
 
       // Step 4: Test credential authentication
       const accountStart = Date.now();
-      const accountResult = await this.testAccountAccess(credentials, includeAccountInfo, timeoutMs);
+      const accountResult = await this.testAccountAccess(
+        credentials,
+        includeAccountInfo,
+        timeoutMs
+      );
       const accountTime = Date.now() - accountStart;
 
       // Step 5: Perform diagnostics if requested
@@ -210,7 +209,7 @@ export class UnifiedMexcValidationService {
         ipAllowlisted: true,
         permissionsValid: true,
         signatureValid: true,
-        timestampValid: true
+        timestampValid: true,
       };
 
       if (performDiagnostics && !accountResult.success) {
@@ -228,19 +227,22 @@ export class UnifiedMexcValidationService {
           networkConnectivity: connectivityResult.success,
           credentialLoading: credentials !== null,
           accountAccess: accountResult.success,
-          balanceRetrieval: accountResult.success && !!accountResult.data
+          balanceRetrieval: accountResult.success && !!accountResult.data,
         },
         performance: {
           connectivityTestMs: connectivityTime,
           accountTestMs: accountTime,
-          totalTestMs: totalTime
+          totalTestMs: totalTime,
         },
-        accountInfo: accountResult.success && includeAccountInfo ? {
-          balanceCount: accountResult.data?.balances?.length || 0,
-          totalValue: accountResult.data?.totalUsdtValue || 0,
-          primaryBalances: this.extractPrimaryBalances(accountResult.data?.balances || [])
-        } : undefined,
-        diagnostics
+        accountInfo:
+          accountResult.success && includeAccountInfo
+            ? {
+                balanceCount: accountResult.data?.balances?.length || 0,
+                totalValue: accountResult.data?.totalUsdtValue || 0,
+                primaryBalances: this.extractPrimaryBalances(accountResult.data?.balances || []),
+              }
+            : undefined,
+        diagnostics,
       };
 
       // Cache successful results
@@ -250,27 +252,26 @@ export class UnifiedMexcValidationService {
       }
 
       return result;
-
     } catch (error) {
       const totalTime = Date.now() - startTime;
-      
+
       if (error instanceof ValidationError) {
         return this.createFailedResult(
           false,
           false,
-          'none',
+          "none",
           false,
           error.message,
           {
             networkConnectivity: false,
             credentialLoading: false,
             accountAccess: false,
-            balanceRetrieval: false
+            balanceRetrieval: false,
           },
           {
             connectivityTestMs: 0,
             accountTestMs: 0,
-            totalTestMs: totalTime
+            totalTestMs: totalTime,
           }
         );
       }
@@ -278,19 +279,19 @@ export class UnifiedMexcValidationService {
       return this.createFailedResult(
         false,
         false,
-        'none',
+        "none",
         false,
-        `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Validation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         {
           networkConnectivity: false,
           credentialLoading: false,
           accountAccess: false,
-          balanceRetrieval: false
+          balanceRetrieval: false,
         },
         {
           connectivityTestMs: 0,
           accountTestMs: 0,
-          totalTestMs: totalTime
+          totalTestMs: totalTime,
         }
       );
     }
@@ -305,21 +306,21 @@ export class UnifiedMexcValidationService {
     error?: string;
   }> {
     const startTime = Date.now();
-    
+
     try {
       const mexcService = getRecommendedMexcService();
       const result = await mexcService.testConnectivity();
-      
+
       return {
         connected: result as boolean,
         responseTime: Date.now() - startTime,
-        error: result ? undefined : 'Connection test failed'
+        error: result ? undefined : "Connection test failed",
       };
     } catch (error) {
       return {
         connected: false,
         responseTime: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -330,7 +331,7 @@ export class UnifiedMexcValidationService {
   static async getValidationSummary(userId: string): Promise<{
     hasUserCredentials: boolean;
     hasEnvironmentCredentials: boolean;
-    preferredSource: 'database' | 'environment' | 'none';
+    preferredSource: "database" | "environment" | "none";
     lastValidation?: {
       timestamp: string;
       wasValid: boolean;
@@ -341,7 +342,7 @@ export class UnifiedMexcValidationService {
       // Check user credentials
       let hasUserCredentials = false;
       try {
-        const userCreds = await getUserCredentials(userId, 'mexc');
+        const userCreds = await getUserCredentials(userId, "mexc");
         hasUserCredentials = !!userCreds;
       } catch {
         // Ignore errors, just means no user credentials
@@ -351,23 +352,23 @@ export class UnifiedMexcValidationService {
       const hasEnvironmentCredentials = !!(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY);
 
       // Determine preferred source
-      let preferredSource: 'database' | 'environment' | 'none' = 'none';
+      let preferredSource: "database" | "environment" | "none" = "none";
       if (hasUserCredentials) {
-        preferredSource = 'database';
+        preferredSource = "database";
       } else if (hasEnvironmentCredentials) {
-        preferredSource = 'environment';
+        preferredSource = "environment";
       }
 
       return {
         hasUserCredentials,
         hasEnvironmentCredentials,
-        preferredSource
+        preferredSource,
       };
     } catch (error) {
       return {
         hasUserCredentials: false,
         hasEnvironmentCredentials: !!(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY),
-        preferredSource: 'none'
+        preferredSource: "none",
       };
     }
   }
@@ -378,15 +379,17 @@ export class UnifiedMexcValidationService {
 
   private static validateCredentialFormat(credentials: MexcCredentials): void {
     if (!credentials.apiKey || !credentials.secretKey) {
-      throw new ValidationError('Both apiKey and secretKey are required');
+      throw new ValidationError("Both apiKey and secretKey are required");
     }
 
-    if (typeof credentials.apiKey !== 'string' || typeof credentials.secretKey !== 'string') {
-      throw new ValidationError('Credentials must be strings');
+    if (typeof credentials.apiKey !== "string" || typeof credentials.secretKey !== "string") {
+      throw new ValidationError("Credentials must be strings");
     }
 
     if (credentials.apiKey.length < 10 || credentials.secretKey.length < 20) {
-      throw new ValidationError('API key must be at least 10 characters, secret key at least 20 characters');
+      throw new ValidationError(
+        "API key must be at least 10 characters, secret key at least 20 characters"
+      );
     }
   }
 
@@ -395,27 +398,27 @@ export class UnifiedMexcValidationService {
     providedCredentials?: MexcCredentials
   ): Promise<{
     credentials: MexcCredentials | null;
-    source: 'database' | 'environment' | 'provided' | 'none';
+    source: "database" | "environment" | "provided" | "none";
   }> {
     // Use provided credentials first
     if (providedCredentials) {
       return {
         credentials: providedCredentials,
-        source: 'provided'
+        source: "provided",
       };
     }
 
     // Try user credentials
     if (userId) {
       try {
-        const userCredentials = await getUserCredentials(userId, 'mexc');
+        const userCredentials = await getUserCredentials(userId, "mexc");
         if (userCredentials) {
           return {
             credentials: {
               apiKey: userCredentials.apiKey,
-              secretKey: userCredentials.secretKey
+              secretKey: userCredentials.secretKey,
             },
-            source: 'database'
+            source: "database",
           };
         }
       } catch (error) {
@@ -431,15 +434,15 @@ export class UnifiedMexcValidationService {
       return {
         credentials: {
           apiKey: process.env.MEXC_API_KEY,
-          secretKey: process.env.MEXC_SECRET_KEY
+          secretKey: process.env.MEXC_SECRET_KEY,
         },
-        source: 'environment'
+        source: "environment",
       };
     }
 
     return {
       credentials: null,
-      source: 'none'
+      source: "none",
     };
   }
 
@@ -448,25 +451,25 @@ export class UnifiedMexcValidationService {
     timeoutMs: number
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const mexcService = credentials 
+      const mexcService = credentials
         ? getRecommendedMexcService(credentials)
         : getRecommendedMexcService();
 
       // Use Promise.race to implement timeout
       const connectivityPromise = mexcService.testConnectivityWithResponse();
       const timeoutPromise = new Promise<{ success: boolean; error: string }>((_, reject) => {
-        setTimeout(() => reject(new Error('Connectivity test timeout')), timeoutMs);
+        setTimeout(() => reject(new Error("Connectivity test timeout")), timeoutMs);
       });
 
       const result = await Promise.race([connectivityPromise, timeoutPromise]);
       return {
         success: result.success,
-        error: result.error
+        error: result.error,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Connectivity test failed'
+        error: error instanceof Error ? error.message : "Connectivity test failed",
       };
     }
   }
@@ -479,7 +482,7 @@ export class UnifiedMexcValidationService {
     if (!credentials) {
       return {
         success: false,
-        error: 'No credentials available'
+        error: "No credentials available",
       };
     }
 
@@ -489,20 +492,20 @@ export class UnifiedMexcValidationService {
       // Use Promise.race to implement timeout
       const accountPromise = mexcService.getAccountBalances();
       const timeoutPromise = new Promise<any>((_, reject) => {
-        setTimeout(() => reject(new Error('Account access test timeout')), timeoutMs);
+        setTimeout(() => reject(new Error("Account access test timeout")), timeoutMs);
       });
 
       const result = await Promise.race([accountPromise, timeoutPromise]);
-      
+
       return {
         success: result.success,
         data: includeBalances ? result.data : undefined,
-        error: result.error
+        error: result.error,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Account access test failed'
+        error: error instanceof Error ? error.message : "Account access test failed",
       };
     }
   }
@@ -518,17 +521,17 @@ export class UnifiedMexcValidationService {
         ipAllowlisted: true,
         permissionsValid: true,
         signatureValid: true,
-        timestampValid: true
+        timestampValid: true,
       };
     }
 
     const errorLower = error.toLowerCase();
-    
+
     return {
-      ipAllowlisted: !errorLower.includes('ip') && !errorLower.includes('allowlist'),
-      permissionsValid: !errorLower.includes('permission') && !errorLower.includes('scope'),
-      signatureValid: !errorLower.includes('signature') && !errorLower.includes('sign'),
-      timestampValid: !errorLower.includes('timestamp') && !errorLower.includes('time')
+      ipAllowlisted: !errorLower.includes("ip") && !errorLower.includes("allowlist"),
+      permissionsValid: !errorLower.includes("permission") && !errorLower.includes("scope"),
+      signatureValid: !errorLower.includes("signature") && !errorLower.includes("sign"),
+      timestampValid: !errorLower.includes("timestamp") && !errorLower.includes("time"),
     };
   }
 
@@ -538,23 +541,25 @@ export class UnifiedMexcValidationService {
     locked: string;
   }> {
     return balances
-      .filter(balance => parseFloat(balance.free) > 0 || parseFloat(balance.locked) > 0)
+      .filter(
+        (balance) => Number.parseFloat(balance.free) > 0 || Number.parseFloat(balance.locked) > 0
+      )
       .slice(0, 10) // Top 10 balances
-      .map(balance => ({
+      .map((balance) => ({
         asset: balance.asset,
         free: balance.free,
-        locked: balance.locked
+        locked: balance.locked,
       }));
   }
 
   private static createFailedResult(
     hasCredentials: boolean,
     credentialsValid: boolean,
-    source: 'database' | 'environment' | 'provided' | 'none',
+    source: "database" | "environment" | "provided" | "none",
     connected: boolean,
     error: string,
-    testResults: ComprehensiveValidationResult['testResults'],
-    performance: ComprehensiveValidationResult['performance']
+    testResults: ComprehensiveValidationResult["testResults"],
+    performance: ComprehensiveValidationResult["performance"]
   ): ComprehensiveValidationResult {
     return {
       hasCredentials,
@@ -568,8 +573,8 @@ export class UnifiedMexcValidationService {
         ipAllowlisted: false,
         permissionsValid: false,
         signatureValid: false,
-        timestampValid: false
-      }
+        timestampValid: false,
+      },
     };
   }
 
@@ -590,20 +595,20 @@ export class UnifiedMexcValidationService {
  */
 export async function testMexcConnectivity(): Promise<ApiResponse<any>> {
   const result = await UnifiedMexcValidationService.testConnectivityOnly();
-  
+
   return {
     success: result.connected,
-    status: result.connected ? 'healthy' : 'error',
-    message: result.connected ? 'MEXC API is reachable' : 'MEXC API is unreachable',
+    status: result.connected ? "healthy" : "error",
+    message: result.connected ? "MEXC API is reachable" : "MEXC API is unreachable",
     data: {
       connected: result.connected,
-      responseTime: result.responseTime
+      responseTime: result.responseTime,
     },
     error: result.error,
     meta: {
       timestamp: new Date().toISOString(),
-      responseTime: result.responseTime
-    }
+      responseTime: result.responseTime,
+    },
   };
 }
 
@@ -625,7 +630,11 @@ export async function testProvidedCredentials(
   credentials: MexcCredentials,
   options?: ValidationOptions
 ): Promise<ApiResponse<ComprehensiveValidationResult>> {
-  const result = await UnifiedMexcValidationService.validateCredentials(undefined, credentials, options);
+  const result = await UnifiedMexcValidationService.validateCredentials(
+    undefined,
+    credentials,
+    options
+  );
   return createCredentialResponse(result, result.accountInfo);
 }
 
@@ -633,7 +642,4 @@ export async function testProvidedCredentials(
 // Exports
 // ============================================================================
 
-export {
-  UnifiedMexcValidationService as default,
-  validationCache as mexcValidationCache
-};
+export { UnifiedMexcValidationService as default, validationCache as mexcValidationCache };

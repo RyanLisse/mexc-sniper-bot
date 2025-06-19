@@ -335,7 +335,7 @@ export class VectorUtils {
       const conditions = [
         sql`pattern_type = ${patternType}`,
         sql`is_active = 1`,
-        sql`discovered_at >= ${afterDate.getTime() / 1000}`
+        sql`discovered_at >= ${afterDate.getTime() / 1000}`,
       ];
 
       if (beforeDate) {
@@ -358,7 +358,7 @@ export class VectorUtils {
       const conditions = [
         sql`is_active = 1`,
         sql`discovered_at >= ${startDate.getTime() / 1000}`,
-        sql`discovered_at <= ${endDate.getTime() / 1000}`
+        sql`discovered_at <= ${endDate.getTime() / 1000}`,
       ];
 
       if (patternType) {

@@ -26,7 +26,8 @@ export const TAKE_PROFIT_STRATEGIES: TakeProfitStrategy[] = [
   {
     id: "conservative",
     name: "Conservative",
-    description: "Lower risk, smaller but more reliable profits. Ideal for stable market conditions.",
+    description:
+      "Lower risk, smaller but more reliable profits. Ideal for stable market conditions.",
     riskLevel: "low",
     levels: [
       {
@@ -34,29 +35,30 @@ export const TAKE_PROFIT_STRATEGIES: TakeProfitStrategy[] = [
         profitPercentage: 3.0,
         sellQuantity: 30.0,
         isActive: true,
-        description: "Quick profit taking at 3%"
+        description: "Quick profit taking at 3%",
       },
       {
         id: "conservative-2",
         profitPercentage: 7.0,
         sellQuantity: 40.0,
         isActive: true,
-        description: "Moderate profit at 7%"
+        description: "Moderate profit at 7%",
       },
       {
         id: "conservative-3",
         profitPercentage: 12.0,
         sellQuantity: 30.0,
         isActive: true,
-        description: "Final exit at 12%"
-      }
+        description: "Final exit at 12%",
+      },
     ],
-    isDefault: false
+    isDefault: false,
   },
   {
     id: "balanced",
     name: "Balanced",
-    description: "Moderate risk/reward balance. Good for most market conditions and experience levels.",
+    description:
+      "Moderate risk/reward balance. Good for most market conditions and experience levels.",
     riskLevel: "medium",
     levels: [
       {
@@ -64,36 +66,37 @@ export const TAKE_PROFIT_STRATEGIES: TakeProfitStrategy[] = [
         profitPercentage: 5.0,
         sellQuantity: 25.0,
         isActive: true,
-        description: "Initial profit taking at 5%"
+        description: "Initial profit taking at 5%",
       },
       {
         id: "balanced-2",
         profitPercentage: 12.0,
         sellQuantity: 35.0,
         isActive: true,
-        description: "Main profit target at 12%"
+        description: "Main profit target at 12%",
       },
       {
         id: "balanced-3",
         profitPercentage: 20.0,
         sellQuantity: 25.0,
         isActive: true,
-        description: "Extended profit at 20%"
+        description: "Extended profit at 20%",
       },
       {
         id: "balanced-4",
         profitPercentage: 35.0,
         sellQuantity: 15.0,
         isActive: true,
-        description: "Moon shot at 35%"
-      }
+        description: "Moon shot at 35%",
+      },
     ],
-    isDefault: true
+    isDefault: true,
   },
   {
     id: "aggressive",
     name: "Aggressive",
-    description: "Higher risk, larger profit potential. Best for volatile markets and experienced traders.",
+    description:
+      "Higher risk, larger profit potential. Best for volatile markets and experienced traders.",
     riskLevel: "high",
     levels: [
       {
@@ -101,32 +104,32 @@ export const TAKE_PROFIT_STRATEGIES: TakeProfitStrategy[] = [
         profitPercentage: 8.0,
         sellQuantity: 20.0,
         isActive: true,
-        description: "Early profit at 8%"
+        description: "Early profit at 8%",
       },
       {
         id: "aggressive-2",
         profitPercentage: 18.0,
         sellQuantity: 30.0,
         isActive: true,
-        description: "Main target at 18%"
+        description: "Main target at 18%",
       },
       {
         id: "aggressive-3",
         profitPercentage: 35.0,
         sellQuantity: 30.0,
         isActive: true,
-        description: "High profit at 35%"
+        description: "High profit at 35%",
       },
       {
         id: "aggressive-4",
         profitPercentage: 60.0,
         sellQuantity: 20.0,
         isActive: true,
-        description: "Maximum profit at 60%"
-      }
+        description: "Maximum profit at 60%",
+      },
     ],
-    isDefault: false
-  }
+    isDefault: false,
+  },
 ];
 
 export interface CustomTakeProfitConfig {
@@ -145,13 +148,13 @@ export const DEFAULT_CUSTOM_CONFIG: CustomTakeProfitConfig = {
     description: "User-defined take profit levels",
     riskLevel: "medium",
     levels: [],
-    isCustom: true
+    isCustom: true,
   },
   maxLevels: 6,
   minProfitPercentage: 0.1,
   maxProfitPercentage: 1000.0,
   minSellQuantity: 1.0,
-  maxSellQuantity: 100.0
+  maxSellQuantity: 100.0,
 };
 
 // Validation functions
@@ -183,7 +186,7 @@ export function validateTakeProfitStrategy(strategy: TakeProfitStrategy): string
   // Validate each level
   strategy.levels.forEach((level, index) => {
     const levelErrors = validateTakeProfitLevel(level);
-    levelErrors.forEach(error => {
+    levelErrors.forEach((error) => {
       errors.push(`Level ${index + 1}: ${error}`);
     });
   });
@@ -197,7 +200,7 @@ export function validateTakeProfitStrategy(strategy: TakeProfitStrategy): string
 
   // Check total sell quantity doesn't exceed 100%
   const totalSellQuantity = strategy.levels
-    .filter(level => level.isActive)
+    .filter((level) => level.isActive)
     .reduce((sum, level) => sum + level.sellQuantity, 0);
 
   if (totalSellQuantity > 100) {
@@ -209,7 +212,7 @@ export function validateTakeProfitStrategy(strategy: TakeProfitStrategy): string
 
 // Helper functions
 export function getTakeProfitStrategyById(id: string): TakeProfitStrategy | undefined {
-  return TAKE_PROFIT_STRATEGIES.find(strategy => strategy.id === id);
+  return TAKE_PROFIT_STRATEGIES.find((strategy) => strategy.id === id);
 }
 
 export function createCustomTakeProfitLevel(
@@ -222,7 +225,7 @@ export function createCustomTakeProfitLevel(
     profitPercentage,
     sellQuantity,
     isActive: true,
-    description
+    description,
   };
 }
 
@@ -234,19 +237,19 @@ export function calculatePotentialProfit(
   const results: { level: TakeProfitLevel; profit: number; remaining: number }[] = [];
 
   strategy.levels
-    .filter(level => level.isActive)
-    .forEach(level => {
+    .filter((level) => level.isActive)
+    .forEach((level) => {
       // Calculate the amount to sell based on the sell quantity percentage
       const sellAmount = level.sellQuantity;
       // Calculate profit based on the investment amount and profit percentage
-      const profit = (investmentAmount * sellAmount / 100) * (level.profitPercentage / 100);
+      const profit = ((investmentAmount * sellAmount) / 100) * (level.profitPercentage / 100);
       // Update remaining position
       remainingPosition -= sellAmount;
 
       results.push({
         level,
         profit,
-        remaining: Math.max(0, remainingPosition) // Ensure remaining doesn't go negative
+        remaining: Math.max(0, remainingPosition), // Ensure remaining doesn't go negative
       });
     });
 
@@ -280,7 +283,7 @@ export function convertLegacyToStrategy(
       profitPercentage: legacy.level1,
       sellQuantity: sellQuantities?.level1 || 25,
       isActive: true,
-      description: "Legacy Level 1"
+      description: "Legacy Level 1",
     });
   }
 
@@ -290,7 +293,7 @@ export function convertLegacyToStrategy(
       profitPercentage: legacy.level2,
       sellQuantity: sellQuantities?.level2 || 25,
       isActive: true,
-      description: "Legacy Level 2"
+      description: "Legacy Level 2",
     });
   }
 
@@ -300,7 +303,7 @@ export function convertLegacyToStrategy(
       profitPercentage: legacy.level3,
       sellQuantity: sellQuantities?.level3 || 25,
       isActive: true,
-      description: "Legacy Level 3"
+      description: "Legacy Level 3",
     });
   }
 
@@ -310,7 +313,7 @@ export function convertLegacyToStrategy(
       profitPercentage: legacy.level4,
       sellQuantity: sellQuantities?.level4 || 25,
       isActive: true,
-      description: "Legacy Level 4"
+      description: "Legacy Level 4",
     });
   }
 
@@ -320,7 +323,7 @@ export function convertLegacyToStrategy(
       profitPercentage: legacy.custom,
       sellQuantity: sellQuantities?.custom || 100,
       isActive: true,
-      description: "Legacy Custom Level"
+      description: "Legacy Custom Level",
     });
   }
 
@@ -330,6 +333,6 @@ export function convertLegacyToStrategy(
     description: "Converted from legacy take profit configuration",
     riskLevel: "medium",
     levels,
-    isCustom: true
+    isCustom: true,
   };
 }

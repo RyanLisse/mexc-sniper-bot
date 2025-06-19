@@ -7,7 +7,7 @@
  * - useCallback for event handlers to maintain referential equality
  * - Optimized icon imports to reduce bundle size
  * - Efficient data structure usage for real-time updates
- * 
+ *
  * Expected Performance Impact:
  * - 40% reduction in component re-renders
  * - 30% improvement in real-time data processing
@@ -16,20 +16,8 @@
 
 "use client";
 
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { memo, useCallback, useMemo } from "react";
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Progress } from "../ui/progress";
-import { ScrollArea } from "../ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { useLiveTradingData } from "../../hooks/use-live-trading-data";
 import { useRealTimePatterns } from "../../hooks/use-real-time-patterns";
 import {
@@ -38,7 +26,11 @@ import {
   useWebSocket,
   useWorkflows,
 } from "../../hooks/use-websocket";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import type { ConnectionMetrics as WebSocketConnectionMetrics } from "../../lib/websocket-types";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 // Use optimized icon imports for better tree shaking
 import {
   Activity,
@@ -51,7 +43,9 @@ import {
   WifiOff,
   Zap,
 } from "../ui/optimized-icons";
-import type { ConnectionMetrics as WebSocketConnectionMetrics } from "../../lib/websocket-types";
+import { Progress } from "../ui/progress";
+import { ScrollArea } from "../ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 // ======================
 // Connection Status Component
@@ -84,15 +78,12 @@ const ConnectionStatus = memo(function ConnectionStatus({
   onReconnect,
 }: ConnectionStatusProps) {
   // Memoize expensive calculations
-  const statusColor = useMemo(() => 
-    isConnected ? "text-green-600" : "text-red-600", 
+  const statusColor = useMemo(
+    () => (isConnected ? "text-green-600" : "text-red-600"),
     [isConnected]
   );
-  
-  const StatusIcon = useMemo(() => 
-    isConnected ? Wifi : WifiOff, 
-    [isConnected]
-  );
+
+  const StatusIcon = useMemo(() => (isConnected ? Wifi : WifiOff), [isConnected]);
 
   return (
     <Card className="mb-4">
@@ -119,7 +110,9 @@ const ConnectionStatus = memo(function ConnectionStatus({
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Latency</p>
-            <p className="text-lg font-semibold">{metrics?.latency ? `${metrics.latency}ms` : 'N/A'}</p>
+            <p className="text-lg font-semibold">
+              {metrics?.latency ? `${metrics.latency}ms` : "N/A"}
+            </p>
           </div>
         </div>
 
@@ -194,11 +187,7 @@ const AgentStatusPanel = memo(function AgentStatusPanel() {
         </CardTitle>
         <CardDescription>
           Real-time status of all 11 AI agents
-          {timeAgo > 0 && (
-            <span className="ml-2 text-xs">
-              Updated {timeAgo}s ago
-            </span>
-          )}
+          {timeAgo > 0 && <span className="ml-2 text-xs">Updated {timeAgo}s ago</span>}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -253,7 +242,7 @@ const AgentStatusPanel = memo(function AgentStatusPanel() {
 const TradingDataPanel = memo(function TradingDataPanel() {
   // Memoize symbols array to prevent unnecessary re-renders
   const symbols = useMemo(() => ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT"], []);
-  
+
   const { prices, getPrice, getTopMovers, lastUpdate } = useLiveTradingData({
     symbols,
     enableOrderBook: true,
@@ -289,11 +278,7 @@ const TradingDataPanel = memo(function TradingDataPanel() {
         </CardTitle>
         <CardDescription>
           Real-time price feeds from MEXC
-          {timeAgo > 0 && (
-            <span className="ml-2 text-xs">
-              Updated {timeAgo}s ago
-            </span>
-          )}
+          {timeAgo > 0 && <span className="ml-2 text-xs">Updated {timeAgo}s ago</span>}
         </CardDescription>
       </CardHeader>
       <CardContent>

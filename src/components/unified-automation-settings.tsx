@@ -1,15 +1,9 @@
 "use client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Target } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { Separator } from "./ui/separator";
 import { Switch } from "./ui/switch";
-import { Target } from "lucide-react";
 
 interface AutomationSettings {
   autoSnipeEnabled: boolean;

@@ -78,8 +78,8 @@ const mockPerformanceMetrics = [
     successRate: 0.98,
     cpuUsage: 45,
     memoryUsage: 512,
-    activeConnections: 8
-  }
+    activeConnections: 8,
+  },
 ];
 
 const mockABTests = [
@@ -95,9 +95,9 @@ const mockABTests = [
       totalParticipants: 1000,
       duration: 14,
       significance: 95.2,
-      improvementPercent: 12.5
-    }
-  }
+      improvementPercent: 12.5,
+    },
+  },
 ];
 
 const mockSafetyConstraints = [
@@ -115,8 +115,8 @@ const mockSafetyConstraints = [
     validation: { min: 1000, max: 50000 },
     currentStatus: "ok" as const,
     lastChecked: new Date().toISOString(),
-    violationCount: 0
-  }
+    violationCount: 0,
+  },
 ];
 
 const mockOptimizationRuns = [
@@ -132,15 +132,15 @@ const mockOptimizationRuns = [
     maxIterations: 50,
     bestScore: 0.85,
     improvementPercent: 15.2,
-    parameters: { "riskThreshold": 0.05, "positionSize": 5000 },
+    parameters: { riskThreshold: 0.05, positionSize: 5000 },
     objective: "Maximize Sharpe Ratio",
     metadata: {
       totalEvaluations: 500,
       convergenceReached: true,
       executionTime: 3600,
-      resourceUsage: { cpu: 45, memory: 512 }
-    }
-  }
+      resourceUsage: { cpu: 45, memory: 512 },
+    },
+  },
 ];
 
 export function ParameterOptimizationDashboard() {

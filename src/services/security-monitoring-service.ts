@@ -1,25 +1,5 @@
-/**
- * Security Monitoring Service
- * 
- * Provides comprehensive security monitoring and automated credential rotation
- * for MEXC API credentials and other sensitive operations.
- * 
- * Features:
- * - Automated credential rotation based on usage patterns and security events
- * - Real-time security threat detection and response
- * - API key health monitoring with expiration tracking
- * - Suspicious activity detection and alerting
- * - Automated security remediation actions
- * - Integration with rate limiting and circuit breaker systems
- */
-
-import { db } from "../db";
-import { apiCredentials } from "../db/schema";
-import { getUserCredentials, updateUserCredentials } from "./user-credentials-service";
-import { getRecommendedMexcService } from "./mexc-unified-exports";
-import { logSecurityEvent, getSecurityEvents, isIPSuspicious } from "../lib/rate-limiter";
+import { getSecurityEvents, isIPSuspicious, logSecurityEvent } from "../lib/rate-limiter";
 import { mexcApiBreaker } from "./circuit-breaker";
-import { eq, and, lt, desc } from "drizzle-orm";
 
 // ============================================================================
 // Types and Interfaces
@@ -54,8 +34,8 @@ export interface SecurityMetrics {
 }
 
 export interface SecurityAnomaly {
-  type: 'UNUSUAL_API_USAGE' | 'GEOGRAPHIC_ANOMALY' | 'TIME_BASED_ANOMALY' | 'VOLUME_SPIKE';
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  type: "UNUSUAL_API_USAGE" | "GEOGRAPHIC_ANOMALY" | "TIME_BASED_ANOMALY" | "VOLUME_SPIKE";
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   description: string;
   detectedAt: string;
   affectedResources: string[];
@@ -65,13 +45,13 @@ export interface SecurityAnomaly {
 
 export interface SecurityIncident {
   id: string;
-  type: 'CREDENTIAL_COMPROMISE' | 'UNAUTHORIZED_ACCESS' | 'API_ABUSE' | 'SYSTEM_BREACH';
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  type: "CREDENTIAL_COMPROMISE" | "UNAUTHORIZED_ACCESS" | "API_ABUSE" | "SYSTEM_BREACH";
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   description: string;
   occurredAt: string;
   affectedUsers: string[];
   responseActions: string[];
-  status: 'ACTIVE' | 'INVESTIGATING' | 'MITIGATED' | 'RESOLVED';
+  status: "ACTIVE" | "INVESTIGATING" | "MITIGATED" | "RESOLVED";
   evidence: Record<string, any>;
 }
 
@@ -88,12 +68,12 @@ export interface CredentialRotationResult {
 }
 
 export interface SecurityRecommendation {
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  category: 'CREDENTIALS' | 'ACCESS_CONTROL' | 'MONITORING' | 'INCIDENT_RESPONSE';
+  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  category: "CREDENTIALS" | "ACCESS_CONTROL" | "MONITORING" | "INCIDENT_RESPONSE";
   title: string;
   description: string;
   actionItems: string[];
-  estimatedEffort: 'LOW' | 'MEDIUM' | 'HIGH';
+  estimatedEffort: "LOW" | "MEDIUM" | "HIGH";
   businessImpact: string;
 }
 
@@ -185,25 +165,27 @@ export class SecurityMonitoringService {
     console.log("[SecurityMonitoring] Starting automated credential rotation...");
 
     const rotatedCredentials: string[] = [];
-    const failedRotations: CredentialRotationResult['failedRotations'] = [];
+    const failedRotations: CredentialRotationResult["failedRotations"] = [];
     const securityImprovements: string[] = [];
 
     try {
       // Get credentials due for rotation
       const credentialsDue = await this.getCredentialsDueForRotation();
-      
-      console.log(`[SecurityMonitoring] Found ${credentialsDue.length} credentials due for rotation`);
+
+      console.log(
+        `[SecurityMonitoring] Found ${credentialsDue.length} credentials due for rotation`
+      );
 
       // Process in batches to avoid overwhelming the system
       const batchSize = SECURITY_CONFIG.credentialRotation.batchSize;
-      
+
       for (let i = 0; i < credentialsDue.length; i += batchSize) {
         const batch = credentialsDue.slice(i, i + batchSize);
-        
+
         for (const credential of batch) {
           try {
             const rotationResult = await this.rotateUserCredentials(credential.userId);
-            
+
             if (rotationResult.success) {
               rotatedCredentials.push(credential.userId);
               securityImprovements.push(
@@ -230,7 +212,7 @@ export class SecurityMonitoringService {
             }
 
             // Add delay between rotations to avoid rate limits
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise((resolve) => setTimeout(resolve, 2000));
           } catch (error) {
             failedRotations.push({
               userId: credential.userId,
@@ -242,7 +224,7 @@ export class SecurityMonitoringService {
 
         // Delay between batches
         if (i + batchSize < credentialsDue.length) {
-          await new Promise(resolve => setTimeout(resolve, 10000));
+          await new Promise((resolve) => setTimeout(resolve, 10000));
         }
       }
 
@@ -261,7 +243,7 @@ export class SecurityMonitoringService {
       };
     } catch (error) {
       console.error("[SecurityMonitoring] Automated credential rotation failed:", error);
-      
+
       return {
         success: false,
         rotatedCredentials,
@@ -292,7 +274,7 @@ export class SecurityMonitoringService {
 
       // Detect unusual API usage patterns
       const recentRateLimitEvents = recentEvents.filter(
-        event => event.type === "RATE_LIMIT_EXCEEDED" && event.timestamp > oneHourAgo
+        (event) => event.type === "RATE_LIMIT_EXCEEDED" && event.timestamp > oneHourAgo
       );
 
       if (recentRateLimitEvents.length > 50) {
@@ -301,11 +283,11 @@ export class SecurityMonitoringService {
           severity: "HIGH",
           description: `Detected ${recentRateLimitEvents.length} rate limit violations in the last hour`,
           detectedAt: new Date().toISOString(),
-          affectedResources: [...new Set(recentRateLimitEvents.map(e => e.endpoint))],
+          affectedResources: [...new Set(recentRateLimitEvents.map((e) => e.endpoint))],
           mitigationActions: [
             "Implement stricter rate limiting",
             "Review suspicious IP addresses",
-            "Consider temporary IP blocking"
+            "Consider temporary IP blocking",
           ],
           resolved: false,
         });
@@ -313,9 +295,9 @@ export class SecurityMonitoringService {
 
       // Detect geographic anomalies (simplified - would need IP geolocation in production)
       const suspiciousIPs = recentEvents
-        .filter(event => event.timestamp > oneHourAgo)
-        .map(event => event.ip)
-        .filter(ip => isIPSuspicious(ip));
+        .filter((event) => event.timestamp > oneHourAgo)
+        .map((event) => event.ip)
+        .filter((ip) => isIPSuspicious(ip));
 
       if (suspiciousIPs.length > 0) {
         anomalies.push({
@@ -327,7 +309,7 @@ export class SecurityMonitoringService {
           mitigationActions: [
             "Review IP activity logs",
             "Consider IP allowlisting",
-            "Enhance geographic restrictions"
+            "Enhance geographic restrictions",
           ],
           resolved: false,
         });
@@ -336,10 +318,10 @@ export class SecurityMonitoringService {
       // Detect time-based anomalies (activity outside normal hours)
       const currentHour = new Date().getHours();
       const isOffHours = currentHour < 6 || currentHour > 22; // 10 PM to 6 AM
-      
+
       if (isOffHours) {
         const offHoursActivity = recentEvents.filter(
-          event => event.timestamp > oneHourAgo && event.type === "AUTH_ATTEMPT"
+          (event) => event.timestamp > oneHourAgo && event.type === "AUTH_ATTEMPT"
         );
 
         if (offHoursActivity.length > 20) {
@@ -348,11 +330,11 @@ export class SecurityMonitoringService {
             severity: "MEDIUM",
             description: `Detected ${offHoursActivity.length} authentication attempts during off-hours (${currentHour}:00)`,
             detectedAt: new Date().toISOString(),
-            affectedResources: [...new Set(offHoursActivity.map(e => e.ip))],
+            affectedResources: [...new Set(offHoursActivity.map((e) => e.ip))],
             mitigationActions: [
               "Review off-hours access patterns",
               "Implement time-based access controls",
-              "Alert security team for manual review"
+              "Alert security team for manual review",
             ],
             resolved: false,
           });
@@ -361,10 +343,12 @@ export class SecurityMonitoringService {
 
       // Detect volume spikes
       const previousHourEvents = recentEvents.filter(
-        event => event.timestamp > (oneHourAgo - 60 * 60 * 1000) && event.timestamp <= oneHourAgo
+        (event) => event.timestamp > oneHourAgo - 60 * 60 * 1000 && event.timestamp <= oneHourAgo
       );
 
-      const currentHourEventCount = recentEvents.filter(event => event.timestamp > oneHourAgo).length;
+      const currentHourEventCount = recentEvents.filter(
+        (event) => event.timestamp > oneHourAgo
+      ).length;
       const previousHourEventCount = previousHourEvents.length;
 
       if (currentHourEventCount > previousHourEventCount * 3 && currentHourEventCount > 100) {
@@ -377,7 +361,7 @@ export class SecurityMonitoringService {
           mitigationActions: [
             "Investigate root cause of volume spike",
             "Scale monitoring infrastructure",
-            "Review automated responses"
+            "Review automated responses",
           ],
           resolved: false,
         });
@@ -389,7 +373,7 @@ export class SecurityMonitoringService {
       // Keep only recent anomalies (last 24 hours)
       const oneDayAgo = now - 24 * 60 * 60 * 1000;
       this.anomalies = this.anomalies.filter(
-        anomaly => new Date(anomaly.detectedAt).getTime() > oneDayAgo
+        (anomaly) => new Date(anomaly.detectedAt).getTime() > oneDayAgo
       );
 
       return anomalies;
@@ -418,7 +402,7 @@ export class SecurityMonitoringService {
           actionItems: [
             "Schedule automated credential rotation",
             "Notify affected users of rotation schedule",
-            "Validate new credentials after rotation"
+            "Validate new credentials after rotation",
           ],
           estimatedEffort: "MEDIUM",
           businessImpact: "Reduces risk of credential compromise and improves security posture",
@@ -434,7 +418,7 @@ export class SecurityMonitoringService {
           actionItems: [
             "Immediately rotate expired credentials",
             "Review access patterns for affected accounts",
-            "Implement stricter expiration policies"
+            "Implement stricter expiration policies",
           ],
           estimatedEffort: "HIGH",
           businessImpact: "Critical security vulnerability - immediate action required",
@@ -451,7 +435,7 @@ export class SecurityMonitoringService {
           actionItems: [
             "Review and investigate detected anomalies",
             "Enhance monitoring sensitivity",
-            "Consider implementing additional security controls"
+            "Consider implementing additional security controls",
           ],
           estimatedEffort: "MEDIUM",
           businessImpact: "Prevents potential security incidents and reduces overall risk",
@@ -467,7 +451,7 @@ export class SecurityMonitoringService {
           actionItems: [
             "Review IP activity logs",
             "Consider IP allowlisting or blacklisting",
-            "Implement geographic restrictions"
+            "Implement geographic restrictions",
           ],
           estimatedEffort: "LOW",
           businessImpact: "Reduces unauthorized access attempts and improves access control",
@@ -484,7 +468,7 @@ export class SecurityMonitoringService {
           actionItems: [
             "Investigate API error patterns",
             "Review circuit breaker configuration",
-            "Optimize API error handling"
+            "Optimize API error handling",
           ],
           estimatedEffort: "MEDIUM",
           businessImpact: "Improves system reliability and user experience",
@@ -585,8 +569,8 @@ export class SecurityMonitoringService {
         expiredCredentials: 2,
         rotationDue: 3,
         lastRotated: {
-          "user1": new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          "user2": new Date(now - 45 * 24 * 60 * 60 * 1000).toISOString(),
+          user1: new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          user2: new Date(now - 45 * 24 * 60 * 60 * 1000).toISOString(),
         },
       };
     } catch (error) {
@@ -603,9 +587,7 @@ export class SecurityMonitoringService {
 
   private async getThreatDetectionMetrics() {
     const recentEvents = getSecurityEvents(1000);
-    const suspiciousIPs = recentEvents
-      .map(event => event.ip)
-      .filter(ip => isIPSuspicious(ip));
+    const suspiciousIPs = recentEvents.map((event) => event.ip).filter((ip) => isIPSuspicious(ip));
 
     const anomalies = await this.detectSecurityAnomalies();
 
@@ -618,7 +600,7 @@ export class SecurityMonitoringService {
     return {
       suspiciousIPs: [...new Set(suspiciousIPs)],
       anomalousPatterns: anomalies,
-      recentBreaches: this.incidents.filter(incident => incident.status === "ACTIVE"),
+      recentBreaches: this.incidents.filter((incident) => incident.status === "ACTIVE"),
       riskScore: Math.min(1.0, riskScore),
     };
   }
@@ -626,10 +608,11 @@ export class SecurityMonitoringService {
   private async getApiHealthMetrics() {
     try {
       const circuitBreakerStats = mexcApiBreaker.getStats();
-      
+
       return {
         circuitBreakerStatus: circuitBreakerStats.state,
-        errorRate: circuitBreakerStats.totalFailures / Math.max(1, circuitBreakerStats.totalRequests),
+        errorRate:
+          circuitBreakerStats.totalFailures / Math.max(1, circuitBreakerStats.totalRequests),
         responseTimeMs: circuitBreakerStats.averageResponseTime || 0,
         lastHealthCheck: new Date().toISOString(),
       };
@@ -643,11 +626,13 @@ export class SecurityMonitoringService {
     }
   }
 
-  private async getCredentialsDueForRotation(): Promise<Array<{
-    userId: string;
-    lastRotated: Date;
-    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
-  }>> {
+  private async getCredentialsDueForRotation(): Promise<
+    Array<{
+      userId: string;
+      lastRotated: Date;
+      riskLevel: "LOW" | "MEDIUM" | "HIGH";
+    }>
+  > {
     // This would query the actual database in production
     // For now, return mock data for demonstration
     const now = Date.now();
@@ -660,7 +645,7 @@ export class SecurityMonitoringService {
         riskLevel: "HIGH",
       },
       {
-        userId: "user2", 
+        userId: "user2",
         lastRotated: new Date(now - 80 * 24 * 60 * 60 * 1000), // 80 days old
         riskLevel: "MEDIUM",
       },
@@ -679,10 +664,10 @@ export class SecurityMonitoringService {
       // 4. Notify the user of the rotation
 
       console.log(`[SecurityMonitoring] Rotating credentials for user ${userId}`);
-      
+
       // For now, simulate credential rotation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       return { success: true };
     } catch (error) {
       return {
@@ -712,7 +697,7 @@ export class SecurityMonitoringService {
     try {
       // Detect anomalies
       const anomalies = await this.detectSecurityAnomalies();
-      
+
       // Generate incidents for critical anomalies
       for (const anomaly of anomalies) {
         if (anomaly.severity === "CRITICAL" && !anomaly.resolved) {
@@ -738,9 +723,8 @@ export class SecurityMonitoringService {
       // Clean up old incidents (keep last 7 days)
       const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
       this.incidents = this.incidents.filter(
-        incident => new Date(incident.occurredAt).getTime() > sevenDaysAgo
+        (incident) => new Date(incident.occurredAt).getTime() > sevenDaysAgo
       );
-
     } catch (error) {
       console.error("[SecurityMonitoring] Security assessment failed:", error);
     }
@@ -766,7 +750,7 @@ export const securityMonitoring = SecurityMonitoringService.getInstance();
 
 // Auto-initialize in production environments
 if (process.env.NODE_ENV === "production") {
-  securityMonitoring.initialize().catch(error => {
+  securityMonitoring.initialize().catch((error) => {
     console.error("[SecurityMonitoring] Failed to initialize:", error);
   });
 }

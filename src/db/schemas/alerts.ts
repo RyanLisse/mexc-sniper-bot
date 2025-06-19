@@ -1,5 +1,4 @@
 import { boolean, integer, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
-import type { z } from "zod";
 
 // ==========================================
 // ALERT SYSTEM SCHEMAS

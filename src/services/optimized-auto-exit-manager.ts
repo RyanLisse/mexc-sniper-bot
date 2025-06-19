@@ -1,3 +1,4 @@
+import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import {
   type NewExecutionHistory,
@@ -5,11 +6,13 @@ import {
   snipeTargets,
   userPreferences,
 } from "../db/schema";
-import { getMexcService } from "./mexc-unified-exports";
 import type { ExitLevel, ExitStrategy } from "../types/exit-strategies";
 import { EXIT_STRATEGIES } from "../types/exit-strategies";
-import { TakeProfitStrategy, getTakeProfitStrategyById } from "../types/take-profit-strategies";
-import { and, eq } from "drizzle-orm";
+import {
+  type TakeProfitStrategy,
+  getTakeProfitStrategyById,
+} from "../types/take-profit-strategies";
+import { getMexcService } from "./mexc-unified-exports";
 
 export interface ActivePosition {
   id: number;
@@ -340,7 +343,12 @@ export class OptimizedAutoExitManager {
   private async evaluateExitCondition(
     position: ActivePosition,
     currentPrice: number
-  ): Promise<{ shouldExit: boolean; reason?: string; quantityToSell?: number; takeProfitLevel?: string }> {
+  ): Promise<{
+    shouldExit: boolean;
+    reason?: string;
+    quantityToSell?: number;
+    takeProfitLevel?: string;
+  }> {
     const priceMultiplier = currentPrice / position.entryPrice;
     const profitPercent = (priceMultiplier - 1) * 100;
 
@@ -387,7 +395,12 @@ export class OptimizedAutoExitManager {
   private async evaluateEnhancedTakeProfitStrategy(
     position: ActivePosition,
     profitPercent: number
-  ): Promise<{ shouldExit: boolean; reason?: string; quantityToSell?: number; takeProfitLevel?: string }> {
+  ): Promise<{
+    shouldExit: boolean;
+    reason?: string;
+    quantityToSell?: number;
+    takeProfitLevel?: string;
+  }> {
     try {
       // Get user preferences to check for enhanced take profit strategy
       const userPrefs = await db

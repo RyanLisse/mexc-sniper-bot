@@ -24,12 +24,12 @@ import type {
   PatternReadyStateMessage,
   TradingSignalMessage,
 } from "../lib/websocket-types";
+import { webSocketServer } from "../services/websocket-server";
 import type { AgentRegistry } from "./coordination/agent-registry";
 import type { EnhancedMexcOrchestrator } from "./coordination/enhanced-orchestrator";
 import type { PerformanceCollector } from "./coordination/performance-collector";
 import type { WorkflowEngine } from "./coordination/workflow-engine";
 import type { MexcWorkflowResult } from "./orchestrator-types";
-import { webSocketServer } from "../services/websocket-server";
 
 // ======================
 // Agent Status Tracker

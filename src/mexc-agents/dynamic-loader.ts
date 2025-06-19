@@ -97,7 +97,9 @@ export class DynamicAgentLoader {
       case "safety-base": {
         // SafetyBaseAgent is abstract, can't be instantiated directly
         // Return a concrete implementation or throw error
-        throw new Error("SafetyBaseAgent is abstract and cannot be instantiated directly. Use a concrete safety agent instead.");
+        throw new Error(
+          "SafetyBaseAgent is abstract and cannot be instantiated directly. Use a concrete safety agent instead."
+        );
       }
 
       case "risk-manager": {

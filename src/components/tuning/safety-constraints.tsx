@@ -7,25 +7,25 @@
  * Ensures that optimizations don't exceed safe risk boundaries.
  */
 
-import { Shield, AlertTriangle, Lock, Unlock, Settings, CheckCircle2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Lock, Settings, Shield, XCircle } from "lucide-react";
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
-import { Slider } from "../ui/slider";
-import { Alert, AlertDescription } from "../ui/alert";
 import { Separator } from "../ui/separator";
+import { Slider } from "../ui/slider";
+import { Switch } from "../ui/switch";
 
 interface SafetyConstraint {
   id: string;
   name: string;
   description: string;
-  type: 'threshold' | 'range' | 'boolean' | 'enum';
-  category: 'risk' | 'performance' | 'compliance' | 'operational';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "threshold" | "range" | "boolean" | "enum";
+  category: "risk" | "performance" | "compliance" | "operational";
+  severity: "low" | "medium" | "high" | "critical";
   enabled: boolean;
   locked: boolean; // Cannot be disabled by users
   value: any;
@@ -36,7 +36,7 @@ interface SafetyConstraint {
     options?: string[];
     required?: boolean;
   };
-  currentStatus: 'ok' | 'warning' | 'violation';
+  currentStatus: "ok" | "warning" | "violation";
   lastChecked: string;
   violationCount: number;
 }
@@ -49,33 +49,36 @@ interface SafetyConstraintsProps {
   readOnly?: boolean;
 }
 
-export function SafetyConstraints({ 
-  constraints, 
-  onConstraintUpdate, 
-  onConstraintToggle, 
+export function SafetyConstraints({
+  constraints,
+  onConstraintUpdate,
+  onConstraintToggle,
   onValidateAll,
-  readOnly = false 
+  readOnly = false,
 }: SafetyConstraintsProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(['risk', 'performance'])
+    new Set(["risk", "performance"])
   );
 
-  const categorizedConstraints = constraints.reduce((acc, constraint) => {
-    if (!acc[constraint.category]) {
-      acc[constraint.category] = [];
-    }
-    acc[constraint.category].push(constraint);
-    return acc;
-  }, {} as Record<string, SafetyConstraint[]>);
+  const categorizedConstraints = constraints.reduce(
+    (acc, constraint) => {
+      if (!acc[constraint.category]) {
+        acc[constraint.category] = [];
+      }
+      acc[constraint.category].push(constraint);
+      return acc;
+    },
+    {} as Record<string, SafetyConstraint[]>
+  );
 
   const overallStatus = React.useMemo(() => {
-    const violationCount = constraints.filter(c => c.currentStatus === 'violation').length;
-    const warningCount = constraints.filter(c => c.currentStatus === 'warning').length;
-    const enabledCount = constraints.filter(c => c.enabled).length;
-    
-    if (violationCount > 0) return 'critical';
-    if (warningCount > 0) return 'warning';
-    return 'healthy';
+    const violationCount = constraints.filter((c) => c.currentStatus === "violation").length;
+    const warningCount = constraints.filter((c) => c.currentStatus === "warning").length;
+    const enabledCount = constraints.filter((c) => c.enabled).length;
+
+    if (violationCount > 0) return "critical";
+    if (warningCount > 0) return "warning";
+    return "healthy";
   }, [constraints]);
 
   const toggleCategory = (category: string) => {
@@ -102,7 +105,7 @@ export function SafetyConstraints({
     };
 
     switch (constraint.type) {
-      case 'threshold':
+      case "threshold":
         return (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -116,7 +119,7 @@ export function SafetyConstraints({
                 />
               </div>
             </div>
-            
+
             <div className="px-3">
               <Slider
                 value={[constraint.value]}
@@ -136,7 +139,7 @@ export function SafetyConstraints({
           </div>
         );
 
-      case 'range':
+      case "range":
         const [min, max] = Array.isArray(constraint.value) ? constraint.value : [0, 100];
         return (
           <div className="space-y-2">
@@ -151,13 +154,13 @@ export function SafetyConstraints({
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-2">
               <Input
                 type="number"
                 placeholder="Min"
                 value={min}
-                onChange={(e) => handleValueChange([parseFloat(e.target.value) || 0, max])}
+                onChange={(e) => handleValueChange([Number.parseFloat(e.target.value) || 0, max])}
                 disabled={!constraint.enabled || readOnly}
                 className="text-sm"
               />
@@ -165,7 +168,7 @@ export function SafetyConstraints({
                 type="number"
                 placeholder="Max"
                 value={max}
-                onChange={(e) => handleValueChange([min, parseFloat(e.target.value) || 100])}
+                onChange={(e) => handleValueChange([min, Number.parseFloat(e.target.value) || 100])}
                 disabled={!constraint.enabled || readOnly}
                 className="text-sm"
               />
@@ -173,7 +176,7 @@ export function SafetyConstraints({
           </div>
         );
 
-      case 'boolean':
+      case "boolean":
         return (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -188,7 +191,7 @@ export function SafetyConstraints({
           </div>
         );
 
-      case 'enum':
+      case "enum":
         return (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -202,7 +205,7 @@ export function SafetyConstraints({
                 />
               </div>
             </div>
-            
+
             <select
               value={constraint.value}
               onChange={(e) => handleValueChange(e.target.value)}
@@ -225,11 +228,11 @@ export function SafetyConstraints({
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'ok':
+      case "ok":
         return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'warning':
+      case "warning":
         return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'violation':
+      case "violation":
         return <XCircle className="h-4 w-4 text-red-500" />;
       default:
         return <Settings className="h-4 w-4 text-gray-500" />;
@@ -238,14 +241,17 @@ export function SafetyConstraints({
 
   const getSeverityBadge = (severity: string) => {
     const variants = {
-      low: 'secondary',
-      medium: 'default',
-      high: 'default',
-      critical: 'destructive',
+      low: "secondary",
+      medium: "default",
+      high: "default",
+      critical: "destructive",
     } as const;
 
     return (
-      <Badge variant={variants[severity as keyof typeof variants] || 'secondary'} className="text-xs">
+      <Badge
+        variant={variants[severity as keyof typeof variants] || "secondary"}
+        className="text-xs"
+      >
         {severity}
       </Badge>
     );
@@ -253,13 +259,13 @@ export function SafetyConstraints({
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'risk':
+      case "risk":
         return <Shield className="h-4 w-4" />;
-      case 'performance':
+      case "performance":
         return <Settings className="h-4 w-4" />;
-      case 'compliance':
+      case "compliance":
         return <Lock className="h-4 w-4" />;
-      case 'operational':
+      case "operational":
         return <Settings className="h-4 w-4" />;
       default:
         return <Settings className="h-4 w-4" />;
@@ -279,16 +285,21 @@ export function SafetyConstraints({
             Configure safety limits for parameter optimization and trading operations
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {getStatusIcon(overallStatus)}
-          <Badge 
-            variant={overallStatus === 'critical' ? 'destructive' : 
-                     overallStatus === 'warning' ? 'secondary' : 'default'}
+          <Badge
+            variant={
+              overallStatus === "critical"
+                ? "destructive"
+                : overallStatus === "warning"
+                  ? "secondary"
+                  : "default"
+            }
           >
             {overallStatus}
           </Badge>
-          
+
           {onValidateAll && (
             <Button variant="outline" size="sm" onClick={onValidateAll}>
               Validate All
@@ -298,14 +309,13 @@ export function SafetyConstraints({
       </div>
 
       {/* Overall Status Alert */}
-      {overallStatus !== 'healthy' && (
-        <Alert variant={overallStatus === 'critical' ? 'destructive' : 'default'}>
+      {overallStatus !== "healthy" && (
+        <Alert variant={overallStatus === "critical" ? "destructive" : "default"}>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            {overallStatus === 'critical' 
-              ? 'Critical safety violations detected. Review and fix before proceeding.'
-              : 'Some safety constraints are in warning state. Review recommended.'
-            }
+            {overallStatus === "critical"
+              ? "Critical safety violations detected. Review and fix before proceeding."
+              : "Some safety constraints are in warning state. Review recommended."}
           </AlertDescription>
         </Alert>
       )}
@@ -313,40 +323,35 @@ export function SafetyConstraints({
       {/* Constraint Categories */}
       {Object.entries(categorizedConstraints).map(([category, categoryConstraints]) => (
         <Card key={category}>
-          <CardHeader 
-            className="cursor-pointer" 
-            onClick={() => toggleCategory(category)}
-          >
+          <CardHeader className="cursor-pointer" onClick={() => toggleCategory(category)}>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {getCategoryIcon(category)}
                 <span className="capitalize">{category} Constraints</span>
                 <Badge variant="outline" className="text-xs">
-                  {categoryConstraints.filter(c => c.enabled).length}/{categoryConstraints.length}
+                  {categoryConstraints.filter((c) => c.enabled).length}/{categoryConstraints.length}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center gap-2">
-                {categoryConstraints.some(c => c.currentStatus === 'violation') && (
+                {categoryConstraints.some((c) => c.currentStatus === "violation") && (
                   <XCircle className="h-4 w-4 text-red-500" />
                 )}
-                {categoryConstraints.some(c => c.currentStatus === 'warning') && (
+                {categoryConstraints.some((c) => c.currentStatus === "warning") && (
                   <AlertTriangle className="h-4 w-4 text-yellow-500" />
                 )}
-                <span className="text-sm">
-                  {expandedCategories.has(category) ? '▼' : '▶'}
-                </span>
+                <span className="text-sm">{expandedCategories.has(category) ? "▼" : "▶"}</span>
               </div>
             </CardTitle>
           </CardHeader>
-          
+
           {expandedCategories.has(category) && (
             <CardContent>
               <div className="space-y-6">
                 {categoryConstraints.map((constraint, index) => (
                   <div key={constraint.id}>
                     {index > 0 && <Separator />}
-                    
+
                     <div className="space-y-3">
                       {/* Constraint Header */}
                       <div className="flex items-start justify-between">
@@ -362,13 +367,13 @@ export function SafetyConstraints({
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {constraint.description}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{constraint.description}</p>
                         </div>
-                        
+
                         <div className="text-right text-sm text-muted-foreground">
-                          <div>Last checked: {new Date(constraint.lastChecked).toLocaleTimeString()}</div>
+                          <div>
+                            Last checked: {new Date(constraint.lastChecked).toLocaleTimeString()}
+                          </div>
                           {constraint.violationCount > 0 && (
                             <div className="text-red-600">
                               {constraint.violationCount} violations
@@ -378,22 +383,21 @@ export function SafetyConstraints({
                       </div>
 
                       {/* Constraint Control */}
-                      <div className="ml-6">
-                        {renderConstraintControl(constraint)}
-                      </div>
+                      <div className="ml-6">{renderConstraintControl(constraint)}</div>
 
                       {/* Constraint Status */}
-                      {constraint.currentStatus !== 'ok' && (
-                        <Alert 
-                          variant={constraint.currentStatus === 'violation' ? 'destructive' : 'default'}
+                      {constraint.currentStatus !== "ok" && (
+                        <Alert
+                          variant={
+                            constraint.currentStatus === "violation" ? "destructive" : "default"
+                          }
                           className="ml-6"
                         >
                           <AlertTriangle className="h-4 w-4" />
                           <AlertDescription>
-                            {constraint.currentStatus === 'violation' 
+                            {constraint.currentStatus === "violation"
                               ? `Safety constraint violated! Current value exceeds safe limits.`
-                              : `Warning: Constraint approaching limits. Monitor closely.`
-                            }
+                              : `Warning: Constraint approaching limits. Monitor closely.`}
                           </AlertDescription>
                         </Alert>
                       )}
@@ -415,28 +419,28 @@ export function SafetyConstraints({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {constraints.filter(c => c.currentStatus === 'ok').length}
+                {constraints.filter((c) => c.currentStatus === "ok").length}
               </div>
               <div className="text-sm text-muted-foreground">Healthy</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold text-yellow-600">
-                {constraints.filter(c => c.currentStatus === 'warning').length}
+                {constraints.filter((c) => c.currentStatus === "warning").length}
               </div>
               <div className="text-sm text-muted-foreground">Warnings</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
-                {constraints.filter(c => c.currentStatus === 'violation').length}
+                {constraints.filter((c) => c.currentStatus === "violation").length}
               </div>
               <div className="text-sm text-muted-foreground">Violations</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold">
-                {constraints.filter(c => c.enabled).length}
+                {constraints.filter((c) => c.enabled).length}
               </div>
               <div className="text-sm text-muted-foreground">Enabled</div>
             </div>

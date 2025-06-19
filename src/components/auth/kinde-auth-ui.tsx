@@ -1,17 +1,11 @@
 "use client";
 
-import { Button } from "../ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { signIn, signUp, useAuth } from "../../lib/kinde-auth-client";
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { signIn, signUp, useAuth } from "../../lib/kinde-auth-client";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
 export function KindeAuthUI() {
   const { user, isAuthenticated, isLoading } = useAuth();

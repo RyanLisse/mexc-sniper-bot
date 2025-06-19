@@ -15,6 +15,7 @@
  * });
  */
 
+import type { NextRequest } from "next/server";
 import {
   getOptionalAuth,
   getUserIdFromBody,
@@ -40,7 +41,6 @@ import {
   getClientIP,
   logSecurityEvent,
 } from "./rate-limiter";
-import type { NextRequest } from "next/server";
 
 // =======================
 // Types and Interfaces

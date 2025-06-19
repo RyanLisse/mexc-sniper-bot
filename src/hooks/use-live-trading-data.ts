@@ -13,6 +13,7 @@
  * - Performance analytics
  */
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   TradingBalanceMessage,
   TradingExecutionMessage,
@@ -20,7 +21,6 @@ import type {
   TradingPriceMessage,
   TradingSignalMessage,
 } from "../lib/websocket-types";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocket } from "./use-websocket";
 
 // ======================
@@ -184,7 +184,7 @@ export interface UseLiveTradingDataResult {
 class PriceAnalyticsEngine {
   private priceHistory = new Map<string, Array<{ price: number; timestamp: number }>>();
   private readonly maxHistoryPoints = 1000;
-  
+
   // PERFORMANCE OPTIMIZATION: Cache recent calculations to avoid repeated work
   private priceChangeCache = new Map<string, { result: number; timestamp: number }>();
   private topMoversCache = new Map<string, { result: PriceData[]; timestamp: number }>();
@@ -196,16 +196,16 @@ class PriceAnalyticsEngine {
     }
 
     const history = this.priceHistory.get(symbol)!;
-    
+
     // OPTIMIZATION: Use circular buffer approach instead of array.splice
     // This reduces memory allocations and improves performance
     if (history.length >= this.maxHistoryPoints) {
       // Remove oldest entry efficiently
       history.pop();
     }
-    
+
     history.unshift({ price, timestamp });
-    
+
     // Invalidate caches for this symbol
     this.invalidateCacheForSymbol(symbol);
   }
@@ -214,7 +214,7 @@ class PriceAnalyticsEngine {
     // OPTIMIZATION: Check cache first to avoid expensive calculations
     const cacheKey = `${symbol}-${timeframeMs}`;
     const cached = this.priceChangeCache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
       return cached.result;
     }
@@ -226,32 +226,35 @@ class PriceAnalyticsEngine {
     const cutoff = now - timeframeMs;
 
     const currentPrice = history[0].price;
-    
+
     // OPTIMIZATION: Use binary search instead of linear search for better performance
     const pastPrice = this.findPriceAtTimestamp(history, cutoff);
 
     if (!pastPrice) return 0;
 
     const result = ((currentPrice - pastPrice) / pastPrice) * 100;
-    
+
     // Cache the result
     this.priceChangeCache.set(cacheKey, { result, timestamp: Date.now() });
-    
+
     return result;
   }
 
   // OPTIMIZATION: Binary search for timestamp lookup (O(log n) vs O(n))
-  private findPriceAtTimestamp(history: Array<{ price: number; timestamp: number }>, targetTimestamp: number): number | null {
+  private findPriceAtTimestamp(
+    history: Array<{ price: number; timestamp: number }>,
+    targetTimestamp: number
+  ): number | null {
     if (history.length === 0) return null;
-    
+
     let left = 0;
     let right = history.length - 1;
     let bestMatch: number | null = null;
-    
+
     while (left <= right) {
       const mid = Math.floor((left + right) / 2);
       const midTimestamp = history[mid].timestamp;
-      
+
       if (midTimestamp <= targetTimestamp) {
         bestMatch = history[mid].price;
         right = mid - 1;
@@ -259,7 +262,7 @@ class PriceAnalyticsEngine {
         left = mid + 1;
       }
     }
-    
+
     return bestMatch;
   }
 
@@ -271,7 +274,7 @@ class PriceAnalyticsEngine {
     // OPTIMIZATION: Check cache first
     const cacheKey = `${type}-${limit}-${prices.size}`;
     const cached = this.topMoversCache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
       return cached.result;
     }
@@ -279,41 +282,41 @@ class PriceAnalyticsEngine {
     // OPTIMIZATION: Use array filtering and partial sorting for better performance
     const pricesArray = Array.from(prices.values());
     const filtered = pricesArray.filter((p) => p.changePercent !== 0);
-    
+
     // OPTIMIZATION: Use partial sort (quickselect) instead of full sort for top K elements
     const result = this.partialSort(filtered, type === "gainers", limit);
-    
+
     // Cache the result
     this.topMoversCache.set(cacheKey, { result, timestamp: Date.now() });
-    
+
     return result;
   }
 
   // OPTIMIZATION: Partial sort implementation for top K elements (O(n) average case)
   private partialSort(arr: PriceData[], descending: boolean, k: number): PriceData[] {
     if (k >= arr.length) {
-      return arr.sort((a, b) => 
+      return arr.sort((a, b) =>
         descending ? b.changePercent - a.changePercent : a.changePercent - b.changePercent
       );
     }
-    
+
     // For small k, use heap-based approach
     if (k <= 10) {
       return arr
-        .sort((a, b) => 
+        .sort((a, b) =>
           descending ? b.changePercent - a.changePercent : a.changePercent - b.changePercent
         )
         .slice(0, k);
     }
-    
+
     // For larger k, use quickselect algorithm
     return this.quickSelect(arr, k, descending);
   }
 
   private quickSelect(arr: PriceData[], k: number, descending: boolean): PriceData[] {
-    const compare = (a: PriceData, b: PriceData) => 
+    const compare = (a: PriceData, b: PriceData) =>
       descending ? b.changePercent - a.changePercent : a.changePercent - b.changePercent;
-    
+
     // Simple implementation - in production, use more sophisticated quickselect
     return arr.sort(compare).slice(0, k);
   }
@@ -321,11 +324,11 @@ class PriceAnalyticsEngine {
   private invalidateCacheForSymbol(symbol: string): void {
     // Remove cached entries related to this symbol
     for (const key of this.priceChangeCache.keys()) {
-      if (key.startsWith(symbol + '-')) {
+      if (key.startsWith(symbol + "-")) {
         this.priceChangeCache.delete(key);
       }
     }
-    
+
     // Clear top movers cache as it depends on all symbols
     this.topMoversCache.clear();
   }
@@ -340,15 +343,20 @@ class PriceAnalyticsEngine {
   getPerformanceMetrics() {
     return {
       historySize: this.priceHistory.size,
-      totalHistoryPoints: Array.from(this.priceHistory.values()).reduce((sum, arr) => sum + arr.length, 0),
+      totalHistoryPoints: Array.from(this.priceHistory.values()).reduce(
+        (sum, arr) => sum + arr.length,
+        0
+      ),
       cacheHitRatio: {
         priceChange: this.priceChangeCache.size,
         topMovers: this.topMoversCache.size,
       },
       memoryUsage: {
         historyMB: this.estimateMemoryUsage(this.priceHistory),
-        cacheMB: this.estimateMemoryUsage(this.priceChangeCache) + this.estimateMemoryUsage(this.topMoversCache),
-      }
+        cacheMB:
+          this.estimateMemoryUsage(this.priceChangeCache) +
+          this.estimateMemoryUsage(this.topMoversCache),
+      },
     };
   }
 
@@ -840,7 +848,7 @@ export function useLiveTradingData(
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
-      
+
       // Clear all data to prevent memory leaks
       setPrices(new Map());
       setOrderBooks(new Map());
@@ -848,14 +856,14 @@ export function useLiveTradingData(
       setExecutions([]);
       setPositions([]);
       setBalances([]);
-      
+
       // Clear analytics caches
       analyticsRef.current.clear();
       priceThrottleRef.current.clear();
-      
+
       // Clear metrics calculator
       metricsRef.current = new TradingMetricsCalculator();
-      
+
       console.log("[useLiveTradingData] Memory cleanup completed");
     };
   }, []);

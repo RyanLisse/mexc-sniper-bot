@@ -15,31 +15,31 @@
 import type { NextResponse } from "next/server";
 import { HTTP_STATUS, apiResponse, createErrorResponse } from "./api-response";
 import {
+  ApiError,
   ApplicationError,
-  ValidationError,
   AuthenticationError,
   AuthorizationError,
-  ApiError,
-  RateLimitError,
-  DatabaseError,
-  NotFoundError,
-  ConflictError,
   BusinessLogicError,
-  TradingError,
   ConfigurationError,
-  TimeoutError,
+  ConflictError,
+  DatabaseError,
   NetworkError,
+  NotFoundError,
+  RateLimitError,
+  TimeoutError,
+  TradingError,
+  ValidationError,
+  isApiError,
   isApplicationError,
-  isValidationError,
   isAuthenticationError,
   isAuthorizationError,
-  isApiError,
-  isRateLimitError,
+  isBusinessLogicError,
   isDatabaseError,
   isNotFoundError,
-  isBusinessLogicError,
-  isTradingError,
   isOperationalError,
+  isRateLimitError,
+  isTradingError,
+  isValidationError,
 } from "./errors";
 
 // ============================================================================
@@ -252,10 +252,10 @@ export class ErrorMetrics {
     const now = Date.now();
     const times = this.timestamps.get(errorCode) || [];
     times.push(now);
-    
+
     // Keep only last hour of timestamps
     const oneHourAgo = now - 60 * 60 * 1000;
-    const recentTimes = times.filter(time => time > oneHourAgo);
+    const recentTimes = times.filter((time) => time > oneHourAgo);
     this.timestamps.set(errorCode, recentTimes);
   }
 
@@ -267,7 +267,7 @@ export class ErrorMetrics {
     const times = this.timestamps.get(errorCode) || [];
     const now = Date.now();
     const windowStart = now - windowMs;
-    const recentErrors = times.filter(time => time > windowStart);
+    const recentErrors = times.filter((time) => time > windowStart);
     return recentErrors.length / (windowMs / 1000); // errors per second
   }
 
@@ -281,7 +281,7 @@ export class ErrorMetrics {
       .map(([code, count]) => ({
         code,
         count,
-        rate: this.getErrorRate(code)
+        rate: this.getErrorRate(code),
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, limit);
@@ -358,7 +358,9 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
       ...(isRateLimitError(error) ? { retryAfter: error.retryAfter } : {}),
       ...(isApiError(error) ? { apiName: error.apiName, apiStatusCode: error.apiStatusCode } : {}),
       ...(isDatabaseError(error) ? { query: error.query } : {}),
-      ...(isNotFoundError(error) ? { resourceType: error.resourceType, resourceId: error.resourceId } : {}),
+      ...(isNotFoundError(error)
+        ? { resourceType: error.resourceType, resourceId: error.resourceId }
+        : {}),
     });
 
     return apiResponse(response, error.statusCode);
@@ -366,7 +368,10 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
 
   // Handle standard errors with enhanced classification
   if (error instanceof Error) {
-    errorLogger.error(`Unhandled error (${errorType}): ${error.message}`, error, { ...context, errorType });
+    errorLogger.error(`Unhandled error (${errorType}): ${error.message}`, error, {
+      ...context,
+      errorType,
+    });
 
     // Enhanced error pattern detection
     if (ErrorClassifier.isConnection(error)) {
@@ -390,7 +395,11 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
     }
 
     // Database specific errors
-    if (error.message.includes("database") || error.message.includes("sql") || error.message.includes("query")) {
+    if (
+      error.message.includes("database") ||
+      error.message.includes("sql") ||
+      error.message.includes("query")
+    ) {
       return apiResponse(
         createErrorResponse("Database error occurred", {
           code: "DATABASE_ERROR",
@@ -486,13 +495,15 @@ export const StandardErrors = {
 // Error Middleware Factory
 // ============================================================================
 
-export function createErrorMiddleware(options: {
-  enableRetry?: boolean;
-  maxRetries?: number;
-  enableMetrics?: boolean;
-  logLevel?: 'error' | 'warn' | 'info';
-} = {}) {
-  const { enableRetry = false, maxRetries = 3, enableMetrics = true, logLevel = 'error' } = options;
+export function createErrorMiddleware(
+  options: {
+    enableRetry?: boolean;
+    maxRetries?: number;
+    enableMetrics?: boolean;
+    logLevel?: "error" | "warn" | "info";
+  } = {}
+) {
+  const { enableRetry = false, maxRetries = 3, enableMetrics = true, logLevel = "error" } = options;
 
   return {
     /**
@@ -534,7 +545,7 @@ export function createErrorMiddleware(options: {
         };
 
         if (isOperationalError(error)) {
-          if (logLevel === 'warn' || logLevel === 'info') {
+          if (logLevel === "warn" || logLevel === "info") {
             errorLogger.warn(`Operation failed: ${operationName}`, error as Error, enrichedContext);
           }
         } else {
@@ -567,14 +578,11 @@ export function createErrorMiddleware(options: {
           if (enableMetrics) {
             errorMetrics.record(ErrorClassifier.getErrorType(error));
           }
-          
-          collector.add(
-            error instanceof Error ? error.message : String(error),
-            `operation_${i}`
-          );
-          
+
+          collector.add(error instanceof Error ? error.message : String(error), `operation_${i}`);
+
           results.push(error as Error);
-          
+
           if (!continueOnError) {
             break;
           }

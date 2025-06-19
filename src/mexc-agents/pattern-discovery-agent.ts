@@ -253,7 +253,9 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Extract pattern-relevant data from calendar entries
-  private extractPatternsFromCalendarData(calendarEntries: CalendarEntry[]): PatternCalendarEntry[] {
+  private extractPatternsFromCalendarData(
+    calendarEntries: CalendarEntry[]
+  ): PatternCalendarEntry[] {
     const now = Date.now();
 
     return calendarEntries

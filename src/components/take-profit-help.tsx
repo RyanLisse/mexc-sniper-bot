@@ -1,14 +1,5 @@
 "use client";
 
-import { Badge } from "./ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { Separator } from "./ui/separator";
 import {
   AlertTriangle,
   BarChart3,
@@ -19,6 +10,9 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
+import { Badge } from "./ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Separator } from "./ui/separator";
 
 export function TakeProfitHelp() {
   return (

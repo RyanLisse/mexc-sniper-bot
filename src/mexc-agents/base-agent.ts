@@ -1,8 +1,8 @@
 import crypto from "node:crypto";
+import OpenAI from "openai";
 import { CACHE_CONSTANTS, TIME_CONSTANTS } from "../lib/constants";
 import { globalEnhancedAgentCache, initializeAgentCache } from "../lib/enhanced-agent-cache";
 import { ErrorLoggingService } from "../services/error-logging-service";
-import OpenAI from "openai";
 
 export interface AgentConfig {
   name: string;
@@ -41,7 +41,7 @@ export interface AgentResponse {
   };
 }
 
-export type AgentStatus = 'idle' | 'running' | 'error' | 'offline';
+export type AgentStatus = "idle" | "running" | "error" | "offline";
 
 export class BaseAgent {
   protected openai: OpenAI;
@@ -62,7 +62,10 @@ export class BaseAgent {
     this.responseCache = new Map();
 
     // Clean up expired cache entries every 10 minutes
-    this.cacheCleanupInterval = setInterval(() => this.cleanupExpiredCache(), TIME_CONSTANTS.MINUTE_MS * 10);
+    this.cacheCleanupInterval = setInterval(
+      () => this.cleanupExpiredCache(),
+      TIME_CONSTANTS.MINUTE_MS * 10
+    );
 
     // Initialize enhanced agent cache for this agent
     if (this.config.cacheEnabled) {
@@ -248,7 +251,7 @@ export class BaseAgent {
           error instanceof Error ? error.message : String(error)
         }`
       );
-      
+
       // Log with proper context
       await errorLoggingService.logError(agentError, {
         agent: this.config.name,
@@ -257,7 +260,7 @@ export class BaseAgent {
         originalError: error instanceof Error ? error.message : String(error),
         stackTrace: error instanceof Error ? error.stack : undefined,
       });
-      
+
       throw agentError;
     }
   }
@@ -271,7 +274,7 @@ export class BaseAgent {
    * Get agent status
    */
   getStatus(): AgentStatus {
-    return 'idle'; // Default implementation, subclasses can override
+    return "idle"; // Default implementation, subclasses can override
   }
 
   /**

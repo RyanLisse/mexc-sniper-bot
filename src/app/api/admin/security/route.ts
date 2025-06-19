@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import {
   HTTP_STATUS,
   apiResponse,
@@ -11,7 +12,6 @@ import {
   getSecurityEvents,
   isIPSuspicious,
 } from "../../../../lib/rate-limiter";
-import type { NextRequest } from "next/server";
 
 /**
  * GET /api/admin/security

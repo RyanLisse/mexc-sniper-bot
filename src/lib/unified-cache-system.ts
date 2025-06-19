@@ -50,42 +50,42 @@ export interface CacheConfig {
   maxMemoryEntries: number;
   maxMemorySize: number; // in bytes
   defaultTTL: number;
-  
+
   // Cleanup and maintenance
   cleanupInterval: number;
-  evictionPolicy: 'lru' | 'lfu' | 'ttl' | 'random';
-  
+  evictionPolicy: "lru" | "lfu" | "ttl" | "random";
+
   // Features
   enableMetrics: boolean;
   enablePersistence: boolean;
   enableCompression: boolean;
   enableEncryption: boolean;
-  
+
   // Performance
   batchSize: number;
   asyncWrite: boolean;
-  
+
   // External backends
   redisUrl?: string;
   redisConfig?: any;
 }
 
-export type CacheDataType = 
-  | 'api_response'
-  | 'agent_response' 
-  | 'market_data'
-  | 'user_data'
-  | 'config'
-  | 'health_check'
-  | 'workflow_result'
-  | 'pattern_analysis'
-  | 'trading_signal'
-  | 'session'
-  | 'generic';
+export type CacheDataType =
+  | "api_response"
+  | "agent_response"
+  | "market_data"
+  | "user_data"
+  | "config"
+  | "health_check"
+  | "workflow_result"
+  | "pattern_analysis"
+  | "trading_signal"
+  | "session"
+  | "generic";
 
-export type CachePriority = 'low' | 'medium' | 'high' | 'critical';
+export type CachePriority = "low" | "medium" | "high" | "critical";
 
-export type CacheLevel = 'L1' | 'L2' | 'L3';
+export type CacheLevel = "L1" | "L2" | "L3";
 
 export interface CacheMetrics {
   hits: number;
@@ -133,7 +133,10 @@ class MemoryCache implements CacheBackend {
   private accessOrder = new Map<string, number>();
   private currentTime = 0;
 
-  constructor(private maxEntries: number, private maxSize: number) {}
+  constructor(
+    private maxEntries: number,
+    private maxSize: number
+  ) {}
 
   async get(key: string): Promise<CacheEntry | null> {
     const entry = this.cache.get(key);
@@ -189,8 +192,8 @@ class MemoryCache implements CacheBackend {
   }
 
   private async evictLRU(): Promise<void> {
-    let oldestKey = '';
-    let oldestTime = Infinity;
+    let oldestKey = "";
+    let oldestTime = Number.POSITIVE_INFINITY;
 
     for (const [key, time] of this.accessOrder.entries()) {
       if (time < oldestTime) {
@@ -219,7 +222,7 @@ class MemoryCache implements CacheBackend {
 class PersistentCache implements CacheBackend {
   private memoryIndex = new Map<string, { file: string; expiresAt: number }>();
 
-  constructor(private baseDir: string = './.cache') {}
+  constructor(private baseDir = "./.cache") {}
 
   async get(key: string): Promise<CacheEntry | null> {
     const index = this.memoryIndex.get(key);
@@ -239,9 +242,9 @@ class PersistentCache implements CacheBackend {
     const fileName = this.generateFileName(key);
     this.memoryIndex.set(key, {
       file: fileName,
-      expiresAt: entry.expiresAt
+      expiresAt: entry.expiresAt,
     });
-    
+
     // In a real implementation, write to file system
     // For now, just track in memory index
   }
@@ -270,7 +273,7 @@ class PersistentCache implements CacheBackend {
   }
 
   private generateFileName(key: string): string {
-    return crypto.createHash('md5').update(key).digest('hex') + '.cache';
+    return crypto.createHash("md5").update(key).digest("hex") + ".cache";
   }
 }
 
@@ -287,68 +290,70 @@ class CacheStrategyManager {
 
   private initializeDefaultStrategies(): void {
     // API responses - medium TTL, high priority for trading data
-    this.strategies.set('api_response', {
+    this.strategies.set("api_response", {
       ttl: 30000, // 30 seconds
-      priority: 'high',
+      priority: "high",
       enableInvalidation: true,
-      dependencies: ['market_data'],
-      tags: ['api', 'external']
+      dependencies: ["market_data"],
+      tags: ["api", "external"],
     });
 
     // Agent responses - longer TTL, medium priority
-    this.strategies.set('agent_response', {
+    this.strategies.set("agent_response", {
       ttl: 300000, // 5 minutes
-      priority: 'medium',
+      priority: "medium",
       enableInvalidation: true,
-      dependencies: ['market_data', 'trading_signal'],
-      tags: ['agent', 'ai']
+      dependencies: ["market_data", "trading_signal"],
+      tags: ["agent", "ai"],
     });
 
     // Market data - short TTL, critical priority
-    this.strategies.set('market_data', {
+    this.strategies.set("market_data", {
       ttl: 5000, // 5 seconds
-      priority: 'critical',
+      priority: "critical",
       enableInvalidation: true,
       dependencies: [],
-      tags: ['market', 'trading', 'real-time']
+      tags: ["market", "trading", "real-time"],
     });
 
     // User data - long TTL, medium priority
-    this.strategies.set('user_data', {
+    this.strategies.set("user_data", {
       ttl: 3600000, // 1 hour
-      priority: 'medium',
+      priority: "medium",
       enableInvalidation: false,
       dependencies: [],
-      tags: ['user', 'profile']
+      tags: ["user", "profile"],
     });
 
     // Health checks - medium TTL, low priority
-    this.strategies.set('health_check', {
+    this.strategies.set("health_check", {
       ttl: 60000, // 1 minute
-      priority: 'low',
+      priority: "low",
       enableInvalidation: false,
       dependencies: [],
-      tags: ['health', 'monitoring']
+      tags: ["health", "monitoring"],
     });
 
     // Configuration - very long TTL, low priority
-    this.strategies.set('config', {
+    this.strategies.set("config", {
       ttl: 1800000, // 30 minutes
-      priority: 'low',
+      priority: "low",
       enableInvalidation: true,
       dependencies: [],
-      tags: ['config', 'settings']
+      tags: ["config", "settings"],
     });
   }
 
   getStrategy(dataType: CacheDataType): CacheStrategy {
-    return this.strategies.get(dataType) || {
-      ttl: 60000,
-      priority: 'medium',
-      enableInvalidation: false,
-      dependencies: [],
-      tags: []
-    };
+    return (
+      this.strategies.get(dataType) || {
+        ttl: 60000,
+        priority: "medium",
+        enableInvalidation: false,
+        dependencies: [],
+        tags: [],
+      }
+    );
   }
 
   updateStrategy(dataType: CacheDataType, strategy: Partial<CacheStrategy>): void {
@@ -373,7 +378,7 @@ export class UnifiedCacheSystem {
     this.l1Cache = new MemoryCache(config.maxMemoryEntries, config.maxMemorySize);
     this.l2Cache = new PersistentCache();
     this.strategyManager = new CacheStrategyManager();
-    
+
     this.metrics = {
       hits: 0,
       misses: 0,
@@ -386,7 +391,7 @@ export class UnifiedCacheSystem {
       memoryUsage: 0,
       entryCount: 0,
       avgResponseTime: 0,
-      lastCleanup: Date.now()
+      lastCleanup: Date.now(),
     };
 
     this.startCleanupScheduler();
@@ -396,7 +401,7 @@ export class UnifiedCacheSystem {
   // Core Cache Operations
   // ============================================================================
 
-  async get<T>(key: string, dataType: CacheDataType = 'generic'): Promise<T | null> {
+  async get<T>(key: string, dataType: CacheDataType = "generic"): Promise<T | null> {
     const startTime = Date.now();
     this.metrics.totalRequests++;
 
@@ -426,18 +431,17 @@ export class UnifiedCacheSystem {
       this.updateHitRate();
       this.updateResponseTime(Date.now() - startTime);
       return null;
-
     } catch (error) {
       this.metrics.errors++;
-      console.error('[UnifiedCache] Get error:', error);
+      console.error("[UnifiedCache] Get error:", error);
       return null;
     }
   }
 
   async set<T>(
-    key: string, 
-    value: T, 
-    dataType: CacheDataType = 'generic',
+    key: string,
+    value: T,
+    dataType: CacheDataType = "generic",
     customTTL?: number
   ): Promise<void> {
     try {
@@ -458,8 +462,8 @@ export class UnifiedCacheSystem {
           priority: strategy.priority,
           dependencies: strategy.dependencies,
           tags: strategy.tags,
-          size: this.estimateSize(value)
-        }
+          size: this.estimateSize(value),
+        },
       };
 
       // Set in L1 cache
@@ -472,10 +476,9 @@ export class UnifiedCacheSystem {
 
       this.metrics.sets++;
       this.updateMemoryUsage();
-
     } catch (error) {
       this.metrics.errors++;
-      console.error('[UnifiedCache] Set error:', error);
+      console.error("[UnifiedCache] Set error:", error);
     }
   }
 
@@ -483,33 +486,30 @@ export class UnifiedCacheSystem {
     try {
       const l1Deleted = await this.l1Cache.delete(key);
       const l2Deleted = await this.l2Cache.delete(key);
-      
+
       if (l1Deleted || l2Deleted) {
         this.metrics.deletes++;
         this.updateMemoryUsage();
         return true;
       }
-      
+
       return false;
     } catch (error) {
       this.metrics.errors++;
-      console.error('[UnifiedCache] Delete error:', error);
+      console.error("[UnifiedCache] Delete error:", error);
       return false;
     }
   }
 
   async clear(): Promise<void> {
     try {
-      await Promise.all([
-        this.l1Cache.clear(),
-        this.l2Cache.clear()
-      ]);
-      
+      await Promise.all([this.l1Cache.clear(), this.l2Cache.clear()]);
+
       this.pendingRequests.clear();
       this.resetMetrics();
     } catch (error) {
       this.metrics.errors++;
-      console.error('[UnifiedCache] Clear error:', error);
+      console.error("[UnifiedCache] Clear error:", error);
     }
   }
 
@@ -517,7 +517,7 @@ export class UnifiedCacheSystem {
     try {
       const l1Has = await this.l1Cache.has(key);
       if (l1Has) return true;
-      
+
       return await this.l2Cache.has(key);
     } catch (error) {
       this.metrics.errors++;
@@ -535,7 +535,7 @@ export class UnifiedCacheSystem {
   async getOrSet<T>(
     key: string,
     factory: () => Promise<T>,
-    dataType: CacheDataType = 'generic',
+    dataType: CacheDataType = "generic",
     customTTL?: number
   ): Promise<T> {
     // Check for pending request to avoid thundering herd
@@ -549,14 +549,16 @@ export class UnifiedCacheSystem {
     }
 
     // Create pending request
-    const promise = factory().then(async (result) => {
-      await this.set(key, result, dataType, customTTL);
-      this.pendingRequests.delete(key);
-      return result;
-    }).catch((error) => {
-      this.pendingRequests.delete(key);
-      throw error;
-    });
+    const promise = factory()
+      .then(async (result) => {
+        await this.set(key, result, dataType, customTTL);
+        this.pendingRequests.delete(key);
+        return result;
+      })
+      .catch((error) => {
+        this.pendingRequests.delete(key);
+        throw error;
+      });
 
     this.pendingRequests.set(key, promise);
     return promise;
@@ -565,9 +567,9 @@ export class UnifiedCacheSystem {
   /**
    * Batch get operation
    */
-  async getBatch<T>(keys: string[], dataType: CacheDataType = 'generic'): Promise<Map<string, T>> {
+  async getBatch<T>(keys: string[], dataType: CacheDataType = "generic"): Promise<Map<string, T>> {
     const results = new Map<string, T>();
-    
+
     await Promise.all(
       keys.map(async (key) => {
         const value = await this.get<T>(key, dataType);
@@ -585,14 +587,10 @@ export class UnifiedCacheSystem {
    */
   async setBatch<T>(
     entries: Array<{ key: string; value: T }>,
-    dataType: CacheDataType = 'generic',
+    dataType: CacheDataType = "generic",
     customTTL?: number
   ): Promise<void> {
-    await Promise.all(
-      entries.map(({ key, value }) => 
-        this.set(key, value, dataType, customTTL)
-      )
-    );
+    await Promise.all(entries.map(({ key, value }) => this.set(key, value, dataType, customTTL)));
   }
 
   /**
@@ -600,11 +598,11 @@ export class UnifiedCacheSystem {
    */
   async invalidateByTags(tags: string[]): Promise<number> {
     let invalidated = 0;
-    
+
     const l1Keys = await this.l1Cache.keys();
     for (const key of l1Keys) {
       const entry = await this.l1Cache.get(key);
-      if (entry && entry.metadata.tags?.some(tag => tags.includes(tag))) {
+      if (entry && entry.metadata.tags?.some((tag) => tags.includes(tag))) {
         await this.delete(key);
         invalidated++;
       }
@@ -618,11 +616,11 @@ export class UnifiedCacheSystem {
    */
   async invalidateByDependencies(dependencies: string[]): Promise<number> {
     let invalidated = 0;
-    
+
     const l1Keys = await this.l1Cache.keys();
     for (const key of l1Keys) {
       const entry = await this.l1Cache.get(key);
-      if (entry && entry.metadata.dependencies?.some(dep => dependencies.includes(dep))) {
+      if (entry && entry.metadata.dependencies?.some((dep) => dependencies.includes(dep))) {
         await this.delete(key);
         invalidated++;
       }
@@ -641,7 +639,7 @@ export class UnifiedCacheSystem {
     context?: any
   ): Promise<AgentResponse | null> {
     const key = this.generateAgentKey(agentName, input, context);
-    return this.get<AgentResponse>(key, 'agent_response');
+    return this.get<AgentResponse>(key, "agent_response");
   }
 
   async setAgentResponse(
@@ -652,23 +650,23 @@ export class UnifiedCacheSystem {
     options?: { ttl?: number; priority?: CachePriority; dependencies?: string[] }
   ): Promise<void> {
     const key = this.generateAgentKey(agentName, input, context);
-    
+
     if (options) {
-      this.strategyManager.updateStrategy('agent_response', {
+      this.strategyManager.updateStrategy("agent_response", {
         ttl: options.ttl,
         priority: options.priority,
-        dependencies: options.dependencies
+        dependencies: options.dependencies,
       });
     }
-    
-    await this.set(key, response, 'agent_response', options?.ttl);
+
+    await this.set(key, response, "agent_response", options?.ttl);
   }
 
   async trackCacheMiss(agentName: string): Promise<void> {
     // Track cache misses for analytics
     const key = `agent_miss_${agentName}`;
-    const current = (await this.get<number>(key, 'generic')) || 0;
-    await this.set(key, current + 1, 'generic', 3600000); // 1 hour TTL
+    const current = (await this.get<number>(key, "generic")) || 0;
+    await this.set(key, current + 1, "generic", 3600000); // 1 hour TTL
   }
 
   // ============================================================================
@@ -683,16 +681,12 @@ export class UnifiedCacheSystem {
     customTTL?: number
   ): Promise<void> {
     const key = this.generateAPIKey(endpoint, method, params);
-    await this.set(key, response, 'api_response', customTTL);
+    await this.set(key, response, "api_response", customTTL);
   }
 
-  async getCachedAPIResponse<T>(
-    endpoint: string,
-    method: string,
-    params: any
-  ): Promise<T | null> {
+  async getCachedAPIResponse<T>(endpoint: string, method: string, params: any): Promise<T | null> {
     const key = this.generateAPIKey(endpoint, method, params);
-    return this.get<T>(key, 'api_response');
+    return this.get<T>(key, "api_response");
   }
 
   // ============================================================================
@@ -701,12 +695,12 @@ export class UnifiedCacheSystem {
 
   private generateAgentKey(agentName: string, input: string, context?: any): string {
     const data = { agentName, input, context };
-    return `agent:${crypto.createHash('md5').update(JSON.stringify(data)).digest('hex')}`;
+    return `agent:${crypto.createHash("md5").update(JSON.stringify(data)).digest("hex")}`;
   }
 
   private generateAPIKey(endpoint: string, method: string, params: any): string {
     const data = { endpoint, method, params };
-    return `api:${crypto.createHash('md5').update(JSON.stringify(data)).digest('hex')}`;
+    return `api:${crypto.createHash("md5").update(JSON.stringify(data)).digest("hex")}`;
   }
 
   private estimateSize(value: any): number {
@@ -718,8 +712,7 @@ export class UnifiedCacheSystem {
   }
 
   private updateResponseTime(responseTime: number): void {
-    this.metrics.avgResponseTime = 
-      (this.metrics.avgResponseTime + responseTime) / 2;
+    this.metrics.avgResponseTime = (this.metrics.avgResponseTime + responseTime) / 2;
   }
 
   private updateMemoryUsage(): void {
@@ -739,7 +732,7 @@ export class UnifiedCacheSystem {
       memoryUsage: 0,
       entryCount: 0,
       avgResponseTime: 0,
-      lastCleanup: Date.now()
+      lastCleanup: Date.now(),
     };
   }
 
@@ -766,9 +759,8 @@ export class UnifiedCacheSystem {
       this.metrics.evictions += cleaned;
       this.metrics.lastCleanup = now;
       this.updateMemoryUsage();
-
     } catch (error) {
-      console.error('[UnifiedCache] Cleanup error:', error);
+      console.error("[UnifiedCache] Cleanup error:", error);
       this.metrics.errors++;
     }
   }
@@ -792,12 +784,12 @@ export class UnifiedCacheSystem {
     const l1Keys = await this.l1Cache.keys();
     const l2Keys = await this.l2Cache.keys();
     const allKeys = [...new Set([...l1Keys, ...l2Keys])];
-    
+
     if (pattern) {
       const regex = new RegExp(pattern);
-      return allKeys.filter(key => regex.test(key));
+      return allKeys.filter((key) => regex.test(key));
     }
-    
+
     return allKeys;
   }
 
@@ -827,13 +819,13 @@ const defaultConfig: CacheConfig = {
   maxMemorySize: 100 * 1024 * 1024, // 100MB
   defaultTTL: 300000, // 5 minutes
   cleanupInterval: 60000, // 1 minute
-  evictionPolicy: 'lru',
+  evictionPolicy: "lru",
   enableMetrics: true,
   enablePersistence: false,
   enableCompression: false,
   enableEncryption: false,
   batchSize: 100,
-  asyncWrite: true
+  asyncWrite: true,
 };
 
 let globalCacheInstance: UnifiedCacheSystem | null = null;
@@ -857,6 +849,4 @@ export function resetUnifiedCache(): void {
 // Exports
 // ============================================================================
 
-export {
-  UnifiedCacheSystem as default
-};
+export { UnifiedCacheSystem as default };

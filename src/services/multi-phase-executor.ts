@@ -526,7 +526,7 @@ export async function createExecutorFromStrategy(
   userId: string
 ): Promise<MultiPhaseExecutor> {
   // Handle the case where levels might be undefined (e.g., in tests)
-  const levels = strategy.levels ? JSON.parse(strategy.levels) as PriceMultiplier[] : [];
+  const levels = strategy.levels ? (JSON.parse(strategy.levels) as PriceMultiplier[]) : [];
   const strategyConfig: TradingStrategyConfig = {
     id: strategy.id.toString(),
     name: strategy.name,

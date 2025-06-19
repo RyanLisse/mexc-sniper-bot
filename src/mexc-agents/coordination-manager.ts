@@ -1,3 +1,4 @@
+import type { AgentManager } from "./agent-manager";
 import {
   type AgentRegistry,
   type EnhancedMexcOrchestrator,
@@ -7,7 +8,6 @@ import {
   createCoordinationSystem,
   registerCommonAgents,
 } from "./coordination";
-import type { AgentManager } from "./agent-manager";
 import type {
   AgentOrchestrationMetrics,
   CalendarDiscoveryWorkflowRequest,
@@ -72,7 +72,9 @@ export class CoordinationSystemManager {
 
       this.isEnabled = true;
 
-      console.log("[CoordinationSystemManager] Enhanced coordination system initialized successfully");
+      console.log(
+        "[CoordinationSystemManager] Enhanced coordination system initialized successfully"
+      );
     } catch (error) {
       console.error("[CoordinationSystemManager] Failed to initialize coordination system:", error);
       throw error;

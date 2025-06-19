@@ -171,7 +171,9 @@ export class DIContainer {
 
       case ServiceLifetime.SCOPED:
         if (!scopeId) {
-          throw new Error(`Scope ID required for scoped service: ${String(registration.identifier)}`);
+          throw new Error(
+            `Scope ID required for scoped service: ${String(registration.identifier)}`
+          );
         }
         return this.getScopedInstance(registration, scopeId);
 
@@ -255,7 +257,11 @@ export class DIContainer {
 
     // Dispose singleton instances
     for (const registration of this.services.values()) {
-      if (registration.instance && typeof registration.instance === "object" && "dispose" in registration.instance) {
+      if (
+        registration.instance &&
+        typeof registration.instance === "object" &&
+        "dispose" in registration.instance
+      ) {
         try {
           (registration.instance as { dispose(): void }).dispose();
         } catch (error) {
@@ -274,7 +280,7 @@ export class DIContainer {
    */
   createChild(): DIContainer {
     const child = new DIContainer(this.options);
-    
+
     // Copy parent registrations (not instances)
     for (const [identifier, registration] of this.services.entries()) {
       child.services.set(identifier, {
@@ -282,7 +288,7 @@ export class DIContainer {
         instance: undefined, // Child containers get fresh instances
       });
     }
-    
+
     return child;
   }
 }
@@ -315,25 +321,25 @@ export const ServiceIdentifiers = {
   CALENDAR_AGENT: Symbol("CalendarAgent"),
   SYMBOL_ANALYSIS_AGENT: Symbol("SymbolAnalysisAgent"),
   STRATEGY_AGENT: Symbol("StrategyAgent"),
-  
+
   // Trading services
   MEXC_SERVICE: Symbol("MexcService"),
   TRADING_STRATEGY_MANAGER: Symbol("TradingStrategyManager"),
   MULTI_PHASE_EXECUTOR: Symbol("MultiPhaseExecutor"),
-  
+
   // Data services
   DATA_FETCHER: Symbol("DataFetcher"),
   WEBSOCKET_CLIENT: Symbol("WebSocketClient"),
-  
+
   // Infrastructure services
   ERROR_HANDLER: Symbol("ErrorHandler"),
   CACHE_MANAGER: Symbol("CacheManager"),
   METRICS_MANAGER: Symbol("MetricsManager"),
-  
+
   // Database services
   DATABASE_CONNECTION: Symbol("DatabaseConnection"),
   USER_CREDENTIALS_SERVICE: Symbol("UserCredentialsService"),
-  
+
   // Coordination services
   AGENT_REGISTRY: Symbol("AgentRegistry"),
   WORKFLOW_ENGINE: Symbol("WorkflowEngine"),
@@ -353,7 +359,7 @@ export const globalContainer = new DIContainer({
  * Decorator for automatic dependency injection (if using TypeScript decorators)
  */
 export function Injectable<T extends Constructor>(dependencies: ServiceIdentifier[] = []) {
-  return function (target: T): T {
+  return (target: T): T => {
     // Store dependency metadata
     (target as unknown as { __dependencies: ServiceIdentifier[] }).__dependencies = dependencies;
     return target;
@@ -370,8 +376,9 @@ export function registerService<T>(
   lifetime: ServiceLifetime = ServiceLifetime.SINGLETON
 ): void {
   const serviceId = identifier || constructor;
-  const dependencies = (constructor as unknown as { __dependencies?: ServiceIdentifier[] }).__dependencies || [];
-  
+  const dependencies =
+    (constructor as unknown as { __dependencies?: ServiceIdentifier[] }).__dependencies || [];
+
   container.registerClass(constructor, lifetime, dependencies);
 }
 

@@ -75,7 +75,7 @@ function createPostgresClient() {
     connect_timeout: 30, // 30 seconds connect timeout
 
     // SSL/TLS settings for NeonDB
-    ssl: isProduction ? "require" : "prefer" as any,
+    ssl: isProduction ? "require" : ("prefer" as any),
 
     // Performance optimizations
     prepare: !isTest, // Prepared statements (disabled in tests for compatibility)
@@ -334,10 +334,12 @@ export async function closeDatabase() {
       try {
         await Promise.race([
           postgresClient.end({ timeout: 5 }),
-          new Promise((resolve) => setTimeout(() => {
-            console.warn("[Database] PostgreSQL close timed out, forcing shutdown");
-            resolve(undefined);
-          }, 5000))
+          new Promise((resolve) =>
+            setTimeout(() => {
+              console.warn("[Database] PostgreSQL close timed out, forcing shutdown");
+              resolve(undefined);
+            }, 5000)
+          ),
         ]);
         console.log("[Database] NeonDB PostgreSQL connection closed");
       } catch (error) {

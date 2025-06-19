@@ -18,27 +18,27 @@
  */
 
 // Import the new unified service
-import { 
-  getUnifiedMexcService, 
-  resetUnifiedMexcService,
-  UnifiedMexcService,
-  type UnifiedMexcConfig,
-  type MexcServiceResponse,
-  type CalendarEntry,
-  type SymbolEntry,
+import {
   type BalanceEntry,
+  type CalendarEntry,
   type ExchangeSymbol,
-  type Ticker,
-  type OrderResult,
-  type OrderParameters,
-  type OrderStatus,
-  type OrderBook,
   type Kline,
   type MarketStats,
+  type MexcServiceResponse,
+  type OrderBook,
+  type OrderParameters,
+  type OrderResult,
+  type OrderStatus,
   type PatternAnalysis,
-  type TradingOpportunity,
   type Portfolio,
-  type RiskAssessment
+  type RiskAssessment,
+  type SymbolEntry,
+  type Ticker,
+  type TradingOpportunity,
+  type UnifiedMexcConfig,
+  UnifiedMexcService,
+  getUnifiedMexcService,
+  resetUnifiedMexcService,
 } from "./unified-mexc-service";
 
 // ============================================================================
@@ -55,27 +55,21 @@ export {
 };
 
 // Core types for trading and market data
-export {
-  type CalendarEntry,
-  type SymbolEntry,
-  type BalanceEntry,
-  type ExchangeSymbol,
-  type Ticker,
-  type OrderResult,
-  type OrderParameters,
-  type OrderStatus,
-  type OrderBook,
-  type Kline,
+export type {
+  CalendarEntry,
+  SymbolEntry,
+  BalanceEntry,
+  ExchangeSymbol,
+  Ticker,
+  OrderResult,
+  OrderParameters,
+  OrderStatus,
+  OrderBook,
+  Kline,
 };
 
 // Advanced analytics and trading types
-export {
-  type MarketStats,
-  type PatternAnalysis,
-  type TradingOpportunity,
-  type Portfolio,
-  type RiskAssessment,
-};
+export type { MarketStats, PatternAnalysis, TradingOpportunity, Portfolio, RiskAssessment };
 
 // ============================================================================
 // Convenience Functions and Aliases
@@ -85,21 +79,29 @@ export {
  * Get a configured MEXC service instance
  * This is the recommended way to access MEXC functionality
  */
-export function getMexcService(config?: { apiKey?: string; secretKey?: string }): UnifiedMexcService {
+export function getMexcService(config?: {
+  apiKey?: string;
+  secretKey?: string;
+}): UnifiedMexcService {
   return getUnifiedMexcService(config);
 }
 
 /**
  * Create a new MEXC service instance with specific configuration
  */
-export function createMexcService(config: { apiKey?: string; secretKey?: string } = {}): UnifiedMexcService {
+export function createMexcService(
+  config: { apiKey?: string; secretKey?: string } = {}
+): UnifiedMexcService {
   return getUnifiedMexcService(config);
 }
 
 /**
  * Get MEXC client (alias for backward compatibility)
  */
-export function getMexcClient(config?: { apiKey?: string; secretKey?: string }): UnifiedMexcService {
+export function getMexcClient(config?: {
+  apiKey?: string;
+  secretKey?: string;
+}): UnifiedMexcService {
   return getUnifiedMexcService(config);
 }
 
@@ -107,8 +109,11 @@ export function getMexcClient(config?: { apiKey?: string; secretKey?: string }):
  * Legacy compatibility - Enhanced MEXC Service
  * @deprecated Use getUnifiedMexcService instead
  */
-export function getEnhancedMexcService(config?: { apiKey?: string; secretKey?: string }): UnifiedMexcService {
-  console.warn('getEnhancedMexcService is deprecated. Use getUnifiedMexcService instead.');
+export function getEnhancedMexcService(config?: {
+  apiKey?: string;
+  secretKey?: string;
+}): UnifiedMexcService {
+  console.warn("getEnhancedMexcService is deprecated. Use getUnifiedMexcService instead.");
   return getUnifiedMexcService(config);
 }
 
@@ -117,7 +122,7 @@ export function getEnhancedMexcService(config?: { apiKey?: string; secretKey?: s
  * @deprecated Use resetUnifiedMexcService instead
  */
 export function resetEnhancedMexcService(): void {
-  console.warn('resetEnhancedMexcService is deprecated. Use resetUnifiedMexcService instead.');
+  console.warn("resetEnhancedMexcService is deprecated. Use resetUnifiedMexcService instead.");
   resetUnifiedMexcService();
 }
 
@@ -125,8 +130,11 @@ export function resetEnhancedMexcService(): void {
  * Legacy compatibility - Unified MEXC Client
  * @deprecated Use getUnifiedMexcService instead
  */
-export function getUnifiedMexcClient(config?: { apiKey?: string; secretKey?: string }): UnifiedMexcService {
-  console.warn('getUnifiedMexcClient is deprecated. Use getUnifiedMexcService instead.');
+export function getUnifiedMexcClient(config?: {
+  apiKey?: string;
+  secretKey?: string;
+}): UnifiedMexcService {
+  console.warn("getUnifiedMexcClient is deprecated. Use getUnifiedMexcService instead.");
   return getUnifiedMexcService(config);
 }
 

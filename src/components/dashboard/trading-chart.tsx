@@ -1,16 +1,10 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { ChartContainer, ChartTooltip } from "../ui/chart";
-import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { ChartContainer, ChartTooltip } from "../ui/chart";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 
 interface TradingChartProps {
   className?: string;

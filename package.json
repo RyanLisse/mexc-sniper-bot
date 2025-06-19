@@ -72,10 +72,10 @@
     "db:migrate:fk": "bun run src/db/migrations/safe-foreign-key-migration.ts",
     "db:verify:fk": "bun run src/db/migrations/verify-foreign-keys.ts",
     "db:studio": "drizzle-kit studio",
-    "db:reset": "rm -f mexc_sniper.db && bun run db:migrate",
+    "db:reset": "echo 'Database reset not available for PostgreSQL. Use NeonDB console for database management.'",
     "db:check": "tsx scripts/check-db.ts",
     "db:diagnostic": "tsx scripts/database-health-diagnostic.ts",
-    "db:optimize": "tsx scripts/optimize-sqlite-database.ts",
+    "db:optimize": "echo 'Database optimization handled automatically by NeonDB PostgreSQL.'",
     "db:setup:neon": "echo 'NeonDB setup: Configure DATABASE_URL environment variable'",
     "db:test:neon": "npx tsx scripts/test-neon-connection.ts",
     "// ===== NEONDB BRANCH MANAGEMENT =====": "",
@@ -149,7 +149,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
-    "@types/better-sqlite3": "^7.6.13",
+
     "@types/node": "^20",
     "@types/pg": "^8.15.4",
     "@types/react": "^19",
@@ -157,7 +157,7 @@
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.2",
     "autoprefixer": "^10.4.21",
-    "better-sqlite3": "^11.10.0",
+
     "jsdom": "^26.1.0",
     "lightningcss": "^1.30.1",
     "msw": "^2.10.2",
@@ -169,8 +169,5 @@
     "typescript": "^5",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.2"
-  },
-  "optionalDependencies": {
-    "@libsql/linux-x64-gnu": "^0.5.13"
   }
 }

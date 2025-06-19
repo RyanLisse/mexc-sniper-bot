@@ -85,10 +85,10 @@ export async function checkRateLimit(
   limitType: keyof typeof RATE_LIMITS = "general",
   userAgent?: string,
   userId?: string
-): Promise<{ 
-  success: boolean; 
-  remaining: number; 
-  resetTime: number; 
+): Promise<{
+  success: boolean;
+  remaining: number;
+  resetTime: number;
   isFirstViolation: boolean;
   adaptiveDelay?: number;
   adaptiveMetrics?: any;
@@ -100,12 +100,10 @@ export async function checkRateLimit(
   // First check adaptive rate limiter for intelligent throttling
   let adaptiveResult;
   try {
-    adaptiveResult = await adaptiveRateLimiter.checkRateLimit(
-      endpoint,
-      userId,
-      userAgent,
-      { ip, limitType }
-    );
+    adaptiveResult = await adaptiveRateLimiter.checkRateLimit(endpoint, userId, userAgent, {
+      ip,
+      limitType,
+    });
 
     // If adaptive rate limiter blocks, respect it
     if (!adaptiveResult.allowed) {
@@ -133,7 +131,7 @@ export async function checkRateLimit(
       };
     }
   } catch (error) {
-    console.error('[Rate Limiter] Adaptive rate limiter failed:', error);
+    console.error("[Rate Limiter] Adaptive rate limiter failed:", error);
     // Continue with traditional rate limiting on adaptive failure
   }
 
@@ -158,8 +156,8 @@ export async function checkRateLimit(
         endpoint,
         userAgent,
         userId,
-        metadata: { 
-          attemptNumber: 1, 
+        metadata: {
+          attemptNumber: 1,
           windowStart: now,
           adaptiveMetrics: adaptiveResult?.metadata,
         },
@@ -237,8 +235,8 @@ export async function checkRateLimit(
       endpoint,
       userAgent,
       userId,
-      metadata: { 
-        attemptNumber: entry.count, 
+      metadata: {
+        attemptNumber: entry.count,
         windowStart: entry.firstAttempt,
         adaptiveMetrics: adaptiveResult?.metadata,
       },

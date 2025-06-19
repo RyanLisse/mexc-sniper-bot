@@ -399,7 +399,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
           performanceMetrics: {
             executionTimeMs: serviceResponse.executionTimeMs,
             cached: serviceResponse.cached,
-            circuitBreakerState: 'unknown', // Circuit breaker state requires async call
+            circuitBreakerState: "unknown", // Circuit breaker state requires async call
           },
         },
       };
@@ -647,7 +647,7 @@ Focus on actionable trading signals with performance-aware recommendations.
             performanceMetrics: {
               executionTimeMs: patternResponse.executionTimeMs,
               cached: patternResponse.cached,
-              circuitBreakerState: circuitBreakerStatus.data?.status || 'unknown',
+              circuitBreakerState: circuitBreakerStatus.data?.status || "unknown",
             },
           },
           null,

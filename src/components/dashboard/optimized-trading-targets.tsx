@@ -1,17 +1,11 @@
 "use client";
 
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { useTimeFormatting } from "../../hooks/use-time-formatting";
 import { AlertTriangle, Clock, Eye, Target, Trash2, TrendingUp, Zap } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
+import { useTimeFormatting } from "../../hooks/use-time-formatting";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
 interface TradingTarget {
   vcoinId: string;

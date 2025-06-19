@@ -2,9 +2,9 @@
  * Unified MEXC Service for MEXC Sniper Bot
  *
  * This service consolidates all MEXC-related functionality from:
- * - unified-mexc-client.ts  
+ * - unified-mexc-client.ts
  * - Previous legacy implementations (now consolidated)
- * 
+ *
  * Into a single, comprehensive service with clear boundaries and responsibilities.
  *
  * Features:
@@ -276,19 +276,19 @@ class MexcResponseCache {
     this.cache.set(key, {
       data,
       timestamp: now,
-      expiresAt: now + (ttl || this.defaultTTL)
+      expiresAt: now + (ttl || this.defaultTTL),
     });
   }
 
   get(key: string): any | null {
     const cached = this.cache.get(key);
     if (!cached) return null;
-    
+
     if (Date.now() > cached.expiresAt) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return cached.data;
   }
 
@@ -297,8 +297,8 @@ class MexcResponseCache {
   }
 
   generateKey(method: string, params?: any): string {
-    const paramsStr = params ? JSON.stringify(params) : '';
-    return `${method}:${crypto.createHash('md5').update(paramsStr).digest('hex')}`;
+    const paramsStr = params ? JSON.stringify(params) : "";
+    return `${method}:${crypto.createHash("md5").update(paramsStr).digest("hex")}`;
   }
 }
 
@@ -309,19 +309,19 @@ class MexcResponseCache {
 class CircuitBreaker {
   private failures = 0;
   private lastFailureTime = 0;
-  private state: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
-  
+  private state: "CLOSED" | "OPEN" | "HALF_OPEN" = "CLOSED";
+
   constructor(
     private threshold = 5,
     private timeout = 60000
   ) {}
 
   async execute<T>(operation: () => Promise<T>): Promise<T> {
-    if (this.state === 'OPEN') {
+    if (this.state === "OPEN") {
       if (Date.now() - this.lastFailureTime > this.timeout) {
-        this.state = 'HALF_OPEN';
+        this.state = "HALF_OPEN";
       } else {
-        throw new Error('Circuit breaker is OPEN');
+        throw new Error("Circuit breaker is OPEN");
       }
     }
 
@@ -337,15 +337,15 @@ class CircuitBreaker {
 
   private onSuccess(): void {
     this.failures = 0;
-    this.state = 'CLOSED';
+    this.state = "CLOSED";
   }
 
   private onFailure(): void {
     this.failures++;
     this.lastFailureTime = Date.now();
-    
+
     if (this.failures >= this.threshold) {
-      this.state = 'OPEN';
+      this.state = "OPEN";
     }
   }
 }
@@ -356,7 +356,7 @@ class CircuitBreaker {
 
 class RateLimiter {
   private requests: number[] = [];
-  
+
   constructor(
     private maxRequests = 50,
     private windowMs = 60000
@@ -365,19 +365,19 @@ class RateLimiter {
   async waitIfNeeded(): Promise<void> {
     const now = Date.now();
     const windowStart = now - this.windowMs;
-    
+
     // Remove old requests
-    this.requests = this.requests.filter(time => time > windowStart);
-    
+    this.requests = this.requests.filter((time) => time > windowStart);
+
     if (this.requests.length >= this.maxRequests) {
       const oldestRequest = this.requests[0];
       const waitTime = this.windowMs - (now - oldestRequest);
-      
+
       if (waitTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
       }
     }
-    
+
     this.requests.push(now);
   }
 }
@@ -394,10 +394,10 @@ export class UnifiedMexcService {
 
   constructor(config: UnifiedMexcConfig = {}) {
     this.config = {
-      apiKey: config.apiKey || process.env.MEXC_API_KEY || '',
-      secretKey: config.secretKey || process.env.MEXC_SECRET_KEY || '',
-      passphrase: config.passphrase || process.env.MEXC_PASSPHRASE || '',
-      baseUrl: config.baseUrl || 'https://api.mexc.com',
+      apiKey: config.apiKey || process.env.MEXC_API_KEY || "",
+      secretKey: config.secretKey || process.env.MEXC_SECRET_KEY || "",
+      passphrase: config.passphrase || process.env.MEXC_PASSPHRASE || "",
+      baseUrl: config.baseUrl || "https://api.mexc.com",
       timeout: config.timeout || 10000,
       maxRetries: config.maxRetries || 3,
       retryDelay: config.retryDelay || 1000,
@@ -418,9 +418,7 @@ export class UnifiedMexcService {
   // ============================================================================
 
   private createSignature(queryString: string): string {
-    return crypto.createHmac('sha256', this.config.secretKey)
-      .update(queryString)
-      .digest('hex');
+    return crypto.createHmac("sha256", this.config.secretKey).update(queryString).digest("hex");
   }
 
   private hasCredentials(): boolean {
@@ -432,16 +430,16 @@ export class UnifiedMexcService {
   // ============================================================================
 
   private async makeRequest<T>(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: "GET" | "POST" | "PUT" | "DELETE",
     endpoint: string,
     params: Record<string, any> = {},
     requiresAuth = false
   ): Promise<MexcServiceResponse<T>> {
     const startTime = Date.now();
     const requestId = crypto.randomUUID();
-    
+
     // Check cache first
-    if (method === 'GET' && this.config.enableCaching) {
+    if (method === "GET" && this.config.enableCaching) {
       const cacheKey = this.cache.generateKey(endpoint, params);
       const cached = this.cache.get(cacheKey);
       if (cached) {
@@ -451,7 +449,7 @@ export class UnifiedMexcService {
           timestamp: new Date().toISOString(),
           requestId,
           cached: true,
-          responseTime: Date.now() - startTime
+          responseTime: Date.now() - startTime,
         };
       }
     }
@@ -466,13 +464,13 @@ export class UnifiedMexcService {
       // Handle authentication
       if (requiresAuth) {
         if (!this.hasCredentials()) {
-          throw new Error('API credentials are required for this operation');
+          throw new Error("API credentials are required for this operation");
         }
 
         const timestamp = Date.now();
         params.timestamp = timestamp;
 
-        if (method === 'POST' || method === 'PUT') {
+        if (method === "POST" || method === "PUT") {
           body = JSON.stringify(params);
           const signature = this.createSignature(body);
           params.signature = signature;
@@ -481,25 +479,25 @@ export class UnifiedMexcService {
           const signature = this.createSignature(queryString);
           url += `?${queryString}&signature=${signature}`;
         }
-      } else if (method === 'GET' && Object.keys(params).length > 0) {
+      } else if (method === "GET" && Object.keys(params).length > 0) {
         const queryString = new URLSearchParams(params).toString();
         url += `?${queryString}`;
       }
 
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'User-Agent': 'MEXC-Sniper-Bot/1.0',
+        "Content-Type": "application/json",
+        "User-Agent": "MEXC-Sniper-Bot/1.0",
       };
 
       if (requiresAuth && this.config.apiKey) {
-        headers['X-MEXC-APIKEY'] = this.config.apiKey;
+        headers["X-MEXC-APIKEY"] = this.config.apiKey;
       }
 
       const response = await fetch(url, {
         method,
         headers,
         body,
-        signal: AbortSignal.timeout(this.config.timeout)
+        signal: AbortSignal.timeout(this.config.timeout),
       });
 
       if (!response.ok) {
@@ -508,9 +506,9 @@ export class UnifiedMexcService {
       }
 
       const responseData = await response.json();
-      
+
       // Cache GET responses
-      if (method === 'GET' && this.config.enableCaching) {
+      if (method === "GET" && this.config.enableCaching) {
         const cacheKey = this.cache.generateKey(endpoint, params);
         this.cache.set(cacheKey, responseData, this.config.cacheTTL);
       }
@@ -528,15 +526,15 @@ export class UnifiedMexcService {
         data,
         timestamp: new Date().toISOString(),
         requestId,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
         requestId,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
     }
   }
@@ -550,7 +548,7 @@ export class UnifiedMexcService {
    */
   async testConnectivity(): Promise<boolean> {
     try {
-      const response = await this.makeRequest('GET', '/api/v3/time');
+      const response = await this.makeRequest("GET", "/api/v3/time");
       return response.success;
     } catch (error) {
       return false;
@@ -561,61 +559,61 @@ export class UnifiedMexcService {
    * Test connectivity to MEXC API (returns full response)
    */
   async testConnectivityWithResponse(): Promise<MexcServiceResponse<{ serverTime: number }>> {
-    return this.makeRequest('GET', '/api/v3/time');
+    return this.makeRequest("GET", "/api/v3/time");
   }
 
   /**
    * Get server time
    */
   async getServerTime(): Promise<MexcServiceResponse<{ serverTime: number }>> {
-    return this.makeRequest('GET', '/api/v3/time');
+    return this.makeRequest("GET", "/api/v3/time");
   }
 
   /**
    * Get exchange information
    */
   async getExchangeInfo(): Promise<MexcServiceResponse<{ symbols: ExchangeSymbol[] }>> {
-    return this.makeRequest('GET', '/api/v3/exchangeInfo');
+    return this.makeRequest("GET", "/api/v3/exchangeInfo");
   }
 
   /**
    * Get all symbol tickers
    */
   async getAllTickers(): Promise<MexcServiceResponse<Ticker[]>> {
-    return this.makeRequest('GET', '/api/v3/ticker/24hr');
+    return this.makeRequest("GET", "/api/v3/ticker/24hr");
   }
 
   /**
    * Get ticker for specific symbol
    */
   async getTicker(symbol: string): Promise<MexcServiceResponse<Ticker>> {
-    return this.makeRequest('GET', '/api/v3/ticker/24hr', { symbol });
+    return this.makeRequest("GET", "/api/v3/ticker/24hr", { symbol });
   }
 
   /**
    * Get order book for symbol
    */
   async getOrderBook(symbol: string, limit = 100): Promise<MexcServiceResponse<OrderBook>> {
-    const response = await this.makeRequest('GET', '/api/v3/depth', { 
-      symbol, 
-      limit: Math.min(limit, 5000) 
+    const response = await this.makeRequest("GET", "/api/v3/depth", {
+      symbol,
+      limit: Math.min(limit, 5000),
     });
-    
+
     if (response.success && response.data) {
       const rawData = response.data as any;
       const orderBook: OrderBook = {
         symbol,
         bids: rawData.bids || [],
         asks: rawData.asks || [],
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      
+
       return {
         ...response,
-        data: orderBook
+        data: orderBook,
       };
     }
-    
+
     return response;
   }
 
@@ -623,9 +621,9 @@ export class UnifiedMexcService {
    * Get recent trades for symbol
    */
   async getRecentTrades(symbol: string, limit = 500): Promise<MexcServiceResponse<any[]>> {
-    return this.makeRequest('GET', '/api/v3/trades', { 
-      symbol, 
-      limit: Math.min(limit, 1000) 
+    return this.makeRequest("GET", "/api/v3/trades", {
+      symbol,
+      limit: Math.min(limit, 1000),
     });
   }
 
@@ -633,8 +631,8 @@ export class UnifiedMexcService {
    * Get kline/candlestick data
    */
   async getKlines(
-    symbol: string, 
-    interval: string, 
+    symbol: string,
+    interval: string,
     limit = 500,
     startTime?: number,
     endTime?: number
@@ -642,8 +640,8 @@ export class UnifiedMexcService {
     const params: any = { symbol, interval, limit: Math.min(limit, 1000) };
     if (startTime) params.startTime = startTime;
     if (endTime) params.endTime = endTime;
-    
-    return this.makeRequest('GET', '/api/v3/klines', params);
+
+    return this.makeRequest("GET", "/api/v3/klines", params);
   }
 
   // ============================================================================
@@ -654,14 +652,14 @@ export class UnifiedMexcService {
    * Get calendar listings (new coin listings)
    */
   async getCalendarListings(): Promise<MexcServiceResponse<CalendarEntry[]>> {
-    return this.makeRequest('GET', '/open/api/v2/market/coin/list');
+    return this.makeRequest("GET", "/open/api/v2/market/coin/list");
   }
 
   /**
    * Get symbol data for MEXC-specific endpoints
    */
   async getSymbolData(): Promise<MexcServiceResponse<SymbolEntry[]>> {
-    return this.makeRequest('GET', '/open/api/v2/market/symbols');
+    return this.makeRequest("GET", "/open/api/v2/market/symbols");
   }
 
   /**
@@ -678,19 +676,18 @@ export class UnifiedMexcService {
     try {
       // For MEXC, we'll fetch all symbol data and filter by vcoin IDs
       const allSymbolsResponse = await this.getSymbolData();
-      
+
       if (!allSymbolsResponse.success) {
         return allSymbolsResponse;
       }
 
       const symbols = allSymbolsResponse.data || [];
-      
+
       // Filter symbols by vcoin IDs
       // Note: This assumes symbol.cd matches vcoin IDs - adjust if needed
-      const filteredSymbols = symbols.filter(symbol => 
-        vcoinIds.some(vcoinId => 
-          symbol.cd === vcoinId || 
-          symbol.cd.toLowerCase() === vcoinId.toLowerCase()
+      const filteredSymbols = symbols.filter((symbol) =>
+        vcoinIds.some(
+          (vcoinId) => symbol.cd === vcoinId || symbol.cd.toLowerCase() === vcoinId.toLowerCase()
         )
       );
 
@@ -698,13 +695,13 @@ export class UnifiedMexcService {
         success: true,
         data: filteredSymbols,
         timestamp: new Date().toISOString(),
-        cached: allSymbolsResponse.cached
+        cached: allSymbolsResponse.cached,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch symbols for vcoins',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : "Failed to fetch symbols for vcoins",
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -717,45 +714,53 @@ export class UnifiedMexcService {
    * Get account information
    */
   async getAccountInfo(): Promise<MexcServiceResponse<any>> {
-    return this.makeRequest('GET', '/api/v3/account', {}, true);
+    return this.makeRequest("GET", "/api/v3/account", {}, true);
   }
 
   /**
    * Get account balances
    */
-  async getAccountBalances(): Promise<MexcServiceResponse<{
-    balances: BalanceEntry[];
-    totalUsdtValue: number;
-  }>> {
-    const response = await this.makeRequest('GET', '/api/v3/account', {}, true);
-    
-    if (response.success && response.data && typeof response.data === 'object' && 'balances' in response.data) {
+  async getAccountBalances(): Promise<
+    MexcServiceResponse<{
+      balances: BalanceEntry[];
+      totalUsdtValue: number;
+    }>
+  > {
+    const response = await this.makeRequest("GET", "/api/v3/account", {}, true);
+
+    if (
+      response.success &&
+      response.data &&
+      typeof response.data === "object" &&
+      "balances" in response.data
+    ) {
       const rawData = response.data as any;
       // Process balances to include USDT values
       const balances = (rawData.balances || []).map((balance: any) => ({
-        asset: balance.asset || '',
-        free: balance.free || '0',
-        locked: balance.locked || '0',
-        total: parseFloat(balance.free || '0') + parseFloat(balance.locked || '0'),
-        usdtValue: 0 // Would need price data to calculate this
+        asset: balance.asset || "",
+        free: balance.free || "0",
+        locked: balance.locked || "0",
+        total: Number.parseFloat(balance.free || "0") + Number.parseFloat(balance.locked || "0"),
+        usdtValue: 0, // Would need price data to calculate this
       }));
 
       // Calculate total USDT value (simplified)
-      const totalUsdtValue = balances.reduce((sum: number, balance: BalanceEntry) => 
-        sum + (balance.usdtValue || 0), 0
+      const totalUsdtValue = balances.reduce(
+        (sum: number, balance: BalanceEntry) => sum + (balance.usdtValue || 0),
+        0
       );
 
       return {
         ...response,
-        data: { balances, totalUsdtValue }
+        data: { balances, totalUsdtValue },
       };
     }
-    
+
     return {
       success: false,
-      error: response.error || 'Failed to fetch account balances',
+      error: response.error || "Failed to fetch account balances",
       timestamp: new Date().toISOString(),
-      data: { balances: [], totalUsdtValue: 0 }
+      data: { balances: [], totalUsdtValue: 0 },
     };
   }
 
@@ -770,32 +775,32 @@ export class UnifiedMexcService {
     try {
       // Validate parameters
       const validatedParams = OrderParametersSchema.parse(params);
-      
-      const response = await this.makeRequest('POST', '/api/v3/order', validatedParams, true);
-      
+
+      const response = await this.makeRequest("POST", "/api/v3/order", validatedParams, true);
+
       if (response.success && response.data) {
         const rawData = response.data as any;
         // Transform response to match our OrderResult schema
         const orderResult: OrderResult = {
           success: true,
-          orderId: rawData?.orderId?.toString() || '',
+          orderId: rawData?.orderId?.toString() || "",
           symbol: validatedParams.symbol,
           side: validatedParams.side,
           quantity: validatedParams.quantity,
           price: validatedParams.price,
-          status: rawData?.status || 'UNKNOWN',
-          timestamp: new Date().toISOString()
+          status: rawData?.status || "UNKNOWN",
+          timestamp: new Date().toISOString(),
         };
-        
+
         return {
           ...response,
-          data: orderResult
+          data: orderResult,
         };
       }
-      
+
       return {
         success: false,
-        error: response.error || 'Order placement failed',
+        error: response.error || "Order placement failed",
         timestamp: new Date().toISOString(),
         data: {
           success: false,
@@ -803,14 +808,14 @@ export class UnifiedMexcService {
           side: validatedParams.side,
           quantity: validatedParams.quantity,
           price: validatedParams.price,
-          error: response.error || 'Order placement failed',
-          timestamp: new Date().toISOString()
-        }
+          error: response.error || "Order placement failed",
+          timestamp: new Date().toISOString(),
+        },
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Order validation failed',
+        error: error instanceof Error ? error.message : "Order validation failed",
         timestamp: new Date().toISOString(),
         data: {
           success: false,
@@ -818,9 +823,9 @@ export class UnifiedMexcService {
           side: params.side,
           quantity: params.quantity,
           price: params.price,
-          error: error instanceof Error ? error.message : 'Order validation failed',
-          timestamp: new Date().toISOString()
-        }
+          error: error instanceof Error ? error.message : "Order validation failed",
+          timestamp: new Date().toISOString(),
+        },
       };
     }
   }
@@ -829,20 +834,30 @@ export class UnifiedMexcService {
    * Cancel an order
    */
   async cancelOrder(symbol: string, orderId: string): Promise<MexcServiceResponse<any>> {
-    return this.makeRequest('DELETE', '/api/v3/order', {
-      symbol,
-      orderId
-    }, true);
+    return this.makeRequest(
+      "DELETE",
+      "/api/v3/order",
+      {
+        symbol,
+        orderId,
+      },
+      true
+    );
   }
 
   /**
    * Get order status
    */
   async getOrderStatus(symbol: string, orderId: string): Promise<MexcServiceResponse<OrderStatus>> {
-    return this.makeRequest('GET', '/api/v3/order', {
-      symbol,
-      orderId
-    }, true);
+    return this.makeRequest(
+      "GET",
+      "/api/v3/order",
+      {
+        symbol,
+        orderId,
+      },
+      true
+    );
   }
 
   /**
@@ -850,7 +865,7 @@ export class UnifiedMexcService {
    */
   async getOpenOrders(symbol?: string): Promise<MexcServiceResponse<OrderStatus[]>> {
     const params = symbol ? { symbol } : {};
-    return this.makeRequest('GET', '/api/v3/openOrders', params, true);
+    return this.makeRequest("GET", "/api/v3/openOrders", params, true);
   }
 
   /**
@@ -865,8 +880,8 @@ export class UnifiedMexcService {
     const params: any = { symbol, limit: Math.min(limit, 1000) };
     if (startTime) params.startTime = startTime;
     if (endTime) params.endTime = endTime;
-    
-    return this.makeRequest('GET', '/api/v3/allOrders', params, true);
+
+    return this.makeRequest("GET", "/api/v3/allOrders", params, true);
   }
 
   // ============================================================================
@@ -881,14 +896,14 @@ export class UnifiedMexcService {
       const [tickers, symbols, calendar] = await Promise.all([
         this.getAllTickers(),
         this.getExchangeInfo(),
-        this.getCalendarListings()
+        this.getCalendarListings(),
       ]);
 
       if (!tickers.success || !symbols.success) {
         return {
           success: false,
-          error: 'Failed to fetch market data',
-          timestamp: new Date().toISOString()
+          error: "Failed to fetch market data",
+          timestamp: new Date().toISOString(),
         };
       }
 
@@ -897,35 +912,36 @@ export class UnifiedMexcService {
       const calendarData = calendar.data || [];
 
       // Calculate market statistics
-      const totalVolume24h = tickerData.reduce((sum, ticker) => 
-        sum + parseFloat(ticker.volume || '0'), 0
+      const totalVolume24h = tickerData.reduce(
+        (sum, ticker) => sum + Number.parseFloat(ticker.volume || "0"),
+        0
       );
 
-      const sorted = [...tickerData].sort((a, b) => 
-        parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent)
+      const sorted = [...tickerData].sort(
+        (a, b) => Number.parseFloat(b.priceChangePercent) - Number.parseFloat(a.priceChangePercent)
       );
 
       const marketStats: MarketStats = {
         totalPairs: symbolData.length,
-        activePairs: symbolData.filter(s => s.status === 'TRADING').length,
+        activePairs: symbolData.filter((s) => s.status === "TRADING").length,
         totalVolume24h,
         totalMarketCap: 0, // Would need additional data
         topGainers: sorted.slice(0, 10),
         topLosers: sorted.slice(-10).reverse(),
         newListings: calendarData.slice(0, 20),
-        trendingPairs: sorted.slice(0, 20).map(t => t.symbol)
+        trendingPairs: sorted.slice(0, 20).map((t) => t.symbol),
       };
 
       return {
         success: true,
         data: marketStats,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to calculate market stats',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : "Failed to calculate market stats",
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -935,16 +951,13 @@ export class UnifiedMexcService {
    */
   async analyzePatterns(): Promise<MexcServiceResponse<PatternAnalysis>> {
     try {
-      const [tickers, symbols] = await Promise.all([
-        this.getAllTickers(),
-        this.getSymbolData()
-      ]);
+      const [tickers, symbols] = await Promise.all([this.getAllTickers(), this.getSymbolData()]);
 
       if (!tickers.success || !symbols.success) {
         return {
           success: false,
-          error: 'Failed to fetch market data for analysis',
-          timestamp: new Date().toISOString()
+          error: "Failed to fetch market data for analysis",
+          timestamp: new Date().toISOString(),
         };
       }
 
@@ -952,52 +965,56 @@ export class UnifiedMexcService {
       const symbolData = symbols.data || [];
 
       // Analyze ready state patterns (simplified)
-      const readyStateSymbols = symbolData.filter(s => s.sts === 1); // Assuming 1 means ready
+      const readyStateSymbols = symbolData.filter((s) => s.sts === 1); // Assuming 1 means ready
 
       // Analyze volume patterns
-      const sortedByVolume = [...tickerData].sort((a, b) => 
-        parseFloat(b.volume || '0') - parseFloat(a.volume || '0')
+      const sortedByVolume = [...tickerData].sort(
+        (a, b) => Number.parseFloat(b.volume || "0") - Number.parseFloat(a.volume || "0")
       );
 
       // Analyze price patterns (simplified momentum analysis)
-      const bullish = tickerData.filter(t => parseFloat(t.priceChangePercent) > 5).map(t => t.symbol);
-      const bearish = tickerData.filter(t => parseFloat(t.priceChangePercent) < -5).map(t => t.symbol);
-      const neutral = tickerData.filter(t => 
-        Math.abs(parseFloat(t.priceChangePercent)) <= 5
-      ).map(t => t.symbol);
+      const bullish = tickerData
+        .filter((t) => Number.parseFloat(t.priceChangePercent) > 5)
+        .map((t) => t.symbol);
+      const bearish = tickerData
+        .filter((t) => Number.parseFloat(t.priceChangePercent) < -5)
+        .map((t) => t.symbol);
+      const neutral = tickerData
+        .filter((t) => Math.abs(Number.parseFloat(t.priceChangePercent)) <= 5)
+        .map((t) => t.symbol);
 
       const analysis: PatternAnalysis = {
         readyStatePatterns: {
           symbols: readyStateSymbols,
           count: readyStateSymbols.length,
-          percentage: (readyStateSymbols.length / symbolData.length) * 100
+          percentage: (readyStateSymbols.length / symbolData.length) * 100,
         },
         volumePatterns: {
-          highVolume: sortedByVolume.slice(0, 50).map(t => t.symbol),
-          emergingVolume: sortedByVolume.slice(50, 100).map(t => t.symbol)
+          highVolume: sortedByVolume.slice(0, 50).map((t) => t.symbol),
+          emergingVolume: sortedByVolume.slice(50, 100).map((t) => t.symbol),
         },
         pricePatterns: {
           breakouts: bullish.slice(0, 20),
           supports: neutral.slice(0, 20),
-          resistances: bearish.slice(0, 20)
+          resistances: bearish.slice(0, 20),
         },
         momentum: {
           bullish: bullish.slice(0, 50),
           bearish: bearish.slice(0, 50),
-          neutral: neutral.slice(0, 50)
-        }
+          neutral: neutral.slice(0, 50),
+        },
       };
 
       return {
         success: true,
         data: analysis,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Pattern analysis failed',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : "Pattern analysis failed",
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -1007,11 +1024,11 @@ export class UnifiedMexcService {
    */
   async getPortfolioSummary(): Promise<MexcServiceResponse<Portfolio>> {
     const balancesResponse = await this.getAccountBalances();
-    
+
     if (!balancesResponse.success) {
       return {
         success: false,
-        error: balancesResponse.error || 'Failed to fetch portfolio data',
+        error: balancesResponse.error || "Failed to fetch portfolio data",
         timestamp: new Date().toISOString(),
         data: {
           totalValue: 0,
@@ -1021,9 +1038,9 @@ export class UnifiedMexcService {
           allocation: {},
           performance24h: {
             change: 0,
-            changePercent: 0
-          }
-        }
+            changePercent: 0,
+          },
+        },
       };
     }
 
@@ -1031,7 +1048,7 @@ export class UnifiedMexcService {
 
     // Calculate allocation percentages
     const allocation: Record<string, number> = {};
-    balances.forEach(balance => {
+    balances.forEach((balance) => {
       if (balance.total > 0 && totalUsdtValue > 0) {
         allocation[balance.asset] = ((balance.usdtValue || 0) / totalUsdtValue) * 100;
       }
@@ -1045,14 +1062,14 @@ export class UnifiedMexcService {
       allocation,
       performance24h: {
         change: 0, // Would need historical data
-        changePercent: 0
-      }
+        changePercent: 0,
+      },
     };
 
     return {
       success: true,
       data: portfolio,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -1076,25 +1093,22 @@ export class UnifiedMexcService {
    */
   async getMarketOverview(): Promise<MexcServiceResponse<any>> {
     try {
-      const [tickers, symbols] = await Promise.all([
-        this.getAllTickers(),
-        this.getExchangeInfo()
-      ]);
+      const [tickers, symbols] = await Promise.all([this.getAllTickers(), this.getExchangeInfo()]);
 
       return {
         success: true,
         data: {
           tickers: tickers.data || [],
           symbols: symbols.data?.symbols || [],
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to get market overview',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : "Failed to get market overview",
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -1110,16 +1124,16 @@ export class UnifiedMexcService {
         timestamp: new Date().toISOString(),
         details: {
           connectivity: serverTime.success,
-          serverTime: serverTime.data?.serverTime
-        }
+          serverTime: serverTime.data?.serverTime,
+        },
       };
     } catch (error) {
       return {
         healthy: false,
         timestamp: new Date().toISOString(),
         details: {
-          error: error instanceof Error ? error.message : 'Health check failed'
-        }
+          error: error instanceof Error ? error.message : "Health check failed",
+        },
       };
     }
   }
@@ -1132,11 +1146,11 @@ export class UnifiedMexcService {
       success: true,
       data: {
         enabled: this.config.enableCircuitBreaker,
-        status: this.circuitBreaker?.isOpen() ? 'OPEN' : 'CLOSED',
+        status: this.circuitBreaker?.isOpen() ? "OPEN" : "CLOSED",
         failures: this.circuitBreaker?.getFailureCount() || 0,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -1149,11 +1163,12 @@ export class UnifiedMexcService {
       data: {
         requestCount: this.metrics.requestCount,
         errorCount: this.metrics.errorCount,
-        averageResponseTime: this.metrics.totalResponseTime / Math.max(this.metrics.requestCount, 1),
+        averageResponseTime:
+          this.metrics.totalResponseTime / Math.max(this.metrics.requestCount, 1),
         cacheHitRate: this.metrics.cacheHits / Math.max(this.metrics.requestCount, 1),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -1166,9 +1181,9 @@ export class UnifiedMexcService {
       data: {
         size: this.cache.size,
         hitRate: this.metrics.cacheHits / Math.max(this.metrics.requestCount, 1),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -1182,15 +1197,15 @@ export class UnifiedMexcService {
         success: true,
         data: {
           patterns: symbols.data?.filter((s: any) => s.sts === 1) || [],
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to detect patterns',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : "Failed to detect patterns",
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -1244,6 +1259,4 @@ export function resetUnifiedMexcService(): void {
 // Exports
 // ============================================================================
 
-export {
-  UnifiedMexcService as default
-};
+export { UnifiedMexcService as default };

@@ -13,13 +13,13 @@
  * - Performance analytics
  */
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   AgentWorkflowMessage,
   PatternDiscoveryMessage,
   PatternReadyStateMessage,
   TradingSignalMessage,
 } from "../lib/websocket-types";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocket } from "./use-websocket";
 
 // ======================

@@ -15,6 +15,7 @@
  */
 
 import { EventEmitter } from "node:events";
+import WebSocket from "ws";
 import type {
   NotificationMessage,
   TradingPriceMessage,
@@ -22,7 +23,6 @@ import type {
 } from "../lib/websocket-types";
 import { webSocketAgentBridge } from "../mexc-agents/websocket-agent-bridge";
 import { webSocketServer } from "./websocket-server";
-import WebSocket from "ws";
 
 // ======================
 // MEXC WebSocket Types

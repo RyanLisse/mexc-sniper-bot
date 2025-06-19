@@ -1,17 +1,5 @@
 "use client";
 
-import { Alert, AlertDescription } from "../ui/alert";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Progress } from "../ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
@@ -24,6 +12,12 @@ import {
   Shield,
 } from "lucide-react";
 import { useState } from "react";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Progress } from "../ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 interface AlertInstance {
   id: string;

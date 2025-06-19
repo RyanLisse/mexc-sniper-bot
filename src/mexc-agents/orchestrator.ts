@@ -9,7 +9,7 @@ export type {
 } from "./orchestrator-types";
 
 import { AgentManager } from "./agent-manager";
-import { CoordinationSystemManager, type CoordinationSystemConfig } from "./coordination-manager";
+import { type CoordinationSystemConfig, CoordinationSystemManager } from "./coordination-manager";
 import { DataFetcher } from "./data-fetcher";
 import { OrchestrationMetricsManager } from "./metrics-manager";
 import type {
@@ -44,7 +44,7 @@ export class MexcOrchestrator {
     this.dataFetcher = new DataFetcher(this.agentManager.getMexcApiAgent());
     this.coordinationManager = new CoordinationSystemManager();
     this.metricsManager = new OrchestrationMetricsManager();
-    
+
     // Initialize workflow execution service with all dependencies
     this.workflowExecutionService = new WorkflowExecutionService(
       this.agentManager,

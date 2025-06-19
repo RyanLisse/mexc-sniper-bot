@@ -1,17 +1,5 @@
 "use client";
 
-import { Alert, AlertDescription } from "./ui/alert";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import type { ExitStrategy } from "../types/exit-strategies";
 import {
   AlertTriangle,
   CheckCircle,
@@ -22,8 +10,14 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
+import type { ExitStrategy } from "../types/exit-strategies";
 import { ExitStrategySelector } from "./exit-strategy-selector";
 import { TakeProfitHelp } from "./take-profit-help";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { UnifiedTakeProfitLevels } from "./unified-take-profit-levels";
 
 interface TakeProfitLevels {

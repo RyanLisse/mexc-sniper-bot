@@ -7,7 +7,7 @@ export interface ApiResponse<T = unknown> {
   /** Indicates if the request was successful */
   success: boolean;
   /** Response status (healthy, warning, unhealthy, error) */
-  status?: 'healthy' | 'warning' | 'unhealthy' | 'error' | 'pending' | 'active' | 'inactive';
+  status?: "healthy" | "warning" | "unhealthy" | "error" | "pending" | "active" | "inactive";
   /** Human-readable message */
   message?: string;
   /** The actual response data */
@@ -214,7 +214,7 @@ export function handleApiError(error: unknown, defaultMessage = "An error occurr
  * Standardizes all health check endpoints across the system
  */
 export interface HealthCheckResult {
-  status: 'healthy' | 'warning' | 'unhealthy' | 'error';
+  status: "healthy" | "warning" | "unhealthy" | "error";
   message: string;
   details?: any;
   timestamp?: string;
@@ -225,10 +225,13 @@ export function createHealthResponse(
   result: HealthCheckResult,
   additionalData?: any
 ): ApiResponse<any> {
-  const isHealthy = result.status === 'healthy';
-  const statusCode = isHealthy ? HTTP_STATUS.OK : 
-    result.status === 'warning' ? HTTP_STATUS.OK : HTTP_STATUS.SERVICE_UNAVAILABLE;
-  
+  const isHealthy = result.status === "healthy";
+  const statusCode = isHealthy
+    ? HTTP_STATUS.OK
+    : result.status === "warning"
+      ? HTTP_STATUS.OK
+      : HTTP_STATUS.SERVICE_UNAVAILABLE;
+
   return {
     success: isHealthy,
     status: result.status,
@@ -236,10 +239,10 @@ export function createHealthResponse(
     data: additionalData,
     meta: {
       timestamp: result.timestamp || new Date().toISOString(),
-      version: result.version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-      ...result.details
-    }
+      version: result.version || "1.0.0",
+      environment: process.env.NODE_ENV || "development",
+      ...result.details,
+    },
   };
 }
 
@@ -250,7 +253,7 @@ export function createHealthResponse(
 export interface CredentialValidationResult {
   hasCredentials: boolean;
   credentialsValid: boolean;
-  credentialSource: 'database' | 'environment' | 'none' | 'provided';
+  credentialSource: "database" | "environment" | "none" | "provided";
   connected?: boolean;
   error?: string;
   details?: any;
@@ -261,24 +264,29 @@ export function createCredentialResponse(
   additionalData?: any
 ): ApiResponse<any> {
   const isValid = result.hasCredentials && result.credentialsValid;
-  const status = !result.hasCredentials ? 'warning' : 
-    !result.credentialsValid ? 'error' : 'healthy';
-  
+  const status = !result.hasCredentials
+    ? "warning"
+    : !result.credentialsValid
+      ? "error"
+      : "healthy";
+
   return {
     success: isValid,
     status,
-    message: result.error || (isValid ? 
-      `Credentials valid from ${result.credentialSource}` : 
-      'Invalid or missing credentials'),
+    message:
+      result.error ||
+      (isValid
+        ? `Credentials valid from ${result.credentialSource}`
+        : "Invalid or missing credentials"),
     data: {
       ...result,
-      ...additionalData
+      ...additionalData,
     },
     error: result.error,
     meta: {
       timestamp: new Date().toISOString(),
-      credentialSource: result.credentialSource
-    }
+      credentialSource: result.credentialSource,
+    },
   };
 }
 
@@ -288,7 +296,7 @@ export function createCredentialResponse(
  */
 export interface ServiceStatusResult {
   serviceName: string;
-  status: 'active' | 'inactive' | 'warning' | 'error';
+  status: "active" | "inactive" | "warning" | "error";
   uptime?: number;
   lastChecked?: string;
   metrics?: Record<string, any>;
@@ -298,8 +306,8 @@ export interface ServiceStatusResult {
 export function createServiceStatusResponse(
   result: ServiceStatusResult
 ): ApiResponse<ServiceStatusResult> {
-  const isActive = result.status === 'active';
-  
+  const isActive = result.status === "active";
+
   return {
     success: isActive,
     status: result.status,
@@ -308,8 +316,8 @@ export function createServiceStatusResponse(
     meta: {
       timestamp: new Date().toISOString(),
       serviceName: result.serviceName,
-      lastChecked: result.lastChecked || new Date().toISOString()
-    }
+      lastChecked: result.lastChecked || new Date().toISOString(),
+    },
   };
 }
 
@@ -330,26 +338,25 @@ export function createConfigResponse(
   configData?: any
 ): ApiResponse<any> {
   const allValid = result.valid && !result.missingVars?.length && !result.invalidVars?.length;
-  const status = !result.valid ? 'error' : 
-    result.warnings?.length ? 'warning' : 'healthy';
-  
+  const status = !result.valid ? "error" : result.warnings?.length ? "warning" : "healthy";
+
   return {
     success: allValid,
     status,
-    message: allValid ? 'Configuration is valid' : 'Configuration issues detected',
+    message: allValid ? "Configuration is valid" : "Configuration issues detected",
     data: configData,
     details: {
       missingVars: result.missingVars,
       invalidVars: result.invalidVars,
-      warnings: result.warnings
+      warnings: result.warnings,
     },
     meta: {
       timestamp: new Date().toISOString(),
       configSource: result.configSource,
       totalMissing: result.missingVars?.length || 0,
       totalInvalid: result.invalidVars?.length || 0,
-      totalWarnings: result.warnings?.length || 0
-    }
+      totalWarnings: result.warnings?.length || 0,
+    },
   };
 }
 
@@ -358,12 +365,15 @@ export function createConfigResponse(
  * Standardizes system status aggregation endpoints
  */
 export interface SystemOverviewResult {
-  overallStatus: 'healthy' | 'warning' | 'unhealthy';
-  components: Record<string, {
-    status: string;
-    message: string;
-    details?: any;
-  }>;
+  overallStatus: "healthy" | "warning" | "unhealthy";
+  components: Record<
+    string,
+    {
+      status: string;
+      message: string;
+      details?: any;
+    }
+  >;
   summary?: {
     healthy: number;
     warnings: number;
@@ -376,17 +386,18 @@ export function createSystemOverviewResponse(
   result: SystemOverviewResult
 ): ApiResponse<SystemOverviewResult> {
   return {
-    success: result.overallStatus === 'healthy',
+    success: result.overallStatus === "healthy",
     status: result.overallStatus,
-    message: result.overallStatus === 'healthy' ? 
-      'All systems operational' : 
-      `System has ${result.summary?.unhealthy || 0} critical issues`,
+    message:
+      result.overallStatus === "healthy"
+        ? "All systems operational"
+        : `System has ${result.summary?.unhealthy || 0} critical issues`,
     data: result,
     meta: {
       timestamp: new Date().toISOString(),
       componentCount: Object.keys(result.components).length,
-      ...result.summary
-    }
+      ...result.summary,
+    },
   };
 }
 
@@ -403,25 +414,23 @@ export interface OperationResult<T = any> {
   warnings?: string[];
 }
 
-export function createOperationResponse<T>(
-  result: OperationResult<T>
-): ApiResponse<T> {
+export function createOperationResponse<T>(result: OperationResult<T>): ApiResponse<T> {
   return {
     success: result.success,
-    status: result.success ? 'healthy' : 'error',
-    message: result.success ? 
-      `${result.operation} completed successfully` : 
-      `${result.operation} failed: ${result.error}`,
+    status: result.success ? "healthy" : "error",
+    message: result.success
+      ? `${result.operation} completed successfully`
+      : `${result.operation} failed: ${result.error}`,
     data: result.data,
     error: result.error,
     details: {
       operation: result.operation,
       resourceId: result.resourceId,
-      warnings: result.warnings
+      warnings: result.warnings,
     },
     meta: {
       timestamp: new Date().toISOString(),
-      operation: result.operation
-    }
+      operation: result.operation,
+    },
   };
 }

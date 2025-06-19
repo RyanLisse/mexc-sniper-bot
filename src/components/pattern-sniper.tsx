@@ -1,15 +1,5 @@
 "use client";
 
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { usePatternSniper } from "../hooks/use-pattern-sniper";
 import {
   Activity,
   AlertCircle,
@@ -27,6 +17,10 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
+import { usePatternSniper } from "../hooks/use-pattern-sniper";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Component handles complex pattern detection UI with multiple conditional rendering paths
 export const PatternSniperComponent: React.FC = () => {

@@ -13,6 +13,8 @@
  * - Performance optimization
  */
 
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   ConnectionMetrics,
   MessageHandler,
@@ -21,8 +23,6 @@ import type {
   WebSocketMessage,
 } from "../lib/websocket-types";
 import { type WebSocketClientState, webSocketClient } from "../services/websocket-client";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // ======================
 // Hook Configuration

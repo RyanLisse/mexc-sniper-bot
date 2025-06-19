@@ -1,9 +1,9 @@
 /**
  * API Performance Optimizer
- * 
+ *
  * Phase 3: API Performance Optimization (3h)
  * TARGET: 65% efficiency improvement through parallelization and batching
- * 
+ *
  * Features:
  * - Parallel request processing with concurrency control
  * - Intelligent request batching and coalescing
@@ -66,7 +66,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
   private requestQueue: BatchableRequest[] = [];
   private activeRequests = new Set<string>();
   private circuitBreaker = new Map<string, CircuitBreakerState>();
-  
+
   private readonly config = {
     maxConcurrency: 10,
     batchSize: 20,
@@ -134,7 +134,6 @@ export class ApiPerformanceOptimizer extends EventEmitter {
 
       // Step 5: Execute request with concurrency control
       return await this.executeRequest<T>(config, startTime);
-
     } catch (error) {
       this.metrics.failedRequests++;
       this.recordCircuitBreakerFailure(this.getEndpointKey(config));
@@ -148,29 +147,40 @@ export class ApiPerformanceOptimizer extends EventEmitter {
    */
   async executeBatchRequests<T = any>(requests: RequestConfig[]): Promise<T[]> {
     const startTime = performance.now();
-    
+
     // Group requests by priority and batchability
-    const criticalRequests = requests.filter(r => r.priority === "critical");
-    const highPriorityRequests = requests.filter(r => r.priority === "high");
-    const regularRequests = requests.filter(r => !["critical", "high"].includes(r.priority || ""));
+    const criticalRequests = requests.filter((r) => r.priority === "critical");
+    const highPriorityRequests = requests.filter((r) => r.priority === "high");
+    const regularRequests = requests.filter(
+      (r) => !["critical", "high"].includes(r.priority || "")
+    );
 
     const results: T[] = [];
 
     // Execute critical requests immediately with high concurrency
     if (criticalRequests.length > 0) {
-      const criticalResults = await this.executeParallelBatch<T>(criticalRequests, this.config.maxConcurrency);
+      const criticalResults = await this.executeParallelBatch<T>(
+        criticalRequests,
+        this.config.maxConcurrency
+      );
       results.push(...criticalResults);
     }
 
     // Execute high priority requests with medium concurrency
     if (highPriorityRequests.length > 0) {
-      const highResults = await this.executeParallelBatch<T>(highPriorityRequests, Math.ceil(this.config.maxConcurrency * 0.7));
+      const highResults = await this.executeParallelBatch<T>(
+        highPriorityRequests,
+        Math.ceil(this.config.maxConcurrency * 0.7)
+      );
       results.push(...highResults);
     }
 
     // Execute regular requests with controlled concurrency
     if (regularRequests.length > 0) {
-      const regularResults = await this.executeParallelBatch<T>(regularRequests, Math.ceil(this.config.maxConcurrency * 0.5));
+      const regularResults = await this.executeParallelBatch<T>(
+        regularRequests,
+        Math.ceil(this.config.maxConcurrency * 0.5)
+      );
       results.push(...regularResults);
     }
 
@@ -183,13 +193,16 @@ export class ApiPerformanceOptimizer extends EventEmitter {
   /**
    * Execute parallel batch with concurrency control
    */
-  private async executeParallelBatch<T>(requests: RequestConfig[], concurrency: number): Promise<T[]> {
+  private async executeParallelBatch<T>(
+    requests: RequestConfig[],
+    concurrency: number
+  ): Promise<T[]> {
     const results: T[] = [];
     const executing: Promise<void>[] = [];
 
     for (let i = 0; i < requests.length; i++) {
       const request = requests[i];
-      
+
       // Wait if we've reached max concurrency
       if (executing.length >= concurrency) {
         await Promise.race(executing);
@@ -199,7 +212,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
         .then((result: T) => {
           results[i] = result;
         })
-        .catch(error => {
+        .catch((error) => {
           console.error(`Batch request failed:`, error);
           results[i] = null as T; // Handle failed requests gracefully
         })
@@ -213,7 +226,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
 
     // Wait for all remaining requests
     await Promise.all(executing);
-    return results.filter(r => r !== null);
+    return results.filter((r) => r !== null);
   }
 
   /**
@@ -275,8 +288,8 @@ export class ApiPerformanceOptimizer extends EventEmitter {
       state.isOpen = true;
       state.nextAttemptTime = Date.now() + this.config.circuitBreakerTimeout;
       this.metrics.circuitBreakerTrips++;
-      
-      this.emit('circuitBreakerTripped', { endpoint, failures: state.failures });
+
+      this.emit("circuitBreakerTripped", { endpoint, failures: state.failures });
       console.warn(`🔌 Circuit breaker opened for ${endpoint} after ${state.failures} failures`);
     }
   }
@@ -291,7 +304,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
 
   private async waitForExistingRequest<T>(config: RequestConfig): Promise<T> {
     const key = this.getRequestKey(config);
-    
+
     return new Promise((resolve, reject) => {
       const checkComplete = () => {
         if (!this.activeRequests.has(key)) {
@@ -303,7 +316,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
               return;
             }
           }
-          
+
           // Cache miss, execute request
           this.executeOptimizedRequest<T>(config).then(resolve).catch(reject);
         } else {
@@ -311,7 +324,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
           setTimeout(checkComplete, 10);
         }
       };
-      
+
       checkComplete();
     });
   }
@@ -351,8 +364,8 @@ export class ApiPerformanceOptimizer extends EventEmitter {
 
     // Group by endpoint for optimized batching
     const endpointGroups = new Map<string, BatchableRequest[]>();
-    
-    batch.forEach(request => {
+
+    batch.forEach((request) => {
       const endpoint = this.getEndpointKey(request);
       if (!endpointGroups.has(endpoint)) {
         endpointGroups.set(endpoint, []);
@@ -361,8 +374,8 @@ export class ApiPerformanceOptimizer extends EventEmitter {
     });
 
     // Process each endpoint group in parallel
-    const groupPromises = Array.from(endpointGroups.entries()).map(
-      ([endpoint, requests]) => this.processBatchGroup(endpoint, requests)
+    const groupPromises = Array.from(endpointGroups.entries()).map(([endpoint, requests]) =>
+      this.processBatchGroup(endpoint, requests)
     );
 
     await Promise.all(groupPromises);
@@ -376,16 +389,16 @@ export class ApiPerformanceOptimizer extends EventEmitter {
   private async processBatchGroup(endpoint: string, requests: BatchableRequest[]): Promise<void> {
     try {
       // Execute requests in parallel within the group
-      const promises = requests.map(request => 
+      const promises = requests.map((request) =>
         this.executeRequest(request, performance.now())
-          .then(result => request.resolve(result))
-          .catch(error => request.reject(error))
+          .then((result) => request.resolve(result))
+          .catch((error) => request.reject(error))
       );
 
       await Promise.allSettled(promises);
     } catch (error) {
       // Reject all requests in the group
-      requests.forEach(request => request.reject(error as Error));
+      requests.forEach((request) => request.reject(error as Error));
     }
   }
 
@@ -399,7 +412,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
     try {
       // Simulate API request (replace with actual fetch logic)
       const response = await this.performHttpRequest<T>(config);
-      
+
       // Cache successful GET requests
       if (config.method === "GET" && config.cacheKey && response) {
         const ttl = config.cacheTTL || this.config.cacheDefaultTTL;
@@ -413,7 +426,6 @@ export class ApiPerformanceOptimizer extends EventEmitter {
       this.updateAverageResponseTime();
 
       return response;
-
     } finally {
       this.activeRequests.delete(requestKey);
     }
@@ -425,9 +437,9 @@ export class ApiPerformanceOptimizer extends EventEmitter {
   private async performHttpRequest<T>(config: RequestConfig): Promise<T> {
     // This would be replaced with actual fetch/axios call
     // For now, simulate network delay and occasional failures
-    
+
     const delay = Math.random() * 100 + 50; // 50-150ms delay
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
 
     // Simulate 2% failure rate
     if (Math.random() < 0.02) {
@@ -476,7 +488,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
   private updateCacheMetrics(hit: boolean): void {
     const totalCacheRequests = this.metrics.successfulRequests + this.metrics.failedRequests;
     if (totalCacheRequests > 0) {
-      this.metrics.cacheHitRate = hit 
+      this.metrics.cacheHitRate = hit
         ? (this.metrics.cacheHitRate * (totalCacheRequests - 1) + 1) / totalCacheRequests
         : (this.metrics.cacheHitRate * (totalCacheRequests - 1)) / totalCacheRequests;
     }
@@ -486,8 +498,9 @@ export class ApiPerformanceOptimizer extends EventEmitter {
     // Calculate batch efficiency based on time saved vs individual requests
     const estimatedIndividualTime = batchSize * this.metrics.averageResponseTime;
     const timeSaved = Math.max(0, estimatedIndividualTime - totalTime);
-    const efficiency = estimatedIndividualTime > 0 ? (timeSaved / estimatedIndividualTime) * 100 : 0;
-    
+    const efficiency =
+      estimatedIndividualTime > 0 ? (timeSaved / estimatedIndividualTime) * 100 : 0;
+
     this.metrics.batchEfficiency = (this.metrics.batchEfficiency + efficiency) / 2;
   }
 
@@ -495,7 +508,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
     if (this.responseTimes.length > 1000) {
       this.responseTimes = this.responseTimes.slice(-500); // Keep last 500 measurements
     }
-    
+
     const sum = this.responseTimes.reduce((a, b) => a + b, 0);
     this.metrics.averageResponseTime = sum / this.responseTimes.length;
   }
@@ -513,7 +526,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
   }
 
   private getRequestKey(config: RequestConfig): string {
-    const body = config.body ? JSON.stringify(config.body) : '';
+    const body = config.body ? JSON.stringify(config.body) : "";
     return `${this.getEndpointKey(config)}:${body}`;
   }
 
@@ -526,7 +539,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
    */
   getMetrics(): PerformanceMetrics {
     // Update parallelism utilization
-    this.metrics.parallelismUtilization = 
+    this.metrics.parallelismUtilization =
       (this.activeRequests.size / this.config.maxConcurrency) * 100;
 
     return { ...this.metrics };
@@ -613,7 +626,7 @@ export class OptimizedMexcApi {
    * Batch symbol information requests
    */
   async getSymbolsInfo(symbols: string[]): Promise<any[]> {
-    const requests = symbols.map(symbol => ({
+    const requests = symbols.map((symbol) => ({
       url: `https://api.mexc.com/api/v3/exchangeInfo?symbol=${symbol}`,
       method: "GET" as const,
       cacheKey: `symbol_info:${symbol}`,

@@ -1,6 +1,6 @@
 /**
  * Enhanced Risk Management Service
- * 
+ *
  * Provides comprehensive risk assessment and management for trading operations:
  * - Position sizing validation
  * - Portfolio correlation analysis
@@ -9,13 +9,13 @@
  * - Compliance checks
  */
 
-import { getUnifiedMexcClient } from './unified-mexc-client';
-import { ErrorLoggingService } from './error-logging-service';
-import type { OrderParameters } from './unified-mexc-client';
+import { ErrorLoggingService } from "./error-logging-service";
+import { getUnifiedMexcClient } from "./unified-mexc-client";
+import type { OrderParameters } from "./unified-mexc-client";
 
 export interface RiskProfile {
   userId: string;
-  riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+  riskTolerance: "conservative" | "moderate" | "aggressive";
   maxPositionSize: number; // Percentage of portfolio
   maxDailyLoss: number; // Percentage of portfolio
   maxDrawdown: number; // Percentage of portfolio
@@ -30,7 +30,7 @@ export interface RiskProfile {
 
 export interface PositionInfo {
   symbol: string;
-  side: 'LONG' | 'SHORT';
+  side: "LONG" | "SHORT";
   size: number;
   notionalValue: number;
   averagePrice: number;
@@ -58,7 +58,7 @@ export interface PortfolioMetrics {
 
 export interface RiskAssessment {
   approved: boolean;
-  riskLevel: 'low' | 'medium' | 'high' | 'extreme';
+  riskLevel: "low" | "medium" | "high" | "extreme";
   riskScore: number; // 0-100
   warnings: string[];
   errors: string[];
@@ -85,11 +85,11 @@ export interface RiskAssessment {
 }
 
 export interface MarketConditions {
-  volatility: 'low' | 'medium' | 'high' | 'extreme';
-  trend: 'bullish' | 'bearish' | 'sideways';
-  liquidity: 'high' | 'medium' | 'low';
+  volatility: "low" | "medium" | "high" | "extreme";
+  trend: "bullish" | "bearish" | "sideways";
+  liquidity: "high" | "medium" | "low";
   correlation: number; // Market-wide correlation
-  sentiment: 'fear' | 'neutral' | 'greed';
+  sentiment: "fear" | "neutral" | "greed";
   riskMultiplier: number; // Adjustment factor for market conditions
 }
 
@@ -97,16 +97,19 @@ export class EnhancedRiskManagementService {
   private static instance: EnhancedRiskManagementService;
   private errorLogger = ErrorLoggingService.getInstance();
   private portfolioCache = new Map<string, { metrics: PortfolioMetrics; expiresAt: number }>();
-  private correlationCache = new Map<string, { correlations: Record<string, number>; expiresAt: number }>();
+  private correlationCache = new Map<
+    string,
+    { correlations: Record<string, number>; expiresAt: number }
+  >();
   private readonly cacheExpiryMs = 2 * 60 * 1000; // 2 minutes
-  
+
   // Default risk profile for new users
-  private readonly defaultRiskProfile: Omit<RiskProfile, 'userId' | 'updatedAt'> = {
-    riskTolerance: 'moderate',
+  private readonly defaultRiskProfile: Omit<RiskProfile, "userId" | "updatedAt"> = {
+    riskTolerance: "moderate",
     maxPositionSize: 5.0, // 5% of portfolio per position
     maxDailyLoss: 2.0, // 2% daily loss limit
     maxDrawdown: 10.0, // 10% maximum drawdown
-    allowedAssets: ['BTC', 'ETH', 'USDT'], // Default allowed assets
+    allowedAssets: ["BTC", "ETH", "USDT"], // Default allowed assets
     blockedAssets: [], // No blocked assets by default
     maxConcurrentPositions: 5,
     leverageLimit: 1.0, // No leverage by default
@@ -132,28 +135,30 @@ export class EnhancedRiskManagementService {
     riskProfile?: RiskProfile
   ): Promise<RiskAssessment> {
     const startTime = Date.now();
-    
+
     try {
-      console.log(`[Risk Management] Starting risk assessment for ${userId} - ${orderParams.symbol}`);
+      console.log(
+        `[Risk Management] Starting risk assessment for ${userId} - ${orderParams.symbol}`
+      );
 
       // Get or create risk profile
       const profile = riskProfile || this.getDefaultRiskProfile(userId);
-      
+
       // Get current portfolio metrics
       const portfolioMetrics = await this.getPortfolioMetrics(userId);
-      
+
       // Get market conditions
       const marketConditions = await this.assessMarketConditions();
-      
+
       // Calculate order impact
       const orderValue = this.calculateOrderValue(orderParams);
-      const portfolioImpact = portfolioMetrics.totalValue > 0 ? 
-        (orderValue / portfolioMetrics.totalValue) * 100 : 100;
+      const portfolioImpact =
+        portfolioMetrics.totalValue > 0 ? (orderValue / portfolioMetrics.totalValue) * 100 : 100;
 
       // Initialize assessment
       const assessment: RiskAssessment = {
         approved: false,
-        riskLevel: 'medium',
+        riskLevel: "medium",
         riskScore: 50,
         warnings: [],
         errors: [],
@@ -190,7 +195,10 @@ export class EnhancedRiskManagementService {
 
       // 2. Position Size Validation
       const positionSizeValidation = this.validatePositionSize(
-        orderParams, portfolioMetrics, profile, marketConditions
+        orderParams,
+        portfolioMetrics,
+        profile,
+        marketConditions
       );
       assessment.limits.positionSizeLimit = positionSizeValidation.maxAllowedSize;
       if (!positionSizeValidation.valid) {
@@ -203,7 +211,9 @@ export class EnhancedRiskManagementService {
 
       // 3. Concentration Risk Assessment
       const concentrationRisk = this.assessConcentrationRisk(
-        orderParams, portfolioMetrics, profile
+        orderParams,
+        portfolioMetrics,
+        profile
       );
       assessment.limits.concentrationRisk = concentrationRisk.riskLevel;
       if (!concentrationRisk.compliant) {
@@ -213,7 +223,9 @@ export class EnhancedRiskManagementService {
 
       // 4. Correlation Risk Assessment
       const correlationRisk = await this.assessCorrelationRisk(
-        orderParams, portfolioMetrics, profile
+        orderParams,
+        portfolioMetrics,
+        profile
       );
       assessment.limits.correlationRisk = correlationRisk.riskLevel;
       if (!correlationRisk.compliant) {
@@ -230,7 +242,9 @@ export class EnhancedRiskManagementService {
 
       // 6. Portfolio Risk Limits
       const portfolioRiskCheck = this.checkPortfolioRiskLimits(
-        portfolioMetrics, profile, marketConditions
+        portfolioMetrics,
+        profile,
+        marketConditions
       );
       if (!portfolioRiskCheck.compliant) {
         assessment.errors.push(...portfolioRiskCheck.errors);
@@ -238,9 +252,7 @@ export class EnhancedRiskManagementService {
       }
 
       // 7. Market Conditions Impact
-      const marketRiskAdjustment = this.adjustForMarketConditions(
-        assessment, marketConditions
-      );
+      const marketRiskAdjustment = this.adjustForMarketConditions(assessment, marketConditions);
       assessment.riskScore = marketRiskAdjustment.adjustedRiskScore;
       assessment.recommendations.push(...marketRiskAdjustment.recommendations);
 
@@ -252,15 +264,16 @@ export class EnhancedRiskManagementService {
       assessment.recommendations.push(...this.generateRecommendations(assessment, profile));
 
       const assessmentTime = Date.now() - startTime;
-      console.log(`[Risk Management] Risk assessment completed in ${assessmentTime}ms - Approved: ${assessment.approved}, Risk: ${assessment.riskLevel}`);
+      console.log(
+        `[Risk Management] Risk assessment completed in ${assessmentTime}ms - Approved: ${assessment.approved}, Risk: ${assessment.riskLevel}`
+      );
 
       return assessment;
-
     } catch (error) {
-      console.error('[Risk Management] Risk assessment failed:', error);
-      
+      console.error("[Risk Management] Risk assessment failed:", error);
+
       await this.errorLogger.logError(error as Error, {
-        context: 'risk_assessment',
+        context: "risk_assessment",
         userId,
         symbol: orderParams.symbol,
         side: orderParams.side,
@@ -270,11 +283,11 @@ export class EnhancedRiskManagementService {
       // Return conservative assessment on error
       return {
         approved: false,
-        riskLevel: 'extreme',
+        riskLevel: "extreme",
         riskScore: 100,
         warnings: [],
-        errors: ['Risk assessment system error - trade blocked for safety'],
-        recommendations: ['Please try again later or contact support'],
+        errors: ["Risk assessment system error - trade blocked for safety"],
+        recommendations: ["Please try again later or contact support"],
         limits: {
           positionSizeLimit: 0,
           portfolioImpact: 100,
@@ -292,7 +305,7 @@ export class EnhancedRiskManagementService {
           assessmentTime: new Date().toISOString(),
           portfolioValue: 0,
           existingPositions: 0,
-          marketConditions: 'unknown',
+          marketConditions: "unknown",
         },
       };
     }
@@ -304,7 +317,7 @@ export class EnhancedRiskManagementService {
   private async getPortfolioMetrics(userId: string): Promise<PortfolioMetrics> {
     const cacheKey = `portfolio_${userId}`;
     const cached = this.portfolioCache.get(cacheKey);
-    
+
     if (cached && Date.now() < cached.expiresAt) {
       return cached.metrics;
     }
@@ -312,19 +325,19 @@ export class EnhancedRiskManagementService {
     try {
       const mexcClient = getUnifiedMexcClient();
       const balanceResult = await mexcClient.getAccountBalances();
-      
+
       if (!balanceResult.success) {
         throw new Error(`Failed to get portfolio data: ${balanceResult.error}`);
       }
 
       const { balances, totalUsdtValue } = balanceResult.data;
-      
+
       // Calculate portfolio metrics
       const positions: PositionInfo[] = balances
-        .filter(balance => balance.total > 0 && balance.asset !== 'USDT')
-        .map(balance => ({
+        .filter((balance) => balance.total > 0 && balance.asset !== "USDT")
+        .map((balance) => ({
           symbol: `${balance.asset}USDT`,
-          side: 'LONG' as const, // Spot trading is always long
+          side: "LONG" as const, // Spot trading is always long
           size: balance.total,
           notionalValue: balance.usdtValue || 0,
           averagePrice: balance.usdtValue ? balance.usdtValue / balance.total : 0,
@@ -337,7 +350,7 @@ export class EnhancedRiskManagementService {
 
       // Calculate concentration
       const concentration: Record<string, number> = {};
-      positions.forEach(position => {
+      positions.forEach((position) => {
         const percentage = totalUsdtValue > 0 ? (position.notionalValue / totalUsdtValue) * 100 : 0;
         concentration[position.symbol] = percentage;
       });
@@ -364,10 +377,9 @@ export class EnhancedRiskManagementService {
       });
 
       return metrics;
-
     } catch (error) {
-      console.error('[Risk Management] Failed to get portfolio metrics:', error);
-      
+      console.error("[Risk Management] Failed to get portfolio metrics:", error);
+
       // Return empty portfolio on error
       return {
         totalValue: 0,
@@ -393,50 +405,54 @@ export class EnhancedRiskManagementService {
     try {
       const mexcClient = getUnifiedMexcClient();
       const tickerResult = await mexcClient.get24hrTicker();
-      
+
       if (!tickerResult.success || !tickerResult.data.length) {
         return this.getDefaultMarketConditions();
       }
 
       const tickers = tickerResult.data;
-      
+
       // Calculate market volatility
-      const priceChanges = tickers.map(ticker => 
-        Math.abs(parseFloat(ticker.priceChangePercent || '0'))
+      const priceChanges = tickers.map((ticker) =>
+        Math.abs(Number.parseFloat(ticker.priceChangePercent || "0"))
       );
-      const avgVolatility = priceChanges.reduce((sum, change) => sum + change, 0) / priceChanges.length;
-      
+      const avgVolatility =
+        priceChanges.reduce((sum, change) => sum + change, 0) / priceChanges.length;
+
       // Determine volatility level
-      let volatility: MarketConditions['volatility'];
-      if (avgVolatility < 2) volatility = 'low';
-      else if (avgVolatility < 5) volatility = 'medium';
-      else if (avgVolatility < 10) volatility = 'high';
-      else volatility = 'extreme';
+      let volatility: MarketConditions["volatility"];
+      if (avgVolatility < 2) volatility = "low";
+      else if (avgVolatility < 5) volatility = "medium";
+      else if (avgVolatility < 10) volatility = "high";
+      else volatility = "extreme";
 
       // Calculate trend (simplified)
-      const positiveMoves = tickers.filter(ticker => 
-        parseFloat(ticker.priceChangePercent || '0') > 0
+      const positiveMoves = tickers.filter(
+        (ticker) => Number.parseFloat(ticker.priceChangePercent || "0") > 0
       ).length;
-      const trend = positiveMoves > tickers.length * 0.6 ? 'bullish' : 
-                   positiveMoves < tickers.length * 0.4 ? 'bearish' : 'sideways';
+      const trend =
+        positiveMoves > tickers.length * 0.6
+          ? "bullish"
+          : positiveMoves < tickers.length * 0.4
+            ? "bearish"
+            : "sideways";
 
       // Risk multiplier based on conditions
       let riskMultiplier = 1.0;
-      if (volatility === 'extreme') riskMultiplier *= 2.0;
-      else if (volatility === 'high') riskMultiplier *= 1.5;
-      else if (volatility === 'low') riskMultiplier *= 0.8;
+      if (volatility === "extreme") riskMultiplier *= 2.0;
+      else if (volatility === "high") riskMultiplier *= 1.5;
+      else if (volatility === "low") riskMultiplier *= 0.8;
 
       return {
         volatility,
         trend,
-        liquidity: 'medium', // Default for now
+        liquidity: "medium", // Default for now
         correlation: 0.5, // Default correlation
-        sentiment: 'neutral',
+        sentiment: "neutral",
         riskMultiplier,
       };
-
     } catch (error) {
-      console.error('[Risk Management] Failed to assess market conditions:', error);
+      console.error("[Risk Management] Failed to assess market conditions:", error);
       return this.getDefaultMarketConditions();
     }
   }
@@ -444,11 +460,14 @@ export class EnhancedRiskManagementService {
   /**
    * Validate if asset is allowed for trading
    */
-  private validateAsset(symbol: string, profile: RiskProfile): {
+  private validateAsset(
+    symbol: string,
+    profile: RiskProfile
+  ): {
     valid: boolean;
     errors: string[];
   } {
-    const asset = symbol.replace('USDT', '').replace('BTC', '').replace('ETH', '');
+    const asset = symbol.replace("USDT", "").replace("BTC", "").replace("ETH", "");
     const errors: string[] = [];
 
     if (profile.blockedAssets.includes(asset)) {
@@ -483,12 +502,12 @@ export class EnhancedRiskManagementService {
     const warnings: string[] = [];
 
     const orderValue = this.calculateOrderValue(orderParams);
-    const portfolioImpact = portfolio.totalValue > 0 ? 
-      (orderValue / portfolio.totalValue) * 100 : 100;
+    const portfolioImpact =
+      portfolio.totalValue > 0 ? (orderValue / portfolio.totalValue) * 100 : 100;
 
     // Adjust limits based on market conditions
     const adjustedMaxPositionSize = profile.maxPositionSize / marketConditions.riskMultiplier;
-    
+
     if (portfolioImpact > adjustedMaxPositionSize) {
       errors.push(
         `Position size ${portfolioImpact.toFixed(2)}% exceeds limit of ${adjustedMaxPositionSize.toFixed(2)}%`
@@ -520,15 +539,15 @@ export class EnhancedRiskManagementService {
     warnings: string[];
   } {
     const warnings: string[] = [];
-    const asset = orderParams.symbol.replace('USDT', '');
-    
+    const asset = orderParams.symbol.replace("USDT", "");
+
     const currentConcentration = portfolio.concentration[asset] || 0;
     const orderValue = this.calculateOrderValue(orderParams);
-    const additionalConcentration = portfolio.totalValue > 0 ?
-      (orderValue / portfolio.totalValue) * 100 : 100;
-    
+    const additionalConcentration =
+      portfolio.totalValue > 0 ? (orderValue / portfolio.totalValue) * 100 : 100;
+
     const newConcentration = currentConcentration + additionalConcentration;
-    
+
     if (newConcentration > profile.concentrationLimit) {
       warnings.push(
         `Asset concentration would be ${newConcentration.toFixed(2)}%, exceeding limit of ${profile.concentrationLimit}%`
@@ -559,7 +578,7 @@ export class EnhancedRiskManagementService {
     warnings: string[];
   }> {
     const warnings: string[] = [];
-    
+
     if (portfolio.positions.length === 0) {
       return {
         compliant: true,
@@ -571,12 +590,12 @@ export class EnhancedRiskManagementService {
     try {
       // Get correlations for the new asset
       const correlations = await this.getAssetCorrelations(orderParams.symbol);
-      
+
       // Check correlations with existing positions
       let maxCorrelation = 0;
-      let correlatedAssets: string[] = [];
+      const correlatedAssets: string[] = [];
 
-      portfolio.positions.forEach(position => {
+      portfolio.positions.forEach((position) => {
         const correlation = Math.abs(correlations[position.symbol] || 0);
         if (correlation > maxCorrelation) {
           maxCorrelation = correlation;
@@ -588,7 +607,7 @@ export class EnhancedRiskManagementService {
 
       if (correlatedAssets.length > 0) {
         warnings.push(
-          `High correlation (${(maxCorrelation * 100).toFixed(1)}%) with existing positions: ${correlatedAssets.join(', ')}`
+          `High correlation (${(maxCorrelation * 100).toFixed(1)}%) with existing positions: ${correlatedAssets.join(", ")}`
         );
       } else if (maxCorrelation > profile.correlationLimit * 0.8) {
         warnings.push(
@@ -601,13 +620,12 @@ export class EnhancedRiskManagementService {
         riskLevel: Math.min(100, maxCorrelation * 100),
         warnings,
       };
-
     } catch (error) {
-      console.error('[Risk Management] Correlation assessment failed:', error);
+      console.error("[Risk Management] Correlation assessment failed:", error);
       return {
         compliant: true, // Default to compliant on error
         riskLevel: 50,
-        warnings: ['Unable to assess correlation risk'],
+        warnings: ["Unable to assess correlation risk"],
       };
     }
   }
@@ -620,42 +638,48 @@ export class EnhancedRiskManagementService {
     warnings: string[];
   }> {
     const warnings: string[] = [];
-    
+
     try {
       const mexcClient = getUnifiedMexcClient();
       const tickerResult = await mexcClient.get24hrTicker(orderParams.symbol);
-      
+
       if (!tickerResult.success || !tickerResult.data.length) {
-        warnings.push('Unable to assess liquidity - no market data available');
+        warnings.push("Unable to assess liquidity - no market data available");
         return { riskLevel: 100, warnings };
       }
 
       const ticker = tickerResult.data[0];
-      const volume24h = parseFloat(ticker.volume || '0');
+      const volume24h = Number.parseFloat(ticker.volume || "0");
       const orderValue = this.calculateOrderValue(orderParams);
-      
+
       // Calculate order impact as percentage of 24h volume
-      const volumeImpact = volume24h > 0 ? (parseFloat(orderParams.quantity) / volume24h) * 100 : 100;
-      
+      const volumeImpact =
+        volume24h > 0 ? (Number.parseFloat(orderParams.quantity) / volume24h) * 100 : 100;
+
       let riskLevel = 0;
       if (volumeImpact > 10) {
         riskLevel = 100;
-        warnings.push(`Order size is ${volumeImpact.toFixed(2)}% of 24h volume - high liquidity risk`);
+        warnings.push(
+          `Order size is ${volumeImpact.toFixed(2)}% of 24h volume - high liquidity risk`
+        );
       } else if (volumeImpact > 5) {
         riskLevel = 75;
-        warnings.push(`Order size is ${volumeImpact.toFixed(2)}% of 24h volume - moderate liquidity risk`);
+        warnings.push(
+          `Order size is ${volumeImpact.toFixed(2)}% of 24h volume - moderate liquidity risk`
+        );
       } else if (volumeImpact > 1) {
         riskLevel = 25;
-        warnings.push(`Order size is ${volumeImpact.toFixed(2)}% of 24h volume - minor liquidity impact`);
+        warnings.push(
+          `Order size is ${volumeImpact.toFixed(2)}% of 24h volume - minor liquidity impact`
+        );
       }
 
       return { riskLevel, warnings };
-
     } catch (error) {
-      console.error('[Risk Management] Liquidity assessment failed:', error);
+      console.error("[Risk Management] Liquidity assessment failed:", error);
       return {
         riskLevel: 50,
-        warnings: ['Unable to assess liquidity risk'],
+        warnings: ["Unable to assess liquidity risk"],
       };
     }
   }
@@ -677,9 +701,7 @@ export class EnhancedRiskManagementService {
 
     // Check maximum concurrent positions
     if (portfolio.activeTrades >= profile.maxConcurrentPositions) {
-      errors.push(
-        `Maximum concurrent positions (${profile.maxConcurrentPositions}) reached`
-      );
+      errors.push(`Maximum concurrent positions (${profile.maxConcurrentPositions}) reached`);
     } else if (portfolio.activeTrades >= profile.maxConcurrentPositions * 0.8) {
       warnings.push(
         `Approaching maximum concurrent positions limit (${portfolio.activeTrades}/${profile.maxConcurrentPositions})`
@@ -701,10 +723,10 @@ export class EnhancedRiskManagementService {
     }
 
     // Market condition warnings
-    if (marketConditions.volatility === 'extreme') {
-      warnings.push('Extreme market volatility detected - consider reducing position sizes');
-    } else if (marketConditions.volatility === 'high') {
-      warnings.push('High market volatility detected - trade with caution');
+    if (marketConditions.volatility === "extreme") {
+      warnings.push("Extreme market volatility detected - consider reducing position sizes");
+    } else if (marketConditions.volatility === "high") {
+      warnings.push("High market volatility detected - trade with caution");
     }
 
     return {
@@ -718,10 +740,10 @@ export class EnhancedRiskManagementService {
    * Helper methods
    */
   private calculateOrderValue(orderParams: OrderParameters): number {
-    const quantity = parseFloat(orderParams.quantity);
-    const price = orderParams.price ? parseFloat(orderParams.price) : 0;
-    
-    if (orderParams.type === 'MARKET') {
+    const quantity = Number.parseFloat(orderParams.quantity);
+    const price = orderParams.price ? Number.parseFloat(orderParams.price) : 0;
+
+    if (orderParams.type === "MARKET") {
       // For market orders, we'll estimate based on quantity
       // This is simplified - in practice you'd get current market price
       return quantity * (price || 50000); // Default price estimation
@@ -733,7 +755,7 @@ export class EnhancedRiskManagementService {
   private async getAssetCorrelations(symbol: string): Promise<Record<string, number>> {
     const cacheKey = `correlations_${symbol}`;
     const cached = this.correlationCache.get(cacheKey);
-    
+
     if (cached && Date.now() < cached.expiresAt) {
       return cached.correlations;
     }
@@ -742,11 +764,11 @@ export class EnhancedRiskManagementService {
       // In a real implementation, this would fetch correlation data
       // For now, return mock correlations
       const mockCorrelations: Record<string, number> = {
-        'BTCUSDT': 0.8,
-        'ETHUSDT': 0.7,
-        'ADAUSDT': 0.6,
-        'DOTUSDT': 0.5,
-        'LINKUSDT': 0.4,
+        BTCUSDT: 0.8,
+        ETHUSDT: 0.7,
+        ADAUSDT: 0.6,
+        DOTUSDT: 0.5,
+        LINKUSDT: 0.4,
       };
 
       this.correlationCache.set(cacheKey, {
@@ -755,9 +777,8 @@ export class EnhancedRiskManagementService {
       });
 
       return mockCorrelations;
-
     } catch (error) {
-      console.error('[Risk Management] Failed to get correlations:', error);
+      console.error("[Risk Management] Failed to get correlations:", error);
       return {};
     }
   }
@@ -772,20 +793,20 @@ export class EnhancedRiskManagementService {
 
   private getDefaultMarketConditions(): MarketConditions {
     return {
-      volatility: 'medium',
-      trend: 'sideways',
-      liquidity: 'medium',
+      volatility: "medium",
+      trend: "sideways",
+      liquidity: "medium",
       correlation: 0.5,
-      sentiment: 'neutral',
+      sentiment: "neutral",
       riskMultiplier: 1.0,
     };
   }
 
-  private determineRiskLevel(riskScore: number): 'low' | 'medium' | 'high' | 'extreme' {
-    if (riskScore < 25) return 'low';
-    if (riskScore < 50) return 'medium';
-    if (riskScore < 75) return 'high';
-    return 'extreme';
+  private determineRiskLevel(riskScore: number): "low" | "medium" | "high" | "extreme" {
+    if (riskScore < 25) return "low";
+    if (riskScore < 50) return "medium";
+    if (riskScore < 75) return "high";
+    return "extreme";
   }
 
   private determineApproval(assessment: RiskAssessment): boolean {
@@ -801,7 +822,7 @@ export class EnhancedRiskManagementService {
 
     // Block if any compliance check fails
     const complianceChecks = Object.values(assessment.compliance);
-    if (complianceChecks.some(check => !check)) {
+    if (complianceChecks.some((check) => !check)) {
       return false;
     }
 
@@ -818,17 +839,17 @@ export class EnhancedRiskManagementService {
     const recommendations: string[] = [];
     let adjustedRiskScore = assessment.riskScore * marketConditions.riskMultiplier;
 
-    if (marketConditions.volatility === 'extreme') {
+    if (marketConditions.volatility === "extreme") {
       adjustedRiskScore *= 1.5;
-      recommendations.push('Extreme market volatility - consider reducing position size by 50%');
-    } else if (marketConditions.volatility === 'high') {
+      recommendations.push("Extreme market volatility - consider reducing position size by 50%");
+    } else if (marketConditions.volatility === "high") {
       adjustedRiskScore *= 1.2;
-      recommendations.push('High market volatility - consider reducing position size by 20%');
+      recommendations.push("High market volatility - consider reducing position size by 20%");
     }
 
-    if (marketConditions.trend === 'bearish' && marketConditions.volatility !== 'low') {
+    if (marketConditions.trend === "bearish" && marketConditions.volatility !== "low") {
       adjustedRiskScore *= 1.1;
-      recommendations.push('Bearish market trend detected - extra caution advised');
+      recommendations.push("Bearish market trend detected - extra caution advised");
     }
 
     return {
@@ -840,20 +861,22 @@ export class EnhancedRiskManagementService {
   private generateRecommendations(assessment: RiskAssessment, profile: RiskProfile): string[] {
     const recommendations: string[] = [];
 
-    if (assessment.riskLevel === 'high' || assessment.riskLevel === 'extreme') {
-      recommendations.push('Consider reducing position size due to high risk level');
+    if (assessment.riskLevel === "high" || assessment.riskLevel === "extreme") {
+      recommendations.push("Consider reducing position size due to high risk level");
     }
 
     if (assessment.limits.correlationRisk > 70) {
-      recommendations.push('High correlation with existing positions - consider diversification');
+      recommendations.push("High correlation with existing positions - consider diversification");
     }
 
     if (assessment.limits.concentrationRisk > 80) {
-      recommendations.push('High concentration risk - consider spreading investments across more assets');
+      recommendations.push(
+        "High concentration risk - consider spreading investments across more assets"
+      );
     }
 
-    if (profile.riskTolerance === 'conservative' && assessment.riskScore > 50) {
-      recommendations.push('Risk level exceeds conservative profile - consider smaller position');
+    if (profile.riskTolerance === "conservative" && assessment.riskScore > 50) {
+      recommendations.push("Risk level exceeds conservative profile - consider smaller position");
     }
 
     return recommendations;
@@ -865,7 +888,7 @@ export class EnhancedRiskManagementService {
   public clearCache(): void {
     this.portfolioCache.clear();
     this.correlationCache.clear();
-    console.log('[Risk Management] Cache cleared');
+    console.log("[Risk Management] Cache cleared");
   }
 
   public getCacheStats(): {
@@ -882,18 +905,18 @@ export class EnhancedRiskManagementService {
    * Initialize the service (required for integrated service compatibility)
    */
   async initialize(): Promise<void> {
-    console.log('[Enhanced Risk Management] Initializing service...');
+    console.log("[Enhanced Risk Management] Initializing service...");
     try {
       // Clear any stale cache on initialization
       this.clearCache();
-      
+
       // Test basic connectivity to MEXC for risk assessment
       const mexcClient = getUnifiedMexcClient();
       await mexcClient.testConnectivity();
-      
-      console.log('[Enhanced Risk Management] Service initialized successfully');
+
+      console.log("[Enhanced Risk Management] Service initialized successfully");
     } catch (error) {
-      console.error('[Enhanced Risk Management] Service initialization failed:', error);
+      console.error("[Enhanced Risk Management] Service initialization failed:", error);
       throw error;
     }
   }
@@ -912,17 +935,17 @@ export class EnhancedRiskManagementService {
   }> {
     try {
       // Test basic functionality
-      const testUserId = 'health_check_test';
+      const testUserId = "health_check_test";
       const testOrderParams: OrderParameters = {
-        symbol: 'BTCUSDT',
-        side: 'BUY',
-        type: 'MARKET',
-        quantity: '0.001',
+        symbol: "BTCUSDT",
+        side: "BUY",
+        type: "MARKET",
+        quantity: "0.001",
       };
 
       // Perform a dry-run risk assessment
       const assessment = await this.assessTradingRisk(testUserId, testOrderParams);
-      
+
       const metrics = {
         portfolioCacheSize: this.portfolioCache.size,
         correlationCacheSize: this.correlationCache.size,
@@ -930,13 +953,13 @@ export class EnhancedRiskManagementService {
       };
 
       return {
-        healthy: assessment !== null && typeof assessment.riskLevel === 'string',
+        healthy: assessment !== null && typeof assessment.riskLevel === "string",
         metrics,
       };
     } catch (error) {
       return {
         healthy: false,
-        error: error instanceof Error ? error.message : 'Health check failed',
+        error: error instanceof Error ? error.message : "Health check failed",
       };
     }
   }

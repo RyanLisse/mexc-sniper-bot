@@ -1,6 +1,6 @@
-import type { BalanceEntry } from "../services/mexc-unified-exports";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../lib/kinde-auth-client";
+import type { BalanceEntry } from "../services/mexc-unified-exports";
 
 interface UseAccountBalanceOptions {
   userId?: string;
@@ -14,7 +14,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
     refreshInterval = 30000, // Refresh every 30 seconds
     enabled = true,
   } = options;
-  
+
   const { user, isAuthenticated } = useAuth();
 
   return useQuery({
@@ -27,7 +27,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      
+
       const url = `/api/mexc/account?userId=${encodeURIComponent(userId)}`;
       const response = await fetch(url, {
         method: "GET",

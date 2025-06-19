@@ -118,7 +118,10 @@ export class PatternAnalysisWorkflow {
 
       // Fallback to legacy analysis
       return await this.analyzePatternsLegacy(
-        { content: `Analysis failed: ${error}`, metadata: { agent: "pattern-analysis-workflow", timestamp: new Date().toISOString() } },
+        {
+          content: `Analysis failed: ${error}`,
+          metadata: { agent: "pattern-analysis-workflow", timestamp: new Date().toISOString() },
+        },
         [],
         analysisType
       );

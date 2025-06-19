@@ -1,19 +1,13 @@
 "use client";
 
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { useAccountBalance } from "../hooks/use-account-balance";
-import { useCurrencyFormatting } from "../hooks/use-currency-formatting";
 import { Eye, EyeOff, RefreshCw, TrendingUp, Wallet } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
 import { useState } from "react";
+import { useAccountBalance } from "../hooks/use-account-balance";
+import { useCurrencyFormatting } from "../hooks/use-currency-formatting";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 interface AccountBalanceProps {
   userId?: string;
@@ -260,7 +254,7 @@ export const OptimizedAccountBalance = React.memo(
     const sortedBalances = useMemo(() => {
       if (!balanceData?.balances) return [];
       return [...balanceData.balances]
-        .filter((balance): balance is BalanceItem => 
+        .filter((balance): balance is BalanceItem =>
           Boolean(balance.asset && balance.free && balance.locked && balance.total !== undefined)
         )
         .sort((a, b) => (b.usdtValue || 0) - (a.usdtValue || 0))

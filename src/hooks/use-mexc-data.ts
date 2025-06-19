@@ -1,8 +1,8 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "../lib/api-response";
+import { useAuth } from "../lib/kinde-auth-client";
 import { queryKeys } from "../lib/query-client";
 import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../lib/kinde-auth-client";
 
 // MEXC Calendar Data Hook
 export function useMexcCalendar() {
@@ -242,14 +242,14 @@ export function useReadyTargets() {
 // Hook for MEXC account balance
 export function useMexcAccount(userId?: string) {
   const { user, isAuthenticated } = useAuth();
-  
+
   return useQuery({
     queryKey: ["mexc", "account", userId || "anonymous"],
     queryFn: async () => {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      
+
       const response = await fetch(`/api/mexc/account?userId=${userId}`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

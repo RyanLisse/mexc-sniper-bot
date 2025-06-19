@@ -60,7 +60,10 @@ const OpenAIConfigSchema = z.object({
 
 // Security Configuration
 const SecurityConfigSchema = z.object({
-  ENCRYPTION_MASTER_KEY: z.string().min(32, "Encryption key must be at least 32 characters").optional(),
+  ENCRYPTION_MASTER_KEY: z
+    .string()
+    .min(32, "Encryption key must be at least 32 characters")
+    .optional(),
   SECURITY_HEADERS_ENABLED: z.coerce.boolean().default(true),
   CSRF_PROTECTION: z.coerce.boolean().default(true),
   RATE_LIMITING: z.coerce.boolean().default(true),
@@ -165,7 +168,7 @@ export interface ConfigOverrides {
 export class UnifiedConfigService {
   private static instance: UnifiedConfigService | null = null;
   private cachedConfig: CompleteConfig | null = null;
-  private lastValidation: number = 0;
+  private lastValidation = 0;
   private cache = getUnifiedCache();
 
   private constructor() {}
@@ -182,10 +185,11 @@ export class UnifiedConfigService {
    */
   async validateAndLoad(overrides: ConfigOverrides = {}): Promise<ConfigValidationResult> {
     const cacheKey = `config:validation:${JSON.stringify(overrides)}`;
-    
+
     // Check cache first
-    const cached = await this.cache.get<ConfigValidationResult>(cacheKey, 'config');
-    if (cached && Date.now() - this.lastValidation < 60000) { // 1 minute cache
+    const cached = await this.cache.get<ConfigValidationResult>(cacheKey, "config");
+    if (cached && Date.now() - this.lastValidation < 60000) {
+      // 1 minute cache
       return cached;
     }
 
@@ -209,7 +213,7 @@ export class UnifiedConfigService {
 
       // Validate complete configuration
       const validation = CompleteConfigSchema.safeParse(sections);
-      
+
       const result: ConfigValidationResult = {
         valid: validation.success,
         config: validation.success ? validation.data : undefined,
@@ -220,15 +224,15 @@ export class UnifiedConfigService {
         security: {
           exposedSecrets: [],
           weakPasswords: [],
-          insecureSettings: []
-        }
+          insecureSettings: [],
+        },
       };
 
       if (!validation.success) {
-        result.errors = validation.error.errors.map(err => ({
-          path: err.path.join('.'),
+        result.errors = validation.error.errors.map((err) => ({
+          path: err.path.join("."),
           message: err.message,
-          value: err.code === 'invalid_type' ? 'undefined' : undefined
+          value: err.code === "invalid_type" ? "undefined" : undefined,
         }));
       }
 
@@ -241,26 +245,27 @@ export class UnifiedConfigService {
       if (result.valid) {
         this.cachedConfig = result.config!;
         this.lastValidation = Date.now();
-        await this.cache.set(cacheKey, result, 'config', 60000);
+        await this.cache.set(cacheKey, result, "config", 60000);
       }
 
       return result;
-
     } catch (error) {
       return {
         valid: false,
-        errors: [{
-          path: 'system',
-          message: `Configuration validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-        }],
+        errors: [
+          {
+            path: "system",
+            message: `Configuration validation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+          },
+        ],
         warnings: [],
         missing: [],
         deprecated: [],
         security: {
           exposedSecrets: [],
           weakPasswords: [],
-          insecureSettings: []
-        }
+          insecureSettings: [],
+        },
       };
     }
   }
@@ -269,7 +274,8 @@ export class UnifiedConfigService {
    * Get current configuration (cached)
    */
   async getConfig(): Promise<CompleteConfig | null> {
-    if (this.cachedConfig && Date.now() - this.lastValidation < 300000) { // 5 minute cache
+    if (this.cachedConfig && Date.now() - this.lastValidation < 300000) {
+      // 5 minute cache
       return this.cachedConfig;
     }
 
@@ -305,37 +311,38 @@ export class UnifiedConfigService {
     lastValidated: string;
   }> {
     const validation = await this.validateAndLoad();
-    
+
     return {
       isValid: validation.valid,
       errorCount: validation.errors.length,
       warningCount: validation.warnings.length,
       missingCount: validation.missing.length,
-      securityIssues: validation.security.exposedSecrets.length + 
-                     validation.security.weakPasswords.length + 
-                     validation.security.insecureSettings.length,
-      lastValidated: new Date(this.lastValidation).toISOString()
+      securityIssues:
+        validation.security.exposedSecrets.length +
+        validation.security.weakPasswords.length +
+        validation.security.insecureSettings.length,
+      lastValidated: new Date(this.lastValidation).toISOString(),
     };
   }
 
   /**
    * Get required environment variables for a specific environment
    */
-  getRequiredVarsForEnvironment(env: 'development' | 'test' | 'staging' | 'production'): string[] {
+  getRequiredVarsForEnvironment(env: "development" | "test" | "staging" | "production"): string[] {
     const base = [
-      'DATABASE_URL',
-      'OPENAI_API_KEY',
-      'KINDE_CLIENT_ID',
-      'KINDE_CLIENT_SECRET',
-      'KINDE_ISSUER_URL',
-      'KINDE_SITE_URL'
+      "DATABASE_URL",
+      "OPENAI_API_KEY",
+      "KINDE_CLIENT_ID",
+      "KINDE_CLIENT_SECRET",
+      "KINDE_ISSUER_URL",
+      "KINDE_SITE_URL",
     ];
 
     const envSpecific = {
       development: [],
       test: [],
-      staging: ['ENCRYPTION_MASTER_KEY'],
-      production: ['ENCRYPTION_MASTER_KEY', 'MEXC_API_KEY', 'MEXC_SECRET_KEY']
+      staging: ["ENCRYPTION_MASTER_KEY"],
+      production: ["ENCRYPTION_MASTER_KEY", "MEXC_API_KEY", "MEXC_SECRET_KEY"],
     };
 
     return [...base, ...envSpecific[env]];
@@ -346,15 +353,35 @@ export class UnifiedConfigService {
    */
   generateDocs(): string {
     const sections = [
-      { name: 'Database', schema: DatabaseConfigSchema, description: 'Database connection and pool settings' },
-      { name: 'Authentication', schema: AuthConfigSchema, description: 'Kinde Auth configuration' },
-      { name: 'MEXC API', schema: MexcConfigSchema, description: 'MEXC exchange API settings' },
-      { name: 'OpenAI', schema: OpenAIConfigSchema, description: 'OpenAI API configuration for agents' },
-      { name: 'Security', schema: SecurityConfigSchema, description: 'Security and encryption settings' },
-      { name: 'Application', schema: AppConfigSchema, description: 'General application settings' },
-      { name: 'External Services', schema: ExternalServicesConfigSchema, description: 'Third-party service integration' },
-      { name: 'Cache', schema: CacheConfigSchema, description: 'Caching system configuration' },
-      { name: 'Trading', schema: TradingConfigSchema, description: 'Trading and risk management settings' },
+      {
+        name: "Database",
+        schema: DatabaseConfigSchema,
+        description: "Database connection and pool settings",
+      },
+      { name: "Authentication", schema: AuthConfigSchema, description: "Kinde Auth configuration" },
+      { name: "MEXC API", schema: MexcConfigSchema, description: "MEXC exchange API settings" },
+      {
+        name: "OpenAI",
+        schema: OpenAIConfigSchema,
+        description: "OpenAI API configuration for agents",
+      },
+      {
+        name: "Security",
+        schema: SecurityConfigSchema,
+        description: "Security and encryption settings",
+      },
+      { name: "Application", schema: AppConfigSchema, description: "General application settings" },
+      {
+        name: "External Services",
+        schema: ExternalServicesConfigSchema,
+        description: "Third-party service integration",
+      },
+      { name: "Cache", schema: CacheConfigSchema, description: "Caching system configuration" },
+      {
+        name: "Trading",
+        schema: TradingConfigSchema,
+        description: "Trading and risk management settings",
+      },
     ];
 
     let docs = "# MEXC Sniper Bot Configuration\n\n";
@@ -365,7 +392,7 @@ export class UnifiedConfigService {
       docs += `${section.description}\n\n`;
       docs += "| Variable | Type | Required | Default | Description |\n";
       docs += "|----------|------|----------|---------|-------------|\n";
-      
+
       // This would need more sophisticated schema introspection
       // For now, just add placeholder
       docs += "| (See schema definition) | Various | Varies | Varies | (Auto-generated) |\n\n";
@@ -384,9 +411,9 @@ export class UnifiedConfigService {
 
   private extractSection<T>(envVars: Record<string, any>, schema: z.ZodSchema<T>): Partial<T> {
     const result: any = {};
-    
+
     // Get all possible keys from the schema
-    if ('shape' in schema._def) {
+    if ("shape" in schema._def) {
       const shape = schema._def.shape as Record<string, any>;
       for (const key in shape) {
         if (envVars[key] !== undefined) {
@@ -394,31 +421,31 @@ export class UnifiedConfigService {
         }
       }
     }
-    
+
     return result;
   }
 
   private async performSecurityValidation(
-    vars: Record<string, any>, 
+    vars: Record<string, any>,
     result: ConfigValidationResult
   ): Promise<void> {
     // Check for exposed secrets
-    const sensitiveKeys = ['SECRET', 'KEY', 'TOKEN', 'PASSWORD'];
+    const sensitiveKeys = ["SECRET", "KEY", "TOKEN", "PASSWORD"];
     for (const [key, value] of Object.entries(vars)) {
-      if (sensitiveKeys.some(sensitive => key.includes(sensitive))) {
-        if (typeof value === 'string' && value.length < 16) {
+      if (sensitiveKeys.some((sensitive) => key.includes(sensitive))) {
+        if (typeof value === "string" && value.length < 16) {
           result.security.weakPasswords.push(key);
         }
       }
     }
 
     // Check for insecure settings
-    if (vars.NODE_ENV === 'production') {
+    if (vars.NODE_ENV === "production") {
       if (!vars.ENCRYPTION_MASTER_KEY) {
-        result.security.insecureSettings.push('ENCRYPTION_MASTER_KEY missing in production');
+        result.security.insecureSettings.push("ENCRYPTION_MASTER_KEY missing in production");
       }
-      if (vars.CORS_ORIGIN === '*') {
-        result.security.insecureSettings.push('CORS_ORIGIN should not be * in production');
+      if (vars.CORS_ORIGIN === "*") {
+        result.security.insecureSettings.push("CORS_ORIGIN should not be * in production");
       }
     }
   }
@@ -427,9 +454,9 @@ export class UnifiedConfigService {
     vars: Record<string, any>,
     result: ConfigValidationResult
   ): Promise<void> {
-    const env = vars.NODE_ENV || 'development';
+    const env = vars.NODE_ENV || "development";
     const required = this.getRequiredVarsForEnvironment(env as any);
-    
+
     for (const requiredVar of required) {
       if (!vars[requiredVar]) {
         result.missing.push(requiredVar);
@@ -437,11 +464,11 @@ export class UnifiedConfigService {
     }
 
     // Environment-specific warnings
-    if (env === 'development' && !vars.MEXC_API_KEY) {
+    if (env === "development" && !vars.MEXC_API_KEY) {
       result.warnings.push({
-        path: 'mexc.MEXC_API_KEY',
-        message: 'MEXC API credentials not set - trading features will be limited',
-        suggestion: 'Set MEXC_API_KEY and MEXC_SECRET_KEY for full functionality'
+        path: "mexc.MEXC_API_KEY",
+        message: "MEXC API credentials not set - trading features will be limited",
+        suggestion: "Set MEXC_API_KEY and MEXC_SECRET_KEY for full functionality",
       });
     }
   }
@@ -453,17 +480,17 @@ export class UnifiedConfigService {
     // Check for configuration inconsistencies
     if (sections.trading?.TRADING_ENABLED && !sections.mexc?.MEXC_API_KEY) {
       result.warnings.push({
-        path: 'trading.TRADING_ENABLED',
-        message: 'Trading is enabled but MEXC credentials are not configured',
-        suggestion: 'Either disable trading or configure MEXC API credentials'
+        path: "trading.TRADING_ENABLED",
+        message: "Trading is enabled but MEXC credentials are not configured",
+        suggestion: "Either disable trading or configure MEXC API credentials",
       });
     }
 
     if (sections.cache?.CACHE_ENABLED && sections.cache?.CACHE_MAX_SIZE < 1000) {
       result.warnings.push({
-        path: 'cache.CACHE_MAX_SIZE',
-        message: 'Cache size is very small, may impact performance',
-        suggestion: 'Consider increasing CACHE_MAX_SIZE for better performance'
+        path: "cache.CACHE_MAX_SIZE",
+        message: "Cache size is very small, may impact performance",
+        suggestion: "Consider increasing CACHE_MAX_SIZE for better performance",
       });
     }
   }
@@ -474,7 +501,7 @@ export class UnifiedConfigService {
   clearCache(): void {
     this.cachedConfig = null;
     this.lastValidation = 0;
-    this.cache.delete('config:validation');
+    this.cache.delete("config:validation");
   }
 }
 
@@ -518,7 +545,9 @@ export async function isConfigValid(): Promise<boolean> {
 /**
  * Get required environment variables for deployment
  */
-export function getRequiredEnvVars(env: 'development' | 'test' | 'staging' | 'production'): string[] {
+export function getRequiredEnvVars(
+  env: "development" | "test" | "staging" | "production"
+): string[] {
   const service = getConfigService();
   return service.getRequiredVarsForEnvironment(env);
 }
@@ -527,6 +556,4 @@ export function getRequiredEnvVars(env: 'development' | 'test' | 'staging' | 'pr
 // Exports
 // ============================================================================
 
-export {
-  UnifiedConfigService as default
-};
+export { UnifiedConfigService as default };

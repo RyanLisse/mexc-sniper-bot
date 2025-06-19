@@ -245,13 +245,17 @@ export class WorkflowEngine {
 
     // Log resolved warnings for debugging
     if (resolvedWarnings.length > 0) {
-      console.debug(`[WorkflowEngine] Resolved ${resolvedWarnings.length} agent registration warnings`);
+      console.debug(
+        `[WorkflowEngine] Resolved ${resolvedWarnings.length} agent registration warnings`
+      );
     }
 
     // Log remaining warnings if any
     if (remainingWarnings.length > 0) {
-      console.warn(`[WorkflowEngine] ${remainingWarnings.length} agent registration warnings remain:`);
-      remainingWarnings.forEach(warning => console.warn(`  - ${warning}`));
+      console.warn(
+        `[WorkflowEngine] ${remainingWarnings.length} agent registration warnings remain:`
+      );
+      remainingWarnings.forEach((warning) => console.warn(`  - ${warning}`));
     }
 
     return { resolvedWarnings, remainingWarnings };
@@ -797,7 +801,9 @@ export class WorkflowEngine {
     for (const step of definition.steps) {
       if (!this.agentRegistry.getAgent(step.agentId)) {
         // Store the warning but don't print it immediately to avoid spam during tests
-        this.deferredWarnings.push(`Agent '${step.agentId}' for step '${step.id}' is not registered`);
+        this.deferredWarnings.push(
+          `Agent '${step.agentId}' for step '${step.id}' is not registered`
+        );
       }
     }
   }

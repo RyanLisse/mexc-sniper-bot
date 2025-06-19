@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import {
   getUserIdFromQuery,
   withAdminAuth,
@@ -6,7 +7,6 @@ import {
   withUserAuth,
 } from "./api-auth";
 import { HTTP_STATUS, createErrorResponse } from "./api-response";
-import type { NextRequest } from "next/server";
 
 /**
  * Authentication decorators for common API route patterns

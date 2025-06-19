@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
+import { and, eq, gte, lte, or } from "drizzle-orm";
 import { db } from "../db";
 import { transactionLocks, transactionQueue } from "../db/schema";
-import { and, eq, gte, lte, or } from "drizzle-orm";
 
 export interface TransactionLockConfig {
   resourceId: string;

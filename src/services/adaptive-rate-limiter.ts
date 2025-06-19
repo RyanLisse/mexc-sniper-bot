@@ -1,6 +1,6 @@
 /**
  * Adaptive Rate Limiter Service
- * 
+ *
  * Provides intelligent rate limiting with:
  * - Adaptive algorithms based on API response times
  * - Circuit breaker integration
@@ -9,8 +9,8 @@
  * - Real-time performance monitoring
  */
 
-import { circuitBreakerRegistry } from './circuit-breaker';
-import { ErrorLoggingService } from './error-logging-service';
+import { circuitBreakerRegistry } from "./circuit-breaker";
+import { ErrorLoggingService } from "./error-logging-service";
 
 export interface RateLimitConfig {
   windowMs: number; // Time window in milliseconds
@@ -68,7 +68,7 @@ interface SlidingWindow {
 interface UserLimits {
   userId: string;
   customLimits: Record<string, RateLimitConfig>;
-  priorityLevel: 'low' | 'medium' | 'high' | 'premium';
+  priorityLevel: "low" | "medium" | "high" | "premium";
   adaptationHistory: Array<{
     timestamp: number;
     factor: number;
@@ -79,13 +79,13 @@ interface UserLimits {
 export class AdaptiveRateLimiterService {
   private static instance: AdaptiveRateLimiterService;
   private errorLogger = ErrorLoggingService.getInstance();
-  
+
   // Core data structures
   private endpointMetrics = new Map<string, EndpointMetrics>();
   private tokenBuckets = new Map<string, TokenBucket>();
   private slidingWindows = new Map<string, SlidingWindow>();
   private userLimits = new Map<string, UserLimits>();
-  
+
   // Default configurations
   private readonly defaultConfig: RateLimitConfig = {
     windowMs: 60000, // 1 minute
@@ -99,33 +99,33 @@ export class AdaptiveRateLimiterService {
   };
 
   private readonly endpointConfigs: Record<string, Partial<RateLimitConfig>> = {
-    '/api/mexc/trade': {
+    "/api/mexc/trade": {
       maxRequests: 10, // Very conservative for trading
       burstAllowance: 2,
       windowMs: 60000,
     },
-    '/api/mexc/test-credentials': {
+    "/api/mexc/test-credentials": {
       maxRequests: 5, // Conservative for credential testing
       burstAllowance: 1,
       windowMs: 300000, // 5 minutes
     },
-    '/api/mexc/account': {
+    "/api/mexc/account": {
       maxRequests: 30,
       burstAllowance: 5,
       windowMs: 60000,
     },
-    '/api/mexc/connectivity': {
+    "/api/mexc/connectivity": {
       maxRequests: 60,
       burstAllowance: 10,
       windowMs: 60000,
     },
     // Public endpoints can have higher limits
-    '/api/mexc/calendar': {
+    "/api/mexc/calendar": {
       maxRequests: 120,
       burstAllowance: 20,
       windowMs: 60000,
     },
-    '/api/mexc/symbols': {
+    "/api/mexc/symbols": {
       maxRequests: 100,
       burstAllowance: 15,
       windowMs: 60000,
@@ -173,29 +173,29 @@ export class AdaptiveRateLimiterService {
     metadata?: Record<string, any>
   ): Promise<RateLimitResult> {
     const startTime = Date.now();
-    
+
     try {
       // Get configuration for this endpoint/user
       const config = this.getConfiguration(endpoint, userId);
       const key = this.generateKey(endpoint, userId);
-      
+
       // Get current metrics
       const metrics = this.getOrCreateMetrics(key);
-      
+
       // Check circuit breaker first
       if (config.circuitBreakerEnabled) {
         const circuitBreaker = circuitBreakerRegistry.getBreaker(`rate-limit-${endpoint}`);
         const cbStats = circuitBreaker.getStats();
-        
-        if (cbStats.state === 'OPEN') {
+
+        if (cbStats.state === "OPEN") {
           return {
             allowed: false,
             remainingRequests: 0,
             resetTime: Date.now() + 30000, // 30 seconds
             retryAfter: 30,
-            circuitBreakerStatus: 'OPEN',
+            circuitBreakerStatus: "OPEN",
             metadata: {
-              algorithm: 'circuit-breaker',
+              algorithm: "circuit-breaker",
               currentWindowRequests: 0,
               averageResponseTime: metrics.averageResponseTime,
               successRate: metrics.successRate,
@@ -208,7 +208,7 @@ export class AdaptiveRateLimiterService {
 
       // Apply adaptive algorithm
       let result: RateLimitResult;
-      
+
       if (config.tokenBucketEnabled) {
         result = await this.checkTokenBucket(key, config, metrics);
       } else {
@@ -224,12 +224,11 @@ export class AdaptiveRateLimiterService {
       this.updateRequestMetrics(key, result.allowed);
 
       return result;
-
     } catch (error) {
-      console.error('[Adaptive Rate Limiter] Check failed:', error);
-      
+      console.error("[Adaptive Rate Limiter] Check failed:", error);
+
       await this.errorLogger.logError(error as Error, {
-        context: 'rate_limit_check',
+        context: "rate_limit_check",
         endpoint,
         userId,
         userAgent,
@@ -242,7 +241,7 @@ export class AdaptiveRateLimiterService {
         resetTime: Date.now() + 60000,
         retryAfter: 60,
         metadata: {
-          algorithm: 'error-fallback',
+          algorithm: "error-fallback",
           currentWindowRequests: 0,
           averageResponseTime: 0,
           successRate: 0,
@@ -269,11 +268,10 @@ export class AdaptiveRateLimiterService {
     // Update response time
     metrics.totalRequests++;
     metrics.lastResponseTime = responseTime;
-    
+
     // Calculate moving average
     const alpha = 0.1; // Smoothing factor
-    metrics.averageResponseTime = 
-      (1 - alpha) * metrics.averageResponseTime + alpha * responseTime;
+    metrics.averageResponseTime = (1 - alpha) * metrics.averageResponseTime + alpha * responseTime;
 
     // Update success metrics
     if (success) {
@@ -281,23 +279,25 @@ export class AdaptiveRateLimiterService {
     } else {
       metrics.failedRequests++;
     }
-    
+
     metrics.successRate = metrics.successfulRequests / metrics.totalRequests;
 
     // Adaptive adjustment
-    if (Date.now() - metrics.lastAdaptation > 30000) { // Adapt every 30 seconds
+    if (Date.now() - metrics.lastAdaptation > 30000) {
+      // Adapt every 30 seconds
       const newFactor = this.calculateAdaptationFactor(metrics, responseTime, success);
-      
+
       if (Math.abs(newFactor - metrics.adaptationFactor) > 0.1) {
-        console.log(`[Adaptive Rate Limiter] Adapting ${key}: ${metrics.adaptationFactor.toFixed(2)} -> ${newFactor.toFixed(2)}`);
-        
+        console.log(
+          `[Adaptive Rate Limiter] Adapting ${key}: ${metrics.adaptationFactor.toFixed(2)} -> ${newFactor.toFixed(2)}`
+        );
+
         metrics.adaptationFactor = newFactor;
         metrics.lastAdaptation = Date.now();
-        
+
         // Update user adaptation history
         if (userId) {
-          this.updateUserAdaptationHistory(userId, newFactor, 
-            success ? 'performance' : 'failure');
+          this.updateUserAdaptationHistory(userId, newFactor, success ? "performance" : "failure");
         }
 
         // Update circuit breaker if needed
@@ -320,7 +320,7 @@ export class AdaptiveRateLimiterService {
   ): Promise<RateLimitResult> {
     let bucket = this.tokenBuckets.get(key);
     const now = Date.now();
-    
+
     if (!bucket) {
       bucket = {
         tokens: config.maxRequests,
@@ -340,13 +340,13 @@ export class AdaptiveRateLimiterService {
     // Check if token available
     if (bucket.tokens >= 1) {
       bucket.tokens -= 1;
-      
+
       return {
         allowed: true,
         remainingRequests: Math.floor(bucket.tokens),
         resetTime: now + ((bucket.capacity - bucket.tokens) / bucket.refillRate) * 1000,
         metadata: {
-          algorithm: 'token-bucket',
+          algorithm: "token-bucket",
           currentWindowRequests: config.maxRequests - Math.floor(bucket.tokens),
           averageResponseTime: metrics.averageResponseTime,
           successRate: metrics.successRate,
@@ -357,14 +357,14 @@ export class AdaptiveRateLimiterService {
     } else {
       // Calculate retry after
       const retryAfterSeconds = Math.ceil((1 - bucket.tokens) / bucket.refillRate);
-      
+
       return {
         allowed: false,
         remainingRequests: 0,
         resetTime: now + retryAfterSeconds * 1000,
         retryAfter: retryAfterSeconds,
         metadata: {
-          algorithm: 'token-bucket',
+          algorithm: "token-bucket",
           currentWindowRequests: config.maxRequests,
           averageResponseTime: metrics.averageResponseTime,
           successRate: metrics.successRate,
@@ -386,7 +386,7 @@ export class AdaptiveRateLimiterService {
     let window = this.slidingWindows.get(key);
     const now = Date.now();
     const windowStart = now - config.windowMs;
-    
+
     if (!window) {
       window = {
         requests: [],
@@ -397,21 +397,21 @@ export class AdaptiveRateLimiterService {
     }
 
     // Remove old requests
-    window.requests = window.requests.filter(timestamp => timestamp > windowStart);
-    
+    window.requests = window.requests.filter((timestamp) => timestamp > windowStart);
+
     // Apply adaptation factor to max requests
     const adaptedMaxRequests = Math.floor(config.maxRequests * metrics.adaptationFactor);
     const maxWithBurst = adaptedMaxRequests + config.burstAllowance;
-    
+
     if (window.requests.length < maxWithBurst) {
       window.requests.push(now);
-      
+
       return {
         allowed: true,
         remainingRequests: maxWithBurst - window.requests.length,
         resetTime: Math.min(...window.requests) + config.windowMs,
         metadata: {
-          algorithm: 'sliding-window',
+          algorithm: "sliding-window",
           currentWindowRequests: window.requests.length,
           averageResponseTime: metrics.averageResponseTime,
           successRate: metrics.successRate,
@@ -423,14 +423,14 @@ export class AdaptiveRateLimiterService {
       // Calculate retry after
       const oldestRequest = Math.min(...window.requests);
       const retryAfterMs = oldestRequest + config.windowMs - now;
-      
+
       return {
         allowed: false,
         remainingRequests: 0,
         resetTime: oldestRequest + config.windowMs,
         retryAfter: Math.ceil(retryAfterMs / 1000),
         metadata: {
-          algorithm: 'sliding-window',
+          algorithm: "sliding-window",
           currentWindowRequests: window.requests.length,
           averageResponseTime: metrics.averageResponseTime,
           successRate: metrics.successRate,
@@ -482,7 +482,8 @@ export class AdaptiveRateLimiterService {
       factor *= 0.7; // Reduce rate by 30%
     } else if (responseTime > this.adaptationThresholds.slowResponseTime) {
       factor *= 0.85; // Reduce rate by 15%
-    } else if (responseTime < 500) { // Fast response
+    } else if (responseTime < 500) {
+      // Fast response
       factor *= 1.05; // Increase rate by 5%
     }
 
@@ -491,7 +492,8 @@ export class AdaptiveRateLimiterService {
       factor *= 0.5; // Reduce rate by 50%
     } else if (metrics.successRate < this.adaptationThresholds.lowSuccessRate) {
       factor *= 0.8; // Reduce rate by 20%
-    } else if (metrics.successRate > 0.95) { // Very high success rate
+    } else if (metrics.successRate > 0.95) {
+      // Very high success rate
       factor *= 1.1; // Increase rate by 10%
     }
 
@@ -509,7 +511,7 @@ export class AdaptiveRateLimiterService {
    */
   private updateCircuitBreakerThresholds(endpoint: string, metrics: EndpointMetrics): void {
     const circuitBreaker = circuitBreakerRegistry.getBreaker(`rate-limit-${endpoint}`);
-    
+
     // Adjust failure threshold based on adaptation factor
     // If we're being adaptive due to poor performance, make circuit breaker more sensitive
     if (metrics.adaptationFactor < 0.8) {
@@ -523,7 +525,7 @@ export class AdaptiveRateLimiterService {
    */
   private getConfiguration(endpoint: string, userId?: string): RateLimitConfig {
     let config = { ...this.defaultConfig };
-    
+
     // Apply endpoint-specific config
     const endpointConfig = this.endpointConfigs[endpoint];
     if (endpointConfig) {
@@ -557,7 +559,7 @@ export class AdaptiveRateLimiterService {
 
   private getOrCreateMetrics(key: string): EndpointMetrics {
     let metrics = this.endpointMetrics.get(key);
-    
+
     if (!metrics) {
       metrics = {
         totalRequests: 0,
@@ -568,17 +570,17 @@ export class AdaptiveRateLimiterService {
         successRate: 1.0,
         adaptationFactor: 1.0,
         lastAdaptation: Date.now(),
-        circuitBreakerState: 'CLOSED',
+        circuitBreakerState: "CLOSED",
       };
       this.endpointMetrics.set(key, metrics);
     }
-    
+
     return metrics;
   }
 
   private updateRequestMetrics(key: string, allowed: boolean): void {
     const metrics = this.getOrCreateMetrics(key);
-    
+
     if (!allowed) {
       // Track rate limit hits as failures for adaptation
       metrics.failedRequests++;
@@ -589,12 +591,12 @@ export class AdaptiveRateLimiterService {
 
   private updateUserAdaptationHistory(userId: string, factor: number, reason: string): void {
     let userLimits = this.userLimits.get(userId);
-    
+
     if (!userLimits) {
       userLimits = {
         userId,
         customLimits: {},
-        priorityLevel: 'medium',
+        priorityLevel: "medium",
         adaptationHistory: [],
       };
       this.userLimits.set(userId, userLimits);
@@ -633,15 +635,17 @@ export class AdaptiveRateLimiterService {
       }
     }
 
-    console.log(`[Adaptive Rate Limiter] Cleanup completed - ${this.slidingWindows.size} windows, ${this.endpointMetrics.size} metrics`);
+    console.log(
+      `[Adaptive Rate Limiter] Cleanup completed - ${this.slidingWindows.size} windows, ${this.endpointMetrics.size} metrics`
+    );
   }
 
   /**
    * Public API methods
    */
-  public setUserPriority(userId: string, priority: 'low' | 'medium' | 'high' | 'premium'): void {
+  public setUserPriority(userId: string, priority: "low" | "medium" | "high" | "premium"): void {
     let userLimits = this.userLimits.get(userId);
-    
+
     if (!userLimits) {
       userLimits = {
         userId,
@@ -652,27 +656,29 @@ export class AdaptiveRateLimiterService {
     } else {
       userLimits.priorityLevel = priority;
     }
-    
+
     this.userLimits.set(userId, userLimits);
     console.log(`[Adaptive Rate Limiter] Set user ${userId} priority to ${priority}`);
   }
 
   public setCustomLimits(userId: string, endpoint: string, config: Partial<RateLimitConfig>): void {
     let userLimits = this.userLimits.get(userId);
-    
+
     if (!userLimits) {
       userLimits = {
         userId,
         customLimits: {},
-        priorityLevel: 'medium',
+        priorityLevel: "medium",
         adaptationHistory: [],
       };
     }
-    
+
     userLimits.customLimits[endpoint] = { ...this.defaultConfig, ...config };
     this.userLimits.set(userId, userLimits);
-    
-    console.log(`[Adaptive Rate Limiter] Set custom limits for user ${userId} endpoint ${endpoint}`);
+
+    console.log(
+      `[Adaptive Rate Limiter] Set custom limits for user ${userId} endpoint ${endpoint}`
+    );
   }
 
   public getMetrics(key?: string): EndpointMetrics | Map<string, EndpointMetrics> {
@@ -694,14 +700,15 @@ export class AdaptiveRateLimiterService {
     };
   } {
     const metrics = Array.from(this.endpointMetrics.values());
-    const avgAdaptationFactor = metrics.length > 0 
-      ? metrics.reduce((sum, m) => sum + m.adaptationFactor, 0) / metrics.length
-      : 1.0;
-    
-    const adaptedEndpoints = metrics.filter(m => Math.abs(m.adaptationFactor - 1.0) > 0.1).length;
-    
-    const recentAdaptations = metrics.filter(m => 
-      Date.now() - m.lastAdaptation < 300000 // Last 5 minutes
+    const avgAdaptationFactor =
+      metrics.length > 0
+        ? metrics.reduce((sum, m) => sum + m.adaptationFactor, 0) / metrics.length
+        : 1.0;
+
+    const adaptedEndpoints = metrics.filter((m) => Math.abs(m.adaptationFactor - 1.0) > 0.1).length;
+
+    const recentAdaptations = metrics.filter(
+      (m) => Date.now() - m.lastAdaptation < 300000 // Last 5 minutes
     ).length;
 
     return {
@@ -721,7 +728,7 @@ export class AdaptiveRateLimiterService {
     this.endpointMetrics.clear();
     this.tokenBuckets.clear();
     this.slidingWindows.clear();
-    console.log('[Adaptive Rate Limiter] Cache cleared');
+    console.log("[Adaptive Rate Limiter] Cache cleared");
   }
 
   public destroy(): void {

@@ -1,17 +1,5 @@
 "use client";
 
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { useMexcCalendar } from "../../hooks/use-mexc-data";
-import { usePatternSniper } from "../../hooks/use-pattern-sniper";
 import {
   Activity,
   AlertTriangle,
@@ -24,6 +12,12 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
+import { useMexcCalendar } from "../../hooks/use-mexc-data";
+import { usePatternSniper } from "../../hooks/use-pattern-sniper";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 interface CoinListingCardProps {
   coin: {
@@ -204,10 +198,10 @@ function enrichCalendarData(
   return calendarData
     .filter((item) => item.vcoinId && item.symbol && item.firstOpenTime)
     .map((item) => {
-      const vcoinId = item.vcoinId!;
-      const symbol = item.symbol!;
-      const firstOpenTime = item.firstOpenTime!;
-      
+      const vcoinId = item.vcoinId as string; // Safe due to filter above
+      const symbol = item.symbol as string; // Safe due to filter above
+      const firstOpenTime = item.firstOpenTime as number; // Safe due to filter above
+
       const isPending = pendingDetection.includes(vcoinId);
       const isReady = readyTargets.some((target) => target.vcoinId && target.vcoinId === vcoinId);
       const isExecuted = executedTargets.includes(vcoinId);
@@ -291,8 +285,8 @@ function useProcessedCoinData() {
   const calendarTargets = enrichedCalendarData.filter((c) => c.status === "calendar");
   const monitoringTargets = enrichedCalendarData.filter((c) => c.status === "monitoring");
   const readyTargetsEnriched = readyTargets.map((target) => ({
-    vcoinId: target.vcoinId || '',
-    symbol: target.symbol || '',
+    vcoinId: target.vcoinId || "",
+    symbol: target.symbol || "",
     projectName: target.projectName,
     launchTime: target.launchTime || new Date(),
     status: "ready" as const,

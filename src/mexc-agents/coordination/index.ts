@@ -216,7 +216,7 @@ export function registerAgentsAndValidate(
 ): void {
   // Register all agents first
   registerCommonAgents(agentRegistry, agentManager);
-  
+
   // Then validate all registered workflows
   workflowEngine.validateRegisteredWorkflows();
 }

@@ -8,9 +8,9 @@
  * - Documents current performance metrics
  */
 
+import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
-import { sql } from "drizzle-orm";
 
 interface DatabaseStats {
   totalQueries: number;

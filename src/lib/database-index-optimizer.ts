@@ -8,8 +8,8 @@
  * - Ensures foreign key relationships are properly indexed
  */
 
-import { db } from "../db";
 import { sql } from "drizzle-orm";
+import { db } from "../db";
 
 interface IndexDefinition {
   name: string;
@@ -44,7 +44,7 @@ export class DatabaseIndexOptimizer {
 
   /**
    * Get all strategic index definitions optimized for MEXC AI agent workloads
-   * 
+   *
    * PERFORMANCE TARGET: 60% query improvement for agent operations
    * Focus areas: Pattern discovery, trading signals, real-time data, user sessions
    */
@@ -53,7 +53,7 @@ export class DatabaseIndexOptimizer {
       // ======================================
       // CRITICAL INDEXES - Agent Core Operations
       // ======================================
-      
+
       // Pattern Discovery Agent optimizations
       {
         name: "idx_patterns_symbol_timestamp",
@@ -62,18 +62,18 @@ export class DatabaseIndexOptimizer {
         type: "btree",
         priority: "critical",
         expectedImprovement: "70% faster pattern discovery queries",
-        agentWorkflows: ["pattern-discovery", "symbol-analysis", "trading-strategy"]
+        agentWorkflows: ["pattern-discovery", "symbol-analysis", "trading-strategy"],
       },
-      
+
       {
         name: "idx_patterns_confidence_ready",
-        table: "patterns", 
+        table: "patterns",
         columns: ["confidence", "is_ready", "pattern_type"],
         where: "confidence > 0.7 AND is_ready = true",
         type: "partial",
         priority: "critical",
         expectedImprovement: "80% faster ready pattern lookups",
-        agentWorkflows: ["pattern-discovery", "trading-strategy"]
+        agentWorkflows: ["pattern-discovery", "trading-strategy"],
       },
 
       // Trading Operations - High Frequency Access
@@ -81,10 +81,10 @@ export class DatabaseIndexOptimizer {
         name: "idx_snipe_targets_user_status",
         table: "snipe_targets",
         columns: ["user_id", "status", "created_at"],
-        type: "btree", 
+        type: "btree",
         priority: "critical",
         expectedImprovement: "65% faster user target queries",
-        agentWorkflows: ["trading-strategy", "mexc-api", "symbol-analysis"]
+        agentWorkflows: ["trading-strategy", "mexc-api", "symbol-analysis"],
       },
 
       {
@@ -92,9 +92,9 @@ export class DatabaseIndexOptimizer {
         table: "strategies",
         columns: ["user_id", "is_active", "strategy_type", "updated_at"],
         type: "btree",
-        priority: "critical", 
+        priority: "critical",
         expectedImprovement: "60% faster active strategy lookups",
-        agentWorkflows: ["trading-strategy", "risk-manager"]
+        agentWorkflows: ["trading-strategy", "risk-manager"],
       },
 
       // Real-time Data Access
@@ -104,8 +104,8 @@ export class DatabaseIndexOptimizer {
         columns: ["user_id", "created_at", "status"],
         type: "btree",
         priority: "high",
-        expectedImprovement: "50% faster transaction history queries", 
-        agentWorkflows: ["reconciliation", "safety-monitor"]
+        expectedImprovement: "50% faster transaction history queries",
+        agentWorkflows: ["reconciliation", "safety-monitor"],
       },
 
       // ======================================
@@ -120,18 +120,18 @@ export class DatabaseIndexOptimizer {
         type: "btree",
         priority: "high",
         expectedImprovement: "70% faster health check queries",
-        agentWorkflows: ["health-monitor", "orchestrator"]
+        agentWorkflows: ["health-monitor", "orchestrator"],
       },
 
       // Performance Metrics for Optimization
       {
         name: "idx_performance_metrics_agent_time",
-        table: "performance_metrics", 
+        table: "performance_metrics",
         columns: ["agent_id", "metric_type", "timestamp"],
         type: "btree",
         priority: "high",
         expectedImprovement: "55% faster performance analytics",
-        agentWorkflows: ["performance-collector", "safety-monitor"]
+        agentWorkflows: ["performance-collector", "safety-monitor"],
       },
 
       // Workflow Execution Tracking
@@ -141,13 +141,13 @@ export class DatabaseIndexOptimizer {
         columns: ["status", "priority", "scheduled_at"],
         where: "status IN ('pending', 'running')",
         type: "partial",
-        priority: "high", 
+        priority: "high",
         expectedImprovement: "60% faster workflow queue processing",
-        agentWorkflows: ["workflow-engine", "orchestrator"]
+        agentWorkflows: ["workflow-engine", "orchestrator"],
       },
 
       // ======================================
-      // MEDIUM PRIORITY - User & Session Data  
+      // MEDIUM PRIORITY - User & Session Data
       // ======================================
 
       // User Session & Auth
@@ -159,18 +159,18 @@ export class DatabaseIndexOptimizer {
         type: "partial",
         priority: "medium",
         expectedImprovement: "40% faster session validation",
-        agentWorkflows: ["auth", "user-manager"]
+        agentWorkflows: ["auth", "user-manager"],
       },
 
       // User Preferences for Personalization
       {
         name: "idx_user_preferences_key_user",
-        table: "user_preferences", 
+        table: "user_preferences",
         columns: ["user_id", "preference_key", "updated_at"],
         type: "btree",
         priority: "medium",
         expectedImprovement: "45% faster preference lookups",
-        agentWorkflows: ["user-manager", "personalization"]
+        agentWorkflows: ["user-manager", "personalization"],
       },
 
       // ======================================
@@ -182,13 +182,13 @@ export class DatabaseIndexOptimizer {
         name: "idx_risk_assessments_user_level",
         table: "risk_assessments",
         columns: ["user_id", "risk_level", "assessed_at"],
-        type: "btree", 
+        type: "btree",
         priority: "high",
         expectedImprovement: "65% faster risk calculations",
-        agentWorkflows: ["risk-manager", "safety-monitor"]
+        agentWorkflows: ["risk-manager", "safety-monitor"],
       },
 
-      // Emergency Stop Mechanisms  
+      // Emergency Stop Mechanisms
       {
         name: "idx_emergency_stops_active",
         table: "emergency_stops",
@@ -197,7 +197,7 @@ export class DatabaseIndexOptimizer {
         type: "partial",
         priority: "critical",
         expectedImprovement: "90% faster emergency response",
-        agentWorkflows: ["safety-monitor", "emergency-recovery"]
+        agentWorkflows: ["safety-monitor", "emergency-recovery"],
       },
 
       // ======================================
@@ -210,20 +210,20 @@ export class DatabaseIndexOptimizer {
         table: "trading_analytics",
         columns: ["symbol", "date", "metric_type"],
         type: "btree",
-        priority: "medium", 
+        priority: "medium",
         expectedImprovement: "50% faster analytics queries",
-        agentWorkflows: ["analytics", "reporting"]
+        agentWorkflows: ["analytics", "reporting"],
       },
 
       // Alerts & Notifications
       {
         name: "idx_alerts_user_status_priority",
-        table: "alerts", 
+        table: "alerts",
         columns: ["user_id", "status", "priority", "created_at"],
         type: "btree",
         priority: "medium",
         expectedImprovement: "40% faster alert processing",
-        agentWorkflows: ["alert-manager", "notification"]
+        agentWorkflows: ["alert-manager", "notification"],
       },
 
       // ======================================
@@ -232,13 +232,13 @@ export class DatabaseIndexOptimizer {
 
       // Complex Trading Queries
       {
-        name: "idx_complex_trading_lookup", 
+        name: "idx_complex_trading_lookup",
         table: "snipe_targets",
         columns: ["user_id", "symbol", "status", "target_price", "created_at"],
         type: "btree",
         priority: "high",
         expectedImprovement: "75% faster complex trading queries",
-        agentWorkflows: ["trading-strategy", "mexc-api", "symbol-analysis", "pattern-discovery"]
+        agentWorkflows: ["trading-strategy", "mexc-api", "symbol-analysis", "pattern-discovery"],
       },
 
       // Pattern Analysis Composite
@@ -248,9 +248,9 @@ export class DatabaseIndexOptimizer {
         columns: ["symbol", "pattern_type", "confidence", "is_ready", "created_at"],
         type: "btree",
         priority: "critical",
-        expectedImprovement: "80% faster pattern analysis workflows", 
-        agentWorkflows: ["pattern-discovery", "symbol-analysis", "trading-strategy"]
-      }
+        expectedImprovement: "80% faster pattern analysis workflows",
+        agentWorkflows: ["pattern-discovery", "symbol-analysis", "trading-strategy"],
+      },
     ];
   }
 

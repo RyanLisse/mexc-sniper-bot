@@ -1,5 +1,5 @@
-import { useAuth } from "../lib/kinde-auth-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../lib/kinde-auth-client";
 
 export interface ApiCredentials {
   id?: number;
@@ -35,7 +35,7 @@ export function useApiCredentials(userId?: string, provider = "mexc") {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      
+
       const response = await fetch(
         `/api/api-credentials?userId=${encodeURIComponent(userId)}&provider=${encodeURIComponent(provider)}`
       );

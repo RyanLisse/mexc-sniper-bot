@@ -1,17 +1,11 @@
 "use client";
 
-import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { cn } from "../lib/utils";
 import { AlertCircle, ChevronDown, ChevronUp, Home, RefreshCcw } from "lucide-react";
 import type React from "react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { cn } from "../lib/utils";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 interface ErrorBoundaryProps {
   children: ReactNode;

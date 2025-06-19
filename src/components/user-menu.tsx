@@ -1,10 +1,10 @@
 "use client";
 
-import { Badge } from "./ui/badge";
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import { ChevronDown, ChevronUp, LogOut, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Badge } from "./ui/badge";
 
 interface UserMenuProps {
   user: {

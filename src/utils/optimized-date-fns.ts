@@ -1,13 +1,13 @@
 /**
  * Optimized Date-FNS Exports
  * Tree-shakeable date utility imports to reduce bundle size by 40%
- * 
+ *
  * PERFORMANCE OPTIMIZATION:
  * - Uses specific function imports instead of full date-fns library
  * - Reduces bundle size from ~60KB to ~35KB for date utilities
  * - Eliminates unused locale data and functions
  * - Provides common date formatting helpers for trading applications
- * 
+ *
  * Bundle Impact: 25KB savings, 40% size reduction
  */
 
@@ -92,18 +92,22 @@ const formatCache = new Map<string, string>();
 
 export function formatTradingTimeOptimized(date: Date | string, useCache = true): string {
   const dateStr = typeof date === "string" ? date : date.toISOString();
-  
+
   if (useCache && formatCache.has(dateStr)) {
-    return formatCache.get(dateStr)!;
+    const cached = formatCache.get(dateStr);
+    if (cached !== undefined) {
+      return cached;
+    }
   }
-  
+
   const d = typeof date === "string" ? parseISO(date) : date;
   const formatted = format(d, DATE_FORMATS.trading);
-  
-  if (useCache && formatCache.size < 1000) { // Prevent memory leak
+
+  if (useCache && formatCache.size < 1000) {
+    // Prevent memory leak
     formatCache.set(dateStr, formatted);
   }
-  
+
   return formatted;
 }
 
@@ -131,6 +135,6 @@ export function getDateFnsBundleAnalysis() {
     savings,
     savingsPercentage,
     cacheSize: formatCache.size,
-    recommendation: savingsPercentage > 70 ? 'Excellent optimization' : 'Good optimization'
+    recommendation: savingsPercentage > 70 ? "Excellent optimization" : "Good optimization",
   };
 }

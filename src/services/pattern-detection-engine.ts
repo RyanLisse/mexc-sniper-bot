@@ -12,11 +12,11 @@
  * - Integration with AI agents for intelligent analysis
  */
 
+import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import type { PatternEmbedding } from "../db/schemas/patterns";
 import { patternEmbeddings } from "../db/schemas/patterns";
 import type { CalendarEntry, SymbolEntry } from "./mexc-unified-exports";
-import { and, eq } from "drizzle-orm";
 import { type PatternData, patternEmbeddingService } from "./pattern-embedding-service";
 
 // ============================================================================

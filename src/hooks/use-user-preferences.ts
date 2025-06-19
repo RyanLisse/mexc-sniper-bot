@@ -1,8 +1,8 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "../lib/api-response";
+import { useAuth } from "../lib/kinde-auth-client";
 import { queryKeys } from "../lib/query-client";
 import type { ExitStrategy } from "../types/exit-strategies";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../lib/kinde-auth-client";
 
 export interface TakeProfitLevels {
   level1: number; // Default: 5%

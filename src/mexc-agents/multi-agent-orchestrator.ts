@@ -1,16 +1,16 @@
 /**
  * Multi-Agent Orchestrator
- * 
+ *
  * Central orchestrator for coordinating multiple MEXC trading agents.
  * Manages agent lifecycle, communication, and workflow coordination.
  */
 
-import { BaseAgent, AgentResponse, AgentStatus } from "./base-agent";
+import { tradingAnalytics } from "../services/trading-analytics-service";
+import type { AgentResponse, AgentStatus, BaseAgent } from "./base-agent";
 import { CalendarAgent } from "./calendar-agent";
 import { MexcApiAgent } from "./mexc-api-agent";
 import { PatternDiscoveryAgent } from "./pattern-discovery-agent";
 import { SymbolAnalysisAgent } from "./symbol-analysis-agent";
-import { tradingAnalytics } from "../services/trading-analytics-service";
 
 export interface OrchestratorConfig {
   maxConcurrentAgents: number;
@@ -42,7 +42,7 @@ export interface WorkflowExecution {
   workflowId: string;
   startTime: Date;
   endTime?: Date;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: "pending" | "running" | "completed" | "failed" | "cancelled";
   results: Map<string, AgentResponse>;
   errors: Array<{ step: string; error: string; timestamp: Date }>;
 }
@@ -75,7 +75,7 @@ export class MultiAgentOrchestrator {
       defaultTimeout: 30000, // 30 seconds
       retryAttempts: 3,
       enableLogging: true,
-      ...config
+      ...config,
     };
 
     this.initializeAgents();
@@ -91,12 +91,12 @@ export class MultiAgentOrchestrator {
 
   private initializeAgents(): void {
     // Register available agents
-    this.registerAgent('calendar', new CalendarAgent());
-    this.registerAgent('mexc-api', new MexcApiAgent());
-    this.registerAgent('pattern-discovery', new PatternDiscoveryAgent());
-    this.registerAgent('symbol-analysis', new SymbolAnalysisAgent());
+    this.registerAgent("calendar", new CalendarAgent());
+    this.registerAgent("mexc-api", new MexcApiAgent());
+    this.registerAgent("pattern-discovery", new PatternDiscoveryAgent());
+    this.registerAgent("symbol-analysis", new SymbolAnalysisAgent());
 
-    this.log('Orchestrator initialized with agents:', Array.from(this.agents.keys()));
+    this.log("Orchestrator initialized with agents:", Array.from(this.agents.keys()));
   }
 
   private registerAgent(type: string, agent: BaseAgent): void {
@@ -115,9 +115,9 @@ export class MultiAgentOrchestrator {
       id: executionId,
       workflowId,
       startTime: new Date(),
-      status: 'running',
+      status: "running",
       results: new Map(),
-      errors: []
+      errors: [],
     };
 
     this.executions.set(executionId, execution);
@@ -126,18 +126,18 @@ export class MultiAgentOrchestrator {
     try {
       // Log workflow start
       tradingAnalytics.logTradingEvent({
-        eventType: 'SYSTEM_ERROR', // Would be WORKFLOW_START in real implementation
+        eventType: "SYSTEM_ERROR", // Would be WORKFLOW_START in real implementation
         metadata: {
           workflowId,
           executionId,
           workflowName: workflow.name,
-          totalSteps: workflow.steps.length
+          totalSteps: workflow.steps.length,
         },
         performance: {
           responseTimeMs: 0,
-          retryCount: 0
+          retryCount: 0,
         },
-        success: true
+        success: true,
       });
 
       if (workflow.parallel) {
@@ -146,52 +146,51 @@ export class MultiAgentOrchestrator {
         await this.executeStepsSequentially(workflow, execution, input);
       }
 
-      execution.status = 'completed';
+      execution.status = "completed";
       execution.endTime = new Date();
 
       this.log(`Workflow execution completed: ${executionId}`);
 
       // Log successful completion
       tradingAnalytics.logTradingEvent({
-        eventType: 'SYSTEM_ERROR', // Would be WORKFLOW_COMPLETE in real implementation
+        eventType: "SYSTEM_ERROR", // Would be WORKFLOW_COMPLETE in real implementation
         metadata: {
           workflowId,
           executionId,
           duration: execution.endTime.getTime() - execution.startTime.getTime(),
-          resultsCount: execution.results.size
+          resultsCount: execution.results.size,
         },
         performance: {
           responseTimeMs: execution.endTime.getTime() - execution.startTime.getTime(),
-          retryCount: 0
+          retryCount: 0,
         },
-        success: true
+        success: true,
       });
-
     } catch (error) {
-      execution.status = 'failed';
+      execution.status = "failed";
       execution.endTime = new Date();
       execution.errors.push({
-        step: 'workflow',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date()
+        step: "workflow",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date(),
       });
 
       this.log(`Workflow execution failed: ${executionId}`, error);
 
       // Log failure
       tradingAnalytics.logTradingEvent({
-        eventType: 'SYSTEM_ERROR',
+        eventType: "SYSTEM_ERROR",
         metadata: {
           workflowId,
           executionId,
-          errorCount: execution.errors.length
+          errorCount: execution.errors.length,
         },
         performance: {
           responseTimeMs: execution.endTime.getTime() - execution.startTime.getTime(),
-          retryCount: 0
+          retryCount: 0,
         },
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
 
@@ -209,15 +208,14 @@ export class MultiAgentOrchestrator {
       try {
         const result = await this.executeStep(step, currentInput, execution);
         execution.results.set(step.agentType, result);
-        
+
         // Use result as input for next step
         currentInput = result.data;
-        
       } catch (error) {
         execution.errors.push({
           step: step.agentType,
-          error: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date()
+          error: error instanceof Error ? error.message : "Unknown error",
+          timestamp: new Date(),
         });
         throw error;
       }
@@ -237,8 +235,8 @@ export class MultiAgentOrchestrator {
       } catch (error) {
         execution.errors.push({
           step: step.agentType,
-          error: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date()
+          error: error instanceof Error ? error.message : "Unknown error",
+          timestamp: new Date(),
         });
         throw error;
       }
@@ -263,16 +261,16 @@ export class MultiAgentOrchestrator {
     this.log(`Executing step: ${step.agentType} with timeout: ${timeout}ms`);
 
     let lastError: Error | null = null;
-    
+
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const startTime = Date.now();
-        
+
         const result = await Promise.race([
           agent.process(step.input || input, { executionId: execution.id }),
-          new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error('Agent timeout')), timeout)
-          )
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Agent timeout")), timeout)
+          ),
         ]);
 
         const responseTime = Date.now() - startTime;
@@ -289,9 +287,8 @@ export class MultiAgentOrchestrator {
 
         this.log(`Step completed: ${step.agentType} in ${responseTime}ms`);
         return result;
-
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error');
+        lastError = error instanceof Error ? error : new Error("Unknown error");
         const responseTime = Date.now() - Date.now();
 
         // Log failed attempt
@@ -305,9 +302,11 @@ export class MultiAgentOrchestrator {
         );
 
         if (attempt < retries) {
-          this.log(`Step failed, retrying: ${step.agentType}, attempt ${attempt + 1}/${retries + 1}`);
+          this.log(
+            `Step failed, retrying: ${step.agentType}, attempt ${attempt + 1}/${retries + 1}`
+          );
           // Wait before retry (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
         }
       }
     }
@@ -325,17 +324,18 @@ export class MultiAgentOrchestrator {
   }
 
   getActiveExecutions(): WorkflowExecution[] {
-    return Array.from(this.executions.values())
-      .filter(execution => execution.status === 'running');
+    return Array.from(this.executions.values()).filter(
+      (execution) => execution.status === "running"
+    );
   }
 
   async cancelExecution(executionId: string): Promise<boolean> {
     const execution = this.executions.get(executionId);
-    if (!execution || execution.status !== 'running') {
+    if (!execution || execution.status !== "running") {
       return false;
     }
 
-    execution.status = 'cancelled';
+    execution.status = "cancelled";
     execution.endTime = new Date();
     this.log(`Execution cancelled: ${executionId}`);
     return true;
@@ -352,14 +352,14 @@ export class MultiAgentOrchestrator {
 
   async getAllAgentStatuses(): Promise<Map<string, AgentStatus>> {
     const statuses = new Map<string, AgentStatus>();
-    
+
     for (const [type, agent] of this.agents.entries()) {
       try {
         const status = await agent.getStatus();
         statuses.set(type, status);
       } catch (error) {
         this.log(`Failed to get status for agent ${type}:`, error);
-        statuses.set(type, 'error');
+        statuses.set(type, "error");
       }
     }
 
@@ -371,38 +371,39 @@ export class MultiAgentOrchestrator {
       await this.performHealthCheck();
     }, this.config.healthCheckInterval);
 
-    this.log('Health monitoring started');
+    this.log("Health monitoring started");
   }
 
   private async performHealthCheck(): Promise<void> {
     try {
       const statuses = await this.getAllAgentStatuses();
       const unhealthyAgents = Array.from(statuses.entries())
-        .filter(([, status]) => status === 'error' || status === 'offline')
+        .filter(([, status]) => status === "error" || status === "offline")
         .map(([type]) => type);
 
       if (unhealthyAgents.length > 0) {
-        this.log('Unhealthy agents detected:', unhealthyAgents);
-        
+        this.log("Unhealthy agents detected:", unhealthyAgents);
+
         // Log health check results
         tradingAnalytics.logTradingEvent({
-          eventType: 'SYSTEM_ERROR',
+          eventType: "SYSTEM_ERROR",
           metadata: {
             healthCheck: true,
             totalAgents: statuses.size,
             unhealthyAgents,
-            unhealthyCount: unhealthyAgents.length
+            unhealthyCount: unhealthyAgents.length,
           },
           performance: {
             responseTimeMs: 0,
-            retryCount: 0
+            retryCount: 0,
           },
           success: unhealthyAgents.length === 0,
-          error: unhealthyAgents.length > 0 ? `${unhealthyAgents.length} unhealthy agents` : undefined
+          error:
+            unhealthyAgents.length > 0 ? `${unhealthyAgents.length} unhealthy agents` : undefined,
         });
       }
     } catch (error) {
-      this.log('Health check failed:', error);
+      this.log("Health check failed:", error);
     }
   }
 
@@ -415,14 +416,14 @@ export class MultiAgentOrchestrator {
     failedExecutions: number;
   } {
     const executions = Array.from(this.executions.values());
-    
+
     return {
       agentCount: this.agents.size,
       workflowCount: this.workflows.size,
-      activeExecutions: executions.filter(e => e.status === 'running').length,
+      activeExecutions: executions.filter((e) => e.status === "running").length,
       totalExecutions: executions.length,
-      completedExecutions: executions.filter(e => e.status === 'completed').length,
-      failedExecutions: executions.filter(e => e.status === 'failed').length,
+      completedExecutions: executions.filter((e) => e.status === "completed").length,
+      failedExecutions: executions.filter((e) => e.status === "failed").length,
     };
   }
 
@@ -433,13 +434,13 @@ export class MultiAgentOrchestrator {
 
     // Cancel all running executions
     for (const execution of this.executions.values()) {
-      if (execution.status === 'running') {
-        execution.status = 'cancelled';
+      if (execution.status === "running") {
+        execution.status = "cancelled";
         execution.endTime = new Date();
       }
     }
 
-    this.log('Orchestrator cleanup completed');
+    this.log("Orchestrator cleanup completed");
   }
 
   private log(message: string, ...args: any[]): void {
@@ -455,55 +456,55 @@ export class MultiAgentOrchestrator {
 
 export const BUILTIN_WORKFLOWS: WorkflowDefinition[] = [
   {
-    id: 'coin-discovery',
-    name: 'Coin Discovery Workflow',
-    description: 'Discovers new coin listings and analyzes their potential',
+    id: "coin-discovery",
+    name: "Coin Discovery Workflow",
+    description: "Discovers new coin listings and analyzes their potential",
     steps: [
       {
-        agentType: 'calendar',
-        input: { action: 'getNewListings' },
-        timeout: 15000
+        agentType: "calendar",
+        input: { action: "getNewListings" },
+        timeout: 15000,
       },
       {
-        agentType: 'symbol-analysis',
-        input: { action: 'analyzeSymbols' },
+        agentType: "symbol-analysis",
+        input: { action: "analyzeSymbols" },
         timeout: 30000,
-        dependencies: ['calendar']
+        dependencies: ["calendar"],
       },
       {
-        agentType: 'pattern-discovery',
-        input: { action: 'findPatterns' },
+        agentType: "pattern-discovery",
+        input: { action: "findPatterns" },
         timeout: 45000,
-        dependencies: ['symbol-analysis']
-      }
+        dependencies: ["symbol-analysis"],
+      },
     ],
     parallel: false,
-    timeoutMs: 120000
+    timeoutMs: 120000,
   },
   {
-    id: 'market-analysis',
-    name: 'Market Analysis Workflow',
-    description: 'Comprehensive market analysis across multiple agents',
+    id: "market-analysis",
+    name: "Market Analysis Workflow",
+    description: "Comprehensive market analysis across multiple agents",
     steps: [
       {
-        agentType: 'mexc-api',
-        input: { action: 'getMarketData' },
-        timeout: 10000
+        agentType: "mexc-api",
+        input: { action: "getMarketData" },
+        timeout: 10000,
       },
       {
-        agentType: 'pattern-discovery',
-        input: { action: 'analyzePatterns' },
-        timeout: 20000
+        agentType: "pattern-discovery",
+        input: { action: "analyzePatterns" },
+        timeout: 20000,
       },
       {
-        agentType: 'symbol-analysis',
-        input: { action: 'rankSymbols' },
-        timeout: 15000
-      }
+        agentType: "symbol-analysis",
+        input: { action: "rankSymbols" },
+        timeout: 15000,
+      },
     ],
     parallel: true,
-    timeoutMs: 60000
-  }
+    timeoutMs: 60000,
+  },
 ];
 
 // Initialize built-in workflows

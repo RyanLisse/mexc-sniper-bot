@@ -1,17 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { useTakeProfitLevels, useUpdateTakeProfitLevels } from "../hooks/use-user-preferences";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
-import { useTakeProfitLevels, useUpdateTakeProfitLevels } from "../hooks/use-user-preferences";
-import { useState } from "react";
 
 interface TakeProfitLevelsProps {
   userId: string;

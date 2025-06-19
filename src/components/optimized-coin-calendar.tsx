@@ -3,9 +3,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMexcCalendar } from "../hooks/use-mexc-data";
 import React, { useCallback, useMemo } from "react";
 import { useState } from "react";
+import { useMexcCalendar } from "../hooks/use-mexc-data";
 
 interface CoinListing {
   symbol: string;

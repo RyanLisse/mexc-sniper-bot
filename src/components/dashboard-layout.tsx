@@ -1,4 +1,9 @@
 "use client";
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuthCacheManager } from "../hooks/use-auth-cache-manager";
+import { useAuth } from "../lib/kinde-auth-client";
 import {
   Avatar,
   AvatarFallback,
@@ -36,11 +41,6 @@ import {
   User,
   Zap,
 } from "./ui/optimized-icons";
-import { useAuthCacheManager } from "../hooks/use-auth-cache-manager";
-import { useAuth } from "../lib/kinde-auth-client";
-import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
