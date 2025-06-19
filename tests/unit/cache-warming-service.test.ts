@@ -30,37 +30,32 @@ vi.mock('../../src/services/pattern-detection-engine', () => ({
   })),
 }));
 
-// Mock database with simple resolved values to avoid recursion
-vi.mock('../../src/db', () => ({
-  db: {
-    select: vi.fn().mockReturnValue({
-      from: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue([
-            { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
-            { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
-          ]),
-          orderBy: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue([
-              { symbolName: 'BTCUSDT', hasReadyPattern: true, confidence: 85 },
-              { symbolName: 'ETHUSDT', hasReadyPattern: true, confidence: 90 },
-            ]),
+// Mock database with completely static resolved values to avoid recursion
+vi.mock('../../src/db', () => {
+  const mockData = [
+    { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
+    { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
+  ];
+
+  return {
+    db: {
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue(mockData),
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue(mockData),
+            }),
           }),
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue(mockData),
+          }),
+          limit: vi.fn().mockResolvedValue(mockData),
         }),
-        orderBy: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue([
-            { currency: 'BTC', isActive: true, priorityScore: 95, discoveredAt: new Date() },
-            { currency: 'ETH', isActive: true, priorityScore: 90, discoveredAt: new Date() },
-          ]),
-        }),
-        limit: vi.fn().mockResolvedValue([
-          { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
-          { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
-        ]),
       }),
-    }),
-  },
-}));
+    },
+  };
+});
 
 vi.mock('../../src/db/schemas/patterns', () => ({
   monitoredListings: {},
