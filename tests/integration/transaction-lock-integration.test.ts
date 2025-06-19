@@ -19,12 +19,12 @@ async function isServerRunning(): Promise<boolean> {
       }, (res: any) => {
         resolve(res.statusCode >= 200 && res.statusCode < 300);
       });
-      
+
       req.on('error', () => resolve(false));
       req.on('timeout', () => resolve(false));
       req.end();
     });
-    
+
     return response;
   } catch {
     return false;
@@ -44,22 +44,27 @@ function itWithServer(name: string, testFn: () => Promise<void>) {
 }
 
 describe("Transaction Lock Integration Tests", () => {
-  
+
   beforeAll(async () => {
     // Disable fetch mock for integration tests - restore original implementation
     vi.mocked(fetch).mockRestore();
-    
+
     // Clean up database
     await db.delete(transactionQueue);
     await db.delete(transactionLocks);
-    
-    // Check if server is running
+
+    // Check if server is running with shorter timeout
     try {
-      const response = await fetch(`${BASE_URL}/api/health/db`, { 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 second timeout
+
+      const response = await fetch(`${BASE_URL}/api/health/db`, {
         method: 'GET',
-        signal: AbortSignal.timeout(2000) // 2 second timeout
+        signal: controller.signal
       });
-      
+
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         console.warn('⚠️  Server health check failed. Integration tests require running Next.js server.');
         console.warn('   Start server with: npm run dev');
@@ -69,7 +74,7 @@ describe("Transaction Lock Integration Tests", () => {
       console.warn('   Integration tests require running server. Start with: npm run dev');
       console.warn('   Skipping integration tests that require server...');
     }
-  });
+  }, 5000); // Increase beforeAll timeout to 5 seconds
 
   afterAll(async () => {
     // Clean up database
@@ -107,7 +112,7 @@ describe("Transaction Lock Integration Tests", () => {
       if (response1.status === 200 && response2.status === 200) {
         const data1 = await response1.json();
         const data2 = await response2.json();
-        
+
         // If both succeed, they should have same order ID (idempotency worked)
         expect(data1.order?.orderId).toBe(data2.order?.orderId);
       } else {
@@ -218,7 +223,7 @@ describe("Transaction Lock Integration Tests", () => {
   describe("Queue Priority Testing", () => {
     itWithServer("should prioritize SELL orders over BUY orders", async () => {
       const resourceId = "trade:QUEUETEST:mixed";
-      
+
       // Create an initial lock
       await fetch(`${BASE_URL}/api/mexc/trade`, {
         method: "POST",
@@ -263,16 +268,16 @@ describe("Transaction Lock Integration Tests", () => {
       // Check queue order
       const queueStatus = await fetch(`${BASE_URL}/api/transaction-locks`);
       const queueData = await queueStatus.json();
-      
+
       const queueItems = queueData.data.queue.filter(
         (item: any) => item.resourceId.includes("QUEUETEST")
       );
 
       // SELL should have higher priority (lower number)
-      const sellItem = queueItems.find((item: any) => 
+      const sellItem = queueItems.find((item: any) =>
         JSON.parse(item.transactionData).side === "SELL"
       );
-      const buyItem = queueItems.find((item: any) => 
+      const buyItem = queueItems.find((item: any) =>
         JSON.parse(item.transactionData).side === "BUY"
       );
 
@@ -286,7 +291,7 @@ describe("Transaction Lock Integration Tests", () => {
     itWithServer("should handle multiple concurrent requests gracefully", async () => {
       const requests = [];
       const numRequests = 10;
-      
+
       // Create multiple concurrent requests for same resource
       for (let i = 0; i < numRequests; i++) {
         requests.push(
@@ -313,10 +318,10 @@ describe("Transaction Lock Integration Tests", () => {
       const conflictCount = statuses.filter(s => s === 409).length;
       const badRequestCount = statuses.filter(s => s === 400).length;
       const validationErrorCount = statuses.filter(s => s === 422).length;
-      
+
       // At least one should succeed, be queued, or have validation/request error
       expect(successCount + conflictCount + badRequestCount + validationErrorCount).toBeGreaterThan(0);
-      
+
       // No 500 errors
       expect(statuses.filter(s => s >= 500).length).toBe(0);
     });
@@ -333,7 +338,7 @@ describe("Pattern Sniper Integration with Locks", () => {
       { symbol: "TOKEN3USDT", vcoinId: "token3" },
     ];
 
-    const snipeRequests = snipeTargets.map(target => 
+    const snipeRequests = snipeTargets.map(target =>
       fetch(`${BASE_URL}/api/mexc/trade`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -349,7 +354,7 @@ describe("Pattern Sniper Integration with Locks", () => {
     );
 
     const responses = await Promise.all(snipeRequests);
-    
+
     // All should complete without errors
     responses.forEach((response, index) => {
       expect(response.status).toBeLessThan(500); // No server errors
@@ -361,7 +366,7 @@ describe("Pattern Sniper Integration with Locks", () => {
     const snipeTarget = {
       symbol: "SAFETESTUSDT",
       side: "BUY",
-      type: "MARKET", 
+      type: "MARKET",
       quantity: "1000",
       userId: "safety-test",
       snipeTargetId: "unique-snipe-123",

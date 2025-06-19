@@ -26,7 +26,12 @@ import {
   systemHealthMetrics,
 } from "./schemas/safety";
 
-import { monitoredListings, patternEmbeddings, patternSimilarityCache } from "./schemas/patterns";
+import {
+  coinActivities,
+  monitoredListings,
+  patternEmbeddings,
+  patternSimilarityCache,
+} from "./schemas/patterns";
 
 import { workflowActivity, workflowSystemStatus } from "./schemas/workflows";
 
@@ -82,6 +87,7 @@ export {
   errorIncidents,
   systemHealthMetrics,
   // Pattern tables
+  coinActivities,
   monitoredListings,
   patternEmbeddings,
   patternSimilarityCache,
@@ -149,6 +155,7 @@ const allTables = {
   systemHealthMetrics,
 
   // Pattern tables
+  coinActivities,
   monitoredListings,
   patternEmbeddings,
   patternSimilarityCache,

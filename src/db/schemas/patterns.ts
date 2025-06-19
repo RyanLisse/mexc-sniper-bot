@@ -156,6 +156,55 @@ export const patternSimilarityCache = pgTable(
   })
 );
 
+// Coin Activities Table for MEXC Activity API Integration
+export const coinActivities = pgTable(
+  "coin_activities",
+  {
+    id: serial("id").primaryKey(),
+
+    // Core Activity Data
+    vcoinId: text("vcoin_id").notNull(),
+    currency: text("currency").notNull(), // Symbol/currency name
+    activityId: text("activity_id").notNull().unique(), // Unique activity identifier
+    currencyId: text("currency_id"), // Internal MEXC currency ID
+    activityType: text("activity_type").notNull(), // SUN_SHINE, PROMOTION, etc.
+
+    // Discovery Metadata
+    discoveredAt: timestamp("discovered_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    lastChecked: timestamp("last_checked").notNull().default(sql`CURRENT_TIMESTAMP`),
+    isActive: boolean("is_active").notNull().default(true),
+
+    // Pattern Enhancement Data
+    confidenceBoost: real("confidence_boost").notNull().default(0), // 0-20 boost points
+    priorityScore: real("priority_score").notNull().default(0), // Calculated priority score
+
+    // Activity Details (JSON for flexibility)
+    activityDetails: text("activity_details"), // JSON metadata about the activity
+
+    // Timestamps
+    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    // Primary indexes
+    vcoinIdIdx: index("coin_activities_vcoin_id_idx").on(table.vcoinId),
+    currencyIdx: index("coin_activities_currency_idx").on(table.currency),
+    activityTypeIdx: index("coin_activities_activity_type_idx").on(table.activityType),
+    isActiveIdx: index("coin_activities_is_active_idx").on(table.isActive),
+    discoveredAtIdx: index("coin_activities_discovered_at_idx").on(table.discoveredAt),
+
+    // Compound indexes for pattern queries
+    activeCurrencyIdx: index("coin_activities_active_currency_idx").on(
+      table.isActive,
+      table.currency
+    ),
+    typeDiscoveredIdx: index("coin_activities_type_discovered_idx").on(
+      table.activityType,
+      table.discoveredAt
+    ),
+  })
+);
+
 // Pattern Analysis Types
 export type MonitoredListing = typeof monitoredListings.$inferSelect;
 export type NewMonitoredListing = typeof monitoredListings.$inferInsert;
@@ -165,3 +214,6 @@ export type NewPatternEmbedding = typeof patternEmbeddings.$inferInsert;
 
 export type PatternSimilarityCache = typeof patternSimilarityCache.$inferSelect;
 export type NewPatternSimilarityCache = typeof patternSimilarityCache.$inferInsert;
+
+export type CoinActivity = typeof coinActivities.$inferSelect;
+export type NewCoinActivity = typeof coinActivities.$inferInsert;

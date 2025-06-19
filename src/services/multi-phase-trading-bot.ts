@@ -10,9 +10,9 @@ import type { TradingStrategy } from "./trading-strategy-manager";
 
 // Real-time Multi-Phase Example - EXACT implementation from docs
 export class MultiPhaseTradingBot {
-  private executor: MultiPhaseExecutor;
-  private entryPrice: number;
-  private position: number;
+  protected executor: MultiPhaseExecutor;
+  protected entryPrice: number;
+  protected position: number;
 
   constructor(strategy: TradingStrategy, entryPrice: number, position: number) {
     // Convert TradingStrategy to TradingStrategyConfig format
@@ -143,9 +143,7 @@ export class MultiPhaseTradingBot {
     efficiency: number;
   } {
     const analytics = this.executor.getExecutionAnalytics();
-    const summary = this.executor.calculateSummary
-      ? this.executor.calculateSummary(currentPrice)
-      : { realizedProfit: 0, unrealizedProfit: 0, totalRemaining: this.position };
+    const summary = this.executor.calculateSummary(currentPrice);
 
     const totalPnL = summary.realizedProfit + summary.unrealizedProfit;
     const totalPnLPercent = (totalPnL / (this.entryPrice * this.position)) * 100;
@@ -167,7 +165,7 @@ export class MultiPhaseTradingBot {
             profit: analytics.worstExecution.profit,
           }
         : null,
-      efficiency: analytics.executionEfficiency || 0,
+      efficiency: analytics.successRate || 0,
     };
   }
 
@@ -330,8 +328,7 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
     const strategy = this.strategies.get(strategyId);
     if (!strategy) return false;
 
-    // Export current state
-    const _currentState = this.exportState();
+    // Note: Could export current state here if needed for strategy migration
 
     // Create new bot with new strategy
     const strategyConfig = {

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db";
 import {
@@ -198,17 +198,17 @@ export class MultiPhaseTradingService {
       conditions.push(eq(tradingStrategies.symbol, options.symbol));
     }
 
-    let query = db
+    const baseQuery = db
       .select()
       .from(tradingStrategies)
       .where(and(...conditions))
       .orderBy(desc(tradingStrategies.createdAt));
 
     if (options?.limit) {
-      query = query.limit(options.limit);
+      return await baseQuery.limit(options.limit);
     }
 
-    return await query;
+    return await baseQuery;
   }
 
   // Get strategy by ID
@@ -376,7 +376,7 @@ export class MultiPhaseTradingService {
           eq(strategyPhaseExecutions.userId, userId)
         )
       )
-      .orderBy(strategyPhaseExecutions.phaseNumber);
+      .orderBy(asc(strategyPhaseExecutions.phaseNumber));
   }
 
   // Update strategy performance after phase execution

@@ -22,6 +22,7 @@ import type {
   TradingSignalMessage,
 } from "../lib/websocket-types";
 import { webSocketAgentBridge } from "../mexc-agents/websocket-agent-bridge";
+import { patternDetectionEngine } from "./pattern-detection-engine";
 import { webSocketServer } from "./websocket-server";
 
 // ======================
@@ -137,7 +138,7 @@ class MarketDataManager {
     });
   }
 
-  updateSymbolStatus(status: SymbolStatusData): void {
+  async updateSymbolStatus(status: SymbolStatusData): Promise<void> {
     const previousStatus = this.statusCache.get(status.s);
     this.statusCache.set(status.s, status);
 
@@ -149,7 +150,12 @@ class MarketDataManager {
 
     if (isReady && !wasReady) {
       // Symbol just became ready - broadcast pattern
-      this.broadcastReadyStatePattern(status);
+      await this.broadcastReadyStatePattern(status);
+
+      // Enhanced pattern detection with AI analysis
+      if (typeof this.performEnhancedAnalysis === 'function') {
+        await this.performEnhancedAnalysis(status);
+      }
     }
 
     // Broadcast status update
@@ -210,8 +216,27 @@ class MarketDataManager {
     }
   }
 
-  private broadcastReadyStatePattern(status: SymbolStatusData): void {
+  private async broadcastReadyStatePattern(status: SymbolStatusData): Promise<void> {
     const priceData = this.priceCache.get(status.s);
+
+    // Enhanced confidence calculation with pattern detection
+    let enhancedConfidence = 0.95; // High confidence for exact match
+
+    try {
+      // Use pattern detection engine for enhanced confidence scoring
+      const patternResult = await patternDetectionEngine.analyzeSymbolReadiness({
+        cd: status.s,
+        sts: status.sts,
+        st: status.st,
+        tt: status.tt,
+      });
+
+      if (patternResult) {
+        enhancedConfidence = Math.max(enhancedConfidence, patternResult.confidence / 100);
+      }
+    } catch (error) {
+      console.warn(`[MEXC Stream] Pattern detection enhancement failed for ${status.s}:`, error);
+    }
 
     const readyStateData = {
       symbol: status.s,
@@ -219,14 +244,15 @@ class MarketDataManager {
       sts: status.sts,
       st: status.st,
       tt: status.tt,
-      confidence: 0.95, // High confidence for exact match
+      confidence: enhancedConfidence,
       riskLevel: "medium" as const,
       expectedVolatility: priceData ? Math.abs(priceData.changePercent) / 100 : 0.1,
       correlatedSymbols: [], // Would need to calculate
       metadata: {
         detectedAt: Date.now(),
-        source: "mexc_websocket",
+        source: "mexc_websocket_enhanced",
         priceAtDetection: priceData?.price,
+        enhancedAnalysis: true,
       },
     };
 
@@ -238,7 +264,7 @@ class MarketDataManager {
       notificationId: crypto.randomUUID(),
       type: "success",
       title: "Ready State Pattern Detected",
-      message: `${status.s} is ready for trading (sts:2, st:2, tt:4)`,
+      message: `${status.s} is ready for trading (sts:2, st:2, tt:4) - Enhanced Confidence: ${Math.round(enhancedConfidence * 100)}%`,
       priority: "critical",
       category: "pattern",
       timestamp: Date.now(),
@@ -260,6 +286,7 @@ class MarketDataManager {
         sts: status.sts,
         st: status.st,
         tt: status.tt,
+        enhancedConfidence,
       },
     };
 
@@ -284,6 +311,27 @@ class MarketDataManager {
 
   getSubscribedSymbols(): string[] {
     return Array.from(this.subscribers.keys());
+  }
+
+  /**
+   * Perform enhanced analysis using AI intelligence
+   */
+  async performEnhancedAnalysis(status: SymbolStatusData): Promise<void> {
+    try {
+      // Use the pattern detection engine for enhanced AI analysis
+      const result = await patternDetectionEngine.analyzeSymbolReadiness({
+        cd: status.s,
+        sts: status.sts,
+        st: status.st,
+        tt: status.tt,
+      });
+
+      if (result && result.enhancedAnalysis) {
+        console.log(`[MEXC Stream] Enhanced AI analysis completed for ${status.s} with confidence: ${result.confidence}`);
+      }
+    } catch (error) {
+      console.warn(`[MEXC Stream] Enhanced analysis failed for ${status.s}:`, error);
+    }
   }
 }
 
@@ -580,10 +628,65 @@ export class MexcWebSocketStreamService extends EventEmitter {
   }
 
   // ======================
+  // Type Guards
+  // ======================
+
+  private isValidTickerData(data: any): data is MexcTickerData {
+    return (
+      data &&
+      typeof data === "object" &&
+      typeof data.s === "string" &&
+      typeof data.c === "string" &&
+      typeof data.h === "string" &&
+      typeof data.l === "string"
+    );
+  }
+
+  private isValidDepthData(data: any): data is MexcDepthData {
+    return (
+      data &&
+      typeof data === "object" &&
+      typeof data.s === "string" &&
+      Array.isArray(data.bids) &&
+      Array.isArray(data.asks)
+    );
+  }
+
+  private isValidTradeData(data: any): data is MexcTradeData {
+    return (
+      data &&
+      typeof data === "object" &&
+      typeof data.s === "string" &&
+      typeof data.p === "string" &&
+      typeof data.q === "string"
+    );
+  }
+
+  private isValidKlineData(data: any): data is MexcKlineData {
+    return (
+      data &&
+      typeof data === "object" &&
+      typeof data.s === "string" &&
+      data.k &&
+      typeof data.k === "object"
+    );
+  }
+
+  private isValidStatusData(data: any): data is SymbolStatusData {
+    return (
+      data &&
+      typeof data === "object" &&
+      typeof data.s === "string" &&
+      typeof data.sts === "number" &&
+      typeof data.st === "number"
+    );
+  }
+
+  // ======================
   // Message Handling
   // ======================
 
-  private handleMexcMessage(message: any): void {
+  private async handleMexcMessage(message: any): Promise<void> {
     try {
       // Handle subscription confirmations
       if (message.result === null && message.id) {
@@ -593,15 +696,21 @@ export class MexcWebSocketStreamService extends EventEmitter {
 
       // Handle stream data
       if (message.stream && message.data) {
-        this.routeStreamData(message.stream, message.data);
+        await this.routeStreamData(message.stream, message.data);
+
+        // Real-time pattern detection for stream data
+        await this.performRealtimePatternDetection(message.stream, message.data);
       }
 
       // Handle ticker array data
       if (Array.isArray(message)) {
         for (const ticker of message) {
-          if (ticker.s) {
-            // Has symbol
-            this.marketDataManager.updatePrice(ticker);
+          if (ticker.s && this.isValidTickerData(ticker)) {
+            // Has symbol and valid ticker data
+            this.marketDataManager.updatePrice(ticker as MexcTickerData);
+
+            // Perform pattern detection on ticker updates
+            await this.performTickerPatternAnalysis(ticker as MexcTickerData);
           }
         }
       }
@@ -615,18 +724,18 @@ export class MexcWebSocketStreamService extends EventEmitter {
     }
   }
 
-  private routeStreamData(stream: string, data: any): void {
+  private async routeStreamData(stream: string, data: any): Promise<void> {
     try {
-      if (stream.includes("@ticker")) {
-        this.marketDataManager.updatePrice(data);
-      } else if (stream.includes("@depth")) {
-        this.marketDataManager.updateDepth(data);
-      } else if (stream.includes("@trade")) {
-        this.handleTradeData(data);
-      } else if (stream.includes("@kline")) {
-        this.handleKlineData(data);
-      } else if (stream.includes("@symbolStatus")) {
-        this.marketDataManager.updateSymbolStatus(data);
+      if (stream.includes("@ticker") && this.isValidTickerData(data)) {
+        this.marketDataManager.updatePrice(data as MexcTickerData);
+      } else if (stream.includes("@depth") && this.isValidDepthData(data)) {
+        this.marketDataManager.updateDepth(data as MexcDepthData);
+      } else if (stream.includes("@trade") && this.isValidTradeData(data)) {
+        this.handleTradeData(data as MexcTradeData);
+      } else if (stream.includes("@kline") && this.isValidKlineData(data)) {
+        this.handleKlineData(data as MexcKlineData);
+      } else if (stream.includes("@symbolStatus") && this.isValidStatusData(data)) {
+        await this.marketDataManager.updateSymbolStatus(data as SymbolStatusData);
       }
 
       this.emit("data", { stream, data });
@@ -771,6 +880,242 @@ export class MexcWebSocketStreamService extends EventEmitter {
 
   async healthCheck(): Promise<boolean> {
     return this.isRunning && this.connectionManager.isConnectedToMexc();
+  }
+
+  // ======================
+  // Real-time Pattern Detection Integration
+  // ======================
+
+  /**
+   * Performs real-time pattern detection on incoming stream data
+   */
+  private async performRealtimePatternDetection(stream: string, data: any): Promise<void> {
+    try {
+      // Only analyze ticker and status streams for pattern detection
+      if (!stream.includes("@ticker") && !stream.includes("@symbolStatus")) {
+        return;
+      }
+
+      // Extract symbol from stream or data
+      const symbol = data.s || data.symbol;
+      if (!symbol) return;
+
+      // Get current status for pattern analysis
+      const currentStatus = this.marketDataManager.getCurrentStatus(symbol);
+      if (!currentStatus) return;
+
+      // Prepare symbol data for pattern detection
+      const symbolData = {
+        cd: symbol,
+        sts: currentStatus.sts,
+        st: currentStatus.st,
+        tt: currentStatus.tt,
+        vcoinId: symbol, // Use symbol as vcoinId fallback
+      };
+
+      // Perform pattern analysis with enhanced confidence
+      const patternResult = await patternDetectionEngine.analyzeSymbolReadiness(symbolData);
+
+      if (patternResult && patternResult.confidence > 70) {
+        // Broadcast high-confidence patterns to WebSocket clients
+        webSocketServer.broadcast({
+          type: "pattern:realtime",
+          channel: "patterns:realtime",
+          data: {
+            symbol,
+            confidence: patternResult.confidence,
+            isReady: patternResult.isReady,
+            source: "realtime_stream",
+            timestamp: Date.now(),
+            metadata: {
+              stream,
+              enhancedAnalysis: true,
+            },
+          },
+        });
+
+        // Broadcast to agent bridge for further processing
+        if (patternResult.isReady) {
+          webSocketAgentBridge.broadcastPatternDiscovery({
+            symbol,
+            type: "ready_state",
+            confidence: patternResult.confidence / 100,
+            strength: patternResult.confidence / 100,
+            metadata: {
+              source: "realtime_websocket",
+              detectedAt: Date.now(),
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.error(
+        `[MEXC Stream] Real-time pattern detection failed for stream ${stream}:`,
+        error
+      );
+    }
+  }
+
+  /**
+   * Performs pattern analysis on ticker data updates
+   */
+  private async performTickerPatternAnalysis(ticker: MexcTickerData): Promise<void> {
+    try {
+      const symbol = ticker.s;
+      const currentStatus = this.marketDataManager.getCurrentStatus(symbol);
+
+      if (!currentStatus) return;
+
+      // Check for significant price movements that might indicate pattern changes
+      const priceChangePercent = Math.abs(Number.parseFloat(ticker.P));
+
+      // Only analyze symbols with significant price movement or potential ready states
+      if (priceChangePercent > 3 || (currentStatus.sts >= 1 && currentStatus.st >= 1)) {
+        const symbolData = {
+          cd: symbol,
+          sts: currentStatus.sts,
+          st: currentStatus.st,
+          tt: currentStatus.tt,
+          vcoinId: symbol,
+        };
+
+        const patternResult = await patternDetectionEngine.analyzeSymbolReadiness(symbolData);
+
+        if (patternResult && patternResult.confidence > 75) {
+          // Broadcast pattern correlation with price movement
+          webSocketServer.broadcast({
+            type: "pattern:price_correlation",
+            channel: "patterns:correlations",
+            data: {
+              symbol,
+              confidence: patternResult.confidence,
+              priceChange: Number.parseFloat(ticker.p),
+              priceChangePercent: priceChangePercent,
+              volume: Number.parseFloat(ticker.v),
+              timestamp: ticker.t || Date.now(),
+              metadata: {
+                source: "ticker_analysis",
+                correlationType: "price_pattern",
+              },
+            },
+          });
+
+          // Generate trading signal for high-confidence patterns with significant price movement
+          if (patternResult.confidence > 85 && priceChangePercent > 5) {
+            webSocketAgentBridge.broadcastTradingSignal({
+              symbol,
+              type: priceChangePercent > 0 ? "buy" : "monitor",
+              strength: Math.min(patternResult.confidence, 95),
+              confidence: patternResult.confidence / 100,
+              source: "pattern_price_correlation",
+              reasoning: `High-confidence pattern (${patternResult.confidence}%) with significant price movement (${priceChangePercent.toFixed(2)}%)`,
+              timeframe: "5m",
+              metadata: {
+                patternConfidence: patternResult.confidence,
+                priceMovement: priceChangePercent,
+                correlationStrength: "high",
+              },
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`[MEXC Stream] Ticker pattern analysis failed for ${ticker.s}:`, error);
+    }
+  }
+
+  /**
+   * Performs enhanced ready state analysis using advanced pattern detection
+   */
+  private async performEnhancedAnalysis(status: SymbolStatusData): Promise<void> {
+    try {
+      const symbol = status.s;
+      const priceData = this.marketDataManager.getCurrentPrice(symbol);
+
+      // Prepare comprehensive symbol data for enhanced analysis
+      const symbolData = {
+        cd: symbol,
+        sts: status.sts,
+        st: status.st,
+        tt: status.tt,
+        vcoinId: symbol,
+      };
+
+      // Get enhanced pattern analysis
+      const patternResult = await patternDetectionEngine.analyzeSymbolReadiness(symbolData);
+
+      if (patternResult) {
+        // Broadcast enhanced ready state analysis
+        webSocketServer.broadcast({
+          type: "pattern:enhanced_ready_state",
+          channel: "patterns:enhanced",
+          data: {
+            symbol,
+            readyState: {
+              sts: status.sts,
+              st: status.st,
+              tt: status.tt,
+              isReady: patternResult.isReady,
+            },
+            analysis: {
+              confidence: patternResult.confidence,
+              enhancedScore: patternResult.confidence,
+              priceAtAnalysis: priceData?.price,
+              volumeAtAnalysis: priceData?.volume,
+              riskAssessment:
+                patternResult.confidence > 90
+                  ? "low"
+                  : patternResult.confidence > 80
+                    ? "medium"
+                    : "high",
+              recommendedAction:
+                patternResult.confidence > 85 ? "monitor_closely" : "standard_monitoring",
+            },
+            timestamp: Date.now(),
+            metadata: {
+              source: "enhanced_ready_state_analysis",
+              detectionMethod: "ml_enhanced",
+              activityDataIncluded: true,
+            },
+          },
+        });
+
+        // Generate high-priority alert for exceptional patterns
+        if (patternResult.confidence > 90) {
+          const exceptionalNotification: NotificationMessage = {
+            notificationId: crypto.randomUUID(),
+            type: "success",
+            title: "Exceptional Ready State Pattern",
+            message: `${symbol} shows exceptional ready state pattern (${patternResult.confidence}% confidence) - Prime trading opportunity detected`,
+            priority: "critical",
+            category: "pattern",
+            timestamp: Date.now(),
+            actionable: true,
+            actions: [
+              {
+                label: "Execute Strategy",
+                action: "execute_strategy",
+                params: { symbol, confidence: patternResult.confidence },
+              },
+              {
+                label: "Set Price Alerts",
+                action: "set_price_alerts",
+                params: { symbol, alertType: "ready_state" },
+              },
+            ],
+            metadata: {
+              symbol,
+              confidence: patternResult.confidence,
+              enhancedConfidence: patternResult.confidence,
+            },
+          };
+
+          webSocketServer.broadcastNotification(exceptionalNotification);
+        }
+      }
+    } catch (error) {
+      console.error(`[MEXC Stream] Enhanced ready state analysis failed for ${status.s}:`, error);
+    }
   }
 }
 

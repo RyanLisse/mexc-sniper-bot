@@ -20,7 +20,10 @@ export class EmailProvider implements NotificationProvider {
   }
 
   async validateConfig(config: Record<string, unknown>): Promise<boolean> {
-    const emailConfig = config as EmailConfig;
+    // Type guard for EmailConfig
+    if (!config || typeof config !== "object") {
+      return false;
+    }
 
     const required = [
       "smtpHost",
@@ -30,8 +33,9 @@ export class EmailProvider implements NotificationProvider {
       "fromAddress",
       "toAddresses",
     ];
+
     const hasAllRequired = required.every(
-      (field) => emailConfig[field] !== undefined && emailConfig[field] !== ""
+      (field) => config[field] !== undefined && config[field] !== ""
     );
 
     if (!hasAllRequired) {
@@ -40,13 +44,19 @@ export class EmailProvider implements NotificationProvider {
 
     // Validate email addresses
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const fromAddress = config.fromAddress as string;
+    const toAddresses = config.toAddresses as string[];
 
-    if (!emailRegex.test(emailConfig.fromAddress)) {
+    if (!emailRegex.test(fromAddress)) {
       return false;
     }
 
-    for (const email of emailConfig.toAddresses) {
-      if (!emailRegex.test(email)) {
+    if (!Array.isArray(toAddresses)) {
+      return false;
+    }
+
+    for (const email of toAddresses) {
+      if (typeof email !== "string" || !emailRegex.test(email)) {
         return false;
       }
     }
@@ -135,11 +145,11 @@ export class EmailProvider implements NotificationProvider {
                 ${alert.anomalyScore ? `<p><strong>Anomaly Score:</strong> ${alert.anomalyScore.toFixed(2)}</p>` : ""}
                 <p class="timestamp"><strong>Triggered:</strong> ${new Date(alert.firstTriggeredAt).toLocaleString()}</p>
               </div>
-              
+
               <div class="description">
                 ${message.body.replace(/\n/g, "<br>")}
               </div>
-              
+
               ${message.alertUrl ? `<a href="${message.alertUrl}" class="button">View Alert Details</a>` : ""}
             </div>
             <div class="footer">

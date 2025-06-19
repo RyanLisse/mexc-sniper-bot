@@ -21,34 +21,48 @@ export class SMSProvider implements NotificationProvider {
   }
 
   async validateConfig(config: Record<string, unknown>): Promise<boolean> {
-    const smsConfig = config as SMSConfig;
+    // Type guard for SMSConfig
+    if (!config || typeof config !== "object") {
+      return false;
+    }
 
-    if (!smsConfig.provider || !smsConfig.fromPhoneNumber || !smsConfig.toPhoneNumbers?.length) {
+    const provider = config.provider;
+    const fromPhoneNumber = config.fromPhoneNumber;
+    const toPhoneNumbers = config.toPhoneNumbers;
+
+    if (
+      !provider ||
+      typeof provider !== "string" ||
+      !fromPhoneNumber ||
+      typeof fromPhoneNumber !== "string" ||
+      !Array.isArray(toPhoneNumbers) ||
+      toPhoneNumbers.length === 0
+    ) {
       return false;
     }
 
     // Validate phone number format (basic validation)
     const phoneRegex = /^\+[1-9]\d{1,14}$/;
 
-    if (!phoneRegex.test(smsConfig.fromPhoneNumber)) {
+    if (!phoneRegex.test(fromPhoneNumber)) {
       return false;
     }
 
-    for (const phone of smsConfig.toPhoneNumbers) {
-      if (!phoneRegex.test(phone)) {
+    for (const phone of toPhoneNumbers) {
+      if (typeof phone !== "string" || !phoneRegex.test(phone)) {
         return false;
       }
     }
 
     // Validate provider-specific configuration
-    switch (smsConfig.provider) {
+    switch (provider) {
       case "twilio":
-        return !!(smsConfig.accountSid && smsConfig.authToken);
+        return !!(config.accountSid && config.authToken);
       case "aws_sns":
-        return !!(smsConfig.accessKeyId && smsConfig.secretAccessKey);
+        return !!(config.accessKeyId && config.secretAccessKey);
       case "nexmo":
       case "messagebird":
-        return !!(smsConfig.apiKey && smsConfig.apiSecret);
+        return !!(config.apiKey && config.apiSecret);
       default:
         return false;
     }

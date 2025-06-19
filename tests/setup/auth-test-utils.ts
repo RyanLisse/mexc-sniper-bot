@@ -1,6 +1,6 @@
 /**
  * Authentication Test Utilities
- * 
+ *
  * Provides helper functions and fixtures for testing authentication flows
  * across unit, integration, and E2E tests.
  */
@@ -195,6 +195,10 @@ export const mockKindeSDK = {
       return { name: claim, value: claims[claim] || null };
     }),
     getAccessToken: vi.fn().mockResolvedValue(isCurrentlyAuthenticated ? 'mock-access-token' : null),
+    getAccessTokenRaw: vi.fn().mockResolvedValue(isCurrentlyAuthenticated ? 'mock-access-token-raw' : null),
+    getRoles: vi.fn().mockResolvedValue(
+      currentTestUser ? { roles: mockPermissions[currentTestUser.id]?.roles || [] } : { roles: [] }
+    ),
     refreshTokens: vi.fn().mockImplementation(async () => {
       if (!isCurrentlyAuthenticated) {
         throw new Error('Not authenticated');
@@ -223,6 +227,8 @@ export const mockKindeSDK = {
     getUserOrganizations: vi.fn().mockRejectedValue(new Error(errorMessage)),
     getClaim: vi.fn().mockRejectedValue(new Error(errorMessage)),
     getAccessToken: vi.fn().mockRejectedValue(new Error(errorMessage)),
+    getAccessTokenRaw: vi.fn().mockRejectedValue(new Error(errorMessage)),
+    getRoles: vi.fn().mockRejectedValue(new Error(errorMessage)),
     refreshTokens: vi.fn().mockRejectedValue(new Error(errorMessage)),
     getBooleanFlag: vi.fn().mockRejectedValue(new Error(errorMessage)),
     getFlag: vi.fn().mockRejectedValue(new Error(errorMessage)),
@@ -245,10 +251,10 @@ export const authTestSetup = {
   beforeEach: () => {
     // Reset authentication state
     authTestUtils.reset();
-    
+
     // Setup test environment
     envTestUtils.setupTestEnv();
-    
+
     // Clear all mocks
     vi.clearAllMocks();
   },
@@ -259,10 +265,10 @@ export const authTestSetup = {
   afterEach: () => {
     // Reset authentication state
     authTestUtils.reset();
-    
+
     // Restore environment
     envTestUtils.restoreEnv();
-    
+
     // Clear all mocks
     vi.clearAllMocks();
   }
@@ -278,7 +284,7 @@ export const createAuthenticatedRequest = async (
 ) => {
   // Set up authentication state
   authTestUtils.setAuthenticated(userType);
-  
+
   // Add authentication headers (mock)
   const headers = {
     'Content-Type': 'application/json',
@@ -301,7 +307,7 @@ export const createUnauthenticatedRequest = async (
 ) => {
   // Set up unauthenticated state
   authTestUtils.setUnauthenticated();
-  
+
   return fetch(url, {
     ...options,
     headers: {
@@ -319,14 +325,14 @@ export const waitForAuthState = async (
   timeout = 5000
 ): Promise<boolean> => {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeout) {
     if (authTestUtils.isAuthenticated() === expectedState) {
       return true;
     }
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-  
+
   return false;
 };
 

@@ -22,6 +22,17 @@ interface SlackBlock {
     type: string;
     text: string;
   }>;
+  elements?: Array<{
+    type: string;
+    text?:
+      | string
+      | {
+          type: string;
+          text: string;
+        };
+    url?: string;
+    style?: string;
+  }>;
   accessory?: unknown;
 }
 
@@ -31,16 +42,20 @@ export class SlackProvider implements NotificationProvider {
   }
 
   async validateConfig(config: Record<string, unknown>): Promise<boolean> {
-    const slackConfig = config as SlackConfig;
+    // Type guard for SlackConfig
+    if (!config || typeof config !== "object") {
+      return false;
+    }
 
-    if (!slackConfig.webhookUrl) {
+    const webhookUrl = config.webhookUrl;
+    if (!webhookUrl || typeof webhookUrl !== "string") {
       return false;
     }
 
     // Validate webhook URL format
     const webhookRegex =
       /^https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[a-zA-Z0-9]+$/;
-    return webhookRegex.test(slackConfig.webhookUrl);
+    return webhookRegex.test(webhookUrl);
   }
 
   async send(
@@ -168,7 +183,7 @@ export class SlackProvider implements NotificationProvider {
       elements: [
         {
           type: "mrkdwn",
-          text: `Triggered: <!date^${Math.floor(alert.firstTriggeredAt / 1000)}^{date_short_pretty} at {time}|${new Date(alert.firstTriggeredAt).toISOString()}>`,
+          text: `Triggered: <!date^${Math.floor(alert.firstTriggeredAt.getTime() / 1000)}^{date_short_pretty} at {time}|${alert.firstTriggeredAt.toISOString()}>`,
         },
       ],
     });

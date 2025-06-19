@@ -71,6 +71,48 @@ export const SniperStatsSchema = z.object({
   successRate: z.number().optional(),
 });
 
+// Activity API Schemas
+export const ActivityTypeSchema = z.enum([
+  "SUN_SHINE",
+  "PROMOTION",
+  "LAUNCH_EVENT",
+  "TRADING_COMPETITION",
+  "AIRDROP",
+  "STAKING_EVENT",
+  "LISTING_EVENT",
+]);
+
+export const ActivityDataSchema = z.object({
+  activityId: z.string(),
+  currency: z.string(),
+  currencyId: z.string(),
+  activityType: z.string(), // Using string instead of enum for flexibility
+});
+
+export const ActivityResponseSchema = z.object({
+  data: z.array(ActivityDataSchema),
+  code: z.number(),
+  msg: z.string(),
+  timestamp: z.number(),
+});
+
+// Activity Enhancement Schemas
+export const ActivityEnhancementSchema = z.object({
+  baseConfidence: z.number(),
+  enhancedConfidence: z.number(),
+  activityBoost: z.number(),
+  activities: z.number(),
+  activityTypes: z.array(z.string()),
+  multipleActivitiesBonus: z.number().optional(),
+  recentActivityBonus: z.number().optional(),
+});
+
+export const ActivityQueryOptions = z.object({
+  batchSize: z.number().optional().default(5),
+  maxRetries: z.number().optional().default(3),
+  rateLimitDelay: z.number().optional().default(200),
+});
+
 // Error Schema
 export const MexcErrorSchema = z.object({
   code: z.number().optional(),
@@ -88,6 +130,13 @@ export type OrderParameters = z.infer<typeof OrderParametersSchema>;
 export type ReadyStatePattern = z.infer<typeof ReadyStatePatternSchema>;
 export type SniperStats = z.infer<typeof SniperStatsSchema>;
 export type MexcError = z.infer<typeof MexcErrorSchema>;
+
+// Activity API Types
+export type ActivityType = z.infer<typeof ActivityTypeSchema>;
+export type ActivityData = z.infer<typeof ActivityDataSchema>;
+export type ActivityResponse = z.infer<typeof ActivityResponseSchema>;
+export type ActivityEnhancement = z.infer<typeof ActivityEnhancementSchema>;
+export type ActivityQueryOptions = z.infer<typeof ActivityQueryOptions>;
 
 // Constants
 export const READY_STATE_PATTERN: ReadyStatePattern = {
@@ -109,6 +158,19 @@ export const validateSnipeTarget = (data: unknown): SnipeTarget => {
   return SnipeTargetSchema.parse(data);
 };
 
+// Activity API validation helpers
+export const validateActivityData = (data: unknown): ActivityData => {
+  return ActivityDataSchema.parse(data);
+};
+
+export const validateActivityResponse = (data: unknown): ActivityResponse => {
+  return ActivityResponseSchema.parse(data);
+};
+
+export const validateActivityEnhancement = (data: unknown): ActivityEnhancement => {
+  return ActivityEnhancementSchema.parse(data);
+};
+
 // Pattern matching utilities
 export const matchesReadyPattern = (symbol: SymbolV2Entry): boolean => {
   return (
@@ -124,4 +186,38 @@ export const hasCompleteData = (symbol: SymbolV2Entry): boolean => {
 
 export const isValidForSnipe = (symbol: SymbolV2Entry): boolean => {
   return matchesReadyPattern(symbol) && hasCompleteData(symbol);
+};
+
+// Activity API utility functions
+export const calculateActivityBoost = (activities: ActivityData[]): number => {
+  if (activities.length === 0) return 0;
+
+  const activityScores = {
+    SUN_SHINE: 15,
+    PROMOTION: 12,
+    LAUNCH_EVENT: 18,
+    TRADING_COMPETITION: 10,
+    AIRDROP: 8,
+    STAKING_EVENT: 10,
+    LISTING_EVENT: 20,
+  };
+
+  const maxBoost = Math.max(
+    ...activities.map(
+      (activity) => activityScores[activity.activityType as keyof typeof activityScores] || 5
+    )
+  );
+
+  const multipleActivitiesBonus = activities.length > 1 ? 5 : 0;
+
+  return Math.min(maxBoost + multipleActivitiesBonus, 20);
+};
+
+export const hasHighPriorityActivity = (activities: ActivityData[]): boolean => {
+  const highPriorityTypes = ["LAUNCH_EVENT", "LISTING_EVENT", "SUN_SHINE"];
+  return activities.some((activity) => highPriorityTypes.includes(activity.activityType));
+};
+
+export const getUniqueActivityTypes = (activities: ActivityData[]): string[] => {
+  return [...new Set(activities.map((activity) => activity.activityType))];
 };

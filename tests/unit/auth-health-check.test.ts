@@ -76,7 +76,7 @@ describe('/api/health/auth', () => {
     it('should return unhealthy status when Kinde SDK throws error', async () => {
       // Mock console.error to suppress expected error messages during test
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+
       // Mock Kinde SDK to throw error during initialization
       const { getKindeServerSession } = await import('@kinde-oss/kinde-auth-nextjs/server');
       vi.mocked(getKindeServerSession).mockImplementation(() => {
@@ -94,7 +94,7 @@ describe('/api/health/auth', () => {
         sdk_accessible: false,
         error: 'Kinde SDK connection failed'
       });
-      
+
       // Restore console.error
       consoleSpy.mockRestore();
     });
@@ -129,7 +129,7 @@ describe('/api/health/auth', () => {
     it('should include deployment information', async () => {
       // Setup test environment and override specific deployment settings
       envTestUtils.setupTestEnv();
-      process.env.NODE_ENV = 'production';
+      (process.env as any).NODE_ENV = 'production';
       process.env.VERCEL = '1';
 
       // Mock successful SDK with authenticated user
@@ -140,7 +140,7 @@ describe('/api/health/auth', () => {
       authenticatedMock.getUser.mockResolvedValue({ id: 'test-user' });
       authenticatedMock.getAccessToken.mockResolvedValue('mock-token');
       authenticatedMock.refreshTokens.mockResolvedValue({ access_token: 'new-token' });
-      
+
       vi.mocked(getKindeServerSession).mockReturnValue(authenticatedMock);
 
       const response = await GET();
@@ -163,7 +163,7 @@ describe('/api/health/auth', () => {
     it('should handle unexpected errors gracefully', async () => {
       // Mock console.error to suppress expected error messages during test
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+
       // Mock Kinde SDK to fail during async operations (not initialization)
       const { getKindeServerSession } = await import('@kinde-oss/kinde-auth-nextjs/server');
       vi.mocked(getKindeServerSession).mockReturnValue(mockKindeSDK.createFailedMock('Network timeout'));
@@ -174,7 +174,7 @@ describe('/api/health/auth', () => {
       expect(data.status).toBe('unhealthy');
       expect(data.kinde_sdk_status).toBe('error');
       expect(data.auth_test_result.error).toBe('Network timeout');
-      
+
       // Restore console.error
       consoleSpy.mockRestore();
     });
@@ -184,19 +184,19 @@ describe('/api/health/auth', () => {
       const { getKindeServerSession } = await import('@kinde-oss/kinde-auth-nextjs/server');
       const mockSession = mockKindeSDK.createSuccessfulMock();
       vi.mocked(getKindeServerSession).mockReturnValue(mockSession);
-      
+
       const response = await GET();
       const data = await response.json();
 
       // Verify the mock was called
       expect(vi.mocked(getKindeServerSession)).toHaveBeenCalled();
       expect(mockSession.isAuthenticated).toHaveBeenCalled();
-      
+
       // Verify successful response (indicates mocks worked)
       expect(response.status).toBe(200);
       expect(data.status).toBe('healthy');
       expect(data.kinde_sdk_status).toBe('initialized');
-      
+
       // Verify fetch was not called with real Kinde URLs (would indicate network attempt)
       const fetchCalls = vi.mocked(global.fetch).mock.calls;
       const kindeNetworkCalls = fetchCalls.filter(call => {

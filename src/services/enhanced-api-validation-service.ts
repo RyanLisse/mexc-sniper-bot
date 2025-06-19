@@ -638,7 +638,10 @@ export class EnhancedApiValidationService {
 
     if (!config.validateIpAllowlist) {
       recommendations.push("Enable IP allowlisting validation for enhanced security");
-      riskLevel = riskLevel === "low" ? "medium" : riskLevel;
+      if (riskLevel !== "high") {
+        riskLevel = "medium";
+      }
+      // If riskLevel is already "high", keep it as "high"
     }
 
     // Determine final risk level

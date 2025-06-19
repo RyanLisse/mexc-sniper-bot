@@ -139,7 +139,7 @@ describe('/api/health/auth Integration Tests', () => {
       envTestUtils.setupTestEnv();
       process.env.KINDE_ISSUER_URL = 'https://staging-mexcsniper.kinde.com';
       process.env.KINDE_SITE_URL = 'https://staging.mexcsniper.com';
-      process.env.NODE_ENV = 'staging';
+      (process.env as any).NODE_ENV = 'staging';
 
       // Override MSW to return staging response for this test
       server.use(
@@ -381,9 +381,9 @@ describe('/api/health/auth Integration Tests', () => {
   describe('Performance and Reliability', () => {
     it('should respond within acceptable time limits', async () => {
       const startTime = Date.now();
-      
+
       const response = await fetch('http://localhost:3008/api/health/auth');
-      
+
       const endTime = Date.now();
       const responseTime = endTime - startTime;
 
@@ -416,12 +416,12 @@ describe('/api/health/auth Integration Tests', () => {
 
     it('should handle concurrent requests properly', async () => {
       // Test with 10 concurrent requests
-      const concurrentRequests = Array(10).fill(null).map(() => 
+      const concurrentRequests = Array(10).fill(null).map(() =>
         fetch('http://localhost:3008/api/health/auth')
       );
 
       const responses = await Promise.all(concurrentRequests);
-      
+
       // All should succeed
       responses.forEach(response => {
         expect(response.status).toBe(200);

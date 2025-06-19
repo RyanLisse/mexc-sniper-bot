@@ -1,9 +1,9 @@
 /**
  * Test Database Setup Utility
- * 
+ *
  * This utility provides a clean database setup for tests that handles
  * migration issues and ensures proper foreign key constraints.
- * 
+ *
  * Uses NeonDB PostgreSQL for consistent testing environment.
  */
 
@@ -25,26 +25,26 @@ export interface TestDbSetup {
  */
 export async function createTestDatabase(): Promise<TestDbSetup> {
   // Get database URL from environment
-  const databaseUrl = process.env.DATABASE_URL?.startsWith('postgresql://') 
-    ? process.env.DATABASE_URL 
+  const databaseUrl = process.env.DATABASE_URL?.startsWith('postgresql://')
+    ? process.env.DATABASE_URL
     : 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
-  
+
   // Force real database for tests - don't fallback to mock anymore
   const forceMock = process.env.FORCE_MOCK_DB === 'true';
-  
+
   if (forceMock) {
     console.log('[Test] FORCE_MOCK_DB enabled, using mock database');
     return createMockDatabase();
   }
-  
+
   let client: postgres.Sql | null = null;
   let retryCount = 0;
   const maxRetries = 3;
-  
+
   while (retryCount < maxRetries) {
     try {
       console.log(`[Test] Attempting database connection (attempt ${retryCount + 1}/${maxRetries})...`);
-      
+
       // Create PostgreSQL client with test-optimized settings
       client = postgres(databaseUrl, {
         max: 3, // Limit connections for tests
@@ -59,27 +59,22 @@ export async function createTestDatabase(): Promise<TestDbSetup> {
           application_name: "mexc-sniper-test",
           statement_timeout: 20000, // 20 seconds
           idle_in_transaction_session_timeout: 20000,
-        },
-        // Add retry options at the postgres client level
-        fetch: retryCount > 0 ? {
-          ...global.fetch,
-          timeout: 10000, // 10 second fetch timeout on retries
-        } : undefined
+        }
       });
-      
+
       const db = drizzle(client, { schema });
-      
+
       // Test database connection with progressively longer timeout
       const timeoutMs = 10000 + (retryCount * 5000); // 10s, 15s, 20s
       await Promise.race([
         db.execute(sql`SELECT 1 as ping`),
-        new Promise((_, reject) => 
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Connection timeout')), timeoutMs)
         )
       ]);
-      
+
       console.log(`[Test] Connected to NeonDB test database successfully`);
-      
+
       // Apply migrations with safe error handling
       try {
         await migrate(db, { migrationsFolder: './src/db/migrations' });
@@ -87,10 +82,10 @@ export async function createTestDatabase(): Promise<TestDbSetup> {
       } catch (error) {
         console.warn('Test migration had issues, proceeding with existing schema:', error instanceof Error ? error.message : error);
       }
-      
-      return { 
-        client, 
-        db, 
+
+      return {
+        client,
+        db,
         cleanup: async () => {
           try {
             if (client) {
@@ -109,12 +104,12 @@ export async function createTestDatabase(): Promise<TestDbSetup> {
           }
         }
       };
-      
+
     } catch (error) {
       retryCount++;
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.warn(`[Test] Database connection attempt ${retryCount} failed: ${errorMessage}`);
-      
+
       // Clean up failed client
       if (client) {
         try {
@@ -124,20 +119,20 @@ export async function createTestDatabase(): Promise<TestDbSetup> {
         }
         client = null;
       }
-      
+
       // If this is the last retry, fall back to mock
       if (retryCount >= maxRetries) {
         console.warn(`[Test] All database connection attempts failed, using mock database for tests`);
         return createMockDatabase();
       }
-      
+
       // Wait before retry with exponential backoff
       const delay = 1000 * retryCount; // 1s, 2s, 3s
       console.log(`[Test] Retrying database connection in ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
-  
+
   // This should never be reached, but TypeScript needs it
   console.warn(`[Test] Unexpected fallback to mock database`);
   return createMockDatabase();
@@ -151,14 +146,14 @@ function createMockDatabase(): TestDbSetup {
   const mockClient = {
     end: async () => Promise.resolve(),
   } as any;
-  
+
   // Storage for mock data to make tests more realistic
   const mockStorage = {
     users: new Map(),
     transactions: new Map(),
     nextId: 1,
   };
-  
+
   const mockDb = {
     select: () => ({
       from: (table: any) => ({
@@ -185,13 +180,13 @@ function createMockDatabase(): TestDbSetup {
             return Promise.reject(new Error('Missing required fields: userId and transactionType are required'));
           }
         }
-        
+
         return {
           returning: () => {
             const id = mockStorage.nextId++;
-            const record = { 
-              id, 
-              ...data, 
+            const record = {
+              id,
+              ...data,
               status: data.status || 'pending', // Default status
               createdAt: data.createdAt || new Date(),
               updatedAt: data.updatedAt || new Date(),
@@ -201,13 +196,13 @@ function createMockDatabase(): TestDbSetup {
               profitLoss: data.profitLoss || null,
               vcoinId: data.vcoinId || null
             };
-            
+
             if (table === schema.user) {
               mockStorage.users.set(data.id, record);
             } else if (table === schema.transactions) {
               mockStorage.transactions.set(id, record);
             }
-            
+
             return Promise.resolve([record]);
           },
         };
@@ -261,7 +256,7 @@ function createMockDatabase(): TestDbSetup {
       },
     },
   } as any;
-  
+
   return {
     client: mockClient,
     db: mockDb,
@@ -274,7 +269,7 @@ function createMockDatabase(): TestDbSetup {
  * Handles existing users to prevent duplicate key violations
  */
 export async function createTestUser(
-  db: ReturnType<typeof drizzle>, 
+  db: ReturnType<typeof drizzle>,
   userId: string = 'test-user'
 ) {
   try {
@@ -282,12 +277,12 @@ export async function createTestUser(
     const existingUser = await (db.query as any).user?.findFirst({
       where: eq(schema.user.id, userId)
     });
-    
+
     if (existingUser) {
       console.log(`[Test] User ${userId} already exists, returning existing user`);
       return [existingUser];
     }
-    
+
     // Create new user if doesn't exist
     return await db.insert(schema.user).values({
       id: userId,
@@ -320,12 +315,12 @@ export async function cleanupTestData(
   // Default tables to clean (in dependency order)
   const defaultTables: Array<keyof typeof schema> = [
     'transactions',
-    'executionHistory', 
+    'executionHistory',
     'snipeTargets',
   ];
-  
+
   const tablesToClean = tableNames.length > 0 ? tableNames : defaultTables;
-  
+
   for (const tableName of tablesToClean) {
     const table = schema[tableName];
     if (table) {
@@ -368,7 +363,7 @@ export async function cleanupTestData(
       }
     }
   }
-  
+
   // Clean user last (after dependencies) - only if not preserving
   if (!preserveUser) {
     try {
@@ -391,12 +386,12 @@ export async function createTestSchema(db: ReturnType<typeof drizzle>) {
       const testUserIds = await db.execute(sql`
         SELECT id FROM "user" WHERE email LIKE '%@example.com' OR email LIKE '%test%'
       `);
-      
+
       for (const user of testUserIds) {
         await cleanupTestData(db, (user as any).id, [], false);
       }
     }
-    
+
     console.log('[Test] Test schema prepared');
   } catch (error) {
     console.warn('Error preparing test schema:', error);

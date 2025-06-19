@@ -14,18 +14,21 @@ describe('Transactions Table', () => {
   let db: TestDbSetup['db'];
 
   beforeAll(async () => {
+    // Force mock database for faster tests
+    process.env.FORCE_MOCK_DB = 'true';
+
     // Create test database with migrations
     testSetup = await createTestDatabase();
     db = testSetup.db;
 
-    console.log('Test database migrations applied successfully');
+    console.log('Test database setup completed');
 
     // Create test user for foreign key constraint
     await createTestUser(db, testUserId);
 
     // Clean up any existing test data for this user
     await db.delete(transactions).where(eq(transactions.userId, testUserId));
-  }, 45000); // Increase timeout to 45 seconds for database setup
+  }, 10000); // Reduced timeout since we're using mock DB
 
   afterEach(async () => {
     // Clean up ALL test data for this user to ensure test isolation

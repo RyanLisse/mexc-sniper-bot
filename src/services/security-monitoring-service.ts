@@ -612,8 +612,8 @@ export class SecurityMonitoringService {
       return {
         circuitBreakerStatus: circuitBreakerStats.state,
         errorRate:
-          circuitBreakerStats.totalFailures / Math.max(1, circuitBreakerStats.totalRequests),
-        responseTimeMs: circuitBreakerStats.averageResponseTime || 0,
+          circuitBreakerStats.failedRequests / Math.max(1, circuitBreakerStats.totalRequests),
+        responseTimeMs: 0, // Circuit breaker doesn't track response time
         lastHealthCheck: new Date().toISOString(),
       };
     } catch (error) {

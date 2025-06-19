@@ -26,27 +26,33 @@ export class WebhookProvider implements NotificationProvider {
   }
 
   async validateConfig(config: Record<string, unknown>): Promise<boolean> {
-    const webhookConfig = config as WebhookConfig;
+    // Type guard for WebhookConfig
+    if (!config || typeof config !== "object") {
+      return false;
+    }
 
-    if (!webhookConfig.url) {
+    const url = config.url;
+    if (!url || typeof url !== "string") {
       return false;
     }
 
     // Validate URL format
     try {
-      new URL(webhookConfig.url);
+      new URL(url);
     } catch {
       return false;
     }
 
     // Validate method
-    if (webhookConfig.method && !["POST", "PUT", "PATCH"].includes(webhookConfig.method)) {
+    const method = config.method;
+    if (method && typeof method === "string" && !["POST", "PUT", "PATCH"].includes(method)) {
       return false;
     }
 
     // Validate authentication config if provided
-    if (webhookConfig.authentication) {
-      const auth = webhookConfig.authentication;
+    const authentication = config.authentication;
+    if (authentication && typeof authentication === "object") {
+      const auth = authentication as any;
       switch (auth.type) {
         case "bearer":
           if (!auth.token) return false;

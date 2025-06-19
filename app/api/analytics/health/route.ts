@@ -1,6 +1,6 @@
 /**
  * System Health Analytics API Endpoint
- * 
+ *
  * Provides comprehensive system health monitoring and diagnostics
  * for the MEXC Sniper Bot infrastructure.
  */
@@ -24,11 +24,11 @@ export async function GET(request: NextRequest) {
     // Parse and validate query parameters
     const url = new URL(request.url);
     const params = Object.fromEntries(url.searchParams.entries());
-    
+
     const validation = HealthQuerySchema.safeParse(params);
     if (!validation.success) {
       return NextResponse.json(
-        { 
+        {
           error: "Invalid query parameters",
           details: validation.error.errors
         },
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('[Health Analytics] Error:', error);
-    
+
     const errorResponse = {
       success: false,
       error: "Failed to fetch system health",
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     // Check authentication for POST operations
     const { getUser } = getKindeServerSession();
     const user = await getUser();
-    
+
     if (!user) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+
     // Schema for health event reporting
     const HealthEventSchema = z.object({
       component: z.string().min(1),
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     const validation = HealthEventSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { 
+        {
           error: "Invalid request body",
           details: validation.error.errors
         },
@@ -146,9 +146,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[Health Analytics] POST Error:', error);
-    
+
     return NextResponse.json(
-      { 
+      {
         error: "Failed to log health event",
         details: error instanceof Error ? error.message : "Unknown error"
       },
@@ -167,7 +167,7 @@ async function performComprehensiveHealthCheck(
   checkExternal: boolean
 ): Promise<any> {
   const startTime = Date.now();
-  
+
   // Core system health components
   const healthChecks = {
     analytics: await checkAnalyticsHealth(),
@@ -184,8 +184,8 @@ async function performComprehensiveHealthCheck(
   // Calculate overall health score
   const componentScores = Object.values(healthChecks).map(check => check.score);
   const overallScore = componentScores.reduce((sum, score) => sum + score, 0) / componentScores.length;
-  
-  const overallStatus = 
+
+  const overallStatus =
     overallScore >= 90 ? 'excellent' :
     overallScore >= 75 ? 'good' :
     overallScore >= 60 ? 'fair' :
@@ -193,7 +193,7 @@ async function performComprehensiveHealthCheck(
 
   // Collect all issues and recommendations
   const issues = Object.values(healthChecks).flatMap(check => check.issues || []);
-  const recommendations = includeRecommendations 
+  const recommendations = includeRecommendations
     ? Object.values(healthChecks).flatMap(check => check.recommendations || [])
     : [];
 
@@ -229,13 +229,13 @@ async function checkAnalyticsHealth(): Promise<any> {
   try {
     const stats = tradingAnalytics.getAnalyticsStats();
     const isHealthy = stats.totalEvents > 0;
-    
+
     const score = isHealthy ? 100 : 50;
     const status = isHealthy ? 'healthy' : 'degraded';
-    
+
     const issues = [];
     const recommendations = [];
-    
+
     if (!isHealthy) {
       issues.push({
         severity: 'warning',
@@ -277,12 +277,12 @@ async function checkMemoryHealth(): Promise<any> {
     const usedMB = Math.round(usage.heapUsed / 1024 / 1024);
     const totalMB = Math.round(usage.heapTotal / 1024 / 1024);
     const percentage = (usage.heapUsed / usage.heapTotal) * 100;
-    
+
     let score = 100;
     let status = 'healthy';
     const issues = [];
     const recommendations = [];
-    
+
     if (percentage > 90) {
       score = 20;
       status = 'critical';
@@ -302,7 +302,7 @@ async function checkMemoryHealth(): Promise<any> {
       });
       recommendations.push('Monitor memory usage and consider optimizing data structures');
     }
-    
+
     return {
       status,
       score,
@@ -332,7 +332,7 @@ async function checkMemoryHealth(): Promise<any> {
 async function checkPerformanceHealth(): Promise<any> {
   try {
     const metrics = tradingAnalytics.getPerformanceMetrics(undefined, 300000); // Last 5 minutes
-    
+
     if (metrics.length === 0) {
       return {
         status: 'degraded',
@@ -341,13 +341,13 @@ async function checkPerformanceHealth(): Promise<any> {
         recommendations: ['Generate some activity to collect performance metrics'],
       };
     }
-    
+
     const latest = metrics[metrics.length - 1];
     let score = 100;
     let status = 'healthy';
     const issues = [];
     const recommendations = [];
-    
+
     // Check response time
     if (latest.metrics.responseTimeMs > 5000) {
       score -= 40;
@@ -367,7 +367,7 @@ async function checkPerformanceHealth(): Promise<any> {
         component: 'performance'
       });
     }
-    
+
     // Check error rate
     if (latest.metrics.errorRate > 0.1) {
       score -= 30;
@@ -379,7 +379,7 @@ async function checkPerformanceHealth(): Promise<any> {
       });
       recommendations.push('Review error logs and fix failing operations');
     }
-    
+
     return {
       status,
       score: Math.max(0, score),
@@ -411,12 +411,12 @@ async function checkCacheHealth(): Promise<any> {
     // Basic cache health check (would be more sophisticated in real implementation)
     const stats = tradingAnalytics.getAnalyticsStats();
     const cacheEfficiency = stats.cacheSize > 0 ? (stats.totalEvents / stats.cacheSize) : 0;
-    
+
     let score = 90;
     let status = 'healthy';
     const issues = [];
     const recommendations = [];
-    
+
     if (cacheEfficiency > 100) {
       score -= 20;
       status = 'degraded';
@@ -427,7 +427,7 @@ async function checkCacheHealth(): Promise<any> {
       });
       recommendations.push('Consider increasing cache size or implementing better eviction policies');
     }
-    
+
     return {
       status,
       score,
@@ -454,19 +454,19 @@ async function checkCacheHealth(): Promise<any> {
 async function checkMexcApiHealth(): Promise<any> {
   try {
     const mexcService = getRecommendedMexcService();
-    
+
     // Use a basic ping or server time check as health indicator
     const serverTimeResponse = await mexcService.getServerTime();
     const isHealthy = serverTimeResponse.success;
-    
+
     const score = isHealthy ? 100 : 20;
     const status = isHealthy ? 'healthy' : 'critical';
-    
+
     return {
       status,
       score,
       connectivity: isHealthy ? 'connected' : 'failed',
-      latency: serverTimeResponse.data?.responseTime || 'unknown',
+      latency: serverTimeResponse.responseTime || 'unknown',
       lastUpdated: new Date().toISOString(),
       issues: !isHealthy ? [{
         severity: 'critical',
@@ -497,10 +497,10 @@ async function checkDatabaseHealth(): Promise<any> {
     // Simulate database ping
     await new Promise(resolve => setTimeout(resolve, 10));
     const responseTime = Date.now() - startTime;
-    
+
     const score = responseTime < 100 ? 100 : responseTime < 500 ? 80 : 40;
     const status = score >= 80 ? 'healthy' : score >= 50 ? 'degraded' : 'critical';
-    
+
     return {
       status,
       score,
@@ -527,10 +527,10 @@ async function checkAuthHealth(): Promise<any> {
   try {
     // Basic auth health check
     const isConfigured = !!(process.env.KINDE_CLIENT_ID && process.env.KINDE_CLIENT_SECRET);
-    
+
     const score = isConfigured ? 100 : 0;
     const status = isConfigured ? 'healthy' : 'critical';
-    
+
     return {
       status,
       score,
@@ -555,30 +555,30 @@ async function checkAuthHealth(): Promise<any> {
 
 function convertToPrometheusFormat(healthData: any): string {
   const metrics = [];
-  
+
   // Overall health score
   metrics.push(`# HELP mexc_bot_health_score Overall system health score (0-100)`);
   metrics.push(`# TYPE mexc_bot_health_score gauge`);
   metrics.push(`mexc_bot_health_score ${healthData.overall.score}`);
-  
+
   // Component health scores
   metrics.push(`# HELP mexc_bot_component_health_score Component health scores (0-100)`);
   metrics.push(`# TYPE mexc_bot_component_health_score gauge`);
-  
+
   for (const [component, data] of Object.entries(healthData.components)) {
     if (typeof data === 'object' && data !== null && 'score' in data) {
       metrics.push(`mexc_bot_component_health_score{component="${component}"} ${data.score}`);
     }
   }
-  
+
   // Summary metrics
   metrics.push(`# HELP mexc_bot_total_components Total number of monitored components`);
   metrics.push(`# TYPE mexc_bot_total_components gauge`);
   metrics.push(`mexc_bot_total_components ${healthData.summary.totalComponents}`);
-  
+
   metrics.push(`# HELP mexc_bot_critical_issues Number of critical issues`);
   metrics.push(`# TYPE mexc_bot_critical_issues gauge`);
   metrics.push(`mexc_bot_critical_issues ${healthData.summary.criticalIssues}`);
-  
+
   return metrics.join('\n') + '\n';
 }

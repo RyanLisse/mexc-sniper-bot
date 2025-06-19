@@ -1,6 +1,6 @@
 /**
  * Vitest Global Setup Configuration
- * 
+ *
  * This file provides unified setup for all Vitest tests including:
  * - Database initialization and cleanup
  * - Mock configurations
@@ -19,7 +19,7 @@ globalThis.__TEST_START_TIME__ = Date.now()
 // Mock external dependencies
 beforeAll(async () => {
   console.log('🧪 Setting up Vitest global environment...')
-  
+
   // Mock OpenAI API for testing
   vi.mock('openai', () => ({
     default: vi.fn().mockImplementation(() => ({
@@ -40,7 +40,7 @@ beforeAll(async () => {
       }
     }))
   }))
-  
+
   // Mock MEXC API client
   vi.mock('@/src/services/mexc-api-client', () => ({
     MexcApiClient: vi.fn().mockImplementation(() => ({
@@ -57,7 +57,7 @@ beforeAll(async () => {
       testConnectivity: vi.fn().mockResolvedValue(true)
     }))
   }))
-  
+
   // Mock Inngest client
   vi.mock('@/src/inngest/client', () => ({
     inngest: {
@@ -65,7 +65,7 @@ beforeAll(async () => {
       createFunction: vi.fn()
     }
   }))
-  
+
   // Mock Kinde Auth SDK to prevent real network calls
   vi.mock('@kinde-oss/kinde-auth-nextjs/server', () => ({
     getKindeServerSession: vi.fn(() => ({
@@ -90,7 +90,7 @@ beforeAll(async () => {
       createOrg: vi.fn().mockResolvedValue(null)
     }))
   }))
-  
+
   // Mock Kinde Auth client-side SDK as well
   vi.mock('@kinde-oss/kinde-auth-nextjs', () => ({
     useKindeBrowserClient: vi.fn(() => ({
@@ -140,14 +140,14 @@ beforeAll(async () => {
   vi.mock('@/src/lib/neon-branch-manager', () => {
     const mockBranches = new Map()
     let branchIdCounter = 1
-    
+
     return {
       NeonBranchManager: vi.fn().mockImplementation(() => ({
         createTestBranch: vi.fn().mockImplementation(async (options = {}) => {
           const branchId = `mock-branch-${branchIdCounter++}`
           const branchName = options.name || `test-${Date.now()}`
           const connectionString = `postgresql://mock_user:mock_pass@mock-endpoint-${branchId}.mock.neon.tech:5432/neondb?sslmode=require`
-          
+
           const branch = {
             id: branchId,
             name: branchName,
@@ -160,7 +160,7 @@ beforeAll(async () => {
               port: 5432
             }
           }
-          
+
           mockBranches.set(branchId, branch)
           return branch
         }),
@@ -191,7 +191,7 @@ beforeAll(async () => {
           const branchId = `mock-branch-${Date.now()}`
           const branchName = options.name || `test-${Date.now()}`
           const connectionString = `postgresql://mock_user:mock_pass@mock-endpoint-${branchId}.mock.neon.tech:5432/neondb?sslmode=require`
-          
+
           return {
             id: branchId,
             name: branchName,
@@ -215,16 +215,16 @@ beforeAll(async () => {
       }
     }
   })
-  
+
   // Mock test-branch-setup utilities
   vi.mock('@/src/lib/test-branch-setup', () => {
     let mockTestBranchContext = null
-    
+
     const mockSetupTestBranch = vi.fn().mockImplementation(async (options = {}) => {
       const branchId = `mock-test-branch-${Date.now()}`
       const branchName = `${options.testSuite || 'test'}-${Date.now()}`
       const connectionString = `postgresql://mock_user:mock_pass@mock-test-endpoint-${branchId}.mock.neon.tech:5432/neondb?sslmode=require`
-      
+
       mockTestBranchContext = {
         branchId,
         branchName,
@@ -232,13 +232,13 @@ beforeAll(async () => {
         originalDatabaseUrl: process.env.DATABASE_URL || 'postgresql://original@host/db',
         cleanup: vi.fn().mockResolvedValue()
       }
-      
+
       return mockTestBranchContext
     })
-    
+
     const mockCleanupTestBranch = vi.fn().mockResolvedValue()
     const mockMigrateTestBranch = vi.fn().mockResolvedValue()
-    
+
     return {
       setupTestBranch: mockSetupTestBranch,
       cleanupTestBranch: mockCleanupTestBranch,
@@ -268,7 +268,7 @@ beforeAll(async () => {
       recoverFromBranchError: vi.fn().mockResolvedValue()
     }
   })
-  
+
   // Mock database functions for isolated testing
   vi.mock('@/src/db', () => {
     const mockDb = {
@@ -281,8 +281,13 @@ beforeAll(async () => {
       }),
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([]),
-          limit: vi.fn().mockResolvedValue([]),
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockResolvedValue([]),
+            limit: vi.fn().mockResolvedValue([])
+          }),
+          limit: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockResolvedValue([])
+          }),
           orderBy: vi.fn().mockResolvedValue([])
         })
       }),
@@ -298,7 +303,7 @@ beforeAll(async () => {
         return cb(mockDb)
       })
     }
-    
+
     return {
       db: mockDb,
       getDb: vi.fn().mockReturnValue(mockDb),
@@ -333,10 +338,10 @@ beforeAll(async () => {
       })
     }
   })
-  
+
   // Note: Not mocking encryption service globally so unit tests can test actual implementation
   // Individual tests can mock if needed
-  
+
   // Mock WebSocket connections
   global.WebSocket = vi.fn().mockImplementation(() => ({
     send: vi.fn(),
@@ -345,7 +350,7 @@ beforeAll(async () => {
     removeEventListener: vi.fn(),
     readyState: 1 // OPEN
   }))
-  
+
   // Mock browser APIs only if window is available (e.g., in jsdom environment)
   if (typeof window !== 'undefined') {
     Object.defineProperty(window, 'localStorage', {
@@ -356,7 +361,7 @@ beforeAll(async () => {
         clear: vi.fn()
       }
     })
-    
+
     Object.defineProperty(window, 'sessionStorage', {
       value: {
         getItem: vi.fn(),
@@ -373,7 +378,7 @@ beforeAll(async () => {
       removeItem: vi.fn(),
       clear: vi.fn()
     }
-    
+
     global.sessionStorage = {
       getItem: vi.fn(),
       setItem: vi.fn(),
@@ -381,19 +386,19 @@ beforeAll(async () => {
       clear: vi.fn()
     }
   }
-  
+
   // Mock fetch for API calls with special handling for Kinde URLs
   global.fetch = vi.fn().mockImplementation((url, options) => {
     // Convert URL to string if it's a URL object
     const urlString = typeof url === 'string' ? url : url.toString();
-    
+
     // Handle Kinde-specific endpoints
     if (urlString.includes('kinde.com') || urlString.includes('kinde')) {
       return Promise.resolve({
         ok: true,
         status: 200,
         statusText: 'OK',
-        json: () => Promise.resolve({ 
+        json: () => Promise.resolve({
           keys: [], // Mock JWKS response
           success: true,
           message: 'Mock Kinde API response'
@@ -404,14 +409,14 @@ beforeAll(async () => {
         })
       });
     }
-    
+
     // Default mock response for all other URLs
     return Promise.resolve({
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: () => Promise.resolve({ 
-        success: true, 
+      json: () => Promise.resolve({
+        success: true,
         data: null,
         message: 'Mock API response'
       }),
@@ -419,7 +424,7 @@ beforeAll(async () => {
       headers: new Headers()
     })
   })
-  
+
   console.log('✅ Global mocks configured')
 })
 
@@ -436,7 +441,7 @@ beforeEach(async () => {
 afterEach(async () => {
   // Clear all mocks
   vi.clearAllMocks()
-  
+
   // Reset any global state
   if (global.testCleanupFunctions) {
     for (const cleanup of global.testCleanupFunctions) {
@@ -449,7 +454,7 @@ afterEach(async () => {
 // Global cleanup
 afterAll(async () => {
   console.log('🧹 Cleaning up Vitest environment...')
-  
+
   // Close database connections with timeout
   try {
     if (db && typeof db.closeDatabase === 'function') {
@@ -465,7 +470,7 @@ afterAll(async () => {
   } catch (error) {
     console.warn('⚠️ Database cleanup warning:', error.message)
   }
-  
+
   // Force close any remaining connections
   try {
     // Clear any cached database instances
@@ -475,10 +480,10 @@ afterAll(async () => {
   } catch (error) {
     console.warn('⚠️ Database cache cleanup warning:', error.message)
   }
-  
+
   // Restore all mocks
   vi.restoreAllMocks()
-  
+
   const testDuration = Date.now() - globalThis.__TEST_START_TIME__
   console.log(`✅ Vitest environment cleaned up (${testDuration}ms)`)
 })
@@ -494,7 +499,7 @@ global.testUtils = {
     updatedAt: new Date(),
     ...overrides
   }),
-  
+
   // Create test API credentials
   createTestApiCredentials: (overrides = {}) => ({
     id: 'test-creds-id',
@@ -506,7 +511,7 @@ global.testUtils = {
     updatedAt: new Date(),
     ...overrides
   }),
-  
+
   // Create test trading data
   createTestTradingData: (overrides = {}) => ({
     symbol: 'BTCUSDT',
@@ -517,13 +522,13 @@ global.testUtils = {
     timestamp: Date.now(),
     ...overrides
   }),
-  
+
   // Wait for async operations
   waitFor: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
-  
+
   // Generate unique test IDs
   generateTestId: () => `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-  
+
   // Mock API response helper
   mockApiResponse: (data, status = 200) => ({
     ok: status >= 200 && status < 300,
@@ -535,7 +540,7 @@ global.testUtils = {
       'content-type': 'application/json'
     })
   }),
-  
+
   // Register cleanup function
   registerCleanup: (fn) => {
     if (!global.testCleanupFunctions) {

@@ -19,6 +19,14 @@
 
 import * as crypto from "node:crypto";
 import { z } from "zod";
+import type {
+  ActivityData,
+  ActivityQueryOptions,
+  ActivityResponse
+} from "../schemas/mexc-schemas";
+import { validateActivityResponse } from "../schemas/mexc-schemas";
+import { getEnhancedUnifiedCache, type EnhancedUnifiedCacheSystem } from "../lib/enhanced-unified-cache";
+import { getPerformanceMonitoringService, type PerformanceMonitoringService } from "../lib/performance-monitoring-service";
 
 // ============================================================================
 // Configuration and Base Types
@@ -37,6 +45,10 @@ export interface UnifiedMexcConfig {
   cacheTTL?: number;
   enableCircuitBreaker?: boolean;
   enableMetrics?: boolean;
+  // Phase 2: Enhanced caching configuration
+  enableEnhancedCaching?: boolean;
+  enablePerformanceMonitoring?: boolean;
+  apiResponseTTL?: number; // 5 seconds as per user preference
 }
 
 export interface MexcServiceResponse<T = any> {
@@ -50,6 +62,7 @@ export interface MexcServiceResponse<T = any> {
   cached?: boolean;
   executionTimeMs?: number;
   retryCount?: number;
+  metadata?: any;
 }
 
 // ============================================================================
@@ -67,12 +80,13 @@ export const CalendarEntrySchema = z.object({
 // Symbol Entry
 export const SymbolEntrySchema = z.object({
   cd: z.string(),
+  symbol: z.string().optional(), // Add symbol property for compatibility
   sts: z.number(),
   st: z.number(),
   tt: z.number(),
-  ca: z.record(z.unknown()).optional(),
-  ps: z.record(z.unknown()).optional(),
-  qs: z.record(z.unknown()).optional(),
+  ca: z.number().optional(),
+  ps: z.number().optional(),
+  qs: z.number().optional(),
   ot: z.record(z.unknown()).optional(),
 });
 
@@ -258,6 +272,17 @@ export interface RiskAssessment {
 }
 
 // ============================================================================
+// Metrics and Monitoring
+// ============================================================================
+
+interface ServiceMetrics {
+  requestCount: number;
+  errorCount: number;
+  totalResponseTime: number;
+  cacheHits: number;
+}
+
+// ============================================================================
 // Request/Response Cache
 // ============================================================================
 
@@ -294,6 +319,10 @@ class MexcResponseCache {
 
   clear(): void {
     this.cache.clear();
+  }
+
+  get size(): number {
+    return this.cache.size;
   }
 
   generateKey(method: string, params?: any): string {
@@ -333,6 +362,14 @@ class CircuitBreaker {
       this.onFailure();
       throw error;
     }
+  }
+
+  isOpen(): boolean {
+    return this.state === "OPEN";
+  }
+
+  getFailureCount(): number {
+    return this.failures;
   }
 
   private onSuccess(): void {
@@ -391,6 +428,10 @@ export class UnifiedMexcService {
   private cache: MexcResponseCache;
   private circuitBreaker: CircuitBreaker;
   private rateLimiter: RateLimiter;
+  private metrics: ServiceMetrics;
+  // Phase 2: Enhanced caching integration
+  private enhancedCache: EnhancedUnifiedCacheSystem;
+  private performanceMonitoring: PerformanceMonitoringService;
 
   constructor(config: UnifiedMexcConfig = {}) {
     this.config = {
@@ -406,11 +447,40 @@ export class UnifiedMexcService {
       cacheTTL: config.cacheTTL || 30000,
       enableCircuitBreaker: config.enableCircuitBreaker ?? true,
       enableMetrics: config.enableMetrics ?? true,
+      // Phase 2: Enhanced caching defaults
+      enableEnhancedCaching: config.enableEnhancedCaching ?? true,
+      enablePerformanceMonitoring: config.enablePerformanceMonitoring ?? true,
+      apiResponseTTL: config.apiResponseTTL || 5000, // 5 seconds as per user preference
     };
 
     this.cache = new MexcResponseCache();
     this.circuitBreaker = new CircuitBreaker();
     this.rateLimiter = new RateLimiter();
+    this.metrics = {
+      requestCount: 0,
+      errorCount: 0,
+      totalResponseTime: 0,
+      cacheHits: 0,
+    };
+
+    // Phase 2: Initialize enhanced caching and performance monitoring
+    if (this.config.enableEnhancedCaching) {
+      this.enhancedCache = getEnhancedUnifiedCache({
+        apiResponseTTL: this.config.apiResponseTTL,
+        enableIntelligentRouting: true,
+        enableBatchOperations: true,
+        enablePerformanceMonitoring: this.config.enablePerformanceMonitoring,
+      });
+    }
+
+    if (this.config.enablePerformanceMonitoring) {
+      this.performanceMonitoring = getPerformanceMonitoringService({
+        enableRealTimeMonitoring: true,
+        metricsCollectionInterval: 30000,
+        enableAlerts: true,
+        enableRecommendations: true,
+      });
+    }
   }
 
   // ============================================================================
@@ -438,11 +508,35 @@ export class UnifiedMexcService {
     const startTime = Date.now();
     const requestId = crypto.randomUUID();
 
-    // Check cache first
-    if (method === "GET" && this.config.enableCaching) {
+    // Phase 2: Enhanced caching check first
+    if (method === "GET" && this.config.enableEnhancedCaching && this.enhancedCache) {
+      const cacheKey = this.cache.generateKey(endpoint, params);
+      const cached = await this.enhancedCache.get<T>(cacheKey, 'api_response');
+      if (cached) {
+        this.metrics.cacheHits++;
+
+        // Track API request for performance monitoring
+        if (this.config.enablePerformanceMonitoring && this.performanceMonitoring) {
+          this.performanceMonitoring.trackApiRequest(Date.now() - startTime, true);
+        }
+
+        return {
+          success: true,
+          data: cached,
+          timestamp: new Date().toISOString(),
+          requestId,
+          cached: true,
+          responseTime: Date.now() - startTime,
+        };
+      }
+    }
+
+    // Fallback to legacy cache
+    if (method === "GET" && this.config.enableCaching && !this.config.enableEnhancedCaching) {
       const cacheKey = this.cache.generateKey(endpoint, params);
       const cached = this.cache.get(cacheKey);
       if (cached) {
+        this.metrics.cacheHits++;
         return {
           success: true,
           data: cached,
@@ -507,8 +601,14 @@ export class UnifiedMexcService {
 
       const responseData = await response.json();
 
-      // Cache GET responses
-      if (method === "GET" && this.config.enableCaching) {
+      // Phase 2: Enhanced caching for GET responses
+      if (method === "GET" && this.config.enableEnhancedCaching && this.enhancedCache) {
+        const cacheKey = this.cache.generateKey(endpoint, params);
+        await this.enhancedCache.set(cacheKey, responseData, 'api_response', this.config.apiResponseTTL);
+      }
+
+      // Fallback to legacy cache
+      if (method === "GET" && this.config.enableCaching && !this.config.enableEnhancedCaching) {
         const cacheKey = this.cache.generateKey(endpoint, params);
         this.cache.set(cacheKey, responseData, this.config.cacheTTL);
       }
@@ -521,20 +621,39 @@ export class UnifiedMexcService {
         ? await this.circuitBreaker.execute(operation)
         : await operation();
 
+      const responseTime = Date.now() - startTime;
+      this.metrics.requestCount++;
+      this.metrics.totalResponseTime += responseTime;
+
+      // Track API request for performance monitoring
+      if (this.config.enablePerformanceMonitoring && this.performanceMonitoring) {
+        this.performanceMonitoring.trackApiRequest(responseTime, true);
+      }
+
       return {
         success: true,
         data,
         timestamp: new Date().toISOString(),
         requestId,
-        responseTime: Date.now() - startTime,
+        responseTime,
       };
     } catch (error) {
+      const responseTime = Date.now() - startTime;
+      this.metrics.requestCount++;
+      this.metrics.errorCount++;
+      this.metrics.totalResponseTime += responseTime;
+
+      // Track failed API request for performance monitoring
+      if (this.config.enablePerformanceMonitoring && this.performanceMonitoring) {
+        this.performanceMonitoring.trackApiRequest(responseTime, false);
+      }
+
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
         requestId,
-        responseTime: Date.now() - startTime,
+        responseTime,
       };
     }
   }
@@ -670,6 +789,35 @@ export class UnifiedMexcService {
   }
 
   /**
+   * Get symbol information for a specific symbol
+   */
+  async getSymbolInfo(symbolName: string): Promise<MexcServiceResponse<SymbolEntry | null>> {
+    try {
+      const symbolsResponse = await this.getSymbolData();
+      if (!symbolsResponse.success || !symbolsResponse.data) {
+        return {
+          success: false,
+          error: "Failed to fetch symbols data",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      const symbol = symbolsResponse.data.find(s => s.symbol === symbolName || s.cd === symbolName);
+      return {
+        success: true,
+        data: symbol || null,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get symbol info",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
    * Get symbols for specific vcoins
    */
   async getSymbolsForVcoins(vcoinIds: string[]): Promise<MexcServiceResponse<SymbolEntry[]>> {
@@ -702,6 +850,172 @@ export class UnifiedMexcService {
         success: false,
         error: error instanceof Error ? error.message : "Failed to fetch symbols for vcoins",
         timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Get activity data for a single currency
+   * MEXC Activity API endpoint: /api/operateactivity/activity/list/by/currencies
+   */
+  async getActivityData(currency: string): Promise<MexcServiceResponse<ActivityData[]>> {
+    const startTime = Date.now();
+
+    try {
+      const endpoint = "/api/operateactivity/activity/list/by/currencies";
+      const params = { currencies: currency };
+
+      const response = await this.makeRequest<ActivityResponse>(
+        "GET",
+        endpoint,
+        params,
+        false // Public endpoint, no authentication required
+      );
+
+      if (response.success && response.data?.code === 0) {
+        return {
+          success: true,
+          data: response.data.data || [],
+          timestamp: new Date().toISOString(),
+          cached: response.cached,
+          executionTimeMs: Date.now() - startTime,
+        };
+      }
+
+      return {
+        success: false,
+        error: response.data?.msg || "Failed to fetch activity data",
+        timestamp: new Date().toISOString(),
+        executionTimeMs: Date.now() - startTime,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: `Activity API error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        timestamp: new Date().toISOString(),
+        executionTimeMs: Date.now() - startTime,
+      };
+    }
+  }
+
+  /**
+   * Get activity data for multiple currencies in batches
+   * Phase 1 Enhancement: Implements rate limiting and error handling for bulk operations
+   */
+  async getBulkActivityData(
+    currencies: string[],
+    options: ActivityQueryOptions = {}
+  ): Promise<MexcServiceResponse<Map<string, ActivityData[]>>> {
+    const startTime = Date.now();
+    const { batchSize = 5, maxRetries = 3, rateLimitDelay = 200 } = options;
+    const results = new Map<string, ActivityData[]>();
+    let totalErrors = 0;
+
+    try {
+      // Process currencies in batches to respect rate limits
+      for (let i = 0; i < currencies.length; i += batchSize) {
+        const batch = currencies.slice(i, i + batchSize);
+        const batchPromises = batch.map(async (currency) => {
+          let retryCount = 0;
+
+          while (retryCount < maxRetries) {
+            try {
+              const result = await this.getActivityData(currency);
+              return { currency, result };
+            } catch (error) {
+              retryCount++;
+              if (retryCount >= maxRetries) {
+                console.warn(`[UnifiedMexcService] Failed to fetch activity data for ${currency} after ${maxRetries} retries:`, error);
+                return { currency, result: { success: false, error: `Max retries exceeded: ${error}`, timestamp: new Date().toISOString() } };
+              }
+              // Exponential backoff for retries
+              await new Promise(resolve => setTimeout(resolve, rateLimitDelay * retryCount));
+            }
+          }
+        });
+
+        const batchResults = await Promise.allSettled(batchPromises);
+
+        // Process batch results
+        for (const promiseResult of batchResults) {
+          if (promiseResult.status === "fulfilled" && promiseResult.value) {
+            const { currency, result } = promiseResult.value;
+            if (result.success && result.data) {
+              // Only add to results if there are actual activities
+              if (result.data.length > 0) {
+                results.set(currency, result.data);
+              }
+            } else {
+              totalErrors++;
+            }
+          } else {
+            totalErrors++;
+          }
+        }
+
+        // Rate limiting delay between batches
+        if (i + batchSize < currencies.length) {
+          await new Promise(resolve => setTimeout(resolve, rateLimitDelay));
+        }
+      }
+
+      return {
+        success: true,
+        data: results,
+        timestamp: new Date().toISOString(),
+        executionTimeMs: Date.now() - startTime,
+        metadata: {
+          totalCurrencies: currencies.length,
+          successfulFetches: results.size,
+          errors: totalErrors,
+          batchSize,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: `Bulk activity API error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        timestamp: new Date().toISOString(),
+        executionTimeMs: Date.now() - startTime,
+        data: results, // Return partial results
+      };
+    }
+  }
+
+  /**
+   * Check if a currency has recent promotional activities
+   * Phase 1 Enhancement: Utility method for quick activity status checking
+   */
+  async hasRecentActivity(currency: string, hoursBack = 24): Promise<MexcServiceResponse<boolean>> {
+    try {
+      const activityResult = await this.getActivityData(currency);
+
+      if (!activityResult.success) {
+        return {
+          success: false,
+          error: activityResult.error,
+          timestamp: new Date().toISOString(),
+          data: false,
+        };
+      }
+
+      const hasActivity = activityResult.data && activityResult.data.length > 0;
+
+      return {
+        success: true,
+        data: hasActivity,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          activityCount: activityResult.data?.length || 0,
+          activities: activityResult.data || [],
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: `Recent activity check error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        timestamp: new Date().toISOString(),
+        data: false,
       };
     }
   }
@@ -1155,9 +1469,9 @@ export class UnifiedMexcService {
   }
 
   /**
-   * Get metrics
+   * Get metrics (async version for agent compatibility)
    */
-  async getMetrics(): Promise<MexcServiceResponse<any>> {
+  async getMetricsAsync(): Promise<MexcServiceResponse<any>> {
     return {
       success: true,
       data: {
@@ -1229,6 +1543,73 @@ export class UnifiedMexcService {
    */
   hasValidCredentials(): boolean {
     return this.hasCredentials();
+  }
+
+  /**
+   * Get service metrics
+   */
+  getMetrics(): ServiceMetrics {
+    return { ...this.metrics };
+  }
+
+  /**
+   * Phase 2: Get enhanced performance metrics
+   */
+  getEnhancedMetrics(): {
+    legacy: ServiceMetrics;
+    cache?: any;
+    performance?: any;
+  } {
+    const result: any = {
+      legacy: this.getMetrics(),
+    };
+
+    if (this.config.enableEnhancedCaching && this.enhancedCache) {
+      result.cache = this.enhancedCache.getPerformanceMetrics();
+    }
+
+    if (this.config.enablePerformanceMonitoring && this.performanceMonitoring) {
+      result.performance = this.performanceMonitoring.getCurrentMetrics();
+    }
+
+    return result;
+  }
+
+  /**
+   * Phase 2: Get detailed status including cache and performance information
+   */
+  async getDetailedStatus(): Promise<{
+    service: {
+      hasCredentials: boolean;
+      enabledFeatures: string[];
+      metrics: ServiceMetrics;
+    };
+    cache?: any;
+    performance?: any;
+  }> {
+    const result: any = {
+      service: {
+        hasCredentials: this.hasCredentials(),
+        enabledFeatures: [
+          ...(this.config.enableCaching ? ['legacy-caching'] : []),
+          ...(this.config.enableEnhancedCaching ? ['enhanced-caching'] : []),
+          ...(this.config.enablePerformanceMonitoring ? ['performance-monitoring'] : []),
+          ...(this.config.enableCircuitBreaker ? ['circuit-breaker'] : []),
+          ...(this.config.enableMetrics ? ['metrics'] : []),
+        ],
+        metrics: this.getMetrics(),
+      },
+    };
+
+    if (this.config.enableEnhancedCaching && this.enhancedCache) {
+      result.cache = await this.enhancedCache.getDetailedStatus();
+    }
+
+    if (this.config.enablePerformanceMonitoring && this.performanceMonitoring) {
+      result.performance = this.performanceMonitoring.getDashboardData();
+    }
+
+    return result;
   }
 }
 

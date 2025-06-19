@@ -10,15 +10,15 @@ vi.mock('@/src/db', () => {
     templates: new Map(),
     users: new Map()
   };
-  
+
   const mockDb = {
     insert: vi.fn().mockImplementation(() => ({
       values: vi.fn().mockImplementation((data) => ({
         returning: vi.fn().mockImplementation(() => {
           const id = (mockIdCounter++).toString();
           // Ensure we return the full data with all fields including levels
-          const fullData = { 
-            ...data, 
+          const fullData = {
+            ...data,
             id,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -28,22 +28,48 @@ vi.mock('@/src/db', () => {
               { percentage: 100, multiplier: 2.0, sellPercentage: 25 }
             ])
           };
-          
-          // Store in strategies map
-          mockStoredData.strategies.set(id, fullData);
-          
+
+          // Store based on data type
+          if (data.strategyId !== undefined) {
+            // This is a phase execution
+            mockStoredData.executions.set(id, fullData);
+          } else {
+            // This is a strategy
+            mockStoredData.strategies.set(id, fullData);
+          }
+
           return Promise.resolve([fullData]);
         })
       }))
     })),
     select: vi.fn().mockImplementation(() => ({
-      from: vi.fn().mockImplementation(() => ({
-        where: vi.fn().mockImplementation(() => {
-          return Promise.resolve(Array.from(mockStoredData.strategies.values()));
-        }),
-        limit: vi.fn().mockImplementation(() => Promise.resolve(Array.from(mockStoredData.strategies.values()))),
-        orderBy: vi.fn().mockImplementation(() => Promise.resolve(Array.from(mockStoredData.strategies.values())))
-      }))
+      from: vi.fn().mockImplementation((table) => {
+        // Store the table reference for later use
+        const queryBuilder = {
+          _table: table,
+          where: vi.fn().mockImplementation((condition) => ({
+            orderBy: vi.fn().mockImplementation(() => {
+              // Use a simple heuristic: if we're looking for executions, return executions
+              // This is based on the fact that getStrategyPhaseExecutions is the main caller
+              if (queryBuilder._table === strategyPhaseExecutions) {
+                return Promise.resolve(Array.from(mockStoredData.executions.values()));
+              }
+              return Promise.resolve(Array.from(mockStoredData.strategies.values()));
+            }),
+            limit: vi.fn().mockImplementation(() => {
+              if (queryBuilder._table === strategyPhaseExecutions) {
+                return Promise.resolve(Array.from(mockStoredData.executions.values()));
+              }
+              return Promise.resolve(Array.from(mockStoredData.strategies.values()));
+            })
+          })),
+          limit: vi.fn().mockImplementation(() => ({
+            orderBy: vi.fn().mockImplementation(() => Promise.resolve(Array.from(mockStoredData.strategies.values())))
+          })),
+          orderBy: vi.fn().mockImplementation(() => Promise.resolve(Array.from(mockStoredData.strategies.values())))
+        };
+        return queryBuilder;
+      })
     })),
     update: vi.fn().mockImplementation(() => ({
       set: vi.fn().mockImplementation(() => ({
@@ -59,14 +85,26 @@ vi.mock('@/src/db', () => {
     execute: vi.fn().mockResolvedValue([]),
     query: vi.fn().mockResolvedValue([])
   };
-  
+
+  // Add helper methods to access mock data for testing
+  (mockDb as any)._getMockData = () => mockStoredData;
+  (mockDb as any)._clearMockData = () => {
+    mockStoredData.strategies.clear();
+    mockStoredData.executions.clear();
+    mockStoredData.templates.clear();
+    mockStoredData.users.clear();
+  };
+
   return {
     db: mockDb,
     getDb: vi.fn().mockReturnValue(mockDb)
   };
 });
 import { db } from "../../src/db";
-import { tradingStrategies, strategyPhaseExecutions, strategyTemplates } from "../../src/db/schemas/strategies";
+import { tradingStrategies, strategyTemplates } from "../../src/db/schemas/strategies";
+
+// Import strategyPhaseExecutions separately to avoid duplicate identifier
+import { strategyPhaseExecutions } from "../../src/db/schemas/strategies";
 import { user } from "../../src/db/schema";
 import { multiPhaseTradingService } from "../../src/services/multi-phase-trading-service";
 import { MultiPhaseExecutor, createExecutorFromStrategy } from "../../src/services/multi-phase-executor";
@@ -78,6 +116,13 @@ import { eq } from 'drizzle-orm';
 describe('Multi-Phase Trading System Integration', () => {
   const testUserId = 'test-user-integration';
   let testStrategy: any;
+
+  beforeEach(() => {
+    // Clear mock data between tests
+    if ((db as any)._clearMockData) {
+      (db as any)._clearMockData();
+    }
+  });
 
   beforeAll(async () => {
     // Ensure test user exists
@@ -94,7 +139,7 @@ describe('Multi-Phase Trading System Integration', () => {
 
     // Clean up strategy templates first to avoid unique constraint conflicts
     await db.delete(strategyTemplates);
-    
+
     // Initialize predefined strategies
     await multiPhaseTradingService.initializePredefinedStrategies();
   });
@@ -143,7 +188,7 @@ describe('Multi-Phase Trading System Integration', () => {
 
       for (const currentPrice of priceUpdates) {
         const execution = executor.executePhases(currentPrice);
-        
+
         // Record executions
         for (const phase of execution.phasesToExecute) {
           await executor.recordPhaseExecution(
@@ -199,7 +244,7 @@ describe('Multi-Phase Trading System Integration', () => {
       // First execution session - execute only phase 1
       let executor = await createExecutorFromStrategy(strategy, testUserId);
       let execution = executor.executePhases(3750); // 25% increase
-      
+
       for (const phase of execution.phasesToExecute) {
         await executor.recordPhaseExecution(phase.phase, 3750, phase.amount);
       }
@@ -212,7 +257,7 @@ describe('Multi-Phase Trading System Integration', () => {
 
       // Continue execution
       execution = executor.executePhases(5250); // 75% increase
-      
+
       for (const phase of execution.phasesToExecute) {
         await executor.recordPhaseExecution(phase.phase, 5250, phase.amount);
       }
@@ -240,7 +285,7 @@ describe('Multi-Phase Trading System Integration', () => {
 
       // Create executor
       const executor = await createExecutorFromStrategy(dbStrategy, testUserId);
-      
+
       // Test sell recommendations vs executor execution
       const currentPrice = 1.5; // 50% increase
       const recommendation = manager.getSellRecommendation(currentPrice, 1.0);
@@ -248,14 +293,14 @@ describe('Multi-Phase Trading System Integration', () => {
 
       expect(recommendation.shouldSell).toBe(true);
       expect(execution.phasesToExecute.length).toBeGreaterThan(0);
-      
+
       // Both should agree on which phases to execute
       expect(execution.phasesToExecute[0].phase).toBe(recommendation.phases[0].phase);
     });
 
     it('should integrate AdvancedTradingStrategy with MultiPhaseTradingBot', async () => {
       const advancedStrategy = new AdvancedTradingStrategy();
-      
+
       // Adjust for high volatility
       advancedStrategy.adjustStrategyForVolatility(0.8);
       const adjustedStrategy = advancedStrategy.getActiveStrategy();
@@ -327,7 +372,7 @@ describe('Multi-Phase Trading System Integration', () => {
       for (const price of prices) {
         for (const executor of executors) {
           const execution = executor.executePhases(price);
-          
+
           for (const phase of execution.phasesToExecute) {
             await executor.recordPhaseExecution(phase.phase, price, phase.amount);
           }
@@ -340,7 +385,7 @@ describe('Multi-Phase Trading System Integration', () => {
 
       // Conservative should have executed all phases (low targets)
       expect(conservativeStatus.completedPhases).toBe(2);
-      
+
       // Aggressive should have executed some phases
       expect(aggressiveStatus.completedPhases).toBeGreaterThan(0);
 
@@ -349,7 +394,7 @@ describe('Multi-Phase Trading System Integration', () => {
       expect(userStrategies).toHaveLength(2);
 
       const allExecutions = await Promise.all(
-        strategies.map(strategy => 
+        strategies.map(strategy =>
           multiPhaseTradingService.getStrategyPhaseExecutions(strategy.id, testUserId)
         )
       );
@@ -399,7 +444,7 @@ describe('Multi-Phase Trading System Integration', () => {
 
     it('should validate data integrity across components', async () => {
       const manager = new TradingStrategyManager();
-      
+
       // Test with invalid strategy data
       const invalidStrategy = {
         id: 'invalid',

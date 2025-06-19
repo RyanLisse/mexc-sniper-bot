@@ -46,16 +46,20 @@ export class TeamsProvider implements NotificationProvider {
   }
 
   async validateConfig(config: Record<string, unknown>): Promise<boolean> {
-    const teamsConfig = config as TeamsConfig;
+    // Type guard for TeamsConfig
+    if (!config || typeof config !== "object") {
+      return false;
+    }
 
-    if (!teamsConfig.webhookUrl) {
+    const webhookUrl = config.webhookUrl;
+    if (!webhookUrl || typeof webhookUrl !== "string") {
       return false;
     }
 
     // Validate webhook URL format for Microsoft Teams
     const webhookRegex =
       /^https:\/\/[a-zA-Z0-9-]+\.webhook\.office\.com\/webhookb2\/[a-f0-9-]+@[a-f0-9-]+\/IncomingWebhook\/[a-f0-9]+\/[a-f0-9-]+$/;
-    return webhookRegex.test(teamsConfig.webhookUrl);
+    return webhookRegex.test(webhookUrl);
   }
 
   async send(

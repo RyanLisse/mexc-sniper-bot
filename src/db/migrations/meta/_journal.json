@@ -15,6 +15,13 @@
       "when": 1737374400000,
       "tag": "0001_add_enhanced_take_profit_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1750341780393,
+      "tag": "0002_polite_gateway",
+      "breakpoints": true
     }
   ]
 }

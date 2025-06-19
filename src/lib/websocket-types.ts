@@ -60,6 +60,9 @@ export type WebSocketMessageType =
   | "trading:balance"
   | "trading:portfolio"
   | "trading:orderbook"
+  | "trading:status"
+  | "trading:trade"
+  | "trading:kline"
 
   // Pattern Discovery Messages
   | "pattern:discovery"
@@ -67,6 +70,9 @@ export type WebSocketMessageType =
   | "pattern:confidence"
   | "pattern:alert"
   | "pattern:ready_state"
+  | "pattern:realtime"
+  | "pattern:price_correlation"
+  | "pattern:enhanced_ready_state"
 
   // User Notifications
   | "notification:info"
@@ -202,7 +208,7 @@ export interface TradingSignalMessage {
   type: "buy" | "sell" | "hold" | "monitor";
   strength: number; // 0-100
   confidence: number; // 0-100
-  source: "pattern_discovery" | "symbol_analysis" | "strategy_agent" | "manual";
+  source: "pattern_discovery" | "symbol_analysis" | "strategy_agent" | "manual" | "price_movement";
   reasoning: string;
   targetPrice?: number;
   stopLoss?: number;
@@ -214,6 +220,9 @@ export interface TradingSignalMessage {
     indicators?: Record<string, number>;
     riskLevel?: "low" | "medium" | "high";
     expectedDuration?: number;
+    priceChange?: number;
+    priceChangePercent?: number;
+    volume?: number;
   };
 }
 
@@ -385,6 +394,13 @@ export interface NotificationMessage {
     workflowId?: string;
     amount?: number;
     relatedId?: string;
+    sts?: number;
+    st?: number;
+    tt?: number;
+    service?: string;
+    errorType?: string;
+    enhancedConfidence?: number;
+    confidence?: number;
   };
 }
 

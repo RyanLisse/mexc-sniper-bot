@@ -12,10 +12,17 @@
  * - Integration with AI agents for intelligent analysis
  */
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { db } from "../db";
 import type { PatternEmbedding } from "../db/schemas/patterns";
-import { patternEmbeddings } from "../db/schemas/patterns";
+import { coinActivities, patternEmbeddings } from "../db/schemas/patterns";
+import {
+  type ActivityData,
+  calculateActivityBoost,
+  getUniqueActivityTypes,
+  hasHighPriorityActivity,
+} from "../schemas/mexc-schemas";
+import { aiIntelligenceService } from "./ai-intelligence-service";
 import type { CalendarEntry, SymbolEntry } from "./mexc-unified-exports";
 import { type PatternData, patternEmbeddingService } from "./pattern-embedding-service";
 
@@ -42,6 +49,14 @@ export interface PatternMatch {
     tt?: number;
     advanceHours?: number;
     marketConditions?: Record<string, any>;
+  };
+
+  // Activity Enhancement Data
+  activityInfo?: {
+    activities: ActivityData[];
+    activityBoost: number;
+    hasHighPriorityActivity: boolean;
+    activityTypes: string[];
   };
 
   // Analysis metadata
@@ -111,6 +126,59 @@ export class PatternDetectionEngine {
   }
 
   /**
+   * Activity Data Integration - Query activity data for confidence enhancement
+   * Retrieves recent activity data for a given currency/symbol
+   */
+  private async getActivityDataForSymbol(
+    symbol: string,
+    vcoinId?: string
+  ): Promise<ActivityData[]> {
+    try {
+      // Extract base currency from symbol (e.g., 'FCATUSDT' -> 'FCAT')
+      const baseCurrency = symbol.replace(/USDT$|BTC$|ETH$|BNB$/, '');
+
+      // Query recent activities for both full symbol and base currency in a single query
+      const whereConditions = [
+        eq(coinActivities.isActive, true),
+      ];
+
+      // Add currency condition - search for both base currency and full symbol
+      if (baseCurrency !== symbol) {
+        whereConditions.push(
+          or(
+            eq(coinActivities.currency, baseCurrency),
+            eq(coinActivities.currency, symbol)
+          )
+        );
+      } else {
+        whereConditions.push(eq(coinActivities.currency, symbol));
+      }
+
+      // Add vcoinId filter if available for better accuracy
+      if (vcoinId) {
+        whereConditions.push(eq(coinActivities.vcoinId, vcoinId));
+      }
+
+      const activities = await db
+        .select()
+        .from(coinActivities)
+        .where(and(...whereConditions))
+        .limit(10); // Limit to recent activities
+
+      // Transform to ActivityData format
+      return activities.map((activity) => ({
+        activityId: activity.activityId,
+        currency: activity.currency,
+        currencyId: activity.currencyId || "",
+        activityType: activity.activityType,
+      }));
+    } catch (error) {
+      console.warn(`[PatternDetectionEngine] Failed to fetch activity data for ${symbol}:`, error);
+      return []; // Return empty array on error
+    }
+  }
+
+  /**
    * Core Pattern Detection - The Heart of Our Competitive Advantage
    * Detects the critical sts:2, st:2, tt:4 ready state pattern
    */
@@ -122,22 +190,40 @@ export class PatternDetectionEngine {
     for (const symbol of symbols) {
       // Core ready state pattern validation
       const isExactMatch = this.validateExactReadyState(symbol);
+
+      // Get activity data for enhanced analysis
+      const symbolName = symbol.cd || "unknown";
+      const vcoinId = (symbol as any).vcoinId;
+      const activities = await this.getActivityDataForSymbol(symbolName, vcoinId);
+
       const confidence = await this.calculateReadyStateConfidence(symbol);
 
       if (isExactMatch && confidence >= 85) {
         // Store successful pattern for future learning
         await this.storeSuccessfulPattern(symbol, "ready_state", confidence);
 
+        // Prepare activity information
+        const activityInfo =
+          activities.length > 0
+            ? {
+                activities,
+                activityBoost: calculateActivityBoost(activities),
+                hasHighPriorityActivity: hasHighPriorityActivity(activities),
+                activityTypes: getUniqueActivityTypes(activities),
+              }
+            : undefined;
+
         matches.push({
           patternType: "ready_state",
           confidence,
-          symbol: symbol.cd || "unknown",
-          vcoinId: (symbol as any).vcoinId,
+          symbol: symbolName,
+          vcoinId,
           indicators: {
             sts: symbol.sts,
             st: symbol.st,
             tt: symbol.tt,
           },
+          activityInfo,
           detectedAt: new Date(),
           advanceNoticeHours: 0, // Ready now
           riskLevel: this.assessReadyStateRisk(symbol),
@@ -172,11 +258,25 @@ export class PatternDetectionEngine {
 
       // Filter for our 3.5+ hour advantage window
       if (advanceHours >= this.MIN_ADVANCE_HOURS) {
+        // Get activity data for enhanced analysis
+        const activities = await this.getActivityDataForSymbol(entry.symbol, entry.vcoinId);
+
         const confidence = await this.calculateAdvanceOpportunityConfidence(entry, advanceHours);
 
         if (confidence >= 70) {
           // Store advance opportunity pattern
           await this.storeSuccessfulPattern(entry, "launch_sequence", confidence);
+
+          // Prepare activity information for advance opportunities
+          const activityInfo =
+            activities.length > 0
+              ? {
+                  activities,
+                  activityBoost: Math.round(calculateActivityBoost(activities) * 0.8), // Scaled boost
+                  hasHighPriorityActivity: hasHighPriorityActivity(activities),
+                  activityTypes: getUniqueActivityTypes(activities),
+                }
+              : undefined;
 
           matches.push({
             patternType: "launch_sequence",
@@ -193,6 +293,7 @@ export class PatternDetectionEngine {
                 launchTiming: this.assessLaunchTiming(launchTimestamp),
               },
             },
+            activityInfo,
             detectedAt: new Date(),
             advanceNoticeHours: advanceHours,
             riskLevel: this.assessAdvanceOpportunityRisk(entry, advanceHours),
@@ -263,7 +364,180 @@ export class PatternDetectionEngine {
       correlations.push(sectorCorrelations);
     }
 
+    // ML-Enhanced Pattern Correlation Analysis - Phase 2 Enhancement
+    try {
+      const mlCorrelations = await this.analyzeMLPatternCorrelations(symbolData);
+      correlations.push(...mlCorrelations);
+    } catch (error) {
+      console.warn(`[PatternDetectionEngine] ML correlation analysis failed:`, error);
+    }
+
     return correlations;
+  }
+
+  /**
+   * ML-Enhanced Pattern Correlation Analysis - Phase 2 Feature
+   * Uses pattern embeddings to find deeper correlations beyond simple status matching
+   */
+  private async analyzeMLPatternCorrelations(
+    symbolData: SymbolEntry[]
+  ): Promise<CorrelationAnalysis[]> {
+    const correlations: CorrelationAnalysis[] = [];
+
+    if (symbolData.length < 2) return correlations;
+
+    try {
+      // Create pattern data for each symbol
+      const patterns = symbolData.map((symbol) => ({
+        symbolName: symbol.cd || "unknown",
+        vcoinId: (symbol as any).vcoinId,
+        type: "ready_state" as const,
+        data: {
+          sts: symbol.sts,
+          st: symbol.st,
+          tt: symbol.tt,
+        },
+        confidence: 75, // Default for correlation analysis
+      }));
+
+      // Find similar patterns for correlation analysis
+      const similarityMatrix: Array<{
+        symbol1: string;
+        symbol2: string;
+        similarity: number;
+        patterns: any[];
+      }> = [];
+
+      for (let i = 0; i < patterns.length; i++) {
+        for (let j = i + 1; j < patterns.length; j++) {
+          try {
+            const pattern1 = patterns[i];
+            const pattern2 = patterns[j];
+
+            // Use ML similarity search to find patterns similar to both symbols
+            const similarPatterns1 = await patternEmbeddingService.findSimilarPatterns(pattern1, {
+              threshold: 0.7,
+              limit: 10,
+              sameTypeOnly: true,
+            });
+
+            const similarPatterns2 = await patternEmbeddingService.findSimilarPatterns(pattern2, {
+              threshold: 0.7,
+              limit: 10,
+              sameTypeOnly: true,
+            });
+
+            // Calculate correlation based on common similar patterns
+            const commonPatterns = this.findCommonPatterns(similarPatterns1, similarPatterns2);
+            const similarity =
+              commonPatterns.length / Math.max(similarPatterns1.length, similarPatterns2.length, 1);
+
+            if (similarity >= 0.3) {
+              // Minimum correlation threshold
+              similarityMatrix.push({
+                symbol1: pattern1.symbolName,
+                symbol2: pattern2.symbolName,
+                similarity,
+                patterns: commonPatterns,
+              });
+            }
+          } catch (error) {
+            console.warn(
+              `[PatternDetectionEngine] ML correlation analysis failed for symbol pair:`,
+              error
+            );
+          }
+        }
+      }
+
+      // Create correlation analysis from similarity matrix
+      if (similarityMatrix.length > 0) {
+        const avgSimilarity =
+          similarityMatrix.reduce((sum, item) => sum + item.similarity, 0) /
+          similarityMatrix.length;
+
+        correlations.push({
+          symbols: similarityMatrix.flatMap((item) => [item.symbol1, item.symbol2]),
+          correlationType: "pattern_similarity",
+          strength: avgSimilarity,
+          insights: [
+            `ML analysis found ${similarityMatrix.length} correlated symbol pairs`,
+            `Average pattern similarity: ${(avgSimilarity * 100).toFixed(1)}%`,
+            `Based on ${similarityMatrix.reduce((sum, item) => sum + item.patterns.length, 0)} historical patterns`,
+          ],
+          recommendations: this.generateMLCorrelationRecommendations(
+            avgSimilarity,
+            similarityMatrix
+          ),
+        });
+      }
+    } catch (error) {
+      console.error(`[PatternDetectionEngine] ML correlation analysis failed:`, error);
+    }
+
+    return correlations;
+  }
+
+  /**
+   * Find common patterns between two sets of similar patterns
+   */
+  private findCommonPatterns(patterns1: any[], patterns2: any[]): any[] {
+    const common: any[] = [];
+
+    for (const p1 of patterns1) {
+      for (const p2 of patterns2) {
+        // Check if patterns are from same symbol or have high similarity
+        if (
+          p1.symbolName === p2.symbolName ||
+          (p1.cosineSimilarity &&
+            p2.cosineSimilarity &&
+            Math.abs(p1.cosineSimilarity - p2.cosineSimilarity) < 0.1)
+        ) {
+          common.push(p1);
+          break;
+        }
+      }
+    }
+
+    return common;
+  }
+
+  /**
+   * Generate recommendations based on ML correlation analysis
+   */
+  private generateMLCorrelationRecommendations(
+    avgSimilarity: number,
+    similarityMatrix: any[]
+  ): string[] {
+    const recommendations: string[] = [];
+
+    if (avgSimilarity > 0.7) {
+      recommendations.push("Strong pattern correlation detected - consider batch trading strategy");
+      recommendations.push(
+        "Monitor all correlated symbols simultaneously for synchronized entries"
+      );
+    } else if (avgSimilarity > 0.5) {
+      recommendations.push("Moderate correlation - validate signals across correlated symbols");
+      recommendations.push("Use correlation data for risk management and position sizing");
+    } else if (avgSimilarity > 0.3) {
+      recommendations.push(
+        "Weak correlation - treat symbols independently but monitor for changes"
+      );
+    }
+
+    // Identify strongest correlated pair
+    const strongestPair = similarityMatrix.reduce(
+      (strongest, current) => (current.similarity > strongest.similarity ? current : strongest),
+      similarityMatrix[0] || { similarity: 0 }
+    );
+
+    if (strongestPair.similarity > 0.6) {
+      recommendations.push(
+        `Strongest correlation: ${strongestPair.symbol1} ↔ ${strongestPair.symbol2} (${(strongestPair.similarity * 100).toFixed(1)}%)`
+      );
+    }
+
+    return recommendations;
   }
 
   /**
@@ -349,9 +623,84 @@ export class PatternDetectionEngine {
     if (symbol.ps !== undefined) confidence += 5;
     if (symbol.qs !== undefined) confidence += 5;
 
-    // Historical success rate
+    // Activity Data Enhancement - Our new competitive advantage
+    try {
+      const symbolName = symbol.cd || "unknown";
+      const vcoinId = (symbol as any).vcoinId;
+      const activities = await this.getActivityDataForSymbol(symbolName, vcoinId);
+
+      if (activities.length > 0) {
+        const activityBoost = calculateActivityBoost(activities);
+        confidence += activityBoost; // Add 0-20 point boost based on activities
+
+        // Additional boost for high-priority activities
+        if (hasHighPriorityActivity(activities)) {
+          confidence += 5; // Extra boost for high-priority activities
+        }
+
+        console.log(
+          `[PatternDetectionEngine] Activity enhancement for ${symbolName}: +${activityBoost} boost from ${activities.length} activities`
+        );
+      }
+    } catch (error) {
+      console.warn(`[PatternDetectionEngine] Activity enhancement failed for symbol:`, error);
+      // Continue without activity enhancement - graceful fallback
+    }
+
+    // Phase 3: AI-Enhanced Pattern Analysis with Cohere + Perplexity
+    try {
+      const patternData = {
+        symbolName: symbol.cd || "unknown",
+        vcoinId: (symbol as any).vcoinId,
+        type: "ready_state" as const,
+        data: {
+          sts: symbol.sts,
+          st: symbol.st,
+          tt: symbol.tt,
+        },
+        confidence: confidence,
+      };
+
+      // Use AI Intelligence Service for enhanced pattern analysis
+      const enhancedPattern = await aiIntelligenceService.enhancePatternWithAI(patternData);
+
+      if (enhancedPattern.perplexityInsights || enhancedPattern.cohereEmbedding) {
+        // Calculate AI-enhanced confidence using Cohere + Perplexity insights
+        const aiEnhancement =
+          await aiIntelligenceService.calculateAIEnhancedConfidence(enhancedPattern);
+
+        if (aiEnhancement.enhancedConfidence > confidence) {
+          const aiBoost = Math.min(aiEnhancement.enhancedConfidence - confidence, 20); // Cap AI boost at 20 points
+          confidence += aiBoost;
+
+          console.log(
+            `[PatternDetectionEngine] AI enhancement for ${patternData.symbolName}: +${aiBoost.toFixed(1)} AI boost (${aiEnhancement.enhancedConfidence.toFixed(1)}% total) - Cohere + Perplexity`
+          );
+        }
+      }
+
+      // Fallback to pattern embedding service if AI intelligence unavailable
+      if (!enhancedPattern.perplexityInsights && !enhancedPattern.cohereEmbedding) {
+        const embeddingConfidence =
+          await patternEmbeddingService.calculatePatternConfidenceScore(patternData);
+
+        if (embeddingConfidence.confidence > confidence) {
+          const mlBoost = Math.min(embeddingConfidence.confidence - confidence, 15); // Cap ML boost at 15 points
+          confidence += mlBoost;
+
+          console.log(
+            `[PatternDetectionEngine] ML fallback for ${patternData.symbolName}: +${mlBoost.toFixed(1)} ML boost (${embeddingConfidence.confidence.toFixed(1)}% total)`
+          );
+        }
+      }
+    } catch (error) {
+      console.warn(`[PatternDetectionEngine] AI enhancement failed for symbol:`, error);
+      // Continue without AI enhancement - graceful fallback
+    }
+
+    // Historical success rate (legacy approach as backup)
     const historicalSuccess = await this.getHistoricalSuccessRate("ready_state");
-    confidence += historicalSuccess * 0.15; // Weight historical success
+    confidence += historicalSuccess * 0.1; // Reduced weight since ML provides better analysis
 
     return Math.min(confidence, 95);
   }
@@ -375,6 +724,33 @@ export class PatternDetectionEngine {
     if (entry.projectName) confidence += 5;
     if ((entry as any).tradingPairs && (entry as any).tradingPairs.length > 1) confidence += 5;
     if ((entry as any).sts !== undefined) confidence += 10;
+
+    // Activity Data Enhancement for Calendar Entries
+    try {
+      const symbolName = entry.symbol;
+      const vcoinId = entry.vcoinId;
+      const activities = await this.getActivityDataForSymbol(symbolName, vcoinId);
+
+      if (activities.length > 0) {
+        const activityBoost = calculateActivityBoost(activities);
+        confidence += activityBoost * 0.8; // Scale down boost for advance opportunities
+
+        // Additional boost for upcoming launches with high-priority activities
+        if (hasHighPriorityActivity(activities) && advanceHours <= 48) {
+          confidence += 8; // Strong boost for near-term launches with high activity
+        }
+
+        console.log(
+          `[PatternDetectionEngine] Activity enhancement for advance opportunity ${symbolName}: +${Math.round(activityBoost * 0.8)} scaled boost from ${activities.length} activities`
+        );
+      }
+    } catch (error) {
+      console.warn(
+        `[PatternDetectionEngine] Activity enhancement failed for calendar entry:`,
+        error
+      );
+      // Continue without activity enhancement - graceful fallback
+    }
 
     // Market timing
     const timing = this.assessLaunchTiming(
@@ -592,6 +968,80 @@ export class PatternDetectionEngine {
     });
 
     return distribution;
+  }
+
+  /**
+   * Analyze Symbol Readiness with AI Intelligence - Public API
+   * Used by WebSocket stream and other services for real-time analysis
+   */
+  async analyzeSymbolReadiness(symbol: SymbolEntry): Promise<{
+    isReady: boolean;
+    confidence: number;
+    patternType: string;
+    enhancedAnalysis?: boolean;
+    aiEnhancement?: {
+      cohereEmbedding?: number[];
+      perplexityInsights?: any;
+      aiConfidence?: number;
+      recommendations?: string[];
+    };
+  } | null> {
+    try {
+      // Check basic ready state pattern
+      const isExactMatch = this.validateExactReadyState(symbol);
+      const confidence = await this.calculateReadyStateConfidence(symbol);
+
+      if (confidence < 50) {
+        return null; // Not worth analyzing
+      }
+
+      const result = {
+        isReady: isExactMatch,
+        confidence,
+        patternType: isExactMatch ? "ready_state" : "pre_ready",
+      };
+
+      // Add AI intelligence enhancement if available
+      try {
+        const patternData = {
+          symbolName: symbol.cd || "unknown",
+          vcoinId: (symbol as any).vcoinId,
+          type: "ready_state" as const,
+          data: {
+            sts: symbol.sts,
+            st: symbol.st,
+            tt: symbol.tt,
+          },
+          confidence: confidence,
+        };
+
+        const enhancedPattern = await aiIntelligenceService.enhancePatternWithAI(patternData);
+
+        if (enhancedPattern.perplexityInsights || enhancedPattern.cohereEmbedding) {
+          const aiEnhancement =
+            await aiIntelligenceService.calculateAIEnhancedConfidence(enhancedPattern);
+
+          return {
+            ...result,
+            confidence: Math.max(confidence, aiEnhancement.enhancedConfidence),
+            enhancedAnalysis: true,
+            aiEnhancement: {
+              cohereEmbedding: enhancedPattern.cohereEmbedding,
+              perplexityInsights: enhancedPattern.perplexityInsights,
+              aiConfidence: aiEnhancement.enhancedConfidence,
+              recommendations: aiEnhancement.recommendations,
+            },
+          };
+        }
+      } catch (error) {
+        console.warn(`[PatternDetectionEngine] AI enhancement failed in symbol readiness:`, error);
+      }
+
+      return result;
+    } catch (error) {
+      console.error(`[PatternDetectionEngine] Symbol readiness analysis failed:`, error);
+      return null;
+    }
   }
 
   // ============================================================================

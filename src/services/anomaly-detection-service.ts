@@ -142,7 +142,7 @@ export class AnomalyDetectionService {
     value: number,
     features?: Record<string, number>
   ): Promise<AnomalyDetectionResult> {
-    const modelData = this.deserializeModel(model.modelData);
+    const modelData = this.deserializeModel(model.modelData || "");
 
     switch (model.modelType) {
       case "statistical":
@@ -274,15 +274,15 @@ export class AnomalyDetectionService {
       metricName,
       modelType,
       parameters: JSON.stringify(this.getDefaultParameters(modelType)),
-      trainingDataFrom: Date.now(),
-      trainingDataTo: Date.now(),
+      trainingDataFrom: new Date(),
+      trainingDataTo: new Date(),
       sampleCount: 0,
-      modelData: this.serializeModel(this.createEmptyModel(modelType)),
+      modelData: JSON.stringify(this.createEmptyModel(modelType)),
       features: JSON.stringify([]),
       isActive: true,
-      lastTrainedAt: Date.now(),
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      lastTrainedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     await this.db.insert(anomalyModels).values(modelData);
@@ -315,17 +315,17 @@ export class AnomalyDetectionService {
       await this.db
         .update(anomalyModels)
         .set({
-          modelData: this.serializeModel(trainedModel),
-          trainingDataFrom: Math.min(...trainingData.map((d) => d.timestamp)),
-          trainingDataTo: Math.max(...trainingData.map((d) => d.timestamp)),
+          modelData: JSON.stringify(trainedModel),
+          trainingDataFrom: new Date(Math.min(...trainingData.map((d) => d.timestamp))),
+          trainingDataTo: new Date(Math.max(...trainingData.map((d) => d.timestamp))),
           sampleCount: trainingData.length,
           accuracy: performance.accuracy,
           precision: performance.precision,
           recall: performance.recall,
           f1Score: performance.f1Score,
           falsePositiveRate: performance.falsePositiveRate,
-          lastTrainedAt: Date.now(),
-          updatedAt: Date.now(),
+          lastTrainedAt: new Date(),
+          updatedAt: new Date(),
         })
         .where(eq(anomalyModels.id, model.id));
 
@@ -614,14 +614,28 @@ export class AnomalyDetectionService {
 
     for (const point of testData) {
       // This is a simplified evaluation - in reality you'd need labeled anomaly data
-      const result = await this.detectAnomalyWithModel(
-        {
-          modelType: "statistical",
-          modelData: this.serializeModel(trainedModel),
-        } as SelectAnomalyModel,
-        point.value,
-        point.features
-      );
+      const mockModel: SelectAnomalyModel = {
+        id: "temp",
+        metricName: "temp",
+        modelType: "statistical",
+        parameters: "{}",
+        trainingDataFrom: new Date(),
+        trainingDataTo: new Date(),
+        sampleCount: 0,
+        accuracy: null,
+        precision: null,
+        recall: null,
+        f1Score: null,
+        falsePositiveRate: null,
+        modelData: this.serializeModel(trainedModel),
+        features: null,
+        isActive: true,
+        lastTrainedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = await this.detectAnomalyWithModel(mockModel, point.value, point.features);
 
       // For demonstration, consider values beyond 3 standard deviations as true anomalies
       const isActualAnomaly = Math.abs(point.value - trainedModel.mean) / trainedModel.stdDev > 3;
@@ -689,13 +703,13 @@ export class AnomalyDetectionService {
     }
   }
 
-  private serializeModel(model: any): Buffer {
-    return Buffer.from(JSON.stringify(model));
+  private serializeModel(model: any): string {
+    return JSON.stringify(model);
   }
 
-  private deserializeModel(modelData: Buffer | null): any {
+  private deserializeModel(modelData: string | null): any {
     if (!modelData) return null;
-    return JSON.parse(modelData.toString());
+    return JSON.parse(modelData);
   }
 
   private async loadModelsFromDatabase(): Promise<void> {
@@ -723,7 +737,7 @@ export class AnomalyDetectionService {
 
     for (const [metricName, model] of this.models.entries()) {
       // Check if model needs retraining due to age
-      if (now - model.lastTrainedAt > this.maxModelAge) {
+      if (now - model.lastTrainedAt.getTime() > this.maxModelAge) {
         console.log(`Model for ${metricName} is stale, scheduling retrain`);
         this.scheduleModelRetrain(metricName);
       }

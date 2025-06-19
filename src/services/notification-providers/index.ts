@@ -2,6 +2,7 @@ import { and, count, eq, gte, inArray } from "drizzle-orm";
 import {
   type SelectAlertInstance,
   type SelectNotificationChannel,
+  alertInstances,
   alertNotifications,
   notificationChannels,
 } from "../../db/schemas/alerts";
@@ -223,7 +224,7 @@ export class NotificationService {
         .update(alertInstances)
         .set({
           escalationLevel: level,
-          lastEscalatedAt: Date.now(),
+          lastEscalatedAt: new Date(),
         })
         .where(eq(alertInstances.id, alert.id));
 
@@ -297,7 +298,7 @@ export class NotificationService {
       .where(
         and(
           eq(alertNotifications.channelId, channel.id),
-          gte(alertNotifications.createdAt, oneHourAgo),
+          gte(alertNotifications.createdAt, new Date(oneHourAgo)),
           eq(alertNotifications.status, "sent")
         )
       );
@@ -456,9 +457,9 @@ export class NotificationService {
       channelId,
       status,
       attempts: 1,
-      lastAttemptAt: Date.now(),
+      lastAttemptAt: new Date(),
       message: "", // Will be updated later
-      createdAt: Date.now(),
+      createdAt: new Date(),
     });
 
     return notificationId;
@@ -475,7 +476,7 @@ export class NotificationService {
     };
 
     if (result.success) {
-      updateData.sentAt = Date.now();
+      updateData.sentAt = new Date();
     }
 
     await this.db
@@ -535,8 +536,8 @@ export class NotificationService {
       rateLimitPerHour: options.rateLimitPerHour || 100,
       messageTemplate: options.messageTemplate,
       titleTemplate: options.titleTemplate,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       createdBy,
     });
 
@@ -572,8 +573,8 @@ export class NotificationService {
       source: "test",
       environment: "test",
       escalationLevel: 0,
-      firstTriggeredAt: Date.now(),
-      lastTriggeredAt: Date.now(),
+      firstTriggeredAt: new Date(),
+      lastTriggeredAt: new Date(),
       sourceId: null,
       threshold: null,
       anomalyScore: null,
@@ -603,7 +604,10 @@ export class NotificationService {
       })
       .from(alertNotifications)
       .where(
-        and(eq(alertNotifications.channelId, channelId), gte(alertNotifications.createdAt, cutoff))
+        and(
+          eq(alertNotifications.channelId, channelId),
+          gte(alertNotifications.createdAt, new Date(cutoff))
+        )
       );
 
     return stats[0] || { total: 0, sent: 0, failed: 0, rateLimited: 0 };

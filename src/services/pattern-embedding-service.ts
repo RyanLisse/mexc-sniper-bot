@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import type { NewPatternEmbedding } from "../db/schema";
 import { vectorUtils } from "../db/vector-utils";
+import { aiIntelligenceService } from "./ai-intelligence-service";
 
 export interface PatternData {
   symbolName: string;
@@ -21,11 +22,21 @@ export interface PatternData {
 export class PatternEmbeddingService {
   private openai: OpenAI;
   private embeddingModel = "text-embedding-ada-002";
+  private useCohere = true; // Default to Cohere Embed v4.0
 
   constructor(apiKey?: string) {
     this.openai = new OpenAI({
       apiKey: apiKey || process.env.OPENAI_API_KEY,
     });
+
+    // Check if Cohere is available, fallback to OpenAI if not
+    this.useCohere = !!process.env.COHERE_API_KEY;
+
+    if (this.useCohere) {
+      console.log("[PatternEmbedding] Using Cohere Embed v4.0 as primary embedding model");
+    } else {
+      console.log("[PatternEmbedding] Falling back to OpenAI text-embedding-ada-002");
+    }
   }
 
   /**
@@ -95,9 +106,21 @@ export class PatternEmbeddingService {
   }
 
   /**
-   * Generate embedding for a pattern
+   * Generate embedding for a pattern using Cohere Embed v4.0 (preferred) or OpenAI (fallback)
    */
   async generateEmbedding(pattern: PatternData): Promise<number[]> {
+    if (this.useCohere) {
+      try {
+        // Use Cohere Embed v4.0 via AI Intelligence Service
+        const embedding = await aiIntelligenceService.generatePatternEmbedding(pattern);
+        return embedding;
+      } catch (error) {
+        console.warn("[PatternEmbedding] Cohere embedding failed, falling back to OpenAI:", error);
+        // Fall through to OpenAI fallback
+      }
+    }
+
+    // OpenAI fallback
     try {
       const text = this.patternToText(pattern);
 
@@ -108,7 +131,10 @@ export class PatternEmbeddingService {
 
       return response.data[0].embedding;
     } catch (error) {
-      console.error("[PatternEmbedding] Failed to generate embedding:", error);
+      console.error(
+        "[PatternEmbedding] Failed to generate embedding (both Cohere and OpenAI):",
+        error
+      );
       throw error;
     }
   }
