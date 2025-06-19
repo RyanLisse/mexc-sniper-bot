@@ -8,6 +8,13 @@
       "when": 1750070829531,
       "tag": "0000_past_rachel_grey",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1737374400000,
+      "tag": "0001_add_enhanced_take_profit_fields",
+      "breakpoints": true
     }
   ]
 }

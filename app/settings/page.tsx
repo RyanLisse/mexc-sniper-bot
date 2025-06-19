@@ -20,7 +20,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { useUserPreferences, useUpdateUserPreferences } from "../../src/hooks/use-user-preferences";
-import { UnifiedTakeProfitLevels } from "../../src/components/unified-take-profit-levels";
+
 import { UnifiedRiskManagement } from "../../src/components/unified-risk-management";
 import { UnifiedAutomationSettings } from "../../src/components/unified-automation-settings";
 import { EditableTakeProfitTable } from "../../src/components/editable-take-profit-table";
@@ -49,15 +49,7 @@ export default function SettingsPage() {
   // State for form values
   const [isDirty, setIsDirty] = useState(false);
 
-  // Take profit levels (legacy)
-  const [takeProfitLevels, setTakeProfitLevels] = useState({
-    level1: preferences?.takeProfitLevels?.level1 || 5,
-    level2: preferences?.takeProfitLevels?.level2 || 10,
-    level3: preferences?.takeProfitLevels?.level3 || 15,
-    level4: preferences?.takeProfitLevels?.level4 || 25,
-    custom: preferences?.takeProfitLevels?.custom || null,
-    defaultLevel: preferences?.defaultTakeProfitLevel || 2
-  });
+
 
   // Enhanced take profit strategy
   const [takeProfitStrategy, setTakeProfitStrategy] = useState(
@@ -99,15 +91,6 @@ export default function SettingsPage() {
   // Initialize state from preferences
   useEffect(() => {
     if (preferences) {
-      setTakeProfitLevels({
-        level1: preferences.takeProfitLevels?.level1 || 5,
-        level2: preferences.takeProfitLevels?.level2 || 10,
-        level3: preferences.takeProfitLevels?.level3 || 15,
-        level4: preferences.takeProfitLevels?.level4 || 25,
-        custom: preferences.takeProfitLevels?.custom || null,
-        defaultLevel: preferences.defaultTakeProfitLevel || 2
-      });
-
       setRiskSettings({
         stopLossPercent: preferences.stopLossPercent || 5,
         riskTolerance: preferences.riskTolerance || "medium",
@@ -170,14 +153,6 @@ export default function SettingsPage() {
       // Save preferences
       await updatePreferencesMutation.mutateAsync({
         userId,
-        takeProfitLevels: {
-          level1: takeProfitLevels.level1,
-          level2: takeProfitLevels.level2,
-          level3: takeProfitLevels.level3,
-          level4: takeProfitLevels.level4,
-          custom: takeProfitLevels.custom || undefined,
-        },
-        defaultTakeProfitLevel: takeProfitLevels.defaultLevel,
         // Enhanced take profit strategy
         takeProfitStrategy: takeProfitStrategy,
         takeProfitLevelsConfig: customTakeProfitStrategy,
@@ -204,7 +179,6 @@ export default function SettingsPage() {
       });
     }
   }, [
-    takeProfitLevels,
     takeProfitStrategy,
     customTakeProfitStrategy,
     riskSettings,
@@ -301,29 +275,7 @@ export default function SettingsPage() {
               className="mb-6"
             />
 
-            {/* Legacy Take Profit Levels (for backward compatibility) */}
-            <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
-              <CardHeader>
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-amber-500/10 rounded-lg">
-                    <Target className="h-5 w-5 text-amber-500" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Legacy Take Profit Levels</CardTitle>
-                    <CardDescription>
-                      Simple take profit configuration (maintained for backward compatibility)
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <UnifiedTakeProfitLevels
-                  levels={takeProfitLevels}
-                  onLevelsChange={setTakeProfitLevels}
-                  onDirty={() => setIsDirty(true)}
-                />
-              </CardContent>
-            </Card>
+
 
             {/* Advanced Multi-Level Take-Profit Configuration */}
             <Card>
