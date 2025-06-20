@@ -147,8 +147,8 @@ export function CacheWarmingControlPanel() {
           <div className="flex items-center gap-2">
             <Database className="h-5 w-5" />
             <CardTitle>Cache Warming Control</CardTitle>
-            <Badge variant={data.warming.isActive ? "default" : "secondary"}>
-              {data.warming.isActive ? "Active" : "Inactive"}
+            <Badge variant={data.warming?.isActive ? "default" : "secondary"}>
+              {data.warming?.isActive ? "Active" : "Inactive"}
             </Badge>
           </div>
           <div className="flex items-center gap-2">
@@ -173,17 +173,17 @@ export function CacheWarmingControlPanel() {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Success Rate</span>
-              <span>{data.warming.metrics.successRate.toFixed(1)}%</span>
+              <span>{(data.warming?.metrics?.successRate || 0).toFixed(1)}%</span>
             </div>
-            <Progress value={data.warming.metrics.successRate} className="h-2" />
+            <Progress value={data.warming?.metrics?.successRate || 0} className="h-2" />
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold">{data.warming.metrics.totalExecutions}</div>
+            <div className="text-2xl font-bold">{data.warming?.metrics?.totalExecutions || 0}</div>
             <div className="text-sm text-muted-foreground">Total Executions</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold">
-              {data.warming.metrics.averageExecutionTime.toFixed(0)}ms
+              {(data.warming?.metrics?.averageExecutionTime || 0).toFixed(0)}ms
             </div>
             <div className="text-sm text-muted-foreground">Avg Execution Time</div>
           </div>
@@ -192,7 +192,7 @@ export function CacheWarmingControlPanel() {
         {/* Cache Warming Strategies */}
         <div className="space-y-3">
           <h4 className="font-medium">Warming Strategies</h4>
-          {data.warming.strategies.map((strategy) => (
+          {(data.warming?.strategies || []).map((strategy) => (
             <div
               key={strategy.name}
               className={`border rounded-lg p-4 transition-colors ${
@@ -266,13 +266,13 @@ export function CacheWarmingControlPanel() {
                 <span>Redis</span>
               </div>
               <div className="flex items-center gap-2">
-                {data.connection.redis.connected ? (
+                {data.connection?.redis?.connected ? (
                   <CheckCircle className="h-4 w-4 text-green-500" />
                 ) : (
                   <AlertTriangle className="h-4 w-4 text-red-500" />
                 )}
-                <Badge variant={data.connection.redis.connected ? "default" : "destructive"}>
-                  {data.connection.redis.status}
+                <Badge variant={data.connection?.redis?.connected ? "default" : "destructive"}>
+                  {data.connection?.redis?.status || "Unknown"}
                 </Badge>
               </div>
             </div>
@@ -282,30 +282,30 @@ export function CacheWarmingControlPanel() {
                 <span>Valkey</span>
               </div>
               <div className="flex items-center gap-2">
-                {data.connection.valkey.connected ? (
+                {data.connection?.valkey?.connected ? (
                   <CheckCircle className="h-4 w-4 text-green-500" />
                 ) : (
                   <AlertTriangle className="h-4 w-4 text-red-500" />
                 )}
-                <Badge variant={data.connection.valkey.connected ? "default" : "destructive"}>
-                  {data.connection.valkey.status}
+                <Badge variant={data.connection?.valkey?.connected ? "default" : "destructive"}>
+                  {data.connection?.valkey?.status || "Unknown"}
                 </Badge>
               </div>
             </div>
           </div>
 
-          {data.connection.gracefulDegradation.fallbackMode && (
+          {data.connection?.gracefulDegradation?.fallbackMode && (
             <Alert className="mt-3">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Fallback Mode Active</AlertTitle>
-              <AlertDescription>{data.connection.gracefulDegradation.message}</AlertDescription>
+              <AlertDescription>{data.connection?.gracefulDegradation?.message}</AlertDescription>
             </Alert>
           )}
         </div>
 
         {/* Last Updated */}
         <div className="text-xs text-muted-foreground text-center pt-2 border-t">
-          Last updated: {new Date(data.lastUpdated).toLocaleString()}
+          Last updated: {data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : "Unknown"}
         </div>
       </CardContent>
     </Card>
