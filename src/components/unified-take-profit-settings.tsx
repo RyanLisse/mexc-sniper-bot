@@ -163,37 +163,37 @@ export function UnifiedTakeProfitSettings({
   };
 
   return (
-    <div className={`min-h-screen bg-background p-6 ${className}`}>
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className={`min-h-screen bg-background p-4 sm:p-6 ${className}`}>
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Take Profit Settings</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold">Take Profit Settings</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Configure your profit-taking strategy and exit levels
             </p>
           </div>
-          <Button size="lg" className="gap-2">
+          <Button size="lg" className="gap-2 w-full sm:w-auto">
             <Shield className="h-4 w-4" />
             Save Strategy
           </Button>
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 xl:grid-cols-3 gap-6">
           {/* Strategy Selection */}
-          <Card className="lg:col-span-1">
+          <Card className="lg:col-span-2 xl:col-span-1">
             <CardHeader>
               <CardTitle>Profit Strategy</CardTitle>
               <CardDescription>Choose your profit-taking approach</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <RadioGroup value={selectedStrategy} onValueChange={handleStrategySelect}>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {TAKE_PROFIT_STRATEGIES.map((strategy) => (
                     <div
                       key={strategy.id}
-                      className={`relative flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
+                      className={`relative flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors min-h-0 ${
                         selectedStrategy === strategy.id
                           ? "border-primary bg-primary/5"
                           : "border-border hover:border-primary/50"
@@ -225,7 +225,7 @@ export function UnifiedTakeProfitSettings({
 
                   {/* Custom Option */}
                   <div
-                    className={`relative flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
+                    className={`relative flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors min-h-0 ${
                       selectedStrategy === "custom"
                         ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/50"
@@ -247,14 +247,14 @@ export function UnifiedTakeProfitSettings({
           </Card>
 
           {/* Strategy Configuration */}
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-3 xl:col-span-2">
             <CardHeader>
               <CardTitle>Strategy Configuration</CardTitle>
               <CardDescription>Fine-tune your selected strategy</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 overflow-hidden">
               {/* Visual Chart */}
-              <div className="bg-muted/30 rounded-lg p-6 relative overflow-hidden">
+              <div className="bg-muted/30 rounded-lg p-4 sm:p-6 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-5">
                   <svg width="100%" height="100%">
                     <defs>
@@ -280,18 +280,18 @@ export function UnifiedTakeProfitSettings({
                     </Badge>
                   </div>
 
-                  <div className="flex items-end justify-between h-40 mb-4">
+                  <div className="flex items-end justify-between h-32 sm:h-40 mb-4 gap-2">
                     {currentStrategy.levels.map((level, index) => (
-                      <div key={level.id} className="flex-1 flex flex-col items-center">
+                      <div key={level.id} className="flex-1 flex flex-col items-center min-w-0">
                         <div
-                          className="w-full max-w-16 bg-primary rounded-t transition-all"
+                          className="w-full max-w-12 sm:max-w-16 bg-primary rounded-t transition-all mx-auto"
                           style={{ height: `${(level.sellQuantity / 40) * 100}%` }}
                         />
-                        <div className="text-center mt-2">
-                          <p className="text-xs text-muted-foreground">
+                        <div className="text-center mt-2 w-full">
+                          <p className="text-xs text-muted-foreground truncate">
                             +{level.profitPercentage}%
                           </p>
-                          <p className="text-sm font-semibold">{level.sellQuantity}%</p>
+                          <p className="text-xs sm:text-sm font-semibold">{level.sellQuantity}%</p>
                         </div>
                       </div>
                     ))}
@@ -309,10 +309,16 @@ export function UnifiedTakeProfitSettings({
               </div>
 
               <Tabs defaultValue="levels" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="levels">Profit Levels</TabsTrigger>
-                  <TabsTrigger value="risk">Risk Management</TabsTrigger>
-                  <TabsTrigger value="advanced">Advanced</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 h-auto">
+                  <TabsTrigger value="levels" className="text-xs sm:text-sm">
+                    Profit Levels
+                  </TabsTrigger>
+                  <TabsTrigger value="risk" className="text-xs sm:text-sm">
+                    Risk Management
+                  </TabsTrigger>
+                  <TabsTrigger value="advanced" className="text-xs sm:text-sm">
+                    Advanced
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="levels" className="space-y-4 mt-6">
@@ -368,11 +374,11 @@ export function UnifiedTakeProfitSettings({
                       )}
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {currentStrategy.levels.map((level, index) => (
                         <div
                           key={level.id}
-                          className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                          className="flex items-center justify-between p-4 rounded-lg border bg-muted/30"
                         >
                           <div className="flex items-center gap-4">
                             <Badge variant="outline">Level {index + 1}</Badge>
