@@ -73,9 +73,17 @@ export class CacheWarmingService {
   private runningWarmups = new Set<string>();
 
   constructor(config: Partial<CacheWarmupConfig> = {}) {
-    this.cache = getEnhancedUnifiedCache();
-    this.mexcService = new UnifiedMexcService();
-    this.patternEngine = new PatternDetectionEngine();
+    // Skip initialization during build time
+    if (this.isBuildEnvironment()) {
+      console.log("[CacheWarmingService] Skipping initialization - build environment detected");
+      this.cache = this.createMockCache();
+      this.mexcService = this.createMockMexcService();
+      this.patternEngine = this.createMockPatternEngine();
+    } else {
+      this.cache = getEnhancedUnifiedCache();
+      this.mexcService = new UnifiedMexcService();
+      this.patternEngine = new PatternDetectionEngine();
+    }
 
     this.config = {
       enableAutoWarming: true,
@@ -108,6 +116,83 @@ export class CacheWarmingService {
     if (this.config.enableAutoWarming) {
       this.startAutoWarming();
     }
+  }
+
+  // ============================================================================
+  // Environment and Mock Helpers
+  // ============================================================================
+
+  /**
+   * Check if we're in a build environment
+   */
+  private isBuildEnvironment(): boolean {
+    // Skip during any build-related environment
+    if (
+      // Standard build environments
+      process.env.NODE_ENV === "production" &&
+      (process.env.VERCEL_ENV === undefined || // Vercel build environment
+        process.env.NEXT_PHASE === "phase-production-build" || // Next.js build phase
+        process.env.BUILD_ID !== undefined || // Build environment indicator
+        process.env.NEXT_BUILD === "true") // Build flag
+    ) {
+      return true;
+    }
+
+    // Skip during any Next.js build phase
+    if (
+      process.env.NEXT_PHASE === "phase-production-build" ||
+      process.env.NEXT_BUILD === "true" ||
+      process.env.STATIC_GENERATION === "true"
+    ) {
+      return true;
+    }
+
+    // Additional build environment detection
+    if (
+      // CI/CD environments
+      process.env.CI === "true" ||
+      process.env.GITHUB_ACTIONS === "true" ||
+      process.env.VERCEL === "1" ||
+      // Build processes
+      process.env.npm_lifecycle_event === "build" ||
+      process.env.npm_command === "run-script" ||
+      // Static generation
+      typeof window === "undefined" && process.env.NODE_ENV === "production"
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Create mock cache for build environments
+   */
+  private createMockCache(): any {
+    return {
+      get: async () => null,
+      set: async () => {},
+      destroy: async () => {},
+    };
+  }
+
+  /**
+   * Create mock MEXC service for build environments
+   */
+  private createMockMexcService(): any {
+    return {
+      getSymbolInfo: async () => ({}),
+      getActivityData: async () => ({}),
+    };
+  }
+
+  /**
+   * Create mock pattern engine for build environments
+   */
+  private createMockPatternEngine(): any {
+    return {
+      analyzeSymbolReadiness: async () => ({}),
+    };
   }
 
   // ============================================================================
@@ -191,6 +276,12 @@ export class CacheWarmingService {
   // ============================================================================
 
   private startAutoWarming(): void {
+    // Skip auto warming in build environments
+    if (this.isBuildEnvironment()) {
+      console.log("[CacheWarmingService] Skipping auto warming - build environment detected");
+      return;
+    }
+
     if (this.warmupInterval) {
       clearInterval(this.warmupInterval);
     }
@@ -383,8 +474,8 @@ export class CacheWarmingService {
           const symbolEntry = {
             cd: symbol.symbolName,
             sts: 2, // Default ready state
-            st: 2,  // Default ready state  
-            tt: 4,  // Default trading type
+            st: 2, // Default ready state
+            tt: 4, // Default trading type
             ca: symbol.confidence,
             ps: undefined,
             qs: undefined,

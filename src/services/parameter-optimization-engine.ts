@@ -7,7 +7,7 @@
  */
 
 import { EventEmitter } from "node:events";
-import { ParameterManager } from "../lib/parameter-management";
+import { getParameterManager, type ParameterManager } from "../lib/parameter-management";
 import { logger } from "../lib/utils";
 
 export interface OptimizationObjective {
@@ -73,10 +73,40 @@ export class ParameterOptimizationEngine extends EventEmitter {
   private optimizationHistory: any[] = [];
   private performanceBaseline: PerformanceMetrics | null = null;
 
-  constructor() {
+  constructor(parameterManager?: ParameterManager) {
     super();
-    this.parameterManager = new ParameterManager();
-    logger.info("Parameter Optimization Engine initialized (simplified mode)");
+    this.parameterManager = parameterManager || getParameterManager();
+    
+    // Skip initialization during build time
+    if (!this.isBuildEnvironment()) {
+      logger.info("Parameter Optimization Engine initialized (simplified mode)");
+    }
+  }
+
+  /**
+   * Check if we're in a build environment
+   */
+  private isBuildEnvironment(): boolean {
+    // More comprehensive build environment detection
+    return (
+      // Next.js build phases
+      process.env.NEXT_PHASE === "phase-production-build" ||
+      process.env.NEXT_PHASE === "phase-development-server" ||
+      // Build flags
+      process.env.NEXT_BUILD === "true" ||
+      process.env.BUILD_ID !== undefined ||
+      // Static generation
+      process.env.STATIC_GENERATION === "true" ||
+      process.env.__NEXT_ROUTER_BASEPATH !== undefined ||
+      // Vercel build environment  
+      (process.env.VERCEL === "1" && process.env.VERCEL_ENV === undefined) ||
+      // General build indicators
+      process.env.CI === "true" ||
+      // Check if we're in webpack/module bundling context
+      typeof window === "undefined" && typeof process !== "undefined" && 
+      (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "development") &&
+      !global.setImmediate // Node.js runtime check
+    );
   }
 
   /**
@@ -226,4 +256,27 @@ export class ParameterOptimizationEngine extends EventEmitter {
       max_hold_time_hours: 12 + Math.random() * 36, // 12-48 hours
     };
   }
+}
+
+// ============================================================================
+// Singleton Instance Management
+// ============================================================================
+
+let globalParameterOptimizationEngineInstance: ParameterOptimizationEngine | null = null;
+
+/**
+ * Get global parameter optimization engine instance with lazy initialization
+ */
+export function getParameterOptimizationEngine(): ParameterOptimizationEngine {
+  if (!globalParameterOptimizationEngineInstance) {
+    globalParameterOptimizationEngineInstance = new ParameterOptimizationEngine();
+  }
+  return globalParameterOptimizationEngineInstance;
+}
+
+/**
+ * Reset global parameter optimization engine instance (for testing)
+ */
+export function resetParameterOptimizationEngine(): void {
+  globalParameterOptimizationEngineInstance = null;
 }

@@ -904,22 +904,51 @@ export class CacheMonitoringSystem {
 // Global Cache Monitoring Instance
 // =======================
 
-export const globalCacheMonitoring = new CacheMonitoringSystem({
-  enableRealTimeMonitoring: true,
-  monitoringInterval: 30000,
-  performanceThresholds: {
-    minHitRate: 70,
-    maxMemoryUsage: 500 * 1024 * 1024,
-    maxResponseTime: 100,
-    maxCacheSize: 50000,
+let globalCacheMonitoringInstance: CacheMonitoringSystem | null = null;
+
+/**
+ * Get global cache monitoring instance with lazy initialization
+ */
+export function getGlobalCacheMonitoring(): CacheMonitoringSystem {
+  if (!globalCacheMonitoringInstance) {
+    globalCacheMonitoringInstance = new CacheMonitoringSystem({
+      enableRealTimeMonitoring: true,
+      monitoringInterval: 30000,
+      performanceThresholds: {
+        minHitRate: 70,
+        maxMemoryUsage: 500 * 1024 * 1024,
+        maxResponseTime: 100,
+        maxCacheSize: 50000,
+      },
+      alerting: {
+        enabled: true,
+        channels: ["console"],
+      },
+      enableMetricsCollection: true,
+      metricsRetentionDays: 7,
+    });
+  }
+  return globalCacheMonitoringInstance;
+}
+
+/**
+ * Legacy export for backward compatibility - use lazy initialization
+ */
+export const globalCacheMonitoring = {
+  getCurrentStatus: () => getGlobalCacheMonitoring().getCurrentStatus(),
+  getPerformanceReport: (start: number, end?: number) =>
+    getGlobalCacheMonitoring().getPerformanceReport(start, end),
+  getActiveAlerts: () => getGlobalCacheMonitoring().getActiveAlerts(),
+  getCurrentRecommendations: () => getGlobalCacheMonitoring().getCurrentRecommendations(),
+  resolveAlert: (id: string) => getGlobalCacheMonitoring().resolveAlert(id),
+  optimizeCache: () => getGlobalCacheMonitoring().optimizeCache(),
+  destroy: () => {
+    if (globalCacheMonitoringInstance) {
+      globalCacheMonitoringInstance.destroy();
+      globalCacheMonitoringInstance = null;
+    }
   },
-  alerting: {
-    enabled: true,
-    channels: ["console"],
-  },
-  enableMetricsCollection: true,
-  metricsRetentionDays: 7,
-});
+};
 
 // =======================
 // Monitoring Utilities

@@ -306,7 +306,7 @@ function PatternCard({
 }) {
   const hasAIEnhancement = Boolean(
     pattern.aiInsights &&
-    (pattern.aiInsights.cohereEmbedding || pattern.aiInsights.perplexityInsights)
+      (pattern.aiInsights.cohereEmbedding || pattern.aiInsights.perplexityInsights)
   );
 
   return (

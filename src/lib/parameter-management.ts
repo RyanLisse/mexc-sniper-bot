@@ -68,8 +68,37 @@ export class ParameterManager extends EventEmitter {
 
   constructor() {
     super();
-    this.initializeParameterDefinitions();
-    this.loadCurrentParameters();
+    // Skip initialization during build time
+    if (!this.isBuildEnvironment()) {
+      this.initializeParameterDefinitions();
+      this.loadCurrentParameters();
+    }
+  }
+
+  /**
+   * Check if we're in a build environment
+   */
+  private isBuildEnvironment(): boolean {
+    // More comprehensive build environment detection
+    return (
+      // Next.js build phases
+      process.env.NEXT_PHASE === "phase-production-build" ||
+      process.env.NEXT_PHASE === "phase-development-server" ||
+      // Build flags
+      process.env.NEXT_BUILD === "true" ||
+      process.env.BUILD_ID !== undefined ||
+      // Static generation
+      process.env.STATIC_GENERATION === "true" ||
+      process.env.__NEXT_ROUTER_BASEPATH !== undefined ||
+      // Vercel build environment  
+      (process.env.VERCEL === "1" && process.env.VERCEL_ENV === undefined) ||
+      // General build indicators
+      process.env.CI === "true" ||
+      // Check if we're in webpack/module bundling context
+      typeof window === "undefined" && typeof process !== "undefined" && 
+      (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "development") &&
+      !global.setImmediate // Node.js runtime check
+    );
   }
 
   /**
@@ -744,4 +773,27 @@ export class ParameterManager extends EventEmitter {
       reason: "Reset all parameters to defaults",
     });
   }
+}
+
+// ============================================================================
+// Singleton Instance Management
+// ============================================================================
+
+let globalParameterManagerInstance: ParameterManager | null = null;
+
+/**
+ * Get global parameter manager instance with lazy initialization
+ */
+export function getParameterManager(): ParameterManager {
+  if (!globalParameterManagerInstance) {
+    globalParameterManagerInstance = new ParameterManager();
+  }
+  return globalParameterManagerInstance;
+}
+
+/**
+ * Reset global parameter manager instance (for testing)
+ */
+export function resetParameterManager(): void {
+  globalParameterManagerInstance = null;
 }

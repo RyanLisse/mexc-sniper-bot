@@ -73,7 +73,7 @@ function createPostgresClient() {
     max: isProduction ? 20 : 10, // Increased max connections for better concurrency
     idle_timeout: 20, // 20 seconds idle timeout
     connect_timeout: 10, // Reduced to 10 seconds for faster failures
-    
+
     // Keep alive settings for better connection stability (TCP keepalive interval in seconds)
     keep_alive: 60,
 

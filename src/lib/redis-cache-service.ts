@@ -132,14 +132,88 @@ export class RedisCacheService {
   // Connection Management
   // ============================================================================
 
+  /**
+   * Check if Redis connection should be skipped during build time or static generation
+   */
+  private shouldSkipRedisConnection(): boolean {
+    // Skip during any build-related environment
+    if (
+      // Standard build environments
+      process.env.NODE_ENV === "production" &&
+      (process.env.VERCEL_ENV === undefined || // Vercel build environment
+        process.env.NEXT_PHASE === "phase-production-build" || // Next.js build phase
+        process.env.BUILD_ID !== undefined || // Build environment indicator
+        process.env.NEXT_BUILD === "true") // Build flag
+    ) {
+      return true;
+    }
+
+    // Skip during any Next.js build phase
+    if (
+      process.env.NEXT_PHASE === "phase-production-build" ||
+      process.env.NEXT_BUILD === "true" ||
+      process.env.STATIC_GENERATION === "true"
+    ) {
+      return true;
+    }
+
+    // Additional build environment detection
+    if (
+      // CI/CD environments
+      process.env.CI === "true" ||
+      process.env.GITHUB_ACTIONS === "true" ||
+      process.env.VERCEL === "1" ||
+      // Build processes
+      process.env.npm_lifecycle_event === "build" ||
+      process.env.npm_command === "run-script" ||
+      // Static generation
+      typeof window === "undefined" && process.env.NODE_ENV === "production"
+    ) {
+      return true;
+    }
+
+    // Skip if no Redis configuration is available
+    if (
+      !process.env.REDIS_URL &&
+      !process.env.VALKEY_URL &&
+      !this.config.url &&
+      !this.config.host
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
   private async initializeRedisConnection(): Promise<void> {
     try {
+      // Skip Redis connection during build time or static generation
+      if (this.shouldSkipRedisConnection()) {
+        console.log(
+          "[RedisCacheService] Skipping Redis connection - build/static generation environment"
+        );
+        return;
+      }
+
       // Get Redis URL from environment or config
       const redisUrl =
         this.config.url ||
         process.env.VALKEY_URL ||
         process.env.REDIS_URL ||
         `redis://${this.config.host || "localhost"}:${this.config.port || 6379}`;
+
+      // Extra safety check: don't create Redis instance with localhost during production builds
+      if (
+        redisUrl.includes("localhost") &&
+        (process.env.NODE_ENV === "production" ||
+          process.env.VERCEL === "1" ||
+          process.env.CI === "true")
+      ) {
+        console.log(
+          "[RedisCacheService] Skipping Redis connection - localhost detected in production/CI environment"
+        );
+        return;
+      }
 
       this.redis = new Redis(redisUrl, {
         maxRetriesPerRequest: this.config.maxRetries,

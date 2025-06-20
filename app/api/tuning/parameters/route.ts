@@ -6,11 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { ParameterManager } from "../../../../src/lib/parameter-management";
+import { getParameterManager } from "../../../../src/lib/parameter-management";
 import { logger } from "../../../../src/lib/utils";
-
-// Initialize parameter manager
-const parameterManager = new ParameterManager();
 
 // Validation schemas
 const ParameterUpdateSchema = z.object({
@@ -35,6 +32,7 @@ export async function GET(request: NextRequest) {
     const includeDefinitions = searchParams.get('includeDefinitions') === 'true';
     const includeHistory = searchParams.get('includeHistory') === 'true';
 
+    const parameterManager = getParameterManager();
     let parameters;
     if (category) {
       parameters = parameterManager.getParametersByCategory(category);
@@ -73,6 +71,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const validatedData = ParameterUpdateSchema.parse(body);
 
+    const parameterManager = getParameterManager();
     // Validate parameters before updating
     const validation = await parameterManager.validateParameters(validatedData.parameters);
     
@@ -128,6 +127,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action } = body;
 
+    const parameterManager = getParameterManager();
     switch (action) {
       case 'validate': {
         const { parameters } = body;

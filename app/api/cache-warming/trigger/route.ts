@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCacheWarmingService } from "../../../../src/lib/cache-warming-service";
 import { createApiResponse } from "../../../../src/lib/api-response";
 import { apiAuthWrapper } from "../../../../src/lib/api-auth";
+
+// Lazy import cache services to prevent build-time initialization
+const getCacheWarmingService = () => {
+  try {
+    // Only import during runtime, not build time
+    const { getCacheWarmingService: _getCacheWarmingService } = require("../../../../src/lib/cache-warming-service");
+    return _getCacheWarmingService();
+  } catch (error) {
+    console.warn("[Cache Warming Trigger] Failed to load cache warming service:", error);
+    return null;
+  }
+};
 
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
   try {
@@ -62,6 +73,13 @@ async function triggerSingleStrategy(strategyName: string, force: boolean = fals
 
     // Check if strategy exists
     const cacheWarmingService = getCacheWarmingService();
+    if (!cacheWarmingService) {
+      return {
+        strategy: strategyName,
+        success: false,
+        error: "Cache warming service not available during build time",
+      };
+    }
     const strategies = cacheWarmingService.getStrategies();
     const strategy = strategies.get(strategyName);
 
@@ -110,6 +128,22 @@ async function triggerSingleStrategy(strategyName: string, force: boolean = fals
 export async function GET(request: NextRequest) {
   try {
     const cacheWarmingService = getCacheWarmingService();
+    if (!cacheWarmingService) {
+      return createApiResponse({
+        success: true,
+        data: {
+          availableStrategies: [],
+          strategies: [],
+          serviceMetrics: {
+            isActive: false,
+            totalExecutions: 0,
+            successRate: 0,
+            lastExecution: null,
+          },
+          message: "Cache warming service not available during build time",
+        },
+      });
+    }
     const strategies = cacheWarmingService.getStrategies();
     const metrics = cacheWarmingService.getMetrics();
 
@@ -117,7 +151,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         availableStrategies: Array.from(strategies.keys()),
-        strategies: Array.from(strategies.entries()).map(([name, strategy]) => ({
+        strategies: Array.from(strategies.entries()).map(([name, strategy]: [string, any]) => ({
           name,
           enabled: strategy.enabled,
           priority: strategy.priority,

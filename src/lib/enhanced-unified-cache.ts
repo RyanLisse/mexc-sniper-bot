@@ -125,8 +125,10 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
       ...config,
     };
 
-    // Initialize Redis/Valkey cache service
-    this.redisCache = getRedisCacheService(this.enhancedConfig.redis);
+    // Initialize Redis/Valkey cache service only if not in build environment
+    this.redisCache = this.shouldInitializeRedis()
+      ? getRedisCacheService(this.enhancedConfig.redis)
+      : this.createMockRedisService();
 
     // Initialize performance metrics
     this.performanceMetrics = {
@@ -151,6 +153,85 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
     if (this.enhancedConfig.enableCacheWarming) {
       this.initializeCacheWarming();
     }
+  }
+
+  // ============================================================================
+  // Environment and Initialization Helpers
+  // ============================================================================
+
+  /**
+   * Check if Redis should be initialized based on environment
+   */
+  private shouldInitializeRedis(): boolean {
+    // Skip during any build-related environment
+    if (
+      // Standard build environments
+      process.env.NODE_ENV === "production" &&
+      (process.env.VERCEL_ENV === undefined || // Vercel build environment
+        process.env.NEXT_PHASE === "phase-production-build" || // Next.js build phase
+        process.env.BUILD_ID !== undefined || // Build environment indicator
+        process.env.NEXT_BUILD === "true") // Build flag
+    ) {
+      return false;
+    }
+
+    // Skip during any Next.js build phase
+    if (
+      process.env.NEXT_PHASE === "phase-production-build" ||
+      process.env.NEXT_BUILD === "true" ||
+      process.env.STATIC_GENERATION === "true"
+    ) {
+      return false;
+    }
+
+    // Additional build environment detection
+    if (
+      // CI/CD environments
+      process.env.CI === "true" ||
+      process.env.GITHUB_ACTIONS === "true" ||
+      process.env.VERCEL === "1" ||
+      // Build processes
+      process.env.npm_lifecycle_event === "build" ||
+      process.env.npm_command === "run-script" ||
+      // Static generation
+      typeof window === "undefined" && process.env.NODE_ENV === "production"
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Create a mock Redis service for build environments
+   */
+  private createMockRedisService(): any {
+    return {
+      get: async () => null,
+      set: async () => false,
+      delete: async () => false,
+      clear: async () => 0,
+      mget: async (keys: string[]) => keys.map(() => null),
+      mset: async () => false,
+      isHealthy: () => false,
+      getMetrics: () => ({
+        hits: 0,
+        misses: 0,
+        sets: 0,
+        deletes: 0,
+        errors: 0,
+        connectionStatus: "disconnected" as const,
+        avgResponseTime: 0,
+        totalOperations: 0,
+        cacheSize: 0,
+        memoryUsage: 0,
+      }),
+      getInfo: async () => ({ status: "disconnected" }),
+      getCacheSize: async () => 0,
+      getMemoryUsage: async () => 0,
+      getHitRate: () => 0,
+      destroy: async () => {},
+    };
   }
 
   // ============================================================================

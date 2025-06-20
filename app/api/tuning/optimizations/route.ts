@@ -6,11 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { ParameterOptimizationEngine } from "../../../../src/services/parameter-optimization-engine";
+import { getParameterOptimizationEngine } from "../../../../src/services/parameter-optimization-engine";
 import { logger } from "../../../../src/lib/utils";
-
-// Initialize optimization engine
-const optimizationEngine = new ParameterOptimizationEngine();
 
 // Validation schemas
 const OptimizationRequestSchema = z.object({
@@ -143,6 +140,7 @@ export async function POST(request: NextRequest) {
         }
       };
 
+      const optimizationEngine = getParameterOptimizationEngine();
       const optimizationId = await optimizationEngine.startOptimization(defaultRequest);
       
       return NextResponse.json({ 
@@ -188,6 +186,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Start optimization
+    const optimizationEngine = getParameterOptimizationEngine();
     const optimizationId = await optimizationEngine.startOptimization(optimizationRequest);
 
     logger.info('Optimization started', { optimizationId, algorithm: validatedRequest.strategy.algorithm });

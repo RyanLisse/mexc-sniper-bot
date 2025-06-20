@@ -486,7 +486,7 @@ export class MultiPhaseTradingService {
 
     // Calculate max drawdown
     const maxDrawdown = this.calculateMaxDrawdown(successfulExecutions, initialInvestment);
-    
+
     // Calculate Sharpe ratio
     const sharpeRatio = this.calculateSharpeRatio(successfulExecutions, initialInvestment);
 
@@ -514,15 +514,15 @@ export class MultiPhaseTradingService {
     // Calculate cumulative portfolio value and track peak-to-trough declines
     for (const execution of executions) {
       portfolioValue += execution.profit || 0;
-      
+
       // Update peak if we've reached a new high
       if (portfolioValue > peak) {
         peak = portfolioValue;
       }
-      
+
       // Calculate current drawdown from peak
       const currentDrawdown = ((peak - portfolioValue) / peak) * 100;
-      
+
       // Update max drawdown if current is worse
       if (currentDrawdown > maxDrawdown) {
         maxDrawdown = currentDrawdown;
@@ -541,15 +541,16 @@ export class MultiPhaseTradingService {
     if (executions.length < 2) return 0; // Need at least 2 data points for std dev
 
     // Calculate returns as percentages for each execution
-    const returns = executions.map(exec => ((exec.profit || 0) / initialInvestment) * 100);
-    
+    const returns = executions.map((exec) => ((exec.profit || 0) / initialInvestment) * 100);
+
     // Calculate average return
     const avgReturn = returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
-    
+
     // Calculate standard deviation of returns
-    const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / (returns.length - 1);
+    const variance =
+      returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / (returns.length - 1);
     const stdDev = Math.sqrt(variance);
-    
+
     // Return Sharpe ratio (using 0% risk-free rate)
     return stdDev === 0 ? 0 : avgReturn / stdDev;
   }

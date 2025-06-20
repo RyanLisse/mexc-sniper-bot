@@ -1,7 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCacheWarmingService } from "../../../../src/lib/cache-warming-service";
-import { globalCacheMonitoring } from "../../../../src/lib/cache-monitoring";
 import { createApiResponse } from "../../../../src/lib/api-response";
+
+// Lazy import cache services to prevent build-time initialization
+const getCacheWarmingService = () => {
+  try {
+    // Only import during runtime, not build time
+    const { getCacheWarmingService: _getCacheWarmingService } = require("../../../../src/lib/cache-warming-service");
+    return _getCacheWarmingService();
+  } catch (error) {
+    console.warn("[Cache Warming Status] Failed to load cache warming service:", error);
+    return null;
+  }
+};
+
+const getGlobalCacheMonitoring = () => {
+  try {
+    // Only import during runtime, not build time
+    const { globalCacheMonitoring } = require("../../../../src/lib/cache-monitoring");
+    return globalCacheMonitoring;
+  } catch (error) {
+    console.warn("[Cache Warming Status] Failed to load cache monitoring:", error);
+    return null;
+  }
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,12 +60,26 @@ export async function GET(request: NextRequest) {
 async function getCacheWarmingStatus() {
   try {
     const cacheWarmingService = getCacheWarmingService();
+    if (!cacheWarmingService) {
+      return {
+        isActive: false,
+        strategies: [],
+        metrics: {
+          totalExecutions: 0,
+          successfulExecutions: 0,
+          failedExecutions: 0,
+          averageExecutionTime: 0,
+          lastExecution: null,
+          successRate: 0,
+        },
+      };
+    }
     const strategies = cacheWarmingService.getStrategies();
     const metrics = cacheWarmingService.getMetrics();
 
     return {
       isActive: !!cacheWarmingService, // Service exists and is initialized
-      strategies: Array.from(strategies.entries()).map(([name, strategy]) => ({
+      strategies: Array.from(strategies.entries()).map(([name, strategy]: [string, any]) => ({
         name,
         enabled: strategy.enabled,
         priority: strategy.priority,
@@ -85,6 +120,24 @@ async function getCacheWarmingStatus() {
 
 async function getCachePerformanceMetrics() {
   try {
+    const globalCacheMonitoring = getGlobalCacheMonitoring();
+    if (!globalCacheMonitoring) {
+      return {
+        hitRate: 0,
+        missRate: 100,
+        totalRequests: 0,
+        averageResponseTime: 0,
+        cacheSize: 0,
+        memoryUsage: 0,
+        evictions: 0,
+        errors: 0,
+        trends: {
+          hitRateChange: 0,
+          responseTimeChange: 0,
+          requestVolumeChange: 0,
+        },
+      };
+    }
     const status = await globalCacheMonitoring.getCurrentStatus();
 
     return {

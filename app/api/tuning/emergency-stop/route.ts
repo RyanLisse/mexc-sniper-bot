@@ -5,13 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-// import { ParameterOptimizationEngine } from "../../../../src/services/parameter-optimization-engine";
-import { ParameterManager } from "../../../../src/lib/parameter-management";
+import { getParameterManager } from "../../../../src/lib/parameter-management";
 import { logger } from "../../../../src/lib/utils";
-
-// Initialize components
-// const optimizationEngine = new ParameterOptimizationEngine();
-const parameterManager = new ParameterManager();
 
 /**
  * POST /api/tuning/emergency-stop
@@ -59,6 +54,7 @@ export async function POST(request: NextRequest) {
       // 2. Revert parameters to safe state
       if (revertToSnapshot) {
         // Find the most recent safe snapshot
+        const parameterManager = getParameterManager();
         const snapshots = parameterManager.getSnapshots();
         const safeSnapshot = snapshots.find(s => 
           s.name.includes('emergency') || 
@@ -76,6 +72,7 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // Create emergency snapshot before reset
+        const parameterManager = getParameterManager();
         const emergencySnapshotId = await parameterManager.createSnapshot(
           `emergency_backup_${Date.now()}`,
           `Emergency backup before stop: ${reason || 'Manual stop'}`
