@@ -277,7 +277,7 @@ describe('CacheWarmingService', () => {
 
     it('should handle strategy execution errors gracefully', async () => {
       // Directly mock the warmup method to avoid database recursion issues
-      const warmupSpy = vi.spyOn(warmingService, 'warmupMexcSymbols').mockRejectedValueOnce(new Error('Database error'));
+      const warmupSpy = vi.spyOn(warmingService as any, 'warmupMexcSymbols').mockRejectedValueOnce(new Error('Database error'));
 
       const result = await warmingService.executeStrategy('mexc-symbols');
 
@@ -293,8 +293,8 @@ describe('CacheWarmingService', () => {
 
     it('should continue with other strategies when one fails', async () => {
       // Mock specific warmup methods to avoid recursion
-      const mexcSpy = vi.spyOn(warmingService, 'warmupMexcSymbols').mockRejectedValueOnce(new Error('MEXC API error'));
-      const patternSpy = vi.spyOn(warmingService, 'warmupPatternData').mockResolvedValueOnce(undefined);
+      const mexcSpy = vi.spyOn(warmingService as any, 'warmupMexcSymbols').mockRejectedValueOnce(new Error('MEXC API error'));
+      const patternSpy = vi.spyOn(warmingService as any, 'warmupPatternData').mockResolvedValueOnce(undefined);
 
       // Execute all strategies
       await warmingService.executeAllStrategies();

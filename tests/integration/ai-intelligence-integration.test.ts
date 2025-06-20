@@ -88,8 +88,17 @@ describe("AI Intelligence Integration", () => {
         perplexityInsights: {
           summary: "Test research summary",
           keyFindings: ["Test finding 1", "Test finding 2"],
-          marketContext: { sentiment: "bullish" },
-          riskAssessment: { level: "low" },
+          marketContext: { 
+            sentiment: "bullish",
+            volatility: "medium",
+            volume: "high", 
+            technicalOutlook: "positive"
+          },
+          riskAssessment: { 
+            level: "low",
+            factors: ["market stability"],
+            mitigation: ["position sizing"]
+          },
           opportunities: { shortTerm: [], mediumTerm: [], longTerm: [] },
           citations: [],
           researchTimestamp: Date.now(),
@@ -113,14 +122,23 @@ describe("AI Intelligence Integration", () => {
       recommendations: ["Test recommendation"]
     });
 
-    vi.spyOn(aiIntelligenceService, 'generateCohereEmbedding').mockResolvedValue([0.1, 0.2, 0.3]);
+    vi.spyOn(aiIntelligenceService, 'generateCohereEmbedding').mockResolvedValue([[0.1, 0.2, 0.3]]);
     vi.spyOn(aiIntelligenceService, 'generatePatternEmbedding').mockResolvedValue([0.1, 0.2, 0.3]);
 
     vi.spyOn(aiIntelligenceService, 'conductMarketResearch').mockResolvedValue({
       summary: "Test research",
       keyFindings: ["Finding 1"],
-      marketContext: { sentiment: "bullish" },
-      riskAssessment: { level: "low" },
+      marketContext: { 
+        sentiment: "bullish",
+        volatility: "medium",
+        volume: "high", 
+        technicalOutlook: "positive"
+      },
+      riskAssessment: { 
+        level: "low",
+        factors: ["market stability"],
+        mitigation: ["position sizing"]
+      },
       opportunities: { shortTerm: [], mediumTerm: [], longTerm: [] },
       citations: [],
       researchTimestamp: Date.now(),
@@ -128,8 +146,8 @@ describe("AI Intelligence Integration", () => {
     });
 
     vi.spyOn(aiIntelligenceService, 'getCacheStats').mockReturnValue({
-      research: { size: 0 },
-      embeddings: { size: 0 }
+      research: { size: 0, hitRate: 0.85 },
+      embeddings: { size: 0, hitRate: 0.75 }
     });
 
     vi.spyOn(aiIntelligenceService, 'clearExpiredCache').mockImplementation(() => {});
@@ -148,10 +166,11 @@ describe("AI Intelligence Integration", () => {
     vi.spyOn(patternDetectionEngine, 'analyzeSymbolReadiness').mockResolvedValue({
       confidence: 95,
       isReady: true,
+      patternType: "ready_state",
       enhancedAnalysis: true,
-      metadata: {
-        source: "ai_enhanced",
-        timestamp: Date.now()
+      aiEnhancement: {
+        aiConfidence: 90,
+        recommendations: ["Strong pattern detected"]
       }
     });
   });
@@ -245,11 +264,8 @@ Long-term: Strategic hold`
       vi.spyOn(patternDetectionEngine, 'analyzeSymbolReadiness').mockResolvedValueOnce({
         confidence: 82, // Base confidence without AI enhancement
         isReady: true,
-        enhancedAnalysis: false, // No AI enhancement due to failure
-        metadata: {
-          source: "base_pattern",
-          timestamp: Date.now()
-        }
+        patternType: "ready_state",
+        enhancedAnalysis: false // No AI enhancement due to failure
       });
 
       const result = await patternDetectionEngine.analyzeSymbolReadiness(testSymbolData);
@@ -490,8 +506,17 @@ Long-term: Strategic hold`
         perplexityInsights: {
           summary: "Limited analysis due to service unavailability",
           keyFindings: ["Partial data available"],
-          marketContext: { sentiment: "neutral" },
-          riskAssessment: { level: "medium" },
+          marketContext: { 
+            sentiment: "neutral",
+            volatility: "medium",
+            volume: "medium", 
+            technicalOutlook: "neutral"
+          },
+          riskAssessment: { 
+            level: "medium",
+            factors: ["market uncertainty"],
+            mitigation: ["conservative position sizing"]
+          },
           opportunities: { shortTerm: [], mediumTerm: [], longTerm: [] },
           citations: [],
           researchTimestamp: Date.now(),

@@ -128,11 +128,11 @@ export async function GET(request: NextRequest) {
         })),
         serviceMetrics: {
           isActive: !!cacheWarmingService, // Service exists and is initialized
-          totalExecutions: metrics.totalExecutions,
-          successRate: metrics.totalExecutions > 0
-            ? (metrics.successfulExecutions / metrics.totalExecutions) * 100
+          totalExecutions: metrics.totalRuns,
+          successRate: metrics.totalRuns > 0
+            ? (metrics.successfulRuns / metrics.totalRuns) * 100
             : 0,
-          lastExecution: metrics.lastExecution ? new Date(metrics.lastExecution).toISOString() : null,
+          lastExecution: metrics.lastWarmupTime ? new Date(metrics.lastWarmupTime).toISOString() : null,
         },
       },
     });

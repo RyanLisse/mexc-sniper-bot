@@ -874,8 +874,8 @@ export class UnifiedMexcService {
       );
 
       // Update metrics
-      this.metrics.apiCalls++;
-      this.metrics.lastCallTime = Date.now();
+      this.metrics.requestCount++;
+      this.metrics.totalResponseTime += executionTimeMs;
 
       return {
         success: true,
@@ -889,8 +889,8 @@ export class UnifiedMexcService {
       const executionTimeMs = Date.now() - startTime;
       console.error("[UnifiedMexcService] Calendar API call failed:", error);
 
-      this.metrics.errors++;
-      this.metrics.lastCallTime = Date.now();
+      this.metrics.errorCount++;
+      this.metrics.totalResponseTime += executionTimeMs;
 
       return {
         success: false,

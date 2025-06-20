@@ -697,7 +697,7 @@ Focus on actionable trading signals with performance-aware recommendations.
 
       const symbols = serviceResponse.data;
       // Convert SymbolEntry to MexcSymbolData for legacy analysis
-      const symbolData = symbols.map((entry: SymbolEntry) => ({
+      const symbolData = symbols.map((entry: any) => ({
         symbol: `${entry.cd}USDT`,
         vcoinId: entry.cd,
         status: entry.sts === 2 ? "ready" : "pending",

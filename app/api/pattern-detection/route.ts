@@ -6,8 +6,8 @@ import { apiAuthWrapper } from "../../../src/lib/api-auth";
 import { createApiResponse } from "../../../src/lib/api-response";
 import { z } from "zod";
 
-// Import schemas from unified client
-import { CalendarEntrySchema, SymbolEntrySchema } from "../../../src/services/unified-mexc-client";
+// Import schemas from unified service (correct schemas)
+import { CalendarEntrySchema, SymbolEntrySchema } from "../../../src/services/unified-mexc-service";
 
 // Request schemas
 const PatternDetectionRequestSchema = z.object({

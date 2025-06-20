@@ -304,9 +304,10 @@ function PatternCard({
   showAdvanceDetection: boolean;
   onClick?: () => void;
 }) {
-  const hasAIEnhancement =
+  const hasAIEnhancement = Boolean(
     pattern.aiInsights &&
-    (pattern.aiInsights.cohereEmbedding || pattern.aiInsights.perplexityInsights);
+    (pattern.aiInsights.cohereEmbedding || pattern.aiInsights.perplexityInsights)
+  );
 
   return (
     <TooltipProvider>

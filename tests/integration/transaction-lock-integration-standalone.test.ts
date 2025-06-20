@@ -336,7 +336,10 @@ describe("Transaction Lock Integration Tests (Standalone)", () => {
       const firstLock = await lockService.acquireLock({
         resourceId: `trade-${tradeParams.idempotencyKey}`,
         ownerId: 'trader-1',
-        timeout: 30000
+        ownerType: 'user',
+        transactionType: 'trade',
+        transactionData: tradeParams,
+        timeoutMs: 30000
       });
       expect(firstLock.success).toBe(true);
       
@@ -344,10 +347,13 @@ describe("Transaction Lock Integration Tests (Standalone)", () => {
       const duplicateLock = await lockService.acquireLock({
         resourceId: `trade-${tradeParams.idempotencyKey}`,
         ownerId: 'trader-2',
-        timeout: 30000
+        ownerType: 'user',
+        transactionType: 'trade',
+        transactionData: tradeParams,
+        timeoutMs: 30000
       });
       expect(duplicateLock.success).toBe(false);
-      expect(duplicateLock.reason).toContain('locked');
+      expect(duplicateLock.error).toContain('locked');
     });
 
     it("should allow different trades to execute concurrently", async () => {
@@ -374,12 +380,18 @@ describe("Transaction Lock Integration Tests (Standalone)", () => {
         lockService.acquireLock({
           resourceId: `trade-${trade1.idempotencyKey}`,
           ownerId: 'trader-1',
-          timeout: 30000
+          ownerType: 'user',
+          transactionType: 'trade',
+          transactionData: trade1,
+          timeoutMs: 30000
         }),
         lockService.acquireLock({
           resourceId: `trade-${trade2.idempotencyKey}`,
-          ownerId: 'trader-2', 
-          timeout: 30000
+          ownerId: 'trader-2',
+          ownerType: 'user',
+          transactionType: 'trade',
+          transactionData: trade2,
+          timeoutMs: 30000
         })
       ]);
       

@@ -70,9 +70,12 @@ function createPostgresClient() {
   // PostgreSQL connection configuration
   const connectionConfig = {
     // Connection pool settings
-    max: isProduction ? 20 : 5, // Max connections
+    max: isProduction ? 20 : 10, // Increased max connections for better concurrency
     idle_timeout: 20, // 20 seconds idle timeout
-    connect_timeout: 30, // 30 seconds connect timeout
+    connect_timeout: 10, // Reduced to 10 seconds for faster failures
+    
+    // Keep alive settings for better connection stability (TCP keepalive interval in seconds)
+    keep_alive: 60,
 
     // SSL/TLS settings for NeonDB
     ssl: isProduction ? "require" : ("prefer" as any),
@@ -83,8 +86,9 @@ function createPostgresClient() {
     // Connection handling
     connection: {
       application_name: "mexc-sniper-bot",
-      statement_timeout: 30000, // 30 seconds
-      idle_in_transaction_session_timeout: 30000, // 30 seconds
+      statement_timeout: 15000, // Reduced to 15 seconds for faster responses
+      idle_in_transaction_session_timeout: 15000, // Reduced to 15 seconds
+      lock_timeout: 10000, // 10 seconds for lock timeouts
     },
 
     // Transform for compatibility
@@ -264,7 +268,7 @@ export async function healthCheck() {
     await db.execute(sql`SELECT 1`);
     const responseTime = Date.now() - startTime;
 
-    const isHealthy = responseTime < 1000; // Less than 1 second is healthy
+    const isHealthy = responseTime < 2000; // Less than 2 seconds is healthy for NeonDB
     const status = isHealthy ? "healthy" : responseTime < 5000 ? "degraded" : "critical";
 
     return {

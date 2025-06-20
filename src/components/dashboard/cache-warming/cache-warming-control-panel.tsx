@@ -23,6 +23,45 @@ import { Progress } from "../../ui/progress";
 import { Skeleton } from "../../ui/skeleton";
 import { useToast } from "../../ui/use-toast";
 
+// Helper component for status icons
+function StrategyStatusIcon({ status }: { status: string }) {
+  switch (status) {
+    case "active":
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case "pending":
+      return <Clock className="h-4 w-4 text-blue-500" />;
+    case "overdue":
+      return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+    case "disabled":
+      return <RefreshCw className="h-4 w-4 text-gray-500" />;
+    default:
+      return <RefreshCw className="h-4 w-4 text-gray-500" />;
+  }
+}
+
+// Helper component for error display
+function CacheWarmingError({ error }: { error: unknown }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Database className="h-5 w-5" />
+          Cache Warming Control
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error Loading Cache Data</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Unknown error occurred"}
+          </AlertDescription>
+        </Alert>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function CacheWarmingControlPanel() {
   const { data, isLoading, error } = useCacheMetrics();
   const { mutate: triggerWarming, isPending: isTriggeringWarming } = useCacheWarmingTrigger();
@@ -100,45 +139,12 @@ export function CacheWarmingControlPanel() {
   }
 
   if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Cache Warming Control
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Error Loading Cache Data</AlertTitle>
-            <AlertDescription>
-              {error instanceof Error ? error.message : "Unknown error occurred"}
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
+    return <CacheWarmingError error={error} />;
   }
 
   if (!data) {
     return null;
   }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "active":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "pending":
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      case "overdue":
-        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
-      case "disabled":
-        return <RefreshCw className="h-4 w-4 text-gray-500" />;
-      default:
-        return <RefreshCw className="h-4 w-4 text-gray-500" />;
-    }
-  };
 
   return (
     <Card>
@@ -207,7 +213,7 @@ export function CacheWarmingControlPanel() {
                     onChange={() => toggleStrategySelection(strategy.name)}
                     className="rounded"
                   />
-                  {getStatusIcon(strategy.status)}
+                  <StrategyStatusIcon status={strategy.status} />
                   <div>
                     <div className="font-medium capitalize">{strategy.name.replace(/-/g, " ")}</div>
                     <div className="text-sm text-muted-foreground">

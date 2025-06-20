@@ -1,144 +1,246 @@
-# Claude AI Assistant Instructions
+# Claude Code Configuration
 
-This file contains instructions and context for Claude AI assistant when working on the MEXC Sniper Bot project.
+## Build Commands
+- `npm run build`: Build the project
+- `npm run test`: Run the full test suite
+- `npm run lint`: Run ESLint and format checks
+- `npm run typecheck`: Run TypeScript type checking
+- `./claude-flow --help`: Show all available commands
 
-## Project Overview
+## Claude-Flow Complete Command Reference
 
-This is a TypeScript-based multi-agent trading bot system for the MEXC cryptocurrency exchange. The system features:
+### Core System Commands
+- `./claude-flow start [--ui] [--port 3000] [--host localhost]`: Start orchestration system with optional web UI
+- `./claude-flow status`: Show comprehensive system status
+- `./claude-flow monitor`: Real-time system monitoring dashboard
+- `./claude-flow config <subcommand>`: Configuration management (show, get, set, init, validate)
 
-- 🤖 5 specialized TypeScript AI agents with GPT-4 integration
-- ⚡ Inngest workflow orchestration for reliable event-driven tasks
-- 🗄️ Drizzle ORM with PostgreSQL/TursoDB support for data persistence
-- 🔄 TanStack Query for real-time data fetching and caching
-- 🔐 Kinde Auth for secure user authentication
-- 🏢 Serverless deployment optimized for Vercel with edge functions
-- 📊 Real-time MEXC exchange integration for trading signals
-- 🎯 Pattern discovery for ready state detection
-- 💼 User-configurable take profit levels and risk management
+### Agent Management
+- `./claude-flow agent spawn <type> [--name <name>]`: Create AI agents (researcher, coder, analyst, etc.)
+- `./claude-flow agent list`: List all active agents
+- `./claude-flow spawn <type>`: Quick agent spawning (alias for agent spawn)
 
-## Architecture
+### Task Orchestration
+- `./claude-flow task create <type> [description]`: Create and manage tasks
+- `./claude-flow task list`: View active task queue
+- `./claude-flow workflow <file>`: Execute workflow automation files
 
-The system operates entirely in TypeScript with no Python dependencies, designed for modern serverless deployment with global edge optimization.
+### Memory Management
+- `./claude-flow memory store <key> <data>`: Store persistent data across sessions
+- `./claude-flow memory get <key>`: Retrieve stored information
+- `./claude-flow memory list`: List all memory keys
+- `./claude-flow memory export <file>`: Export memory to file
+- `./claude-flow memory import <file>`: Import memory from file
+- `./claude-flow memory stats`: Memory usage statistics
+- `./claude-flow memory cleanup`: Clean unused memory entries
 
-### Key Components
+### SPARC Development Modes
+- `./claude-flow sparc "<task>"`: Run orchestrator mode (default)
+- `./claude-flow sparc run <mode> "<task>"`: Run specific SPARC mode
+- `./claude-flow sparc tdd "<feature>"`: Test-driven development mode
+- `./claude-flow sparc modes`: List all 17 available SPARC modes
 
-1. **Multi-Agent System** (`src/mexc-agents/`)
-   - MexcApiAgent: MEXC API analysis and signal extraction
-   - PatternDiscoveryAgent: Ready state pattern detection
-   - CalendarAgent: New listing discovery and monitoring
-   - SymbolAnalysisAgent: Real-time readiness assessment
-   - MexcOrchestrator: Multi-agent workflow coordination
+Available SPARC modes: orchestrator, coder, researcher, tdd, architect, reviewer, debugger, tester, analyzer, optimizer, documenter, designer, innovator, swarm-coordinator, memory-manager, batch-executor, workflow-manager
 
-2. **Database Layer** (`src/db/`)
-   - Drizzle ORM for type-safe database operations
-   - PostgreSQL/TursoDB for production
-   - Comprehensive migration system
+### Swarm Coordination
+- `./claude-flow swarm "<objective>" [options]`: Multi-agent swarm coordination
+- `--strategy`: research, development, analysis, testing, optimization, maintenance
+- `--mode`: centralized, distributed, hierarchical, mesh, hybrid
+- `--max-agents <n>`: Maximum number of agents (default: 5)
+- `--parallel`: Enable parallel execution
+- `--monitor`: Real-time monitoring
+- `--output <format>`: json, sqlite, csv, html
 
-3. **API Routes** (`app/api/`)
-   - RESTful API endpoints for all system operations
-   - Authentication-protected routes
-   - Real-time webhook integrations
+### MCP Server Integration
+- `./claude-flow mcp start [--port 3000] [--host localhost]`: Start MCP server
+- `./claude-flow mcp status`: Show MCP server status
+- `./claude-flow mcp tools`: List available MCP tools
 
-4. **Frontend** (`app/` and `src/components/`)
-   - Next.js 14 with App Router
-   - Real-time dashboard with TanStack Query
-   - Comprehensive monitoring and configuration interfaces
+### Claude Integration
+- `./claude-flow claude auth`: Authenticate with Claude API
+- `./claude-flow claude models`: List available Claude models
+- `./claude-flow claude chat`: Interactive chat mode
 
-## Development Guidelines
+### Session Management
+- `./claude-flow session`: Manage terminal sessions
+- `./claude-flow repl`: Start interactive REPL mode
 
-### Testing
-- Unit tests: `tests/unit/`
-- Integration tests: `tests/integration/`
-- E2E tests: `tests/e2e/`
-- Run tests: `make test` or `npm test`
+### Enterprise Features
+- `./claude-flow project <subcommand>`: Project management (Enterprise)
+- `./claude-flow deploy <subcommand>`: Deployment operations (Enterprise)
+- `./claude-flow cloud <subcommand>`: Cloud infrastructure management (Enterprise)
+- `./claude-flow security <subcommand>`: Security and compliance tools (Enterprise)
+- `./claude-flow analytics <subcommand>`: Analytics and insights (Enterprise)
 
-### Database Operations
-- Always use transactions for critical operations
-- Implement proper error handling and rollback
-- Use the connection pool for optimal performance
+### Project Initialization
+- `./claude-flow init`: Initialize Claude-Flow project
+- `./claude-flow init --sparc`: Initialize with full SPARC development environment
 
-### Code Style
-- Follow existing TypeScript patterns
-- Use Drizzle ORM for all database operations
-- Implement proper error boundaries
-- Add comprehensive logging
+## Quick Start Workflows
 
-### Security
-- Never expose API keys or secrets
-- Use proper input validation
-- Implement rate limiting for all endpoints
-- Follow authentication best practices
+### Research Workflow
+```bash
+# Start a research swarm with distributed coordination
+./claude-flow swarm "Research modern web frameworks" --strategy research --mode distributed --parallel --monitor
 
-## Common Tasks
+# Or use SPARC researcher mode for focused research
+./claude-flow sparc run researcher "Analyze React vs Vue vs Angular performance characteristics"
 
-### Adding New API Endpoints
-1. Create route in `app/api/[endpoint]/route.ts`
-2. Implement proper authentication if needed
-3. Add input validation using Zod schemas
-4. Write comprehensive tests
+# Store findings in memory for later use
+./claude-flow memory store "research_findings" "Key insights from framework analysis"
+```
 
-### Database Changes
-1. Create new migration: `npm run db:generate`
-2. Review generated SQL carefully
-3. Test migration on development database
-4. Update schema types if needed
+### Development Workflow
+```bash
+# Start orchestration system with web UI
+./claude-flow start --ui --port 3000
 
-### Agent Development
-1. Extend `BaseAgent` class
-2. Implement required methods
-3. Add proper error handling
-4. Register with orchestrator
-5. Write comprehensive tests
+# Run TDD workflow for new feature
+./claude-flow sparc tdd "User authentication system with JWT tokens"
 
-## Environment Setup
+# Development swarm for complex projects
+./claude-flow swarm "Build e-commerce API with payment integration" --strategy development --mode hierarchical --max-agents 8 --monitor
 
-### Required Environment Variables
+# Check system status
+./claude-flow status
+```
 
-#### Authentication (Kinde Auth)
-- `KINDE_CLIENT_ID`: Kinde application client ID
-- `KINDE_CLIENT_SECRET`: Kinde application client secret
-- `KINDE_ISSUER_URL`: Kinde domain URL (e.g., https://your-domain.kinde.com)
-- `KINDE_SITE_URL`: Your application URL
-- `KINDE_POST_LOGOUT_REDIRECT_URL`: Where to redirect after logout
-- `KINDE_POST_LOGIN_REDIRECT_URL`: Where to redirect after login
+### Analysis Workflow
+```bash
+# Analyze codebase performance
+./claude-flow sparc run analyzer "Identify performance bottlenecks in current codebase"
 
-#### Core Services
-- `DATABASE_URL`: PostgreSQL connection string
-- `OPENAI_API_KEY`: Required for AI agents
-- `MEXC_API_KEY` / `MEXC_SECRET_KEY`: MEXC exchange API
-- `ENCRYPTION_MASTER_KEY`: For secure credential storage
+# Data analysis swarm
+./claude-flow swarm "Analyze user behavior patterns from logs" --strategy analysis --mode mesh --parallel --output sqlite
 
-#### Environment Files
-- `.env.local`: Local development (not committed)
-- `.env.test`: Test environment configuration
-- `.env.staging`: Staging environment configuration
-- `.env.example`: Template with all available variables
+# Store analysis results
+./claude-flow memory store "performance_analysis" "Bottlenecks identified in database queries"
+```
 
-See `.env.example` for complete configuration.
+### Maintenance Workflow
+```bash
+# System maintenance with safety controls
+./claude-flow swarm "Update dependencies and security patches" --strategy maintenance --mode centralized --monitor
 
-## Troubleshooting
+# Security review
+./claude-flow sparc run reviewer "Security audit of authentication system"
 
-### Common Issues
-1. Database connection issues: Check `DATABASE_URL` and network connectivity
-2. AI agent failures: Verify `OPENAI_API_KEY` and API limits
-3. MEXC API errors: Check IP allowlisting and credential validity
-4. Authentication issues: Verify Kinde configuration
+# Export maintenance logs
+./claude-flow memory export maintenance_log.json
+```
 
-### Debugging
-- Enable debug logging: `DEBUG=mexc-api:*`
-- Check health endpoints: `/api/health/*`
-- Monitor database performance: `/api/query-performance`
-- Review agent logs in browser console
+## Integration Patterns
 
-## Best Practices
+### Memory-Driven Coordination
+Use Memory to coordinate information across multiple SPARC modes and swarm operations:
 
-1. **Error Handling**: Always implement comprehensive error handling
-2. **Logging**: Use structured logging for debugging
-3. **Testing**: Write tests for all new functionality
-4. **Security**: Never commit sensitive data
-5. **Performance**: Monitor query performance and optimize as needed
-6. **Documentation**: Keep documentation up to date
+```bash
+# Store architecture decisions
+./claude-flow memory store "system_architecture" "Microservices with API Gateway pattern"
 
-## Support
+# All subsequent operations can reference this decision
+./claude-flow sparc run coder "Implement user service based on system_architecture in memory"
+./claude-flow sparc run tester "Create integration tests for microservices architecture"
+```
 
-For issues and feature requests, refer to the comprehensive documentation in the `docs/` directory.
+### Multi-Stage Development
+Coordinate complex development through staged execution:
+
+```bash
+# Stage 1: Research and planning
+./claude-flow sparc run researcher "Research authentication best practices"
+./claude-flow sparc run architect "Design authentication system architecture"
+
+# Stage 2: Implementation
+./claude-flow sparc tdd "User registration and login functionality"
+./claude-flow sparc run coder "Implement JWT token management"
+
+# Stage 3: Testing and deployment
+./claude-flow sparc run tester "Comprehensive security testing"
+./claude-flow swarm "Deploy authentication system" --strategy maintenance --mode centralized
+```
+
+### Enterprise Integration
+For enterprise environments with additional tooling:
+
+```bash
+# Project management integration
+./claude-flow project create "authentication-system"
+./claude-flow project switch "authentication-system"
+
+# Security compliance
+./claude-flow security scan
+./claude-flow security audit
+
+# Analytics and monitoring
+./claude-flow analytics dashboard
+./claude-flow deploy production --monitor
+```
+
+## Advanced Batch Tool Patterns
+
+### TodoWrite Coordination
+Always use TodoWrite for complex task coordination:
+
+```javascript
+TodoWrite([
+  {
+    id: "architecture_design",
+    content: "Design system architecture and component interfaces",
+    status: "pending",
+    priority: "high",
+    dependencies: [],
+    estimatedTime: "60min",
+    assignedAgent: "architect"
+  },
+  {
+    id: "frontend_development", 
+    content: "Develop React components and user interface",
+    status: "pending",
+    priority: "medium",
+    dependencies: ["architecture_design"],
+    estimatedTime: "120min",
+    assignedAgent: "frontend_team"
+  }
+]);
+```
+
+### Task and Memory Integration
+Launch coordinated agents with shared memory:
+
+```javascript
+// Store architecture in memory
+Task("System Architect", "Design architecture and store specs in Memory");
+
+// Other agents use memory for coordination
+Task("Frontend Team", "Develop UI using Memory architecture specs");
+Task("Backend Team", "Implement APIs according to Memory specifications");
+```
+
+## Code Style Preferences
+- Use ES modules (import/export) syntax
+- Destructure imports when possible
+- Use TypeScript for all new code
+- Follow existing naming conventions
+- Add JSDoc comments for public APIs
+- Use async/await instead of Promise chains
+- Prefer const/let over var
+
+## Workflow Guidelines
+- Always run typecheck after making code changes
+- Run tests before committing changes
+- Use meaningful commit messages
+- Create feature branches for new functionality
+- Ensure all tests pass before merging
+
+## Important Notes
+- **Use TodoWrite extensively** for all complex task coordination
+- **Leverage Task tool** for parallel agent execution on independent work
+- **Store all important information in Memory** for cross-agent coordination
+- **Use batch file operations** whenever reading/writing multiple files
+- **Check .claude/commands/** for detailed command documentation
+- **All swarm operations include automatic batch tool coordination**
+- **Monitor progress** with TodoRead during long-running operations
+- **Enable parallel execution** with --parallel flags for maximum efficiency
+
+This configuration ensures optimal use of Claude Code's batch tools for swarm orchestration and parallel task execution with full Claude-Flow capabilities.

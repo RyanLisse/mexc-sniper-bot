@@ -418,7 +418,6 @@ export function UnifiedTakeProfitSettings({
                     </Label>
                     <div className="flex items-center gap-4">
                       <Slider
-                        id="stop-loss"
                         value={[stopLoss]}
                         onValueChange={([value]) => setStopLoss(value)}
                         min={5}

@@ -56,13 +56,13 @@ async function getCacheWarmingStatus() {
         status: getStrategyStatus(strategy),
       })),
       metrics: {
-        totalExecutions: metrics.totalExecutions,
-        successfulExecutions: metrics.successfulExecutions,
-        failedExecutions: metrics.failedExecutions,
-        averageExecutionTime: metrics.averageExecutionTime,
-        lastExecution: metrics.lastExecution ? new Date(metrics.lastExecution).toISOString() : null,
-        successRate: metrics.totalExecutions > 0
-          ? (metrics.successfulExecutions / metrics.totalExecutions) * 100
+        totalExecutions: metrics.totalRuns,
+        successfulExecutions: metrics.successfulRuns,
+        failedExecutions: metrics.failedRuns,
+        averageExecutionTime: metrics.avgExecutionTime,
+        lastExecution: metrics.lastWarmupTime ? new Date(metrics.lastWarmupTime).toISOString() : null,
+        successRate: metrics.totalRuns > 0
+          ? (metrics.successfulRuns / metrics.totalRuns) * 100
           : 0,
       },
     };

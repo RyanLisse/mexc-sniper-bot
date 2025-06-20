@@ -484,14 +484,74 @@ export class MultiPhaseTradingService {
           }, 0) / successfulExecutions.length
         : 0;
 
+    // Calculate max drawdown
+    const maxDrawdown = this.calculateMaxDrawdown(successfulExecutions, initialInvestment);
+    
+    // Calculate Sharpe ratio
+    const sharpeRatio = this.calculateSharpeRatio(successfulExecutions, initialInvestment);
+
     return {
       totalPnl,
       totalPnlPercent,
-      maxDrawdown: 0, // TODO: Implement proper drawdown calculation
-      sharpeRatio: 0, // TODO: Implement Sharpe ratio calculation
+      maxDrawdown,
+      sharpeRatio,
       winRate,
       avgExecutionTime: avgExecutionTime / 1000, // Convert to seconds
     };
+  }
+
+  /**
+   * Calculate maximum drawdown percentage
+   * Max drawdown is the maximum percentage decline from a portfolio peak to trough
+   */
+  private calculateMaxDrawdown(executions: any[], initialInvestment: number): number {
+    if (executions.length === 0) return 0;
+
+    let portfolioValue = initialInvestment;
+    let peak = portfolioValue;
+    let maxDrawdown = 0;
+
+    // Calculate cumulative portfolio value and track peak-to-trough declines
+    for (const execution of executions) {
+      portfolioValue += execution.profit || 0;
+      
+      // Update peak if we've reached a new high
+      if (portfolioValue > peak) {
+        peak = portfolioValue;
+      }
+      
+      // Calculate current drawdown from peak
+      const currentDrawdown = ((peak - portfolioValue) / peak) * 100;
+      
+      // Update max drawdown if current is worse
+      if (currentDrawdown > maxDrawdown) {
+        maxDrawdown = currentDrawdown;
+      }
+    }
+
+    return maxDrawdown;
+  }
+
+  /**
+   * Calculate Sharpe ratio
+   * Sharpe ratio = (average return - risk-free rate) / standard deviation of returns
+   * Using 0% risk-free rate for crypto trading
+   */
+  private calculateSharpeRatio(executions: any[], initialInvestment: number): number {
+    if (executions.length < 2) return 0; // Need at least 2 data points for std dev
+
+    // Calculate returns as percentages for each execution
+    const returns = executions.map(exec => ((exec.profit || 0) / initialInvestment) * 100);
+    
+    // Calculate average return
+    const avgReturn = returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
+    
+    // Calculate standard deviation of returns
+    const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / (returns.length - 1);
+    const stdDev = Math.sqrt(variance);
+    
+    // Return Sharpe ratio (using 0% risk-free rate)
+    return stdDev === 0 ? 0 : avgReturn / stdDev;
   }
 }
 

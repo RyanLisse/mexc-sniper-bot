@@ -22,12 +22,33 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
     // Mock AI services to speed up tests and avoid API calls
     const { aiIntelligenceService } = await import('../../src/services/ai-intelligence-service');
     vi.spyOn(aiIntelligenceService, 'enhancePatternWithAI').mockResolvedValue({
+      symbolName: 'TESTUSDT',
+      type: 'ready_state' as const,
+      data: { sts: 2, st: 2, tt: 4 },
+      confidence: 85,
       cohereEmbedding: new Array(1024).fill(0.1),
       perplexityInsights: {
-        marketSentiment: 'bullish',
-        volumeInsights: 'increasing',
-        newsImpact: 'positive',
-        researchSummary: 'Mock research summary for testing'
+        summary: 'Mock research summary for testing',
+        keyFindings: ['Bullish momentum', 'Increasing volume'],
+        marketContext: {
+          sentiment: 'bullish',
+          volatility: 'medium',
+          volume: 'high',
+          technicalOutlook: 'positive'
+        },
+        riskAssessment: {
+          level: 'low' as const,
+          factors: ['market stability'],
+          mitigation: ['position sizing']
+        },
+        opportunities: {
+          shortTerm: ['breakout potential'],
+          mediumTerm: ['trend continuation'],
+          longTerm: ['strong fundamentals']
+        },
+        citations: [],
+        researchTimestamp: Date.now(),
+        confidence: 0.8
       },
       aiContext: {
         marketSentiment: 'neutral',
@@ -69,12 +90,33 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
     // Re-establish AI service mocks to prevent external API calls
     const { aiIntelligenceService } = await import('../../src/services/ai-intelligence-service');
     vi.spyOn(aiIntelligenceService, 'enhancePatternWithAI').mockResolvedValue({
+      symbolName: 'TESTUSDT',
+      type: 'ready_state' as const,
+      data: { sts: 2, st: 2, tt: 4 },
+      confidence: 85,
       cohereEmbedding: new Array(1024).fill(0.1),
       perplexityInsights: {
-        marketSentiment: 'bullish',
-        volumeInsights: 'increasing',
-        newsImpact: 'positive',
-        researchSummary: 'Mock research summary for testing'
+        summary: 'Mock research summary for testing',
+        keyFindings: ['Bullish momentum', 'Increasing volume'],
+        marketContext: {
+          sentiment: 'bullish',
+          volatility: 'medium',
+          volume: 'high',
+          technicalOutlook: 'positive'
+        },
+        riskAssessment: {
+          level: 'low' as const,
+          factors: ['market stability'],
+          mitigation: ['position sizing']
+        },
+        opportunities: {
+          shortTerm: ['breakout potential'],
+          mediumTerm: ['trend continuation'],
+          longTerm: ['strong fundamentals']
+        },
+        citations: [],
+        researchTimestamp: Date.now(),
+        confidence: 0.8
       },
       aiContext: {
         marketSentiment: 'neutral',

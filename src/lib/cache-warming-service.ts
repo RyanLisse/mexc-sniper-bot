@@ -379,7 +379,18 @@ export class CacheWarmingService {
 
         // Generate and cache pattern analysis
         try {
-          const patternData = await this.patternEngine.analyzeSymbolReadiness(symbol.symbolName);
+          // Construct SymbolEntry object from available data
+          const symbolEntry = {
+            cd: symbol.symbolName,
+            sts: 2, // Default ready state
+            st: 2,  // Default ready state  
+            tt: 4,  // Default trading type
+            ca: symbol.confidence,
+            ps: undefined,
+            qs: undefined,
+            ot: undefined,
+          };
+          const patternData = await this.patternEngine.analyzeSymbolReadiness(symbolEntry);
           await this.cache.set(cacheKey, patternData, "pattern_analysis", 30000); // 30 second TTL
         } catch (error) {
           console.warn(
