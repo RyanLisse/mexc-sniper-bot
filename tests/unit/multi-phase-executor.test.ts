@@ -187,42 +187,96 @@ describe('MultiPhaseExecutor', () => {
   });
 
   describe('Phase Visualization', () => {
-    it('should generate correct phase visualization', () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement phase visualization with emoji indicators
+    it('should generate correct phase visualization', async () => {
+      // Execute some phases to test visualization
+      await executor.recordPhaseExecution(1, 150, 250);
+      await executor.recordPhaseExecution(2, 200, 250);
+
+      const visualization = executor.getPhaseVisualization(250); // 150% price increase
+      
+      expect(visualization).toBeDefined();
+      expect(typeof visualization).toBe('string');
+      expect(visualization.length).toBeGreaterThan(0);
+      // Check for basic visualization structure
+      expect(visualization).toMatch(/Phase|phase/i);
     });
 
     it('should show completed phases correctly', async () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement completed phase visualization
+      // Execute first two phases
+      await executor.recordPhaseExecution(1, 150, 250);
+      await executor.recordPhaseExecution(2, 200, 250);
+
+      const completedVisualization = executor.getPhaseVisualization(250);
+      
+      expect(completedVisualization).toBeDefined();
+      expect(typeof completedVisualization).toBe('string');
+      expect(completedVisualization.length).toBeGreaterThan(0);
+      // Should contain information about completed phases
+      expect(completedVisualization).toMatch(/1|2/);
     });
 
-    it('should generate visualization with percentage', () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement percentage-based phase visualization
+    it('should generate visualization with percentage', async () => {
+      // Execute one phase
+      await executor.recordPhaseExecution(1, 150, 250);
+
+      const percentageVisualization = executor.getPhaseVisualizationWithPercentage(50); // 50% price increase
+      
+      expect(percentageVisualization).toBeDefined();
+      expect(typeof percentageVisualization).toBe('string');
+      expect(percentageVisualization.length).toBeGreaterThan(0);
+      // Should contain percentage information
+      expect(percentageVisualization).toMatch(/%|percent/i);
     });
   });
 
   describe('Execution Analytics', () => {
     it('should return empty analytics when no executions', () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement empty analytics state validation
+      const analytics = executor.getExecutionAnalytics();
+      
+      expect(analytics).toBeDefined();
+      expect(analytics.totalExecutions).toBe(0);
+      expect(analytics.successRate).toBe(0);
+      expect(analytics.avgExecutionTime).toBe(0);
+      expect(analytics.avgSlippage).toBe(0);
+      expect(analytics.totalProfitRealized).toBe(0);
+      expect(analytics.bestExecution).toBeNull();
+      expect(analytics.worstExecution).toBeNull();
+      expect(analytics.executionTrend).toBe('stable');
     });
 
     it('should calculate analytics correctly after executions', async () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement analytics calculation with execution metrics
+      // Execute several phases using recordPhaseExecution
+      await executor.recordPhaseExecution(1, 150, 250, { latency: 50 });
+      await executor.recordPhaseExecution(2, 200, 250, { latency: 60 });
+      await executor.recordPhaseExecution(3, 300, 250, { latency: 70 });
+
+      const analytics = executor.getExecutionAnalytics();
+      
+      expect(analytics.totalExecutions).toBe(3);
+      expect(analytics.successRate).toBeGreaterThan(0);
+      expect(analytics.avgExecutionTime).toBeGreaterThan(0);
+      expect(analytics.totalProfitRealized).toBeGreaterThan(0);
+      expect(analytics.bestExecution).toBeDefined();
+      expect(analytics.worstExecution).toBeDefined();
+      expect(analytics.executionTrend).toMatch(/improving|stable|declining/);
     });
 
     it('should determine execution trend', async () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement execution trend analysis
+      // Execute phases multiple times to establish trend
+      for (let i = 1; i <= 4; i++) {
+        await executor.recordPhaseExecution(i, 100 + i * 50, 250, { latency: 40 + i * 10 });
+      }
+
+      const analytics = executor.getExecutionAnalytics();
+      
+      expect(analytics).toBeDefined();
+      expect(analytics.totalExecutions).toBe(4);
+      expect(typeof analytics.avgExecutionTime).toBe('number');
+      expect(analytics.avgExecutionTime).toBeGreaterThan(0);
+      expect(analytics.successRate).toBeGreaterThanOrEqual(0);
+      expect(analytics.successRate).toBeLessThanOrEqual(100);
+      expect(analytics.executionTrend).toBeDefined();
+      expect(analytics.executionTrend).toMatch(/improving|stable|declining/);
     });
   });
 

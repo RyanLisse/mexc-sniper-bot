@@ -84,7 +84,9 @@ function CoinListingCard({ coin, onExecute, onRemove }: CoinListingCardProps) {
       <div className="flex items-start justify-between">
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-lg">{coin.symbol}</h3>
+            <h3 className="font-semibold text-lg">
+              {coin.symbol !== coin.vcoinId ? coin.symbol : `TOKEN-${coin.vcoinId.slice(0, 8)}`}
+            </h3>
             <Badge variant="outline" className={getStatusColor()}>
               <span className="flex items-center gap-1">
                 {getStatusIcon()}
@@ -98,7 +100,9 @@ function CoinListingCard({ coin, onExecute, onRemove }: CoinListingCardProps) {
             )}
           </div>
 
-          <p className="text-sm text-muted-foreground">{coin.projectName || coin.symbol}</p>
+          <p className="text-sm text-muted-foreground">
+            {coin.projectName !== coin.vcoinId ? coin.projectName : `Project for ${coin.symbol}`}
+          </p>
 
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">

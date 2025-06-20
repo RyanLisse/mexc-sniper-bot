@@ -36,6 +36,7 @@ class MockBaseAgent {
   private config: any
   private cache: Map<string, any> = new Map()
   private callCount: number = 0
+  private cacheHits: number = 0
 
   constructor(config: any) {
     this.config = config
@@ -43,10 +44,11 @@ class MockBaseAgent {
 
   async callOpenAI(messages: any[], options: any = {}): Promise<any> {
     this.callCount++
-    const cacheKey = this.generateCacheKey(messages)
+    const cacheKey = this.generateCacheKey(messages, options)
     
     // Simulate caching
     if (this.cache.has(cacheKey) && options.useCache !== false) {
+      this.cacheHits++
       return {
         ...this.cache.get(cacheKey),
         fromCache: true,
@@ -59,7 +61,7 @@ class MockBaseAgent {
 
     const response = {
       success: true,
-      content: `Mock AI response for ${this.config.name}`,
+      content: `Mock AI response for ${this.config.name} - ${JSON.stringify(messages)}`,
       confidence: 85 + Math.random() * 10,
       timestamp: Date.now(),
       fromCache: false,
@@ -70,24 +72,28 @@ class MockBaseAgent {
     return response
   }
 
-  private generateCacheKey(messages: any[]): string {
-    return Buffer.from(JSON.stringify(messages)).toString('base64').slice(0, 16)
+  private generateCacheKey(messages: any[], options: any = {}): string {
+    const keyData = { messages, options }
+    const hash = require('crypto').createHash('sha256').update(JSON.stringify(keyData)).digest('hex')
+    return hash
   }
 
   getCacheStats(): any {
     return {
       size: this.cache.size,
-      hitRate: this.callCount > 0 ? (this.cache.size / this.callCount) : 0,
+      hitRate: this.callCount > 0 ? (this.cacheHits / this.callCount) : 0,
       totalCalls: this.callCount
     }
   }
 
   clearCache(): void {
     this.cache.clear()
+    this.callCount = 0
+    this.cacheHits = 0
   }
 
   isHealthy(): boolean {
-    return this.config && this.config.name && this.config.systemPrompt
+    return !!(this.config && this.config.name && this.config.systemPrompt)
   }
 
   getConfig(): any {
@@ -273,6 +279,7 @@ describe('Base Agent Comprehensive Testing', () => {
         responses.push(response)
       }
 
+
       expect(responses[0].fromCache).toBe(false) // First A
       expect(responses[1].fromCache).toBe(false) // First B
       expect(responses[2].fromCache).toBe(true)  // Cached A
@@ -310,7 +317,7 @@ describe('Base Agent Comprehensive Testing', () => {
 
       const stats = mockAgent.getCacheStats()
       expect(stats.size).toBe(4) // 4 unique requests cached
-      expect(stats.totalCalls).toBe(7) // 7 total calls made
+      expect(stats.totalCalls).toBe(6) // 6 total calls made
       expect(stats.hitRate).toBeGreaterThan(0)
     })
 

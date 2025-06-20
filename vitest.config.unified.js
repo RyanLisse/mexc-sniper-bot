@@ -38,6 +38,7 @@ export default defineConfig({
     include: [
       'tests/unit/**/*.test.{js,ts}',
       'tests/integration/**/*.test.{js,ts}',
+      'tests/agents/**/*.test.{js,ts}', // Agent-specific tests
       'src/**/*.test.{js,ts}', // Allow co-located tests
     ],
     

@@ -76,7 +76,7 @@ export default function PerformanceMonitoringDashboard({
     uptime: 86400000, // 24 hours in ms
   });
 
-  const [alerts, setAlerts] = useState<PerformanceAlert[]>([
+  const [alerts, _setAlerts] = useState<PerformanceAlert[]>([
     {
       id: "1",
       type: "warning",
@@ -136,7 +136,7 @@ export default function PerformanceMonitoringDashboard({
     return `${hours}h ${minutes}m`;
   };
 
-  const getHealthStatus = (value: number, thresholds: { warning: number; error: number }) => {
+  const _getHealthStatus = (value: number, thresholds: { warning: number; error: number }) => {
     if (value >= thresholds.error) return "error";
     if (value >= thresholds.warning) return "warning";
     return "healthy";
@@ -153,7 +153,7 @@ export default function PerformanceMonitoringDashboard({
         <div className="flex items-center gap-2">
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
               <span className="text-sm">Updating...</span>
             </div>
           ) : (

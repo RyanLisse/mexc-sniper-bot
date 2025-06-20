@@ -22,11 +22,26 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
     // Mock AI services to speed up tests and avoid API calls
     const { aiIntelligenceService } = await import('../../src/services/ai-intelligence-service');
     vi.spyOn(aiIntelligenceService, 'enhancePatternWithAI').mockResolvedValue({
-      cohereEmbedding: null,
-      perplexityInsights: null,
+      cohereEmbedding: new Array(1024).fill(0.1),
+      perplexityInsights: {
+        marketSentiment: 'bullish',
+        volumeInsights: 'increasing',
+        newsImpact: 'positive',
+        researchSummary: 'Mock research summary for testing'
+      },
+      aiContext: {
+        marketSentiment: 'neutral',
+        opportunityScore: 85,
+        researchInsights: ['Test AI insight'],
+        timeframe: 'immediate',
+        volumeProfile: 'medium',
+        liquidityScore: 0.75,
+      },
     });
     vi.spyOn(aiIntelligenceService, 'calculateAIEnhancedConfidence').mockResolvedValue({
       enhancedConfidence: 85,
+      components: { basePattern: 75, aiResearch: 5, marketSentiment: 3, technicalAlignment: 2, riskAdjustment: 0 },
+      aiInsights: ['Test AI insight'],
       recommendations: ['Test recommendation'],
     });
 
@@ -54,20 +69,25 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
     // Re-establish AI service mocks to prevent external API calls
     const { aiIntelligenceService } = await import('../../src/services/ai-intelligence-service');
     vi.spyOn(aiIntelligenceService, 'enhancePatternWithAI').mockResolvedValue({
-      cohereEmbedding: null,
-      perplexityInsights: null,
+      cohereEmbedding: new Array(1024).fill(0.1),
+      perplexityInsights: {
+        marketSentiment: 'bullish',
+        volumeInsights: 'increasing',
+        newsImpact: 'positive',
+        researchSummary: 'Mock research summary for testing'
+      },
       aiContext: {
         marketSentiment: 'neutral',
         opportunityScore: 85,
         researchInsights: ['Test AI insight'],
         timeframe: 'immediate',
         volumeProfile: 'medium',
-        liquidityScore: 0.5,
+        liquidityScore: 0.75,
       },
     });
     vi.spyOn(aiIntelligenceService, 'calculateAIEnhancedConfidence').mockResolvedValue({
       enhancedConfidence: 85,
-      components: { basePattern: 85, aiResearch: 0, marketSentiment: 0, technicalAlignment: 0, riskAdjustment: 0 },
+      components: { basePattern: 75, aiResearch: 5, marketSentiment: 3, technicalAlignment: 2, riskAdjustment: 0 },
       aiInsights: ['Test AI insight'],
       recommendations: ['Test recommendation'],
     });
@@ -229,8 +249,8 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
         const executionTime = Date.now() - startTime;
         console.log(`Bulk pattern detection completed in ${executionTime}ms`);
 
-        // Validate performance (adjusted for test environment with AI service calls)
-        expect(executionTime).toBeLessThan(8000); // Should complete within 8 seconds
+        // Validate performance (optimized for test environment)
+        expect(executionTime).toBeLessThan(5000); // Should complete within 5 seconds with optimized AI mocks
         expect(matches).toHaveLength(3);
 
         // Validate activity enhancement for symbols with activity data
@@ -317,8 +337,8 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
       const matches = await patternEngine.detectReadyStatePattern(testSymbol);
       const executionTime = Date.now() - startTime;
 
-      // Should complete quickly even with large dataset (adjusted for test environment)
-      expect(executionTime).toBeLessThan(3000); // Within 3 seconds
+      // Should complete quickly even with large dataset (optimized for test environment)
+      expect(executionTime).toBeLessThan(2000); // Within 2 seconds with optimized mocks
       expect(matches).toHaveLength(1);
     });
   });

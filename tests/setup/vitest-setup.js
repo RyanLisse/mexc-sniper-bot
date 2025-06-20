@@ -37,6 +37,13 @@ beforeAll(async () => {
             }]
           })
         }
+      },
+      embeddings: {
+        create: vi.fn().mockResolvedValue({
+          data: [{
+            embedding: new Array(1536).fill(0.1) // Mock 1536-dimension embedding
+          }]
+        })
       }
     }))
   }))
@@ -338,6 +345,97 @@ beforeAll(async () => {
       })
     }
   })
+
+  // Mock AI Intelligence Service for fast, deterministic test results
+  vi.mock('@/src/services/ai-intelligence-service', () => ({
+    aiIntelligenceService: {
+      enhancePatternWithAI: vi.fn().mockResolvedValue({
+        cohereEmbedding: new Array(1024).fill(0.1), // Mock Cohere embedding
+        perplexityInsights: {
+          marketSentiment: 'bullish',
+          volumeInsights: 'increasing',
+          newsImpact: 'positive',
+          researchSummary: 'Mock research summary for testing'
+        },
+        aiContext: {
+          marketSentiment: 'neutral',
+          opportunityScore: 85,
+          researchInsights: ['Mock AI insight for testing'],
+          timeframe: 'immediate',
+          volumeProfile: 'medium',
+          liquidityScore: 0.75
+        }
+      }),
+      calculateAIEnhancedConfidence: vi.fn().mockResolvedValue({
+        enhancedConfidence: 85,
+        components: {
+          basePattern: 75,
+          aiResearch: 5,
+          marketSentiment: 3,
+          technicalAlignment: 2,
+          riskAdjustment: 0
+        },
+        aiInsights: ['Mock AI confidence insight'],
+        recommendations: ['Mock AI recommendation']
+      }),
+      generateCohereEmbedding: vi.fn().mockResolvedValue([new Array(1024).fill(0.1)]),
+      generatePatternEmbedding: vi.fn().mockResolvedValue(new Array(1024).fill(0.1)),
+      researchWithPerplexity: vi.fn().mockResolvedValue({
+        summary: 'Mock Perplexity research summary',
+        insights: ['Mock insight 1', 'Mock insight 2'],
+        marketSentiment: 'neutral',
+        confidence: 0.8
+      })
+    },
+    AIIntelligenceService: vi.fn().mockImplementation(() => ({
+      enhancePatternWithAI: vi.fn().mockResolvedValue({
+        cohereEmbedding: new Array(1024).fill(0.1),
+        perplexityInsights: {
+          marketSentiment: 'bullish',
+          volumeInsights: 'increasing',
+          newsImpact: 'positive',
+          researchSummary: 'Mock research summary'
+        }
+      }),
+      calculateAIEnhancedConfidence: vi.fn().mockResolvedValue({
+        enhancedConfidence: 85,
+        components: { basePattern: 75, aiResearch: 5, marketSentiment: 3, technicalAlignment: 2, riskAdjustment: 0 },
+        aiInsights: ['Mock insight'],
+        recommendations: ['Mock recommendation']
+      })
+    }))
+  }))
+
+  // Mock Pattern Embedding Service for fast test execution
+  vi.mock('@/src/services/pattern-embedding-service', () => ({
+    patternEmbeddingService: {
+      storePattern: vi.fn().mockResolvedValue({ id: 'mock-pattern-id' }),
+      findSimilarPatterns: vi.fn().mockResolvedValue([
+        {
+          id: 'mock-similar-1',
+          symbolName: 'MOCKUSDT',
+          cosineSimilarity: 0.85,
+          confidence: 80,
+          createdAt: new Date()
+        }
+      ]),
+      calculatePatternConfidenceScore: vi.fn().mockResolvedValue({
+        confidence: 80,
+        factors: {
+          similarity: 0.8,
+          historicalSuccess: 0.75,
+          marketAlignment: 0.7
+        },
+        recommendations: ['Mock pattern recommendation']
+      }),
+      generateEmbedding: vi.fn().mockResolvedValue(new Array(1024).fill(0.1))
+    },
+    PatternEmbeddingService: vi.fn().mockImplementation(() => ({
+      storePattern: vi.fn().mockResolvedValue({ id: 'mock-pattern-id' }),
+      findSimilarPatterns: vi.fn().mockResolvedValue([]),
+      calculatePatternConfidenceScore: vi.fn().mockResolvedValue({ confidence: 80 })
+    }))
+  }))
 
   // Note: Not mocking encryption service globally so unit tests can test actual implementation
   // Individual tests can mock if needed

@@ -6,6 +6,12 @@ export const CalendarEntrySchema = z.object({
   symbol: z.string(),
   projectName: z.string(),
   firstOpenTime: z.number(),
+  // Additional fields from MEXC API
+  vcoinName: z.string().optional(), // Short token name (e.g., "BRIC")
+  vcoinNameFull: z.string().optional(), // Full project name (e.g., "REDBRICK")
+  zone: z.string().optional(), // Trading zone (e.g., "NEW")
+  introductionEn: z.string().optional(), // English description
+  introductionCn: z.string().optional(), // Chinese description
 });
 
 export const SymbolV2EntrySchema = z.object({

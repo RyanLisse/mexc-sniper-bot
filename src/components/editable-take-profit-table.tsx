@@ -523,7 +523,7 @@ export function EditableTakeProfitTable({
             <div className="space-y-2">
               {validationErrors.map((error, index) => (
                 <Alert
-                  key={index}
+                  key={`validation-error-${index}-${error.message.slice(0, 10)}`}
                   className={`border ${error.type === "error" ? "border-red-200 bg-red-50" : "border-yellow-200 bg-yellow-50"}`}
                 >
                   {error.type === "error" ? (

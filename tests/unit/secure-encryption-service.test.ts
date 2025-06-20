@@ -119,15 +119,30 @@ describe('SecureEncryptionService', () => {
     });
 
     it('should fail to decrypt tampered data', () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement tampered data decryption failure testing
+      const originalData = 'sensitive data';
+      const encrypted = service.encrypt(originalData);
+      
+      // Tamper with the encrypted data by modifying a character
+      const tamperedEncrypted = encrypted.slice(0, -1) + 'X';
+      
+      expect(() => {
+        service.decrypt(tamperedEncrypted);
+      }).toThrow();
     });
 
     it('should fail to decrypt invalid format', () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement invalid format decryption failure testing
+      const invalidFormats = [
+        'not-base64-data',
+        'dGVzdA==', // Valid base64 but wrong format
+        '', // Empty string
+        'invalid:format:structure'
+      ];
+      
+      invalidFormats.forEach(invalidData => {
+        expect(() => {
+          service.decrypt(invalidData);
+        }).toThrow();
+      });
     });
   });
 

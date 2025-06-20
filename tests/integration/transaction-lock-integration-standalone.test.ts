@@ -322,15 +322,73 @@ describe("Transaction Lock Integration Tests (Standalone)", () => {
 
   describe("Trade API with Lock Protection", () => {
     it("should prevent duplicate trades with same parameters", async () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement duplicate trade prevention testing with idempotency keys
+      const tradeParams = {
+        symbol: 'TESTUSDT',
+        side: 'buy',
+        quantity: 100,
+        price: 1.0,
+        idempotencyKey: 'unique-trade-123'
+      };
+      
+      const lockService = new TransactionLockService();
+      
+      // First trade should succeed
+      const firstLock = await lockService.acquireLock({
+        resourceId: `trade-${tradeParams.idempotencyKey}`,
+        ownerId: 'trader-1',
+        timeout: 30000
+      });
+      expect(firstLock.success).toBe(true);
+      
+      // Duplicate trade with same idempotency key should be prevented
+      const duplicateLock = await lockService.acquireLock({
+        resourceId: `trade-${tradeParams.idempotencyKey}`,
+        ownerId: 'trader-2',
+        timeout: 30000
+      });
+      expect(duplicateLock.success).toBe(false);
+      expect(duplicateLock.reason).toContain('locked');
     });
 
     it("should allow different trades to execute concurrently", async () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement concurrent trade execution testing with different resources
+      const trade1 = {
+        symbol: 'BTCUSDT',
+        side: 'buy',
+        quantity: 50,
+        idempotencyKey: 'concurrent-trade-1'
+      };
+      
+      const trade2 = {
+        symbol: 'ETHUSDT',
+        side: 'sell',
+        quantity: 25,
+        idempotencyKey: 'concurrent-trade-2'
+      };
+      
+      const startTime = performance.now();
+      
+      const lockService = new TransactionLockService();
+      
+      // Execute lock acquisitions concurrently for different resources
+      const [result1, result2] = await Promise.all([
+        lockService.acquireLock({
+          resourceId: `trade-${trade1.idempotencyKey}`,
+          ownerId: 'trader-1',
+          timeout: 30000
+        }),
+        lockService.acquireLock({
+          resourceId: `trade-${trade2.idempotencyKey}`,
+          ownerId: 'trader-2', 
+          timeout: 30000
+        })
+      ]);
+      
+      const executionTime = performance.now() - startTime;
+      
+      expect(result1.success).toBe(true);
+      expect(result2.success).toBe(true);
+      expect(result1.lockId).not.toBe(result2.lockId);
+      expect(executionTime).toBeLessThan(2000); // Should execute concurrently, not sequentially
     });
   });
 

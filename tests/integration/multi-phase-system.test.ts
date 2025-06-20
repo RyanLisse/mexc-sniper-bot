@@ -476,15 +476,62 @@ describe('Multi-Phase Trading System Integration', () => {
 
   describe('Performance and Scalability', () => {
     it('should handle multiple concurrent strategy executions', async () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement concurrent strategy execution testing with performance metrics
+      const concurrentStrategies = Array.from({ length: 5 }, (_, i) => ({
+        id: `concurrent-strategy-${i}`,
+        name: `Concurrent Strategy ${i}`,
+        levels: [
+          { percentage: 20, multiplier: 1.2, sellPercentage: 25 },
+          { percentage: 40, multiplier: 1.4, sellPercentage: 25 },
+          { percentage: 60, multiplier: 1.6, sellPercentage: 25 },
+          { percentage: 80, multiplier: 1.8, sellPercentage: 25 },
+        ]
+      }));
+      
+      const startTime = performance.now();
+      
+      const results = await Promise.all(
+        concurrentStrategies.map(async (strategy) => {
+          const strategyManager = new TradingStrategyManager();
+          const importSuccess = strategyManager.importStrategy(strategy);
+          return { success: importSuccess, metrics: { executionTime: performance.now() - startTime } };
+        })
+      );
+      
+      const executionTime = performance.now() - startTime;
+      
+      expect(results.length).toBe(5);
+      expect(results.every(r => r.success)).toBe(true);
+      expect(executionTime).toBeLessThan(10000); // Should complete within 10 seconds
+      expect(results.every(r => r.metrics.executionTime > 0)).toBe(true);
     });
 
     it('should efficiently handle large numbers of phase executions', async () => {
-      // Placeholder implementation - basic assertion to make test pass
-      expect(true).toBe(true);
-      // TODO: Implement large-scale phase execution testing with performance benchmarks
+      const largePhaseCount = 100;
+      const strategy = new TradingStrategyManager().getActiveStrategy();
+      
+      const benchmarkStart = performance.now();
+      
+      const batchResults = await Promise.all(
+        Array.from({ length: largePhaseCount }, async (_, i) => {
+          const bot = new MultiPhaseTradingBot(strategy, 100, 1000);
+          const priceUpdate = 100 + (i % 50); // Vary prices
+          const result = bot.onPriceUpdate(priceUpdate);
+          return result.actions.length > 0;
+        })
+      ).then(results => ({
+        totalPhases: largePhaseCount,
+        successfulPhases: results.filter(r => r).length,
+        averagePhaseTime: (performance.now() - benchmarkStart) / largePhaseCount,
+        memoryUsage: process.memoryUsage().heapUsed
+      }));
+      
+      const benchmarkTime = performance.now() - benchmarkStart;
+      
+      expect(batchResults.totalPhases).toBe(largePhaseCount);
+      expect(batchResults.successfulPhases).toBeGreaterThanOrEqual(0); // Some may not trigger actions
+      expect(benchmarkTime).toBeLessThan(30000); // Should complete within 30 seconds
+      expect(batchResults.averagePhaseTime).toBeLessThan(300); // Average phase time < 300ms
+      expect(batchResults.memoryUsage).toBeLessThan(1024 * 1024 * 100); // < 100MB
     });
   });
 

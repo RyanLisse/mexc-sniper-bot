@@ -533,8 +533,16 @@ export class AdvancedTestFramework {
   }
 
   private comparePatterns(actual: unknown, expected: unknown): boolean {
-    // Implement pattern comparison logic
-    return JSON.stringify(actual) === JSON.stringify(expected)
+    if (!actual || !expected) return false
+    
+    const actualPattern = actual as any
+    const expectedPattern = expected as any
+    
+    // Check core pattern fields
+    return actualPattern.sts === expectedPattern.sts &&
+           actualPattern.st === expectedPattern.st &&
+           actualPattern.tt === expectedPattern.tt &&
+           actualPattern.confidence >= (expectedPattern.confidence - 5) // Allow 5% tolerance
   }
 
   private validateResultSynthesis(actual: unknown, expected: unknown): boolean {

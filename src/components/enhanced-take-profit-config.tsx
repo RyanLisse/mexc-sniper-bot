@@ -209,7 +209,10 @@ export function EnhancedTakeProfitConfig({
                         {calculatePotentialProfit(strategy, investmentAmount)
                           .slice(0, 2)
                           .map((result, index) => (
-                            <div key={index} className="text-muted-foreground">
+                            <div
+                              key={`profit-result-${index}-${result.level.profitPercentage}`}
+                              className="text-muted-foreground"
+                            >
                               Level {index + 1}: +${result.profit.toFixed(0)}(
                               {result.level.profitPercentage}%)
                             </div>
@@ -282,7 +285,10 @@ export function EnhancedTakeProfitConfig({
                     <AlertDescription>
                       <div className="space-y-1">
                         {validationErrors.map((error, index) => (
-                          <div key={index} className="text-sm">
+                          <div
+                            key={`validation-error-${index}-${error.slice(0, 10)}`}
+                            className="text-sm"
+                          >
                             {error}
                           </div>
                         ))}

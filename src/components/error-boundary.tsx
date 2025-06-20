@@ -188,10 +188,101 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     );
   };
 
-  renderDefaultFallback = () => {
-    const { error, errorCount } = this.state;
-    const { level = "component" } = this.props;
+  // Helper methods to reduce complexity
+  getErrorTitle = (isPageLevel: boolean, isSectionLevel: boolean) => {
+    if (isPageLevel) return "Page Error";
+    if (isSectionLevel) return "Section Error";
+    return "Component Error";
+  };
 
+  getErrorDescription = (isPageLevel: boolean, isSectionLevel: boolean) => {
+    if (isPageLevel) return "Something went wrong while loading this page";
+    if (isSectionLevel) return "This section encountered an error";
+    return "This component encountered an error";
+  };
+
+  renderErrorHeader = (isPageLevel: boolean, isSectionLevel: boolean) => (
+    <CardHeader>
+      <div className="flex items-center gap-2">
+        <AlertCircle className="h-5 w-5 text-red-500" />
+        <CardTitle className="text-lg">{this.getErrorTitle(isPageLevel, isSectionLevel)}</CardTitle>
+      </div>
+      <CardDescription>{this.getErrorDescription(isPageLevel, isSectionLevel)}</CardDescription>
+    </CardHeader>
+  );
+
+  renderErrorMessage = () => {
+    const { error } = this.state;
+    if (process.env.NODE_ENV !== "development" || !error) return null;
+
+    return (
+      <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+        <span className="font-medium">Error: </span>
+        {error.message}
+      </div>
+    );
+  };
+
+  renderErrorCountWarning = () => {
+    const { errorCount } = this.state;
+    if (errorCount <= 2) return null;
+
+    return (
+      <div className="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md">
+        This component has crashed {errorCount} times. Consider refreshing the page.
+      </div>
+    );
+  };
+
+  renderActionButtons = (isPageLevel: boolean) => (
+    <div className="flex flex-col sm:flex-row gap-2">
+      <Button
+        onClick={this.handleRetry}
+        variant="default"
+        size="sm"
+        className="flex items-center gap-2"
+      >
+        <RefreshCcw className="h-4 w-4" />
+        Try Again
+      </Button>
+
+      {isPageLevel && (
+        <Button
+          onClick={this.handleGoHome}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <Home className="h-4 w-4" />
+          Go Home
+        </Button>
+      )}
+
+      {process.env.NODE_ENV === "development" && (
+        <Button
+          onClick={this.toggleDetails}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          {this.state.showDetails ? (
+            <>
+              <ChevronUp className="h-4 w-4" />
+              Hide Details
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-4 w-4" />
+              Show Details
+            </>
+          )}
+        </Button>
+      )}
+    </div>
+  );
+
+  renderDefaultFallback = () => {
+    const { level = "component" } = this.props;
     const isPageLevel = level === "page";
     const isSectionLevel = level === "section";
 
@@ -212,84 +303,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             !isPageLevel && !isSectionLevel && "w-full"
           )}
         >
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-red-500" />
-              <CardTitle className="text-lg">
-                {isPageLevel ? "Page Error" : isSectionLevel ? "Section Error" : "Component Error"}
-              </CardTitle>
-            </div>
-            <CardDescription>
-              {isPageLevel
-                ? "Something went wrong while loading this page"
-                : isSectionLevel
-                  ? "This section encountered an error"
-                  : "This component encountered an error"}
-            </CardDescription>
-          </CardHeader>
+          {this.renderErrorHeader(isPageLevel, isSectionLevel)}
           <CardContent className="space-y-4">
-            {/* Error message for development */}
-            {process.env.NODE_ENV === "development" && error && (
-              <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                <span className="font-medium">Error: </span>
-                {error.message}
-              </div>
-            )}
-
-            {/* Error count warning */}
-            {errorCount > 2 && (
-              <div className="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md">
-                This component has crashed {errorCount} times. Consider refreshing the page.
-              </div>
-            )}
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-                onClick={this.handleRetry}
-                variant="default"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <RefreshCcw className="h-4 w-4" />
-                Try Again
-              </Button>
-
-              {isPageLevel && (
-                <Button
-                  onClick={this.handleGoHome}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Home className="h-4 w-4" />
-                  Go Home
-                </Button>
-              )}
-
-              {process.env.NODE_ENV === "development" && (
-                <Button
-                  onClick={this.toggleDetails}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  {this.state.showDetails ? (
-                    <>
-                      <ChevronUp className="h-4 w-4" />
-                      Hide Details
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="h-4 w-4" />
-                      Show Details
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-
-            {/* Error details (development only) */}
+            {this.renderErrorMessage()}
+            {this.renderErrorCountWarning()}
+            {this.renderActionButtons(isPageLevel)}
             {process.env.NODE_ENV === "development" && this.renderErrorDetails()}
           </CardContent>
         </Card>

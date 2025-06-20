@@ -777,7 +777,130 @@ export class UnifiedMexcService {
    * Get calendar listings (new coin listings)
    */
   async getCalendarListings(): Promise<MexcServiceResponse<CalendarEntry[]>> {
-    return this.makeRequest("GET", "/open/api/v2/market/coin/list");
+    const startTime = Date.now();
+    const requestId = crypto.randomUUID();
+
+    try {
+      console.log("[UnifiedMexcService] Fetching calendar listings from MEXC...");
+
+      // Special handling for MEXC calendar endpoint which uses different base URL
+      const timestamp = Date.now();
+      const url = `https://www.mexc.com/api/operation/new_coin_calendar?timestamp=${timestamp}`;
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "User-Agent": "MEXC-Sniper-Bot/1.0",
+      };
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers,
+        signal: AbortSignal.timeout(this.config.timeout),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const responseData = await response.json();
+
+      // Debug: Log the first few entries to understand the structure
+      if (
+        responseData?.data?.newCoins &&
+        Array.isArray(responseData.data.newCoins) &&
+        responseData.data.newCoins.length > 0
+      ) {
+        console.log(
+          "[UnifiedMexcService] Sample calendar entries structure:",
+          JSON.stringify(responseData.data.newCoins.slice(0, 2), null, 2)
+        );
+      }
+
+      // Parse and validate the response structure
+      let calendarData: CalendarEntry[] = [];
+
+      // Handle the actual MEXC API response structure: data.newCoins
+      if (responseData?.data?.newCoins && Array.isArray(responseData.data.newCoins)) {
+        calendarData = responseData.data.newCoins
+          .map((coin: any) => {
+            try {
+              // Extract meaningful fields from the API response
+              const vcoinId = coin.vcoinId || coin.id || "";
+              // Use actual vcoinName from API, fallback to vcoinId if not available
+              const symbol = coin.vcoinName || coin.symbol || vcoinId;
+              // Use vcoinNameFull for full project name, fallback to vcoinName or other fields
+              const projectName =
+                coin.vcoinNameFull ||
+                coin.vcoinName ||
+                coin.projectName ||
+                coin.project_name ||
+                coin.name ||
+                coin.desc ||
+                symbol;
+              const firstOpenTime =
+                coin.firstOpenTime ||
+                coin.first_open_time ||
+                coin.listingTime ||
+                coin.listing_time ||
+                Date.now();
+
+              return CalendarEntrySchema.parse({
+                vcoinId,
+                symbol,
+                projectName,
+                firstOpenTime:
+                  typeof firstOpenTime === "string"
+                    ? new Date(firstOpenTime).getTime()
+                    : firstOpenTime,
+                // Include additional fields from API
+                vcoinName: coin.vcoinName,
+                vcoinNameFull: coin.vcoinNameFull,
+                zone: coin.zone,
+                introductionEn: coin.introductionEn,
+                introductionCn: coin.introductionCn,
+              });
+            } catch (error) {
+              console.warn("[UnifiedMexcService] Invalid calendar entry:", coin, error);
+              return null;
+            }
+          })
+          .filter((entry: CalendarEntry | null): entry is CalendarEntry => entry !== null);
+      }
+
+      const executionTimeMs = Date.now() - startTime;
+      console.log(
+        `[UnifiedMexcService] Calendar listings fetched: ${calendarData.length} entries (${executionTimeMs}ms)`
+      );
+
+      // Update metrics
+      this.metrics.apiCalls++;
+      this.metrics.lastCallTime = Date.now();
+
+      return {
+        success: true,
+        data: calendarData,
+        timestamp: new Date().toISOString(),
+        requestId,
+        executionTimeMs,
+        cached: false,
+      };
+    } catch (error) {
+      const executionTimeMs = Date.now() - startTime;
+      console.error("[UnifiedMexcService] Calendar API call failed:", error);
+
+      this.metrics.errors++;
+      this.metrics.lastCallTime = Date.now();
+
+      return {
+        success: false,
+        data: [],
+        error: error instanceof Error ? error.message : "Failed to fetch calendar listings",
+        timestamp: new Date().toISOString(),
+        requestId,
+        executionTimeMs,
+      };
+    }
   }
 
   /**

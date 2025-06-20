@@ -2,8 +2,9 @@
 
 import { Calendar, Clock, RefreshCw, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
-import { useUpcomingLaunches } from "../../hooks/use-mexc-data";
+import { useMexcCalendar, useRefreshMexcCalendar } from "../../hooks/use-mexc-data";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
 interface UpcomingCalendarEntry {
@@ -19,11 +20,13 @@ interface GroupedLaunches {
 }
 
 export function UpcomingCoinsSection() {
-  const { data: upcomingLaunches, isLoading, error } = useUpcomingLaunches();
+  // Use the main calendar hook to get all data instead of filtered data
+  const { data: allCalendarData, isLoading, error } = useMexcCalendar();
+  const refreshCalendar = useRefreshMexcCalendar();
 
   // Group launches by today/tomorrow and sort by earliest launch time
   const groupedLaunches = useMemo<GroupedLaunches>(() => {
-    if (!Array.isArray(upcomingLaunches)) {
+    if (!Array.isArray(allCalendarData)) {
       return { today: [], tomorrow: [] };
     }
 
@@ -35,7 +38,7 @@ export function UpcomingCoinsSection() {
     const today: UpcomingCalendarEntry[] = [];
     const tomorrow: UpcomingCalendarEntry[] = [];
 
-    upcomingLaunches.forEach((entry: UpcomingCalendarEntry) => {
+    allCalendarData.forEach((entry: UpcomingCalendarEntry) => {
       try {
         if (!entry.firstOpenTime) return;
         const launchTime = new Date(entry.firstOpenTime);
@@ -61,7 +64,7 @@ export function UpcomingCoinsSection() {
     tomorrow.sort(sortByLaunchTime);
 
     return { today, tomorrow };
-  }, [upcomingLaunches]);
+  }, [allCalendarData]);
 
   const formatLaunchTime = (firstOpenTime: string | number) => {
     try {
@@ -96,6 +99,20 @@ export function UpcomingCoinsSection() {
           <div className="text-center text-muted-foreground">
             <p>Failed to load upcoming coins</p>
             <p className="text-sm mt-1">{error.message}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refreshCalendar.mutate()}
+              disabled={refreshCalendar.isPending}
+              className="mt-3"
+            >
+              {refreshCalendar.isPending ? (
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Retry
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -104,6 +121,25 @@ export function UpcomingCoinsSection() {
 
   return (
     <div className="space-y-6">
+      {/* Information Notice */}
+      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <div className="p-1 bg-blue-500/10 rounded">
+            <Calendar className="h-4 w-4 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              About Token Names
+            </h3>
+            <p className="text-xs text-blue-700 dark:text-blue-200 mt-1">
+              MEXC reveals actual token names and symbols closer to launch time for security
+              reasons. Current entries show placeholder IDs that will be updated with real names as
+              launch approaches.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Today's Launches */}
       <Card>
         <CardHeader>
@@ -117,7 +153,12 @@ export function UpcomingCoinsSection() {
               {groupedLaunches.today.length}
             </Badge>
           </div>
-          <CardDescription>Coins launching today - sorted by earliest launch time</CardDescription>
+          <CardDescription>
+            Coins launching today - sorted by earliest launch time
+            <Badge variant="outline" className="ml-2 text-xs">
+              Total in calendar: {allCalendarData?.length || 0}
+            </Badge>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {groupedLaunches.today.length === 0 ? (
@@ -139,8 +180,19 @@ export function UpcomingCoinsSection() {
                         <TrendingUp className="h-4 w-4 text-green-600" />
                       </div>
                       <div>
-                        <h4 className="font-medium">{entry.projectName || entry.symbol}</h4>
-                        <p className="text-sm text-muted-foreground">{entry.symbol}</p>
+                        <h4 className="font-medium">
+                          {entry.projectName !== entry.vcoinId
+                            ? entry.projectName
+                            : `Upcoming Launch #${index + 1}`}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {entry.symbol !== entry.vcoinId
+                            ? entry.symbol
+                            : `${entry.vcoinId?.slice(0, 6)?.toUpperCase()}...`}
+                        </p>
+                        <p className="text-xs text-orange-600">
+                          ⏳ Token name revealed closer to launch
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -196,8 +248,19 @@ export function UpcomingCoinsSection() {
                         <TrendingUp className="h-4 w-4 text-blue-600" />
                       </div>
                       <div>
-                        <h4 className="font-medium">{entry.projectName || entry.symbol}</h4>
-                        <p className="text-sm text-muted-foreground">{entry.symbol}</p>
+                        <h4 className="font-medium">
+                          {entry.projectName !== entry.vcoinId
+                            ? entry.projectName
+                            : `Tomorrow Launch #${index + 1}`}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {entry.symbol !== entry.vcoinId
+                            ? entry.symbol
+                            : `${entry.vcoinId?.slice(0, 6)?.toUpperCase()}...`}
+                        </p>
+                        <p className="text-xs text-orange-600">
+                          ⏳ Token name revealed closer to launch
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -224,10 +287,13 @@ export function UpcomingCoinsSection() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Total upcoming launches:{" "}
+              Upcoming launches (next 48h):{" "}
               <span className="font-medium text-foreground">
                 {groupedLaunches.today.length + groupedLaunches.tomorrow.length}
               </span>
+              {Array.isArray(allCalendarData) && (
+                <span className="ml-2">(Total: {allCalendarData.length} in calendar)</span>
+              )}
             </div>
             <div className="flex gap-2">
               <Badge
@@ -239,6 +305,18 @@ export function UpcomingCoinsSection() {
               <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
                 Tomorrow: {groupedLaunches.tomorrow.length}
               </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => refreshCalendar.mutate()}
+                disabled={refreshCalendar.isPending}
+              >
+                {refreshCalendar.isPending ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
             </div>
           </div>
         </CardContent>
