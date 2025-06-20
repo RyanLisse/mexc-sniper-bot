@@ -186,7 +186,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-visible">
           <div className="h-16 border-b flex items-center px-6">
             <SidebarTrigger />
             <h1 className="ml-4 text-xl font-semibold">
@@ -199,7 +199,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </h1>
             <div className="ml-auto" />
           </div>
-          <div className="p-6">{children}</div>
+          <div className="p-6 h-[calc(100vh-4rem)] overflow-auto">{children}</div>
         </main>
       </div>
     </SidebarProvider>
