@@ -1,8 +1,13 @@
 "use client";
 
 import { Brain, CheckCircle, Database, Settings, Zap } from "lucide-react";
-import React, { useState, useEffect } from "react";
-import { usePhase3Config, usePhase3ConfigUpdate, usePhase3ConfigValidation, getDefaultPhase3Config } from "../../../hooks/use-phase3-config";
+import { useEffect, useState } from "react";
+import {
+  getDefaultPhase3Config,
+  usePhase3Config,
+  usePhase3ConfigUpdate,
+  usePhase3ConfigValidation,
+} from "../../../hooks/use-phase3-config";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
@@ -118,7 +123,7 @@ export function Phase3ConfigurationPanel() {
   }, [configData]);
 
   const updateConfig = (section: keyof Phase3Configuration, key: string, value: any) => {
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
@@ -134,7 +139,7 @@ export function Phase3ConfigurationPanel() {
     key: string,
     value: any
   ) => {
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
@@ -170,7 +175,10 @@ export function Phase3ConfigurationPanel() {
       onError: (error) => {
         toast({
           title: "Save Failed",
-          description: error instanceof Error ? error.message : "Failed to save configuration. Please try again.",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to save configuration. Please try again.",
           variant: "destructive",
         });
       },
@@ -233,17 +241,10 @@ export function Phase3ConfigurationPanel() {
           <div className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
             <CardTitle>Phase 3 Configuration</CardTitle>
-            {hasChanges && (
-              <Badge variant="secondary">Unsaved Changes</Badge>
-            )}
+            {hasChanges && <Badge variant="secondary">Unsaved Changes</Badge>}
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              onClick={handleReset}
-              variant="outline"
-              size="sm"
-              disabled={isSaving}
-            >
+            <Button onClick={handleReset} variant="outline" size="sm" disabled={isSaving}>
               Reset to Defaults
             </Button>
             <Button
@@ -293,7 +294,9 @@ export function Phase3ConfigurationPanel() {
               <Switch
                 id="cohere-enabled"
                 checked={config.aiIntelligence.cohereEnabled}
-                onCheckedChange={(checked) => updateConfig("aiIntelligence", "cohereEnabled", checked)}
+                onCheckedChange={(checked) =>
+                  updateConfig("aiIntelligence", "cohereEnabled", checked)
+                }
                 disabled={!config.aiIntelligence.enabled}
               />
             </div>
@@ -303,7 +306,9 @@ export function Phase3ConfigurationPanel() {
               <Switch
                 id="perplexity-enabled"
                 checked={config.aiIntelligence.perplexityEnabled}
-                onCheckedChange={(checked) => updateConfig("aiIntelligence", "perplexityEnabled", checked)}
+                onCheckedChange={(checked) =>
+                  updateConfig("aiIntelligence", "perplexityEnabled", checked)
+                }
                 disabled={!config.aiIntelligence.enabled}
               />
             </div>
@@ -313,7 +318,9 @@ export function Phase3ConfigurationPanel() {
               <Switch
                 id="openai-enabled"
                 checked={config.aiIntelligence.openaiEnabled}
-                onCheckedChange={(checked) => updateConfig("aiIntelligence", "openaiEnabled", checked)}
+                onCheckedChange={(checked) =>
+                  updateConfig("aiIntelligence", "openaiEnabled", checked)
+                }
                 disabled={!config.aiIntelligence.enabled}
               />
             </div>
@@ -324,7 +331,9 @@ export function Phase3ConfigurationPanel() {
               <Label htmlFor="ai-confidence-threshold">AI Confidence Threshold (%)</Label>
               <Select
                 value={config.aiIntelligence.confidenceThreshold.toString()}
-                onValueChange={(value) => updateConfig("aiIntelligence", "confidenceThreshold", parseInt(value))}
+                onValueChange={(value) =>
+                  updateConfig("aiIntelligence", "confidenceThreshold", Number.parseInt(value))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -342,7 +351,9 @@ export function Phase3ConfigurationPanel() {
               <Label htmlFor="max-ai-boost">Max AI Boost (points)</Label>
               <Select
                 value={config.aiIntelligence.maxAIBoost.toString()}
-                onValueChange={(value) => updateConfig("aiIntelligence", "maxAIBoost", parseInt(value))}
+                onValueChange={(value) =>
+                  updateConfig("aiIntelligence", "maxAIBoost", Number.parseInt(value))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -373,7 +384,9 @@ export function Phase3ConfigurationPanel() {
               <Switch
                 id="advance-detection"
                 checked={config.patternDetection.advanceDetectionEnabled}
-                onCheckedChange={(checked) => updateConfig("patternDetection", "advanceDetectionEnabled", checked)}
+                onCheckedChange={(checked) =>
+                  updateConfig("patternDetection", "advanceDetectionEnabled", checked)
+                }
               />
             </div>
 
@@ -382,7 +395,9 @@ export function Phase3ConfigurationPanel() {
               <Switch
                 id="activity-enhancement"
                 checked={config.patternDetection.activityEnhancementEnabled}
-                onCheckedChange={(checked) => updateConfig("patternDetection", "activityEnhancementEnabled", checked)}
+                onCheckedChange={(checked) =>
+                  updateConfig("patternDetection", "activityEnhancementEnabled", checked)
+                }
               />
             </div>
           </div>
@@ -392,7 +407,9 @@ export function Phase3ConfigurationPanel() {
               <Label htmlFor="target-advance-hours">Target Advance Hours</Label>
               <Select
                 value={config.patternDetection.targetAdvanceHours.toString()}
-                onValueChange={(value) => updateConfig("patternDetection", "targetAdvanceHours", parseFloat(value))}
+                onValueChange={(value) =>
+                  updateConfig("patternDetection", "targetAdvanceHours", Number.parseFloat(value))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -411,7 +428,9 @@ export function Phase3ConfigurationPanel() {
               <Label htmlFor="pattern-confidence-threshold">Pattern Confidence Threshold (%)</Label>
               <Select
                 value={config.patternDetection.confidenceThreshold.toString()}
-                onValueChange={(value) => updateConfig("patternDetection", "confidenceThreshold", parseInt(value))}
+                onValueChange={(value) =>
+                  updateConfig("patternDetection", "confidenceThreshold", Number.parseInt(value))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -451,7 +470,9 @@ export function Phase3ConfigurationPanel() {
               <Switch
                 id="auto-warming"
                 checked={config.cacheWarming.autoWarmingEnabled}
-                onCheckedChange={(checked) => updateConfig("cacheWarming", "autoWarmingEnabled", checked)}
+                onCheckedChange={(checked) =>
+                  updateConfig("cacheWarming", "autoWarmingEnabled", checked)
+                }
                 disabled={!config.cacheWarming.enabled}
               />
             </div>
@@ -463,7 +484,7 @@ export function Phase3ConfigurationPanel() {
               {Object.entries(config.cacheWarming.strategies).map(([strategy, enabled]) => (
                 <div key={strategy} className="flex items-center justify-between">
                   <Label htmlFor={`strategy-${strategy}`} className="text-sm">
-                    {strategy.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    {strategy.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
                   </Label>
                   <Switch
                     id={`strategy-${strategy}`}

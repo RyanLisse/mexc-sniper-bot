@@ -1,8 +1,7 @@
 "use client";
 
 import { AlertTriangle, Bot, CheckCircle, Circle, RefreshCw, XCircle } from "lucide-react";
-import React from "react";
-import { useAIServices, useAIServiceHealthCheck } from "../../../hooks/use-ai-services";
+import { useAIServiceHealthCheck, useAIServices } from "../../../hooks/use-ai-services";
 import { Alert, AlertDescription, AlertTitle } from "../../ui/alert";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
@@ -100,7 +99,8 @@ export function AIServiceStatusPanel() {
           </Button>
         </div>
         <CardDescription>
-          {data.overall.message} ({data.overall.availableServices}/{data.overall.totalServices} services)
+          {data.overall.message} ({data.overall.availableServices}/{data.overall.totalServices}{" "}
+          services)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -108,10 +108,12 @@ export function AIServiceStatusPanel() {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>Service Availability</span>
-            <span>{Math.round((data.overall.availableServices / data.overall.totalServices) * 100)}%</span>
+            <span>
+              {Math.round((data.overall.availableServices / data.overall.totalServices) * 100)}%
+            </span>
           </div>
-          <Progress 
-            value={(data.overall.availableServices / data.overall.totalServices) * 100} 
+          <Progress
+            value={(data.overall.availableServices / data.overall.totalServices) * 100}
             className="h-2"
           />
         </div>
@@ -119,7 +121,10 @@ export function AIServiceStatusPanel() {
         {/* Individual Service Status */}
         <div className="space-y-3">
           {Object.entries(data.services).map(([serviceName, service]) => (
-            <div key={serviceName} className="flex items-center justify-between p-3 border rounded-lg">
+            <div
+              key={serviceName}
+              className="flex items-center justify-between p-3 border rounded-lg"
+            >
               <div className="flex items-center gap-3">
                 {getStatusIcon(service.status)}
                 <div>

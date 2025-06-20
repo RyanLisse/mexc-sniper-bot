@@ -1,27 +1,35 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { AlertCircle, TrendingUp, Shield, Target, DollarSign, Plus, Trash2, CheckCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  AlertCircle,
+  CheckCircle,
+  DollarSign,
+  Plus,
+  Shield,
+  Target,
+  Trash2,
+  TrendingUp,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  DEFAULT_CUSTOM_CONFIG,
   TAKE_PROFIT_STRATEGIES,
-  type TakeProfitStrategy,
   type TakeProfitLevel,
-  validateTakeProfitStrategy,
-  validateTakeProfitLevel,
-  calculatePotentialProfit,
+  type TakeProfitStrategy,
   createCustomTakeProfitLevel,
-  DEFAULT_CUSTOM_CONFIG
-} from '../types/take-profit-strategies';
+  validateTakeProfitLevel,
+  validateTakeProfitStrategy,
+} from "../types/take-profit-strategies";
 
 interface UnifiedTakeProfitSettingsProps {
   selectedStrategy: string;
@@ -40,9 +48,7 @@ export function UnifiedTakeProfitSettings({
   investmentAmount = 1000,
   className = "",
 }: UnifiedTakeProfitSettingsProps) {
-  const [customLevels, setCustomLevels] = useState<TakeProfitLevel[]>(
-    customStrategy?.levels || []
-  );
+  const [customLevels, setCustomLevels] = useState<TakeProfitLevel[]>(customStrategy?.levels || []);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [stopLoss, setStopLoss] = useState(15);
   const [trailingStop, setTrailingStop] = useState(true);
@@ -50,14 +56,16 @@ export function UnifiedTakeProfitSettings({
 
   // Get current strategy for display
   const currentStrategy = useMemo(() => {
-    if (selectedStrategy === 'custom') {
+    if (selectedStrategy === "custom") {
       return {
         ...DEFAULT_CUSTOM_CONFIG.strategy,
         levels: customLevels,
-        name: 'Custom Strategy'
+        name: "Custom Strategy",
       };
     }
-    return TAKE_PROFIT_STRATEGIES.find(s => s.id === selectedStrategy) || TAKE_PROFIT_STRATEGIES[0];
+    return (
+      TAKE_PROFIT_STRATEGIES.find((s) => s.id === selectedStrategy) || TAKE_PROFIT_STRATEGIES[0]
+    );
   }, [selectedStrategy, customLevels]);
 
   // Update custom levels when customStrategy prop changes
@@ -88,7 +96,11 @@ export function UnifiedTakeProfitSettings({
   const handleCustomLevelAdd = () => {
     if (customLevels.length < 6) {
       const lastPercent = customLevels[customLevels.length - 1]?.profitPercentage || 0;
-      const newLevel = createCustomTakeProfitLevel(lastPercent + 10, 25, `Level ${customLevels.length + 1}`);
+      const newLevel = createCustomTakeProfitLevel(
+        lastPercent + 10,
+        25,
+        `Level ${customLevels.length + 1}`
+      );
       const newLevels = [...customLevels, newLevel];
       setCustomLevels(newLevels);
       updateCustomStrategy(newLevels);
@@ -120,25 +132,33 @@ export function UnifiedTakeProfitSettings({
 
   const totalSellQuantity = useMemo(() => {
     return currentStrategy.levels
-      .filter(level => level.isActive)
+      .filter((level) => level.isActive)
       .reduce((sum, level) => sum + level.sellQuantity, 0);
   }, [currentStrategy]);
 
   const getRiskBadgeColor = (riskLevel: string) => {
     switch (riskLevel) {
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case "low":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "high":
+        return "bg-red-100 text-red-800 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getStrategyIcon = (strategyId: string) => {
     switch (strategyId) {
-      case 'conservative': return <Shield className="h-5 w-5 text-green-600" />;
-      case 'balanced': return <Target className="h-5 w-5 text-blue-600" />;
-      case 'aggressive': return <TrendingUp className="h-5 w-5 text-red-600" />;
-      default: return <Target className="h-5 w-5 text-purple-600" />;
+      case "conservative":
+        return <Shield className="h-5 w-5 text-green-600" />;
+      case "balanced":
+        return <Target className="h-5 w-5 text-blue-600" />;
+      case "aggressive":
+        return <TrendingUp className="h-5 w-5 text-red-600" />;
+      default:
+        return <Target className="h-5 w-5 text-purple-600" />;
     }
   };
 
@@ -149,7 +169,9 @@ export function UnifiedTakeProfitSettings({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Take Profit Settings</h1>
-            <p className="text-muted-foreground">Configure your profit-taking strategy and exit levels</p>
+            <p className="text-muted-foreground">
+              Configure your profit-taking strategy and exit levels
+            </p>
           </div>
           <Button size="lg" className="gap-2">
             <Shield className="h-4 w-4" />
@@ -172,7 +194,9 @@ export function UnifiedTakeProfitSettings({
                     <div
                       key={strategy.id}
                       className={`relative flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
-                        selectedStrategy === strategy.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                        selectedStrategy === strategy.id
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
                       }`}
                       onClick={() => handleStrategySelect(strategy.id)}
                     >
@@ -202,9 +226,11 @@ export function UnifiedTakeProfitSettings({
                   {/* Custom Option */}
                   <div
                     className={`relative flex items-start space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
-                      selectedStrategy === 'custom' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                      selectedStrategy === "custom"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
                     }`}
-                    onClick={() => handleStrategySelect('custom')}
+                    onClick={() => handleStrategySelect("custom")}
                   >
                     <RadioGroupItem value="custom" id="custom" className="mt-1" />
                     <Label htmlFor="custom" className="flex-1 cursor-pointer">
@@ -233,7 +259,12 @@ export function UnifiedTakeProfitSettings({
                   <svg width="100%" height="100%">
                     <defs>
                       <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/>
+                        <path
+                          d="M 40 0 L 0 0 0 40"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                        />
                       </pattern>
                     </defs>
                     <rect width="100%" height="100%" fill="url(#grid)" />
@@ -257,7 +288,9 @@ export function UnifiedTakeProfitSettings({
                           style={{ height: `${(level.sellQuantity / 40) * 100}%` }}
                         />
                         <div className="text-center mt-2">
-                          <p className="text-xs text-muted-foreground">+{level.profitPercentage}%</p>
+                          <p className="text-xs text-muted-foreground">
+                            +{level.profitPercentage}%
+                          </p>
                           <p className="text-sm font-semibold">{level.sellQuantity}%</p>
                         </div>
                       </div>
@@ -283,7 +316,7 @@ export function UnifiedTakeProfitSettings({
                 </TabsList>
 
                 <TabsContent value="levels" className="space-y-4 mt-6">
-                  {selectedStrategy === 'custom' ? (
+                  {selectedStrategy === "custom" ? (
                     <div className="space-y-3">
                       {/* Validation Errors */}
                       {validationErrors.length > 0 && (
@@ -292,7 +325,9 @@ export function UnifiedTakeProfitSettings({
                           <AlertDescription>
                             <div className="space-y-1">
                               {validationErrors.map((error, index) => (
-                                <div key={index} className="text-sm">{error}</div>
+                                <div key={index} className="text-sm">
+                                  {error}
+                                </div>
                               ))}
                             </div>
                           </AlertDescription>
@@ -303,7 +338,9 @@ export function UnifiedTakeProfitSettings({
                         <div className="text-center py-8 text-muted-foreground">
                           <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
                           <p>No custom levels configured yet.</p>
-                          <p className="text-sm">Click "Add Level" to create your first profit level.</p>
+                          <p className="text-sm">
+                            Click "Add Level" to create your first profit level.
+                          </p>
                         </div>
                       ) : (
                         customLevels.map((level, index) => (
@@ -319,7 +356,12 @@ export function UnifiedTakeProfitSettings({
                       )}
 
                       {customLevels.length < 6 && (
-                        <Button variant="outline" size="sm" onClick={handleCustomLevelAdd} className="w-full">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCustomLevelAdd}
+                          className="w-full"
+                        >
                           <Plus className="h-4 w-4 mr-2" />
                           Add Level
                         </Button>
@@ -328,10 +370,15 @@ export function UnifiedTakeProfitSettings({
                   ) : (
                     <div className="space-y-3">
                       {currentStrategy.levels.map((level, index) => (
-                        <div key={level.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                        <div
+                          key={level.id}
+                          className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                        >
                           <div className="flex items-center gap-4">
                             <Badge variant="outline">Level {index + 1}</Badge>
-                            <span className="text-sm">Take profit at +{level.profitPercentage}%</span>
+                            <span className="text-sm">
+                              Take profit at +{level.profitPercentage}%
+                            </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium">Sell {level.sellQuantity}%</span>
@@ -348,7 +395,9 @@ export function UnifiedTakeProfitSettings({
                     <div>
                       <Label htmlFor="stop-loss" className="flex items-center gap-2 mb-2">
                         Stop Loss
-                        <Badge variant="outline" className="text-xs">Protects downside</Badge>
+                        <Badge variant="outline" className="text-xs">
+                          Protects downside
+                        </Badge>
                       </Label>
                       <div className="flex items-center gap-4">
                         <Slider
@@ -370,8 +419,12 @@ export function UnifiedTakeProfitSettings({
                       <div className="flex items-center gap-3">
                         <TrendingUp className="h-5 w-5 text-primary" />
                         <div>
-                          <Label htmlFor="trailing-stop" className="text-base">Trailing Stop</Label>
-                          <p className="text-sm text-muted-foreground">Lock in profits as price rises</p>
+                          <Label htmlFor="trailing-stop" className="text-base">
+                            Trailing Stop
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            Lock in profits as price rises
+                          </p>
                         </div>
                       </div>
                       <Switch
@@ -384,7 +437,9 @@ export function UnifiedTakeProfitSettings({
                     <div>
                       <Label htmlFor="max-position" className="flex items-center gap-2 mb-2">
                         Maximum Position Size
-                        <Badge variant="outline" className="text-xs">Per trade</Badge>
+                        <Badge variant="outline" className="text-xs">
+                          Per trade
+                        </Badge>
                       </Label>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">$</span>
@@ -392,7 +447,7 @@ export function UnifiedTakeProfitSettings({
                           id="max-position"
                           type="number"
                           value={maxPosition}
-                          onChange={(e) => setMaxPosition(parseInt(e.target.value) || 0)}
+                          onChange={(e) => setMaxPosition(Number.parseInt(e.target.value) || 0)}
                           className="flex-1"
                         />
                         <span className="text-muted-foreground">USDT</span>
@@ -413,7 +468,9 @@ export function UnifiedTakeProfitSettings({
                     <div className="flex items-center justify-between p-4 rounded-lg border">
                       <div>
                         <Label className="text-base">Enable Partial Fills</Label>
-                        <p className="text-sm text-muted-foreground">Allow orders to be partially filled</p>
+                        <p className="text-sm text-muted-foreground">
+                          Allow orders to be partially filled
+                        </p>
                       </div>
                       <Switch />
                     </div>
@@ -421,7 +478,9 @@ export function UnifiedTakeProfitSettings({
                     <div className="flex items-center justify-between p-4 rounded-lg border">
                       <div>
                         <Label className="text-base">Auto-Rebalance</Label>
-                        <p className="text-sm text-muted-foreground">Automatically adjust positions</p>
+                        <p className="text-sm text-muted-foreground">
+                          Automatically adjust positions
+                        </p>
                       </div>
                       <Switch />
                     </div>
@@ -429,7 +488,9 @@ export function UnifiedTakeProfitSettings({
                     <div className="flex items-center justify-between p-4 rounded-lg border">
                       <div>
                         <Label className="text-base">Pattern Discovery Integration</Label>
-                        <p className="text-sm text-muted-foreground">Use AI pattern detection for timing</p>
+                        <p className="text-sm text-muted-foreground">
+                          Use AI pattern detection for timing
+                        </p>
                       </div>
                       <Switch defaultChecked />
                     </div>
@@ -502,7 +563,7 @@ function CustomLevelEditor({
         <Input
           type="number"
           value={level.profitPercentage}
-          onChange={(e) => onUpdate({ profitPercentage: parseFloat(e.target.value) || 0 })}
+          onChange={(e) => onUpdate({ profitPercentage: Number.parseFloat(e.target.value) || 0 })}
           className="w-20 h-8"
           min="0.1"
           max="1000"
@@ -515,7 +576,7 @@ function CustomLevelEditor({
         <Input
           type="number"
           value={level.sellQuantity}
-          onChange={(e) => onUpdate({ sellQuantity: parseFloat(e.target.value) || 0 })}
+          onChange={(e) => onUpdate({ sellQuantity: Number.parseFloat(e.target.value) || 0 })}
           className="w-20 h-8"
           min="1"
           max="100"

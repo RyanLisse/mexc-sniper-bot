@@ -13,8 +13,8 @@
  * - Intelligent batching and cache-aware query optimization
  */
 
-import Redis from 'ioredis';
-import type { CacheDataType, CachePriority } from './unified-cache-system';
+import Redis from "ioredis";
+import type { CacheDataType, CachePriority } from "./unified-cache-system";
 
 // ============================================================================
 // Types and Interfaces
@@ -66,7 +66,7 @@ export interface CacheMetrics {
   sets: number;
   deletes: number;
   errors: number;
-  connectionStatus: 'connected' | 'disconnected' | 'connecting' | 'error';
+  connectionStatus: "connected" | "disconnected" | "connecting" | "error";
   lastError?: string;
   avgResponseTime: number;
   totalOperations: number;
@@ -107,7 +107,7 @@ export class RedisCacheService {
       enableMetrics: true,
       enableCompression: false,
       enableCacheWarming: true,
-      warmupPatterns: ['api:mexc:*', 'pattern:*', 'activity:*'],
+      warmupPatterns: ["api:mexc:*", "pattern:*", "activity:*"],
       warmupInterval: 30000, // 30 seconds
       ...config,
     };
@@ -118,7 +118,7 @@ export class RedisCacheService {
       sets: 0,
       deletes: 0,
       errors: 0,
-      connectionStatus: 'disconnected',
+      connectionStatus: "disconnected",
       avgResponseTime: 0,
       totalOperations: 0,
       cacheSize: 0,
@@ -135,10 +135,11 @@ export class RedisCacheService {
   private async initializeRedisConnection(): Promise<void> {
     try {
       // Get Redis URL from environment or config
-      const redisUrl = this.config.url ||
-                      process.env.VALKEY_URL ||
-                      process.env.REDIS_URL ||
-                      `redis://${this.config.host || 'localhost'}:${this.config.port || 6379}`;
+      const redisUrl =
+        this.config.url ||
+        process.env.VALKEY_URL ||
+        process.env.REDIS_URL ||
+        `redis://${this.config.host || "localhost"}:${this.config.port || 6379}`;
 
       this.redis = new Redis(redisUrl, {
         maxRetriesPerRequest: this.config.maxRetries,
@@ -149,33 +150,36 @@ export class RedisCacheService {
       });
 
       // Event handlers for graceful degradation
-      this.redis.on('connect', () => {
+      this.redis.on("connect", () => {
         this.isConnected = true;
-        this.metrics.connectionStatus = 'connected';
-        console.log('[RedisCacheService] Connected to Redis/Valkey');
+        this.metrics.connectionStatus = "connected";
+        console.log("[RedisCacheService] Connected to Redis/Valkey");
 
         if (this.config.enableCacheWarming) {
           this.startCacheWarming();
         }
       });
 
-      this.redis.on('error', (error) => {
+      this.redis.on("error", (error) => {
         this.isConnected = false;
-        this.metrics.connectionStatus = 'error';
+        this.metrics.connectionStatus = "error";
         this.metrics.lastError = error.message;
         this.metrics.errors++;
 
         if (this.config.enableGracefulDegradation) {
-          console.warn('[RedisCacheService] Redis error (graceful degradation enabled):', error.message);
+          console.warn(
+            "[RedisCacheService] Redis error (graceful degradation enabled):",
+            error.message
+          );
         } else {
-          console.error('[RedisCacheService] Redis error:', error);
+          console.error("[RedisCacheService] Redis error:", error);
         }
       });
 
-      this.redis.on('close', () => {
+      this.redis.on("close", () => {
         this.isConnected = false;
-        this.metrics.connectionStatus = 'disconnected';
-        console.log('[RedisCacheService] Disconnected from Redis/Valkey');
+        this.metrics.connectionStatus = "disconnected";
+        console.log("[RedisCacheService] Disconnected from Redis/Valkey");
 
         // Attempt reconnection after delay
         if (this.config.enableGracefulDegradation) {
@@ -185,7 +189,6 @@ export class RedisCacheService {
 
       // Attempt initial connection
       await this.redis.connect();
-
     } catch (error) {
       this.handleConnectionError(error);
     }
@@ -193,15 +196,18 @@ export class RedisCacheService {
 
   private handleConnectionError(error: any): void {
     this.isConnected = false;
-    this.metrics.connectionStatus = 'error';
+    this.metrics.connectionStatus = "error";
     this.metrics.lastError = error.message;
     this.metrics.errors++;
 
     if (this.config.enableGracefulDegradation) {
-      console.warn('[RedisCacheService] Failed to connect to Redis/Valkey (graceful degradation enabled):', error.message);
+      console.warn(
+        "[RedisCacheService] Failed to connect to Redis/Valkey (graceful degradation enabled):",
+        error.message
+      );
       this.scheduleReconnection();
     } else {
-      console.error('[RedisCacheService] Failed to connect to Redis/Valkey:', error);
+      console.error("[RedisCacheService] Failed to connect to Redis/Valkey:", error);
       throw error;
     }
   }
@@ -212,7 +218,7 @@ export class RedisCacheService {
     }
 
     this.connectionRetryTimeout = setTimeout(() => {
-      console.log('[RedisCacheService] Attempting to reconnect...');
+      console.log("[RedisCacheService] Attempting to reconnect...");
       this.initializeRedisConnection();
     }, 5000); // Retry after 5 seconds
   }
@@ -232,7 +238,7 @@ export class RedisCacheService {
 
       const result = await this.redis.get(key);
       const responseTime = Date.now() - startTime;
-      this.updateMetrics('get', responseTime);
+      this.updateMetrics("get", responseTime);
 
       if (result === null) {
         this.metrics.misses++;
@@ -251,9 +257,8 @@ export class RedisCacheService {
 
       this.metrics.hits++;
       return parsed.data;
-
     } catch (error) {
-      this.handleOperationError('get', error);
+      this.handleOperationError("get", error);
       this.metrics.misses++;
       return null;
     }
@@ -281,11 +286,11 @@ export class RedisCacheService {
         data: value,
         timestamp: Date.now(),
         ttl,
-        type: options.type || 'generic',
-        priority: options.priority || 'medium',
+        type: options.type || "generic",
+        priority: options.priority || "medium",
         metadata: {
           size: this.estimateSize(value),
-          source: 'redis-cache-service',
+          source: "redis-cache-service",
           ...options.metadata,
         },
       };
@@ -296,13 +301,12 @@ export class RedisCacheService {
       await this.redis.setex(key, Math.ceil(ttl / 1000), serialized);
 
       const responseTime = Date.now() - startTime;
-      this.updateMetrics('set', responseTime);
+      this.updateMetrics("set", responseTime);
       this.metrics.sets++;
 
       return true;
-
     } catch (error) {
-      this.handleOperationError('set', error);
+      this.handleOperationError("set", error);
       return false;
     }
   }
@@ -317,13 +321,12 @@ export class RedisCacheService {
 
       const result = await this.redis.del(key);
       const responseTime = Date.now() - startTime;
-      this.updateMetrics('delete', responseTime);
+      this.updateMetrics("delete", responseTime);
       this.metrics.deletes++;
 
       return result > 0;
-
     } catch (error) {
-      this.handleOperationError('delete', error);
+      this.handleOperationError("delete", error);
       return false;
     }
   }
@@ -346,9 +349,8 @@ export class RedisCacheService {
         await this.redis.flushdb();
         return 1; // Indicate success
       }
-
     } catch (error) {
-      this.handleOperationError('clear', error);
+      this.handleOperationError("clear", error);
       return 0;
     }
   }
@@ -379,7 +381,10 @@ export class RedisCacheService {
 
     if (this.config.enableGracefulDegradation) {
       // Silently fail for graceful degradation
-      console.warn(`[RedisCacheService] ${operation} operation failed (graceful degradation):`, error.message);
+      console.warn(
+        `[RedisCacheService] ${operation} operation failed (graceful degradation):`,
+        error.message
+      );
     } else {
       console.error(`[RedisCacheService] ${operation} operation failed:`, error);
     }
@@ -416,11 +421,10 @@ export class RedisCacheService {
 
         await this.set(key, data, {
           ttl: strategy.ttl || this.config.defaultTTL,
-          type: 'generic',
+          type: "generic",
           priority: strategy.priority,
-          metadata: { source: 'cache-warming', pattern },
+          metadata: { source: "cache-warming", pattern },
         });
-
       } catch (error) {
         console.warn(`[RedisCacheService] Cache warming failed for pattern ${pattern}:`, error);
       }
@@ -436,19 +440,19 @@ export class RedisCacheService {
   }
 
   isHealthy(): boolean {
-    return this.isConnected && this.metrics.connectionStatus === 'connected';
+    return this.isConnected && this.metrics.connectionStatus === "connected";
   }
 
   async getInfo(): Promise<any> {
     try {
       if (!this.isConnected || !this.redis) {
-        return { status: 'disconnected' };
+        return { status: "disconnected" };
       }
 
       const info = await this.redis.info();
-      return { status: 'connected', info };
+      return { status: "connected", info };
     } catch (error) {
-      return { status: 'error', error: (error as Error).message || 'Unknown error' };
+      return { status: "error", error: (error as Error).message || "Unknown error" };
     }
   }
 
@@ -466,7 +470,7 @@ export class RedisCacheService {
 
       const results = await this.redis.mget(...keys);
       const responseTime = Date.now() - startTime;
-      this.updateMetrics('mget', responseTime);
+      this.updateMetrics("mget", responseTime);
 
       return results.map((result, index) => {
         if (result === null) {
@@ -492,9 +496,8 @@ export class RedisCacheService {
           return null;
         }
       });
-
     } catch (error) {
-      this.handleOperationError('mget', error);
+      this.handleOperationError("mget", error);
       return keys.map(() => null);
     }
   }
@@ -524,11 +527,11 @@ export class RedisCacheService {
           data: entry.value,
           timestamp: Date.now(),
           ttl,
-          type: entry.type || 'generic',
-          priority: entry.priority || 'medium',
+          type: entry.type || "generic",
+          priority: entry.priority || "medium",
           metadata: {
             size: this.estimateSize(entry.value),
-            source: 'redis-cache-service',
+            source: "redis-cache-service",
             ...entry.metadata,
           },
         };
@@ -540,13 +543,12 @@ export class RedisCacheService {
       await pipeline.exec();
 
       const responseTime = Date.now() - startTime;
-      this.updateMetrics('mset', responseTime);
+      this.updateMetrics("mset", responseTime);
       this.metrics.sets += entries.length;
 
       return true;
-
     } catch (error) {
-      this.handleOperationError('mset', error);
+      this.handleOperationError("mset", error);
       return false;
     }
   }
@@ -565,7 +567,7 @@ export class RedisCacheService {
       this.metrics.cacheSize = dbsize;
       return dbsize;
     } catch (error) {
-      this.handleOperationError('getCacheSize', error);
+      this.handleOperationError("getCacheSize", error);
       return 0;
     }
   }
@@ -576,13 +578,13 @@ export class RedisCacheService {
         return 0;
       }
 
-      const info = await this.redis.info('memory');
+      const info = await this.redis.info("memory");
       const match = info.match(/used_memory:(\d+)/);
-      const memoryUsage = match ? parseInt(match[1], 10) : 0;
+      const memoryUsage = match ? Number.parseInt(match[1], 10) : 0;
       this.metrics.memoryUsage = memoryUsage;
       return memoryUsage;
     } catch (error) {
-      this.handleOperationError('getMemoryUsage', error);
+      this.handleOperationError("getMemoryUsage", error);
       return 0;
     }
   }
@@ -623,7 +625,7 @@ export class RedisCacheService {
       const deltaInfo = {
         lastUpdate: Date.now(),
         key,
-        type: options.type || 'generic',
+        type: options.type || "generic",
       };
 
       pipeline.setex(
@@ -634,9 +636,8 @@ export class RedisCacheService {
 
       await pipeline.exec();
       return true;
-
     } catch (error) {
-      this.handleOperationError('setWithDelta', error);
+      this.handleOperationError("setWithDelta", error);
       return false;
     }
   }
@@ -649,7 +650,7 @@ export class RedisCacheService {
 
       return await this.redis.keys(pattern);
     } catch (error) {
-      this.handleOperationError('getDeltaKeys', error);
+      this.handleOperationError("getDeltaKeys", error);
       return [];
     }
   }
@@ -675,8 +676,8 @@ export class RedisCacheService {
     }
 
     this.isConnected = false;
-    this.metrics.connectionStatus = 'disconnected';
-    console.log('[RedisCacheService] Service destroyed');
+    this.metrics.connectionStatus = "disconnected";
+    console.log("[RedisCacheService] Service destroyed");
   }
 }
 

@@ -57,9 +57,7 @@
           "elementId": "0-125",
           "description": "The name input field where the user can enter their name.",
           "method": "fill",
-          "arguments": [
-            "Dashboard Test User"
-          ]
+          "arguments": ["Dashboard Test User"]
         }
       ]
     },
@@ -127,11 +125,7 @@
       "hasSettingsPage": true,
       "mainTitle": "Settings",
       "hasTabs": true,
-      "tabNames": [
-        "General",
-        "Take Profit",
-        "Notifications"
-      ],
+      "tabNames": ["General", "Take Profit", "Notifications"],
       "takeProfitTabExists": true,
       "designConsistency": {
         "hasCardLayout": false,
@@ -366,28 +360,19 @@
           "elementId": "0-2",
           "description": "The main registration form where the user can input their name, email, and password.",
           "method": "fill",
-          "arguments": [
-            "input[name='name']",
-            "Journey Test User"
-          ]
+          "arguments": ["input[name='name']", "Journey Test User"]
         },
         {
           "elementId": "0-2",
           "description": "The email input field in the registration form.",
           "method": "fill",
-          "arguments": [
-            "input[name='email']",
-            "journey-test-1750362053140@example.com"
-          ]
+          "arguments": ["input[name='email']", "journey-test-1750362053140@example.com"]
         },
         {
           "elementId": "0-2",
           "description": "The password input field in the registration form.",
           "method": "fill",
-          "arguments": [
-            "input[name='password']",
-            "Journey123!"
-          ]
+          "arguments": ["input[name='password']", "Journey123!"]
         }
       ]
     },

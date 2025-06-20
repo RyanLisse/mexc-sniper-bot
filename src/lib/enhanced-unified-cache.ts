@@ -12,9 +12,17 @@
  * - Cache-aware query optimization
  */
 
-import { UnifiedCacheSystem, CacheConfig, CacheDataType, CachePriority } from './unified-cache-system';
-import { RedisCacheService, getRedisCacheService, type RedisCacheConfig } from './redis-cache-service';
-import { globalCacheManager } from './cache-manager';
+import {
+  type RedisCacheConfig,
+  type RedisCacheService,
+  getRedisCacheService,
+} from "./redis-cache-service";
+import {
+  type CacheConfig,
+  type CacheDataType,
+  type CachePriority,
+  UnifiedCacheSystem,
+} from "./unified-cache-system";
 
 // ============================================================================
 // Enhanced Cache Configuration
@@ -90,7 +98,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
       maxMemorySize: config.maxMemorySize || 100 * 1024 * 1024,
       defaultTTL: config.defaultTTL || 300000,
       cleanupInterval: config.cleanupInterval || 60000,
-      evictionPolicy: config.evictionPolicy || 'lru' as const,
+      evictionPolicy: config.evictionPolicy || ("lru" as const),
       enableMetrics: config.enableMetrics ?? true,
       enablePersistence: config.enablePersistence ?? false,
       enableCompression: config.enableCompression ?? false,
@@ -124,8 +132,14 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
     this.performanceMetrics = {
       l1: { hits: 0, misses: 0, hitRate: 0, avgResponseTime: 0 },
       l2: { hits: 0, misses: 0, hitRate: 0, avgResponseTime: 0 },
-      l3: { hits: 0, misses: 0, hitRate: 0, avgResponseTime: 0, connectionStatus: 'disconnected' },
-      overall: { totalHits: 0, totalMisses: 0, overallHitRate: 0, avgResponseTime: 0, cacheEfficiency: 0 },
+      l3: { hits: 0, misses: 0, hitRate: 0, avgResponseTime: 0, connectionStatus: "disconnected" },
+      overall: {
+        totalHits: 0,
+        totalMisses: 0,
+        overallHitRate: 0,
+        avgResponseTime: 0,
+        cacheEfficiency: 0,
+      },
     };
 
     // Start performance monitoring
@@ -143,18 +157,18 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
   // Enhanced Cache Operations with Intelligent Routing
   // ============================================================================
 
-  async get<T>(key: string, dataType: CacheDataType = 'generic'): Promise<T | null> {
+  async get<T>(key: string, dataType: CacheDataType = "generic"): Promise<T | null> {
     const startTime = Date.now();
     let result: T | null = null;
-    let cacheLevel = '';
+    let cacheLevel = "";
 
     try {
       // L1 Cache (Memory) - Fastest
       result = await super.get<T>(key);
       if (result !== null) {
-        cacheLevel = 'L1';
+        cacheLevel = "L1";
         this.performanceMetrics.l1.hits++;
-        this.updateEnhancedResponseTime('l1', Date.now() - startTime);
+        this.updateEnhancedResponseTime("l1", Date.now() - startTime);
         return result;
       }
       this.performanceMetrics.l1.misses++;
@@ -163,9 +177,9 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
       if (this.shouldUseRedisForDataType(dataType)) {
         result = await this.redisCache.get<T>(key);
         if (result !== null) {
-          cacheLevel = 'L3';
+          cacheLevel = "L3";
           this.performanceMetrics.l3.hits++;
-          this.updateEnhancedResponseTime('l3', Date.now() - startTime);
+          this.updateEnhancedResponseTime("l3", Date.now() - startTime);
 
           // Promote to L1 for faster future access
           await super.set(key, result, dataType, this.getTTLForDataType(dataType));
@@ -177,9 +191,8 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
       // Cache miss
       this.updateOverallMetrics();
       return null;
-
     } catch (error) {
-      console.error('[EnhancedUnifiedCache] Get operation failed:', error);
+      console.error("[EnhancedUnifiedCache] Get operation failed:", error);
       return null;
     }
   }
@@ -187,7 +200,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
   async set<T>(
     key: string,
     value: T,
-    dataType: CacheDataType = 'generic',
+    dataType: CacheDataType = "generic",
     customTTL?: number
   ): Promise<void> {
     const startTime = Date.now();
@@ -204,16 +217,15 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
           type: dataType,
           priority: this.getPriorityForDataType(dataType),
           metadata: {
-            source: 'enhanced-unified-cache',
+            source: "enhanced-unified-cache",
             timestamp: Date.now(),
           },
         });
       }
 
-      this.updateEnhancedResponseTime('overall', Date.now() - startTime);
-
+      this.updateEnhancedResponseTime("overall", Date.now() - startTime);
     } catch (error) {
-      console.error('[EnhancedUnifiedCache] Set operation failed:', error);
+      console.error("[EnhancedUnifiedCache] Set operation failed:", error);
     }
   }
 
@@ -221,10 +233,10 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
   // Batch Operations for Performance
   // ============================================================================
 
-  async mget<T>(keys: string[], dataType: CacheDataType = 'generic'): Promise<(T | null)[]> {
+  async mget<T>(keys: string[], dataType: CacheDataType = "generic"): Promise<(T | null)[]> {
     if (!this.enhancedConfig.enableBatchOperations || keys.length === 0) {
       // Fallback to individual gets
-      return Promise.all(keys.map(key => this.get<T>(key, dataType)));
+      return Promise.all(keys.map((key) => this.get<T>(key, dataType)));
     }
 
     const startTime = Date.now();
@@ -246,7 +258,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
 
       // If we have missing keys and should use Redis for this data type
       if (missingKeys.length > 0 && this.shouldUseRedisForDataType(dataType)) {
-        const missingKeyStrings = missingKeys.map(i => keys[i]);
+        const missingKeyStrings = missingKeys.map((i) => keys[i]);
         const redisResults = await this.redisCache.mget<T>(missingKeyStrings);
 
         for (let j = 0; j < missingKeys.length; j++) {
@@ -258,20 +270,24 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
             this.performanceMetrics.l3.hits++;
 
             // Promote to L1
-            await super.set(keys[originalIndex], redisResult, dataType, this.getTTLForDataType(dataType));
+            await super.set(
+              keys[originalIndex],
+              redisResult,
+              dataType,
+              this.getTTLForDataType(dataType)
+            );
           } else {
             this.performanceMetrics.l3.misses++;
           }
         }
       }
 
-      this.updateEnhancedResponseTime('overall', Date.now() - startTime);
+      this.updateEnhancedResponseTime("overall", Date.now() - startTime);
       this.updateOverallMetrics();
 
       return results;
-
     } catch (error) {
-      console.error('[EnhancedUnifiedCache] Batch get operation failed:', error);
+      console.error("[EnhancedUnifiedCache] Batch get operation failed:", error);
       return results;
     }
   }
@@ -286,9 +302,11 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
   ): Promise<void> {
     if (!this.enhancedConfig.enableBatchOperations || entries.length === 0) {
       // Fallback to individual sets
-      await Promise.all(entries.map(entry =>
-        this.set(entry.key, entry.value, entry.dataType || 'generic', entry.ttl)
-      ));
+      await Promise.all(
+        entries.map((entry) =>
+          this.set(entry.key, entry.value, entry.dataType || "generic", entry.ttl)
+        )
+      );
       return;
     }
 
@@ -296,21 +314,28 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
 
     try {
       // Set in L1 cache
-      await Promise.all(entries.map(entry =>
-        super.set(entry.key, entry.value, entry.dataType || 'generic', entry.ttl || this.getTTLForDataType(entry.dataType || 'generic'))
-      ));
+      await Promise.all(
+        entries.map((entry) =>
+          super.set(
+            entry.key,
+            entry.value,
+            entry.dataType || "generic",
+            entry.ttl || this.getTTLForDataType(entry.dataType || "generic")
+          )
+        )
+      );
 
       // Batch set in Redis for applicable data types
       const redisEntries = entries
-        .filter(entry => this.shouldUseRedisForDataType(entry.dataType || 'generic'))
-        .map(entry => ({
+        .filter((entry) => this.shouldUseRedisForDataType(entry.dataType || "generic"))
+        .map((entry) => ({
           key: entry.key,
           value: entry.value,
-          ttl: entry.ttl || this.getTTLForDataType(entry.dataType || 'generic'),
-          type: entry.dataType || 'generic' as CacheDataType,
-          priority: this.getPriorityForDataType(entry.dataType || 'generic'),
+          ttl: entry.ttl || this.getTTLForDataType(entry.dataType || "generic"),
+          type: entry.dataType || ("generic" as CacheDataType),
+          priority: this.getPriorityForDataType(entry.dataType || "generic"),
           metadata: {
-            source: 'enhanced-unified-cache',
+            source: "enhanced-unified-cache",
             timestamp: Date.now(),
           },
         }));
@@ -319,10 +344,9 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
         await this.redisCache.mset(redisEntries);
       }
 
-      this.updateEnhancedResponseTime('overall', Date.now() - startTime);
-
+      this.updateEnhancedResponseTime("overall", Date.now() - startTime);
     } catch (error) {
-      console.error('[EnhancedUnifiedCache] Batch set operation failed:', error);
+      console.error("[EnhancedUnifiedCache] Batch set operation failed:", error);
     }
   }
 
@@ -332,18 +356,18 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
 
   private shouldUseRedisForDataType(dataType: CacheDataType): boolean {
     // Use Redis for API responses (user preference), market data, and pattern analysis
-    return ['api_response', 'market_data', 'pattern_analysis', 'trading_signal'].includes(dataType);
+    return ["api_response", "market_data", "pattern_analysis", "trading_signal"].includes(dataType);
   }
 
   private getTTLForDataType(dataType: CacheDataType): number {
     switch (dataType) {
-      case 'api_response':
+      case "api_response":
         return this.enhancedConfig.apiResponseTTL; // 5 seconds as per user preference
-      case 'market_data':
+      case "market_data":
         return 5000; // 5 seconds for real-time data
-      case 'pattern_analysis':
+      case "pattern_analysis":
         return 30000; // 30 seconds for pattern data
-      case 'trading_signal':
+      case "trading_signal":
         return 10000; // 10 seconds for trading signals
       default:
         return this.enhancedConfig.defaultTTL;
@@ -352,14 +376,14 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
 
   private getPriorityForDataType(dataType: CacheDataType): CachePriority {
     switch (dataType) {
-      case 'api_response':
-      case 'market_data':
-      case 'trading_signal':
-        return 'critical';
-      case 'pattern_analysis':
-        return 'high';
+      case "api_response":
+      case "market_data":
+      case "trading_signal":
+        return "critical";
+      case "pattern_analysis":
+        return "high";
       default:
-        return 'medium';
+        return "medium";
     }
   }
 
@@ -376,16 +400,17 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
   private async collectPerformanceMetrics(): Promise<void> {
     try {
       // Update Redis connection status
-      this.performanceMetrics.l3.connectionStatus = this.redisCache.isHealthy() ? 'connected' : 'disconnected';
+      this.performanceMetrics.l3.connectionStatus = this.redisCache.isHealthy()
+        ? "connected"
+        : "disconnected";
 
       // Calculate hit rates
       this.calculateHitRates();
 
       // Update overall metrics
       this.updateOverallMetrics();
-
     } catch (error) {
-      console.error('[EnhancedUnifiedCache] Performance metrics collection failed:', error);
+      console.error("[EnhancedUnifiedCache] Performance metrics collection failed:", error);
     }
   }
 
@@ -393,8 +418,10 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
     const l1Total = this.performanceMetrics.l1.hits + this.performanceMetrics.l1.misses;
     const l3Total = this.performanceMetrics.l3.hits + this.performanceMetrics.l3.misses;
 
-    this.performanceMetrics.l1.hitRate = l1Total > 0 ? (this.performanceMetrics.l1.hits / l1Total) * 100 : 0;
-    this.performanceMetrics.l3.hitRate = l3Total > 0 ? (this.performanceMetrics.l3.hits / l3Total) * 100 : 0;
+    this.performanceMetrics.l1.hitRate =
+      l1Total > 0 ? (this.performanceMetrics.l1.hits / l1Total) * 100 : 0;
+    this.performanceMetrics.l3.hitRate =
+      l3Total > 0 ? (this.performanceMetrics.l3.hits / l3Total) * 100 : 0;
   }
 
   private updateOverallMetrics(): void {
@@ -414,16 +441,18 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
     const l1Weight = 0.7; // L1 cache is most efficient
     const l3Weight = 0.3; // L3 cache is less efficient but still valuable
 
-    return (this.performanceMetrics.l1.hitRate * l1Weight) +
-           (this.performanceMetrics.l3.hitRate * l3Weight);
+    return (
+      this.performanceMetrics.l1.hitRate * l1Weight + this.performanceMetrics.l3.hitRate * l3Weight
+    );
   }
 
-  private updateEnhancedResponseTime(level: 'l1' | 'l3' | 'overall', responseTime: number): void {
+  private updateEnhancedResponseTime(level: "l1" | "l3" | "overall", responseTime: number): void {
     const metrics = this.performanceMetrics[level];
     let totalOps: number;
 
-    if (level === 'overall') {
-      totalOps = this.performanceMetrics.overall.totalHits + this.performanceMetrics.overall.totalMisses;
+    if (level === "overall") {
+      totalOps =
+        this.performanceMetrics.overall.totalHits + this.performanceMetrics.overall.totalMisses;
     } else {
       // For l1 and l3, metrics have hits and misses properties
       const levelMetrics = metrics as { hits: number; misses: number; avgResponseTime: number };
@@ -431,7 +460,8 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
     }
 
     if (totalOps > 0) {
-      metrics.avgResponseTime = (metrics.avgResponseTime * (totalOps - 1) + responseTime) / totalOps;
+      metrics.avgResponseTime =
+        (metrics.avgResponseTime * (totalOps - 1) + responseTime) / totalOps;
     }
   }
 
@@ -441,14 +471,14 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
 
   private initializeCacheWarming(): void {
     // Add default warming strategies for MEXC data
-    this.addWarmupStrategy('mexc-symbols', async () => {
+    this.addWarmupStrategy("mexc-symbols", async () => {
       // This would be implemented to warm up frequently accessed symbol data
-      console.log('[EnhancedUnifiedCache] Warming up MEXC symbols cache');
+      console.log("[EnhancedUnifiedCache] Warming up MEXC symbols cache");
     });
 
-    this.addWarmupStrategy('pattern-data', async () => {
+    this.addWarmupStrategy("pattern-data", async () => {
       // This would be implemented to warm up pattern detection data
-      console.log('[EnhancedUnifiedCache] Warming up pattern data cache');
+      console.log("[EnhancedUnifiedCache] Warming up pattern data cache");
     });
   }
 
@@ -506,7 +536,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
     await this.redisCache.destroy();
     await super.destroy();
 
-    console.log('[EnhancedUnifiedCache] Enhanced unified cache system destroyed');
+    console.log("[EnhancedUnifiedCache] Enhanced unified cache system destroyed");
   }
 }
 
@@ -516,7 +546,9 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
 
 let globalEnhancedCacheInstance: EnhancedUnifiedCacheSystem | null = null;
 
-export function getEnhancedUnifiedCache(config?: Partial<EnhancedCacheConfig>): EnhancedUnifiedCacheSystem {
+export function getEnhancedUnifiedCache(
+  config?: Partial<EnhancedCacheConfig>
+): EnhancedUnifiedCacheSystem {
   if (!globalEnhancedCacheInstance || config) {
     globalEnhancedCacheInstance = new EnhancedUnifiedCacheSystem(config);
   }

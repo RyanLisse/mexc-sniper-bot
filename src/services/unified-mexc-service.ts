@@ -19,14 +19,15 @@
 
 import * as crypto from "node:crypto";
 import { z } from "zod";
-import type {
-  ActivityData,
-  ActivityQueryOptions,
-  ActivityResponse
-} from "../schemas/mexc-schemas";
-import { validateActivityResponse } from "../schemas/mexc-schemas";
-import { getEnhancedUnifiedCache, type EnhancedUnifiedCacheSystem } from "../lib/enhanced-unified-cache";
-import { getPerformanceMonitoringService, type PerformanceMonitoringService } from "../lib/performance-monitoring-service";
+import {
+  type EnhancedUnifiedCacheSystem,
+  getEnhancedUnifiedCache,
+} from "../lib/enhanced-unified-cache";
+import {
+  type PerformanceMonitoringService,
+  getPerformanceMonitoringService,
+} from "../lib/performance-monitoring-service";
+import type { ActivityData, ActivityQueryOptions, ActivityResponse } from "../schemas/mexc-schemas";
 
 // ============================================================================
 // Configuration and Base Types
@@ -511,7 +512,7 @@ export class UnifiedMexcService {
     // Phase 2: Enhanced caching check first
     if (method === "GET" && this.config.enableEnhancedCaching && this.enhancedCache) {
       const cacheKey = this.cache.generateKey(endpoint, params);
-      const cached = await this.enhancedCache.get<T>(cacheKey, 'api_response');
+      const cached = await this.enhancedCache.get<T>(cacheKey, "api_response");
       if (cached) {
         this.metrics.cacheHits++;
 
@@ -604,7 +605,12 @@ export class UnifiedMexcService {
       // Phase 2: Enhanced caching for GET responses
       if (method === "GET" && this.config.enableEnhancedCaching && this.enhancedCache) {
         const cacheKey = this.cache.generateKey(endpoint, params);
-        await this.enhancedCache.set(cacheKey, responseData, 'api_response', this.config.apiResponseTTL);
+        await this.enhancedCache.set(
+          cacheKey,
+          responseData,
+          "api_response",
+          this.config.apiResponseTTL
+        );
       }
 
       // Fallback to legacy cache
@@ -802,7 +808,9 @@ export class UnifiedMexcService {
         };
       }
 
-      const symbol = symbolsResponse.data.find(s => s.symbol === symbolName || s.cd === symbolName);
+      const symbol = symbolsResponse.data.find(
+        (s) => s.symbol === symbolName || s.cd === symbolName
+      );
       return {
         success: true,
         data: symbol || null,
@@ -925,11 +933,21 @@ export class UnifiedMexcService {
             } catch (error) {
               retryCount++;
               if (retryCount >= maxRetries) {
-                console.warn(`[UnifiedMexcService] Failed to fetch activity data for ${currency} after ${maxRetries} retries:`, error);
-                return { currency, result: { success: false, error: `Max retries exceeded: ${error}`, timestamp: new Date().toISOString() } };
+                console.warn(
+                  `[UnifiedMexcService] Failed to fetch activity data for ${currency} after ${maxRetries} retries:`,
+                  error
+                );
+                return {
+                  currency,
+                  result: {
+                    success: false,
+                    error: `Max retries exceeded: ${error}`,
+                    timestamp: new Date().toISOString(),
+                  },
+                };
               }
               // Exponential backoff for retries
-              await new Promise(resolve => setTimeout(resolve, rateLimitDelay * retryCount));
+              await new Promise((resolve) => setTimeout(resolve, rateLimitDelay * retryCount));
             }
           }
         });
@@ -955,7 +973,7 @@ export class UnifiedMexcService {
 
         // Rate limiting delay between batches
         if (i + batchSize < currencies.length) {
-          await new Promise(resolve => setTimeout(resolve, rateLimitDelay));
+          await new Promise((resolve) => setTimeout(resolve, rateLimitDelay));
         }
       }
 
@@ -1591,11 +1609,11 @@ export class UnifiedMexcService {
       service: {
         hasCredentials: this.hasCredentials(),
         enabledFeatures: [
-          ...(this.config.enableCaching ? ['legacy-caching'] : []),
-          ...(this.config.enableEnhancedCaching ? ['enhanced-caching'] : []),
-          ...(this.config.enablePerformanceMonitoring ? ['performance-monitoring'] : []),
-          ...(this.config.enableCircuitBreaker ? ['circuit-breaker'] : []),
-          ...(this.config.enableMetrics ? ['metrics'] : []),
+          ...(this.config.enableCaching ? ["legacy-caching"] : []),
+          ...(this.config.enableEnhancedCaching ? ["enhanced-caching"] : []),
+          ...(this.config.enablePerformanceMonitoring ? ["performance-monitoring"] : []),
+          ...(this.config.enableCircuitBreaker ? ["circuit-breaker"] : []),
+          ...(this.config.enableMetrics ? ["metrics"] : []),
         ],
         metrics: this.getMetrics(),
       },

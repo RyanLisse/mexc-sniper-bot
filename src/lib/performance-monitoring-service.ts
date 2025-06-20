@@ -12,10 +12,10 @@
  * - Performance alerts and recommendations
  */
 
-import { getEnhancedUnifiedCache, type CachePerformanceMetrics } from './enhanced-unified-cache';
-import { getCacheWarmingService, type WarmupMetrics } from './cache-warming-service';
-import { getIncrementalDataProcessor, type ProcessingMetrics } from './incremental-data-processor';
-import { getRedisCacheService } from './redis-cache-service';
+import { type WarmupMetrics, getCacheWarmingService } from "./cache-warming-service";
+import { type CachePerformanceMetrics, getEnhancedUnifiedCache } from "./enhanced-unified-cache";
+import { type ProcessingMetrics, getIncrementalDataProcessor } from "./incremental-data-processor";
+import { getRedisCacheService } from "./redis-cache-service";
 
 // ============================================================================
 // Types and Interfaces
@@ -72,8 +72,8 @@ export interface SystemResourceMetrics {
 
 export interface PerformanceAlert {
   id: string;
-  type: 'warning' | 'error' | 'critical';
-  category: 'cache' | 'api' | 'pattern' | 'system' | 'processing';
+  type: "warning" | "error" | "critical";
+  category: "cache" | "api" | "pattern" | "system" | "processing";
   message: string;
   timestamp: number;
   threshold: number;
@@ -84,12 +84,12 @@ export interface PerformanceAlert {
 
 export interface PerformanceRecommendation {
   id: string;
-  category: 'cache' | 'api' | 'pattern' | 'system' | 'processing';
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  category: "cache" | "api" | "pattern" | "system" | "processing";
+  priority: "low" | "medium" | "high" | "critical";
   title: string;
   description: string;
   expectedImpact: string;
-  implementationEffort: 'low' | 'medium' | 'high';
+  implementationEffort: "low" | "medium" | "high";
   timestamp: number;
 }
 
@@ -180,7 +180,7 @@ export class PerformanceMonitoringService {
       await this.collectMetrics();
     }, this.config.metricsCollectionInterval);
 
-    console.log('[PerformanceMonitoring] Real-time monitoring started');
+    console.log("[PerformanceMonitoring] Real-time monitoring started");
   }
 
   private async collectMetrics(): Promise<void> {
@@ -218,10 +218,11 @@ export class PerformanceMonitoringService {
         this.generateRecommendations(metrics);
       }
 
-      console.log(`[PerformanceMonitoring] Metrics collected at ${new Date(timestamp).toISOString()}`);
-
+      console.log(
+        `[PerformanceMonitoring] Metrics collected at ${new Date(timestamp).toISOString()}`
+      );
     } catch (error) {
-      console.error('[PerformanceMonitoring] Failed to collect metrics:', error);
+      console.error("[PerformanceMonitoring] Failed to collect metrics:", error);
     }
   }
 
@@ -249,11 +250,10 @@ export class PerformanceMonitoringService {
           total: 0,
           percentage: 0,
         },
-        activeConnections: redisMetrics.connectionStatus === 'connected' ? 1 : 0,
+        activeConnections: redisMetrics.connectionStatus === "connected" ? 1 : 0,
       };
-
     } catch (error) {
-      console.error('[PerformanceMonitoring] Failed to collect system metrics:', error);
+      console.error("[PerformanceMonitoring] Failed to collect system metrics:", error);
       return {
         memoryUsage: { used: 0, total: 0, percentage: 0 },
         cpuUsage: 0,
@@ -267,7 +267,7 @@ export class PerformanceMonitoringService {
   private async getCpuUsage(): Promise<number> {
     // Simplified CPU usage calculation
     const startUsage = process.cpuUsage();
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     const endUsage = process.cpuUsage(startUsage);
 
     const totalUsage = endUsage.user + endUsage.system;
@@ -278,7 +278,7 @@ export class PerformanceMonitoringService {
     const start = Date.now();
     try {
       // Simple latency test (would be replaced with actual network test)
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise((resolve) => setTimeout(resolve, 1));
       return Date.now() - start;
     } catch {
       return -1; // Indicate failure
@@ -296,13 +296,13 @@ export class PerformanceMonitoringService {
     if (metrics.cache.overall.overallHitRate < this.config.alertThresholds.cacheHitRate) {
       alerts.push({
         id: `cache-hit-rate-${Date.now()}`,
-        type: 'warning',
-        category: 'cache',
+        type: "warning",
+        category: "cache",
         message: `Cache hit rate is below threshold: ${metrics.cache.overall.overallHitRate.toFixed(1)}%`,
         timestamp: Date.now(),
         threshold: this.config.alertThresholds.cacheHitRate,
         currentValue: metrics.cache.overall.overallHitRate,
-        recommendation: 'Consider increasing cache TTL or implementing cache warming strategies',
+        recommendation: "Consider increasing cache TTL or implementing cache warming strategies",
         resolved: false,
       });
     }
@@ -311,13 +311,13 @@ export class PerformanceMonitoringService {
     if (metrics.api.avgResponseTime > this.config.alertThresholds.apiResponseTime) {
       alerts.push({
         id: `api-response-time-${Date.now()}`,
-        type: 'warning',
-        category: 'api',
+        type: "warning",
+        category: "api",
         message: `API response time is above threshold: ${metrics.api.avgResponseTime}ms`,
         timestamp: Date.now(),
         threshold: this.config.alertThresholds.apiResponseTime,
         currentValue: metrics.api.avgResponseTime,
-        recommendation: 'Check network connectivity and consider implementing request batching',
+        recommendation: "Check network connectivity and consider implementing request batching",
         resolved: false,
       });
     }
@@ -326,13 +326,13 @@ export class PerformanceMonitoringService {
     if (metrics.api.errorRate > this.config.alertThresholds.errorRate) {
       alerts.push({
         id: `api-error-rate-${Date.now()}`,
-        type: 'error',
-        category: 'api',
+        type: "error",
+        category: "api",
         message: `API error rate is above threshold: ${metrics.api.errorRate.toFixed(1)}%`,
         timestamp: Date.now(),
         threshold: this.config.alertThresholds.errorRate,
         currentValue: metrics.api.errorRate,
-        recommendation: 'Investigate API failures and implement better error handling',
+        recommendation: "Investigate API failures and implement better error handling",
         resolved: false,
       });
     }
@@ -341,13 +341,13 @@ export class PerformanceMonitoringService {
     if (metrics.system.memoryUsage.percentage > this.config.alertThresholds.memoryUsage) {
       alerts.push({
         id: `memory-usage-${Date.now()}`,
-        type: 'warning',
-        category: 'system',
+        type: "warning",
+        category: "system",
         message: `Memory usage is above threshold: ${metrics.system.memoryUsage.percentage.toFixed(1)}%`,
         timestamp: Date.now(),
         threshold: this.config.alertThresholds.memoryUsage,
         currentValue: metrics.system.memoryUsage.percentage,
-        recommendation: 'Consider implementing memory cleanup or increasing available memory',
+        recommendation: "Consider implementing memory cleanup or increasing available memory",
         resolved: false,
       });
     }
@@ -371,12 +371,13 @@ export class PerformanceMonitoringService {
     if (metrics.cache.overall.overallHitRate < 80) {
       recommendations.push({
         id: `cache-optimization-${Date.now()}`,
-        category: 'cache',
-        priority: 'medium',
-        title: 'Optimize Cache Hit Rate',
-        description: 'Cache hit rate is below optimal levels. Consider implementing cache warming or adjusting TTL values.',
-        expectedImpact: 'Improve response times by 20-30%',
-        implementationEffort: 'medium',
+        category: "cache",
+        priority: "medium",
+        title: "Optimize Cache Hit Rate",
+        description:
+          "Cache hit rate is below optimal levels. Consider implementing cache warming or adjusting TTL values.",
+        expectedImpact: "Improve response times by 20-30%",
+        implementationEffort: "medium",
         timestamp: Date.now(),
       });
     }
@@ -385,12 +386,13 @@ export class PerformanceMonitoringService {
     if (metrics.processing.dataEfficiency < 60) {
       recommendations.push({
         id: `processing-efficiency-${Date.now()}`,
-        category: 'processing',
-        priority: 'high',
-        title: 'Improve Incremental Processing',
-        description: 'Data processing efficiency is low. More full updates than delta updates are being performed.',
-        expectedImpact: 'Reduce processing time by 40-50%',
-        implementationEffort: 'low',
+        category: "processing",
+        priority: "high",
+        title: "Improve Incremental Processing",
+        description:
+          "Data processing efficiency is low. More full updates than delta updates are being performed.",
+        expectedImpact: "Reduce processing time by 40-50%",
+        implementationEffort: "low",
         timestamp: Date.now(),
       });
     }
@@ -399,23 +401,26 @@ export class PerformanceMonitoringService {
     if (metrics.api.avgResponseTime > 500) {
       recommendations.push({
         id: `api-performance-${Date.now()}`,
-        category: 'api',
-        priority: 'high',
-        title: 'Optimize API Performance',
-        description: 'API response times are higher than optimal. Consider implementing request batching or connection pooling.',
-        expectedImpact: 'Reduce API response times by 30-40%',
-        implementationEffort: 'medium',
+        category: "api",
+        priority: "high",
+        title: "Optimize API Performance",
+        description:
+          "API response times are higher than optimal. Consider implementing request batching or connection pooling.",
+        expectedImpact: "Reduce API response times by 30-40%",
+        implementationEffort: "medium",
         timestamp: Date.now(),
       });
     }
 
     // Add new recommendations (avoid duplicates)
-    const existingIds = new Set(this.recommendations.map(r => r.id));
-    const newRecommendations = recommendations.filter(r => !existingIds.has(r.id));
+    const existingIds = new Set(this.recommendations.map((r) => r.id));
+    const newRecommendations = recommendations.filter((r) => !existingIds.has(r.id));
     this.recommendations.push(...newRecommendations);
 
     if (newRecommendations.length > 0) {
-      console.log(`[PerformanceMonitoring] Generated ${newRecommendations.length} new recommendations`);
+      console.log(
+        `[PerformanceMonitoring] Generated ${newRecommendations.length} new recommendations`
+      );
     }
   }
 
@@ -439,8 +444,10 @@ export class PerformanceMonitoringService {
     }
 
     // Calculate metrics
-    this.apiMetrics.avgResponseTime = this.responseTimes.reduce((a, b) => a + b, 0) / this.responseTimes.length;
-    this.apiMetrics.errorRate = (this.apiMetrics.failedRequests / this.apiMetrics.totalRequests) * 100;
+    this.apiMetrics.avgResponseTime =
+      this.responseTimes.reduce((a, b) => a + b, 0) / this.responseTimes.length;
+    this.apiMetrics.errorRate =
+      (this.apiMetrics.failedRequests / this.apiMetrics.totalRequests) * 100;
 
     // Calculate percentiles
     const sortedTimes = [...this.responseTimes].sort((a, b) => a - b);
@@ -471,7 +478,8 @@ export class PerformanceMonitoringService {
 
     // Update average confidence
     this.patternMetrics.avgConfidenceScore =
-      (this.patternMetrics.avgConfidenceScore * (this.patternMetrics.totalAnalyses - 1) + confidence) /
+      (this.patternMetrics.avgConfidenceScore * (this.patternMetrics.totalAnalyses - 1) +
+        confidence) /
       this.patternMetrics.totalAnalyses;
 
     // Update accuracy
@@ -483,14 +491,16 @@ export class PerformanceMonitoringService {
     // Update advance detection time
     if (advanceHours !== undefined) {
       this.patternMetrics.advanceDetectionTime =
-        (this.patternMetrics.advanceDetectionTime * (this.patternMetrics.readyStateDetections - 1) + advanceHours) /
+        (this.patternMetrics.advanceDetectionTime * (this.patternMetrics.readyStateDetections - 1) +
+          advanceHours) /
         this.patternMetrics.readyStateDetections;
     }
 
     // Update activity enhancement impact
     if (activityEnhancement !== undefined) {
       this.patternMetrics.activityEnhancementImpact =
-        (this.patternMetrics.activityEnhancementImpact * (this.patternMetrics.totalAnalyses - 1) + activityEnhancement) /
+        (this.patternMetrics.activityEnhancementImpact * (this.patternMetrics.totalAnalyses - 1) +
+          activityEnhancement) /
         this.patternMetrics.totalAnalyses;
     }
   }
@@ -502,9 +512,9 @@ export class PerformanceMonitoringService {
   private cleanupOldMetrics(): void {
     const cutoffTime = Date.now() - this.config.retentionPeriod;
 
-    this.metricsHistory = this.metricsHistory.filter(m => m.timestamp > cutoffTime);
-    this.alerts = this.alerts.filter(a => a.timestamp > cutoffTime);
-    this.recommendations = this.recommendations.filter(r => r.timestamp > cutoffTime);
+    this.metricsHistory = this.metricsHistory.filter((m) => m.timestamp > cutoffTime);
+    this.alerts = this.alerts.filter((a) => a.timestamp > cutoffTime);
+    this.recommendations = this.recommendations.filter((r) => r.timestamp > cutoffTime);
   }
 
   // ============================================================================
@@ -515,23 +525,23 @@ export class PerformanceMonitoringService {
     return this.metricsHistory[this.metricsHistory.length - 1] || null;
   }
 
-  getMetricsHistory(hours: number = 1): SystemPerformanceMetrics[] {
-    const cutoffTime = Date.now() - (hours * 60 * 60 * 1000);
-    return this.metricsHistory.filter(m => m.timestamp > cutoffTime);
+  getMetricsHistory(hours = 1): SystemPerformanceMetrics[] {
+    const cutoffTime = Date.now() - hours * 60 * 60 * 1000;
+    return this.metricsHistory.filter((m) => m.timestamp > cutoffTime);
   }
 
   getActiveAlerts(): PerformanceAlert[] {
-    return this.alerts.filter(a => !a.resolved);
+    return this.alerts.filter((a) => !a.resolved);
   }
 
   getRecommendations(category?: string): PerformanceRecommendation[] {
     return category
-      ? this.recommendations.filter(r => r.category === category)
+      ? this.recommendations.filter((r) => r.category === category)
       : this.recommendations;
   }
 
   resolveAlert(alertId: string): boolean {
-    const alert = this.alerts.find(a => a.id === alertId);
+    const alert = this.alerts.find((a) => a.id === alertId);
     if (alert) {
       alert.resolved = true;
       return true;
@@ -556,9 +566,9 @@ export class PerformanceMonitoringService {
       alerts: this.getActiveAlerts(),
       recommendations: this.getRecommendations(),
       trends: {
-        cacheHitRate: recentMetrics.map(m => m.cache.overall.overallHitRate),
-        apiResponseTime: recentMetrics.map(m => m.api.avgResponseTime),
-        errorRate: recentMetrics.map(m => m.api.errorRate),
+        cacheHitRate: recentMetrics.map((m) => m.cache.overall.overallHitRate),
+        apiResponseTime: recentMetrics.map((m) => m.api.avgResponseTime),
+        errorRate: recentMetrics.map((m) => m.api.errorRate),
       },
     };
   }
@@ -578,7 +588,7 @@ export class PerformanceMonitoringService {
     this.recommendations = [];
     this.responseTimes = [];
 
-    console.log('[PerformanceMonitoring] Service destroyed');
+    console.log("[PerformanceMonitoring] Service destroyed");
   }
 }
 
@@ -588,7 +598,9 @@ export class PerformanceMonitoringService {
 
 let globalPerformanceMonitoringInstance: PerformanceMonitoringService | null = null;
 
-export function getPerformanceMonitoringService(config?: Partial<MonitoringConfig>): PerformanceMonitoringService {
+export function getPerformanceMonitoringService(
+  config?: Partial<MonitoringConfig>
+): PerformanceMonitoringService {
   if (!globalPerformanceMonitoringInstance || config) {
     globalPerformanceMonitoringInstance = new PerformanceMonitoringService(config);
   }

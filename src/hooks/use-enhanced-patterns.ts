@@ -269,7 +269,8 @@ function transformPatternResponse(apiData: any): EnhancedPatternsResponse {
           aiContext: {
             enhancementType: "combined",
             processingTime: match.aiEnhancement.processingTime || 0,
-            confidenceBoost: (match.aiEnhancement.enhancedConfidence || 0) - (match.confidence || 0),
+            confidenceBoost:
+              (match.aiEnhancement.enhancedConfidence || 0) - (match.confidence || 0),
           },
         };
         aiEnhancedPatterns++;

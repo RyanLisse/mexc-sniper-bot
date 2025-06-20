@@ -11,11 +11,8 @@
  * - Conflict resolution for concurrent updates
  */
 
-import { getEnhancedUnifiedCache, type EnhancedUnifiedCacheSystem } from './enhanced-unified-cache';
-import { db } from '../db';
-import { monitoredListings, coinActivities } from '../db/schemas/patterns';
-import { eq, and, gte, desc, sql } from 'drizzle-orm';
-import crypto from 'node:crypto';
+import crypto from "node:crypto";
+import { type EnhancedUnifiedCacheSystem, getEnhancedUnifiedCache } from "./enhanced-unified-cache";
 
 // ============================================================================
 // Types and Interfaces
@@ -41,8 +38,8 @@ export interface DeltaUpdate<T = any> {
   newChecksum: string;
   changes: Partial<T>;
   timestamp: number;
-  operation: 'create' | 'update' | 'delete';
-  conflictResolution?: 'merge' | 'overwrite' | 'skip';
+  operation: "create" | "update" | "delete";
+  conflictResolution?: "merge" | "overwrite" | "skip";
 }
 
 export interface ProcessingBatch<T = any> {
@@ -51,7 +48,7 @@ export interface ProcessingBatch<T = any> {
   batchSize: number;
   processingStartTime: number;
   estimatedCompletionTime?: number;
-  priority: 'critical' | 'high' | 'medium' | 'low';
+  priority: "critical" | "high" | "medium" | "low";
 }
 
 export interface IncrementalProcessorConfig {
@@ -60,7 +57,7 @@ export interface IncrementalProcessorConfig {
   enableConflictResolution: boolean;
   maxBatchSize: number;
   batchTimeout: number; // milliseconds
-  checksumAlgorithm: 'md5' | 'sha256';
+  checksumAlgorithm: "md5" | "sha256";
   enableMetrics: boolean;
   cacheIntegration: boolean;
 }
@@ -99,7 +96,7 @@ export class IncrementalDataProcessor {
       enableConflictResolution: true,
       maxBatchSize: 50,
       batchTimeout: 5000, // 5 seconds
-      checksumAlgorithm: 'sha256',
+      checksumAlgorithm: "sha256",
       enableMetrics: true,
       cacheIntegration: true,
       ...config,
@@ -129,7 +126,7 @@ export class IncrementalDataProcessor {
     options: {
       type?: string;
       source?: string;
-      priority?: 'critical' | 'high' | 'medium' | 'low';
+      priority?: "critical" | "high" | "medium" | "low";
       forceFullUpdate?: boolean;
     } = {}
   ): Promise<DeltaUpdate<T> | null> {
@@ -141,7 +138,11 @@ export class IncrementalDataProcessor {
       const newChecksum = this.calculateChecksum(newData);
 
       // Check if data has actually changed
-      if (existingSnapshot && existingSnapshot.checksum === newChecksum && !options.forceFullUpdate) {
+      if (
+        existingSnapshot &&
+        existingSnapshot.checksum === newChecksum &&
+        !options.forceFullUpdate
+      ) {
         console.log(`[IncrementalProcessor] No changes detected for ${id}`);
         return null;
       }
@@ -149,13 +150,14 @@ export class IncrementalDataProcessor {
       // Create delta update
       const deltaUpdate: DeltaUpdate<T> = {
         id,
-        previousChecksum: existingSnapshot?.checksum || '',
+        previousChecksum: existingSnapshot?.checksum || "",
         newChecksum,
-        changes: this.config.enableDeltaProcessing && existingSnapshot
-          ? this.calculateDelta(existingSnapshot.data, newData)
-          : newData,
+        changes:
+          this.config.enableDeltaProcessing && existingSnapshot
+            ? this.calculateDelta(existingSnapshot.data, newData)
+            : newData,
         timestamp: Date.now(),
-        operation: existingSnapshot ? 'update' : 'create',
+        operation: existingSnapshot ? "update" : "create",
       };
 
       // Create new snapshot
@@ -166,8 +168,8 @@ export class IncrementalDataProcessor {
         timestamp: Date.now(),
         version: (existingSnapshot?.version || 0) + 1,
         metadata: {
-          source: options.source || 'incremental-processor',
-          type: options.type || 'generic',
+          source: options.source || "incremental-processor",
+          type: options.type || "generic",
           size: this.estimateSize(newData),
         },
       };
@@ -180,12 +182,13 @@ export class IncrementalDataProcessor {
 
       // Cache the processed data if cache integration is enabled
       if (this.config.cacheIntegration) {
-        await this.cache.set(`snapshot:${id}`, newSnapshot, 'generic', 300000); // 5 minute TTL
+        await this.cache.set(`snapshot:${id}`, newSnapshot, "generic", 300000); // 5 minute TTL
       }
 
-      console.log(`[IncrementalProcessor] Processed ${deltaUpdate.operation} for ${id} in ${Date.now() - startTime}ms`);
+      console.log(
+        `[IncrementalProcessor] Processed ${deltaUpdate.operation} for ${id} in ${Date.now() - startTime}ms`
+      );
       return deltaUpdate;
-
     } catch (error) {
       console.error(`[IncrementalProcessor] Processing failed for ${id}:`, error);
       throw error;
@@ -200,31 +203,33 @@ export class IncrementalDataProcessor {
       source?: string;
     }>,
     options: {
-      priority?: 'critical' | 'high' | 'medium' | 'low';
+      priority?: "critical" | "high" | "medium" | "low";
       maxConcurrency?: number;
     } = {}
   ): Promise<DeltaUpdate<T>[]> {
     if (!this.config.enableBatchOptimization || items.length === 0) {
       // Fallback to individual processing
-      return Promise.all(items.map(item =>
-        this.processData(item.id, item.data, {
-          type: item.type,
-          source: item.source,
-          priority: options.priority,
-        })
-      )).then(results => results.filter(Boolean) as DeltaUpdate<T>[]);
+      return Promise.all(
+        items.map((item) =>
+          this.processData(item.id, item.data, {
+            type: item.type,
+            source: item.source,
+            priority: options.priority,
+          })
+        )
+      ).then((results) => results.filter(Boolean) as DeltaUpdate<T>[]);
     }
 
     const startTime = Date.now();
     const batchId = this.generateBatchId();
-    const priority = options.priority || 'medium';
+    const priority = options.priority || "medium";
     const maxConcurrency = options.maxConcurrency || 5;
 
     console.log(`[IncrementalProcessor] Processing batch ${batchId} with ${items.length} items`);
 
     try {
       // Create processing batch
-      const batch: ProcessingBatch<typeof items[0]> = {
+      const batch: ProcessingBatch<(typeof items)[0]> = {
         batchId,
         items,
         batchSize: items.length,
@@ -240,7 +245,7 @@ export class IncrementalDataProcessor {
 
       for (const chunk of chunks) {
         const chunkResults = await Promise.all(
-          chunk.map(item =>
+          chunk.map((item) =>
             this.processData(item.id, item.data, {
               type: item.type,
               source: item.source,
@@ -249,7 +254,7 @@ export class IncrementalDataProcessor {
           )
         );
 
-        results.push(...chunkResults.filter(Boolean) as DeltaUpdate<T>[]);
+        results.push(...(chunkResults.filter(Boolean) as DeltaUpdate<T>[]));
       }
 
       // Update batch metrics
@@ -258,11 +263,9 @@ export class IncrementalDataProcessor {
 
       console.log(`[IncrementalProcessor] Batch ${batchId} completed in ${processingTime}ms`);
       return results;
-
     } catch (error) {
       console.error(`[IncrementalProcessor] Batch processing failed for ${batchId}:`, error);
       throw error;
-
     } finally {
       this.pendingBatches.delete(batchId);
     }
@@ -273,8 +276,12 @@ export class IncrementalDataProcessor {
   // ============================================================================
 
   private calculateDelta<T>(oldData: T, newData: T): Partial<T> {
-    if (typeof oldData !== 'object' || typeof newData !== 'object' ||
-        oldData === null || newData === null) {
+    if (
+      typeof oldData !== "object" ||
+      typeof newData !== "object" ||
+      oldData === null ||
+      newData === null
+    ) {
       return newData;
     }
 
@@ -304,7 +311,7 @@ export class IncrementalDataProcessor {
     if (a == null || b == null) return false;
     if (typeof a !== typeof b) return false;
 
-    if (typeof a === 'object') {
+    if (typeof a === "object") {
       const keysA = Object.keys(a);
       const keysB = Object.keys(b);
 
@@ -354,7 +361,7 @@ export class IncrementalDataProcessor {
         ...localUpdate,
         changes: mergedChanges,
         newChecksum: this.calculateChecksum(mergedChanges),
-        conflictResolution: 'merge',
+        conflictResolution: "merge",
       };
 
       this.metrics.conflictsResolved++;
@@ -374,7 +381,7 @@ export class IncrementalDataProcessor {
     try {
       // Try cache first if integration is enabled
       if (this.config.cacheIntegration) {
-        const cached = await this.cache.get<DataSnapshot<T>>(`snapshot:${id}`, 'generic');
+        const cached = await this.cache.get<DataSnapshot<T>>(`snapshot:${id}`, "generic");
         if (cached) {
           this.metrics.cacheHits++;
           return cached;
@@ -385,7 +392,6 @@ export class IncrementalDataProcessor {
       // Check in-memory snapshots
       const snapshot = this.snapshots.get(id) as DataSnapshot<T> | undefined;
       return snapshot || null;
-
     } catch (error) {
       console.error(`[IncrementalProcessor] Failed to get snapshot for ${id}:`, error);
       return null;
@@ -399,9 +405,8 @@ export class IncrementalDataProcessor {
 
       // Store in cache if integration is enabled
       if (this.config.cacheIntegration) {
-        await this.cache.set(`snapshot:${snapshot.id}`, snapshot, 'generic', 300000); // 5 minute TTL
+        await this.cache.set(`snapshot:${snapshot.id}`, snapshot, "generic", 300000); // 5 minute TTL
       }
-
     } catch (error) {
       console.error(`[IncrementalProcessor] Failed to store snapshot for ${snapshot.id}:`, error);
       throw error;
@@ -416,12 +421,12 @@ export class IncrementalDataProcessor {
     const serialized = JSON.stringify(data, Object.keys(data).sort());
 
     switch (this.config.checksumAlgorithm) {
-      case 'md5':
-        return crypto.createHash('md5').update(serialized).digest('hex');
-      case 'sha256':
-        return crypto.createHash('sha256').update(serialized).digest('hex');
+      case "md5":
+        return crypto.createHash("md5").update(serialized).digest("hex");
+      case "sha256":
+        return crypto.createHash("sha256").update(serialized).digest("hex");
       default:
-        return crypto.createHash('sha256').update(serialized).digest('hex');
+        return crypto.createHash("sha256").update(serialized).digest("hex");
     }
   }
 
@@ -454,7 +459,7 @@ export class IncrementalDataProcessor {
 
     this.metrics.totalProcessed++;
 
-    if (deltaUpdate.operation === 'create') {
+    if (deltaUpdate.operation === "create") {
       this.metrics.fullUpdates++;
     } else {
       this.metrics.deltaUpdates++;
@@ -466,8 +471,7 @@ export class IncrementalDataProcessor {
       this.metrics.totalProcessed;
 
     // Calculate data efficiency
-    this.metrics.dataEfficiency =
-      (this.metrics.deltaUpdates / this.metrics.totalProcessed) * 100;
+    this.metrics.dataEfficiency = (this.metrics.deltaUpdates / this.metrics.totalProcessed) * 100;
   }
 
   private updateBatchMetrics<T>(batch: ProcessingBatch<T>, processingTime: number): void {
@@ -506,7 +510,7 @@ export class IncrementalDataProcessor {
       await this.cache.clear();
     }
 
-    console.log('[IncrementalProcessor] All snapshots cleared');
+    console.log("[IncrementalProcessor] All snapshots cleared");
   }
 
   // ============================================================================
@@ -522,7 +526,7 @@ export class IncrementalDataProcessor {
     this.snapshots.clear();
     this.pendingBatches.clear();
 
-    console.log('[IncrementalProcessor] Service destroyed');
+    console.log("[IncrementalProcessor] Service destroyed");
   }
 }
 
@@ -532,7 +536,9 @@ export class IncrementalDataProcessor {
 
 let globalIncrementalProcessorInstance: IncrementalDataProcessor | null = null;
 
-export function getIncrementalDataProcessor(config?: Partial<IncrementalProcessorConfig>): IncrementalDataProcessor {
+export function getIncrementalDataProcessor(
+  config?: Partial<IncrementalProcessorConfig>
+): IncrementalDataProcessor {
   if (!globalIncrementalProcessorInstance || config) {
     globalIncrementalProcessorInstance = new IncrementalDataProcessor(config);
   }

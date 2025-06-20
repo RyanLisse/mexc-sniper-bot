@@ -117,16 +117,18 @@ export function useAICapabilities() {
 export function useAIServicesHealth() {
   const { data, isLoading, error } = useAIServices();
 
-  const healthSummary = data ? {
-    isHealthy: data.overall.status === "healthy",
-    isDegraded: data.overall.status === "degraded",
-    isCritical: data.overall.status === "critical",
-    availableServices: data.overall.availableServices,
-    totalServices: data.overall.totalServices,
-    healthPercentage: (data.overall.availableServices / data.overall.totalServices) * 100,
-    message: data.overall.message,
-    lastUpdated: data.lastUpdated,
-  } : null;
+  const healthSummary = data
+    ? {
+        isHealthy: data.overall.status === "healthy",
+        isDegraded: data.overall.status === "degraded",
+        isCritical: data.overall.status === "critical",
+        availableServices: data.overall.availableServices,
+        totalServices: data.overall.totalServices,
+        healthPercentage: (data.overall.availableServices / data.overall.totalServices) * 100,
+        message: data.overall.message,
+        lastUpdated: data.lastUpdated,
+      }
+    : null;
 
   return {
     data: healthSummary,
@@ -153,7 +155,7 @@ export function useAIServiceHealthCheck() {
       console.error("[AI Services] Health check failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   };
@@ -205,7 +207,5 @@ export function getAIServiceStatusIcon(status: AIServiceStatus["status"]) {
  * Format AI service capabilities for display
  */
 export function formatAICapabilities(capabilities: string[]) {
-  return capabilities.map(cap =>
-    cap.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())
-  );
+  return capabilities.map((cap) => cap.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()));
 }

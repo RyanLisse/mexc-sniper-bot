@@ -1,8 +1,20 @@
 "use client";
 
-import { Activity, AlertTriangle, CheckCircle, Clock, Database, Play, RefreshCw, Zap } from "lucide-react";
-import React, { useState } from "react";
-import { useCacheMetrics, useCacheWarmingTrigger, getCacheStrategyStatusColor } from "../../../hooks/use-cache-metrics";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Database,
+  Play,
+  RefreshCw,
+} from "lucide-react";
+import { useState } from "react";
+import {
+  getCacheStrategyStatusColor,
+  useCacheMetrics,
+  useCacheWarmingTrigger,
+} from "../../../hooks/use-cache-metrics";
 import { Alert, AlertDescription, AlertTitle } from "../../ui/alert";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
@@ -78,10 +90,8 @@ export function CacheWarmingControlPanel() {
   };
 
   const toggleStrategySelection = (strategyName: string) => {
-    setSelectedStrategies(prev =>
-      prev.includes(strategyName)
-        ? prev.filter(s => s !== strategyName)
-        : [...prev, strategyName]
+    setSelectedStrategies((prev) =>
+      prev.includes(strategyName) ? prev.filter((s) => s !== strategyName) : [...prev, strategyName]
     );
   };
 
@@ -155,9 +165,7 @@ export function CacheWarmingControlPanel() {
             )}
           </div>
         </div>
-        <CardDescription>
-          Manage cache warming strategies for optimal performance
-        </CardDescription>
+        <CardDescription>Manage cache warming strategies for optimal performance</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Performance Overview */}
@@ -174,7 +182,9 @@ export function CacheWarmingControlPanel() {
             <div className="text-sm text-muted-foreground">Total Executions</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold">{data.warming.metrics.averageExecutionTime.toFixed(0)}ms</div>
+            <div className="text-2xl font-bold">
+              {data.warming.metrics.averageExecutionTime.toFixed(0)}ms
+            </div>
             <div className="text-sm text-muted-foreground">Avg Execution Time</div>
           </div>
         </div>
@@ -199,17 +209,18 @@ export function CacheWarmingControlPanel() {
                   />
                   {getStatusIcon(strategy.status)}
                   <div>
-                    <div className="font-medium capitalize">
-                      {strategy.name.replace(/-/g, " ")}
-                    </div>
+                    <div className="font-medium capitalize">{strategy.name.replace(/-/g, " ")}</div>
                     <div className="text-sm text-muted-foreground">
-                      Priority: {strategy.priority} • 
-                      Frequency: {Math.round(strategy.frequency / 60000)}m
+                      Priority: {strategy.priority} • Frequency:{" "}
+                      {Math.round(strategy.frequency / 60000)}m
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" style={{ color: getCacheStrategyStatusColor(strategy.status) }}>
+                  <Badge
+                    variant="outline"
+                    style={{ color: getCacheStrategyStatusColor(strategy.status) }}
+                  >
                     {strategy.status}
                   </Badge>
                   <Button
@@ -229,19 +240,15 @@ export function CacheWarmingControlPanel() {
                 <div>
                   <span className="text-muted-foreground">Last Run:</span>
                   <div className="font-medium">
-                    {strategy.lastRun 
-                      ? new Date(strategy.lastRun).toLocaleString()
-                      : "Never"
-                    }
+                    {strategy.lastRun ? new Date(strategy.lastRun).toLocaleString() : "Never"}
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Next Run:</span>
                   <div className="font-medium">
-                    {strategy.nextRun 
+                    {strategy.nextRun
                       ? new Date(strategy.nextRun).toLocaleString()
-                      : "Not scheduled"
-                    }
+                      : "Not scheduled"}
                   </div>
                 </div>
               </div>
@@ -291,9 +298,7 @@ export function CacheWarmingControlPanel() {
             <Alert className="mt-3">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Fallback Mode Active</AlertTitle>
-              <AlertDescription>
-                {data.connection.gracefulDegradation.message}
-              </AlertDescription>
+              <AlertDescription>{data.connection.gracefulDegradation.message}</AlertDescription>
             </Alert>
           )}
         </div>

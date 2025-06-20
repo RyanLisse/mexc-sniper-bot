@@ -135,20 +135,15 @@ export class PatternDetectionEngine {
   ): Promise<ActivityData[]> {
     try {
       // Extract base currency from symbol (e.g., 'FCATUSDT' -> 'FCAT')
-      const baseCurrency = symbol.replace(/USDT$|BTC$|ETH$|BNB$/, '');
+      const baseCurrency = symbol.replace(/USDT$|BTC$|ETH$|BNB$/, "");
 
       // Query recent activities for both full symbol and base currency in a single query
-      const whereConditions = [
-        eq(coinActivities.isActive, true),
-      ];
+      const whereConditions = [eq(coinActivities.isActive, true)];
 
       // Add currency condition - search for both base currency and full symbol
       if (baseCurrency !== symbol) {
         whereConditions.push(
-          or(
-            eq(coinActivities.currency, baseCurrency),
-            eq(coinActivities.currency, symbol)
-          )
+          or(eq(coinActivities.currency, baseCurrency), eq(coinActivities.currency, symbol))
         );
       } else {
         whereConditions.push(eq(coinActivities.currency, symbol));

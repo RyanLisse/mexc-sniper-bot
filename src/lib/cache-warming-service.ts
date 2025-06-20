@@ -11,12 +11,12 @@
  * - User-specific trading configurations
  */
 
-import { getEnhancedUnifiedCache, type EnhancedUnifiedCacheSystem } from './enhanced-unified-cache';
-import { UnifiedMexcService } from '../services/unified-mexc-service';
-import { PatternDetectionEngine } from '../services/pattern-detection-engine';
-import { db } from '../db';
-import { monitoredListings, coinActivities } from '../db/schemas/patterns';
-import { eq, and, gte, desc } from 'drizzle-orm';
+import { and, desc, eq, gte } from "drizzle-orm";
+import { db } from "../db";
+import { coinActivities, monitoredListings } from "../db/schemas/patterns";
+import { PatternDetectionEngine } from "../services/pattern-detection-engine";
+import { UnifiedMexcService } from "../services/unified-mexc-service";
+import { type EnhancedUnifiedCacheSystem, getEnhancedUnifiedCache } from "./enhanced-unified-cache";
 
 // ============================================================================
 // Types and Interfaces
@@ -24,7 +24,7 @@ import { eq, and, gte, desc } from 'drizzle-orm';
 
 export interface WarmupStrategy {
   name: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
+  priority: "critical" | "high" | "medium" | "low";
   frequency: number; // milliseconds
   enabled: boolean;
   lastRun?: number;
@@ -117,9 +117,9 @@ export class CacheWarmingService {
   private initializeStrategies(): void {
     // MEXC Symbols Strategy - Critical for trading operations
     if (this.config.strategies.mexcSymbols) {
-      this.strategies.set('mexc-symbols', {
-        name: 'MEXC Active Symbols',
-        priority: 'critical',
+      this.strategies.set("mexc-symbols", {
+        name: "MEXC Active Symbols",
+        priority: "critical",
         frequency: 15000, // 15 seconds
         enabled: true,
         successCount: 0,
@@ -130,9 +130,9 @@ export class CacheWarmingService {
 
     // Pattern Data Strategy - High priority for ready state detection
     if (this.config.strategies.patternData) {
-      this.strategies.set('pattern-data', {
-        name: 'Pattern Detection Data',
-        priority: 'high',
+      this.strategies.set("pattern-data", {
+        name: "Pattern Detection Data",
+        priority: "high",
         frequency: 20000, // 20 seconds
         enabled: true,
         successCount: 0,
@@ -143,9 +143,9 @@ export class CacheWarmingService {
 
     // Activity Data Strategy - High priority for promotional activities
     if (this.config.strategies.activityData) {
-      this.strategies.set('activity-data', {
-        name: 'MEXC Activity Data',
-        priority: 'high',
+      this.strategies.set("activity-data", {
+        name: "MEXC Activity Data",
+        priority: "high",
         frequency: 25000, // 25 seconds
         enabled: true,
         successCount: 0,
@@ -156,9 +156,9 @@ export class CacheWarmingService {
 
     // Market Data Strategy - Medium priority for general market info
     if (this.config.strategies.marketData) {
-      this.strategies.set('market-data', {
-        name: 'Market Data',
-        priority: 'medium',
+      this.strategies.set("market-data", {
+        name: "Market Data",
+        priority: "medium",
         frequency: 45000, // 45 seconds
         enabled: true,
         successCount: 0,
@@ -169,9 +169,9 @@ export class CacheWarmingService {
 
     // User Configs Strategy - Low priority for user settings
     if (this.config.strategies.userConfigs) {
-      this.strategies.set('user-configs', {
-        name: 'User Configurations',
-        priority: 'low',
+      this.strategies.set("user-configs", {
+        name: "User Configurations",
+        priority: "low",
         frequency: 120000, // 2 minutes
         enabled: true,
         successCount: 0,
@@ -181,7 +181,9 @@ export class CacheWarmingService {
     }
 
     this.metrics.totalStrategies = this.strategies.size;
-    this.metrics.activeStrategies = Array.from(this.strategies.values()).filter(s => s.enabled).length;
+    this.metrics.activeStrategies = Array.from(this.strategies.values()).filter(
+      (s) => s.enabled
+    ).length;
   }
 
   // ============================================================================
@@ -197,18 +199,22 @@ export class CacheWarmingService {
       await this.performScheduledWarmup();
     }, this.config.warmupInterval);
 
-    console.log('[CacheWarmingService] Auto warming started');
+    console.log("[CacheWarmingService] Auto warming started");
   }
 
   private async performScheduledWarmup(): Promise<void> {
     const now = Date.now();
     const eligibleStrategies = Array.from(this.strategies.entries())
       .filter(([name, strategy]) => {
-        return strategy.enabled &&
-               !this.runningWarmups.has(name) &&
-               (!strategy.lastRun || (now - strategy.lastRun) >= strategy.frequency);
+        return (
+          strategy.enabled &&
+          !this.runningWarmups.has(name) &&
+          (!strategy.lastRun || now - strategy.lastRun >= strategy.frequency)
+        );
       })
-      .sort(([, a], [, b]) => this.getPriorityWeight(a.priority) - this.getPriorityWeight(b.priority));
+      .sort(
+        ([, a], [, b]) => this.getPriorityWeight(a.priority) - this.getPriorityWeight(b.priority)
+      );
 
     // Limit concurrent warmups
     const toRun = eligibleStrategies.slice(0, this.config.maxConcurrentWarmups);
@@ -220,11 +226,16 @@ export class CacheWarmingService {
 
   private getPriorityWeight(priority: string): number {
     switch (priority) {
-      case 'critical': return 1;
-      case 'high': return 2;
-      case 'medium': return 3;
-      case 'low': return 4;
-      default: return 5;
+      case "critical":
+        return 1;
+      case "high":
+        return 2;
+      case "medium":
+        return 3;
+      case "low":
+        return 4;
+      default:
+        return 5;
     }
   }
 
@@ -245,19 +256,19 @@ export class CacheWarmingService {
       console.log(`[CacheWarmingService] Executing strategy: ${strategy.name}`);
 
       switch (strategyName) {
-        case 'mexc-symbols':
+        case "mexc-symbols":
           await this.warmupMexcSymbols();
           break;
-        case 'pattern-data':
+        case "pattern-data":
           await this.warmupPatternData();
           break;
-        case 'activity-data':
+        case "activity-data":
           await this.warmupActivityData();
           break;
-        case 'market-data':
+        case "market-data":
           await this.warmupMarketData();
           break;
-        case 'user-configs':
+        case "user-configs":
           await this.warmupUserConfigs();
           break;
         default:
@@ -284,9 +295,10 @@ export class CacheWarmingService {
         this.metrics.totalRuns
       );
 
-      console.log(`[CacheWarmingService] Strategy ${strategy.name} completed in ${executionTime}ms`);
+      console.log(
+        `[CacheWarmingService] Strategy ${strategy.name} completed in ${executionTime}ms`
+      );
       return true;
-
     } catch (error) {
       strategy.errorCount++;
       this.metrics.totalRuns++;
@@ -294,7 +306,6 @@ export class CacheWarmingService {
 
       console.error(`[CacheWarmingService] Strategy ${strategy.name} failed:`, error);
       return false;
-
     } finally {
       this.runningWarmups.delete(strategyName);
     }
@@ -312,7 +323,7 @@ export class CacheWarmingService {
         .from(monitoredListings)
         .where(
           and(
-            eq(monitoredListings.status, 'monitoring'),
+            eq(monitoredListings.status, "monitoring"),
             gte(monitoredListings.lastChecked, new Date(Date.now() - 24 * 60 * 60 * 1000)) // Last 24 hours
           )
         )
@@ -323,20 +334,22 @@ export class CacheWarmingService {
         const cacheKey = `mexc:symbol:${listing.symbolName}`;
 
         // Check if already cached
-        const cached = await this.cache.get(cacheKey, 'api_response');
+        const cached = await this.cache.get(cacheKey, "api_response");
         if (cached) continue;
 
         // Fetch and cache symbol data
         try {
           const symbolData = await this.mexcService.getSymbolInfo(listing.symbolName);
-          await this.cache.set(cacheKey, symbolData, 'api_response', 5000); // 5 second TTL
+          await this.cache.set(cacheKey, symbolData, "api_response", 5000); // 5 second TTL
         } catch (error) {
-          console.warn(`[CacheWarmingService] Failed to warm up symbol ${listing.symbolName}:`, error);
+          console.warn(
+            `[CacheWarmingService] Failed to warm up symbol ${listing.symbolName}:`,
+            error
+          );
         }
       }
-
     } catch (error) {
-      console.error('[CacheWarmingService] MEXC symbols warmup failed:', error);
+      console.error("[CacheWarmingService] MEXC symbols warmup failed:", error);
       throw error;
     }
   }
@@ -361,20 +374,22 @@ export class CacheWarmingService {
         const cacheKey = `pattern:analysis:${symbol.symbolName}`;
 
         // Check if already cached
-        const cached = await this.cache.get(cacheKey, 'pattern_analysis');
+        const cached = await this.cache.get(cacheKey, "pattern_analysis");
         if (cached) continue;
 
         // Generate and cache pattern analysis
         try {
           const patternData = await this.patternEngine.analyzeSymbolReadiness(symbol.symbolName);
-          await this.cache.set(cacheKey, patternData, 'pattern_analysis', 30000); // 30 second TTL
+          await this.cache.set(cacheKey, patternData, "pattern_analysis", 30000); // 30 second TTL
         } catch (error) {
-          console.warn(`[CacheWarmingService] Failed to warm up pattern for ${symbol.symbolName}:`, error);
+          console.warn(
+            `[CacheWarmingService] Failed to warm up pattern for ${symbol.symbolName}:`,
+            error
+          );
         }
       }
-
     } catch (error) {
-      console.error('[CacheWarmingService] Pattern data warmup failed:', error);
+      console.error("[CacheWarmingService] Pattern data warmup failed:", error);
       throw error;
     }
   }
@@ -395,26 +410,25 @@ export class CacheWarmingService {
         .limit(10);
 
       // Warm up activity data for each currency
-      const currencies = [...new Set(recentActivities.map(a => a.currency))];
+      const currencies = [...new Set(recentActivities.map((a) => a.currency))];
 
       for (const currency of currencies) {
         const cacheKey = `mexc:activity:${currency}`;
 
         // Check if already cached
-        const cached = await this.cache.get(cacheKey, 'api_response');
+        const cached = await this.cache.get(cacheKey, "api_response");
         if (cached) continue;
 
         // Fetch and cache activity data
         try {
           const activityData = await this.mexcService.getActivityData(currency);
-          await this.cache.set(cacheKey, activityData, 'api_response', 5000); // 5 second TTL
+          await this.cache.set(cacheKey, activityData, "api_response", 5000); // 5 second TTL
         } catch (error) {
           console.warn(`[CacheWarmingService] Failed to warm up activity for ${currency}:`, error);
         }
       }
-
     } catch (error) {
-      console.error('[CacheWarmingService] Activity data warmup failed:', error);
+      console.error("[CacheWarmingService] Activity data warmup failed:", error);
       throw error;
     }
   }
@@ -422,29 +436,24 @@ export class CacheWarmingService {
   private async warmupMarketData(): Promise<void> {
     try {
       // Warm up general market data that's frequently accessed
-      const marketDataKeys = [
-        'mexc:market:overview',
-        'mexc:market:trending',
-        'mexc:market:volume',
-      ];
+      const marketDataKeys = ["mexc:market:overview", "mexc:market:trending", "mexc:market:volume"];
 
       for (const key of marketDataKeys) {
         // Check if already cached
-        const cached = await this.cache.get(key, 'market_data');
+        const cached = await this.cache.get(key, "market_data");
         if (cached) continue;
 
         // Generate placeholder market data (would be replaced with actual API calls)
         const marketData = {
           timestamp: Date.now(),
-          type: key.split(':')[2],
+          type: key.split(":")[2],
           data: `Cached market data for ${key}`,
         };
 
-        await this.cache.set(key, marketData, 'market_data', 30000); // 30 second TTL
+        await this.cache.set(key, marketData, "market_data", 30000); // 30 second TTL
       }
-
     } catch (error) {
-      console.error('[CacheWarmingService] Market data warmup failed:', error);
+      console.error("[CacheWarmingService] Market data warmup failed:", error);
       throw error;
     }
   }
@@ -453,28 +462,27 @@ export class CacheWarmingService {
     try {
       // Warm up common user configuration data
       const configKeys = [
-        'config:default:take-profit',
-        'config:default:risk-management',
-        'config:default:trading-pairs',
+        "config:default:take-profit",
+        "config:default:risk-management",
+        "config:default:trading-pairs",
       ];
 
       for (const key of configKeys) {
         // Check if already cached
-        const cached = await this.cache.get(key, 'config');
+        const cached = await this.cache.get(key, "config");
         if (cached) continue;
 
         // Generate default configuration data
         const configData = {
           timestamp: Date.now(),
-          type: key.split(':')[2],
+          type: key.split(":")[2],
           defaults: true,
         };
 
-        await this.cache.set(key, configData, 'config', 300000); // 5 minute TTL
+        await this.cache.set(key, configData, "config", 300000); // 5 minute TTL
       }
-
     } catch (error) {
-      console.error('[CacheWarmingService] User configs warmup failed:', error);
+      console.error("[CacheWarmingService] User configs warmup failed:", error);
       throw error;
     }
   }
@@ -501,14 +509,16 @@ export class CacheWarmingService {
 
   async executeAllStrategies(): Promise<void> {
     const strategies = Array.from(this.strategies.keys());
-    await Promise.all(strategies.map(name => this.executeStrategy(name)));
+    await Promise.all(strategies.map((name) => this.executeStrategy(name)));
   }
 
   enableStrategy(name: string): boolean {
     const strategy = this.strategies.get(name);
     if (strategy) {
       strategy.enabled = true;
-      this.metrics.activeStrategies = Array.from(this.strategies.values()).filter(s => s.enabled).length;
+      this.metrics.activeStrategies = Array.from(this.strategies.values()).filter(
+        (s) => s.enabled
+      ).length;
       return true;
     }
     return false;
@@ -518,7 +528,9 @@ export class CacheWarmingService {
     const strategy = this.strategies.get(name);
     if (strategy) {
       strategy.enabled = false;
-      this.metrics.activeStrategies = Array.from(this.strategies.values()).filter(s => s.enabled).length;
+      this.metrics.activeStrategies = Array.from(this.strategies.values()).filter(
+        (s) => s.enabled
+      ).length;
       return true;
     }
     return false;
@@ -537,7 +549,7 @@ export class CacheWarmingService {
     this.runningWarmups.clear();
     this.strategies.clear();
 
-    console.log('[CacheWarmingService] Service destroyed');
+    console.log("[CacheWarmingService] Service destroyed");
   }
 }
 

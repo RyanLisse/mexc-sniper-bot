@@ -153,7 +153,7 @@ class MarketDataManager {
       await this.broadcastReadyStatePattern(status);
 
       // Enhanced pattern detection with AI analysis
-      if (typeof this.performEnhancedAnalysis === 'function') {
+      if (typeof this.performEnhancedAnalysis === "function") {
         await this.performEnhancedAnalysis(status);
       }
     }
@@ -327,7 +327,9 @@ class MarketDataManager {
       });
 
       if (result && result.enhancedAnalysis) {
-        console.log(`[MEXC Stream] Enhanced AI analysis completed for ${status.s} with confidence: ${result.confidence}`);
+        console.log(
+          `[MEXC Stream] Enhanced AI analysis completed for ${status.s} with confidence: ${result.confidence}`
+        );
       }
     } catch (error) {
       console.warn(`[MEXC Stream] Enhanced analysis failed for ${status.s}:`, error);

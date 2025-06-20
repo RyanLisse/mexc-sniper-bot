@@ -1,7 +1,6 @@
 "use client";
 
 import { Brain, CheckCircle, Database, Gauge, Settings, Zap } from "lucide-react";
-import React from "react";
 import { useAIServices } from "../../hooks/use-ai-services";
 import { useCacheMetrics } from "../../hooks/use-cache-metrics";
 import { useEnhancedPatterns } from "../../hooks/use-enhanced-patterns";
@@ -46,7 +45,7 @@ export function Phase3IntegrationSummary() {
               variant="outline"
               style={{
                 borderColor: overallStatus.color,
-                color: overallStatus.color
+                color: overallStatus.color,
               }}
             >
               {overallStatus.status.toUpperCase()}
@@ -99,7 +98,9 @@ export function Phase3IntegrationSummary() {
                 </span>
               </div>
               <Progress
-                value={(aiServices.overall.availableServices / aiServices.overall.totalServices) * 100}
+                value={
+                  (aiServices.overall.availableServices / aiServices.overall.totalServices) * 100
+                }
                 className="h-2"
               />
             </div>
@@ -144,14 +145,19 @@ export function Phase3IntegrationSummary() {
               <div className="flex justify-between text-sm">
                 <span>3.5+ Hour Detection Target</span>
                 <span>
-                  {(enhancedPatterns?.summary?.averageAdvanceHours || 0) >= featureStatus.targetAdvanceHours
+                  {(enhancedPatterns?.summary?.averageAdvanceHours || 0) >=
+                  featureStatus.targetAdvanceHours
                     ? "✅ Met"
-                    : "⏳ In Progress"
-                  }
+                    : "⏳ In Progress"}
                 </span>
               </div>
               <Progress
-                value={Math.min(100, ((enhancedPatterns?.summary?.averageAdvanceHours || 0) / featureStatus.targetAdvanceHours) * 100)}
+                value={Math.min(
+                  100,
+                  ((enhancedPatterns?.summary?.averageAdvanceHours || 0) /
+                    featureStatus.targetAdvanceHours) *
+                    100
+                )}
                 className="h-2"
               />
             </div>
@@ -174,20 +180,14 @@ export function Phase3IntegrationSummary() {
                 <span>Cache Hit Rate</span>
                 <span>{cacheMetrics?.performance?.hitRate?.toFixed(1) || 0}%</span>
               </div>
-              <Progress
-                value={cacheMetrics?.performance?.hitRate || 0}
-                className="h-2"
-              />
+              <Progress value={cacheMetrics?.performance?.hitRate || 0} className="h-2" />
             </div>
             <div className="space-y-1">
               <div className="flex justify-between text-sm">
                 <span>Success Rate</span>
                 <span>{cacheMetrics?.warming?.metrics?.successRate?.toFixed(1) || 0}%</span>
               </div>
-              <Progress
-                value={cacheMetrics?.warming?.metrics?.successRate || 0}
-                className="h-2"
-              />
+              <Progress value={cacheMetrics?.warming?.metrics?.successRate || 0} className="h-2" />
             </div>
           </div>
 
@@ -251,8 +251,8 @@ export function Phase3IntegrationSummary() {
         {/* Quick Actions */}
         <div className="border-t pt-3">
           <div className="text-xs text-muted-foreground text-center">
-            All Phase 3 optimization features are now integrated and accessible through the dashboard.
-            Use the tabs above to configure and monitor each component.
+            All Phase 3 optimization features are now integrated and accessible through the
+            dashboard. Use the tabs above to configure and monitor each component.
           </div>
         </div>
       </CardContent>

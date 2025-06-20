@@ -1,7 +1,6 @@
 "use client";
 
 import { Brain, Eye, Target, TrendingUp, Zap } from "lucide-react";
-import React from "react";
 import { Badge } from "../../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import { Progress } from "../../ui/progress";
@@ -68,15 +67,15 @@ export function AIEnhancedPatternDisplay({
             <Brain className="h-5 w-5" />
             AI-Enhanced Pattern Detection
           </CardTitle>
-          <CardDescription>
-            No patterns detected with AI enhancement
-          </CardDescription>
+          <CardDescription>No patterns detected with AI enhancement</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
             <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No AI-enhanced patterns found</p>
-            <p className="text-sm">Patterns will appear here when detected with 3.5+ hour advance capability</p>
+            <p className="text-sm">
+              Patterns will appear here when detected with 3.5+ hour advance capability
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -143,7 +142,8 @@ function PatternCard({
     return "text-red-600";
   };
 
-  const hasAIEnhancement = pattern.aiInsights && 
+  const hasAIEnhancement =
+    pattern.aiInsights &&
     (pattern.aiInsights.cohereEmbedding || pattern.aiInsights.perplexityInsights);
 
   return (
@@ -153,6 +153,14 @@ function PatternCard({
           onClick ? "cursor-pointer hover:bg-muted/50" : ""
         }`}
         onClick={onClick}
+        onKeyDown={(e) => {
+          if (onClick && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+        tabIndex={onClick ? 0 : undefined}
+        role={onClick ? "button" : undefined}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -183,12 +191,14 @@ function PatternCard({
             </span>
           </div>
           <Progress value={pattern.confidence} className="h-2" />
-          
+
           {pattern.aiEnhancedConfidence && pattern.aiEnhancedConfidence !== pattern.confidence && (
             <>
               <div className="flex items-center justify-between">
                 <span className="text-sm">AI-Enhanced Confidence</span>
-                <span className={`text-sm font-medium ${getConfidenceColor(pattern.aiEnhancedConfidence)}`}>
+                <span
+                  className={`text-sm font-medium ${getConfidenceColor(pattern.aiEnhancedConfidence)}`}
+                >
                   {pattern.aiEnhancedConfidence.toFixed(1)}%
                   <span className="text-xs text-green-600 ml-1">
                     (+{(pattern.aiEnhancedConfidence - pattern.confidence).toFixed(1)})
@@ -250,15 +260,18 @@ function PatternCard({
               </div>
             )}
 
-            {pattern.aiInsights.recommendations && pattern.aiInsights.recommendations.length > 0 && (
-              <div className="text-xs text-muted-foreground">
-                <span className="font-medium">AI Recommendation:</span> {pattern.aiInsights.recommendations[0]}
-              </div>
-            )}
+            {pattern.aiInsights.recommendations &&
+              pattern.aiInsights.recommendations.length > 0 && (
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-medium">AI Recommendation:</span>{" "}
+                  {pattern.aiInsights.recommendations[0]}
+                </div>
+              )}
 
             {pattern.aiInsights.cohereEmbedding && (
               <div className="text-xs text-muted-foreground">
-                <span className="font-medium">Pattern Embedding:</span> {pattern.aiInsights.cohereEmbedding.length}D vector
+                <span className="font-medium">Pattern Embedding:</span>{" "}
+                {pattern.aiInsights.cohereEmbedding.length}D vector
               </div>
             )}
           </div>
@@ -270,15 +283,19 @@ function PatternCard({
             {pattern.activityData.volume24h && (
               <div>
                 <span className="text-muted-foreground">24h Volume:</span>
-                <div className="font-medium">${pattern.activityData.volume24h.toLocaleString()}</div>
+                <div className="font-medium">
+                  ${pattern.activityData.volume24h.toLocaleString()}
+                </div>
               </div>
             )}
             {pattern.activityData.priceChange24h && (
               <div>
                 <span className="text-muted-foreground">24h Change:</span>
-                <div className={`font-medium ${
-                  pattern.activityData.priceChange24h >= 0 ? "text-green-600" : "text-red-600"
-                }`}>
+                <div
+                  className={`font-medium ${
+                    pattern.activityData.priceChange24h >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
                   {pattern.activityData.priceChange24h >= 0 ? "+" : ""}
                   {pattern.activityData.priceChange24h.toFixed(2)}%
                 </div>

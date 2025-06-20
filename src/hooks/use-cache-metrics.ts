@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ======================
 // Types
@@ -99,11 +99,11 @@ export function useCacheMetrics() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to fetch cache metrics");
       }
-      
+
       return result.data;
     },
     staleTime: 10 * 1000, // 10 seconds
@@ -126,11 +126,11 @@ export function useCacheWarmingStrategies() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to fetch cache warming strategies");
       }
-      
+
       return result.data;
     },
     staleTime: 60 * 1000, // 1 minute
@@ -144,16 +144,16 @@ export function useCacheWarmingStrategies() {
  */
 export function useCacheWarmingTrigger() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ 
-      strategy, 
-      strategies, 
-      force = false 
-    }: { 
-      strategy?: string; 
-      strategies?: string[]; 
-      force?: boolean; 
+    mutationFn: async ({
+      strategy,
+      strategies,
+      force = false,
+    }: {
+      strategy?: string;
+      strategies?: string[];
+      force?: boolean;
     }) => {
       const response = await fetch("/api/cache-warming/trigger", {
         method: "POST",
@@ -162,17 +162,17 @@ export function useCacheWarmingTrigger() {
         },
         body: JSON.stringify({ strategy, strategies, force }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to trigger cache warming");
       }
-      
+
       return result.data;
     },
     onSuccess: () => {
@@ -187,21 +187,23 @@ export function useCacheWarmingTrigger() {
  */
 export function useCachePerformance() {
   const { data, isLoading, error } = useCacheMetrics();
-  
-  const performanceSummary = data ? {
-    hitRate: data.performance.hitRate,
-    isHealthy: data.performance.hitRate >= 70, // 70% hit rate threshold
-    responseTime: data.performance.averageResponseTime,
-    isFast: data.performance.averageResponseTime <= 100, // 100ms threshold
-    totalRequests: data.performance.totalRequests,
-    cacheSize: data.performance.cacheSize,
-    memoryUsage: data.performance.memoryUsage,
-    trends: data.performance.trends,
-    connectionStatus: data.connection,
-    isConnected: data.connection.redis.connected || data.connection.valkey.connected,
-    fallbackMode: data.connection.gracefulDegradation.fallbackMode,
-  } : null;
-  
+
+  const performanceSummary = data
+    ? {
+        hitRate: data.performance.hitRate,
+        isHealthy: data.performance.hitRate >= 70, // 70% hit rate threshold
+        responseTime: data.performance.averageResponseTime,
+        isFast: data.performance.averageResponseTime <= 100, // 100ms threshold
+        totalRequests: data.performance.totalRequests,
+        cacheSize: data.performance.cacheSize,
+        memoryUsage: data.performance.memoryUsage,
+        trends: data.performance.trends,
+        connectionStatus: data.connection,
+        isConnected: data.connection.redis.connected || data.connection.valkey.connected,
+        fallbackMode: data.connection.gracefulDegradation.fallbackMode,
+      }
+    : null;
+
   return {
     data: performanceSummary,
     isLoading,
@@ -214,14 +216,15 @@ export function useCachePerformance() {
  */
 export function useCacheConnection() {
   const { data, isLoading, error } = useCacheMetrics();
-  
+
   return {
     data: data?.connection,
     isLoading,
     error,
     isRedisConnected: data?.connection?.redis?.connected || false,
     isValkeyConnected: data?.connection?.valkey?.connected || false,
-    isAnyConnected: (data?.connection?.redis?.connected || data?.connection?.valkey?.connected) || false,
+    isAnyConnected:
+      data?.connection?.redis?.connected || data?.connection?.valkey?.connected || false,
     fallbackMode: data?.connection?.gracefulDegradation?.fallbackMode || false,
   };
 }
@@ -264,12 +267,12 @@ export function formatCacheSize(bytes: number) {
   const units = ["B", "KB", "MB", "GB"];
   let size = bytes;
   let unitIndex = 0;
-  
+
   while (size >= 1024 && unitIndex < units.length - 1) {
     size /= 1024;
     unitIndex++;
   }
-  
+
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 }
 

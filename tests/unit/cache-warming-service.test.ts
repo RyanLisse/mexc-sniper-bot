@@ -276,13 +276,8 @@ describe('CacheWarmingService', () => {
     });
 
     it('should handle strategy execution errors gracefully', async () => {
-      // Mock the database to throw an error for this specific test
-      const { db } = await import('../../src/db');
-      const originalSelect = vi.mocked(db.select);
-
-      vi.mocked(db.select).mockImplementationOnce(() => {
-        throw new Error('Database error');
-      });
+      // Directly mock the warmup method to avoid database recursion issues
+      const warmupSpy = vi.spyOn(warmingService, 'warmupMexcSymbols').mockRejectedValueOnce(new Error('Database error'));
 
       const result = await warmingService.executeStrategy('mexc-symbols');
 
@@ -292,15 +287,14 @@ describe('CacheWarmingService', () => {
       const mexcStrategy = strategies.get('mexc-symbols');
       expect(mexcStrategy?.errorCount).toBe(1);
 
-      // Restore the original mock
-      vi.mocked(db.select).mockImplementation(originalSelect);
+      // Restore the spy
+      warmupSpy.mockRestore();
     });
 
     it('should continue with other strategies when one fails', async () => {
-      // Mock one service to fail
-      const { UnifiedMexcService } = await import('../../src/services/unified-mexc-service');
-      const mockMexcService = new UnifiedMexcService();
-      vi.mocked(mockMexcService.getSymbolInfo).mockRejectedValue(new Error('API error'));
+      // Mock specific warmup methods to avoid recursion
+      const mexcSpy = vi.spyOn(warmingService, 'warmupMexcSymbols').mockRejectedValueOnce(new Error('MEXC API error'));
+      const patternSpy = vi.spyOn(warmingService, 'warmupPatternData').mockResolvedValueOnce(undefined);
 
       // Execute all strategies
       await warmingService.executeAllStrategies();
@@ -314,6 +308,10 @@ describe('CacheWarmingService', () => {
       }
 
       expect(totalExecutions).toBeGreaterThan(0);
+
+      // Restore spies
+      mexcSpy.mockRestore();
+      patternSpy.mockRestore();
     });
   });
 
