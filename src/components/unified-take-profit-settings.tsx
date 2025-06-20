@@ -265,7 +265,7 @@ export function UnifiedTakeProfitSettings({
             <CardTitle>Strategy Configuration</CardTitle>
             <CardDescription>Fine-tune your selected strategy</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6 overflow-hidden">
+          <CardContent className="space-y-6">
             {/* Visual Chart */}
             <div className="bg-muted/30 rounded-lg p-4 sm:p-6 relative overflow-hidden">
               <div className="absolute inset-0 opacity-5">
