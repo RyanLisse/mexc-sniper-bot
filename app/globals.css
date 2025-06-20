@@ -3,81 +3,81 @@
 @theme {
   --radius: 0.75rem;
   
-  /* Light theme colors */
-  --color-background: 32 71% 95%;
-  --color-foreground: 32 5% 10%;
-  --color-card: 32 50% 90%;
-  --color-card-foreground: 32 5% 10%;
-  --color-popover: 32 71% 95%;
-  --color-popover-foreground: 32 95% 10%;
+  /* Dark theme colors (now default) */
+  --color-background: 32 50% 10%;
+  --color-foreground: 32 5% 90%;
+  --color-card: 32 50% 10%;
+  --color-card-foreground: 32 5% 90%;
+  --color-popover: 32 50% 5%;
+  --color-popover-foreground: 32 5% 90%;
   --color-primary: 32 88% 58%;
   --color-primary-foreground: 0 0% 100%;
-  --color-secondary: 32 30% 70%;
-  --color-secondary-foreground: 0 0% 0%;
-  --color-muted: -6 30% 85%;
-  --color-muted-foreground: 32 5% 35%;
-  --color-accent: -6 30% 80%;
-  --color-accent-foreground: 32 5% 10%;
+  --color-secondary: 32 30% 10%;
+  --color-secondary-foreground: 0 0% 100%;
+  --color-muted: -6 30% 15%;
+  --color-muted-foreground: 32 5% 60%;
+  --color-accent: -6 30% 15%;
+  --color-accent-foreground: 32 5% 90%;
   --color-destructive: 0 71% 30%;
   --color-destructive-foreground: 32 5% 90%;
-  --color-border: 32 30% 50%;
+  --color-border: 32 30% 18%;
   --color-input: 32 30% 18%;
   --color-ring: 32 88% 58%;
   
-  /* Chart colors */
-  --color-chart-1: 12 76% 61%;
-  --color-chart-2: 173 58% 39%;
-  --color-chart-3: 197 37% 24%;
-  --color-chart-4: 43 74% 66%;
-  --color-chart-5: 27 87% 67%;
+  /* Chart colors (dark) */
+  --color-chart-1: 220 70% 50%;
+  --color-chart-2: 160 60% 45%;
+  --color-chart-3: 30 80% 55%;
+  --color-chart-4: 280 65% 60%;
+  --color-chart-5: 340 75% 55%;
   
-  /* Sidebar colors */
-  --color-sidebar: 32 50% 90%;
-  --color-sidebar-foreground: 32 5% 10%;
+  /* Sidebar colors (dark) */
+  --color-sidebar: 32 50% 10%;
+  --color-sidebar-foreground: 32 5% 90%;
   --color-sidebar-primary: 32 88% 58%;
   --color-sidebar-primary-foreground: 0 0% 100%;
-  --color-sidebar-accent: -6 30% 80%;
-  --color-sidebar-accent-foreground: 32 5% 10%;
-  --color-sidebar-border: 32 30% 50%;
+  --color-sidebar-accent: -6 30% 15%;
+  --color-sidebar-accent-foreground: 32 5% 90%;
+  --color-sidebar-border: 32 30% 18%;
   --color-sidebar-ring: 32 88% 58%;
 
-  /* Dark theme colors */
-  --color-background-dark: 32 50% 10%;
-  --color-foreground-dark: 32 5% 90%;
-  --color-card-dark: 32 50% 10%;
-  --color-card-foreground-dark: 32 5% 90%;
-  --color-popover-dark: 32 50% 5%;
-  --color-popover-foreground-dark: 32 5% 90%;
-  --color-primary-dark: 32 88% 58%;
-  --color-primary-foreground-dark: 0 0% 100%;
-  --color-secondary-dark: 32 30% 10%;
-  --color-secondary-foreground-dark: 0 0% 100%;
-  --color-muted-dark: -6 30% 15%;
-  --color-muted-foreground-dark: 32 5% 60%;
-  --color-accent-dark: -6 30% 15%;
-  --color-accent-foreground-dark: 32 5% 90%;
-  --color-destructive-dark: 0 71% 30%;
-  --color-destructive-foreground-dark: 32 5% 90%;
-  --color-border-dark: 32 30% 18%;
-  --color-input-dark: 32 30% 18%;
-  --color-ring-dark: 32 88% 58%;
+  /* Light theme colors (backup/alternate) */
+  --color-background-light: 32 71% 95%;
+  --color-foreground-light: 32 5% 10%;
+  --color-card-light: 32 50% 90%;
+  --color-card-foreground-light: 32 5% 10%;
+  --color-popover-light: 32 71% 95%;
+  --color-popover-foreground-light: 32 95% 10%;
+  --color-primary-light: 32 88% 58%;
+  --color-primary-foreground-light: 0 0% 100%;
+  --color-secondary-light: 32 30% 70%;
+  --color-secondary-foreground-light: 0 0% 0%;
+  --color-muted-light: -6 30% 85%;
+  --color-muted-foreground-light: 32 5% 35%;
+  --color-accent-light: -6 30% 80%;
+  --color-accent-foreground-light: 32 5% 10%;
+  --color-destructive-light: 0 71% 30%;
+  --color-destructive-foreground-light: 32 5% 90%;
+  --color-border-light: 32 30% 50%;
+  --color-input-light: 32 30% 18%;
+  --color-ring-light: 32 88% 58%;
   
-  /* Chart colors dark */
-  --color-chart-1-dark: 220 70% 50%;
-  --color-chart-2-dark: 160 60% 45%;
-  --color-chart-3-dark: 30 80% 55%;
-  --color-chart-4-dark: 280 65% 60%;
-  --color-chart-5-dark: 340 75% 55%;
+  /* Chart colors light */
+  --color-chart-1-light: 12 76% 61%;
+  --color-chart-2-light: 173 58% 39%;
+  --color-chart-3-light: 197 37% 24%;
+  --color-chart-4-light: 43 74% 66%;
+  --color-chart-5-light: 27 87% 67%;
   
-  /* Sidebar colors dark */
-  --color-sidebar-dark: 32 50% 10%;
-  --color-sidebar-foreground-dark: 32 5% 90%;
-  --color-sidebar-primary-dark: 32 88% 58%;
-  --color-sidebar-primary-foreground-dark: 0 0% 100%;
-  --color-sidebar-accent-dark: -6 30% 15%;
-  --color-sidebar-accent-foreground-dark: 32 5% 90%;
-  --color-sidebar-border-dark: 32 30% 18%;
-  --color-sidebar-ring-dark: 32 88% 58%;
+  /* Sidebar colors light */
+  --color-sidebar-light: 32 50% 90%;
+  --color-sidebar-foreground-light: 32 5% 10%;
+  --color-sidebar-primary-light: 32 88% 58%;
+  --color-sidebar-primary-foreground-light: 0 0% 100%;
+  --color-sidebar-accent-light: -6 30% 80%;
+  --color-sidebar-accent-foreground-light: 32 5% 10%;
+  --color-sidebar-border-light: 32 30% 50%;
+  --color-sidebar-ring-light: 32 88% 58%;
 
   /* Custom animations */
   --animate-pulse-green: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
