@@ -907,7 +907,39 @@ export class UnifiedMexcService {
    * Get symbol data for MEXC-specific endpoints
    */
   async getSymbolData(): Promise<MexcServiceResponse<SymbolEntry[]>> {
-    return this.makeRequest("GET", "/open/api/v2/market/symbols");
+    // Use the correct MEXC API endpoint for symbol/exchange info
+    const response = await this.makeRequest("GET", "/api/v3/exchangeInfo");
+
+    if (
+      response.success &&
+      response.data &&
+      typeof response.data === "object" &&
+      "symbols" in response.data
+    ) {
+      const rawData = response.data as any;
+      const symbols = (rawData.symbols || []).map((symbol: any) => ({
+        cd: symbol.symbol || "",
+        symbol: symbol.symbol || "",
+        sts: symbol.status === "TRADING" ? 2 : 1, // Map status to state
+        st: symbol.status === "TRADING" ? 2 : 1, // Map status to state
+        tt: symbol.status === "TRADING" ? 4 : 1, // Map status to type
+        ca: symbol.baseAssetPrecision || 8,
+        ps: symbol.quotePrecision || 8,
+        qs: symbol.quoteAssetPrecision || 8,
+      }));
+
+      return {
+        ...response,
+        data: symbols,
+      };
+    }
+
+    return {
+      success: false,
+      error: response.error || "Failed to fetch symbol data",
+      timestamp: new Date().toISOString(),
+      data: [],
+    };
   }
 
   /**
@@ -1179,44 +1211,110 @@ export class UnifiedMexcService {
     MexcServiceResponse<{
       balances: BalanceEntry[];
       totalUsdtValue: number;
+      lastUpdated: string;
     }>
   > {
-    const response = await this.makeRequest("GET", "/api/v3/account", {}, true);
+    try {
+      // Fetch account data and ticker prices in parallel
+      const [accountResponse, tickersResponse] = await Promise.all([
+        this.makeRequest("GET", "/api/v3/account", {}, true),
+        this.getAllTickers(),
+      ]);
 
-    if (
-      response.success &&
-      response.data &&
-      typeof response.data === "object" &&
-      "balances" in response.data
-    ) {
-      const rawData = response.data as any;
-      // Process balances to include USDT values
-      const balances = (rawData.balances || []).map((balance: any) => ({
-        asset: balance.asset || "",
-        free: balance.free || "0",
-        locked: balance.locked || "0",
-        total: Number.parseFloat(balance.free || "0") + Number.parseFloat(balance.locked || "0"),
-        usdtValue: 0, // Would need price data to calculate this
-      }));
+      if (
+        !accountResponse.success ||
+        !accountResponse.data ||
+        typeof accountResponse.data !== "object" ||
+        !("balances" in accountResponse.data)
+      ) {
+        return {
+          success: false,
+          error: accountResponse.error || "Failed to fetch account balances",
+          timestamp: new Date().toISOString(),
+          data: { balances: [], totalUsdtValue: 0, lastUpdated: new Date().toISOString() },
+        };
+      }
 
-      // Calculate total USDT value (simplified)
+      // Create price lookup map from tickers
+      const priceMap = new Map<string, number>();
+      if (tickersResponse.success && tickersResponse.data) {
+        for (const ticker of tickersResponse.data) {
+          const price = Number.parseFloat(ticker.lastPrice || ticker.price || "0");
+          if (price > 0) {
+            priceMap.set(ticker.symbol, price);
+          }
+        }
+      }
+
+      const rawData = accountResponse.data as any;
+
+      // Process balances with USDT value calculation
+      const balances: BalanceEntry[] = (rawData.balances || [])
+        .map((balance: any) => {
+          const asset = balance.asset || "";
+          const free = Number.parseFloat(balance.free || "0");
+          const locked = Number.parseFloat(balance.locked || "0");
+          const total = free + locked;
+
+          // Skip assets with zero balance
+          if (total <= 0) {
+            return null;
+          }
+
+          let usdtValue = 0;
+
+          if (asset === "USDT") {
+            // USDT is already in USDT
+            usdtValue = total;
+          } else {
+            // Try to find USDT trading pair for this asset
+            const usdtPair = `${asset}USDT`;
+            const price = priceMap.get(usdtPair);
+
+            if (price && price > 0) {
+              usdtValue = total * price;
+            } else {
+              // Try reverse pair (USDTASSET) for some assets
+              const reverseUsdtPair = `USDT${asset}`;
+              const reversePrice = priceMap.get(reverseUsdtPair);
+              if (reversePrice && reversePrice > 0) {
+                usdtValue = total / reversePrice;
+              }
+            }
+          }
+
+          return {
+            asset,
+            free: balance.free || "0",
+            locked: balance.locked || "0",
+            total,
+            usdtValue,
+          };
+        })
+        .filter((balance: BalanceEntry | null): balance is BalanceEntry => balance !== null);
+
+      // Calculate total USDT value
       const totalUsdtValue = balances.reduce(
         (sum: number, balance: BalanceEntry) => sum + (balance.usdtValue || 0),
         0
       );
 
       return {
-        ...response,
-        data: { balances, totalUsdtValue },
+        ...accountResponse,
+        data: {
+          balances,
+          totalUsdtValue,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error occurred",
+        timestamp: new Date().toISOString(),
+        data: { balances: [], totalUsdtValue: 0, lastUpdated: new Date().toISOString() },
       };
     }
-
-    return {
-      success: false,
-      error: response.error || "Failed to fetch account balances",
-      timestamp: new Date().toISOString(),
-      data: { balances: [], totalUsdtValue: 0 },
-    };
   }
 
   // ============================================================================

@@ -246,11 +246,7 @@ export const OptimizedAccountBalance = React.memo(
 
     const { formatCurrency, formatTokenAmount } = useCurrencyFormatting();
 
-    const handleRefresh = useCallback(() => refetch(), [refetch]);
-    const toggleVisibility = useCallback(() => setShowBalances((prev) => !prev), []);
-    const toggleAutoRefresh = useCallback(() => setAutoRefresh((prev) => !prev), []);
-
-    // Memoize sorted balances
+    // Memoize sorted balances first
     const sortedBalances = useMemo(() => {
       if (!balanceData?.balances) return [];
       return [...balanceData.balances]
@@ -261,8 +257,12 @@ export const OptimizedAccountBalance = React.memo(
         .slice(0, 10);
     }, [balanceData?.balances]);
 
-    if (isError) {
-      return (
+    const handleRefresh = useCallback(() => refetch(), [refetch]);
+    const toggleVisibility = useCallback(() => setShowBalances((prev) => !prev), []);
+    const toggleAutoRefresh = useCallback(() => setAutoRefresh((prev) => !prev), []);
+
+    const renderErrorState = useCallback(
+      () => (
         <Card className={`bg-slate-800/50 border-slate-700 backdrop-blur-sm ${className}`}>
           <CardHeader className="pb-3">
             <BalanceHeader
@@ -291,7 +291,175 @@ export const OptimizedAccountBalance = React.memo(
             </div>
           </CardContent>
         </Card>
+      ),
+      [
+        className,
+        isFetching,
+        autoRefresh,
+        showBalances,
+        toggleAutoRefresh,
+        toggleVisibility,
+        handleRefresh,
+        error,
+      ]
+    );
+
+    const renderLoadingState = useCallback(
+      () => (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }, (_, i) => `balance-loading-${i}`).map((key) => (
+            <div key={key} className="animate-pulse">
+              <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+              <div className="h-3 bg-muted rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      ),
+      []
+    );
+
+    const renderPortfolioValue = useCallback(() => {
+      if (!balanceData) return null;
+
+      return (
+        <div className="p-4 bg-gradient-to-r from-muted/50 to-accent/20 rounded-lg border border-border">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Total Portfolio Value</p>
+              <p className="text-2xl font-bold text-foreground">
+                {showBalances ? (
+                  <span className="flex items-center">
+                    <TrendingUp className="h-5 w-5 text-primary mr-2" />$
+                    {formatCurrency(balanceData.totalUsdtValue || 0)} USDT
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">••••••</span>
+                )}
+              </p>
+            </div>
+            <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
+              {balanceData.balances.length} assets
+            </Badge>
+          </div>
+
+          {showBalances && sortedBalances.length > 0 && (
+            <div className="border-t border-border pt-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Major Holdings</p>
+              <div className="flex flex-wrap gap-2">
+                {sortedBalances.slice(0, 4).map((holding) =>
+                  holding.total > 0 ? (
+                    <div key={holding.asset} className="text-xs bg-muted px-2 py-1 rounded">
+                      <span className="text-foreground font-medium">
+                        {formatTokenAmount(holding.total, holding.asset)} {holding.asset}
+                      </span>
+                      {holding.usdtValue && holding.usdtValue > 0 && (
+                        <span className="text-muted-foreground ml-1">
+                          (${formatCurrency(holding.usdtValue)})
+                        </span>
+                      )}
+                    </div>
+                  ) : null
+                )}
+                {balanceData.balances.length > 4 && (
+                  <div className="text-xs bg-muted/50 px-2 py-1 rounded text-muted-foreground">
+                    +{balanceData.balances.length - 4} more
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       );
+    }, [showBalances, balanceData, formatCurrency, formatTokenAmount]);
+
+    const renderAssetBreakdown = useCallback(() => {
+      const balanceCount = balanceData?.balances.length || 0;
+      const hasBalances = balanceCount > 0;
+
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-foreground">Asset Breakdown</h4>
+            {balanceCount > 5 && (
+              <Badge variant="outline" className="text-xs border-border text-muted-foreground">
+                Showing top holdings
+              </Badge>
+            )}
+          </div>
+
+          {!hasBalances ? (
+            <div className="text-center py-6 text-muted-foreground">
+              <Wallet className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No balances found</p>
+              <p className="text-xs text-muted-foreground">Your account appears to be empty</p>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {sortedBalances.map((balance) => (
+                <div
+                  key={balance.asset}
+                  className="flex items-center justify-between p-3 bg-muted/30 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold text-primary">
+                        {balance.asset.slice(0, 2)}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm text-foreground">{balance.asset}</p>
+                      {balance.locked !== "0" && (
+                        <p className="text-xs text-muted-foreground">
+                          {formatTokenAmount(Number.parseFloat(balance.locked), balance.asset)}{" "}
+                          locked
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {showBalances ? (
+                      <>
+                        <p className="font-medium text-sm text-foreground">
+                          {formatTokenAmount(balance.total, balance.asset)} {balance.asset}
+                        </p>
+                        {balance.usdtValue && balance.usdtValue > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            ≈ ${formatCurrency(balance.usdtValue)} USDT
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="font-medium text-sm text-muted-foreground">••••••</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {balanceCount > 10 && (
+                <div className="text-center py-2">
+                  <Badge variant="outline" className="text-xs border-border">
+                    +{balanceCount - 10} more assets
+                  </Badge>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }, [balanceData, showBalances, formatTokenAmount, formatCurrency]);
+
+    const renderEmptyState = useCallback(
+      () => (
+        <div className="text-center py-8 text-muted-foreground">
+          <Wallet className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">No balance data available</p>
+        </div>
+      ),
+      []
+    );
+
+    if (isError) {
+      return renderErrorState();
     }
 
     return (
@@ -339,149 +507,14 @@ export const OptimizedAccountBalance = React.memo(
         </CardHeader>
         <CardContent className="space-y-4">
           {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }, (_, i) => `balance-loading-${i}`).map((key) => (
-                <div key={key} className="animate-pulse">
-                  <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-                  <div className="h-3 bg-muted rounded w-1/2" />
-                </div>
-              ))}
-            </div>
+            renderLoadingState()
           ) : balanceData ? (
             <>
-              <div className="p-4 bg-gradient-to-r from-muted/50 to-accent/20 rounded-lg border border-border">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Total Portfolio Value
-                    </p>
-                    <p className="text-2xl font-bold text-foreground">
-                      {showBalances ? (
-                        <span className="flex items-center">
-                          <TrendingUp className="h-5 w-5 text-primary mr-2" />$
-                          {formatCurrency(balanceData.totalUsdtValue)} USDT
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">••••••</span>
-                      )}
-                    </p>
-                  </div>
-                  <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
-                    {balanceData.balances.length} assets
-                  </Badge>
-                </div>
-
-                {showBalances && sortedBalances.length > 0 && (
-                  <div className="border-t border-border pt-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Major Holdings</p>
-                    <div className="flex flex-wrap gap-2">
-                      {sortedBalances.slice(0, 4).map(
-                        (holding) =>
-                          holding.total > 0 && (
-                            <div key={holding.asset} className="text-xs bg-muted px-2 py-1 rounded">
-                              <span className="text-foreground font-medium">
-                                {formatTokenAmount(holding.total, holding.asset)} {holding.asset}
-                              </span>
-                              {holding.usdtValue && holding.usdtValue > 0 && (
-                                <span className="text-muted-foreground ml-1">
-                                  (${formatCurrency(holding.usdtValue)})
-                                </span>
-                              )}
-                            </div>
-                          )
-                      )}
-                      {balanceData.balances.length > 4 && (
-                        <div className="text-xs bg-muted/50 px-2 py-1 rounded text-muted-foreground">
-                          +{balanceData.balances.length - 4} more
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium text-foreground">Asset Breakdown</h4>
-                  {balanceData.balances.length > 5 && (
-                    <Badge
-                      variant="outline"
-                      className="text-xs border-border text-muted-foreground"
-                    >
-                      Showing top holdings
-                    </Badge>
-                  )}
-                </div>
-
-                {balanceData.balances.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <Wallet className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No balances found</p>
-                    <p className="text-xs text-muted-foreground">
-                      Your account appears to be empty
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {sortedBalances.map((balance) => (
-                      <div
-                        key={balance.asset}
-                        className="flex items-center justify-between p-3 bg-muted/30 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-bold text-primary">
-                              {balance.asset.slice(0, 2)}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm text-foreground">{balance.asset}</p>
-                            {balance.locked !== "0" && (
-                              <p className="text-xs text-muted-foreground">
-                                {formatTokenAmount(
-                                  Number.parseFloat(balance.locked),
-                                  balance.asset
-                                )}{" "}
-                                locked
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          {showBalances ? (
-                            <>
-                              <p className="font-medium text-sm text-foreground">
-                                {formatTokenAmount(balance.total, balance.asset)} {balance.asset}
-                              </p>
-                              {balance.usdtValue && balance.usdtValue > 0 && (
-                                <p className="text-xs text-muted-foreground">
-                                  ≈ ${formatCurrency(balance.usdtValue)} USDT
-                                </p>
-                              )}
-                            </>
-                          ) : (
-                            <p className="font-medium text-sm text-muted-foreground">••••••</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-
-                    {balanceData.balances.length > 10 && (
-                      <div className="text-center py-2">
-                        <Badge variant="outline" className="text-xs border-border">
-                          +{balanceData.balances.length - 10} more assets
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              {renderPortfolioValue()}
+              {renderAssetBreakdown()}
             </>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Wallet className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No balance data available</p>
-            </div>
+            renderEmptyState()
           )}
         </CardContent>
       </Card>

@@ -32,6 +32,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  createTooltipFormatter,
+  generateChartCellKey,
+  generateListKey,
+  useSkeletonItems,
+} from "../../lib/react-utilities";
 
 interface TradingAnalyticsData {
   timestamp: string;
@@ -309,8 +315,8 @@ export function TradingAnalyticsDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-100 rounded animate-pulse" />
+            {useSkeletonItems(5, "h-32 bg-gray-100 rounded animate-pulse").map((item) => (
+              <div key={item.key} className={item.className} />
             ))}
           </div>
         </CardContent>
@@ -452,7 +458,7 @@ export function TradingAnalyticsDashboard() {
                     <XAxis dataKey="date" />
                     <YAxis tickFormatter={(value) => formatCurrency(value)} />
                     <Tooltip
-                      formatter={(value: any) => [formatCurrency(value), "P&L"]}
+                      formatter={createTooltipFormatter((value) => formatCurrency(Number(value)))}
                       labelFormatter={(date) => `Date: ${date}`}
                     />
                     <Area
@@ -530,7 +536,10 @@ export function TradingAnalyticsDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {data.profitLossAnalytics.bestTrades.map((trade, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div
+                      key={generateListKey(trade, index, "symbol")}
+                      className="flex items-center justify-between"
+                    >
                       <div>
                         <p className="font-medium text-sm">{trade.symbol}</p>
                         <p className="text-xs text-muted-foreground">{trade.duration}</p>
@@ -553,7 +562,10 @@ export function TradingAnalyticsDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {data.profitLossAnalytics.worstTrades.map((trade, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div
+                      key={generateListKey(trade, index, "symbol")}
+                      className="flex items-center justify-between"
+                    >
                       <div>
                         <p className="font-medium text-sm">{trade.symbol}</p>
                         <p className="text-xs text-muted-foreground">{trade.duration}</p>
@@ -576,7 +588,7 @@ export function TradingAnalyticsDashboard() {
               <CardContent>
                 <div className="space-y-2">
                   {data.profitLossAnalytics.pnLDistribution.map((dist, index) => (
-                    <div key={index} className="space-y-1">
+                    <div key={generateListKey(dist, index, "range")} className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span>{dist.range}</span>
                         <span>{dist.percentage}%</span>
@@ -610,11 +622,14 @@ export function TradingAnalyticsDashboard() {
                       nameKey="asset"
                       label={({ asset, percentage }) => `${asset}: ${percentage}%`}
                     >
-                      {data.portfolioMetrics.allocations.map((_entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      {data.portfolioMetrics.allocations.map((entry, index) => (
+                        <Cell
+                          key={generateChartCellKey(index, entry.asset)}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: any) => [`${value}%`, "Allocation"]} />
+                    <Tooltip formatter={createTooltipFormatter((value) => `${value}%`)} />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -708,7 +723,7 @@ export function TradingAnalyticsDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {data.portfolioMetrics.topPerformers.map((performer, index) => (
                   <div
-                    key={index}
+                    key={generateListKey(performer, index, "symbol")}
                     className="flex items-center justify-between p-3 rounded-lg border"
                   >
                     <span className="font-medium">{performer.symbol}</span>
@@ -735,12 +750,7 @@ export function TradingAnalyticsDashboard() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="pattern" />
                     <YAxis />
-                    <Tooltip
-                      formatter={(value: any, name: string) => [
-                        name === "successRate" ? `${value}%` : `${value}%`,
-                        name === "successRate" ? "Success Rate" : "Avg Return",
-                      ]}
-                    />
+                    <Tooltip formatter={createTooltipFormatter((value) => `${value}%`)} />
                     <Bar dataKey="successRate" fill="#8884d8" name="Success Rate" />
                     <Bar dataKey="avgReturn" fill="#82ca9d" name="Avg Return" />
                   </BarChart>
@@ -823,7 +833,10 @@ export function TradingAnalyticsDashboard() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {data.patternAnalytics.patternTypes.map((type, index) => (
-                  <div key={index} className="text-center p-4 rounded-lg border">
+                  <div
+                    key={generateListKey(type, index, "type")}
+                    className="text-center p-4 rounded-lg border"
+                  >
                     <div className="text-2xl font-bold text-blue-600">{type.count}</div>
                     <p className="text-sm text-muted-foreground capitalize">
                       {type.type.replace("-", " ")}
@@ -976,7 +989,10 @@ export function TradingAnalyticsDashboard() {
               <CardContent>
                 <div className="space-y-2">
                   {data.riskManagement.correlationMatrix.map((corr, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div
+                      key={generateListKey(corr, index, "pair")}
+                      className="flex items-center justify-between"
+                    >
                       <span className="text-sm">{corr.pair}</span>
                       <Badge
                         variant={
@@ -1053,7 +1069,7 @@ export function TradingAnalyticsDashboard() {
                       label={({ name, value }) => `${name}: ${value}%`}
                     >
                       {["#8884d8", "#82ca9d", "#ffc658"].map((color, index) => (
-                        <Cell key={`cell-${index}`} fill={color} />
+                        <Cell key={generateChartCellKey(index, `fill-${color}`)} fill={color} />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -1088,7 +1104,10 @@ export function TradingAnalyticsDashboard() {
                 <div className="space-y-2">
                   {data.executionAnalytics.slippageMetrics.slippageDistribution.map(
                     (dist, index) => (
-                      <div key={index} className="flex justify-between items-center">
+                      <div
+                        key={generateListKey(dist, index, "range")}
+                        className="flex justify-between items-center"
+                      >
                         <span className="text-sm">{dist.range}</span>
                         <Badge variant="outline">{dist.count}</Badge>
                       </div>
@@ -1223,7 +1242,10 @@ export function TradingAnalyticsDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {data.marketAnalytics.sectorPerformance.map((sector, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div
+                      key={generateListKey(sector, index, "sector")}
+                      className="flex items-center justify-between"
+                    >
                       <span className="font-medium">{sector.sector}</span>
                       <div className="flex items-center gap-2">
                         {sector.trend === "up" ? (
@@ -1252,7 +1274,7 @@ export function TradingAnalyticsDashboard() {
                 <div className="space-y-3">
                   {data.marketAnalytics.tradingOpportunities.map((opportunity, index) => (
                     <div
-                      key={index}
+                      key={generateListKey(opportunity, index, "symbol")}
                       className="flex items-center justify-between p-3 rounded-lg border"
                     >
                       <div>
@@ -1316,7 +1338,7 @@ export function TradingAnalyticsDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {data.marketAnalytics.marketTrends.map((trend, index) => (
-                    <div key={index} className="space-y-1">
+                    <div key={generateListKey(trend, index, "trend")} className="space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-sm">{trend.trend}</span>
                         <Badge

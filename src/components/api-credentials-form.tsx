@@ -205,7 +205,11 @@ function ApiCredentialsStatus({ apiCredentials }: { apiCredentials: ApiCredentia
           </div>
           <div className="text-sm text-muted-foreground">
             {apiCredentials
-              ? `Last updated: ${new Date(apiCredentials.updatedAt || "").toLocaleDateString()}`
+              ? `Last updated: ${
+                  apiCredentials.updatedAt
+                    ? new Date(apiCredentials.updatedAt).toLocaleDateString()
+                    : "Unknown"
+                }`
               : "Configure your MEXC API keys to enable automated trading"}
           </div>
         </div>

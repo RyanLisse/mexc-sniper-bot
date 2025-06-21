@@ -82,11 +82,6 @@ export class DynamicAgentLoader {
         break;
       }
 
-      case "strategy": {
-        const { StrategyAgent } = await import("./strategy-agent");
-        AgentClass = StrategyAgent;
-        break;
-      }
 
       case "mexc-api": {
         const { MexcApiAgent } = await import("./mexc-api-agent");

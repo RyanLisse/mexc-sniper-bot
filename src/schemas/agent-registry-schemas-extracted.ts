@@ -1,9 +1,9 @@
 /**
  * Extracted Agent Registry Schemas
- * 
- * This file contains all agent registry-related Zod schemas extracted from the 
+ *
+ * This file contains all agent registry-related Zod schemas extracted from the
  * agent-registry.ts file as part of the TDD refactoring process.
- * 
+ *
  * Extracted schemas provide type safety and validation for agent coordination,
  * health monitoring, registry management, and recovery operations.
  */
@@ -19,20 +19,16 @@ import { z } from "zod";
  */
 export const AgentStatusSchema = z.enum([
   "healthy",
-  "degraded", 
+  "degraded",
   "unhealthy",
   "unknown",
-  "recovering"
+  "recovering",
 ]);
 
 /**
  * Health Trend Schema - Performance trend indicators
  */
-export const HealthTrendSchema = z.enum([
-  "improving",
-  "degrading",
-  "stable"
-]);
+export const HealthTrendSchema = z.enum(["improving", "degrading", "stable"]);
 
 /**
  * Health Threshold Pair Schema - Warning and critical thresholds
@@ -48,28 +44,28 @@ export const HealthThresholdPairSchema = z.object({
 export const HealthThresholdsSchema = z.object({
   // Response time thresholds (milliseconds)
   responseTime: HealthThresholdPairSchema,
-  
+
   // Error rate thresholds (0-1 scale)
   errorRate: z.object({
     warning: z.number().min(0).max(1),
     critical: z.number().min(0).max(1),
   }),
-  
+
   // Consecutive error count thresholds
   consecutiveErrors: z.object({
     warning: z.number().positive().int(),
     critical: z.number().positive().int(),
   }),
-  
+
   // Uptime percentage thresholds (0-100 scale)
   uptime: z.object({
     warning: z.number().min(0).max(100),
     critical: z.number().min(0).max(100),
   }),
-  
+
   // Memory usage thresholds (MB)
   memoryUsage: HealthThresholdPairSchema,
-  
+
   // CPU usage percentage thresholds (0-100 scale)
   cpuUsage: z.object({
     warning: z.number().min(0).max(100),
@@ -103,37 +99,37 @@ export const AgentHealthSchema = z.object({
   status: AgentStatusSchema,
   lastChecked: z.date(),
   lastResponse: z.date().nullable(),
-  
+
   // Performance metrics
   responseTime: z.number().min(0),
   errorCount: z.number().min(0).int(),
   errorRate: z.number().min(0).max(1),
   consecutiveErrors: z.number().min(0).int(),
   uptime: z.number().min(0).max(100), // percentage
-  
+
   // Optional error information
   lastError: z.string().optional(),
-  
+
   // Agent capabilities and load
   capabilities: z.array(z.string()),
   load: AgentLoadSchema,
-  
+
   // Resource usage metrics
   memoryUsage: z.number().min(0), // MB
   cpuUsage: z.number().min(0).max(100), // percentage
   cacheHitRate: z.number().min(0).max(100), // percentage
-  
+
   // Request tracking
   requestCount: z.number().min(0).int(),
   successCount: z.number().min(0).int(),
-  
+
   // Recovery tracking
   lastRecoveryAttempt: z.date().optional(),
   recoveryAttempts: z.number().min(0).int(),
-  
+
   // Composite health score (0-100)
   healthScore: z.number().min(0).max(100),
-  
+
   // Performance trends
   trends: AgentHealthTrendsSchema,
 });
@@ -150,16 +146,16 @@ export const RegisteredAgentSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   type: z.string().min(1),
-  
+
   // Agent instance (allowing any object for BaseAgent)
   instance: z.unknown(), // BaseAgent instance
-  
+
   // Health monitoring
   health: AgentHealthSchema,
-  
+
   // Registration metadata
   registeredAt: z.date(),
-  
+
   // Configuration
   dependencies: z.array(z.string()),
   priority: z.number().min(1).int(),
@@ -180,13 +176,13 @@ export const HealthCheckResultSchema = z.object({
   success: z.boolean(),
   responseTime: z.number().min(0),
   timestamp: z.date(),
-  
+
   // Optional error information
   error: z.string().optional(),
-  
+
   // Optional metadata
   metadata: z.record(z.unknown()).optional(),
-  
+
   // Enhanced metrics (optional)
   memoryUsage: z.number().min(0).optional(),
   cpuUsage: z.number().min(0).max(100).optional(),
@@ -209,10 +205,10 @@ export const AgentRegistryStatsSchema = z.object({
   degradedAgents: z.number().min(0).int(),
   unhealthyAgents: z.number().min(0).int(),
   unknownAgents: z.number().min(0).int(),
-  
+
   // Performance metrics
   averageResponseTime: z.number().min(0),
-  
+
   // Health check statistics
   totalHealthChecks: z.number().min(0).int(),
   lastFullHealthCheck: z.date().nullable(),
@@ -238,11 +234,11 @@ export const AgentRegistryOptionsSchema = z.object({
   // Timing configurations
   healthCheckInterval: z.number().positive().optional(),
   maxHealthHistorySize: z.number().positive().int().optional(),
-  
+
   // Default settings
   defaultThresholds: HealthThresholdsSchema.optional(),
   autoRecoveryEnabled: z.boolean().optional(),
-  
+
   // Alert configurations
   alertThresholds: AlertThresholdsSchema.optional(),
 });
@@ -272,18 +268,18 @@ export const AgentRecoveryResultSchema = z.object({
   success: z.boolean(),
   agentId: z.string().min(1),
   strategy: z.string().min(1),
-  
+
   // Timing information
   timestamp: z.date(),
   duration: z.number().min(0), // milliseconds
-  
+
   // Status transition
   previousStatus: AgentStatusSchema,
   newStatus: AgentStatusSchema,
-  
+
   // Recovery tracking
   recoveryAttempt: z.number().positive().int(),
-  
+
   // Optional error information
   error: z.string().optional(),
 });

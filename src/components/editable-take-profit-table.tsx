@@ -10,7 +10,7 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -88,7 +88,7 @@ export function EditableTakeProfitTable({
 
   // Validation helper functions - extracted to reduce complexity
 
-  const validateProfitPercentage = (level: TakeProfitLevel): ValidationError[] => {
+  const validateProfitPercentage = useCallback((level: TakeProfitLevel): ValidationError[] => {
     const errors: ValidationError[] = [];
 
     if (level.profitPercentage <= 0) {
@@ -117,9 +117,9 @@ export function EditableTakeProfitTable({
     }
 
     return errors;
-  };
+  }, []);
 
-  const validateSellPortion = (level: TakeProfitLevel): ValidationError[] => {
+  const validateSellPortion = useCallback((level: TakeProfitLevel): ValidationError[] => {
     const errors: ValidationError[] = [];
 
     if (level.sellPortion <= 0) {
@@ -140,31 +140,31 @@ export function EditableTakeProfitTable({
     }
 
     return errors;
-  };
+  }, []);
 
-  const validateLevelProgression = (
-    level: TakeProfitLevel,
-    sortedLevels: TakeProfitLevel[]
-  ): ValidationError[] => {
-    const errors: ValidationError[] = [];
+  const validateLevelProgression = useCallback(
+    (level: TakeProfitLevel, sortedLevels: TakeProfitLevel[]): ValidationError[] => {
+      const errors: ValidationError[] = [];
 
-    const currentIndex = sortedLevels.findIndex((l) => l.id === level.id);
-    if (currentIndex > 0) {
-      const prevLevel = sortedLevels[currentIndex - 1];
-      if (prevLevel && level.profitPercentage <= prevLevel.profitPercentage) {
-        errors.push({
-          field: "profitPercentage",
-          levelId: level.id,
-          message: `${level.level}: Should have higher profit % than previous levels`,
-          type: "warning",
-        });
+      const currentIndex = sortedLevels.findIndex((l) => l.id === level.id);
+      if (currentIndex > 0) {
+        const prevLevel = sortedLevels[currentIndex - 1];
+        if (prevLevel && level.profitPercentage <= prevLevel.profitPercentage) {
+          errors.push({
+            field: "profitPercentage",
+            levelId: level.id,
+            message: `${level.level}: Should have higher profit % than previous levels`,
+            type: "warning",
+          });
+        }
       }
-    }
 
-    return errors;
-  };
+      return errors;
+    },
+    []
+  );
 
-  const validateActionDescription = (level: TakeProfitLevel): ValidationError[] => {
+  const validateActionDescription = useCallback((level: TakeProfitLevel): ValidationError[] => {
     const errors: ValidationError[] = [];
 
     if (!level.actionWhenReached.trim()) {
@@ -177,54 +177,62 @@ export function EditableTakeProfitTable({
     }
 
     return errors;
-  };
+  }, []);
 
-  const validateSingleLevel = (
-    level: TakeProfitLevel,
-    sortedLevels: TakeProfitLevel[]
-  ): ValidationError[] => {
-    return [
-      ...validateProfitPercentage(level),
-      ...validateSellPortion(level),
-      ...validateLevelProgression(level, sortedLevels),
-      ...validateActionDescription(level),
-    ];
-  };
+  const validateSingleLevel = useCallback(
+    (level: TakeProfitLevel, sortedLevels: TakeProfitLevel[]): ValidationError[] => {
+      return [
+        ...validateProfitPercentage(level),
+        ...validateSellPortion(level),
+        ...validateLevelProgression(level, sortedLevels),
+        ...validateActionDescription(level),
+      ];
+    },
+    [
+      validateProfitPercentage,
+      validateSellPortion,
+      validateLevelProgression,
+      validateActionDescription,
+    ]
+  );
 
-  // Simplified validation function
-  const validateConfiguration = (levels: TakeProfitLevel[]): ValidationError[] => {
-    const errors: ValidationError[] = [];
+  // Simplified validation function (memoized to prevent unnecessary re-renders)
+  const validateConfiguration = useCallback(
+    (levels: TakeProfitLevel[]): ValidationError[] => {
+      const errors: ValidationError[] = [];
 
-    // Validate levels array
-    if (levels.length === 0) {
-      errors.push({
-        field: "levels",
-        message: "At least one take-profit level is required",
-        type: "error",
+      // Validate levels array
+      if (levels.length === 0) {
+        errors.push({
+          field: "levels",
+          message: "At least one take-profit level is required",
+          type: "error",
+        });
+        return errors;
+      }
+
+      // Sort levels by profit percentage for validation
+      const sortedLevels = [...levels].sort((a, b) => a.profitPercentage - b.profitPercentage);
+
+      // Validate each level using extracted functions
+      levels.forEach((level) => {
+        errors.push(...validateSingleLevel(level, sortedLevels));
       });
+
+      // Total sell portion validation
+      const totalSellPortion = levels.reduce((sum, level) => sum + level.sellPortion, 0);
+      if (Math.abs(totalSellPortion - 100) > 0.01) {
+        errors.push({
+          field: "totalSellPortion",
+          message: `Total sell portions must equal 100% (currently ${totalSellPortion.toFixed(1)}%)`,
+          type: "error",
+        });
+      }
+
       return errors;
-    }
-
-    // Sort levels by profit percentage for validation
-    const sortedLevels = [...levels].sort((a, b) => a.profitPercentage - b.profitPercentage);
-
-    // Validate each level using extracted functions
-    levels.forEach((level) => {
-      errors.push(...validateSingleLevel(level, sortedLevels));
-    });
-
-    // Total sell portion validation
-    const totalSellPortion = levels.reduce((sum, level) => sum + level.sellPortion, 0);
-    if (Math.abs(totalSellPortion - 100) > 0.01) {
-      errors.push({
-        field: "totalSellPortion",
-        message: `Total sell portions must equal 100% (currently ${totalSellPortion.toFixed(1)}%)`,
-        type: "error",
-      });
-    }
-
-    return errors;
-  };
+    },
+    [validateSingleLevel]
+  );
 
   // Update editing levels when props change
   useEffect(() => {

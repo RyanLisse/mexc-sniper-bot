@@ -1,9 +1,9 @@
 /**
  * Extracted Agent Cache Schemas
- * 
- * This file contains all agent cache-related Zod schemas extracted from the 
+ *
+ * This file contains all agent cache-related Zod schemas extracted from the
  * enhanced-agent-cache.ts file as part of the TDD refactoring process.
- * 
+ *
  * Extracted schemas provide type safety and validation for agent caching
  * configurations, metrics, responses, workflow entries, health monitoring, and analytics.
  */
@@ -21,7 +21,7 @@ export const AgentCacheConfigSchema = z.object({
   // TTL and retry settings (positive values)
   defaultTTL: z.number().positive(),
   maxRetries: z.number().positive().int(),
-  
+
   // Feature toggles
   enablePerformanceTracking: z.boolean(),
   enableWorkflowCaching: z.boolean(),
@@ -39,17 +39,17 @@ export const AgentCacheConfigSchema = z.object({
 export const AgentCacheMetricsSchema = z.object({
   // Agent identification
   agentId: z.string().min(1),
-  
+
   // Execution counters (non-negative)
   totalExecutions: z.number().min(0).int(),
   successfulExecutions: z.number().min(0).int(),
   failedExecutions: z.number().min(0).int(),
-  
+
   // Performance metrics
   avgResponseTime: z.number().min(0),
   errorRate: z.number().min(0).max(100), // percentage
   lastActivity: z.number().min(0), // timestamp
-  
+
   // Cache performance
   cacheHits: z.number().min(0).int(),
   cacheSets: z.number().min(0).int(),
@@ -67,13 +67,15 @@ export const BaseAgentResponseSchema = z.object({
   success: z.boolean(),
   data: z.unknown().optional(),
   error: z.string().optional(),
-  metadata: z.object({
-    agentId: z.string().min(1),
-    timestamp: z.string(),
-    executionTime: z.number().min(0),
-    fromCache: z.boolean().optional(),
-    cached: z.boolean().optional(),
-  }).passthrough(), // Allow additional metadata fields
+  metadata: z
+    .object({
+      agentId: z.string().min(1),
+      timestamp: z.string(),
+      executionTime: z.number().min(0),
+      fromCache: z.boolean().optional(),
+      cached: z.boolean().optional(),
+    })
+    .passthrough(), // Allow additional metadata fields
 });
 
 /**
@@ -116,16 +118,16 @@ export const WorkflowCacheEntrySchema = z.object({
   // Workflow identification
   workflowId: z.string().min(1),
   agentSequence: z.array(z.string().min(1)),
-  
+
   // Results (using record instead of Map for JSON serialization)
   results: z.record(z.unknown()).optional(), // Map serialized as object
   finalResult: z.unknown(),
-  
+
   // Timing and dependencies
   executionTime: z.number().min(0),
   timestamp: z.number().min(0),
   dependencies: z.array(z.string()),
-  
+
   // Workflow metadata
   metadata: WorkflowMetadataSchema,
 });
@@ -151,13 +153,13 @@ export const AgentHealthCacheSchema = z.object({
   // Agent identification
   agentId: z.string().min(1),
   status: z.enum(["healthy", "degraded", "unhealthy"]),
-  
+
   // Health metrics
   lastCheck: z.number().min(0), // timestamp
   responseTime: z.number().min(0),
   errorRate: z.number().min(0).max(100), // percentage
   cacheHitRate: z.number().min(0).max(100), // percentage
-  
+
   // Additional health metadata
   metadata: AgentHealthMetadataSchema,
 });
@@ -205,13 +207,13 @@ export const HealthMonitoringMetricsSchema = z.object({
 export const AgentCacheAnalyticsSchema = z.object({
   // Per-agent performance metrics
   agentPerformance: z.record(AgentPerformanceMetricsSchema),
-  
+
   // Workflow efficiency metrics
   workflowEfficiency: WorkflowEfficiencyMetricsSchema,
-  
+
   // Health monitoring overview
   healthMonitoring: HealthMonitoringMetricsSchema,
-  
+
   // System recommendations
   recommendations: z.array(z.string()),
 });

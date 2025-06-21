@@ -507,7 +507,7 @@ describe('Auto Sniping Core Functionality', () => {
       const originalPosition = { symbol: 'TESTUSDT', entryPrice: 1.0, amount: 1000 };
       tradingBot.initializePosition(originalPosition.symbol, originalPosition.entryPrice, originalPosition.amount);
 
-      // Mock database failure (testing internal data persistence method)
+      // Mock database failure (testing internal data persistence method - type assertion necessary for testing internal methods)
       vi.spyOn(tradingBot as any, 'persistTradeData').mockRejectedValue(new Error('Database unavailable'));
 
       // Act: Execute trade during DB failure

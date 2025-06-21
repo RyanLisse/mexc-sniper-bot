@@ -291,7 +291,8 @@ export class ApiMockingUtils {
    */
   static setupMexcApiMocks(mexcService: any) {
     // Mock getTicker - matches: async getTicker(symbol: string): Promise<MexcServiceResponse<Ticker>>
-    vi.spyOn(mexcService, 'getTicker').mockImplementation(async (symbol: string) => {
+    vi.spyOn(mexcService, 'getTicker').mockImplementation(async (...args: unknown[]) => {
+      const symbol = args[0] as string;
       const marketData = MockDataGenerator.generateMarketData('normal');
       return {
         success: true,
@@ -311,7 +312,9 @@ export class ApiMockingUtils {
     });
 
     // Mock getOrderBook - matches: async getOrderBook(symbol: string, limit = 100): Promise<MexcServiceResponse<OrderBook>>
-    vi.spyOn(mexcService, 'getOrderBook').mockImplementation(async (symbol: string, limit: number = 100) => {
+    vi.spyOn(mexcService, 'getOrderBook').mockImplementation(async (...args: unknown[]) => {
+      const symbol = args[0] as string;
+      const limit = (args[1] as number) || 100;
       const orderBook = MockDataGenerator.generateOrderBook(limit);
       return {
         success: true,
@@ -409,7 +412,8 @@ export class ApiMockingUtils {
     });
 
     // Mock activity data endpoint - matches: async getActivityData(currency: string): Promise<MexcServiceResponse<ActivityData[]>>
-    vi.spyOn(mexcService, 'getActivityData').mockImplementation(async (currency: string) => {
+    vi.spyOn(mexcService, 'getActivityData').mockImplementation(async (...args: unknown[]) => {
+      const currency = args[0] as string;
       const activities = MockDataGenerator.generateActivityData(currency, ['SUN_SHINE', 'PROMOTION']);
 
       return {
@@ -466,7 +470,7 @@ export class ApiMockingUtils {
     };
 
     // Mock global WebSocket constructor with required constants
-    const MockWebSocketConstructor = vi.fn().mockImplementation(() => mockWebSocket);
+    const MockWebSocketConstructor = vi.fn().mockImplementation(() => mockWebSocket) as any;
     MockWebSocketConstructor.CONNECTING = 0;
     MockWebSocketConstructor.OPEN = 1;
     MockWebSocketConstructor.CLOSING = 2;
@@ -474,7 +478,7 @@ export class ApiMockingUtils {
     MockWebSocketConstructor.prototype = mockWebSocket;
 
     // Type assertion is necessary here for global object assignment
-    global.WebSocket = MockWebSocketConstructor as typeof WebSocket;
+    global.WebSocket = MockWebSocketConstructor;
 
     return mockWebSocket;
   }

@@ -16,7 +16,6 @@ import { OptimizedTradingTargets } from "../../src/components/dashboard/optimize
 import { RecentTradesTable } from "../../src/components/dashboard/recent-trades-table";
 import { UpcomingCoinsSection } from "../../src/components/dashboard/upcoming-coins-section";
 import { OptimizedAccountBalance } from "../../src/components/optimized-account-balance";
-import { MultiPhaseStrategyManager } from "../../src/components/multi-phase-strategy-manager";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { AIServiceStatusPanel } from "../../src/components/dashboard/ai-intelligence/ai-service-status-panel";
 import { AIEnhancedPatternDisplay } from "../../src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
@@ -114,7 +113,6 @@ export default function DashboardPage() {
                   {newListings}
                 </span>
               </TabsTrigger>
-              <TabsTrigger value="strategies">Trading Strategies</TabsTrigger>
               <TabsTrigger value="ai-performance">AI & Performance</TabsTrigger>
               <TabsTrigger value="trades">Recent Trades</TabsTrigger>
               <TabsTrigger value="patterns">Pattern Detection</TabsTrigger>
@@ -148,9 +146,6 @@ export default function DashboardPage() {
             <CoinListingsBoard />
           </TabsContent>
 
-          <TabsContent value="strategies" className="space-y-4">
-            <MultiPhaseStrategyManager />
-          </TabsContent>
 
           <TabsContent value="ai-performance" className="space-y-4">
             <div className="grid gap-6">

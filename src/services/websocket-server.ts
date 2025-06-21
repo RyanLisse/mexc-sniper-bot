@@ -805,15 +805,18 @@ export class WebSocketServerService extends EventEmitter {
   }
 
   private isValidMessage(message: unknown): message is WebSocketMessage {
+    if (!message || typeof message !== "object" || message === null) {
+      return false;
+    }
+
+    const msg = message as Record<string, unknown>;
+
     return (
-      message &&
-      typeof message === "object" &&
-      message !== null &&
-      typeof (message as any).type === "string" &&
-      typeof (message as any).channel === "string" &&
-      (message as any).data !== undefined &&
-      typeof (message as any).timestamp === "number" &&
-      typeof (message as any).messageId === "string"
+      typeof msg.type === "string" &&
+      typeof msg.channel === "string" &&
+      msg.data !== undefined &&
+      typeof msg.timestamp === "number" &&
+      typeof msg.messageId === "string"
     );
   }
 

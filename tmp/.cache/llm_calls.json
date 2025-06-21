@@ -22,11 +22,7 @@
     "data": {
       "isCorrectHomepage": true,
       "title": "MEXC Sniper Bot - AI Trading Platform",
-      "availableActions": [
-        "Sign In",
-        "Get Started",
-        "Sign Up Now"
-      ],
+      "availableActions": ["Sign In", "Get Started", "Sign Up Now"],
       "hasLoadingState": false
     },
     "timestamp": 1750506019824,
@@ -93,9 +89,7 @@
           "elementId": "0-631",
           "description": "The name field for entering the user's name during account creation",
           "method": "fill",
-          "arguments": [
-            "Stagehand Test User"
-          ]
+          "arguments": ["Stagehand Test User"]
         }
       ]
     },
@@ -170,9 +164,7 @@
           "elementId": "0-16",
           "description": "textbox for Email input in the registration form",
           "method": "fill",
-          "arguments": [
-            "stagehand-auth-1750506063698@example.com"
-          ]
+          "arguments": ["stagehand-auth-1750506063698@example.com"]
         }
       ]
     },
@@ -223,10 +215,7 @@
     "data": {
       "currentMode": "login",
       "hasRegistrationOption": true,
-      "formFields": [
-        "Sign In",
-        "Don't have an account? Sign Up"
-      ]
+      "formFields": ["Sign In", "Don't have an account? Sign Up"]
     },
     "timestamp": 1750506500970,
     "requestId": "oedpnj8dnel"
@@ -298,11 +287,7 @@
     "data": {
       "isCorrectHomepage": true,
       "title": "MEXC Sniper Bot - AI Trading Platform",
-      "availableActions": [
-        "Sign In",
-        "Get Started",
-        "Sign Up Now"
-      ],
+      "availableActions": ["Sign In", "Get Started", "Sign Up Now"],
       "hasLoadingState": false
     },
     "timestamp": 1750506519173,
@@ -438,11 +423,7 @@
         "Real-time Analytics",
         "Platform Performance"
       ],
-      "callsToAction": [
-        "Sign In",
-        "Get Started",
-        "Sign Up Now"
-      ],
+      "callsToAction": ["Sign In", "Get Started", "Sign Up Now"],
       "trustIndicators": [
         "99.5% Uptime",
         "3.5hrs Avg. Advance Notice",
@@ -541,10 +522,7 @@
     "data": {
       "isOnRegistrationPage": true,
       "formComplexity": "simple",
-      "fieldsRequired": [
-        "Email",
-        "Password"
-      ],
+      "fieldsRequired": ["Email", "Password"],
       "hasSecurityIndicators": false,
       "userFriendly": true,
       "currentMode": "register"
@@ -640,10 +618,7 @@
       "hasVisualChart": false,
       "chartBars": 0,
       "riskLevel": "Low",
-      "profitLevels": [
-        "Stable returns",
-        "Minimal risk exposure"
-      ],
+      "profitLevels": ["Stable returns", "Minimal risk exposure"],
       "summaryData": {
         "strategyType": "Conservative",
         "profitLevels": "Stable returns",
@@ -814,10 +789,7 @@
   },
   "21b887678d0756a99d2a8a30f97e30575d018977c1784a217c339084d8188b1a": {
     "data": {
-      "tasksCompleted": [
-        "Create Account",
-        "Sign Up"
-      ],
+      "tasksCompleted": ["Create Account", "Sign Up"],
       "timeSpent": "null",
       "engagementLevel": "high",
       "exitPoint": "Back to Homepage",
@@ -896,25 +868,19 @@
           "elementId": "0-50",
           "description": "The input field for the user's name in the registration form.",
           "method": "fill",
-          "arguments": [
-            "Stagehand Test User"
-          ]
+          "arguments": ["Stagehand Test User"]
         },
         {
           "elementId": "0-52",
           "description": "The input field for the user's email in the registration form.",
           "method": "fill",
-          "arguments": [
-            "stagehand-auth-1750506562948@example.com"
-          ]
+          "arguments": ["stagehand-auth-1750506562948@example.com"]
         },
         {
           "elementId": "0-54",
           "description": "The input field for the user's password in the registration form.",
           "method": "fill",
-          "arguments": [
-            "TestPass123!"
-          ]
+          "arguments": ["TestPass123!"]
         }
       ]
     },

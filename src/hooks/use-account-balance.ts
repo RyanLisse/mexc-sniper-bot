@@ -28,7 +28,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
         throw new Error("User ID is required");
       }
 
-      const url = `/api/mexc/account?userId=${encodeURIComponent(userId)}`;
+      const url = `/api/account/balance?userId=${encodeURIComponent(userId)}`;
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -47,9 +47,9 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       }
 
       return {
-        balances: data.balances || [],
-        totalUsdtValue: data.totalUsdtValue || 0,
-        lastUpdated: data.lastUpdated || new Date().toISOString(),
+        balances: data.data.balances || [],
+        totalUsdtValue: data.data.totalUsdtValue || 0,
+        lastUpdated: data.data.lastUpdated || new Date().toISOString(),
       };
     },
     // Only fetch if user is authenticated and we have a valid userId

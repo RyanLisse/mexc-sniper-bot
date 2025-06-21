@@ -18,6 +18,11 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+  createKeyboardClickHandler,
+  generateListKey,
+  useSkeletonItems,
+} from "../../lib/react-utilities";
 
 // Helper type for safety status entries
 type SafetyStatusEntry = { passed: boolean; issues: string[]; recommendations: string[] };
@@ -179,8 +184,8 @@ export function SystemArchitectureOverview() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-20 bg-gray-100 rounded animate-pulse" />
+            {useSkeletonItems(3, "h-20 bg-gray-100 rounded animate-pulse").map((item) => (
+              <div key={item.key} className={item.className} />
             ))}
           </div>
         </CardContent>
@@ -315,7 +320,9 @@ export function SystemArchitectureOverview() {
                     className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
                       selectedAgent === agent ? "bg-blue-50 border-blue-200" : "hover:bg-gray-50"
                     }`}
-                    onClick={() => setSelectedAgent(selectedAgent === agent ? null : agent)}
+                    {...createKeyboardClickHandler(() =>
+                      setSelectedAgent(selectedAgent === agent ? null : agent)
+                    )}
                   >
                     <div className="flex items-center gap-3">
                       {getStatusIcon(healthy)}
@@ -347,7 +354,10 @@ export function SystemArchitectureOverview() {
               <CardContent>
                 <div className="space-y-3">
                   {data.agentArchitecture.agentInteractions.map((interaction, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 rounded-lg border">
+                    <div
+                      key={generateListKey(interaction, index, "from")}
+                      className="flex items-center gap-3 p-3 rounded-lg border"
+                    >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm">{interaction.from}</span>
@@ -537,7 +547,10 @@ export function SystemArchitectureOverview() {
                               <p className="text-xs font-medium text-red-600">Issues:</p>
                               {(status as SafetyStatusEntry).issues.map(
                                 (issue: string, index: number) => (
-                                  <p key={index} className="text-xs text-red-600">
+                                  <p
+                                    key={generateListKey(issue, index)}
+                                    className="text-xs text-red-600"
+                                  >
                                     • {issue}
                                   </p>
                                 )
@@ -551,7 +564,10 @@ export function SystemArchitectureOverview() {
                               <p className="text-xs font-medium text-blue-600">Recommendations:</p>
                               {(status as SafetyStatusEntry).recommendations.map(
                                 (rec: string, index: number) => (
-                                  <p key={index} className="text-xs text-blue-600">
+                                  <p
+                                    key={generateListKey(rec, index)}
+                                    className="text-xs text-blue-600"
+                                  >
                                     • {rec}
                                   </p>
                                 )
@@ -569,7 +585,7 @@ export function SystemArchitectureOverview() {
                 <h4 className="font-medium mb-2">Safety Summary</h4>
                 <div className="space-y-1">
                   {data.safetyStatus.summary.map((item, index) => (
-                    <p key={index} className="text-sm text-muted-foreground">
+                    <p key={generateListKey(item, index)} className="text-sm text-muted-foreground">
                       • {item}
                     </p>
                   ))}

@@ -37,12 +37,8 @@ interface EnhancedProfitSettingsProps {
   // Exit Strategy Props
   selectedStrategy: string;
   customStrategy?: ExitStrategy;
-  autoBuyEnabled: boolean;
-  autoSellEnabled: boolean;
   onStrategyChange: (strategyId: string) => void;
   onCustomStrategyChange: (strategy: ExitStrategy) => void;
-  onAutoBuyToggle: (enabled: boolean) => void;
-  onAutoSellToggle: (enabled: boolean) => void;
 
   // Common Props
   onSave: () => void;
@@ -55,12 +51,8 @@ export function EnhancedProfitSettings({
   onLevelsChange,
   selectedStrategy,
   customStrategy,
-  autoBuyEnabled,
-  autoSellEnabled,
   onStrategyChange,
   onCustomStrategyChange,
-  onAutoBuyToggle,
-  onAutoSellToggle,
   onSave,
   isSaving,
   isDirty,
@@ -73,13 +65,12 @@ export function EnhancedProfitSettings({
 
   const getConfigurationStatus = () => {
     const hasBasicConfig = levels.defaultLevel > 0;
-    const hasAutomation = autoBuyEnabled || autoSellEnabled;
     const hasStrategy = selectedStrategy !== "";
 
     return {
-      isComplete: hasBasicConfig && hasAutomation && hasStrategy,
-      completedSteps: [hasBasicConfig, hasAutomation, hasStrategy].filter(Boolean).length,
-      totalSteps: 3,
+      isComplete: hasBasicConfig && hasStrategy,
+      completedSteps: [hasBasicConfig, hasStrategy].filter(Boolean).length,
+      totalSteps: 2,
     };
   };
 
@@ -108,7 +99,7 @@ export function EnhancedProfitSettings({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               {levels.defaultLevel > 0 ? (
                 <CheckCircle className="h-4 w-4 text-green-600" />
@@ -116,14 +107,6 @@ export function EnhancedProfitSettings({
                 <AlertTriangle className="h-4 w-4 text-orange-600" />
               )}
               <span>Basic Levels</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {autoBuyEnabled || autoSellEnabled ? (
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 text-orange-600" />
-              )}
-              <span>Automation</span>
             </div>
             <div className="flex items-center gap-2">
               {selectedStrategy ? (
@@ -168,12 +151,8 @@ export function EnhancedProfitSettings({
           <ExitStrategySelector
             selectedStrategy={selectedStrategy}
             customStrategy={customStrategy}
-            autoBuyEnabled={autoBuyEnabled}
-            autoSellEnabled={autoSellEnabled}
             onStrategyChange={onStrategyChange}
             onCustomStrategyChange={onCustomStrategyChange}
-            onAutoBuyToggle={onAutoBuyToggle}
-            onAutoSellToggle={onAutoSellToggle}
           />
         </TabsContent>
 

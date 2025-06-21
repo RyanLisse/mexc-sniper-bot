@@ -1,20 +1,19 @@
 import * as crypto from "node:crypto";
-import { z } from "zod";
-import { mexcApiBreaker } from "./circuit-breaker";
 import {
-  CalendarEntrySchema,
-  SymbolEntrySchema,
-  BalanceEntrySchema,
-  ExchangeSymbolSchema,
-  TickerSchema,
-  OrderResultSchema,
-  type CalendarEntry,
-  type SymbolEntry,
   type BalanceEntry,
+  BalanceEntrySchema,
+  type CalendarEntry,
+  CalendarEntrySchema,
   type ExchangeSymbol,
-  type Ticker,
+  ExchangeSymbolSchema,
   type OrderResult,
+  OrderResultSchema,
+  type SymbolEntry,
+  SymbolEntrySchema,
+  type Ticker,
+  TickerSchema,
 } from "../schemas/mexc-schemas-extracted";
+import { mexcApiBreaker } from "./circuit-breaker";
 
 // ============================================================================
 // Core Configuration and Types

@@ -1,9 +1,9 @@
 /**
  * Extracted Cache Manager Schemas
- * 
- * This file contains all cache management-related Zod schemas extracted from the 
+ *
+ * This file contains all cache management-related Zod schemas extracted from the
  * cache-manager.ts file as part of the TDD refactoring process.
- * 
+ *
  * Extracted schemas provide type safety and validation for cache entries,
  * configurations, metrics, analytics, and operational results.
  */
@@ -19,14 +19,14 @@ import { z } from "zod";
  */
 export const CacheDataTypeSchema = z.enum([
   "agent_response",
-  "api_response", 
+  "api_response",
   "pattern_detection",
   "query_result",
   "session_data",
   "user_preferences",
   "workflow_result",
   "performance_metrics",
-  "health_status"
+  "health_status",
 ]);
 
 /**
@@ -34,9 +34,9 @@ export const CacheDataTypeSchema = z.enum([
  */
 export const CacheInvalidationStrategySchema = z.enum([
   "time_based",
-  "event_based", 
+  "event_based",
   "manual",
-  "smart"
+  "smart",
 ]);
 
 // ============================================================================
@@ -46,12 +46,14 @@ export const CacheInvalidationStrategySchema = z.enum([
 /**
  * Cache Entry Metadata Schema
  */
-export const CacheEntryMetadataSchema = z.object({
-  type: CacheDataTypeSchema.optional(),
-  source: z.string().optional(),
-  size: z.number().min(0).optional(),
-  dependencies: z.array(z.string()).optional(),
-}).passthrough(); // Allow additional metadata fields
+export const CacheEntryMetadataSchema = z
+  .object({
+    type: CacheDataTypeSchema.optional(),
+    source: z.string().optional(),
+    size: z.number().min(0).optional(),
+    dependencies: z.array(z.string()).optional(),
+  })
+  .passthrough(); // Allow additional metadata fields
 
 /**
  * Cache Entry Schema - Core cache entry structure
@@ -60,15 +62,15 @@ export const CacheEntrySchema = z.object({
   // Core entry fields
   key: z.string().min(1),
   value: z.unknown(), // Any type of cached value
-  
+
   // Timing information
   timestamp: z.number().min(0),
   expiresAt: z.number().min(0),
-  
+
   // Access tracking
   accessCount: z.number().min(0).int(),
   lastAccessed: z.number().min(0),
-  
+
   // Optional metadata
   metadata: CacheEntryMetadataSchema.optional(),
 });
@@ -83,38 +85,40 @@ export const CacheEntrySchema = z.object({
 export const CacheConfigSchema = z.object({
   // Size and capacity settings
   maxSize: z.number().positive().int(),
-  
+
   // Timing configurations
   defaultTTL: z.number().positive(),
   cleanupInterval: z.number().min(0), // 0 = disabled
-  
+
   // Feature toggles
   enableMetrics: z.boolean(),
   enablePersistence: z.boolean().optional(),
-  
+
   // Optional persistence settings
   persistenceFile: z.string().optional(),
 });
 
 // ============================================================================
-// TTL Configuration Schema  
+// TTL Configuration Schema
 // ============================================================================
 
 /**
  * TTL Configuration Schema - TTL settings per data type
  */
-export const TTLConfigSchema = z.object({
-  // Individual TTL settings for each data type (all positive values)
-  agent_response: z.number().positive(),
-  api_response: z.number().positive(),
-  pattern_detection: z.number().positive(),
-  query_result: z.number().positive(),
-  session_data: z.number().positive(),
-  user_preferences: z.number().positive(),
-  workflow_result: z.number().positive(),
-  performance_metrics: z.number().positive(),
-  health_status: z.number().positive(),
-}).passthrough(); // Allow additional TTL configurations
+export const TTLConfigSchema = z
+  .object({
+    // Individual TTL settings for each data type (all positive values)
+    agent_response: z.number().positive(),
+    api_response: z.number().positive(),
+    pattern_detection: z.number().positive(),
+    query_result: z.number().positive(),
+    session_data: z.number().positive(),
+    user_preferences: z.number().positive(),
+    workflow_result: z.number().positive(),
+    performance_metrics: z.number().positive(),
+    health_status: z.number().positive(),
+  })
+  .passthrough(); // Allow additional TTL configurations
 
 // ============================================================================
 // Cache Metrics Schema
@@ -130,15 +134,15 @@ export const CacheMetricsSchema = z.object({
   sets: z.number().min(0).int(),
   deletes: z.number().min(0).int(),
   evictions: z.number().min(0).int(),
-  
+
   // Size and memory metrics
   totalSize: z.number().min(0).int(),
   memoryUsage: z.number().min(0),
-  
+
   // Performance metrics
   hitRate: z.number().min(0).max(100), // percentage
   averageAccessTime: z.number().min(0),
-  
+
   // Timing information
   lastCleanup: z.number().min(0), // timestamp
 });
@@ -171,13 +175,13 @@ export const TypeBreakdownEntrySchema = z.object({
 export const CacheAnalyticsSchema = z.object({
   // Core performance metrics
   performance: CacheMetricsSchema,
-  
+
   // Top accessed keys
   topKeys: z.array(TopKeysSchema),
-  
+
   // Breakdown by data type
   typeBreakdown: z.record(CacheDataTypeSchema, TypeBreakdownEntrySchema),
-  
+
   // System recommendations
   recommendations: z.array(z.string()),
 });
@@ -191,7 +195,7 @@ export const CacheAnalyticsSchema = z.object({
  */
 export const CacheSizeBreakdownSchema = z.object({
   L1: z.number().min(0).int(),
-  L2: z.number().min(0).int(), 
+  L2: z.number().min(0).int(),
   L3: z.number().min(0).int(),
   total: z.number().min(0).int(),
 });

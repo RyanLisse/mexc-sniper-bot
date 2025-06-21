@@ -226,35 +226,24 @@ export function ComprehensiveSafetyDashboard() {
   }, []);
 
   const _getStatusColor = (status: string) => {
-    switch (status) {
-      case "healthy":
-        return "text-green-600";
-      case "degraded":
-        return "text-yellow-600";
-      case "critical":
-        return "text-red-600";
-      case "emergency":
-        return "text-red-800";
-      default:
-        return "text-gray-600";
-    }
+    const colorMap = {
+      healthy: "text-green-600",
+      degraded: "text-yellow-600",
+      critical: "text-red-600",
+      emergency: "text-red-800",
+    };
+    return colorMap[status as keyof typeof colorMap] || "text-gray-600";
   };
 
   const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "healthy":
-        return "bg-green-100 text-green-800";
-      case "degraded":
-        return "bg-yellow-100 text-yellow-800";
-      case "critical":
-        return "bg-red-100 text-red-800";
-      case "emergency":
-        return "bg-red-200 text-red-900";
-      case "offline":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+    const badgeColorMap = {
+      healthy: "bg-green-100 text-green-800",
+      degraded: "bg-yellow-100 text-yellow-800",
+      critical: "bg-red-100 text-red-800",
+      emergency: "bg-red-200 text-red-900",
+      offline: "bg-gray-100 text-gray-800",
+    };
+    return badgeColorMap[status as keyof typeof badgeColorMap] || "bg-gray-100 text-gray-800";
   };
 
   const handleEmergencyHalt = () => {
@@ -286,6 +275,155 @@ export function ComprehensiveSafetyDashboard() {
       responseActions: [],
     }));
   };
+
+  const renderSystemHealthOverview = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>System Health Overview</CardTitle>
+        <CardDescription>Real-time system component status</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Trading Engine</span>
+            <Badge
+              className={getStatusBadgeColor(safetyOverview.tradingHalted ? "critical" : "healthy")}
+            >
+              {safetyOverview.tradingHalted ? "HALTED" : "ACTIVE"}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Risk Management</span>
+            <Badge className={getStatusBadgeColor("healthy")}>ACTIVE</Badge>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Safety Monitoring</span>
+            <Badge className={getStatusBadgeColor("healthy")}>ACTIVE</Badge>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Agent System</span>
+            <Badge
+              className={getStatusBadgeColor(
+                agentHealth.criticalAgents > 0
+                  ? "critical"
+                  : agentHealth.degradedAgents > 0
+                    ? "degraded"
+                    : "healthy"
+              )}
+            >
+              {agentHealth.healthyAgents}/{agentHealth.totalAgents} HEALTHY
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Data Connectivity</span>
+            <Badge className={getStatusBadgeColor("healthy")}>CONNECTED</Badge>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderRiskMetricsSummary = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Risk Metrics Summary</CardTitle>
+        <CardDescription>Current portfolio risk exposure</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Portfolio Value</span>
+            <span className="font-medium">${riskMetrics.portfolioValue.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Total Exposure</span>
+            <span className="font-medium">${riskMetrics.totalExposure.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Daily P&L</span>
+            <span
+              className={`font-medium ${riskMetrics.dailyPnL >= 0 ? "text-green-600" : "text-red-600"}`}
+            >
+              {riskMetrics.dailyPnL >= 0 ? "+" : ""}${riskMetrics.dailyPnL.toFixed(2)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Value at Risk (95%)</span>
+            <span className="font-medium text-orange-600">
+              ${riskMetrics.valueAtRisk.toLocaleString()}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Open Positions</span>
+            <span className="font-medium">{riskMetrics.openPositions}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Risk Percentage</span>
+            <span
+              className={`font-medium ${
+                riskMetrics.riskPercentage > 80
+                  ? "text-red-600"
+                  : riskMetrics.riskPercentage > 60
+                    ? "text-yellow-600"
+                    : "text-green-600"
+              }`}
+            >
+              {riskMetrics.riskPercentage}%
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderEmergencyStatus = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Emergency Status</CardTitle>
+        <CardDescription>Current emergency conditions and responses</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {emergencyStatus.active ? (
+          <div className="space-y-4">
+            <Alert className="border-red-500 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                <strong>{emergencyStatus.activeCount} Emergency Condition(s) Active</strong>
+                {emergencyStatus.lastActivation && (
+                  <div className="mt-1 text-sm">
+                    Activated: {new Date(emergencyStatus.lastActivation).toLocaleString()}
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
+
+            {emergencyStatus.currentConditions.map((condition) => (
+              <div key={condition.id} className="border rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">
+                    {condition.type.replace("_", " ").toUpperCase()}
+                  </span>
+                  <Badge className={getStatusBadgeColor(condition.severity)}>
+                    {condition.severity.toUpperCase()}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">{condition.description}</p>
+                <div className="text-xs text-muted-foreground">
+                  Detected: {new Date(condition.detectedAt).toLocaleString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 text-muted-foreground">
+            <Shield className="w-12 h-12 mx-auto mb-2 text-green-600" />
+            <p>No emergency conditions detected</p>
+            <p className="text-sm">All systems operating normally</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
@@ -403,109 +541,8 @@ export function ComprehensiveSafetyDashboard() {
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            {/* System Health */}
-            <Card>
-              <CardHeader>
-                <CardTitle>System Health Overview</CardTitle>
-                <CardDescription>Real-time system component status</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Trading Engine</span>
-                    <Badge
-                      className={getStatusBadgeColor(
-                        safetyOverview.tradingHalted ? "critical" : "healthy"
-                      )}
-                    >
-                      {safetyOverview.tradingHalted ? "HALTED" : "ACTIVE"}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Risk Management</span>
-                    <Badge className={getStatusBadgeColor("healthy")}>ACTIVE</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Safety Monitoring</span>
-                    <Badge className={getStatusBadgeColor("healthy")}>ACTIVE</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Agent System</span>
-                    <Badge
-                      className={getStatusBadgeColor(
-                        agentHealth.criticalAgents > 0
-                          ? "critical"
-                          : agentHealth.degradedAgents > 0
-                            ? "degraded"
-                            : "healthy"
-                      )}
-                    >
-                      {agentHealth.healthyAgents}/{agentHealth.totalAgents} HEALTHY
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Data Connectivity</span>
-                    <Badge className={getStatusBadgeColor("healthy")}>CONNECTED</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Risk Metrics Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Risk Metrics Summary</CardTitle>
-                <CardDescription>Current portfolio risk exposure</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Portfolio Value</span>
-                    <span className="font-medium">
-                      ${riskMetrics.portfolioValue.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Total Exposure</span>
-                    <span className="font-medium">
-                      ${riskMetrics.totalExposure.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Daily P&L</span>
-                    <span
-                      className={`font-medium ${riskMetrics.dailyPnL >= 0 ? "text-green-600" : "text-red-600"}`}
-                    >
-                      {riskMetrics.dailyPnL >= 0 ? "+" : ""}${riskMetrics.dailyPnL.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Value at Risk (95%)</span>
-                    <span className="font-medium text-orange-600">
-                      ${riskMetrics.valueAtRisk.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Open Positions</span>
-                    <span className="font-medium">{riskMetrics.openPositions}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Risk Percentage</span>
-                    <span
-                      className={`font-medium ${
-                        riskMetrics.riskPercentage > 80
-                          ? "text-red-600"
-                          : riskMetrics.riskPercentage > 60
-                            ? "text-yellow-600"
-                            : "text-green-600"
-                      }`}
-                    >
-                      {riskMetrics.riskPercentage}%
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {renderSystemHealthOverview()}
+            {renderRiskMetricsSummary()}
           </div>
         </TabsContent>
 
@@ -564,53 +601,7 @@ export function ComprehensiveSafetyDashboard() {
               </CardContent>
             </Card>
 
-            {/* Emergency Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Emergency Status</CardTitle>
-                <CardDescription>Current emergency conditions and responses</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {emergencyStatus.active ? (
-                  <div className="space-y-4">
-                    <Alert className="border-red-500 bg-red-50">
-                      <AlertTriangle className="h-4 w-4 text-red-600" />
-                      <AlertDescription className="text-red-800">
-                        <strong>{emergencyStatus.activeCount} Emergency Condition(s) Active</strong>
-                        {emergencyStatus.lastActivation && (
-                          <div className="mt-1 text-sm">
-                            Activated: {new Date(emergencyStatus.lastActivation).toLocaleString()}
-                          </div>
-                        )}
-                      </AlertDescription>
-                    </Alert>
-
-                    {emergencyStatus.currentConditions.map((condition) => (
-                      <div key={condition.id} className="border rounded-lg p-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">
-                            {condition.type.replace("_", " ").toUpperCase()}
-                          </span>
-                          <Badge className={getStatusBadgeColor(condition.severity)}>
-                            {condition.severity.toUpperCase()}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{condition.description}</p>
-                        <div className="text-xs text-muted-foreground">
-                          Detected: {new Date(condition.detectedAt).toLocaleString()}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <Shield className="w-12 h-12 mx-auto mb-2 text-green-600" />
-                    <p>No emergency conditions detected</p>
-                    <p className="text-sm">All systems operating normally</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {renderEmergencyStatus()}
           </div>
         </TabsContent>
 

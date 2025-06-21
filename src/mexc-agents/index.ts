@@ -1,6 +1,5 @@
 // Core base classes
 export { BaseAgent, type AgentConfig, type AgentResponse } from "./base-agent";
-export { StrategyAgent, type StrategyRequest } from "./strategy-agent";
 
 // Multi-agent orchestration
 export {

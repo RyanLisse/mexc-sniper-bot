@@ -1,6 +1,6 @@
 /**
  * Application Constants
- * 
+ *
  * Centralized constants file to eliminate magic numbers throughout the codebase.
  * Organized by category for easy maintenance and reference.
  */
@@ -538,7 +538,10 @@ export function getRiskThreshold(level: keyof typeof RISK_CONSTANTS.THRESHOLDS):
 /**
  * Check if risk score exceeds threshold
  */
-export function isRiskAboveThreshold(riskScore: number, threshold: keyof typeof RISK_CONSTANTS.THRESHOLDS): boolean {
+export function isRiskAboveThreshold(
+  riskScore: number,
+  threshold: keyof typeof RISK_CONSTANTS.THRESHOLDS
+): boolean {
   return riskScore > getRiskThreshold(threshold);
 }
 

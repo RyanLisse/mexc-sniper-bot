@@ -6,6 +6,7 @@
 - `bun run lint`: Run ESLint and format checks
 - `bun run typecheck`: Run TypeScript type checking
 - `./claude-flow --help`: Show all available commands
+- Use the make commands to run the app and tests
 
 ## Claude-Flow Complete Command Reference
 

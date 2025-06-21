@@ -33,6 +33,9 @@ import { useAuth } from "../../src/lib/kinde-auth-client";
 import { DashboardLayout } from "../../src/components/dashboard-layout";
 import { ApiCredentialsForm } from "../../src/components/api-credentials-form";
 import { EnhancedCredentialStatus } from "../../src/components/enhanced-credential-status";
+import { ConfigStatusPanel } from "../../src/components/auto-sniping/config-status-panel";
+import { AutoSnipingExecutionDashboard } from "../../src/components/auto-sniping/auto-sniping-execution-dashboard";
+import { useMexcConnectivity } from "../../src/hooks/use-mexc-data";
 
 // TypeScript interfaces for system status
 interface SystemStatus {
@@ -59,14 +62,7 @@ interface DatabaseHealth {
   error?: string;
 }
 
-interface APICredentials {
-  mexc?: {
-    hasApiKey: boolean;
-    hasSecretKey: boolean;
-    isTestnet: boolean;
-    isValid?: boolean;
-  };
-}
+// APICredentials interface removed - using connectivity data instead
 
 interface TradingStrategyHealth {
   status: 'healthy' | 'unhealthy' | 'warning' | 'loading' | 'error';
@@ -100,13 +96,11 @@ interface TradingStrategyHealth {
 
 interface SystemCheckState {
   database: SystemStatus;
-  mexcApi: SystemStatus;
   openaiApi: SystemStatus;
   kindeAuth: SystemStatus;
   inngestWorkflows: SystemStatus;
   environment: SystemStatus;
   tradingStrategies: TradingStrategyHealth;
-  credentials: APICredentials;
   isRefreshing: boolean;
   lastFullCheck: string | null;
 }
@@ -114,16 +108,17 @@ interface SystemCheckState {
 export default function SystemCheckPage() {
   const [systemState, setSystemState] = useState<SystemCheckState>({
     database: { status: 'loading' },
-    mexcApi: { status: 'loading' },
     openaiApi: { status: 'loading' },
     kindeAuth: { status: 'loading' },
     inngestWorkflows: { status: 'loading' },
     environment: { status: 'loading' },
     tradingStrategies: { status: 'loading' },
-    credentials: {},
     isRefreshing: false,
     lastFullCheck: null
   });
+
+  // Use the connectivity hook instead of separate API calls
+  const { data: connectivity } = useMexcConnectivity();
   
   const [showCredentials, setShowCredentials] = useState(false);
   const [expandedComponent, setExpandedComponent] = useState<string | null>(null);
@@ -162,55 +157,7 @@ export default function SystemCheckPage() {
     }
   };
 
-  // Check MEXC API connectivity and credentials
-  const checkMexcApi = async (): Promise<SystemStatus> => {
-    try {
-      const response = await fetch('/api/mexc/connectivity');
-      const data = await response.json();
-      
-      // Determine status based on connection and credentials
-      if (!data.connected) {
-        return {
-          status: 'unhealthy',
-          message: data.error || 'MEXC API not reachable',
-          details: data,
-          lastChecked: new Date().toISOString()
-        };
-      }
-      
-      if (!data.hasCredentials) {
-        return {
-          status: 'warning',
-          message: 'MEXC API reachable but no credentials configured',
-          details: data,
-          lastChecked: new Date().toISOString()
-        };
-      }
-      
-      if (!data.credentialsValid) {
-        return {
-          status: 'unhealthy',
-          message: `MEXC credentials invalid: ${data.error || 'Authentication failed'}`,
-          details: data,
-          lastChecked: new Date().toISOString()
-        };
-      }
-      
-      // Fully connected with valid credentials
-      return {
-        status: 'healthy',
-        message: 'MEXC API fully connected with valid credentials',
-        details: data,
-        lastChecked: new Date().toISOString()
-      };
-    } catch (error) {
-      return {
-        status: 'error',
-        message: `MEXC API check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        lastChecked: new Date().toISOString()
-      };
-    }
-  };
+  // MEXC API check is now handled by the connectivity hook
 
   // Check OpenAI API
   const checkOpenAiApi = async (): Promise<SystemStatus> => {
@@ -389,36 +336,7 @@ export default function SystemCheckPage() {
     }
   };
 
-  // Load API credentials
-  const loadCredentials = async (): Promise<APICredentials> => {
-    try {
-      const userId = getUserId();
-      const response = await fetch(`/api/api-credentials`);
-      
-      if (response.ok) {
-        const credentials = await response.json();
-        const mexcCreds = credentials.find((cred: any) => cred.provider === 'mexc');
-        
-        return {
-          mexc: mexcCreds ? {
-            hasApiKey: !!(mexcCreds.apiKey && mexcCreds.apiKey.length > 0),
-            hasSecretKey: !!(mexcCreds.secretKey && mexcCreds.secretKey.length > 0),
-            isTestnet: mexcCreds.is_testnet,
-            isValid: !!(mexcCreds.apiKey && mexcCreds.apiKey.length > 0) && !!(mexcCreds.secretKey && mexcCreds.secretKey.length > 0)
-          } : {
-            hasApiKey: false,
-            hasSecretKey: false,
-            isTestnet: true,
-            isValid: false
-          }
-        };
-      }
-    } catch (error) {
-      console.error('Failed to load credentials:', error);
-    }
-    
-    return {};
-  };
+  // Credentials loading is now handled by the connectivity hook
 
   // Get the authenticated user ID
   const getUserId = () => {
@@ -485,33 +403,27 @@ export default function SystemCheckPage() {
     try {
       const [
         database,
-        mexcApi,
         openaiApi,
         kindeAuth,
         inngestWorkflows,
         environment,
-        tradingStrategies,
-        credentials
+        tradingStrategies
       ] = await Promise.all([
         checkDatabaseHealth(),
-        checkMexcApi(),
         checkOpenAiApi(),
         checkKindeAuth(),
         checkInngestWorkflows(),
         checkEnvironment(),
-        checkTradingStrategies(),
-        loadCredentials()
+        checkTradingStrategies()
       ]);
 
       setSystemState({
         database,
-        mexcApi,
         openaiApi,
         kindeAuth,
         inngestWorkflows,
         environment,
         tradingStrategies,
-        credentials,
         isRefreshing: false,
         lastFullCheck: new Date().toISOString()
       });
@@ -554,7 +466,7 @@ export default function SystemCheckPage() {
   };
 
   // Test individual system component
-  const testComponent = async (component: keyof Omit<SystemCheckState, 'credentials' | 'isRefreshing' | 'lastFullCheck'>) => {
+  const testComponent = async (component: keyof Omit<SystemCheckState, 'isRefreshing' | 'lastFullCheck'>) => {
     setSystemState(prev => ({ 
       ...prev, 
       [component]: { ...prev[component], status: 'loading' }
@@ -565,9 +477,6 @@ export default function SystemCheckPage() {
     switch (component) {
       case 'database':
         result = await checkDatabaseHealth();
-        break;
-      case 'mexcApi':
-        result = await checkMexcApi();
         break;
       case 'openaiApi':
         result = await checkOpenAiApi();
@@ -606,7 +515,7 @@ export default function SystemCheckPage() {
 
   const overallHealth = [
     systemState.database.status,
-    systemState.mexcApi.status,
+    connectivity?.status === 'fully_connected' ? 'healthy' : connectivity?.status === 'no_credentials' ? 'warning' : 'unhealthy', // Use connectivity status for MEXC
     systemState.openaiApi.status,
     systemState.kindeAuth.status,
     systemState.inngestWorkflows.status,
@@ -676,6 +585,20 @@ export default function SystemCheckPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Auto-Sniping System Status */}
+        <ConfigStatusPanel 
+          className="w-full"
+          showDetailedResults={true}
+          autoRefresh={true}
+        />
+
+        {/* Auto-Sniping Execution Control */}
+        <AutoSnipingExecutionDashboard
+          className="w-full"
+          autoRefresh={true}
+          showControls={true}
+        />
 
         {/* System Components */}
         <div className="grid lg:grid-cols-2 gap-8">
@@ -1124,54 +1047,11 @@ export default function SystemCheckPage() {
                 </Button>
               </div>
               
-              <div className="grid md:grid-cols-2 gap-4">
+              {/* MEXC credentials status is now handled by EnhancedCredentialStatus component above */}
+              <div className="grid md:grid-cols-1 gap-4">
                 <div className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">MEXC Exchange</h4>
-                    <Badge 
-                      variant={systemState.credentials.mexc?.isValid ? "default" : "destructive"}
-                      className="text-xs"
-                    >
-                      {systemState.credentials.mexc?.isValid ? "Valid" : "Invalid"}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>API Key:</span>
-                      <span className={systemState.credentials.mexc?.hasApiKey ? 'text-green-500' : 'text-red-500'}>
-                        {systemState.credentials.mexc?.hasApiKey ? '✓ Configured' : '✗ Missing'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Secret Key:</span>
-                      <span className={systemState.credentials.mexc?.hasSecretKey ? 'text-green-500' : 'text-red-500'}>
-                        {systemState.credentials.mexc?.hasSecretKey ? '✓ Configured' : '✗ Missing'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Trading Mode:</span>
-                      <span className={systemState.credentials.mexc?.isTestnet ? 'text-yellow-500' : 'text-blue-500'}>
-                        {systemState.credentials.mexc?.isTestnet ? 'Testnet' : 'Live Trading'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Connection:</span>
-                      <span className={systemState.mexcApi.status === 'healthy' ? 'text-green-500' : 'text-red-500'}>
-                        {systemState.mexcApi.status === 'healthy' ? '✓ Connected' : '✗ Disconnected'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {!systemState.credentials.mexc?.isValid && (
-                    <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded text-xs text-yellow-600 dark:text-yellow-400">
-                      Configure API credentials in Trading Settings to enable automated trading
-                    </div>
-                  )}
-                </div>
-                
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">AI & Authentication Services</h4>
+                    <h4 className="font-medium">Core Services Status</h4>
                     <Badge 
                       variant={systemState.openaiApi.status === 'healthy' && systemState.kindeAuth.status === 'healthy' ? "default" : "destructive"}
                       className="text-xs"
@@ -1260,12 +1140,32 @@ export default function SystemCheckPage() {
                   </div>
                 )}
                 
-                {systemState.mexcApi.status !== 'healthy' && (
+                {connectivity?.status === 'network_error' && (
                   <div className="p-3 border-l-4 border-red-500 bg-red-500/5">
                     <h4 className="font-medium text-red-700">MEXC API Issues</h4>
-                    <p className="text-sm text-red-600 mt-1">{systemState.mexcApi.message}</p>
+                    <p className="text-sm text-red-600 mt-1">{connectivity.message}</p>
                     <p className="text-xs text-muted-foreground mt-2">
                       Check your internet connection and ensure MEXC API is not experiencing downtime.
+                    </p>
+                  </div>
+                )}
+                
+                {connectivity?.status === 'invalid_credentials' && (
+                  <div className="p-3 border-l-4 border-yellow-500 bg-yellow-500/5">
+                    <h4 className="font-medium text-yellow-700">MEXC Credential Issues</h4>
+                    <p className="text-sm text-yellow-600 mt-1">{connectivity.message}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Review your API credentials in the configuration section above.
+                    </p>
+                  </div>
+                )}
+                
+                {connectivity?.status === 'no_credentials' && (
+                  <div className="p-3 border-l-4 border-blue-500 bg-blue-500/5">
+                    <h4 className="font-medium text-blue-700">MEXC Setup Required</h4>
+                    <p className="text-sm text-blue-600 mt-1">{connectivity.message}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Configure your MEXC API credentials in the form below to enable trading features.
                     </p>
                   </div>
                 )}

@@ -144,7 +144,7 @@ export function Phase3ConfigurationPanel() {
       [section]: {
         ...prev[section],
         [subsection]: {
-          ...(prev[section] as any)[subsection],
+          ...((prev[section] as Record<string, unknown>)[subsection] as Record<string, unknown>),
           [key]: value,
         },
       },

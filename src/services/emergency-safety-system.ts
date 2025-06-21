@@ -154,7 +154,7 @@ export class EmergencySafetySystem extends EventEmitter {
   private agentsShutdown: string[] = [];
   private lastEmergencyResponse = 0;
   private consecutiveLossCount = 0;
-  private tradeResults: Array<{success: boolean; timestamp: string; amount: number}> = [];
+  private tradeResults: Array<{ success: boolean; timestamp: string; amount: number }> = [];
 
   constructor(config?: Partial<EmergencyConfig>) {
     super();
@@ -859,8 +859,8 @@ export class EmergencySafetySystem extends EventEmitter {
    */
   assessPortfolioHealth(portfolioData: {
     totalValue: number;
-    positions: Array<{symbol: string; value: number; pnl: number}>;
-    riskMetrics: {totalExposure: number; maxDrawdown: number};
+    positions: Array<{ symbol: string; value: number; pnl: number }>;
+    riskMetrics: { totalExposure: number; maxDrawdown: number };
   }): {
     status: "healthy" | "warning" | "critical";
     issues: string[];
@@ -885,7 +885,7 @@ export class EmergencySafetySystem extends EventEmitter {
     }
 
     // Check individual positions
-    const largeLosses = portfolioData.positions.filter(p => p.pnl < -p.value * 0.1);
+    const largeLosses = portfolioData.positions.filter((p) => p.pnl < -p.value * 0.1);
     if (largeLosses.length > 0) {
       issues.push(`${largeLosses.length} positions with significant losses`);
       recommendations.push("Consider stop-loss adjustments");
@@ -922,7 +922,7 @@ export class EmergencySafetySystem extends EventEmitter {
     const result = {
       success: tradeData.success,
       timestamp: tradeData.timestamp || new Date().toISOString(),
-      amount: tradeData.amount
+      amount: tradeData.amount,
     };
 
     this.tradeResults.push(result);
@@ -941,20 +941,22 @@ export class EmergencySafetySystem extends EventEmitter {
 
     // Check for emergency conditions
     if (this.consecutiveLossCount >= 5) {
-      console.log(`[EmergencySafetySystem] WARNING: ${this.consecutiveLossCount} consecutive losses detected`);
-      this.emit('emergency_stop', {
-        reason: 'consecutive_losses',
+      console.log(
+        `[EmergencySafetySystem] WARNING: ${this.consecutiveLossCount} consecutive losses detected`
+      );
+      this.emit("emergency_stop", {
+        reason: "consecutive_losses",
         count: this.consecutiveLossCount,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
     // Emit circuit breaker if too many failures
     if (this.consecutiveLossCount >= 3) {
-      this.emit('circuit_breaker_activated', {
-        reason: 'trading_losses',
+      this.emit("circuit_breaker_activated", {
+        reason: "trading_losses",
         consecutiveLosses: this.consecutiveLossCount,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }

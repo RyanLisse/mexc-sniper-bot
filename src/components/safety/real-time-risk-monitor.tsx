@@ -22,6 +22,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { generateChartCellKey } from "../../lib/react-utilities";
 
 // Real-time Risk Monitoring Interfaces
 interface RealTimeRiskData {
@@ -458,8 +459,11 @@ export function RealTimeRiskMonitor() {
                     `${symbol}: ${riskContribution.toFixed(1)}%`
                   }
                 >
-                  {positionRisks.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                  {positionRisks.map((risk, index) => (
+                    <Cell
+                      key={generateChartCellKey(index, risk.symbol)}
+                      fill={pieColors[index % pieColors.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />

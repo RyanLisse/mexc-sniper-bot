@@ -1,9 +1,9 @@
 /**
  * Extracted Risk Engine Schemas
- * 
- * This file contains all risk management-related Zod schemas extracted from the 
+ *
+ * This file contains all risk management-related Zod schemas extracted from the
  * advanced-risk-engine.ts file as part of the TDD refactoring process.
- * 
+ *
  * Extracted schemas provide type safety and validation for risk management
  * configurations, market conditions, portfolio metrics, alerts, and stress testing.
  */
@@ -21,21 +21,21 @@ export const MarketConditionsSchema = z.object({
   // Risk indices (0-100 scale)
   volatilityIndex: z.number().min(0).max(100),
   liquidityIndex: z.number().min(0).max(100),
-  
+
   // Market depth and spread metrics
   orderBookDepth: z.number().min(0),
   bidAskSpread: z.number().min(0),
-  
+
   // Volume and price metrics
   tradingVolume24h: z.number().min(0),
   priceChange24h: z.number(), // can be negative
-  
+
   // Risk correlation (0-1 scale)
   correlationRisk: z.number().min(0).max(1),
-  
+
   // Market sentiment enumeration
   marketSentiment: z.enum(["bullish", "bearish", "neutral", "volatile"]),
-  
+
   // Timestamp for data validity
   timestamp: z.string(),
 });
@@ -50,22 +50,22 @@ export const MarketConditionsSchema = z.object({
 export const PositionRiskProfileSchema = z.object({
   // Position identification
   symbol: z.string().min(1),
-  
+
   // Position size and exposure
   size: z.number().min(0),
   exposure: z.number().min(0),
   leverage: z.number().positive(),
-  
+
   // P&L metrics (can be negative)
   unrealizedPnL: z.number(),
   valueAtRisk: z.number().min(0),
   maxDrawdown: z.number().min(0),
-  
+
   // Time and distance metrics
   timeHeld: z.number().min(0),
   stopLossDistance: z.number().min(0),
   takeProfitDistance: z.number().min(0),
-  
+
   // Correlation score (0-1 scale)
   correlationScore: z.number().min(0).max(1),
 });
@@ -81,14 +81,14 @@ export const PortfolioRiskMetricsSchema = z.object({
   // Portfolio value metrics
   totalValue: z.number().min(0),
   totalExposure: z.number().min(0),
-  
+
   // Risk scores (0-100 scale)
   diversificationScore: z.number().min(0).max(100),
   concentrationRisk: z.number().min(0).max(100),
-  
+
   // Correlation matrix (2D array of numbers between -1 and 1)
   correlationMatrix: z.array(z.array(z.number().min(-1).max(1))),
-  
+
   // Risk calculations
   valueAtRisk95: z.number().min(0),
   expectedShortfall: z.number().min(0),
@@ -111,18 +111,18 @@ export const RiskEngineConfigSchema = z.object({
   maxConcurrentPositions: z.number().positive().int(),
   maxDailyLoss: z.number().positive(),
   maxDrawdown: z.number().min(0).max(100),
-  
+
   // Risk calculation parameters
   confidenceLevel: z.number().min(0).max(1),
   lookbackPeriod: z.number().positive().int(),
   correlationThreshold: z.number().min(0).max(1),
   volatilityMultiplier: z.number().positive(),
-  
+
   // Feature toggles
   adaptiveRiskScaling: z.boolean(),
   marketRegimeDetection: z.boolean(),
   stressTestingEnabled: z.boolean(),
-  
+
   // Emergency thresholds
   emergencyVolatilityThreshold: z.number().min(0).max(100),
   emergencyLiquidityThreshold: z.number().min(0).max(100),
@@ -139,16 +139,16 @@ export const RiskEngineConfigSchema = z.object({
 export const RiskAlertSchema = z.object({
   // Alert identification
   id: z.string().min(1),
-  
+
   // Alert classification
   type: z.enum(["position", "portfolio", "market", "system"]),
   severity: z.enum(["low", "medium", "high", "critical"]),
-  
+
   // Alert content
   message: z.string().min(1),
   details: z.record(z.unknown()),
   recommendations: z.array(z.string()),
-  
+
   // Alert lifecycle
   timestamp: z.string(),
   resolved: z.boolean(),
@@ -166,14 +166,14 @@ export const StressTestScenarioSchema = z.object({
   // Scenario identification
   name: z.string().min(1),
   description: z.string(),
-  
+
   // Market shock parameters
   marketShock: z.object({
     priceChange: z.number(), // percentage change (can be negative)
     volatilityIncrease: z.number().min(0), // multiplier (must be positive)
     liquidityReduction: z.number(), // percentage (can be negative for increased liquidity)
   }),
-  
+
   // Expected impact
   expectedLoss: z.number(), // can be negative (profit)
   recoveryTime: z.number().min(0), // hours

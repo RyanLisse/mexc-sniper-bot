@@ -1,9 +1,9 @@
 /**
  * Extracted Safety Schemas
- * 
- * This file contains all safety-related Zod schemas extracted from the 
+ *
+ * This file contains all safety-related Zod schemas extracted from the
  * comprehensive-safety-coordinator.ts file as part of the TDD refactoring process.
- * 
+ *
  * Extracted schemas provide type safety and validation for safety system
  * configurations, status monitoring, alerts, actions, and metrics.
  */

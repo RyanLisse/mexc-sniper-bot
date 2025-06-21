@@ -12,17 +12,14 @@ import { type CircuitBreaker, circuitBreakerRegistry } from "./circuit-breaker";
 // Import extracted risk engine schemas for enhanced type safety and validation
 import {
   type MarketConditions,
-  type PositionRiskProfile,
   type PortfolioRiskMetrics,
-  type RiskEngineConfig,
+  type PositionRiskProfile,
   type RiskAlert,
+  type RiskEngineConfig,
   type StressTestScenario,
   validateMarketConditions,
-  validatePositionRiskProfile,
   validatePortfolioRiskMetrics,
-  validateRiskEngineConfig,
-  validateRiskAlert,
-  validateStressTestScenario,
+  validatePositionRiskProfile,
 } from "../schemas/risk-engine-schemas-extracted";
 
 // Re-export types for backward compatibility
@@ -199,7 +196,9 @@ export class AdvancedRiskEngine {
       // Validate the position before storing
       const validatedPosition = validatePositionRiskProfile(position);
       this.positions.set(validatedPosition.symbol, validatedPosition);
-      console.log(`[AdvancedRiskEngine] Position updated and validated for ${validatedPosition.symbol}`);
+      console.log(
+        `[AdvancedRiskEngine] Position updated and validated for ${validatedPosition.symbol}`
+      );
     } catch (validationError) {
       console.error("[AdvancedRiskEngine] Invalid position profile:", validationError);
       throw new Error(`Invalid position profile: ${validationError}`);
@@ -1017,7 +1016,10 @@ export class AdvancedRiskEngine {
         });
         this.historicalMetrics.push(validatedMetrics);
       } catch (validationError) {
-        console.warn("[AdvancedRiskEngine] Invalid portfolio metrics, using base metrics:", validationError);
+        console.warn(
+          "[AdvancedRiskEngine] Invalid portfolio metrics, using base metrics:",
+          validationError
+        );
         this.historicalMetrics.push(updatedMetrics);
       }
 

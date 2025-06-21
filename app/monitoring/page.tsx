@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { DashboardLayout } from "@/components/dashboard-layout";
 import { SystemArchitectureOverview } from "@/components/monitoring/system-architecture-overview";
 import { RealTimePerformance } from "@/components/monitoring/real-time-performance";
 import { TradingAnalyticsDashboard } from "@/components/monitoring/trading-analytics-dashboard";
 import { AlertCenter } from "@/components/monitoring/alert-center";
+import { PatternMonitoringDashboard } from "@/src/components/auto-sniping/pattern-monitoring-dashboard";
+import { RealTimeSafetyDashboard } from "@/src/components/auto-sniping/real-time-safety-dashboard";
 import { 
   Activity, 
   BarChart3, 
@@ -116,24 +119,25 @@ export default function MonitoringPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Advanced Monitoring Dashboard</h1>
-          <p className="text-muted-foreground">
-            Comprehensive monitoring and analytics for the MEXC Sniper Bot AI System
-          </p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between space-y-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Advanced Monitoring Dashboard</h1>
+            <p className="text-muted-foreground">
+              Comprehensive monitoring and analytics for the MEXC Sniper Bot AI System
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline">
+              Last Updated: {lastUpdated.toLocaleTimeString()}
+            </Badge>
+            <Button onClick={fetchQuickMetrics} variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Badge variant="outline">
-            Last Updated: {lastUpdated.toLocaleTimeString()}
-          </Badge>
-          <Button onClick={fetchQuickMetrics} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
-      </div>
 
       {/* Quick Overview Dashboard */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -271,7 +275,7 @@ export default function MonitoringPage() {
 
       {/* Main Monitoring Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Monitor className="h-4 w-4" />
             System Overview
@@ -287,6 +291,14 @@ export default function MonitoringPage() {
           <TabsTrigger value="alerts" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             Alert Center
+          </TabsTrigger>
+          <TabsTrigger value="patterns" className="flex items-center gap-2">
+            <Target className="h-4 w-4" />
+            Pattern Monitoring
+          </TabsTrigger>
+          <TabsTrigger value="safety" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Safety Monitoring
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -308,6 +320,14 @@ export default function MonitoringPage() {
 
         <TabsContent value="alerts" className="space-y-4">
           <AlertCenter />
+        </TabsContent>
+
+        <TabsContent value="patterns" className="space-y-4">
+          <PatternMonitoringDashboard autoRefresh={true} showControls={true} />
+        </TabsContent>
+
+        <TabsContent value="safety" className="space-y-4">
+          <RealTimeSafetyDashboard autoRefresh={true} showControls={true} />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
@@ -562,6 +582,7 @@ export default function MonitoringPage() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

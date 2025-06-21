@@ -46,7 +46,7 @@ import {
   TrendingUp,
   XCircle,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -61,6 +61,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { generateChartCellKey, generateListKey, useSkeletonItems } from "../../lib/react-utilities";
 
 interface Alert {
   id: string;
@@ -139,39 +140,29 @@ export function AlertCenter() {
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  useEffect(() => {
-    fetchAlerts();
-    setupRealTimeConnection();
-
-    return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-    };
+  // Helper function to build API query parameters (memoized)
+  const buildApiParams = useCallback(() => {
+    const params = new URLSearchParams();
+    if (filters.severity) params.append("severity", filters.severity);
+    if (filters.category) params.append("category", filters.category);
+    if (filters.acknowledged) params.append("acknowledged", filters.acknowledged);
+    return params;
   }, [filters]);
 
-  const fetchAlerts = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (filters.severity) params.append("severity", filters.severity);
-      if (filters.category) params.append("category", filters.category);
-      if (filters.acknowledged) params.append("acknowledged", filters.acknowledged);
+  // Helper function to apply client-side filtering (memoized)
+  const applyClientFilters = useCallback(
+    (alerts: Alert[]) => {
+      let filteredAlerts = alerts;
 
-      const response = await fetch(`/api/monitoring/alerts?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch alerts");
-      }
-
-      const result = await response.json();
-
-      let filteredAlerts = result.alerts;
       if (filters.search) {
-        filteredAlerts = filteredAlerts.filter(
-          (alert: Alert) =>
-            alert.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-            alert.message.toLowerCase().includes(filters.search.toLowerCase()) ||
-            alert.source.toLowerCase().includes(filters.search.toLowerCase())
-        );
+        filteredAlerts = filteredAlerts.filter((alert: Alert) => {
+          const searchTerm = filters.search.toLowerCase();
+          return (
+            alert.title.toLowerCase().includes(searchTerm) ||
+            alert.message.toLowerCase().includes(searchTerm) ||
+            alert.source.toLowerCase().includes(searchTerm)
+          );
+        });
       }
 
       if (showOnlyCritical) {
@@ -179,6 +170,23 @@ export function AlertCenter() {
           (alert: Alert) => alert.severity === "critical" && !alert.acknowledged
         );
       }
+
+      return filteredAlerts;
+    },
+    [filters.search, showOnlyCritical]
+  );
+
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const params = buildApiParams();
+      const response = await fetch(`/api/monitoring/alerts?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch alerts");
+      }
+
+      const result = await response.json();
+      const filteredAlerts = applyClientFilters(result.alerts);
 
       setAlerts(filteredAlerts);
       setSummary(result.summary);
@@ -189,7 +197,18 @@ export function AlertCenter() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [buildApiParams, applyClientFilters]);
+
+  useEffect(() => {
+    fetchAlerts();
+    setupRealTimeConnection();
+
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+  }, [fetchAlerts]);
 
   const setupRealTimeConnection = () => {
     if (eventSourceRef.current) {
@@ -238,7 +257,9 @@ export function AlertCenter() {
     }
   };
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (
+    severity: string
+  ): "default" | "secondary" | "destructive" | "outline" => {
     switch (severity) {
       case "critical":
         return "destructive";
@@ -403,8 +424,8 @@ export function AlertCenter() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+            {useSkeletonItems(4, "h-16 bg-gray-100 rounded animate-pulse").map((item) => (
+              <div key={item.key} className={item.className} />
             ))}
           </div>
         </CardContent>
@@ -675,7 +696,7 @@ export function AlertCenter() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {getSeverityIcon(alert.severity)}
-                            <Badge variant={getSeverityColor(alert.severity) as any}>
+                            <Badge variant={getSeverityColor(alert.severity)}>
                               {alert.severity}
                             </Badge>
                           </div>
@@ -771,7 +792,10 @@ export function AlertCenter() {
                                     <p className="text-sm font-medium mb-2">Affected Components</p>
                                     <div className="flex flex-wrap gap-2">
                                       {alert.metadata.affectedComponents.map((component, index) => (
-                                        <Badge key={index} variant="outline">
+                                        <Badge
+                                          key={generateListKey(component, index)}
+                                          variant="outline"
+                                        >
                                           {component}
                                         </Badge>
                                       ))}
@@ -782,7 +806,10 @@ export function AlertCenter() {
                                     <p className="text-sm font-medium mb-2">Tags</p>
                                     <div className="flex flex-wrap gap-2">
                                       {alert.tags.map((tag, index) => (
-                                        <Badge key={index} variant="secondary">
+                                        <Badge
+                                          key={generateListKey(tag, index)}
+                                          variant="secondary"
+                                        >
                                           {tag}
                                         </Badge>
                                       ))}
@@ -864,7 +891,10 @@ export function AlertCenter() {
                         label={({ category, count }) => `${category}: ${count}`}
                       >
                         {summary.topCategories.map((_entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          <Cell
+                            key={generateChartCellKey(index, "category")}
+                            fill={COLORS[index % COLORS.length]}
+                          />
                         ))}
                       </Pie>
                       <Tooltip />
@@ -910,7 +940,7 @@ export function AlertCenter() {
                     <div className="space-y-3">
                       {trends.patterns.map((pattern, index) => (
                         <div
-                          key={index}
+                          key={generateListKey(pattern, index, "pattern")}
                           className="flex items-center justify-between p-3 rounded-lg border"
                         >
                           <span className="text-sm">{pattern.pattern.replace(/_/g, " ")}</span>
@@ -931,7 +961,10 @@ export function AlertCenter() {
                   <CardContent>
                     <div className="space-y-3">
                       {trends.recommendations.map((recommendation, index) => (
-                        <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
+                        <div
+                          key={generateListKey(recommendation, index)}
+                          className="flex items-start gap-3 p-3 rounded-lg border"
+                        >
                           <TrendingUp className="h-4 w-4 text-blue-500 mt-0.5" />
                           <span className="text-sm">{recommendation}</span>
                         </div>

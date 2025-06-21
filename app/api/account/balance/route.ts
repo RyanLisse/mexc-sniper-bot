@@ -78,7 +78,9 @@ export async function GET(request: NextRequest) {
 
     return apiResponse(
       createSuccessResponse({
-        ...balanceResponse.data,
+        balances: balanceResponse.data.balances,
+        totalUsdtValue: balanceResponse.data.totalUsdtValue,
+        lastUpdated: balanceResponse.data.lastUpdated,
         hasUserCredentials,
         credentialsType: hasUserCredentials ? 'user-specific' : 'environment-fallback',
       })

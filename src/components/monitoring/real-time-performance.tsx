@@ -32,6 +32,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  type CpuUsageData,
+  type PerformanceMetrics,
+  createTooltipFormatter,
+  generateChartCellKey,
+  generateListKey,
+  useSkeletonItems,
+} from "../../lib/react-utilities";
 
 interface PerformanceData {
   timestamp: string;
@@ -55,15 +63,7 @@ interface PerformanceData {
         [key: string]: string | number;
       }
     >;
-    safety: Record<
-      string,
-      {
-        responseTime: number;
-        successRate: number;
-        lastActivity: string;
-        [key: string]: any;
-      }
-    >;
+    safety: PerformanceMetrics;
     overall: {
       totalAgents: number;
       healthyAgents: number;
@@ -84,7 +84,7 @@ interface PerformanceData {
     };
   };
   systemPerformance: {
-    cpuUsage: any;
+    cpuUsage: CpuUsageData;
     memoryUsage: {
       used: number;
       total: number;
@@ -239,8 +239,8 @@ export function RealTimePerformance() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-100 rounded animate-pulse" />
+            {useSkeletonItems(4, "h-32 bg-gray-100 rounded animate-pulse").map((item) => (
+              <div key={item.key} className={item.className} />
             ))}
           </div>
         </CardContent>
@@ -385,10 +385,9 @@ export function RealTimePerformance() {
                     <YAxis />
                     <Tooltip
                       labelFormatter={(time) => new Date(time).toLocaleTimeString()}
-                      formatter={(value: any, name: string) => [
-                        typeof value === "number" ? value.toFixed(2) : value,
-                        name,
-                      ]}
+                      formatter={createTooltipFormatter((value) =>
+                        typeof value === "number" ? value.toFixed(2) : String(value)
+                      )}
                     />
                     <Line
                       type="monotone"
@@ -418,10 +417,9 @@ export function RealTimePerformance() {
                     <YAxis domain={[0, 100]} />
                     <Tooltip
                       labelFormatter={(time) => new Date(time).toLocaleTimeString()}
-                      formatter={(value: any, name: string) => [
-                        typeof value === "number" ? `${value.toFixed(1)}%` : value,
-                        name,
-                      ]}
+                      formatter={createTooltipFormatter((value) =>
+                        typeof value === "number" ? `${value.toFixed(1)}%` : String(value)
+                      )}
                     />
                     <Area
                       type="monotone"
@@ -642,8 +640,11 @@ export function RealTimePerformance() {
                       dataKey="count"
                       nameKey="type"
                     >
-                      {data.patternDiscoveryAnalytics.patternTypes.map((_entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      {data.patternDiscoveryAnalytics.patternTypes.map((entry, index) => (
+                        <Cell
+                          key={generateChartCellKey(index, entry.type)}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -752,7 +753,7 @@ export function RealTimePerformance() {
                 <div className="space-y-3">
                   {data.recentActivity.trends.map((trend, index) => (
                     <div
-                      key={index}
+                      key={generateListKey(trend, index, "metric")}
                       className="flex items-center justify-between p-3 rounded-lg border"
                     >
                       <div className="flex items-center gap-3">
@@ -790,7 +791,10 @@ export function RealTimePerformance() {
               <CardContent>
                 <div className="space-y-3">
                   {data.recentActivity.alerts.map((alert, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
+                    <div
+                      key={generateListKey(alert, index, "message")}
+                      className="flex items-start gap-3 p-3 rounded-lg border"
+                    >
                       <AlertTriangle
                         className={`h-4 w-4 mt-0.5 ${
                           alert.level === "warning" ? "text-yellow-600" : "text-red-600"
