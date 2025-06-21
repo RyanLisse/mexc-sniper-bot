@@ -3,6 +3,13 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
+// OpenTelemetry database instrumentation
+import { 
+  instrumentDatabase, 
+  instrumentConnectionHealth,
+  instrumentDatabaseQuery 
+} from "../lib/opentelemetry-database-instrumentation";
+
 // Retry configuration
 const RETRY_DELAYS = [100, 500, 1000, 2000, 5000]; // Exponential backoff
 const MAX_RETRIES = 5;
@@ -130,7 +137,10 @@ function createDatabase() {
 
   try {
     const client = createPostgresClient();
-    const db = drizzle(client, { schema });
+    const baseDb = drizzle(client, { schema });
+    
+    // Wrap database with OpenTelemetry instrumentation
+    const db = instrumentDatabase(baseDb);
 
     // Test connection immediately to catch auth issues early
     if (isProduction || isRailway) {
@@ -263,6 +273,11 @@ export async function executeWithRetry<T>(
 
 // Health check with detailed status
 export async function healthCheck() {
+  return instrumentConnectionHealth();
+}
+
+// Internal health check implementation
+async function internalHealthCheck() {
   try {
     const startTime = Date.now();
     await db.execute(sql`SELECT 1`);
@@ -310,7 +325,7 @@ export async function executeBatchOperations<T>(
   return databaseConnectionPool.executeBatch(operations, invalidatePatterns);
 }
 
-// Performance monitoring wrapper
+// Performance monitoring wrapper with OpenTelemetry
 export async function monitoredQuery<T>(
   queryName: string,
   queryFn: () => Promise<T>,
@@ -318,9 +333,20 @@ export async function monitoredQuery<T>(
     query?: string;
     parameters?: unknown[];
     userId?: string;
+    operationType?: 'select' | 'insert' | 'update' | 'delete';
+    tableName?: string;
   }
 ): Promise<T> {
-  return queryPerformanceMonitor.wrapQuery(queryName, queryFn, options);
+  return instrumentDatabaseQuery(
+    queryName,
+    () => queryPerformanceMonitor.wrapQuery(queryName, queryFn, options),
+    {
+      operationType: options?.operationType || 'select',
+      tableName: options?.tableName,
+      queryName,
+      includeQuery: !!options?.query,
+    }
+  );
 }
 
 export async function closeDatabase() {

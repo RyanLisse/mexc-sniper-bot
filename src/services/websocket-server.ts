@@ -31,6 +31,16 @@ import type {
   WebSocketServerConfig,
 } from "../lib/websocket-types";
 
+// OpenTelemetry WebSocket instrumentation
+import {
+  instrumentWebSocketConnection,
+  instrumentWebSocketSend,
+  instrumentWebSocketReceive,
+  instrumentChannelOperation,
+  instrumentConnectionHealth,
+  instrumentAgentMessage,
+} from "../lib/opentelemetry-websocket-instrumentation";
+
 // ======================
 // Connection Management
 // ======================
@@ -506,7 +516,18 @@ export class WebSocketServerService extends EventEmitter {
       timestamp: Date.now(),
     };
 
-    this.broadcastToChannel(message.channel as WebSocketChannel, fullMessage);
+    // Instrument broadcast operation
+    instrumentChannelOperation(
+      'broadcast',
+      message.channel,
+      async () => {
+        this.broadcastToChannel(message.channel as WebSocketChannel, fullMessage);
+        return Promise.resolve();
+      },
+      { messageType: message.type }
+    ).catch(error => {
+      console.error('[WebSocket] Broadcast instrumentation error:', error);
+    });
   }
 
   broadcastToChannel<T>(channel: WebSocketChannel, message: WebSocketMessage<T>): void {
@@ -534,6 +555,24 @@ export class WebSocketServerService extends EventEmitter {
     if (!connection || connection.ws.readyState !== WebSocket.OPEN) {
       return false;
     }
+
+    // Instrument message sending
+    instrumentWebSocketSend(
+      message,
+      async () => {
+        const serialized = JSON.stringify(message);
+        connection.ws.send(serialized);
+        return Promise.resolve();
+      },
+      {
+        connectionId,
+        channel: message.channel,
+        messageType: message.type,
+        clientType: connection.clientType,
+      }
+    ).catch(error => {
+      console.error('[WebSocket] Send message instrumentation error:', error);
+    });
 
     try {
       const serialized = JSON.stringify(message);

@@ -73,6 +73,12 @@ import {
 
 import type { ActivityData, ActivityQueryOptions, ActivityResponse } from "../schemas/mexc-schemas";
 
+// OpenTelemetry instrumentation
+import { 
+  instrumentServiceMethod, 
+  instrumentMexcApiCall 
+} from "../lib/opentelemetry-service-instrumentation";
+
 // ============================================================================
 // Service Configuration
 // ============================================================================
@@ -172,6 +178,12 @@ export class UnifiedMexcService {
   /**
    * Get calendar listings with optimized parallel fetching
    */
+  @instrumentServiceMethod({
+    serviceName: 'unified-mexc-service',
+    methodName: 'getCalendarListings',
+    operationType: 'api_call',
+    includeInputData: false
+  })
   async getCalendarListings(): Promise<MexcServiceResponse<CalendarEntry[]>> {
     const response = await this.apiClient.get<CalendarEntry[]>(
       "/api/v3/capital/sub-account/capitalOr4List",
@@ -201,6 +213,12 @@ export class UnifiedMexcService {
   /**
    * Get symbols data with intelligent caching
    */
+  @instrumentServiceMethod({
+    serviceName: 'unified-mexc-service',
+    methodName: 'getSymbolsData',
+    operationType: 'api_call',
+    includeInputData: false
+  })
   async getSymbolsData(): Promise<MexcServiceResponse<SymbolEntry[]>> {
     const response = await this.apiClient.get<SymbolEntry[]>(
       "/api/v3/capital/sub-account/capitalOr4List",
@@ -294,6 +312,13 @@ export class UnifiedMexcService {
   /**
    * Get account balances with parallel optimization
    */
+  @instrumentServiceMethod({
+    serviceName: 'unified-mexc-service',
+    methodName: 'getAccountBalances',
+    operationType: 'api_call',
+    includeInputData: false,
+    sensitiveParameters: ['apiKey', 'secretKey']
+  })
   async getAccountBalances(): Promise<MexcServiceResponse<BalanceEntry[]>> {
     const response = await this.apiClient.get<{ balances: BalanceEntry[] }>(
       "/api/v3/account",

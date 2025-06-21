@@ -23,7 +23,7 @@ import {
   TrendingUp,
   X,
   Zap,
-} from "lucide-react";
+} from "../ui/optimized-icons";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";

@@ -72,6 +72,9 @@ export {
   EyeOff,
   Lock,
   Unlock,
+  Edit,
+  Save,
+  X,
 } from "lucide-react";
 
 // System & Bot Icons (Actually Used)
@@ -79,4 +82,8 @@ export {
   Calendar,
   Wifi,
   WifiOff,
+  BarChart3,
+  Database,
+  Gauge,
+  Server,
 } from "lucide-react";

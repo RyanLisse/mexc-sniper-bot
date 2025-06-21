@@ -2,12 +2,14 @@
  * Auto-Sniping Execution API Endpoints
  * 
  * Provides control and monitoring for auto-sniping trade execution.
+ * Enhanced with OpenTelemetry instrumentation for comprehensive monitoring.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AutoSnipingExecutionService } from '@/src/services/auto-sniping-execution-service';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
-import { apiResponse } from '@/src/lib/api-response';
+import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
+import { instrumentedTradingRoute } from '@/src/lib/opentelemetry-api-middleware';
 
 const executionService = AutoSnipingExecutionService.getInstance();
 
@@ -15,7 +17,8 @@ const executionService = AutoSnipingExecutionService.getInstance();
  * GET /api/auto-sniping/execution
  * Get execution status and report
  */
-export const GET = apiAuthWrapper(async (request: NextRequest) => {
+export const GET = instrumentedTradingRoute(
+  apiAuthWrapper(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const includePositions = searchParams.get('include_positions') === 'true';
@@ -54,13 +57,16 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       }
     ), { status: 500 });
   }
-});
+}),
+'sniping' // operationType for OpenTelemetry spans
+);
 
 /**
  * POST /api/auto-sniping/execution
  * Control execution and manage positions
  */
-export const POST = apiAuthWrapper(async (request: NextRequest) => {
+export const POST = instrumentedTradingRoute(
+  apiAuthWrapper(async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { action, positionId, reason, config } = body;
@@ -234,7 +240,9 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       { details: error instanceof Error ? error.message : 'Unknown error' }
     ), { status: 500 });
   }
-});
+}),
+'sniping' // operationType for OpenTelemetry spans
+);
 
 /**
  * PUT /api/auto-sniping/execution
@@ -300,25 +308,28 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
  * DELETE /api/auto-sniping/execution
  * Emergency shutdown and cleanup
  */
-export const DELETE = apiAuthWrapper(async (request: NextRequest) => {
-  try {
-    console.log('[API] Emergency shutdown requested');
-    
-    // Stop execution
-    executionService.stopExecution();
-    
-    // Close all positions
-    const closedCount = await executionService.emergencyCloseAll();
-    
-    return NextResponse.json(createSuccessResponse(
-      { closedPositions: closedCount },
-      { message: `Emergency shutdown completed: ${closedCount} positions closed` }
-    ));
-  } catch (error) {
-    console.error('[API] Emergency shutdown failed:', error);
-    return NextResponse.json(createErrorResponse(
-      'Emergency shutdown failed',
-      { details: error instanceof Error ? error.message : 'Unknown error' }
-    ), { status: 500 });
-  }
-});
+export const DELETE = instrumentedTradingRoute(
+  apiAuthWrapper(async (request: NextRequest) => {
+    try {
+      console.log('[API] Emergency shutdown requested');
+      
+      // Stop execution
+      executionService.stopExecution();
+      
+      // Close all positions
+      const closedCount = await executionService.emergencyCloseAll();
+      
+      return NextResponse.json(createSuccessResponse(
+        { closedPositions: closedCount },
+        { message: `Emergency shutdown completed: ${closedCount} positions closed` }
+      ));
+    } catch (error) {
+      console.error('[API] Emergency shutdown failed:', error);
+      return NextResponse.json(createErrorResponse(
+        'Emergency shutdown failed',
+        { details: error instanceof Error ? error.message : 'Unknown error' }
+      ), { status: 500 });
+    }
+  }),
+  'execution' // operationType for OpenTelemetry spans
+);

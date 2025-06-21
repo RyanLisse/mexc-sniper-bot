@@ -270,7 +270,7 @@ export const AutoSnipingExecutionDashboard = lazy(() =>
 );
 
 export const AlertCenter = lazy(() =>
-  import("./alert-center").then((module) => ({
+  import("./monitoring/alert-center").then((module) => ({
     default: module.AlertCenter,
   }))
 );
@@ -325,7 +325,7 @@ export const EditableTakeProfitTable = lazy(() =>
 );
 
 export const ParameterMonitor = lazy(() =>
-  import("./monitoring/parameter-monitor").then((module) => ({
+  import("./tuning/parameter-monitor").then((module) => ({
     default: module.ParameterMonitor,
   }))
 );
@@ -497,7 +497,7 @@ export function preloadHeavyDashboardComponents() {
   const preloadPromises = [
     import("./monitoring/trading-analytics-dashboard"),
     import("./auto-sniping/auto-sniping-execution-dashboard"),
-    import("./alert-center"),
+    import("./monitoring/alert-center"),
     import("./auto-sniping/real-time-safety-dashboard"),
     import("./safety/comprehensive-safety-dashboard"),
     import("./monitoring/real-time-performance"),
@@ -512,7 +512,7 @@ export function preloadMonitoringComponents() {
     import("./monitoring/trading-analytics-dashboard"),
     import("./monitoring/real-time-performance"),
     import("./monitoring/system-architecture-overview"),
-    import("./monitoring/parameter-monitor"),
+    import("./tuning/parameter-monitor"),
   ];
 
   return Promise.all(preloadPromises);
@@ -523,7 +523,7 @@ export function preloadSafetyComponents() {
   const preloadPromises = [
     import("./auto-sniping/real-time-safety-dashboard"),
     import("./safety/comprehensive-safety-dashboard"),
-    import("./alert-center"),
+    import("./monitoring/alert-center"),
   ];
 
   return Promise.all(preloadPromises);

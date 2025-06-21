@@ -1,0 +1,58 @@
+{
+  "name": "opentelemetry-dependencies",
+  "description": "OpenTelemetry packages needed for MEXC Sniper Bot optimization",
+  "devDependencies": {
+    "@opentelemetry/sdk-node": "^0.45.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.40.0",
+    "@opentelemetry/sdk-metrics": "^1.17.0",
+    "@opentelemetry/sdk-trace-node": "^1.17.0",
+    "@opentelemetry/api": "^1.6.0",
+    "@opentelemetry/api-logs": "^0.45.0",
+    "@opentelemetry/semantic-conventions": "^1.17.0",
+    "@opentelemetry/resources": "^1.17.0",
+    "@opentelemetry/exporter-prometheus": "^0.44.0",
+    "@opentelemetry/exporter-jaeger": "^1.17.0",
+    "@opentelemetry/exporter-otlp-http": "^0.44.0",
+    "@opentelemetry/instrumentation-redis": "^0.35.0",
+    "@opentelemetry/instrumentation-http": "^0.44.0",
+    "@opentelemetry/instrumentation-express": "^0.34.0"
+  },
+  "scripts": {
+    "install-otel": "npm install @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/sdk-metrics @opentelemetry/sdk-trace-node @opentelemetry/api @opentelemetry/api-logs @opentelemetry/semantic-conventions @opentelemetry/resources @opentelemetry/exporter-prometheus @opentelemetry/exporter-jaeger @opentelemetry/exporter-otlp-http @opentelemetry/instrumentation-redis @opentelemetry/instrumentation-http @opentelemetry/instrumentation-express",
+    "start-otel-dev": "node --require ./src/instrumentation.js src/app.js",
+    "start-otel-stack": "docker-compose -f docker-compose.otel.yml up -d"
+  },
+  "installation_commands": {
+    "core_packages": "npm install @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/sdk-metrics @opentelemetry/api",
+    "exporters": "npm install @opentelemetry/exporter-prometheus @opentelemetry/exporter-jaeger @opentelemetry/exporter-otlp-http",
+    "instrumentations": "npm install @opentelemetry/instrumentation-redis @opentelemetry/instrumentation-http @opentelemetry/instrumentation-express",
+    "all_at_once": "npm run install-otel"
+  },
+  "environment_variables": {
+    "OTEL_SERVICE_NAME": "mexc-sniper-bot",
+    "OTEL_SERVICE_VERSION": "2.0.0", 
+    "OTEL_RESOURCE_ATTRIBUTES": "service.name=mexc-sniper-bot,service.version=2.0.0",
+    "JAEGER_ENDPOINT": "http://localhost:14268/api/traces",
+    "OTEL_EXPORTER_PROMETHEUS_PORT": "9464",
+    "OTEL_LOG_LEVEL": "info",
+    "OTEL_BSP_MAX_EXPORT_BATCH_SIZE": "512",
+    "OTEL_BSP_EXPORT_TIMEOUT": "30000",
+    "OTEL_BSP_SCHEDULE_DELAY": "5000"
+  },
+  "quick_start_checklist": [
+    "1. Run: npm run install-otel",
+    "2. Create src/instrumentation.ts using the implementation guide",
+    "3. Update your main app file to import './instrumentation' first",
+    "4. Run: npm run start-otel-stack (starts Jaeger + Prometheus)",
+    "5. Start your app and check http://localhost:16686 for traces",
+    "6. Check http://localhost:9090 for metrics",
+    "7. Begin migrating console.log statements using provided examples"
+  ],
+  "performance_impact": {
+    "cpu_overhead": "<2%",
+    "memory_overhead": "<5%", 
+    "network_overhead": "minimal with batch export",
+    "latency_impact": "<1ms per operation",
+    "recommended_sampling": "10% in development, 1-5% in production"
+  }
+}
