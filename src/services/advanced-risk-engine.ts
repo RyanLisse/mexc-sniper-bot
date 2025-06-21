@@ -9,94 +9,31 @@
 import type { TradeRiskAssessment } from "../mexc-agents/risk-manager-agent";
 import { type CircuitBreaker, circuitBreakerRegistry } from "./circuit-breaker";
 
-// Advanced Risk Assessment Interfaces
-export interface MarketConditions {
-  volatilityIndex: number; // 0-100 scale
-  liquidityIndex: number; // 0-100 scale
-  orderBookDepth: number; // USDT depth
-  bidAskSpread: number; // Percentage
-  tradingVolume24h: number; // USDT volume
-  priceChange24h: number; // Percentage
-  correlationRisk: number; // Portfolio correlation (0-1)
-  marketSentiment: "bullish" | "bearish" | "neutral" | "volatile";
-  timestamp: string;
-}
+// Import extracted risk engine schemas for enhanced type safety and validation
+import {
+  type MarketConditions,
+  type PositionRiskProfile,
+  type PortfolioRiskMetrics,
+  type RiskEngineConfig,
+  type RiskAlert,
+  type StressTestScenario,
+  validateMarketConditions,
+  validatePositionRiskProfile,
+  validatePortfolioRiskMetrics,
+  validateRiskEngineConfig,
+  validateRiskAlert,
+  validateStressTestScenario,
+} from "../schemas/risk-engine-schemas-extracted";
 
-export interface PositionRiskProfile {
-  symbol: string;
-  size: number; // Position size in USDT
-  exposure: number; // Market exposure percentage
-  leverage: number; // Leverage multiplier
-  unrealizedPnL: number; // Current P&L
-  valueAtRisk: number; // VaR calculation
-  maxDrawdown: number; // Maximum drawdown
-  timeHeld: number; // Duration in hours
-  stopLossDistance: number; // Distance to stop loss (%)
-  takeProfitDistance: number; // Distance to take profit (%)
-  correlationScore: number; // Correlation with other positions
-}
-
-export interface PortfolioRiskMetrics {
-  totalValue: number;
-  totalExposure: number;
-  diversificationScore: number; // 0-100 (higher is better)
-  concentrationRisk: number; // 0-100 (lower is better)
-  correlationMatrix: number[][]; // Position correlations
-  valueAtRisk95: number; // 95% VaR
-  expectedShortfall: number; // Expected shortfall (CVaR)
-  sharpeRatio: number; // Risk-adjusted returns
-  maxDrawdownRisk: number; // Maximum potential drawdown
-  liquidityRisk: number; // Portfolio liquidity score
-}
-
-export interface RiskEngineConfig {
-  // Portfolio Limits
-  maxPortfolioValue: number;
-  maxSinglePositionSize: number;
-  maxConcurrentPositions: number;
-  maxDailyLoss: number;
-  maxDrawdown: number;
-
-  // Risk Calculation Parameters
-  confidenceLevel: number; // VaR confidence level (0.95)
-  lookbackPeriod: number; // Days for historical analysis
-  correlationThreshold: number; // Maximum position correlation
-  volatilityMultiplier: number; // Risk scaling factor
-
-  // Dynamic Adjustment Parameters
-  adaptiveRiskScaling: boolean;
-  marketRegimeDetection: boolean;
-  stressTestingEnabled: boolean;
-
-  // Emergency Thresholds
-  emergencyVolatilityThreshold: number;
-  emergencyLiquidityThreshold: number;
-  emergencyCorrelationThreshold: number;
-}
-
-export interface RiskAlert {
-  id: string;
-  type: "position" | "portfolio" | "market" | "system";
-  severity: "low" | "medium" | "high" | "critical";
-  message: string;
-  details: Record<string, unknown>;
-  recommendations: string[];
-  timestamp: string;
-  resolved: boolean;
-  resolvedAt?: string;
-}
-
-export interface StressTestScenario {
-  name: string;
-  description: string;
-  marketShock: {
-    priceChange: number; // Percentage change
-    volatilityIncrease: number; // Multiplier
-    liquidityReduction: number; // Percentage reduction
-  };
-  expectedLoss: number; // Expected portfolio loss
-  recoveryTime: number; // Expected recovery time (hours)
-}
+// Re-export types for backward compatibility
+export type {
+  MarketConditions,
+  PositionRiskProfile,
+  PortfolioRiskMetrics,
+  RiskEngineConfig,
+  RiskAlert,
+  StressTestScenario,
+};
 
 /**
  * Advanced Risk Management Engine
@@ -230,27 +167,43 @@ export class AdvancedRiskEngine {
   }
 
   /**
-   * Update market conditions for risk calculations
+   * Update market conditions for risk calculations with validation
    */
   async updateMarketConditions(conditions: Partial<MarketConditions>): Promise<void> {
-    this.marketConditions = {
+    const updatedConditions = {
       ...this.marketConditions,
       ...conditions,
       timestamp: new Date().toISOString(),
     };
 
+    try {
+      // Validate the updated market conditions
+      this.marketConditions = validateMarketConditions(updatedConditions);
+      console.log("[AdvancedRiskEngine] Market conditions updated and validated");
+    } catch (validationError) {
+      console.error("[AdvancedRiskEngine] Invalid market conditions:", validationError);
+      throw new Error(`Invalid market conditions: ${validationError}`);
+    }
+
     // Check for emergency market conditions
     await this.checkEmergencyMarketConditions();
 
     this.lastRiskUpdate = Date.now();
-    console.log("[AdvancedRiskEngine] Market conditions updated");
   }
 
   /**
-   * Add or update position in risk tracking
+   * Add or update position in risk tracking with validation
    */
   async updatePosition(position: PositionRiskProfile): Promise<void> {
-    this.positions.set(position.symbol, position);
+    try {
+      // Validate the position before storing
+      const validatedPosition = validatePositionRiskProfile(position);
+      this.positions.set(validatedPosition.symbol, validatedPosition);
+      console.log(`[AdvancedRiskEngine] Position updated and validated for ${validatedPosition.symbol}`);
+    } catch (validationError) {
+      console.error("[AdvancedRiskEngine] Invalid position profile:", validationError);
+      throw new Error(`Invalid position profile: ${validationError}`);
+    }
 
     // Recalculate portfolio risk metrics
     const portfolioMetrics = await this.calculatePortfolioRiskMetrics();
@@ -1055,13 +1008,18 @@ export class AdvancedRiskEngine {
         await this.updatePortfolioRisk(update.currentRisk);
       }
 
-      // Store historical metrics
+      // Store historical metrics with proper validation
       const updatedMetrics = await this.calculatePortfolioRiskMetrics();
-      this.historicalMetrics.push({
-        ...updatedMetrics,
-        timestamp: new Date().toISOString(),
-        ...update,
-      } as any);
+      try {
+        const validatedMetrics = validatePortfolioRiskMetrics({
+          ...updatedMetrics,
+          ...update,
+        });
+        this.historicalMetrics.push(validatedMetrics);
+      } catch (validationError) {
+        console.warn("[AdvancedRiskEngine] Invalid portfolio metrics, using base metrics:", validationError);
+        this.historicalMetrics.push(updatedMetrics);
+      }
 
       // Keep only last 1000 historical metrics
       if (this.historicalMetrics.length > 1000) {
@@ -1823,10 +1781,10 @@ export class AdvancedRiskEngine {
     };
   }
 
-  // Add EventEmitter functionality
+  // Add EventEmitter functionality with type safety
   private eventListeners: Map<string, Function[]> = new Map();
 
-  emit(event: string, data: any): void {
+  emit(event: string, data: RiskAlert | PortfolioRiskMetrics | MarketConditions | unknown): void {
     const listeners = this.eventListeners.get(event) || [];
     listeners.forEach((listener) => {
       try {
