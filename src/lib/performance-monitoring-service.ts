@@ -113,6 +113,12 @@ export interface MonitoringConfig {
 // ============================================================================
 
 export class PerformanceMonitoringService {
+  // PERFORMANCE OPTIMIZATION: Memory leak prevention with size limits
+  private static readonly MAX_HISTORY_SIZE = 1000;
+  private static readonly MAX_ALERTS_SIZE = 500;
+  private static readonly MAX_RECOMMENDATIONS_SIZE = 200;
+  private static readonly MAX_RESPONSE_TIMES_SIZE = 1000;
+
   private config: MonitoringConfig;
   private metricsHistory: SystemPerformanceMetrics[] = [];
   private alerts: PerformanceAlert[] = [];
@@ -203,7 +209,7 @@ export class PerformanceMonitoringService {
       };
 
       // Store metrics
-      this.metricsHistory.push(metrics);
+      this.addToMetricsHistory(metrics);
 
       // Clean up old metrics
       this.cleanupOldMetrics();
@@ -353,7 +359,7 @@ export class PerformanceMonitoringService {
     }
 
     // Add new alerts
-    this.alerts.push(...alerts);
+    this.addToAlerts(alerts);
 
     if (alerts.length > 0) {
       console.warn(`[PerformanceMonitoring] Generated ${alerts.length} new alerts`);
@@ -415,7 +421,7 @@ export class PerformanceMonitoringService {
     // Add new recommendations (avoid duplicates)
     const existingIds = new Set(this.recommendations.map((r) => r.id));
     const newRecommendations = recommendations.filter((r) => !existingIds.has(r.id));
-    this.recommendations.push(...newRecommendations);
+    this.addToRecommendations(newRecommendations);
 
     if (newRecommendations.length > 0) {
       console.log(
@@ -438,10 +444,7 @@ export class PerformanceMonitoringService {
     }
 
     // Update response times
-    this.responseTimes.push(responseTime);
-    if (this.responseTimes.length > 1000) {
-      this.responseTimes = this.responseTimes.slice(-1000); // Keep last 1000
-    }
+    this.addToResponseTimes(responseTime);
 
     // Calculate metrics
     this.apiMetrics.avgResponseTime =
@@ -571,6 +574,38 @@ export class PerformanceMonitoringService {
         errorRate: recentMetrics.map((m) => m.api.errorRate),
       },
     };
+  }
+
+  // ============================================================================
+  // PERFORMANCE OPTIMIZATION: Memory Management Helpers
+  // ============================================================================
+
+  private addToMetricsHistory(metrics: SystemPerformanceMetrics): void {
+    this.metricsHistory.push(metrics);
+    if (this.metricsHistory.length > PerformanceMonitoringService.MAX_HISTORY_SIZE) {
+      this.metricsHistory = this.metricsHistory.slice(-PerformanceMonitoringService.MAX_HISTORY_SIZE);
+    }
+  }
+
+  private addToAlerts(alerts: PerformanceAlert[]): void {
+    this.alerts.push(...alerts);
+    if (this.alerts.length > PerformanceMonitoringService.MAX_ALERTS_SIZE) {
+      this.alerts = this.alerts.slice(-PerformanceMonitoringService.MAX_ALERTS_SIZE);
+    }
+  }
+
+  private addToRecommendations(recommendations: PerformanceRecommendation[]): void {
+    this.recommendations.push(...recommendations);
+    if (this.recommendations.length > PerformanceMonitoringService.MAX_RECOMMENDATIONS_SIZE) {
+      this.recommendations = this.recommendations.slice(-PerformanceMonitoringService.MAX_RECOMMENDATIONS_SIZE);
+    }
+  }
+
+  private addToResponseTimes(responseTime: number): void {
+    this.responseTimes.push(responseTime);
+    if (this.responseTimes.length > PerformanceMonitoringService.MAX_RESPONSE_TIMES_SIZE) {
+      this.responseTimes = this.responseTimes.slice(-PerformanceMonitoringService.MAX_RESPONSE_TIMES_SIZE);
+    }
   }
 
   // ============================================================================

@@ -129,6 +129,167 @@ export interface SafetyConfiguration {
   thresholds: SafetyThresholds;
 }
 
+/**
+ * Timer coordination interface for managing scheduled operations
+ */
+interface ScheduledOperation {
+  id: string;
+  name: string;
+  intervalMs: number;
+  lastExecuted: number;
+  isRunning: boolean;
+  handler: () => Promise<void>;
+}
+
+/**
+ * Centralized timer coordinator to prevent overlapping operations
+ */
+class TimerCoordinator {
+  private operations: Map<string, ScheduledOperation> = new Map();
+  private coordinatorTimer: NodeJS.Timeout | null = null;
+  private isActive = false;
+  private readonly baseTickMs = 5000; // 5-second base tick for coordination
+
+  constructor() {
+    console.log("[TimerCoordinator] Timer coordinator initialized");
+  }
+
+  /**
+   * Register a scheduled operation
+   */
+  public registerOperation(operation: Omit<ScheduledOperation, 'lastExecuted' | 'isRunning'>): void {
+    const scheduledOp: ScheduledOperation = {
+      ...operation,
+      lastExecuted: 0,
+      isRunning: false,
+    };
+    
+    this.operations.set(operation.id, scheduledOp);
+    console.log(`[TimerCoordinator] Registered operation: ${operation.name} (${operation.intervalMs}ms)`);
+  }
+
+  /**
+   * Start the timer coordinator
+   */
+  public start(): void {
+    if (this.isActive) {
+      console.warn("[TimerCoordinator] Already active");
+      return;
+    }
+
+    this.isActive = true;
+    console.log("[TimerCoordinator] Starting timer coordination...");
+
+    this.coordinatorTimer = setInterval(() => {
+      this.coordinateCycle().catch((error) => {
+        console.error("[TimerCoordinator] Coordination cycle failed:", error);
+      });
+    }, this.baseTickMs);
+  }
+
+  /**
+   * Stop the timer coordinator and cleanup
+   */
+  public stop(): void {
+    console.log("[TimerCoordinator] Stopping timer coordination...");
+    
+    this.isActive = false;
+    
+    if (this.coordinatorTimer) {
+      clearInterval(this.coordinatorTimer);
+      this.coordinatorTimer = null;
+    }
+
+    // Wait for any running operations to complete
+    const allOperations = Array.from(this.operations.values());
+    const runningOps = allOperations.filter(op => op.isRunning);
+    if (runningOps.length > 0) {
+      console.log(`[TimerCoordinator] Waiting for ${runningOps.length} operations to complete...`);
+    }
+
+    this.operations.clear();
+  }
+
+  /**
+   * Main coordination cycle - prevents overlapping operations
+   */
+  private async coordinateCycle(): Promise<void> {
+    if (!this.isActive) return;
+
+    const now = Date.now();
+    const readyOperations: ScheduledOperation[] = [];
+
+    // Find operations that are ready to execute
+    const allOperations = Array.from(this.operations.values());
+    for (const operation of allOperations) {
+      if (operation.isRunning) {
+        // Skip operations that are already running
+        continue;
+      }
+
+      const timeSinceLastExecution = now - operation.lastExecuted;
+      if (timeSinceLastExecution >= operation.intervalMs) {
+        readyOperations.push(operation);
+      }
+    }
+
+    // Execute ready operations in order of priority (shortest interval first)
+    readyOperations.sort((a, b) => a.intervalMs - b.intervalMs);
+
+    for (const operation of readyOperations) {
+      if (!this.isActive) break; // Check if coordinator was stopped
+
+      await this.executeOperationSafely(operation);
+      
+      // Add small delay between operations to prevent resource contention
+      if (readyOperations.length > 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+  }
+
+  /**
+   * Execute an operation with proper error handling and state management
+   */
+  private async executeOperationSafely(operation: ScheduledOperation): Promise<void> {
+    try {
+      operation.isRunning = true;
+      operation.lastExecuted = Date.now();
+      
+      console.log(`[TimerCoordinator] Executing: ${operation.name}`);
+      await operation.handler();
+      
+      console.log(`[TimerCoordinator] Completed: ${operation.name}`);
+    } catch (error) {
+      console.error(`[TimerCoordinator] Operation failed: ${operation.name}`, error);
+    } finally {
+      operation.isRunning = false;
+    }
+  }
+
+  /**
+   * Get operation status for monitoring
+   */
+  public getOperationStatus(): Array<{
+    id: string;
+    name: string;
+    intervalMs: number;
+    lastExecuted: number;
+    isRunning: boolean;
+    nextExecution: number;
+  }> {
+    const allOperations = Array.from(this.operations.values());
+    return allOperations.map(op => ({
+      id: op.id,
+      name: op.name,
+      intervalMs: op.intervalMs,
+      lastExecuted: op.lastExecuted,
+      isRunning: op.isRunning,
+      nextExecution: op.lastExecuted + op.intervalMs,
+    }));
+  }
+}
+
 export class RealTimeSafetyMonitoringService {
   private static instance: RealTimeSafetyMonitoringService;
 
@@ -143,8 +304,7 @@ export class RealTimeSafetyMonitoringService {
   private alerts: SafetyAlert[] = [];
   private recentActions: SafetyAction[] = [];
 
-  private monitoringInterval: NodeJS.Timeout | null = null;
-  private riskCheckInterval: NodeJS.Timeout | null = null;
+  private timerCoordinator: TimerCoordinator;
 
   private monitoringStats = {
     alertsGenerated: 0,
@@ -162,6 +322,7 @@ export class RealTimeSafetyMonitoringService {
 
     this.config = this.getDefaultConfiguration();
     this.riskMetrics = this.getDefaultRiskMetrics();
+    this.timerCoordinator = new TimerCoordinator();
 
     console.log("[SafetyMonitoring] Real-time safety monitoring service initialized");
   }
@@ -186,30 +347,42 @@ export class RealTimeSafetyMonitoringService {
     this.isMonitoringActive = true;
     this.monitoringStats.startTime = Date.now();
 
-    // Start monitoring cycles
-    this.monitoringInterval = setInterval(() => {
-      this.performMonitoringCycle().catch((error) => {
-        console.error("[SafetyMonitoring] Monitoring cycle failed:", error);
-        this.addAlert({
-          type: "system_failure",
-          severity: "high",
-          category: "system",
-          title: "Monitoring Cycle Failed",
-          message: `Safety monitoring cycle failed: ${error.message}`,
-          riskLevel: 80,
-          source: "monitoring_cycle",
-          autoActions: [],
-          metadata: { error: error.message },
+    // Register monitoring operations with the timer coordinator
+    this.timerCoordinator.registerOperation({
+      id: "monitoring_cycle",
+      name: "Safety Monitoring Cycle",
+      intervalMs: this.config.monitoringIntervalMs,
+      handler: async () => {
+        await this.performMonitoringCycle().catch((error) => {
+          console.error("[SafetyMonitoring] Monitoring cycle failed:", error);
+          this.addAlert({
+            type: "system_failure",
+            severity: "high",
+            category: "system",
+            title: "Monitoring Cycle Failed",
+            message: `Safety monitoring cycle failed: ${error.message}`,
+            riskLevel: 80,
+            source: "monitoring_cycle",
+            autoActions: [],
+            metadata: { error: error.message },
+          });
         });
-      });
-    }, this.config.monitoringIntervalMs);
+      },
+    });
 
-    // Start risk assessment cycles
-    this.riskCheckInterval = setInterval(() => {
-      this.performRiskAssessment().catch((error) => {
-        console.error("[SafetyMonitoring] Risk assessment failed:", error);
-      });
-    }, this.config.riskCheckIntervalMs);
+    this.timerCoordinator.registerOperation({
+      id: "risk_assessment",
+      name: "Risk Assessment Cycle",
+      intervalMs: this.config.riskCheckIntervalMs,
+      handler: async () => {
+        await this.performRiskAssessment().catch((error) => {
+          console.error("[SafetyMonitoring] Risk assessment failed:", error);
+        });
+      },
+    });
+
+    // Start the coordinated timer system
+    this.timerCoordinator.start();
 
     this.addAlert({
       type: "emergency_condition",
@@ -232,15 +405,8 @@ export class RealTimeSafetyMonitoringService {
 
     this.isMonitoringActive = false;
 
-    if (this.monitoringInterval) {
-      clearInterval(this.monitoringInterval);
-      this.monitoringInterval = null;
-    }
-
-    if (this.riskCheckInterval) {
-      clearInterval(this.riskCheckInterval);
-      this.riskCheckInterval = null;
-    }
+    // Stop the timer coordinator (handles cleanup of all timers)
+    this.timerCoordinator.stop();
 
     this.addAlert({
       type: "emergency_condition",
@@ -253,6 +419,20 @@ export class RealTimeSafetyMonitoringService {
       autoActions: [],
       metadata: { stopTime: new Date().toISOString() },
     });
+  }
+
+  /**
+   * Get timer coordination status for monitoring
+   */
+  public getTimerStatus(): Array<{
+    id: string;
+    name: string;
+    intervalMs: number;
+    lastExecuted: number;
+    isRunning: boolean;
+    nextExecution: number;
+  }> {
+    return this.timerCoordinator.getOperationStatus();
   }
 
   /**
@@ -449,19 +629,32 @@ export class RealTimeSafetyMonitoringService {
   // Private methods
 
   private async performMonitoringCycle(): Promise<void> {
-    if (!this.isMonitoringActive) return;
+    if (!this.isMonitoringActive) {
+      console.log("[SafetyMonitoring] Skipping monitoring cycle - service not active");
+      return;
+    }
+
+    const startTime = Date.now();
+    console.log("[SafetyMonitoring] Starting monitoring cycle...");
 
     try {
-      // Update risk metrics
+      // Update risk metrics with timeout protection
       await this.updateRiskMetrics();
+
+      // Validate we're still active before continuing
+      if (!this.isMonitoringActive) return;
 
       // Check all safety thresholds
       await this.checkSafetyThresholds();
 
+      // Validate we're still active before cleanup
+      if (!this.isMonitoringActive) return;
+
       // Clean up old alerts
       this.cleanupOldAlerts();
 
-      console.log("[SafetyMonitoring] Monitoring cycle completed");
+      const duration = Date.now() - startTime;
+      console.log(`[SafetyMonitoring] Monitoring cycle completed in ${duration}ms`);
     } catch (error) {
       console.error("[SafetyMonitoring] Monitoring cycle error:", error);
       throw error;
@@ -469,21 +662,35 @@ export class RealTimeSafetyMonitoringService {
   }
 
   private async performRiskAssessment(): Promise<void> {
-    if (!this.isMonitoringActive) return;
+    if (!this.isMonitoringActive) {
+      console.log("[SafetyMonitoring] Skipping risk assessment - service not active");
+      return;
+    }
+
+    const startTime = Date.now();
+    console.log("[SafetyMonitoring] Starting risk assessment...");
 
     try {
       // Run all risk assessments in parallel for 3x faster execution
       // These are independent operations that can safely run concurrently
-      await Promise.all([
+      const assessmentPromises = [
         this.assessPortfolioRisk(),
         this.assessPerformanceRisk(),
         this.assessPatternRisk(),
-      ]);
+      ];
+
+      await Promise.all(assessmentPromises);
+
+      // Validate we're still active before updating stats
+      if (!this.isMonitoringActive) return;
 
       this.monitoringStats.riskEventsDetected++;
-      console.log("[SafetyMonitoring] Risk assessment completed");
+      
+      const duration = Date.now() - startTime;
+      console.log(`[SafetyMonitoring] Risk assessment completed in ${duration}ms`);
     } catch (error) {
       console.error("[SafetyMonitoring] Risk assessment error:", error);
+      // Don't throw error in risk assessment to prevent disrupting timer coordination
     }
   }
 

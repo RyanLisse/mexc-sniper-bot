@@ -77,10 +77,10 @@ export class DatabaseConnectionPool {
 
   constructor() {
     this.config = {
-      maxConnections: 20,
-      minConnections: 5,
-      acquireTimeoutMs: 10000,
-      idleTimeoutMs: 30000,
+      maxConnections: 100, // PERFORMANCE OPTIMIZATION: Increased from 20 to 100 for high-volume trading
+      minConnections: 10,  // Increased from 5 to maintain adequate idle connections
+      acquireTimeoutMs: 5000,  // Reduced from 10s to 5s for faster failure detection
+      idleTimeoutMs: 15000,    // Reduced from 30s to 15s for faster connection recycling
       maxRetries: 3,
       healthCheckIntervalMs: 60000, // 1 minute
       enableConnectionReuse: true,

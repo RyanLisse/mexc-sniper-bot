@@ -92,7 +92,7 @@ const DEFAULT_CONFIG: Required<UnifiedMexcConfig> = {
   enableMetrics: true,
   enableEnhancedCaching: true,
   enablePerformanceMonitoring: true,
-  apiResponseTTL: 5000,
+  apiResponseTTL: 1500, // PERFORMANCE OPTIMIZATION: Reduced from 5000ms to 1.5s for real-time trading
 };
 
 // ============================================================================
@@ -242,7 +242,7 @@ export class UnifiedMexcService {
     const response = await this.apiClient.get<Ticker | Ticker[]>(
       "/api/v3/ticker/24hr",
       params,
-      { cacheTTL: 5000 } // 5 seconds cache for ticker data
+      { cacheTTL: 1000 } // PERFORMANCE OPTIMIZATION: Reduced from 5s to 1s for real-time trading
     );
 
     if (response.success && response.data) {

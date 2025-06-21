@@ -14,6 +14,7 @@ import { db } from "../../../../src/db";
 import { apiCredentials, executionHistory } from "../../../../src/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getEncryptionService } from "../../../../src/services/secure-encryption-service";
+import { getCachedCredentials } from "../../../../src/lib/credential-cache";
 import type { NewExecutionHistory } from "../../../../src/db/schema";
 
 export async function POST(request: NextRequest) {
@@ -48,10 +49,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Decrypt API credentials
-    const encryptionService = getEncryptionService();
-    const apiKey = encryptionService.decrypt(credentials[0].encryptedApiKey);
-    const secretKey = encryptionService.decrypt(credentials[0].encryptedSecretKey);
+    // PERFORMANCE OPTIMIZATION: Use cached credentials to reduce decryption overhead
+    const { apiKey, secretKey } = await getCachedCredentials(
+      userId,
+      credentials[0].encryptedApiKey,
+      credentials[0].encryptedSecretKey,
+      credentials[0].encryptedPassphrase
+    );
 
     // Validate required parameters
     if (!symbol || !side || !type || !quantity) {
