@@ -1,6 +1,20 @@
 import * as crypto from "node:crypto";
 import { z } from "zod";
 import { mexcApiBreaker } from "./circuit-breaker";
+import {
+  CalendarEntrySchema,
+  SymbolEntrySchema,
+  BalanceEntrySchema,
+  ExchangeSymbolSchema,
+  TickerSchema,
+  OrderResultSchema,
+  type CalendarEntry,
+  type SymbolEntry,
+  type BalanceEntry,
+  type ExchangeSymbol,
+  type Ticker,
+  type OrderResult,
+} from "../schemas/mexc-schemas-extracted";
 
 // ============================================================================
 // Core Configuration and Types
@@ -28,78 +42,24 @@ export interface UnifiedMexcResponse<T> {
 }
 
 // ============================================================================
-// Common Data Schemas
+// Re-exported Schemas from Extracted Module
 // ============================================================================
 
-export const CalendarEntrySchema = z.object({
-  vcoinId: z.string(),
-  symbol: z.string(),
-  projectName: z.string(),
-  firstOpenTime: z.number(),
-});
-
-export const SymbolEntrySchema = z.object({
-  cd: z.string(),
-  sts: z.number(),
-  st: z.number(),
-  tt: z.number(),
-  ca: z.record(z.unknown()).optional(),
-  ps: z.record(z.unknown()).optional(),
-  qs: z.record(z.unknown()).optional(),
-  ot: z.record(z.unknown()).optional(),
-});
-
-export const BalanceEntrySchema = z.object({
-  asset: z.string(),
-  free: z.string(),
-  locked: z.string(),
-  total: z.number(),
-  usdtValue: z.number().optional(),
-});
-
-export const ExchangeSymbolSchema = z.object({
-  symbol: z.string(),
-  status: z.string(),
-  baseAsset: z.string(),
-  quoteAsset: z.string(),
-  baseAssetPrecision: z.number(),
-  quotePrecision: z.number(),
-  quoteAssetPrecision: z.number(),
-});
-
-export const TickerSchema = z.object({
-  symbol: z.string(),
-  lastPrice: z.string(),
-  price: z.string(),
-  priceChange: z.string(),
-  priceChangePercent: z.string(),
-  volume: z.string(),
-  quoteVolume: z.string().optional(),
-  openPrice: z.string().optional(),
-  highPrice: z.string().optional(),
-  lowPrice: z.string().optional(),
-  count: z.string().optional(),
-});
-
-export const OrderResultSchema = z.object({
-  success: z.boolean(),
-  orderId: z.string().optional(),
-  symbol: z.string(),
-  side: z.string(),
-  quantity: z.string(),
-  price: z.string().optional(),
-  status: z.string().optional(),
-  error: z.string().optional(),
-  timestamp: z.string(),
-});
-
-// Type exports
-export type CalendarEntry = z.infer<typeof CalendarEntrySchema>;
-export type SymbolEntry = z.infer<typeof SymbolEntrySchema>;
-export type BalanceEntry = z.infer<typeof BalanceEntrySchema>;
-export type ExchangeSymbol = z.infer<typeof ExchangeSymbolSchema>;
-export type Ticker = z.infer<typeof TickerSchema>;
-export type OrderResult = z.infer<typeof OrderResultSchema>;
+// Schemas are now imported from the extracted module to eliminate duplication
+export {
+  CalendarEntrySchema,
+  SymbolEntrySchema,
+  BalanceEntrySchema,
+  ExchangeSymbolSchema,
+  TickerSchema,
+  OrderResultSchema,
+  type CalendarEntry,
+  type SymbolEntry,
+  type BalanceEntry,
+  type ExchangeSymbol,
+  type Ticker,
+  type OrderResult,
+};
 
 // ============================================================================
 // Request Cache System
