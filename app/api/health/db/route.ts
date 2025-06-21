@@ -1,5 +1,5 @@
 import { checkDatabaseHealth, checkAuthTables } from "../../../../src/lib/db-health-check";
-import { NextResponse } from "next/server";
+import { createHealthResponse, apiResponse, handleApiError } from "../../../../src/lib/api-response";
 
 export async function GET() {
   try {
@@ -19,24 +19,20 @@ export async function GET() {
     
     const isHealthy = dbHealth.healthy && authTables.healthy;
     
-    return NextResponse.json({
-      status: isHealthy ? 'healthy' : 'unhealthy',
-      database: dbHealth,
-      authTables: authTables,
-      environment: envCheck,
-      timestamp: new Date().toISOString(),
-    }, {
-      status: isHealthy ? 200 : 503,
-    });
+    const healthResult = {
+      status: isHealthy ? 'healthy' as const : 'unhealthy' as const,
+      message: isHealthy ? 'Database is healthy' : 'Database has issues',
+      details: {
+        database: dbHealth,
+        authTables: authTables,
+        environment: envCheck,
+      }
+    };
+    
+    const response = createHealthResponse(healthResult);
+    return apiResponse(response, isHealthy ? 200 : 503);
   } catch (error) {
     console.error("[Health Check] Error:", error);
-    const errorObj = error as Error | { message?: string };
-    return NextResponse.json({
-      status: 'error',
-      error: errorObj?.message || 'Unknown error',
-      timestamp: new Date().toISOString(),
-    }, {
-      status: 500,
-    });
+    return handleApiError(error, "Database health check failed");
   }
 }

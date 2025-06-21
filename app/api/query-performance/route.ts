@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { queryPerformanceMonitor } from "../../../src/services/query-performance-monitor";
+import { apiResponse, createOperationResponse, handleApiError } from "../../../src/lib/api-response";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,49 +11,28 @@ export async function GET(request: NextRequest) {
     switch (action) {
       case 'stats':
         const stats = queryPerformanceMonitor.getPerformanceStats(timeframe);
-        return NextResponse.json({
-          success: true,
-          data: stats,
-        });
+        return apiResponse.success(stats, { operation: 'get-stats', timeframe });
 
       case 'patterns':
         const patterns = queryPerformanceMonitor.analyzeQueryPatterns(timeframe);
-        return NextResponse.json({
-          success: true,
-          data: patterns,
-        });
+        return apiResponse.success(patterns, { operation: 'analyze-patterns', timeframe });
 
       case 'recommendations':
         const recommendations = queryPerformanceMonitor.getOptimizationRecommendations(timeframe);
-        return NextResponse.json({
-          success: true,
-          data: recommendations,
-        });
+        return apiResponse.success(recommendations, { operation: 'get-recommendations', timeframe });
 
       case 'export':
         const exportData = queryPerformanceMonitor.exportMetrics(timeframe);
-        return NextResponse.json({
-          success: true,
-          data: exportData,
-        });
+        return apiResponse.success(exportData, { operation: 'export-metrics', timeframe });
 
       case 'status':
       default:
         const status = queryPerformanceMonitor.getStatus();
-        return NextResponse.json({
-          success: true,
-          data: status,
-        });
+        return apiResponse.success(status, { operation: 'get-status' });
     }
   } catch (error) {
     console.error("❌ Error getting query performance data:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to get query performance data",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, "Failed to get query performance data");
   }
 }
 
@@ -64,45 +44,36 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "start":
         queryPerformanceMonitor.startMonitoring();
-        return NextResponse.json({
+        const startResult = createOperationResponse({
           success: true,
-          message: "Query performance monitoring started",
-          data: queryPerformanceMonitor.getStatus(),
+          operation: "start_monitoring",
+          data: queryPerformanceMonitor.getStatus()
         });
+        return apiResponse(startResult);
 
       case "stop":
         queryPerformanceMonitor.stopMonitoring();
-        return NextResponse.json({
+        const stopResult = createOperationResponse({
           success: true,
-          message: "Query performance monitoring stopped",
-          data: queryPerformanceMonitor.getStatus(),
+          operation: "stop_monitoring",
+          data: queryPerformanceMonitor.getStatus()
         });
+        return apiResponse(stopResult);
 
       case "clear":
         queryPerformanceMonitor.clearMetrics();
-        return NextResponse.json({
+        const clearResult = createOperationResponse({
           success: true,
-          message: "Query performance metrics cleared",
-          data: queryPerformanceMonitor.getStatus(),
+          operation: "clear_metrics",
+          data: queryPerformanceMonitor.getStatus()
         });
+        return apiResponse(clearResult);
 
       default:
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Invalid action. Use 'start', 'stop', or 'clear'",
-          },
-          { status: 400 }
-        );
+        return apiResponse.badRequest("Invalid action. Use 'start', 'stop', or 'clear'");
     }
   } catch (error) {
     console.error("❌ Error controlling query performance monitor:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Failed to control query performance monitor",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, "Failed to control query performance monitor");
   }
 }

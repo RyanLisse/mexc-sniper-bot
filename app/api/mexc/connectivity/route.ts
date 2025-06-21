@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { getUserCredentials } from "../../../../src/services/user-credentials-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { ErrorFactory } from "../../../../src/lib/error-types";
 import { errorHandler } from "../../../../src/lib/error-handler-service";
+import { createCredentialResponse, apiResponse, handleApiError } from "../../../../src/lib/api-response";
 
 interface ConnectivityResponse {
   connected: boolean;
@@ -32,45 +32,44 @@ export async function GET() {
     // Test basic connectivity first
     const isConnected = await testMexcConnectivity(mexcService);
     if (!isConnected) {
-      return createConnectivityResponse({
-        connected: false,
+      const credentialResult = {
         hasCredentials: false,
         credentialsValid: false,
         credentialSource: credentials.source,
-        hasUserCredentials: credentials.hasUserCredentials,
-        hasEnvironmentCredentials: credentials.hasEnvironmentCredentials,
+        connected: false,
         error: "MEXC API unreachable",
-        status: "network_error",
-      });
+        details: {
+          hasUserCredentials: credentials.hasUserCredentials,
+          hasEnvironmentCredentials: credentials.hasEnvironmentCredentials,
+          status: "network_error",
+        }
+      };
+      const response = createCredentialResponse(credentialResult);
+      return apiResponse(response);
     }
 
     // Test credentials if available
     const credentialsResult = await testCredentials(mexcService, credentials);
     
-    return createConnectivityResponse({
-      connected: true,
+    const credentialResult = {
       hasCredentials: credentialsResult.hasCredentials,
       credentialsValid: credentialsResult.isValid,
       credentialSource: credentials.source,
-      hasUserCredentials: credentials.hasUserCredentials,
-      hasEnvironmentCredentials: credentials.hasEnvironmentCredentials,
-      message: credentialsResult.message,
+      connected: true,
       error: credentialsResult.error,
-      status: credentialsResult.status,
-    });
+      details: {
+        hasUserCredentials: credentials.hasUserCredentials,
+        hasEnvironmentCredentials: credentials.hasEnvironmentCredentials,
+        message: credentialsResult.message,
+        status: credentialsResult.status,
+      }
+    };
+    const response = createCredentialResponse(credentialResult);
+    return apiResponse(response);
     
   } catch (error) {
-    const appError = await errorHandler.handleError(error, {
-      operation: "mexc-connectivity-check",
-      requestId,
-    });
-    
-    console.error("MEXC connectivity check failed:", appError.toJSON());
-    
-    return NextResponse.json(
-      errorHandler.createErrorResponse(appError, { requestId }),
-      { status: 500 }
-    );
+    console.error("[MEXC Connectivity] Error:", error);
+    return handleApiError(error, "MEXC connectivity check failed");
   }
 }
 
@@ -172,19 +171,4 @@ async function testCredentials(
   }
 }
 
-function createConnectivityResponse(data: Partial<ConnectivityResponse>): NextResponse {
-  const response: ConnectivityResponse = {
-    connected: data.connected ?? false,
-    hasCredentials: data.hasCredentials ?? false,
-    credentialsValid: data.credentialsValid ?? false,
-    credentialSource: data.credentialSource ?? "none",
-    hasUserCredentials: data.hasUserCredentials ?? false,
-    hasEnvironmentCredentials: data.hasEnvironmentCredentials ?? false,
-    message: data.message,
-    error: data.error,
-    timestamp: new Date().toISOString(),
-    status: data.status ?? "unknown",
-  };
-  
-  return NextResponse.json(response);
-}
+// Removed - using standardized createCredentialResponse instead
