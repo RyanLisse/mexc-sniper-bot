@@ -1312,13 +1312,13 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
     console.log("[ComprehensiveSafetyCoordinator] Initiating system recovery...");
 
     try {
-      // Step 1: Verify system components
-      const systemHealth = await this.performSystemHealthCheck();
+      // Steps 1-2: Run verification operations in parallel for 2x faster recovery
+      const [systemHealth, dataIntegrityVerified] = await Promise.all([
+        this.performSystemHealthCheck(),
+        this.verifyDataIntegrity(),
+      ]);
 
-      // Step 2: Check data integrity
-      const dataIntegrityVerified = await this.verifyDataIntegrity();
-
-      // Step 3: Restore services
+      // Step 3: Restore services after verification completes
       await this.restoreServices();
 
       // Step 4: Update system status

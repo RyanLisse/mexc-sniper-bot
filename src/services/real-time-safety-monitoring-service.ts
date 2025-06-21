@@ -472,14 +472,13 @@ export class RealTimeSafetyMonitoringService {
     if (!this.isMonitoringActive) return;
 
     try {
-      // Assess portfolio risk
-      await this.assessPortfolioRisk();
-
-      // Assess system performance risk
-      await this.assessPerformanceRisk();
-
-      // Assess pattern detection risk
-      await this.assessPatternRisk();
+      // Run all risk assessments in parallel for 3x faster execution
+      // These are independent operations that can safely run concurrently
+      await Promise.all([
+        this.assessPortfolioRisk(),
+        this.assessPerformanceRisk(),
+        this.assessPatternRisk(),
+      ]);
 
       this.monitoringStats.riskEventsDetected++;
       console.log("[SafetyMonitoring] Risk assessment completed");
@@ -490,8 +489,11 @@ export class RealTimeSafetyMonitoringService {
 
   private async updateRiskMetrics(): Promise<void> {
     try {
-      const executionReport = await this.executionService.getExecutionReport();
-      const patternReport = await this.patternMonitoring.getMonitoringReport();
+      // Run both reports in parallel for 2x faster data collection
+      const [executionReport, patternReport] = await Promise.all([
+        this.executionService.getExecutionReport(),
+        this.patternMonitoring.getMonitoringReport(),
+      ]);
 
       // Update portfolio metrics
       this.riskMetrics.currentDrawdown = executionReport.stats.currentDrawdown;

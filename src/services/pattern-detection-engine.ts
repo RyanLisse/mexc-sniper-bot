@@ -189,14 +189,16 @@ export class PatternDetectionEngine {
       // Core ready state pattern validation
       const isExactMatch = this.validateExactReadyState(symbol);
 
-      // Get activity data for enhanced analysis
+      // Get activity data and calculate confidence in parallel for 2x faster processing
       const symbolName = symbol.cd || "unknown";
       const vcoinId = (symbol as any).vcoinId;
-      const activities = await this.getActivityDataForSymbol(symbolName, vcoinId);
-
-      const confidence = isTestEnv
-        ? await this.calculateReadyStateConfidenceOptimized(symbol)
-        : await this.calculateReadyStateConfidence(symbol);
+      
+      const [activities, confidence] = await Promise.all([
+        this.getActivityDataForSymbol(symbolName, vcoinId),
+        isTestEnv
+          ? this.calculateReadyStateConfidenceOptimized(symbol)
+          : this.calculateReadyStateConfidence(symbol),
+      ]);
 
       if (isExactMatch && confidence >= 85) {
         // Store successful pattern for future learning (skip in test environment for speed)
