@@ -29,6 +29,7 @@ import {
   SidebarTrigger,
 } from "./ui/optimized-exports";
 import {
+  Activity,
   Bot,
   Brain,
   CheckCircle,
@@ -63,6 +64,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       title: "Safety",
       href: "/safety",
       icon: Shield,
+    },
+    {
+      title: "Monitoring",
+      href: "/monitoring",
+      icon: Activity,
     },
     {
       title: "Agents",

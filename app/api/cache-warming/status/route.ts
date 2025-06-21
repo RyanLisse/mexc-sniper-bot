@@ -79,7 +79,7 @@ async function getCacheWarmingStatus() {
 
     return {
       isActive: !!cacheWarmingService, // Service exists and is initialized
-      strategies: Array.from(strategies.entries()).map(([name, strategy]: [string, any]) => ({
+      strategies: (Array.from(strategies.entries()) as [string, any][]).map(([name, strategy]) => ({
         name,
         enabled: strategy.enabled,
         priority: strategy.priority,

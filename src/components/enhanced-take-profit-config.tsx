@@ -193,7 +193,7 @@ export function EnhancedTakeProfitConfig({
                         Profit Levels:
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {strategy.levels.map((level, index) => (
+                        {strategy.levels.map((level, _index) => (
                           <Badge key={level.id} variant="outline" className="text-xs">
                             {level.profitPercentage}% ({level.sellQuantity}%)
                           </Badge>
@@ -373,7 +373,7 @@ function CustomLevelEditor({
   index,
   onUpdate,
   onRemove,
-  totalSellQuantity,
+  totalSellQuantity: _totalSellQuantity,
 }: CustomLevelEditorProps) {
   const [errors, setErrors] = useState<string[]>([]);
 

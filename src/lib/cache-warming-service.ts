@@ -157,7 +157,7 @@ export class CacheWarmingService {
       process.env.npm_lifecycle_event === "build" ||
       process.env.npm_command === "run-script" ||
       // Static generation
-      typeof window === "undefined" && process.env.NODE_ENV === "production"
+      (typeof window === "undefined" && process.env.NODE_ENV === "production")
     ) {
       return true;
     }

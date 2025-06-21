@@ -19,6 +19,9 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// Helper type for safety status entries
+type SafetyStatusEntry = { passed: boolean; issues: string[]; recommendations: string[] };
+
 interface SystemOverviewData {
   timestamp: string;
   systemStatus: {
@@ -58,17 +61,17 @@ interface SystemOverviewData {
     database: {
       status: string;
       responseTime: number;
-      details: any;
+      details: Record<string, unknown>;
     };
     mexcApi: {
       status: string;
       responseTime: number;
-      details: any;
+      details: Record<string, unknown>;
     };
     openAi: {
       status: string;
       responseTime: number;
-      details: any;
+      details: Record<string, unknown>;
     };
   };
   safetyStatus: {
@@ -518,34 +521,41 @@ export function SystemArchitectureOverview() {
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm flex items-center justify-between">
                           {system.replace(/([A-Z])/g, " $1").trim()}
-                          {getStatusIcon((status as any).passed)}
+                          {getStatusIcon((status as SafetyStatusEntry).passed)}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
-                        <Badge variant={(status as any).passed ? "default" : "destructive"}>
-                          {(status as any).passed ? "Operational" : "Issues Detected"}
+                        <Badge
+                          variant={(status as SafetyStatusEntry).passed ? "default" : "destructive"}
+                        >
+                          {(status as SafetyStatusEntry).passed ? "Operational" : "Issues Detected"}
                         </Badge>
 
-                        {(status as any).issues && (status as any).issues.length > 0 && (
-                          <div className="space-y-1">
-                            <p className="text-xs font-medium text-red-600">Issues:</p>
-                            {(status as any).issues.map((issue: string, index: number) => (
-                              <p key={index} className="text-xs text-red-600">
-                                • {issue}
-                              </p>
-                            ))}
-                          </div>
-                        )}
+                        {(status as SafetyStatusEntry).issues &&
+                          (status as SafetyStatusEntry).issues.length > 0 && (
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-red-600">Issues:</p>
+                              {(status as SafetyStatusEntry).issues.map(
+                                (issue: string, index: number) => (
+                                  <p key={index} className="text-xs text-red-600">
+                                    • {issue}
+                                  </p>
+                                )
+                              )}
+                            </div>
+                          )}
 
-                        {(status as any).recommendations &&
-                          (status as any).recommendations.length > 0 && (
+                        {(status as SafetyStatusEntry).recommendations &&
+                          (status as SafetyStatusEntry).recommendations.length > 0 && (
                             <div className="space-y-1">
                               <p className="text-xs font-medium text-blue-600">Recommendations:</p>
-                              {(status as any).recommendations.map((rec: string, index: number) => (
-                                <p key={index} className="text-xs text-blue-600">
-                                  • {rec}
-                                </p>
-                              ))}
+                              {(status as SafetyStatusEntry).recommendations.map(
+                                (rec: string, index: number) => (
+                                  <p key={index} className="text-xs text-blue-600">
+                                    • {rec}
+                                  </p>
+                                )
+                              )}
                             </div>
                           )}
                       </CardContent>

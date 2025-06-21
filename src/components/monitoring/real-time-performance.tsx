@@ -52,7 +52,7 @@ interface PerformanceData {
         successRate: number;
         cacheHitRate: number;
         lastActivity: string;
-        [key: string]: any;
+        [key: string]: string | number;
       }
     >;
     safety: Record<

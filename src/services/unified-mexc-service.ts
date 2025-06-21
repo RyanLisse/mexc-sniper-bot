@@ -1627,6 +1627,194 @@ export class UnifiedMexcService {
     };
   }
 
+  // ============================================================================
+  // Missing Trading Methods for Test Compatibility
+  // ============================================================================
+
+  /**
+   * Get symbol status (trading state)
+   */
+  async getSymbolStatus(
+    symbol: string
+  ): Promise<MexcServiceResponse<{ status: string; timestamp: number }>> {
+    try {
+      const exchangeInfo = await this.getExchangeInfo();
+      if (!exchangeInfo.success || !exchangeInfo.data?.symbols) {
+        return {
+          success: false,
+          error: "Failed to fetch exchange info",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      const symbolInfo = exchangeInfo.data.symbols.find((s) => s.symbol === symbol);
+      return {
+        success: true,
+        data: {
+          status: symbolInfo?.status || "UNKNOWN",
+          timestamp: Date.now(),
+        },
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get symbol status",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Get order book depth (enhanced version of getOrderBook)
+   */
+  async getOrderBookDepth(
+    symbol: string,
+    limit = 100
+  ): Promise<MexcServiceResponse<{ bids: number[][]; asks: number[][] }>> {
+    try {
+      const orderBook = await this.getOrderBook(symbol, limit);
+      if (!orderBook.success || !orderBook.data) {
+        return {
+          success: false,
+          error: orderBook.error || "Failed to fetch order book",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Convert string arrays to number arrays for enhanced depth analysis
+      const bids = orderBook.data.bids.map(([price, quantity]) => [
+        Number.parseFloat(price),
+        Number.parseFloat(quantity),
+      ]);
+      const asks = orderBook.data.asks.map(([price, quantity]) => [
+        Number.parseFloat(price),
+        Number.parseFloat(quantity),
+      ]);
+
+      return {
+        success: true,
+        data: { bids, asks },
+        timestamp: new Date().toISOString(),
+        cached: orderBook.cached,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get order book depth",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Get 24hr ticker statistics
+   */
+  async get24hrTicker(symbol: string): Promise<
+    MexcServiceResponse<{
+      symbol: string;
+      volume: string;
+      count: number;
+      high: string;
+      low: string;
+      lastPrice: string;
+    }>
+  > {
+    try {
+      const ticker = await this.getTicker(symbol);
+      if (!ticker.success || !ticker.data) {
+        return {
+          success: false,
+          error: ticker.error || "Failed to fetch ticker",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          symbol: ticker.data.symbol,
+          volume: ticker.data.volume,
+          count: Number.parseInt(ticker.data.count || "0"),
+          high: ticker.data.highPrice || "0",
+          low: ticker.data.lowPrice || "0",
+          lastPrice: ticker.data.lastPrice,
+        },
+        timestamp: new Date().toISOString(),
+        cached: ticker.cached,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get 24hr ticker",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Detect price gaps in market data
+   */
+  async detectPriceGap(
+    symbol: string,
+    options: {
+      threshold?: number;
+      lookbackMinutes?: number;
+    } = {}
+  ): Promise<
+    MexcServiceResponse<{
+      hasGap: boolean;
+      gapPercentage: number;
+      previousPrice: number;
+      currentPrice: number;
+      gapType: string;
+    }>
+  > {
+    try {
+      const { threshold = 2.0, lookbackMinutes = 5 } = options;
+
+      // Get recent klines to analyze price movement
+      const klines = await this.getKlines(symbol, "1m", 10);
+      if (!klines.success || !klines.data || klines.data.length < 2) {
+        return {
+          success: false,
+          error: "Insufficient price data for gap detection",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      const recentKlines = klines.data.slice(-2);
+      const previousPrice = Number.parseFloat(recentKlines[0].close);
+      const currentPrice = Number.parseFloat(recentKlines[1].close);
+
+      const gapPercentage = Math.abs((currentPrice - previousPrice) / previousPrice) * 100;
+      const hasGap = gapPercentage >= threshold;
+
+      let gapType = "none";
+      if (hasGap) {
+        gapType = currentPrice > previousPrice ? "gap_up" : "gap_down";
+      }
+
+      return {
+        success: true,
+        data: {
+          hasGap,
+          gapPercentage,
+          previousPrice,
+          currentPrice,
+          gapType,
+        },
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to detect price gap",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
   /**
    * Get cache stats
    */

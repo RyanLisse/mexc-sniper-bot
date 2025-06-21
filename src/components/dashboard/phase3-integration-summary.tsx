@@ -9,12 +9,59 @@ import { Badge } from "../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
 
+// Type definitions for component props
+interface AIServicesData {
+  overall?: {
+    status: string;
+    availableServices: number;
+    totalServices: number;
+  };
+  services?: {
+    cohere?: { available: boolean };
+    perplexity?: { available: boolean };
+    openai?: { available: boolean };
+  };
+}
+
+interface CacheMetricsData {
+  warming?: {
+    isActive: boolean;
+    metrics?: {
+      successRate: number;
+    };
+  };
+  connection?: {
+    redis?: { connected: boolean };
+    valkey?: { connected: boolean };
+  };
+  performance?: {
+    hitRate: number;
+  };
+}
+
+interface EnhancedPatternsData {
+  summary?: {
+    totalPatterns: number;
+    aiEnhancedPatterns: number;
+    averageConfidence: number;
+    averageAdvanceHours: number;
+  };
+}
+
+interface FeatureStatusData {
+  aiIntelligenceEnabled?: boolean;
+  cacheWarmingEnabled?: boolean;
+  performanceMonitoringEnabled?: boolean;
+  advanceDetectionEnabled?: boolean;
+  targetAdvanceHours?: number;
+}
+
 // Helper function for overall status
 const getOverallStatus = (
-  aiServices: any,
-  cacheMetrics: any,
-  enhancedPatterns: any,
-  featureStatus: any
+  aiServices: AIServicesData | undefined,
+  cacheMetrics: CacheMetricsData | undefined,
+  enhancedPatterns: EnhancedPatternsData | undefined,
+  featureStatus: FeatureStatusData | undefined
 ) => {
   const checks = [
     aiServices?.overall?.status === "healthy",
@@ -33,7 +80,7 @@ const getOverallStatus = (
 };
 
 // Sub-components for Phase3IntegrationSummary
-function AIIntelligenceStatus({ aiServices }: { aiServices: any }) {
+function AIIntelligenceStatus({ aiServices }: { aiServices: AIServicesData | undefined }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
@@ -86,7 +133,10 @@ function AIIntelligenceStatus({ aiServices }: { aiServices: any }) {
 function PatternDetectionStatus({
   featureStatus,
   enhancedPatterns,
-}: { featureStatus: any; enhancedPatterns: any }) {
+}: {
+  featureStatus: FeatureStatusData | undefined;
+  enhancedPatterns: EnhancedPatternsData | undefined;
+}) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
@@ -146,7 +196,7 @@ function PatternDetectionStatus({
   );
 }
 
-function CacheWarmingStatus({ cacheMetrics }: { cacheMetrics: any }) {
+function CacheWarmingStatus({ cacheMetrics }: { cacheMetrics: CacheMetricsData | undefined }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
@@ -198,7 +248,7 @@ function CacheWarmingStatus({ cacheMetrics }: { cacheMetrics: any }) {
   );
 }
 
-function ConfigurationStatus({ featureStatus }: { featureStatus: any }) {
+function ConfigurationStatus({ featureStatus }: { featureStatus: FeatureStatusData | undefined }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">

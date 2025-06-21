@@ -39,6 +39,9 @@ export default defineConfig({
       'tests/unit/**/*.test.{js,ts}',
       'tests/integration/**/*.test.{js,ts}',
       'tests/agents/**/*.test.{js,ts}', // Agent-specific tests
+      'tests/auto-sniping/**/*.test.{js,ts}', // Auto-sniping workflow tests
+      'tests/safety/**/*.test.{js,ts}', // Safety and risk management tests
+      'tests/performance/**/*.test.{js,ts}', // Performance and load tests
       'src/**/*.test.{js,ts}', // Allow co-located tests
     ],
     
@@ -65,10 +68,18 @@ export default defineConfig({
     
     // Test execution configuration - removed duplicate, see poolOptions below
     
-    // Timeouts and retries
-    testTimeout: 30000, // 30 seconds per test
+    // Comprehensive timeout configuration to prevent hanging tests
+    testTimeout: 10000, // 10 seconds default (conservative for unit tests)
     hookTimeout: 20000, // 20 seconds for hooks (database setup needs more time)
     teardownTimeout: 15000, // 15 seconds for teardown (database cleanup)
+    
+    // NOTE: Per-file timeout overrides handled via individual test files
+    // Different test types should configure their own timeouts as needed:
+    // - Unit tests: 10s (default)
+    // - Integration tests: 45s (use per-test timeout overrides)
+    // - Auto-sniping tests: 30s (use per-test timeout overrides)
+    // - Performance tests: 60s (use per-test timeout overrides)
+    // - Safety tests: 45s (use per-test timeout overrides)
     
     // Retry configuration
     retry: process.env.CI ? 2 : 0,
@@ -162,6 +173,20 @@ export default defineConfig({
       // Database test settings
       FORCE_MOCK_DB: 'false', // Allow real database connections
       TEST_DB_TIMEOUT: '20000', // 20 second timeout for database operations
+      
+      // Test timeout configuration - environment variables for runtime timeout control
+      TEST_TIMEOUT_UNIT: '10000', // 10s for unit tests
+      TEST_TIMEOUT_INTEGRATION: '45000', // 45s for integration tests
+      TEST_TIMEOUT_AUTO_SNIPING: '30000', // 30s for auto-sniping tests
+      TEST_TIMEOUT_PERFORMANCE: '60000', // 60s for performance tests
+      TEST_TIMEOUT_SAFETY: '45000', // 45s for safety tests
+      TEST_TIMEOUT_AGENTS: '30000', // 30s for agent tests
+      TEST_TIMEOUT_E2E: '120000', // 2 minutes for E2E tests
+      
+      // Timeout monitoring and error handling
+      ENABLE_TIMEOUT_MONITORING: 'true',
+      TIMEOUT_WARNING_THRESHOLD: '0.8', // Warn when test reaches 80% of timeout
+      TIMEOUT_ERROR_REPORTING: 'true', // Report timeout errors to console
     },
     
     // Setup files

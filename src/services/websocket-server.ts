@@ -804,14 +804,16 @@ export class WebSocketServerService extends EventEmitter {
     });
   }
 
-  private isValidMessage(message: any): message is WebSocketMessage {
+  private isValidMessage(message: unknown): message is WebSocketMessage {
     return (
       message &&
-      typeof message.type === "string" &&
-      typeof message.channel === "string" &&
-      message.data !== undefined &&
-      typeof message.timestamp === "number" &&
-      typeof message.messageId === "string"
+      typeof message === "object" &&
+      message !== null &&
+      typeof (message as any).type === "string" &&
+      typeof (message as any).channel === "string" &&
+      (message as any).data !== undefined &&
+      typeof (message as any).timestamp === "number" &&
+      typeof (message as any).messageId === "string"
     );
   }
 

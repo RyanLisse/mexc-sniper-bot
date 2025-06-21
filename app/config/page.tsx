@@ -401,10 +401,10 @@ export default function SystemCheckPage() {
         
         return {
           mexc: mexcCreds ? {
-            hasApiKey: mexcCreds.has_api_key,
-            hasSecretKey: mexcCreds.has_secret_key,
+            hasApiKey: !!(mexcCreds.apiKey && mexcCreds.apiKey.length > 0),
+            hasSecretKey: !!(mexcCreds.secretKey && mexcCreds.secretKey.length > 0),
             isTestnet: mexcCreds.is_testnet,
-            isValid: mexcCreds.has_api_key && mexcCreds.has_secret_key
+            isValid: !!(mexcCreds.apiKey && mexcCreds.apiKey.length > 0) && !!(mexcCreds.secretKey && mexcCreds.secretKey.length > 0)
           } : {
             hasApiKey: false,
             hasSecretKey: false,

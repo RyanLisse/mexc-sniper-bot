@@ -10,7 +10,7 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -192,7 +192,7 @@ export function EditableTakeProfitTable({
   };
 
   // Simplified validation function
-  const validateConfiguration = useCallback((levels: TakeProfitLevel[]): ValidationError[] => {
+  const validateConfiguration = (levels: TakeProfitLevel[]): ValidationError[] => {
     const errors: ValidationError[] = [];
 
     // Validate levels array
@@ -224,7 +224,7 @@ export function EditableTakeProfitTable({
     }
 
     return errors;
-  }, []);
+  };
 
   // Update editing levels when props change
   useEffect(() => {

@@ -7,7 +7,7 @@
  */
 
 import { EventEmitter } from "node:events";
-import { getParameterManager, type ParameterManager } from "../lib/parameter-management";
+import { type ParameterManager, getParameterManager } from "../lib/parameter-management";
 import { logger } from "../lib/utils";
 
 export interface OptimizationObjective {
@@ -76,7 +76,7 @@ export class ParameterOptimizationEngine extends EventEmitter {
   constructor(parameterManager?: ParameterManager) {
     super();
     this.parameterManager = parameterManager || getParameterManager();
-    
+
     // Skip initialization during build time
     if (!this.isBuildEnvironment()) {
       logger.info("Parameter Optimization Engine initialized (simplified mode)");
@@ -98,14 +98,15 @@ export class ParameterOptimizationEngine extends EventEmitter {
       // Static generation
       process.env.STATIC_GENERATION === "true" ||
       process.env.__NEXT_ROUTER_BASEPATH !== undefined ||
-      // Vercel build environment  
+      // Vercel build environment
       (process.env.VERCEL === "1" && process.env.VERCEL_ENV === undefined) ||
       // General build indicators
       process.env.CI === "true" ||
       // Check if we're in webpack/module bundling context
-      typeof window === "undefined" && typeof process !== "undefined" && 
-      (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "development") &&
-      !global.setImmediate // Node.js runtime check
+      (typeof window === "undefined" &&
+        typeof process !== "undefined" &&
+        (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "development") &&
+        !global.setImmediate) // Node.js runtime check
     );
   }
 

@@ -11,10 +11,16 @@
 import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest'
 import { db } from '../../src/db'
 import '@testing-library/jest-dom'
+import { globalTimeoutMonitor } from '../utils/timeout-utilities'
 
 // Global test configuration
 globalThis.__TEST_ENV__ = true
 globalThis.__TEST_START_TIME__ = Date.now()
+
+// Initialize timeout monitoring
+if (process.env.ENABLE_TIMEOUT_MONITORING === 'true') {
+  console.log('🕐 Timeout monitoring enabled for test suite')
+}
 
 // Mock external dependencies
 beforeAll(async () => {
@@ -540,6 +546,17 @@ afterEach(async () => {
   // Clear all mocks
   vi.clearAllMocks()
 
+  // Cleanup timeout monitors to prevent memory leaks
+  globalTimeoutMonitor.cleanup()
+  
+  // Report any hanging timeouts in monitoring mode
+  if (process.env.ENABLE_TIMEOUT_MONITORING === 'true') {
+    const activeCount = globalTimeoutMonitor.getActiveCount()
+    if (activeCount.timeouts > 0 || activeCount.intervals > 0) {
+      console.warn(`⚠️ Cleaned up ${activeCount.timeouts} timeouts and ${activeCount.intervals} intervals after test`)
+    }
+  }
+
   // Reset any global state
   if (global.testCleanupFunctions) {
     for (const cleanup of global.testCleanupFunctions) {
@@ -552,6 +569,13 @@ afterEach(async () => {
 // Global cleanup
 afterAll(async () => {
   console.log('🧹 Cleaning up Vitest environment...')
+
+  // Final timeout cleanup
+  globalTimeoutMonitor.cleanup()
+  const finalActiveCount = globalTimeoutMonitor.getActiveCount()
+  if (finalActiveCount.timeouts > 0 || finalActiveCount.intervals > 0) {
+    console.warn(`⚠️ Final cleanup: ${finalActiveCount.timeouts} timeouts and ${finalActiveCount.intervals} intervals`)
+  }
 
   // Close database connections with timeout
   try {

@@ -518,6 +518,14 @@ export class MultiPhaseExecutor {
     }
     return remaining;
   }
+
+  /**
+   * Get the current trading strategy configuration
+   * @returns The trading strategy configuration
+   */
+  getStrategy(): TradingStrategyConfig {
+    return this.strategy;
+  }
 }
 
 // Utility function to create executor from database strategy

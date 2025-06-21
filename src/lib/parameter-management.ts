@@ -90,14 +90,15 @@ export class ParameterManager extends EventEmitter {
       // Static generation
       process.env.STATIC_GENERATION === "true" ||
       process.env.__NEXT_ROUTER_BASEPATH !== undefined ||
-      // Vercel build environment  
+      // Vercel build environment
       (process.env.VERCEL === "1" && process.env.VERCEL_ENV === undefined) ||
       // General build indicators
       process.env.CI === "true" ||
       // Check if we're in webpack/module bundling context
-      typeof window === "undefined" && typeof process !== "undefined" && 
-      (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "development") &&
-      !global.setImmediate // Node.js runtime check
+      (typeof window === "undefined" &&
+        typeof process !== "undefined" &&
+        (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "development") &&
+        !global.setImmediate) // Node.js runtime check
     );
   }
 

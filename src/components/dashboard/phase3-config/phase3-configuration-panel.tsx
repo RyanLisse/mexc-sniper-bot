@@ -63,7 +63,7 @@ interface Phase3Configuration {
 // Default Configuration
 // ======================
 
-const defaultConfig: Phase3Configuration = {
+const _defaultConfig: Phase3Configuration = {
   aiIntelligence: {
     enabled: true,
     cohereEnabled: true,
@@ -122,7 +122,7 @@ export function Phase3ConfigurationPanel() {
     }
   }, [configData]);
 
-  const updateConfig = (section: keyof Phase3Configuration, key: string, value: any) => {
+  const updateConfig = (section: keyof Phase3Configuration, key: string, value: unknown) => {
     setConfig((prev) => ({
       ...prev,
       [section]: {
@@ -137,7 +137,7 @@ export function Phase3ConfigurationPanel() {
     section: keyof Phase3Configuration,
     subsection: string,
     key: string,
-    value: any
+    value: unknown
   ) => {
     setConfig((prev) => ({
       ...prev,

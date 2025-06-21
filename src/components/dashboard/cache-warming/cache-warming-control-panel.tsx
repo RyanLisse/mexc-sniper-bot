@@ -62,6 +62,192 @@ function CacheWarmingError({ error }: { error: unknown }) {
   );
 }
 
+// Type definitions for component props
+interface CacheMetrics {
+  successRate?: number;
+  totalExecutions?: number;
+  averageExecutionTime?: number;
+}
+
+interface Strategy {
+  name: string;
+  status: string;
+  priority: string;
+  frequency: number;
+  lastRun?: string;
+  nextRun?: string;
+}
+
+interface Connection {
+  redis?: { connected: boolean; status: string };
+  valkey?: { connected: boolean; status: string };
+  gracefulDegradation?: {
+    fallbackMode: boolean;
+    message: string;
+  };
+}
+
+// Helper component for performance metrics
+function PerformanceOverview({ metrics }: { metrics: CacheMetrics | undefined }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span>Success Rate</span>
+          <span>{(metrics?.successRate || 0).toFixed(1)}%</span>
+        </div>
+        <Progress value={metrics?.successRate || 0} className="h-2" />
+      </div>
+      <div className="text-center">
+        <div className="text-2xl font-bold">{metrics?.totalExecutions || 0}</div>
+        <div className="text-sm text-muted-foreground">Total Executions</div>
+      </div>
+      <div className="text-center">
+        <div className="text-2xl font-bold">
+          {(metrics?.averageExecutionTime || 0).toFixed(0)}ms
+        </div>
+        <div className="text-sm text-muted-foreground">Avg Execution Time</div>
+      </div>
+    </div>
+  );
+}
+
+// Helper component for strategy list
+function StrategyList({
+  strategies,
+  selectedStrategies,
+  onToggleSelection,
+  onTriggerStrategy,
+  isTriggeringWarming,
+}: {
+  strategies: Strategy[];
+  selectedStrategies: string[];
+  onToggleSelection: (name: string) => void;
+  onTriggerStrategy: (name: string) => void;
+  isTriggeringWarming: boolean;
+}) {
+  return (
+    <div className="space-y-3">
+      <h4 className="font-medium">Warming Strategies</h4>
+      {strategies.map((strategy) => (
+        <div
+          key={strategy.name}
+          className={`border rounded-lg p-4 transition-colors ${
+            selectedStrategies.includes(strategy.name) ? "bg-blue-50 border-blue-200" : ""
+          }`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={selectedStrategies.includes(strategy.name)}
+                onChange={() => onToggleSelection(strategy.name)}
+                className="rounded"
+              />
+              <StrategyStatusIcon status={strategy.status} />
+              <div>
+                <div className="font-medium capitalize">{strategy.name.replace(/-/g, " ")}</div>
+                <div className="text-sm text-muted-foreground">
+                  Priority: {strategy.priority} • Frequency:{" "}
+                  {Math.round(strategy.frequency / 60000)}m
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                style={{
+                  color: getCacheStrategyStatusColor(
+                    strategy.status as "pending" | "active" | "disabled" | "overdue"
+                  ),
+                }}
+              >
+                {strategy.status}
+              </Badge>
+              <Button
+                onClick={() => onTriggerStrategy(strategy.name)}
+                disabled={isTriggeringWarming}
+                size="sm"
+                variant="outline"
+                className="flex items-center gap-1"
+              >
+                <Play className="h-3 w-3" />
+                Trigger
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span className="text-muted-foreground">Last Run:</span>
+              <div className="font-medium">
+                {strategy.lastRun ? new Date(strategy.lastRun).toLocaleString() : "Never"}
+              </div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Next Run:</span>
+              <div className="font-medium">
+                {strategy.nextRun ? new Date(strategy.nextRun).toLocaleString() : "Not scheduled"}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Helper component for connection status
+function ConnectionStatus({ connection }: { connection: Connection | undefined }) {
+  return (
+    <div className="border-t pt-4">
+      <h4 className="font-medium mb-3">Cache Connection Status</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex items-center justify-between p-3 border rounded-lg">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            <span>Redis</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {connection?.redis?.connected ? (
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            ) : (
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+            )}
+            <Badge variant={connection?.redis?.connected ? "default" : "destructive"}>
+              {connection?.redis?.status || "Unknown"}
+            </Badge>
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-3 border rounded-lg">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            <span>Valkey</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {connection?.valkey?.connected ? (
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            ) : (
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+            )}
+            <Badge variant={connection?.valkey?.connected ? "default" : "destructive"}>
+              {connection?.valkey?.status || "Unknown"}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      {connection?.gracefulDegradation?.fallbackMode && (
+        <Alert className="mt-3">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Fallback Mode Active</AlertTitle>
+          <AlertDescription>{connection?.gracefulDegradation?.message}</AlertDescription>
+        </Alert>
+      )}
+    </div>
+  );
+}
+
 export function CacheWarmingControlPanel() {
   const { data, isLoading, error } = useCacheMetrics();
   const { mutate: triggerWarming, isPending: isTriggeringWarming } = useCacheWarmingTrigger();
@@ -134,17 +320,9 @@ export function CacheWarmingControlPanel() {
     );
   };
 
-  if (isLoading) {
-    return <CacheWarmingControlSkeleton />;
-  }
-
-  if (error) {
-    return <CacheWarmingError error={error} />;
-  }
-
-  if (!data) {
-    return null;
-  }
+  if (isLoading) return <CacheWarmingControlSkeleton />;
+  if (error) return <CacheWarmingError error={error} />;
+  if (!data) return null;
 
   return (
     <Card>
@@ -174,142 +352,15 @@ export function CacheWarmingControlPanel() {
         <CardDescription>Manage cache warming strategies for optimal performance</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Performance Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Success Rate</span>
-              <span>{(data.warming?.metrics?.successRate || 0).toFixed(1)}%</span>
-            </div>
-            <Progress value={data.warming?.metrics?.successRate || 0} className="h-2" />
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold">{data.warming?.metrics?.totalExecutions || 0}</div>
-            <div className="text-sm text-muted-foreground">Total Executions</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold">
-              {(data.warming?.metrics?.averageExecutionTime || 0).toFixed(0)}ms
-            </div>
-            <div className="text-sm text-muted-foreground">Avg Execution Time</div>
-          </div>
-        </div>
-
-        {/* Cache Warming Strategies */}
-        <div className="space-y-3">
-          <h4 className="font-medium">Warming Strategies</h4>
-          {(data.warming?.strategies || []).map((strategy) => (
-            <div
-              key={strategy.name}
-              className={`border rounded-lg p-4 transition-colors ${
-                selectedStrategies.includes(strategy.name) ? "bg-blue-50 border-blue-200" : ""
-              }`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedStrategies.includes(strategy.name)}
-                    onChange={() => toggleStrategySelection(strategy.name)}
-                    className="rounded"
-                  />
-                  <StrategyStatusIcon status={strategy.status} />
-                  <div>
-                    <div className="font-medium capitalize">{strategy.name.replace(/-/g, " ")}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Priority: {strategy.priority} • Frequency:{" "}
-                      {Math.round(strategy.frequency / 60000)}m
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="outline"
-                    style={{ color: getCacheStrategyStatusColor(strategy.status) }}
-                  >
-                    {strategy.status}
-                  </Badge>
-                  <Button
-                    onClick={() => handleTriggerStrategy(strategy.name)}
-                    disabled={isTriggeringWarming}
-                    size="sm"
-                    variant="outline"
-                    className="flex items-center gap-1"
-                  >
-                    <Play className="h-3 w-3" />
-                    Trigger
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div>
-                  <span className="text-muted-foreground">Last Run:</span>
-                  <div className="font-medium">
-                    {strategy.lastRun ? new Date(strategy.lastRun).toLocaleString() : "Never"}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Next Run:</span>
-                  <div className="font-medium">
-                    {strategy.nextRun
-                      ? new Date(strategy.nextRun).toLocaleString()
-                      : "Not scheduled"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Connection Status */}
-        <div className="border-t pt-4">
-          <h4 className="font-medium mb-3">Cache Connection Status</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4" />
-                <span>Redis</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {data.connection?.redis?.connected ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                ) : (
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                )}
-                <Badge variant={data.connection?.redis?.connected ? "default" : "destructive"}>
-                  {data.connection?.redis?.status || "Unknown"}
-                </Badge>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4" />
-                <span>Valkey</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {data.connection?.valkey?.connected ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                ) : (
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
-                )}
-                <Badge variant={data.connection?.valkey?.connected ? "default" : "destructive"}>
-                  {data.connection?.valkey?.status || "Unknown"}
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          {data.connection?.gracefulDegradation?.fallbackMode && (
-            <Alert className="mt-3">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Fallback Mode Active</AlertTitle>
-              <AlertDescription>{data.connection?.gracefulDegradation?.message}</AlertDescription>
-            </Alert>
-          )}
-        </div>
-
-        {/* Last Updated */}
+        <PerformanceOverview metrics={data.warming?.metrics} />
+        <StrategyList
+          strategies={data.warming?.strategies || []}
+          selectedStrategies={selectedStrategies}
+          onToggleSelection={toggleStrategySelection}
+          onTriggerStrategy={handleTriggerStrategy}
+          isTriggeringWarming={isTriggeringWarming}
+        />
+        <ConnectionStatus connection={data.connection} />
         <div className="text-xs text-muted-foreground text-center pt-2 border-t">
           Last updated: {data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : "Unknown"}
         </div>

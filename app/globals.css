@@ -209,3 +209,54 @@
 .better-auth-form label {
   @apply text-slate-300;
 }
+
+/* Fix dropdown overlap issues */
+[data-radix-popper-content-wrapper] {
+  z-index: 999999 !important;
+}
+
+[data-slot="select-content"] {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+/* Ensure all popovers and dropdowns are above everything */
+.z-\[999999\] {
+  z-index: 999999 !important;
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 640px) {
+  .grid-cols-1 {
+    grid-template-columns: 1fr;
+  }
+  
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+  
+  /* Improve mobile spacing for cards */
+  .card-content-mobile {
+    padding: 1rem;
+  }
+  
+  /* Mobile dropdown improvements */
+  [data-slot="select-content"] {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+}
+
+/* Ensure consistent hover states */
+.hover\:bg-accent\/50:hover {
+  background-color: hsl(var(--color-accent) / 0.5) !important;
+}
+
+.hover\:text-foreground:hover {
+  color: hsl(var(--color-foreground)) !important;
+}
+
+/* Focus states for better accessibility */
+.focus\:ring-primary\/50:focus {
+  box-shadow: 0 0 0 3px hsl(var(--color-primary) / 0.5) !important;
+}

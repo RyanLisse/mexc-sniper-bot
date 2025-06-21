@@ -1,6 +1,9 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vitest';
+import { setTestTimeout } from '../utils/timeout-utilities';
 
 describe('MEXC API Client Utilities', () => {
+  // Set standard timeout for unit tests (10 seconds)
+  const TEST_TIMEOUT = setTestTimeout('unit');
 
   describe('Signature generation logic', () => {
     it('should create proper query string for signature', () => {

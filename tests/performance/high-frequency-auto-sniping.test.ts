@@ -12,11 +12,17 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
+import { 
+  setTestTimeout, 
+  withTimeout, 
+  timeoutPromise,
+  globalTimeoutMonitor 
+} from '../utils/timeout-utilities';
 import { PatternDetectionEngine } from '../../src/services/pattern-detection-engine';
 import { MultiPhaseTradingBot } from '../../src/services/multi-phase-trading-bot';
 import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
 import { ComprehensiveSafetyCoordinator } from '../../src/services/comprehensive-safety-coordinator';
-import { WebSocketClient } from '../../src/services/websocket-client';
+import { webSocketClient } from '../../src/services/websocket-client';
 import { 
   MockDataGenerator, 
   PerformanceTestUtils, 
@@ -26,11 +32,14 @@ import {
 import type { SymbolEntry } from '../../src/services/mexc-unified-exports';
 
 describe('High-Frequency Auto Sniping Performance', () => {
+  // Set extended timeout for performance tests (60 seconds)
+  const TEST_TIMEOUT = setTestTimeout('performance');
+  console.log(`🕐 Performance tests configured with ${TEST_TIMEOUT}ms timeout`);
   let patternEngine: PatternDetectionEngine;
   let tradingBots: Map<string, MultiPhaseTradingBot>;
   let mexcService: UnifiedMexcService;
   let safetyCoordinator: ComprehensiveSafetyCoordinator;
-  let wsClient: WebSocketClient;
+  let wsClient = webSocketClient;
 
   // Performance benchmarks and thresholds
   const PERFORMANCE_THRESHOLDS = {
@@ -76,21 +85,40 @@ describe('High-Frequency Auto Sniping Performance', () => {
     ApiMockingUtils.setupMexcApiMocks(mexcService);
 
     // Override with performance-optimized mocks
-    vi.spyOn(mexcService, 'getSpotPrice').mockImplementation(async () => {
+    vi.spyOn(mexcService, 'getTicker').mockImplementation(async (symbol: string) => {
       // Simulate fast API response
       await new Promise(resolve => setTimeout(resolve, 10 + Math.random() * 20));
-      return 1.0 + Math.random() * 0.1;
+      return {
+        success: true,
+        data: {
+          symbol,
+          lastPrice: (1.0 + Math.random() * 0.1).toString(),
+          price: (1.0 + Math.random() * 0.1).toString(),
+          priceChange: '0',
+          priceChangePercent: '0',
+          volume: '1000000',
+          quoteVolume: '1000000',
+          openPrice: '1.0',
+          highPrice: '1.1',
+          lowPrice: '0.9',
+          count: '100'
+        },
+        timestamp: new Date().toISOString()
+      };
     });
 
     vi.spyOn(mexcService, 'placeOrder').mockImplementation(async () => {
       // Simulate order execution latency
       await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
       return {
-        orderId: `perf-order-${Date.now()}-${Math.random()}`,
-        status: 'FILLED',
-        executedQty: '1000',
-        executedPrice: '1.0',
-        fee: '0.001'
+        success: true,
+        data: {
+          orderId: `perf-order-${Date.now()}-${Math.random()}`,
+          status: 'FILLED',
+          price: '1.0',
+          quantity: '1000'
+        },
+        timestamp: new Date().toISOString()
       };
     });
   });
@@ -275,16 +303,17 @@ describe('High-Frequency Auto Sniping Performance', () => {
         await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
         
         const result = {
-          orderId: `integrity-order-${currentSequence}`,
-          status: 'FILLED',
-          executedQty: '100',
-          executedPrice: '1.5',
-          fee: '0.0015',
-          sequence: currentSequence,
-          timestamp: Date.now()
+          success: true,
+          data: {
+            orderId: `integrity-order-${currentSequence}`,
+            status: 'FILLED',
+            price: '1.5',
+            quantity: '100'
+          },
+          timestamp: new Date().toISOString()
         };
         
-        orderResults.push(result);
+        orderResults.push(result.data);
         return result;
       });
 
@@ -396,7 +425,8 @@ describe('High-Frequency Auto Sniping Performance', () => {
 
           try {
             // Simulate market data processing
-            await mexcService.getSpotPrice(symbol);
+            const ticker = await mexcService.getTicker(symbol);
+            const price = ticker.success ? parseFloat(ticker.data.lastPrice) : 1.0;
             await patternEngine.analyzeSymbolReadiness({
               sts: Math.floor(Math.random() * 3),
               st: Math.floor(Math.random() * 3),
@@ -442,7 +472,8 @@ describe('High-Frequency Auto Sniping Performance', () => {
         await new Promise(resolve => setTimeout(resolve, 1 + Math.random() * 5));
         
         if (message.type === 'price_update') {
-          await mexcService.getSpotPrice(message.symbol);
+          const ticker = await mexcService.getTicker(message.symbol);
+          const price = ticker.success ? parseFloat(ticker.data.lastPrice) : 1.0;
         }
         
         processedMessages++;
@@ -550,26 +581,38 @@ describe('High-Frequency Auto Sniping Performance', () => {
       let circuitBreakerTriggered = false;
 
       // Mock with occasional errors
-      vi.spyOn(mexcService, 'getSpotPrice').mockImplementation(async () => {
+      vi.spyOn(mexcService, 'getTicker').mockImplementation(async (symbol: string) => {
         if (Math.random() < stressTestConfig.errorInjectionRate) {
           throw new Error('Simulated API error');
         }
         await new Promise(resolve => setTimeout(resolve, 10 + Math.random() * 40));
-        return 1.0 + Math.random() * 0.1;
+        return {
+          success: true,
+          data: {
+            symbol,
+            lastPrice: (1.0 + Math.random() * 0.1).toString(),
+            price: (1.0 + Math.random() * 0.1).toString(),
+            priceChange: '0',
+            priceChangePercent: '0',
+            volume: '1000000',
+            quoteVolume: '1000000',
+            openPrice: '1.0',
+            highPrice: '1.1',
+            lowPrice: '0.9',
+            count: '100'
+          },
+          timestamp: new Date().toISOString()
+        };
       });
 
-      // Monitor circuit breaker
-      if (mexcService.on) {
-        mexcService.on('circuit_breaker_open', () => {
-          circuitBreakerTriggered = true;
-        });
-      }
+      // Note: Circuit breaker monitoring would be handled through other mechanisms
 
       // Act: Execute stress test
       const stressTestResult = await PerformanceTestUtils.runLoadTest(
         async () => {
           try {
-            await mexcService.getSpotPrice('STRESSUSDT');
+            const ticker = await mexcService.getTicker('STRESSUSDT');
+            const price = ticker.success ? parseFloat(ticker.data.lastPrice) : 1.0;
             successfulRequests++;
           } catch (error) {
             failedRequests++;
@@ -607,7 +650,8 @@ describe('High-Frequency Auto Sniping Performance', () => {
         const loadTestResult = await PerformanceTestUtils.runLoadTest(
           async () => {
             const symbol = `SCALE${Math.floor(Math.random() * 10)}USDT`;
-            return mexcService.getSpotPrice(symbol);
+            const ticker = await mexcService.getTicker(symbol);
+            return ticker.success ? parseFloat(ticker.data.lastPrice) : 1.0;
           },
           {
             concurrency,

@@ -51,16 +51,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 // Connection Status Component
 // ======================
 
-interface ConnectionMetrics {
-  latency?: number;
-  messageCount?: number;
-  reconnectCount?: number;
-  lastMessageTime?: string;
-  messagesSent?: number;
-  messagesReceived?: number;
-  subscriptions?: number;
-  queuedMessages?: number;
-}
+// Note: ConnectionMetrics interface was removed as it was unused
+// Can be re-added when needed for connection status monitoring
 
 interface ConnectionStatusProps {
   isConnected: boolean;

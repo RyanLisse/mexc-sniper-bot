@@ -9,6 +9,7 @@
  * - System-wide emergency protocols
  */
 
+import { EventEmitter } from "node:events";
 import type { AdvancedRiskEngine } from "./advanced-risk-engine";
 import { type CircuitBreaker, circuitBreakerRegistry } from "./circuit-breaker";
 
@@ -138,22 +139,25 @@ export interface EmergencyConfig {
  * situations and execute automated responses to protect capital
  * and system integrity.
  */
-export class EmergencySafetySystem {
+export class EmergencySafetySystem extends EventEmitter {
   private config: EmergencyConfig;
   private circuitBreaker: CircuitBreaker;
   private riskEngine?: AdvancedRiskEngine;
   private emergencyConditions: Map<string, EmergencyCondition> = new Map();
   private emergencyResponses: EmergencyResponse[] = [];
   private lastHealthCheck = 0;
-  private isEmergencyActive = false;
+  private emergencyActive = false;
   private activeEmergencies = 0;
 
   // System state tracking
   private tradingHalted = false;
   private agentsShutdown: string[] = [];
   private lastEmergencyResponse = 0;
+  private consecutiveLossCount = 0;
+  private tradeResults: Array<{success: boolean; timestamp: string; amount: number}> = [];
 
   constructor(config?: Partial<EmergencyConfig>) {
+    super();
     this.config = this.mergeWithDefaultConfig(config);
     this.circuitBreaker = circuitBreakerRegistry.getBreaker("emergency-safety-system", {
       failureThreshold: 2,
@@ -226,7 +230,7 @@ export class EmergencySafetySystem {
       }
 
       // Check for active emergencies
-      if (this.isEmergencyActive) {
+      if (this.emergencyActive) {
         healthCheck.criticalIssues.push("Emergency condition active");
         healthCheck.overall = "emergency";
       }
@@ -380,7 +384,7 @@ export class EmergencySafetySystem {
     };
 
     this.emergencyConditions.set(condition.id, condition);
-    this.isEmergencyActive = true;
+    this.emergencyActive = true;
     this.activeEmergencies++;
 
     console.log(`[EmergencySafetySystem] Emergency activated: ${condition.id} - ${description}`);
@@ -463,7 +467,7 @@ export class EmergencySafetySystem {
       this.activeEmergencies = Math.max(0, this.activeEmergencies - 1);
 
       if (this.activeEmergencies === 0) {
-        this.isEmergencyActive = false;
+        this.emergencyActive = false;
       }
 
       console.log(`[EmergencySafetySystem] Emergency deactivated: ${conditionId} - ${reason}`);
@@ -551,7 +555,7 @@ export class EmergencySafetySystem {
     const lastResponse = this.emergencyResponses[this.emergencyResponses.length - 1];
 
     let systemHealth: "healthy" | "degraded" | "critical" | "emergency" = "healthy";
-    if (this.isEmergencyActive) {
+    if (this.emergencyActive) {
       systemHealth = "emergency";
     } else if (this.tradingHalted) {
       systemHealth = "critical";
@@ -560,7 +564,7 @@ export class EmergencySafetySystem {
     }
 
     return {
-      active: this.isEmergencyActive,
+      active: this.emergencyActive,
       activeCount: this.activeEmergencies,
       conditions,
       tradingHalted: this.tradingHalted,
@@ -848,5 +852,117 @@ export class EmergencySafetySystem {
     } else {
       console.log("[EmergencySafetySystem] Manual recovery required");
     }
+  }
+
+  /**
+   * Assess portfolio health and detect potential issues
+   */
+  assessPortfolioHealth(portfolioData: {
+    totalValue: number;
+    positions: Array<{symbol: string; value: number; pnl: number}>;
+    riskMetrics: {totalExposure: number; maxDrawdown: number};
+  }): {
+    status: "healthy" | "warning" | "critical";
+    issues: string[];
+    recommendations: string[];
+  } {
+    const issues: string[] = [];
+    const recommendations: string[] = [];
+    let status: "healthy" | "warning" | "critical" = "healthy";
+
+    // Check for high exposure
+    if (portfolioData.riskMetrics.totalExposure > 0.8) {
+      issues.push("High portfolio exposure detected");
+      recommendations.push("Reduce position sizes");
+      status = portfolioData.riskMetrics.totalExposure > 0.95 ? "critical" : "warning";
+    }
+
+    // Check for significant drawdown
+    if (portfolioData.riskMetrics.maxDrawdown > 15) {
+      issues.push("Significant drawdown detected");
+      recommendations.push("Review risk management settings");
+      status = "warning";
+    }
+
+    // Check individual positions
+    const largeLosses = portfolioData.positions.filter(p => p.pnl < -p.value * 0.1);
+    if (largeLosses.length > 0) {
+      issues.push(`${largeLosses.length} positions with significant losses`);
+      recommendations.push("Consider stop-loss adjustments");
+      if (largeLosses.length > 3) status = "critical";
+    }
+
+    return { status, issues, recommendations };
+  }
+
+  /**
+   * Check if emergency mode is currently active
+   */
+  isEmergencyActive(): boolean {
+    return this.emergencyActive;
+  }
+
+  /**
+   * Check if trading is currently halted
+   */
+  isTradingHalted(): boolean {
+    return this.tradingHalted;
+  }
+
+  /**
+   * Record a trade result for consecutive loss tracking
+   */
+  recordTradeResult(tradeData: {
+    success: boolean;
+    symbol: string;
+    amount: number;
+    pnl?: number;
+    timestamp?: string;
+  }): void {
+    const result = {
+      success: tradeData.success,
+      timestamp: tradeData.timestamp || new Date().toISOString(),
+      amount: tradeData.amount
+    };
+
+    this.tradeResults.push(result);
+
+    // Keep only last 100 trades to prevent memory issues
+    if (this.tradeResults.length > 100) {
+      this.tradeResults = this.tradeResults.slice(-100);
+    }
+
+    // Update consecutive loss count
+    if (!tradeData.success) {
+      this.consecutiveLossCount++;
+    } else {
+      this.consecutiveLossCount = 0;
+    }
+
+    // Check for emergency conditions
+    if (this.consecutiveLossCount >= 5) {
+      console.log(`[EmergencySafetySystem] WARNING: ${this.consecutiveLossCount} consecutive losses detected`);
+      this.emit('emergency_stop', {
+        reason: 'consecutive_losses',
+        count: this.consecutiveLossCount,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Emit circuit breaker if too many failures
+    if (this.consecutiveLossCount >= 3) {
+      this.emit('circuit_breaker_activated', {
+        reason: 'trading_losses',
+        consecutiveLosses: this.consecutiveLossCount,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Get the current consecutive loss count
+   */
+  getConsecutiveLossCount(): number {
+    return this.consecutiveLossCount;
   }
 }

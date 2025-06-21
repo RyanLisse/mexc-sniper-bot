@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         availableStrategies: Array.from(strategies.keys()),
-        strategies: Array.from(strategies.entries()).map(([name, strategy]: [string, any]) => ({
+        strategies: (Array.from(strategies.entries()) as [string, any][]).map(([name, strategy]) => ({
           name,
           enabled: strategy.enabled,
           priority: strategy.priority,

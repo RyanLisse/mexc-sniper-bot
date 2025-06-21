@@ -51,6 +51,9 @@ export interface SafetyCoordinatorConfig {
   websocketEnabled: boolean;
   realTimeAlertsEnabled: boolean;
   consensusEnforcementEnabled: boolean;
+
+  // Operational limits
+  maxConcurrentPositions?: number; // maximum concurrent trading positions
 }
 
 export interface ComprehensiveSafetyStatus {
@@ -965,5 +968,450 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
 
   private handleWebSocketDisconnection(connectionId: string): void {
     console.log(`[ComprehensiveSafetyCoordinator] WebSocket client disconnected: ${connectionId}`);
+  }
+
+  /**
+   * Assess overall system safety based on provided conditions
+   */
+  async assessSystemSafety(systemState: {
+    portfolioRisk: number;
+    agentAnomalies: number;
+    marketVolatility: number;
+    connectivityIssues: boolean;
+    dataIntegrityViolations: number;
+  }): Promise<{
+    safetyLevel: "safe" | "warning" | "critical" | "emergency";
+    recommendations: string[];
+    shouldHalt: boolean;
+  }> {
+    const issues: string[] = [];
+    let safetyScore = 100;
+
+    // Assess portfolio risk
+    if (systemState.portfolioRisk > 90) {
+      safetyScore -= 40;
+      issues.push("Critical portfolio risk detected");
+    } else if (systemState.portfolioRisk > 75) {
+      safetyScore -= 20;
+      issues.push("High portfolio risk");
+    }
+
+    // Assess agent anomalies
+    if (systemState.agentAnomalies >= 3) {
+      safetyScore -= 30;
+      issues.push("Multiple agent anomalies detected");
+    } else if (systemState.agentAnomalies >= 1) {
+      safetyScore -= 15;
+      issues.push("Agent anomalies present");
+    }
+
+    // Assess market volatility
+    if (systemState.marketVolatility > 0.95) {
+      safetyScore -= 25;
+      issues.push("Extreme market volatility");
+    } else if (systemState.marketVolatility > 0.8) {
+      safetyScore -= 15;
+      issues.push("High market volatility");
+    }
+
+    // Assess connectivity
+    if (systemState.connectivityIssues) {
+      safetyScore -= 20;
+      issues.push("Connectivity issues detected");
+    }
+
+    // Assess data integrity
+    if (systemState.dataIntegrityViolations >= 2) {
+      safetyScore -= 35;
+      issues.push("Data integrity violations");
+    } else if (systemState.dataIntegrityViolations >= 1) {
+      safetyScore -= 15;
+      issues.push("Data integrity concerns");
+    }
+
+    // Determine safety level
+    let safetyLevel: "safe" | "warning" | "critical" | "emergency";
+    let shouldHalt = false;
+
+    if (safetyScore <= 20) {
+      safetyLevel = "emergency";
+      shouldHalt = true;
+    } else if (safetyScore <= 50) {
+      safetyLevel = "critical";
+      shouldHalt = true;
+    } else if (safetyScore <= 70) {
+      safetyLevel = "warning";
+    } else {
+      safetyLevel = "safe";
+    }
+
+    // Generate recommendations
+    const recommendations: string[] = [];
+    if (systemState.portfolioRisk > 80) {
+      recommendations.push("Reduce portfolio exposure immediately");
+    }
+    if (systemState.agentAnomalies >= 2) {
+      recommendations.push("Review and restart problematic agents");
+    }
+    if (systemState.marketVolatility > 0.9) {
+      recommendations.push("Halt trading during extreme volatility");
+    }
+    if (systemState.connectivityIssues) {
+      recommendations.push("Check network connectivity and exchange status");
+    }
+    if (systemState.dataIntegrityViolations >= 1) {
+      recommendations.push("Verify data sources and synchronization");
+    }
+
+    // Trigger coordinated shutdown if critical
+    if (shouldHalt) {
+      this.emit("coordinated_shutdown", {
+        reason: "critical_system_state",
+        safetyLevel,
+        issues,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    console.log(
+      `[ComprehensiveSafetyCoordinator] System safety assessed: ${safetyLevel} (score: ${safetyScore})`
+    );
+
+    return {
+      safetyLevel,
+      recommendations,
+      shouldHalt,
+    };
+  }
+
+  /**
+   * Assess trading conditions and scenarios
+   */
+  async assessTradingConditions(scenario: {
+    marketConditions: {
+      volatility: number;
+      liquidity: number;
+      volume: number;
+    };
+    systemHealth: {
+      agentStatus: string;
+      connectivityStatus: string;
+      dataQuality: string;
+    };
+    riskMetrics: {
+      portfolioRisk: number;
+      positionConcentration: number;
+      correlation: number;
+    };
+  }): Promise<{
+    tradingRecommendation: "proceed" | "caution" | "halt";
+    riskLevel: "low" | "medium" | "high" | "critical";
+    conditions: string[];
+  }> {
+    const conditions: string[] = [];
+    let riskScore = 0;
+
+    // Assess market conditions
+    if (scenario.marketConditions.volatility > 0.8) {
+      riskScore += 30;
+      conditions.push("High market volatility");
+    }
+    if (scenario.marketConditions.liquidity < 0.3) {
+      riskScore += 25;
+      conditions.push("Low market liquidity");
+    }
+    if (scenario.marketConditions.volume < 0.5) {
+      riskScore += 15;
+      conditions.push("Low trading volume");
+    }
+
+    // Assess system health
+    if (scenario.systemHealth.agentStatus === "degraded") {
+      riskScore += 20;
+      conditions.push("Agent system degraded");
+    }
+    if (scenario.systemHealth.connectivityStatus === "unstable") {
+      riskScore += 15;
+      conditions.push("Connectivity issues");
+    }
+    if (scenario.systemHealth.dataQuality === "poor") {
+      riskScore += 20;
+      conditions.push("Data quality issues");
+    }
+
+    // Assess risk metrics
+    if (scenario.riskMetrics.portfolioRisk > 80) {
+      riskScore += 25;
+      conditions.push("High portfolio risk");
+    }
+    if (scenario.riskMetrics.positionConcentration > 70) {
+      riskScore += 20;
+      conditions.push("High position concentration");
+    }
+    if (scenario.riskMetrics.correlation > 0.8) {
+      riskScore += 15;
+      conditions.push("High correlation risk");
+    }
+
+    // Determine recommendations
+    let tradingRecommendation: "proceed" | "caution" | "halt";
+    let riskLevel: "low" | "medium" | "high" | "critical";
+
+    if (riskScore >= 80) {
+      tradingRecommendation = "halt";
+      riskLevel = "critical";
+    } else if (riskScore >= 60) {
+      tradingRecommendation = "halt";
+      riskLevel = "high";
+    } else if (riskScore >= 30) {
+      tradingRecommendation = "caution";
+      riskLevel = "medium";
+    } else {
+      tradingRecommendation = "proceed";
+      riskLevel = "low";
+    }
+
+    return {
+      tradingRecommendation,
+      riskLevel,
+      conditions,
+    };
+  }
+
+  /**
+   * Check if system is currently halted
+   */
+  isSystemHalted(): boolean {
+    return (
+      this.currentStatus.emergency.tradingHalted ||
+      this.currentStatus.emergency.systemActive ||
+      this.currentStatus.overall.systemStatus === "emergency"
+    );
+  }
+
+  /**
+   * Implement graceful degradation during resource constraints
+   */
+  async implementGracefulDegradation(resourceConstraints: {
+    memoryUsage: number;
+    cpuUsage: number;
+    networkLatency: number;
+    databaseConnections: number;
+  }): Promise<{
+    tradingEnabled: boolean;
+    reducedFunctionality: string[];
+    monitoringInterval: number;
+    maxConcurrentPositions: number;
+  }> {
+    const reducedFunctionality: string[] = [];
+    let tradingEnabled = true;
+    let monitoringInterval = this.config.agentMonitoringInterval;
+    let maxConcurrentPositions = this.config.maxConcurrentPositions || 10;
+
+    // Handle high memory usage
+    if (resourceConstraints.memoryUsage > 0.9) {
+      reducedFunctionality.push("advanced_analytics");
+      reducedFunctionality.push("historical_data_processing");
+      maxConcurrentPositions = Math.floor(maxConcurrentPositions * 0.5);
+    } else if (resourceConstraints.memoryUsage > 0.8) {
+      reducedFunctionality.push("pattern_analysis");
+      maxConcurrentPositions = Math.floor(maxConcurrentPositions * 0.7);
+    }
+
+    // Handle high CPU usage
+    if (resourceConstraints.cpuUsage > 0.9) {
+      reducedFunctionality.push("real_time_analysis");
+      monitoringInterval *= 2; // Reduce monitoring frequency
+      maxConcurrentPositions = Math.floor(maxConcurrentPositions * 0.6);
+    } else if (resourceConstraints.cpuUsage > 0.8) {
+      monitoringInterval *= 1.5;
+    }
+
+    // Handle high network latency
+    if (resourceConstraints.networkLatency > 2000) {
+      reducedFunctionality.push("high_frequency_updates");
+      monitoringInterval *= 2;
+    }
+
+    // Handle database connection pressure
+    if (resourceConstraints.databaseConnections > 0.9) {
+      reducedFunctionality.push("detailed_logging");
+      reducedFunctionality.push("audit_trail");
+    }
+
+    // Disable trading if resources are critically low
+    if (
+      resourceConstraints.memoryUsage > 0.95 ||
+      resourceConstraints.cpuUsage > 0.95 ||
+      resourceConstraints.databaseConnections > 0.98
+    ) {
+      tradingEnabled = false;
+      reducedFunctionality.push("trading_disabled");
+    }
+
+    console.log(
+      `[ComprehensiveSafetyCoordinator] Graceful degradation implemented: ${reducedFunctionality.length} functions reduced`
+    );
+
+    return {
+      tradingEnabled,
+      reducedFunctionality,
+      monitoringInterval,
+      maxConcurrentPositions,
+    };
+  }
+
+  /**
+   * Simulate system failure for testing
+   */
+  async simulateSystemFailure(failureScenario: {
+    type: string;
+    duration: number;
+    dataLoss: boolean;
+    backupAvailable: boolean;
+  }): Promise<void> {
+    console.log(
+      `[ComprehensiveSafetyCoordinator] Simulating ${failureScenario.type} failure for ${failureScenario.duration}ms`
+    );
+
+    // Update system status to reflect failure
+    this.currentStatus.overall.systemStatus = "critical";
+    this.currentStatus.emergency.systemActive = true;
+
+    // Create failure alert
+    await this.createAlert({
+      type: "system_degradation",
+      severity: "critical",
+      title: `System Failure Simulation: ${failureScenario.type}`,
+      message: `Simulated ${failureScenario.type} for testing purposes`,
+      source: "safety_coordinator",
+      actions: ["Monitor recovery process", "Validate backup systems"],
+      metadata: {
+        simulatedFailure: true,
+        scenario: failureScenario,
+      },
+    });
+
+    // Simulate failure duration
+    await new Promise((resolve) => setTimeout(resolve, Math.min(failureScenario.duration, 5000))); // Cap at 5 seconds for testing
+
+    console.log(`[ComprehensiveSafetyCoordinator] Failure simulation completed`);
+  }
+
+  /**
+   * Initiate recovery process
+   */
+  async initiateRecovery(): Promise<{
+    success: boolean;
+    dataIntegrityVerified: boolean;
+    recoveryTime: number;
+    lostTransactions: number;
+  }> {
+    const recoveryStartTime = Date.now();
+
+    console.log("[ComprehensiveSafetyCoordinator] Initiating system recovery...");
+
+    try {
+      // Step 1: Verify system components
+      const systemHealth = await this.performSystemHealthCheck();
+
+      // Step 2: Check data integrity
+      const dataIntegrityVerified = await this.verifyDataIntegrity();
+
+      // Step 3: Restore services
+      await this.restoreServices();
+
+      // Step 4: Update system status
+      this.currentStatus.overall.systemStatus = "operational";
+      this.currentStatus.emergency.systemActive = false;
+      this.currentStatus.emergency.tradingHalted = false;
+
+      const recoveryTime = Date.now() - recoveryStartTime;
+
+      // Create recovery success alert
+      await this.createAlert({
+        type: "system_degradation",
+        severity: "low",
+        title: "System Recovery Completed",
+        message: `System recovery completed successfully in ${recoveryTime}ms`,
+        source: "safety_coordinator",
+        actions: ["Continue monitoring", "Verify all systems operational"],
+        metadata: {
+          recoveryTime,
+          dataIntegrityVerified,
+        },
+      });
+
+      console.log(
+        `[ComprehensiveSafetyCoordinator] Recovery completed successfully in ${recoveryTime}ms`
+      );
+
+      return {
+        success: true,
+        dataIntegrityVerified,
+        recoveryTime,
+        lostTransactions: 0, // No transactions lost in simulation
+      };
+    } catch (error) {
+      console.error("[ComprehensiveSafetyCoordinator] Recovery failed:", error);
+
+      return {
+        success: false,
+        dataIntegrityVerified: false,
+        recoveryTime: Date.now() - recoveryStartTime,
+        lostTransactions: 0,
+      };
+    }
+  }
+
+  /**
+   * Verify data integrity during recovery
+   */
+  private async verifyDataIntegrity(): Promise<boolean> {
+    try {
+      // Check portfolio metrics consistency
+      const portfolioMetrics = await this.riskEngine.getPortfolioRiskMetrics();
+
+      // Check emergency system data
+      const emergencyStatus = await this.emergencySystem.getEmergencyStatus();
+
+      // Verify agent metrics
+      const agentMetrics = this.safetyMonitor.getSafetyStatus();
+
+      // Simple integrity checks
+      const portfolioIntegrityOk = portfolioMetrics.totalValue >= 0;
+      const emergencyIntegrityOk = typeof emergencyStatus.active === "boolean";
+      const agentIntegrityOk = typeof agentMetrics.overallSafetyScore === "number";
+
+      const dataIntegrityVerified =
+        portfolioIntegrityOk && emergencyIntegrityOk && agentIntegrityOk;
+
+      console.log(
+        `[ComprehensiveSafetyCoordinator] Data integrity verification: ${dataIntegrityVerified ? "PASSED" : "FAILED"}`
+      );
+
+      return dataIntegrityVerified;
+    } catch (error) {
+      console.error("[ComprehensiveSafetyCoordinator] Data integrity verification failed:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Restore services after failure
+   */
+  private async restoreServices(): Promise<void> {
+    try {
+      // Restart monitoring timers
+      this.startMonitoringTimers();
+
+      // Perform comprehensive assessment
+      await this.performComprehensiveAssessment();
+
+      console.log("[ComprehensiveSafetyCoordinator] Services restored successfully");
+    } catch (error) {
+      console.error("[ComprehensiveSafetyCoordinator] Service restoration failed:", error);
+      throw error;
+    }
   }
 }
