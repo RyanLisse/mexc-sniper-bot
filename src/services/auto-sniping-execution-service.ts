@@ -586,14 +586,27 @@ export class AutoSnipingExecutionService {
   private async monitorActivePositions(): Promise<void> {
     if (this.activePositions.size === 0) return;
 
-    try {
-      for (const position of this.activePositions.values()) {
-        await this.updatePositionPnL(position);
-        await this.checkStopLossAndTakeProfit(position);
+    // Convert positions to array for parallel processing
+    const positions = Array.from(this.activePositions.values());
+    
+    // Process all positions in parallel using Promise.allSettled
+    const results = await Promise.allSettled(
+      positions.map(position => this.monitorSinglePosition(position))
+    );
+
+    // Log any failures without stopping the entire monitoring process
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const position = positions[index];
+        console.error(`[AutoSnipingExecution] Failed to monitor position ${position.id}:`, result.reason);
       }
-    } catch (error) {
-      console.error("[AutoSnipingExecution] Position monitoring error:", error);
-    }
+    });
+  }
+
+  private async monitorSinglePosition(position: ExecutionPosition): Promise<void> {
+    // Update PnL and check stop-loss/take-profit in sequence for this position
+    await this.updatePositionPnL(position);
+    await this.checkStopLossAndTakeProfit(position);
   }
 
   private async updatePositionPnL(position: ExecutionPosition): Promise<void> {
