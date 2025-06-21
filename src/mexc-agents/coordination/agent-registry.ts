@@ -1,4 +1,10 @@
 import type { BaseAgent } from "../base-agent";
+import { 
+  TIME_CONSTANTS, 
+  SYSTEM_CONFIG, 
+  RISK_CONSTANTS,
+  DATA_CONSTANTS 
+} from "../../lib/constants";
 
 export type AgentStatus = "healthy" | "degraded" | "unhealthy" | "unknown" | "recovering";
 
@@ -118,9 +124,9 @@ export interface AgentRegistryOptions {
 export class AgentRegistry {
   private agents: Map<string, RegisteredAgent> = new Map();
   private healthCheckInterval: NodeJS.Timeout | null = null;
-  private healthCheckIntervalMs = 30000; // 30 seconds
+  private healthCheckIntervalMs = TIME_CONSTANTS.INTERVALS.THIRTY_SECONDS;
   private healthHistory: Map<string, HealthCheckResult[]> = new Map();
-  private maxHealthHistorySize = 100;
+  private maxHealthHistorySize = SYSTEM_CONFIG.AGENTS.MAX_HEALTH_HISTORY;
   private isRunning = false;
   private defaultThresholds: HealthThresholds;
   private autoRecoveryEnabled: boolean;
@@ -141,21 +147,39 @@ export class AgentRegistry {
 
     this.autoRecoveryEnabled = options?.autoRecoveryEnabled ?? true;
 
-    // Default health thresholds
+    // Default health thresholds using centralized constants
     this.defaultThresholds = options?.defaultThresholds ?? {
-      responseTime: { warning: 3000, critical: 10000 }, // 3s warning, 10s critical
-      errorRate: { warning: 0.1, critical: 0.3 }, // 10% warning, 30% critical
-      consecutiveErrors: { warning: 3, critical: 5 }, // 3 warnings, 5 critical
-      uptime: { warning: 95, critical: 90 }, // 95% warning, 90% critical
-      memoryUsage: { warning: 100, critical: 250 }, // 100MB warning, 250MB critical
-      cpuUsage: { warning: 70, critical: 90 }, // 70% warning, 90% critical
+      responseTime: { 
+        warning: RISK_CONSTANTS.HEALTH.RESPONSE_TIME_WARNING, 
+        critical: RISK_CONSTANTS.HEALTH.RESPONSE_TIME_CRITICAL 
+      },
+      errorRate: { 
+        warning: RISK_CONSTANTS.HEALTH.ERROR_RATE_WARNING, 
+        critical: RISK_CONSTANTS.HEALTH.ERROR_RATE_CRITICAL 
+      },
+      consecutiveErrors: { 
+        warning: SYSTEM_CONFIG.AGENTS.DEFAULT_RETRY_ATTEMPTS, 
+        critical: SYSTEM_CONFIG.AGENTS.DEFAULT_RETRY_ATTEMPTS + 2 
+      },
+      uptime: { 
+        warning: RISK_CONSTANTS.HEALTH.UPTIME_WARNING, 
+        critical: RISK_CONSTANTS.HEALTH.UPTIME_CRITICAL 
+      },
+      memoryUsage: { 
+        warning: RISK_CONSTANTS.HEALTH.MEMORY_WARNING, 
+        critical: RISK_CONSTANTS.HEALTH.MEMORY_CRITICAL 
+      },
+      cpuUsage: { 
+        warning: RISK_CONSTANTS.HEALTH.CPU_WARNING, 
+        critical: RISK_CONSTANTS.HEALTH.CPU_CRITICAL 
+      },
     };
 
-    // Default system alert thresholds
+    // Default system alert thresholds using centralized constants
     this.alertThresholds = options?.alertThresholds ?? {
-      unhealthyAgentPercentage: 20, // Alert if >20% agents unhealthy
-      systemResponseTime: 5000, // Alert if system avg response > 5s
-      systemErrorRate: 0.15, // Alert if system error rate > 15%
+      unhealthyAgentPercentage: RISK_CONSTANTS.ALERTS.UNHEALTHY_AGENT_PERCENTAGE,
+      systemResponseTime: RISK_CONSTANTS.ALERTS.SYSTEM_RESPONSE_TIME,
+      systemErrorRate: RISK_CONSTANTS.ALERTS.SYSTEM_ERROR_RATE,
     };
 
     this.setupDefaultRecoveryStrategies();
@@ -189,7 +213,7 @@ export class AgentRegistry {
       instance,
       registeredAt: new Date(),
       dependencies: options.dependencies || [],
-      priority: options.priority || 1,
+      priority: options.priority || SYSTEM_CONFIG.AGENTS.DEFAULT_PRIORITY,
       tags: options.tags || [],
       thresholds: options.thresholds || this.defaultThresholds,
       autoRecovery: options.autoRecovery ?? this.autoRecoveryEnabled,
@@ -201,7 +225,7 @@ export class AgentRegistry {
         errorCount: 0,
         errorRate: 0,
         consecutiveErrors: 0,
-        uptime: 100,
+        uptime: SYSTEM_CONFIG.AGENTS.DEFAULT_UPTIME,
         capabilities: options.capabilities || [],
         load: {
           current: 0,
@@ -215,7 +239,7 @@ export class AgentRegistry {
         requestCount: 0,
         successCount: 0,
         recoveryAttempts: 0,
-        healthScore: 100,
+        healthScore: SYSTEM_CONFIG.AGENTS.DEFAULT_HEALTH_SCORE,
         trends: {
           responseTime: "stable",
           errorRate: "stable",
@@ -332,7 +356,7 @@ export class AgentRegistry {
           timestamp: new Date().toISOString(),
         }),
         new Promise(
-          (_, reject) => setTimeout(() => reject(new Error("Health check timeout")), 8000) // Increased timeout
+          (_, reject) => setTimeout(() => reject(new Error("Health check timeout")), TIME_CONSTANTS.TIMEOUTS.HEALTH_CHECK)
         ),
       ]);
 
@@ -393,7 +417,7 @@ export class AgentRegistry {
       this.updateAgentHealth(id, result);
 
       // Attempt auto-recovery if enabled
-      if (agent.autoRecovery && agent.health.consecutiveErrors >= 2) {
+      if (agent.autoRecovery && agent.health.consecutiveErrors >= RISK_CONSTANTS.HEALTH.CONSECUTIVE_ERRORS_WARNING - 1) {
         await this.attemptAgentRecovery(id);
       }
     }
@@ -571,7 +595,7 @@ export class AgentRegistry {
 
       // Calculate error rate from recent history
       const history = this.healthHistory.get(id) || [];
-      const recentChecks = history.slice(-20).concat([result]); // Last 20 checks + current
+      const recentChecks = history.slice(-DATA_CONSTANTS.HISTORY.RECENT_CHECKS).concat([result]); // Last N checks + current
       const recentErrors = recentChecks.filter((check) => !check.success).length;
       health.errorRate = recentChecks.length > 0 ? recentErrors / recentChecks.length : 1;
 
@@ -704,10 +728,10 @@ export class AgentRegistry {
     if (!agent) return;
 
     const history = this.healthHistory.get(id) || [];
-    if (history.length < 5) return; // Need at least 5 data points
+    if (history.length < DATA_CONSTANTS.HISTORY.LAST_N_CHECKS) return; // Need at least N data points
 
-    const recent = history.slice(-10); // Last 10 checks
-    const older = history.slice(-20, -10); // Previous 10 checks
+    const recent = history.slice(-DATA_CONSTANTS.HISTORY.TOP_KEYS_LIMIT); // Last N checks
+    const older = history.slice(-DATA_CONSTANTS.HISTORY.RECENT_CHECKS, -DATA_CONSTANTS.HISTORY.TOP_KEYS_LIMIT); // Previous N checks
 
     if (older.length === 0) return;
 
@@ -812,7 +836,7 @@ export class AgentRegistry {
             );
 
             // Reset consecutive errors after successful recovery
-            agent.health.consecutiveErrors = Math.max(0, agent.health.consecutiveErrors - 2);
+            agent.health.consecutiveErrors = Math.max(0, agent.health.consecutiveErrors - RISK_CONSTANTS.HEALTH.CONSECUTIVE_ERRORS_WARNING + 1);
             return true;
           }
         }
@@ -846,7 +870,7 @@ export class AgentRegistry {
     const unhealthyPercentage = (stats.unhealthyAgents / stats.totalAgents) * 100;
     if (unhealthyPercentage > this.alertThresholds.unhealthyAgentPercentage) {
       alerts.push({
-        type: unhealthyPercentage > 40 ? "critical" : "warning",
+        type: unhealthyPercentage > RISK_CONSTANTS.ALERTS.CRITICAL_UNHEALTHY_PERCENTAGE ? "critical" : "warning",
         message: `${unhealthyPercentage.toFixed(1)}% of agents are unhealthy (${stats.unhealthyAgents}/${stats.totalAgents})`,
         timestamp: now,
       });
@@ -855,7 +879,7 @@ export class AgentRegistry {
     // Check system response time
     if (stats.averageResponseTime > this.alertThresholds.systemResponseTime) {
       alerts.push({
-        type: stats.averageResponseTime > 10000 ? "critical" : "warning",
+        type: stats.averageResponseTime > RISK_CONSTANTS.ALERTS.CRITICAL_SYSTEM_RESPONSE_TIME ? "critical" : "warning",
         message: `System average response time is ${stats.averageResponseTime.toFixed(0)}ms`,
         timestamp: now,
       });
@@ -863,9 +887,9 @@ export class AgentRegistry {
 
     // Check for agents with high recovery attempts
     for (const agent of this.agents.values()) {
-      if (agent.health.recoveryAttempts > 5) {
+      if (agent.health.recoveryAttempts > RISK_CONSTANTS.ALERTS.RECOVERY_ATTEMPTS_WARNING) {
         alerts.push({
-          type: agent.health.recoveryAttempts > 10 ? "critical" : "warning",
+          type: agent.health.recoveryAttempts > RISK_CONSTANTS.ALERTS.RECOVERY_ATTEMPTS_CRITICAL ? "critical" : "warning",
           message: `Agent ${agent.name} has required ${agent.health.recoveryAttempts} recovery attempts`,
           timestamp: now,
         });
@@ -908,7 +932,7 @@ export class AgentRegistry {
       );
     }
 
-    if (agent.health.recoveryAttempts > 3) {
+    if (agent.health.recoveryAttempts > SYSTEM_CONFIG.AGENTS.DEFAULT_RETRY_ATTEMPTS) {
       recommendations.push(
         "Multiple recovery attempts detected. Consider investigating root cause of failures."
       );
