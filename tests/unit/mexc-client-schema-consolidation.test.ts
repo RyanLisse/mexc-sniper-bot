@@ -24,16 +24,16 @@ import {
 } from '../../src/services/unified-mexc-client';
 
 import {
-  CalendarEntrySchema as ExtractedCalendarSchema,
-  SymbolEntrySchema as ExtractedSymbolSchema,
-  BalanceEntrySchema as ExtractedBalanceSchema,
-  TickerSchema as ExtractedTickerSchema,
-  OrderResultSchema as ExtractedOrderResultSchema,
-  ExchangeSymbolSchema as ExtractedExchangeSymbolSchema,
-  type CalendarEntry as ExtractedCalendarEntry,
-  type SymbolEntry as ExtractedSymbolEntry,
-  type BalanceEntry as ExtractedBalanceEntry,
-} from '../../src/schemas/mexc-schemas-extracted';
+  CalendarEntrySchema as MainCalendarSchema,
+  SymbolEntrySchema as MainSymbolSchema,
+  BalanceEntrySchema as MainBalanceSchema,
+  TickerSchema as MainTickerSchema,
+  OrderResultSchema as MainOrderResultSchema,
+  ExchangeSymbolSchema as MainExchangeSymbolSchema,
+  type CalendarEntry as MainCalendarEntry,
+  type SymbolEntry as MainSymbolEntry,
+  type BalanceEntry as MainBalanceEntry,
+} from '../../src/schemas/mexc-schemas';
 
 describe('MEXC Client Schema Consolidation - TDD Tests', () => {
   describe('Schema Imports and Compatibility', () => {
@@ -47,12 +47,12 @@ describe('MEXC Client Schema Consolidation - TDD Tests', () => {
 
       // Both schemas should validate the same data successfully
       expect(() => ClientCalendarSchema.parse(validEntry)).not.toThrow();
-      expect(() => ExtractedCalendarSchema.parse(validEntry)).not.toThrow();
+      expect(() => MainCalendarSchema.parse(validEntry)).not.toThrow();
       
       // Results should be identical
       const clientResult = ClientCalendarSchema.parse(validEntry);
-      const extractedResult = ExtractedCalendarSchema.parse(validEntry);
-      expect(clientResult).toEqual(extractedResult);
+      const mainResult = MainCalendarSchema.parse(validEntry);
+      expect(clientResult).toEqual(mainResult);
     });
 
     it('should validate SymbolEntry data with both schemas identically', () => {
@@ -64,11 +64,11 @@ describe('MEXC Client Schema Consolidation - TDD Tests', () => {
       };
 
       expect(() => ClientSymbolSchema.parse(validEntry)).not.toThrow();
-      expect(() => ExtractedSymbolSchema.parse(validEntry)).not.toThrow();
+      expect(() => MainSymbolSchema.parse(validEntry)).not.toThrow();
       
       const clientResult = ClientSymbolSchema.parse(validEntry);
-      const extractedResult = ExtractedSymbolSchema.parse(validEntry);
-      expect(clientResult).toEqual(extractedResult);
+      const mainResult = MainSymbolSchema.parse(validEntry);
+      expect(clientResult).toEqual(mainResult);
     });
 
     it('should validate BalanceEntry data with both schemas identically', () => {
@@ -81,11 +81,11 @@ describe('MEXC Client Schema Consolidation - TDD Tests', () => {
       };
 
       expect(() => ClientBalanceSchema.parse(validEntry)).not.toThrow();
-      expect(() => ExtractedBalanceSchema.parse(validEntry)).not.toThrow();
+      expect(() => MainBalanceSchema.parse(validEntry)).not.toThrow();
       
       const clientResult = ClientBalanceSchema.parse(validEntry);
-      const extractedResult = ExtractedBalanceSchema.parse(validEntry);
-      expect(clientResult).toEqual(extractedResult);
+      const mainResult = MainBalanceSchema.parse(validEntry);
+      expect(clientResult).toEqual(mainResult);
     });
 
     it('should validate Ticker data with both schemas identically', () => {
@@ -99,11 +99,11 @@ describe('MEXC Client Schema Consolidation - TDD Tests', () => {
       };
 
       expect(() => ClientTickerSchema.parse(validTicker)).not.toThrow();
-      expect(() => ExtractedTickerSchema.parse(validTicker)).not.toThrow();
+      expect(() => MainTickerSchema.parse(validTicker)).not.toThrow();
       
       const clientResult = ClientTickerSchema.parse(validTicker);
-      const extractedResult = ExtractedTickerSchema.parse(validTicker);
-      expect(clientResult).toEqual(extractedResult);
+      const mainResult = MainTickerSchema.parse(validTicker);
+      expect(clientResult).toEqual(mainResult);
     });
 
     it('should validate OrderResult data with both schemas identically', () => {
@@ -116,11 +116,11 @@ describe('MEXC Client Schema Consolidation - TDD Tests', () => {
       };
 
       expect(() => ClientOrderResultSchema.parse(validOrder)).not.toThrow();
-      expect(() => ExtractedOrderResultSchema.parse(validOrder)).not.toThrow();
+      expect(() => MainOrderResultSchema.parse(validOrder)).not.toThrow();
       
       const clientResult = ClientOrderResultSchema.parse(validOrder);
-      const extractedResult = ExtractedOrderResultSchema.parse(validOrder);
-      expect(clientResult).toEqual(extractedResult);
+      const mainResult = MainOrderResultSchema.parse(validOrder);
+      expect(clientResult).toEqual(mainResult);
     });
 
     it('should validate ExchangeSymbol data with both schemas identically', () => {
@@ -135,11 +135,11 @@ describe('MEXC Client Schema Consolidation - TDD Tests', () => {
       };
 
       expect(() => ClientExchangeSymbolSchema.parse(validSymbol)).not.toThrow();
-      expect(() => ExtractedExchangeSymbolSchema.parse(validSymbol)).not.toThrow();
+      expect(() => MainExchangeSymbolSchema.parse(validSymbol)).not.toThrow();
       
       const clientResult = ClientExchangeSymbolSchema.parse(validSymbol);
-      const extractedResult = ExtractedExchangeSymbolSchema.parse(validSymbol);
-      expect(clientResult).toEqual(extractedResult);
+      const mainResult = MainExchangeSymbolSchema.parse(validSymbol);
+      expect(clientResult).toEqual(mainResult);
     });
   });
 

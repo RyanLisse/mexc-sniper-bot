@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
+import { apiResponse } from '@/src/lib/api-response';
 import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
 
 /**
@@ -63,31 +63,20 @@ export async function GET(request: NextRequest) {
 
     const statusCode = isHealthy ? 200 : 503;
     
-    return Response.json(
-      isHealthy 
-        ? createSuccessResponse({
-            message: 'System is healthy',
-            data: healthData,
-          })
-        : createErrorResponse('System health degraded', healthData),
-      { status: statusCode }
-    );
+    return isHealthy 
+      ? apiResponse.success(healthData, { message: 'System is healthy' })
+      : apiResponse.error('System health degraded', 503, healthData);
     
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
     console.error('[Health Check] Health check failed:', error);
     
-    return Response.json(
-      createErrorResponse('Health check failed', {
-        status: 'unhealthy',
-        timestamp: new Date().toISOString(),
-        responseTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        uptime: process.uptime(),
-      }),
-      { status: 503 }
-    );
+    return apiResponse.error('Health check failed', 503, {
+      status: 'unhealthy',
+      responseTime,
+      uptime: process.uptime(),
+    });
   }
 }
 

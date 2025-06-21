@@ -49,7 +49,10 @@ describe('Real-time Safety Monitoring Integration', () => {
       components: {
         riskEngine: 'healthy',
         tradingEngine: 'healthy',
-        emergencySystem: 'healthy'
+        dataFeed: 'healthy',
+        agentSystem: 'healthy',
+        database: 'healthy',
+        connectivity: 'healthy'
       },
       emergencyConditions: [],
       lastHealthCheck: new Date().toISOString()
@@ -120,22 +123,19 @@ describe('Real-time Safety Monitoring Integration', () => {
       stats: {
         totalPatternsDetected: 10,
         averageConfidence: 85,
-        patternTypes: {
-          ready_state: 5,
-          pre_ready: 3,
-          launch_sequence: 2,
-          risk_warning: 0,
-        },
-        timeRange: {
-          start: new Date(Date.now() - 3600000).toISOString(),
-          end: new Date().toISOString(),
-        },
+        readyStatePatterns: 5,
+        preReadyPatterns: 3,
+        launchSequencePatterns: 2,
+        riskWarningPatterns: 0,
+        engineStatus: 'active',
+        lastHealthCheck: new Date().toISOString(),
         consecutiveErrors: 0,
         successRate: 95,
         lastPatternDetected: new Date().toISOString(),
       },
-      recentPatterns: [],
-      alerts: [],
+      activeAlerts: [],
+      recentActivity: [],
+      recommendations: [],
       lastUpdated: new Date().toISOString(),
     });
   });
@@ -366,7 +366,10 @@ describe('Real-time Safety Monitoring Integration', () => {
         components: {
           riskEngine: 'critical',
           tradingEngine: 'healthy',
-          emergencySystem: 'critical'
+          dataFeed: 'critical',
+          agentSystem: 'healthy',
+          database: 'healthy',
+          connectivity: 'healthy'
         },
         emergencyConditions: ['System failure detected'],
         lastHealthCheck: new Date().toISOString()
@@ -453,6 +456,14 @@ describe('Real-time Safety Monitoring Integration', () => {
         thresholds: {
           maxDrawdownPercentage: 18,
           minSuccessRatePercentage: 65,
+          maxDailyLossPercentage: 10,
+          maxPositionRiskPercentage: 5,
+          maxPortfolioConcentration: 25,
+          maxConsecutiveLosses: 3,
+          maxSlippagePercentage: 2,
+          minProfitMarginPercentage: 2,
+          maxMarketImpactPercentage: 1,
+          emergencyStopLossPercentage: 15,
         },
       };
       

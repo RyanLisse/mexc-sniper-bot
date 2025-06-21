@@ -246,6 +246,60 @@ export function createHealthResponse(
   };
 }
 
+// ============================================================================
+// Enhanced API Response Builders for Redundancy Elimination
+// ============================================================================
+
+/**
+ * Standardized API route wrapper that eliminates redundant error handling patterns
+ * Use this to replace manual try/catch blocks with consistent error handling and logging
+ */
+export function createApiRouteHandler<T = any>(
+  serviceName: string,
+  handler: () => Promise<ApiResponse<T>>
+) {
+  return async (): Promise<Response> => {
+    try {
+      const result = await handler();
+      const statusCode = result.success ? HTTP_STATUS.OK : HTTP_STATUS.BAD_REQUEST;
+      return createApiResponse(result, statusCode);
+    } catch (error) {
+      console.error(`[${serviceName}] API request failed:`, error);
+      return handleApiError(error, `${serviceName} request failed`);
+    }
+  };
+}
+
+/**
+ * Enhanced success response builder that eliminates manual timestamp additions
+ * Replaces patterns like: { ...data, timestamp: new Date().toISOString() }
+ */
+export function createTimestampedSuccessResponse<T>(
+  message: string,
+  data: T,
+  additionalMeta?: Record<string, unknown>
+): ApiResponse<T> {
+  return createSuccessResponse(data, {
+    message,
+    ...additionalMeta,
+    // timestamp is automatically added by createSuccessResponse
+  });
+}
+
+/**
+ * Enhanced error response builder that eliminates manual error logging and timestamps
+ * Replaces patterns like: console.error + createErrorResponse + manual timestamp
+ */
+export function createTimestampedErrorResponse(
+  message: string,
+  details?: Record<string, unknown>
+): ApiResponse {
+  return createErrorResponse(message, {
+    ...details,
+    // timestamp is automatically added by createErrorResponse
+  });
+}
+
 /**
  * Credential Validation Response Builder
  * Standardizes credential testing endpoints

@@ -41,10 +41,10 @@ export interface UnifiedMexcResponse<T> {
 }
 
 // ============================================================================
-// Re-exported Schemas from Extracted Module
+// Re-exported Schemas from Main Schema Module
 // ============================================================================
 
-// Schemas are now imported from the extracted module to eliminate duplication
+// Schemas are imported from the main consolidated schema module
 export {
   CalendarEntrySchema,
   SymbolEntrySchema,

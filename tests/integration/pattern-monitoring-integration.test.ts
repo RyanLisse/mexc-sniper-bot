@@ -97,7 +97,10 @@ describe('Pattern Monitoring Integration', () => {
           symbol: 'BTCUSDT',
           indicators: { sts: 2, st: 2, tt: 4 },
           recommendation: 'immediate_action' as const,
-          metadata: { source: 'test' }
+          metadata: { source: 'test' },
+          detectedAt: new Date(),
+          advanceNoticeHours: 3.5,
+          riskLevel: 'low' as const
         }
       ];
 
@@ -131,7 +134,10 @@ describe('Pattern Monitoring Integration', () => {
         symbol: 'BTCUSDT',
         indicators: { sts: 2, st: 2, tt: 4 },
         recommendation: 'immediate_action' as const,
-        metadata: {}
+        metadata: {},
+        detectedAt: new Date(),
+        advanceNoticeHours: 4.0,
+        riskLevel: 'low' as const
       };
 
       const preReadyPattern = {
@@ -140,7 +146,10 @@ describe('Pattern Monitoring Integration', () => {
         symbol: 'ETHUSDT',
         indicators: { sts: 1, st: 2, tt: 3 },
         recommendation: 'monitor_closely' as const,
-        metadata: {}
+        metadata: {},
+        detectedAt: new Date(),
+        advanceNoticeHours: 6.0,
+        riskLevel: 'medium' as const
       };
 
       // First detection with ready state pattern
@@ -173,7 +182,10 @@ describe('Pattern Monitoring Integration', () => {
         symbol: 'BTCUSDT',
         indicators: { sts: 2, st: 2, tt: 4 },
         recommendation: 'immediate_action' as const,
-        metadata: {}
+        metadata: {},
+        detectedAt: new Date(),
+        advanceNoticeHours: 2.5,
+        riskLevel: 'low' as const
       };
 
       vi.spyOn(patternEngine, 'detectReadyStatePattern').mockResolvedValue([highConfidencePattern]);
@@ -202,7 +214,10 @@ describe('Pattern Monitoring Integration', () => {
         symbol: 'BTCUSDT',
         indicators: { sts: 2, st: 2, tt: 4 },
         recommendation: 'immediate_action' as const,
-        metadata: {}
+        metadata: {},
+        detectedAt: new Date(),
+        advanceNoticeHours: 3.0,
+        riskLevel: 'low' as const
       };
 
       vi.spyOn(patternEngine, 'detectReadyStatePattern').mockResolvedValue([highConfidencePattern]);
@@ -259,7 +274,10 @@ describe('Pattern Monitoring Integration', () => {
           symbol: 'BTCUSDT',
           indicators: { sts: 2, st: 2, tt: 4 },
           recommendation: 'immediate_action' as const,
-          metadata: {}
+          metadata: {},
+          detectedAt: new Date(),
+          advanceNoticeHours: 3.5,
+          riskLevel: 'low' as const
         },
         {
           patternType: 'pre_ready' as const,
@@ -267,7 +285,10 @@ describe('Pattern Monitoring Integration', () => {
           symbol: 'ETHUSDT',
           indicators: { sts: 1, st: 2, tt: 3 },
           recommendation: 'monitor_closely' as const,
-          metadata: {}
+          metadata: {},
+          detectedAt: new Date(),
+          advanceNoticeHours: 5.0,
+          riskLevel: 'medium' as const
         }
       ];
 

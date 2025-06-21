@@ -84,42 +84,40 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         if (!configuration) {
           return NextResponse.json(createErrorResponse(
             'Configuration data is required for update action',
-            'MISSING_CONFIGURATION'
+            { code: 'MISSING_CONFIGURATION' }
           ), { status: 400 });
         }
         
         safetyMonitoringService.updateConfiguration(configuration as Partial<SafetyConfiguration>);
         return NextResponse.json(createSuccessResponse({
-          message: 'Safety monitoring configuration updated successfully',
-          data: { 
-            updatedFields: Object.keys(configuration),
-            timestamp: new Date().toISOString()
-          }
+          updatedFields: Object.keys(configuration),
+          timestamp: new Date().toISOString()
+        }, {
+          message: 'Safety monitoring configuration updated successfully'
         }));
 
       case 'trigger_emergency_response':
         if (!reason) {
           return NextResponse.json(createErrorResponse(
             'Reason is required for emergency response',
-            'MISSING_REASON'
+            { code: 'MISSING_REASON' }
           ), { status: 400 });
         }
         
         const emergencyActions = await safetyMonitoringService.triggerEmergencyResponse(reason);
-        return NextResponse.json(createSuccessResponse({
-          message: 'Emergency safety response triggered successfully',
-          data: { 
-            actions: emergencyActions,
-            timestamp: new Date().toISOString(),
-            reason 
-          }
+        return NextResponse.json(createSuccessResponse({ 
+          actions: emergencyActions,
+          timestamp: new Date().toISOString(),
+          reason 
+        }, {
+          message: 'Emergency safety response triggered successfully'
         }));
 
       case 'acknowledge_alert':
         if (!alertId) {
           return NextResponse.json(createErrorResponse(
             'Alert ID is required for acknowledgment',
-            'MISSING_ALERT_ID'
+            { code: 'MISSING_ALERT_ID' }
           ), { status: 400 });
         }
         
@@ -127,14 +125,14 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         if (!acknowledged) {
           return NextResponse.json(createErrorResponse(
             'Alert not found or already acknowledged',
-            'ALERT_NOT_FOUND'
+            { code: 'ALERT_NOT_FOUND' }
           ), { status: 404 });
         }
         
-        return NextResponse.json(createSuccessResponse({
-          message: 'Alert acknowledged successfully',
-          data: { alertId, timestamp: new Date().toISOString() }
-        }));
+        return NextResponse.json(createSuccessResponse(
+          { alertId, timestamp: new Date().toISOString() },
+          { message: 'Alert acknowledged successfully' }
+        ));
 
       case 'clear_acknowledged_alerts':
         const clearedCount = safetyMonitoringService.clearAcknowledgedAlerts();
@@ -164,25 +162,26 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       default:
         return NextResponse.json(createErrorResponse(
           `Unknown action: ${action}`,
-          'INVALID_ACTION',
-          { supportedActions: [
-            'start_monitoring',
-            'stop_monitoring', 
-            'update_configuration',
-            'trigger_emergency_response',
-            'acknowledge_alert',
-            'clear_acknowledged_alerts',
-            'get_risk_metrics',
-            'check_system_safety'
-          ]}
+          { 
+            code: 'INVALID_ACTION',
+            supportedActions: [
+              'start_monitoring',
+              'stop_monitoring', 
+              'update_configuration',
+              'trigger_emergency_response',
+              'acknowledge_alert',
+              'clear_acknowledged_alerts',
+              'get_risk_metrics',
+              'check_system_safety'
+            ]
+          }
         ), { status: 400 });
     }
   } catch (error: any) {
     console.error('[SafetyMonitoringAPI] Action failed:', error);
     return NextResponse.json(createErrorResponse(
       'Safety monitoring action failed',
-      'ACTION_FAILED',
-      { error: error.message }
+      { code: 'ACTION_FAILED', details: error.message }
     ), { status: 500 });
   }
 });
