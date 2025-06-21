@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AutoSnipingExecutionService } from '@/src/services/auto-sniping-execution-service';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
-import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
+import { apiResponse } from '@/src/lib/api-response';
 
 const executionService = AutoSnipingExecutionService.getInstance();
 
