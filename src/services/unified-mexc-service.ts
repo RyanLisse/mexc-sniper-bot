@@ -177,25 +177,100 @@ export class UnifiedMexcService {
     includeInputData: false,
   })
   async getCalendarListings(): Promise<MexcServiceResponse<CalendarEntry[]>> {
-    const response = await this.apiClient.get<CalendarEntry[]>(
-      "/api/v3/capital/sub-account/capitalOr4List",
-      {},
-      { cacheTTL: 300000 } // 5 minutes cache for calendar data
-    );
+    const startTime = Date.now();
+    
+    try {
+      console.log("[UnifiedMexcService] Fetching calendar listings from MEXC...");
 
-    if (response.success && response.data) {
-      // Validate response data
-      const validationResult = validateMexcData(CalendarEntrySchema.array(), response.data);
-      if (!validationResult.success) {
-        return {
-          ...response,
-          success: false,
-          error: `Calendar data validation failed: ${validationResult.error}`,
-        };
+      // Special handling for MEXC calendar endpoint which uses different base URL
+      const timestamp = Date.now();
+      const url = `https://www.mexc.com/api/operation/new_coin_calendar?timestamp=${timestamp}`;
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "User-Agent": "MEXC-Sniper-Bot/1.0",
+      };
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers,
+        signal: AbortSignal.timeout(30000), // 30 second timeout
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
-    }
 
-    return response;
+      const responseData = await response.json();
+
+      // Parse and validate the response structure
+      let calendarData: CalendarEntry[] = [];
+
+      // Handle the actual MEXC API response structure: data.newCoins
+      if (responseData?.data?.newCoins && Array.isArray(responseData.data.newCoins)) {
+        calendarData = responseData.data.newCoins
+          .map((coin: any) => {
+            try {
+              // Extract meaningful fields from the API response
+              const vcoinId = coin.vcoinId || coin.id || "";
+              // Use actual vcoinName from API, fallback to vcoinId if not available
+              const symbol = coin.vcoinName || coin.symbol || vcoinId;
+              // Use vcoinNameFull for full project name, fallback to vcoinName or other fields
+              const projectName =
+                coin.vcoinNameFull ||
+                coin.vcoinName ||
+                coin.projectName ||
+                coin.project_name ||
+                coin.name ||
+                coin.desc ||
+                symbol;
+              const firstOpenTime =
+                coin.firstOpenTime ||
+                coin.first_open_time ||
+                coin.listingTime ||
+                coin.listing_time ||
+                Date.now();
+
+              return CalendarEntrySchema.parse({
+                vcoinId,
+                symbol,
+                projectName,
+                firstOpenTime:
+                  typeof firstOpenTime === "string"
+                    ? new Date(firstOpenTime).getTime()
+                    : firstOpenTime,
+                // Include additional fields from API
+                vcoinName: coin.vcoinName,
+                vcoinNameFull: coin.vcoinNameFull,
+                zone: coin.zone,
+              });
+            } catch (error) {
+              console.warn("[UnifiedMexcService] Failed to parse calendar entry:", coin, error);
+              return null;
+            }
+          })
+          .filter((entry): entry is CalendarEntry => entry !== null);
+      }
+
+      console.log(`[UnifiedMexcService] Successfully fetched ${calendarData.length} calendar entries`);
+
+      return {
+        success: true,
+        data: calendarData,
+        cached: false,
+        executionTimeMs: Date.now() - startTime,
+      };
+    } catch (error) {
+      console.error("[UnifiedMexcService] Calendar fetch failed:", error);
+      return {
+        success: false,
+        data: [],
+        error: error instanceof Error ? error.message : "Unknown error",
+        cached: false,
+        executionTimeMs: Date.now() - startTime,
+      };
+    }
   }
 
   // ============================================================================
@@ -511,25 +586,51 @@ export class UnifiedMexcService {
     includeInputData: false,
   })
   async getSymbolsData(): Promise<MexcServiceResponse<SymbolEntry[]>> {
-    const response = await this.apiClient.get<SymbolEntry[]>(
-      "/api/v3/capital/sub-account/capitalOr4List",
+    // Use the correct MEXC API endpoint for symbol/exchange info
+    const response = await this.apiClient.get<any>(
+      "/api/v3/exchangeInfo",
       {},
       { cacheTTL: 60000 } // 1 minute cache for symbol data
     );
 
-    if (response.success && response.data) {
-      // Validate and enrich symbol data
-      const validationResult = validateMexcData(SymbolEntrySchema.array(), response.data);
+    if (response.success && response.data && typeof response.data === "object" && "symbols" in response.data) {
+      const rawData = response.data as any;
+      const symbols = (rawData.symbols || []).map((symbol: any) => ({
+        cd: symbol.symbol || "",
+        symbol: symbol.symbol || "",
+        sts: symbol.status === "TRADING" ? 2 : 1, // Map status to state
+        st: symbol.status === "TRADING" ? 2 : 1, // Map status to state
+        tt: symbol.status === "TRADING" ? 4 : 1, // Map status to type
+        ca: symbol.baseAssetPrecision || 8,
+        ps: symbol.quotePrecision || 8,
+        qs: symbol.quoteAssetPrecision || 8,
+      }));
+
+      // Validate the mapped symbol data
+      const validationResult = validateMexcData(SymbolEntrySchema.array(), symbols);
       if (!validationResult.success) {
         return {
-          ...response,
           success: false,
           error: `Symbol data validation failed: ${validationResult.error}`,
+          data: [],
+          cached: response.cached,
+          executionTimeMs: response.executionTimeMs,
         };
       }
+
+      return {
+        ...response,
+        data: symbols,
+      };
     }
 
-    return response;
+    return {
+      success: false,
+      error: response.error || "Failed to fetch symbol data",
+      data: [],
+      cached: response.cached,
+      executionTimeMs: response.executionTimeMs,
+    };
   }
 
   /**
