@@ -1,89 +1,104 @@
 /**
- * Optimized Icon Exports - Actually Used Icons Only
- * Tree-shakeable icon imports to reduce bundle size
- *
- * This file has been optimized to include only icons that are actually used
- * in the codebase, reducing bundle size by ~60% from the original 158 icons.
+ * Optimized Icon Exports
+ * 
+ * This file provides optimized exports for lucide-react icons to improve bundle size.
+ * Only the icons actually used in the application are exported here.
  */
 
-// Core UI & Navigation Icons (Actually Used)
+// Core navigation and layout icons
 export {
-  Home,
-  Settings,
-  User,
-  LogOut,
-  ChevronDown,
-  ChevronUp,
-  ChevronRight,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
-  PanelLeftIcon,
-  ExternalLink,
-  Info,
-  LayoutDashboard,
-  GitBranch,
-  Brain,
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  BarChart3,
   Bot,
+  Brain,
+  Calendar,
+  CheckCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Clock,
+  Database,
+  DollarSign,
+  Download,
+  Edit,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  Filter,
+  GitBranch,
+  Globe,
+  Home,
+  Info,
+  Key,
+  LayoutDashboard,
+  LineChart,
+  Loader2,
+  Lock,
+  LogOut,
+  Menu,
+  MoreHorizontal,
+  MoreVertical,
+  Play,
+  Plus,
+  Refresh,
+  RefreshCw,
+  Search,
+  Server,
+  Settings,
   Shield,
+  Star,
+  Target,
+  TestTube,
+  TrendingDown,
+  TrendingUp,
+  User,
+  Users,
+  X,
   Zap,
 } from "lucide-react";
 
-// Status & Alert Icons (Actually Used)
+// Trading and finance specific icons
 export {
-  CheckCircle,
-  CheckIcon,
-  XCircle,
-  XIcon,
-  CircleIcon,
-  AlertTriangle,
-  AlertCircle,
-  Loader2,
-  RefreshCw,
-  RefreshCcw,
-  RotateCcw,
-  Clock,
+  Coins,
+  CreditCard,
+  PieChart,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  DollarSign as DollarIcon,
+  BarChart3 as ChartIcon,
+  Activity as ActivityIcon,
+  Target as TargetIcon,
+  Zap as ZapIcon,
 } from "lucide-react";
 
-// Trading & Finance Icons (Actually Used)
+// Status and notification icons
 export {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Activity,
-  Target,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpRight,
-  ArrowDownRight,
-  Wallet,
-  Percent,
+  AlertCircle as AlertIcon,
+  CheckCircle as SuccessIcon,
+  XCircle as ErrorIcon,
+  Info as InfoIcon,
+  AlertTriangle as WarningIcon,
 } from "lucide-react";
 
-// Action Icons (Actually Used)
+// Action icons
 export {
-  Play,
+  Play as PlayIcon,
   Pause,
-  Plus,
-  Minus,
-  Trash2,
-  Eye,
-  EyeOff,
-  Lock,
-  Unlock,
-  Edit,
+  Square as StopIcon,
+  RotateCcw as ResetIcon,
   Save,
-  X,
-} from "lucide-react";
-
-// System & Bot Icons (Actually Used)
-export {
-  Calendar,
+  Trash2 as DeleteIcon,
+  Copy,
+  Download as DownloadIcon,
+  Upload,
+  Gauge,
   Wifi,
   WifiOff,
-  BarChart3,
-  Database,
-  Gauge,
-  Server,
 } from "lucide-react";

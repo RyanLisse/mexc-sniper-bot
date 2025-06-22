@@ -1,34 +1,19 @@
 /**
  * Optimized UI Component Exports
- * Tree-shakeable exports to reduce bundle size
- * Part of Task 5.1: Bundle Size Optimization
+ * 
+ * This file provides optimized exports for UI components to improve bundle size
+ * and loading performance. Components are lazy-loaded where appropriate.
  */
 
-// Core UI Components - Only export what's needed
+// Core UI components - frequently used, keep as regular imports
+export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 export { Button } from "./button";
-export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card";
-export {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./dialog";
+export { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
 export { Input } from "./input";
 export { Label } from "./label";
-export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
-export { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
 export { Badge } from "./badge";
-export { Progress } from "./progress";
-export { Switch } from "./switch";
-export { Checkbox } from "./checkbox";
 
-// Avatar components
-export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
-
-// Navigation components
+// Dropdown components
 export {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +23,7 @@ export {
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 
+// Sidebar components - used in layout
 export {
   Sidebar,
   SidebarContent,
@@ -53,13 +39,51 @@ export {
   SidebarTrigger,
 } from "./sidebar";
 
+// Dialog components
+export {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./dialog";
+
 // Table components
-export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
+export {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./table";
 
-// Tooltip components
-export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
+// Toast components
+export { toast } from "./use-toast";
 
-// Sheet/Drawer components
+// Select components
+export {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./select";
+
+// Progress components
+export { Progress } from "./progress";
+
+// Tabs components
+export {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "./tabs";
+
+// Sheet components (for mobile)
 export {
   Sheet,
   SheetContent,
@@ -69,27 +93,22 @@ export {
   SheetTrigger,
 } from "./sheet";
 
-// Alert components
-export { Alert, AlertDescription, AlertTitle } from "./alert";
+// Tooltip components
+export {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./tooltip";
 
-// Scroll area
-export { ScrollArea } from "./scroll-area";
+// Switch component
+export { Switch } from "./switch";
 
-// Toggle components
-export { Toggle } from "./toggle";
-export { ToggleGroup, ToggleGroupItem } from "./toggle-group";
-
-// Separator
+// Separator component
 export { Separator } from "./separator";
 
-// Chart components (for dashboard)
-export { ChartContainer, ChartTooltip, ChartTooltipContent } from "./chart";
-
-// Calendar component
-export { Calendar } from "./calendar";
+// ScrollArea component
+export { ScrollArea } from "./scroll-area";
 
 // Skeleton component
 export { Skeleton } from "./skeleton";
-
-// Toast hook
-export { useToast } from "./use-toast";

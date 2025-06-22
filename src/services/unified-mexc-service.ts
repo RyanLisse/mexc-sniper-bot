@@ -1515,6 +1515,207 @@ export class UnifiedMexcService {
     }
   }
 
+  /**
+   * Get candlestick/kline data for technical analysis
+   */
+  @instrumentServiceMethod({
+    serviceName: "unified-mexc-service",
+    methodName: "getKlines",
+    operationType: "api_call",
+    includeInputData: false,
+  })
+  async getKlines(
+    symbol: string,
+    interval: string = "1m",
+    limit: number = 100
+  ): Promise<MexcServiceResponse<Kline[]>> {
+    try {
+      const response = await this.apiClient.get<any[]>(
+        "/api/v3/klines",
+        { symbol, interval, limit },
+        { cacheTTL: 5000 } // 5 second cache for kline data
+      );
+
+      if (!response.success || !response.data) {
+        return {
+          success: false,
+          error: response.error || "Failed to fetch kline data",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Transform MEXC kline format to our Kline interface
+      const klines: Kline[] = response.data.map((k: any[]) => ({
+        openTime: Number(k[0]),
+        open: k[1],
+        high: k[2],
+        low: k[3],
+        close: k[4],
+        volume: k[5],
+        closeTime: Number(k[6]),
+        quoteAssetVolume: k[7] || "0",
+        numberOfTrades: Number(k[8]) || 0,
+        takerBuyBaseAssetVolume: k[9] || "0",
+        takerBuyQuoteAssetVolume: k[10] || "0",
+      }));
+
+      return {
+        success: true,
+        data: klines,
+        timestamp: new Date().toISOString(),
+        executionTimeMs: response.executionTimeMs,
+        cached: response.cached,
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      return {
+        success: false,
+        error: `Failed to get klines for ${symbol}: ${safeError.message}`,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Calculate comprehensive market statistics
+   */
+  private calculateMarketStats(tickers: Ticker[]): MarketStats {
+    if (!tickers || tickers.length === 0) {
+      return {
+        totalMarketCap: 0,
+        totalVolume: 0,
+        averageChange: 0,
+        gainersCount: 0,
+        losersCount: 0,
+        topGainer: null,
+        topLoser: null,
+        volatilityIndex: 0,
+        marketTrend: "neutral",
+      };
+    }
+
+    let totalVolume = 0;
+    let totalChange = 0;
+    let gainersCount = 0;
+    let losersCount = 0;
+    let topGainer: Ticker | null = null;
+    let topLoser: Ticker | null = null;
+    let maxGain = -Infinity;
+    let maxLoss = Infinity;
+    let volatilitySum = 0;
+
+    for (const ticker of tickers) {
+      const volume = Number.parseFloat(ticker.volume || "0");
+      const change = Number.parseFloat(ticker.priceChangePercent || "0");
+
+      totalVolume += volume;
+      totalChange += change;
+
+      if (change > 0) {
+        gainersCount++;
+        if (change > maxGain) {
+          maxGain = change;
+          topGainer = ticker;
+        }
+      } else if (change < 0) {
+        losersCount++;
+        if (change < maxLoss) {
+          maxLoss = change;
+          topLoser = ticker;
+        }
+      }
+
+      // Calculate volatility as absolute price change
+      volatilitySum += Math.abs(change);
+    }
+
+    const averageChange = totalChange / tickers.length;
+    const volatilityIndex = volatilitySum / tickers.length;
+
+    // Determine market trend
+    let marketTrend: "bullish" | "bearish" | "neutral" = "neutral";
+    if (gainersCount > losersCount * 1.5 && averageChange > 1) {
+      marketTrend = "bullish";
+    } else if (losersCount > gainersCount * 1.5 && averageChange < -1) {
+      marketTrend = "bearish";
+    }
+
+    return {
+      totalMarketCap: 0, // Would need market cap data
+      totalVolume,
+      averageChange,
+      gainersCount,
+      losersCount,
+      topGainer,
+      topLoser,
+      volatilityIndex,
+      marketTrend,
+    };
+  }
+
+  /**
+   * Analyze portfolio for risk assessment and recommendations
+   */
+  private async analyzePortfolio(portfolio: Portfolio): Promise<RiskAssessment> {
+    const { balances, totalUsdtValue, allocation } = portfolio;
+
+    // Calculate diversification score
+    const activeAssets = balances.filter(b => b.total > 0).length;
+    const diversificationScore = Math.min(activeAssets * 10, 100); // Max 100 for 10+ assets
+
+    // Calculate concentration risk
+    const maxAllocation = Math.max(...Object.values(allocation));
+    const concentrationRisk = maxAllocation > 50 ? "high" : maxAllocation > 25 ? "medium" : "low";
+
+    // Calculate volatility risk based on 24h performance
+    const volatilityRisk = Math.abs(portfolio.performance24h?.changePercent || 0) > 10 ? "high" : 
+                          Math.abs(portfolio.performance24h?.changePercent || 0) > 5 ? "medium" : "low";
+
+    // Generate recommendations
+    const recommendations: string[] = [];
+    
+    if (concentrationRisk === "high") {
+      recommendations.push("Consider diversifying holdings - over 50% concentrated in single asset");
+    }
+    
+    if (activeAssets < 3) {
+      recommendations.push("Increase diversification by holding more assets");
+    }
+    
+    if (totalUsdtValue < 100) {
+      recommendations.push("Portfolio value is low - consider increasing position sizes");
+    }
+
+    if (volatilityRisk === "high") {
+      recommendations.push("High volatility detected - consider implementing stop-losses");
+    }
+
+    // Calculate overall risk score (0-100)
+    let riskScore = 50; // Base score
+    if (concentrationRisk === "high") riskScore += 20;
+    if (concentrationRisk === "medium") riskScore += 10;
+    if (volatilityRisk === "high") riskScore += 15;
+    if (volatilityRisk === "medium") riskScore += 8;
+    if (activeAssets < 3) riskScore += 10;
+    
+    riskScore = Math.min(riskScore, 100);
+
+    return {
+      overallRiskLevel: riskScore > 70 ? "high" : riskScore > 40 ? "medium" : "low",
+      riskScore,
+      diversificationScore,
+      concentrationRisk,
+      volatilityRisk,
+      recommendations,
+      riskFactors: [
+        ...(concentrationRisk === "high" ? ["High concentration risk"] : []),
+        ...(volatilityRisk === "high" ? ["High volatility"] : []),
+        ...(activeAssets < 3 ? ["Low diversification"] : []),
+        ...(totalUsdtValue < 100 ? ["Small portfolio size"] : []),
+      ],
+    };
+  }
+
   // ============================================================================
   // Missing Methods Required by Integration Services
   // ============================================================================
@@ -1569,12 +1770,59 @@ export class UnifiedMexcService {
   })
   async createOrder(params: OrderParameters): Promise<MexcServiceResponse<OrderResult>> {
     try {
-      // Delegate to existing placeOrder method
-      return await this.placeOrder(params);
+      // Delegate to API client placeOrder method - CRITICAL FIX
+      const response = await this.apiClient.placeOrder(params);
+      
+      // Transform UnifiedMexcResponse to MexcServiceResponse format
+      return {
+        success: response.success,
+        data: response.data,
+        error: response.success ? undefined : (response.data?.error || "Order placement failed"),
+        timestamp: new Date().toISOString(),
+        executionTimeMs: response.executionTimeMs,
+        cached: response.cached,
+        requestId: response.requestId,
+      };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to create order",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Place order - Primary trading method
+   * Provides full order placement functionality with proper response handling
+   */
+  @instrumentServiceMethod({
+    serviceName: "unified-mexc-service",
+    methodName: "placeOrder",
+    operationType: "trading_operation",
+    includeInputData: false,
+    sensitiveParameters: ["apiKey", "secretKey", "quantity", "price"],
+  })
+  async placeOrder(params: OrderParameters): Promise<MexcServiceResponse<OrderResult>> {
+    try {
+      // Use API client to place the order
+      const response = await this.apiClient.placeOrder(params);
+      
+      // Transform UnifiedMexcResponse to MexcServiceResponse format
+      return {
+        success: response.success,
+        data: response.data,
+        error: response.success ? undefined : (response.data?.error || "Order placement failed"),
+        timestamp: new Date().toISOString(),
+        executionTimeMs: response.executionTimeMs,
+        cached: response.cached,
+        requestId: response.requestId,
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      return {
+        success: false,
+        error: safeError.message,
         timestamp: new Date().toISOString(),
       };
     }

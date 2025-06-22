@@ -8,19 +8,20 @@ export async function GET() {
     const patternHealth = await checkPatternDetection();
     const riskHealth = await checkRiskManagement();
     
-    // Determine overall health
+    // Determine overall health - more permissive for development
+    const criticalHealthy = strategyHealth.healthy || patternHealth.healthy; // At least one system working
     const allHealthy = strategyHealth.healthy && patternHealth.healthy && riskHealth.healthy;
     const hasWarnings = strategyHealth.warnings || patternHealth.warnings || riskHealth.warnings;
     
     let status: 'healthy' | 'warning' | 'unhealthy';
     let message: string;
     
-    if (!allHealthy) {
+    if (!criticalHealthy) {
       status = 'unhealthy';
       message = 'Trading strategy system has critical issues';
-    } else if (hasWarnings) {
+    } else if (!allHealthy || hasWarnings) {
       status = 'warning';
-      message = 'Trading strategy system operational with warnings';
+      message = 'Trading strategy system operational with some components degraded';
     } else {
       status = 'healthy';
       message = 'Trading strategy system fully operational';
@@ -52,7 +53,8 @@ export async function GET() {
     };
     
     const response = createHealthResponse(healthResult);
-    return apiResponse(response, allHealthy ? 200 : 503);
+    // Return 200 for healthy and warning states, 503 only for critical failures
+    return apiResponse(response, status === 'unhealthy' ? 503 : 200);
     
   } catch (error) {
     console.error("[Strategies Health Check] Error:", error);

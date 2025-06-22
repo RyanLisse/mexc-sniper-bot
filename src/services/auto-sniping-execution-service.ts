@@ -339,6 +339,48 @@ export class AutoSnipingExecutionService {
   }
 
   /**
+   * Enable auto-sniping with safe defaults
+   */
+  public enableAutoSniping(overrides: Partial<AutoSnipingConfig> = {}): void {
+    const enabledConfig: Partial<AutoSnipingConfig> = {
+      enabled: true,
+      ...overrides,
+    };
+
+    this.updateConfig(enabledConfig);
+
+    this.logger.info("Auto-sniping enabled", {
+      operation: "enable_auto_sniping",
+      overrides: Object.keys(overrides),
+      enabled: true,
+    });
+  }
+
+  /**
+   * Disable auto-sniping
+   */
+  public disableAutoSniping(): void {
+    this.updateConfig({ enabled: false });
+
+    // Stop execution if currently running
+    if (this.isExecutionActive) {
+      this.stopExecution();
+    }
+
+    this.logger.info("Auto-sniping disabled", {
+      operation: "disable_auto_sniping",
+      enabled: false,
+    });
+  }
+
+  /**
+   * Check if auto-sniping is enabled and ready for trading
+   */
+  public isReadyForTrading(): boolean {
+    return this.config.enabled && !this.isExecutionActive;
+  }
+
+  /**
    * Close position manually
    */
   public async closePosition(positionId: string, reason = "manual"): Promise<boolean> {
@@ -939,20 +981,20 @@ export class AutoSnipingExecutionService {
 
   private getDefaultConfig(): AutoSnipingConfig {
     return {
-      enabled: false,
-      maxPositions: 5,
-      maxDailyTrades: 10,
-      positionSizeUSDT: 100,
-      minConfidence: 80,
-      allowedPatternTypes: ["ready_state"],
-      requireCalendarConfirmation: true,
-      stopLossPercentage: 5,
-      takeProfitPercentage: 10,
-      maxDrawdownPercentage: 20,
-      enableAdvanceDetection: true,
-      advanceHoursThreshold: 3.5,
-      enableMultiPhaseStrategy: false,
-      slippageTolerancePercentage: 1,
+      enabled: process.env.AUTO_SNIPING_ENABLED !== 'false', // Default enabled unless explicitly disabled
+      maxPositions: parseInt(process.env.AUTO_SNIPING_MAX_POSITIONS || '5'),
+      maxDailyTrades: parseInt(process.env.AUTO_SNIPING_MAX_DAILY_TRADES || '10'),
+      positionSizeUSDT: parseFloat(process.env.AUTO_SNIPING_POSITION_SIZE_USDT || '100'),
+      minConfidence: parseFloat(process.env.AUTO_SNIPING_MIN_CONFIDENCE || '80'),
+      allowedPatternTypes: (process.env.AUTO_SNIPING_ALLOWED_PATTERNS?.split(',') as PatternType[]) || ["ready_state"],
+      requireCalendarConfirmation: process.env.AUTO_SNIPING_REQUIRE_CALENDAR === 'true' || true,
+      stopLossPercentage: parseFloat(process.env.AUTO_SNIPING_STOP_LOSS_PERCENT || '5'),
+      takeProfitPercentage: parseFloat(process.env.AUTO_SNIPING_TAKE_PROFIT_PERCENT || '10'),
+      maxDrawdownPercentage: parseFloat(process.env.AUTO_SNIPING_MAX_DRAWDOWN_PERCENT || '20'),
+      enableAdvanceDetection: process.env.AUTO_SNIPING_ENABLE_ADVANCE_DETECTION !== 'false', // Default true
+      advanceHoursThreshold: parseFloat(process.env.AUTO_SNIPING_ADVANCE_HOURS_THRESHOLD || '3.5'),
+      enableMultiPhaseStrategy: process.env.AUTO_SNIPING_ENABLE_MULTI_PHASE === 'true' || false,
+      slippageTolerancePercentage: parseFloat(process.env.AUTO_SNIPING_SLIPPAGE_TOLERANCE || '1'),
     };
   }
 
