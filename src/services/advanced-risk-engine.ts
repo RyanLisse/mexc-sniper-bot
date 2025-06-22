@@ -995,7 +995,7 @@ export class AdvancedRiskEngine {
         const newValue = update.totalValue;
 
         // Update position values proportionally
-        for (const [symbol, position] of this.positions.entries()) {
+        for (const [_symbol, position] of this.positions.entries()) {
           const scaleFactor = newValue / oldValue;
           position.size *= scaleFactor;
         }
@@ -1722,7 +1722,7 @@ export class AdvancedRiskEngine {
     riskScore: number;
     warnings: string[];
   }> {
-    const tradeValue = options.price * options.amount;
+    const _tradeValue = options.price * options.amount;
     const assessment = await this.assessTradeRisk(
       options.symbol,
       options.side as "buy" | "sell",
@@ -1801,7 +1801,7 @@ export class AdvancedRiskEngine {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, []);
     }
-    this.eventListeners.get(event)!.push(listener);
+    this.eventListeners.get(event)?.push(listener);
   }
 
   off(event: string, listener: Function): void {

@@ -501,7 +501,7 @@ export class SecurityMonitoringService {
             try {
               await this.rotateUserCredentials(userId);
               actionsPerformed.push(`Rotated credentials for user ${userId}`);
-            } catch (error) {
+            } catch (_error) {
               actionsPerformed.push(`Failed to rotate credentials for user ${userId}`);
               requiresManualIntervention = true;
             }
@@ -558,8 +558,8 @@ export class SecurityMonitoringService {
   private async getCredentialHealthMetrics() {
     try {
       const now = Date.now();
-      const warningThreshold = now - SECURITY_CONFIG.credentialRotation.warningThreshold;
-      const expiredThreshold = now - SECURITY_CONFIG.credentialRotation.forceRotationAge;
+      const _warningThreshold = now - SECURITY_CONFIG.credentialRotation.warningThreshold;
+      const _expiredThreshold = now - SECURITY_CONFIG.credentialRotation.forceRotationAge;
 
       // This would query the actual database in production
       // For now, return mock data that demonstrates the structure
@@ -616,7 +616,7 @@ export class SecurityMonitoringService {
         responseTimeMs: 0, // Circuit breaker doesn't track response time
         lastHealthCheck: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         circuitBreakerStatus: "unknown",
         errorRate: 0,
@@ -636,7 +636,7 @@ export class SecurityMonitoringService {
     // This would query the actual database in production
     // For now, return mock data for demonstration
     const now = Date.now();
-    const rotationThreshold = now - SECURITY_CONFIG.credentialRotation.maxAge;
+    const _rotationThreshold = now - SECURITY_CONFIG.credentialRotation.maxAge;
 
     return [
       {

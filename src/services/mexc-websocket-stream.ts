@@ -14,7 +14,7 @@
  * - Connection management and error recovery
  */
 
-import { EventEmitter } from "node:events";
+import { EventEmitter } from "events";
 import WebSocket from "ws";
 import type {
   NotificationMessage,
@@ -326,7 +326,7 @@ class MarketDataManager {
         tt: status.tt,
       });
 
-      if (result && result.enhancedAnalysis) {
+      if (result?.enhancedAnalysis) {
         console.log(
           `[MEXC Stream] Enhanced AI analysis completed for ${status.s} with confidence: ${result.confidence}`
         );

@@ -7,6 +7,7 @@
 
 import type { NextResponse } from "next/server";
 import { HTTP_STATUS, apiResponse, createErrorResponse } from "./api-response";
+import { ensureError } from "./error-type-utils";
 import {
   isApplicationError,
   isOperationalError,
@@ -119,11 +120,12 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
   }
 
   // Handle standard errors
+  const safeError = ensureError(error);
   if (error instanceof Error) {
-    errorLogger.error(`Unhandled error: ${error.message}`, error, context);
+    errorLogger.error(`Unhandled error: ${safeError.message}`, safeError, context);
 
     // Check for specific error patterns
-    if (error.message.includes("ECONNREFUSED")) {
+    if (safeError.message.includes("ECONNREFUSED")) {
       return apiResponse(
         createErrorResponse("Service temporarily unavailable", {
           code: "SERVICE_UNAVAILABLE",
@@ -132,7 +134,7 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
       );
     }
 
-    if (error.message.includes("timeout")) {
+    if (safeError.message.includes("timeout")) {
       return apiResponse(
         createErrorResponse("Request timeout", {
           code: "TIMEOUT_ERROR",
@@ -151,8 +153,9 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
   }
 
   // Handle unknown errors
-  errorLogger.error("Unknown error type", new Error("Unknown error"), {
-    error,
+  const fallbackError = safeError || ensureError(error);
+  errorLogger.error("Unknown error type", fallbackError, {
+    originalError: error,
     context,
   });
 
@@ -213,10 +216,11 @@ export async function safeExecute<T>(
       timestamp: new Date().toISOString(),
     };
 
+    const errorToLog = ensureError(error);
     if (isOperationalError(error)) {
-      errorLogger.warn(`Operation failed: ${operationName}`, error as Error, enrichedContext);
+      errorLogger.warn(`Operation failed: ${operationName}`, errorToLog, enrichedContext);
     } else {
-      errorLogger.error(`System failure in: ${operationName}`, error as Error, enrichedContext);
+      errorLogger.error(`System failure in: ${operationName}`, errorToLog, enrichedContext);
     }
 
     throw error;

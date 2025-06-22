@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import OpenAI from "openai";
 import { CACHE_CONSTANTS, TIME_CONSTANTS } from "../lib/constants";
 import { globalEnhancedAgentCache, initializeAgentCache } from "../lib/enhanced-agent-cache";
+import { toSafeError } from "../lib/error-type-utils";
 import { ErrorLoggingService } from "../services/error-logging-service";
 
 export interface AgentConfig {
@@ -70,7 +71,11 @@ export class BaseAgent {
     // Initialize enhanced agent cache for this agent
     if (this.config.cacheEnabled) {
       initializeAgentCache(this.config.name).catch((error) => {
-        console.error(`[${this.config.name}] Failed to initialize enhanced cache:`, error);
+        const safeError = toSafeError(error);
+        console.error(
+          `[${this.config.name}] Failed to initialize enhanced cache:`,
+          safeError.message
+        );
       });
     }
   }
@@ -245,11 +250,10 @@ export class BaseAgent {
 
       return agentResponse;
     } catch (error) {
+      const safeError = toSafeError(error);
       const errorLoggingService = ErrorLoggingService.getInstance();
       const agentError = new Error(
-        `Agent ${this.config.name} failed to process request: ${
-          error instanceof Error ? error.message : String(error)
-        }`
+        `Agent ${this.config.name} failed to process request: ${safeError.message}`
       );
 
       // Log with proper context
@@ -257,8 +261,8 @@ export class BaseAgent {
         agent: this.config.name,
         operation: "processWithOpenAI",
         messages: messages.length,
-        originalError: error instanceof Error ? error.message : String(error),
-        stackTrace: error instanceof Error ? error.stack : undefined,
+        originalError: safeError.message,
+        stackTrace: safeError.stack,
       });
 
       throw agentError;

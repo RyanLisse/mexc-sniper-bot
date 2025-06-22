@@ -1,44 +1,44 @@
 /**
  * Structured Logger for MEXC Trading Bot
- * 
+ *
  * Replaces console.log statements with structured, contextual logging
  * integrated with OpenTelemetry for comprehensive observability.
  */
 
-import { trace, context } from '@opentelemetry/api';
+import { trace } from "@opentelemetry/api";
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
 
 export interface LogContext {
   // Trading context
   symbol?: string;
-  side?: 'BUY' | 'SELL';
+  side?: "BUY" | "SELL";
   quantity?: number | string;
   price?: number | string;
   patternType?: string;
   confidence?: number;
   riskScore?: number;
-  
+
   // Agent context
   agentId?: string;
   agentType?: string;
   taskType?: string;
-  
+
   // System context
   service?: string;
   operation?: string;
   component?: string;
-  
+
   // Performance context
   duration?: number;
   memoryUsage?: number;
   responseTime?: number;
-  
+
   // Error context
   errorCode?: string;
   errorType?: string;
   stackTrace?: string;
-  
+
   // Additional context
   [key: string]: any;
 }
@@ -62,7 +62,7 @@ export class StructuredLogger {
   private component: string;
   private logLevel: LogLevel;
 
-  constructor(service: string, component: string, logLevel: LogLevel = 'info') {
+  constructor(service: string, component: string, logLevel: LogLevel = "info") {
     this.service = service;
     this.component = component;
     this.logLevel = this.parseLogLevel(process.env.LOG_LEVEL || logLevel);
@@ -73,8 +73,8 @@ export class StructuredLogger {
    */
   private parseLogLevel(level: string): LogLevel {
     const normalizedLevel = level.toLowerCase() as LogLevel;
-    const validLevels: LogLevel[] = ['debug', 'info', 'warn', 'error', 'fatal'];
-    return validLevels.includes(normalizedLevel) ? normalizedLevel : 'info';
+    const validLevels: LogLevel[] = ["debug", "info", "warn", "error", "fatal"];
+    return validLevels.includes(normalizedLevel) ? normalizedLevel : "info";
   }
 
   /**
@@ -97,7 +97,7 @@ export class StructuredLogger {
   private createLogEntry(level: LogLevel, message: string, context: LogContext = {}): LogEntry {
     const activeSpan = trace.getActiveSpan();
     const spanContext = activeSpan?.spanContext();
-    
+
     return {
       timestamp: new Date().toISOString(),
       level,
@@ -131,18 +131,19 @@ export class StructuredLogger {
     }
 
     // Format for console output (development) or structured output (production)
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       // JSON output for log aggregation systems
       console.log(JSON.stringify(entry));
     } else {
       // Human-readable format for development
       const timestamp = entry.timestamp;
-      const traceInfo = entry.traceId ? `[${entry.traceId.substring(0, 8)}]` : '';
-      const contextStr = Object.keys(entry.context).length > 0 
-        ? JSON.stringify(entry.context, null, 2) 
-        : '';
-      
-      console.log(`${timestamp} [${entry.level.toUpperCase()}] ${traceInfo} ${entry.component}: ${entry.message}`);
+      const traceInfo = entry.traceId ? `[${entry.traceId.substring(0, 8)}]` : "";
+      const contextStr =
+        Object.keys(entry.context).length > 0 ? JSON.stringify(entry.context, null, 2) : "";
+
+      console.log(
+        `${timestamp} [${entry.level.toUpperCase()}] ${traceInfo} ${entry.component}: ${entry.message}`
+      );
       if (contextStr) {
         console.log(`Context: ${contextStr}`);
       }
@@ -153,21 +154,21 @@ export class StructuredLogger {
    * Debug logging
    */
   debug(message: string, context?: LogContext): void {
-    this.emit(this.createLogEntry('debug', message, context));
+    this.emit(this.createLogEntry("debug", message, context));
   }
 
   /**
    * Info logging
    */
   info(message: string, context?: LogContext): void {
-    this.emit(this.createLogEntry('info', message, context));
+    this.emit(this.createLogEntry("info", message, context));
   }
 
   /**
    * Warning logging
    */
   warn(message: string, context?: LogContext): void {
-    this.emit(this.createLogEntry('warn', message, context));
+    this.emit(this.createLogEntry("warn", message, context));
   }
 
   /**
@@ -181,7 +182,7 @@ export class StructuredLogger {
       stackTrace: error?.stack,
     };
 
-    this.emit(this.createLogEntry('error', message, errorContext));
+    this.emit(this.createLogEntry("error", message, errorContext));
 
     // Also record exception in OpenTelemetry span
     if (error) {
@@ -210,7 +211,7 @@ export class StructuredLogger {
   trading(operation: string, context: LogContext): void {
     this.info(`Trading: ${operation}`, {
       ...context,
-      operation: 'trading',
+      operation: "trading",
       operationType: operation,
     });
   }
@@ -223,7 +224,7 @@ export class StructuredLogger {
       ...context,
       patternType,
       confidence,
-      operation: 'pattern_detection',
+      operation: "pattern_detection",
     });
   }
 
@@ -236,7 +237,7 @@ export class StructuredLogger {
       endpoint,
       method,
       responseTime,
-      operation: 'api_call',
+      operation: "api_call",
     });
   }
 
@@ -248,7 +249,7 @@ export class StructuredLogger {
       ...context,
       agentId,
       taskType,
-      operation: 'agent_task',
+      operation: "agent_task",
     });
   }
 
@@ -256,23 +257,25 @@ export class StructuredLogger {
    * Log performance metrics
    */
   performance(operation: string, duration: number, context: LogContext = {}): void {
-    const level = duration > 1000 ? 'warn' : 'info'; // Warn for operations > 1s
-    this.emit(this.createLogEntry(level, `Performance: ${operation} completed in ${duration}ms`, {
-      ...context,
-      operation: 'performance',
-      duration,
-    }));
+    const level = duration > 1000 ? "warn" : "info"; // Warn for operations > 1s
+    this.emit(
+      this.createLogEntry(level, `Performance: ${operation} completed in ${duration}ms`, {
+        ...context,
+        operation: "performance",
+        duration,
+      })
+    );
   }
 
   /**
    * Log cache operations
    */
-  cache(operation: 'hit' | 'miss' | 'set' | 'delete', key: string, context: LogContext = {}): void {
+  cache(operation: "hit" | "miss" | "set" | "delete", key: string, context: LogContext = {}): void {
     this.debug(`Cache ${operation}: ${key}`, {
       ...context,
       cacheOperation: operation,
       cacheKey: key,
-      operation: 'cache',
+      operation: "cache",
     });
   }
 
@@ -280,20 +283,22 @@ export class StructuredLogger {
    * Log safety events
    */
   safety(event: string, riskScore: number, context: LogContext = {}): void {
-    const level = riskScore > 70 ? 'warn' : 'info';
-    this.emit(this.createLogEntry(level, `Safety: ${event}`, {
-      ...context,
-      riskScore,
-      operation: 'safety',
-      safetyEvent: event,
-    }));
+    const level = riskScore > 70 ? "warn" : "info";
+    this.emit(
+      this.createLogEntry(level, `Safety: ${event}`, {
+        ...context,
+        riskScore,
+        operation: "safety",
+        safetyEvent: event,
+      })
+    );
   }
 }
 
 /**
  * Create logger instance for a specific component
  */
-export function createLogger(component: string, service = 'mexc-trading-bot'): StructuredLogger {
+export function createLogger(component: string, service = "mexc-trading-bot"): StructuredLogger {
   return new StructuredLogger(service, component);
 }
 
@@ -302,27 +307,27 @@ export function createLogger(component: string, service = 'mexc-trading-bot'): S
  */
 export const logger = {
   // Core services
-  trading: createLogger('trading'),
-  pattern: createLogger('pattern-detection'),
-  safety: createLogger('safety'),
-  api: createLogger('api'),
-  
+  trading: createLogger("trading"),
+  pattern: createLogger("pattern-detection"),
+  safety: createLogger("safety"),
+  api: createLogger("api"),
+
   // Infrastructure
-  cache: createLogger('cache'),
-  database: createLogger('database'),
-  websocket: createLogger('websocket'),
-  
+  cache: createLogger("cache"),
+  database: createLogger("database"),
+  websocket: createLogger("websocket"),
+
   // Agent system
-  agent: createLogger('agent'),
-  coordination: createLogger('coordination'),
-  
+  agent: createLogger("agent"),
+  coordination: createLogger("coordination"),
+
   // Monitoring
-  monitoring: createLogger('monitoring'),
-  performance: createLogger('performance'),
-  
+  monitoring: createLogger("monitoring"),
+  performance: createLogger("performance"),
+
   // General purpose
-  system: createLogger('system'),
-  default: createLogger('default'),
+  system: createLogger("system"),
+  default: createLogger("default"),
 };
 
 /**
@@ -330,12 +335,13 @@ export const logger = {
  */
 export function replaceConsoleLog(component: string) {
   const componentLogger = createLogger(component);
-  
+
   return {
     log: (message: string, context?: LogContext) => componentLogger.info(message, context),
     info: (message: string, context?: LogContext) => componentLogger.info(message, context),
     warn: (message: string, context?: LogContext) => componentLogger.warn(message, context),
-    error: (message: string, context?: LogContext, error?: Error) => componentLogger.error(message, context, error),
+    error: (message: string, context?: LogContext, error?: Error) =>
+      componentLogger.error(message, context, error),
     debug: (message: string, context?: LogContext) => componentLogger.debug(message, context),
   };
 }
@@ -347,13 +353,13 @@ export class PerformanceTimer {
   private startTime: number;
   private operation: string;
   private logger: StructuredLogger;
-  
+
   constructor(operation: string, logger: StructuredLogger) {
     this.operation = operation;
     this.logger = logger;
     this.startTime = Date.now();
   }
-  
+
   end(context?: LogContext): number {
     const duration = Date.now() - this.startTime;
     this.logger.performance(this.operation, duration, context);

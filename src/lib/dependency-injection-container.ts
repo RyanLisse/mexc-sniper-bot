@@ -1,16 +1,16 @@
 /**
  * Dependency Injection Container
- * 
+ *
  * Provides a comprehensive dependency injection system that eliminates tight coupling
  * and improves testability by managing service lifecycles and dependencies.
- * 
+ *
  * ELIMINATES ARCHITECTURAL ISSUES:
  * - Tight coupling between services (24 files importing ../services/)
  * - Mixed service instantiation patterns
  * - Difficult unit testing due to hard dependencies
  * - Circular dependency issues
  * - No centralized service lifecycle management
- * 
+ *
  * PROVIDES:
  * - Centralized service registration and resolution
  * - Automatic dependency injection
@@ -20,23 +20,14 @@
  * - Circular dependency detection
  */
 
-import { EventEmitter } from 'node:events';
-import type { 
-  ServiceRegistry, 
-  BaseService, 
-  ServiceDependencies,
-  ServiceConfiguration,
-  TradingServices,
-  InfrastructureServices,
-  SafetyServices,
-} from './service-layer-architecture';
-import type { Configuration } from './unified-configuration-management';
+import { EventEmitter } from "events";
+import type { BaseService, ServiceDependencies } from "./service-layer-architecture";
 
 // ============================================================================
 // Container Types and Interfaces
 // ============================================================================
 
-export type ServiceLifetime = 'singleton' | 'transient' | 'scoped';
+export type ServiceLifetime = "singleton" | "transient" | "scoped";
 
 export interface ServiceDescriptor<T = any> {
   name: string;
@@ -51,9 +42,7 @@ export interface ServiceConstructor<T = any> {
   new (dependencies: ServiceDependencies): T;
 }
 
-export interface ServiceFactory<T = any> {
-  (container: DependencyContainer): T;
-}
+export type ServiceFactory<T = any> = (container: DependencyContainer) => T;
 
 export interface ServiceScope {
   id: string;
@@ -109,12 +98,12 @@ export class DependencyContainer extends EventEmitter {
     }
 
     this.services.set(descriptor.name, descriptor);
-    
+
     if (this.configuration.enableLifecycleLogging) {
       console.log(`📝 Registered service: ${descriptor.name} (${descriptor.lifetime})`);
     }
 
-    this.emit('serviceRegistered', descriptor);
+    this.emit("serviceRegistered", descriptor);
     return this;
   }
 
@@ -122,7 +111,7 @@ export class DependencyContainer extends EventEmitter {
    * Register a singleton service
    */
   registerSingleton<T>(
-    name: string, 
+    name: string,
     implementation: ServiceConstructor<T> | ServiceFactory<T>,
     dependencies: string[] = [],
     interfaces: string[] = []
@@ -130,10 +119,11 @@ export class DependencyContainer extends EventEmitter {
     return this.register({
       name,
       implementation: implementation as ServiceConstructor<T>,
-      factory: typeof implementation === 'function' && implementation.length === 1 
-        ? implementation as ServiceFactory<T> 
-        : undefined,
-      lifetime: 'singleton',
+      factory:
+        typeof implementation === "function" && implementation.length === 1
+          ? (implementation as ServiceFactory<T>)
+          : undefined,
+      lifetime: "singleton",
       dependencies,
       interfaces,
     });
@@ -151,10 +141,11 @@ export class DependencyContainer extends EventEmitter {
     return this.register({
       name,
       implementation: implementation as ServiceConstructor<T>,
-      factory: typeof implementation === 'function' && implementation.length === 1 
-        ? implementation as ServiceFactory<T> 
-        : undefined,
-      lifetime: 'transient',
+      factory:
+        typeof implementation === "function" && implementation.length === 1
+          ? (implementation as ServiceFactory<T>)
+          : undefined,
+      lifetime: "transient",
       dependencies,
       interfaces,
     });
@@ -172,10 +163,11 @@ export class DependencyContainer extends EventEmitter {
     return this.register({
       name,
       implementation: implementation as ServiceConstructor<T>,
-      factory: typeof implementation === 'function' && implementation.length === 1 
-        ? implementation as ServiceFactory<T> 
-        : undefined,
-      lifetime: 'scoped',
+      factory:
+        typeof implementation === "function" && implementation.length === 1
+          ? (implementation as ServiceFactory<T>)
+          : undefined,
+      lifetime: "scoped",
       dependencies,
       interfaces,
     });
@@ -189,7 +181,7 @@ export class DependencyContainer extends EventEmitter {
     this.services.set(name, {
       name,
       implementation: class {} as any,
-      lifetime: 'singleton',
+      lifetime: "singleton",
       dependencies: [],
       interfaces,
     });
@@ -208,7 +200,7 @@ export class DependencyContainer extends EventEmitter {
 
     try {
       const instance = this.internalResolve<T>(name, scopeId);
-      
+
       if (this.configuration.enablePerformanceTracking) {
         const duration = Date.now() - startTime;
         console.log(`⚡ Resolved '${name}' in ${duration}ms`);
@@ -229,8 +221,9 @@ export class DependencyContainer extends EventEmitter {
    * Resolve a service by interface
    */
   resolveByInterface<T>(interfaceName: string, scopeId?: string): T {
-    const serviceDescriptor = Array.from(this.services.values())
-      .find(descriptor => descriptor.interfaces?.includes(interfaceName));
+    const serviceDescriptor = Array.from(this.services.values()).find((descriptor) =>
+      descriptor.interfaces?.includes(interfaceName)
+    );
 
     if (!serviceDescriptor) {
       throw new Error(`No service implements interface '${interfaceName}'`);
@@ -243,12 +236,11 @@ export class DependencyContainer extends EventEmitter {
    * Resolve all services implementing an interface
    */
   resolveAll<T>(interfaceName: string, scopeId?: string): T[] {
-    const serviceDescriptors = Array.from(this.services.values())
-      .filter(descriptor => descriptor.interfaces?.includes(interfaceName));
-
-    return serviceDescriptors.map(descriptor => 
-      this.resolve<T>(descriptor.name, scopeId)
+    const serviceDescriptors = Array.from(this.services.values()).filter((descriptor) =>
+      descriptor.interfaces?.includes(interfaceName)
     );
+
+    return serviceDescriptors.map((descriptor) => this.resolve<T>(descriptor.name, scopeId));
   }
 
   /**
@@ -265,12 +257,14 @@ export class DependencyContainer extends EventEmitter {
     // Check for circular dependencies
     if (this.configuration.enableCircularDependencyDetection) {
       if (this.resolutionStack.includes(name)) {
-        const cycle = [...this.resolutionStack, name].join(' -> ');
+        const cycle = [...this.resolutionStack, name].join(" -> ");
         throw new Error(`Circular dependency detected: ${cycle}`);
       }
 
       if (this.resolutionStack.length >= this.configuration.maxDependencyDepth) {
-        throw new Error(`Maximum dependency depth exceeded (${this.configuration.maxDependencyDepth})`);
+        throw new Error(
+          `Maximum dependency depth exceeded (${this.configuration.maxDependencyDepth})`
+        );
       }
     }
 
@@ -283,11 +277,11 @@ export class DependencyContainer extends EventEmitter {
 
     try {
       switch (descriptor.lifetime) {
-        case 'singleton':
+        case "singleton":
           return this.resolveSingleton<T>(descriptor);
-        case 'transient':
+        case "transient":
           return this.resolveTransient<T>(descriptor);
-        case 'scoped':
+        case "scoped":
           return this.resolveScoped<T>(descriptor, scopeId);
         default:
           throw new Error(`Unknown service lifetime: ${descriptor.lifetime}`);
@@ -312,7 +306,7 @@ export class DependencyContainer extends EventEmitter {
       console.log(`🏗️ Created singleton: ${descriptor.name}`);
     }
 
-    this.emit('singletonCreated', descriptor.name, instance);
+    this.emit("singletonCreated", descriptor.name, instance);
     return instance;
   }
 
@@ -326,7 +320,7 @@ export class DependencyContainer extends EventEmitter {
       console.log(`🔄 Created transient: ${descriptor.name}`);
     }
 
-    this.emit('transientCreated', descriptor.name, instance);
+    this.emit("transientCreated", descriptor.name, instance);
     return instance;
   }
 
@@ -354,7 +348,7 @@ export class DependencyContainer extends EventEmitter {
       console.log(`🎯 Created scoped: ${descriptor.name} (scope: ${scopeId})`);
     }
 
-    this.emit('scopedCreated', descriptor.name, instance, scopeId);
+    this.emit("scopedCreated", descriptor.name, instance, scopeId);
     return instance;
   }
 
@@ -371,9 +365,8 @@ export class DependencyContainer extends EventEmitter {
     // Create instance using factory or constructor
     if (descriptor.factory) {
       return descriptor.factory(this);
-    } else {
-      return new descriptor.implementation(dependencies);
     }
+    return new descriptor.implementation(dependencies);
   }
 
   // ============================================================================
@@ -405,7 +398,7 @@ export class DependencyContainer extends EventEmitter {
       console.log(`📦 Created scope: ${scopeId}`);
     }
 
-    this.emit('scopeCreated', scopeId);
+    this.emit("scopeCreated", scopeId);
     return scope;
   }
 
@@ -420,7 +413,7 @@ export class DependencyContainer extends EventEmitter {
 
     // Dispose all scoped services
     for (const [serviceName, service] of scope.services) {
-      if (service && typeof service.cleanup === 'function') {
+      if (service && typeof service.cleanup === "function") {
         try {
           service.cleanup();
         } catch (error) {
@@ -437,7 +430,7 @@ export class DependencyContainer extends EventEmitter {
       console.log(`🗑️ Disposed scope: ${scopeId}`);
     }
 
-    this.emit('scopeDisposed', scopeId);
+    this.emit("scopeDisposed", scopeId);
   }
 
   // ============================================================================
@@ -448,14 +441,15 @@ export class DependencyContainer extends EventEmitter {
    * Initialize all singleton services
    */
   async initializeAll(): Promise<void> {
-    const singletonDescriptors = Array.from(this.services.values())
-      .filter(descriptor => descriptor.lifetime === 'singleton');
+    const singletonDescriptors = Array.from(this.services.values()).filter(
+      (descriptor) => descriptor.lifetime === "singleton"
+    );
 
     for (const descriptor of singletonDescriptors) {
       try {
         const instance = this.resolve(descriptor.name);
-        
-        if (instance && typeof (instance as any).initialize === 'function') {
+
+        if (instance && typeof (instance as any).initialize === "function") {
           await (instance as any).initialize();
         }
 
@@ -468,19 +462,22 @@ export class DependencyContainer extends EventEmitter {
       }
     }
 
-    this.emit('containerInitialized');
+    this.emit("containerInitialized");
   }
 
   /**
    * Get container health status
    */
-  async getHealthStatus(): Promise<{ healthy: boolean; services: Array<{ name: string; healthy: boolean; error?: string }> }> {
+  async getHealthStatus(): Promise<{
+    healthy: boolean;
+    services: Array<{ name: string; healthy: boolean; error?: string }>;
+  }> {
     const serviceStatuses: Array<{ name: string; healthy: boolean; error?: string }> = [];
     let allHealthy = true;
 
     for (const [name, instance] of this.singletonInstances) {
       try {
-        if (instance && typeof instance.isHealthy === 'function') {
+        if (instance && typeof instance.isHealthy === "function") {
           const healthy = await instance.isHealthy();
           serviceStatuses.push({ name, healthy });
           if (!healthy) allHealthy = false;
@@ -488,7 +485,7 @@ export class DependencyContainer extends EventEmitter {
           serviceStatuses.push({ name, healthy: true });
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         serviceStatuses.push({ name, healthy: false, error: errorMessage });
         allHealthy = false;
       }
@@ -508,7 +505,7 @@ export class DependencyContainer extends EventEmitter {
 
     // Dispose singleton services
     for (const [name, instance] of this.singletonInstances) {
-      if (instance && typeof instance.cleanup === 'function') {
+      if (instance && typeof instance.cleanup === "function") {
         try {
           await instance.cleanup();
           if (this.configuration.enableLifecycleLogging) {
@@ -524,7 +521,7 @@ export class DependencyContainer extends EventEmitter {
     this.services.clear();
     this.removeAllListeners();
 
-    this.emit('containerDisposed');
+    this.emit("containerDisposed");
   }
 
   /**
@@ -552,7 +549,10 @@ export class DependencyContainer extends EventEmitter {
   /**
    * Get dependency graph for debugging
    */
-  getDependencyGraph(): { nodes: Array<{ id: string; lifetime: ServiceLifetime }>; edges: Array<{ from: string; to: string }> } {
+  getDependencyGraph(): {
+    nodes: Array<{ id: string; lifetime: ServiceLifetime }>;
+    edges: Array<{ from: string; to: string }>;
+  } {
     const nodes: Array<{ id: string; lifetime: ServiceLifetime }> = [];
     const edges: Array<{ from: string; to: string }> = [];
 
@@ -578,18 +578,37 @@ export class DependencyContainer extends EventEmitter {
 export function registerTradingServices(container: DependencyContainer): void {
   // Register all trading-related services with their dependencies
   container.registerSingleton(
-    'OrderExecutionService',
-    class MockOrderExecutionService implements any {
-      async initialize() { /* implementation */ }
-      async isHealthy() { return true; }
-      getStatus() { return { name: 'OrderExecution', status: 'healthy' as const, lastChecked: new Date(), dependencies: [] }; }
-      async cleanup() { /* cleanup */ }
-      async executeOrder() { /* implementation */ }
-      async cancelOrder() { /* implementation */ }
-      async getOrderStatus() { /* implementation */ }
+    "OrderExecutionService",
+    class MockOrderExecutionService {
+      async initialize() {
+        /* implementation */
+      }
+      async isHealthy() {
+        return true;
+      }
+      getStatus() {
+        return {
+          name: "OrderExecution",
+          status: "healthy" as const,
+          lastChecked: new Date(),
+          dependencies: [],
+        };
+      }
+      async cleanup() {
+        /* cleanup */
+      }
+      async executeOrder() {
+        /* implementation */
+      }
+      async cancelOrder() {
+        /* implementation */
+      }
+      async getOrderStatus() {
+        /* implementation */
+      }
     },
-    ['MexcIntegrationService', 'RiskManagementService'],
-    ['OrderExecutionService']
+    ["MexcIntegrationService", "RiskManagementService"],
+    ["OrderExecutionService"]
   );
 
   // Add more trading services...
@@ -600,18 +619,37 @@ export function registerTradingServices(container: DependencyContainer): void {
  */
 export function registerInfrastructureServices(container: DependencyContainer): void {
   container.registerSingleton(
-    'MexcIntegrationService',
-    class MockMexcIntegrationService implements any {
-      async initialize() { /* implementation */ }
-      async isHealthy() { return true; }
-      getStatus() { return { name: 'MexcIntegration', status: 'healthy' as const, lastChecked: new Date(), dependencies: [] }; }
-      async cleanup() { /* cleanup */ }
-      async getMarketData() { /* implementation */ }
-      async placeOrder() { /* implementation */ }
-      async getAccountInfo() { /* implementation */ }
+    "MexcIntegrationService",
+    class MockMexcIntegrationService {
+      async initialize() {
+        /* implementation */
+      }
+      async isHealthy() {
+        return true;
+      }
+      getStatus() {
+        return {
+          name: "MexcIntegration",
+          status: "healthy" as const,
+          lastChecked: new Date(),
+          dependencies: [],
+        };
+      }
+      async cleanup() {
+        /* cleanup */
+      }
+      async getMarketData() {
+        /* implementation */
+      }
+      async placeOrder() {
+        /* implementation */
+      }
+      async getAccountInfo() {
+        /* implementation */
+      }
     },
-    ['CacheService'],
-    ['MexcIntegrationService']
+    ["CacheService"],
+    ["MexcIntegrationService"]
   );
 
   // Add more infrastructure services...
@@ -622,18 +660,37 @@ export function registerInfrastructureServices(container: DependencyContainer): 
  */
 export function registerSafetyServices(container: DependencyContainer): void {
   container.registerSingleton(
-    'SafetyCoordinatorService',
-    class MockSafetyCoordinatorService implements any {
-      async initialize() { /* implementation */ }
-      async isHealthy() { return true; }
-      getStatus() { return { name: 'SafetyCoordinator', status: 'healthy' as const, lastChecked: new Date(), dependencies: [] }; }
-      async cleanup() { /* cleanup */ }
-      async checkSystemSafety() { /* implementation */ }
-      async enforceEmergencyStop() { /* implementation */ }
-      async getActiveViolations() { /* implementation */ }
+    "SafetyCoordinatorService",
+    class MockSafetyCoordinatorService {
+      async initialize() {
+        /* implementation */
+      }
+      async isHealthy() {
+        return true;
+      }
+      getStatus() {
+        return {
+          name: "SafetyCoordinator",
+          status: "healthy" as const,
+          lastChecked: new Date(),
+          dependencies: [],
+        };
+      }
+      async cleanup() {
+        /* cleanup */
+      }
+      async checkSystemSafety() {
+        /* implementation */
+      }
+      async enforceEmergencyStop() {
+        /* implementation */
+      }
+      async getActiveViolations() {
+        /* implementation */
+      }
     },
-    ['SystemMonitoringService', 'EmergencySystemService'],
-    ['SafetyCoordinatorService']
+    ["SystemMonitoringService", "EmergencySystemService"],
+    ["SafetyCoordinatorService"]
   );
 
   // Add more safety services...
@@ -692,18 +749,18 @@ export function Service(options: {
   dependencies?: string[];
   interfaces?: string[];
 }) {
-  return function <T extends new (...args: any[]) => any>(constructor: T) {
+  return <T extends new (...args: any[]) => any>(constructor: T) => {
     const serviceName = options.name || constructor.name;
     const container = getContainer();
 
-    if (options.lifetime === 'transient') {
+    if (options.lifetime === "transient") {
       container.registerTransient(
         serviceName,
         constructor as any,
         options.dependencies || [],
         options.interfaces || []
       );
-    } else if (options.lifetime === 'scoped') {
+    } else if (options.lifetime === "scoped") {
       container.registerScoped(
         serviceName,
         constructor as any,
@@ -727,7 +784,7 @@ export function Service(options: {
  * Injectable dependency decorator
  */
 export function Inject(serviceName: string) {
-  return function (target: any, propertyKey: string | symbol) {
+  return (target: any, propertyKey: string | symbol) => {
     // Store metadata for dependency injection
     if (!target.constructor._dependencies) {
       target.constructor._dependencies = [];
@@ -744,22 +801,19 @@ export function Inject(serviceName: string) {
  * Example of how to create a service using the new architecture
  */
 @Service({
-  name: 'ExampleTradingService',
-  lifetime: 'singleton',
-  dependencies: ['MexcIntegrationService', 'RiskManagementService'],
-  interfaces: ['TradingService']
+  name: "ExampleTradingService",
+  lifetime: "singleton",
+  dependencies: ["MexcIntegrationService", "RiskManagementService"],
+  interfaces: ["TradingService"],
 })
 export class ExampleTradingService implements BaseService {
-  @Inject('MexcIntegrationService')
   private mexcService: any;
-
-  @Inject('RiskManagementService')
   private riskService: any;
 
   async initialize(dependencies: ServiceDependencies): Promise<void> {
-    this.mexcService = dependencies.MexcIntegrationService;
-    this.riskService = dependencies.RiskManagementService;
-    console.log('ExampleTradingService initialized');
+    this.mexcService = (dependencies as any).MexcIntegrationService;
+    this.riskService = (dependencies as any).RiskManagementService;
+    console.log("ExampleTradingService initialized");
   }
 
   async isHealthy(): Promise<boolean> {
@@ -768,39 +822,39 @@ export class ExampleTradingService implements BaseService {
 
   getStatus() {
     return {
-      name: 'ExampleTradingService',
-      status: 'healthy' as const,
+      name: "ExampleTradingService",
+      status: "healthy" as const,
       lastChecked: new Date(),
-      dependencies: ['MexcIntegrationService', 'RiskManagementService'],
+      dependencies: ["MexcIntegrationService", "RiskManagementService"],
       metrics: {
         operationsPerformed: 42,
         lastOperation: new Date(),
-      }
+      },
     };
   }
 
   async cleanup(): Promise<void> {
-    console.log('ExampleTradingService cleaned up');
+    console.log("ExampleTradingService cleaned up");
   }
 
   // Service-specific methods
   async executeTrade(symbol: string, quantity: number): Promise<any> {
     // Check risk first
     const riskAssessment = await this.riskService.assessRisk({
-      type: 'buy',
+      type: "buy",
       symbol,
       quantity,
     });
 
-    if (riskAssessment.recommendation === 'abort') {
-      throw new Error('Trade rejected by risk management');
+    if (riskAssessment.recommendation === "abort") {
+      throw new Error("Trade rejected by risk management");
     }
 
     // Execute through MEXC service
     return await this.mexcService.placeOrder({
       symbol,
-      side: 'buy',
-      type: 'market',
+      side: "buy",
+      type: "market",
       quantity,
     });
   }

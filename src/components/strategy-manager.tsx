@@ -1,22 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -25,31 +14,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  TrendingUp,
-  Shield,
-  Target,
-  BarChart3,
-  Settings,
-  Download,
-  Upload,
-  Play,
-  Pause,
-  RefreshCw,
-  AlertTriangle,
-  CheckCircle,
   Activity,
+  AlertTriangle,
   DollarSign,
-  Percent,
-  Clock
+  Download,
+  Pause,
+  Play,
+  Settings,
+  Target,
+  TrendingUp,
+  Upload,
 } from "lucide-react";
+import { useState } from "react";
 
 // Import the trading strategy types and manager
 import {
-  TradingStrategyManager,
   TRADING_STRATEGIES,
   type TradingStrategy,
-  type PriceMultiplier,
+  TradingStrategyManager,
 } from "../services/trading-strategy-manager";
 
 interface StrategyPerformance {
@@ -80,7 +64,7 @@ export function StrategyManager() {
   );
   const [selectedStrategyId, setSelectedStrategyId] = useState(activeStrategy.id);
   const [isActive, setIsActive] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
 
   // Mock data for demonstration
   const [strategyPerformance] = useState<Record<string, StrategyPerformance>>({
@@ -154,18 +138,18 @@ export function StrategyManager() {
   const getStrategyBadgeColor = (strategyId: string) => {
     const performance = strategyPerformance[strategyId];
     if (!performance) return "secondary";
-    
+
     if (performance.successRate >= 80) return "default"; // green
     if (performance.successRate >= 70) return "secondary"; // blue
     return "destructive"; // red
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(value);
   };
 
@@ -220,7 +204,8 @@ export function StrategyManager() {
           <CardContent>
             <div className="text-2xl font-bold">{activePositions.length}</div>
             <p className="text-xs text-muted-foreground">
-              {formatCurrency(activePositions.reduce((sum, pos) => sum + pos.currentPnL, 0))} total PnL
+              {formatCurrency(activePositions.reduce((sum, pos) => sum + pos.currentPnL, 0))} total
+              PnL
             </p>
           </CardContent>
         </Card>
@@ -234,8 +219,8 @@ export function StrategyManager() {
             <div className="text-2xl font-bold text-green-600">
               {formatPercentage(strategyPerformance[selectedStrategyId]?.successRate || 0)}
             </div>
-            <Progress 
-              value={strategyPerformance[selectedStrategyId]?.successRate || 0} 
+            <Progress
+              value={strategyPerformance[selectedStrategyId]?.successRate || 0}
               className="mt-2"
             />
           </CardContent>
@@ -272,9 +257,9 @@ export function StrategyManager() {
             {Object.values(TRADING_STRATEGIES).map((strategy) => {
               const performance = strategyPerformance[strategy.id];
               const isSelected = strategy.id === selectedStrategyId;
-              
+
               return (
-                <Card 
+                <Card
                   key={strategy.id}
                   className={`cursor-pointer transition-colors ${
                     isSelected ? "ring-2 ring-primary" : "hover:bg-muted/50"
@@ -299,7 +284,7 @@ export function StrategyManager() {
                       <div className="flex justify-between text-sm">
                         <span>Max Target:</span>
                         <span className="font-medium">
-                          {formatPercentage(Math.max(...strategy.levels.map(l => l.percentage)))}
+                          {formatPercentage(Math.max(...strategy.levels.map((l) => l.percentage)))}
                         </span>
                       </div>
                       {performance && (
@@ -324,9 +309,15 @@ export function StrategyManager() {
                     <div className="space-y-1">
                       <h4 className="text-sm font-medium">Profit Levels:</h4>
                       {strategy.levels.slice(0, 3).map((level, index) => (
-                        <div key={index} className="flex justify-between text-xs text-muted-foreground">
+                        <div
+                          key={index}
+                          className="flex justify-between text-xs text-muted-foreground"
+                        >
                           <span>Level {index + 1}:</span>
-                          <span>{formatPercentage(level.sellPercentage)} @ +{formatPercentage(level.percentage)}</span>
+                          <span>
+                            {formatPercentage(level.sellPercentage)} @ +
+                            {formatPercentage(level.percentage)}
+                          </span>
                         </div>
                       ))}
                       {strategy.levels.length > 3 && (
@@ -409,10 +400,14 @@ export function StrategyManager() {
                       <TableCell>{position.quantity}</TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className={`font-medium ${position.currentPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          <span
+                            className={`font-medium ${position.currentPnL >= 0 ? "text-green-600" : "text-red-600"}`}
+                          >
                             {formatCurrency(position.currentPnL)}
                           </span>
-                          <span className={`text-xs ${position.currentPnLPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          <span
+                            className={`text-xs ${position.currentPnLPercentage >= 0 ? "text-green-600" : "text-red-600"}`}
+                          >
                             {formatPercentage(position.currentPnLPercentage)}
                           </span>
                         </div>
@@ -420,10 +415,12 @@ export function StrategyManager() {
                       <TableCell>
                         <div className="space-y-1">
                           <div className="flex justify-between text-xs">
-                            <span>Levels: {position.triggeredLevels}/{activeStrategy.levels.length}</span>
+                            <span>
+                              Levels: {position.triggeredLevels}/{activeStrategy.levels.length}
+                            </span>
                           </div>
-                          <Progress 
-                            value={(position.triggeredLevels / activeStrategy.levels.length) * 100} 
+                          <Progress
+                            value={(position.triggeredLevels / activeStrategy.levels.length) * 100}
                             className="h-2"
                           />
                         </div>
@@ -462,9 +459,7 @@ export function StrategyManager() {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm">Win Rate:</span>
-                        <span className="font-medium">
-                          {formatPercentage(perf.winRate)}
-                        </span>
+                        <span className="font-medium">{formatPercentage(perf.winRate)}</span>
                       </div>
                       <Progress value={perf.winRate} className="h-2" />
                     </div>
@@ -506,9 +501,7 @@ export function StrategyManager() {
             <Card>
               <CardHeader>
                 <CardTitle>Strategy Import/Export</CardTitle>
-                <CardDescription>
-                  Manage your strategy configurations
-                </CardDescription>
+                <CardDescription>Manage your strategy configurations</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex space-x-2">
@@ -521,7 +514,7 @@ export function StrategyManager() {
                     Import Strategy
                   </Button>
                 </div>
-                
+
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
@@ -534,9 +527,7 @@ export function StrategyManager() {
             <Card>
               <CardHeader>
                 <CardTitle>Risk Management</CardTitle>
-                <CardDescription>
-                  Configure risk parameters and safety limits
-                </CardDescription>
+                <CardDescription>Configure risk parameters and safety limits</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">

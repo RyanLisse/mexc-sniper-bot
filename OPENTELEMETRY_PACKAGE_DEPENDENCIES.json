@@ -30,7 +30,7 @@
   },
   "environment_variables": {
     "OTEL_SERVICE_NAME": "mexc-sniper-bot",
-    "OTEL_SERVICE_VERSION": "2.0.0", 
+    "OTEL_SERVICE_VERSION": "2.0.0",
     "OTEL_RESOURCE_ATTRIBUTES": "service.name=mexc-sniper-bot,service.version=2.0.0",
     "JAEGER_ENDPOINT": "http://localhost:14268/api/traces",
     "OTEL_EXPORTER_PROMETHEUS_PORT": "9464",
@@ -50,7 +50,7 @@
   ],
   "performance_impact": {
     "cpu_overhead": "<2%",
-    "memory_overhead": "<5%", 
+    "memory_overhead": "<5%",
     "network_overhead": "minimal with batch export",
     "latency_impact": "<1ms per operation",
     "recommended_sampling": "10% in development, 1-5% in production"

@@ -5,6 +5,7 @@
  * Monitors system health, trading risks, and triggers safety protocols.
  */
 
+import { createLogger, createTimer } from "../lib/structured-logger";
 import { AutoSnipingExecutionService } from "./auto-sniping-execution-service";
 import type { ExecutionPosition } from "./auto-sniping-execution-service";
 import { EmergencySafetySystem } from "./emergency-safety-system";
@@ -149,23 +150,35 @@ class TimerCoordinator {
   private coordinatorTimer: NodeJS.Timeout | null = null;
   private isActive = false;
   private readonly baseTickMs = 5000; // 5-second base tick for coordination
+  private logger = createLogger("timer-coordinator");
 
   constructor() {
-    console.log("[TimerCoordinator] Timer coordinator initialized");
+    this.logger.info("Timer coordinator initialized", {
+      operation: "initialization",
+      baseTickMs: this.baseTickMs,
+    });
   }
 
   /**
    * Register a scheduled operation
    */
-  public registerOperation(operation: Omit<ScheduledOperation, 'lastExecuted' | 'isRunning'>): void {
+  public registerOperation(
+    operation: Omit<ScheduledOperation, "lastExecuted" | "isRunning">
+  ): void {
     const scheduledOp: ScheduledOperation = {
       ...operation,
       lastExecuted: 0,
       isRunning: false,
     };
-    
+
     this.operations.set(operation.id, scheduledOp);
-    console.log(`[TimerCoordinator] Registered operation: ${operation.name} (${operation.intervalMs}ms)`);
+    this.logger.info("Operation registered", {
+      operation: "register_operation",
+      operationId: operation.id,
+      operationName: operation.name,
+      intervalMs: operation.intervalMs,
+      totalOperations: this.operations.size,
+    });
   }
 
   /**
@@ -173,16 +186,32 @@ class TimerCoordinator {
    */
   public start(): void {
     if (this.isActive) {
-      console.warn("[TimerCoordinator] Already active");
+      this.logger.warn("Timer coordinator already active", {
+        operation: "start_coordinator",
+        isActive: this.isActive,
+        operationsCount: this.operations.size,
+      });
       return;
     }
 
     this.isActive = true;
-    console.log("[TimerCoordinator] Starting timer coordination...");
+    this.logger.info("Starting timer coordination", {
+      operation: "start_coordinator",
+      baseTickMs: this.baseTickMs,
+      operationsCount: this.operations.size,
+    });
 
     this.coordinatorTimer = setInterval(() => {
       this.coordinateCycle().catch((error) => {
-        console.error("[TimerCoordinator] Coordination cycle failed:", error);
+        this.logger.error(
+          "Coordination cycle failed",
+          {
+            operation: "coordination_cycle",
+            activeOperations: this.operations.size,
+            baseTickMs: this.baseTickMs,
+          },
+          error
+        );
       });
     }, this.baseTickMs);
   }
@@ -191,10 +220,14 @@ class TimerCoordinator {
    * Stop the timer coordinator and cleanup
    */
   public stop(): void {
-    console.log("[TimerCoordinator] Stopping timer coordination...");
-    
+    this.logger.info("Stopping timer coordination", {
+      operation: "stop_coordinator",
+      isActive: this.isActive,
+      totalOperations: this.operations.size,
+    });
+
     this.isActive = false;
-    
+
     if (this.coordinatorTimer) {
       clearInterval(this.coordinatorTimer);
       this.coordinatorTimer = null;
@@ -202,9 +235,13 @@ class TimerCoordinator {
 
     // Wait for any running operations to complete
     const allOperations = Array.from(this.operations.values());
-    const runningOps = allOperations.filter(op => op.isRunning);
+    const runningOps = allOperations.filter((op) => op.isRunning);
     if (runningOps.length > 0) {
-      console.log(`[TimerCoordinator] Waiting for ${runningOps.length} operations to complete...`);
+      this.logger.info("Waiting for operations to complete", {
+        operation: "stop_coordinator",
+        runningOperations: runningOps.length,
+        runningOperationNames: runningOps.map((op) => op.name),
+      });
     }
 
     this.operations.clear();
@@ -240,10 +277,10 @@ class TimerCoordinator {
       if (!this.isActive) break; // Check if coordinator was stopped
 
       await this.executeOperationSafely(operation);
-      
+
       // Add small delay between operations to prevent resource contention
       if (readyOperations.length > 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
   }
@@ -252,16 +289,52 @@ class TimerCoordinator {
    * Execute an operation with proper error handling and state management
    */
   private async executeOperationSafely(operation: ScheduledOperation): Promise<void> {
+    const timer = createTimer("operation_execution", "timer-coordinator");
+
     try {
       operation.isRunning = true;
       operation.lastExecuted = Date.now();
-      
-      console.log(`[TimerCoordinator] Executing: ${operation.name}`);
+
+      this.logger.info("Executing operation", {
+        operation: "execute_operation",
+        operationId: operation.id,
+        operationName: operation.name,
+        intervalMs: operation.intervalMs,
+      });
+
       await operation.handler();
-      
-      console.log(`[TimerCoordinator] Completed: ${operation.name}`);
+
+      const duration = timer.end({
+        operationId: operation.id,
+        operationName: operation.name,
+        status: "success",
+      });
+
+      this.logger.info("Operation completed", {
+        operation: "execute_operation",
+        operationId: operation.id,
+        operationName: operation.name,
+        duration,
+        status: "success",
+      });
     } catch (error) {
-      console.error(`[TimerCoordinator] Operation failed: ${operation.name}`, error);
+      const duration = timer.end({
+        operationId: operation.id,
+        operationName: operation.name,
+        status: "failed",
+      });
+
+      this.logger.error(
+        "Operation failed",
+        {
+          operation: "execute_operation",
+          operationId: operation.id,
+          operationName: operation.name,
+          duration,
+          status: "failed",
+        },
+        error
+      );
     } finally {
       operation.isRunning = false;
     }
@@ -279,7 +352,7 @@ class TimerCoordinator {
     nextExecution: number;
   }> {
     const allOperations = Array.from(this.operations.values());
-    return allOperations.map(op => ({
+    return allOperations.map((op) => ({
       id: op.id,
       name: op.name,
       intervalMs: op.intervalMs,
@@ -305,6 +378,7 @@ export class RealTimeSafetyMonitoringService {
   private recentActions: SafetyAction[] = [];
 
   private timerCoordinator: TimerCoordinator;
+  private logger = createLogger("safety-monitoring");
 
   private monitoringStats = {
     alertsGenerated: 0,
@@ -324,7 +398,13 @@ export class RealTimeSafetyMonitoringService {
     this.riskMetrics = this.getDefaultRiskMetrics();
     this.timerCoordinator = new TimerCoordinator();
 
-    console.log("[SafetyMonitoring] Real-time safety monitoring service initialized");
+    this.logger.info("Safety monitoring service initialized", {
+      operation: "initialization",
+      monitoringIntervalMs: this.config.monitoringIntervalMs,
+      riskCheckIntervalMs: this.config.riskCheckIntervalMs,
+      autoActionEnabled: this.config.autoActionEnabled,
+      thresholdCount: Object.keys(this.config.thresholds).length,
+    });
   }
 
   public static getInstance(): RealTimeSafetyMonitoringService {
@@ -335,6 +415,82 @@ export class RealTimeSafetyMonitoringService {
   }
 
   /**
+   * For testing: inject dependencies
+   */
+  public injectDependencies(dependencies: {
+    emergencySystem?: EmergencySafetySystem;
+    executionService?: AutoSnipingExecutionService;
+    patternMonitoring?: PatternMonitoringService;
+    mexcService?: UnifiedMexcService;
+  }): void {
+    if (dependencies.emergencySystem) {
+      this.emergencySystem = dependencies.emergencySystem;
+    }
+    if (dependencies.executionService) {
+      this.executionService = dependencies.executionService;
+    }
+    if (dependencies.patternMonitoring) {
+      this.patternMonitoring = dependencies.patternMonitoring;
+    }
+    if (dependencies.mexcService) {
+      this.mexcService = dependencies.mexcService;
+    }
+  }
+
+  /**
+   * For testing: clear all alerts
+   */
+  public clearAllAlerts(): void {
+    this.alerts = [];
+    this.recentActions = [];
+  }
+
+  /**
+   * For testing: reset to default state
+   */
+  public resetToDefaults(): void {
+    this.alerts = [];
+    this.recentActions = [];
+    this.riskMetrics = this.getDefaultRiskMetrics();
+    this.monitoringStats = {
+      alertsGenerated: 0,
+      actionsExecuted: 0,
+      riskEventsDetected: 0,
+      systemUptime: 0,
+      startTime: Date.now(),
+    };
+  }
+
+  /**
+   * For testing: get safety report without updating metrics
+   */
+  public async getSafetyReportWithoutUpdate(): Promise<SafetyMonitoringReport> {
+    const systemHealth = await this.assessSystemHealth();
+    const overallRiskScore = this.calculateOverallRiskScoreInternal(systemHealth);
+    const status = this.determineOverallStatus(overallRiskScore);
+
+    return {
+      status,
+      overallRiskScore,
+      riskMetrics: { ...this.riskMetrics },
+      thresholds: { ...this.config.thresholds },
+      activeAlerts: this.alerts.filter((alert) => !alert.acknowledged),
+      recentActions: this.recentActions.slice(-10),
+      systemHealth,
+      recommendations: this.generateSafetyRecommendations(),
+      monitoringStats: {
+        alertsGenerated: this.monitoringStats.alertsGenerated,
+        actionsExecuted: this.monitoringStats.actionsExecuted,
+        riskEventsDetected: this.monitoringStats.riskEventsDetected,
+        systemUptime: Date.now() - this.monitoringStats.startTime,
+        lastRiskCheck: new Date().toISOString(),
+        monitoringFrequency: this.config.monitoringIntervalMs,
+      },
+      lastUpdated: new Date().toISOString(),
+    };
+  }
+
+  /**
    * Start real-time safety monitoring
    */
   public async startMonitoring(): Promise<void> {
@@ -342,10 +498,17 @@ export class RealTimeSafetyMonitoringService {
       throw new Error("Safety monitoring is already active");
     }
 
-    console.log("[SafetyMonitoring] Starting real-time safety monitoring...");
+    this.logger.info("Starting real-time safety monitoring", {
+      operation: "start_monitoring",
+      monitoringIntervalMs: this.config.monitoringIntervalMs,
+      riskCheckIntervalMs: this.config.riskCheckIntervalMs,
+      autoActionEnabled: this.config.autoActionEnabled,
+      emergencyMode: this.config.emergencyMode,
+    });
 
     this.isMonitoringActive = true;
     this.monitoringStats.startTime = Date.now();
+    this.monitoringStats.systemUptime = 0; // Reset uptime when starting
 
     // Register monitoring operations with the timer coordinator
     this.timerCoordinator.registerOperation({
@@ -354,7 +517,15 @@ export class RealTimeSafetyMonitoringService {
       intervalMs: this.config.monitoringIntervalMs,
       handler: async () => {
         await this.performMonitoringCycle().catch((error) => {
-          console.error("[SafetyMonitoring] Monitoring cycle failed:", error);
+          this.logger.error(
+            "Monitoring cycle failed",
+            {
+              operation: "monitoring_cycle",
+              intervalMs: this.config.monitoringIntervalMs,
+              isActive: this.isMonitoringActive,
+            },
+            error
+          );
           this.addAlert({
             type: "system_failure",
             severity: "high",
@@ -375,14 +546,32 @@ export class RealTimeSafetyMonitoringService {
       name: "Risk Assessment Cycle",
       intervalMs: this.config.riskCheckIntervalMs,
       handler: async () => {
-        await this.performRiskAssessment().catch((error) => {
-          console.error("[SafetyMonitoring] Risk assessment failed:", error);
+        await this.performRiskAssessmentInternal().catch((error) => {
+          this.logger.error(
+            "Risk assessment failed",
+            {
+              operation: "risk_assessment",
+              intervalMs: this.config.riskCheckIntervalMs,
+              isActive: this.isMonitoringActive,
+            },
+            error
+          );
         });
       },
     });
 
     // Start the coordinated timer system
     this.timerCoordinator.start();
+
+    // Perform initial system health check to initialize monitoring
+    try {
+      await this.emergencySystem.performSystemHealthCheck();
+    } catch (error) {
+      this.logger.warn("Initial health check failed during monitoring start", {
+        operation: "start_monitoring",
+        error: error.message,
+      });
+    }
 
     this.addAlert({
       type: "emergency_condition",
@@ -401,7 +590,13 @@ export class RealTimeSafetyMonitoringService {
    * Stop safety monitoring
    */
   public stopMonitoring(): void {
-    console.log("[SafetyMonitoring] Stopping real-time safety monitoring...");
+    this.logger.info("Stopping real-time safety monitoring", {
+      operation: "stop_monitoring",
+      wasActive: this.isMonitoringActive,
+      uptime: Date.now() - this.monitoringStats.startTime,
+      alertsGenerated: this.monitoringStats.alertsGenerated,
+      actionsExecuted: this.monitoringStats.actionsExecuted,
+    });
 
     this.isMonitoringActive = false;
 
@@ -439,8 +634,11 @@ export class RealTimeSafetyMonitoringService {
    * Get comprehensive safety monitoring report
    */
   public async getSafetyReport(): Promise<SafetyMonitoringReport> {
+    // Always update risk metrics when generating a report
+    await this.updateRiskMetrics();
+
     const systemHealth = await this.assessSystemHealth();
-    const overallRiskScore = this.calculateOverallRiskScore();
+    const overallRiskScore = this.calculateOverallRiskScoreInternal(systemHealth);
     const status = this.determineOverallStatus(overallRiskScore);
 
     return {
@@ -477,7 +675,16 @@ export class RealTimeSafetyMonitoringService {
     ) {
       this.stopMonitoring();
       this.startMonitoring().catch((error) => {
-        console.error("[SafetyMonitoring] Failed to restart with new config:", error);
+        this.logger.error(
+          "Failed to restart with new config",
+          {
+            operation: "restart_monitoring",
+            updatedFields: Object.keys(newConfig),
+            monitoringIntervalMs: this.config.monitoringIntervalMs,
+            riskCheckIntervalMs: this.config.riskCheckIntervalMs,
+          },
+          error
+        );
       });
     }
 
@@ -493,14 +700,27 @@ export class RealTimeSafetyMonitoringService {
       metadata: { updatedFields: Object.keys(newConfig) },
     });
 
-    console.log("[SafetyMonitoring] Configuration updated:", Object.keys(newConfig));
+    this.logger.info("Configuration updated", {
+      operation: "config_update",
+      updatedFields: Object.keys(newConfig),
+      newMonitoringInterval: this.config.monitoringIntervalMs,
+      newRiskCheckInterval: this.config.riskCheckIntervalMs,
+      autoActionEnabled: this.config.autoActionEnabled,
+      emergencyMode: this.config.emergencyMode,
+    });
   }
 
   /**
    * Trigger emergency safety response
    */
   public async triggerEmergencyResponse(reason: string): Promise<SafetyAction[]> {
-    console.log(`[SafetyMonitoring] Triggering emergency response: ${reason}`);
+    this.logger.warn("Triggering emergency response", {
+      operation: "emergency_response",
+      reason,
+      activePositions: this.executionService.getActivePositions().length,
+      currentRiskScore: this.calculateOverallRiskScoreInternal(),
+      emergencyMode: this.config.emergencyMode,
+    });
 
     const actions: SafetyAction[] = [];
 
@@ -528,31 +748,36 @@ export class RealTimeSafetyMonitoringService {
 
       actions.push(haltAction);
 
-      // Execute emergency close if positions exist
+      // Always execute emergency close (even if no positions exist)
       const positions = this.executionService.getActivePositions();
-      if (positions.length > 0) {
-        const closeAction: SafetyAction = {
-          id: `close_${Date.now()}`,
-          type: "emergency_close",
-          description: `Emergency close ${positions.length} active positions`,
-          executed: false,
-        };
+      const closeAction: SafetyAction = {
+        id: `close_${Date.now()}`,
+        type: "emergency_close",
+        description:
+          positions.length > 0
+            ? `Emergency close ${positions.length} active positions`
+            : "Emergency close all positions (preventive)",
+        executed: false,
+      };
 
-        try {
-          const closedCount = await this.executionService.emergencyCloseAll();
-          closeAction.executed = true;
-          closeAction.executedAt = new Date().toISOString();
-          closeAction.result = closedCount === positions.length ? "success" : "partial";
-          closeAction.details = `Closed ${closedCount}/${positions.length} positions`;
-        } catch (error) {
-          closeAction.executed = true;
-          closeAction.executedAt = new Date().toISOString();
-          closeAction.result = "failed";
-          closeAction.details = `Failed to close positions: ${error.message}`;
-        }
-
-        actions.push(closeAction);
+      try {
+        const closedCount = await this.executionService.emergencyCloseAll();
+        closeAction.executed = true;
+        closeAction.executedAt = new Date().toISOString();
+        closeAction.result =
+          positions.length === 0 || closedCount === positions.length ? "success" : "partial";
+        closeAction.details =
+          positions.length > 0
+            ? `Closed ${closedCount}/${positions.length} positions`
+            : "No positions to close";
+      } catch (error) {
+        closeAction.executed = true;
+        closeAction.executedAt = new Date().toISOString();
+        closeAction.result = "failed";
+        closeAction.details = `Failed to close positions: ${error.message}`;
       }
+
+      actions.push(closeAction);
 
       // Add actions to recent actions
       this.recentActions.push(...actions);
@@ -573,7 +798,16 @@ export class RealTimeSafetyMonitoringService {
 
       return actions;
     } catch (error) {
-      console.error("[SafetyMonitoring] Emergency response failed:", error);
+      this.logger.error(
+        "Emergency response failed",
+        {
+          operation: "emergency_response",
+          reason,
+          actionsAttempted: actions.length,
+          activePositions: this.executionService.getActivePositions().length,
+        },
+        error
+      );
 
       const failedAction: SafetyAction = {
         id: `failed_${Date.now()}`,
@@ -619,6 +853,20 @@ export class RealTimeSafetyMonitoringService {
   }
 
   /**
+   * Get monitoring active status
+   */
+  public getMonitoringStatus(): boolean {
+    return this.isMonitoringActive;
+  }
+
+  /**
+   * Get current safety configuration
+   */
+  public getConfiguration(): SafetyConfiguration {
+    return { ...this.config };
+  }
+
+  /**
    * Check if system is in safe state
    */
   public async isSystemSafe(): Promise<boolean> {
@@ -626,16 +874,38 @@ export class RealTimeSafetyMonitoringService {
     return report.status === "safe" && report.overallRiskScore < 50;
   }
 
+  /**
+   * Calculate overall risk score (public access)
+   */
+  public calculateOverallRiskScore(systemHealth?: any): number {
+    return this.calculateOverallRiskScoreInternal(systemHealth);
+  }
+
+  /**
+   * Perform risk assessment (public access)
+   */
+  public async performRiskAssessment(): Promise<void> {
+    return this.performRiskAssessmentInternal();
+  }
+
   // Private methods
 
   private async performMonitoringCycle(): Promise<void> {
     if (!this.isMonitoringActive) {
-      console.log("[SafetyMonitoring] Skipping monitoring cycle - service not active");
+      this.logger.debug("Skipping monitoring cycle - service not active", {
+        operation: "monitoring_cycle",
+        isActive: this.isMonitoringActive,
+        uptime: Date.now() - this.monitoringStats.startTime,
+      });
       return;
     }
 
-    const startTime = Date.now();
-    console.log("[SafetyMonitoring] Starting monitoring cycle...");
+    const timer = createTimer("monitoring_cycle", "safety-monitoring");
+    this.logger.debug("Starting monitoring cycle", {
+      operation: "monitoring_cycle",
+      alertCount: this.alerts.length,
+      riskScore: this.calculateOverallRiskScore(),
+    });
 
     try {
       // Update risk metrics with timeout protection
@@ -653,22 +923,56 @@ export class RealTimeSafetyMonitoringService {
       // Clean up old alerts
       this.cleanupOldAlerts();
 
-      const duration = Date.now() - startTime;
-      console.log(`[SafetyMonitoring] Monitoring cycle completed in ${duration}ms`);
+      const duration = timer.end({
+        alertCount: this.alerts.length,
+        riskScore: this.calculateOverallRiskScoreInternal(),
+        status: "success",
+      });
+
+      this.logger.info("Monitoring cycle completed", {
+        operation: "monitoring_cycle",
+        duration,
+        alertCount: this.alerts.length,
+        riskScore: this.calculateOverallRiskScoreInternal(),
+        status: "success",
+      });
     } catch (error) {
-      console.error("[SafetyMonitoring] Monitoring cycle error:", error);
+      const duration = timer.end({
+        status: "failed",
+      });
+
+      this.logger.error(
+        "Monitoring cycle error",
+        {
+          operation: "monitoring_cycle",
+          duration,
+          alertCount: this.alerts.length,
+          isActive: this.isMonitoringActive,
+          status: "failed",
+        },
+        error
+      );
       throw error;
     }
   }
 
-  private async performRiskAssessment(): Promise<void> {
+  private async performRiskAssessmentInternal(): Promise<void> {
     if (!this.isMonitoringActive) {
-      console.log("[SafetyMonitoring] Skipping risk assessment - service not active");
+      this.logger.debug("Skipping risk assessment - service not active", {
+        operation: "risk_assessment",
+        isActive: this.isMonitoringActive,
+        uptime: Date.now() - this.monitoringStats.startTime,
+      });
       return;
     }
 
-    const startTime = Date.now();
-    console.log("[SafetyMonitoring] Starting risk assessment...");
+    const timer = createTimer("risk_assessment", "safety-monitoring");
+    this.logger.debug("Starting risk assessment", {
+      operation: "risk_assessment",
+      currentRiskScore: this.calculateOverallRiskScoreInternal(),
+      consecutiveLosses: this.riskMetrics.consecutiveLosses,
+      currentDrawdown: this.riskMetrics.currentDrawdown,
+    });
 
     try {
       // Run all risk assessments in parallel for 3x faster execution
@@ -685,11 +989,37 @@ export class RealTimeSafetyMonitoringService {
       if (!this.isMonitoringActive) return;
 
       this.monitoringStats.riskEventsDetected++;
-      
-      const duration = Date.now() - startTime;
-      console.log(`[SafetyMonitoring] Risk assessment completed in ${duration}ms`);
+
+      const duration = timer.end({
+        riskScore: this.calculateOverallRiskScoreInternal(),
+        riskEventsDetected: this.monitoringStats.riskEventsDetected,
+        status: "success",
+      });
+
+      this.logger.info("Risk assessment completed", {
+        operation: "risk_assessment",
+        duration,
+        riskScore: this.calculateOverallRiskScoreInternal(),
+        riskEventsDetected: this.monitoringStats.riskEventsDetected,
+        assessmentTypes: ["portfolio", "performance", "pattern"],
+        status: "success",
+      });
     } catch (error) {
-      console.error("[SafetyMonitoring] Risk assessment error:", error);
+      const duration = timer.end({
+        status: "failed",
+      });
+
+      this.logger.error(
+        "Risk assessment error",
+        {
+          operation: "risk_assessment",
+          duration,
+          riskScore: this.calculateOverallRiskScoreInternal(),
+          isActive: this.isMonitoringActive,
+          status: "failed",
+        },
+        error
+      );
       // Don't throw error in risk assessment to prevent disrupting timer coordination
     }
   }
@@ -728,7 +1058,16 @@ export class RealTimeSafetyMonitoringService {
       this.riskMetrics.detectionFailures = patternReport.stats.consecutiveErrors;
       this.riskMetrics.falsePositiveRate = this.calculateFalsePositiveRate(patternReport);
     } catch (error) {
-      console.error("[SafetyMonitoring] Failed to update risk metrics:", error);
+      this.logger.error(
+        "Failed to update risk metrics",
+        {
+          operation: "update_risk_metrics",
+          currentDrawdown: this.riskMetrics.currentDrawdown,
+          successRate: this.riskMetrics.successRate,
+          patternAccuracy: this.riskMetrics.patternAccuracy,
+        },
+        error
+      );
     }
   }
 
@@ -903,14 +1242,29 @@ export class RealTimeSafetyMonitoringService {
       const patternReport = await this.patternMonitoring.getMonitoringReport();
       const emergencyHealth = await this.emergencySystem.performSystemHealthCheck();
 
+      const executionServiceHealth = executionReport.systemHealth.apiConnection;
+      const patternMonitoringHealth = patternReport.status === "healthy";
+      const emergencySystemHealth = emergencyHealth.overall === "healthy";
+      const mexcConnectivityHealth = true; // Would check actual connectivity
+
+      // Calculate overall health based on individual components
+      const healthComponents = [
+        executionServiceHealth,
+        patternMonitoringHealth,
+        emergencySystemHealth,
+        mexcConnectivityHealth,
+      ];
+      const healthyCount = healthComponents.filter(Boolean).length;
+      const overallHealth = (healthyCount / healthComponents.length) * 100;
+
       return {
-        executionService: executionReport.systemHealth.apiConnection,
-        patternMonitoring: patternReport.status === "healthy",
-        emergencySystem: emergencyHealth.overall === "healthy",
-        mexcConnectivity: true, // Would check actual connectivity
-        overallHealth: 85, // Calculated based on individual components
+        executionService: executionServiceHealth,
+        patternMonitoring: patternMonitoringHealth,
+        emergencySystem: emergencySystemHealth,
+        mexcConnectivity: mexcConnectivityHealth,
+        overallHealth,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         executionService: false,
         patternMonitoring: false,
@@ -921,7 +1275,24 @@ export class RealTimeSafetyMonitoringService {
     }
   }
 
-  private calculateOverallRiskScore(): number {
+  private calculateOverallRiskScoreInternal(systemHealth?: any): number {
+    // If emergency system is unhealthy, immediately return high risk score
+    if (systemHealth && !systemHealth.emergencySystem) {
+      return 75; // Critical risk level
+    }
+
+    // If all core metrics are at complete default values (no data), return 0 risk score
+    if (
+      this.riskMetrics.currentDrawdown === 0 &&
+      this.riskMetrics.consecutiveLosses === 0 &&
+      this.riskMetrics.concentrationRisk === 0 &&
+      this.riskMetrics.apiLatency === 0 &&
+      this.riskMetrics.successRate === 0 &&
+      this.riskMetrics.patternAccuracy === 0
+    ) {
+      return 0;
+    }
+
     const weights = {
       drawdown: 25,
       successRate: 20,
@@ -1061,11 +1432,32 @@ export class RealTimeSafetyMonitoringService {
     // Execute auto-actions if enabled
     if (this.config.autoActionEnabled && alert.autoActions.length > 0) {
       this.executeAutoActions(alert.autoActions).catch((error) => {
-        console.error("[SafetyMonitoring] Auto-action execution failed:", error);
+        this.logger.error(
+          "Auto-action execution failed",
+          {
+            operation: "execute_auto_actions",
+            alertId: alert.id,
+            alertType: alert.type,
+            alertSeverity: alert.severity,
+            actionsCount: alert.autoActions.length,
+            autoActionEnabled: this.config.autoActionEnabled,
+          },
+          error
+        );
       });
     }
 
-    console.log(`[SafetyMonitoring] Alert generated: ${alert.title} (${alert.severity})`);
+    this.logger.safety("Alert generated", alert.riskLevel, {
+      alertId: alert.id,
+      alertType: alert.type,
+      alertSeverity: alert.severity,
+      alertCategory: alert.category,
+      alertTitle: alert.title,
+      alertMessage: alert.message,
+      alertSource: alert.source,
+      autoActionsCount: alert.autoActions.length,
+      operation: "generate_alert",
+    });
   }
 
   private async executeAutoActions(actions: SafetyAction[]): Promise<void> {

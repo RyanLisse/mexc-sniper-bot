@@ -181,8 +181,8 @@ export class CacheWarmingService {
    */
   private createMockMexcService(): any {
     return {
-      getSymbolInfo: async () => ({}),
-      getActivityData: async () => ({}),
+      getSymbolInfoBasic: async () => ({ success: true, data: null }),
+      getActivityData: async () => ({ success: true, data: [] }),
     };
   }
 
@@ -430,7 +430,7 @@ export class CacheWarmingService {
 
         // Fetch and cache symbol data
         try {
-          const symbolData = await this.mexcService.getSymbolInfo(listing.symbolName);
+          const symbolData = await this.mexcService.getSymbolInfoBasic(listing.symbolName);
           await this.cache.set(cacheKey, symbolData, "api_response", 5000); // 5 second TTL
         } catch (error) {
           console.warn(

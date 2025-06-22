@@ -375,7 +375,7 @@ export function registerService<T>(
   identifier?: ServiceIdentifier<T>,
   lifetime: ServiceLifetime = ServiceLifetime.SINGLETON
 ): void {
-  const serviceId = identifier || constructor;
+  const _serviceId = identifier || constructor;
   const dependencies =
     (constructor as unknown as { __dependencies?: ServiceIdentifier[] }).__dependencies || [];
 

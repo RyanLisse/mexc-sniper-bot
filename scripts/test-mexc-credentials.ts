@@ -110,7 +110,8 @@ async function testMexcCredentials() {
       process.exit(1);
     }
 
-    const { balances, totalUsdtValue } = accountResult.data;
+    const balances = accountResult.data || [];
+    const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
     console.log("✅ Authentication successful!");
     console.log(`   Found ${balances?.length || 0} assets with balances`);
     console.log(`   Total value: ${totalUsdtValue?.toFixed(2) || '0.00'} USDT`);

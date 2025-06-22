@@ -431,8 +431,8 @@ export class BinarySearchOptimizer {
     maxVal: T,
     compareFn?: (a: T, b: T) => number
   ): number[] {
-    const firstIndex = this.lowerBound(sortedArray, minVal, compareFn);
-    const lastIndex = this.lowerBound(sortedArray, maxVal, compareFn);
+    const firstIndex = BinarySearchOptimizer.lowerBound(sortedArray, minVal, compareFn);
+    const lastIndex = BinarySearchOptimizer.lowerBound(sortedArray, maxVal, compareFn);
 
     const result: number[] = [];
     for (let i = firstIndex; i < lastIndex; i++) {
@@ -457,7 +457,7 @@ export class StringSearchOptimizer {
   static boyerMoore(text: string, pattern: string): number[] {
     if (pattern.length === 0) return [];
 
-    const badCharTable = this.buildBadCharTable(pattern);
+    const badCharTable = StringSearchOptimizer.buildBadCharTable(pattern);
     const results: number[] = [];
     let i = pattern.length - 1;
 
@@ -498,7 +498,7 @@ export class StringSearchOptimizer {
   static kmp(text: string, pattern: string): number[] {
     if (pattern.length === 0) return [];
 
-    const lps = this.computeLPSArray(pattern);
+    const lps = StringSearchOptimizer.computeLPSArray(pattern);
     const results: number[] = [];
     let i = 0; // text index
     let j = 0; // pattern index
@@ -551,7 +551,7 @@ export class StringSearchOptimizer {
    * Fuzzy string matching with Levenshtein distance
    */
   static fuzzyMatch(str1: string, str2: string, maxDistance = 2): boolean {
-    return this.levenshteinDistance(str1, str2) <= maxDistance;
+    return StringSearchOptimizer.levenshteinDistance(str1, str2) <= maxDistance;
   }
 
   static levenshteinDistance(str1: string, str2: string): number {
@@ -601,7 +601,7 @@ export class SortingOptimizer {
   static timsort<T>(array: T[], compareFn?: (a: T, b: T) => number): T[] {
     // For small arrays, use insertion sort
     if (array.length < 64) {
-      return this.insertionSort([...array], compareFn);
+      return SortingOptimizer.insertionSort([...array], compareFn);
     }
 
     // For larger arrays, fall back to native sort (which is often optimized)
@@ -638,7 +638,7 @@ export class SortingOptimizer {
     const compare = compareFn || ((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     const result = [...array];
 
-    this.quickSortInPlace(result, 0, result.length - 1, compare);
+    SortingOptimizer.quickSortInPlace(result, 0, result.length - 1, compare);
     return result;
   }
 
@@ -649,9 +649,9 @@ export class SortingOptimizer {
     compare: (a: T, b: T) => number
   ): void {
     if (low < high) {
-      const pivotIndex = this.partition(array, low, high, compare);
-      this.quickSortInPlace(array, low, pivotIndex - 1, compare);
-      this.quickSortInPlace(array, pivotIndex + 1, high, compare);
+      const pivotIndex = SortingOptimizer.partition(array, low, high, compare);
+      SortingOptimizer.quickSortInPlace(array, low, pivotIndex - 1, compare);
+      SortingOptimizer.quickSortInPlace(array, pivotIndex + 1, high, compare);
     }
   }
 
@@ -703,7 +703,7 @@ export class SortingOptimizer {
         .map(() => []);
 
       for (const num of result) {
-        const digitValue = Math.floor(Math.abs(num) / Math.pow(10, digit)) % 10;
+        const digitValue = Math.floor(Math.abs(num) / 10 ** digit) % 10;
         buckets[digitValue].push(num);
       }
 

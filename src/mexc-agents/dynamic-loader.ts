@@ -82,7 +82,6 @@ export class DynamicAgentLoader {
         break;
       }
 
-
       case "mexc-api": {
         const { MexcApiAgent } = await import("./mexc-api-agent");
         AgentClass = MexcApiAgent;

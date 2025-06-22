@@ -57,13 +57,98 @@ interface RealTimeSafetyDashboardProps {
   showControls?: boolean;
 }
 
+// Helper component for safety overview
+function SafetyOverview({
+  riskMetrics,
+  safetyStatus,
+  systemHealthScore,
+}: {
+  riskMetrics: any;
+  safetyStatus: string;
+  systemHealthScore: number;
+}) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Risk Score</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{riskMetrics?.overall || 0}%</div>
+          <Progress value={riskMetrics?.overall || 0} className="mt-2" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Safety Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Badge variant={safetyStatus === "healthy" ? "default" : "destructive"}>
+            {safetyStatus}
+          </Badge>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">System Health</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{systemHealthScore}%</div>
+          <Progress value={systemHealthScore} className="mt-2" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Helper component for emergency controls
+function EmergencyControls({
+  onEmergencyStop,
+  isLoading,
+}: {
+  onEmergencyStop: (reason: string) => void;
+  isLoading: boolean;
+}) {
+  const [emergencyReason, setEmergencyReason] = useState("");
+
+  return (
+    <Card className="border-red-200 bg-red-50">
+      <CardHeader>
+        <CardTitle className="text-red-700 flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5" />
+          Emergency Controls
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <Label htmlFor="emergency-reason">Emergency Stop Reason</Label>
+          <Input
+            id="emergency-reason"
+            value={emergencyReason}
+            onChange={(e) => setEmergencyReason(e.target.value)}
+            placeholder="Describe the emergency situation..."
+          />
+        </div>
+        <Button
+          variant="destructive"
+          onClick={() => onEmergencyStop(emergencyReason)}
+          disabled={!emergencyReason.trim() || isLoading}
+          className="w-full"
+        >
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          Emergency Stop
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function RealTimeSafetyDashboard({
   className = "",
   autoRefresh = true,
   showControls = true,
 }: RealTimeSafetyDashboardProps) {
   const [selectedTab, setSelectedTab] = useState("overview");
-  const [emergencyReason, setEmergencyReason] = useState("");
   const [configEditMode, setConfigEditMode] = useState(false);
   const [tempConfig, setTempConfig] = useState<Partial<SafetyConfiguration>>({});
 
@@ -84,7 +169,7 @@ export function RealTimeSafetyDashboard({
     isUpdatingConfig,
     isTriggeringEmergency,
     isAcknowledgingAlert,
-    isClearingAlerts,
+    // isClearingAlerts,
     error,
     lastUpdated,
     startMonitoring,
@@ -94,7 +179,7 @@ export function RealTimeSafetyDashboard({
     acknowledgeAlert,
     clearAcknowledgedAlerts,
     refreshData,
-    checkSystemSafety,
+    // checkSystemSafety,
     clearError,
   } = useRealTimeSafetyMonitoring({
     autoRefresh,
@@ -223,7 +308,7 @@ export function RealTimeSafetyDashboard({
     await clearAcknowledgedAlerts();
   };
 
-  const handleConfigChange = (field: string, value: any) => {
+  const handleConfigChange = (field: string, value: string | number | boolean) => {
     setTempConfig((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -458,7 +543,7 @@ export function RealTimeSafetyDashboard({
                       <h4 className="text-sm font-medium">Safety Recommendations</h4>
                       <div className="space-y-2">
                         {report.recommendations.map((recommendation, index) => (
-                          <Alert key={index}>
+                          <Alert key={`safety-rec-${index}-${recommendation.slice(0, 20)}`}>
                             <AlertCircle className="h-4 w-4" />
                             <AlertDescription>{recommendation}</AlertDescription>
                           </Alert>

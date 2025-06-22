@@ -1,10 +1,10 @@
 /**
  * Service Layer Architecture - Improved Separation of Concerns
- * 
+ *
  * This module establishes a clean service layer architecture that eliminates
  * tight coupling and improves maintainability by defining clear boundaries
  * between different service domains.
- * 
+ *
  * ARCHITECTURE PRINCIPLES:
  * 1. Domain-specific service boundaries
  * 2. Dependency injection through service locator pattern
@@ -20,22 +20,22 @@
 export interface ServiceDependencies {
   // Database layer
   database?: any;
-  
+
   // External API integrations
   mexcService?: any;
-  
+
   // Infrastructure services
   cache?: any;
   websocket?: any;
-  
+
   // Configuration
   config?: ServiceConfiguration;
 }
 
 export interface ServiceConfiguration {
   // Environment settings
-  environment: 'development' | 'production' | 'test';
-  
+  environment: "development" | "production" | "test";
+
   // Feature flags
   features: {
     autoSniping: boolean;
@@ -43,7 +43,7 @@ export interface ServiceConfiguration {
     riskManagement: boolean;
     aiIntelligence: boolean;
   };
-  
+
   // Service-specific configs
   mexc: {
     apiKey?: string;
@@ -51,13 +51,13 @@ export interface ServiceConfiguration {
     baseUrl: string;
     timeout: number;
   };
-  
+
   safety: {
     maxPositionSize: number;
     stopLossPercentage: number;
     confidenceThreshold: number;
   };
-  
+
   performance: {
     cacheEnabled: boolean;
     cacheTTL: number;
@@ -78,7 +78,7 @@ export interface TradingServices {
   orderExecution: OrderExecutionService;
   portfolioManagement: PortfolioManagementService;
   riskManagement: RiskManagementService;
-  
+
   // Pattern and analysis
   patternDetection: PatternDetectionService;
   marketAnalysis: MarketAnalysisService;
@@ -91,14 +91,14 @@ export interface TradingServices {
 export interface InfrastructureServices {
   // External APIs
   mexcIntegration: MexcIntegrationService;
-  
+
   // Data persistence
   dataStorage: DataStorageService;
-  
+
   // Communication
   websocket: WebSocketService;
   notifications: NotificationService;
-  
+
   // Caching and performance
   cache: CacheService;
   performance: PerformanceService;
@@ -112,11 +112,11 @@ export interface SafetyServices {
   // Safety coordination
   safetyCoordinator: SafetyCoordinatorService;
   emergencySystem: EmergencySystemService;
-  
+
   // Monitoring and alerting
   systemMonitoring: SystemMonitoringService;
   agentMonitoring: AgentMonitoringService;
-  
+
   // Compliance and audit
   auditLogger: AuditLoggerService;
   complianceChecker: ComplianceCheckerService;
@@ -135,7 +135,7 @@ export interface BaseService {
 
 export interface ServiceStatus {
   name: string;
-  status: 'healthy' | 'degraded' | 'offline';
+  status: "healthy" | "degraded" | "offline";
   lastChecked: Date;
   dependencies: string[];
   metrics?: Record<string, any>;
@@ -254,15 +254,15 @@ export interface ComplianceCheckerService extends BaseService {
 // Trading Types
 export interface OrderRequest {
   symbol: string;
-  side: 'buy' | 'sell';
-  type: 'market' | 'limit';
+  side: "buy" | "sell";
+  type: "market" | "limit";
   quantity: number;
   price?: number;
 }
 
 export interface OrderResult {
   orderId: string;
-  status: 'filled' | 'partial' | 'rejected';
+  status: "filled" | "partial" | "rejected";
   executedQuantity: number;
   executedPrice: number;
 }
@@ -294,7 +294,7 @@ export interface Balance {
 }
 
 export interface TradingOperation {
-  type: 'buy' | 'sell';
+  type: "buy" | "sell";
   symbol: string;
   quantity: number;
   price?: number;
@@ -303,18 +303,18 @@ export interface TradingOperation {
 export interface RiskAssessment {
   riskScore: number;
   factors: RiskFactor[];
-  recommendation: 'proceed' | 'caution' | 'abort';
+  recommendation: "proceed" | "caution" | "abort";
 }
 
 export interface RiskFactor {
   name: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   description: string;
 }
 
 export interface RiskAlert {
   id: string;
-  severity: 'warning' | 'critical';
+  severity: "warning" | "critical";
   message: string;
   timestamp: Date;
 }
@@ -355,21 +355,21 @@ export interface MarketData {
 
 export interface MarketAnalysis {
   symbol: string;
-  trend: 'bullish' | 'bearish' | 'neutral';
+  trend: "bullish" | "bearish" | "neutral";
   strength: number;
   signals: TradeSignal[];
 }
 
 export interface MarketTrend {
   symbol: string;
-  direction: 'up' | 'down' | 'sideways';
+  direction: "up" | "down" | "sideways";
   strength: number;
   duration: number;
 }
 
 export interface TradeSignal {
   symbol: string;
-  action: 'buy' | 'sell' | 'hold';
+  action: "buy" | "sell" | "hold";
   confidence: number;
   reason: string;
 }
@@ -391,7 +391,7 @@ export interface QueryCriteria {
 export type MessageCallback = (message: any) => void;
 
 export interface AlertMessage {
-  severity: 'info' | 'warning' | 'error';
+  severity: "info" | "warning" | "error";
   title: string;
   message: string;
   timestamp: Date;
@@ -425,33 +425,33 @@ export interface Timer {
 
 // Safety Types
 export interface SafetyStatus {
-  overall: 'safe' | 'warning' | 'critical';
+  overall: "safe" | "warning" | "critical";
   checks: SafetyCheck[];
   violations: SafetyViolation[];
 }
 
 export interface SafetyCheck {
   name: string;
-  status: 'pass' | 'fail' | 'warning';
+  status: "pass" | "fail" | "warning";
   message: string;
 }
 
 export interface SafetyViolation {
   id: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   description: string;
   timestamp: Date;
 }
 
 export interface SystemHealth {
-  status: 'healthy' | 'degraded' | 'critical';
+  status: "healthy" | "degraded" | "critical";
   components: ComponentHealth[];
   uptime: number;
 }
 
 export interface ComponentHealth {
   name: string;
-  status: 'healthy' | 'degraded' | 'offline';
+  status: "healthy" | "degraded" | "offline";
   responseTime: number;
   lastChecked: Date;
 }
@@ -465,7 +465,7 @@ export interface SystemMetrics {
 
 export interface AgentStatus {
   agentId: string;
-  status: 'active' | 'inactive' | 'error';
+  status: "active" | "inactive" | "error";
   lastActivity: Date;
   metrics: Record<string, any>;
 }
@@ -488,7 +488,7 @@ export interface AuditFilter {
 export interface AuditEntry {
   id: string;
   action: AuditAction;
-  result: 'success' | 'failure';
+  result: "success" | "failure";
   timestamp: Date;
 }
 
@@ -510,19 +510,19 @@ export interface ComplianceResult {
 }
 
 export interface ComplianceStatus {
-  overall: 'compliant' | 'warning' | 'violation';
+  overall: "compliant" | "warning" | "violation";
   checks: ComplianceCheck[];
 }
 
 export interface ComplianceCheck {
   name: string;
-  status: 'pass' | 'fail' | 'warning';
+  status: "pass" | "fail" | "warning";
   message: string;
 }
 
 export interface ComplianceViolation {
   rule: string;
-  severity: 'minor' | 'major' | 'critical';
+  severity: "minor" | "major" | "critical";
   description: string;
   timestamp: Date;
 }
@@ -570,7 +570,7 @@ export class ServiceRegistry {
 
   async healthCheck(): Promise<Map<string, boolean>> {
     const healthStatus = new Map<string, boolean>();
-    
+
     for (const [name, service] of this.services) {
       try {
         const isHealthy = await service.isHealthy();
@@ -620,7 +620,7 @@ export function createServiceRegistry(config: ServiceConfiguration): ServiceRegi
  */
 export function getDefaultServiceConfiguration(): ServiceConfiguration {
   return {
-    environment: (process.env.NODE_ENV as any) || 'development',
+    environment: (process.env.NODE_ENV as any) || "development",
     features: {
       autoSniping: true,
       patternDetection: true,
@@ -628,7 +628,7 @@ export function getDefaultServiceConfiguration(): ServiceConfiguration {
       aiIntelligence: false,
     },
     mexc: {
-      baseUrl: 'https://api.mexc.com',
+      baseUrl: "https://api.mexc.com",
       timeout: 30000,
     },
     safety: {

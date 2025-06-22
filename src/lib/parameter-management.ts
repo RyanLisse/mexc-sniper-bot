@@ -5,7 +5,7 @@
  * safety validation, and integration with the optimization engine.
  */
 
-import { EventEmitter } from "node:events";
+import { EventEmitter } from "events";
 import { logger } from "./utils";
 
 export interface ParameterDefinition {

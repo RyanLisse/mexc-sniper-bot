@@ -341,7 +341,8 @@ export class EnhancedApiValidationService {
               "Check for extra spaces in credentials",
             ],
           };
-        } else if (errorMsg.includes("key") || errorMsg.includes("10072")) {
+        }
+        if (errorMsg.includes("key") || errorMsg.includes("10072")) {
           return {
             success: false,
             error: "Invalid API key",
@@ -351,7 +352,8 @@ export class EnhancedApiValidationService {
               "Ensure you are using the correct MEXC account",
             ],
           };
-        } else if (errorMsg.includes("IP") || errorMsg.includes("403")) {
+        }
+        if (errorMsg.includes("IP") || errorMsg.includes("403")) {
           return {
             success: false,
             error: "IP address not allowlisted",
@@ -361,17 +363,16 @@ export class EnhancedApiValidationService {
               "Check if you are using the correct API environment (live vs. testnet)",
             ],
           };
-        } else {
-          return {
-            success: false,
-            error: errorMsg,
-            recommendations: [
-              "Check MEXC API status and documentation",
-              "Verify all credentials are correct",
-              "Contact MEXC support if the issue persists",
-            ],
-          };
         }
+        return {
+          success: false,
+          error: errorMsg,
+          recommendations: [
+            "Check MEXC API status and documentation",
+            "Verify all credentials are correct",
+            "Contact MEXC support if the issue persists",
+          ],
+        };
       }
 
       return {
@@ -435,7 +436,7 @@ export class EnhancedApiValidationService {
         if (orderValidation.valid) {
           recommendations.push("API key has trading validation capabilities");
         }
-      } catch (error) {
+      } catch (_error) {
         recommendations.push(
           "API key may lack trading permissions - verify if trading is required"
         );
@@ -748,7 +749,7 @@ export class EnhancedApiValidationService {
    * Perform comprehensive validation for integrated service
    */
   async performComprehensiveValidation(
-    userId: string,
+    _userId: string,
     credentials?: { apiKey: string; secretKey: string; passphrase?: string }
   ): Promise<{
     credentialsValid: boolean;

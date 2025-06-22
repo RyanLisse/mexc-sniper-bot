@@ -176,7 +176,7 @@ export function generateComponentId(type: string, data?: string): string {
 /**
  * Safe array key generator for lists with content
  */
-export function generateListKey(item: any, index: number, preferredKey?: string): string {
+export function generateListKey(item: any, _index: number, preferredKey?: string): string {
   if (preferredKey && item[preferredKey]) {
     return `item-${item[preferredKey]}`;
   }

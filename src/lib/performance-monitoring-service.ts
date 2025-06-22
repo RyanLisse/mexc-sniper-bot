@@ -583,7 +583,9 @@ export class PerformanceMonitoringService {
   private addToMetricsHistory(metrics: SystemPerformanceMetrics): void {
     this.metricsHistory.push(metrics);
     if (this.metricsHistory.length > PerformanceMonitoringService.MAX_HISTORY_SIZE) {
-      this.metricsHistory = this.metricsHistory.slice(-PerformanceMonitoringService.MAX_HISTORY_SIZE);
+      this.metricsHistory = this.metricsHistory.slice(
+        -PerformanceMonitoringService.MAX_HISTORY_SIZE
+      );
     }
   }
 
@@ -597,14 +599,18 @@ export class PerformanceMonitoringService {
   private addToRecommendations(recommendations: PerformanceRecommendation[]): void {
     this.recommendations.push(...recommendations);
     if (this.recommendations.length > PerformanceMonitoringService.MAX_RECOMMENDATIONS_SIZE) {
-      this.recommendations = this.recommendations.slice(-PerformanceMonitoringService.MAX_RECOMMENDATIONS_SIZE);
+      this.recommendations = this.recommendations.slice(
+        -PerformanceMonitoringService.MAX_RECOMMENDATIONS_SIZE
+      );
     }
   }
 
   private addToResponseTimes(responseTime: number): void {
     this.responseTimes.push(responseTime);
     if (this.responseTimes.length > PerformanceMonitoringService.MAX_RESPONSE_TIMES_SIZE) {
-      this.responseTimes = this.responseTimes.slice(-PerformanceMonitoringService.MAX_RESPONSE_TIMES_SIZE);
+      this.responseTimes = this.responseTimes.slice(
+        -PerformanceMonitoringService.MAX_RESPONSE_TIMES_SIZE
+      );
     }
   }
 

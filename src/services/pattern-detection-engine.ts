@@ -16,6 +16,8 @@ import { and, eq, or } from "drizzle-orm";
 import { db } from "../db";
 import type { PatternEmbedding } from "../db/schemas/patterns";
 import { coinActivities, patternEmbeddings } from "../db/schemas/patterns";
+import { toSafeError } from "../lib/error-type-utils";
+import { createLogger } from "../lib/structured-logger";
 import {
   type ActivityData,
   calculateActivityBoost,
@@ -117,6 +119,7 @@ export class PatternDetectionEngine {
   private static instance: PatternDetectionEngine;
   private readonly READY_STATE_PATTERN: ReadyStatePattern = { sts: 2, st: 2, tt: 4 };
   private readonly MIN_ADVANCE_HOURS = 3.5; // Core competitive advantage
+  private logger = createLogger("pattern-detection-engine");
 
   static getInstance(): PatternDetectionEngine {
     if (!PatternDetectionEngine.instance) {
@@ -168,7 +171,18 @@ export class PatternDetectionEngine {
         activityType: activity.activityType,
       }));
     } catch (error) {
-      console.warn(`[PatternDetectionEngine] Failed to fetch activity data for ${symbol}:`, error);
+      const safeError = toSafeError(error);
+      this.logger.warn(
+        "Failed to fetch activity data",
+        {
+          operation: "activity_data_fetch",
+          symbol,
+          vcoinId,
+          baseCurrency: symbol.replace(/USDT$|BTC$|ETH$|BNB$/, ""),
+          error: safeError.message,
+        },
+        safeError
+      );
       return []; // Return empty array on error
     }
   }
@@ -192,7 +206,7 @@ export class PatternDetectionEngine {
       // Get activity data and calculate confidence in parallel for 2x faster processing
       const symbolName = symbol.cd || "unknown";
       const vcoinId = (symbol as any).vcoinId;
-      
+
       const [activities, confidence] = await Promise.all([
         this.getActivityDataForSymbol(symbolName, vcoinId),
         isTestEnv
@@ -242,9 +256,18 @@ export class PatternDetectionEngine {
       }
     }
 
-    console.log(
-      `[PatternDetectionEngine] Detected ${matches.length} ready state patterns in ${Date.now() - startTime}ms`
-    );
+    const duration = Date.now() - startTime;
+    this.logger.pattern("ready_state", matches.length, {
+      operation: "ready_state_detection",
+      symbolsAnalyzed: symbols.length,
+      patternsFound: matches.length,
+      duration,
+      averageConfidence:
+        matches.length > 0
+          ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
+          : 0,
+      isTestEnv,
+    });
     return matches;
   }
 
@@ -318,9 +341,24 @@ export class PatternDetectionEngine {
       }
     }
 
-    console.log(
-      `[PatternDetectionEngine] Detected ${matches.length} advance opportunities in ${Date.now() - startTime}ms`
-    );
+    const duration = Date.now() - startTime;
+    this.logger.pattern("advance_opportunities", matches.length, {
+      operation: "advance_detection",
+      calendarEntriesAnalyzed: calendarEntries.length,
+      opportunitiesFound: matches.length,
+      duration,
+      minAdvanceHours: this.MIN_ADVANCE_HOURS,
+      averageAdvanceHours:
+        matches.length > 0
+          ? Math.round(
+              (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
+            ) / 10
+          : 0,
+      averageConfidence:
+        matches.length > 0
+          ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
+          : 0,
+    });
     return matches;
   }
 
@@ -383,7 +421,16 @@ export class PatternDetectionEngine {
       const mlCorrelations = await this.analyzeMLPatternCorrelations(symbolData);
       correlations.push(...mlCorrelations);
     } catch (error) {
-      console.warn(`[PatternDetectionEngine] ML correlation analysis failed:`, error);
+      const safeError = toSafeError(error);
+      this.logger.warn(
+        "ML correlation analysis failed",
+        {
+          operation: "ml_correlation_analysis",
+          symbolsAnalyzed: symbolData.length,
+          error: safeError.message,
+        },
+        safeError
+      );
     }
 
     return correlations;
@@ -451,13 +498,17 @@ export class PatternDetectionEngine {
         const chunkResults = await Promise.all(
           chunk.map(async ({ pattern1, pattern2 }) => {
             try {
-              return await this.calculatePatternSimilarityOptimized(
-                pattern1,
-                pattern2,
-                cache
-              );
+              return await this.calculatePatternSimilarityOptimized(pattern1, pattern2, cache);
             } catch (error) {
-              console.warn(`[PatternDetectionEngine] Pattern similarity calculation failed:`, error);
+              this.logger.warn(
+                "Pattern similarity calculation failed",
+                {
+                  operation: "pattern_similarity_calculation",
+                  pattern1Symbol: pattern1.symbolName,
+                  pattern2Symbol: pattern2.symbolName,
+                },
+                error
+              );
               return null;
             }
           })
@@ -465,10 +516,10 @@ export class PatternDetectionEngine {
 
         // Filter and add valid results
         const validResults = chunkResults.filter(
-          (result): result is NonNullable<typeof result> => 
+          (result): result is NonNullable<typeof result> =>
             result !== null && result.similarity >= 0.3
         );
-        
+
         similarityMatrix.push(...validResults);
       }
 
@@ -495,11 +546,24 @@ export class PatternDetectionEngine {
         });
       }
 
-      console.log(
-        `[PatternDetectionEngine] Optimized ML correlation analysis completed in ${Date.now() - startTime}ms`
-      );
+      this.logger.performance("ML correlation analysis", Date.now() - startTime, {
+        operation: "ml_correlation_analysis",
+        symbolsAnalyzed: symbolData.length,
+        correlationsFound: correlations.length,
+        similarityMatrixSize: similarityMatrix.length,
+        cacheHits: cache.size,
+        avgSimilarity: correlations.length > 0 ? avgSimilarity : 0,
+      });
     } catch (error) {
-      console.error(`[PatternDetectionEngine] ML correlation analysis failed:`, error);
+      this.logger.error(
+        "ML correlation analysis failed",
+        {
+          operation: "ml_correlation_analysis",
+          symbolsAnalyzed: symbolData.length,
+          executionTime: Date.now() - startTime,
+        },
+        error
+      );
     }
 
     return correlations;
@@ -540,30 +604,34 @@ export class PatternDetectionEngine {
 
     // Batch fetch uncached patterns
     const fetchPromises: Promise<any>[] = [];
-    
+
     if (!similarPatterns1) {
       fetchPromises.push(
-        patternEmbeddingService.findSimilarPatterns(pattern1, {
-          threshold: 0.7,
-          limit: 8, // Reduced limit for faster processing
-          sameTypeOnly: true,
-        }).then(result => {
-          cache.set(cacheKey1, result);
-          return { key: cacheKey1, result };
-        })
+        patternEmbeddingService
+          .findSimilarPatterns(pattern1, {
+            threshold: 0.7,
+            limit: 8, // Reduced limit for faster processing
+            sameTypeOnly: true,
+          })
+          .then((result) => {
+            cache.set(cacheKey1, result);
+            return { key: cacheKey1, result };
+          })
       );
     }
 
     if (!similarPatterns2) {
       fetchPromises.push(
-        patternEmbeddingService.findSimilarPatterns(pattern2, {
-          threshold: 0.7,
-          limit: 8, // Reduced limit for faster processing
-          sameTypeOnly: true,
-        }).then(result => {
-          cache.set(cacheKey2, result);
-          return { key: cacheKey2, result };
-        })
+        patternEmbeddingService
+          .findSimilarPatterns(pattern2, {
+            threshold: 0.7,
+            limit: 8, // Reduced limit for faster processing
+            sameTypeOnly: true,
+          })
+          .then((result) => {
+            cache.set(cacheKey2, result);
+            return { key: cacheKey2, result };
+          })
       );
     }
 
@@ -576,7 +644,8 @@ export class PatternDetectionEngine {
 
     // Fast similarity calculation using optimized common pattern detection
     const commonPatterns = this.findCommonPatternsOptimized(similarPatterns1!, similarPatterns2!);
-    const similarity = commonPatterns.length / Math.max(similarPatterns1!.length, similarPatterns2!.length, 1);
+    const similarity =
+      commonPatterns.length / Math.max(similarPatterns1?.length, similarPatterns2?.length, 1);
 
     if (similarity >= 0.3) {
       return {
@@ -599,7 +668,7 @@ export class PatternDetectionEngine {
 
     // Create fast lookup map for patterns2 using multiple keys
     const patterns2Map = new Map<string, any>();
-    
+
     for (const p2 of patterns2) {
       // Multiple lookup strategies for better matching
       const keys = [
@@ -607,7 +676,7 @@ export class PatternDetectionEngine {
         `${p2.cosineSimilarity?.toFixed(3)}`, // Similarity score match
         `${p2.data?.sts}-${p2.data?.st}-${p2.data?.tt}`, // Pattern signature match
       ].filter(Boolean);
-      
+
       for (const key of keys) {
         if (!patterns2Map.has(key)) {
           patterns2Map.set(key, p2);
@@ -618,17 +687,17 @@ export class PatternDetectionEngine {
     // Fast lookup instead of nested loops
     const common: any[] = [];
     const addedSymbols = new Set<string>(); // Prevent duplicates
-    
+
     for (const p1 of patterns1) {
       if (addedSymbols.has(p1.symbolName)) continue;
-      
+
       // Try multiple lookup strategies
       const lookupKeys = [
         p1.symbolName,
         `${p1.cosineSimilarity?.toFixed(3)}`,
         `${p1.data?.sts}-${p1.data?.st}-${p1.data?.tt}`,
       ].filter(Boolean);
-      
+
       for (const key of lookupKeys) {
         const match = patterns2Map.get(key);
         if (match && !addedSymbols.has(p1.symbolName)) {
@@ -637,7 +706,7 @@ export class PatternDetectionEngine {
           break;
         }
       }
-      
+
       // Early termination for performance
       if (common.length >= 10) break;
     }
@@ -723,9 +792,18 @@ export class PatternDetectionEngine {
 
     const executionTime = Date.now() - startTime;
 
-    console.log(
-      `[PatternDetectionEngine] Analysis completed: ${filteredMatches.length}/${allMatches.length} patterns above threshold in ${executionTime}ms`
-    );
+    this.logger.info("Pattern analysis completed", {
+      operation: "comprehensive_analysis",
+      analysisType: request.analysisType,
+      symbolsAnalyzed: request.symbols?.length || 0,
+      calendarEntriesAnalyzed: request.calendarEntries?.length || 0,
+      totalMatches: allMatches.length,
+      filteredMatches: filteredMatches.length,
+      confidenceThreshold: request.confidenceThreshold || 70,
+      executionTime,
+      algorithmCount: 4,
+      correlationsFound: correlations.length,
+    });
 
     return {
       matches: filteredMatches,
@@ -781,12 +859,29 @@ export class PatternDetectionEngine {
           confidence += 5; // Extra boost for high-priority activities
         }
 
-        console.log(
-          `[PatternDetectionEngine] Activity enhancement for ${symbolName}: +${activityBoost} boost from ${activities.length} activities`
-        );
+        this.logger.info("Activity enhancement applied", {
+          operation: "activity_enhancement",
+          method: "calculateReadyStateConfidence",
+          symbol: symbolName,
+          vcoinId,
+          activitiesCount: activities.length,
+          activityBoost,
+          hasHighPriorityActivity: hasHighPriorityActivity(activities),
+          activityTypes: getUniqueActivityTypes(activities),
+          confidenceAfterBoost: confidence,
+        });
       }
     } catch (error) {
-      console.warn(`[PatternDetectionEngine] Activity enhancement failed for symbol:`, error);
+      this.logger.warn(
+        "Activity enhancement failed",
+        {
+          operation: "activity_enhancement",
+          method: "calculateReadyStateConfidence",
+          symbol: symbolName,
+          vcoinId,
+        },
+        error
+      );
       // Continue without activity enhancement - graceful fallback
     }
 
@@ -816,9 +911,17 @@ export class PatternDetectionEngine {
           const aiBoost = Math.min(aiEnhancement.enhancedConfidence - confidence, 20); // Cap AI boost at 20 points
           confidence += aiBoost;
 
-          console.log(
-            `[PatternDetectionEngine] AI enhancement for ${patternData.symbolName}: +${aiBoost.toFixed(1)} AI boost (${aiEnhancement.enhancedConfidence.toFixed(1)}% total) - Cohere + Perplexity`
-          );
+          this.logger.info("AI enhancement applied", {
+            operation: "ai_enhancement",
+            method: "calculateReadyStateConfidence",
+            symbol: patternData.symbolName,
+            vcoinId: patternData.vcoinId,
+            originalConfidence: confidence - aiBoost,
+            aiBoost: Math.round(aiBoost * 10) / 10,
+            enhancedConfidence: Math.round(aiEnhancement.enhancedConfidence * 10) / 10,
+            totalConfidence: confidence,
+            enhancementType: "cohere_perplexity",
+          });
         }
       }
 
@@ -831,13 +934,30 @@ export class PatternDetectionEngine {
           const mlBoost = Math.min(embeddingConfidence.confidence - confidence, 15); // Cap ML boost at 15 points
           confidence += mlBoost;
 
-          console.log(
-            `[PatternDetectionEngine] ML fallback for ${patternData.symbolName}: +${mlBoost.toFixed(1)} ML boost (${embeddingConfidence.confidence.toFixed(1)}% total)`
-          );
+          this.logger.info("ML fallback enhancement applied", {
+            operation: "ml_fallback_enhancement",
+            method: "calculateReadyStateConfidence",
+            symbol: patternData.symbolName,
+            vcoinId: patternData.vcoinId,
+            originalConfidence: confidence - mlBoost,
+            mlBoost: Math.round(mlBoost * 10) / 10,
+            embeddingConfidence: Math.round(embeddingConfidence.confidence * 10) / 10,
+            totalConfidence: confidence,
+            enhancementType: "pattern_embedding",
+          });
         }
       }
     } catch (error) {
-      console.warn(`[PatternDetectionEngine] AI enhancement failed for symbol:`, error);
+      this.logger.warn(
+        "AI enhancement failed",
+        {
+          operation: "ai_enhancement",
+          method: "calculateReadyStateConfidence",
+          symbol: patternData.symbolName,
+          vcoinId: patternData.vcoinId,
+        },
+        error
+      );
       // Continue without AI enhancement - graceful fallback
     }
 
@@ -881,12 +1001,31 @@ export class PatternDetectionEngine {
           confidence += 5; // Extra boost for high-priority activities
         }
 
-        console.log(
-          `[PatternDetectionEngine] Activity enhancement for ${symbolName}: +${activityBoost} boost from ${activities.length} activities`
-        );
+        this.logger.info("Activity enhancement applied (optimized)", {
+          operation: "activity_enhancement",
+          method: "calculateReadyStateConfidenceOptimized",
+          symbol: symbolName,
+          vcoinId,
+          activitiesCount: activities.length,
+          activityBoost,
+          hasHighPriorityActivity: hasHighPriorityActivity(activities),
+          activityTypes: getUniqueActivityTypes(activities),
+          confidenceAfterBoost: confidence,
+          isOptimized: true,
+        });
       }
     } catch (error) {
-      console.warn(`[PatternDetectionEngine] Activity enhancement failed for symbol:`, error);
+      this.logger.warn(
+        "Activity enhancement failed (optimized)",
+        {
+          operation: "activity_enhancement",
+          method: "calculateReadyStateConfidenceOptimized",
+          symbol: symbolName,
+          vcoinId,
+          isOptimized: true,
+        },
+        error
+      );
       // Continue without activity enhancement - graceful fallback
     }
 
@@ -935,13 +1074,31 @@ export class PatternDetectionEngine {
           confidence += 8; // Strong boost for near-term launches with high activity
         }
 
-        console.log(
-          `[PatternDetectionEngine] Activity enhancement for advance opportunity ${symbolName}: +${Math.round(activityBoost * 0.8)} scaled boost from ${activities.length} activities`
-        );
+        this.logger.info("Activity enhancement applied to advance opportunity", {
+          operation: "activity_enhancement",
+          method: "calculateAdvanceOpportunityConfidence",
+          symbol: symbolName,
+          vcoinId,
+          activitiesCount: activities.length,
+          rawActivityBoost: activityBoost,
+          scaledActivityBoost: Math.round(activityBoost * 0.8),
+          scaleFactor: 0.8,
+          advanceHours,
+          hasHighPriorityActivity: hasHighPriorityActivity(activities),
+          isNearTermLaunch: advanceHours <= 48,
+          confidenceAfterBoost: confidence,
+        });
       }
     } catch (error) {
-      console.warn(
-        `[PatternDetectionEngine] Activity enhancement failed for calendar entry:`,
+      this.logger.warn(
+        "Activity enhancement failed for calendar entry",
+        {
+          operation: "activity_enhancement",
+          method: "calculateAdvanceOpportunityConfidence",
+          symbol: symbolName,
+          vcoinId,
+          advanceHours,
+        },
         error
       );
       // Continue without activity enhancement - graceful fallback
@@ -1229,12 +1386,33 @@ export class PatternDetectionEngine {
           };
         }
       } catch (error) {
-        console.warn(`[PatternDetectionEngine] AI enhancement failed in symbol readiness:`, error);
+        this.logger.warn(
+          "AI enhancement failed in symbol readiness",
+          {
+            operation: "ai_enhancement",
+            method: "analyzeSymbolReadiness",
+            symbol: patternData.symbolName,
+            vcoinId: patternData.vcoinId,
+            confidence,
+          },
+          error
+        );
       }
 
       return result;
     } catch (error) {
-      console.error(`[PatternDetectionEngine] Symbol readiness analysis failed:`, error);
+      this.logger.error(
+        "Symbol readiness analysis failed",
+        {
+          operation: "symbol_readiness_analysis",
+          method: "analyzeSymbolReadiness",
+          symbol: symbol.cd || "unknown",
+          sts: symbol.sts,
+          st: symbol.st,
+          tt: symbol.tt,
+        },
+        error
+      );
       return null;
     }
   }
@@ -1267,7 +1445,18 @@ export class PatternDetectionEngine {
 
       await patternEmbeddingService.storePattern(patternData);
     } catch (error) {
-      console.warn("[PatternDetectionEngine] Failed to store pattern:", error);
+      this.logger.warn(
+        "Failed to store successful pattern",
+        {
+          operation: "pattern_storage",
+          method: "storeSuccessfulPattern",
+          symbol: symbolName,
+          vcoinId: patternData.vcoinId,
+          patternType: type,
+          confidence,
+        },
+        error
+      );
     }
   }
 
@@ -1291,7 +1480,16 @@ export class PatternDetectionEngine {
 
       return totalAttempts > 0 ? (totalSuccesses / totalAttempts) * 100 : 75;
     } catch (error) {
-      console.warn("[PatternDetectionEngine] Failed to get historical success rate:", error);
+      this.logger.warn(
+        "Failed to get historical success rate",
+        {
+          operation: "historical_success_rate",
+          method: "getHistoricalSuccessRate",
+          patternType,
+          fallbackRate: 75,
+        },
+        error
+      );
       return 75; // Default fallback
     }
   }

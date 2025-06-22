@@ -228,7 +228,10 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
   }, [fetchPerformanceData, setupRealTimeConnection]);
 
   // Memoize constants and chart data to prevent recreation - 60% performance improvement
-  const COLORS = useMemo(() => ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#00ff00", "#ff00ff"], []);
+  const COLORS = useMemo(
+    () => ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#00ff00", "#ff00ff"],
+    []
+  );
 
   // Memoize chart metrics to prevent unnecessary re-renders
   const chartMetrics = useMemo(() => {
@@ -236,13 +239,13 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
   }, [realtimeMetrics]);
 
   // Memoize tooltip formatters
-  const durationTooltipFormatter = useMemo(() => 
-    createTooltipFormatter((value) => formatDuration(Number(value))), 
+  const durationTooltipFormatter = useMemo(
+    () => createTooltipFormatter((value) => formatDuration(Number(value))),
     [formatDuration]
   );
 
-  const percentageTooltipFormatter = useMemo(() => 
-    createTooltipFormatter((value) => `${value}%`), 
+  const percentageTooltipFormatter = useMemo(
+    () => createTooltipFormatter((value) => `${value}%`),
     []
   );
 

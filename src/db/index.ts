@@ -4,10 +4,10 @@ import postgres from "postgres";
 import * as schema from "./schema";
 
 // OpenTelemetry database instrumentation
-import { 
-  instrumentDatabase, 
+import {
   instrumentConnectionHealth,
-  instrumentDatabaseQuery 
+  instrumentDatabase,
+  instrumentDatabaseQuery,
 } from "../lib/opentelemetry-database-instrumentation";
 
 // Retry configuration
@@ -138,7 +138,7 @@ function createDatabase() {
   try {
     const client = createPostgresClient();
     const baseDb = drizzle(client, { schema });
-    
+
     // Wrap database with OpenTelemetry instrumentation
     const db = instrumentDatabase(baseDb);
 
@@ -333,7 +333,7 @@ export async function monitoredQuery<T>(
     query?: string;
     parameters?: unknown[];
     userId?: string;
-    operationType?: 'select' | 'insert' | 'update' | 'delete';
+    operationType?: "select" | "insert" | "update" | "delete";
     tableName?: string;
   }
 ): Promise<T> {
@@ -341,7 +341,7 @@ export async function monitoredQuery<T>(
     queryName,
     () => queryPerformanceMonitor.wrapQuery(queryName, queryFn, options),
     {
-      operationType: options?.operationType || 'select',
+      operationType: options?.operationType || "select",
       tableName: options?.tableName,
       queryName,
       includeQuery: !!options?.query,

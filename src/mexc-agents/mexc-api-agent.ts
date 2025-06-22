@@ -573,7 +573,7 @@ Provide actionable insights for service quality improvement and reliability enha
   }
 
   // Enhanced pattern detection using service layer
-  async detectReadyStatePatterns(vcoinIds?: string[]): Promise<AgentResponse> {
+  async detectReadyStatePatterns(_vcoinIds?: string[]): Promise<AgentResponse> {
     try {
       console.log(`[MexcApiAgent] Detecting ready state patterns via service layer`);
 

@@ -1,15 +1,15 @@
 /**
  * Unified Configuration Management System
- * 
+ *
  * Consolidates all configuration patterns across the application into a single,
  * type-safe, and maintainable configuration system.
- * 
+ *
  * ELIMINATES REDUNDANCY:
  * - Multiple config interfaces across 151+ files
  * - Scattered environment variable access
  * - Duplicate validation logic
  * - Inconsistent default values
- * 
+ *
  * PROVIDES:
  * - Type-safe configuration access
  * - Environment-specific overrides
@@ -18,7 +18,7 @@
  * - Configuration change notifications
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // ============================================================================
 // Configuration Schema Definitions
@@ -29,28 +29,28 @@ import { z } from 'zod';
  */
 const ApplicationConfigSchema = z.object({
   // Application metadata
-  name: z.string().default('MEXC Sniper Bot'),
-  version: z.string().default('1.0.0'),
-  environment: z.enum(['development', 'production', 'test']).default('development'),
-  
+  name: z.string().default("MEXC Sniper Bot"),
+  version: z.string().default("1.0.0"),
+  environment: z.enum(["development", "production", "test"]).default("development"),
+
   // Server configuration
   server: z.object({
     port: z.number().min(1000).max(65535).default(3000),
-    host: z.string().default('localhost'),
+    host: z.string().default("localhost"),
     cors: z.object({
       enabled: z.boolean().default(true),
-      origins: z.array(z.string()).default(['http://localhost:3000']),
+      origins: z.array(z.string()).default(["http://localhost:3000"]),
     }),
   }),
-  
+
   // Logging configuration
   logging: z.object({
-    level: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
-    format: z.enum(['json', 'text']).default('json'),
+    level: z.enum(["debug", "info", "warn", "error"]).default("info"),
+    format: z.enum(["json", "text"]).default("json"),
     file: z.object({
       enabled: z.boolean().default(false),
-      path: z.string().default('./logs/app.log'),
-      maxSize: z.string().default('100MB'),
+      path: z.string().default("./logs/app.log"),
+      maxSize: z.string().default("100MB"),
       maxFiles: z.number().default(5),
     }),
   }),
@@ -64,26 +64,26 @@ const MexcConfigSchema = z.object({
   apiKey: z.string().optional(),
   secretKey: z.string().optional(),
   passphrase: z.string().optional(),
-  
+
   // API endpoints
-  baseUrl: z.string().url().default('https://api.mexc.com'),
-  websocketUrl: z.string().url().default('wss://wbs.mexc.com/ws'),
-  
+  baseUrl: z.string().url().default("https://api.mexc.com"),
+  websocketUrl: z.string().url().default("wss://wbs.mexc.com/ws"),
+
   // Request configuration
   timeout: z.number().min(1000).max(300000).default(30000),
   maxRetries: z.number().min(0).max(10).default(3),
   retryDelay: z.number().min(100).max(10000).default(1000),
   rateLimitDelay: z.number().min(50).max(5000).default(200),
-  
+
   // Caching
   enableCaching: z.boolean().default(true),
   cacheTTL: z.number().min(1).max(3600).default(300),
-  
+
   // Circuit breaker
   enableCircuitBreaker: z.boolean().default(true),
   circuitBreakerThreshold: z.number().min(1).max(100).default(5),
   circuitBreakerTimeout: z.number().min(1000).max(300000).default(60000),
-  
+
   // WebSocket configuration
   websocket: z.object({
     pingInterval: z.number().default(30000),
@@ -106,7 +106,7 @@ const TradingConfigSchema = z.object({
     confidenceThreshold: z.number().min(0).max(100).default(80),
     paperTradingMode: z.boolean().default(true),
   }),
-  
+
   // Risk management
   risk: z.object({
     maxPositionSize: z.number().min(0.1).max(100).default(10),
@@ -114,39 +114,39 @@ const TradingConfigSchema = z.object({
     takeProfitPercentage: z.number().min(0.1).max(100).default(15),
     maxDailyLoss: z.number().min(0.1).max(50).default(10),
     maxDrawdown: z.number().min(0.1).max(50).default(20),
-    
+
     // Portfolio risk
     maxPortfolioConcentration: z.number().min(1).max(100).default(25),
     maxCorrelatedPositions: z.number().min(1).max(20).default(3),
-    
+
     // Emergency thresholds
     emergencyStopLoss: z.number().min(0.1).max(100).default(25),
     criticalVolatilityThreshold: z.number().min(1).max(1000).default(50),
   }),
-  
+
   // Order execution
   orders: z.object({
-    defaultOrderType: z.enum(['market', 'limit']).default('limit'),
+    defaultOrderType: z.enum(["market", "limit"]).default("limit"),
     slippageTolerance: z.number().min(0.01).max(10).default(0.5),
     maxOrderSize: z.number().min(1).max(1000000).default(10000),
-    partialFillHandling: z.enum(['cancel', 'keep', 'retry']).default('keep'),
-    
+    partialFillHandling: z.enum(["cancel", "keep", "retry"]).default("keep"),
+
     // Timing
     orderTimeout: z.number().min(1000).max(300000).default(30000),
     cancelTimeout: z.number().min(1000).max(60000).default(10000),
   }),
-  
+
   // Pattern detection
   patterns: z.object({
     enableReadyStatePattern: z.boolean().default(true),
     enablePreLaunchPattern: z.boolean().default(true),
     enableVolatilityPattern: z.boolean().default(false),
-    
+
     // Pattern thresholds
     readyStateConfidence: z.number().min(50).max(100).default(85),
     preLaunchAdvanceHours: z.number().min(0.5).max(12).default(3.5),
     volatilityThreshold: z.number().min(1).max(100).default(20),
-    
+
     // AI enhancement
     enableAiEnhancement: z.boolean().default(false),
     aiConfidenceBoost: z.number().min(0).max(50).default(10),
@@ -159,7 +159,7 @@ const TradingConfigSchema = z.object({
 const DatabaseConfigSchema = z.object({
   // Primary database
   url: z.string().optional(),
-  
+
   // Connection pool
   pool: z.object({
     min: z.number().min(0).max(100).default(2),
@@ -167,18 +167,18 @@ const DatabaseConfigSchema = z.object({
     acquireTimeoutMillis: z.number().default(60000),
     idleTimeoutMillis: z.number().default(30000),
   }),
-  
+
   // Query optimization
   queryTimeout: z.number().min(1000).max(300000).default(30000),
   enableQueryLogging: z.boolean().default(false),
   slowQueryThreshold: z.number().min(100).max(10000).default(1000),
-  
+
   // Migrations
   migrations: z.object({
     autoRun: z.boolean().default(false),
-    directory: z.string().default('./src/db/migrations'),
+    directory: z.string().default("./src/db/migrations"),
   }),
-  
+
   // Caching
   enableQueryCache: z.boolean().default(true),
   queryCacheTTL: z.number().default(300),
@@ -191,35 +191,35 @@ const CacheConfigSchema = z.object({
   // Redis configuration
   redis: z.object({
     url: z.string().optional(),
-    host: z.string().default('localhost'),
+    host: z.string().default("localhost"),
     port: z.number().min(1).max(65535).default(6379),
     password: z.string().optional(),
     db: z.number().min(0).max(15).default(0),
-    
+
     // Connection options
     connectTimeout: z.number().default(10000),
     retryDelayOnFailover: z.number().default(100),
     maxRetriesPerRequest: z.number().default(3),
   }),
-  
+
   // Cache strategies
   default: z.object({
     ttl: z.number().min(1).max(86400).default(300),
     maxKeys: z.number().min(100).max(1000000).default(10000),
-    evictionPolicy: z.enum(['lru', 'lfu', 'ttl']).default('lru'),
+    evictionPolicy: z.enum(["lru", "lfu", "ttl"]).default("lru"),
   }),
-  
+
   // Specific cache configs
   patterns: z.object({
     ttl: z.number().default(60),
     maxKeys: z.number().default(1000),
   }),
-  
+
   marketData: z.object({
     ttl: z.number().default(30),
     maxKeys: z.number().default(5000),
   }),
-  
+
   userSessions: z.object({
     ttl: z.number().default(3600),
     maxKeys: z.number().default(10000),
@@ -235,33 +235,33 @@ const MonitoringConfigSchema = z.object({
     enabled: z.boolean().default(true),
     interval: z.number().min(1000).max(300000).default(30000),
     timeout: z.number().min(1000).max(60000).default(10000),
-    endpoints: z.array(z.string()).default(['/api/health']),
+    endpoints: z.array(z.string()).default(["/api/health"]),
   }),
-  
+
   // Metrics collection
   metrics: z.object({
     enabled: z.boolean().default(true),
-    endpoint: z.string().default('/metrics'),
+    endpoint: z.string().default("/metrics"),
     collectInterval: z.number().default(15000),
     retentionPeriod: z.number().default(86400),
   }),
-  
+
   // Performance monitoring
   performance: z.object({
     enableTracing: z.boolean().default(false),
     sampleRate: z.number().min(0).max(1).default(0.1),
     slowRequestThreshold: z.number().default(1000),
   }),
-  
+
   // Alerting
   alerts: z.object({
     enabled: z.boolean().default(true),
-    channels: z.array(z.enum(['email', 'slack', 'webhook'])).default(['email']),
+    channels: z.array(z.enum(["email", "slack", "webhook"])).default(["email"]),
     thresholds: z.object({
       errorRate: z.number().min(0).max(1).default(0.05),
       responseTime: z.number().default(2000),
       memoryUsage: z.number().min(0).max(1).default(0.85),
-      cpuUsage: z.number().min(0).max(1).default(0.80),
+      cpuUsage: z.number().min(0).max(1).default(0.8),
     }),
   }),
 });
@@ -272,11 +272,11 @@ const MonitoringConfigSchema = z.object({
 const SecurityConfigSchema = z.object({
   // Authentication
   auth: z.object({
-    provider: z.enum(['kinde', 'auth0', 'supabase']).default('kinde'),
+    provider: z.enum(["kinde", "auth0", "supabase"]).default("kinde"),
     sessionTimeout: z.number().default(3600),
     requireMfa: z.boolean().default(false),
   }),
-  
+
   // API security
   api: z.object({
     enableRateLimit: z.boolean().default(true),
@@ -284,18 +284,18 @@ const SecurityConfigSchema = z.object({
     rateLimitMax: z.number().default(100),
     requireApiKey: z.boolean().default(false),
   }),
-  
+
   // Encryption
   encryption: z.object({
-    algorithm: z.string().default('aes-256-gcm'),
+    algorithm: z.string().default("aes-256-gcm"),
     keyRotationInterval: z.number().default(86400 * 30), // 30 days
   }),
-  
+
   // CORS
   cors: z.object({
     enabled: z.boolean().default(true),
-    allowedOrigins: z.array(z.string()).default(['http://localhost:3000']),
-    allowedMethods: z.array(z.string()).default(['GET', 'POST', 'PUT', 'DELETE']),
+    allowedOrigins: z.array(z.string()).default(["http://localhost:3000"]),
+    allowedMethods: z.array(z.string()).default(["GET", "POST", "PUT", "DELETE"]),
     allowCredentials: z.boolean().default(true),
   }),
 });
@@ -362,17 +362,17 @@ export class ConfigurationManager {
    * Get nested configuration value
    */
   public getValue<T>(path: string): T {
-    const keys = path.split('.');
+    const keys = path.split(".");
     let value: any = this.config;
-    
+
     for (const key of keys) {
-      if (value && typeof value === 'object' && key in value) {
+      if (value && typeof value === "object" && key in value) {
         value = value[key];
       } else {
         throw new Error(`Configuration path '${path}' not found`);
       }
     }
-    
+
     return value as T;
   }
 
@@ -382,7 +382,7 @@ export class ConfigurationManager {
   public updateConfig(newConfig: Partial<Configuration>): void {
     const merged = { ...this.config, ...newConfig };
     const validated = ConfigurationSchema.parse(merged);
-    
+
     this.config = validated;
     this.notifyListeners();
   }
@@ -394,7 +394,7 @@ export class ConfigurationManager {
     if (!this.listeners.has(key)) {
       this.listeners.set(key, []);
     }
-    this.listeners.get(key)!.push(callback);
+    this.listeners.get(key)?.push(callback);
   }
 
   /**
@@ -415,10 +415,10 @@ export class ConfigurationManager {
       if (error instanceof z.ZodError) {
         return {
           valid: false,
-          errors: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+          errors: error.errors.map((e) => `${e.path.join(".")}: ${e.message}`),
         };
       }
-      return { valid: false, errors: ['Unknown validation error'] };
+      return { valid: false, errors: ["Unknown validation error"] };
     }
   }
 
@@ -443,7 +443,7 @@ export class ConfigurationManager {
         mexcConfigured: !!(this.config.mexc.apiKey && this.config.mexc.secretKey),
         databaseConfigured: !!this.config.database.url,
         cacheConfigured: !!(this.config.cache.redis.url || this.config.cache.redis.host),
-      }
+      },
     };
   }
 
@@ -457,11 +457,11 @@ export class ConfigurationManager {
         version: process.env.APP_VERSION || process.env.npm_package_version,
         environment: process.env.NODE_ENV,
         server: {
-          port: process.env.PORT ? parseInt(process.env.PORT, 10) : undefined,
+          port: process.env.PORT ? Number.parseInt(process.env.PORT, 10) : undefined,
           host: process.env.HOST,
           cors: {
-            enabled: process.env.CORS_ENABLED === 'true',
-            origins: process.env.CORS_ORIGINS?.split(','),
+            enabled: process.env.CORS_ENABLED === "true",
+            origins: process.env.CORS_ORIGINS?.split(","),
           },
         },
         logging: {
@@ -475,68 +475,75 @@ export class ConfigurationManager {
         passphrase: process.env.MEXC_PASSPHRASE,
         baseUrl: process.env.MEXC_BASE_URL,
         websocketUrl: process.env.MEXC_WEBSOCKET_URL,
-        timeout: process.env.MEXC_TIMEOUT ? parseInt(process.env.MEXC_TIMEOUT, 10) : undefined,
-        enableCaching: process.env.MEXC_CACHE_ENABLED !== 'false',
-        enableCircuitBreaker: process.env.MEXC_CIRCUIT_BREAKER_ENABLED !== 'false',
+        timeout: process.env.MEXC_TIMEOUT
+          ? Number.parseInt(process.env.MEXC_TIMEOUT, 10)
+          : undefined,
+        enableCaching: process.env.MEXC_CACHE_ENABLED !== "false",
+        enableCircuitBreaker: process.env.MEXC_CIRCUIT_BREAKER_ENABLED !== "false",
       },
       trading: {
         autoSniping: {
-          enabled: process.env.AUTO_SNIPING_ENABLED === 'true',
-          paperTradingMode: process.env.PAPER_TRADING_MODE !== 'false',
-          maxConcurrentPositions: process.env.MAX_CONCURRENT_POSITIONS ? 
-            parseInt(process.env.MAX_CONCURRENT_POSITIONS, 10) : undefined,
-          confidenceThreshold: process.env.CONFIDENCE_THRESHOLD ? 
-            parseInt(process.env.CONFIDENCE_THRESHOLD, 10) : undefined,
+          enabled: process.env.AUTO_SNIPING_ENABLED === "true",
+          paperTradingMode: process.env.PAPER_TRADING_MODE !== "false",
+          maxConcurrentPositions: process.env.MAX_CONCURRENT_POSITIONS
+            ? Number.parseInt(process.env.MAX_CONCURRENT_POSITIONS, 10)
+            : undefined,
+          confidenceThreshold: process.env.CONFIDENCE_THRESHOLD
+            ? Number.parseInt(process.env.CONFIDENCE_THRESHOLD, 10)
+            : undefined,
         },
         risk: {
-          maxPositionSize: process.env.MAX_POSITION_SIZE ? 
-            parseFloat(process.env.MAX_POSITION_SIZE) : undefined,
-          stopLossPercentage: process.env.STOP_LOSS_PERCENTAGE ? 
-            parseFloat(process.env.STOP_LOSS_PERCENTAGE) : undefined,
+          maxPositionSize: process.env.MAX_POSITION_SIZE
+            ? Number.parseFloat(process.env.MAX_POSITION_SIZE)
+            : undefined,
+          stopLossPercentage: process.env.STOP_LOSS_PERCENTAGE
+            ? Number.parseFloat(process.env.STOP_LOSS_PERCENTAGE)
+            : undefined,
         },
       },
       database: {
         url: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL,
-        queryTimeout: process.env.DB_QUERY_TIMEOUT ? 
-          parseInt(process.env.DB_QUERY_TIMEOUT, 10) : undefined,
-        enableQueryLogging: process.env.DB_QUERY_LOGGING === 'true',
+        queryTimeout: process.env.DB_QUERY_TIMEOUT
+          ? Number.parseInt(process.env.DB_QUERY_TIMEOUT, 10)
+          : undefined,
+        enableQueryLogging: process.env.DB_QUERY_LOGGING === "true",
       },
       cache: {
         redis: {
           url: process.env.REDIS_URL,
           host: process.env.REDIS_HOST,
-          port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT, 10) : undefined,
+          port: process.env.REDIS_PORT ? Number.parseInt(process.env.REDIS_PORT, 10) : undefined,
           password: process.env.REDIS_PASSWORD,
         },
       },
       monitoring: {
         metrics: {
-          enabled: process.env.METRICS_ENABLED !== 'false',
+          enabled: process.env.METRICS_ENABLED !== "false",
         },
         alerts: {
-          enabled: process.env.ALERTS_ENABLED !== 'false',
+          enabled: process.env.ALERTS_ENABLED !== "false",
         },
       },
       security: {
         auth: {
           provider: process.env.AUTH_PROVIDER,
-          requireMfa: process.env.REQUIRE_MFA === 'true',
+          requireMfa: process.env.REQUIRE_MFA === "true",
         },
         api: {
-          enableRateLimit: process.env.RATE_LIMIT_ENABLED !== 'false',
-          requireApiKey: process.env.REQUIRE_API_KEY === 'true',
+          enableRateLimit: process.env.RATE_LIMIT_ENABLED !== "false",
+          requireApiKey: process.env.REQUIRE_API_KEY === "true",
         },
       },
     };
 
     // Remove undefined values to let Zod apply defaults
     const cleanConfig = this.removeUndefined(rawConfig);
-    
+
     try {
       return ConfigurationSchema.parse(cleanConfig);
     } catch (error) {
-      console.error('Configuration validation failed:', error);
-      throw new Error('Invalid configuration');
+      console.error("Configuration validation failed:", error);
+      throw new Error("Invalid configuration");
     }
   }
 
@@ -544,14 +551,14 @@ export class ConfigurationManager {
    * Remove undefined values from nested object
    */
   private removeUndefined(obj: any): any {
-    if (obj === null || typeof obj !== 'object') {
+    if (obj === null || typeof obj !== "object") {
       return obj;
     }
-    
+
     if (Array.isArray(obj)) {
-      return obj.map(item => this.removeUndefined(item));
+      return obj.map((item) => this.removeUndefined(item));
     }
-    
+
     const result: any = {};
     for (const [key, value] of Object.entries(obj)) {
       if (value !== undefined) {
@@ -631,27 +638,27 @@ export function getConfigSummary(): Record<string, any> {
  * Check if running in development mode
  */
 export function isDevelopment(): boolean {
-  return getConfigValue<string>('app.environment') === 'development';
+  return getConfigValue<string>("app.environment") === "development";
 }
 
 /**
  * Check if running in production mode
  */
 export function isProduction(): boolean {
-  return getConfigValue<string>('app.environment') === 'production';
+  return getConfigValue<string>("app.environment") === "production";
 }
 
 /**
  * Check if running in test mode
  */
 export function isTest(): boolean {
-  return getConfigValue<string>('app.environment') === 'test';
+  return getConfigValue<string>("app.environment") === "test";
 }
 
 /**
  * Check if a feature is enabled
  */
-export function isFeatureEnabled(feature: keyof Configuration['trading']['autoSniping']): boolean {
+export function isFeatureEnabled(feature: keyof Configuration["trading"]["autoSniping"]): boolean {
   return getConfigValue<boolean>(`trading.autoSniping.${feature}`);
 }
 
@@ -659,7 +666,7 @@ export function isFeatureEnabled(feature: keyof Configuration['trading']['autoSn
  * Get MEXC API credentials safely
  */
 export function getMexcCredentials(): { apiKey?: string; secretKey?: string } {
-  const mexcConfig = getConfigSection('mexc');
+  const mexcConfig = getConfigSection("mexc");
   return {
     apiKey: mexcConfig.apiKey,
     secretKey: mexcConfig.secretKey,
@@ -682,23 +689,23 @@ export function hasMexcCredentials(): boolean {
  * Validate MEXC configuration
  */
 export function validateMexcConfig(): { valid: boolean; issues: string[] } {
-  const mexcConfig = getConfigSection('mexc');
+  const mexcConfig = getConfigSection("mexc");
   const issues: string[] = [];
 
   if (!mexcConfig.apiKey) {
-    issues.push('MEXC API key is required');
+    issues.push("MEXC API key is required");
   }
 
   if (!mexcConfig.secretKey) {
-    issues.push('MEXC secret key is required');
+    issues.push("MEXC secret key is required");
   }
 
   if (mexcConfig.timeout < 5000) {
-    issues.push('MEXC timeout should be at least 5 seconds');
+    issues.push("MEXC timeout should be at least 5 seconds");
   }
 
   if (mexcConfig.maxRetries > 5) {
-    issues.push('MEXC max retries should not exceed 5');
+    issues.push("MEXC max retries should not exceed 5");
   }
 
   return {
@@ -711,21 +718,21 @@ export function validateMexcConfig(): { valid: boolean; issues: string[] } {
  * Validate trading configuration
  */
 export function validateTradingConfig(): { valid: boolean; issues: string[] } {
-  const tradingConfig = getConfigSection('trading');
+  const tradingConfig = getConfigSection("trading");
   const issues: string[] = [];
 
   if (tradingConfig.autoSniping.enabled && !tradingConfig.autoSniping.paperTradingMode) {
     if (!hasMexcCredentials()) {
-      issues.push('Live trading requires MEXC credentials');
+      issues.push("Live trading requires MEXC credentials");
     }
   }
 
   if (tradingConfig.risk.maxPositionSize > 50) {
-    issues.push('Max position size above 50% is highly risky');
+    issues.push("Max position size above 50% is highly risky");
   }
 
   if (tradingConfig.risk.stopLossPercentage < 2) {
-    issues.push('Stop loss below 2% may trigger too frequently');
+    issues.push("Stop loss below 2% may trigger too frequently");
   }
 
   return {
@@ -738,46 +745,46 @@ export function validateTradingConfig(): { valid: boolean; issues: string[] } {
  * Get configuration health status
  */
 export function getConfigHealth(): {
-  overall: 'healthy' | 'warning' | 'critical';
-  checks: Array<{ name: string; status: 'pass' | 'warn' | 'fail'; message: string }>;
+  overall: "healthy" | "warning" | "critical";
+  checks: Array<{ name: string; status: "pass" | "warn" | "fail"; message: string }>;
 } {
-  const checks: Array<{ name: string; status: 'pass' | 'warn' | 'fail'; message: string }> = [];
+  const checks: Array<{ name: string; status: "pass" | "warn" | "fail"; message: string }> = [];
 
   // Validate overall config
   const configValidation = validateConfig();
   checks.push({
-    name: 'Configuration Schema',
-    status: configValidation.valid ? 'pass' : 'fail',
-    message: configValidation.valid ? 'Valid' : configValidation.errors.join(', '),
+    name: "Configuration Schema",
+    status: configValidation.valid ? "pass" : "fail",
+    message: configValidation.valid ? "Valid" : configValidation.errors.join(", "),
   });
 
   // Validate MEXC config
   const mexcValidation = validateMexcConfig();
   checks.push({
-    name: 'MEXC Configuration',
-    status: mexcValidation.valid ? 'pass' : 'warn',
-    message: mexcValidation.valid ? 'Valid' : mexcValidation.issues.join(', '),
+    name: "MEXC Configuration",
+    status: mexcValidation.valid ? "pass" : "warn",
+    message: mexcValidation.valid ? "Valid" : mexcValidation.issues.join(", "),
   });
 
   // Validate trading config
   const tradingValidation = validateTradingConfig();
   checks.push({
-    name: 'Trading Configuration',
-    status: tradingValidation.valid ? 'pass' : 'warn',
-    message: tradingValidation.valid ? 'Valid' : tradingValidation.issues.join(', '),
+    name: "Trading Configuration",
+    status: tradingValidation.valid ? "pass" : "warn",
+    message: tradingValidation.valid ? "Valid" : tradingValidation.issues.join(", "),
   });
 
   // Determine overall status
-  const failCount = checks.filter(c => c.status === 'fail').length;
-  const warnCount = checks.filter(c => c.status === 'warn').length;
+  const failCount = checks.filter((c) => c.status === "fail").length;
+  const warnCount = checks.filter((c) => c.status === "warn").length;
 
-  let overall: 'healthy' | 'warning' | 'critical';
+  let overall: "healthy" | "warning" | "critical";
   if (failCount > 0) {
-    overall = 'critical';
+    overall = "critical";
   } else if (warnCount > 0) {
-    overall = 'warning';
+    overall = "warning";
   } else {
-    overall = 'healthy';
+    overall = "healthy";
   }
 
   return { overall, checks };

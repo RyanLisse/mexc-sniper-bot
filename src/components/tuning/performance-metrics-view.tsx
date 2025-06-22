@@ -244,11 +244,14 @@ export function PerformanceMetricsView({
   const formatValue = (value: number, unit: string) => {
     if (unit === "%") {
       return `${value.toFixed(1)}${unit}`;
-    } else if (unit === "ms") {
+    }
+    if (unit === "ms") {
       return `${Math.round(value)}${unit}`;
-    } else if (unit === "req/s") {
+    }
+    if (unit === "req/s") {
       return `${value.toFixed(1)} ${unit}`;
-    } else if (unit === "MB") {
+    }
+    if (unit === "MB") {
       return `${Math.round(value)} ${unit}`;
     }
     return `${value} ${unit}`;

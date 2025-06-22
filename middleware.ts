@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSecurityHeaders } from './src/lib/security-config';
 
 // Conditional import to avoid build issues with expo dependencies
 let withAuth: any = null;
@@ -26,7 +27,16 @@ const PROTECTED_ROUTES = [
 async function testMiddleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   console.log(`Test Middleware: Allowing access to ${pathname}`);
-  return NextResponse.next();
+  
+  const response = NextResponse.next();
+  
+  // Apply security headers even in test mode
+  const securityHeaders = getSecurityHeaders();
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+  
+  return response;
 }
 
 // Production middleware with authentication
@@ -50,7 +60,15 @@ const authMiddleware = withAuth ? withAuth(
 
     // For non-protected routes (including homepage), allow access
     console.log(`Middleware: Non-protected route ${pathname} - allowing access`);
-    return undefined;
+    
+    // Apply security headers for non-protected routes
+    const response = NextResponse.next();
+    const securityHeaders = getSecurityHeaders();
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    
+    return response;
   },
   {
     isReturnToCurrentPage: true,

@@ -156,10 +156,9 @@ export class ErrorHandlerService {
           userMessage: "Service is temporarily unavailable. Please try again later.",
           context: { ...context, circuitKey, circuitState: "open" },
         });
-      } else {
-        // Try to reset circuit to half-open
-        circuitState.state = "half-open";
       }
+      // Try to reset circuit to half-open
+      circuitState.state = "half-open";
     }
 
     try {

@@ -426,7 +426,15 @@ describe('High-Frequency Auto Sniping Performance', () => {
           try {
             // Simulate market data processing
             const ticker = await mexcService.getTicker(symbol);
-            const price = ticker.success ? parseFloat(ticker.data.lastPrice) : 1.0;
+            let price = 1.0;
+            if (ticker.success) {
+              const data = ticker.data;
+              if (Array.isArray(data)) {
+                price = data.length > 0 && 'lastPrice' in data[0] ? parseFloat(data[0].lastPrice) : 1.0;
+              } else if (data && 'lastPrice' in data) {
+                price = parseFloat(data.lastPrice);
+              }
+            }
             await patternEngine.analyzeSymbolReadiness({
               sts: Math.floor(Math.random() * 3),
               st: Math.floor(Math.random() * 3),
@@ -473,7 +481,15 @@ describe('High-Frequency Auto Sniping Performance', () => {
         
         if (message.type === 'price_update') {
           const ticker = await mexcService.getTicker(message.symbol);
-          const price = ticker.success ? parseFloat(ticker.data.lastPrice) : 1.0;
+          let price = 1.0;
+          if (ticker.success) {
+            const data = ticker.data;
+            if (Array.isArray(data)) {
+              price = data.length > 0 && 'lastPrice' in data[0] ? parseFloat(data[0].lastPrice) : 1.0;
+            } else if (data && 'lastPrice' in data) {
+              price = parseFloat(data.lastPrice);
+            }
+          }
         }
         
         processedMessages++;
@@ -612,7 +628,15 @@ describe('High-Frequency Auto Sniping Performance', () => {
         async () => {
           try {
             const ticker = await mexcService.getTicker('STRESSUSDT');
-            const price = ticker.success ? parseFloat(ticker.data.lastPrice) : 1.0;
+            let price = 1.0;
+            if (ticker.success) {
+              const data = ticker.data;
+              if (Array.isArray(data)) {
+                price = data.length > 0 && 'lastPrice' in data[0] ? parseFloat(data[0].lastPrice) : 1.0;
+              } else if (data && 'lastPrice' in data) {
+                price = parseFloat(data.lastPrice);
+              }
+            }
             successfulRequests++;
           } catch (error) {
             failedRequests++;
@@ -651,7 +675,15 @@ describe('High-Frequency Auto Sniping Performance', () => {
           async () => {
             const symbol = `SCALE${Math.floor(Math.random() * 10)}USDT`;
             const ticker = await mexcService.getTicker(symbol);
-            return ticker.success ? parseFloat(ticker.data.lastPrice) : 1.0;
+            if (ticker.success) {
+              const data = ticker.data;
+              if (Array.isArray(data)) {
+                return data.length > 0 && 'lastPrice' in data[0] ? parseFloat(data[0].lastPrice) : 1.0;
+              } else if (data && 'lastPrice' in data) {
+                return parseFloat(data.lastPrice);
+              }
+            }
+            return 1.0;
           },
           {
             concurrency,

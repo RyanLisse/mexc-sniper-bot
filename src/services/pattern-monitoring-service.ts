@@ -255,7 +255,7 @@ export class PatternMonitoringService {
    * Perform a single monitoring cycle
    */
   private async performMonitoringCycle(): Promise<void> {
-    const startTime = Date.now();
+    const _startTime = Date.now();
 
     try {
       console.log("[PatternMonitoring] Performing monitoring cycle...");

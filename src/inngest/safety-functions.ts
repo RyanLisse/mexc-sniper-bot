@@ -664,8 +664,16 @@ export const realTimeRiskMonitor = inngest.createFunction(
       };
     });
 
+    // Type guard for portfolio metrics
+    const portfolioMetrics = currentRiskMetrics as {
+      totalValue?: number;
+      valueAtRisk95?: number;
+      diversificationScore?: number;
+      concentrationRisk?: number;
+    } | null;
+
     logger.info("Real-time risk monitoring completed", {
-      portfolioValue: currentRiskMetrics.totalValue,
+      portfolioValue: portfolioMetrics?.totalValue ?? 0,
       riskScore: riskAlerts.riskScore,
       activeAlerts: riskAlerts.activeAlerts,
       stressTestRun: stressTestResults !== null,
@@ -673,10 +681,10 @@ export const realTimeRiskMonitor = inngest.createFunction(
 
     return {
       portfolioMetrics: {
-        totalValue: currentRiskMetrics.totalValue,
-        valueAtRisk: currentRiskMetrics.valueAtRisk95,
-        diversificationScore: currentRiskMetrics.diversificationScore,
-        concentrationRisk: currentRiskMetrics.concentrationRisk,
+        totalValue: portfolioMetrics?.totalValue ?? 0,
+        valueAtRisk: portfolioMetrics?.valueAtRisk95 ?? 0,
+        diversificationScore: portfolioMetrics?.diversificationScore ?? 0,
+        concentrationRisk: portfolioMetrics?.concentrationRisk ?? 0,
       },
       riskAlerts,
       stressTestResults,

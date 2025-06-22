@@ -1,21 +1,19 @@
 /**
  * Extracted Risk Calculation Modules
- * 
+ *
  * High-performance risk calculation functions extracted from AdvancedRiskEngine
  * for 40% faster processing through modular, cacheable calculations.
  */
 
-import type { 
-  MarketConditions, 
-  PositionRiskProfile, 
-  RiskEngineConfig 
+import type {
+  MarketConditions,
+  PositionRiskProfile,
 } from "../schemas/risk-engine-schemas-extracted";
 
 /**
  * Core risk calculation functions for position sizing and assessment
  */
 export class RiskCalculationEngine {
-  
   /**
    * Calculate position size risk as percentage (0-100)
    */
@@ -67,11 +65,7 @@ export class RiskCalculationEngine {
   /**
    * Calculate Value at Risk for a trade
    */
-  static calculateTradeVaR(
-    tradeValue: number, 
-    volatility: number, 
-    confidenceLevel: number = 0.95
-  ): number {
+  static calculateTradeVaR(tradeValue: number, volatility: number, confidenceLevel = 0.95): number {
     const confidenceMultiplier = confidenceLevel === 0.95 ? 1.645 : 1.96;
     return tradeValue * volatility * confidenceMultiplier;
   }
@@ -80,11 +74,11 @@ export class RiskCalculationEngine {
    * Calculate Expected Shortfall for a trade
    */
   static calculateTradeExpectedShortfall(
-    tradeValue: number, 
-    volatility: number, 
-    confidenceLevel: number = 0.95
+    tradeValue: number,
+    volatility: number,
+    confidenceLevel = 0.95
   ): number {
-    const var95 = this.calculateTradeVaR(tradeValue, volatility, confidenceLevel);
+    const var95 = RiskCalculationEngine.calculateTradeVaR(tradeValue, volatility, confidenceLevel);
     return var95 * 1.3; // Typical ES/VaR ratio
   }
 
@@ -123,18 +117,18 @@ export class RiskCalculationEngine {
     marketRisk: number,
     liquidityRisk: number,
     portfolioImpact: number,
-    volatilityAdjustment: number = 1,
-    liquidityAdjustment: number = 1,
-    sentimentAdjustment: number = 1
+    volatilityAdjustment = 1,
+    liquidityAdjustment = 1,
+    sentimentAdjustment = 1
   ): number {
     // Calculate weighted risk score (0-100)
     let riskScore = 0;
-    riskScore += positionSizeRisk * 0.25;  // 25% weight
-    riskScore += concentrationRisk * 0.2;  // 20% weight
-    riskScore += correlationRisk * 0.15;   // 15% weight
-    riskScore += marketRisk * 0.2;         // 20% weight
-    riskScore += liquidityRisk * 0.1;      // 10% weight
-    riskScore += portfolioImpact * 0.1;    // 10% weight
+    riskScore += positionSizeRisk * 0.25; // 25% weight
+    riskScore += concentrationRisk * 0.2; // 20% weight
+    riskScore += correlationRisk * 0.15; // 15% weight
+    riskScore += marketRisk * 0.2; // 20% weight
+    riskScore += liquidityRisk * 0.1; // 10% weight
+    riskScore += portfolioImpact * 0.1; // 10% weight
 
     // Apply dynamic adjustments
     riskScore *= volatilityAdjustment;
@@ -150,14 +144,10 @@ export class RiskCalculationEngine {
  * Market adjustment calculations for dynamic risk scaling
  */
 export class MarketAdjustmentEngine {
-  
   /**
    * Calculate volatility adjustment multiplier
    */
-  static getVolatilityAdjustment(
-    volatilityIndex: number, 
-    volatilityMultiplier: number = 1.5
-  ): number {
+  static getVolatilityAdjustment(volatilityIndex: number, volatilityMultiplier = 1.5): number {
     const volatility = volatilityIndex / 100;
     return 1 + (volatility * volatilityMultiplier - 1);
   }
@@ -193,7 +183,7 @@ export class MarketAdjustmentEngine {
    */
   static calculateAllAdjustments(
     marketConditions: MarketConditions,
-    volatilityMultiplier: number = 1.5
+    volatilityMultiplier = 1.5
   ): {
     volatilityAdjustment: number;
     liquidityAdjustment: number;
@@ -201,12 +191,16 @@ export class MarketAdjustmentEngine {
   } {
     // Run all calculations in parallel for better performance
     return {
-      volatilityAdjustment: this.getVolatilityAdjustment(
-        marketConditions.volatilityIndex, 
+      volatilityAdjustment: MarketAdjustmentEngine.getVolatilityAdjustment(
+        marketConditions.volatilityIndex,
         volatilityMultiplier
       ),
-      liquidityAdjustment: this.getLiquidityAdjustment(marketConditions.liquidityIndex),
-      sentimentAdjustment: this.getSentimentAdjustment(marketConditions.marketSentiment),
+      liquidityAdjustment: MarketAdjustmentEngine.getLiquidityAdjustment(
+        marketConditions.liquidityIndex
+      ),
+      sentimentAdjustment: MarketAdjustmentEngine.getSentimentAdjustment(
+        marketConditions.marketSentiment
+      ),
     };
   }
 }
@@ -215,7 +209,6 @@ export class MarketAdjustmentEngine {
  * Portfolio metrics calculation engine for performance optimization
  */
 export class PortfolioMetricsEngine {
-  
   /**
    * Calculate total portfolio value from positions
    */
@@ -228,11 +221,11 @@ export class PortfolioMetricsEngine {
    */
   static calculatePortfolioConcentrationRisk(positions: PositionRiskProfile[]): number {
     if (positions.length === 0) return 0;
-    
-    const totalValue = this.calculatePortfolioValue(positions);
+
+    const totalValue = PortfolioMetricsEngine.calculatePortfolioValue(positions);
     if (totalValue === 0) return 0;
-    
-    const maxPosition = Math.max(...positions.map(p => p.size));
+
+    const maxPosition = Math.max(...positions.map((p) => p.size));
     return (maxPosition / totalValue) * 100;
   }
 
@@ -241,11 +234,11 @@ export class PortfolioMetricsEngine {
    */
   static calculateDiversificationScore(positions: PositionRiskProfile[]): number {
     if (positions.length === 0) return 100;
-    
-    const totalValue = this.calculatePortfolioValue(positions);
+
+    const totalValue = PortfolioMetricsEngine.calculatePortfolioValue(positions);
     if (totalValue === 0) return 100;
-    
-    const maxPosition = Math.max(...positions.map(p => p.size));
+
+    const maxPosition = Math.max(...positions.map((p) => p.size));
     return Math.max(0, 100 - (maxPosition / totalValue) * 100);
   }
 
@@ -277,7 +270,7 @@ export class PortfolioMetricsEngine {
     let totalValue = 0;
 
     // Include existing positions
-    positions.forEach(pos => {
+    positions.forEach((pos) => {
       symbolMap.set(pos.symbol, (symbolMap.get(pos.symbol) || 0) + pos.size);
       totalValue += pos.size;
     });
@@ -288,7 +281,7 @@ export class PortfolioMetricsEngine {
 
     // Find largest position as percentage of total
     let maxConcentration = 0;
-    symbolMap.forEach(value => {
+    symbolMap.forEach((value) => {
       const concentration = (value / totalValue) * 100;
       maxConcentration = Math.max(maxConcentration, concentration);
     });
@@ -312,12 +305,13 @@ export class PortfolioMetricsEngine {
     liquidityRisk: number;
     maxDrawdownRisk: number;
   } {
-    const totalValue = this.calculatePortfolioValue(positions);
+    const totalValue = PortfolioMetricsEngine.calculatePortfolioValue(positions);
     const totalExposure = positions.reduce((sum, pos) => sum + pos.exposure, 0);
-    const diversificationScore = this.calculateDiversificationScore(positions);
-    const concentrationRisk = this.calculatePortfolioConcentrationRisk(positions);
-    const portfolioVar = this.calculatePortfolioVaR(positions);
-    const expectedShortfall = this.calculatePortfolioExpectedShortfall(portfolioVar);
+    const diversificationScore = PortfolioMetricsEngine.calculateDiversificationScore(positions);
+    const concentrationRisk = PortfolioMetricsEngine.calculatePortfolioConcentrationRisk(positions);
+    const portfolioVar = PortfolioMetricsEngine.calculatePortfolioVaR(positions);
+    const expectedShortfall =
+      PortfolioMetricsEngine.calculatePortfolioExpectedShortfall(portfolioVar);
     const liquidityRisk = Math.max(0, 100 - marketConditions.liquidityIndex);
     const maxDrawdownRisk = positions.reduce((max, pos) => Math.max(max, pos.maxDrawdown), 0);
 
@@ -338,7 +332,6 @@ export class PortfolioMetricsEngine {
  * Position validation engine for size and risk checks
  */
 export class PositionValidationEngine {
-  
   /**
    * Validate position size against portfolio limits
    */
@@ -368,13 +361,15 @@ export class PositionValidationEngine {
     // Check against portfolio percentage limits (5% default)
     const maxPortfolioPercentage = 0.05; // 5%
     const positionSizeRatio = requestedSize / portfolioValue;
-    
+
     if (positionSizeRatio > maxPortfolioPercentage) {
       const maxAllowedSize = portfolioValue * maxPortfolioPercentage;
       if (maxAllowedSize < adjustedSize) {
         adjustedSize = maxAllowedSize;
         adjustmentReason = "portfolio_percentage_limit";
-        warnings.push(`Position size reduced to ${(maxPortfolioPercentage * 100).toFixed(1)}% of portfolio`);
+        warnings.push(
+          `Position size reduced to ${(maxPortfolioPercentage * 100).toFixed(1)}% of portfolio`
+        );
       }
     }
 
@@ -486,9 +481,10 @@ export class PositionValidationEngine {
       adjustedSize *= 1 - volatilityReduction;
     }
 
-    const reasoning = volatilityReduction > 0
-      ? `Position reduced by ${(volatilityReduction * 100).toFixed(1)}% due to high volatility (${(volatility * 100).toFixed(1)}%)`
-      : "No volatility adjustment needed";
+    const reasoning =
+      volatilityReduction > 0
+        ? `Position reduced by ${(volatilityReduction * 100).toFixed(1)}% due to high volatility (${(volatility * 100).toFixed(1)}%)`
+        : "No volatility adjustment needed";
 
     return {
       adjustedSize,
@@ -502,7 +498,6 @@ export class PositionValidationEngine {
  * Risk assessment utility functions
  */
 export class RiskAssessmentUtils {
-  
   /**
    * Generate risk assessment reasons and warnings
    */
@@ -581,10 +576,7 @@ export class RiskAssessmentUtils {
   /**
    * Calculate false positive rate from pattern data
    */
-  static calculateFalsePositiveRate(
-    totalPatterns: number,
-    failedPatterns: number
-  ): number {
+  static calculateFalsePositiveRate(totalPatterns: number, failedPatterns: number): number {
     if (totalPatterns === 0) return 0;
     return (failedPatterns / totalPatterns) * 100;
   }

@@ -170,9 +170,9 @@ export class AdaptiveRateLimiterService {
     endpoint: string,
     userId?: string,
     userAgent?: string,
-    metadata?: Record<string, any>
+    _metadata?: Record<string, any>
   ): Promise<RateLimitResult> {
-    const startTime = Date.now();
+    const _startTime = Date.now();
 
     try {
       // Get configuration for this endpoint/user
@@ -260,7 +260,7 @@ export class AdaptiveRateLimiterService {
     userId: string | undefined,
     responseTime: number,
     success: boolean,
-    statusCode?: number
+    _statusCode?: number
   ): Promise<void> {
     const key = this.generateKey(endpoint, userId);
     const metrics = this.getOrCreateMetrics(key);
@@ -354,25 +354,24 @@ export class AdaptiveRateLimiterService {
           burstTokens: Math.max(0, bucket.tokens - config.maxRequests),
         },
       };
-    } else {
-      // Calculate retry after
-      const retryAfterSeconds = Math.ceil((1 - bucket.tokens) / bucket.refillRate);
-
-      return {
-        allowed: false,
-        remainingRequests: 0,
-        resetTime: now + retryAfterSeconds * 1000,
-        retryAfter: retryAfterSeconds,
-        metadata: {
-          algorithm: "token-bucket",
-          currentWindowRequests: config.maxRequests,
-          averageResponseTime: metrics.averageResponseTime,
-          successRate: metrics.successRate,
-          adaptationFactor: metrics.adaptationFactor,
-          burstTokens: 0,
-        },
-      };
     }
+    // Calculate retry after
+    const retryAfterSeconds = Math.ceil((1 - bucket.tokens) / bucket.refillRate);
+
+    return {
+      allowed: false,
+      remainingRequests: 0,
+      resetTime: now + retryAfterSeconds * 1000,
+      retryAfter: retryAfterSeconds,
+      metadata: {
+        algorithm: "token-bucket",
+        currentWindowRequests: config.maxRequests,
+        averageResponseTime: metrics.averageResponseTime,
+        successRate: metrics.successRate,
+        adaptationFactor: metrics.adaptationFactor,
+        burstTokens: 0,
+      },
+    };
   }
 
   /**
@@ -419,26 +418,25 @@ export class AdaptiveRateLimiterService {
           burstTokens: Math.max(0, window.requests.length - adaptedMaxRequests),
         },
       };
-    } else {
-      // Calculate retry after
-      const oldestRequest = Math.min(...window.requests);
-      const retryAfterMs = oldestRequest + config.windowMs - now;
-
-      return {
-        allowed: false,
-        remainingRequests: 0,
-        resetTime: oldestRequest + config.windowMs,
-        retryAfter: Math.ceil(retryAfterMs / 1000),
-        metadata: {
-          algorithm: "sliding-window",
-          currentWindowRequests: window.requests.length,
-          averageResponseTime: metrics.averageResponseTime,
-          successRate: metrics.successRate,
-          adaptationFactor: metrics.adaptationFactor,
-          burstTokens: Math.max(0, window.requests.length - adaptedMaxRequests),
-        },
-      };
     }
+    // Calculate retry after
+    const oldestRequest = Math.min(...window.requests);
+    const retryAfterMs = oldestRequest + config.windowMs - now;
+
+    return {
+      allowed: false,
+      remainingRequests: 0,
+      resetTime: oldestRequest + config.windowMs,
+      retryAfter: Math.ceil(retryAfterMs / 1000),
+      metadata: {
+        algorithm: "sliding-window",
+        currentWindowRequests: window.requests.length,
+        averageResponseTime: metrics.averageResponseTime,
+        successRate: metrics.successRate,
+        adaptationFactor: metrics.adaptationFactor,
+        burstTokens: Math.max(0, window.requests.length - adaptedMaxRequests),
+      },
+    };
   }
 
   /**

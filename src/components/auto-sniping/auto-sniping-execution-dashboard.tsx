@@ -19,7 +19,6 @@ import {
 } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
-import { Progress } from "@/src/components/ui/progress";
 import { ScrollArea } from "@/src/components/ui/scroll-area";
 import { Separator } from "@/src/components/ui/separator";
 import { Switch } from "@/src/components/ui/switch";
@@ -28,39 +27,114 @@ import { useAutoSnipingExecution } from "@/src/hooks/use-auto-sniping-execution"
 import type {
   AutoSnipingConfig,
   ExecutionAlert,
-  ExecutionPosition,
 } from "@/src/services/auto-sniping-execution-service";
 import {
   AlertCircle,
-  BarChart3,
   Bell,
   BellOff,
   Clock,
   DollarSign,
   Hash,
-  Pause,
-  PauseCircle,
   Percent,
-  Play,
-  PlayCircle,
-  RefreshCw,
   Settings,
-  Shield,
-  Square,
-  StopCircle,
-  Target,
-  TrendingDown,
-  TrendingUp,
-  X,
-  XCircle,
   Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { PerformanceMetrics } from "./components/performance-metrics";
+import { PnLIndicator } from "./components/pnl-indicator";
+import { PositionsTab } from "./components/positions-tab";
+import { StatusIndicator } from "./components/status-indicator";
 
 interface AutoSnipingExecutionDashboardProps {
   className?: string;
   autoRefresh?: boolean;
   showControls?: boolean;
+}
+
+// Helper component for execution overview
+function ExecutionOverview({
+  stats,
+  totalPnl,
+  successRate,
+  dailyTradeCount,
+}: {
+  stats: any;
+  totalPnl: number;
+  successRate: number;
+  dailyTradeCount: number;
+}) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Total P&L</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div
+            className={`text-2xl font-bold ${totalPnl >= 0 ? "text-green-600" : "text-red-600"}`}
+          >
+            {totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{successRate.toFixed(1)}%</div>
+          <Progress value={successRate} className="mt-2" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Daily Trades</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{dailyTradeCount}</div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Badge variant={stats?.isActive ? "default" : "secondary"}>
+            {stats?.isActive ? "Active" : "Inactive"}
+          </Badge>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Helper component for execution controls
+function ExecutionControls({
+  isExecutionActive,
+  onStartExecution,
+  onStopExecution,
+  isLoading,
+}: {
+  isExecutionActive: boolean;
+  onStartExecution: () => void;
+  onStopExecution: () => void;
+  isLoading: boolean;
+}) {
+  return (
+    <div className="flex gap-2">
+      {!isExecutionActive ? (
+        <Button onClick={onStartExecution} disabled={isLoading}>
+          <Play className="h-4 w-4 mr-2" />
+          Start Execution
+        </Button>
+      ) : (
+        <Button variant="outline" onClick={onStopExecution} disabled={isLoading}>
+          <Pause className="h-4 w-4 mr-2" />
+          Stop Execution
+        </Button>
+      )}
+    </div>
+  );
 }
 
 export function AutoSnipingExecutionDashboard({
@@ -84,7 +158,7 @@ export function AutoSnipingExecutionDashboard({
     totalPnl,
     successRate,
     activePositionsCount,
-    unacknowledgedAlertsCount,
+    // unacknowledgedAlertsCount,
     dailyTradeCount,
     isLoading,
     isStartingExecution,
@@ -114,53 +188,6 @@ export function AutoSnipingExecutionDashboard({
     includeHistory: true,
     includeAlerts: true,
   });
-
-  // Status indicator component
-  const StatusIndicator = ({ status }: { status: string }) => {
-    const getStatusProps = (status: string) => {
-      switch (status) {
-        case "active":
-          return { icon: PlayCircle, color: "text-green-500", bg: "bg-green-50" };
-        case "paused":
-          return { icon: PauseCircle, color: "text-yellow-500", bg: "bg-yellow-50" };
-        case "idle":
-          return { icon: StopCircle, color: "text-gray-500", bg: "bg-gray-50" };
-        case "error":
-          return { icon: XCircle, color: "text-red-500", bg: "bg-red-50" };
-        default:
-          return { icon: Clock, color: "text-gray-400", bg: "bg-gray-50" };
-      }
-    };
-
-    const { icon: Icon, color, bg } = getStatusProps(status);
-
-    return (
-      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${bg}`}>
-        <Icon className={`h-5 w-5 ${color}`} />
-        <span className={`text-sm font-medium ${color}`}>{status.toUpperCase()}</span>
-      </div>
-    );
-  };
-
-  // Position PnL component
-  const PnLIndicator = ({ position }: { position: ExecutionPosition }) => {
-    const pnl = Number.parseFloat(position.unrealizedPnl);
-    const isProfit = pnl >= 0;
-
-    return (
-      <div className={`flex items-center gap-1 ${isProfit ? "text-green-600" : "text-red-600"}`}>
-        {isProfit ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-        <span className="font-medium">
-          {isProfit ? "+" : ""}
-          {pnl.toFixed(2)} USDT
-        </span>
-        <span className="text-sm">
-          ({position.unrealizedPnlPercentage > 0 ? "+" : ""}
-          {position.unrealizedPnlPercentage.toFixed(2)}%)
-        </span>
-      </div>
-    );
-  };
 
   // Execution controls
   const handleToggleExecution = async () => {
@@ -205,7 +232,7 @@ export function AutoSnipingExecutionDashboard({
   };
 
   // Configuration management
-  const handleConfigChange = (field: string, value: any) => {
+  const handleConfigChange = (field: string, value: string | number | boolean) => {
     setTempConfig((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -261,67 +288,20 @@ export function AutoSnipingExecutionDashboard({
                 Automated trade execution based on pattern detection
               </CardDescription>
             </div>
-            <div className="flex gap-2">
-              {showControls && (
-                <>
-                  <Button variant="outline" size="sm" onClick={refreshData} disabled={isLoading}>
-                    <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-                    Refresh
-                  </Button>
-                  <Button
-                    variant={
-                      isExecutionActive
-                        ? executionStatus === "paused"
-                          ? "default"
-                          : "secondary"
-                        : "default"
-                    }
-                    size="sm"
-                    onClick={handleToggleExecution}
-                    disabled={isStartingExecution || isPausingExecution || isResumingExecution}
-                  >
-                    {isExecutionActive ? (
-                      executionStatus === "paused" ? (
-                        <>
-                          <Play className="h-4 w-4" />
-                          Resume
-                        </>
-                      ) : (
-                        <>
-                          <Pause className="h-4 w-4" />
-                          Pause
-                        </>
-                      )
-                    ) : (
-                      <>
-                        <Play className="h-4 w-4" />
-                        Start
-                      </>
-                    )}
-                  </Button>
-                  {isExecutionActive && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleStopExecution}
-                      disabled={isStoppingExecution}
-                    >
-                      <Square className="h-4 w-4" />
-                      Stop
-                    </Button>
-                  )}
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleEmergencyStop}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    <Shield className="h-4 w-4" />
-                    Emergency Stop
-                  </Button>
-                </>
-              )}
-            </div>
+            <ExecutionControls
+              isExecutionActive={isExecutionActive}
+              executionStatus={executionStatus}
+              isLoading={isLoading}
+              isStartingExecution={isStartingExecution}
+              isPausingExecution={isPausingExecution}
+              isResumingExecution={isResumingExecution}
+              isStoppingExecution={isStoppingExecution}
+              onRefresh={refreshData}
+              onToggleExecution={handleToggleExecution}
+              onStopExecution={handleStopExecution}
+              onEmergencyStop={handleEmergencyStop}
+              showControls={showControls}
+            />
           </div>
         </CardHeader>
         <CardContent>
@@ -391,7 +371,7 @@ export function AutoSnipingExecutionDashboard({
           {/* Loading State */}
           {isLoading && !report && (
             <div className="flex items-center justify-center py-8">
-              <RefreshCw className="h-6 w-6 animate-spin" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
               <span className="ml-2">Loading execution data...</span>
             </div>
           )}
@@ -408,66 +388,12 @@ export function AutoSnipingExecutionDashboard({
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          {/* Performance Metrics */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Performance Metrics
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Success Rate</span>
-                    <span className="text-sm font-medium">{successRate.toFixed(1)}%</span>
-                  </div>
-                  <Progress value={successRate} className="w-full" />
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Daily Trade Progress</span>
-                    <span className="text-sm font-medium">
-                      {dailyTradeCount}/{config?.maxDailyTrades || 0}
-                    </span>
-                  </div>
-                  <Progress
-                    value={
-                      config?.maxDailyTrades ? (dailyTradeCount / config.maxDailyTrades) * 100 : 0
-                    }
-                    className="w-full"
-                  />
-                </div>
-              </div>
-
-              {stats && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                  <div className="text-center p-3 bg-gray-50 rounded">
-                    <div className="text-lg font-semibold">
-                      {stats.averageExecutionTime.toFixed(0)}ms
-                    </div>
-                    <p className="text-xs text-gray-600">Avg Execution</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded">
-                    <div className="text-lg font-semibold">{stats.averageSlippage.toFixed(2)}%</div>
-                    <p className="text-xs text-gray-600">Avg Slippage</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded">
-                    <div className="text-lg font-semibold">{stats.maxDrawdown.toFixed(1)}%</div>
-                    <p className="text-xs text-gray-600">Max Drawdown</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded">
-                    <div className="text-lg font-semibold">
-                      {stats.averageTradeReturn.toFixed(1)}%
-                    </div>
-                    <p className="text-xs text-gray-600">Avg Return</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <PerformanceMetrics
+            successRate={successRate}
+            dailyTradeCount={dailyTradeCount}
+            maxDailyTrades={config?.maxDailyTrades}
+            stats={stats}
+          />
 
           {/* Recent Executions */}
           {recentExecutions.length > 0 && (
@@ -482,7 +408,10 @@ export function AutoSnipingExecutionDashboard({
                 <ScrollArea className="h-64">
                   <div className="space-y-3">
                     {recentExecutions.map((execution, index) => (
-                      <div key={index} className="border rounded-lg p-3">
+                      <div
+                        key={`execution-${execution.symbol}-${execution.timestamp || index}`}
+                        className="border rounded-lg p-3"
+                      >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="font-mono">
@@ -510,101 +439,13 @@ export function AutoSnipingExecutionDashboard({
         </TabsContent>
 
         <TabsContent value="positions" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Active Positions ({activePositions.length})
-                </CardTitle>
-                <CardDescription>Monitor and manage your active trading positions</CardDescription>
-              </div>
-              {activePositions.length > 0 && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleEmergencyStop}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  Close All
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              {activePositions.length > 0 ? (
-                <ScrollArea className="h-96">
-                  <div className="space-y-4">
-                    {activePositions.map((position) => (
-                      <div key={position.id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="font-mono text-lg">
-                              {position.symbol}
-                            </Badge>
-                            <Badge variant="default">{position.side}</Badge>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleClosePosition(position.id)}
-                            disabled={isClosingPosition}
-                          >
-                            <X className="h-4 w-4" />
-                            Close
-                          </Button>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                          <div>
-                            <p className="text-sm text-gray-600">Entry Price</p>
-                            <p className="font-medium">{formatCurrency(position.entryPrice)}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600">Current Price</p>
-                            <p className="font-medium">{formatCurrency(position.currentPrice)}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600">Quantity</p>
-                            <p className="font-medium">{position.quantity}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-600">P&L</p>
-                            <PnLIndicator position={position} />
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between text-sm text-gray-600">
-                          <span>
-                            Pattern: {position.patternMatch.patternType}(
-                            {position.patternMatch.confidence}% confidence)
-                          </span>
-                          <span>Opened: {new Date(position.entryTime).toLocaleString()}</span>
-                        </div>
-
-                        {(position.stopLossPrice || position.takeProfitPrice) && (
-                          <div className="mt-2 pt-2 border-t text-sm">
-                            {position.stopLossPrice && (
-                              <span className="text-red-600">
-                                SL: {formatCurrency(position.stopLossPrice)}
-                              </span>
-                            )}
-                            {position.stopLossPrice && position.takeProfitPrice && " • "}
-                            {position.takeProfitPrice && (
-                              <span className="text-green-600">
-                                TP: {formatCurrency(position.takeProfitPrice)}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              ) : (
-                <div className="text-center py-8 text-gray-500">No active positions</div>
-              )}
-            </CardContent>
-          </Card>
+          <PositionsTab
+            activePositions={activePositions}
+            isClosingPosition={isClosingPosition}
+            onClosePosition={handleClosePosition}
+            onEmergencyStop={handleEmergencyStop}
+            formatCurrency={formatCurrency}
+          />
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-4">
@@ -627,9 +468,9 @@ export function AutoSnipingExecutionDashboard({
               {activeAlerts.length > 0 ? (
                 <ScrollArea className="h-96">
                   <div className="space-y-3">
-                    {activeAlerts.map((alert: ExecutionAlert) => (
+                    {activeAlerts.map((alert: ExecutionAlert, index: number) => (
                       <div
-                        key={alert.id}
+                        key={alert.id || `alert-${index}`}
                         className={`border rounded-lg p-3 ${alert.acknowledged ? "bg-gray-50 opacity-60" : "bg-white"}`}
                       >
                         <div className="flex items-center justify-between">

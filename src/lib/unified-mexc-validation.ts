@@ -163,19 +163,25 @@ export class UnifiedMexcValidationService {
     try {
       // Step 1: Validate input credentials if provided
       if (providedCredentials) {
-        this.validateCredentialFormat(providedCredentials);
+        UnifiedMexcValidationService.validateCredentialFormat(providedCredentials);
       }
 
       // Step 2: Determine credential source and load credentials
-      const { credentials, source } = await this.loadCredentials(userId, providedCredentials);
+      const { credentials, source } = await UnifiedMexcValidationService.loadCredentials(
+        userId,
+        providedCredentials
+      );
 
       // Step 3: Test network connectivity
       const connectivityStart = Date.now();
-      const connectivityResult = await this.testConnectivity(credentials, timeoutMs);
+      const connectivityResult = await UnifiedMexcValidationService.testConnectivity(
+        credentials,
+        timeoutMs
+      );
       const connectivityTime = Date.now() - connectivityStart;
 
       if (!connectivityResult.success) {
-        return this.createFailedResult(
+        return UnifiedMexcValidationService.createFailedResult(
           credentials !== null,
           false,
           source,
@@ -197,7 +203,7 @@ export class UnifiedMexcValidationService {
 
       // Step 4: Test credential authentication
       const accountStart = Date.now();
-      const accountResult = await this.testAccountAccess(
+      const accountResult = await UnifiedMexcValidationService.testAccountAccess(
         credentials,
         includeAccountInfo,
         timeoutMs
@@ -213,7 +219,7 @@ export class UnifiedMexcValidationService {
       };
 
       if (performDiagnostics && !accountResult.success) {
-        diagnostics = this.performDiagnostics(accountResult.error);
+        diagnostics = UnifiedMexcValidationService.performDiagnostics(accountResult.error);
       }
 
       const totalTime = Date.now() - startTime;
@@ -239,7 +245,9 @@ export class UnifiedMexcValidationService {
             ? {
                 balanceCount: accountResult.data?.balances?.length || 0,
                 totalValue: accountResult.data?.totalUsdtValue || 0,
-                primaryBalances: this.extractPrimaryBalances(accountResult.data?.balances || []),
+                primaryBalances: UnifiedMexcValidationService.extractPrimaryBalances(
+                  accountResult.data?.balances || []
+                ),
               }
             : undefined,
         diagnostics,
@@ -256,7 +264,7 @@ export class UnifiedMexcValidationService {
       const totalTime = Date.now() - startTime;
 
       if (error instanceof ValidationError) {
-        return this.createFailedResult(
+        return UnifiedMexcValidationService.createFailedResult(
           false,
           false,
           "none",
@@ -276,7 +284,7 @@ export class UnifiedMexcValidationService {
         );
       }
 
-      return this.createFailedResult(
+      return UnifiedMexcValidationService.createFailedResult(
         false,
         false,
         "none",
@@ -364,7 +372,7 @@ export class UnifiedMexcValidationService {
         hasEnvironmentCredentials,
         preferredSource,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         hasUserCredentials: false,
         hasEnvironmentCredentials: !!(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY),

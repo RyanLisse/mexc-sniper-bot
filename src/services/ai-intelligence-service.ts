@@ -464,8 +464,8 @@ Focus on actionable insights and recent developments. Use current market data an
 
       // Return basic result with raw content
       return {
-        summary: content.substring(0, 200) + "...",
-        keyFindings: [content.substring(0, 100) + "..."],
+        summary: `${content.substring(0, 200)}...`,
+        keyFindings: [`${content.substring(0, 100)}...`],
         marketContext: {
           sentiment: "neutral",
           volatility: "unknown",
@@ -550,7 +550,7 @@ Focus on actionable insights and recent developments. Use current market data an
    */
   async calculateAIEnhancedConfidence(
     pattern: EnhancedPatternData,
-    marketContext?: Record<string, any>
+    _marketContext?: Record<string, any>
   ): Promise<{
     enhancedConfidence: number;
     components: Record<string, number>;
@@ -661,7 +661,7 @@ Focus on actionable insights and recent developments. Use current market data an
     }
 
     // Clear embedding cache (keep longer - 2 hours)
-    const embeddingTimeout = 2 * 60 * 60 * 1000;
+    const _embeddingTimeout = 2 * 60 * 60 * 1000;
     if (this.embeddingCache.size > 1000) {
       // Simple size-based cleanup
       this.embeddingCache.clear();

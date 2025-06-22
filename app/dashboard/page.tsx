@@ -14,6 +14,7 @@ import {
   LazyDashboardWrapper,
   LazyChartWrapper,
   LazyCardWrapper,
+  LazyTableWrapper,
   preloadDashboardComponents
 } from "../../src/components/dynamic-component-loader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../src/components/ui/tabs";

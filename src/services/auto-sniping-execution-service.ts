@@ -6,13 +6,13 @@
  * Enhanced with structured logging and OpenTelemetry instrumentation.
  */
 
+import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
+import { createLogger, createTimer } from "../lib/structured-logger";
 import { EmergencySafetySystem } from "./emergency-safety-system";
 import { PatternDetectionEngine } from "./pattern-detection-engine";
 import type { PatternMatch } from "./pattern-detection-engine";
 import { PatternMonitoringService } from "./pattern-monitoring-service";
 import { UnifiedMexcService } from "./unified-mexc-service";
-import { createLogger, createTimer } from "../lib/structured-logger";
-import { instrumentedTradingOperation } from "../lib/opentelemetry-api-middleware";
 
 export interface AutoSnipingConfig {
   // Execution parameters
@@ -130,7 +130,7 @@ export class AutoSnipingExecutionService {
   private patternMonitoring: PatternMonitoringService;
   private mexcService: UnifiedMexcService;
   private safetySystem: EmergencySafetySystem;
-  private logger = createLogger('auto-sniping-execution');
+  private logger = createLogger("auto-sniping-execution");
 
   private config: AutoSnipingConfig;
   private isExecutionActive = false;
@@ -151,8 +151,8 @@ export class AutoSnipingExecutionService {
     this.config = this.getDefaultConfig();
     this.stats = this.getDefaultStats();
 
-    this.logger.info('Service initialized', {
-      operation: 'initialization',
+    this.logger.info("Service initialized", {
+      operation: "initialization",
       maxPositions: this.config.maxPositions,
       enabled: this.config.enabled,
     });
@@ -173,8 +173,8 @@ export class AutoSnipingExecutionService {
       throw new Error("Auto-sniping execution is already active");
     }
 
-    this.logger.info('Starting auto-sniping execution', {
-      operation: 'start_execution',
+    this.logger.info("Starting auto-sniping execution", {
+      operation: "start_execution",
       config: {
         maxPositions: this.config.maxPositions,
         minConfidence: this.config.minConfidence,
@@ -190,16 +190,21 @@ export class AutoSnipingExecutionService {
     // Start execution cycle
     this.executionInterval = setInterval(() => {
       this.performExecutionCycle().catch((error) => {
-        this.logger.error('Execution cycle failed', {
-          operation: 'execution_cycle',
-          activePositions: this.activePositions.size,
-          dailyTrades: this.stats.dailyTradeCount,
-        }, error);
+        const safeError = toSafeError(error);
+        this.logger.error(
+          "Execution cycle failed",
+          {
+            operation: "execution_cycle",
+            activePositions: this.activePositions.size,
+            dailyTrades: this.stats.dailyTradeCount,
+          },
+          error
+        );
         this.addAlert({
           type: "execution_error",
           severity: "error",
-          message: `Execution cycle failed: ${error.message}`,
-          details: { error: error.message, stack: error.stack },
+          message: `Execution cycle failed: ${safeError.message}`,
+          details: { error: safeError.message, stack: safeError.stack },
         });
       });
     }, 5000); // Check every 5 seconds
@@ -207,10 +212,16 @@ export class AutoSnipingExecutionService {
     // Start position monitoring
     this.monitoringInterval = setInterval(() => {
       this.monitorActivePositions().catch((error) => {
-        this.logger.error('Position monitoring failed', {
-          operation: 'position_monitoring',
-          activePositions: this.activePositions.size,
-        }, error);
+        const safeError = toSafeError(error);
+        this.logger.error(
+          "Position monitoring failed",
+          {
+            operation: "position_monitoring",
+            activePositions: this.activePositions.size,
+            error: safeError.message,
+          },
+          error
+        );
       });
     }, 10000); // Monitor every 10 seconds
 
@@ -226,8 +237,8 @@ export class AutoSnipingExecutionService {
    * Stop auto-sniping execution
    */
   public stopExecution(): void {
-    this.logger.info('Stopping auto-sniping execution', {
-      operation: 'stop_execution',
+    this.logger.info("Stopping auto-sniping execution", {
+      operation: "stop_execution",
       activePositions: this.activePositions.size,
       totalTrades: this.stats.totalTrades,
       successRate: this.stats.successRate,
@@ -262,8 +273,8 @@ export class AutoSnipingExecutionService {
       this.executionInterval = null;
     }
 
-    this.logger.info('Execution paused', {
-      operation: 'pause_execution',
+    this.logger.info("Execution paused", {
+      operation: "pause_execution",
       activePositions: this.activePositions.size,
     });
   }
@@ -277,8 +288,8 @@ export class AutoSnipingExecutionService {
     }
 
     await this.startExecution();
-    this.logger.info('Execution resumed', {
-      operation: 'resume_execution',
+    this.logger.info("Execution resumed", {
+      operation: "resume_execution",
       activePositions: this.activePositions.size,
     });
   }
@@ -315,13 +326,13 @@ export class AutoSnipingExecutionService {
       details: { updatedFields: Object.keys(newConfig) },
     });
 
-    this.logger.info('Configuration updated', {
-      operation: 'config_update',
+    this.logger.info("Configuration updated", {
+      operation: "config_update",
       updatedFields: Object.keys(newConfig),
       newConfig: Object.fromEntries(
         Object.entries(newConfig).map(([key, value]) => [
           key,
-          typeof value === 'object' ? JSON.stringify(value) : value,
+          typeof value === "object" ? JSON.stringify(value) : value,
         ])
       ),
     });
@@ -365,20 +376,26 @@ export class AutoSnipingExecutionService {
 
       return false;
     } catch (error) {
-      this.logger.error('Failed to close position', {
-        operation: 'close_position',
-        positionId,
-        symbol: position.symbol,
-        reason,
-      }, error);
+      const safeError = toSafeError(error);
+      this.logger.error(
+        "Failed to close position",
+        {
+          operation: "close_position",
+          positionId,
+          symbol: position.symbol,
+          reason,
+          error: safeError.message,
+        },
+        error
+      );
 
       this.addAlert({
         type: "execution_error",
         severity: "error",
-        message: `Failed to close position: ${error.message}`,
+        message: `Failed to close position: ${safeError.message}`,
         positionId,
         symbol: position.symbol,
-        details: { error: error.message },
+        details: { error: safeError.message },
       });
 
       return false;
@@ -417,8 +434,8 @@ export class AutoSnipingExecutionService {
    * Force close all positions (emergency)
    */
   public async emergencyCloseAll(): Promise<number> {
-    this.logger.warn('Emergency close all positions initiated', {
-      operation: 'emergency_close_all',
+    this.logger.warn("Emergency close all positions initiated", {
+      operation: "emergency_close_all",
       totalPositions: this.activePositions.size,
       totalPnl: this.stats.totalPnl,
     });
@@ -433,12 +450,18 @@ export class AutoSnipingExecutionService {
           closedCount++;
         }
       } catch (error) {
-        this.logger.error('Failed to emergency close position', {
-          operation: 'emergency_close',
-          positionId: position.id,
-          symbol: position.symbol,
-          currentPnL: position.unrealizedPnl,
-        }, error);
+        const safeError = toSafeError(error);
+        this.logger.error(
+          "Failed to emergency close position",
+          {
+            operation: "emergency_close",
+            positionId: position.id,
+            symbol: position.symbol,
+            currentPnL: position.unrealizedPnl,
+            error: safeError.message,
+          },
+          error
+        );
       }
     }
 
@@ -455,10 +478,10 @@ export class AutoSnipingExecutionService {
   // Private methods
 
   private async performPreflightChecks(): Promise<void> {
-    const timer = createTimer('preflight_checks', 'auto-sniping-execution');
-    
-    this.logger.info('Performing pre-flight checks', {
-      operation: 'preflight_checks',
+    const timer = createTimer("preflight_checks", "auto-sniping-execution");
+
+    this.logger.info("Performing pre-flight checks", {
+      operation: "preflight_checks",
       config: {
         enabled: this.config.enabled,
         maxPositions: this.config.maxPositions,
@@ -473,7 +496,7 @@ export class AutoSnipingExecutionService {
         throw new Error("Failed to get account info");
       }
     } catch (error) {
-      throw new Error(`API connectivity check failed: ${error.message}`);
+      throw new Error(`API connectivity check failed: ${getErrorMessage(error)}`);
     }
 
     // Check safety system
@@ -488,8 +511,8 @@ export class AutoSnipingExecutionService {
     }
 
     const duration = timer.end();
-    this.logger.info('Pre-flight checks passed', {
-      operation: 'preflight_checks',
+    this.logger.info("Pre-flight checks passed", {
+      operation: "preflight_checks",
       duration,
       safetyStatus: safetyStatus.overall,
     });
@@ -501,13 +524,21 @@ export class AutoSnipingExecutionService {
     try {
       // Check daily trade limit
       if (this.stats.dailyTradeCount >= this.config.maxDailyTrades) {
-        console.log("[AutoSnipingExecution] Daily trade limit reached");
+        this.logger.warn("Daily trade limit reached", {
+          operation: "execution_cycle",
+          dailyTrades: this.stats.dailyTradeCount,
+          maxDailyTrades: this.config.maxDailyTrades,
+        });
         return;
       }
 
       // Check position limit
       if (this.activePositions.size >= this.config.maxPositions) {
-        console.log("[AutoSnipingExecution] Maximum positions reached");
+        this.logger.warn("Maximum positions reached", {
+          operation: "execution_cycle",
+          activePositions: this.activePositions.size,
+          maxPositions: this.config.maxPositions,
+        });
         return;
       }
 
@@ -528,14 +559,32 @@ export class AutoSnipingExecutionService {
         try {
           await this.executeTradeForPattern(pattern);
         } catch (error) {
-          console.error(
-            `[AutoSnipingExecution] Failed to execute trade for ${pattern.symbol}:`,
+          const safeError = toSafeError(error);
+          this.logger.error(
+            "Failed to execute trade for pattern",
+            {
+              operation: "trade_execution",
+              symbol: pattern.symbol,
+              patternType: pattern.patternType,
+              confidence: pattern.confidence,
+              error: safeError.message,
+            },
             error
           );
         }
       }
     } catch (error) {
-      console.error("[AutoSnipingExecution] Execution cycle error:", error);
+      const safeError = toSafeError(error);
+      this.logger.error(
+        "Execution cycle error",
+        {
+          operation: "execution_cycle",
+          activePositions: this.activePositions.size,
+          dailyTrades: this.stats.dailyTradeCount,
+          error: safeError.message,
+        },
+        error
+      );
       this.stats.failedTrades++;
     }
   }
@@ -573,9 +622,14 @@ export class AutoSnipingExecutionService {
     const startTime = Date.now();
 
     try {
-      console.log(
-        `[AutoSnipingExecution] Executing trade for ${pattern.symbol} (${pattern.patternType})`
-      );
+      this.logger.trading("Executing trade for pattern", {
+        symbol: pattern.symbol,
+        patternType: pattern.patternType,
+        confidence: pattern.confidence,
+        advanceNoticeHours: pattern.advanceNoticeHours,
+        riskLevel: pattern.riskLevel,
+        operation: "execute_trade",
+      });
 
       // Calculate position size
       const quantity = this.calculatePositionSize(pattern.symbol);
@@ -646,7 +700,16 @@ export class AutoSnipingExecutionService {
         },
       });
 
-      console.log(`[AutoSnipingExecution] Trade executed successfully: ${position.id}`);
+      this.logger.trading("Trade executed successfully", {
+        positionId: position.id,
+        symbol: position.symbol,
+        entryPrice: position.entryPrice,
+        quantity: position.quantity,
+        patternType: pattern.patternType,
+        confidence: pattern.confidence,
+        executionLatency,
+        operation: "trade_success",
+      });
     } catch (error) {
       this.stats.failedTrades++;
       throw error;
@@ -658,17 +721,26 @@ export class AutoSnipingExecutionService {
 
     // Convert positions to array for parallel processing
     const positions = Array.from(this.activePositions.values());
-    
+
     // Process all positions in parallel using Promise.allSettled
     const results = await Promise.allSettled(
-      positions.map(position => this.monitorSinglePosition(position))
+      positions.map((position) => this.monitorSinglePosition(position))
     );
 
     // Log any failures without stopping the entire monitoring process
     results.forEach((result, index) => {
-      if (result.status === 'rejected') {
+      if (result.status === "rejected") {
         const position = positions[index];
-        console.error(`[AutoSnipingExecution] Failed to monitor position ${position.id}:`, result.reason);
+        this.logger.error(
+          "Failed to monitor position",
+          {
+            operation: "position_monitoring",
+            positionId: position.id,
+            symbol: position.symbol,
+            currentPnL: position.unrealizedPnl,
+          },
+          result.reason instanceof Error ? result.reason : new Error(String(result.reason))
+        );
       }
     });
   }
@@ -699,7 +771,18 @@ export class AutoSnipingExecutionService {
       position.unrealizedPnl = unrealizedPnl.toString();
       position.unrealizedPnlPercentage = unrealizedPnlPercentage;
     } catch (error) {
-      console.error(`[AutoSnipingExecution] Failed to update PnL for ${position.id}:`, error);
+      const safeError = toSafeError(error);
+      this.logger.error(
+        "Failed to update PnL for position",
+        {
+          operation: "update_pnl",
+          positionId: position.id,
+          symbol: position.symbol,
+          entryPrice: position.entryPrice,
+          error: safeError.message,
+        },
+        error
+      );
     }
   }
 
@@ -743,7 +826,7 @@ export class AutoSnipingExecutionService {
     }
   }
 
-  private calculatePositionSize(symbol: string): number {
+  private calculatePositionSize(_symbol: string): number {
     // Simple fixed USDT amount for now
     // In production, this would be more sophisticated
     return this.config.positionSizeUSDT;
@@ -772,7 +855,18 @@ export class AutoSnipingExecutionService {
 
       return { success: orderResult.success };
     } catch (error) {
-      console.error("[AutoSnipingExecution] Close order failed:", error);
+      const safeError = toSafeError(error);
+      this.logger.error(
+        "Close order failed",
+        {
+          operation: "close_order",
+          symbol: position.symbol,
+          side: "SELL",
+          quantity: position.quantity,
+          error: safeError.message,
+        },
+        error
+      );
       return { success: false };
     }
   }

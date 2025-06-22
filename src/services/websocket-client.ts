@@ -13,7 +13,7 @@
  * - TypeScript type safety
  */
 
-import { EventEmitter } from "node:events";
+import { EventEmitter } from "events";
 import type {
   AgentStatusMessage,
   MessageHandler,

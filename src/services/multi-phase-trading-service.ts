@@ -548,7 +548,7 @@ export class MultiPhaseTradingService {
 
     // Calculate standard deviation of returns
     const variance =
-      returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / (returns.length - 1);
+      returns.reduce((sum, ret) => sum + (ret - avgReturn) ** 2, 0) / (returns.length - 1);
     const stdDev = Math.sqrt(variance);
 
     // Return Sharpe ratio (using 0% risk-free rate)

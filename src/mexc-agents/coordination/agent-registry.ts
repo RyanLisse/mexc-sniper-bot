@@ -2,11 +2,7 @@ import { DATA_CONSTANTS, RISK_CONSTANTS, SYSTEM_CONFIG, TIME_CONSTANTS } from ".
 import type { BaseAgent } from "../base-agent";
 
 // OpenTelemetry agent instrumentation
-import { 
-  instrumentAgentRegistry,
-  instrumentAgentHealth,
-  instrumentAgentMethod 
-} from "../../lib/opentelemetry-agent-instrumentation";
+import { instrumentAgentMethod } from "../../lib/opentelemetry-agent-instrumentation";
 
 export type AgentStatus = "healthy" | "degraded" | "unhealthy" | "unknown" | "recovering";
 
@@ -191,9 +187,9 @@ export class AgentRegistry {
    * Register an agent in the registry
    */
   @instrumentAgentMethod({
-    agentType: 'registry',
-    operationType: 'coordination',
-    methodName: 'registerAgent'
+    agentType: "registry",
+    operationType: "coordination",
+    methodName: "registerAgent",
   })
   registerAgent(
     id: string,

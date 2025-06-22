@@ -273,7 +273,7 @@ class PersistentCache implements CacheBackend {
   }
 
   private generateFileName(key: string): string {
-    return crypto.createHash("md5").update(key).digest("hex") + ".cache";
+    return `${crypto.createHash("md5").update(key).digest("hex")}.cache`;
   }
 }
 
@@ -401,7 +401,7 @@ export class UnifiedCacheSystem {
   // Core Cache Operations
   // ============================================================================
 
-  async get<T>(key: string, dataType: CacheDataType = "generic"): Promise<T | null> {
+  async get<T>(key: string, _dataType: CacheDataType = "generic"): Promise<T | null> {
     const startTime = Date.now();
     this.metrics.totalRequests++;
 
@@ -519,7 +519,7 @@ export class UnifiedCacheSystem {
       if (l1Has) return true;
 
       return await this.l2Cache.has(key);
-    } catch (error) {
+    } catch (_error) {
       this.metrics.errors++;
       return false;
     }
@@ -602,7 +602,7 @@ export class UnifiedCacheSystem {
     const l1Keys = await this.l1Cache.keys();
     for (const key of l1Keys) {
       const entry = await this.l1Cache.get(key);
-      if (entry && entry.metadata.tags?.some((tag) => tags.includes(tag))) {
+      if (entry?.metadata.tags?.some((tag) => tags.includes(tag))) {
         await this.delete(key);
         invalidated++;
       }
@@ -620,7 +620,7 @@ export class UnifiedCacheSystem {
     const l1Keys = await this.l1Cache.keys();
     for (const key of l1Keys) {
       const entry = await this.l1Cache.get(key);
-      if (entry && entry.metadata.dependencies?.some((dep) => dependencies.includes(dep))) {
+      if (entry?.metadata.dependencies?.some((dep) => dependencies.includes(dep))) {
         await this.delete(key);
         invalidated++;
       }

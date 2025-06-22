@@ -7,6 +7,7 @@ import { ReconciliationAgent } from "./reconciliation-agent";
 import { RiskManagerAgent } from "./risk-manager-agent";
 // Safety agents
 import { SimulationAgent } from "./simulation-agent";
+import { StrategyAgent } from "./strategy-agent";
 import { SymbolAnalysisAgent } from "./symbol-analysis-agent";
 
 export class AgentManager {
@@ -15,6 +16,7 @@ export class AgentManager {
   private patternDiscoveryAgent: PatternDiscoveryAgent;
   private calendarAgent: CalendarAgent;
   private symbolAnalysisAgent: SymbolAnalysisAgent;
+  private strategyAgent: StrategyAgent;
 
   // Safety agents
   private simulationAgent: SimulationAgent;
@@ -28,6 +30,7 @@ export class AgentManager {
     this.patternDiscoveryAgent = new PatternDiscoveryAgent();
     this.calendarAgent = new CalendarAgent();
     this.symbolAnalysisAgent = new SymbolAnalysisAgent();
+    this.strategyAgent = new StrategyAgent();
 
     // Initialize safety agents
     this.simulationAgent = new SimulationAgent();
@@ -52,6 +55,9 @@ export class AgentManager {
     return this.symbolAnalysisAgent;
   }
 
+  getStrategyAgent(): StrategyAgent {
+    return this.strategyAgent;
+  }
 
   // Safety agent getters
   getSimulationAgent(): SimulationAgent {

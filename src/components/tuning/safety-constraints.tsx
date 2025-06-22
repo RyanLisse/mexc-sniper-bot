@@ -74,7 +74,7 @@ export function SafetyConstraints({
   const overallStatus = React.useMemo(() => {
     const violationCount = constraints.filter((c) => c.currentStatus === "violation").length;
     const warningCount = constraints.filter((c) => c.currentStatus === "warning").length;
-    const enabledCount = constraints.filter((c) => c.enabled).length;
+    const _enabledCount = constraints.filter((c) => c.enabled).length;
 
     if (violationCount > 0) return "critical";
     if (warningCount > 0) return "warning";
@@ -139,7 +139,7 @@ export function SafetyConstraints({
           </div>
         );
 
-      case "range":
+      case "range": {
         const [min, max] = Array.isArray(constraint.value) ? constraint.value : [0, 100];
         return (
           <div className="space-y-2">
@@ -175,6 +175,7 @@ export function SafetyConstraints({
             </div>
           </div>
         );
+      }
 
       case "boolean":
         return (

@@ -370,7 +370,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
       if (!endpointGroups.has(endpoint)) {
         endpointGroups.set(endpoint, []);
       }
-      endpointGroups.get(endpoint)!.push(request);
+      endpointGroups.get(endpoint)?.push(request);
     });
 
     // Process each endpoint group in parallel
@@ -386,7 +386,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
     }
   }
 
-  private async processBatchGroup(endpoint: string, requests: BatchableRequest[]): Promise<void> {
+  private async processBatchGroup(_endpoint: string, requests: BatchableRequest[]): Promise<void> {
     try {
       // Execute requests in parallel within the group
       const promises = requests.map((request) =>
@@ -595,7 +595,7 @@ export class OptimizedMexcApi {
   /**
    * Get account balances with caching and batching
    */
-  async getAccountBalances(apiKey: string, secretKey: string): Promise<any> {
+  async getAccountBalances(apiKey: string, _secretKey: string): Promise<any> {
     return this.optimizer.executeOptimizedRequest({
       url: "https://api.mexc.com/api/v3/account",
       method: "GET",
@@ -641,7 +641,7 @@ export class OptimizedMexcApi {
   /**
    * Critical trading operations with highest priority
    */
-  async placeOrder(orderData: any, apiKey: string, secretKey: string): Promise<any> {
+  async placeOrder(orderData: any, apiKey: string, _secretKey: string): Promise<any> {
     return this.optimizer.executeOptimizedRequest({
       url: "https://api.mexc.com/api/v3/order",
       method: "POST",

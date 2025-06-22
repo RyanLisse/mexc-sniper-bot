@@ -241,13 +241,13 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
   async get<T>(key: string, dataType: CacheDataType = "generic"): Promise<T | null> {
     const startTime = Date.now();
     let result: T | null = null;
-    let cacheLevel = "";
+    let _cacheLevel = "";
 
     try {
       // L1 Cache (Memory) - Fastest
       result = await super.get<T>(key);
       if (result !== null) {
-        cacheLevel = "L1";
+        _cacheLevel = "L1";
         this.performanceMetrics.l1.hits++;
         this.updateEnhancedResponseTime("l1", Date.now() - startTime);
         return result;
@@ -258,7 +258,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
       if (this.shouldUseRedisForDataType(dataType)) {
         result = await this.redisCache.get<T>(key);
         if (result !== null) {
-          cacheLevel = "L3";
+          _cacheLevel = "L3";
           this.performanceMetrics.l3.hits++;
           this.updateEnhancedResponseTime("l3", Date.now() - startTime);
 

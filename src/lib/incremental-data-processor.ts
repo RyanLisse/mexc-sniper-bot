@@ -474,7 +474,7 @@ export class IncrementalDataProcessor {
     this.metrics.dataEfficiency = (this.metrics.deltaUpdates / this.metrics.totalProcessed) * 100;
   }
 
-  private updateBatchMetrics<T>(batch: ProcessingBatch<T>, processingTime: number): void {
+  private updateBatchMetrics<T>(batch: ProcessingBatch<T>, _processingTime: number): void {
     if (!this.config.enableMetrics) return;
 
     this.metrics.batchesProcessed++;

@@ -13,9 +13,9 @@
  * - Integration with 11-agent system
  */
 
-import crypto from "node:crypto";
-import { EventEmitter } from "node:events";
-import type { IncomingMessage } from "node:http";
+import crypto from "crypto";
+import { EventEmitter } from "events";
+import type { IncomingMessage } from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import type {
   AgentStatusMessage,
@@ -33,12 +33,8 @@ import type {
 
 // OpenTelemetry WebSocket instrumentation
 import {
-  instrumentWebSocketConnection,
-  instrumentWebSocketSend,
-  instrumentWebSocketReceive,
   instrumentChannelOperation,
-  instrumentConnectionHealth,
-  instrumentAgentMessage,
+  instrumentWebSocketSend,
 } from "../lib/opentelemetry-websocket-instrumentation";
 
 // ======================
@@ -518,15 +514,15 @@ export class WebSocketServerService extends EventEmitter {
 
     // Instrument broadcast operation
     instrumentChannelOperation(
-      'broadcast',
+      "broadcast",
       message.channel,
       async () => {
         this.broadcastToChannel(message.channel as WebSocketChannel, fullMessage);
         return Promise.resolve();
       },
       { messageType: message.type }
-    ).catch(error => {
-      console.error('[WebSocket] Broadcast instrumentation error:', error);
+    ).catch((error) => {
+      console.error("[WebSocket] Broadcast instrumentation error:", error);
     });
   }
 
@@ -570,8 +566,8 @@ export class WebSocketServerService extends EventEmitter {
         messageType: message.type,
         clientType: connection.clientType,
       }
-    ).catch(error => {
-      console.error('[WebSocket] Send message instrumentation error:', error);
+    ).catch((error) => {
+      console.error("[WebSocket] Send message instrumentation error:", error);
     });
 
     try {

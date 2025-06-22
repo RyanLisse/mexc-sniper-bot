@@ -6,7 +6,7 @@
  * This maintains API compatibility while reducing code overhead.
  */
 
-import { EventEmitter } from "node:events";
+import { EventEmitter } from "events";
 import { type ParameterManager, getParameterManager } from "../lib/parameter-management";
 import { logger } from "../lib/utils";
 

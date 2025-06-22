@@ -17,7 +17,7 @@ export const CalendarEntrySchema = z.object({
 // Unified Symbol Entry Schema (merged SymbolV2 and Symbol schemas)
 export const SymbolEntrySchema = z.object({
   cd: z.string(), // vcoinId
-  symbol: z.string().optional(), // symbol name for compatibility  
+  symbol: z.string().optional(), // symbol name for compatibility
   ca: z.string().optional(), // contract address
   ps: z.number().optional(), // price scale
   qs: z.number().optional(), // quantity scale
@@ -160,9 +160,19 @@ export const KlineSchema = z.object({
 /**
  * MEXC Service Response Schema for standardized API responses
  */
+// Define flexible data types for API responses
+const FlexibleDataSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+  z.array(z.unknown()),
+  z.record(z.unknown()),
+]);
+
 export const MexcServiceResponseSchema = z.object({
   success: z.boolean(),
-  data: z.any().optional(),
+  data: FlexibleDataSchema.optional(),
   error: z.string().optional(),
   code: z.string().optional(),
   timestamp: z.string(),
@@ -171,7 +181,7 @@ export const MexcServiceResponseSchema = z.object({
   cached: z.boolean().optional(),
   executionTimeMs: z.number().optional(),
   retryCount: z.number().optional(),
-  metadata: z.any().optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 // Trading Order Schema
@@ -248,7 +258,7 @@ export const ActivityQueryOptions = z.object({
 export const MexcErrorSchema = z.object({
   code: z.number().optional(),
   message: z.string(),
-  details: z.any().optional(),
+  details: z.record(z.unknown()).optional(),
 });
 
 // Type inference exports
@@ -271,7 +281,7 @@ export type OrderResult = z.infer<typeof OrderResultSchema>;
 export type OrderStatus = z.infer<typeof OrderStatusSchema>;
 export type OrderBook = z.infer<typeof OrderBookSchema>;
 export type Kline = z.infer<typeof KlineSchema>;
-export type MexcServiceResponse<T = any> = z.infer<typeof MexcServiceResponseSchema> & {
+export type MexcServiceResponse<T = unknown> = z.infer<typeof MexcServiceResponseSchema> & {
   data?: T;
 };
 
@@ -317,6 +327,33 @@ export const validateActivityResponse = (data: unknown): ActivityResponse => {
 
 export const validateActivityEnhancement = (data: unknown): ActivityEnhancement => {
   return ActivityEnhancementSchema.parse(data);
+};
+
+// Ticker validation helper for service layer compatibility
+export const validateTickerData = (data: unknown): Ticker => {
+  return TickerSchema.parse(data);
+};
+
+// General MEXC response validation for service integration
+export const validateMexcData = <T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): { success: boolean; data?: T; error?: string } => {
+  try {
+    const result = schema.parse(data);
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation failed: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
+      };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown validation error",
+    };
+  }
 };
 
 // Pattern matching utilities

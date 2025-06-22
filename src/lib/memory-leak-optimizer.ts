@@ -194,7 +194,7 @@ export class MemoryLeakDetector {
     if (!this.eventListeners.has(component)) {
       this.eventListeners.set(component, new Set());
     }
-    this.eventListeners.get(component)!.add(cleanup);
+    this.eventListeners.get(component)?.add(cleanup);
   }
 
   unregisterEventListener(component: string, cleanup: () => void): void {
@@ -389,7 +389,7 @@ export function createMemoryOptimizedWebSocket(
     reconnectDelay?: number;
     maxReconnectAttempts?: number;
   },
-  componentName?: string
+  _componentName?: string
 ): {
   webSocket: WebSocket | null;
   readyState: number;

@@ -650,7 +650,7 @@ export class EnhancedRiskManagementService {
 
       const ticker = tickerResult.data[0];
       const volume24h = Number.parseFloat(ticker.volume || "0");
-      const orderValue = this.calculateOrderValue(orderParams);
+      const _orderValue = this.calculateOrderValue(orderParams);
 
       // Calculate order impact as percentage of 24h volume
       const volumeImpact =
@@ -747,9 +747,8 @@ export class EnhancedRiskManagementService {
       // For market orders, we'll estimate based on quantity
       // This is simplified - in practice you'd get current market price
       return quantity * (price || 50000); // Default price estimation
-    } else {
-      return quantity * price;
     }
+    return quantity * price;
   }
 
   private async getAssetCorrelations(symbol: string): Promise<Record<string, number>> {

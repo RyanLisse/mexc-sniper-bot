@@ -1,9 +1,9 @@
 /**
  * MEXC Cache Manager
- * 
+ *
  * Extracted from unified-mexc-service.ts for better modularity.
  * Handles all caching functionality including response caching and cache statistics.
- * 
+ *
  * Features:
  * - TTL-based response caching
  * - Automatic cache cleanup
@@ -93,7 +93,7 @@ export class MexcResponseCache {
    */
   get(key: string): any | null {
     const cached = this.cache.get(key);
-    
+
     if (!cached) {
       this.missCount++;
       return null;
@@ -172,7 +172,7 @@ export class MexcResponseCache {
     for (const cached of this.cache.values()) {
       // Rough memory calculation
       totalMemoryUsage += JSON.stringify(cached.data).length * 2; // UTF-16 encoding
-      
+
       if (oldestEntry === null || cached.timestamp < oldestEntry) {
         oldestEntry = cached.timestamp;
       }
@@ -203,7 +203,7 @@ export class MexcResponseCache {
    * Get cache entries by pattern
    */
   getKeysByPattern(pattern: RegExp): string[] {
-    return Array.from(this.cache.keys()).filter(key => pattern.test(key));
+    return Array.from(this.cache.keys()).filter((key) => pattern.test(key));
   }
 
   /**
@@ -234,7 +234,7 @@ export class MexcResponseCache {
   } {
     const stats = this.getStats();
     const now = Date.now();
-    
+
     let totalAge = 0;
     let expiredCount = 0;
 
@@ -247,7 +247,8 @@ export class MexcResponseCache {
 
     const averageEntryAge = this.cache.size > 0 ? totalAge / this.cache.size : 0;
     const expirationRate = this.cache.size > 0 ? expiredCount / this.cache.size : 0;
-    const memoryEfficiency = stats.totalMemoryUsage > 0 ? stats.hitCount / (stats.totalMemoryUsage / 1024) : 0;
+    const memoryEfficiency =
+      stats.totalMemoryUsage > 0 ? stats.hitCount / (stats.totalMemoryUsage / 1024) : 0;
 
     return {
       hitRate: stats.hitRate,
@@ -270,9 +271,10 @@ export class MexcResponseCache {
 
     // If still over capacity, remove LRU entries
     if (this.cache.size > this.config.maxSize) {
-      const entries = Array.from(this.cache.entries())
-        .sort(([,a], [,b]) => a.timestamp - b.timestamp);
-      
+      const entries = Array.from(this.cache.entries()).sort(
+        ([, a], [, b]) => a.timestamp - b.timestamp
+      );
+
       const toRemove = this.cache.size - this.config.maxSize;
       for (let i = 0; i < toRemove; i++) {
         this.cache.delete(entries[i][0]);
@@ -355,7 +357,9 @@ export function createMexcCache(config?: Partial<CacheConfig>): MexcResponseCach
 /**
  * Create a specialized cache for different data types
  */
-export function createSpecializedCache(type: 'calendar' | 'symbols' | 'balance' | 'ticker'): MexcResponseCache {
+export function createSpecializedCache(
+  type: "calendar" | "symbols" | "balance" | "ticker"
+): MexcResponseCache {
   const configs = {
     calendar: {
       defaultTTL: 300000, // 5 minutes - calendar data changes infrequently
@@ -385,13 +389,13 @@ export function createSpecializedCache(type: 'calendar' | 'symbols' | 'balance' 
 /**
  * Decorator for automatic method result caching
  */
-export function cacheResult(ttl: number = 30000) {
-  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+export function cacheResult(ttl = 30000) {
+  return (_target: any, _propertyName: string, descriptor: PropertyDescriptor) => {
     const method = descriptor.value;
     const cache = new Map<string, CachedResponse>();
 
     descriptor.value = async function (...args: any[]) {
-      const key = crypto.createHash('md5').update(JSON.stringify(args)).digest('hex');
+      const key = crypto.createHash("md5").update(JSON.stringify(args)).digest("hex");
       const cached = cache.get(key);
       const now = Date.now();
 
@@ -400,7 +404,7 @@ export function cacheResult(ttl: number = 30000) {
       }
 
       const result = await method.apply(this, args);
-      
+
       cache.set(key, {
         data: result,
         timestamp: now,

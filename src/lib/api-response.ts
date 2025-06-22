@@ -3,6 +3,7 @@
  *
  * This interface ensures consistent response format across all API routes
  */
+import { toSafeError } from "./error-type-utils";
 export interface ApiResponse<T = unknown> {
   /** Indicates if the request was successful */
   success: boolean;
@@ -98,7 +99,7 @@ apiResponse.success = <T>(
 apiResponse.error = (
   error: string,
   status: number = HTTP_STATUS.INTERNAL_SERVER_ERROR,
-  details?: any
+  details?: Record<string, unknown>
 ) => {
   const { NextResponse } = require("next/server");
   const response = createErrorResponse(error);
@@ -196,13 +197,11 @@ export function createApiResponse<T>(response: ApiResponse<T>, status?: number):
  * Handle API errors and return appropriate error response
  */
 export function handleApiError(error: unknown, defaultMessage = "An error occurred"): Response {
-  console.error("API Error:", error);
+  const safeError = toSafeError(error);
+  console.error("API Error:", safeError);
 
-  if (error instanceof Error) {
-    return createApiResponse(createErrorResponse(error.message), HTTP_STATUS.INTERNAL_SERVER_ERROR);
-  }
-
-  return createApiResponse(createErrorResponse(defaultMessage), HTTP_STATUS.INTERNAL_SERVER_ERROR);
+  const errorMessage = safeError.message || defaultMessage;
+  return createApiResponse(createErrorResponse(errorMessage), HTTP_STATUS.INTERNAL_SERVER_ERROR);
 }
 
 // ============================================================================
@@ -216,17 +215,17 @@ export function handleApiError(error: unknown, defaultMessage = "An error occurr
 export interface HealthCheckResult {
   status: "healthy" | "warning" | "unhealthy" | "error";
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
   timestamp?: string;
   version?: string;
 }
 
 export function createHealthResponse(
   result: HealthCheckResult,
-  additionalData?: any
-): ApiResponse<any> {
+  additionalData?: Record<string, unknown>
+): ApiResponse<Record<string, unknown>> {
   const isHealthy = result.status === "healthy";
-  const statusCode = isHealthy
+  const _statusCode = isHealthy
     ? HTTP_STATUS.OK
     : result.status === "warning"
       ? HTTP_STATUS.OK
@@ -254,7 +253,7 @@ export function createHealthResponse(
  * Standardized API route wrapper that eliminates redundant error handling patterns
  * Use this to replace manual try/catch blocks with consistent error handling and logging
  */
-export function createApiRouteHandler<T = any>(
+export function createApiRouteHandler<T = Record<string, unknown>>(
   serviceName: string,
   handler: () => Promise<ApiResponse<T>>
 ) {
@@ -310,13 +309,13 @@ export interface CredentialValidationResult {
   credentialSource: "database" | "environment" | "none" | "provided";
   connected?: boolean;
   error?: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export function createCredentialResponse(
   result: CredentialValidationResult,
-  additionalData?: any
-): ApiResponse<any> {
+  additionalData?: Record<string, unknown>
+): ApiResponse<Record<string, unknown>> {
   const isValid = result.hasCredentials && result.credentialsValid;
   const status = !result.hasCredentials
     ? "warning"
@@ -353,7 +352,7 @@ export interface ServiceStatusResult {
   status: "active" | "inactive" | "warning" | "error";
   uptime?: number;
   lastChecked?: string;
-  metrics?: Record<string, any>;
+  metrics?: Record<string, unknown>;
   issues?: string[];
 }
 
@@ -389,8 +388,8 @@ export interface ConfigValidationResult {
 
 export function createConfigResponse(
   result: ConfigValidationResult,
-  configData?: any
-): ApiResponse<any> {
+  configData?: Record<string, unknown>
+): ApiResponse<Record<string, unknown>> {
   const allValid = result.valid && !result.missingVars?.length && !result.invalidVars?.length;
   const status = !result.valid ? "error" : result.warnings?.length ? "warning" : "healthy";
 
@@ -425,7 +424,7 @@ export interface SystemOverviewResult {
     {
       status: string;
       message: string;
-      details?: any;
+      details?: Record<string, unknown>;
     }
   >;
   summary?: {
@@ -459,7 +458,7 @@ export function createSystemOverviewResponse(
  * Generic Operation Result Response Builder
  * Standardizes operation responses (create, update, delete, etc.)
  */
-export interface OperationResult<T = any> {
+export interface OperationResult<T = Record<string, unknown>> {
   success: boolean;
   operation: string;
   resourceId?: string;

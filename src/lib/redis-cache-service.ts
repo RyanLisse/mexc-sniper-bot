@@ -419,10 +419,9 @@ export class RedisCacheService {
           return result;
         }
         return 0;
-      } else {
-        await this.redis.flushdb();
-        return 1; // Indicate success
       }
+      await this.redis.flushdb();
+      return 1; // Indicate success
     } catch (error) {
       this.handleOperationError("clear", error);
       return 0;
@@ -441,7 +440,7 @@ export class RedisCacheService {
     }
   }
 
-  private updateMetrics(operation: string, responseTime: number): void {
+  private updateMetrics(_operation: string, responseTime: number): void {
     if (!this.config.enableMetrics) return;
 
     this.metrics.totalOperations++;

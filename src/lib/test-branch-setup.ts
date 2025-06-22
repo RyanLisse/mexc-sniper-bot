@@ -219,7 +219,7 @@ export async function cleanupTestBranch(
 export async function seedTestDatabase(databaseUrl: string): Promise<void> {
   try {
     const sql = postgres(databaseUrl);
-    const db = drizzle(sql);
+    const _db = drizzle(sql);
 
     // Insert seed data here
     console.log(`[TestBranch] Seeded test database: ${databaseUrl}`);
@@ -316,7 +316,7 @@ export async function migrateTestBranch(
       throw new Error(`Branch ${contextOrBranchName} not found`);
     }
 
-    const db = createTestDatabase(branch);
+    const _db = createTestDatabase(branch);
     console.log(`[TestBranch] Running migrations for branch: ${contextOrBranchName}`);
     // Migration logic would go here
   } else {
@@ -336,7 +336,7 @@ export async function checkTestBranchHealth(
     }
 
     try {
-      const db = createTestDatabase(branch);
+      const _db = createTestDatabase(branch);
       // Health check logic would go here
       console.log(`[TestBranch] Health check passed for branch: ${contextOrBranchName}`);
       return true;

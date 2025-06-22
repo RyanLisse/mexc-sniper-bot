@@ -1,9 +1,9 @@
 /**
  * MEXC Circuit Breaker and Rate Limiting
- * 
+ *
  * Extracted from unified-mexc-service.ts for better modularity.
  * Provides reliability patterns and request rate management for MEXC API calls.
- * 
+ *
  * Features:
  * - Circuit breaker pattern for fault tolerance
  * - Rate limiting for API compliance
@@ -67,7 +67,9 @@ export class CircuitBreaker {
         this.state = "HALF_OPEN";
         this.halfOpenRequestCount = 0;
       } else {
-        throw new Error(`Circuit breaker is OPEN. Last failure: ${new Date(this.lastFailureTime).toISOString()}`);
+        throw new Error(
+          `Circuit breaker is OPEN. Last failure: ${new Date(this.lastFailureTime).toISOString()}`
+        );
       }
     }
 
@@ -265,7 +267,7 @@ export class RateLimiter {
       this.totalRequests++;
 
       // Clean up old requests outside the window
-      this.requests = this.requests.filter(time => now - time < this.config.windowSizeMs);
+      this.requests = this.requests.filter((time) => now - time < this.config.windowSizeMs);
 
       // Check if we can make the request immediately
       if (this.requests.length < this.config.maxRequests) {
@@ -292,7 +294,7 @@ export class RateLimiter {
    */
   wouldBeRateLimited(): boolean {
     const now = Date.now();
-    const recentRequests = this.requests.filter(time => now - time < this.config.windowSizeMs);
+    const recentRequests = this.requests.filter((time) => now - time < this.config.windowSizeMs);
     return recentRequests.length >= this.config.maxRequests;
   }
 
@@ -314,7 +316,7 @@ export class RateLimiter {
    */
   getCurrentRequestCount(): number {
     const now = Date.now();
-    return this.requests.filter(time => now - time < this.config.windowSizeMs).length;
+    return this.requests.filter((time) => now - time < this.config.windowSizeMs).length;
   }
 
   /**
@@ -348,7 +350,7 @@ export class RateLimiter {
    */
   reset(): void {
     this.requests = [];
-    this.queue.forEach(item => item.reject(new Error("Rate limiter reset")));
+    this.queue.forEach((item) => item.reject(new Error("Rate limiter reset")));
     this.queue = [];
     this.totalRequests = 0;
     this.rejectedRequests = 0;
@@ -364,16 +366,16 @@ export class RateLimiter {
     }
 
     const now = Date.now();
-    
+
     // Clean up old requests
-    this.requests = this.requests.filter(time => now - time < this.config.windowSizeMs);
+    this.requests = this.requests.filter((time) => now - time < this.config.windowSizeMs);
 
     // Process as many queued requests as possible
     while (this.queue.length > 0 && this.requests.length < this.config.maxRequests) {
       const item = this.queue.shift()!;
       const waitTime = now - item.timestamp;
       this.totalWaitTime += waitTime;
-      
+
       this.requests.push(now);
       item.resolve();
     }
@@ -451,8 +453,10 @@ export class MexcReliabilityManager {
    * Check if requests are currently being blocked
    */
   isBlocked(): boolean {
-    return (this.config.enableCircuitBreaker && this.circuitBreaker.isOpen()) ||
-           (this.config.enableRateLimiter && this.rateLimiter.wouldBeRateLimited());
+    return (
+      (this.config.enableCircuitBreaker && this.circuitBreaker.isOpen()) ||
+      (this.config.enableRateLimiter && this.rateLimiter.wouldBeRateLimited())
+    );
   }
 
   /**
@@ -474,6 +478,25 @@ export class MexcReliabilityManager {
   reset(): void {
     this.circuitBreaker.reset();
     this.rateLimiter.reset();
+  }
+
+  /**
+   * Get status for compatibility with UnifiedMexcService
+   */
+  getStatus(): {
+    state: CircuitBreakerState;
+    failures: number;
+    lastFailureTime?: string;
+    nextAttemptTime?: string;
+  } {
+    const cbStats = this.circuitBreaker.getStats();
+    return {
+      state: cbStats.state,
+      failures: cbStats.failures,
+      lastFailureTime:
+        cbStats.lastFailureTime > 0 ? new Date(cbStats.lastFailureTime).toISOString() : undefined,
+      nextAttemptTime: undefined, // Not implemented in current circuit breaker
+    };
   }
 
   /**
@@ -523,7 +546,9 @@ export function createMexcRateLimiter(config?: Partial<RateLimiterConfig>): Rate
 /**
  * Create a complete reliability manager for MEXC API
  */
-export function createMexcReliabilityManager(config?: Partial<ReliabilityConfig>): MexcReliabilityManager {
+export function createMexcReliabilityManager(
+  config?: Partial<ReliabilityConfig>
+): MexcReliabilityManager {
   return new MexcReliabilityManager(config);
 }
 

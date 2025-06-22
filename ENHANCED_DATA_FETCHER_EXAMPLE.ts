@@ -10,7 +10,7 @@
 
 import { trace, SpanStatusCode, SpanKind } from '@opentelemetry/api';
 import { metrics } from '@opentelemetry/api';
-import type { MexcApiAgent } from "./mexc-api-agent";
+import type { MexcApiAgent } from "./src/mexc-agents/mexc-api-agent";
 
 // ============================================================================
 // Structured Logger Implementation
@@ -90,13 +90,11 @@ class DataFetcherMetrics {
 
   // Histograms
   private apiLatencyHistogram = this.meter.createHistogram('api_call_latency_ms', {
-    description: 'API call latency distribution in milliseconds',
-    boundaries: [10, 50, 100, 250, 500, 1000, 2500, 5000, 10000]
+    description: 'API call latency distribution in milliseconds'
   });
 
   private dataVolumeHistogram = this.meter.createHistogram('data_volume_count', {
-    description: 'Volume of data returned per API call',
-    boundaries: [0, 1, 5, 10, 25, 50, 100, 250, 500, 1000]
+    description: 'Volume of data returned per API call'
   });
 
   // Usage methods

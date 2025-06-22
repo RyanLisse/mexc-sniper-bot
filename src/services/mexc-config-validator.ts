@@ -167,7 +167,7 @@ export class MexcConfigValidator {
       const testPatterns = await this.patternEngine.detectReadyStatePattern(mockSymbol);
 
       // If we get here without throwing, pattern detection is working
-      const isOperational = Array.isArray(testPatterns);
+      const _isOperational = Array.isArray(testPatterns);
 
       // Validate AI services are available
       const aiServiceStatus = {
@@ -180,7 +180,7 @@ export class MexcConfigValidator {
         // The pattern engine should work without AI enhancement but with reduced confidence
         aiServiceStatus.cohereEmbedding = true; // Assume available for now
         aiServiceStatus.perplexityInsights = true; // Assume available for now
-      } catch (error) {
+      } catch (_error) {
         // AI services are optional but recommended
       }
 

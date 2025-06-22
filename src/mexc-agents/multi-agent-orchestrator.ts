@@ -306,7 +306,7 @@ export class MultiAgentOrchestrator {
             `Step failed, retrying: ${step.agentType}, attempt ${attempt + 1}/${retries + 1}`
           );
           // Wait before retry (exponential backoff)
-          await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          await new Promise((resolve) => setTimeout(resolve, 2 ** attempt * 1000));
         }
       }
     }

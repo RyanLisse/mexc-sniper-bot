@@ -1,9 +1,9 @@
 /**
  * MEXC API Client
- * 
+ *
  * Extracted from unified-mexc-service.ts for better modularity.
  * Handles core HTTP communication with MEXC API endpoints.
- * 
+ *
  * Features:
  * - HTTP request/response handling
  * - Authentication and signature generation
@@ -13,28 +13,25 @@
  */
 
 import * as crypto from "node:crypto";
-import { 
-  type UnifiedMexcConfig, 
-  type MexcServiceResponse,
-  validateServiceResponse 
-} from "./mexc-schemas";
-import { type MexcResponseCache } from "./mexc-cache-manager";
-import { type MexcReliabilityManager } from "./mexc-circuit-breaker";
-import {
-  type EnhancedUnifiedCacheSystem,
-} from "../lib/enhanced-unified-cache";
-import {
-  type PerformanceMonitoringService,
-} from "../lib/performance-monitoring-service";
+import type { EnhancedUnifiedCacheSystem } from "../lib/enhanced-unified-cache";
+import { toSafeError } from "../lib/error-type-utils";
+import type { PerformanceMonitoringService } from "../lib/performance-monitoring-service";
+import type { MexcResponseCache } from "./mexc-cache-manager";
+import type { MexcReliabilityManager } from "./mexc-circuit-breaker";
+import type { MexcServiceResponse, UnifiedMexcConfig } from "./mexc-schemas";
 
 // ============================================================================
 // API Client Types and Interfaces
 // ============================================================================
 
+// Define possible parameter value types for API requests
+export type ApiParamValue = string | number | boolean | null | undefined;
+export type ApiParams = Record<string, ApiParamValue | ApiParamValue[]>;
+
 export interface ApiRequestConfig {
   method: "GET" | "POST" | "PUT" | "DELETE";
   endpoint: string;
-  params?: Record<string, any>;
+  params?: ApiParams;
   requiresAuth?: boolean;
   timeout?: number;
   retries?: number;
@@ -87,7 +84,7 @@ export class MexcApiClient {
     this.reliabilityManager = reliabilityManager;
     this.enhancedCache = enhancedCache;
     this.performanceMonitoring = performanceMonitoring;
-    
+
     this.stats = {
       totalRequests: 0,
       successfulRequests: 0,
@@ -153,20 +150,19 @@ export class MexcApiClient {
         requestId,
         responseTime: Date.now() - startTime,
       };
-
     } catch (error) {
       this.stats.failedRequests++;
-      
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+      const safeError = toSafeError(error);
       console.error(`[MexcApiClient] Request failed:`, {
         endpoint: requestConfig.endpoint,
-        error: errorMessage,
+        error: safeError.message,
         requestId,
       });
 
       return {
         success: false,
-        error: errorMessage,
+        error: safeError.message,
         timestamp: new Date().toISOString(),
         requestId,
         responseTime: Date.now() - startTime,
@@ -177,7 +173,11 @@ export class MexcApiClient {
   /**
    * GET request convenience method
    */
-  async get<T>(endpoint: string, params?: Record<string, any>, options?: Partial<ApiRequestConfig>): Promise<MexcServiceResponse<T>> {
+  async get<T>(
+    endpoint: string,
+    params?: ApiParams,
+    options?: Partial<ApiRequestConfig>
+  ): Promise<MexcServiceResponse<T>> {
     return this.request<T>({
       method: "GET",
       endpoint,
@@ -189,7 +189,11 @@ export class MexcApiClient {
   /**
    * POST request convenience method
    */
-  async post<T>(endpoint: string, params?: Record<string, any>, options?: Partial<ApiRequestConfig>): Promise<MexcServiceResponse<T>> {
+  async post<T>(
+    endpoint: string,
+    params?: ApiParams,
+    options?: Partial<ApiRequestConfig>
+  ): Promise<MexcServiceResponse<T>> {
     return this.request<T>({
       method: "POST",
       endpoint,
@@ -202,7 +206,11 @@ export class MexcApiClient {
   /**
    * PUT request convenience method
    */
-  async put<T>(endpoint: string, params?: Record<string, any>, options?: Partial<ApiRequestConfig>): Promise<MexcServiceResponse<T>> {
+  async put<T>(
+    endpoint: string,
+    params?: Record<string, any>,
+    options?: Partial<ApiRequestConfig>
+  ): Promise<MexcServiceResponse<T>> {
     return this.request<T>({
       method: "PUT",
       endpoint,
@@ -215,7 +223,11 @@ export class MexcApiClient {
   /**
    * DELETE request convenience method
    */
-  async delete<T>(endpoint: string, params?: Record<string, any>, options?: Partial<ApiRequestConfig>): Promise<MexcServiceResponse<T>> {
+  async delete<T>(
+    endpoint: string,
+    params?: Record<string, any>,
+    options?: Partial<ApiRequestConfig>
+  ): Promise<MexcServiceResponse<T>> {
     return this.request<T>({
       method: "DELETE",
       endpoint,
@@ -232,7 +244,9 @@ export class MexcApiClient {
   /**
    * Execute actual HTTP request with retry logic
    */
-  private async executeHttpRequest<T>(requestConfig: ApiRequestConfig): Promise<MexcServiceResponse<T>> {
+  private async executeHttpRequest<T>(
+    requestConfig: ApiRequestConfig
+  ): Promise<MexcServiceResponse<T>> {
     let lastError: Error | null = null;
     const maxRetries = requestConfig.retries ?? this.retryConfig.maxRetries;
 
@@ -246,10 +260,9 @@ export class MexcApiClient {
 
         const response = await this.makeHttpRequest<T>(requestConfig);
         return response;
-
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error("Unknown error");
-        
+        lastError = toSafeError(error);
+
         // Don't retry on certain errors
         if (!this.shouldRetry(lastError, attempt, maxRetries)) {
           break;
@@ -263,9 +276,12 @@ export class MexcApiClient {
   /**
    * Make actual HTTP request
    */
-  private async makeHttpRequest<T>(requestConfig: ApiRequestConfig): Promise<MexcServiceResponse<T>> {
+  private async makeHttpRequest<T>(
+    requestConfig: ApiRequestConfig
+  ): Promise<MexcServiceResponse<T>> {
+    const startTime = Date.now();
     const { method, endpoint, params = {}, requiresAuth = false } = requestConfig;
-    
+
     let url = `${this.config.baseUrl}${endpoint}`;
     let body: string | undefined;
 
@@ -312,7 +328,7 @@ export class MexcApiClient {
     if (!response.ok) {
       const errorText = await response.text();
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      
+
       try {
         const errorJson = JSON.parse(errorText);
         errorMessage = errorJson.msg || errorJson.message || errorMessage;
@@ -331,13 +347,18 @@ export class MexcApiClient {
 
     try {
       data = JSON.parse(responseText);
-    } catch (error) {
-      throw new Error(`Invalid JSON response: ${responseText.substring(0, 200)}`);
+    } catch (parseError) {
+      const safeParseError = toSafeError(parseError);
+      throw new Error(
+        `Invalid JSON response: ${responseText.substring(0, 200)} - Parse error: ${safeParseError.message}`
+      );
     }
 
     // Track performance
     if (this.performanceMonitoring) {
-      this.performanceMonitoring.trackApiRequest(Date.now() - Date.now(), false);
+      const endTime = Date.now();
+      const responseTime = endTime - startTime;
+      this.performanceMonitoring.trackApiRequest(responseTime, false);
     }
 
     return {
@@ -355,10 +376,7 @@ export class MexcApiClient {
    * Create HMAC SHA256 signature for authenticated requests
    */
   private createSignature(queryString: string): string {
-    return crypto
-      .createHmac("sha256", this.config.secretKey)
-      .update(queryString)
-      .digest("hex");
+    return crypto.createHmac("sha256", this.config.secretKey).update(queryString).digest("hex");
   }
 
   /**
@@ -375,7 +393,9 @@ export class MexcApiClient {
   /**
    * Get cached response if available
    */
-  private async getCachedResponse<T>(requestConfig: ApiRequestConfig): Promise<MexcServiceResponse<T> | null> {
+  private async getCachedResponse<T>(
+    requestConfig: ApiRequestConfig
+  ): Promise<MexcServiceResponse<T> | null> {
     const cacheKey = this.cache.generateKey(requestConfig.endpoint, requestConfig.params);
 
     // Try enhanced cache first
@@ -410,7 +430,11 @@ export class MexcApiClient {
   /**
    * Cache successful response
    */
-  private async cacheResponse(requestConfig: ApiRequestConfig, data: any, ttl?: number): Promise<void> {
+  private async cacheResponse(
+    requestConfig: ApiRequestConfig,
+    data: any,
+    ttl?: number
+  ): Promise<void> {
     const cacheKey = this.cache.generateKey(requestConfig.endpoint, requestConfig.params);
     const cacheTTL = ttl ?? this.config.cacheTTL;
 
@@ -433,7 +457,7 @@ export class MexcApiClient {
    * Calculate retry delay with exponential backoff
    */
   private calculateRetryDelay(attempt: number): number {
-    const delay = this.retryConfig.baseDelay * Math.pow(this.retryConfig.backoffMultiplier, attempt - 1);
+    const delay = this.retryConfig.baseDelay * this.retryConfig.backoffMultiplier ** (attempt - 1);
     return Math.min(delay, this.retryConfig.maxDelay);
   }
 
@@ -463,7 +487,7 @@ export class MexcApiClient {
    * Sleep for specified milliseconds
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   // ============================================================================
@@ -527,9 +551,8 @@ export class MexcApiClient {
     isBlocked: boolean;
     blockingReason?: string;
   } {
-    const successRate = this.stats.totalRequests > 0 
-      ? this.stats.successfulRequests / this.stats.totalRequests 
-      : 1;
+    const successRate =
+      this.stats.totalRequests > 0 ? this.stats.successfulRequests / this.stats.totalRequests : 1;
 
     const isBlocked = this.reliabilityManager.isBlocked();
     const blockingReason = this.reliabilityManager.getBlockingReason();

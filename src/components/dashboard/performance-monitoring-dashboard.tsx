@@ -1,5 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Badge } from "../ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import {
   Activity,
   AlertTriangle,
@@ -12,10 +16,6 @@ import {
   WifiOff,
   Zap,
 } from "../ui/optimized-icons";
-import { useEffect, useState } from "react";
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Badge } from "../ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 

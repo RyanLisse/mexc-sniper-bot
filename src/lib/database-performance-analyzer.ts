@@ -327,7 +327,7 @@ export class DatabasePerformanceAnalyzer {
           WHERE table_name = '${tableName}' AND table_schema = 'public'
         `)
         );
-        const tableInfo = Array.isArray(tableInfoResult)
+        const _tableInfo = Array.isArray(tableInfoResult)
           ? tableInfoResult
           : (tableInfoResult as any).rows || [];
 

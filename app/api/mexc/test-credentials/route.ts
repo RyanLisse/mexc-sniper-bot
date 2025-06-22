@@ -137,7 +137,8 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
     });
     
     const accountResult = await mexcService.getAccountBalances();
-    const { balances, totalUsdtValue } = accountResult.data || { balances: [], totalUsdtValue: 0 };
+    const balances = accountResult.data || [];
+    const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
     
     console.log('[DEBUG] Enhanced credential validation successful - balances found:', balances?.length || 0);
 

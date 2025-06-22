@@ -40,6 +40,57 @@ interface ConfigStatusPanelProps {
   autoRefresh?: boolean;
 }
 
+// Helper component for rendering component status
+function ComponentStatusCard({
+  component,
+  onExpand,
+  isExpanded,
+  onValidate,
+  isValidating,
+}: {
+  component: any;
+  onExpand: (id: string) => void;
+  isExpanded: boolean;
+  onValidate: (id: string) => void;
+  isValidating: boolean;
+}) {
+  return (
+    <Card key={component.id} className="mb-4">
+      <CardHeader className="cursor-pointer" onClick={() => onExpand(component.id)}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {/* Status icon will be rendered here */}
+            <CardTitle className="text-sm">{component.name}</CardTitle>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={component.isValid ? "default" : "destructive"}>
+              {component.status}
+            </Badge>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                onValidate(component.id);
+              }}
+              disabled={isValidating}
+            >
+              Validate
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      {isExpanded && (
+        <CardContent>
+          <div className="text-sm text-gray-600">
+            {component.description || "No description available"}
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
 export function ConfigStatusPanel({
   className = "",
   showDetailedResults = true,
@@ -64,17 +115,18 @@ export function ConfigStatusPanel({
     loadOnMount: true,
   });
 
-  // Status icon mapping
-  const getStatusIcon = (status: string, isValid: boolean) => {
+  // Helper function for status icons
+  const renderStatusIcon = (status: string, isValid: boolean) => {
     if (status === "valid" && isValid) {
       return <CheckCircle className="h-5 w-5 text-green-500" />;
-    } else if (status === "warning") {
-      return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-    } else if (status === "invalid" || !isValid) {
-      return <XCircle className="h-5 w-5 text-red-500" />;
-    } else {
-      return <Clock className="h-5 w-5 text-gray-400" />;
     }
+    if (status === "warning") {
+      return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+    }
+    if (status === "invalid" || !isValid) {
+      return <XCircle className="h-5 w-5 text-red-500" />;
+    }
+    return <Clock className="h-5 w-5 text-gray-400" />;
   };
 
   // Status badge variant mapping
@@ -232,7 +284,10 @@ export function ConfigStatusPanel({
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Issues:</h4>
                   {healthStatus.issues.map((issue, index) => (
-                    <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                    <div
+                      key={`issue-${index}-${issue.slice(0, 20)}`}
+                      className="text-sm text-red-600 bg-red-50 p-2 rounded"
+                    >
                       {issue}
                     </div>
                   ))}
@@ -262,7 +317,10 @@ export function ConfigStatusPanel({
             <div className="space-y-4">
               {readinessReport.validationResults.map(
                 (result: ConfigValidationResult, index: number) => (
-                  <div key={index} className="border rounded-lg p-4">
+                  <div
+                    key={`${result.component}-${result.status}-${index}`}
+                    className="border rounded-lg p-4"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {getComponentIcon(result.component)}
@@ -334,7 +392,10 @@ export function ConfigStatusPanel({
           <CardContent>
             <div className="space-y-2">
               {readinessReport.recommendations.map((recommendation, index) => (
-                <div key={index} className="flex items-start gap-2">
+                <div
+                  key={`recommendation-${index}-${recommendation.slice(0, 20)}`}
+                  className="flex items-start gap-2"
+                >
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                   <p className="text-sm">{recommendation}</p>
                 </div>

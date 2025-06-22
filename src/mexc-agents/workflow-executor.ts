@@ -1,3 +1,4 @@
+import { toSafeError } from "../lib/error-type-utils";
 import type { CalendarEntry } from "../schemas/mexc-schemas";
 import type { AgentManager } from "./agent-manager";
 import { CalendarWorkflow } from "./calendar-workflow";
@@ -274,13 +275,12 @@ export class WorkflowExecutor {
       // Step 1: Strategy analysis
       console.log("[WorkflowExecutor] Step 1: Strategy analysis");
       context.currentStep = "strategy-analysis";
-      const strategyAnalysis = await this.agentManager
-        .getStrategyAgent()
-        .createTradingStrategy(
-          JSON.stringify(request.symbolData),
-          request.riskLevel || "medium",
-          "medium"
-        );
+      const strategyAnalysis = await this.agentManager.getStrategyAgent().createStrategy({
+        action: "create",
+        symbols: [request.symbolData.cd],
+        riskLevel: request.riskLevel || "medium",
+        timeframe: "medium",
+      });
 
       // Step 2: Compile strategy
       console.log("[WorkflowExecutor] Step 2: Compiling trading strategy");
@@ -330,11 +330,14 @@ export class WorkflowExecutor {
   }
 
   private createErrorResult(error: unknown, agentsUsed: string[]): MexcWorkflowResult {
+    const safeError = toSafeError(error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: safeError.message,
       metadata: {
         agentsUsed,
+        errorName: safeError.name,
+        errorStack: safeError.stack,
       },
     };
   }

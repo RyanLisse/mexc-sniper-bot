@@ -206,7 +206,9 @@ export const usePatternSniper = () => {
         throw new Error(`Missing required symbol data for ${vcoinId}`);
       }
 
-      const launchTime = new Date(symbol.ot);
+      const launchTime = new Date(
+        typeof symbol.ot === "number" || typeof symbol.ot === "string" ? symbol.ot : Date.now()
+      );
       const hoursAdvance = (launchTime.getTime() - Date.now()) / (1000 * 60 * 60);
 
       const orderParams: SchemaOrderParameters = {

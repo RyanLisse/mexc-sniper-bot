@@ -1,9 +1,9 @@
 /**
  * Credential Caching Service
- * 
+ *
  * PERFORMANCE OPTIMIZATION: Caches decrypted API credentials to reduce
  * expensive decryption operations on every trading request.
- * 
+ *
  * Security Features:
  * - Short TTL (5-10 minutes) to limit exposure
  * - Secure memory cleanup on expiration
@@ -85,8 +85,10 @@ class CredentialCache {
       this.metrics.cacheHits++;
       this.updateMetrics();
 
-      console.log(`💾 [CredentialCache] Cache HIT for user ${userId} (${cached.accessCount} accesses)`);
-      
+      console.log(
+        `💾 [CredentialCache] Cache HIT for user ${userId} (${cached.accessCount} accesses)`
+      );
+
       return {
         apiKey: cached.apiKey,
         secretKey: cached.secretKey,
@@ -99,7 +101,7 @@ class CredentialCache {
     this.metrics.cacheMisses++;
 
     const encryptionService = getEncryptionService();
-    
+
     const decryptedCredentials = {
       apiKey: encryptionService.decrypt(encryptedApiKey),
       secretKey: encryptionService.decrypt(encryptedSecretKey),
@@ -125,7 +127,9 @@ class CredentialCache {
     this.updateDecryptionTime(decryptionTime);
     this.updateMetrics();
 
-    console.log(`✅ [CredentialCache] Cached credentials for user ${userId} (${decryptionTime.toFixed(2)}ms)`);
+    console.log(
+      `✅ [CredentialCache] Cached credentials for user ${userId} (${decryptionTime.toFixed(2)}ms)`
+    );
 
     return decryptedCredentials;
   }
@@ -160,14 +164,14 @@ class CredentialCache {
    */
   clearAll(): number {
     const count = this.cache.size;
-    
+
     for (const value of this.cache.values()) {
       this.secureDelete(value);
     }
-    
+
     this.cache.clear();
     this.updateMetrics();
-    
+
     console.log(`🧹 [CredentialCache] Cleared all ${count} cached entries`);
     return count;
   }
@@ -189,13 +193,13 @@ class CredentialCache {
     encryptedSecretKey: string
   ): string {
     // Use a hash of the encrypted data to ensure uniqueness without storing sensitive info
-    const crypto = require('crypto');
+    const crypto = require("node:crypto");
     const hash = crypto
-      .createHash('sha256')
+      .createHash("sha256")
       .update(`${userId}:${encryptedApiKey}:${encryptedSecretKey}`)
-      .digest('hex')
+      .digest("hex")
       .substring(0, 16); // First 16 chars for shorter key
-    
+
     return `${userId}:${hash}`;
   }
 
@@ -238,23 +242,23 @@ class CredentialCache {
 
   private secureDelete(credentials: CachedCredentials): void {
     // Overwrite sensitive data before deletion
-    credentials.apiKey = '0'.repeat(credentials.apiKey.length);
-    credentials.secretKey = '0'.repeat(credentials.secretKey.length);
+    credentials.apiKey = "0".repeat(credentials.apiKey.length);
+    credentials.secretKey = "0".repeat(credentials.secretKey.length);
     if (credentials.passphrase) {
-      credentials.passphrase = '0'.repeat(credentials.passphrase.length);
+      credentials.passphrase = "0".repeat(credentials.passphrase.length);
     }
   }
 
   private updateDecryptionTime(time: number): void {
     // Simple rolling average
-    this.metrics.averageDecryptionTime = 
-      (this.metrics.averageDecryptionTime + time) / 2;
+    this.metrics.averageDecryptionTime = (this.metrics.averageDecryptionTime + time) / 2;
   }
 
   private updateMetrics(): void {
-    this.metrics.hitRate = this.metrics.totalRequests > 0 
-      ? (this.metrics.cacheHits / this.metrics.totalRequests) * 100 
-      : 0;
+    this.metrics.hitRate =
+      this.metrics.totalRequests > 0
+        ? (this.metrics.cacheHits / this.metrics.totalRequests) * 100
+        : 0;
     this.metrics.activeEntries = this.cache.size;
   }
 }
@@ -269,7 +273,12 @@ export async function getCachedCredentials(
   encryptedSecretKey: string,
   encryptedPassphrase?: string
 ): Promise<{ apiKey: string; secretKey: string; passphrase?: string }> {
-  return credentialCache.getCredentials(userId, encryptedApiKey, encryptedSecretKey, encryptedPassphrase);
+  return credentialCache.getCredentials(
+    userId,
+    encryptedApiKey,
+    encryptedSecretKey,
+    encryptedPassphrase
+  );
 }
 
 export { CredentialCache };

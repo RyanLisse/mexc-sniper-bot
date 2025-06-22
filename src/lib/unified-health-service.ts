@@ -174,8 +174,13 @@ export class HealthCheckComponents {
 
       // Validate configuration values
       const configValidation = {
-        issuer_url_format: this.validateUrlFormat(process.env.KINDE_ISSUER_URL, ["https"]),
-        site_url_format: this.validateUrlFormat(process.env.KINDE_SITE_URL, ["http", "https"]),
+        issuer_url_format: HealthCheckComponents.validateUrlFormat(process.env.KINDE_ISSUER_URL, [
+          "https",
+        ]),
+        site_url_format: HealthCheckComponents.validateUrlFormat(process.env.KINDE_SITE_URL, [
+          "http",
+          "https",
+        ]),
         client_id_format: Boolean(
           process.env.KINDE_CLIENT_ID && process.env.KINDE_CLIENT_ID.length > 0
         ),
@@ -663,9 +668,9 @@ export class UnifiedHealthService {
    */
   static getCacheStats(): { size: number; keys: string[] } {
     const keys: string[] = [];
-    healthCache["cache"].forEach((_, key) => keys.push(key));
+    healthCache.cache.forEach((_, key) => keys.push(key));
     return {
-      size: healthCache["cache"].size,
+      size: healthCache.cache.size,
       keys,
     };
   }

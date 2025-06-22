@@ -263,7 +263,7 @@ export class MultiPhaseTradingBot {
    * Calculate optimal entry point for a symbol based on market conditions
    */
   calculateOptimalEntry(
-    symbol: string,
+    _symbol: string,
     conditions?: {
       volatility?: number;
       volume?: number;
@@ -435,7 +435,7 @@ export class MultiPhaseTradingBot {
    * Handle partial fill of trade execution
    */
   handlePartialFill(
-    action: string,
+    _action: string,
     executedAmount: number,
     totalAmount: number
   ): {
@@ -563,7 +563,7 @@ export class MultiPhaseTradingBot {
     };
   } {
     const phaseStatus = this.executor.getPhaseStatus();
-    const summary = this.executor.calculateSummary(this.entryPrice);
+    const _summary = this.executor.calculateSummary(this.entryPrice);
 
     // Build detailed phase information
     const phaseDetails = phaseStatus.phaseDetails.map((phase, index) => {
@@ -696,7 +696,7 @@ export class MultiPhaseTradingBot {
 
     // Check for unsaved phase executions
     const phaseHistory = (this.executor as any).phaseHistory || [];
-    phaseHistory.forEach((execution: any, index: number) => {
+    phaseHistory.forEach((execution: any, _index: number) => {
       if (!execution.persisted) {
         operations.push({
           type: "phase_execution" as const,

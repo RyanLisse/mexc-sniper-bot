@@ -13,7 +13,7 @@
  * - Error and alert distribution
  */
 
-import { EventEmitter } from "node:events";
+import { EventEmitter } from "events";
 import type {
   AgentErrorMessage,
   AgentHealthMessage,

@@ -9,7 +9,7 @@
  * - System-wide emergency protocols
  */
 
-import { EventEmitter } from "node:events";
+import { EventEmitter } from "events";
 import type { AdvancedRiskEngine } from "./advanced-risk-engine";
 import { type CircuitBreaker, circuitBreakerRegistry } from "./circuit-breaker";
 

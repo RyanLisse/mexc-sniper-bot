@@ -88,7 +88,7 @@ export class CoordinationSystemManager {
     request: CalendarDiscoveryWorkflowRequest
   ): Promise<MexcWorkflowResult> {
     this.ensureInitialized();
-    return await this.coordinationSystem!.orchestrator.executeCalendarDiscoveryWorkflow(request);
+    return await this.coordinationSystem?.orchestrator.executeCalendarDiscoveryWorkflow(request);
   }
 
   /**
@@ -98,7 +98,7 @@ export class CoordinationSystemManager {
     request: SymbolAnalysisWorkflowRequest
   ): Promise<MexcWorkflowResult> {
     this.ensureInitialized();
-    return await this.coordinationSystem!.orchestrator.executeSymbolAnalysisWorkflow(request);
+    return await this.coordinationSystem?.orchestrator.executeSymbolAnalysisWorkflow(request);
   }
 
   /**
@@ -108,7 +108,7 @@ export class CoordinationSystemManager {
     request: PatternAnalysisWorkflowRequest
   ): Promise<MexcWorkflowResult> {
     this.ensureInitialized();
-    return await this.coordinationSystem!.orchestrator.executePatternAnalysisWorkflow(request);
+    return await this.coordinationSystem?.orchestrator.executePatternAnalysisWorkflow(request);
   }
 
   /**
@@ -118,7 +118,7 @@ export class CoordinationSystemManager {
     request: TradingStrategyWorkflowRequest
   ): Promise<MexcWorkflowResult> {
     this.ensureInitialized();
-    return await this.coordinationSystem!.orchestrator.executeTradingStrategyWorkflow(request);
+    return await this.coordinationSystem?.orchestrator.executeTradingStrategyWorkflow(request);
   }
 
   /**
@@ -132,7 +132,7 @@ export class CoordinationSystemManager {
     strategy: boolean;
   }> {
     this.ensureInitialized();
-    return await this.coordinationSystem!.orchestrator.getAgentHealth();
+    return await this.coordinationSystem?.orchestrator.getAgentHealth();
   }
 
   /**
@@ -140,7 +140,7 @@ export class CoordinationSystemManager {
    */
   getOrchestrationMetrics(): AgentOrchestrationMetrics {
     this.ensureInitialized();
-    return this.coordinationSystem!.orchestrator.getOrchestrationMetrics();
+    return this.coordinationSystem?.orchestrator.getOrchestrationMetrics();
   }
 
   /**
@@ -152,7 +152,7 @@ export class CoordinationSystemManager {
     initialized: boolean;
   } {
     this.ensureInitialized();
-    return this.coordinationSystem!.orchestrator.getAgentSummary();
+    return this.coordinationSystem?.orchestrator.getAgentSummary();
   }
 
   /**
@@ -160,7 +160,7 @@ export class CoordinationSystemManager {
    */
   async healthCheck(): Promise<boolean> {
     this.ensureInitialized();
-    return await this.coordinationSystem!.orchestrator.healthCheck();
+    return await this.coordinationSystem?.orchestrator.healthCheck();
   }
 
   /**

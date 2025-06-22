@@ -304,7 +304,10 @@ export const TradingAnalyticsDashboard = memo(function TradingAnalyticsDashboard
   }, [fetchTradingAnalytics]);
 
   // Memoize constants to prevent recreation
-  const COLORS = useMemo(() => ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#00ff00", "#ff00ff"], []);
+  const COLORS = useMemo(
+    () => ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#00ff00", "#ff00ff"],
+    []
+  );
 
   // Memoize expensive chart data calculations - 80% performance improvement
   const chartData = useMemo(() => {
@@ -332,13 +335,13 @@ export const TradingAnalyticsDashboard = memo(function TradingAnalyticsDashboard
   }, [data?.executionAnalytics?.fillRates]);
 
   // Memoize tooltip formatters to prevent recreation
-  const currencyTooltipFormatter = useMemo(() => 
-    createTooltipFormatter((value) => formatCurrency(Number(value))), 
+  const currencyTooltipFormatter = useMemo(
+    () => createTooltipFormatter((value) => formatCurrency(Number(value))),
     [formatCurrency]
   );
 
-  const percentageTooltipFormatter = useMemo(() => 
-    createTooltipFormatter((value) => `${value}%`), 
+  const percentageTooltipFormatter = useMemo(
+    () => createTooltipFormatter((value) => `${value}%`),
     []
   );
 

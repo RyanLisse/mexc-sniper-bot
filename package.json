@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "description": "AI-powered MEXC cryptocurrency trading bot with pattern detection and automated execution",
   "scripts": {
-    "postinstall": "patch-package && ./scripts/safe-migrate.sh",
+    "postinstall": "echo 'Build dependencies installed successfully'",
     "dev": "next dev -p 3008",
     "dev:turbo": "next dev --turbopack -p 3008",
-    "build": "next build",
+    "build": "DISABLE_TELEMETRY=true next build",
     "start": "next start",
     "lint": "biome check --write",
     "lint:check": "biome check",
@@ -182,5 +182,18 @@
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.0.14",
     "lightningcss-linux-x64-gnu": "^1.29"
+  },
+  "overrides": {
+    "esbuild": "^0.25.5",
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.5"
+    },
+    "drizzle-kit": {
+      "@esbuild-kit/esm-loader": {
+        "@esbuild-kit/core-utils": {
+          "esbuild": "^0.25.5"
+        }
+      }
+    }
   }
 }

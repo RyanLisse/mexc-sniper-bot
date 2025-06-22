@@ -5,7 +5,7 @@
  * This service fulfills the requirements from Vertical Slice 5 in the integration testing mission.
  */
 
-import { EventEmitter } from "node:events";
+import { EventEmitter } from "events";
 import { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
 import { MexcConfigValidator } from "./mexc-config-validator";
 import type { SymbolEntry } from "./mexc-unified-exports";

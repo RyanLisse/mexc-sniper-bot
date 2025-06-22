@@ -324,7 +324,7 @@ class PriceAnalyticsEngine {
   private invalidateCacheForSymbol(symbol: string): void {
     // Remove cached entries related to this symbol
     for (const key of this.priceChangeCache.keys()) {
-      if (key.startsWith(symbol + "-")) {
+      if (key.startsWith(`${symbol}-`)) {
         this.priceChangeCache.delete(key);
       }
     }

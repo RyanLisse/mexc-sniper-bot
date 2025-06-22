@@ -675,7 +675,7 @@ export class UnifiedMexcService {
     try {
       const response = await this.makeRequest("GET", "/api/v3/time");
       return response.success;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -1159,7 +1159,10 @@ export class UnifiedMexcService {
    * Check if a currency has recent promotional activities
    * Phase 1 Enhancement: Utility method for quick activity status checking
    */
-  async hasRecentActivity(currency: string, hoursBack = 24): Promise<MexcServiceResponse<boolean>> {
+  async hasRecentActivity(
+    currency: string,
+    _hoursBack = 24
+  ): Promise<MexcServiceResponse<boolean>> {
     try {
       const activityResult = await this.getActivityData(currency);
 

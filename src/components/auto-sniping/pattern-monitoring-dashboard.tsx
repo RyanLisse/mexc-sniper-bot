@@ -396,7 +396,11 @@ export function PatternMonitoringDashboard({
                     {alert.patterns.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {alert.patterns.slice(0, 3).map((pattern, idx) => (
-                          <Badge key={`alert-pattern-${pattern.symbol}-${idx}`} variant="outline" className="text-xs">
+                          <Badge
+                            key={`alert-pattern-${pattern.symbol}-${idx}`}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {pattern.symbol}
                           </Badge>
                         ))}

@@ -300,7 +300,7 @@ export function UnifiedTakeProfitSettings({
               </div>
 
               <div className="flex items-end justify-between h-32 sm:h-40 mb-4 gap-2">
-                {currentStrategy.levels.map((level, index) => (
+                {currentStrategy.levels.map((level, _index) => (
                   <div key={level.id} className="flex-1 flex flex-col items-center min-w-0">
                     <div
                       className="w-full max-w-12 sm:max-w-16 bg-primary rounded-t transition-all mx-auto shadow-sm"

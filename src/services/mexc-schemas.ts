@@ -1,9 +1,9 @@
 /**
  * MEXC API Schemas and Type Definitions
- * 
+ *
  * Extracted from unified-mexc-service.ts for better modularity and tree-shaking.
  * Contains all Zod schemas and TypeScript type definitions for MEXC API responses.
- * 
+ *
  * This module enables:
  * - Better code splitting and bundle size optimization
  * - Improved type safety across the application
@@ -214,14 +214,18 @@ export const MarketStatsSchema = z.object({
   totalMarketCap: z.number(),
   total24hVolume: z.number(),
   activePairs: z.number(),
-  topGainers: z.array(z.object({
-    symbol: z.string(),
-    priceChangePercent: z.number(),
-  })),
-  topLosers: z.array(z.object({
-    symbol: z.string(),
-    priceChangePercent: z.number(),
-  })),
+  topGainers: z.array(
+    z.object({
+      symbol: z.string(),
+      priceChangePercent: z.number(),
+    })
+  ),
+  topLosers: z.array(
+    z.object({
+      symbol: z.string(),
+      priceChangePercent: z.number(),
+    })
+  ),
   averageVolatility: z.number(),
 });
 
@@ -235,11 +239,13 @@ export const PatternAnalysisSchema = z.object({
   confidence: z.number().min(0).max(100),
   strength: z.number().min(0).max(10),
   timeframe: z.string(),
-  signals: z.array(z.object({
-    type: z.string(),
-    strength: z.number(),
-    description: z.string(),
-  })),
+  signals: z.array(
+    z.object({
+      type: z.string(),
+      strength: z.number(),
+      description: z.string(),
+    })
+  ),
   recommendations: z.array(z.string()),
   riskFactors: z.array(z.string()),
 });
@@ -259,11 +265,13 @@ export const TradingOpportunitySchema = z.object({
   exitPrice: z.number(),
   stopLoss: z.number(),
   reasoning: z.string(),
-  indicators: z.array(z.object({
-    name: z.string(),
-    value: z.number(),
-    signal: z.enum(["bullish", "bearish", "neutral"]),
-  })),
+  indicators: z.array(
+    z.object({
+      name: z.string(),
+      value: z.number(),
+      signal: z.enum(["bullish", "bearish", "neutral"]),
+    })
+  ),
 });
 
 /**
@@ -347,7 +355,9 @@ export const ALL_MEXC_SCHEMAS = {
 /**
  * Schema names for reference and testing
  */
-export const MEXC_SCHEMA_NAMES = Object.keys(ALL_MEXC_SCHEMAS) as Array<keyof typeof ALL_MEXC_SCHEMAS>;
+export const MEXC_SCHEMA_NAMES = Object.keys(ALL_MEXC_SCHEMAS) as Array<
+  keyof typeof ALL_MEXC_SCHEMAS
+>;
 
 // ============================================================================
 // Utility Functions
@@ -356,7 +366,10 @@ export const MEXC_SCHEMA_NAMES = Object.keys(ALL_MEXC_SCHEMAS) as Array<keyof ty
 /**
  * Validate data against a specific schema
  */
-export function validateMexcData<T>(schema: z.ZodSchema<T>, data: unknown): { success: boolean; data?: T; error?: string } {
+export function validateMexcData<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): { success: boolean; data?: T; error?: string } {
   try {
     const result = schema.parse(data);
     return { success: true, data: result };
@@ -364,12 +377,12 @@ export function validateMexcData<T>(schema: z.ZodSchema<T>, data: unknown): { su
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation failed: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`
+        error: `Validation failed: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
       };
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown validation error'
+      error: error instanceof Error ? error.message : "Unknown validation error",
     };
   }
 }
@@ -384,7 +397,10 @@ export function getMexcSchema(schemaName: keyof typeof ALL_MEXC_SCHEMAS): z.ZodS
 /**
  * Validate service response structure
  */
-export function validateServiceResponse<T>(data: unknown, dataSchema?: z.ZodSchema<T>): { success: boolean; data?: MexcServiceResponse<T>; error?: string } {
+export function validateServiceResponse<T>(
+  data: unknown,
+  dataSchema?: z.ZodSchema<T>
+): { success: boolean; data?: MexcServiceResponse<T>; error?: string } {
   const baseResponseSchema = z.object({
     success: z.boolean(),
     data: dataSchema ? dataSchema.optional() : z.unknown().optional(),

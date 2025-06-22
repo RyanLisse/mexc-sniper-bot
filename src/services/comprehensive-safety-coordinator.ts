@@ -16,7 +16,7 @@
  * - Emergency response coordination
  */
 
-import { EventEmitter } from "node:events";
+import { EventEmitter } from "events";
 import type { WebSocketMessage } from "../lib/websocket-types";
 import {
   type AgentBehaviorMetrics,
@@ -1313,7 +1313,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
 
     try {
       // Steps 1-2: Run verification operations in parallel for 2x faster recovery
-      const [systemHealth, dataIntegrityVerified] = await Promise.all([
+      const [_systemHealth, dataIntegrityVerified] = await Promise.all([
         this.performSystemHealthCheck(),
         this.verifyDataIntegrity(),
       ]);
