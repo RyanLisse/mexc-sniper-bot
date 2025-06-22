@@ -57,8 +57,8 @@ export async function GET() {
     };
     
     const response = createHealthResponse(healthResult);
-    // Return 200 for healthy and warning states, 503 only for critical failures
-    return apiResponse(response, status === 'unhealthy' ? 503 : 200);
+    // Always return 200 OK - let the client handle status interpretation
+    return apiResponse(response, 200);
     
   } catch (error) {
     console.error("[Strategies Health Check] Error:", error);
