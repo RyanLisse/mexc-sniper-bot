@@ -3,9 +3,9 @@
 // Force dynamic rendering for this page since it shows real-time system status
 export const dynamic = 'force-dynamic';
 
-import { Badge } from "../../src/components/ui/badge";
-import { Button } from "../../src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../src/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   CheckCircle, 
   XCircle, 
@@ -32,13 +32,13 @@ import {
   Globe
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useAuth } from "../../src/lib/kinde-auth-client";
-import { DashboardLayout } from "../../src/components/dashboard-layout";
-import { ApiCredentialsForm } from "../../src/components/api-credentials-form";
-import { ConsolidatedCredentialStatus } from "../../src/components/enhanced-credential-status-consolidated";
-import { ConfigStatusPanel } from "../../src/components/auto-sniping/config-status-panel";
-import { AutoSnipingExecutionDashboard } from "../../src/components/auto-sniping/auto-sniping-execution-dashboard";
-import { useStatus } from "../../src/contexts/status-context";
+import { useAuth } from "@/src/lib/kinde-auth-client";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { ApiCredentialsForm } from "@/components/api-credentials-form";
+import { ConsolidatedCredentialStatus } from "@/components/enhanced-credential-status-consolidated";
+import { ConfigStatusPanel } from "@/components/auto-sniping/config-status-panel";
+import { AutoSnipingExecutionDashboard } from "@/components/auto-sniping/auto-sniping-execution-dashboard";
+import { useStatus } from "@/src/contexts/status-context";
 import { Suspense } from "react";
 
 // TypeScript interfaces for system status

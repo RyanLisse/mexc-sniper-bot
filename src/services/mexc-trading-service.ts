@@ -13,19 +13,19 @@
  * - Performance monitoring
  */
 
+import { toSafeError } from "../lib/error-type-utils";
 import type { MexcApiClient } from "./mexc-api-client";
 import type { MexcAuthenticationService } from "./mexc-authentication-service";
-import type { 
-  MexcServiceResponse, 
-  OrderParameters, 
-  OrderResult, 
+import type {
+  BalanceEntry,
+  MexcServiceResponse,
+  OrderBook,
+  OrderParameters,
+  OrderResult,
   OrderStatus,
   Portfolio,
-  BalanceEntry,
   Ticker,
-  OrderBook
 } from "./mexc-schemas";
-import { toSafeError } from "../lib/error-type-utils";
 
 // ============================================================================
 // Trading Service Types and Interfaces
@@ -202,7 +202,7 @@ export class MexcTradingService {
 
       // Place the order
       const response = await this.apiClient.placeOrder(params);
-      
+
       // Update statistics
       this.updateOrderStats(response);
 
@@ -210,7 +210,7 @@ export class MexcTradingService {
     } catch (error) {
       const safeError = toSafeError(error);
       this.stats.failedOrders++;
-      
+
       return {
         success: false,
         error: `Failed to place order: ${safeError.message}`,
@@ -287,7 +287,9 @@ export class MexcTradingService {
   /**
    * Get current portfolio with enhanced analysis
    */
-  async getPortfolio(): Promise<MexcServiceResponse<Portfolio & { riskAssessment: RiskAssessment }>> {
+  async getPortfolio(): Promise<
+    MexcServiceResponse<Portfolio & { riskAssessment: RiskAssessment }>
+  > {
     if (!this.apiClient) {
       return {
         success: false,
@@ -298,8 +300,10 @@ export class MexcTradingService {
 
     try {
       // Get account balances
-      const balancesResponse = await this.apiClient.get<{ balances: BalanceEntry[] }>("/api/v3/account");
-      
+      const balancesResponse = await this.apiClient.get<{ balances: BalanceEntry[] }>(
+        "/api/v3/account"
+      );
+
       if (!balancesResponse.success || !balancesResponse.data?.balances) {
         return {
           success: false,
@@ -337,7 +341,7 @@ export class MexcTradingService {
   async calculatePositionSize(
     symbol: string,
     side: "BUY" | "SELL",
-    riskPercentage: number = 2
+    riskPercentage = 2
   ): Promise<MexcServiceResponse<PositionSizing>> {
     try {
       // Get current portfolio
@@ -365,7 +369,10 @@ export class MexcTradingService {
       }
 
       const currentPrice = Number.parseFloat(tickerResponse.data.lastPrice);
-      const maxQuantity = Math.min(riskAmount / currentPrice, this.config.maxPositionSize / currentPrice);
+      const maxQuantity = Math.min(
+        riskAmount / currentPrice,
+        this.config.maxPositionSize / currentPrice
+      );
       const recommendedQuantity = maxQuantity * 0.8; // Conservative sizing
 
       const reasoning: string[] = [
@@ -416,14 +423,16 @@ export class MexcTradingService {
   /**
    * Get order book analysis
    */
-  async getOrderBookAnalysis(symbol: string): Promise<MexcServiceResponse<{
-    orderBook: OrderBook;
-    spread: number;
-    spreadPercentage: number;
-    liquidityScore: number;
-    marketDepth: { bids: number; asks: number };
-    recommendation: "buy" | "sell" | "hold";
-  }>> {
+  async getOrderBookAnalysis(symbol: string): Promise<
+    MexcServiceResponse<{
+      orderBook: OrderBook;
+      spread: number;
+      spreadPercentage: number;
+      liquidityScore: number;
+      marketDepth: { bids: number; asks: number };
+      recommendation: "buy" | "sell" | "hold";
+    }>
+  > {
     if (!this.apiClient) {
       return {
         success: false,
@@ -434,7 +443,7 @@ export class MexcTradingService {
 
     try {
       const orderBook = await this.apiClient.getOrderBook(symbol, 50);
-      
+
       if (!orderBook || !orderBook.bids || !orderBook.asks) {
         return {
           success: false,
@@ -449,14 +458,20 @@ export class MexcTradingService {
       const spreadPercentage = (spread / bestAsk) * 100;
 
       // Calculate liquidity score (based on order book depth)
-      const bidVolume = orderBook.bids.reduce((sum, bid) => sum + Number.parseFloat(bid.quantity), 0);
-      const askVolume = orderBook.asks.reduce((sum, ask) => sum + Number.parseFloat(ask.quantity), 0);
+      const bidVolume = orderBook.bids.reduce(
+        (sum, bid) => sum + Number.parseFloat(bid.quantity),
+        0
+      );
+      const askVolume = orderBook.asks.reduce(
+        (sum, ask) => sum + Number.parseFloat(ask.quantity),
+        0
+      );
       const liquidityScore = Math.min((bidVolume + askVolume) / 10000, 100); // Normalized to 0-100
 
       // Simple recommendation based on order book imbalance
       const imbalance = bidVolume / (bidVolume + askVolume);
       let recommendation: "buy" | "sell" | "hold" = "hold";
-      
+
       if (imbalance > 0.6) {
         recommendation = "buy"; // More bids than asks
       } else if (imbalance < 0.4) {
@@ -605,12 +620,16 @@ export class MexcTradingService {
       // Check minimum order value
       const orderValue = quantity * price;
       if (orderValue < this.config.minOrderValue) {
-        errors.push(`Order value $${orderValue.toFixed(2)} is below minimum $${this.config.minOrderValue}`);
+        errors.push(
+          `Order value $${orderValue.toFixed(2)} is below minimum $${this.config.minOrderValue}`
+        );
       }
 
       // Check maximum position size
       if (orderValue > this.config.maxPositionSize) {
-        warnings.push(`Order value $${orderValue.toFixed(2)} exceeds recommended maximum $${this.config.maxPositionSize}`);
+        warnings.push(
+          `Order value $${orderValue.toFixed(2)} exceeds recommended maximum $${this.config.maxPositionSize}`
+        );
       }
     }
 
@@ -644,7 +663,7 @@ export class MexcTradingService {
 
       // Calculate risk score (simplified)
       let riskScore = 0;
-      
+
       if (params.price) {
         const orderValue = Number.parseFloat(params.quantity) * Number.parseFloat(params.price);
         riskScore += (orderValue / this.config.maxPositionSize) * 50;
@@ -675,7 +694,7 @@ export class MexcTradingService {
    */
   private simulateOrderPlacement(params: OrderParameters): MexcServiceResponse<OrderResult> {
     const orderId = `PAPER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const orderResult: OrderResult = {
       success: true,
       orderId,
@@ -690,7 +709,7 @@ export class MexcTradingService {
     // Update paper trading stats
     this.stats.totalOrders++;
     this.stats.successfulOrders++;
-    
+
     if (params.price) {
       const orderValue = Number.parseFloat(params.quantity) * Number.parseFloat(params.price);
       this.stats.totalVolume += orderValue;
@@ -709,15 +728,16 @@ export class MexcTradingService {
    */
   private updateOrderStats(response: MexcServiceResponse<OrderResult>): void {
     this.stats.totalOrders++;
-    
+
     if (response.success) {
       this.stats.successfulOrders++;
-      
+
       if (response.data?.quantity && response.data?.price) {
-        const orderValue = Number.parseFloat(response.data.quantity) * Number.parseFloat(response.data.price);
+        const orderValue =
+          Number.parseFloat(response.data.quantity) * Number.parseFloat(response.data.price);
         this.stats.totalVolume += orderValue;
         this.stats.averageOrderSize = this.stats.totalVolume / this.stats.totalOrders;
-        
+
         if (orderValue > this.stats.largestPosition) {
           this.stats.largestPosition = orderValue;
         }
@@ -749,7 +769,7 @@ export class MexcTradingService {
       const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
       if (total > 0) {
         let usdtValue = 0;
-        
+
         if (balance.asset === "USDT") {
           usdtValue = total;
         } else {
@@ -761,7 +781,7 @@ export class MexcTradingService {
 
         totalUsdtValue += usdtValue;
         allocation[balance.asset] = usdtValue;
-        
+
         processedBalances.push({
           ...balance,
           total,
@@ -778,8 +798,8 @@ export class MexcTradingService {
     }
 
     // Calculate 24h performance (simplified)
-    let performance24hChange = 0;
-    let performance24hChangePercent = 0;
+    const performance24hChange = 0;
+    const performance24hChangePercent = 0;
 
     return {
       totalValue: totalUsdtValue,
@@ -801,18 +821,21 @@ export class MexcTradingService {
     const { balances, totalUsdtValue, allocation } = portfolio;
 
     // Calculate diversification
-    const activeAssets = balances.filter(b => b.total > 0).length;
+    const activeAssets = balances.filter((b) => b.total > 0).length;
     const diversificationScore = Math.min(activeAssets * 10, 100);
 
     // Calculate concentration risk
     const maxAllocation = Math.max(...Object.values(allocation));
-    const concentrationRisk: "low" | "medium" | "high" = 
+    const concentrationRisk: "low" | "medium" | "high" =
       maxAllocation > 50 ? "high" : maxAllocation > 25 ? "medium" : "low";
 
     // Calculate volatility risk (simplified)
-    const volatilityRisk: "low" | "medium" | "high" = 
-      Math.abs(portfolio.performance24h?.changePercent || 0) > 10 ? "high" :
-      Math.abs(portfolio.performance24h?.changePercent || 0) > 5 ? "medium" : "low";
+    const volatilityRisk: "low" | "medium" | "high" =
+      Math.abs(portfolio.performance24h?.changePercent || 0) > 10
+        ? "high"
+        : Math.abs(portfolio.performance24h?.changePercent || 0) > 5
+          ? "medium"
+          : "low";
 
     // Generate recommendations
     const recommendations: string[] = [];
@@ -833,7 +856,7 @@ export class MexcTradingService {
     if (activeAssets < 3) riskScore += 10;
     riskScore = Math.min(riskScore, 100);
 
-    const overallRiskLevel: "low" | "medium" | "high" = 
+    const overallRiskLevel: "low" | "medium" | "high" =
       riskScore > 70 ? "high" : riskScore > 40 ? "medium" : "low";
 
     return {

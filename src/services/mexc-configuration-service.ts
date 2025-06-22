@@ -121,7 +121,7 @@ export class MexcConfigurationService {
   constructor(initialConfig?: Partial<ServiceConfig>) {
     // Load configuration from environment and defaults
     this.config = this.loadConfiguration(initialConfig);
-    
+
     this.metrics = {
       lastValidatedAt: new Date(),
       validationCount: 0,
@@ -198,15 +198,18 @@ export class MexcConfigurationService {
   /**
    * Update environment configuration
    */
-  updateEnvironmentConfig(updates: Partial<EnvironmentConfig>): { success: boolean; errors: string[] } {
+  updateEnvironmentConfig(updates: Partial<EnvironmentConfig>): {
+    success: boolean;
+    errors: string[];
+  } {
     try {
       const newEnvironmentConfig = { ...this.config.environment, ...updates };
       const validatedConfig = EnvironmentConfigSchema.parse(newEnvironmentConfig);
-      
+
       this.config.environment = validatedConfig;
       this.config.lastUpdated = new Date();
       this.metrics.configUpdates++;
-      
+
       return { success: true, errors: [] };
     } catch (error) {
       const errors = this.extractValidationErrors(error);
@@ -222,11 +225,11 @@ export class MexcConfigurationService {
     try {
       const newTradingConfig = { ...this.config.trading, ...updates };
       const validatedConfig = TradingConfigSchema.parse(newTradingConfig);
-      
+
       this.config.trading = validatedConfig;
       this.config.lastUpdated = new Date();
       this.metrics.configUpdates++;
-      
+
       return { success: true, errors: [] };
     } catch (error) {
       const errors = this.extractValidationErrors(error);
@@ -242,11 +245,11 @@ export class MexcConfigurationService {
     try {
       const newAuthConfig = { ...this.config.authentication, ...updates };
       const validatedConfig = AuthConfigSchema.parse(newAuthConfig);
-      
+
       this.config.authentication = validatedConfig;
       this.config.lastUpdated = new Date();
       this.metrics.configUpdates++;
-      
+
       return { success: true, errors: [] };
     } catch (error) {
       const errors = this.extractValidationErrors(error);
@@ -258,7 +261,11 @@ export class MexcConfigurationService {
   /**
    * Update credentials securely
    */
-  updateCredentials(apiKey: string, secretKey: string, passphrase?: string): { success: boolean; errors: string[] } {
+  updateCredentials(
+    apiKey: string,
+    secretKey: string,
+    passphrase?: string
+  ): { success: boolean; errors: string[] } {
     return this.updateEnvironmentConfig({
       MEXC_API_KEY: apiKey,
       MEXC_SECRET_KEY: secretKey,
@@ -281,7 +288,7 @@ export class MexcConfigurationService {
     try {
       // Validate complete configuration
       ServiceConfigSchema.parse(this.config);
-      
+
       // Check required environment variables
       this.metrics.environmentChecks++;
       for (const envVar of this.requiredEnvVars) {
@@ -295,7 +302,7 @@ export class MexcConfigurationService {
         if (!this.config.authentication.enableEncryption) {
           warnings.push("Encryption not enabled in production environment");
         }
-        
+
         if (this.config.trading.paperTradingMode) {
           warnings.push("Paper trading mode enabled in production");
         }
@@ -313,7 +320,7 @@ export class MexcConfigurationService {
       if (errors.length > 0) {
         this.metrics.errorCount++;
       }
-      
+
       if (warnings.length > 0) {
         this.metrics.warningCount++;
       }
@@ -331,32 +338,34 @@ export class MexcConfigurationService {
    */
   performHealthCheck(): ConfigurationHealth {
     const validation = this.validateConfiguration();
-    const hasCredentials = !!(this.config.environment.MEXC_API_KEY && this.config.environment.MEXC_SECRET_KEY);
-    const hasRequiredEnvVars = this.requiredEnvVars.every(envVar => 
-      process.env[envVar] || this.config.environment[envVar as keyof EnvironmentConfig]
+    const hasCredentials = !!(
+      this.config.environment.MEXC_API_KEY && this.config.environment.MEXC_SECRET_KEY
+    );
+    const hasRequiredEnvVars = this.requiredEnvVars.every(
+      (envVar) => process.env[envVar] || this.config.environment[envVar as keyof EnvironmentConfig]
     );
 
     const recommendations: string[] = [];
-    
+
     if (!hasCredentials) {
       recommendations.push("Configure MEXC API credentials");
     }
-    
+
     if (!this.config.environment.MEXC_ENABLE_CACHING) {
       recommendations.push("Enable caching for better performance");
     }
-    
+
     if (!this.config.environment.MEXC_ENABLE_CIRCUIT_BREAKER) {
       recommendations.push("Enable circuit breaker for better reliability");
     }
-    
+
     if (this.config.trading.maxPositionSize > 5000) {
       recommendations.push("Consider lowering maximum position size for risk management");
     }
 
     // Determine security level
     let securityLevel: "high" | "medium" | "low" = "medium";
-    
+
     if (this.config.environment.NODE_ENV === "production") {
       if (this.config.authentication.enableEncryption && hasCredentials) {
         securityLevel = "high";
@@ -413,7 +422,7 @@ export class MexcConfigurationService {
     try {
       // Create environment configuration from process.env
       const envConfig = this.loadEnvironmentConfig();
-      
+
       // Default configurations
       const defaultConfig: ServiceConfig = {
         environment: envConfig,
@@ -473,15 +482,13 @@ export class MexcConfigurationService {
    */
   private extractValidationErrors(error: unknown): string[] {
     if (error instanceof z.ZodError) {
-      return error.errors.map(err => 
-        `${err.path.join(".")}: ${err.message}`
-      );
+      return error.errors.map((err) => `${err.path.join(".")}: ${err.message}`);
     }
-    
+
     if (error instanceof Error) {
       return [error.message];
     }
-    
+
     return ["Unknown validation error"];
   }
 }
@@ -525,20 +532,18 @@ export function resetGlobalConfigurationService(): void {
 /**
  * Initialize configuration with validation
  */
-export async function initializeConfiguration(
-  initialConfig?: Partial<ServiceConfig>
-): Promise<{
+export async function initializeConfiguration(initialConfig?: Partial<ServiceConfig>): Promise<{
   configService: MexcConfigurationService;
   health: ConfigurationHealth;
   isReady: boolean;
 }> {
-  const configService = initialConfig ? 
-    createMexcConfigurationService(initialConfig) : 
-    getGlobalConfigurationService();
-  
+  const configService = initialConfig
+    ? createMexcConfigurationService(initialConfig)
+    : getGlobalConfigurationService();
+
   const health = configService.performHealthCheck();
   const isReady = health.isValid && health.hasCredentials;
-  
+
   if (!isReady) {
     console.warn("[Configuration] Service not ready:", {
       isValid: health.isValid,
@@ -547,6 +552,6 @@ export async function initializeConfiguration(
       warnings: health.warnings,
     });
   }
-  
+
   return { configService, health, isReady };
 }

@@ -56,21 +56,16 @@ import { type MexcReliabilityManager, createMexcReliabilityManager } from "./mex
 
 import { MexcApiClient } from "./mexc-api-client";
 
-import { 
-  type MexcAuthenticationService, 
+import {
+  type MexcAuthenticationService,
   createMexcAuthenticationService,
-  initializeAuthentication 
 } from "./mexc-authentication-service";
 
-import { 
-  type MexcTradingService, 
-  createMexcTradingService 
-} from "./mexc-trading-service";
+import { type MexcTradingService, createMexcTradingService } from "./mexc-trading-service";
 
-import { 
-  type MexcConfigurationService, 
+import {
+  type MexcConfigurationService,
   createMexcConfigurationService,
-  initializeConfiguration 
 } from "./mexc-configuration-service";
 
 import {
@@ -125,7 +120,7 @@ export class UnifiedMexcService {
   private apiClient: MexcApiClient;
   private enhancedCache?: EnhancedUnifiedCacheSystem;
   private performanceMonitoring?: PerformanceMonitoringService;
-  
+
   // New decomposed services
   private authenticationService: MexcAuthenticationService;
   private tradingService: MexcTradingService;
@@ -1209,12 +1204,12 @@ export class UnifiedMexcService {
     lastTestedAt?: Date;
   }> {
     const status = this.authenticationService.getStatus();
-    
+
     // Test credentials if not recently tested
     if (!status.lastTestedAt || Date.now() - status.lastTestedAt.getTime() > 60000) {
       await this.authenticationService.testCredentials();
     }
-    
+
     return this.authenticationService.getStatus();
   }
 
@@ -1263,7 +1258,7 @@ export class UnifiedMexcService {
     const apiHealth = this.apiClient.getHealthStatus();
     const cacheStats = this.cache.getStats();
     const reliabilityStats = this.reliabilityManager.getStats();
-    
+
     // Get unified credential status
     const credentialStatus = await this.getCredentialStatus();
     const authHealth = await this.authenticationService.performHealthCheck();
@@ -1343,18 +1338,54 @@ export class UnifiedMexcService {
    */
   async testConnectivity(): Promise<MexcServiceResponse<any>> {
     try {
-      const _response = await this.apiClient.get("/api/v3/ping");
-      return {
-        success: true,
-        data: { connected: true, timestamp: new Date().toISOString() },
-        timestamp: new Date().toISOString(),
-      };
+      // Use the server time endpoint for connectivity test (lightweight and publicly accessible)
+      const response = await this.apiClient.get("/api/v3/time", undefined, {
+        cacheTTL: 0, // Don't cache connectivity tests
+        timeout: 5000, // Short timeout for connectivity test
+      });
+      
+      if (response.success) {
+        return {
+          success: true,
+          data: { 
+            connected: true, 
+            timestamp: new Date().toISOString(),
+            serverTime: response.data?.serverTime
+          },
+          timestamp: new Date().toISOString(),
+        };
+      } else {
+        return {
+          success: false,
+          error: response.error || "MEXC API not responding",
+          timestamp: new Date().toISOString(),
+        };
+      }
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Connectivity test failed",
-        timestamp: new Date().toISOString(),
-      };
+      // Fallback: try ping endpoint if server time fails
+      try {
+        const pingResponse = await this.apiClient.get("/api/v3/ping", undefined, {
+          cacheTTL: 0,
+          timeout: 5000,
+        });
+        
+        return {
+          success: pingResponse.success,
+          data: { 
+            connected: pingResponse.success, 
+            timestamp: new Date().toISOString(),
+            method: "ping_fallback"
+          },
+          timestamp: new Date().toISOString(),
+          error: pingResponse.success ? undefined : pingResponse.error,
+        };
+      } catch (fallbackError) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Connectivity test failed",
+          timestamp: new Date().toISOString(),
+        };
+      }
     }
   }
 
@@ -1465,8 +1496,43 @@ export class UnifiedMexcService {
         false // Public endpoint
       );
 
+      if (result.success && result.data) {
+        // Check if the response has the expected MEXC API structure
+        if (result.data.code === 0 && Array.isArray(result.data.data)) {
+          // Extract the activity data array from the MEXC response
+          return {
+            success: true,
+            data: result.data.data, // Extract the array from the nested structure
+            timestamp: new Date().toISOString(),
+            executionTimeMs: Date.now() - startTime,
+            cached: result.cached,
+          };
+        } else if (result.data.code !== 0) {
+          // Handle MEXC API error responses
+          return {
+            success: false,
+            error: `Failed to fetch activity data: ${result.data.msg || 'API error'}`,
+            timestamp: new Date().toISOString(),
+            executionTimeMs: Date.now() - startTime,
+          };
+        }
+      }
+
+      // Handle case where makeRequest returned success: false
+      if (!result.success) {
+        return {
+          success: false,
+          error: `Failed to fetch activity data: ${result.error || 'Unknown error'}`,
+          timestamp: new Date().toISOString(),
+          executionTimeMs: Date.now() - startTime,
+        };
+      }
+
+      // If we get here, the response structure was unexpected
       return {
-        ...result,
+        success: false,
+        error: "Failed to fetch activity data: Invalid response format",
+        timestamp: new Date().toISOString(),
         executionTimeMs: Date.now() - startTime,
       };
     } catch (error) {

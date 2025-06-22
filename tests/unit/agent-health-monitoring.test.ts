@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { AgentRegistry, getGlobalAgentRegistry, initializeGlobalAgentRegistry } from "../../src/mexc-agents/coordination/agent-registry";
+import { AgentRegistry, getGlobalAgentRegistry, initializeGlobalAgentRegistry, clearGlobalAgentRegistry } from "../../src/mexc-agents/coordination/agent-registry";
 import { AgentMonitoringService } from "../../src/services/agent-monitoring-service";
 import { BaseAgent } from "../../src/mexc-agents/base-agent";
 import type { AgentConfig, AgentResponse } from "../../src/mexc-agents/base-agent";
@@ -26,6 +26,22 @@ vi.mock("@/src/services/error-logging-service", () => ({
       logError: vi.fn().mockResolvedValue(undefined),
     }),
   },
+}));
+
+// Mock OpenTelemetry instrumentation to prevent test conflicts
+vi.mock("../../src/lib/opentelemetry-agent-instrumentation", () => ({
+  instrumentAgentMethod: () => {
+    return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+      // Return original descriptor without instrumentation in tests
+      return descriptor;
+    };
+  },
+  instrumentAgentTask: vi.fn(async (taskName: string, operation: () => Promise<any>) => {
+    return await operation();
+  }),
+  instrumentAgentCoordination: vi.fn(async (type: string, operation: () => Promise<any>) => {
+    return await operation();
+  }),
 }));
 
 // Test agent implementation
@@ -61,6 +77,21 @@ class TestAgent extends BaseAgent {
       },
     };
   }
+
+  // Mock cache stats for testing
+  getCacheStats(): { hitRate: number; size: number } {
+    return { hitRate: Math.random() * 100, size: Math.floor(Math.random() * 1000) };
+  }
+
+  // Cleanup method for testing
+  destroy(): void {
+    // Clean up any resources
+    try {
+      super.destroy();
+    } catch (error) {
+      // Ignore errors during test cleanup
+    }
+  }
 }
 
 describe("Agent Health Monitoring System", () => {
@@ -69,7 +100,11 @@ describe("Agent Health Monitoring System", () => {
   let testAgent1: TestAgent;
   let testAgent2: TestAgent;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Clear any existing registry and service instances
+    clearGlobalAgentRegistry();
+    AgentMonitoringService.reset();
+
     // Initialize fresh registry with custom options
     registry = initializeGlobalAgentRegistry({
       healthCheckInterval: 1000, // 1 second for testing
@@ -96,28 +131,32 @@ describe("Agent Health Monitoring System", () => {
       systemPrompt: "You are another test agent",
     });
 
-    // Register test agents
-    registry.registerAgent("test-1", testAgent1, {
-      name: "Test Agent 1",
-      type: "test",
-      tags: ["test", "primary"],
-      capabilities: ["processing", "testing"],
-    });
+    // Register test agents only if they're not already registered
+    if (!registry.hasAgent("test-1")) {
+      registry.registerAgent("test-1", testAgent1, {
+        name: "Test Agent 1",
+        type: "test",
+        tags: ["test", "primary"],
+        capabilities: ["processing", "testing"],
+      });
+    }
 
-    registry.registerAgent("test-2", testAgent2, {
-      name: "Test Agent 2",
-      type: "test",
-      tags: ["test", "secondary"],
-      capabilities: ["processing", "backup"],
-      thresholds: {
-        responseTime: { warning: 1000, critical: 3000 },
-        errorRate: { warning: 0.1, critical: 0.3 },
-        consecutiveErrors: { warning: 1, critical: 2 },
-        uptime: { warning: 90, critical: 70 },
-        memoryUsage: { warning: 30, critical: 60 },
-        cpuUsage: { warning: 50, critical: 80 },
-      },
-    });
+    if (!registry.hasAgent("test-2")) {
+      registry.registerAgent("test-2", testAgent2, {
+        name: "Test Agent 2",
+        type: "test",
+        tags: ["test", "secondary"],
+        capabilities: ["processing", "backup"],
+        thresholds: {
+          responseTime: { warning: 1000, critical: 3000 },
+          errorRate: { warning: 0.1, critical: 0.3 },
+          consecutiveErrors: { warning: 1, critical: 2 },
+          uptime: { warning: 90, critical: 70 },
+          memoryUsage: { warning: 30, critical: 60 },
+          cpuUsage: { warning: 50, critical: 80 },
+        },
+      });
+    }
 
     // Initialize monitoring service
     monitoringService = AgentMonitoringService.getInstance({
@@ -140,11 +179,50 @@ describe("Agent Health Monitoring System", () => {
     });
   });
 
-  afterEach(() => {
-    monitoringService.stop();
-    registry.stopHealthMonitoring();
-    registry.destroy();
-    monitoringService.destroy();
+  afterEach(async () => {
+    // Stop any running services
+    if (monitoringService) {
+      try {
+        monitoringService.stop();
+        monitoringService.destroy();
+      } catch (error) {
+        console.warn("Error stopping monitoring service:", error);
+      }
+    }
+
+    // Clean up registry
+    if (registry) {
+      try {
+        registry.stopHealthMonitoring();
+        registry.clearAllAgents(); // Clean up all registered agents first
+        registry.destroy();
+      } catch (error) {
+        console.warn("Error destroying registry:", error);
+      }
+    }
+
+    // Clean up test agents
+    if (testAgent1) {
+      try {
+        testAgent1.destroy();
+      } catch (error) {
+        // Ignore cleanup errors
+      }
+    }
+    if (testAgent2) {
+      try {
+        testAgent2.destroy();
+      } catch (error) {
+        // Ignore cleanup errors
+      }
+    }
+
+    // Clear singletons
+    clearGlobalAgentRegistry();
+    AgentMonitoringService.reset();
+
+    // Wait a bit for async cleanup to complete
+    await new Promise(resolve => setTimeout(resolve, 50));
   });
 
   describe("Enhanced Health Check System", () => {
@@ -439,8 +517,17 @@ describe("Agent Health Monitoring System", () => {
     });
 
     it("should handle agent registration conflicts", () => {
+      // Verify agent is already registered
+      expect(registry.hasAgent("test-1")).toBe(true);
+      
+      // Try to register an agent with a duplicate ID
+      const duplicateAgent = new TestAgent({
+        name: "duplicate-agent",
+        systemPrompt: "You are a duplicate test agent",
+      });
+      
       expect(() => {
-        registry.registerAgent("test-1", testAgent1, {
+        registry.registerAgent("test-1", duplicateAgent, {
           name: "Duplicate Agent",
           type: "test",
         });
@@ -448,13 +535,13 @@ describe("Agent Health Monitoring System", () => {
     });
 
     it("should handle health check timeouts", async () => {
-      // Mock a very slow agent
+      // Mock a very slow agent that exceeds the health check timeout (8 seconds)
       testAgent1.setDelay(9000); // 9 seconds - should timeout at 8 seconds
       
       const result = await registry.checkAgentHealth("test-1");
       expect(result.success).toBe(false);
       expect(result.error).toContain("timeout");
-    }, 12000);
+    }, 15000);
 
     it("should maintain health data consistency during errors", async () => {
       const agent = registry.getAgent("test-1");

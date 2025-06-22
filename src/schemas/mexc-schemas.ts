@@ -189,9 +189,9 @@ export const OrderParametersSchema = z.object({
   symbol: z.string(),
   side: z.enum(["BUY", "SELL"]),
   type: z.enum(["MARKET", "LIMIT", "STOP_LOSS", "STOP_LOSS_LIMIT"]),
-  quantity: z.number().optional(),
-  quoteOrderQty: z.number().optional(),
-  price: z.number().optional(),
+  quantity: z.union([z.string(), z.number()]).optional(), // Accept both string and number for flexibility
+  quoteOrderQty: z.union([z.string(), z.number()]).optional(), // Accept both string and number for flexibility
+  price: z.union([z.string(), z.number()]).optional(), // Accept both string and number for flexibility
   timeInForce: z.enum(["GTC", "IOC", "FOK"]).optional(),
 });
 

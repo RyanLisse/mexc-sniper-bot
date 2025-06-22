@@ -1,0 +1,13 @@
+{
+  "objective": "asses the current codebaase and look for gaps or blockers that could prevent the auto sniping functionality to fail",
+  "strategy": "development",
+  "mode": "centralized",
+  "maxAgents": 5,
+  "timeout": 60,
+  "parallel": true,
+  "monitor": true,
+  "output": "json",
+  "outputDir": "./reports",
+  "timestamp": "2025-06-22T20:56:13.525Z",
+  "id": "swarm-development-centralized-1750625773526"
+}

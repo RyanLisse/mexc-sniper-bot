@@ -57,9 +57,16 @@ export class BaseAgent {
       cacheTTL: this.defaultCacheTTL,
       ...config,
     };
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    // FIXED: Add fallback handling for missing OpenAI API key
+    if (process.env.OPENAI_API_KEY) {
+      this.openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } else {
+      console.warn(`[${this.config.name}] OpenAI API key not available - AI features will be disabled`);
+      // Create a mock OpenAI instance to prevent runtime errors
+      this.openai = null as any;
+    }
     this.responseCache = new Map();
 
     // Clean up expired cache entries every 10 minutes
@@ -190,6 +197,11 @@ export class BaseAgent {
     }
 
     try {
+      // FIXED: Handle case where OpenAI API key is not available
+      if (!this.openai) {
+        throw new Error(`OpenAI API key not configured for agent ${this.config.name} - AI features unavailable`);
+      }
+
       const response = await this.openai.chat.completions.create({
         model: this.config.model || "gpt-4o",
         messages: [

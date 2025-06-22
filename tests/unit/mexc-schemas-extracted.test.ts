@@ -65,7 +65,7 @@ describe('MEXC Schemas - TDD Extraction Tests', () => {
         sts: 2,
         st: 2,
         tt: 4,
-        ca: 1000,
+        ca: '0x1234567890abcdef', // Contract address should be a string
         ps: 100,
         qs: 50,
         ot: { additional: 'data' }

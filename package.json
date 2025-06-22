@@ -92,7 +92,13 @@
     "branch:setup:test": "tsx scripts/setup-branch-testing.ts --test",
     "// ===== AGENT & TESTING =====": "",
     "agents:test": "bun test src/mexc-agents/**/*.test.ts",
-    "agents:health": "bun run src/mexc-agents/health-check.ts"
+    "agents:health": "bun run src/mexc-agents/health-check.ts",
+    "// ===== CIRCUIT BREAKER & SAFETY =====": "",
+    "fix-circuit-breaker": "tsx scripts/fix-circuit-breaker.ts",
+    "safety:diagnose": "tsx scripts/fix-circuit-breaker.ts diagnose",
+    "safety:fix": "tsx scripts/fix-circuit-breaker.ts fix",
+    "safety:validate": "tsx scripts/fix-circuit-breaker.ts validate",
+    "safety:check": "tsx scripts/fix-circuit-breaker.ts check"
   },
   "dependencies": {
     "@browserbasehq/stagehand": "^2.3.0",

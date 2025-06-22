@@ -26,6 +26,21 @@ export interface CredentialStatus {
   hasEnvironmentCredentials: boolean;
   lastValidated: string;
   error?: string;
+  // Enhanced fields (optional for backward compatibility)
+  isTestCredentials?: boolean;
+  connectionHealth?: "excellent" | "good" | "fair" | "poor";
+  metrics?: {
+    totalChecks: number;
+    successRate: number;
+    averageLatency: number;
+    consecutiveFailures: number;
+    uptime: number;
+  };
+  alerts?: {
+    count: number;
+    latest?: string;
+    severity: "none" | "info" | "warning" | "critical";
+  };
 }
 
 export interface TradingStatus {
@@ -238,8 +253,32 @@ export function StatusProvider({
 
   const fetchCredentialStatus = useCallback(async (): Promise<CredentialStatus> => {
     try {
-      const response = await fetch("/api/mexc/connectivity");
-      const data = await response.json();
+      // Try enhanced connectivity first, fallback to legacy endpoint
+      let response = await fetch("/api/mexc/enhanced-connectivity");
+      let data = await response.json();
+
+      if (response.ok && data.data) {
+        // Enhanced connectivity response format
+        const enhanced = data.data;
+        return {
+          hasCredentials: enhanced.hasCredentials || false,
+          isValid: enhanced.credentialsValid || false,
+          source: enhanced.credentialSource || "none",
+          hasUserCredentials: enhanced.hasUserCredentials || false,
+          hasEnvironmentCredentials: enhanced.hasEnvironmentCredentials || false,
+          lastValidated: new Date().toISOString(),
+          error: enhanced.error || (enhanced.isTestCredentials ? "Test credentials detected - configure real MEXC API credentials" : undefined),
+          // Additional enhanced fields
+          isTestCredentials: enhanced.isTestCredentials,
+          connectionHealth: enhanced.connectionHealth,
+          metrics: enhanced.metrics,
+          alerts: enhanced.alerts,
+        };
+      }
+
+      // Fallback to legacy endpoint
+      response = await fetch("/api/mexc/connectivity");
+      data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch credentials");
@@ -301,17 +340,25 @@ export function StatusProvider({
 
   const fetchSystemStatus = useCallback(async (): Promise<SystemStatus> => {
     try {
-      const [healthResponse, envResponse] = await Promise.allSettled([
+      const [healthResponse, envResponse, validationResponse] = await Promise.allSettled([
         fetch("/api/health/system"),
         fetch("/api/health/environment"),
+        fetch("/api/system/validation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "quick_health_check" }),
+        }),
       ]);
 
       const healthData =
         healthResponse.status === "fulfilled" ? await healthResponse.value.json() : null;
       const envData = envResponse.status === "fulfilled" ? await envResponse.value.json() : null;
+      const validationData =
+        validationResponse.status === "fulfilled" ? await validationResponse.value.json() : null;
 
       const components: Record<string, any> = {};
 
+      // System API health
       if (healthData) {
         components.api = {
           status: healthData.success ? "active" : "error",
@@ -320,6 +367,7 @@ export function StatusProvider({
         };
       }
 
+      // Environment configuration
       if (envData) {
         components.environment = {
           status: envData.success ? "active" : "warning",
@@ -328,8 +376,32 @@ export function StatusProvider({
         };
       }
 
+      // System readiness validation
+      if (validationData && validationData.success) {
+        const validationResult = validationData.data;
+        components.validation = {
+          status: validationResult.status === "ready" ? "active" : 
+                 validationResult.status === "issues" ? "warning" : "error",
+          message: `System validation score: ${validationResult.score}%`,
+          lastChecked: new Date().toISOString(),
+          readyForAutoSniping: validationResult.readyForAutoSniping,
+          criticalIssues: validationResult.criticalIssues,
+        };
+      }
+
+      // Determine overall status
       const hasErrors = Object.values(components).some((c) => c.status === "error");
       const hasWarnings = Object.values(components).some((c) => c.status === "warning");
+
+      // If validation shows critical issues, mark as error
+      const validationComponent = components.validation;
+      if (validationComponent && !validationComponent.readyForAutoSniping && validationComponent.criticalIssues > 0) {
+        return {
+          overall: "error",
+          components,
+          lastHealthCheck: new Date().toISOString(),
+        };
+      }
 
       return {
         overall: hasErrors ? "error" : hasWarnings ? "warning" : "healthy",
@@ -478,9 +550,22 @@ export function StatusProvider({
     if (!status.network.connected) return "error";
     if (status.syncErrors.length > 0) return "error";
     if (status.system.overall === "error") return "error";
+    
+    // Enhanced credential status evaluation
     if (!status.credentials.hasCredentials) return "warning";
+    if (status.credentials.isTestCredentials) return "warning";
     if (!status.credentials.isValid) return "error";
+    
+    // Enhanced health evaluation
+    if (status.credentials.connectionHealth === "poor") return "error";
+    if (status.credentials.alerts?.severity === "critical") return "error";
+    if (status.credentials.metrics?.consecutiveFailures && status.credentials.metrics.consecutiveFailures > 5) {
+      return "error";
+    }
+    
     if (status.system.overall === "warning") return "warning";
+    if (status.credentials.connectionHealth === "fair") return "warning";
+    if (status.credentials.alerts?.severity === "warning") return "warning";
 
     return "healthy";
   }, [status]);
@@ -490,8 +575,19 @@ export function StatusProvider({
 
     if (!status.network.connected) return "Network connection unavailable";
     if (status.syncErrors.length > 0) return `System errors detected (${status.syncErrors.length})`;
+    
+    // Enhanced credential status messages
     if (!status.credentials.hasCredentials) return "API credentials not configured";
+    if (status.credentials.isTestCredentials) return "Test credentials detected - configure real MEXC API credentials for live trading";
     if (!status.credentials.isValid) return "API credentials invalid";
+    
+    // Enhanced health status
+    if (status.credentials.connectionHealth === "poor") return "Poor connection quality detected";
+    if (status.credentials.alerts?.severity === "critical") return "Critical alerts detected";
+    if (status.credentials.metrics?.consecutiveFailures && status.credentials.metrics.consecutiveFailures > 5) {
+      return "Multiple connection failures detected";
+    }
+    
     if (status.system.overall === "error") return "System components have errors";
     if (status.system.overall === "warning") return "System components have warnings";
 

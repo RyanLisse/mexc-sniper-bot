@@ -491,7 +491,7 @@ beforeAll(async () => {
     }
   }
 
-  // Mock fetch for API calls with special handling for Kinde URLs
+  // Mock fetch for API calls with special handling for Kinde URLs and MEXC API
   global.fetch = vi.fn().mockImplementation((url, options) => {
     // Convert URL to string if it's a URL object
     const urlString = typeof url === 'string' ? url : url.toString();
@@ -514,18 +514,91 @@ beforeAll(async () => {
       });
     }
 
+    // Handle MEXC API endpoints
+    if (urlString.includes('api.mexc.com') || urlString.includes('mexc')) {
+      // Activity API endpoint
+      if (urlString.includes('/api/operateactivity/activity/list/by/currencies')) {
+        const mockActivityResponse = {
+          code: 0,
+          msg: 'success',
+          data: [
+            {
+              activityId: 'mock-activity-1',
+              currency: 'FCAT',
+              currencyId: 'mock-currency-id',
+              activityType: 'SUN_SHINE',
+            }
+          ],
+          timestamp: Date.now()
+        };
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: () => Promise.resolve(mockActivityResponse),
+          text: () => Promise.resolve(JSON.stringify(mockActivityResponse)),
+          headers: new Headers({
+            'content-type': 'application/json'
+          })
+        });
+      }
+
+      // Exchange Info endpoint
+      if (urlString.includes('/api/v3/exchangeInfo')) {
+        const mockExchangeInfo = {
+          timezone: 'UTC',
+          serverTime: Date.now(),
+          symbols: [
+            { symbol: 'BTCUSDT', status: 'TRADING' },
+            { symbol: 'ETHUSDT', status: 'TRADING' }
+          ]
+        };
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          json: () => Promise.resolve(mockExchangeInfo),
+          text: () => Promise.resolve(JSON.stringify(mockExchangeInfo)),
+          headers: new Headers({
+            'content-type': 'application/json'
+          })
+        });
+      }
+
+      // Default MEXC API response
+      const defaultMexcResponse = {
+        code: 0,
+        msg: 'success',
+        data: null,
+        timestamp: Date.now()
+      };
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: () => Promise.resolve(defaultMexcResponse),
+        text: () => Promise.resolve(JSON.stringify(defaultMexcResponse)),
+        headers: new Headers({
+          'content-type': 'application/json'
+        })
+      });
+    }
+
     // Default mock response for all other URLs
+    const defaultResponse = {
+      success: true,
+      data: null,
+      message: 'Mock API response'
+    };
     return Promise.resolve({
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: () => Promise.resolve({
-        success: true,
-        data: null,
-        message: 'Mock API response'
-      }),
-      text: () => Promise.resolve('Mock response text'),
-      headers: new Headers()
+      json: () => Promise.resolve(defaultResponse),
+      text: () => Promise.resolve(JSON.stringify(defaultResponse)),
+      headers: new Headers({
+        'content-type': 'application/json'
+      })
     })
   })
 

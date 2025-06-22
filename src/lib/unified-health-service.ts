@@ -238,10 +238,14 @@ export class HealthCheckComponents {
 
     try {
       if (!process.env.OPENAI_API_KEY) {
+        // FIXED: OpenAI key missing should be warning, not error - auto-sniping works without AI
         const result: HealthCheckResult = {
-          status: "error",
-          message: "OpenAI API key not configured",
-          details: { configured: false },
+          status: "warning",
+          message: "OpenAI API key not configured - AI features will be limited",
+          details: { 
+            configured: false,
+            impact: "Auto-sniping functionality will work without AI enhancement"
+          },
         };
         return result;
       }
@@ -413,9 +417,9 @@ export class HealthCheckComponents {
     const cached = healthCache.get(cacheKey);
     if (cached) return cached;
 
+    // FIXED: Removed OPENAI_API_KEY from required vars since auto-sniping should work without AI
     const requiredVars = [
       "DATABASE_URL",
-      "OPENAI_API_KEY",
       "KINDE_CLIENT_ID",
       "KINDE_CLIENT_SECRET",
       "KINDE_ISSUER_URL",

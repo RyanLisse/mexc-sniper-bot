@@ -1,13 +1,13 @@
 /**
  * Connectivity Health Monitor Hook
- * 
+ *
  * Provides continuous monitoring of network connectivity with health metrics,
  * automatic recovery mechanisms, and real-time status updates.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMexcConnectivity, type MexcConnectivityResult } from "./use-mexc-data";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { type MexcConnectivityResult, useMexcConnectivity } from "./use-mexc-data";
 
 interface ConnectivityHealthMetrics {
   isOnline: boolean;
@@ -39,7 +39,7 @@ export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {})
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const queryClient = useQueryClient();
   const { data: connectivity, refetch, isLoading, error } = useMexcConnectivity();
-  
+
   const [healthMetrics, setHealthMetrics] = useState<ConnectivityHealthMetrics>({
     isOnline: navigator.onLine,
     consecutiveFailures: 0,
@@ -56,7 +56,7 @@ export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {})
   // Network connectivity change handler
   const handleOnlineStatusChange = useCallback(() => {
     const isOnline = navigator.onLine;
-    setHealthMetrics(prev => ({
+    setHealthMetrics((prev) => ({
       ...prev,
       isOnline,
       connectionStability: isOnline ? prev.connectionStability : "offline",
@@ -71,56 +71,60 @@ export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {})
   }, [refetch, opts.autoRetryOnFailure]);
 
   // Update health metrics based on connectivity result
-  const updateHealthMetrics = useCallback((connectivityResult: MexcConnectivityResult | undefined) => {
-    if (!connectivityResult) return;
+  const updateHealthMetrics = useCallback(
+    (connectivityResult: MexcConnectivityResult | undefined) => {
+      if (!connectivityResult) return;
 
-    setHealthMetrics(prev => {
-      const newLatencies = connectivityResult.latency 
-        ? [...prev.recentLatencies, connectivityResult.latency].slice(-opts.maxPingHistory)
-        : prev.recentLatencies;
+      setHealthMetrics((prev) => {
+        const newLatencies = connectivityResult.latency
+          ? [...prev.recentLatencies, connectivityResult.latency].slice(-opts.maxPingHistory)
+          : prev.recentLatencies;
 
-      const averageLatency = newLatencies.length > 0 
-        ? newLatencies.reduce((sum, lat) => sum + lat, 0) / newLatencies.length 
-        : 0;
+        const averageLatency =
+          newLatencies.length > 0
+            ? newLatencies.reduce((sum, lat) => sum + lat, 0) / newLatencies.length
+            : 0;
 
-      const isSuccessful = connectivityResult.connected && connectivityResult.credentialsValid;
-      const consecutiveFailures = isSuccessful ? 0 : prev.consecutiveFailures + 1;
-      const lastSuccessfulPing = isSuccessful ? new Date() : prev.lastSuccessfulPing;
+        const isSuccessful = connectivityResult.connected && connectivityResult.credentialsValid;
+        const consecutiveFailures = isSuccessful ? 0 : prev.consecutiveFailures + 1;
+        const lastSuccessfulPing = isSuccessful ? new Date() : prev.lastSuccessfulPing;
 
-      // Calculate connection stability
-      let connectionStability: ConnectivityHealthMetrics["connectionStability"] = "stable";
-      if (!navigator.onLine) {
-        connectionStability = "offline";
-      } else if (consecutiveFailures >= 3) {
-        connectionStability = "poor";
-      } else if (consecutiveFailures >= 1 || averageLatency > 3000) {
-        connectionStability = "unstable";
-      }
+        // Calculate connection stability
+        let connectionStability: ConnectivityHealthMetrics["connectionStability"] = "stable";
+        if (!navigator.onLine) {
+          connectionStability = "offline";
+        } else if (consecutiveFailures >= 3) {
+          connectionStability = "poor";
+        } else if (consecutiveFailures >= 1 || averageLatency > 3000) {
+          connectionStability = "unstable";
+        }
 
-      // Calculate health score (0-100)
-      let healthScore = 100;
-      if (consecutiveFailures > 0) {
-        healthScore -= consecutiveFailures * 20;
-      }
-      if (averageLatency > 1000) {
-        healthScore -= Math.min(30, (averageLatency - 1000) / 100);
-      }
-      if (connectivityResult.retryCount && connectivityResult.retryCount > 0) {
-        healthScore -= connectivityResult.retryCount * 10;
-      }
-      healthScore = Math.max(0, Math.min(100, healthScore));
+        // Calculate health score (0-100)
+        let healthScore = 100;
+        if (consecutiveFailures > 0) {
+          healthScore -= consecutiveFailures * 20;
+        }
+        if (averageLatency > 1000) {
+          healthScore -= Math.min(30, (averageLatency - 1000) / 100);
+        }
+        if (connectivityResult.retryCount && connectivityResult.retryCount > 0) {
+          healthScore -= connectivityResult.retryCount * 10;
+        }
+        healthScore = Math.max(0, Math.min(100, healthScore));
 
-      return {
-        isOnline: navigator.onLine,
-        consecutiveFailures,
-        lastSuccessfulPing,
-        averageLatency,
-        connectionStability,
-        recentLatencies: newLatencies,
-        healthScore,
-      };
-    });
-  }, [opts.maxPingHistory]);
+        return {
+          isOnline: navigator.onLine,
+          consecutiveFailures,
+          lastSuccessfulPing,
+          averageLatency,
+          connectionStability,
+          recentLatencies: newLatencies,
+          healthScore,
+        };
+      });
+    },
+    [opts.maxPingHistory]
+  );
 
   // Ping function for continuous monitoring
   const performHealthCheck = useCallback(async () => {
@@ -131,7 +135,7 @@ export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {})
       }
     } catch (error) {
       console.warn("Health check failed:", error);
-      setHealthMetrics(prev => ({
+      setHealthMetrics((prev) => ({
         ...prev,
         consecutiveFailures: prev.consecutiveFailures + 1,
         connectionStability: prev.consecutiveFailures >= 2 ? "poor" : "unstable",
@@ -210,20 +214,21 @@ export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {})
     connectivity,
     isLoading,
     error,
-    
+
     // Health metrics
     healthMetrics,
-    
+
     // Control functions
     refresh: refreshWithHealthCheck,
     startMonitoring,
     stopMonitoring,
     resetHealthMetrics,
-    
+
     // Computed states
     isHealthy: healthMetrics.healthScore >= 70,
     isMonitoring: isMonitoringRef.current,
-    needsAttention: healthMetrics.consecutiveFailures > 0 || healthMetrics.connectionStability === "poor",
+    needsAttention:
+      healthMetrics.consecutiveFailures > 0 || healthMetrics.connectionStability === "poor",
   };
 }
 

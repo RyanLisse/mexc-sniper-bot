@@ -984,7 +984,11 @@ export class AgentRegistry {
     // Destroy all registered agents
     for (const agent of this.agents.values()) {
       if (typeof agent.instance.destroy === "function") {
-        agent.instance.destroy();
+        try {
+          agent.instance.destroy();
+        } catch (error) {
+          console.warn(`[AgentRegistry] Error destroying agent ${agent.id}:`, error);
+        }
       }
     }
 
@@ -992,7 +996,27 @@ export class AgentRegistry {
     this.healthHistory.clear();
     this.recoveryStrategies.clear();
 
+    // Reset to fresh state
+    this.isRunning = false;
+    this.healthCheckInterval = null;
+
     console.log("[AgentRegistry] Registry destroyed");
+  }
+
+  /**
+   * Force unregister all agents (for testing)
+   */
+  clearAllAgents(): void {
+    for (const [id] of this.agents) {
+      this.unregisterAgent(id);
+    }
+  }
+
+  /**
+   * Check if agent is already registered
+   */
+  hasAgent(id: string): boolean {
+    return this.agents.has(id);
   }
 }
 
@@ -1008,8 +1032,26 @@ export function getGlobalAgentRegistry(): AgentRegistry {
 
 export function initializeGlobalAgentRegistry(options?: AgentRegistryOptions): AgentRegistry {
   if (globalRegistry) {
-    globalRegistry.destroy();
+    try {
+      globalRegistry.destroy();
+    } catch (error) {
+      console.warn("[AgentRegistry] Error destroying previous registry:", error);
+    }
   }
   globalRegistry = new AgentRegistry(options);
   return globalRegistry;
+}
+
+/**
+ * Clear global registry (for testing)
+ */
+export function clearGlobalAgentRegistry(): void {
+  if (globalRegistry) {
+    try {
+      globalRegistry.destroy();
+    } catch (error) {
+      console.warn("[AgentRegistry] Error destroying global registry:", error);
+    }
+    globalRegistry = null;
+  }
 }

@@ -75,7 +75,7 @@ export class DatabasePerformanceAnalyzer {
 
     const expensiveQueries: ExpensiveQuery[] = [];
 
-    // Common query patterns used by agents
+    // Common query patterns used by agents - only test tables that actually exist
     const criticalQueries = [
       {
         name: "snipe_targets_user_status_priority",
@@ -88,27 +88,6 @@ export class DatabasePerformanceAnalyzer {
         params: ["user123", "pending"],
       },
       {
-        name: "execution_history_user_symbol_time",
-        query: `
-          SELECT * FROM execution_history 
-          WHERE user_id = ? 
-          AND symbol_name = ? 
-          AND executed_at >= ? 
-          ORDER BY executed_at DESC
-        `,
-        params: ["user123", "BTCUSDT", Date.now() - 86400000],
-      },
-      {
-        name: "monitored_listings_ready_pattern",
-        query: `
-          SELECT * FROM monitored_listings 
-          WHERE has_ready_pattern = true 
-          AND status = 'monitoring' 
-          ORDER BY confidence DESC
-        `,
-        params: [],
-      },
-      {
         name: "pattern_embeddings_similarity_search",
         query: `
           SELECT * FROM pattern_embeddings 
@@ -117,27 +96,26 @@ export class DatabasePerformanceAnalyzer {
           AND confidence > ? 
           ORDER BY confidence DESC
         `,
-        params: ["ready_state", 80],
+        params: ["ready_state", 0.8],
       },
       {
-        name: "transaction_locks_resource_status",
+        name: "transactions_user_recent",
         query: `
-          SELECT * FROM transaction_locks 
-          WHERE resource_id = ? 
-          AND status = 'active' 
-          AND expires_at > ?
-        `,
-        params: ["trade:BTCUSDT:BUY", Date.now()],
-      },
-      {
-        name: "workflow_activity_recent",
-        query: `
-          SELECT * FROM workflow_activity 
+          SELECT * FROM transactions 
           WHERE user_id = ? 
-          ORDER BY timestamp DESC 
+          ORDER BY created_at DESC 
           LIMIT 10
         `,
-        params: ["default"],
+        params: ["user123"],
+      },
+      {
+        name: "user_preferences_lookup",
+        query: `
+          SELECT * FROM user_preferences 
+          WHERE user_id = ? 
+          ORDER BY updated_at DESC
+        `,
+        params: ["user123"],
       },
     ];
 
@@ -302,19 +280,16 @@ export class DatabasePerformanceAnalyzer {
 
     const stats: TableScanStats[] = [];
 
-    // Get list of tables from schema
+    // Get list of tables from schema - only include tables that exist
     const tables = [
       "snipe_targets",
-      "execution_history",
+      "execution_history", 
       "transactions",
-      "monitored_listings",
       "pattern_embeddings",
-      "pattern_similarity_cache",
-      "transaction_locks",
-      "transaction_queue",
-      "workflow_activity",
-      "api_credentials",
       "user_preferences",
+      "api_credentials",
+      "transaction_locks",
+      "workflow_activity",
     ];
 
     for (const tableName of tables) {
@@ -387,11 +362,10 @@ export class DatabasePerformanceAnalyzer {
       "snipe_targets",
       "execution_history",
       "transactions",
-      "monitored_listings",
       "pattern_embeddings",
-      "pattern_similarity_cache",
+      "user_preferences",
+      "api_credentials",
       "transaction_locks",
-      "transaction_queue",
       "workflow_activity",
     ];
 

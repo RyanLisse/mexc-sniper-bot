@@ -14,15 +14,15 @@ import {
   XCircle,
 } from "lucide-react";
 import React, { useState } from "react";
+import { useStatus } from "../contexts/status-context";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { useStatus } from "../contexts/status-context";
 
 /**
  * Enhanced Credential Status Component V2
- * 
+ *
  * Updated to use the centralized StatusContext to eliminate contradictory
  * status messages. This replaces the original EnhancedCredentialStatus component.
  */
@@ -36,15 +36,15 @@ export const EnhancedCredentialStatusV2 = React.memo(function EnhancedCredential
   showDetailsButton = true,
   className = "",
 }: EnhancedCredentialStatusV2Props) {
-  const { 
-    status, 
-    refreshCredentials, 
+  const {
+    status,
+    refreshCredentials,
     refreshNetwork,
     getOverallStatus,
     getStatusMessage,
-    clearErrors
+    clearErrors,
   } = useStatus();
-  
+
   const [showDetails, setShowDetails] = useState(false);
   const overallStatus = getOverallStatus();
   const isLoading = status.isLoading;
@@ -149,7 +149,7 @@ function StatusBadge() {
         color: "text-red-500",
       };
     }
-    
+
     if (!credentials.hasCredentials) {
       return {
         variant: "secondary" as const,
@@ -158,7 +158,7 @@ function StatusBadge() {
         color: "text-yellow-500",
       };
     }
-    
+
     if (!credentials.isValid) {
       return {
         variant: "destructive" as const,
@@ -167,7 +167,7 @@ function StatusBadge() {
         color: "text-red-500",
       };
     }
-    
+
     return {
       variant: "default" as const,
       icon: CheckCircle,
@@ -233,9 +233,7 @@ function MainStatusRow({ onRefresh }: { onRefresh: () => void }) {
       {/* Detailed Status Grid - Now using centralized status */}
       <div className="grid grid-cols-3 gap-3 text-sm">
         <div className="flex items-center space-x-2">
-          <Globe
-            className={`h-4 w-4 ${network.connected ? "text-green-500" : "text-red-500"}`}
-          />
+          <Globe className={`h-4 w-4 ${network.connected ? "text-green-500" : "text-red-500"}`} />
           <span className={network.connected ? "text-green-600" : "text-red-600"}>
             {network.connected ? "Network OK" : "Network Error"}
           </span>
@@ -249,9 +247,7 @@ function MainStatusRow({ onRefresh }: { onRefresh: () => void }) {
           </span>
         </div>
         <div className="flex items-center space-x-2">
-          <Lock
-            className={`h-4 w-4 ${credentials.isValid ? "text-green-500" : "text-red-500"}`}
-          />
+          <Lock className={`h-4 w-4 ${credentials.isValid ? "text-green-500" : "text-red-500"}`} />
           <span className={credentials.isValid ? "text-green-600" : "text-red-600"}>
             {credentials.isValid ? "Valid" : "Invalid"}
           </span>

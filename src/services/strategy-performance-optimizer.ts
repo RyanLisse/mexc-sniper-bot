@@ -1,12 +1,4 @@
-/**
- * STRATEGY PERFORMANCE OPTIMIZER
- * 
- * Optimizes memory usage and performance for strategy operations
- * Addresses memory leaks and performance bottlenecks in strategy execution
- */
-
-import { multiPhaseTradingService } from "./multi-phase-trading-service";
-import type { TradingStrategy, StrategyPhaseExecution } from "../db/schemas/strategies";
+import type { TradingStrategy } from "../db/schemas/strategies";
 
 interface PerformanceMetrics {
   memoryUsage: number;
@@ -27,12 +19,12 @@ export class StrategyPerformanceOptimizer {
   private activeExecutions = new Set<string>();
   private executionCache = new Map<string, any>();
   private lastGC = Date.now();
-  
+
   private config: OptimizationConfig = {
     maxConcurrentExecutions: 50,
     memoryThresholdMB: 100, // 100MB limit
     batchSize: 25,
-    cacheTimeout: 5000 // 5 seconds
+    cacheTimeout: 5000, // 5 seconds
   };
 
   static getInstance(): StrategyPerformanceOptimizer {
@@ -57,10 +49,12 @@ export class StrategyPerformanceOptimizer {
   ): Promise<T> {
     // Check memory threshold before execution
     await this.checkMemoryThreshold();
-    
+
     // Check concurrent execution limit
     if (this.activeExecutions.size >= this.config.maxConcurrentExecutions) {
-      throw new Error(`Concurrent execution limit reached (${this.config.maxConcurrentExecutions})`);
+      throw new Error(
+        `Concurrent execution limit reached (${this.config.maxConcurrentExecutions})`
+      );
     }
 
     // Check cache first
@@ -71,19 +65,19 @@ export class StrategyPerformanceOptimizer {
     }
 
     this.activeExecutions.add(executionId);
-    
+
     try {
       const startTime = Date.now();
       const result = await operation();
       const executionTime = Date.now() - startTime;
-      
+
       // Cache result for short term
       this.executionCache.set(cacheKey, {
         result,
         timestamp: Date.now(),
-        executionTime
+        executionTime,
       });
-      
+
       return result;
     } finally {
       this.activeExecutions.delete(executionId);
@@ -101,10 +95,10 @@ export class StrategyPerformanceOptimizer {
     processor: (batch: any[]) => Promise<T[]>
   ): Promise<T[]> {
     const results: T[] = [];
-    
+
     for (let i = 0; i < strategies.length; i += this.config.batchSize) {
       const batch = strategies.slice(i, i + this.config.batchSize);
-      
+
       // Process batch with memory monitoring
       const batchResults = await this.optimizeStrategyExecution(
         `batch_${i}_${Date.now()}`,
@@ -116,18 +110,18 @@ export class StrategyPerformanceOptimizer {
           }
         }
       );
-      
+
       results.push(...batchResults);
-      
+
       // Check memory between batches
       await this.checkMemoryThreshold();
-      
+
       // Small delay to prevent overwhelming the system
       if (i + this.config.batchSize < strategies.length) {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
     }
-    
+
     return results;
   }
 
@@ -138,36 +132,32 @@ export class StrategyPerformanceOptimizer {
     strategies: TradingStrategy[],
     currentPrices: Record<string, number>
   ): Promise<any[]> {
-    return this.batchProcessStrategies(
-      strategies,
-      async (batch) => {
-        return batch.map(strategy => {
+    return this.batchProcessStrategies(strategies, async (batch) => {
+      return batch
+        .map((strategy) => {
           const currentPrice = currentPrices[strategy.symbol];
           if (!currentPrice) return null;
-          
+
           // Use memory-efficient calculation
           return this.calculateStrategyMetricsOptimized(strategy, currentPrice);
-        }).filter(Boolean);
-      }
-    );
+        })
+        .filter(Boolean);
+    });
   }
 
   /**
    * Memory-optimized strategy metrics calculation
    */
-  private calculateStrategyMetricsOptimized(
-    strategy: TradingStrategy,
-    currentPrice: number
-  ): any {
+  private calculateStrategyMetricsOptimized(strategy: TradingStrategy, currentPrice: number): any {
     try {
       const levels = JSON.parse(strategy.levels);
       const entryPrice = strategy.entryPrice;
       const priceIncrease = ((currentPrice - entryPrice) / entryPrice) * 100;
-      
+
       // Calculate only essential metrics to save memory
       const triggeredPhases = levels.filter((level: any) => priceIncrease >= level.percentage);
       const nextPhase = levels.find((level: any) => priceIncrease < level.percentage);
-      
+
       return {
         strategyId: strategy.id,
         symbol: strategy.symbol,
@@ -176,7 +166,7 @@ export class StrategyPerformanceOptimizer {
         triggeredPhases: triggeredPhases.length,
         totalPhases: levels.length,
         nextTarget: nextPhase ? entryPrice * nextPhase.multiplier : null,
-        estimatedProfit: this.calculateEstimatedProfitOptimized(strategy, currentPrice, levels)
+        estimatedProfit: this.calculateEstimatedProfitOptimized(strategy, currentPrice, levels),
       };
     } catch (error) {
       console.error(`Error calculating metrics for strategy ${strategy.id}:`, error);
@@ -195,9 +185,9 @@ export class StrategyPerformanceOptimizer {
     const entryPrice = strategy.entryPrice;
     const totalAmount = strategy.positionSize;
     const priceIncrease = ((currentPrice - entryPrice) / entryPrice) * 100;
-    
+
     let estimatedProfit = 0;
-    
+
     for (const level of levels) {
       if (priceIncrease >= level.percentage) {
         const amount = (totalAmount * level.sellPercentage) / 100;
@@ -205,7 +195,7 @@ export class StrategyPerformanceOptimizer {
         estimatedProfit += profit;
       }
     }
-    
+
     return Math.round(estimatedProfit * 100) / 100; // Round to save memory
   }
 
@@ -216,15 +206,22 @@ export class StrategyPerformanceOptimizer {
     if (process.memoryUsage) {
       const memoryUsage = process.memoryUsage();
       const heapUsedMB = memoryUsage.heapUsed / 1024 / 1024;
-      
+
       if (heapUsedMB > this.config.memoryThresholdMB) {
-        console.warn(`[Performance] Memory usage high: ${heapUsedMB.toFixed(2)}MB, triggering cleanup`);
+        console.warn(
+          `[Performance] Memory usage high: ${heapUsedMB.toFixed(2)}MB, triggering cleanup`
+        );
         await this.performGarbageCollection();
-        
+
         // If still high, reduce concurrent executions temporarily
         if (heapUsedMB > this.config.memoryThresholdMB * 1.2) {
-          this.config.maxConcurrentExecutions = Math.max(10, this.config.maxConcurrentExecutions - 5);
-          console.warn(`[Performance] Reduced concurrent executions to ${this.config.maxConcurrentExecutions}`);
+          this.config.maxConcurrentExecutions = Math.max(
+            10,
+            this.config.maxConcurrentExecutions - 5
+          );
+          console.warn(
+            `[Performance] Reduced concurrent executions to ${this.config.maxConcurrentExecutions}`
+          );
         }
       }
     }
@@ -235,26 +232,27 @@ export class StrategyPerformanceOptimizer {
    */
   private async performGarbageCollection(): Promise<void> {
     const now = Date.now();
-    
+
     // Skip if GC was recent
-    if (now - this.lastGC < 10000) { // 10 seconds
+    if (now - this.lastGC < 10000) {
+      // 10 seconds
       return;
     }
-    
+
     this.lastGC = now;
-    
+
     // Clear expired cache entries
     for (const [key, value] of this.executionCache.entries()) {
       if (now - value.timestamp > this.config.cacheTimeout) {
         this.executionCache.delete(key);
       }
     }
-    
+
     // Force garbage collection if available
     if (global.gc) {
       global.gc();
     }
-    
+
     // Reset concurrent execution limit if memory is better
     if (process.memoryUsage) {
       const heapUsedMB = process.memoryUsage().heapUsed / 1024 / 1024;
@@ -269,14 +267,16 @@ export class StrategyPerformanceOptimizer {
    */
   getPerformanceMetrics(): PerformanceMetrics {
     const memoryUsage = process.memoryUsage ? process.memoryUsage().heapUsed / 1024 / 1024 : 0;
-    const cacheHitRate = this.executionCache.size > 0 ? 
-      (this.executionCache.size / (this.executionCache.size + this.activeExecutions.size)) * 100 : 0;
-    
+    const cacheHitRate =
+      this.executionCache.size > 0
+        ? (this.executionCache.size / (this.executionCache.size + this.activeExecutions.size)) * 100
+        : 0;
+
     return {
       memoryUsage,
       executionTime: 0, // This would be calculated from recent operations
       cacheHitRate,
-      operationsPerSecond: this.activeExecutions.size
+      operationsPerSecond: this.activeExecutions.size,
     };
   }
 
@@ -297,7 +297,7 @@ export class StrategyPerformanceOptimizer {
       maxConcurrentExecutions: 50,
       memoryThresholdMB: 100,
       batchSize: 25,
-      cacheTimeout: 5000
+      cacheTimeout: 5000,
     };
   }
 }

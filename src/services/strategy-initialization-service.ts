@@ -1,14 +1,14 @@
 /**
  * STRATEGY INITIALIZATION SERVICE
- * 
+ *
  * Handles automatic initialization and validation of trading strategy templates
  * Ensures strategy templates are seeded on startup and validates connectivity
  */
 
-import { multiPhaseTradingService } from "./multi-phase-trading-service";
+import { count } from "drizzle-orm";
 import { db } from "../db";
 import { strategyTemplates } from "../db/schemas/strategies";
-import { count } from "drizzle-orm";
+import { multiPhaseTradingService } from "./multi-phase-trading-service";
 
 export interface StrategySystemHealth {
   templatesInitialized: boolean;
@@ -47,13 +47,15 @@ export class StrategyInitializationService {
   private async performInitialization(force: boolean): Promise<void> {
     const maxRetries = 3;
     let attempts = 0;
-    
+
     while (attempts < maxRetries) {
       try {
-        console.log(`[Strategy Init] Starting initialization attempt ${attempts + 1}/${maxRetries}`);
-        
+        console.log(
+          `[Strategy Init] Starting initialization attempt ${attempts + 1}/${maxRetries}`
+        );
+
         // Check if already initialized (unless forced)
-        if (!force && await this.isAlreadyInitialized()) {
+        if (!force && (await this.isAlreadyInitialized())) {
           console.log("[Strategy Init] Templates already initialized, skipping");
           this.lastInitialization = new Date();
           this.errors = [];
@@ -62,32 +64,33 @@ export class StrategyInitializationService {
 
         // Perform initialization
         await this.performDatabaseInitialization();
-        
+
         // Verify initialization success
         await this.verifyInitialization();
-        
+
         this.lastInitialization = new Date();
         this.errors = [];
         console.log("[Strategy Init] Strategy templates initialized successfully");
         return;
-        
       } catch (error) {
         attempts++;
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         console.error(`[Strategy Init] Attempt ${attempts} failed:`, errorMessage);
-        
+
         this.errors.push(`Attempt ${attempts}: ${errorMessage}`);
-        
+
         if (attempts < maxRetries) {
           // Exponential backoff
           const delay = Math.pow(2, attempts) * 1000;
           console.log(`[Strategy Init] Retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     }
-    
-    throw new Error(`Failed to initialize strategy templates after ${maxRetries} attempts. Errors: ${this.errors.join('; ')}`);
+
+    throw new Error(
+      `Failed to initialize strategy templates after ${maxRetries} attempts. Errors: ${this.errors.join("; ")}`
+    );
   }
 
   private async isAlreadyInitialized(): Promise<boolean> {
@@ -103,10 +106,10 @@ export class StrategyInitializationService {
   private async performDatabaseInitialization(): Promise<void> {
     // Test database connectivity first
     await this.testDatabaseConnectivity();
-    
+
     // Initialize predefined strategies
     await multiPhaseTradingService.initializePredefinedStrategies();
-    
+
     console.log("[Strategy Init] Predefined strategies initialized");
   }
 
@@ -116,31 +119,35 @@ export class StrategyInitializationService {
       await db.select().from(strategyTemplates).limit(1);
       console.log("[Strategy Init] Database connectivity verified");
     } catch (error) {
-      throw new Error(`Database connectivity test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Database connectivity test failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
   }
 
   private async verifyInitialization(): Promise<void> {
     try {
       const templates = await multiPhaseTradingService.getStrategyTemplates();
-      
+
       if (templates.length === 0) {
         throw new Error("No strategy templates found after initialization");
       }
-      
+
       // Verify specific templates exist
-      const expectedTemplates = ['normal', 'conservative', 'aggressive', 'scalping', 'diamond'];
-      const templateIds = templates.map(t => t.strategyId);
-      
+      const expectedTemplates = ["normal", "conservative", "aggressive", "scalping", "diamond"];
+      const templateIds = templates.map((t) => t.strategyId);
+
       for (const expectedId of expectedTemplates) {
         if (!templateIds.includes(expectedId)) {
           throw new Error(`Required strategy template '${expectedId}' not found`);
         }
       }
-      
+
       console.log(`[Strategy Init] Verified ${templates.length} strategy templates`);
     } catch (error) {
-      throw new Error(`Initialization verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Initialization verification failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
   }
 
@@ -151,13 +158,13 @@ export class StrategyInitializationService {
     try {
       const templates = await multiPhaseTradingService.getStrategyTemplates();
       const databaseConnected = await this.testDatabaseConnection();
-      
+
       return {
         templatesInitialized: templates.length > 0,
         templateCount: templates.length,
         databaseConnected,
         lastInitialization: this.lastInitialization,
-        errors: [...this.errors]
+        errors: [...this.errors],
       };
     } catch (error) {
       return {
@@ -165,7 +172,7 @@ export class StrategyInitializationService {
         templateCount: 0,
         databaseConnected: false,
         lastInitialization: this.lastInitialization,
-        errors: [...this.errors, error instanceof Error ? error.message : 'Unknown error']
+        errors: [...this.errors, error instanceof Error ? error.message : "Unknown error"],
       };
     }
   }

@@ -54,11 +54,11 @@ export class DatabaseIndexOptimizer {
       // CRITICAL INDEXES - Agent Core Operations
       // ======================================
 
-      // Pattern Discovery Agent optimizations
+      // Pattern Discovery Agent optimizations - use correct table name
       {
-        name: "idx_patterns_symbol_timestamp",
-        table: "patterns",
-        columns: ["symbol", "created_at", "confidence"],
+        name: "idx_pattern_embeddings_symbol_timestamp",
+        table: "pattern_embeddings",
+        columns: ["symbol_name", "created_at", "confidence"],
         type: "btree",
         priority: "critical",
         expectedImprovement: "70% faster pattern discovery queries",
@@ -66,10 +66,10 @@ export class DatabaseIndexOptimizer {
       },
 
       {
-        name: "idx_patterns_confidence_ready",
-        table: "patterns",
-        columns: ["confidence", "is_ready", "pattern_type"],
-        where: "confidence > 0.7 AND is_ready = true",
+        name: "idx_pattern_embeddings_confidence_active",
+        table: "pattern_embeddings",
+        columns: ["confidence", "is_active", "pattern_type"],
+        where: "confidence > 0.7 AND is_active = true",
         type: "partial",
         priority: "critical",
         expectedImprovement: "80% faster ready pattern lookups",
@@ -88,9 +88,9 @@ export class DatabaseIndexOptimizer {
       },
 
       {
-        name: "idx_strategies_active_user",
-        table: "strategies",
-        columns: ["user_id", "is_active", "strategy_type", "updated_at"],
+        name: "idx_trading_strategies_active_user",
+        table: "trading_strategies",
+        columns: ["user_id", "status", "updated_at"],
         type: "btree",
         priority: "critical",
         expectedImprovement: "60% faster active strategy lookups",
@@ -112,37 +112,37 @@ export class DatabaseIndexOptimizer {
       // HIGH PRIORITY - Agent Coordination
       // ======================================
 
-      // Agent Health & Monitoring
+      // Execution History for Trading Performance
       {
-        name: "idx_agent_health_status_time",
-        table: "agent_health",
-        columns: ["agent_type", "status", "last_heartbeat"],
+        name: "idx_execution_history_user_symbol",
+        table: "execution_history",
+        columns: ["user_id", "symbol_name", "executed_at"],
         type: "btree",
         priority: "high",
-        expectedImprovement: "70% faster health check queries",
-        agentWorkflows: ["health-monitor", "orchestrator"],
+        expectedImprovement: "60% faster execution history queries",
+        agentWorkflows: ["trading-strategy", "performance-analysis"],
       },
 
-      // Performance Metrics for Optimization
+      // Transaction Locks for Concurrency Control
       {
-        name: "idx_performance_metrics_agent_time",
-        table: "performance_metrics",
-        columns: ["agent_id", "metric_type", "timestamp"],
-        type: "btree",
-        priority: "high",
-        expectedImprovement: "55% faster performance analytics",
-        agentWorkflows: ["performance-collector", "safety-monitor"],
-      },
-
-      // Workflow Execution Tracking
-      {
-        name: "idx_workflows_status_priority",
-        table: "workflows",
-        columns: ["status", "priority", "scheduled_at"],
-        where: "status IN ('pending', 'running')",
+        name: "idx_transaction_locks_resource_status",
+        table: "transaction_locks",
+        columns: ["resource_id", "status", "expires_at"],
+        where: "status = 'active'",
         type: "partial",
         priority: "high",
-        expectedImprovement: "60% faster workflow queue processing",
+        expectedImprovement: "70% faster lock queries",
+        agentWorkflows: ["concurrency-control", "trading-coordination"],
+      },
+
+      // Workflow Activity Tracking
+      {
+        name: "idx_workflow_activity_user_timestamp",
+        table: "workflow_activity",
+        columns: ["user_id", "timestamp", "type"],
+        type: "btree",
+        priority: "high",
+        expectedImprovement: "55% faster workflow tracking",
         agentWorkflows: ["workflow-engine", "orchestrator"],
       },
 
@@ -150,80 +150,54 @@ export class DatabaseIndexOptimizer {
       // MEDIUM PRIORITY - User & Session Data
       // ======================================
 
-      // User Session & Auth
-      {
-        name: "idx_user_sessions_active",
-        table: "user_sessions",
-        columns: ["user_id", "is_active", "expires_at"],
-        where: "is_active = true AND expires_at > NOW()",
-        type: "partial",
-        priority: "medium",
-        expectedImprovement: "40% faster session validation",
-        agentWorkflows: ["auth", "user-manager"],
-      },
-
       // User Preferences for Personalization
       {
-        name: "idx_user_preferences_key_user",
+        name: "idx_user_preferences_user_key",
         table: "user_preferences",
-        columns: ["user_id", "preference_key", "updated_at"],
+        columns: ["user_id", "updated_at"],
         type: "btree",
         priority: "medium",
         expectedImprovement: "45% faster preference lookups",
         agentWorkflows: ["user-manager", "personalization"],
       },
 
-      // ======================================
-      // SAFETY & RISK MANAGEMENT
-      // ======================================
-
-      // Risk Assessment Data
+      // API Credentials for Authentication
       {
-        name: "idx_risk_assessments_user_level",
-        table: "risk_assessments",
-        columns: ["user_id", "risk_level", "assessed_at"],
-        type: "btree",
-        priority: "high",
-        expectedImprovement: "65% faster risk calculations",
-        agentWorkflows: ["risk-manager", "safety-monitor"],
-      },
-
-      // Emergency Stop Mechanisms
-      {
-        name: "idx_emergency_stops_active",
-        table: "emergency_stops",
-        columns: ["is_active", "trigger_type", "created_at"],
+        name: "idx_api_credentials_user_active",
+        table: "api_credentials",
+        columns: ["user_id", "is_active", "updated_at"],
         where: "is_active = true",
         type: "partial",
-        priority: "critical",
-        expectedImprovement: "90% faster emergency response",
-        agentWorkflows: ["safety-monitor", "emergency-recovery"],
+        priority: "medium",
+        expectedImprovement: "50% faster credential validation",
+        agentWorkflows: ["auth", "mexc-api"],
       },
 
       // ======================================
-      // ANALYTICS & REPORTING
+      // ANALYTICS & MONITORING
       // ======================================
 
-      // Trading Analytics
+      // Monitored Listings for Pattern Detection
       {
-        name: "idx_trading_analytics_symbol_date",
-        table: "trading_analytics",
-        columns: ["symbol", "date", "metric_type"],
-        type: "btree",
-        priority: "medium",
-        expectedImprovement: "50% faster analytics queries",
-        agentWorkflows: ["analytics", "reporting"],
+        name: "idx_monitored_listings_pattern_ready",
+        table: "monitored_listings",
+        columns: ["has_ready_pattern", "status", "confidence"],
+        where: "has_ready_pattern = true",
+        type: "partial",
+        priority: "high",
+        expectedImprovement: "65% faster pattern monitoring",
+        agentWorkflows: ["pattern-discovery", "monitoring"],
       },
 
-      // Alerts & Notifications
+      // Pattern Similarity Cache for Fast Lookups
       {
-        name: "idx_alerts_user_status_priority",
-        table: "alerts",
-        columns: ["user_id", "status", "priority", "created_at"],
+        name: "idx_pattern_similarity_cache_pattern_similarity",
+        table: "pattern_similarity_cache",
+        columns: ["pattern_id_1", "cosine_similarity", "created_at"],
         type: "btree",
         priority: "medium",
-        expectedImprovement: "40% faster alert processing",
-        agentWorkflows: ["alert-manager", "notification"],
+        expectedImprovement: "40% faster similarity queries",
+        agentWorkflows: ["pattern-matching", "analytics"],
       },
 
       // ======================================
@@ -232,20 +206,20 @@ export class DatabaseIndexOptimizer {
 
       // Complex Trading Queries
       {
-        name: "idx_complex_trading_lookup",
+        name: "idx_snipe_targets_complex_lookup",
         table: "snipe_targets",
-        columns: ["user_id", "symbol", "status", "target_price", "created_at"],
+        columns: ["user_id", "symbol_name", "status", "priority", "created_at"],
         type: "btree",
         priority: "high",
         expectedImprovement: "75% faster complex trading queries",
         agentWorkflows: ["trading-strategy", "mexc-api", "symbol-analysis", "pattern-discovery"],
       },
 
-      // Pattern Analysis Composite
+      // Pattern Analysis Composite - use correct table and column names
       {
-        name: "idx_pattern_analysis_composite",
-        table: "patterns",
-        columns: ["symbol", "pattern_type", "confidence", "is_ready", "created_at"],
+        name: "idx_pattern_embeddings_analysis_composite",
+        table: "pattern_embeddings",
+        columns: ["symbol_name", "pattern_type", "confidence", "is_active", "created_at"],
         type: "btree",
         priority: "critical",
         expectedImprovement: "80% faster pattern analysis workflows",
@@ -311,13 +285,48 @@ export class DatabaseIndexOptimizer {
    * Create a single index
    */
   private async createIndex(index: IndexDefinition): Promise<void> {
-    let sql_statement = `CREATE ${index.unique ? "UNIQUE " : ""}INDEX IF NOT EXISTS ${index.name} ON ${index.table}(${index.columns.join(", ")})`;
+    try {
+      // First check if table exists
+      const tableExistsResult = await db.execute(sql.raw(`
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = '${index.table}'
+      `));
+      
+      const tableExists = Array.isArray(tableExistsResult) 
+        ? tableExistsResult.length > 0
+        : (tableExistsResult as any).rows?.length > 0;
 
-    if (index.where) {
-      sql_statement += ` WHERE ${index.where}`;
+      if (!tableExists) {
+        throw new Error(`Table '${index.table}' does not exist`);
+      }
+
+      // Check if columns exist
+      const columnsExistResult = await db.execute(sql.raw(`
+        SELECT column_name FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = '${index.table}' 
+        AND column_name = ANY(ARRAY[${index.columns.map(col => `'${col}'`).join(', ')}])
+      `));
+      
+      const existingColumns = Array.isArray(columnsExistResult) 
+        ? columnsExistResult.map((row: any) => row.column_name)
+        : (columnsExistResult as any).rows?.map((row: any) => row.column_name) || [];
+
+      const missingColumns = index.columns.filter(col => !existingColumns.includes(col));
+      if (missingColumns.length > 0) {
+        throw new Error(`Missing columns in table '${index.table}': ${missingColumns.join(', ')}`);
+      }
+
+      let sql_statement = `CREATE ${index.unique ? "UNIQUE " : ""}INDEX IF NOT EXISTS ${index.name} ON ${index.table}(${index.columns.join(", ")})`;
+
+      if (index.where) {
+        sql_statement += ` WHERE ${index.where}`;
+      }
+
+      await db.execute(sql.raw(sql_statement));
+    } catch (error) {
+      // Re-throw with more context
+      throw new Error(`Failed to create index ${index.name}: ${error}`);
     }
-
-    await db.execute(sql.raw(sql_statement));
   }
 
   /**
@@ -328,19 +337,16 @@ export class DatabaseIndexOptimizer {
 
     const droppedIndexes: string[] = [];
 
-    // Get all existing indexes
+    // Get all existing indexes - only include tables that exist
     const tables = [
       "snipe_targets",
       "execution_history",
       "transactions",
-      "monitored_listings",
       "pattern_embeddings",
-      "pattern_similarity_cache",
-      "transaction_locks",
-      "transaction_queue",
-      "workflow_activity",
-      "api_credentials",
       "user_preferences",
+      "api_credentials",
+      "transaction_locks",
+      "workflow_activity",
     ];
 
     for (const tableName of tables) {

@@ -1,14 +1,14 @@
 "use client";
 
 import { Activity, AlertTriangle, Bot, Loader2, Pause, Play, RefreshCw } from "lucide-react";
+import { useStatus } from "../../contexts/status-context";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { useStatus } from "../../contexts/status-context";
 
 /**
  * Workflow Status Card V2
- * 
+ *
  * Updated to use the centralized StatusContext to eliminate contradictory
  * status messages. This replaces the original WorkflowStatusCard component.
  */
@@ -53,13 +53,8 @@ export function WorkflowStatusCardV2({
   onToggleMonitoring,
   onRunDiscovery,
 }: WorkflowStatusCardV2Props) {
-  const { 
-    status, 
-    refreshAll, 
-    getOverallStatus, 
-    getStatusMessage 
-  } = useStatus();
-  
+  const { status, refreshAll, getOverallStatus, getStatusMessage } = useStatus();
+
   const overallStatus = getOverallStatus();
   const { network, credentials, trading, workflows } = status;
 
@@ -108,16 +103,18 @@ export function WorkflowStatusCardV2({
             <CardTitle className="text-lg">System Status</CardTitle>
           </div>
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => {
                 onRefresh();
                 refreshAll();
-              }} 
+              }}
               disabled={isLoading || status.isLoading}
             >
-              <RefreshCw className={`h-4 w-4 ${(isLoading || status.isLoading) ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading || status.isLoading ? "animate-spin" : ""}`}
+              />
             </Button>
             <Button
               variant={isDiscoveryRunning ? "destructive" : "default"}
@@ -125,7 +122,7 @@ export function WorkflowStatusCardV2({
               onClick={onToggleMonitoring}
               disabled={isLoading || status.isLoading}
             >
-              {(isLoading || status.isLoading) ? (
+              {isLoading || status.isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : isDiscoveryRunning ? (
                 <>
@@ -146,10 +143,7 @@ export function WorkflowStatusCardV2({
         {/* System Status - Now using centralized status */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Discovery System:</span>
-          <Badge
-            variant="secondary"
-            className={getStatusColor(systemStatus)}
-          >
+          <Badge variant="secondary" className={getStatusColor(systemStatus)}>
             {systemStatus.charAt(0).toUpperCase() + systemStatus.slice(1)}
           </Badge>
         </div>
@@ -180,30 +174,39 @@ export function WorkflowStatusCardV2({
         <div className="p-3 rounded-lg border bg-muted/50">
           <div className="flex items-center justify-between">
             <div className="text-sm font-medium">Overall Health:</div>
-            <Badge 
+            <Badge
               variant={
-                overallStatus === "healthy" ? "default" :
-                overallStatus === "warning" ? "secondary" :
-                overallStatus === "error" ? "destructive" : "outline"
+                overallStatus === "healthy"
+                  ? "default"
+                  : overallStatus === "warning"
+                    ? "secondary"
+                    : overallStatus === "error"
+                      ? "destructive"
+                      : "outline"
               }
             >
-              {overallStatus === "healthy" ? "Operational" :
-               overallStatus === "warning" ? "Warning" :
-               overallStatus === "error" ? "Error" : "Unknown"}
+              {overallStatus === "healthy"
+                ? "Operational"
+                : overallStatus === "warning"
+                  ? "Warning"
+                  : overallStatus === "error"
+                    ? "Error"
+                    : "Unknown"}
             </Badge>
           </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            {getStatusMessage()}
-          </div>
+          <div className="text-xs text-muted-foreground mt-1">{getStatusMessage()}</div>
         </div>
 
         {/* Active Workflows */}
-        {(workflowStatus?.activeWorkflows?.length || workflows.activeWorkflows.length) ? (
+        {workflowStatus?.activeWorkflows?.length || workflows.activeWorkflows.length ? (
           <div>
             <span className="text-sm font-medium">Active Workflows:</span>
             <div className="mt-1 space-y-1">
               {/* Use centralized workflows first, fallback to prop */}
-              {(workflows.activeWorkflows.length > 0 ? workflows.activeWorkflows : workflowStatus?.activeWorkflows || []).map((workflow) => (
+              {(workflows.activeWorkflows.length > 0
+                ? workflows.activeWorkflows
+                : workflowStatus?.activeWorkflows || []
+              ).map((workflow) => (
                 <Badge
                   key={`workflow-${workflow}-${Date.now()}`}
                   variant="outline"
@@ -244,7 +247,7 @@ export function WorkflowStatusCardV2({
           disabled={isLoading || status.isLoading}
           className="w-full"
         >
-          {(isLoading || status.isLoading) ? (
+          {isLoading || status.isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (
             <RefreshCw className="h-4 w-4 mr-2" />

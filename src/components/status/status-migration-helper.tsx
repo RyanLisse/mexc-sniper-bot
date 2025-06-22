@@ -1,15 +1,12 @@
 "use client";
-
-import React from "react";
+import { AlertTriangle, ArrowRight, CheckCircle, FileText } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { CheckCircle, AlertTriangle, ArrowRight, Code, FileText } from "lucide-react";
 
 /**
  * Status Migration Helper Component
- * 
+ *
  * This component helps developers migrate from individual status components
  * to the centralized status management system.
  */
@@ -32,14 +29,19 @@ export default function RootLayout({ children }) {
     },
     {
       title: "Replace EnhancedCredentialStatus",
-      description: "Replace the original component with the V2 version",
-      code: `// Old way (causes contradictions)
+      description: "Upgrade to the latest V3 version with enhanced connectivity features",
+      code: `// Old way (basic status)
 import { EnhancedCredentialStatus } from '@/src/components/enhanced-credential-status';
 
-// New way (synchronized)
-import { EnhancedCredentialStatusV2 } from '@/src/components/enhanced-credential-status-v2';
+// Latest way (enhanced connectivity + health monitoring)
+import { EnhancedCredentialStatusV3 } from '@/src/components/enhanced-credential-status-v3';
 
-<EnhancedCredentialStatusV2 />`,
+<EnhancedCredentialStatusV3 
+  showDetailsButton={true} 
+  showHealthMetrics={true} 
+  showTrends={true} 
+  autoRefresh={true} 
+/>`,
       status: "critical",
     },
     {
@@ -131,8 +133,8 @@ function MyCustomStatus() {
             <span>Status System Migration Guide</span>
           </CardTitle>
           <CardDescription>
-            Follow these steps to eliminate contradictory status messages and implement 
-            centralized status management throughout your application.
+            Follow these steps to eliminate contradictory status messages and implement centralized
+            status management throughout your application.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -140,11 +142,11 @@ function MyCustomStatus() {
             <CheckCircle className="h-4 w-4" />
             <AlertTitle>Migration Benefits</AlertTitle>
             <AlertDescription>
-              • Eliminates contradictory status messages across components<br/>
-              • Provides single source of truth for all status information<br/>
-              • Enables real-time status synchronization<br/>
-              • Improves user experience with consistent status display<br/>
-              • Reduces development complexity with unified status hooks
+              • Eliminates contradictory status messages across components
+              <br />• Provides single source of truth for all status information
+              <br />• Enables real-time status synchronization
+              <br />• Improves user experience with consistent status display
+              <br />• Reduces development complexity with unified status hooks
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -185,8 +187,8 @@ function MyCustomStatus() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Breaking Changes</AlertTitle>
             <AlertDescription>
-              The V2 components are not drop-in replacements. You'll need to update imports 
-              and remove any custom status logic that conflicts with the centralized system.
+              The V2 components are not drop-in replacements. You'll need to update imports and
+              remove any custom status logic that conflicts with the centralized system.
             </AlertDescription>
           </Alert>
 
@@ -194,8 +196,8 @@ function MyCustomStatus() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Testing</AlertTitle>
             <AlertDescription>
-              After migration, test all status displays to ensure they show consistent 
-              information. Pay special attention to error states and loading conditions.
+              After migration, test all status displays to ensure they show consistent information.
+              Pay special attention to error states and loading conditions.
             </AlertDescription>
           </Alert>
 
@@ -203,8 +205,8 @@ function MyCustomStatus() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Performance</AlertTitle>
             <AlertDescription>
-              The centralized system includes automatic refresh and caching. You may need to 
-              adjust refresh intervals based on your application's performance requirements.
+              The centralized system includes automatic refresh and caching. You may need to adjust
+              refresh intervals based on your application's performance requirements.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -229,23 +231,31 @@ function MyCustomStatus() {
             </div>
             <div className="grid grid-cols-3 gap-4 p-3 border rounded-lg text-sm">
               <code>EnhancedCredentialStatus</code>
-              <code>EnhancedCredentialStatusV2</code>
-              <Badge variant="destructive" className="w-fit">Critical</Badge>
+              <code>EnhancedCredentialStatusV3</code>
+              <Badge variant="destructive" className="w-fit">
+                Critical
+              </Badge>
             </div>
             <div className="grid grid-cols-3 gap-4 p-3 border rounded-lg text-sm">
               <code>WorkflowStatusCard</code>
               <code>WorkflowStatusCardV2</code>
-              <Badge variant="destructive" className="w-fit">Critical</Badge>
+              <Badge variant="destructive" className="w-fit">
+                Critical
+              </Badge>
             </div>
             <div className="grid grid-cols-3 gap-4 p-3 border rounded-lg text-sm">
               <code>useMexcConnectivity</code>
               <code>useStatus</code>
-              <Badge variant="secondary" className="w-fit">Recommended</Badge>
+              <Badge variant="secondary" className="w-fit">
+                Recommended
+              </Badge>
             </div>
             <div className="grid grid-cols-3 gap-4 p-3 border rounded-lg text-sm">
               <code>Custom status displays</code>
               <code>UnifiedStatusDisplay components</code>
-              <Badge variant="outline" className="w-fit">Optional</Badge>
+              <Badge variant="outline" className="w-fit">
+                Optional
+              </Badge>
             </div>
           </div>
         </CardContent>

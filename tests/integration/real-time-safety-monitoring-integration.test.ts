@@ -46,9 +46,18 @@ describe('Real-time Safety Monitoring Integration', () => {
     safetyMonitoringService.stopMonitoring();
     
     // Setup mocks for external dependencies
-    vi.spyOn(mexcService, 'getAccountInfo').mockResolvedValue({
+    vi.spyOn(mexcService, 'getAccountBalances').mockResolvedValue({
       success: true,
-      data: { balance: '1000', available: '1000' },
+      data: { 
+        totalValue: '1000',
+        totalBalanceUSDT: '1000',
+        totalBalanceUSD: '1000',
+        assets: [],
+        positions: [],
+        profits: [],
+        marginLevel: 0,
+        riskLevel: 0
+      },
       timestamp: new Date().toISOString()
     });
 

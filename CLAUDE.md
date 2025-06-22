@@ -1,10 +1,10 @@
 # Claude Code Configuration
 
 ## Build Commands
-- `npm run build`: Build the project
-- `npm run test`: Run the full test suite
-- `npm run lint`: Run ESLint and format checks
-- `npm run typecheck`: Run TypeScript type checking
+- `bun run build`: Build the project
+- `bun run test`: Run the full test suite
+- `bun run lint`: Run ESLint and format checks
+- `bun run typecheck`: Run TypeScript type checking
 - `./claude-flow --help`: Show all available commands
 
 ## Claude-Flow Complete Command Reference

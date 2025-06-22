@@ -715,7 +715,19 @@ export class AgentMonitoringService {
     this.stop();
     this.alerts.clear();
     this.reports = [];
+    this.alertIdCounter = 0;
+    this.reportIdCounter = 0;
     AgentMonitoringService.instance = null;
     console.log("[AgentMonitoringService] Service destroyed");
+  }
+
+  /**
+   * Reset singleton instance (for testing)
+   */
+  public static reset(): void {
+    if (AgentMonitoringService.instance) {
+      AgentMonitoringService.instance.destroy();
+    }
+    AgentMonitoringService.instance = null;
   }
 }
