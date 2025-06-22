@@ -886,19 +886,20 @@ export class PatternDetectionEngine {
     }
 
     // Phase 3: AI-Enhanced Pattern Analysis with Cohere + Perplexity
-    try {
-      const patternData = {
-        symbolName: symbol.cd || "unknown",
-        vcoinId: (symbol as any).vcoinId,
-        type: "ready_state" as const,
-        data: {
-          sts: symbol.sts,
-          st: symbol.st,
-          tt: symbol.tt,
-        },
-        confidence: confidence,
-      };
+    // Prepare pattern data for AI enhancement (move outside try block for error handling scope)
+    const patternData = {
+      symbolName: symbol.cd || "unknown",
+      vcoinId: (symbol as any).vcoinId,
+      type: "ready_state" as const,
+      data: {
+        sts: symbol.sts,
+        st: symbol.st,
+        tt: symbol.tt,
+      },
+      confidence: confidence,
+    };
 
+    try {
       // Use AI Intelligence Service for enhanced pattern analysis
       const enhancedPattern = await aiIntelligenceService.enhancePatternWithAI(patternData);
 
@@ -1353,20 +1354,21 @@ export class PatternDetectionEngine {
         patternType: isExactMatch ? "ready_state" : "pre_ready",
       };
 
+      // Prepare pattern data for AI enhancement (move outside try block for error handling scope)
+      const patternData = {
+        symbolName: symbol.cd || "unknown",
+        vcoinId: (symbol as any).vcoinId,
+        type: "ready_state" as const,
+        data: {
+          sts: symbol.sts,
+          st: symbol.st,
+          tt: symbol.tt,
+        },
+        confidence: confidence,
+      };
+
       // Add AI intelligence enhancement if available
       try {
-        const patternData = {
-          symbolName: symbol.cd || "unknown",
-          vcoinId: (symbol as any).vcoinId,
-          type: "ready_state" as const,
-          data: {
-            sts: symbol.sts,
-            st: symbol.st,
-            tt: symbol.tt,
-          },
-          confidence: confidence,
-        };
-
         const enhancedPattern = await aiIntelligenceService.enhancePatternWithAI(patternData);
 
         if (enhancedPattern.perplexityInsights || enhancedPattern.cohereEmbedding) {
@@ -1397,6 +1399,7 @@ export class PatternDetectionEngine {
           },
           error
         );
+        // Continue with result without AI enhancement - graceful fallback
       }
 
       return result;

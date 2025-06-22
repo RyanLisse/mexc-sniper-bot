@@ -181,19 +181,23 @@ export function useAutoSnipingExecution(
           ...prev,
           report: report,
           config: report.config || {},
-          stats: report.stats || { totalTrades: 0, successRate: 0, totalPnl: "0", dailyTradeCount: 0 },
+          stats: report.stats || {
+            totalTrades: 0,
+            successRate: 0,
+            totalPnl: "0",
+            dailyTradeCount: 0,
+          },
           activePositions: report.activePositions || [],
           recentExecutions: report.recentExecutions || [],
           activeAlerts: report.activeAlerts || [],
           isExecutionActive: execution.isActive || false,
-          executionStatus: execution.status || 'idle',
+          executionStatus: execution.status || "idle",
           totalPnl: execution.totalPnl || "0",
           successRate: execution.successRate || 0,
           activePositionsCount: execution.activePositionsCount || 0,
           dailyTradeCount: execution.dailyTrades || 0,
-          unacknowledgedAlertsCount: (report.activeAlerts || []).filter(
-            (a) => !a.acknowledged
-          ).length,
+          unacknowledgedAlertsCount: (report.activeAlerts || []).filter((a) => !a.acknowledged)
+            .length,
           isLoading: false,
           lastUpdated: new Date().toISOString(),
         }));

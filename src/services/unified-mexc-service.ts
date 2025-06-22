@@ -178,7 +178,7 @@ export class UnifiedMexcService {
   })
   async getCalendarListings(): Promise<MexcServiceResponse<CalendarEntry[]>> {
     const startTime = Date.now();
-    
+
     try {
       console.log("[UnifiedMexcService] Fetching calendar listings from MEXC...");
 
@@ -253,7 +253,9 @@ export class UnifiedMexcService {
           .filter((entry): entry is CalendarEntry => entry !== null);
       }
 
-      console.log(`[UnifiedMexcService] Successfully fetched ${calendarData.length} calendar entries`);
+      console.log(
+        `[UnifiedMexcService] Successfully fetched ${calendarData.length} calendar entries`
+      );
 
       return {
         success: true,
@@ -319,22 +321,24 @@ export class UnifiedMexcService {
     operationType: "api_call",
     includeInputData: false,
   })
-  async getSymbolTradingRules(symbol: string): Promise<MexcServiceResponse<{
-    symbol: string;
-    minQty: string | null;
-    maxQty: string | null;
-    stepSize: string | null;
-    minNotional: string | null;
-    maxNotional: string | null;
-    minPrice: string | null;
-    maxPrice: string | null;
-    tickSize: string | null;
-    status: string;
-    isSpotTradingAllowed: boolean;
-  }>> {
+  async getSymbolTradingRules(symbol: string): Promise<
+    MexcServiceResponse<{
+      symbol: string;
+      minQty: string | null;
+      maxQty: string | null;
+      stepSize: string | null;
+      minNotional: string | null;
+      maxNotional: string | null;
+      minPrice: string | null;
+      maxPrice: string | null;
+      tickSize: string | null;
+      status: string;
+      isSpotTradingAllowed: boolean;
+    }>
+  > {
     try {
       const exchangeInfoResponse = await this.getExchangeInfo();
-      
+
       if (!exchangeInfoResponse.success || !exchangeInfoResponse.data) {
         return {
           success: false,
@@ -343,8 +347,8 @@ export class UnifiedMexcService {
         };
       }
 
-      const symbolInfo = exchangeInfoResponse.data.symbols.find(s => s.symbol === symbol);
-      
+      const symbolInfo = exchangeInfoResponse.data.symbols.find((s) => s.symbol === symbol);
+
       if (!symbolInfo) {
         return {
           success: false,
@@ -421,12 +425,14 @@ export class UnifiedMexcService {
     includeInputData: false,
     sensitiveParameters: ["quantity", "price"],
   })
-  async validateOrderParams(params: OrderParameters): Promise<MexcServiceResponse<{
-    isValid: boolean;
-    errors: string[];
-    warnings: string[];
-    adjustedParams?: Partial<OrderParameters>;
-  }>> {
+  async validateOrderParams(params: OrderParameters): Promise<
+    MexcServiceResponse<{
+      isValid: boolean;
+      errors: string[];
+      warnings: string[];
+      adjustedParams?: Partial<OrderParameters>;
+    }>
+  > {
     const errors: string[] = [];
     const warnings: string[] = [];
     const adjustedParams: Partial<OrderParameters> = {};
@@ -434,9 +440,11 @@ export class UnifiedMexcService {
     try {
       // Get trading rules for the symbol
       const rulesResponse = await this.getSymbolTradingRules(params.symbol);
-      
+
       if (!rulesResponse.success || !rulesResponse.data) {
-        errors.push(`Cannot validate order: ${rulesResponse.error || 'Trading rules not available'}`);
+        errors.push(
+          `Cannot validate order: ${rulesResponse.error || "Trading rules not available"}`
+        );
         return {
           success: true,
           data: { isValid: false, errors, warnings },
@@ -448,7 +456,9 @@ export class UnifiedMexcService {
 
       // Check if symbol is active for trading
       if (rules.status !== "TRADING") {
-        errors.push(`Symbol ${params.symbol} is not available for trading (status: ${rules.status})`);
+        errors.push(
+          `Symbol ${params.symbol} is not available for trading (status: ${rules.status})`
+        );
       }
 
       if (!rules.isSpotTradingAllowed) {
@@ -484,7 +494,9 @@ export class UnifiedMexcService {
           const remainder = quantity % stepSize;
           if (remainder !== 0) {
             const adjustedQty = Math.floor(quantity / stepSize) * stepSize;
-            warnings.push(`Quantity ${quantity} doesn't match step size ${stepSize}, suggested: ${adjustedQty}`);
+            warnings.push(
+              `Quantity ${quantity} doesn't match step size ${stepSize}, suggested: ${adjustedQty}`
+            );
             adjustedParams.quantity = adjustedQty.toString();
           }
         }
@@ -520,7 +532,9 @@ export class UnifiedMexcService {
             const remainder = price % tickSize;
             if (remainder !== 0) {
               const adjustedPrice = Math.round(price / tickSize) * tickSize;
-              warnings.push(`Price ${price} doesn't match tick size ${tickSize}, suggested: ${adjustedPrice}`);
+              warnings.push(
+                `Price ${price} doesn't match tick size ${tickSize}, suggested: ${adjustedPrice}`
+              );
               adjustedParams.price = adjustedPrice.toString();
             }
           }
@@ -530,18 +544,22 @@ export class UnifiedMexcService {
       // Validate notional value (quantity * price)
       if (params.price && !errors.length) {
         const notionalValue = quantity * Number.parseFloat(params.price);
-        
+
         if (rules.minNotional) {
           const minNotional = Number.parseFloat(rules.minNotional);
           if (notionalValue < minNotional) {
-            errors.push(`Order notional value ${notionalValue.toFixed(6)} is below minimum ${minNotional}`);
+            errors.push(
+              `Order notional value ${notionalValue.toFixed(6)} is below minimum ${minNotional}`
+            );
           }
         }
 
         if (rules.maxNotional) {
           const maxNotional = Number.parseFloat(rules.maxNotional);
           if (notionalValue > maxNotional) {
-            errors.push(`Order notional value ${notionalValue.toFixed(6)} exceeds maximum ${maxNotional}`);
+            errors.push(
+              `Order notional value ${notionalValue.toFixed(6)} exceeds maximum ${maxNotional}`
+            );
           }
         }
       }
@@ -549,11 +567,13 @@ export class UnifiedMexcService {
       // Check against static minimum from constants
       const { TRADING_CONFIG } = await import("../lib/constants");
       const minPositionSize = TRADING_CONFIG.PORTFOLIO.MIN_POSITION_SIZE;
-      
+
       if (params.price) {
         const totalValue = quantity * Number.parseFloat(params.price);
         if (totalValue < minPositionSize) {
-          warnings.push(`Order value ${totalValue.toFixed(2)} USDT is below recommended minimum ${minPositionSize} USDT`);
+          warnings.push(
+            `Order value ${totalValue.toFixed(2)} USDT is below recommended minimum ${minPositionSize} USDT`
+          );
         }
       }
 
@@ -593,7 +613,12 @@ export class UnifiedMexcService {
       { cacheTTL: 60000 } // 1 minute cache for symbol data
     );
 
-    if (response.success && response.data && typeof response.data === "object" && "symbols" in response.data) {
+    if (
+      response.success &&
+      response.data &&
+      typeof response.data === "object" &&
+      "symbols" in response.data
+    ) {
       const rawData = response.data as any;
       const symbols = (rawData.symbols || []).map((symbol: any) => ({
         cd: symbol.symbol || "",
@@ -646,16 +671,17 @@ export class UnifiedMexcService {
     try {
       // If specific symbols are requested, fetch individually
       if (symbols && symbols.length > 0) {
-        const tickerPromises = symbols.map(symbol => 
+        const tickerPromises = symbols.map((symbol) =>
           this.apiClient.get<Ticker>("/api/v3/ticker/24hr", { symbol })
         );
-        
+
         const results = await Promise.allSettled(tickerPromises);
         const tickers = results
-          .filter((result): result is PromiseFulfilledResult<MexcServiceResponse<Ticker>> => 
-            result.status === 'fulfilled' && result.value.success
+          .filter(
+            (result): result is PromiseFulfilledResult<MexcServiceResponse<Ticker>> =>
+              result.status === "fulfilled" && result.value.success
           )
-          .map(result => result.value.data!)
+          .map((result) => result.value.data!)
           .filter(Boolean);
 
         return {
@@ -677,7 +703,11 @@ export class UnifiedMexcService {
       }
 
       // Ensure data is an array
-      const tickers = Array.isArray(response.data) ? response.data : response.data ? [response.data] : [];
+      const tickers = Array.isArray(response.data)
+        ? response.data
+        : response.data
+          ? [response.data]
+          : [];
 
       return {
         ...response,
@@ -740,28 +770,28 @@ export class UnifiedMexcService {
       }
 
       const tickers = Array.isArray(tickerResponse.data) ? tickerResponse.data : [];
-      
+
       // Create price map using correct field (lastPrice instead of price)
       const priceMap = new Map<string, number>();
       for (const ticker of tickers) {
         if (ticker.symbol && ticker.lastPrice) {
-          priceMap.set(ticker.symbol, parseFloat(ticker.lastPrice));
+          priceMap.set(ticker.symbol, Number.parseFloat(ticker.lastPrice));
         }
       }
 
       let totalUsdtValue = 0;
       let btcPrice = 0;
-      
+
       // Get BTC price for totalValueBTC calculation
-      const btcTicker = tickers.find(t => t.symbol === 'BTCUSDT');
+      const btcTicker = tickers.find((t) => t.symbol === "BTCUSDT");
       if (btcTicker && btcTicker.lastPrice) {
-        btcPrice = parseFloat(btcTicker.lastPrice);
+        btcPrice = Number.parseFloat(btcTicker.lastPrice);
       }
 
       // Process balances with enhanced calculations
       const processedBalances: BalanceEntry[] = balanceResponse.data.balances
         .map((b) => {
-          const total = parseFloat(b.free) + parseFloat(b.locked);
+          const total = Number.parseFloat(b.free) + Number.parseFloat(b.locked);
           const asset = b.asset.toUpperCase();
           let usdtValue = 0;
 
@@ -783,7 +813,7 @@ export class UnifiedMexcService {
             usdtValue,
           };
         })
-        .filter(balance => balance.total > 0); // Only include non-zero balances
+        .filter((balance) => balance.total > 0); // Only include non-zero balances
 
       // Calculate allocation percentages
       const allocation: Record<string, number> = {};
@@ -798,19 +828,19 @@ export class UnifiedMexcService {
       // Calculate 24h performance (simplified implementation)
       let performance24hChange = 0;
       let performance24hChangePercent = 0;
-      
+
       // Calculate weighted average of price changes across portfolio
       let totalWeightedChange = 0;
       let totalWeight = 0;
-      
+
       for (const balance of processedBalances) {
         if (balance.usdtValue && balance.usdtValue > 0) {
           const asset = balance.asset.toUpperCase();
-          if (asset !== 'USDT') {
+          if (asset !== "USDT") {
             const tickerSymbol = `${asset}USDT`;
-            const ticker = tickers.find(t => t.symbol === tickerSymbol);
+            const ticker = tickers.find((t) => t.symbol === tickerSymbol);
             if (ticker && ticker.priceChangePercent) {
-              const changePercent = parseFloat(ticker.priceChangePercent);
+              const changePercent = Number.parseFloat(ticker.priceChangePercent);
               const weight = balance.usdtValue;
               totalWeightedChange += changePercent * weight;
               totalWeight += weight;
@@ -818,7 +848,7 @@ export class UnifiedMexcService {
           }
         }
       }
-      
+
       if (totalWeight > 0) {
         performance24hChangePercent = totalWeightedChange / totalWeight;
         performance24hChange = (totalUsdtValue * performance24hChangePercent) / 100;
@@ -940,15 +970,15 @@ export class UnifiedMexcService {
     try {
       const tickerResponse = await this.getTicker24hr([symbol]);
       const data = tickerResponse.success && tickerResponse.data?.[0];
-      
+
       return {
-        status: data ? 'active' : 'inactive',
-        trading: !!data
+        status: data ? "active" : "inactive",
+        trading: !!data,
       };
     } catch (error) {
       return {
-        status: 'error',
-        trading: false
+        status: "error",
+        trading: false,
       };
     }
   }
@@ -956,7 +986,10 @@ export class UnifiedMexcService {
   /**
    * Get order book depth
    */
-  async getOrderBookDepth(symbol: string, limit = 100): Promise<{
+  async getOrderBookDepth(
+    symbol: string,
+    limit = 100
+  ): Promise<{
     bids: Array<{ price: string; quantity: string }>;
     asks: Array<{ price: string; quantity: string }>;
   }> {
@@ -964,12 +997,12 @@ export class UnifiedMexcService {
       const orderBook = await this.apiClient.getOrderBook(symbol, limit);
       return {
         bids: orderBook.bids || [],
-        asks: orderBook.asks || []
+        asks: orderBook.asks || [],
       };
     } catch (error) {
       return {
         bids: [],
-        asks: []
+        asks: [],
       };
     }
   }
@@ -982,7 +1015,7 @@ export class UnifiedMexcService {
     if (!response.success) {
       return response;
     }
-    
+
     // Return single ticker if only one symbol requested
     if (symbols && symbols.length === 1) {
       return {
@@ -990,7 +1023,7 @@ export class UnifiedMexcService {
         data: response.data?.[0] || null,
       };
     }
-    
+
     return response;
   }
 
@@ -1000,27 +1033,27 @@ export class UnifiedMexcService {
   async detectPriceGap(symbol: string): Promise<{
     hasGap: boolean;
     gapPercentage: number;
-    direction: 'up' | 'down' | 'none';
+    direction: "up" | "down" | "none";
   }> {
     try {
       const tickerResponse = await this.getTicker24hr([symbol]);
       const data = tickerResponse.success && tickerResponse.data?.[0];
-      
+
       if (!data?.openPrice || !data?.lastPrice) {
-        return { hasGap: false, gapPercentage: 0, direction: 'none' };
+        return { hasGap: false, gapPercentage: 0, direction: "none" };
       }
 
       const openPrice = Number.parseFloat(data.openPrice);
       const currentPrice = Number.parseFloat(data.lastPrice);
       const gapPercentage = Math.abs((currentPrice - openPrice) / openPrice) * 100;
-      
+
       return {
         hasGap: gapPercentage > 2, // Consider >2% as a gap
         gapPercentage,
-        direction: currentPrice > openPrice ? 'up' : currentPrice < openPrice ? 'down' : 'none'
+        direction: currentPrice > openPrice ? "up" : currentPrice < openPrice ? "down" : "none",
       };
     } catch (error) {
-      return { hasGap: false, gapPercentage: 0, direction: 'none' };
+      return { hasGap: false, gapPercentage: 0, direction: "none" };
     }
   }
 
@@ -1526,8 +1559,8 @@ export class UnifiedMexcService {
   })
   async getKlines(
     symbol: string,
-    interval: string = "1m",
-    limit: number = 100
+    interval = "1m",
+    limit = 100
   ): Promise<MexcServiceResponse<Kline[]>> {
     try {
       const response = await this.apiClient.get<any[]>(
@@ -1600,8 +1633,8 @@ export class UnifiedMexcService {
     let losersCount = 0;
     let topGainer: Ticker | null = null;
     let topLoser: Ticker | null = null;
-    let maxGain = -Infinity;
-    let maxLoss = Infinity;
+    let maxGain = Number.NEGATIVE_INFINITY;
+    let maxLoss = Number.POSITIVE_INFINITY;
     let volatilitySum = 0;
 
     for (const ticker of tickers) {
@@ -1660,7 +1693,7 @@ export class UnifiedMexcService {
     const { balances, totalUsdtValue, allocation } = portfolio;
 
     // Calculate diversification score
-    const activeAssets = balances.filter(b => b.total > 0).length;
+    const activeAssets = balances.filter((b) => b.total > 0).length;
     const diversificationScore = Math.min(activeAssets * 10, 100); // Max 100 for 10+ assets
 
     // Calculate concentration risk
@@ -1668,20 +1701,26 @@ export class UnifiedMexcService {
     const concentrationRisk = maxAllocation > 50 ? "high" : maxAllocation > 25 ? "medium" : "low";
 
     // Calculate volatility risk based on 24h performance
-    const volatilityRisk = Math.abs(portfolio.performance24h?.changePercent || 0) > 10 ? "high" : 
-                          Math.abs(portfolio.performance24h?.changePercent || 0) > 5 ? "medium" : "low";
+    const volatilityRisk =
+      Math.abs(portfolio.performance24h?.changePercent || 0) > 10
+        ? "high"
+        : Math.abs(portfolio.performance24h?.changePercent || 0) > 5
+          ? "medium"
+          : "low";
 
     // Generate recommendations
     const recommendations: string[] = [];
-    
+
     if (concentrationRisk === "high") {
-      recommendations.push("Consider diversifying holdings - over 50% concentrated in single asset");
+      recommendations.push(
+        "Consider diversifying holdings - over 50% concentrated in single asset"
+      );
     }
-    
+
     if (activeAssets < 3) {
       recommendations.push("Increase diversification by holding more assets");
     }
-    
+
     if (totalUsdtValue < 100) {
       recommendations.push("Portfolio value is low - consider increasing position sizes");
     }
@@ -1697,7 +1736,7 @@ export class UnifiedMexcService {
     if (volatilityRisk === "high") riskScore += 15;
     if (volatilityRisk === "medium") riskScore += 8;
     if (activeAssets < 3) riskScore += 10;
-    
+
     riskScore = Math.min(riskScore, 100);
 
     return {
@@ -1772,12 +1811,12 @@ export class UnifiedMexcService {
     try {
       // Delegate to API client placeOrder method - CRITICAL FIX
       const response = await this.apiClient.placeOrder(params);
-      
+
       // Transform UnifiedMexcResponse to MexcServiceResponse format
       return {
         success: response.success,
         data: response.data,
-        error: response.success ? undefined : (response.data?.error || "Order placement failed"),
+        error: response.success ? undefined : response.data?.error || "Order placement failed",
         timestamp: new Date().toISOString(),
         executionTimeMs: response.executionTimeMs,
         cached: response.cached,
@@ -1807,12 +1846,12 @@ export class UnifiedMexcService {
     try {
       // Use API client to place the order
       const response = await this.apiClient.placeOrder(params);
-      
+
       // Transform UnifiedMexcResponse to MexcServiceResponse format
       return {
         success: response.success,
         data: response.data,
-        error: response.success ? undefined : (response.data?.error || "Order placement failed"),
+        error: response.success ? undefined : response.data?.error || "Order placement failed",
         timestamp: new Date().toISOString(),
         executionTimeMs: response.executionTimeMs,
         cached: response.cached,

@@ -59,7 +59,6 @@ const formatAlertType = (type: string) => {
   return type.replace("_", " ").toUpperCase();
 };
 
-
 interface AutoSnipingExecutionDashboardProps {
   className?: string;
   autoRefresh?: boolean;
@@ -90,7 +89,7 @@ function ExecutionStats({
   formatCurrency: (value: string | number) => string;
 }) {
   const pnlValue = Number.parseFloat(totalPnl);
-  
+
   return (
     <div className="space-y-4">
       {/* Status Overview */}
@@ -107,7 +106,9 @@ function ExecutionStats({
           <p className="text-sm text-gray-600">Active Positions</p>
         </div>
         <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
-          <div className={`flex items-center gap-2 ${pnlValue >= 0 ? "text-green-600" : "text-red-600"}`}>
+          <div
+            className={`flex items-center gap-2 ${pnlValue >= 0 ? "text-green-600" : "text-red-600"}`}
+          >
             <DollarSign className="h-5 w-5" />
             <span className="text-2xl font-bold">{formatCurrency(totalPnl)}</span>
           </div>
@@ -175,15 +176,19 @@ function ExecutionControls({
 }) {
   if (!showControls) return null;
 
-  const isAnyOperationLoading = isLoading || isStartingExecution || isPausingExecution || 
-                                isResumingExecution || isStoppingExecution;
+  const isAnyOperationLoading =
+    isLoading ||
+    isStartingExecution ||
+    isPausingExecution ||
+    isResumingExecution ||
+    isStoppingExecution;
 
   return (
     <div className="flex gap-2">
       <Button variant="outline" size="sm" onClick={onRefresh} disabled={isAnyOperationLoading}>
         <RefreshCw className="h-4 w-4" />
       </Button>
-      
+
       {!isExecutionActive ? (
         <Button onClick={onToggleExecution} disabled={isAnyOperationLoading}>
           <Play className="h-4 w-4 mr-2" />
@@ -397,7 +402,9 @@ function ConfigEditor({
                   min="1"
                   max="100"
                   value={getConfigValue("maxDailyTrades") as number}
-                  onChange={(e) => onConfigChange("maxDailyTrades", Number.parseInt(e.target.value))}
+                  onChange={(e) =>
+                    onConfigChange("maxDailyTrades", Number.parseInt(e.target.value))
+                  }
                   disabled={!configEditMode}
                 />
               </div>
@@ -410,7 +417,9 @@ function ConfigEditor({
                   min="10"
                   step="10"
                   value={getConfigValue("positionSizeUSDT") as number}
-                  onChange={(e) => onConfigChange("positionSizeUSDT", Number.parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    onConfigChange("positionSizeUSDT", Number.parseFloat(e.target.value))
+                  }
                   disabled={!configEditMode}
                 />
               </div>
@@ -431,7 +440,9 @@ function ConfigEditor({
                   min="0"
                   max="100"
                   value={getConfigValue("minConfidence") as number}
-                  onChange={(e) => onConfigChange("minConfidence", Number.parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    onConfigChange("minConfidence", Number.parseFloat(e.target.value))
+                  }
                   disabled={!configEditMode}
                 />
               </div>
@@ -468,7 +479,9 @@ function ConfigEditor({
                   max="50"
                   step="0.5"
                   value={getConfigValue("stopLossPercentage") as number}
-                  onChange={(e) => onConfigChange("stopLossPercentage", Number.parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    onConfigChange("stopLossPercentage", Number.parseFloat(e.target.value))
+                  }
                   disabled={!configEditMode}
                 />
               </div>
@@ -482,7 +495,9 @@ function ConfigEditor({
                   max="100"
                   step="0.5"
                   value={getConfigValue("takeProfitPercentage") as number}
-                  onChange={(e) => onConfigChange("takeProfitPercentage", Number.parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    onConfigChange("takeProfitPercentage", Number.parseFloat(e.target.value))
+                  }
                   disabled={!configEditMode}
                 />
               </div>
@@ -496,7 +511,9 @@ function ConfigEditor({
                   max="50"
                   step="1"
                   value={getConfigValue("maxDrawdownPercentage") as number}
-                  onChange={(e) => onConfigChange("maxDrawdownPercentage", Number.parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    onConfigChange("maxDrawdownPercentage", Number.parseFloat(e.target.value))
+                  }
                   disabled={!configEditMode}
                 />
               </div>
@@ -510,7 +527,9 @@ function ConfigEditor({
                   max="5"
                   step="0.1"
                   value={getConfigValue("slippageTolerancePercentage") as number}
-                  onChange={(e) => onConfigChange("slippageTolerancePercentage", Number.parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    onConfigChange("slippageTolerancePercentage", Number.parseFloat(e.target.value))
+                  }
                   disabled={!configEditMode}
                 />
               </div>

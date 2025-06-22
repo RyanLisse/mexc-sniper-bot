@@ -56,7 +56,7 @@ const getStatusInfo = (status: string, autoSnipingEnabled: boolean): StatusInfo 
     },
     partial: {
       icon: <AlertTriangle className="h-6 w-6 text-yellow-500" />,
-      title: "Partial Readiness", 
+      title: "Partial Readiness",
       description: `Auto-sniping is ${autoSnipingEnabled ? "enabled" : "disabled"}`,
     },
     not_ready: {
@@ -65,22 +65,22 @@ const getStatusInfo = (status: string, autoSnipingEnabled: boolean): StatusInfo 
       description: `Auto-sniping is ${autoSnipingEnabled ? "enabled" : "disabled"}`,
     },
   };
-  
+
   return statusMap[status] || statusMap.not_ready;
 };
 
 // Status display component for overall system status
-const StatusDisplay = ({ 
-  status, 
-  autoSnipingEnabled, 
-  readinessScore 
-}: { 
-  status: string; 
-  autoSnipingEnabled: boolean; 
-  readinessScore: number; 
+const StatusDisplay = ({
+  status,
+  autoSnipingEnabled,
+  readinessScore,
+}: {
+  status: string;
+  autoSnipingEnabled: boolean;
+  readinessScore: number;
 }) => {
   const statusInfo = getStatusInfo(status, autoSnipingEnabled);
-  
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -224,7 +224,7 @@ export function ConfigStatusPanel({
           {/* Overall Status */}
           {readinessReport && (
             <div className="space-y-4">
-              <StatusDisplay 
+              <StatusDisplay
                 status={readinessReport.overallStatus}
                 autoSnipingEnabled={readinessReport.autoSnipingEnabled}
                 readinessScore={readinessReport.readinessScore}
@@ -314,7 +314,11 @@ export function ConfigStatusPanel({
                         <div>
                           <h4 className="font-medium flex items-center gap-2">
                             {result.component}
-                            <Badge variant={getComponentStatusInfo(result.status, result.isValid).variant}>
+                            <Badge
+                              variant={
+                                getComponentStatusInfo(result.status, result.isValid).variant
+                              }
+                            >
                               {result.status}
                             </Badge>
                           </h4>

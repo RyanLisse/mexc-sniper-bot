@@ -981,20 +981,28 @@ export class AutoSnipingExecutionService {
 
   private getDefaultConfig(): AutoSnipingConfig {
     return {
-      enabled: process.env.NODE_ENV !== 'production' || process.env.AUTO_SNIPING_ENABLED === 'true', // Default disabled in production unless explicitly enabled
-      maxPositions: parseInt(process.env.AUTO_SNIPING_MAX_POSITIONS || '5'),
-      maxDailyTrades: parseInt(process.env.AUTO_SNIPING_MAX_DAILY_TRADES || '10'),
-      positionSizeUSDT: parseFloat(process.env.AUTO_SNIPING_POSITION_SIZE_USDT || '10'),
-      minConfidence: parseFloat(process.env.AUTO_SNIPING_MIN_CONFIDENCE || '80'),
-      allowedPatternTypes: (process.env.AUTO_SNIPING_ALLOWED_PATTERNS?.split(',') as PatternType[]) || ["ready_state"],
-      requireCalendarConfirmation: process.env.AUTO_SNIPING_REQUIRE_CALENDAR === 'true' || true,
-      stopLossPercentage: parseFloat(process.env.AUTO_SNIPING_STOP_LOSS_PERCENT || '5'),
-      takeProfitPercentage: parseFloat(process.env.AUTO_SNIPING_TAKE_PROFIT_PERCENT || '10'),
-      maxDrawdownPercentage: parseFloat(process.env.AUTO_SNIPING_MAX_DRAWDOWN_PERCENT || '20'),
-      enableAdvanceDetection: process.env.AUTO_SNIPING_ENABLE_ADVANCE_DETECTION !== 'false', // Default true
-      advanceHoursThreshold: parseFloat(process.env.AUTO_SNIPING_ADVANCE_HOURS_THRESHOLD || '3.5'),
-      enableMultiPhaseStrategy: process.env.AUTO_SNIPING_ENABLE_MULTI_PHASE === 'true' || false,
-      slippageTolerancePercentage: parseFloat(process.env.AUTO_SNIPING_SLIPPAGE_TOLERANCE || '1'),
+      enabled: process.env.NODE_ENV !== "production" || process.env.AUTO_SNIPING_ENABLED === "true", // Default disabled in production unless explicitly enabled
+      maxPositions: Number.parseInt(process.env.AUTO_SNIPING_MAX_POSITIONS || "5"),
+      maxDailyTrades: Number.parseInt(process.env.AUTO_SNIPING_MAX_DAILY_TRADES || "10"),
+      positionSizeUSDT: Number.parseFloat(process.env.AUTO_SNIPING_POSITION_SIZE_USDT || "10"),
+      minConfidence: Number.parseFloat(process.env.AUTO_SNIPING_MIN_CONFIDENCE || "80"),
+      allowedPatternTypes: (process.env.AUTO_SNIPING_ALLOWED_PATTERNS?.split(
+        ","
+      ) as PatternType[]) || ["ready_state"],
+      requireCalendarConfirmation: process.env.AUTO_SNIPING_REQUIRE_CALENDAR === "true" || true,
+      stopLossPercentage: Number.parseFloat(process.env.AUTO_SNIPING_STOP_LOSS_PERCENT || "5"),
+      takeProfitPercentage: Number.parseFloat(process.env.AUTO_SNIPING_TAKE_PROFIT_PERCENT || "10"),
+      maxDrawdownPercentage: Number.parseFloat(
+        process.env.AUTO_SNIPING_MAX_DRAWDOWN_PERCENT || "20"
+      ),
+      enableAdvanceDetection: process.env.AUTO_SNIPING_ENABLE_ADVANCE_DETECTION !== "false", // Default true
+      advanceHoursThreshold: Number.parseFloat(
+        process.env.AUTO_SNIPING_ADVANCE_HOURS_THRESHOLD || "3.5"
+      ),
+      enableMultiPhaseStrategy: process.env.AUTO_SNIPING_ENABLE_MULTI_PHASE === "true" || false,
+      slippageTolerancePercentage: Number.parseFloat(
+        process.env.AUTO_SNIPING_SLIPPAGE_TOLERANCE || "1"
+      ),
     };
   }
 

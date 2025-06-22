@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
 import { createHealthResponse, apiResponse, handleApiError } from "../../../../src/lib/api-response";
+import { strategyInitializationService } from "../../../../src/services/strategy-initialization-service";
+import { multiPhaseTradingService } from "../../../../src/services/multi-phase-trading-service";
 
 export async function GET() {
   try {
     // Check strategy system components
     const strategyHealth = await checkTradingStrategies();
+    const templateHealth = await checkStrategyTemplates();
     const patternHealth = await checkPatternDetection();
     const riskHealth = await checkRiskManagement();
     
     // Determine overall health - more permissive for development and production without API keys
-    const criticalHealthy = strategyHealth.healthy || patternHealth.healthy || riskHealth.healthy; // At least one system working
-    const allHealthy = strategyHealth.healthy && patternHealth.healthy && riskHealth.healthy;
-    const hasWarnings = strategyHealth.warnings || patternHealth.warnings || riskHealth.warnings;
+    const criticalHealthy = (strategyHealth.healthy && templateHealth.healthy) || patternHealth.healthy || riskHealth.healthy; // Strategy + templates required, OR other systems working
+    const allHealthy = strategyHealth.healthy && templateHealth.healthy && patternHealth.healthy && riskHealth.healthy;
+    const hasWarnings = strategyHealth.warnings || templateHealth.warnings || patternHealth.warnings || riskHealth.warnings;
     
     let status: 'healthy' | 'warning' | 'unhealthy';
     let message: string;
@@ -36,20 +39,24 @@ export async function GET() {
       message,
       details: {
         multiPhaseStrategies: strategyHealth,
+        strategyTemplates: templateHealth,
         patternDetection: patternHealth,
         riskManagement: riskHealth,
         predefinedStrategies: {
-          count: 4,
-          types: ['momentum', 'breakout', 'mean-reversion', 'volume-spike']
+          count: templateHealth.templateCount || 0,
+          types: ['normal', 'conservative', 'aggressive', 'scalping', 'diamond'],
+          initialized: templateHealth.initialized
         },
         database: {
-          tradingStrategies: 12,
-          strategyTemplates: 8,
-          activeConfigurations: 3
+          connection: templateHealth.databaseConnected,
+          templateCount: templateHealth.templateCount || 0,
+          lastInitialization: templateHealth.lastInitialization,
+          errors: templateHealth.errors
         },
         validation: {
           testPassed: allHealthy,
-          lastValidation: new Date().toISOString()
+          lastValidation: new Date().toISOString(),
+          criticalSystemsHealthy: criticalHealthy
         }
       },
       responseTime: '45ms',
@@ -195,6 +202,72 @@ async function checkRiskManagement(): Promise<{
       currentRiskLevel: 'high',
       stopLossActive: false,
       positionSizeOptimal: false
+    };
+  }
+}
+
+async function checkStrategyTemplates(): Promise<{
+  healthy: boolean;
+  warnings: boolean;
+  initialized: boolean;
+  templateCount: number;
+  databaseConnected: boolean;
+  lastInitialization: Date | null;
+  errors: string[];
+}> {
+  try {
+    // Get health status from strategy initialization service
+    const health = await strategyInitializationService.getHealthStatus();
+    
+    // Check if templates need initialization
+    if (!health.templatesInitialized && health.databaseConnected) {
+      try {
+        console.log("[Health Check] Strategy templates not initialized, attempting initialization...");
+        await strategyInitializationService.initializeOnStartup();
+        // Get updated health status
+        const updatedHealth = await strategyInitializationService.getHealthStatus();
+        return {
+          healthy: updatedHealth.templatesInitialized && updatedHealth.databaseConnected,
+          warnings: updatedHealth.errors.length > 0,
+          initialized: updatedHealth.templatesInitialized,
+          templateCount: updatedHealth.templateCount,
+          databaseConnected: updatedHealth.databaseConnected,
+          lastInitialization: updatedHealth.lastInitialization,
+          errors: updatedHealth.errors
+        };
+      } catch (initError) {
+        console.error("[Health Check] Strategy template initialization failed:", initError);
+        return {
+          healthy: false,
+          warnings: true,
+          initialized: false,
+          templateCount: 0,
+          databaseConnected: health.databaseConnected,
+          lastInitialization: null,
+          errors: [...health.errors, `Initialization failed: ${initError instanceof Error ? initError.message : 'Unknown error'}`]
+        };
+      }
+    }
+    
+    return {
+      healthy: health.templatesInitialized && health.databaseConnected,
+      warnings: health.errors.length > 0,
+      initialized: health.templatesInitialized,
+      templateCount: health.templateCount,
+      databaseConnected: health.databaseConnected,
+      lastInitialization: health.lastInitialization,
+      errors: health.errors
+    };
+  } catch (error) {
+    console.error("[Health Check] Strategy template check failed:", error);
+    return {
+      healthy: false,
+      warnings: true,
+      initialized: false,
+      templateCount: 0,
+      databaseConnected: false,
+      lastInitialization: null,
+      errors: [error instanceof Error ? error.message : 'Unknown error']
     };
   }
 }

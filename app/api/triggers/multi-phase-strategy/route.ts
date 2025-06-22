@@ -6,6 +6,7 @@ import { multiPhaseTradingService } from "../../../../src/services/multi-phase-t
 import { StrategyAgent } from "../../../../src/mexc-agents/strategy-agent";
 import { rateLimiter } from "../../../../src/lib/rate-limiter";
 import { apiResponse } from "../../../../src/lib/api-response";
+import { ensureStartupInitialization } from "../../../../src/lib/startup-initialization";
 
 // ===========================================
 // MULTI-PHASE STRATEGY CREATION TRIGGER
@@ -42,6 +43,9 @@ const TriggerSchema = z.object({
 // POST /api/triggers/multi-phase-strategy - Trigger multi-phase strategy workflows
 export async function POST(request: NextRequest) {
   try {
+    // Ensure startup initialization is complete
+    await ensureStartupInitialization();
+
     // Rate limiting
     const rateLimitResult = await rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategy_triggers");
     if (!rateLimitResult.success) {
@@ -330,6 +334,9 @@ async function handleStrategyRecommendation(data: any, userId: string) {
 // GET /api/triggers/multi-phase-strategy - Get trigger status and capabilities
 export async function GET(request: NextRequest) {
   try {
+    // Ensure startup initialization is complete
+    await ensureStartupInitialization();
+
     // Rate limiting
     const rateLimitResult = await rateLimiter.checkRateLimit(rateLimiter.getClientIP(request), "strategy_status");
     if (!rateLimitResult.success) {

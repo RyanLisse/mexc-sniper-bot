@@ -167,9 +167,7 @@ function SafetyStatusOverview({
       </div>
       <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-2">
-          <Bell
-            className={`h-5 w-5 ${alertsCount > 0 ? "text-red-500" : "text-gray-400"}`}
-          />
+          <Bell className={`h-5 w-5 ${alertsCount > 0 ? "text-red-500" : "text-gray-400"}`} />
           <span className="text-2xl font-bold">{alertsCount}</span>
         </div>
         <p className="text-sm text-gray-600">Active Alerts</p>
@@ -183,10 +181,10 @@ function SafetyStatusOverview({
         <div className="flex items-center gap-2">
           <Heart
             className={`h-5 w-5 ${
-              systemHealthScore > 80 
-                ? "text-green-500" 
-                : systemHealthScore > 60 
-                  ? "text-yellow-500" 
+              systemHealthScore > 80
+                ? "text-green-500"
+                : systemHealthScore > 60
+                  ? "text-yellow-500"
                   : "text-red-500"
             }`}
           />
@@ -224,15 +222,11 @@ function RiskMetricsGrid({ riskMetrics }: { riskMetrics: RiskMetricsData | null 
         <p className="text-sm text-gray-600">Success Rate</p>
       </div>
       <div className="text-center">
-        <div className="text-lg font-bold text-orange-600">
-          {riskMetrics.consecutiveLosses}
-        </div>
+        <div className="text-lg font-bold text-orange-600">{riskMetrics.consecutiveLosses}</div>
         <p className="text-sm text-gray-600">Consecutive Losses</p>
       </div>
       <div className="text-center">
-        <div className="text-lg font-bold text-green-600">
-          {riskMetrics.apiLatency}ms
-        </div>
+        <div className="text-lg font-bold text-green-600">{riskMetrics.apiLatency}ms</div>
         <p className="text-sm text-gray-600">API Latency</p>
       </div>
     </div>
@@ -311,9 +305,7 @@ function RiskAssessmentCard({
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Overall Risk Score</span>
-                <span className="text-sm font-medium">
-                  {overallRiskScore.toFixed(1)}/100
-                </span>
+                <span className="text-sm font-medium">{overallRiskScore.toFixed(1)}/100</span>
               </div>
               <Progress value={overallRiskScore} className="w-full" />
             </div>
@@ -375,25 +367,33 @@ function SystemHealthCard({ report }: { report: SystemHealthData | null }) {
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-3 bg-gray-50 rounded">
-            <div className={`text-lg font-semibold ${getHealthStatus(report.systemHealth.executionService).color}`}>
+            <div
+              className={`text-lg font-semibold ${getHealthStatus(report.systemHealth.executionService).color}`}
+            >
               {getHealthStatus(report.systemHealth.executionService).text}
             </div>
             <p className="text-xs text-gray-600">Execution Service</p>
           </div>
           <div className="text-center p-3 bg-gray-50 rounded">
-            <div className={`text-lg font-semibold ${getHealthStatus(report.systemHealth.patternMonitoring).color}`}>
+            <div
+              className={`text-lg font-semibold ${getHealthStatus(report.systemHealth.patternMonitoring).color}`}
+            >
               {getHealthStatus(report.systemHealth.patternMonitoring).text}
             </div>
             <p className="text-xs text-gray-600">Pattern Monitoring</p>
           </div>
           <div className="text-center p-3 bg-gray-50 rounded">
-            <div className={`text-lg font-semibold ${getHealthStatus(report.systemHealth.emergencySystem).color}`}>
+            <div
+              className={`text-lg font-semibold ${getHealthStatus(report.systemHealth.emergencySystem).color}`}
+            >
               {getHealthStatus(report.systemHealth.emergencySystem).text}
             </div>
             <p className="text-xs text-gray-600">Emergency System</p>
           </div>
           <div className="text-center p-3 bg-gray-50 rounded">
-            <div className={`text-lg font-semibold ${getHealthStatus(report.systemHealth.mexcConnectivity).color}`}>
+            <div
+              className={`text-lg font-semibold ${getHealthStatus(report.systemHealth.mexcConnectivity).color}`}
+            >
               {report.systemHealth.mexcConnectivity ? "Connected" : "Disconnected"}
             </div>
             <p className="text-xs text-gray-600">MEXC API</p>
@@ -504,9 +504,7 @@ function SafetyActionsTab({ recentActions }: { recentActions: SafetyAction[] }) 
           <Zap className="h-5 w-5" />
           Recent Safety Actions ({recentActions.length})
         </CardTitle>
-        <CardDescription>
-          Automated and manual safety actions taken by the system
-        </CardDescription>
+        <CardDescription>Automated and manual safety actions taken by the system</CardDescription>
       </CardHeader>
       <CardContent>
         {recentActions.length > 0 ? (
@@ -519,9 +517,7 @@ function SafetyActionsTab({ recentActions }: { recentActions: SafetyAction[] }) 
                       <Badge variant={getActionVariant(action.result)}>
                         {action.type.replace("_", " ").toUpperCase()}
                       </Badge>
-                      <Badge variant="outline">
-                        {action.result?.toUpperCase() || "PENDING"}
-                      </Badge>
+                      <Badge variant="outline">{action.result?.toUpperCase() || "PENDING"}</Badge>
                     </div>
                     {action.executedAt && (
                       <span className="text-sm text-gray-500">
@@ -530,9 +526,7 @@ function SafetyActionsTab({ recentActions }: { recentActions: SafetyAction[] }) 
                     )}
                   </div>
                   <p className="text-sm text-gray-700 mb-1">{action.description}</p>
-                  {action.details && (
-                    <p className="text-xs text-gray-500">{action.details}</p>
-                  )}
+                  {action.details && <p className="text-xs text-gray-500">{action.details}</p>}
                 </div>
               ))}
             </div>
@@ -563,15 +557,8 @@ function ConfigSwitch({
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
       <div className="flex items-center space-x-2">
-        <Switch
-          id={id}
-          checked={checked}
-          onCheckedChange={onCheckedChange}
-          disabled={disabled}
-        />
-        <span className="text-sm text-gray-600">
-          {checked ? "Enabled" : "Disabled"}
-        </span>
+        <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
+        <span className="text-sm text-gray-600">{checked ? "Enabled" : "Disabled"}</span>
       </div>
     </div>
   );
@@ -635,9 +622,7 @@ function ConfigHeader({
           <Settings className="h-5 w-5" />
           Safety Configuration
         </CardTitle>
-        <CardDescription>
-          Configure safety monitoring parameters and thresholds
-        </CardDescription>
+        <CardDescription>Configure safety monitoring parameters and thresholds</CardDescription>
       </div>
       <div className="flex gap-2">
         {configEditMode ? (

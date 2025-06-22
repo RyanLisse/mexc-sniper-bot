@@ -1,6 +1,6 @@
 /**
  * Optimized Icon Exports
- * 
+ *
  * This file provides optimized exports for lucide-react icons to improve bundle size.
  * Only the icons actually used in the application are exported here.
  */

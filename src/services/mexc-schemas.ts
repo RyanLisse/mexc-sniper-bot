@@ -143,12 +143,16 @@ export const ExchangeSymbolSchema = z.object({
 export const ExchangeInfoSchema = z.object({
   timezone: z.string(),
   serverTime: z.number(),
-  rateLimits: z.array(z.object({
-    rateLimitType: z.string(),
-    interval: z.string(),
-    intervalNum: z.number(),
-    limit: z.number(),
-  })).optional(),
+  rateLimits: z
+    .array(
+      z.object({
+        rateLimitType: z.string(),
+        interval: z.string(),
+        intervalNum: z.number(),
+        limit: z.number(),
+      })
+    )
+    .optional(),
   exchangeFilters: z.array(TradingFilterSchema).optional(),
   symbols: z.array(ExchangeSymbolSchema),
 });
