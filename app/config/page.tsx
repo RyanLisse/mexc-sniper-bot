@@ -1,5 +1,8 @@
 "use client";
 
+// Force dynamic rendering for this page since it shows real-time system status
+export const dynamic = 'force-dynamic';
+
 import { Badge } from "../../src/components/ui/badge";
 import { Button } from "../../src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../src/components/ui/card";
@@ -36,6 +39,7 @@ import { ConsolidatedCredentialStatus } from "../../src/components/enhanced-cred
 import { ConfigStatusPanel } from "../../src/components/auto-sniping/config-status-panel";
 import { AutoSnipingExecutionDashboard } from "../../src/components/auto-sniping/auto-sniping-execution-dashboard";
 import { useStatus } from "../../src/contexts/status-context";
+import { Suspense } from "react";
 
 // TypeScript interfaces for system status
 interface SystemStatus {
@@ -105,6 +109,23 @@ interface SystemCheckState {
   lastFullCheck: string | null;
 }
 
+// Safe wrapper for status functionality with fallback
+function SafeStatusWrapper({ children }: { children: (status: any) => React.ReactNode }) {
+  try {
+    const { status: centralizedStatus } = useStatus();
+    return <>{children(centralizedStatus)}</>;
+  } catch (error) {
+    // Fallback status when provider isn't available
+    const fallbackStatus = {
+      network: { connected: false, lastChecked: new Date().toISOString() },
+      credentials: { hasCredentials: false, isValid: false, source: 'none' },
+      trading: { canTrade: false },
+      isLoading: true
+    };
+    return <>{children(fallbackStatus)}</>;
+  }
+}
+
 export default function SystemCheckPage() {
   const [systemState, setSystemState] = useState<SystemCheckState>({
     database: { status: 'loading' },
@@ -116,9 +137,6 @@ export default function SystemCheckPage() {
     isRefreshing: false,
     lastFullCheck: null
   });
-
-  // Use the centralized status system instead of separate API calls
-  const { status: centralizedStatus } = useStatus();
   
   const [showCredentials, setShowCredentials] = useState(false);
   const [expandedComponent, setExpandedComponent] = useState<string | null>(null);
@@ -513,7 +531,7 @@ export default function SystemCheckPage() {
     );
   }
 
-  const overallHealth = [
+  const getOverallHealth = (centralizedStatus: any) => [
     systemState.database.status,
     centralizedStatus.network.connected && centralizedStatus.credentials.isValid ? 'healthy' : !centralizedStatus.credentials.hasCredentials ? 'warning' : 'unhealthy', // Use centralized status for MEXC
     systemState.openaiApi.status,
@@ -523,60 +541,68 @@ export default function SystemCheckPage() {
     systemState.tradingStrategies.status
   ];
 
-  const healthyCount = overallHealth.filter(status => status === 'healthy').length;
-  const warningCount = overallHealth.filter(status => status === 'warning').length;
-  const unhealthyCount = overallHealth.filter(status => status === 'unhealthy' || status === 'error').length;
+  const getHealthCounts = (overallHealth: string[]) => ({
+    healthyCount: overallHealth.filter(status => status === 'healthy').length,
+    warningCount: overallHealth.filter(status => status === 'warning').length,
+    unhealthyCount: overallHealth.filter(status => status === 'unhealthy' || status === 'error').length
+  });
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">System Check</h1>
-            <p className="text-muted-foreground mt-1">
-              Comprehensive system validation and health monitoring
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            {systemState.lastFullCheck && (
-              <Badge variant="outline" className="text-xs">
-                Last check: {new Date(systemState.lastFullCheck).toLocaleTimeString()}
-              </Badge>
-            )}
-            <Button 
-              onClick={runFullSystemCheck}
-              disabled={systemState.isRefreshing}
-              variant="outline"
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${systemState.isRefreshing ? 'animate-spin' : ''}`} />
-              Run Full Check
-            </Button>
-          </div>
-        </div>
+      <SafeStatusWrapper>
+        {(centralizedStatus) => {
+          const overallHealth = getOverallHealth(centralizedStatus);
+          const { healthyCount, warningCount, unhealthyCount } = getHealthCounts(overallHealth);
+          
+          return (
+            <div className="space-y-8">
+              {/* Page Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold">System Check</h1>
+                  <p className="text-muted-foreground mt-1">
+                    Comprehensive system validation and health monitoring
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  {systemState.lastFullCheck && (
+                    <Badge variant="outline" className="text-xs">
+                      Last check: {new Date(systemState.lastFullCheck).toLocaleTimeString()}
+                    </Badge>
+                  )}
+                  <Button 
+                    onClick={runFullSystemCheck}
+                    disabled={systemState.isRefreshing}
+                    variant="outline"
+                  >
+                    <RefreshCw className={`mr-2 h-4 w-4 ${systemState.isRefreshing ? 'animate-spin' : ''}`} />
+                    Run Full Check
+                  </Button>
+                </div>
+              </div>
 
-        {/* System Overview */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Zap className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">System Overview</CardTitle>
-                <CardDescription>Overall system health status</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">{healthyCount}</div>
-                <div className="text-sm text-muted-foreground">Healthy Components</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-500">{warningCount}</div>
-                <div className="text-sm text-muted-foreground">Warnings</div>
+              {/* System Overview */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                      <Zap className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">System Overview</CardTitle>
+                      <CardDescription>Overall system health status</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-500">{healthyCount}</div>
+                      <div className="text-sm text-muted-foreground">Healthy Components</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-yellow-500">{warningCount}</div>
+                      <div className="text-sm text-muted-foreground">Warnings</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-500">{unhealthyCount}</div>
@@ -1309,7 +1335,10 @@ export default function SystemCheckPage() {
           </CardContent>
         </Card>
 
-      </div>
+              </div>
+            );
+          }}
+        </SafeStatusWrapper>
     </DashboardLayout>
   );
 }
