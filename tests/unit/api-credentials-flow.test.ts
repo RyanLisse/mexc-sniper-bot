@@ -7,7 +7,7 @@ import React from 'react';
 // Ensure React is available globally for JSX
 globalThis.React = React;
 import { ApiCredentialsForm } from "../../src/components/api-credentials-form";
-import { EnhancedCredentialStatus } from "../../src/components/enhanced-credential-status";
+import { ConsolidatedCredentialStatus } from "../../src/components/enhanced-credential-status-consolidated";
 
 // Mock the auth hook
 vi.mock('@/src/lib/kinde-auth-client', () => ({
@@ -266,7 +266,7 @@ describe('API Credentials Authentication Flow', () => {
 
   describe('Enhanced Credential Status', () => {
     it('should display fully connected status correctly', () => {
-      renderWithQueryClient(React.createElement(EnhancedCredentialStatus));
+      renderWithQueryClient(React.createElement(ConsolidatedCredentialStatus));
 
       expect(screen.getByText(/Fully Connected/i)).toBeInTheDocument();
       expect(screen.getByText(/Network OK/i)).toBeInTheDocument();

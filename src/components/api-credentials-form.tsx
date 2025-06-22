@@ -19,7 +19,7 @@ import {
   useSaveApiCredentials,
   useTestApiCredentials,
 } from "../hooks/use-api-credentials";
-import { useMexcConnectivity } from "../hooks/use-mexc-data";
+import { useStatus } from "../contexts/status-context";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -424,14 +424,14 @@ function ApiCredentialsTestResult({
 }
 
 function CredentialSourceAlert() {
-  const { data: connectivity, isLoading } = useMexcConnectivity();
+  const { status, isLoading } = useStatus();
 
-  if (isLoading || !connectivity) {
+  if (isLoading) {
     return null;
   }
 
   const getSourceConfig = () => {
-    switch (connectivity.credentialSource) {
+    switch (status.credentials.source) {
       case "database":
         return {
           icon: Database,
@@ -473,9 +473,9 @@ function CredentialSourceAlert() {
         <div className={`text-sm ${config.color}`}>
           <div className="font-medium">{config.title}</div>
           <div className="mt-1 text-sm opacity-80">{config.description}</div>
-          {connectivity.credentialSource !== "none" && (
+          {status.credentials.hasCredentials && (
             <div className="mt-2 text-xs opacity-70">
-              Last checked: {new Date(connectivity.timestamp).toLocaleString()}
+              Last checked: {new Date(status.credentials.lastValidated).toLocaleString()}
             </div>
           )}
         </div>

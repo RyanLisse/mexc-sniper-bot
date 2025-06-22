@@ -53,6 +53,34 @@ export interface RetryConfig {
   maxDelay: number;
   backoffMultiplier: number;
   retryableStatusCodes: number[];
+  jitterFactor: number; // Add jitter to prevent thundering herd
+  adaptiveRetry: boolean; // Enable adaptive retry based on success rate
+}
+
+export interface TimeoutConfig {
+  defaultTimeout: number;
+  connectTimeout: number;
+  readTimeout: number;
+  adaptiveTimeout: boolean;
+  endpointTimeouts: Record<string, number>; // Per-endpoint timeouts
+}
+
+export interface RequestContext {
+  requestId: string;
+  correlationId?: string;
+  priority: "low" | "medium" | "high" | "critical";
+  endpoint: string;
+  attempt: number;
+  startTime: number;
+  metadata?: Record<string, any>;
+}
+
+export interface ErrorClassification {
+  isRetryable: boolean;
+  category: "network" | "authentication" | "rate_limit" | "server" | "client" | "timeout";
+  severity: "low" | "medium" | "high" | "critical";
+  suggestedDelay?: number;
+  suggestedBackoff?: number;
 }
 
 // ============================================================================
@@ -71,6 +99,7 @@ export class MexcApiClient {
   private performanceMonitoring?: PerformanceMonitoringService;
   private stats: ApiClientStats;
   private retryConfig: RetryConfig;
+  private timeoutConfig: TimeoutConfig;
 
   constructor(
     config: Required<UnifiedMexcConfig>,
@@ -100,6 +129,23 @@ export class MexcApiClient {
       maxDelay: 30000, // 30 seconds max delay
       backoffMultiplier: 2,
       retryableStatusCodes: [429, 500, 502, 503, 504],
+      jitterFactor: 0.1, // 10% jitter to prevent thundering herd
+      adaptiveRetry: true, // Enable adaptive retry based on success rate
+    };
+
+    this.timeoutConfig = {
+      defaultTimeout: config.timeout,
+      connectTimeout: 10000, // 10 seconds for connection
+      readTimeout: 20000, // 20 seconds for reading response
+      adaptiveTimeout: true,
+      endpointTimeouts: {
+        "/api/v3/ping": 5000, // Fast ping timeout
+        "/api/v3/time": 5000, // Server time should be fast
+        "/api/v3/depth": 15000, // Order book can take longer
+        "/api/v3/account": 30000, // Account info may take longer
+        "/api/v3/order": 45000, // Order operations need more time
+        "/api/v3/openOrders": 30000, // Open orders query
+      },
     };
   }
 
@@ -113,6 +159,20 @@ export class MexcApiClient {
   async request<T>(requestConfig: ApiRequestConfig): Promise<MexcServiceResponse<T>> {
     const startTime = Date.now();
     const requestId = crypto.randomUUID();
+    
+    // Create request context for tracking
+    const context: RequestContext = {
+      requestId,
+      priority: this.determinePriority(requestConfig.endpoint),
+      endpoint: requestConfig.endpoint,
+      attempt: 1,
+      startTime,
+      metadata: {
+        method: requestConfig.method,
+        requiresAuth: requestConfig.requiresAuth || false,
+        timeout: this.calculateTimeout(requestConfig),
+      },
+    };
 
     try {
       this.stats.totalRequests++;
@@ -134,7 +194,7 @@ export class MexcApiClient {
 
       // Execute request with reliability protection
       const response = await this.reliabilityManager.execute(async () => {
-        return this.executeHttpRequest<T>(requestConfig);
+        return this.executeHttpRequestWithContext<T>(requestConfig, context);
       });
 
       // Cache successful GET responses
@@ -154,10 +214,14 @@ export class MexcApiClient {
       this.stats.failedRequests++;
 
       const safeError = toSafeError(error);
+      const classification = this.classifyError(safeError);
+      
       console.error(`[MexcApiClient] Request failed:`, {
         endpoint: requestConfig.endpoint,
         error: safeError.message,
         requestId,
+        classification,
+        context,
       });
 
       return {
@@ -242,10 +306,11 @@ export class MexcApiClient {
   // ============================================================================
 
   /**
-   * Execute actual HTTP request with retry logic
+   * Execute actual HTTP request with retry logic and context tracking
    */
-  private async executeHttpRequest<T>(
-    requestConfig: ApiRequestConfig
+  private async executeHttpRequestWithContext<T>(
+    requestConfig: ApiRequestConfig,
+    context: RequestContext
   ): Promise<MexcServiceResponse<T>> {
     let lastError: Error | null = null;
     const maxRetries = requestConfig.retries ?? this.retryConfig.maxRetries;
@@ -253,15 +318,24 @@ export class MexcApiClient {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         if (attempt > 0) {
-          const delay = this.calculateRetryDelay(attempt);
+          const delay = this.calculateRetryDelayWithClassification(attempt, lastError);
           await this.sleep(delay);
           this.stats.retryCount++;
         }
 
+        // Update context with current attempt
+        context.attempt = attempt + 1;
+        context.startTime = Date.now();
+
         const response = await this.makeHttpRequest<T>(requestConfig);
         return response;
       } catch (error) {
-        lastError = toSafeError(error);
+        lastError = toSafeError(error) as Error & { statusCode?: number; headers?: Record<string, string> };
+
+        // FIXED: Handle rate limiting errors for adaptive rate limiter
+        if (lastError.statusCode === 429) {
+          await this.handleRateLimitError(lastError, requestConfig.endpoint, Date.now() - context.startTime);
+        }
 
         // Don't retry on certain errors
         if (!this.shouldRetry(lastError, attempt, maxRetries)) {
@@ -271,6 +345,46 @@ export class MexcApiClient {
     }
 
     throw lastError || new Error("Request failed after all retries");
+  }
+
+  /**
+   * Execute actual HTTP request with retry logic (legacy method for compatibility)
+   */
+  private async executeHttpRequest<T>(
+    requestConfig: ApiRequestConfig
+  ): Promise<MexcServiceResponse<T>> {
+    const context: RequestContext = {
+      requestId: crypto.randomUUID(),
+      priority: this.determinePriority(requestConfig.endpoint),
+      endpoint: requestConfig.endpoint,
+      attempt: 1,
+      startTime: Date.now(),
+    };
+    
+    return this.executeHttpRequestWithContext(requestConfig, context);
+  }
+
+  /**
+   * Determine request priority based on endpoint
+   */
+  private determinePriority(endpoint: string): "low" | "medium" | "high" | "critical" {
+    // Trading operations are critical
+    if (endpoint.includes("/order") || endpoint.includes("/trade")) {
+      return "critical";
+    }
+    
+    // Account and balance info is high priority
+    if (endpoint.includes("/account") || endpoint.includes("/balance")) {
+      return "high";
+    }
+    
+    // Market data is medium priority
+    if (endpoint.includes("/ticker") || endpoint.includes("/depth") || endpoint.includes("/klines")) {
+      return "medium";
+    }
+    
+    // Everything else is low priority (ping, time, etc.)
+    return "low";
   }
 
   /**
@@ -317,12 +431,18 @@ export class MexcApiClient {
       headers["X-MEXC-APIKEY"] = this.config.apiKey;
     }
 
-    const timeout = requestConfig.timeout ?? this.config.timeout;
+    const timeout = this.calculateTimeout(requestConfig);
     const response = await fetch(url, {
       method,
       headers,
       body,
       signal: AbortSignal.timeout(timeout),
+    });
+
+    // FIXED: Extract response headers for rate limiting analysis
+    const responseHeaders: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
     });
 
     if (!response.ok) {
@@ -339,7 +459,15 @@ export class MexcApiClient {
         }
       }
 
-      throw new Error(errorMessage);
+      // FIXED: Pass response headers and status code for rate limiting
+      const errorWithHeaders = new Error(errorMessage) as Error & { 
+        statusCode?: number; 
+        headers?: Record<string, string>; 
+      };
+      errorWithHeaders.statusCode = response.status;
+      errorWithHeaders.headers = responseHeaders;
+
+      throw errorWithHeaders;
     }
 
     const responseText = await response.text();
@@ -354,17 +482,22 @@ export class MexcApiClient {
       );
     }
 
-    // Track performance
+    // FIXED: Track performance and rate limiting headers
+    const endTime = Date.now();
+    const responseTime = endTime - startTime;
+
     if (this.performanceMonitoring) {
-      const endTime = Date.now();
-      const responseTime = endTime - startTime;
       this.performanceMonitoring.trackApiRequest(responseTime, false);
     }
+
+    // FIXED: Record response headers for adaptive rate limiting
+    await this.recordRateLimitingResponse(endpoint, responseTime, true, response.status, responseHeaders);
 
     return {
       success: true,
       data,
       timestamp: new Date().toISOString(),
+      headers: responseHeaders, // Include headers in response
     };
   }
 
@@ -454,11 +587,58 @@ export class MexcApiClient {
   // ============================================================================
 
   /**
-   * Calculate retry delay with exponential backoff
+   * Calculate retry delay with exponential backoff and jitter
    */
   private calculateRetryDelay(attempt: number): number {
-    const delay = this.retryConfig.baseDelay * this.retryConfig.backoffMultiplier ** (attempt - 1);
-    return Math.min(delay, this.retryConfig.maxDelay);
+    const baseDelay = this.retryConfig.baseDelay * this.retryConfig.backoffMultiplier ** (attempt - 1);
+    const cappedDelay = Math.min(baseDelay, this.retryConfig.maxDelay);
+    
+    // Add jitter to prevent thundering herd problem
+    const jitter = cappedDelay * this.retryConfig.jitterFactor * (Math.random() - 0.5);
+    const delayWithJitter = Math.max(0, cappedDelay + jitter);
+    
+    // Apply adaptive retry - increase delay if success rate is low
+    if (this.retryConfig.adaptiveRetry) {
+      const successRate = this.stats.totalRequests > 0 
+        ? this.stats.successfulRequests / this.stats.totalRequests 
+        : 1;
+      
+      if (successRate < 0.5) {
+        // Low success rate - increase delay by 50%
+        return delayWithJitter * 1.5;
+      } else if (successRate < 0.8) {
+        // Medium success rate - increase delay by 25%
+        return delayWithJitter * 1.25;
+      }
+    }
+    
+    return delayWithJitter;
+  }
+
+  /**
+   * Calculate retry delay incorporating error classification
+   */
+  private calculateRetryDelayWithClassification(attempt: number, lastError: Error | null): number {
+    if (!lastError) {
+      return this.calculateRetryDelay(attempt);
+    }
+    
+    const classification = this.classifyError(lastError);
+    
+    // Use suggested delay from error classification if available
+    if (classification.suggestedDelay) {
+      const baseDelay = classification.suggestedDelay;
+      const backoffMultiplier = classification.suggestedBackoff || this.retryConfig.backoffMultiplier;
+      const delay = baseDelay * backoffMultiplier ** (attempt - 1);
+      const cappedDelay = Math.min(delay, this.retryConfig.maxDelay);
+      
+      // Add jitter
+      const jitter = cappedDelay * this.retryConfig.jitterFactor * (Math.random() - 0.5);
+      return Math.max(0, cappedDelay + jitter);
+    }
+    
+    // Fallback to standard retry delay calculation
+    return this.calculateRetryDelay(attempt);
   }
 
   /**
@@ -469,18 +649,116 @@ export class MexcApiClient {
       return false;
     }
 
-    // Don't retry authentication errors
-    if (error.message.includes("401") || error.message.includes("403")) {
-      return false;
-    }
+    const classification = this.classifyError(error);
+    return classification.isRetryable;
+  }
 
-    // Don't retry client errors (4xx) except rate limiting
-    if (error.message.includes("4") && !error.message.includes("429")) {
-      return false;
+  /**
+   * Classify error for intelligent retry decisions
+   */
+  private classifyError(error: Error): ErrorClassification {
+    const message = error.message.toLowerCase();
+    
+    // Authentication errors - not retryable
+    if (message.includes("401") || message.includes("403") || message.includes("unauthorized") || message.includes("forbidden")) {
+      return {
+        isRetryable: false,
+        category: "authentication",
+        severity: "high",
+      };
     }
+    
+    // Rate limiting - retryable with longer delay
+    if (message.includes("429") || message.includes("rate limit") || message.includes("too many requests")) {
+      return {
+        isRetryable: true,
+        category: "rate_limit",
+        severity: "medium",
+        suggestedDelay: 5000, // 5 seconds
+        suggestedBackoff: 2.5,
+      };
+    }
+    
+    // Client errors (4xx except 429) - usually not retryable
+    if (message.includes("400") || message.includes("404") || message.includes("422")) {
+      return {
+        isRetryable: false,
+        category: "client",
+        severity: "medium",
+      };
+    }
+    
+    // Server errors (5xx) - retryable
+    if (message.includes("500") || message.includes("502") || message.includes("503") || message.includes("504")) {
+      return {
+        isRetryable: true,
+        category: "server",
+        severity: "high",
+        suggestedDelay: 2000, // 2 seconds
+        suggestedBackoff: 2,
+      };
+    }
+    
+    // Network errors - retryable
+    if (message.includes("network") || message.includes("connection") || message.includes("timeout") || 
+        message.includes("fetch") || message.includes("abort")) {
+      return {
+        isRetryable: true,
+        category: "network",
+        severity: "high",
+        suggestedDelay: 1000, // 1 second
+        suggestedBackoff: 1.5,
+      };
+    }
+    
+    // Timeout errors - retryable
+    if (message.includes("timeout") || error.name === "AbortError") {
+      return {
+        isRetryable: true,
+        category: "timeout",
+        severity: "medium",
+        suggestedDelay: 3000, // 3 seconds
+        suggestedBackoff: 2,
+      };
+    }
+    
+    // Unknown errors - cautiously retryable
+    return {
+      isRetryable: true,
+      category: "server",
+      severity: "medium",
+      suggestedDelay: 2000,
+      suggestedBackoff: 2,
+    };
+  }
 
-    // Retry on network errors, timeouts, and server errors
-    return true;
+  /**
+   * Calculate timeout for a request based on endpoint and adaptive settings
+   */
+  private calculateTimeout(requestConfig: ApiRequestConfig): number {
+    // Use explicit timeout if provided
+    if (requestConfig.timeout) {
+      return requestConfig.timeout;
+    }
+    
+    // Check for endpoint-specific timeout
+    const endpointTimeout = this.timeoutConfig.endpointTimeouts[requestConfig.endpoint];
+    if (endpointTimeout) {
+      return endpointTimeout;
+    }
+    
+    // Apply adaptive timeout based on recent performance
+    if (this.timeoutConfig.adaptiveTimeout && this.stats.averageResponseTime > 0) {
+      const adaptiveTimeout = Math.min(
+        this.stats.averageResponseTime * 3, // 3x average response time
+        this.timeoutConfig.defaultTimeout * 2 // But not more than 2x default
+      );
+      
+      // Ensure minimum timeout
+      return Math.max(adaptiveTimeout, 5000);
+    }
+    
+    return this.timeoutConfig.defaultTimeout;
   }
 
   /**
@@ -579,6 +857,122 @@ export class MexcApiClient {
    */
   getConfig(): UnifiedMexcConfig {
     return { ...this.config };
+  }
+
+  /**
+   * Get retry configuration
+   */
+  getRetryConfig(): RetryConfig {
+    return { ...this.retryConfig };
+  }
+
+  /**
+   * Get timeout configuration
+   */
+  getTimeoutConfig(): TimeoutConfig {
+    return { ...this.timeoutConfig };
+  }
+
+  /**
+   * Update retry configuration
+   */
+  updateRetryConfig(newRetryConfig: Partial<RetryConfig>): void {
+    this.retryConfig = { ...this.retryConfig, ...newRetryConfig };
+  }
+
+  /**
+   * Update timeout configuration
+   */
+  updateTimeoutConfig(newTimeoutConfig: Partial<TimeoutConfig>): void {
+    this.timeoutConfig = { ...this.timeoutConfig, ...newTimeoutConfig };
+  }
+
+  /**
+   * Record rate limiting response data for adaptive rate limiter
+   */
+  private async recordRateLimitingResponse(
+    endpoint: string,
+    responseTime: number,
+    success: boolean,
+    statusCode: number,
+    headers: Record<string, string>
+  ): Promise<void> {
+    try {
+      // Import adaptive rate limiter dynamically to avoid circular dependencies
+      const { adaptiveRateLimiter } = await import('./adaptive-rate-limiter');
+      
+      // Record the response with headers for rate limiting analysis
+      await adaptiveRateLimiter.recordResponse(
+        endpoint,
+        undefined, // userId not available in API client context
+        responseTime,
+        success,
+        statusCode,
+        headers
+      );
+    } catch (error) {
+      console.error('[MexcApiClient] Failed to record rate limiting response:', error);
+      // Don't throw - this is non-critical for the main request flow
+    }
+  }
+
+  /**
+   * Handle rate limiting errors
+   */
+  private async handleRateLimitError(
+    error: Error & { statusCode?: number; headers?: Record<string, string> },
+    endpoint: string,
+    responseTime: number
+  ): Promise<void> {
+    if (error.statusCode === 429 && error.headers) {
+      // Record the rate limit response
+      await this.recordRateLimitingResponse(
+        endpoint,
+        responseTime,
+        false,
+        error.statusCode,
+        error.headers
+      );
+    }
+  }
+
+  /**
+   * Get performance insights
+   */
+  getPerformanceInsights(): {
+    stats: ApiClientStats;
+    health: ReturnType<MexcApiClient["getHealthStatus"]>;
+    retryConfig: RetryConfig;
+    timeoutConfig: TimeoutConfig;
+    recommendations: string[];
+  } {
+    const health = this.getHealthStatus();
+    const recommendations: string[] = [];
+    
+    // Generate recommendations based on performance
+    if (health.successRate < 0.8) {
+      recommendations.push("Consider increasing retry delays or checking API credentials");
+    }
+    
+    if (health.averageResponseTime > 10000) {
+      recommendations.push("Consider increasing timeout values for better reliability");
+    }
+    
+    if (this.stats.retryCount > this.stats.totalRequests * 0.3) {
+      recommendations.push("High retry rate detected - check network connectivity");
+    }
+    
+    if (health.cacheHitRate < 0.2 && this.config.enableCaching) {
+      recommendations.push("Low cache hit rate - consider optimizing cache TTL settings");
+    }
+    
+    return {
+      stats: this.getStats(),
+      health,
+      retryConfig: this.getRetryConfig(),
+      timeoutConfig: this.getTimeoutConfig(),
+      recommendations,
+    };
   }
 
   // ============================================================================
@@ -788,7 +1182,7 @@ export class MexcApiClient {
       return {
         isValid,
         hasConnection,
-        error: isValid ? undefined : (accountResponse.error || "Invalid credentials"),
+        error: isValid ? undefined : accountResponse.error || "Invalid credentials",
         responseTime: Date.now() - startTime,
       };
     } catch (error) {

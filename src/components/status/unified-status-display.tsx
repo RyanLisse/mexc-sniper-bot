@@ -1,26 +1,24 @@
 "use client";
-
-import React from "react";
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Loader2, 
-  Globe, 
-  Key, 
-  Shield, 
+import {
   Activity,
-  RefreshCw
+  AlertTriangle,
+  CheckCircle,
+  Globe,
+  Key,
+  Loader2,
+  RefreshCw,
+  Shield,
+  XCircle,
 } from "lucide-react";
+import { useStatus } from "../../contexts/status-context";
+import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Alert, AlertDescription } from "../ui/alert";
-import { useStatus } from "../../contexts/status-context";
 
 /**
  * Unified Status Display Components
- * 
+ *
  * These components provide consistent status information across the application
  * using the centralized StatusContext to eliminate contradictory messages.
  */
@@ -32,10 +30,14 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export function UnifiedStatusBadge({ showText = true, size = "md", className = "" }: StatusBadgeProps) {
+export function UnifiedStatusBadge({
+  showText = true,
+  size = "md",
+  className = "",
+}: StatusBadgeProps) {
   const { status, getOverallStatus, getStatusMessage } = useStatus();
   const overallStatus = getOverallStatus();
-  
+
   const getStatusConfig = () => {
     switch (overallStatus) {
       case "healthy":
@@ -106,12 +108,7 @@ export function NetworkStatusIndicator() {
         {network.connected ? "Connected" : "Disconnected"}
       </span>
       {network.error && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={refreshNetwork}
-          className="h-6 px-2 text-xs"
-        >
+        <Button variant="ghost" size="sm" onClick={refreshNetwork} className="h-6 px-2 text-xs">
           Retry
         </Button>
       )}
@@ -119,7 +116,7 @@ export function NetworkStatusIndicator() {
   );
 }
 
-// Credential Status Component  
+// Credential Status Component
 export function CredentialStatusIndicator() {
   const { status, refreshCredentials } = useStatus();
   const { credentials } = status;
@@ -140,16 +137,9 @@ export function CredentialStatusIndicator() {
     <div className="flex items-center space-x-2">
       <Icon className={`h-4 w-4 ${color}`} />
       <span className={`text-sm ${color}`}>{text}</span>
-      <span className="text-xs text-muted-foreground">
-        ({credentials.source})
-      </span>
+      <span className="text-xs text-muted-foreground">({credentials.source})</span>
       {credentials.error && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={refreshCredentials}
-          className="h-6 px-2 text-xs"
-        >
+        <Button variant="ghost" size="sm" onClick={refreshCredentials} className="h-6 px-2 text-xs">
           Retry
         </Button>
       )}
@@ -178,17 +168,10 @@ export function TradingStatusIndicator() {
         {trading.canTrade ? "Can Trade" : "Cannot Trade"}
       </span>
       {trading.accountType && (
-        <span className="text-xs text-muted-foreground">
-          ({trading.accountType})
-        </span>
+        <span className="text-xs text-muted-foreground">({trading.accountType})</span>
       )}
       {trading.error && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={refreshTrading}
-          className="h-6 px-2 text-xs"
-        >
+        <Button variant="ghost" size="sm" onClick={refreshTrading} className="h-6 px-2 text-xs">
           Retry
         </Button>
       )}
@@ -204,11 +187,11 @@ interface UnifiedStatusCardProps {
   className?: string;
 }
 
-export function UnifiedStatusCard({ 
+export function UnifiedStatusCard({
   title = "System Status",
   showRefreshButton = true,
   showDetailedStatus = true,
-  className = ""
+  className = "",
 }: UnifiedStatusCardProps) {
   const { status, refreshAll, clearErrors, getOverallStatus, getStatusMessage } = useStatus();
   const overallStatus = getOverallStatus();
@@ -240,12 +223,7 @@ export function UnifiedStatusCard({
           <div className="flex items-center space-x-2">
             <UnifiedStatusBadge />
             {showRefreshButton && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={refreshAll}
-                disabled={status.isLoading}
-              >
+              <Button variant="ghost" size="sm" onClick={refreshAll} disabled={status.isLoading}>
                 <RefreshCw className={`h-4 w-4 ${status.isLoading ? "animate-spin" : ""}`} />
               </Button>
             )}
@@ -253,24 +231,38 @@ export function UnifiedStatusCard({
         </div>
         <CardDescription>{statusMessage}</CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Main Status Banner */}
         <div className={`p-3 rounded-lg border ${getStatusCardStyle()}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded-full animate-pulse ${
-                overallStatus === "healthy" ? "bg-green-500" :
-                overallStatus === "warning" ? "bg-yellow-500" :
-                overallStatus === "error" ? "bg-red-500" :
-                overallStatus === "loading" ? "bg-blue-500" : "bg-gray-500"
-              }`} />
-              <span className={`font-medium ${
-                overallStatus === "healthy" ? "text-green-600" :
-                overallStatus === "warning" ? "text-yellow-600" :
-                overallStatus === "error" ? "text-red-600" :
-                overallStatus === "loading" ? "text-blue-600" : "text-gray-600"
-              }`}>
+              <div
+                className={`w-3 h-3 rounded-full animate-pulse ${
+                  overallStatus === "healthy"
+                    ? "bg-green-500"
+                    : overallStatus === "warning"
+                      ? "bg-yellow-500"
+                      : overallStatus === "error"
+                        ? "bg-red-500"
+                        : overallStatus === "loading"
+                          ? "bg-blue-500"
+                          : "bg-gray-500"
+                }`}
+              />
+              <span
+                className={`font-medium ${
+                  overallStatus === "healthy"
+                    ? "text-green-600"
+                    : overallStatus === "warning"
+                      ? "text-yellow-600"
+                      : overallStatus === "error"
+                        ? "text-red-600"
+                        : overallStatus === "loading"
+                          ? "text-blue-600"
+                          : "text-gray-600"
+                }`}
+              >
                 {statusMessage}
               </span>
             </div>
@@ -299,7 +291,11 @@ export function UnifiedStatusCard({
               </Button>
             </div>
             {status.syncErrors.slice(-3).map((error, index) => (
-              <Alert key={`error-${index}-${error.slice(0, 20)}`} variant="destructive" className="p-2">
+              <Alert
+                key={`error-${index}-${error.slice(0, 20)}`}
+                variant="destructive"
+                className="p-2"
+              >
                 <AlertDescription className="text-xs">{error}</AlertDescription>
               </Alert>
             ))}
@@ -309,14 +305,20 @@ export function UnifiedStatusCard({
         {/* Status Details */}
         {showDetailedStatus && (
           <div className="text-xs text-muted-foreground space-y-1">
-            <div>Network: {status.network.connected ? "OK" : "Failed"} 
-              {status.network.lastChecked && ` (${new Date(status.network.lastChecked).toLocaleTimeString()})`}
+            <div>
+              Network: {status.network.connected ? "OK" : "Failed"}
+              {status.network.lastChecked &&
+                ` (${new Date(status.network.lastChecked).toLocaleTimeString()})`}
             </div>
-            <div>Credentials: {status.credentials.hasCredentials ? "Configured" : "Missing"} 
-              {status.credentials.lastValidated && ` (${new Date(status.credentials.lastValidated).toLocaleTimeString()})`}
+            <div>
+              Credentials: {status.credentials.hasCredentials ? "Configured" : "Missing"}
+              {status.credentials.lastValidated &&
+                ` (${new Date(status.credentials.lastValidated).toLocaleTimeString()})`}
             </div>
-            <div>Trading: {status.trading.canTrade ? "Enabled" : "Disabled"} 
-              {status.trading.lastUpdate && ` (${new Date(status.trading.lastUpdate).toLocaleTimeString()})`}
+            <div>
+              Trading: {status.trading.canTrade ? "Enabled" : "Disabled"}
+              {status.trading.lastUpdate &&
+                ` (${new Date(status.trading.lastUpdate).toLocaleTimeString()})`}
             </div>
           </div>
         )}

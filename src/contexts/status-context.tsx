@@ -1,11 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useReducer, useCallback, useRef } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import type React from "react";
+import { createContext, useCallback, useContext, useEffect, useReducer, useRef } from "react";
 
 /**
  * Centralized Status Management System
- * 
+ *
  * This system provides a single source of truth for all status information
  * across the application, eliminating contradictory status messages.
  */
@@ -37,11 +38,14 @@ export interface TradingStatus {
 
 export interface SystemStatus {
   overall: "healthy" | "warning" | "error" | "unknown";
-  components: Record<string, {
-    status: "active" | "inactive" | "warning" | "error";
-    message: string;
-    lastChecked: string;
-  }>;
+  components: Record<
+    string,
+    {
+      status: "active" | "inactive" | "warning" | "error";
+      message: string;
+      lastChecked: string;
+    }
+  >;
   lastHealthCheck: string;
 }
 
@@ -116,63 +120,63 @@ const initialState: ApplicationStatus = {
 // Status Reducer
 function statusReducer(state: ApplicationStatus, action: StatusAction): ApplicationStatus {
   const now = new Date().toISOString();
-  
+
   switch (action.type) {
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
-      
+
     case "UPDATE_NETWORK":
       return {
         ...state,
         network: { ...state.network, ...action.payload, lastChecked: now },
         lastGlobalUpdate: now,
       };
-      
+
     case "UPDATE_CREDENTIALS":
       return {
         ...state,
         credentials: { ...state.credentials, ...action.payload, lastValidated: now },
         lastGlobalUpdate: now,
       };
-      
+
     case "UPDATE_TRADING":
       return {
         ...state,
         trading: { ...state.trading, ...action.payload, lastUpdate: now },
         lastGlobalUpdate: now,
       };
-      
+
     case "UPDATE_SYSTEM":
       return {
         ...state,
         system: { ...state.system, ...action.payload, lastHealthCheck: now },
         lastGlobalUpdate: now,
       };
-      
+
     case "UPDATE_WORKFLOWS":
       return {
         ...state,
         workflows: { ...state.workflows, ...action.payload, lastUpdate: now },
         lastGlobalUpdate: now,
       };
-      
+
     case "SYNC_ERROR":
       return {
         ...state,
         syncErrors: [...state.syncErrors.slice(-4), action.payload], // Keep last 5 errors
         lastGlobalUpdate: now,
       };
-      
+
     case "CLEAR_ERRORS":
       return { ...state, syncErrors: [] };
-      
+
     case "FULL_UPDATE":
       return {
         ...state,
         ...action.payload,
         lastGlobalUpdate: now,
       };
-      
+
     default:
       return state;
   }
@@ -202,10 +206,10 @@ interface StatusProviderProps {
   enableRealTimeUpdates?: boolean;
 }
 
-export function StatusProvider({ 
-  children, 
+export function StatusProvider({
+  children,
   autoRefreshInterval = 30000,
-  enableRealTimeUpdates = true 
+  enableRealTimeUpdates = true,
 }: StatusProviderProps) {
   const [status, dispatch] = useReducer(statusReducer, initialState);
   const queryClient = useQueryClient();
@@ -217,7 +221,7 @@ export function StatusProvider({
     try {
       const response = await fetch("/api/health/system");
       const data = await response.json();
-      
+
       return {
         connected: response.ok && data.success,
         lastChecked: new Date().toISOString(),
@@ -236,7 +240,7 @@ export function StatusProvider({
     try {
       const response = await fetch("/api/mexc/connectivity");
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch credentials");
       }
@@ -277,7 +281,7 @@ export function StatusProvider({
 
       const response = await fetch("/api/mexc/account");
       const data = await response.json();
-      
+
       return {
         canTrade: data.success && data.data?.canTrade === true,
         accountType: data.data?.accountType,
@@ -302,15 +306,12 @@ export function StatusProvider({
         fetch("/api/health/environment"),
       ]);
 
-      const healthData = healthResponse.status === "fulfilled" 
-        ? await healthResponse.value.json() 
-        : null;
-      const envData = envResponse.status === "fulfilled" 
-        ? await envResponse.value.json() 
-        : null;
+      const healthData =
+        healthResponse.status === "fulfilled" ? await healthResponse.value.json() : null;
+      const envData = envResponse.status === "fulfilled" ? await envResponse.value.json() : null;
 
       const components: Record<string, any> = {};
-      
+
       if (healthData) {
         components.api = {
           status: healthData.success ? "active" : "error",
@@ -327,9 +328,9 @@ export function StatusProvider({
         };
       }
 
-      const hasErrors = Object.values(components).some(c => c.status === "error");
-      const hasWarnings = Object.values(components).some(c => c.status === "warning");
-      
+      const hasErrors = Object.values(components).some((c) => c.status === "error");
+      const hasWarnings = Object.values(components).some((c) => c.status === "warning");
+
       return {
         overall: hasErrors ? "error" : hasWarnings ? "warning" : "healthy",
         components,
@@ -375,79 +376,79 @@ export function StatusProvider({
   // Refresh Functions
   const refreshNetwork = useCallback(async () => {
     if (!mountedRef.current) return;
-    
+
     try {
       const networkStatus = await fetchNetworkStatus();
       dispatch({ type: "UPDATE_NETWORK", payload: networkStatus });
     } catch (error) {
-      dispatch({ 
-        type: "SYNC_ERROR", 
-        payload: `Network refresh failed: ${error instanceof Error ? error.message : "Unknown error"}` 
+      dispatch({
+        type: "SYNC_ERROR",
+        payload: `Network refresh failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       });
     }
   }, [fetchNetworkStatus]);
 
   const refreshCredentials = useCallback(async () => {
     if (!mountedRef.current) return;
-    
+
     try {
       const credentialStatus = await fetchCredentialStatus();
       dispatch({ type: "UPDATE_CREDENTIALS", payload: credentialStatus });
     } catch (error) {
-      dispatch({ 
-        type: "SYNC_ERROR", 
-        payload: `Credential refresh failed: ${error instanceof Error ? error.message : "Unknown error"}` 
+      dispatch({
+        type: "SYNC_ERROR",
+        payload: `Credential refresh failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       });
     }
   }, [fetchCredentialStatus]);
 
   const refreshTrading = useCallback(async () => {
     if (!mountedRef.current) return;
-    
+
     try {
       const tradingStatus = await fetchTradingStatus();
       dispatch({ type: "UPDATE_TRADING", payload: tradingStatus });
     } catch (error) {
-      dispatch({ 
-        type: "SYNC_ERROR", 
-        payload: `Trading refresh failed: ${error instanceof Error ? error.message : "Unknown error"}` 
+      dispatch({
+        type: "SYNC_ERROR",
+        payload: `Trading refresh failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       });
     }
   }, [fetchTradingStatus]);
 
   const refreshSystem = useCallback(async () => {
     if (!mountedRef.current) return;
-    
+
     try {
       const systemStatus = await fetchSystemStatus();
       dispatch({ type: "UPDATE_SYSTEM", payload: systemStatus });
     } catch (error) {
-      dispatch({ 
-        type: "SYNC_ERROR", 
-        payload: `System refresh failed: ${error instanceof Error ? error.message : "Unknown error"}` 
+      dispatch({
+        type: "SYNC_ERROR",
+        payload: `System refresh failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       });
     }
   }, [fetchSystemStatus]);
 
   const refreshWorkflows = useCallback(async () => {
     if (!mountedRef.current) return;
-    
+
     try {
       const workflowStatus = await fetchWorkflowStatus();
       dispatch({ type: "UPDATE_WORKFLOWS", payload: workflowStatus });
     } catch (error) {
-      dispatch({ 
-        type: "SYNC_ERROR", 
-        payload: `Workflow refresh failed: ${error instanceof Error ? error.message : "Unknown error"}` 
+      dispatch({
+        type: "SYNC_ERROR",
+        payload: `Workflow refresh failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       });
     }
   }, [fetchWorkflowStatus]);
 
   const refreshAll = useCallback(async () => {
     if (!mountedRef.current) return;
-    
+
     dispatch({ type: "SET_LOADING", payload: true });
-    
+
     try {
       // Refresh in logical order - network first, then credentials, then trading
       await refreshNetwork();
@@ -456,9 +457,9 @@ export function StatusProvider({
       await refreshTrading(); // Trading depends on credentials
       await refreshWorkflows();
     } catch (error) {
-      dispatch({ 
-        type: "SYNC_ERROR", 
-        payload: `Global refresh failed: ${error instanceof Error ? error.message : "Unknown error"}` 
+      dispatch({
+        type: "SYNC_ERROR",
+        payload: `Global refresh failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       });
     } finally {
       if (mountedRef.current) {
@@ -473,27 +474,27 @@ export function StatusProvider({
 
   const getOverallStatus = useCallback((): "healthy" | "warning" | "error" | "loading" => {
     if (status.isLoading) return "loading";
-    
+
     if (!status.network.connected) return "error";
     if (status.syncErrors.length > 0) return "error";
     if (status.system.overall === "error") return "error";
     if (!status.credentials.hasCredentials) return "warning";
     if (!status.credentials.isValid) return "error";
     if (status.system.overall === "warning") return "warning";
-    
+
     return "healthy";
   }, [status]);
 
   const getStatusMessage = useCallback((): string => {
     if (status.isLoading) return "Checking system status...";
-    
+
     if (!status.network.connected) return "Network connection unavailable";
     if (status.syncErrors.length > 0) return `System errors detected (${status.syncErrors.length})`;
     if (!status.credentials.hasCredentials) return "API credentials not configured";
     if (!status.credentials.isValid) return "API credentials invalid";
     if (status.system.overall === "error") return "System components have errors";
     if (status.system.overall === "warning") return "System components have warnings";
-    
+
     return "All systems operational";
   }, [status]);
 
@@ -519,7 +520,7 @@ export function StatusProvider({
 
     // Initial load
     refreshAll();
-    
+
     // Setup auto-refresh
     setupAutoRefresh();
 
@@ -554,11 +555,7 @@ export function StatusProvider({
     getStatusMessage,
   };
 
-  return (
-    <StatusContext.Provider value={contextValue}>
-      {children}
-    </StatusContext.Provider>
-  );
+  return <StatusContext.Provider value={contextValue}>{children}</StatusContext.Provider>;
 }
 
 // Hook to use Status Context

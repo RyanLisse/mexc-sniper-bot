@@ -1,12 +1,13 @@
 /**
  * STARTUP INITIALIZATION
- * 
+ *
  * Handles all system initialization tasks that should run when the application starts
  * Ensures critical systems are properly initialized before handling requests
  */
 
-import { strategyInitializationService } from "../services/strategy-initialization-service";
 import { environmentValidation } from "../services/enhanced-environment-validation";
+import { strategyInitializationService } from "../services/strategy-initialization-service";
+import { AutoSnipingExecutionService } from "../services/auto-sniping-execution-service";
 
 interface StartupResult {
   success: boolean;
@@ -41,10 +42,10 @@ export class StartupInitializer {
     if (this.isInitialized) {
       return {
         success: true,
-        initialized: ['already-initialized'],
+        initialized: ["already-initialized"],
         failed: [],
         errors: {},
-        duration: 0
+        duration: 0,
       };
     }
 
@@ -65,26 +66,30 @@ export class StartupInitializer {
       console.log("[Startup] Validating environment configuration...");
       const envValidation = environmentValidation.validateEnvironment();
       const healthSummary = environmentValidation.getHealthSummary();
-      
-      if (healthSummary.status === 'critical') {
-        const errorMessage = `Critical environment issues: ${healthSummary.issues.join(', ')}`;
-        failed.push('environment-validation');
-        errors['environment-validation'] = errorMessage;
+
+      if (healthSummary.status === "critical") {
+        const errorMessage = `Critical environment issues: ${healthSummary.issues.join(", ")}`;
+        failed.push("environment-validation");
+        errors["environment-validation"] = errorMessage;
         console.error("[Startup] ❌ Environment validation failed:", errorMessage);
         console.error("[Startup] 💡 Run: bun run scripts/environment-setup.ts --check");
       } else {
-        initialized.push('environment-validation');
-        console.log(`[Startup] ✅ Environment validated (${healthSummary.status}, score: ${healthSummary.score}/100)`);
-        
-        if (healthSummary.status === 'warning') {
-          console.warn(`[Startup] ⚠️ Environment warnings: ${healthSummary.issues.join(', ')}`);
-          console.warn("[Startup] 💡 Consider running: bun run scripts/environment-setup.ts --template");
+        initialized.push("environment-validation");
+        console.log(
+          `[Startup] ✅ Environment validated (${healthSummary.status}, score: ${healthSummary.score}/100)`
+        );
+
+        if (healthSummary.status === "warning") {
+          console.warn(`[Startup] ⚠️ Environment warnings: ${healthSummary.issues.join(", ")}`);
+          console.warn(
+            "[Startup] 💡 Consider running: bun run scripts/environment-setup.ts --template"
+          );
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      failed.push('environment-validation');
-      errors['environment-validation'] = errorMessage;
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      failed.push("environment-validation");
+      errors["environment-validation"] = errorMessage;
       console.error("[Startup] ❌ Environment validation failed:", errorMessage);
     }
 
@@ -92,13 +97,36 @@ export class StartupInitializer {
     try {
       console.log("[Startup] Initializing strategy templates...");
       await strategyInitializationService.initializeOnStartup();
-      initialized.push('strategy-templates');
+      initialized.push("strategy-templates");
       console.log("[Startup] ✅ Strategy templates initialized");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      failed.push('strategy-templates');
-      errors['strategy-templates'] = errorMessage;
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      failed.push("strategy-templates");
+      errors["strategy-templates"] = errorMessage;
       console.error("[Startup] ❌ Strategy template initialization failed:", errorMessage);
+    }
+
+    // Initialize auto-sniping system if enabled
+    try {
+      console.log("[Startup] Initializing auto-sniping system...");
+      const autoSnipingService = AutoSnipingExecutionService.getInstance();
+      
+      // Check if auto-sniping should be auto-started
+      const autoSnipingConfig = await autoSnipingService.getConfig();
+      if (autoSnipingConfig.enabled) {
+        console.log("[Startup] Auto-sniping is enabled, preparing for automatic activation...");
+        // Don't start execution immediately - let the UI component handle it after status check
+        initialized.push("auto-sniping-system");
+        console.log("[Startup] ✅ Auto-sniping system ready for activation");
+      } else {
+        initialized.push("auto-sniping-system");
+        console.log("[Startup] ✅ Auto-sniping system initialized (disabled)");
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      failed.push("auto-sniping-system");
+      errors["auto-sniping-system"] = errorMessage;
+      console.error("[Startup] ❌ Auto-sniping system initialization failed:", errorMessage);
     }
 
     // Add other critical system initializations here as needed
@@ -114,15 +142,17 @@ export class StartupInitializer {
       initialized,
       failed,
       errors,
-      duration
+      duration,
     };
 
-    console.log(`[Startup] Initialization ${success ? 'completed successfully' : 'completed with errors'} in ${duration}ms`);
+    console.log(
+      `[Startup] Initialization ${success ? "completed successfully" : "completed with errors"} in ${duration}ms`
+    );
     if (initialized.length > 0) {
-      console.log(`[Startup] ✅ Initialized: ${initialized.join(', ')}`);
+      console.log(`[Startup] ✅ Initialized: ${initialized.join(", ")}`);
     }
     if (failed.length > 0) {
-      console.log(`[Startup] ❌ Failed: ${failed.join(', ')}`);
+      console.log(`[Startup] ❌ Failed: ${failed.join(", ")}`);
     }
 
     return result;
@@ -154,7 +184,7 @@ export class StartupInitializer {
   } {
     return {
       isInitialized: this.isInitialized,
-      isInProgress: this.initializationPromise !== null && !this.isInitialized
+      isInProgress: this.initializationPromise !== null && !this.isInitialized,
     };
   }
 }

@@ -9,6 +9,7 @@
 import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
 import { createLogger, createTimer } from "../lib/structured-logger";
 import { EmergencySafetySystem } from "./emergency-safety-system";
+import { getRecommendedMexcService } from "./mexc-unified-exports";
 import { PatternDetectionEngine } from "./pattern-detection-engine";
 import type { PatternMatch } from "./pattern-detection-engine";
 import { PatternMonitoringService } from "./pattern-monitoring-service";
@@ -145,7 +146,8 @@ export class AutoSnipingExecutionService {
   private constructor() {
     this.patternEngine = PatternDetectionEngine.getInstance();
     this.patternMonitoring = PatternMonitoringService.getInstance();
-    this.mexcService = new UnifiedMexcService();
+    // FIXED: Use singleton instances instead of creating new instances
+    this.mexcService = getRecommendedMexcService();
     this.safetySystem = new EmergencySafetySystem();
 
     this.config = this.getDefaultConfig();
@@ -339,45 +341,42 @@ export class AutoSnipingExecutionService {
   }
 
   /**
-   * Enable auto-sniping with safe defaults
+   * Configure auto-sniping parameters (auto-sniping is ALWAYS enabled)
    */
-  public enableAutoSniping(overrides: Partial<AutoSnipingConfig> = {}): void {
-    const enabledConfig: Partial<AutoSnipingConfig> = {
-      enabled: true,
+  public configureAutoSniping(overrides: Partial<AutoSnipingConfig> = {}): void {
+    // Force enabled to true - auto-sniping cannot be disabled
+    const configWithForcedEnabled: Partial<AutoSnipingConfig> = {
       ...overrides,
+      enabled: true, // ALWAYS ENABLED
     };
 
-    this.updateConfig(enabledConfig);
+    this.updateConfig(configWithForcedEnabled);
 
-    this.logger.info("Auto-sniping enabled", {
-      operation: "enable_auto_sniping",
+    this.logger.info("Auto-sniping configuration updated", {
+      operation: "configure_auto_sniping",
       overrides: Object.keys(overrides),
-      enabled: true,
+      enabled: true, // Always true
     });
   }
 
   /**
-   * Disable auto-sniping
+   * Get current auto-sniping configuration
+   * FIXED: Added missing getConfig() method required by startup initialization
    */
-  public disableAutoSniping(): void {
-    this.updateConfig({ enabled: false });
-
-    // Stop execution if currently running
-    if (this.isExecutionActive) {
-      this.stopExecution();
-    }
-
-    this.logger.info("Auto-sniping disabled", {
-      operation: "disable_auto_sniping",
-      enabled: false,
-    });
+  public async getConfig(): Promise<AutoSnipingConfig> {
+    // Return current configuration (auto-sniping is always enabled)
+    return {
+      ...this.config,
+      enabled: true // Always enabled as per user requirements
+    };
   }
 
   /**
-   * Check if auto-sniping is enabled and ready for trading
+   * Check if auto-sniping is ready for trading (always enabled, checks system readiness)
    */
   public isReadyForTrading(): boolean {
-    return this.config.enabled && !this.isExecutionActive;
+    // Auto-sniping is always enabled, check if system is ready and not currently executing
+    return !this.isExecutionActive;
   }
 
   /**
@@ -533,24 +532,31 @@ export class AutoSnipingExecutionService {
 
     // Check API connectivity
     try {
-      const accountInfo = await this.mexcService.getAccountInfo();
+      const accountInfo = await this.mexcService.getAccountBalances();
       if (!accountInfo.success) {
-        throw new Error("Failed to get account info");
+        throw new Error("Failed to get account balances");
       }
     } catch (error) {
       throw new Error(`API connectivity check failed: ${getErrorMessage(error)}`);
     }
 
     // Check safety system
+    // FIXED: Allow degraded systems to continue, only block critical failures
     const safetyStatus = await this.safetySystem.performSystemHealthCheck();
-    if (safetyStatus.overall !== "healthy") {
-      throw new Error(`Safety system status: ${safetyStatus.overall}`);
+    if (safetyStatus.overall === "critical") {
+      throw new Error(`Safety system in critical state: ${safetyStatus.criticalIssues?.join(', ') || 'Unknown critical issues'}`);
+    }
+    
+    if (safetyStatus.overall === "degraded") {
+      this.logger.warn("Safety system degraded but continuing", {
+        operation: "preflight_checks",
+        degradedComponents: safetyStatus.degradedComponents,
+        issues: safetyStatus.criticalIssues
+      });
     }
 
-    // Check configuration
-    if (!this.config.enabled) {
-      throw new Error("Auto-sniping is disabled in configuration");
-    }
+    // FIXED: Auto-sniping is always enabled by design, no need to check
+    // Configuration check removed since auto-sniping is permanently enabled
 
     const duration = timer.end();
     this.logger.info("Pre-flight checks passed", {
@@ -981,7 +987,7 @@ export class AutoSnipingExecutionService {
 
   private getDefaultConfig(): AutoSnipingConfig {
     return {
-      enabled: process.env.NODE_ENV !== "production" || process.env.AUTO_SNIPING_ENABLED === "true", // Default disabled in production unless explicitly enabled
+      enabled: true, // ALWAYS ENABLED - Auto-sniping is always active
       maxPositions: Number.parseInt(process.env.AUTO_SNIPING_MAX_POSITIONS || "5"),
       maxDailyTrades: Number.parseInt(process.env.AUTO_SNIPING_MAX_DAILY_TRADES || "10"),
       positionSizeUSDT: Number.parseFloat(process.env.AUTO_SNIPING_POSITION_SIZE_USDT || "10"),

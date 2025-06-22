@@ -14,7 +14,8 @@ import {
   XCircle,
 } from "lucide-react";
 import React, { useState } from "react";
-import { type MexcConnectivityResult, useMexcConnectivity } from "../hooks/use-mexc-data";
+import { useStatus } from "../contexts/status-context";
+import { UnifiedStatusBadge } from "./status/unified-status-display";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -29,10 +30,12 @@ export const EnhancedCredentialStatus = React.memo(function EnhancedCredentialSt
   showDetailsButton = true,
   className = "",
 }: EnhancedCredentialStatusProps) {
-  const { data: connectivity, isLoading, error, refetch } = useMexcConnectivity();
+  const { status, refreshAll, refreshCredentials, getOverallStatus, getStatusMessage } = useStatus();
   const [showDetails, setShowDetails] = useState(false);
+  const overallStatus = getOverallStatus();
+  const statusMessage = getStatusMessage();
 
-  if (isLoading) {
+  if (status.isLoading) {
     return (
       <Card className={className}>
         <CardContent className="p-4">
@@ -50,34 +53,6 @@ export const EnhancedCredentialStatus = React.memo(function EnhancedCredentialSt
     );
   }
 
-  if (error) {
-    return (
-      <Card className={className}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <XCircle className="h-5 w-5 text-red-500" />
-              <div>
-                <div className="font-medium text-red-600">Connectivity Check Failed</div>
-                <div className="text-sm text-muted-foreground">
-                  Unable to verify MEXC connection
-                </div>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="ml-4">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Retry
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!connectivity) {
-    return null;
-  }
-
   return (
     <Card className={className}>
       <CardHeader className="pb-3">
@@ -87,7 +62,7 @@ export const EnhancedCredentialStatus = React.memo(function EnhancedCredentialSt
             <span>MEXC API Status</span>
           </div>
           <div className="flex items-center space-x-2">
-            <StatusBadge connectivity={connectivity} />
+            <UnifiedStatusBadge />
             {showDetailsButton && (
               <Button variant="ghost" size="sm" onClick={() => setShowDetails(!showDetails)}>
                 <Info className="h-4 w-4" />
@@ -95,198 +70,131 @@ export const EnhancedCredentialStatus = React.memo(function EnhancedCredentialSt
             )}
           </div>
         </CardTitle>
-        <CardDescription>{connectivity.message}</CardDescription>
+        <CardDescription>{statusMessage}</CardDescription>
       </CardHeader>
       <CardContent className="pt-0 space-y-4">
         {/* Main Status Row */}
-        <MainStatusRow connectivity={connectivity} onRefresh={() => refetch()} />
+        <UnifiedMainStatusRow onRefresh={refreshAll} />
 
         {/* Credential Source Information */}
-        <CredentialSourceInfo connectivity={connectivity} />
+        <UnifiedCredentialSourceInfo />
 
         {/* Detailed Information (expandable) */}
-        {showDetails && <DetailedStatusInfo connectivity={connectivity} />}
+        {showDetails && <UnifiedDetailedStatusInfo />}
 
         {/* Action Suggestions */}
-        <ActionSuggestions connectivity={connectivity} />
+        <UnifiedActionSuggestions />
       </CardContent>
     </Card>
   );
 });
 
-function StatusBadge({ connectivity }: { connectivity: MexcConnectivityResult }) {
-  const getStatusConfig = () => {
-    switch (connectivity.status) {
-      case "fully_connected":
+// Unified Status Components using centralized status context
+
+function UnifiedMainStatusRow({ onRefresh }: { onRefresh: () => void }) {
+  const { status, getOverallStatus } = useStatus();
+  const overallStatus = getOverallStatus();
+
+  const getStatusDisplay = () => {
+    switch (overallStatus) {
+      case "healthy":
         return {
-          variant: "default" as const,
-          icon: CheckCircle,
-          text: "Connected",
+          text: "System Operational",
           color: "text-green-500",
+          bgColor: "bg-green-500",
+          icon: CheckCircle,
         };
-      case "no_credentials":
+      case "warning":
         return {
-          variant: "secondary" as const,
-          icon: Key,
-          text: "No Credentials",
-          color: "text-yellow-500",
+          text: "Minor Issues Detected",
+          color: "text-yellow-500", 
+          bgColor: "bg-yellow-500",
+          icon: AlertTriangle,
         };
-      case "invalid_credentials":
+      case "error":
         return {
-          variant: "destructive" as const,
-          icon: XCircle,
-          text: "Invalid Credentials",
+          text: "System Issues",
           color: "text-red-500",
-        };
-      case "network_error":
-        return {
-          variant: "destructive" as const,
+          bgColor: "bg-red-500",
           icon: XCircle,
-          text: "Network Error",
-          color: "text-red-500",
+        };
+      case "loading":
+        return {
+          text: "Checking System Status...",
+          color: "text-blue-500",
+          bgColor: "bg-blue-500",
+          icon: RefreshCw,
         };
       default:
         return {
-          variant: "secondary" as const,
-          icon: AlertTriangle,
-          text: "Unknown",
+          text: "Unknown Status",
           color: "text-gray-500",
+          bgColor: "bg-gray-500",
+          icon: AlertTriangle,
         };
     }
   };
 
-  const config = getStatusConfig();
-  const Icon = config.icon;
+  const statusDisplay = getStatusDisplay();
+  const Icon = statusDisplay.icon;
 
   return (
-    <Badge variant={config.variant} className="flex items-center space-x-1">
-      <Icon className={`h-3 w-3 ${config.color}`} />
-      <span>{config.text}</span>
-    </Badge>
-  );
-}
-
-function MainStatusRow({
-  connectivity,
-  onRefresh,
-}: { connectivity: MexcConnectivityResult; onRefresh: () => void }) {
-  const getOverallStatus = () => {
-    // Check connection health first for more accurate status
-    if (!connectivity.connected) {
-      if (connectivity.connectionHealth === "failed" && connectivity.retryCount && connectivity.retryCount > 0) {
-        return { 
-          text: `Network Error (${connectivity.retryCount} retries)`, 
-          color: "text-red-500", 
-          bgColor: "bg-red-500" 
-        };
-      }
-      return { text: "Network Disconnected", color: "text-red-500", bgColor: "bg-red-500" };
-    }
-    
-    if (!connectivity.hasCredentials) {
-      return { text: "No Credentials", color: "text-yellow-500", bgColor: "bg-yellow-500" };
-    }
-    
-    if (!connectivity.credentialsValid) {
-      return { text: "Invalid Credentials", color: "text-red-500", bgColor: "bg-red-500" };
-    }
-    
-    // If connected and valid, show health-based status
-    const health = connectivity.connectionHealth;
-    if (health === "excellent" || health === "good") {
-      return { text: "Fully Connected", color: "text-green-500", bgColor: "bg-green-500" };
-    } else if (health === "poor") {
-      return { text: "Connected (Slow)", color: "text-yellow-500", bgColor: "bg-yellow-500" };
-    }
-    
-    return { text: "Fully Connected", color: "text-green-500", bgColor: "bg-green-500" };
-  };
-
-  const overallStatus = getOverallStatus();
-
-  return (
-    <div className="space-y-3">
-      {/* Overall Status Banner */}
-      <div
-        className={`flex items-center justify-between p-3 rounded-lg border ${
-          overallStatus.color === "text-green-500"
-            ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800"
-            : overallStatus.color === "text-yellow-500"
-              ? "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800"
-              : "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800"
-        }`}
+    <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
+      <div className="flex items-center space-x-3">
+        <div className={`w-3 h-3 rounded-full ${statusDisplay.bgColor}`} />
+        <div>
+          <div className={`font-medium ${statusDisplay.color}`}>
+            {statusDisplay.text}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Last updated: {new Date(status.lastGlobalUpdate).toLocaleTimeString()}
+          </div>
+        </div>
+      </div>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={onRefresh}
+        disabled={status.isLoading}
       >
-        <div className="flex items-center space-x-3">
-          <div className={`w-3 h-3 rounded-full ${overallStatus.bgColor} animate-pulse`} />
-          <span className={`font-medium ${overallStatus.color}`}>{overallStatus.text}</span>
-        </div>
-        <Button variant="outline" size="sm" onClick={onRefresh} className="border-current">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh
-        </Button>
-      </div>
-
-      {/* Detailed Status Grid */}
-      <div className="grid grid-cols-3 gap-3 text-sm">
-        <div className="flex items-center space-x-2">
-          <Globe
-            className={`h-4 w-4 ${connectivity.connected ? "text-green-500" : "text-red-500"}`}
-          />
-          <span className={connectivity.connected ? "text-green-600" : "text-red-600"}>
-            {connectivity.connected ? "Network OK" : "Network Error"}
-          </span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Key
-            className={`h-4 w-4 ${connectivity.hasCredentials ? "text-green-500" : "text-gray-400"}`}
-          />
-          <span className={connectivity.hasCredentials ? "text-green-600" : "text-gray-500"}>
-            {connectivity.hasCredentials ? "Keys Found" : "No Keys"}
-          </span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Lock
-            className={`h-4 w-4 ${connectivity.credentialsValid ? "text-green-500" : "text-red-500"}`}
-          />
-          <span className={connectivity.credentialsValid ? "text-green-600" : "text-red-600"}>
-            {connectivity.credentialsValid ? "Valid" : "Invalid"}
-          </span>
-        </div>
-      </div>
+        <RefreshCw className={`h-4 w-4 ${status.isLoading ? "animate-spin" : ""}`} />
+      </Button>
     </div>
   );
 }
 
-function CredentialSourceInfo({ connectivity }: { connectivity: MexcConnectivityResult }) {
+function UnifiedCredentialSourceInfo() {
+  const { status } = useStatus();
+  const { credentials } = status;
+
   const getSourceConfig = () => {
-    switch (connectivity.credentialSource) {
-      case "database":
-        return {
-          icon: Database,
-          title: "User Settings",
-          description: "Using API credentials from your user profile",
-          color: "text-blue-500",
-          bgColor: "bg-blue-50 dark:bg-blue-950/20",
-          borderColor: "border-blue-200 dark:border-blue-800",
-        };
-      case "environment":
-        return {
-          icon: Settings,
-          title: "Environment Variables",
-          description: "Using API credentials from server environment",
-          color: "text-green-500",
-          bgColor: "bg-green-50 dark:bg-green-950/20",
-          borderColor: "border-green-200 dark:border-green-800",
-        };
-      default:
-        return {
-          icon: AlertTriangle,
-          title: "No Credentials",
-          description: "No API credentials configured",
-          color: "text-yellow-500",
-          bgColor: "bg-yellow-50 dark:bg-yellow-950/20",
-          borderColor: "border-yellow-200 dark:border-yellow-800",
-        };
+    if (credentials.source === "database") {
+      return {
+        icon: Database,
+        title: "User Settings",
+        description: "Using API credentials from your user profile",
+        color: "text-blue-500",
+        bgColor: "bg-blue-50 dark:bg-blue-950/20",
+        borderColor: "border-blue-200 dark:border-blue-800",
+      };
+    } else if (credentials.source === "environment") {
+      return {
+        icon: Settings,
+        title: "Environment Variables", 
+        description: "Using API credentials from server environment",
+        color: "text-green-500",
+        bgColor: "bg-green-50 dark:bg-green-950/20",
+        borderColor: "border-green-200 dark:border-green-800",
+      };
+    } else {
+      return {
+        icon: AlertTriangle,
+        title: "No Credentials",
+        description: "No API credentials configured - configure below to enable trading",
+        color: "text-yellow-500",
+        bgColor: "bg-yellow-50 dark:bg-yellow-950/20",
+        borderColor: "border-yellow-200 dark:border-yellow-800",
+      };
     }
   };
 
@@ -304,88 +212,57 @@ function CredentialSourceInfo({ connectivity }: { connectivity: MexcConnectivity
   );
 }
 
-function DetailedStatusInfo({ connectivity }: { connectivity: MexcConnectivityResult }) {
-  const getHealthColor = (health?: string) => {
-    switch (health) {
-      case "excellent": return "text-green-600";
-      case "good": return "text-green-500";
-      case "poor": return "text-yellow-500";
-      case "failed": return "text-red-500";
-      default: return "text-gray-400";
-    }
-  };
-
-  const getHealthDisplay = (health?: string) => {
-    switch (health) {
-      case "excellent": return "✓ Excellent";
-      case "good": return "✓ Good";
-      case "poor": return "⚠ Poor";
-      case "failed": return "✗ Failed";
-      default: return "— Unknown";
-    }
-  };
+function UnifiedDetailedStatusInfo() {
+  const { status } = useStatus();
+  const { network, credentials, trading } = status;
 
   return (
     <div className="space-y-3">
       <div className="text-sm font-medium text-muted-foreground">Detailed Information</div>
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div>
-          <div className="font-medium">User Credentials</div>
-          <div className={connectivity.hasUserCredentials ? "text-green-600" : "text-gray-400"}>
-            {connectivity.hasUserCredentials ? "✓ Available" : "✗ Not configured"}
+          <div className="font-medium">Network Connection</div>
+          <div className={network.connected ? "text-green-600" : "text-red-600"}>
+            {network.connected ? "✓ Connected" : "✗ Disconnected"}
           </div>
         </div>
         <div>
-          <div className="font-medium">Environment Variables</div>
-          <div
-            className={connectivity.hasEnvironmentCredentials ? "text-green-600" : "text-gray-400"}
-          >
-            {connectivity.hasEnvironmentCredentials ? "✓ Available" : "✗ Not set"}
+          <div className="font-medium">API Credentials</div>
+          <div className={credentials.hasCredentials ? "text-green-600" : "text-gray-400"}>
+            {credentials.hasCredentials ? "✓ Configured" : "✗ Not set"}
           </div>
         </div>
         <div>
-          <div className="font-medium">Connection Health</div>
-          <div className={getHealthColor(connectivity.connectionHealth)}>
-            {getHealthDisplay(connectivity.connectionHealth)}
+          <div className="font-medium">Credential Validation</div>
+          <div className={credentials.isValid ? "text-green-600" : "text-red-600"}>
+            {credentials.isValid ? "✓ Valid" : "✗ Invalid"}
           </div>
         </div>
         <div>
-          <div className="font-medium">Response Time</div>
+          <div className="font-medium">Trading Status</div>
+          <div className={trading.canTrade ? "text-green-600" : "text-red-600"}>
+            {trading.canTrade ? "✓ Enabled" : "✗ Disabled"}
+          </div>
+        </div>
+        <div>
+          <div className="font-medium">Credential Source</div>
+          <div className="text-muted-foreground capitalize">
+            {credentials.source || "None"}
+          </div>
+        </div>
+        <div>
+          <div className="font-medium">Last Updated</div>
           <div className="text-muted-foreground">
-            {connectivity.latency ? `${Math.round(connectivity.latency)}ms` : "—"}
+            {new Date(status.lastGlobalUpdate).toLocaleTimeString()}
           </div>
-        </div>
-        <div>
-          <div className="font-medium">Retry Count</div>
-          <div className={connectivity.retryCount ? "text-yellow-600" : "text-green-600"}>
-            {connectivity.retryCount || 0} attempts
-          </div>
-        </div>
-        <div>
-          <div className="font-medium">Last Successful Check</div>
-          <div className="text-muted-foreground">
-            {connectivity.lastSuccessfulCheck 
-              ? new Date(connectivity.lastSuccessfulCheck).toLocaleString()
-              : "—"}
-          </div>
-        </div>
-        <div>
-          <div className="font-medium">Last Check</div>
-          <div className="text-muted-foreground">
-            {new Date(connectivity.timestamp).toLocaleString()}
-          </div>
-        </div>
-        <div>
-          <div className="font-medium">Status Code</div>
-          <div className="text-muted-foreground">{connectivity.status}</div>
         </div>
       </div>
-      {connectivity.error && (
+      {status.syncErrors.length > 0 && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <div className="font-medium">Error Details</div>
-            <div className="text-sm mt-1">{connectivity.error}</div>
+            <div className="font-medium">Recent Errors</div>
+            <div className="text-sm mt-1">{status.syncErrors[status.syncErrors.length - 1]}</div>
           </AlertDescription>
         </Alert>
       )}
@@ -393,30 +270,44 @@ function DetailedStatusInfo({ connectivity }: { connectivity: MexcConnectivityRe
   );
 }
 
-function ActionSuggestions({ connectivity }: { connectivity: MexcConnectivityResult }) {
-  if (connectivity.status === "fully_connected") {
+function UnifiedActionSuggestions() {
+  const { status, getOverallStatus } = useStatus();
+  const overallStatus = getOverallStatus();
+  const { credentials, network, trading } = status;
+
+  if (overallStatus === "healthy") {
     return null;
   }
 
   const suggestions = [];
 
-  if (connectivity.credentialSource === "none") {
+  // If no credentials, show scroll-to-form suggestion instead of circular redirect
+  if (!credentials.hasCredentials) {
     suggestions.push(
       <Button
         key="configure"
-        variant="outline"
+        variant="outline" 
         size="sm"
-        onClick={() => window.open("/config", "_self")}
+        onClick={() => {
+          const formElement = document.getElementById("api-credentials-form");
+          if (formElement) {
+            formElement.scrollIntoView({ behavior: "smooth" });
+            // Focus on the first input
+            const firstInput = formElement.querySelector("input");
+            if (firstInput) {
+              setTimeout(() => firstInput.focus(), 500);
+            }
+          }
+        }}
         className="flex items-center space-x-2"
       >
         <Key className="h-4 w-4" />
-        <span>Configure API Credentials</span>
-        <ExternalLink className="h-3 w-3" />
+        <span>Configure API Credentials Below</span>
       </Button>
     );
   }
 
-  if (!connectivity.connected) {
+  if (!network.connected) {
     suggestions.push(
       <div key="network" className="text-sm text-muted-foreground">
         Check your internet connection and MEXC API status
@@ -424,10 +315,18 @@ function ActionSuggestions({ connectivity }: { connectivity: MexcConnectivityRes
     );
   }
 
-  if (connectivity.hasCredentials && !connectivity.credentialsValid) {
+  if (credentials.hasCredentials && !credentials.isValid) {
     suggestions.push(
       <div key="invalid" className="text-sm text-muted-foreground">
         Verify your API credentials are correct and have proper permissions
+      </div>
+    );
+  }
+
+  if (credentials.isValid && !trading.canTrade) {
+    suggestions.push(
+      <div key="trading" className="text-sm text-muted-foreground">
+        Check trading permissions and account status
       </div>
     );
   }

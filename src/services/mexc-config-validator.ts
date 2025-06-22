@@ -156,12 +156,14 @@ export class MexcConfigValidator {
     try {
       // Test pattern detection capability with mock symbol data
       const mockSymbol = {
-        symbol: "BTCUSDT",
-        sts: 2,
-        st: 2,
-        tt: 4,
-        price: "50000",
-        volume: "1000",
+        cd: "BTCUSDT",         // symbol code (required)
+        symbol: "BTCUSDT",     // symbol for compatibility (optional)
+        sts: 2,                // status (required for ready state pattern)
+        st: 2,                 // state (required for ready state pattern)
+        tt: 4,                 // type (required for ready state pattern)
+        ca: 1000,              // market cap indicator (optional)
+        ps: 100,               // price score (optional)
+        qs: 50,                // quality score (optional)
       };
 
       const testPatterns = await this.patternEngine.detectReadyStatePattern(mockSymbol);
@@ -279,11 +281,12 @@ export class MexcConfigValidator {
 
     try {
       // Validate environment variables
+      // FIXED: Auto-sniping is ALWAYS enabled by system design
       const requiredConfig = {
         maxPositionSize: process.env.MAX_POSITION_SIZE || "0.10",
         maxPortfolioRisk: process.env.MAX_PORTFOLIO_RISK || "0.20",
         stopLossPercentage: process.env.STOP_LOSS_PERCENTAGE || "0.15",
-        autoSnipingEnabled: process.env.AUTO_SNIPING_ENABLED === "true",
+        autoSnipingEnabled: true, // Always enabled as per user requirements
       };
 
       // Validate numeric values are within acceptable ranges
@@ -397,8 +400,8 @@ export class MexcConfigValidator {
       }
     }
 
-    const autoSnipingEnabled =
-      overallStatus === "ready" && process.env.AUTO_SNIPING_ENABLED === "true";
+    // FIXED: Auto-sniping is ALWAYS enabled when system is ready
+    const autoSnipingEnabled = overallStatus === "ready";
 
     return {
       overallStatus,

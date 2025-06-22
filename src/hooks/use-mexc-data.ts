@@ -95,45 +95,48 @@ export function useMexcConnectivity() {
       const maxRetries = 3;
       const baseDelay = 1000;
       let lastError: Error | null = null;
-      
+
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
           const response = await fetch("/api/mexc/connectivity", {
             signal: AbortSignal.timeout(15000), // 15 second timeout
           });
-          
+
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
-          
+
           const result = await response.json();
-          
+
           // Store successful result metadata for health monitoring
-          if (result && typeof result === 'object') {
+          if (result && typeof result === "object") {
             result.queryAttempt = attempt + 1;
             result.queryTimestamp = new Date().toISOString();
           }
-          
+
           return result;
         } catch (error) {
-          lastError = error instanceof Error ? error : new Error('Unknown error');
-          console.warn(`Connectivity check attempt ${attempt + 1}/${maxRetries} failed:`, lastError.message);
-          
+          lastError = error instanceof Error ? error : new Error("Unknown error");
+          console.warn(
+            `Connectivity check attempt ${attempt + 1}/${maxRetries} failed:`,
+            lastError.message
+          );
+
           // Don't retry on auth errors or specific client errors
-          if (lastError.message.includes('401') || lastError.message.includes('403')) {
+          if (lastError.message.includes("401") || lastError.message.includes("403")) {
             break;
           }
-          
+
           // If not the last attempt, wait before retrying
           if (attempt < maxRetries - 1) {
             const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 500;
-            await new Promise(resolve => setTimeout(resolve, delay));
+            await new Promise((resolve) => setTimeout(resolve, delay));
           }
         }
       }
-      
+
       // All retries failed
-      throw lastError || new Error('All connectivity checks failed');
+      throw lastError || new Error("All connectivity checks failed");
     },
     staleTime: 2 * 60 * 1000, // 2 minutes - reduced for more responsive updates
     refetchInterval: false, // Disabled automatic refetch for better performance
@@ -142,7 +145,7 @@ export function useMexcConnectivity() {
     retry: false, // Disable built-in retry since we implement our own
     retryOnMount: true, // Retry when component mounts
     refetchIntervalInBackground: false, // Don't refetch in background
-    networkMode: 'online', // Only run when online
+    networkMode: "online", // Only run when online
   });
 }
 

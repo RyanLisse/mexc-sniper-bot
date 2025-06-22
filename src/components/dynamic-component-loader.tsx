@@ -251,8 +251,8 @@ export const UpcomingCoinsSection = lazy(() =>
 );
 
 export const WorkflowStatusCard = lazy(() =>
-  import("./dashboard/workflow-status-card").then((module) => ({
-    default: module.WorkflowStatusCard,
+  import("./dashboard/workflow-status-card-v2").then((module) => ({
+    default: module.WorkflowStatusCardV2,
   }))
 );
 

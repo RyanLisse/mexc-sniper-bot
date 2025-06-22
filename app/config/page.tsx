@@ -32,10 +32,10 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../src/lib/kinde-auth-client";
 import { DashboardLayout } from "../../src/components/dashboard-layout";
 import { ApiCredentialsForm } from "../../src/components/api-credentials-form";
-import { EnhancedCredentialStatus } from "../../src/components/enhanced-credential-status";
+import { ConsolidatedCredentialStatus } from "../../src/components/enhanced-credential-status-consolidated";
 import { ConfigStatusPanel } from "../../src/components/auto-sniping/config-status-panel";
 import { AutoSnipingExecutionDashboard } from "../../src/components/auto-sniping/auto-sniping-execution-dashboard";
-import { useMexcConnectivity } from "../../src/hooks/use-mexc-data";
+import { useStatus } from "../../src/contexts/status-context";
 
 // TypeScript interfaces for system status
 interface SystemStatus {
@@ -117,8 +117,8 @@ export default function SystemCheckPage() {
     lastFullCheck: null
   });
 
-  // Use the connectivity hook instead of separate API calls
-  const { data: connectivity } = useMexcConnectivity();
+  // Use the centralized status system instead of separate API calls
+  const { status: centralizedStatus } = useStatus();
   
   const [showCredentials, setShowCredentials] = useState(false);
   const [expandedComponent, setExpandedComponent] = useState<string | null>(null);
@@ -515,7 +515,7 @@ export default function SystemCheckPage() {
 
   const overallHealth = [
     systemState.database.status,
-    connectivity?.status === 'fully_connected' ? 'healthy' : connectivity?.status === 'no_credentials' ? 'warning' : 'unhealthy', // Use connectivity status for MEXC
+    centralizedStatus.network.connected && centralizedStatus.credentials.isValid ? 'healthy' : !centralizedStatus.credentials.hasCredentials ? 'warning' : 'unhealthy', // Use centralized status for MEXC
     systemState.openaiApi.status,
     systemState.kindeAuth.status,
     systemState.inngestWorkflows.status,
@@ -674,7 +674,7 @@ export default function SystemCheckPage() {
           </Card>
 
           {/* MEXC API - Enhanced Credential Status */}
-          <EnhancedCredentialStatus showDetailsButton={true} />
+          <EnhancedCredentialStatusV3 showDetailsButton={true} showHealthMetrics={true} showTrends={true} autoRefresh={true} />
 
           {/* OpenAI API */}
           <Card>
@@ -1047,7 +1047,7 @@ export default function SystemCheckPage() {
                 </Button>
               </div>
               
-              {/* MEXC credentials status is now handled by EnhancedCredentialStatus component above */}
+              {/* MEXC credentials status is now handled by EnhancedCredentialStatusV3 component above */}
               <div className="grid md:grid-cols-1 gap-4">
                 <div className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-3">
@@ -1140,30 +1140,30 @@ export default function SystemCheckPage() {
                   </div>
                 )}
                 
-                {connectivity?.status === 'network_error' && (
+                {!centralizedStatus.network.connected && (
                   <div className="p-3 border-l-4 border-red-500 bg-red-500/5">
                     <h4 className="font-medium text-red-700">MEXC API Issues</h4>
-                    <p className="text-sm text-red-600 mt-1">{connectivity.message}</p>
+                    <p className="text-sm text-red-600 mt-1">Network connection to MEXC API failed</p>
                     <p className="text-xs text-muted-foreground mt-2">
                       Check your internet connection and ensure MEXC API is not experiencing downtime.
                     </p>
                   </div>
                 )}
                 
-                {connectivity?.status === 'invalid_credentials' && (
+                {centralizedStatus.credentials.hasCredentials && !centralizedStatus.credentials.isValid && (
                   <div className="p-3 border-l-4 border-yellow-500 bg-yellow-500/5">
                     <h4 className="font-medium text-yellow-700">MEXC Credential Issues</h4>
-                    <p className="text-sm text-yellow-600 mt-1">{connectivity.message}</p>
+                    <p className="text-sm text-yellow-600 mt-1">API credentials are invalid or expired</p>
                     <p className="text-xs text-muted-foreground mt-2">
                       Review your API credentials in the configuration section above.
                     </p>
                   </div>
                 )}
                 
-                {connectivity?.status === 'no_credentials' && (
+                {!centralizedStatus.credentials.hasCredentials && (
                   <div className="p-3 border-l-4 border-blue-500 bg-blue-500/5">
                     <h4 className="font-medium text-blue-700">MEXC Setup Required</h4>
-                    <p className="text-sm text-blue-600 mt-1">{connectivity.message}</p>
+                    <p className="text-sm text-blue-600 mt-1">No MEXC API credentials configured</p>
                     <p className="text-xs text-muted-foreground mt-2">
                       Configure your MEXC API credentials in the form below to enable trading features.
                     </p>

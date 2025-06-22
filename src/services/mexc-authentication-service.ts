@@ -14,9 +14,8 @@
  */
 
 import * as crypto from "node:crypto";
-import type { MexcApiClient } from "./mexc-api-client";
-import type { MexcServiceResponse, UnifiedMexcConfig } from "./mexc-schemas";
 import { toSafeError } from "../lib/error-type-utils";
+import type { MexcApiClient } from "./mexc-api-client";
 
 // ============================================================================
 // Authentication Types and Interfaces
@@ -170,7 +169,7 @@ export class MexcAuthenticationService {
         error: this.status.blockReason || "Authentication is blocked",
         timestamp: now,
       };
-      
+
       this.updateStatus(result);
       return result;
     }
@@ -183,7 +182,7 @@ export class MexcAuthenticationService {
         error: "No API credentials configured",
         timestamp: now,
       };
-      
+
       this.updateStatus(result);
       return result;
     }
@@ -196,7 +195,7 @@ export class MexcAuthenticationService {
         error: "API client not initialized",
         timestamp: now,
       };
-      
+
       this.updateStatus(result);
       return result;
     }
@@ -225,7 +224,7 @@ export class MexcAuthenticationService {
         error: `Credential test failed: ${safeError.message}`,
         timestamp: now,
       };
-      
+
       this.updateStatus(result);
       return result;
     }
@@ -236,10 +235,10 @@ export class MexcAuthenticationService {
    */
   async updateCredentials(newCredentials: Partial<AuthenticationConfig>): Promise<void> {
     const wasValid = this.status.isValid;
-    
+
     // Update configuration
     this.config = { ...this.config, ...newCredentials };
-    
+
     // Reset status
     this.status.hasCredentials = this.hasCredentials();
     this.status.failureCount = 0;
@@ -249,7 +248,7 @@ export class MexcAuthenticationService {
     // Test new credentials immediately
     if (this.status.hasCredentials) {
       await this.testCredentials(true);
-      
+
       // Restart periodic testing if credentials are now valid
       if (!wasValid && this.status.isValid) {
         this.startPeriodicTesting();
@@ -268,18 +267,20 @@ export class MexcAuthenticationService {
     }
 
     try {
-      const cipher = crypto.createCipher('aes256', this.config.encryptionKey);
-      const encryptedApiKey = cipher.update(this.config.apiKey, 'utf8', 'hex') + cipher.final('hex');
-      
-      const cipher2 = crypto.createCipher('aes256', this.config.encryptionKey);
-      const encryptedSecretKey = cipher2.update(this.config.secretKey, 'utf8', 'hex') + cipher2.final('hex');
+      const cipher = crypto.createCipher("aes256", this.config.encryptionKey);
+      const encryptedApiKey =
+        cipher.update(this.config.apiKey, "utf8", "hex") + cipher.final("hex");
+
+      const cipher2 = crypto.createCipher("aes256", this.config.encryptionKey);
+      const encryptedSecretKey =
+        cipher2.update(this.config.secretKey, "utf8", "hex") + cipher2.final("hex");
 
       return {
         apiKey: encryptedApiKey,
         secretKey: encryptedSecretKey,
       };
     } catch (error) {
-      console.error('[MexcAuthenticationService] Failed to encrypt credentials:', error);
+      console.error("[MexcAuthenticationService] Failed to encrypt credentials:", error);
       return null;
     }
   }
@@ -287,23 +288,27 @@ export class MexcAuthenticationService {
   /**
    * Set credentials from encrypted storage
    */
-  async setEncryptedCredentials(encrypted: { apiKey: string; secretKey: string }): Promise<boolean> {
+  async setEncryptedCredentials(encrypted: {
+    apiKey: string;
+    secretKey: string;
+  }): Promise<boolean> {
     if (!this.config.enableEncryption || !this.config.encryptionKey) {
-      console.error('[MexcAuthenticationService] Encryption not enabled or key missing');
+      console.error("[MexcAuthenticationService] Encryption not enabled or key missing");
       return false;
     }
 
     try {
-      const decipher = crypto.createDecipher('aes256', this.config.encryptionKey);
-      const apiKey = decipher.update(encrypted.apiKey, 'hex', 'utf8') + decipher.final('utf8');
-      
-      const decipher2 = crypto.createDecipher('aes256', this.config.encryptionKey);
-      const secretKey = decipher2.update(encrypted.secretKey, 'hex', 'utf8') + decipher2.final('utf8');
+      const decipher = crypto.createDecipher("aes256", this.config.encryptionKey);
+      const apiKey = decipher.update(encrypted.apiKey, "hex", "utf8") + decipher.final("utf8");
+
+      const decipher2 = crypto.createDecipher("aes256", this.config.encryptionKey);
+      const secretKey =
+        decipher2.update(encrypted.secretKey, "hex", "utf8") + decipher2.final("utf8");
 
       await this.updateCredentials({ apiKey, secretKey });
       return true;
     } catch (error) {
-      console.error('[MexcAuthenticationService] Failed to decrypt credentials:', error);
+      console.error("[MexcAuthenticationService] Failed to decrypt credentials:", error);
       return false;
     }
   }
@@ -326,9 +331,10 @@ export class MexcAuthenticationService {
     const recommendations: string[] = [];
 
     // Test credentials if not recently tested
-    const testStale = !status.lastTestedAt || 
+    const testStale =
+      !status.lastTestedAt ||
       Date.now() - status.lastTestedAt.getTime() > this.config.testIntervalMs!;
-    
+
     if (testStale && status.hasCredentials) {
       await this.testCredentials();
     }
@@ -347,10 +353,13 @@ export class MexcAuthenticationService {
     }
 
     if (status.isBlocked) {
-      recommendations.push("Authentication is blocked due to failures - check credentials and try again");
+      recommendations.push(
+        "Authentication is blocked due to failures - check credentials and try again"
+      );
     }
 
-    const healthy = status.hasCredentials && status.isValid && status.isConnected && !status.isBlocked;
+    const healthy =
+      status.hasCredentials && status.isValid && status.isConnected && !status.isBlocked;
 
     return {
       healthy,
@@ -368,7 +377,7 @@ export class MexcAuthenticationService {
     this.status.isBlocked = false;
     this.status.blockReason = undefined;
     this.status.error = undefined;
-    
+
     this.metrics = {
       totalTests: 0,
       successfulTests: 0,
@@ -382,7 +391,7 @@ export class MexcAuthenticationService {
   /**
    * Get service configuration (sanitized)
    */
-  getConfig(): Omit<AuthenticationConfig, 'apiKey' | 'secretKey' | 'encryptionKey'> {
+  getConfig(): Omit<AuthenticationConfig, "apiKey" | "secretKey" | "encryptionKey"> {
     return {
       passphrase: this.config.passphrase,
       enableEncryption: this.config.enableEncryption,
@@ -401,7 +410,7 @@ export class MexcAuthenticationService {
    */
   private updateStatus(result: CredentialTestResult): void {
     const now = new Date();
-    
+
     this.status.lastTestedAt = now;
     this.status.isValid = result.isValid;
     this.status.isConnected = result.hasConnection;
@@ -417,12 +426,12 @@ export class MexcAuthenticationService {
     } else {
       this.status.failureCount++;
       this.metrics.failedTests++;
-      
+
       // Block authentication if too many failures
       if (this.status.failureCount >= this.config.maxAuthFailures!) {
         this.status.isBlocked = true;
         this.status.blockReason = `Too many authentication failures (${this.status.failureCount})`;
-        
+
         // Schedule automatic unblock
         setTimeout(() => {
           if (this.status.isBlocked) {
@@ -441,7 +450,8 @@ export class MexcAuthenticationService {
 
     if (result.responseTime > 0) {
       const totalResponseTime = this.metrics.averageResponseTime * (this.metrics.totalTests - 1);
-      this.metrics.averageResponseTime = (totalResponseTime + result.responseTime) / this.metrics.totalTests;
+      this.metrics.averageResponseTime =
+        (totalResponseTime + result.responseTime) / this.metrics.totalTests;
     }
 
     this.metrics.lastTestTime = now;
@@ -533,16 +543,16 @@ export async function initializeAuthentication(
   apiClient: MexcApiClient,
   config?: Partial<AuthenticationConfig>
 ): Promise<MexcAuthenticationService> {
-  const authService = config ? 
-    createMexcAuthenticationService(config) : 
-    getGlobalAuthenticationService();
-  
+  const authService = config
+    ? createMexcAuthenticationService(config)
+    : getGlobalAuthenticationService();
+
   authService.setApiClient(apiClient);
-  
+
   // Perform initial credential test
   if (authService.hasCredentials()) {
     await authService.testCredentials(true);
   }
-  
+
   return authService;
 }
