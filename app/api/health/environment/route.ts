@@ -18,20 +18,41 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
   
   try {
-    // Get comprehensive environment validation
-    const validation = environmentValidation.validateEnvironment();
-    const healthSummary = environmentValidation.getHealthSummary();
-    const missingByCategory = environmentValidation.getMissingByCategory();
+    // Get comprehensive environment validation with error handling
+    let validation, healthSummary, missingByCategory;
+    
+    try {
+      validation = environmentValidation.validateEnvironment();
+      healthSummary = environmentValidation.getHealthSummary();
+      missingByCategory = environmentValidation.getMissingByCategory();
+    } catch (validationError) {
+      console.warn('[Environment Health] Validation service failed, using fallback:', validationError);
+      
+      // Fallback validation response
+      validation = {
+        isValid: false,
+        status: 'warning',
+        summary: { total: 0, configured: 0, missing: 0, invalid: 0 },
+        results: [],
+        recommendations: ['Environment validation service temporarily unavailable'],
+        developmentDefaults: {},
+      };
+      
+      healthSummary = {
+        status: 'warning',
+        score: 50,
+        issues: ['Environment validation service error'],
+        recommendedActions: ['Check environment validation service configuration'],
+      };
+      
+      missingByCategory = {};
+    }
     
     const responseTime = Date.now() - startTime;
     
-    // Determine HTTP status based on health
+    // Always return 200 for environment checks in production to prevent frontend errors
+    // Use response data to indicate actual health status
     let statusCode = 200;
-    if (healthSummary.status === 'critical') {
-      statusCode = 503; // Service Unavailable
-    } else if (healthSummary.status === 'warning') {
-      statusCode = 200; // OK but with warnings
-    }
     
     const responseData = {
       status: healthSummary.status,

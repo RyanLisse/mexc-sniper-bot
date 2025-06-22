@@ -700,7 +700,11 @@ export default function SystemCheckPage() {
           </Card>
 
           {/* MEXC API - Enhanced Credential Status */}
-          <EnhancedCredentialStatusV3 showDetailsButton={true} showHealthMetrics={true} showTrends={true} autoRefresh={true} />
+          <ConsolidatedCredentialStatus 
+            variant="card" 
+            showActions={true} 
+            showTimestamp={true} 
+          />
 
           {/* OpenAI API */}
           <Card>
@@ -1073,7 +1077,7 @@ export default function SystemCheckPage() {
                 </Button>
               </div>
               
-              {/* MEXC credentials status is now handled by EnhancedCredentialStatusV3 component above */}
+              {/* MEXC credentials status is now handled by ConsolidatedCredentialStatus component above */}
               <div className="grid md:grid-cols-1 gap-4">
                 <div className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-3">
