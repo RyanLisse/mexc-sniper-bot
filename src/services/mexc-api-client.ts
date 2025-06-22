@@ -580,4 +580,225 @@ export class MexcApiClient {
   getConfig(): UnifiedMexcConfig {
     return { ...this.config };
   }
+
+  // ============================================================================
+  // Trading Operations
+  // ============================================================================
+
+  /**
+   * Place order on MEXC exchange
+   */
+  async placeOrder(params: any): Promise<MexcServiceResponse<any>> {
+    if (!this.hasCredentials()) {
+      return {
+        success: false,
+        error: "API credentials are required for placing orders",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    try {
+      const orderParams = {
+        symbol: params.symbol,
+        side: params.side,
+        type: params.type || "LIMIT",
+        quantity: params.quantity,
+        price: params.price,
+        timeInForce: params.timeInForce || "GTC",
+        newOrderRespType: params.newOrderRespType || "RESULT",
+      };
+
+      const response = await this.post<any>("/api/v3/order", orderParams);
+
+      // Transform response to match OrderResult format
+      if (response.success && response.data) {
+        const orderResult = {
+          success: true,
+          orderId: response.data.orderId?.toString() || response.data.id?.toString(),
+          symbol: response.data.symbol || params.symbol,
+          side: response.data.side || params.side,
+          quantity: response.data.origQty || params.quantity,
+          price: response.data.price || params.price,
+          status: response.data.status,
+          timestamp: new Date().toISOString(),
+        };
+
+        return {
+          success: true,
+          data: orderResult,
+          timestamp: new Date().toISOString(),
+          requestId: response.requestId,
+          responseTime: response.responseTime,
+        };
+      }
+
+      return response;
+    } catch (error) {
+      const safeError = toSafeError(error);
+      return {
+        success: false,
+        error: `Failed to place order: ${safeError.message}`,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Get order book depth for a symbol
+   */
+  async getOrderBook(symbol: string, limit = 100): Promise<any> {
+    try {
+      const response = await this.get<any>("/api/v3/depth", { symbol, limit });
+
+      if (response.success && response.data) {
+        // Transform MEXC order book format to our standard format
+        const orderBook = {
+          symbol,
+          bids: (response.data.bids || []).map((bid: any) => ({
+            price: Array.isArray(bid) ? bid[0] : bid.price,
+            quantity: Array.isArray(bid) ? bid[1] : bid.quantity,
+          })),
+          asks: (response.data.asks || []).map((ask: any) => ({
+            price: Array.isArray(ask) ? ask[0] : ask.price,
+            quantity: Array.isArray(ask) ? ask[1] : ask.quantity,
+          })),
+          timestamp: Date.now(),
+        };
+
+        return orderBook;
+      }
+
+      throw new Error(response.error || "Failed to get order book");
+    } catch (error) {
+      const safeError = toSafeError(error);
+      console.error(`[MexcApiClient] Failed to get order book for ${symbol}:`, safeError.message);
+      return {
+        symbol,
+        bids: [],
+        asks: [],
+        timestamp: Date.now(),
+      };
+    }
+  }
+
+  /**
+   * Get order status
+   */
+  async getOrderStatus(symbol: string, orderId: string): Promise<MexcServiceResponse<any>> {
+    if (!this.hasCredentials()) {
+      return {
+        success: false,
+        error: "API credentials are required for order status",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    return this.get<any>("/api/v3/order", { symbol, orderId });
+  }
+
+  /**
+   * Cancel order
+   */
+  async cancelOrder(symbol: string, orderId: string): Promise<MexcServiceResponse<any>> {
+    if (!this.hasCredentials()) {
+      return {
+        success: false,
+        error: "API credentials are required for canceling orders",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    return this.delete<any>("/api/v3/order", { symbol, orderId });
+  }
+
+  /**
+   * Get open orders
+   */
+  async getOpenOrders(symbol?: string): Promise<MexcServiceResponse<any[]>> {
+    if (!this.hasCredentials()) {
+      return {
+        success: false,
+        error: "API credentials are required for getting open orders",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    const params = symbol ? { symbol } : {};
+    return this.get<any[]>("/api/v3/openOrders", params);
+  }
+
+  /**
+   * Get account information
+   */
+  async getAccountInfo(): Promise<MexcServiceResponse<any>> {
+    if (!this.hasCredentials()) {
+      return {
+        success: false,
+        error: "API credentials are required for account information",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    return this.get<any>("/api/v3/account");
+  }
+
+  // ============================================================================
+  // Enhanced Credential Validation
+  // ============================================================================
+
+  /**
+   * Test API credentials with a simple authenticated request
+   */
+  async testCredentials(): Promise<{
+    isValid: boolean;
+    hasConnection: boolean;
+    error?: string;
+    responseTime?: number;
+  }> {
+    const startTime = Date.now();
+
+    // Check if credentials exist
+    if (!this.hasCredentials()) {
+      return {
+        isValid: false,
+        hasConnection: false,
+        error: "No API credentials configured",
+        responseTime: Date.now() - startTime,
+      };
+    }
+
+    try {
+      // Test connection with a simple unauthenticated request first
+      const pingResponse = await this.get<any>("/api/v3/ping");
+      const hasConnection = pingResponse.success;
+
+      if (!hasConnection) {
+        return {
+          isValid: false,
+          hasConnection: false,
+          error: "Cannot connect to MEXC API",
+          responseTime: Date.now() - startTime,
+        };
+      }
+
+      // Test credentials with authenticated request
+      const accountResponse = await this.getAccountInfo();
+      const isValid = accountResponse.success;
+
+      return {
+        isValid,
+        hasConnection,
+        error: isValid ? undefined : (accountResponse.error || "Invalid credentials"),
+        responseTime: Date.now() - startTime,
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      return {
+        isValid: false,
+        hasConnection: false,
+        error: `Credential test failed: ${safeError.message}`,
+        responseTime: Date.now() - startTime,
+      };
+    }
+  }
 }

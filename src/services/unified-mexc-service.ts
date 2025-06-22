@@ -56,6 +56,23 @@ import { type MexcReliabilityManager, createMexcReliabilityManager } from "./mex
 
 import { MexcApiClient } from "./mexc-api-client";
 
+import { 
+  type MexcAuthenticationService, 
+  createMexcAuthenticationService,
+  initializeAuthentication 
+} from "./mexc-authentication-service";
+
+import { 
+  type MexcTradingService, 
+  createMexcTradingService 
+} from "./mexc-trading-service";
+
+import { 
+  type MexcConfigurationService, 
+  createMexcConfigurationService,
+  initializeConfiguration 
+} from "./mexc-configuration-service";
+
 import {
   type EnhancedUnifiedCacheSystem,
   getEnhancedUnifiedCache,
@@ -108,6 +125,11 @@ export class UnifiedMexcService {
   private apiClient: MexcApiClient;
   private enhancedCache?: EnhancedUnifiedCacheSystem;
   private performanceMonitoring?: PerformanceMonitoringService;
+  
+  // New decomposed services
+  private authenticationService: MexcAuthenticationService;
+  private tradingService: MexcTradingService;
+  private configurationService: MexcConfigurationService;
 
   constructor(config: UnifiedMexcConfig = {}) {
     // Merge with defaults
@@ -153,6 +175,37 @@ export class UnifiedMexcService {
       });
     }
 
+    // Initialize new decomposed services
+    this.configurationService = createMexcConfigurationService({
+      environment: {
+        MEXC_API_KEY: this.config.apiKey,
+        MEXC_SECRET_KEY: this.config.secretKey,
+        MEXC_PASSPHRASE: this.config.passphrase,
+        MEXC_BASE_URL: this.config.baseUrl,
+        MEXC_TIMEOUT: this.config.timeout,
+        MEXC_MAX_RETRIES: this.config.maxRetries,
+        MEXC_RETRY_DELAY: this.config.retryDelay,
+        MEXC_RATE_LIMIT_DELAY: this.config.rateLimitDelay,
+        MEXC_ENABLE_CACHING: this.config.enableCaching,
+        MEXC_CACHE_TTL: this.config.cacheTTL,
+        MEXC_ENABLE_CIRCUIT_BREAKER: this.config.enableCircuitBreaker,
+        MEXC_ENABLE_METRICS: this.config.enableMetrics,
+        MEXC_ENABLE_ENHANCED_CACHING: this.config.enableEnhancedCaching,
+        MEXC_ENABLE_PERFORMANCE_MONITORING: this.config.enablePerformanceMonitoring,
+        MEXC_API_RESPONSE_TTL: this.config.apiResponseTTL,
+      },
+    });
+
+    this.authenticationService = createMexcAuthenticationService({
+      apiKey: this.config.apiKey,
+      secretKey: this.config.secretKey,
+      passphrase: this.config.passphrase,
+    });
+
+    this.tradingService = createMexcTradingService({
+      paperTradingMode: false, // Can be configured later
+    });
+
     // Initialize API client with all dependencies
     this.apiClient = new MexcApiClient(
       this.config,
@@ -161,6 +214,10 @@ export class UnifiedMexcService {
       this.enhancedCache,
       this.performanceMonitoring
     );
+
+    // Connect services for proper integration
+    this.authenticationService.setApiClient(this.apiClient);
+    this.tradingService.initialize(this.apiClient, this.authenticationService);
   }
 
   // ============================================================================
@@ -1135,10 +1192,30 @@ export class UnifiedMexcService {
   }
 
   /**
-   * Check if service has valid credentials
+   * Check if service has valid credentials (uses authentication service for consistency)
    */
   hasValidCredentials(): boolean {
-    return !!(this.config.apiKey && this.config.secretKey);
+    return this.authenticationService.hasCredentials();
+  }
+
+  /**
+   * Get detailed credential status from authentication service
+   */
+  async getCredentialStatus(): Promise<{
+    hasCredentials: boolean;
+    isValid: boolean;
+    isConnected: boolean;
+    error?: string;
+    lastTestedAt?: Date;
+  }> {
+    const status = this.authenticationService.getStatus();
+    
+    // Test credentials if not recently tested
+    if (!status.lastTestedAt || Date.now() - status.lastTestedAt.getTime() > 60000) {
+      await this.authenticationService.testCredentials();
+    }
+    
+    return this.authenticationService.getStatus();
   }
 
   /**
@@ -1161,18 +1238,24 @@ export class UnifiedMexcService {
   }
 
   /**
-   * Get detailed service status
+   * Get detailed service status with unified credential reporting
    */
   async getDetailedStatus(): Promise<{
     service: {
       hasCredentials: boolean;
+      isValid: boolean;
+      isConnected: boolean;
       enabledFeatures: string[];
       health: any;
+      credentialStatus: any;
     };
     components: {
       api: any;
       cache: any;
       reliability: any;
+      authentication: any;
+      trading: any;
+      configuration: any;
       enhanced?: any;
       performance?: any;
     };
@@ -1180,23 +1263,37 @@ export class UnifiedMexcService {
     const apiHealth = this.apiClient.getHealthStatus();
     const cacheStats = this.cache.getStats();
     const reliabilityStats = this.reliabilityManager.getStats();
+    
+    // Get unified credential status
+    const credentialStatus = await this.getCredentialStatus();
+    const authHealth = await this.authenticationService.performHealthCheck();
+    const tradingHealth = await this.tradingService.performHealthCheck();
+    const configHealth = this.configurationService.performHealthCheck();
 
     return {
       service: {
-        hasCredentials: this.hasValidCredentials(),
+        hasCredentials: credentialStatus.hasCredentials,
+        isValid: credentialStatus.isValid,
+        isConnected: credentialStatus.isConnected,
         enabledFeatures: [
           ...(this.config.enableCaching ? ["caching"] : []),
           ...(this.config.enableEnhancedCaching ? ["enhanced-caching"] : []),
           ...(this.config.enablePerformanceMonitoring ? ["performance-monitoring"] : []),
           ...(this.config.enableCircuitBreaker ? ["circuit-breaker"] : []),
           ...(this.config.enableMetrics ? ["metrics"] : []),
+          ...(credentialStatus.isValid ? ["authenticated"] : []),
+          ...(tradingHealth.tradingEnabled ? ["trading"] : []),
         ],
         health: apiHealth,
+        credentialStatus,
       },
       components: {
         api: apiHealth,
         cache: cacheStats,
         reliability: reliabilityStats,
+        authentication: authHealth,
+        trading: tradingHealth,
+        configuration: configHealth,
         enhanced: this.enhancedCache?.getDetailedStatus(),
         performance: this.performanceMonitoring?.getDashboardData(),
       },

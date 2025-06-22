@@ -6,6 +6,7 @@
  */
 
 import { strategyInitializationService } from "../services/strategy-initialization-service";
+import { environmentValidation } from "../services/enhanced-environment-validation";
 
 interface StartupResult {
   success: boolean;
@@ -58,6 +59,34 @@ export class StartupInitializer {
     const errors: Record<string, string> = {};
 
     console.log("[Startup] Beginning system initialization...");
+
+    // Validate environment configuration first
+    try {
+      console.log("[Startup] Validating environment configuration...");
+      const envValidation = environmentValidation.validateEnvironment();
+      const healthSummary = environmentValidation.getHealthSummary();
+      
+      if (healthSummary.status === 'critical') {
+        const errorMessage = `Critical environment issues: ${healthSummary.issues.join(', ')}`;
+        failed.push('environment-validation');
+        errors['environment-validation'] = errorMessage;
+        console.error("[Startup] ❌ Environment validation failed:", errorMessage);
+        console.error("[Startup] 💡 Run: bun run scripts/environment-setup.ts --check");
+      } else {
+        initialized.push('environment-validation');
+        console.log(`[Startup] ✅ Environment validated (${healthSummary.status}, score: ${healthSummary.score}/100)`);
+        
+        if (healthSummary.status === 'warning') {
+          console.warn(`[Startup] ⚠️ Environment warnings: ${healthSummary.issues.join(', ')}`);
+          console.warn("[Startup] 💡 Consider running: bun run scripts/environment-setup.ts --template");
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      failed.push('environment-validation');
+      errors['environment-validation'] = errorMessage;
+      console.error("[Startup] ❌ Environment validation failed:", errorMessage);
+    }
 
     // Initialize strategy templates
     try {
