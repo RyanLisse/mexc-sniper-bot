@@ -113,14 +113,58 @@ interface SystemCheckState {
 function SafeStatusWrapper({ children }: { children: (status: any) => React.ReactNode }) {
   try {
     const { status: centralizedStatus } = useStatus();
-    return <>{children(centralizedStatus)}</>;
+    
+    // Ensure status object has all required properties with defaults
+    const safeStatus = {
+      network: centralizedStatus?.network || { connected: false, lastChecked: new Date().toISOString() },
+      credentials: centralizedStatus?.credentials || { 
+        hasCredentials: false, 
+        isValid: false, 
+        source: 'none',
+        hasUserCredentials: false,
+        hasEnvironmentCredentials: false,
+        lastValidated: new Date().toISOString()
+      },
+      trading: centralizedStatus?.trading || { canTrade: false, balanceLoaded: false, lastUpdate: new Date().toISOString() },
+      system: centralizedStatus?.system || { overall: 'unknown', components: {}, lastHealthCheck: new Date().toISOString() },
+      workflows: centralizedStatus?.workflows || { 
+        discoveryRunning: false, 
+        sniperActive: false, 
+        activeWorkflows: [], 
+        systemStatus: 'stopped', 
+        lastUpdate: new Date().toISOString() 
+      },
+      isLoading: centralizedStatus?.isLoading ?? false,
+      lastGlobalUpdate: centralizedStatus?.lastGlobalUpdate || new Date().toISOString(),
+      syncErrors: centralizedStatus?.syncErrors || []
+    };
+    
+    return <>{children(safeStatus)}</>;
   } catch (error) {
+    console.warn('Status context not available, using fallback:', error);
     // Fallback status when provider isn't available
     const fallbackStatus = {
       network: { connected: false, lastChecked: new Date().toISOString() },
-      credentials: { hasCredentials: false, isValid: false, source: 'none' },
-      trading: { canTrade: false },
-      isLoading: true
+      credentials: { 
+        hasCredentials: false, 
+        isValid: false, 
+        source: 'none',
+        hasUserCredentials: false,
+        hasEnvironmentCredentials: false,
+        lastValidated: new Date().toISOString()
+      },
+      trading: { canTrade: false, balanceLoaded: false, lastUpdate: new Date().toISOString() },
+      system: { overall: 'unknown', components: {}, lastHealthCheck: new Date().toISOString() },
+      workflows: { 
+        discoveryRunning: false, 
+        sniperActive: false, 
+        activeWorkflows: [], 
+        systemStatus: 'stopped', 
+        lastUpdate: new Date().toISOString() 
+      },
+      isLoading: false,
+      lastGlobalUpdate: new Date().toISOString(),
+      syncErrors: []
     };
     return <>{children(fallbackStatus)}</>;
   }
@@ -533,7 +577,9 @@ export default function SystemCheckPage() {
 
   const getOverallHealth = (centralizedStatus: any) => [
     systemState.database.status,
-    centralizedStatus.network.connected && centralizedStatus.credentials.isValid ? 'healthy' : !centralizedStatus.credentials.hasCredentials ? 'warning' : 'unhealthy', // Use centralized status for MEXC
+    // Safe access to centralized status with null checking
+    (centralizedStatus?.network?.connected && centralizedStatus?.credentials?.isValid) ? 'healthy' : 
+    !centralizedStatus?.credentials?.hasCredentials ? 'warning' : 'unhealthy',
     systemState.openaiApi.status,
     systemState.kindeAuth.status,
     systemState.inngestWorkflows.status,

@@ -38,16 +38,24 @@ export function ConsolidatedCredentialStatus({
   onCredentialConfigure,
   className = "",
 }: ConsolidatedCredentialStatusProps) {
-  const {
-    networkStatus,
-    credentialStatus,
-    tradingStatus,
-    isLoading,
-    lastUpdated,
-    syncError,
-    clearSyncError,
-    refreshStatus,
-  } = useStatus();
+  const { status, refreshAll, clearErrors } = useStatus();
+  
+  // Safe access to status properties with defaults
+  const networkStatus = status?.network || { connected: false, lastChecked: new Date().toISOString() };
+  const credentialStatus = status?.credentials || { 
+    hasCredentials: false, 
+    isValid: false, 
+    source: 'none',
+    hasUserCredentials: false,
+    hasEnvironmentCredentials: false,
+    lastValidated: new Date().toISOString()
+  };
+  const tradingStatus = status?.trading || { canTrade: false, balanceLoaded: false, lastUpdate: new Date().toISOString() };
+  const isLoading = status?.isLoading ?? false;
+  const lastUpdated = status?.lastGlobalUpdate || new Date().toISOString();
+  const syncError = status?.syncErrors?.length > 0 ? status.syncErrors[status.syncErrors.length - 1] : null;
+  const clearSyncError = clearErrors;
+  const refreshStatus = refreshAll;
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -83,7 +91,7 @@ export function ConsolidatedCredentialStatus({
       suggestions.push("Ensure credentials have required permissions");
     }
 
-    if (credentialStatus.isTestCredentials) {
+    if (credentialStatus?.isTestCredentials) {
       suggestions.push("Configure real MEXC API credentials for live trading");
     }
 
