@@ -37,7 +37,6 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 import { ApiCredentialsForm } from "@/components/api-credentials-form";
 import { ConsolidatedCredentialStatus } from "@/components/enhanced-credential-status-consolidated";
 import { ConfigStatusPanel } from "@/components/auto-sniping/config-status-panel";
-import { AutoSnipingExecutionDashboard } from "@/components/auto-sniping/auto-sniping-execution-dashboard";
 import { useStatus } from "@/src/contexts/status-context";
 import { Suspense } from "react";
 
@@ -665,12 +664,6 @@ export default function SystemCheckPage() {
           autoRefresh={true}
         />
 
-        {/* Auto-Sniping Execution Control */}
-        <AutoSnipingExecutionDashboard
-          className="w-full"
-          autoRefresh={true}
-          showControls={true}
-        />
 
         {/* System Components */}
         <div className="grid lg:grid-cols-2 gap-8">
@@ -1166,7 +1159,7 @@ export default function SystemCheckPage() {
               </div>
 
               {/* API Credentials Form */}
-              <div className="border-t pt-6">
+              <div id="credential-configuration" className="border-t pt-6">
                 <h3 className="text-lg font-semibold mb-4">Configure API Credentials</h3>
                 <ApiCredentialsForm userId={getUserId()} />
               </div>
@@ -1216,35 +1209,7 @@ export default function SystemCheckPage() {
                   </div>
                 )}
                 
-                {!centralizedStatus.network.connected && (
-                  <div className="p-3 border-l-4 border-red-500 bg-red-500/5">
-                    <h4 className="font-medium text-red-700">MEXC API Issues</h4>
-                    <p className="text-sm text-red-600 mt-1">Network connection to MEXC API failed</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Check your internet connection and ensure MEXC API is not experiencing downtime.
-                    </p>
-                  </div>
-                )}
-                
-                {centralizedStatus.credentials.hasCredentials && !centralizedStatus.credentials.isValid && (
-                  <div className="p-3 border-l-4 border-yellow-500 bg-yellow-500/5">
-                    <h4 className="font-medium text-yellow-700">MEXC Credential Issues</h4>
-                    <p className="text-sm text-yellow-600 mt-1">API credentials are invalid or expired</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Review your API credentials in the configuration section above.
-                    </p>
-                  </div>
-                )}
-                
-                {!centralizedStatus.credentials.hasCredentials && (
-                  <div className="p-3 border-l-4 border-blue-500 bg-blue-500/5">
-                    <h4 className="font-medium text-blue-700">MEXC Setup Required</h4>
-                    <p className="text-sm text-blue-600 mt-1">No MEXC API credentials configured</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Configure your MEXC API credentials in the form below to enable trading features.
-                    </p>
-                  </div>
-                )}
+                {/* MEXC status is now handled entirely by ConsolidatedCredentialStatus component - no duplicate messages */}
                 
                 {systemState.openaiApi.status !== 'healthy' && (
                   <div className="p-3 border-l-4 border-red-500 bg-red-500/5">
@@ -1286,15 +1251,7 @@ export default function SystemCheckPage() {
                   </div>
                 )}
                 
-                {systemState.tradingStrategies.status !== 'healthy' && (
-                  <div className="p-3 border-l-4 border-red-500 bg-red-500/5">
-                    <h4 className="font-medium text-red-700">Trading Strategy Issues</h4>
-                    <p className="text-sm text-red-600 mt-1">{systemState.tradingStrategies.message}</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Multi-phase trading strategy system is not functioning properly. Check strategy templates and database connectivity.
-                    </p>
-                  </div>
-                )}
+                {/* Trading Strategy issues removed per user request */}
               </div>
             </CardContent>
           </Card>
