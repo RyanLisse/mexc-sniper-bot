@@ -30,7 +30,7 @@ interface ABTestResult {
   variants: Array<{
     id: string;
     name: string;
-    parameters: Record<string, any>;
+    parameters: Record<string, unknown>;
     participants: number;
     conversions: number;
     conversionRate: number;

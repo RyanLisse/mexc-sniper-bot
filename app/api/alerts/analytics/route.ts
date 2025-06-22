@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       timeSeries: {
         bucket,
         limit,
-        data: analytics.map(item => ({
+        data: analytics.map((item: any) => ({
           ...item,
           timestamp: new Date(item.timestamp).toISOString(),
           alertRate: item.totalAlerts > 0 ? item.totalAlerts / (bucket === "hourly" ? 1 : 24) : 0,
@@ -52,9 +52,9 @@ export async function GET(request: NextRequest) {
       },
       
       summary: {
-        totalAlerts: analytics.reduce((sum, item) => sum + item.totalAlerts, 0),
-        totalResolved: analytics.reduce((sum, item) => sum + item.resolvedAlerts, 0),
-        totalFalsePositives: analytics.reduce((sum, item) => sum + item.falsePositives, 0),
+        totalAlerts: analytics.reduce((sum: number, item: any) => sum + item.totalAlerts, 0),
+        totalResolved: analytics.reduce((sum: number, item: any) => sum + item.resolvedAlerts, 0),
+        totalFalsePositives: analytics.reduce((sum: number, item: any) => sum + item.falsePositives, 0),
         averageMTTR: calculateAverageMTTR(analytics),
         alertDistribution: calculateAlertDistribution(analytics),
         notificationStats: calculateNotificationStats(analytics),
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       
       anomalyDetection: {
         modelsActive: modelStats.length,
-        models: modelStats.map(model => ({
+        models: modelStats.map((model: any) => ({
           metricName: model.metricName,
           modelType: model.modelType,
           sampleCount: model.sampleCount,
@@ -214,14 +214,14 @@ async function calculateAdditionalMetrics(startDate?: string, endDate?: string):
     alertingService.getAlertAnalytics("daily", 7), // Would need to adjust time range
   ]);
 
-  const currentTotalAlerts = currentPeriodAnalytics.reduce((sum, item) => sum + item.totalAlerts, 0);
-  const previousTotalAlerts = previousPeriodAnalytics.reduce((sum, item) => sum + item.totalAlerts, 0);
+  const currentTotalAlerts = currentPeriodAnalytics.reduce((sum: number, item: any) => sum + item.totalAlerts, 0);
+  const previousTotalAlerts = previousPeriodAnalytics.reduce((sum: number, item: any) => sum + item.totalAlerts, 0);
   
-  const currentResolved = currentPeriodAnalytics.reduce((sum, item) => sum + item.resolvedAlerts, 0);
-  const previousResolved = previousPeriodAnalytics.reduce((sum, item) => sum + item.resolvedAlerts, 0);
+  const currentResolved = currentPeriodAnalytics.reduce((sum: number, item: any) => sum + item.resolvedAlerts, 0);
+  const previousResolved = previousPeriodAnalytics.reduce((sum: number, item: any) => sum + item.resolvedAlerts, 0);
   
-  const currentFalsePositives = currentPeriodAnalytics.reduce((sum, item) => sum + item.falsePositives, 0);
-  const previousFalsePositives = previousPeriodAnalytics.reduce((sum, item) => sum + item.falsePositives, 0);
+  const currentFalsePositives = currentPeriodAnalytics.reduce((sum: number, item: any) => sum + item.falsePositives, 0);
+  const previousFalsePositives = previousPeriodAnalytics.reduce((sum: number, item: any) => sum + item.falsePositives, 0);
 
   return {
     trends: {
@@ -246,7 +246,7 @@ function calculatePercentageChange(current: number, previous: number): number {
 
 function calculateSystemReliability(analytics: any[]): number {
   // Calculate based on critical alert frequency and resolution time
-  const criticalAlerts = analytics.reduce((sum, item) => sum + item.criticalAlerts, 0);
+  const criticalAlerts = analytics.reduce((sum: number, item: any) => sum + item.criticalAlerts, 0);
   const totalAlerts = analytics.reduce((sum, item) => sum + item.totalAlerts, 0);
   const avgMTTR = calculateAverageMTTR(analytics);
   

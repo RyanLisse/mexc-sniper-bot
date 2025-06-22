@@ -74,13 +74,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`[API] Account balance success: ${balanceResponse.data.balances.length} balances, total: ${balanceResponse.data.totalUsdtValue.toFixed(2)} USDT`);
+    console.log(`[API] Account balance success: ${balanceResponse.data?.length || 0} balances`);
 
+    // Calculate total USDT value from individual balances
+    const balances = balanceResponse.data || [];
+    const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
+    
     return apiResponse(
       createSuccessResponse({
-        balances: balanceResponse.data.balances,
-        totalUsdtValue: balanceResponse.data.totalUsdtValue,
-        lastUpdated: balanceResponse.data.lastUpdated,
+        balances,
+        totalUsdtValue,
+        lastUpdated: new Date().toISOString(),
         hasUserCredentials,
         credentialsType: hasUserCredentials ? 'user-specific' : 'environment-fallback',
       })

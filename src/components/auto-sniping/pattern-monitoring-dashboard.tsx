@@ -53,7 +53,7 @@ export function PatternMonitoringDashboard({
   autoRefresh = true,
   showControls = true,
 }: PatternMonitoringDashboardProps) {
-  const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
+  const [_expandedAlert, _setExpandedAlert] = useState<string | null>(null);
 
   const {
     report,
@@ -61,12 +61,12 @@ export function PatternMonitoringDashboard({
     isLoading,
     isStartingMonitoring,
     isStoppingMonitoring,
-    isDetecting,
+    // isDetecting,
     error,
     lastUpdated,
     isMonitoringActive,
     unacknowledgedAlertsCount,
-    loadMonitoringReport,
+    // loadMonitoringReport,
     startMonitoring,
     stopMonitoring,
     acknowledgeAlert,
@@ -396,7 +396,7 @@ export function PatternMonitoringDashboard({
                     {alert.patterns.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {alert.patterns.slice(0, 3).map((pattern, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
+                          <Badge key={`alert-pattern-${pattern.symbol}-${idx}`} variant="outline" className="text-xs">
                             {pattern.symbol}
                           </Badge>
                         ))}
@@ -429,7 +429,10 @@ export function PatternMonitoringDashboard({
             <ScrollArea className="h-64">
               <div className="space-y-3">
                 {recentPatterns.map((pattern: PatternMatch, index: number) => (
-                  <div key={index} className="border rounded-lg p-3">
+                  <div
+                    key={`pattern-${pattern.symbol}-${pattern.timestamp}-${index}`}
+                    className="border rounded-lg p-3"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="font-mono">
@@ -482,7 +485,10 @@ export function PatternMonitoringDashboard({
           <CardContent>
             <div className="space-y-2">
               {report.recommendations.map((recommendation, index) => (
-                <div key={index} className="flex items-start gap-2">
+                <div
+                  key={`recommendation-${index}-${recommendation.slice(0, 20)}`}
+                  className="flex items-start gap-2"
+                >
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                   <p className="text-sm">{recommendation}</p>
                 </div>

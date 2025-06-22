@@ -127,8 +127,8 @@ const AlertSkeleton = () => (
       <Skeleton className="h-8 w-24" />
     </div>
     <div className="space-y-2">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="rounded-lg border p-3 space-y-2">
+      {Array.from({ length: 6 }, (_, i) => i).map((skeletonId) => (
+        <div key={`loading-skeleton-${skeletonId}`} className="rounded-lg border p-3 space-y-2">
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-1/4" />
             <Skeleton className="h-4 w-16" />
@@ -294,11 +294,7 @@ export const RealTimePerformance = lazy(() =>
 );
 
 // TIER 2 HEAVY COMPONENTS: Quick wins for performance
-export const RealTimeDashboard = lazy(() =>
-  import("./dashboard/real-time-dashboard").then((module) => ({
-    default: module.RealTimeDashboard,
-  }))
-);
+export const RealTimeDashboard = lazy(() => import("./dashboard/real-time-dashboard"));
 
 export const AlertsDashboard = lazy(() =>
   import("./alerts/alerts-dashboard").then((module) => ({
@@ -530,7 +526,7 @@ export function preloadSafetyComponents() {
 }
 
 export function preloadSettingsComponents() {
-  // Preload settings components  
+  // Preload settings components
   const preloadPromises = [
     import("./unified-take-profit-settings"),
     import("./editable-take-profit-table"),
