@@ -10,7 +10,7 @@ import { JaegerExporter } from "@opentelemetry/exporter-jaeger";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { type Resource, resourceFromAttributes } from "@opentelemetry/resources";
+import { Resource } from "@opentelemetry/resources";
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import {
@@ -250,7 +250,7 @@ function createServiceResource(config: ProductionTelemetryConfig): Resource {
   resourceAttributes["service.component"] = "mexc-api-client";
   resourceAttributes["trading.exchange"] = "mexc";
 
-  return resourceFromAttributes(resourceAttributes);
+  return new Resource(resourceAttributes);
 }
 
 /**

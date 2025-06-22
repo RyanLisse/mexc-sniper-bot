@@ -24,7 +24,10 @@ import {
   BalanceEntrySchema,
   type CalendarEntry,
   CalendarEntrySchema,
+  type ExchangeInfo,
+  ExchangeInfoSchema,
   type ExchangeSymbol,
+  ExchangeSymbolSchema,
   type Kline,
   type MarketStats,
   type MexcServiceResponse,
@@ -34,11 +37,14 @@ import {
   type OrderStatus,
   type PatternAnalysis,
   type Portfolio,
+  PortfolioSchema,
   type RiskAssessment,
   type SymbolEntry,
   SymbolEntrySchema,
   type Ticker,
   TickerSchema,
+  type TradingFilter,
+  TradingFilterSchema,
   type TradingOpportunity,
   type UnifiedMexcConfig,
   validateMexcData,
@@ -197,6 +203,305 @@ export class UnifiedMexcService {
   // ============================================================================
 
   /**
+   * Get exchange information including trading rules and symbol filters
+   * This method fetches minimum order amounts and trading constraints for all symbols
+   */
+  @instrumentServiceMethod({
+    serviceName: "unified-mexc-service",
+    methodName: "getExchangeInfo",
+    operationType: "api_call",
+    includeInputData: false,
+  })
+  async getExchangeInfo(): Promise<MexcServiceResponse<ExchangeInfo>> {
+    const response = await this.apiClient.get<ExchangeInfo>(
+      "/api/v3/exchangeInfo",
+      {},
+      { cacheTTL: 300000 } // 5 minutes cache for exchange rules
+    );
+
+    if (response.success && response.data) {
+      // Validate exchange info data
+      const validationResult = validateMexcData(ExchangeInfoSchema, response.data);
+      if (!validationResult.success) {
+        return {
+          ...response,
+          success: false,
+          error: `Exchange info validation failed: ${validationResult.error}`,
+        };
+      }
+    }
+
+    return response;
+  }
+
+  /**
+   * Get trading rules for a specific symbol
+   * Returns minimum order amounts, price filters, and other constraints
+   */
+  @instrumentServiceMethod({
+    serviceName: "unified-mexc-service",
+    methodName: "getSymbolTradingRules",
+    operationType: "api_call",
+    includeInputData: false,
+  })
+  async getSymbolTradingRules(symbol: string): Promise<MexcServiceResponse<{
+    symbol: string;
+    minQty: string | null;
+    maxQty: string | null;
+    stepSize: string | null;
+    minNotional: string | null;
+    maxNotional: string | null;
+    minPrice: string | null;
+    maxPrice: string | null;
+    tickSize: string | null;
+    status: string;
+    isSpotTradingAllowed: boolean;
+  }>> {
+    try {
+      const exchangeInfoResponse = await this.getExchangeInfo();
+      
+      if (!exchangeInfoResponse.success || !exchangeInfoResponse.data) {
+        return {
+          success: false,
+          error: "Failed to fetch exchange information",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      const symbolInfo = exchangeInfoResponse.data.symbols.find(s => s.symbol === symbol);
+      
+      if (!symbolInfo) {
+        return {
+          success: false,
+          error: `Symbol ${symbol} not found in exchange info`,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Extract trading rules from filters
+      let minQty: string | null = null;
+      let maxQty: string | null = null;
+      let stepSize: string | null = null;
+      let minNotional: string | null = null;
+      let maxNotional: string | null = null;
+      let minPrice: string | null = null;
+      let maxPrice: string | null = null;
+      let tickSize: string | null = null;
+
+      if (symbolInfo.filters) {
+        for (const filter of symbolInfo.filters) {
+          switch (filter.filterType) {
+            case "LOT_SIZE":
+              minQty = filter.minQty || null;
+              maxQty = filter.maxQty || null;
+              stepSize = filter.stepSize || null;
+              break;
+            case "MIN_NOTIONAL":
+              minNotional = filter.minNotional || null;
+              maxNotional = filter.maxNotional || null;
+              break;
+            case "PRICE_FILTER":
+              minPrice = filter.minPrice || null;
+              maxPrice = filter.maxPrice || null;
+              tickSize = filter.tickSize || null;
+              break;
+          }
+        }
+      }
+
+      return {
+        success: true,
+        data: {
+          symbol: symbolInfo.symbol,
+          minQty,
+          maxQty,
+          stepSize,
+          minNotional,
+          maxNotional,
+          minPrice,
+          maxPrice,
+          tickSize,
+          status: symbolInfo.status,
+          isSpotTradingAllowed: symbolInfo.isSpotTradingAllowed ?? true,
+        },
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : `Failed to get trading rules for ${symbol}`,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Validate order parameters against MEXC trading rules
+   * This ensures orders meet minimum quantity, price, and notional requirements
+   */
+  @instrumentServiceMethod({
+    serviceName: "unified-mexc-service",
+    methodName: "validateOrderParams",
+    operationType: "api_call",
+    includeInputData: false,
+    sensitiveParameters: ["quantity", "price"],
+  })
+  async validateOrderParams(params: OrderParameters): Promise<MexcServiceResponse<{
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+    adjustedParams?: Partial<OrderParameters>;
+  }>> {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const adjustedParams: Partial<OrderParameters> = {};
+
+    try {
+      // Get trading rules for the symbol
+      const rulesResponse = await this.getSymbolTradingRules(params.symbol);
+      
+      if (!rulesResponse.success || !rulesResponse.data) {
+        errors.push(`Cannot validate order: ${rulesResponse.error || 'Trading rules not available'}`);
+        return {
+          success: true,
+          data: { isValid: false, errors, warnings },
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      const rules = rulesResponse.data;
+
+      // Check if symbol is active for trading
+      if (rules.status !== "TRADING") {
+        errors.push(`Symbol ${params.symbol} is not available for trading (status: ${rules.status})`);
+      }
+
+      if (!rules.isSpotTradingAllowed) {
+        errors.push(`Spot trading is not allowed for symbol ${params.symbol}`);
+      }
+
+      // Validate quantity
+      const quantity = Number.parseFloat(params.quantity);
+      if (isNaN(quantity) || quantity <= 0) {
+        errors.push("Order quantity must be a positive number");
+      } else {
+        // Check minimum quantity
+        if (rules.minQty) {
+          const minQty = Number.parseFloat(rules.minQty);
+          if (quantity < minQty) {
+            errors.push(`Order quantity ${quantity} is below minimum ${minQty}`);
+            adjustedParams.quantity = rules.minQty;
+          }
+        }
+
+        // Check maximum quantity
+        if (rules.maxQty) {
+          const maxQty = Number.parseFloat(rules.maxQty);
+          if (quantity > maxQty) {
+            errors.push(`Order quantity ${quantity} exceeds maximum ${maxQty}`);
+            adjustedParams.quantity = rules.maxQty;
+          }
+        }
+
+        // Check step size
+        if (rules.stepSize) {
+          const stepSize = Number.parseFloat(rules.stepSize);
+          const remainder = quantity % stepSize;
+          if (remainder !== 0) {
+            const adjustedQty = Math.floor(quantity / stepSize) * stepSize;
+            warnings.push(`Quantity ${quantity} doesn't match step size ${stepSize}, suggested: ${adjustedQty}`);
+            adjustedParams.quantity = adjustedQty.toString();
+          }
+        }
+      }
+
+      // Validate price (for limit orders)
+      if (params.price) {
+        const price = Number.parseFloat(params.price);
+        if (isNaN(price) || price <= 0) {
+          errors.push("Order price must be a positive number");
+        } else {
+          // Check minimum price
+          if (rules.minPrice) {
+            const minPrice = Number.parseFloat(rules.minPrice);
+            if (price < minPrice) {
+              errors.push(`Order price ${price} is below minimum ${minPrice}`);
+              adjustedParams.price = rules.minPrice;
+            }
+          }
+
+          // Check maximum price
+          if (rules.maxPrice) {
+            const maxPrice = Number.parseFloat(rules.maxPrice);
+            if (price > maxPrice) {
+              errors.push(`Order price ${price} exceeds maximum ${maxPrice}`);
+              adjustedParams.price = rules.maxPrice;
+            }
+          }
+
+          // Check tick size
+          if (rules.tickSize) {
+            const tickSize = Number.parseFloat(rules.tickSize);
+            const remainder = price % tickSize;
+            if (remainder !== 0) {
+              const adjustedPrice = Math.round(price / tickSize) * tickSize;
+              warnings.push(`Price ${price} doesn't match tick size ${tickSize}, suggested: ${adjustedPrice}`);
+              adjustedParams.price = adjustedPrice.toString();
+            }
+          }
+        }
+      }
+
+      // Validate notional value (quantity * price)
+      if (params.price && !errors.length) {
+        const notionalValue = quantity * Number.parseFloat(params.price);
+        
+        if (rules.minNotional) {
+          const minNotional = Number.parseFloat(rules.minNotional);
+          if (notionalValue < minNotional) {
+            errors.push(`Order notional value ${notionalValue.toFixed(6)} is below minimum ${minNotional}`);
+          }
+        }
+
+        if (rules.maxNotional) {
+          const maxNotional = Number.parseFloat(rules.maxNotional);
+          if (notionalValue > maxNotional) {
+            errors.push(`Order notional value ${notionalValue.toFixed(6)} exceeds maximum ${maxNotional}`);
+          }
+        }
+      }
+
+      // Check against static minimum from constants
+      const { TRADING_CONFIG } = await import("../lib/constants");
+      const minPositionSize = TRADING_CONFIG.PORTFOLIO.MIN_POSITION_SIZE;
+      
+      if (params.price) {
+        const totalValue = quantity * Number.parseFloat(params.price);
+        if (totalValue < minPositionSize) {
+          warnings.push(`Order value ${totalValue.toFixed(2)} USDT is below recommended minimum ${minPositionSize} USDT`);
+        }
+      }
+
+      return {
+        success: true,
+        data: {
+          isValid: errors.length === 0,
+          errors,
+          warnings,
+          adjustedParams: Object.keys(adjustedParams).length > 0 ? adjustedParams : undefined,
+        },
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Order validation failed",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
    * Get symbols data with intelligent caching
    */
   @instrumentServiceMethod({
@@ -228,91 +533,80 @@ export class UnifiedMexcService {
   }
 
   /**
-   * Get exchange symbols information
+   * Get 24hr ticker data for all symbols or specific symbols
    */
-  async getExchangeInfo(): Promise<MexcServiceResponse<{ symbols: ExchangeSymbol[] }>> {
-    return this.apiClient.get<{ symbols: ExchangeSymbol[] }>(
-      "/api/v3/exchangeInfo",
-      {},
-      { cacheTTL: 300000 } // 5 minutes cache
-    );
-  }
+  @instrumentServiceMethod({
+    serviceName: "unified-mexc-service",
+    methodName: "getTicker24hr",
+    operationType: "api_call",
+    includeInputData: false,
+  })
+  async getTicker24hr(symbols?: string[]): Promise<MexcServiceResponse<Ticker[]>> {
+    try {
+      // If specific symbols are requested, fetch individually
+      if (symbols && symbols.length > 0) {
+        const tickerPromises = symbols.map(symbol => 
+          this.apiClient.get<Ticker>("/api/v3/ticker/24hr", { symbol })
+        );
+        
+        const results = await Promise.allSettled(tickerPromises);
+        const tickers = results
+          .filter((result): result is PromiseFulfilledResult<MexcServiceResponse<Ticker>> => 
+            result.status === 'fulfilled' && result.value.success
+          )
+          .map(result => result.value.data!)
+          .filter(Boolean);
 
-  /**
-   * Get 24hr ticker price change statistics
-   * Returns consistent type handling for both single symbol and all symbols
-   */
-  async getTicker24hr(symbol?: string): Promise<MexcServiceResponse<Ticker | Ticker[]>> {
-    const params = symbol ? { symbol } : {};
-    const response = await this.apiClient.get<Ticker | Ticker[]>(
-      "/api/v3/ticker/24hr",
-      params,
-      { cacheTTL: 1000 } // PERFORMANCE OPTIMIZATION: Reduced from 5s to 1s for real-time trading
-    );
-
-    if (response.success && response.data) {
-      // Validate ticker data with proper schema selection
-      const schema = symbol ? TickerSchema : TickerSchema.array();
-      const validationResult = validateMexcData(schema, response.data);
-      if (!validationResult.success) {
         return {
-          ...response,
-          success: false,
-          error: `Ticker data validation failed: ${validationResult.error}`,
+          success: true,
+          data: tickers,
+          timestamp: new Date().toISOString(),
         };
       }
 
-      // Ensure consistent response structure - single symbol should return single object
-      if (symbol && Array.isArray(response.data) && response.data.length === 1) {
-        return {
-          ...response,
-          data: response.data[0],
-        };
+      // Fetch all tickers
+      const response = await this.apiClient.get<Ticker[]>(
+        "/api/v3/ticker/24hr",
+        {},
+        { cacheTTL: 5000 } // 5 second cache for all tickers
+      );
+
+      if (!response.success) {
+        return response;
       }
+
+      // Ensure data is an array
+      const tickers = Array.isArray(response.data) ? response.data : response.data ? [response.data] : [];
+
+      return {
+        ...response,
+        data: tickers,
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      return {
+        success: false,
+        error: `Failed to fetch 24hr ticker data: ${safeError.message}`,
+        timestamp: new Date().toISOString(),
+      };
     }
-
-    return response;
   }
 
   /**
-   * Get ticker data (alias for getTicker24hr for compatibility)
+   * Get single ticker data for a specific symbol
    */
-  async getTicker(symbol?: string): Promise<MexcServiceResponse<Ticker | Ticker[]>> {
-    return this.getTicker24hr(symbol);
+  @instrumentServiceMethod({
+    serviceName: "unified-mexc-service",
+    methodName: "getTicker",
+    operationType: "api_call",
+    includeInputData: false,
+  })
+  async getTicker(symbol: string): Promise<MexcServiceResponse<Ticker>> {
+    return this.apiClient.get<Ticker>("/api/v3/ticker/24hr", { symbol });
   }
 
   /**
-   * Get order book depth with optimized fetching
-   */
-  async getOrderBook(symbol: string, limit = 100): Promise<MexcServiceResponse<OrderBook>> {
-    return this.apiClient.get<OrderBook>(
-      "/api/v3/depth",
-      { symbol, limit },
-      { cacheTTL: 1000 } // 1 second cache for order book
-    );
-  }
-
-  /**
-   * Get kline/candlestick data
-   */
-  async getKlines(
-    symbol: string,
-    interval: string,
-    limit = 500
-  ): Promise<MexcServiceResponse<Kline[]>> {
-    return this.apiClient.get<Kline[]>(
-      "/api/v3/klines",
-      { symbol, interval, limit },
-      { cacheTTL: 10000 } // 10 seconds cache for klines
-    );
-  }
-
-  // ============================================================================
-  // Account and Balance API
-  // ============================================================================
-
-  /**
-   * Get account balances with parallel optimization
+   * Get account balances with parallel optimization and proper portfolio calculation
    */
   @instrumentServiceMethod({
     serviceName: "unified-mexc-service",
@@ -321,245 +615,178 @@ export class UnifiedMexcService {
     includeInputData: false,
     sensitiveParameters: ["apiKey", "secretKey"],
   })
-  async getAccountBalances(): Promise<MexcServiceResponse<BalanceEntry[]>> {
-    const response = await this.apiClient.get<{ balances: BalanceEntry[] }>(
-      "/api/v3/account",
-      {},
-      { requiresAuth: true, cacheTTL: 10000 } // 10 seconds cache
-    );
-
-    if (response.success && response.data?.balances) {
-      // Validate balance data
-      const validationResult = validateMexcData(BalanceEntrySchema.array(), response.data.balances);
-      if (!validationResult.success) {
-        return {
-          ...response,
-          success: false,
-          error: `Balance data validation failed: ${validationResult.error}`,
-        };
-      }
-
-      return {
-        ...response,
-        data: response.data.balances,
-      };
-    }
-
-    return response as MexcServiceResponse<BalanceEntry[]>;
-  }
-
-  /**
-   * Get account information
-   */
-  async getAccountInfo(): Promise<MexcServiceResponse<any>> {
-    return this.apiClient.get("/api/v3/account", {}, { requiresAuth: true, cacheTTL: 30000 });
-  }
-
-  // ============================================================================
-  // Trading API
-  // ============================================================================
-
-  /**
-   * Place a new order
-   */
-  async placeOrder(params: OrderParameters): Promise<MexcServiceResponse<OrderResult>> {
-    return this.apiClient.post<OrderResult>("/api/v3/order", params);
-  }
-
-  /**
-   * Cancel an order
-   */
-  async cancelOrder(symbol: string, orderId: string): Promise<MexcServiceResponse<any>> {
-    return this.apiClient.delete("/api/v3/order", { symbol, orderId });
-  }
-
-  /**
-   * Get order status
-   */
-  async getOrderStatus(symbol: string, orderId: string): Promise<MexcServiceResponse<OrderStatus>> {
-    return this.apiClient.get<OrderStatus>(
-      "/api/v3/order",
-      { symbol, orderId },
-      { requiresAuth: true }
-    );
-  }
-
-  // ============================================================================
-  // Advanced Analytics (Optimized with Promise.all)
-  // ============================================================================
-
-  /**
-   * Get comprehensive market data with parallel fetching
-   * PERFORMANCE OPTIMIZATION: Uses Promise.all for 60% faster data collection
-   */
-  async getMarketData(): Promise<
-    MexcServiceResponse<{
-      tickers: Ticker[];
-      symbols: ExchangeSymbol[];
-      stats: MarketStats;
-    }>
-  > {
+  async getAccountBalances(): Promise<MexcServiceResponse<Portfolio>> {
     try {
-      // Execute all requests in parallel for maximum performance
-      const [tickersResponse, symbolsResponse, exchangeInfoResponse] = await Promise.all([
-        this.getTicker24hr(),
-        this.getSymbolsData(),
-        this.getExchangeInfo(),
+      const [balanceResponse, tickerResponse] = await Promise.all([
+        this.apiClient.get<{ balances: Omit<BalanceEntry, "total">[] }>(
+          "/api/v3/account",
+          {},
+          { requiresAuth: true, cacheTTL: 10000 }
+        ),
+        this.getTicker24hr(), // Fetch all tickers
       ]);
 
-      if (!tickersResponse.success || !symbolsResponse.success || !exchangeInfoResponse.success) {
+      if (!balanceResponse.success || !balanceResponse.data?.balances) {
         return {
           success: false,
-          error: "Failed to fetch complete market data",
+          error: balanceResponse.error || "Failed to fetch account balances.",
           timestamp: new Date().toISOString(),
         };
       }
 
-      // Calculate market statistics
-      const tickers = Array.isArray(tickersResponse.data)
-        ? tickersResponse.data
-        : [tickersResponse.data];
-      const stats = this.calculateMarketStats(tickers);
+      if (!tickerResponse.success || !tickerResponse.data) {
+        console.warn("[UnifiedMexcService] Could not fetch ticker prices for balance calculation.");
+      }
+
+      const tickers = Array.isArray(tickerResponse.data) ? tickerResponse.data : [];
+      
+      // Create price map using correct field (lastPrice instead of price)
+      const priceMap = new Map<string, number>();
+      for (const ticker of tickers) {
+        if (ticker.symbol && ticker.lastPrice) {
+          priceMap.set(ticker.symbol, parseFloat(ticker.lastPrice));
+        }
+      }
+
+      let totalUsdtValue = 0;
+      let btcPrice = 0;
+      
+      // Get BTC price for totalValueBTC calculation
+      const btcTicker = tickers.find(t => t.symbol === 'BTCUSDT');
+      if (btcTicker && btcTicker.lastPrice) {
+        btcPrice = parseFloat(btcTicker.lastPrice);
+      }
+
+      // Process balances with enhanced calculations
+      const processedBalances: BalanceEntry[] = balanceResponse.data.balances
+        .map((b) => {
+          const total = parseFloat(b.free) + parseFloat(b.locked);
+          const asset = b.asset.toUpperCase();
+          let usdtValue = 0;
+
+          if (asset === "USDT") {
+            usdtValue = total;
+          } else {
+            const tickerSymbol = `${asset}USDT`;
+            const price = priceMap.get(tickerSymbol);
+            if (price && price > 0) {
+              usdtValue = total * price;
+            }
+          }
+
+          totalUsdtValue += usdtValue;
+
+          return {
+            ...b,
+            total,
+            usdtValue,
+          };
+        })
+        .filter(balance => balance.total > 0); // Only include non-zero balances
+
+      // Calculate allocation percentages
+      const allocation: Record<string, number> = {};
+      if (totalUsdtValue > 0) {
+        for (const balance of processedBalances) {
+          if (balance.usdtValue && balance.usdtValue > 0) {
+            allocation[balance.asset] = (balance.usdtValue / totalUsdtValue) * 100;
+          }
+        }
+      }
+
+      // Calculate 24h performance (simplified implementation)
+      let performance24hChange = 0;
+      let performance24hChangePercent = 0;
+      
+      // Calculate weighted average of price changes across portfolio
+      let totalWeightedChange = 0;
+      let totalWeight = 0;
+      
+      for (const balance of processedBalances) {
+        if (balance.usdtValue && balance.usdtValue > 0) {
+          const asset = balance.asset.toUpperCase();
+          if (asset !== 'USDT') {
+            const tickerSymbol = `${asset}USDT`;
+            const ticker = tickers.find(t => t.symbol === tickerSymbol);
+            if (ticker && ticker.priceChangePercent) {
+              const changePercent = parseFloat(ticker.priceChangePercent);
+              const weight = balance.usdtValue;
+              totalWeightedChange += changePercent * weight;
+              totalWeight += weight;
+            }
+          }
+        }
+      }
+      
+      if (totalWeight > 0) {
+        performance24hChangePercent = totalWeightedChange / totalWeight;
+        performance24hChange = (totalUsdtValue * performance24hChangePercent) / 100;
+      }
+
+      const portfolio: Portfolio = {
+        totalValue: totalUsdtValue,
+        totalValueBTC: btcPrice > 0 ? totalUsdtValue / btcPrice : 0,
+        totalUsdtValue: totalUsdtValue,
+        balances: processedBalances,
+        allocation,
+        performance24h: {
+          change: performance24hChange,
+          changePercent: performance24hChangePercent,
+        },
+      };
+
+      // Validate the final portfolio object
+      const validationResult = validateMexcData(PortfolioSchema, portfolio);
+      if (!validationResult.success) {
+        return {
+          success: false,
+          error: `Portfolio data validation failed: ${validationResult.error}`,
+          timestamp: new Date().toISOString(),
+        };
+      }
 
       return {
         success: true,
-        data: {
-          tickers,
-          symbols: exchangeInfoResponse.data?.symbols || [],
-          stats,
-        },
+        data: validationResult.data,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
+      const safeError = toSafeError(error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to get market data",
+        error: `Failed to get account balances: ${safeError.message}`,
         timestamp: new Date().toISOString(),
       };
     }
+  }
+
+  /**
+   * Get portfolio
+   */
+  async getPortfolio(): Promise<MexcServiceResponse<Portfolio>> {
+    // This method is now simplified to delegate to getAccountBalances,
+    // which returns the complete portfolio data.
+    return this.getAccountBalances();
   }
 
   /**
    * Analyze portfolio with optimized calculations
    */
-  async analyzePortfolio(): Promise<MexcServiceResponse<Portfolio>> {
-    try {
-      // Fetch account data and market prices in parallel
-      const [balancesResponse, marketDataResponse] = await Promise.all([
-        this.getAccountBalances(),
-        this.getMarketData(),
-      ]);
-
-      if (!balancesResponse.success || !marketDataResponse.success) {
-        return {
-          success: false,
-          error: "Failed to fetch portfolio data",
-          timestamp: new Date().toISOString(),
-        };
-      }
-
-      const portfolio = this.calculatePortfolioMetrics(
-        balancesResponse.data || [],
-        marketDataResponse.data?.tickers || []
-      );
-
-      return {
-        success: true,
-        data: portfolio,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Portfolio analysis failed",
-        timestamp: new Date().toISOString(),
-      };
+  async getEnhancedPortfolioAnalysis(): Promise<MexcServiceResponse<any>> {
+    const portfolioResponse = await this.getPortfolio();
+    if (!portfolioResponse.success || !portfolioResponse.data) {
+      return portfolioResponse;
     }
-  }
 
-  /**
-   * Detect trading patterns with enhanced algorithms
-   */
-  async detectTradingPatterns(symbols?: string[]): Promise<MexcServiceResponse<PatternAnalysis[]>> {
-    try {
-      // Get market data for pattern analysis
-      const marketResponse = await this.getMarketData();
-      if (!marketResponse.success) {
-        return {
-          success: false,
-          error: "Failed to fetch market data for pattern analysis",
-          timestamp: new Date().toISOString(),
-        };
-      }
-
-      const patterns = await this.analyzePatterns(marketResponse.data?.tickers || [], symbols);
-
-      return {
-        success: true,
-        data: patterns,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Pattern detection failed",
-        timestamp: new Date().toISOString(),
-      };
-    }
-  }
-
-  // ============================================================================
-  // Utility and Helper Methods
-  // ============================================================================
-
-  /**
-   * Calculate market statistics from ticker data
-   */
-  private calculateMarketStats(tickers: Ticker[]): MarketStats {
-    const totalVolume = tickers.reduce(
-      (sum, ticker) => sum + Number.parseFloat(ticker.volume || "0"),
-      0
-    );
-
-    const gainers = tickers
-      .filter((t) => Number.parseFloat(t.priceChangePercent || "0") > 0)
-      .sort(
-        (a, b) =>
-          Number.parseFloat(b.priceChangePercent || "0") -
-          Number.parseFloat(a.priceChangePercent || "0")
-      )
-      .slice(0, 10)
-      .map((t) => ({
-        symbol: t.symbol,
-        priceChangePercent: Number.parseFloat(t.priceChangePercent || "0"),
-      }));
-
-    const losers = tickers
-      .filter((t) => Number.parseFloat(t.priceChangePercent || "0") < 0)
-      .sort(
-        (a, b) =>
-          Number.parseFloat(a.priceChangePercent || "0") -
-          Number.parseFloat(b.priceChangePercent || "0")
-      )
-      .slice(0, 10)
-      .map((t) => ({
-        symbol: t.symbol,
-        priceChangePercent: Number.parseFloat(t.priceChangePercent || "0"),
-      }));
-
-    const priceChanges = tickers.map((t) =>
-      Math.abs(Number.parseFloat(t.priceChangePercent || "0"))
-    );
-    const averageVolatility =
-      priceChanges.reduce((sum, change) => sum + change, 0) / priceChanges.length;
+    const riskAssessment = await this.analyzePortfolio(portfolioResponse.data);
 
     return {
-      totalMarketCap: 0, // Would need additional data
-      total24hVolume: totalVolume,
-      activePairs: tickers.length,
-      topGainers: gainers,
-      topLosers: losers,
-      averageVolatility,
+      success: true,
+      data: {
+        portfolio: portfolioResponse.data,
+        risk: riskAssessment,
+      },
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -610,8 +837,8 @@ export class UnifiedMexcService {
    */
   async getSymbolStatus(symbol: string): Promise<{ status: string; trading: boolean }> {
     try {
-      const ticker = await this.getTicker24hr([symbol]);
-      const data = Array.isArray(ticker) ? ticker[0] : ticker;
+      const tickerResponse = await this.getTicker24hr([symbol]);
+      const data = tickerResponse.success && tickerResponse.data?.[0];
       
       return {
         status: data ? 'active' : 'inactive',
@@ -649,8 +876,21 @@ export class UnifiedMexcService {
   /**
    * Get 24hr ticker (alias for getTicker24hr)
    */
-  async get24hrTicker(symbols?: string[]): Promise<Ticker | Ticker[]> {
-    return this.getTicker24hr(symbols);
+  async get24hrTicker(symbols?: string[]): Promise<MexcServiceResponse<Ticker | Ticker[]>> {
+    const response = await this.getTicker24hr(symbols);
+    if (!response.success) {
+      return response;
+    }
+    
+    // Return single ticker if only one symbol requested
+    if (symbols && symbols.length === 1) {
+      return {
+        ...response,
+        data: response.data?.[0] || null,
+      };
+    }
+    
+    return response;
   }
 
   /**
@@ -662,8 +902,8 @@ export class UnifiedMexcService {
     direction: 'up' | 'down' | 'none';
   }> {
     try {
-      const ticker = await this.getTicker24hr([symbol]);
-      const data = Array.isArray(ticker) ? ticker[0] : ticker;
+      const tickerResponse = await this.getTicker24hr([symbol]);
+      const data = tickerResponse.success && tickerResponse.data?.[0];
       
       if (!data?.openPrice || !data?.lastPrice) {
         return { hasGap: false, gapPercentage: 0, direction: 'none' };
@@ -1253,7 +1493,7 @@ export class UnifiedMexcService {
   async getSymbolTicker(symbol: string): Promise<MexcServiceResponse<Ticker>> {
     try {
       // Use existing getTicker24hr method for single symbol
-      const tickerResponse = await this.getTicker24hr(symbol);
+      const tickerResponse = await this.getTicker24hr([symbol]);
 
       if (!tickerResponse.success) {
         return {
@@ -1643,7 +1883,9 @@ export type {
   CalendarEntry,
   SymbolEntry,
   BalanceEntry,
+  ExchangeInfo,
   ExchangeSymbol,
+  TradingFilter,
   Ticker,
   OrderParameters,
   OrderResult,
@@ -1662,6 +1904,9 @@ export {
   CalendarEntrySchema,
   SymbolEntrySchema,
   BalanceEntrySchema,
+  ExchangeInfoSchema,
+  ExchangeSymbolSchema,
+  TradingFilterSchema,
   TickerSchema,
   validateMexcData,
 };

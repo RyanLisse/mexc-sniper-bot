@@ -93,7 +93,26 @@ export const BalanceEntrySchema = z.object({
 });
 
 /**
- * Exchange Symbol Schema
+ * Trading Filter Schema for MEXC exchange rules
+ * Used for order validation and minimum requirements
+ */
+export const TradingFilterSchema = z.object({
+  filterType: z.string(),
+  minPrice: z.string().optional(),
+  maxPrice: z.string().optional(),
+  tickSize: z.string().optional(),
+  minQty: z.string().optional(),
+  maxQty: z.string().optional(),
+  stepSize: z.string().optional(),
+  minNotional: z.string().optional(),
+  maxNotional: z.string().optional(),
+  multiplierUp: z.string().optional(),
+  multiplierDown: z.string().optional(),
+  avgPriceMins: z.number().optional(),
+});
+
+/**
+ * Exchange Symbol Schema with enhanced trading rules
  * Used for detailed symbol information from exchange info
  */
 export const ExchangeSymbolSchema = z.object({
@@ -104,6 +123,34 @@ export const ExchangeSymbolSchema = z.object({
   baseAssetPrecision: z.number(),
   quotePrecision: z.number(),
   quoteAssetPrecision: z.number(),
+  baseCommissionPrecision: z.number().optional(),
+  quoteCommissionPrecision: z.number().optional(),
+  orderTypes: z.array(z.string()).optional(),
+  icebergAllowed: z.boolean().optional(),
+  ocoAllowed: z.boolean().optional(),
+  quoteOrderQtyMarketAllowed: z.boolean().optional(),
+  allowTrailingStop: z.boolean().optional(),
+  isSpotTradingAllowed: z.boolean().optional(),
+  isMarginTradingAllowed: z.boolean().optional(),
+  filters: z.array(TradingFilterSchema).optional(),
+  permissions: z.array(z.string()).optional(),
+});
+
+/**
+ * Exchange Info Schema
+ * Complete exchange information with all symbols and rules
+ */
+export const ExchangeInfoSchema = z.object({
+  timezone: z.string(),
+  serverTime: z.number(),
+  rateLimits: z.array(z.object({
+    rateLimitType: z.string(),
+    interval: z.string(),
+    intervalNum: z.number(),
+    limit: z.number(),
+  })).optional(),
+  exchangeFilters: z.array(TradingFilterSchema).optional(),
+  symbols: z.array(ExchangeSymbolSchema),
 });
 
 /**
@@ -281,7 +328,7 @@ export const TradingOpportunitySchema = z.object({
 export const PortfolioSchema = z.object({
   totalValue: z.number(),
   totalValueBTC: z.number(),
-  totalValueUSDT: z.number(),
+  totalUsdtValue: z.number(),
   balances: z.array(BalanceEntrySchema),
   allocation: z.record(z.string(), z.number()),
   performance24h: z.object({
@@ -314,7 +361,9 @@ export const RiskAssessmentSchema = z.object({
 export type CalendarEntry = z.infer<typeof CalendarEntrySchema>;
 export type SymbolEntry = z.infer<typeof SymbolEntrySchema>;
 export type BalanceEntry = z.infer<typeof BalanceEntrySchema>;
+export type TradingFilter = z.infer<typeof TradingFilterSchema>;
 export type ExchangeSymbol = z.infer<typeof ExchangeSymbolSchema>;
+export type ExchangeInfo = z.infer<typeof ExchangeInfoSchema>;
 export type Ticker = z.infer<typeof TickerSchema>;
 export type OrderParameters = z.infer<typeof OrderParametersSchema>;
 export type OrderResult = z.infer<typeof OrderResultSchema>;
@@ -338,7 +387,9 @@ export const ALL_MEXC_SCHEMAS = {
   CalendarEntrySchema,
   SymbolEntrySchema,
   BalanceEntrySchema,
+  TradingFilterSchema,
   ExchangeSymbolSchema,
+  ExchangeInfoSchema,
   TickerSchema,
   OrderParametersSchema,
   OrderResultSchema,

@@ -74,11 +74,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`[API] Account balance success: ${balanceResponse.data?.length || 0} balances`);
+    console.log(`[API] Account balance success: ${balanceResponse.data?.balances?.length || 0} balances`);
 
-    // Calculate total USDT value from individual balances
-    const balances = balanceResponse.data || [];
-    const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
+    // Extract data from Portfolio object
+    const portfolio = balanceResponse.data;
+    const balances = portfolio?.balances || [];
+    const totalUsdtValue = portfolio?.totalUsdtValue || 0;
     
     return apiResponse(
       createSuccessResponse({

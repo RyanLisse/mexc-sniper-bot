@@ -8,7 +8,7 @@
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { JaegerExporter } from "@opentelemetry/exporter-jaeger";
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
-import { resourceFromAttributes } from "@opentelemetry/resources";
+import { Resource } from "@opentelemetry/resources";
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { BatchSpanProcessor, TraceIdRatioBasedSampler } from "@opentelemetry/sdk-trace-node";
@@ -47,7 +47,7 @@ export function initializeOpenTelemetry(): NodeSDK | null {
 
   try {
     // Resource configuration - identifies the service
-    const resource = resourceFromAttributes({
+    const resource = new Resource({
       [SEMRESATTRS_SERVICE_NAME]: "mexc-trading-bot",
       [SEMRESATTRS_SERVICE_VERSION]: process.env.APP_VERSION || "1.0.0",
       [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]: process.env.NODE_ENV || "development",

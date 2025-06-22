@@ -40,56 +40,63 @@ interface ConfigStatusPanelProps {
   autoRefresh?: boolean;
 }
 
-// Helper component for rendering component status
-function ComponentStatusCard({
-  component,
-  onExpand,
-  isExpanded,
-  onValidate,
-  isValidating,
-}: {
-  component: any;
-  onExpand: (id: string) => void;
-  isExpanded: boolean;
-  onValidate: (id: string) => void;
-  isValidating: boolean;
-}) {
-  return (
-    <Card key={component.id} className="mb-4">
-      <CardHeader className="cursor-pointer" onClick={() => onExpand(component.id)}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {/* Status icon will be rendered here */}
-            <CardTitle className="text-sm">{component.name}</CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={component.isValid ? "default" : "destructive"}>
-              {component.status}
-            </Badge>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                onValidate(component.id);
-              }}
-              disabled={isValidating}
-            >
-              Validate
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      {isExpanded && (
-        <CardContent>
-          <div className="text-sm text-gray-600">
-            {component.description || "No description available"}
-          </div>
-        </CardContent>
-      )}
-    </Card>
-  );
+interface StatusInfo {
+  icon: JSX.Element;
+  title: string;
+  description: string;
 }
+
+// Consolidated status information helper
+const getStatusInfo = (status: string, autoSnipingEnabled: boolean): StatusInfo => {
+  const statusMap: Record<string, StatusInfo> = {
+    ready: {
+      icon: <CheckCircle className="h-6 w-6 text-green-500" />,
+      title: "System Ready",
+      description: `Auto-sniping is ${autoSnipingEnabled ? "enabled" : "disabled"}`,
+    },
+    partial: {
+      icon: <AlertTriangle className="h-6 w-6 text-yellow-500" />,
+      title: "Partial Readiness", 
+      description: `Auto-sniping is ${autoSnipingEnabled ? "enabled" : "disabled"}`,
+    },
+    not_ready: {
+      icon: <XCircle className="h-6 w-6 text-red-500" />,
+      title: "System Not Ready",
+      description: `Auto-sniping is ${autoSnipingEnabled ? "enabled" : "disabled"}`,
+    },
+  };
+  
+  return statusMap[status] || statusMap.not_ready;
+};
+
+// Status display component for overall system status
+const StatusDisplay = ({ 
+  status, 
+  autoSnipingEnabled, 
+  readinessScore 
+}: { 
+  status: string; 
+  autoSnipingEnabled: boolean; 
+  readinessScore: number; 
+}) => {
+  const statusInfo = getStatusInfo(status, autoSnipingEnabled);
+  
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        {statusInfo.icon}
+        <div>
+          <h3 className="font-semibold">{statusInfo.title}</h3>
+          <p className="text-sm text-muted-foreground">{statusInfo.description}</p>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="text-2xl font-bold">{readinessScore}%</div>
+        <p className="text-sm text-muted-foreground">Readiness Score</p>
+      </div>
+    </div>
+  );
+};
 
 export function ConfigStatusPanel({
   className = "",
@@ -115,29 +122,31 @@ export function ConfigStatusPanel({
     loadOnMount: true,
   });
 
-  // Helper function for status icons
-  const renderStatusIcon = (status: string, isValid: boolean) => {
-    if (status === "valid" && isValid) {
-      return <CheckCircle className="h-5 w-5 text-green-500" />;
-    }
-    if (status === "warning") {
-      return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-    }
-    if (status === "invalid" || !isValid) {
-      return <XCircle className="h-5 w-5 text-red-500" />;
-    }
-    return <Clock className="h-5 w-5 text-gray-400" />;
-  };
+  // Consolidated status information for components
+  const getComponentStatusInfo = (status: string, isValid: boolean) => {
+    const statusTypes = {
+      valid_and_valid: {
+        icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+        variant: "default" as const,
+      },
+      warning: {
+        icon: <AlertTriangle className="h-5 w-5 text-yellow-500" />,
+        variant: "secondary" as const,
+      },
+      invalid_or_not_valid: {
+        icon: <XCircle className="h-5 w-5 text-red-500" />,
+        variant: "destructive" as const,
+      },
+      default: {
+        icon: <Clock className="h-5 w-5 text-gray-400" />,
+        variant: "outline" as const,
+      },
+    };
 
-  // Status badge variant mapping
-  const getStatusVariant = (
-    status: string,
-    isValid: boolean
-  ): "default" | "secondary" | "destructive" | "outline" => {
-    if (status === "valid" && isValid) return "default";
-    if (status === "warning") return "secondary";
-    if (status === "invalid" || !isValid) return "destructive";
-    return "outline";
+    if (status === "valid" && isValid) return statusTypes.valid_and_valid;
+    if (status === "warning") return statusTypes.warning;
+    if (status === "invalid" || !isValid) return statusTypes.invalid_or_not_valid;
+    return statusTypes.default;
   };
 
   // Component icon mapping
@@ -215,33 +224,11 @@ export function ConfigStatusPanel({
           {/* Overall Status */}
           {readinessReport && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {readinessReport.overallStatus === "ready" && (
-                    <CheckCircle className="h-6 w-6 text-green-500" />
-                  )}
-                  {readinessReport.overallStatus === "partial" && (
-                    <AlertTriangle className="h-6 w-6 text-yellow-500" />
-                  )}
-                  {readinessReport.overallStatus === "not_ready" && (
-                    <XCircle className="h-6 w-6 text-red-500" />
-                  )}
-                  <div>
-                    <h3 className="font-semibold">
-                      {readinessReport.overallStatus === "ready" && "System Ready"}
-                      {readinessReport.overallStatus === "partial" && "Partial Readiness"}
-                      {readinessReport.overallStatus === "not_ready" && "System Not Ready"}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Auto-sniping is {readinessReport.autoSnipingEnabled ? "enabled" : "disabled"}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold">{readinessReport.readinessScore}%</div>
-                  <p className="text-sm text-muted-foreground">Readiness Score</p>
-                </div>
-              </div>
+              <StatusDisplay 
+                status={readinessReport.overallStatus}
+                autoSnipingEnabled={readinessReport.autoSnipingEnabled}
+                readinessScore={readinessReport.readinessScore}
+              />
 
               <Progress value={readinessReport.readinessScore} className="w-full" />
 
@@ -327,7 +314,7 @@ export function ConfigStatusPanel({
                         <div>
                           <h4 className="font-medium flex items-center gap-2">
                             {result.component}
-                            <Badge variant={getStatusVariant(result.status, result.isValid)}>
+                            <Badge variant={getComponentStatusInfo(result.status, result.isValid).variant}>
                               {result.status}
                             </Badge>
                           </h4>
@@ -335,7 +322,7 @@ export function ConfigStatusPanel({
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {getStatusIcon(result.status, result.isValid)}
+                        {getComponentStatusInfo(result.status, result.isValid).icon}
                         <Button
                           variant="ghost"
                           size="sm"
