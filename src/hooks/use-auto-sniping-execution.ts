@@ -164,21 +164,26 @@ export function useAutoSnipingExecution(
           message: string;
         }>(`/api/auto-sniping/execution?${queryParams}`);
 
+        // Check if response has the expected structure
+        if (!response.data || !response.data.report || !response.data.execution) {
+          throw new Error("Invalid API response structure - missing required data fields");
+        }
+
         setState((prev) => ({
           ...prev,
           report: response.data.report,
           config: response.data.report.config,
           stats: response.data.report.stats,
-          activePositions: response.data.report.activePositions,
-          recentExecutions: response.data.report.recentExecutions,
-          activeAlerts: response.data.report.activeAlerts,
+          activePositions: response.data.report.activePositions || [],
+          recentExecutions: response.data.report.recentExecutions || [],
+          activeAlerts: response.data.report.activeAlerts || [],
           isExecutionActive: response.data.execution.isActive,
           executionStatus: response.data.execution.status,
-          totalPnl: response.data.execution.totalPnl,
-          successRate: response.data.execution.successRate,
-          activePositionsCount: response.data.execution.activePositionsCount,
-          dailyTradeCount: response.data.execution.dailyTrades,
-          unacknowledgedAlertsCount: response.data.report.activeAlerts.filter(
+          totalPnl: response.data.execution.totalPnl || "0",
+          successRate: response.data.execution.successRate || 0,
+          activePositionsCount: response.data.execution.activePositionsCount || 0,
+          dailyTradeCount: response.data.execution.dailyTrades || 0,
+          unacknowledgedAlertsCount: (response.data.report.activeAlerts || []).filter(
             (a) => !a.acknowledged
           ).length,
           isLoading: false,

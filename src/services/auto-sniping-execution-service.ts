@@ -981,10 +981,10 @@ export class AutoSnipingExecutionService {
 
   private getDefaultConfig(): AutoSnipingConfig {
     return {
-      enabled: process.env.AUTO_SNIPING_ENABLED !== 'false', // Default enabled unless explicitly disabled
+      enabled: process.env.NODE_ENV !== 'production' || process.env.AUTO_SNIPING_ENABLED === 'true', // Default disabled in production unless explicitly enabled
       maxPositions: parseInt(process.env.AUTO_SNIPING_MAX_POSITIONS || '5'),
       maxDailyTrades: parseInt(process.env.AUTO_SNIPING_MAX_DAILY_TRADES || '10'),
-      positionSizeUSDT: parseFloat(process.env.AUTO_SNIPING_POSITION_SIZE_USDT || '100'),
+      positionSizeUSDT: parseFloat(process.env.AUTO_SNIPING_POSITION_SIZE_USDT || '10'),
       minConfidence: parseFloat(process.env.AUTO_SNIPING_MIN_CONFIDENCE || '80'),
       allowedPatternTypes: (process.env.AUTO_SNIPING_ALLOWED_PATTERNS?.split(',') as PatternType[]) || ["ready_state"],
       requireCalendarConfirmation: process.env.AUTO_SNIPING_REQUIRE_CALENDAR === 'true' || true,
