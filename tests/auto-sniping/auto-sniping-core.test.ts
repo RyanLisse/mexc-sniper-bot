@@ -381,20 +381,24 @@ describe('Auto Sniping Core Functionality', () => {
 
   describe('Trade Execution Logic', () => {
     it('should execute multi-phase sell strategy on price targets', async () => {
-      // Arrange: Position with 100% profit
-      const currentPrice = 2.0; // 100% gain from $1.0 entry
+      // Arrange: Position with gradual price increases
       const entryPrice = 1.0;
       
       // Initialize bot with position
       tradingBot.initializePosition('TESTUSDT', entryPrice, 1000);
 
-      // Act: Process price update
-      const executionResult = tradingBot.onPriceUpdate(currentPrice);
-
+      // Act: First execute Phase 1 at 50% gain
+      const phase1Result = tradingBot.onPriceUpdate(1.5); // 50% gain
+      expect(phase1Result.actions).toHaveLength(1);
+      expect(phase1Result.actions[0]).toContain('EXECUTE Phase 1');
+      
+      // Then execute Phase 2 at 100% gain
+      const phase2Result = tradingBot.onPriceUpdate(2.0); // 100% gain
+      
       // Assert: Should execute second phase
-      expect(executionResult.actions).toHaveLength(1);
-      expect(executionResult.actions[0]).toContain('EXECUTE Phase 2');
-      expect(executionResult.actions[0]).toContain('Sell');
+      expect(phase2Result.actions).toHaveLength(1);
+      expect(phase2Result.actions[0]).toContain('EXECUTE Phase 2');
+      expect(phase2Result.actions[0]).toContain('Sell');
     });
 
     it('should handle partial fills and continue strategy', async () => {
@@ -519,7 +523,7 @@ describe('Auto Sniping Core Functionality', () => {
       expect(tradingBot.getPositionInfo().entryPrice).toBe(originalPosition.entryPrice);
       
       // Should queue for retry
-      expect(tradingBot.getPendingPersistenceOperations()).toHaveLength(1);
+      expect(tradingBot.getPendingPersistenceOperations().operations).toHaveLength(1);
     });
   });
 
