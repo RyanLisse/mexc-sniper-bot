@@ -902,10 +902,12 @@ export class AdvancedRiskEngine extends EventEmitter {
 
       // Enhanced portfolio risk rejection logic
       if (positionRequest.estimatedRisk && positionRequest.estimatedRisk > 1.5) {
-        const existingRisk = this.currentPortfolioRisk > 0 ? this.currentPortfolioRisk : portfolioRiskScore;
+        const existingRisk =
+          this.currentPortfolioRisk > 0 ? this.currentPortfolioRisk : portfolioRiskScore;
         const totalRisk = existingRisk + positionRequest.estimatedRisk;
-        
-        if (totalRisk > 11) { // More sensitive threshold for total portfolio risk
+
+        if (totalRisk > 11) {
+          // More sensitive threshold for total portfolio risk
           approved = false;
           rejectionReason = "portfolio_risk_exceeded";
           adjustedSize = 0;
@@ -1070,7 +1072,6 @@ export class AdvancedRiskEngine extends EventEmitter {
       console.error("[AdvancedRiskEngine] Portfolio metrics update failed:", error);
     }
   }
-
 
   /**
    * Alias for isEmergencyStopActive to match test expectations

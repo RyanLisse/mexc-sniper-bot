@@ -242,9 +242,9 @@ export class HealthCheckComponents {
         const result: HealthCheckResult = {
           status: "warning",
           message: "OpenAI API key not configured - AI features will be limited",
-          details: { 
+          details: {
             configured: false,
-            impact: "Auto-sniping functionality will work without AI enhancement"
+            impact: "Auto-sniping functionality will work without AI enhancement",
           },
         };
         return result;

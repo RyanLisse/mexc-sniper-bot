@@ -1,12 +1,12 @@
 /**
  * Pattern Detection Core Interfaces
- * 
+ *
  * Type-safe contracts for the decomposed pattern detection system.
  * These interfaces ensure clean architecture and testability.
  */
 
-import type { SymbolEntry, CalendarEntry } from '../../services/mexc-unified-exports';
-import type { ActivityData } from '../../schemas/mexc-schemas';
+import type { ActivityData } from "../../schemas/mexc-schemas";
+import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 
 // ============================================================================
 // Core Pattern Types (Preserved from original engine)
@@ -14,8 +14,8 @@ import type { ActivityData } from '../../schemas/mexc-schemas';
 
 export interface ReadyStatePattern {
   sts: 2; // Symbol Trading Status: Ready
-  st: 2;  // Symbol State: Active
-  tt: 4;  // Trading Time: Live
+  st: 2; // Symbol State: Active
+  tt: 4; // Trading Time: Live
 }
 
 export interface PatternMatch {
@@ -113,7 +113,10 @@ export interface IPatternAnalyzer {
  */
 export interface IConfidenceCalculator {
   calculateReadyStateConfidence(symbol: SymbolEntry): Promise<number>;
-  calculateAdvanceOpportunityConfidence(entry: CalendarEntry, advanceHours: number): Promise<number>;
+  calculateAdvanceOpportunityConfidence(
+    entry: CalendarEntry,
+    advanceHours: number
+  ): Promise<number>;
   calculatePreReadyScore(symbol: SymbolEntry): Promise<{
     isPreReady: boolean;
     confidence: number;
@@ -128,13 +131,20 @@ export interface IConfidenceCalculator {
  * Handles pattern persistence and caching
  */
 export interface IPatternStorage {
-  storeSuccessfulPattern(data: SymbolEntry | CalendarEntry, type: string, confidence: number): Promise<void>;
+  storeSuccessfulPattern(
+    data: SymbolEntry | CalendarEntry,
+    type: string,
+    confidence: number
+  ): Promise<void>;
   getHistoricalSuccessRate(patternType: string): Promise<number>;
-  findSimilarPatterns(pattern: any, options?: {
-    threshold?: number;
-    limit?: number;
-    sameTypeOnly?: boolean;
-  }): Promise<any[]>;
+  findSimilarPatterns(
+    pattern: any,
+    options?: {
+      threshold?: number;
+      limit?: number;
+      sameTypeOnly?: boolean;
+    }
+  ): Promise<any[]>;
   clearCache(): void;
   getCacheStats(): {
     hitRatio: number;
@@ -178,16 +188,16 @@ export interface PatternDetectionConfig {
   // Core settings
   minAdvanceHours: number;
   confidenceThreshold: number;
-  
+
   // Performance settings
   enableCaching: boolean;
   cacheTimeout: number;
   maxConcurrentAnalysis: number;
-  
+
   // AI Enhancement settings
   enableAIEnhancement: boolean;
   enableActivityEnhancement: boolean;
-  
+
   // Validation settings
   strictValidation: boolean;
   logValidationErrors: boolean;
@@ -214,20 +224,28 @@ export class PatternDetectionError extends Error {
     public context?: any
   ) {
     super(message);
-    this.name = 'PatternDetectionError';
+    this.name = "PatternDetectionError";
   }
 }
 
 export class PatternValidationError extends PatternDetectionError {
-  constructor(message: string, public validationErrors: string[], context?: any) {
-    super(message, 'VALIDATION_ERROR', context);
-    this.name = 'PatternValidationError';
+  constructor(
+    message: string,
+    public validationErrors: string[],
+    context?: any
+  ) {
+    super(message, "VALIDATION_ERROR", context);
+    this.name = "PatternValidationError";
   }
 }
 
 export class PatternAnalysisError extends PatternDetectionError {
-  constructor(message: string, public analysisType: string, context?: any) {
-    super(message, 'ANALYSIS_ERROR', context);
-    this.name = 'PatternAnalysisError';
+  constructor(
+    message: string,
+    public analysisType: string,
+    context?: any
+  ) {
+    super(message, "ANALYSIS_ERROR", context);
+    this.name = "PatternAnalysisError";
   }
 }

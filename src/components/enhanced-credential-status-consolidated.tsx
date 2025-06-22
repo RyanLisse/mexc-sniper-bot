@@ -4,7 +4,7 @@
  * This component consolidates the functionality from:
  * - enhanced-credential-status.tsx (comprehensive status display)
  * - enhanced-credential-status-v2.tsx (clean implementation)
- * 
+ *
  * Features:
  * - Uses unified status components for consistency
  * - Comprehensive status information
@@ -13,14 +13,14 @@
  * - Action suggestions and troubleshooting
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useStatus } from "../contexts/status-context";
-import { 
-  UnifiedStatusBadge,
-  NetworkStatusIndicator,
+import {
   CredentialStatusIndicator,
+  NetworkStatusIndicator,
+  StatusTooltip,
   TradingStatusIndicator,
-  StatusTooltip
+  UnifiedStatusBadge,
 } from "./status/unified-status-display";
 
 interface ConsolidatedCredentialStatusProps {
@@ -39,21 +39,29 @@ export function ConsolidatedCredentialStatus({
   className = "",
 }: ConsolidatedCredentialStatusProps) {
   const { status, refreshAll, clearErrors } = useStatus();
-  
+
   // Safe access to status properties with defaults
-  const networkStatus = status?.network || { connected: false, lastChecked: new Date().toISOString() };
-  const credentialStatus = status?.credentials || { 
-    hasCredentials: false, 
-    isValid: false, 
-    source: 'none',
+  const networkStatus = status?.network || {
+    connected: false,
+    lastChecked: new Date().toISOString(),
+  };
+  const credentialStatus = status?.credentials || {
+    hasCredentials: false,
+    isValid: false,
+    source: "none",
     hasUserCredentials: false,
     hasEnvironmentCredentials: false,
-    lastValidated: new Date().toISOString()
+    lastValidated: new Date().toISOString(),
   };
-  const tradingStatus = status?.trading || { canTrade: false, balanceLoaded: false, lastUpdate: new Date().toISOString() };
+  const tradingStatus = status?.trading || {
+    canTrade: false,
+    balanceLoaded: false,
+    lastUpdate: new Date().toISOString(),
+  };
   const isLoading = status?.isLoading ?? false;
   const lastUpdated = status?.lastGlobalUpdate || new Date().toISOString();
-  const syncError = status?.syncErrors?.length > 0 ? status.syncErrors[status.syncErrors.length - 1] : null;
+  const syncError =
+    status?.syncErrors?.length > 0 ? status.syncErrors[status.syncErrors.length - 1] : null;
   const clearSyncError = clearErrors;
   const refreshStatus = refreshAll;
 
@@ -149,11 +157,11 @@ export function ConsolidatedCredentialStatus({
   // Card variant
   if (variant === "card") {
     return (
-      <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${className}`}>
+      <div
+        className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${className}`}
+      >
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            System Status
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">System Status</h3>
           <div className="flex items-center space-x-2">
             <UnifiedStatusBadge status={overallStatus} />
             <button
@@ -193,8 +201,18 @@ export function ConsolidatedCredentialStatus({
           {syncError && (
             <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
               <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-5 h-5 text-red-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <span className="text-sm text-red-700 dark:text-red-300">{syncError}</span>
               </div>
@@ -204,7 +222,12 @@ export function ConsolidatedCredentialStatus({
                 title="Clear error"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -222,7 +245,12 @@ export function ConsolidatedCredentialStatus({
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
                 {isExpanded ? "Hide" : "Show"} suggested actions ({actionSuggestions.length})
               </button>
@@ -232,10 +260,22 @@ export function ConsolidatedCredentialStatus({
                   <ul className="space-y-1">
                     {actionSuggestions.map((suggestion, index) => (
                       <li key={index} className="flex items-start">
-                        <svg className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <svg
+                          className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
                         </svg>
-                        <span className="text-sm text-blue-700 dark:text-blue-300">{suggestion}</span>
+                        <span className="text-sm text-blue-700 dark:text-blue-300">
+                          {suggestion}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -263,9 +303,7 @@ export function ConsolidatedCredentialStatus({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <UnifiedStatusBadge status={overallStatus} />
-          <span className="text-lg font-semibold text-gray-900 dark:text-white">
-            System Status
-          </span>
+          <span className="text-lg font-semibold text-gray-900 dark:text-white">System Status</span>
         </div>
         <button
           onClick={handleRefresh}
@@ -305,8 +343,18 @@ export function ConsolidatedCredentialStatus({
       {syncError && (
         <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <div className="flex items-center">
-            <svg className="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-5 h-5 text-red-500 mr-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <span className="text-red-700 dark:text-red-300">{syncError}</span>
           </div>
@@ -316,7 +364,12 @@ export function ConsolidatedCredentialStatus({
             title="Clear error"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -325,9 +378,7 @@ export function ConsolidatedCredentialStatus({
       {showActions && actionSuggestions.length > 0 && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="font-medium text-blue-900 dark:text-blue-100">
-              Suggested Actions
-            </h4>
+            <h4 className="font-medium text-blue-900 dark:text-blue-100">Suggested Actions</h4>
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
@@ -340,8 +391,18 @@ export function ConsolidatedCredentialStatus({
             <div className="space-y-2">
               {actionSuggestions.map((suggestion, index) => (
                 <div key={index} className="flex items-start">
-                  <svg className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <svg
+                    className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
                   </svg>
                   <span className="text-sm text-blue-800 dark:text-blue-200">{suggestion}</span>
                 </div>

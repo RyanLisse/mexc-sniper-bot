@@ -1,15 +1,15 @@
 "use client";
 
 import { Activity, AlertTriangle, DollarSign, Hash, TrendingUp } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { SimpleAutoSnipingControl } from "../auto-sniping/simple-auto-sniping-control";
-import { UnifiedStatusBadge } from "../status/unified-status-display";
 import { useStatus } from "../../contexts/status-context";
 import { useAutoSnipingExecution } from "../../hooks/use-auto-sniping-execution";
+import { SimpleAutoSnipingControl } from "../auto-sniping/simple-auto-sniping-control";
+import { UnifiedStatusBadge } from "../status/unified-status-display";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
 /**
  * Simplified Trading Dashboard
- * 
+ *
  * Replaces complex technical dashboards with user-friendly essential information:
  * - Clear auto-sniping control
  * - Simple connection status
@@ -24,21 +24,16 @@ interface SimplifiedTradingDashboardProps {
 export function SimplifiedTradingDashboard({ className = "" }: SimplifiedTradingDashboardProps) {
   const { status, getOverallStatus } = useStatus();
   const overallStatus = getOverallStatus();
-  
-  const {
-    activePositionsCount,
-    totalPnl,
-    successRate,
-    dailyTradeCount,
-    stats,
-  } = useAutoSnipingExecution({
-    autoRefresh: true,
-    refreshInterval: 30000,
-    loadOnMount: true,
-    includePositions: true,
-    includeHistory: false,
-    includeAlerts: false,
-  });
+
+  const { activePositionsCount, totalPnl, successRate, dailyTradeCount, stats } =
+    useAutoSnipingExecution({
+      autoRefresh: true,
+      refreshInterval: 30000,
+      loadOnMount: true,
+      includePositions: true,
+      includeHistory: false,
+      includeAlerts: false,
+    });
 
   const pnlValue = Number.parseFloat(totalPnl);
   const isSystemReady = overallStatus === "healthy";
@@ -55,10 +50,9 @@ export function SimplifiedTradingDashboard({ className = "" }: SimplifiedTrading
                 Trading System
               </CardTitle>
               <CardDescription>
-                {isSystemReady 
+                {isSystemReady
                   ? "System ready for automated trading"
-                  : "System requires attention before trading"
-                }
+                  : "System requires attention before trading"}
               </CardDescription>
             </div>
             <UnifiedStatusBadge />
@@ -77,12 +71,15 @@ export function SimplifiedTradingDashboard({ className = "" }: SimplifiedTrading
 
             {/* Total P&L */}
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className={`flex items-center justify-center gap-2 mb-2 ${
-                pnlValue >= 0 ? "text-green-600" : "text-red-600"
-              }`}>
+              <div
+                className={`flex items-center justify-center gap-2 mb-2 ${
+                  pnlValue >= 0 ? "text-green-600" : "text-red-600"
+                }`}
+              >
                 <DollarSign className="h-5 w-5" />
                 <span className="text-2xl font-bold">
-                  {pnlValue >= 0 ? "+" : ""}{pnlValue.toFixed(1)}
+                  {pnlValue >= 0 ? "+" : ""}
+                  {pnlValue.toFixed(1)}
                 </span>
               </div>
               <p className="text-sm text-gray-600">Total P&L (USDT)</p>
@@ -124,9 +121,7 @@ export function SimplifiedTradingDashboard({ className = "" }: SimplifiedTrading
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
-                <div className="text-xl font-bold text-blue-600">
-                  {stats?.totalTrades || 0}
-                </div>
+                <div className="text-xl font-bold text-blue-600">{stats?.totalTrades || 0}</div>
                 <p className="text-sm text-gray-600">Total Trades</p>
               </div>
               <div>
@@ -136,16 +131,17 @@ export function SimplifiedTradingDashboard({ className = "" }: SimplifiedTrading
                 <p className="text-sm text-gray-600">Successful</p>
               </div>
               <div>
-                <div className="text-xl font-bold text-red-600">
-                  {stats?.failedTrades || 0}
-                </div>
+                <div className="text-xl font-bold text-red-600">{stats?.failedTrades || 0}</div>
                 <p className="text-sm text-gray-600">Failed</p>
               </div>
               <div>
-                <div className={`text-xl font-bold ${
-                  pnlValue >= 0 ? "text-green-600" : "text-red-600"
-                }`}>
-                  {pnlValue >= 0 ? "+" : ""}{pnlValue.toFixed(2)}
+                <div
+                  className={`text-xl font-bold ${
+                    pnlValue >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {pnlValue >= 0 ? "+" : ""}
+                  {pnlValue.toFixed(2)}
                 </div>
                 <p className="text-sm text-gray-600">Net P&L (USDT)</p>
               </div>
@@ -165,9 +161,7 @@ export function SimplifiedTradingDashboard({ className = "" }: SimplifiedTrading
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-yellow-700">
-              {!status.network.connected && (
-                <p>• Check your internet connection</p>
-              )}
+              {!status.network.connected && <p>• Check your internet connection</p>}
               {!status.credentials.hasCredentials && (
                 <p>• Configure your MEXC API credentials in Settings</p>
               )}

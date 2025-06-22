@@ -665,58 +665,67 @@ export class AdaptiveRateLimiterService {
     try {
       // Extract weight and order count headers (case-insensitive)
       const originalHeaderKeys = Object.keys(headers);
-      
+
       // Check weight-based limits (1-minute window)
-      const weightUsedHeaderKey = originalHeaderKeys.find(key => 
-        key.toLowerCase().includes('x-mbx-used-weight') || key.toLowerCase().includes('x-mexc-used-weight')
+      const weightUsedHeaderKey = originalHeaderKeys.find(
+        (key) =>
+          key.toLowerCase().includes("x-mbx-used-weight") ||
+          key.toLowerCase().includes("x-mexc-used-weight")
       );
-      
+
       if (weightUsedHeaderKey) {
-        const weightUsed = parseInt(headers[weightUsedHeaderKey] || '0', 10);
+        const weightUsed = Number.parseInt(headers[weightUsedHeaderKey] || "0", 10);
         const weightLimit = this.extractWeightLimit(headers, weightUsedHeaderKey);
-        
+
         if (weightUsed > 0 && weightLimit > 0) {
           const utilizationRate = weightUsed / weightLimit;
-          this.adjustRateLimitBasedOnUtilization(endpoint, utilizationRate, 'weight', metrics);
+          this.adjustRateLimitBasedOnUtilization(endpoint, utilizationRate, "weight", metrics);
         }
       }
 
       // Check order count limits (1-second and 1-minute windows)
-      const orderCount1sHeaderKey = originalHeaderKeys.find(key => 
-        key.toLowerCase().includes('x-mbx-order-count-1s') || key.toLowerCase().includes('x-mexc-order-count-1s')
+      const orderCount1sHeaderKey = originalHeaderKeys.find(
+        (key) =>
+          key.toLowerCase().includes("x-mbx-order-count-1s") ||
+          key.toLowerCase().includes("x-mexc-order-count-1s")
       );
-      
+
       if (orderCount1sHeaderKey) {
-        const orderCount = parseInt(headers[orderCount1sHeaderKey] || '0', 10);
+        const orderCount = Number.parseInt(headers[orderCount1sHeaderKey] || "0", 10);
         const orderLimit = this.extractOrderLimit(headers, orderCount1sHeaderKey);
-        
+
         if (orderCount > 0 && orderLimit > 0) {
           const utilizationRate = orderCount / orderLimit;
-          this.adjustRateLimitBasedOnUtilization(endpoint, utilizationRate, 'order_1s', metrics);
+          this.adjustRateLimitBasedOnUtilization(endpoint, utilizationRate, "order_1s", metrics);
         }
       }
 
-      const orderCount1mHeaderKey = originalHeaderKeys.find(key => 
-        key.toLowerCase().includes('x-mbx-order-count-1m') || key.toLowerCase().includes('x-mexc-order-count-1m')
+      const orderCount1mHeaderKey = originalHeaderKeys.find(
+        (key) =>
+          key.toLowerCase().includes("x-mbx-order-count-1m") ||
+          key.toLowerCase().includes("x-mexc-order-count-1m")
       );
-      
+
       if (orderCount1mHeaderKey) {
-        const orderCount = parseInt(headers[orderCount1mHeaderKey] || '0', 10);
+        const orderCount = Number.parseInt(headers[orderCount1mHeaderKey] || "0", 10);
         const orderLimit = this.extractOrderLimit(headers, orderCount1mHeaderKey);
-        
+
         if (orderCount > 0 && orderLimit > 0) {
           const utilizationRate = orderCount / orderLimit;
-          this.adjustRateLimitBasedOnUtilization(endpoint, utilizationRate, 'order_1m', metrics);
+          this.adjustRateLimitBasedOnUtilization(endpoint, utilizationRate, "order_1m", metrics);
         }
       }
 
       console.log(`[Adaptive Rate Limiter] Processed MEXC headers for ${endpoint}`, {
-        weightUsed: weightUsedHeaderKey ? headers[weightUsedHeaderKey] : 'none',
-        orderCount1s: orderCount1sHeaderKey ? headers[orderCount1sHeaderKey] : 'none',
-        orderCount1m: orderCount1mHeaderKey ? headers[orderCount1mHeaderKey] : 'none',
+        weightUsed: weightUsedHeaderKey ? headers[weightUsedHeaderKey] : "none",
+        orderCount1s: orderCount1sHeaderKey ? headers[orderCount1sHeaderKey] : "none",
+        orderCount1m: orderCount1mHeaderKey ? headers[orderCount1mHeaderKey] : "none",
       });
     } catch (error) {
-      console.error(`[Adaptive Rate Limiter] Error processing MEXC headers for ${endpoint}:`, error);
+      console.error(
+        `[Adaptive Rate Limiter] Error processing MEXC headers for ${endpoint}:`,
+        error
+      );
     }
   }
 
@@ -730,29 +739,33 @@ export class AdaptiveRateLimiterService {
   ): void {
     try {
       // Look for Retry-After header
-      const retryAfterHeader = headers ? Object.keys(headers).find(key => 
-        key.toLowerCase() === 'retry-after'
-      ) : undefined;
-      
-      const retryAfterSeconds = retryAfterHeader ? parseInt(headers![retryAfterHeader], 10) : 60;
-      
+      const retryAfterHeader = headers
+        ? Object.keys(headers).find((key) => key.toLowerCase() === "retry-after")
+        : undefined;
+
+      const retryAfterSeconds = retryAfterHeader
+        ? Number.parseInt(headers![retryAfterHeader], 10)
+        : 60;
+
       // Significantly reduce rate limit temporarily
       if (metrics) {
         metrics.adaptationFactor = Math.min(metrics.adaptationFactor * 0.1, 0.1); // Reduce to 10%
         metrics.lastAdaptation = Date.now();
-        
+
         console.warn(`[Adaptive Rate Limiter] Rate limited on ${endpoint}`, {
           retryAfterSeconds,
           newAdaptationFactor: metrics.adaptationFactor,
-          recommendation: `Wait ${retryAfterSeconds} seconds before retrying`
+          recommendation: `Wait ${retryAfterSeconds} seconds before retrying`,
         });
       }
 
       // Update endpoint-specific rate limits for this endpoint
       this.temporarilyReduceEndpointLimits(endpoint, retryAfterSeconds);
-      
     } catch (error) {
-      console.error(`[Adaptive Rate Limiter] Error handling rate limit response for ${endpoint}:`, error);
+      console.error(
+        `[Adaptive Rate Limiter] Error handling rate limit response for ${endpoint}:`,
+        error
+      );
     }
   }
 
@@ -761,20 +774,21 @@ export class AdaptiveRateLimiterService {
    */
   private extractWeightLimit(headers: Record<string, string>, weightHeader: string): number {
     // Look for weight limit header
-    const limitHeader = Object.keys(headers).find(key => 
-      key.toLowerCase().includes('x-mbx-weight-limit') || 
-      key.toLowerCase().includes('x-mexc-weight-limit')
+    const limitHeader = Object.keys(headers).find(
+      (key) =>
+        key.toLowerCase().includes("x-mbx-weight-limit") ||
+        key.toLowerCase().includes("x-mexc-weight-limit")
     );
-    
+
     if (limitHeader) {
-      return parseInt(headers[limitHeader], 10);
+      return Number.parseInt(headers[limitHeader], 10);
     }
-    
+
     // Default MEXC weight limits based on endpoint type
-    if (weightHeader.includes('1m')) {
+    if (weightHeader.includes("1m")) {
       return 6000; // Default 1-minute weight limit
     }
-    
+
     return 1200; // Default weight limit
   }
 
@@ -783,22 +797,23 @@ export class AdaptiveRateLimiterService {
    */
   private extractOrderLimit(headers: Record<string, string>, orderHeader: string): number {
     // Look for order limit header
-    const limitHeader = Object.keys(headers).find(key => 
-      key.toLowerCase().includes('x-mbx-order-limit') || 
-      key.toLowerCase().includes('x-mexc-order-limit')
+    const limitHeader = Object.keys(headers).find(
+      (key) =>
+        key.toLowerCase().includes("x-mbx-order-limit") ||
+        key.toLowerCase().includes("x-mexc-order-limit")
     );
-    
+
     if (limitHeader) {
-      return parseInt(headers[limitHeader], 10);
+      return Number.parseInt(headers[limitHeader], 10);
     }
-    
+
     // Default MEXC order limits
-    if (orderHeader.includes('1s')) {
+    if (orderHeader.includes("1s")) {
       return 10; // Default 1-second order limit
-    } else if (orderHeader.includes('1m')) {
+    } else if (orderHeader.includes("1m")) {
       return 100; // Default 1-minute order limit
     }
-    
+
     return 50; // Default order limit
   }
 
@@ -812,7 +827,7 @@ export class AdaptiveRateLimiterService {
     metrics: EndpointMetrics
   ): void {
     let newAdaptationFactor = metrics.adaptationFactor;
-    
+
     // Adjust based on utilization rate
     if (utilizationRate > 0.9) {
       // Very high utilization - reduce rate significantly
@@ -827,16 +842,19 @@ export class AdaptiveRateLimiterService {
       // Low utilization - can increase rate slightly
       newAdaptationFactor = Math.min(newAdaptationFactor * 1.1, 2.0);
     }
-    
+
     // Only update if significant change
     if (Math.abs(newAdaptationFactor - metrics.adaptationFactor) > 0.05) {
-      console.log(`[Adaptive Rate Limiter] Adjusting ${endpoint} based on ${limitType} utilization`, {
-        utilizationRate: `${(utilizationRate * 100).toFixed(1)}%`,
-        oldFactor: metrics.adaptationFactor.toFixed(2),
-        newFactor: newAdaptationFactor.toFixed(2),
-        limitType
-      });
-      
+      console.log(
+        `[Adaptive Rate Limiter] Adjusting ${endpoint} based on ${limitType} utilization`,
+        {
+          utilizationRate: `${(utilizationRate * 100).toFixed(1)}%`,
+          oldFactor: metrics.adaptationFactor.toFixed(2),
+          newFactor: newAdaptationFactor.toFixed(2),
+          limitType,
+        }
+      );
+
       metrics.adaptationFactor = newAdaptationFactor;
       metrics.lastAdaptation = Date.now();
     }
@@ -855,20 +873,20 @@ export class AdaptiveRateLimiterService {
         burstAllowance: Math.max(Math.floor((currentConfig.burstAllowance || 10) * 0.3), 1),
         windowMs: Math.max((currentConfig.windowMs || 60000) * 2, retryAfterSeconds * 1000),
       };
-      
+
       this.endpointConfigs[endpoint] = reducedConfig;
-      
+
       // Reset limits after some time (double the retry-after period)
       setTimeout(() => {
         this.endpointConfigs[endpoint] = currentConfig;
         console.log(`[Adaptive Rate Limiter] Reset limits for ${endpoint} after rate limit period`);
       }, retryAfterSeconds * 2000);
-      
+
       console.log(`[Adaptive Rate Limiter] Temporarily reduced limits for ${endpoint}`, {
         retryAfterSeconds,
         newMaxRequests: reducedConfig.maxRequests,
         newBurstAllowance: reducedConfig.burstAllowance,
-        newWindowMs: reducedConfig.windowMs
+        newWindowMs: reducedConfig.windowMs,
       });
     }
   }

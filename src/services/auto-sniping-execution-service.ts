@@ -13,7 +13,7 @@ import { getRecommendedMexcService } from "./mexc-unified-exports";
 import { PatternDetectionEngine } from "./pattern-detection-engine";
 import type { PatternMatch } from "./pattern-detection-engine";
 import { PatternMonitoringService } from "./pattern-monitoring-service";
-import { UnifiedMexcService } from "./unified-mexc-service";
+import type { UnifiedMexcService } from "./unified-mexc-service";
 
 export interface AutoSnipingConfig {
   // Execution parameters
@@ -367,7 +367,7 @@ export class AutoSnipingExecutionService {
     // Return current configuration (auto-sniping is always enabled)
     return {
       ...this.config,
-      enabled: true // Always enabled as per user requirements
+      enabled: true, // Always enabled as per user requirements
     };
   }
 
@@ -544,14 +544,16 @@ export class AutoSnipingExecutionService {
     // FIXED: Allow degraded systems to continue, only block critical failures
     const safetyStatus = await this.safetySystem.performSystemHealthCheck();
     if (safetyStatus.overall === "critical") {
-      throw new Error(`Safety system in critical state: ${safetyStatus.criticalIssues?.join(', ') || 'Unknown critical issues'}`);
+      throw new Error(
+        `Safety system in critical state: ${safetyStatus.criticalIssues?.join(", ") || "Unknown critical issues"}`
+      );
     }
-    
+
     if (safetyStatus.overall === "degraded") {
       this.logger.warn("Safety system degraded but continuing", {
         operation: "preflight_checks",
         degradedComponents: safetyStatus.degradedComponents,
-        issues: safetyStatus.criticalIssues
+        issues: safetyStatus.criticalIssues,
       });
     }
 

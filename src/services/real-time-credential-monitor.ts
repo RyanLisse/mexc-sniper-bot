@@ -9,11 +9,14 @@
  * - Health metrics aggregation
  */
 
-import type { EnhancedCredentialValidator, CredentialValidationResult } from "./enhanced-mexc-credential-validator";
-import type { ConnectionHealthMonitor } from "./connection-health-monitor";
-import { getGlobalCredentialValidator } from "./enhanced-mexc-credential-validator";
-import { getGlobalHealthMonitor } from "./connection-health-monitor";
 import { toSafeError } from "../lib/error-type-utils";
+import type { ConnectionHealthMonitor } from "./connection-health-monitor";
+import { getGlobalHealthMonitor } from "./connection-health-monitor";
+import type {
+  CredentialValidationResult,
+  EnhancedCredentialValidator,
+} from "./enhanced-mexc-credential-validator";
+import { getGlobalCredentialValidator } from "./enhanced-mexc-credential-validator";
 
 // ============================================================================
 // Types and Interfaces
@@ -71,11 +74,11 @@ export class RealTimeCredentialMonitor {
   private config: RealTimeMonitorConfig;
   private credentialValidator: EnhancedCredentialValidator;
   private healthMonitor: ConnectionHealthMonitor;
-  
+
   private currentStatus: RealTimeCredentialStatus | null = null;
   private statusHistory: RealTimeCredentialStatus[] = [];
   private statusChangeCallbacks: ((event: StatusChangeEvent) => void)[] = [];
-  
+
   private monitoringInterval: NodeJS.Timeout | null = null;
   private isMonitoring = false;
   private lastChangeNotification = 0;
@@ -161,9 +164,9 @@ export class RealTimeCredentialMonitor {
     try {
       // Get credential validation result
       const validationResult = await this.credentialValidator.validateCredentials();
-      
+
       // Get health metrics
-      const healthMetrics = this.config.enableHealthMonitoring 
+      const healthMetrics = this.config.enableHealthMonitoring
         ? this.healthMonitor.getHealthMetrics()
         : this.getDefaultHealthMetrics();
 
@@ -206,7 +209,7 @@ export class RealTimeCredentialMonitor {
       return status;
     } catch (error) {
       const safeError = toSafeError(error);
-      
+
       // Create error status
       const errorStatus: RealTimeCredentialStatus = {
         hasCredentials: false,
@@ -281,8 +284,8 @@ export class RealTimeCredentialMonitor {
     statusChanges: number;
     healthTrend: "improving" | "stable" | "degrading";
   } {
-    const cutoffTime = new Date(Date.now() - (hours * 60 * 60 * 1000));
-    const recentHistory = this.statusHistory.filter(status => status.lastChecked > cutoffTime);
+    const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+    const recentHistory = this.statusHistory.filter((status) => status.lastChecked > cutoffTime);
 
     if (recentHistory.length === 0) {
       return {
@@ -295,27 +298,33 @@ export class RealTimeCredentialMonitor {
     }
 
     // Calculate averages
-    const averageUptime = recentHistory.reduce((sum, status) => sum + status.metrics.uptime, 0) / recentHistory.length;
-    const totalChecks = Math.max(...recentHistory.map(status => status.metrics.totalChecks));
-    
+    const averageUptime =
+      recentHistory.reduce((sum, status) => sum + status.metrics.uptime, 0) / recentHistory.length;
+    const totalChecks = Math.max(...recentHistory.map((status) => status.metrics.totalChecks));
+
     const responseTimes = recentHistory
-      .map(status => status.responseTime)
+      .map((status) => status.responseTime)
       .filter((time): time is number => time !== undefined);
-    const averageResponseTime = responseTimes.length > 0
-      ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
-      : 0;
+    const averageResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        : 0;
 
     // Find most common issue
     const errors = recentHistory
-      .map(status => status.error)
+      .map((status) => status.error)
       .filter((error): error is string => error !== undefined);
-    const errorCounts = errors.reduce((counts, error) => {
-      counts[error] = (counts[error] || 0) + 1;
-      return counts;
-    }, {} as Record<string, number>);
-    const mostCommonIssue = Object.keys(errorCounts).length > 0
-      ? Object.entries(errorCounts).sort(([,a], [,b]) => b - a)[0][0]
-      : undefined;
+    const errorCounts = errors.reduce(
+      (counts, error) => {
+        counts[error] = (counts[error] || 0) + 1;
+        return counts;
+      },
+      {} as Record<string, number>
+    );
+    const mostCommonIssue =
+      Object.keys(errorCounts).length > 0
+        ? Object.entries(errorCounts).sort(([, a], [, b]) => b - a)[0][0]
+        : undefined;
 
     // Count status changes
     let statusChanges = 0;
@@ -333,7 +342,7 @@ export class RealTimeCredentialMonitor {
       const first = recentHistory[0];
       const last = recentHistory[recentHistory.length - 1];
       const uptimeDiff = last.metrics.uptime - first.metrics.uptime;
-      
+
       if (uptimeDiff > 5) {
         healthTrend = "improving";
       } else if (uptimeDiff < -5) {
@@ -414,7 +423,7 @@ export class RealTimeCredentialMonitor {
 
   private updateStatus(newStatus: RealTimeCredentialStatus): void {
     const previousStatus = this.currentStatus;
-    
+
     // Update current status
     this.currentStatus = newStatus;
 
@@ -482,7 +491,7 @@ export class RealTimeCredentialMonitor {
     };
 
     // Notify all callbacks
-    this.statusChangeCallbacks.forEach(callback => {
+    this.statusChangeCallbacks.forEach((callback) => {
       try {
         callback(event);
       } catch (error) {
@@ -525,8 +534,8 @@ export class RealTimeCredentialMonitor {
     }
 
     const latestAlert = alerts[0];
-    const criticalCount = alerts.filter(alert => alert.severity === "critical").length;
-    const warningCount = alerts.filter(alert => alert.severity === "warning").length;
+    const criticalCount = alerts.filter((alert) => alert.severity === "critical").length;
+    const warningCount = alerts.filter((alert) => alert.severity === "warning").length;
 
     let severity: "none" | "info" | "warning" | "critical" = "none";
     if (criticalCount > 0) {
@@ -560,7 +569,7 @@ export class RealTimeCredentialMonitor {
    */
   updateConfig(config: Partial<RealTimeMonitorConfig>): void {
     const wasMonitoring = this.isMonitoring;
-    
+
     if (wasMonitoring) {
       this.stop();
     }

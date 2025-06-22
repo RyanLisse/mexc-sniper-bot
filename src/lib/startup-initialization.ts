@@ -5,9 +5,9 @@
  * Ensures critical systems are properly initialized before handling requests
  */
 
+import { AutoSnipingExecutionService } from "../services/auto-sniping-execution-service";
 import { environmentValidation } from "../services/enhanced-environment-validation";
 import { strategyInitializationService } from "../services/strategy-initialization-service";
-import { AutoSnipingExecutionService } from "../services/auto-sniping-execution-service";
 
 interface StartupResult {
   success: boolean;
@@ -110,7 +110,7 @@ export class StartupInitializer {
     try {
       console.log("[Startup] Initializing auto-sniping system...");
       const autoSnipingService = AutoSnipingExecutionService.getInstance();
-      
+
       // Check if auto-sniping should be auto-started
       const autoSnipingConfig = await autoSnipingService.getConfig();
       if (autoSnipingConfig.enabled) {

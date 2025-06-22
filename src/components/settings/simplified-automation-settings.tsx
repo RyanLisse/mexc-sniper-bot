@@ -1,19 +1,19 @@
 "use client";
 
-import { AlertTriangle, Zap, Settings as SettingsIcon, Info } from "lucide-react";
+import { AlertTriangle, Info, Settings as SettingsIcon, Zap } from "lucide-react";
+import { useState } from "react";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
-import { Alert, AlertDescription } from "../ui/alert";
-import { Button } from "../ui/button";
-import { useState } from "react";
 
 /**
  * Simplified Automation Settings
- * 
+ *
  * Replaces the confusing multiple toggles (autoSnipeEnabled, autoBuyEnabled, autoSellEnabled)
  * with a single clear "Auto-Sniping" switch that users can easily understand.
- * 
+ *
  * This consolidates all automation into one simple control:
  * - Auto-Sniping: Automatically trade when patterns are detected
  * - Includes buying, selling, and position management
@@ -31,7 +31,7 @@ export function SimplifiedAutomationSettings({
   autoSnipingEnabled = true,
   onAutoSnipingChange,
   isLoading = false,
-  className = ""
+  className = "",
 }: SimplifiedAutomationSettingsProps) {
   const [isDirty, setIsDirty] = useState(false);
 
@@ -82,24 +82,27 @@ export function SimplifiedAutomationSettings({
           </div>
 
           {/* Status Explanation */}
-          <div className={`p-3 rounded-lg border ${
-            autoSnipingEnabled 
-              ? "bg-green-50 border-green-200 text-green-800"
-              : "bg-gray-50 border-gray-200 text-gray-600"
-          }`}>
+          <div
+            className={`p-3 rounded-lg border ${
+              autoSnipingEnabled
+                ? "bg-green-50 border-green-200 text-green-800"
+                : "bg-gray-50 border-gray-200 text-gray-600"
+            }`}
+          >
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${
-                autoSnipingEnabled ? "bg-green-500" : "bg-gray-400"
-              }`} />
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  autoSnipingEnabled ? "bg-green-500" : "bg-gray-400"
+                }`}
+              />
               <span className="font-medium">
                 {autoSnipingEnabled ? "Auto-Sniping Active" : "Auto-Sniping Stopped"}
               </span>
             </div>
             <p className="text-sm mt-1">
-              {autoSnipingEnabled 
+              {autoSnipingEnabled
                 ? "The system will automatically trade when profitable patterns are detected in new MEXC listings."
-                : "No automated trading will occur. You can manually trade through the interface."
-              }
+                : "No automated trading will occur. You can manually trade through the interface."}
             </p>
           </div>
 
@@ -107,9 +110,9 @@ export function SimplifiedAutomationSettings({
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Important:</strong> Auto-sniping uses real funds and carries trading risks. 
-              The system includes safety controls like stop-loss orders and position limits, 
-              but you should monitor your account regularly and understand the risks involved.
+              <strong>Important:</strong> Auto-sniping uses real funds and carries trading risks.
+              The system includes safety controls like stop-loss orders and position limits, but you
+              should monitor your account regularly and understand the risks involved.
             </AlertDescription>
           </Alert>
 
@@ -134,9 +137,9 @@ export function SimplifiedAutomationSettings({
             <span className="font-medium text-blue-800">Simplified Controls</span>
           </div>
           <p className="text-sm text-blue-700">
-            We've simplified the automation settings. The single "Auto-Sniping" toggle now 
-            controls all trading automation, including buying, selling, and position management. 
-            This replaces the previous separate toggles for a clearer user experience.
+            We've simplified the automation settings. The single "Auto-Sniping" toggle now controls
+            all trading automation, including buying, selling, and position management. This
+            replaces the previous separate toggles for a clearer user experience.
           </p>
         </CardContent>
       </Card>

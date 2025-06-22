@@ -1,6 +1,6 @@
 /**
  * Coordinated Circuit Breaker System
- * 
+ *
  * Fixes race conditions in circuit breaker operations by implementing:
  * - Atomic state transitions with proper locking
  * - Coordinated multi-service operations
@@ -14,10 +14,10 @@
 
 export interface CircuitBreakerOperation {
   id: string;
-  type: 'execute' | 'reset' | 'force_open' | 'force_closed' | 'recovery';
+  type: "execute" | "reset" | "force_open" | "force_closed" | "recovery";
   serviceId: string;
   timestamp: number;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: "low" | "medium" | "high" | "critical";
 }
 
 export interface CircuitBreakerLock {
@@ -75,7 +75,7 @@ export class CircuitBreakerCoordinator {
   ): Promise<boolean> {
     const startTime = Date.now();
     const lockKey = `${circuitBreakerId}:${operationType}`;
-    
+
     // Check for existing lock
     const existingLock = this.locks.get(lockKey);
     if (existingLock && existingLock.expiresAt > Date.now()) {
@@ -84,14 +84,14 @@ export class CircuitBreakerCoordinator {
         existingLock.expiresAt = Date.now() + timeoutMs;
         return true;
       }
-      
+
       this.metrics.lockContentions++;
-      
+
       // Wait for lock to expire or be released
       while (this.locks.has(lockKey) && Date.now() - startTime < timeoutMs) {
         await this.sleep(50); // Check every 50ms
       }
-      
+
       // Check again after waiting
       const currentLock = this.locks.get(lockKey);
       if (currentLock && currentLock.expiresAt > Date.now()) {
@@ -109,10 +109,10 @@ export class CircuitBreakerCoordinator {
     };
 
     this.locks.set(lockKey, lock);
-    
+
     const waitTime = Date.now() - startTime;
     this.updateWaitTimeMetrics(waitTime);
-    
+
     return true;
   }
 
@@ -122,7 +122,7 @@ export class CircuitBreakerCoordinator {
   releaseLock(circuitBreakerId: string, operationType: string, serviceId: string): void {
     const lockKey = `${circuitBreakerId}:${operationType}`;
     const lock = this.locks.get(lockKey);
-    
+
     if (lock && lock.acquiredBy === serviceId) {
       this.locks.delete(lockKey);
     }
@@ -136,7 +136,7 @@ export class CircuitBreakerCoordinator {
     operationType: string,
     serviceId: string,
     operation: () => Promise<T>,
-    priority: 'low' | 'medium' | 'high' | 'critical' = 'medium'
+    priority: "low" | "medium" | "high" | "critical" = "medium"
   ): Promise<T> {
     this.metrics.totalOperations++;
     this.metrics.concurrentOperations++;
@@ -144,8 +144,13 @@ export class CircuitBreakerCoordinator {
     try {
       // Acquire lock with priority-based timeout
       const timeoutMs = this.getTimeoutForPriority(priority);
-      const lockAcquired = await this.acquireLock(circuitBreakerId, operationType, serviceId, timeoutMs);
-      
+      const lockAcquired = await this.acquireLock(
+        circuitBreakerId,
+        operationType,
+        serviceId,
+        timeoutMs
+      );
+
       if (!lockAcquired) {
         throw new Error(`Failed to acquire lock for ${operationType} on ${circuitBreakerId}`);
       }
@@ -199,11 +204,16 @@ export class CircuitBreakerCoordinator {
 
   private getTimeoutForPriority(priority: string): number {
     switch (priority) {
-      case 'critical': return 15000; // 15 seconds
-      case 'high': return 10000;     // 10 seconds
-      case 'medium': return 5000;    // 5 seconds
-      case 'low': return 2000;       // 2 seconds
-      default: return 5000;
+      case "critical":
+        return 15000; // 15 seconds
+      case "high":
+        return 10000; // 10 seconds
+      case "medium":
+        return 5000; // 5 seconds
+      case "low":
+        return 2000; // 2 seconds
+      default:
+        return 5000;
     }
   }
 
@@ -218,7 +228,7 @@ export class CircuitBreakerCoordinator {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
@@ -234,19 +244,19 @@ export interface CoordinatedCircuitBreakerConfig {
   coordinationTimeout: number;
 }
 
-export type CircuitBreakerState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+export type CircuitBreakerState = "CLOSED" | "OPEN" | "HALF_OPEN";
 
 /**
  * Circuit breaker with coordination support to prevent race conditions
  */
 export class CoordinatedCircuitBreaker {
-  private state: CircuitBreakerState = 'CLOSED';
+  private state: CircuitBreakerState = "CLOSED";
   private failures = 0;
   private successes = 0;
   private lastFailureTime = 0;
   private halfOpenRequestCount = 0;
   private readonly coordinator: CircuitBreakerCoordinator;
-  
+
   constructor(
     private name: string,
     private config: CoordinatedCircuitBreakerConfig
@@ -265,10 +275,10 @@ export class CoordinatedCircuitBreaker {
 
     return this.coordinator.executeWithCoordination(
       this.name,
-      'execute',
+      "execute",
       this.config.serviceId,
       () => this.executeInternal(operation),
-      'medium'
+      "medium"
     );
   }
 
@@ -283,12 +293,12 @@ export class CoordinatedCircuitBreaker {
 
     await this.coordinator.executeWithCoordination(
       this.name,
-      'reset',
+      "reset",
       this.config.serviceId,
       async () => {
         this.resetInternal();
       },
-      'high'
+      "high"
     );
   }
 
@@ -303,12 +313,12 @@ export class CoordinatedCircuitBreaker {
 
     await this.coordinator.executeWithCoordination(
       this.name,
-      'force_open',
+      "force_open",
       this.config.serviceId,
       async () => {
         this.forceOpenInternal();
       },
-      'critical'
+      "critical"
     );
   }
 
@@ -323,12 +333,12 @@ export class CoordinatedCircuitBreaker {
 
     await this.coordinator.executeWithCoordination(
       this.name,
-      'force_closed',
+      "force_closed",
       this.config.serviceId,
       async () => {
         this.forceClosedInternal();
       },
-      'critical'
+      "critical"
     );
   }
 
@@ -343,21 +353,21 @@ export class CoordinatedCircuitBreaker {
    * Check if circuit breaker is open (read-only)
    */
   isOpen(): boolean {
-    return this.state === 'OPEN';
+    return this.state === "OPEN";
   }
 
   /**
    * Check if circuit breaker is closed (read-only)
    */
   isClosed(): boolean {
-    return this.state === 'CLOSED';
+    return this.state === "CLOSED";
   }
 
   /**
    * Check if circuit breaker is half-open (read-only)
    */
   isHalfOpen(): boolean {
-    return this.state === 'HALF_OPEN';
+    return this.state === "HALF_OPEN";
   }
 
   /**
@@ -371,7 +381,8 @@ export class CoordinatedCircuitBreaker {
       lastFailureTime: this.lastFailureTime,
       halfOpenRequestCount: this.halfOpenRequestCount,
       totalRequests: this.failures + this.successes,
-      failureRate: (this.failures + this.successes) > 0 ? this.failures / (this.failures + this.successes) : 0,
+      failureRate:
+        this.failures + this.successes > 0 ? this.failures / (this.failures + this.successes) : 0,
     };
   }
 
@@ -381,20 +392,20 @@ export class CoordinatedCircuitBreaker {
 
   private async executeInternal<T>(operation: () => Promise<T>): Promise<T> {
     // Check state and potentially transition to HALF_OPEN
-    if (this.state === 'OPEN' && this.shouldAttemptReset()) {
-      this.state = 'HALF_OPEN';
+    if (this.state === "OPEN" && this.shouldAttemptReset()) {
+      this.state = "HALF_OPEN";
       this.halfOpenRequestCount = 0;
     }
 
     // Reject if circuit is OPEN
-    if (this.state === 'OPEN') {
+    if (this.state === "OPEN") {
       throw new Error(
         `Circuit breaker [${this.name}] is OPEN. Last failure: ${new Date(this.lastFailureTime).toISOString()}`
       );
     }
 
     // Check half-open request limit
-    if (this.state === 'HALF_OPEN') {
+    if (this.state === "HALF_OPEN") {
       if (this.halfOpenRequestCount >= 3) {
         throw new Error(`Circuit breaker [${this.name}] is HALF_OPEN and at request limit`);
       }
@@ -412,7 +423,7 @@ export class CoordinatedCircuitBreaker {
   }
 
   private resetInternal(): void {
-    this.state = 'CLOSED';
+    this.state = "CLOSED";
     this.failures = 0;
     this.successes = 0;
     this.lastFailureTime = 0;
@@ -420,12 +431,12 @@ export class CoordinatedCircuitBreaker {
   }
 
   private forceOpenInternal(): void {
-    this.state = 'OPEN';
+    this.state = "OPEN";
     this.lastFailureTime = Date.now();
   }
 
   private forceClosedInternal(): void {
-    this.state = 'CLOSED';
+    this.state = "CLOSED";
     this.failures = 0;
     this.halfOpenRequestCount = 0;
   }
@@ -433,10 +444,10 @@ export class CoordinatedCircuitBreaker {
   private onSuccess(): void {
     this.successes++;
 
-    if (this.state === 'HALF_OPEN') {
+    if (this.state === "HALF_OPEN") {
       // Successful requests in HALF_OPEN state move to CLOSED
       if (this.halfOpenRequestCount >= 3) {
-        this.state = 'CLOSED';
+        this.state = "CLOSED";
         this.failures = 0;
       }
     } else {
@@ -449,12 +460,12 @@ export class CoordinatedCircuitBreaker {
     this.failures++;
     this.lastFailureTime = Date.now();
 
-    if (this.state === 'HALF_OPEN') {
+    if (this.state === "HALF_OPEN") {
       // Failure in HALF_OPEN goes back to OPEN
-      this.state = 'OPEN';
+      this.state = "OPEN";
     } else if (this.failures >= this.config.failureThreshold) {
       // Failure threshold exceeded, open the circuit
-      this.state = 'OPEN';
+      this.state = "OPEN";
     }
   }
 
@@ -511,16 +522,14 @@ export class CoordinatedCircuitBreakerRegistry {
    */
   async resetAll(serviceId: string): Promise<void> {
     await this.coordinator.executeWithCoordination(
-      'registry',
-      'reset_all',
+      "registry",
+      "reset_all",
       serviceId,
       async () => {
-        const resetPromises = Array.from(this.breakers.values()).map(breaker => 
-          breaker.reset()
-        );
+        const resetPromises = Array.from(this.breakers.values()).map((breaker) => breaker.reset());
         await Promise.all(resetPromises);
       },
-      'critical'
+      "critical"
     );
   }
 
@@ -561,7 +570,7 @@ export class CoordinatedCircuitBreakerRegistry {
  */
 export function createCoordinatedMexcApiBreaker(serviceId: string): CoordinatedCircuitBreaker {
   const registry = CoordinatedCircuitBreakerRegistry.getInstance();
-  return registry.getBreaker('mexc-api', serviceId, {
+  return registry.getBreaker("mexc-api", serviceId, {
     failureThreshold: 3,
     recoveryTimeout: 30000,
     enableCoordination: true,
@@ -571,9 +580,11 @@ export function createCoordinatedMexcApiBreaker(serviceId: string): CoordinatedC
 /**
  * Create coordinated MEXC WebSocket circuit breaker
  */
-export function createCoordinatedMexcWebSocketBreaker(serviceId: string): CoordinatedCircuitBreaker {
+export function createCoordinatedMexcWebSocketBreaker(
+  serviceId: string
+): CoordinatedCircuitBreaker {
   const registry = CoordinatedCircuitBreakerRegistry.getInstance();
-  return registry.getBreaker('mexc-websocket', serviceId, {
+  return registry.getBreaker("mexc-websocket", serviceId, {
     failureThreshold: 5,
     recoveryTimeout: 10000,
     enableCoordination: true,

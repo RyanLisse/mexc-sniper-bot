@@ -149,7 +149,7 @@ export class ConnectionHealthMonitor {
         latency,
         timestamp,
         statusCode: response.status,
-        responseSize: parseInt(response.headers.get("content-length") || "0"),
+        responseSize: Number.parseInt(response.headers.get("content-length") || "0"),
       };
 
       if (!response.ok) {
@@ -236,9 +236,10 @@ export class ConnectionHealthMonitor {
 
     // Calculate uptime (percentage of successful checks in last 24 hours)
     const last24Hours = this.getRecentHealthChecks(24);
-    const uptime = last24Hours.length > 0 
-      ? last24Hours.filter(check => check.success).length / last24Hours.length * 100
-      : 100;
+    const uptime =
+      last24Hours.length > 0
+        ? (last24Hours.filter((check) => check.success).length / last24Hours.length) * 100
+        : 100;
 
     return {
       totalChecks: recentChecks.length,
@@ -264,7 +265,7 @@ export class ConnectionHealthMonitor {
 
     // Factor in success rate (40% of score)
     const successRateScore = metrics.successRate * 40;
-    score = (score * 0.6) + successRateScore;
+    score = score * 0.6 + successRateScore;
 
     if (metrics.successRate < 0.9) {
       reasons.push(`Low success rate: ${(metrics.successRate * 100).toFixed(1)}%`);
@@ -286,7 +287,7 @@ export class ConnectionHealthMonitor {
       latencyScore = 20;
       reasons.push(`Moderate latency: ${avgLatency.toFixed(0)}ms`);
     }
-    score = (score * 0.7) + (latencyScore * 0.3);
+    score = score * 0.7 + latencyScore * 0.3;
 
     // Factor in consecutive failures (20% of score)
     if (metrics.consecutiveFailures > 0) {
@@ -298,7 +299,7 @@ export class ConnectionHealthMonitor {
 
     // Factor in uptime (10% of score)
     const uptimeScore = (metrics.uptime / 100) * 10;
-    score = (score * 0.9) + (uptimeScore * 0.1);
+    score = score * 0.9 + uptimeScore * 0.1;
 
     if (metrics.uptime < 95) {
       reasons.push(`Low uptime: ${metrics.uptime.toFixed(1)}%`);
@@ -325,10 +326,7 @@ export class ConnectionHealthMonitor {
         "Increase retry timeouts"
       );
     } else if (status === "fair") {
-      recommendations.push(
-        "Monitor trends closely",
-        "Optimize request patterns"
-      );
+      recommendations.push("Monitor trends closely", "Optimize request patterns");
     }
 
     return {
@@ -351,11 +349,12 @@ export class ConnectionHealthMonitor {
 
     return periods.map(({ key, hours }) => {
       const checks = this.getRecentHealthChecks(hours);
-      const successful = checks.filter(check => check.success);
-      
-      const averageLatency = successful.length > 0
-        ? successful.reduce((sum, check) => sum + check.latency, 0) / successful.length
-        : 0;
+      const successful = checks.filter((check) => check.success);
+
+      const averageLatency =
+        successful.length > 0
+          ? successful.reduce((sum, check) => sum + check.latency, 0) / successful.length
+          : 0;
 
       const successRate = checks.length > 0 ? successful.length / checks.length : 1;
 
@@ -367,15 +366,16 @@ export class ConnectionHealthMonitor {
 
       // Determine trend by comparing with previous period
       const previousPeriodChecks = this.getHealthChecksInRange(
-        new Date(Date.now() - (hours * 2 * 60 * 60 * 1000)),
-        new Date(Date.now() - (hours * 60 * 60 * 1000))
+        new Date(Date.now() - hours * 2 * 60 * 60 * 1000),
+        new Date(Date.now() - hours * 60 * 60 * 1000)
       );
-      
+
       let trend: ConnectionTrend["trend"] = "stable";
       if (previousPeriodChecks.length > 0) {
-        const previousSuccessRate = previousPeriodChecks.filter(c => c.success).length / previousPeriodChecks.length;
+        const previousSuccessRate =
+          previousPeriodChecks.filter((c) => c.success).length / previousPeriodChecks.length;
         const rateChange = successRate - previousSuccessRate;
-        
+
         if (rateChange > 0.1) {
           trend = "improving";
         } else if (rateChange < -0.1) {
@@ -418,7 +418,9 @@ export class ConnectionHealthMonitor {
         type: "connection_lost",
         severity: "critical",
         message: `Connection lost for ${metrics.consecutiveFailures} consecutive attempts`,
-        timestamp: new Date(Date.now() - (metrics.consecutiveFailures * this.config.healthCheckInterval)),
+        timestamp: new Date(
+          Date.now() - metrics.consecutiveFailures * this.config.healthCheckInterval
+        ),
         metrics: { consecutiveFailures: metrics.consecutiveFailures },
         recommendations: [
           "Check network connectivity",
@@ -435,10 +437,7 @@ export class ConnectionHealthMonitor {
         message: `High failure rate: ${(metrics.successRate * 100).toFixed(1)}%`,
         timestamp: new Date(Date.now() - 300000), // 5 minutes ago
         metrics: { successRate: metrics.successRate },
-        recommendations: [
-          "Investigate connection stability",
-          "Consider increasing timeouts",
-        ],
+        recommendations: ["Investigate connection stability", "Consider increasing timeouts"],
       });
     }
 
@@ -454,8 +453,8 @@ export class ConnectionHealthMonitor {
     this.recordLatency(result.latency);
 
     // Clean up old health checks
-    const cutoffTime = new Date(Date.now() - (this.config.maxRetentionPeriod * 60 * 60 * 1000));
-    this.healthChecks = this.healthChecks.filter(check => check.timestamp > cutoffTime);
+    const cutoffTime = new Date(Date.now() - this.config.maxRetentionPeriod * 60 * 60 * 1000);
+    this.healthChecks = this.healthChecks.filter((check) => check.timestamp > cutoffTime);
 
     // Check for alerts
     if (this.config.enableAlerts) {
@@ -467,7 +466,7 @@ export class ConnectionHealthMonitor {
     const metrics = this.getHealthMetrics();
 
     // Check failure rate
-    if (metrics.successRate < (1 - this.config.alertThresholds.failureRate)) {
+    if (metrics.successRate < 1 - this.config.alertThresholds.failureRate) {
       this.triggerAlert({
         type: "failure_rate",
         severity: metrics.successRate < 0.5 ? "critical" : "warning",
@@ -499,7 +498,7 @@ export class ConnectionHealthMonitor {
   }
 
   private triggerAlert(alert: PerformanceAlert): void {
-    this.alertCallbacks.forEach(callback => {
+    this.alertCallbacks.forEach((callback) => {
       try {
         callback(alert);
       } catch (error) {
@@ -514,14 +513,12 @@ export class ConnectionHealthMonitor {
   }
 
   private getRecentHealthChecks(hours: number): HealthCheckResult[] {
-    const cutoffTime = new Date(Date.now() - (hours * 60 * 60 * 1000));
-    return this.healthChecks.filter(check => check.timestamp > cutoffTime);
+    const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+    return this.healthChecks.filter((check) => check.timestamp > cutoffTime);
   }
 
   private getHealthChecksInRange(start: Date, end: Date): HealthCheckResult[] {
-    return this.healthChecks.filter(
-      check => check.timestamp >= start && check.timestamp <= end
-    );
+    return this.healthChecks.filter((check) => check.timestamp >= start && check.timestamp <= end);
   }
 
   // ============================================================================

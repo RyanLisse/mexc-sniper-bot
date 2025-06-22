@@ -2,7 +2,7 @@
 
 /**
  * Unified System Check Component
- * 
+ *
  * Consolidates all system status checking into a single, clear interface:
  * - Overall system health at a glance
  * - Component status with action buttons
@@ -10,7 +10,23 @@
  * - Auto-sniping always-enabled status
  */
 
-import React, { useState, useEffect } from "react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Database,
+  Eye,
+  EyeOff,
+  GitBranch,
+  Globe,
+  Key,
+  RefreshCw,
+  Settings,
+  Shield,
+  TrendingUp,
+  XCircle,
+  Zap,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { useStatus } from "../contexts/status-context";
 import { useAuth } from "../lib/kinde-auth-client";
 import { ApiCredentialsForm } from "./api-credentials-form";
@@ -19,24 +35,6 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Separator } from "./ui/separator";
-import {
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  RefreshCw,
-  Database,
-  Key,
-  Brain,
-  Shield,
-  GitBranch,
-  Zap,
-  Settings,
-  ExternalLink,
-  Globe,
-  Eye,
-  EyeOff,
-  TrendingUp
-} from "lucide-react";
 
 interface SystemCheckState {
   database: SystemStatus;
@@ -49,7 +47,7 @@ interface SystemCheckState {
 }
 
 interface SystemStatus {
-  status: 'healthy' | 'unhealthy' | 'warning' | 'loading' | 'error';
+  status: "healthy" | "unhealthy" | "warning" | "loading" | "error";
   message?: string;
   details?: any;
   lastChecked?: string;
@@ -62,15 +60,15 @@ interface UnifiedSystemCheckProps {
 export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) {
   const { status: centralizedStatus, refreshAll, clearErrors } = useStatus();
   const { user } = useAuth();
-  
+
   const [systemState, setSystemState] = useState<SystemCheckState>({
-    database: { status: 'loading' },
-    openaiApi: { status: 'loading' },
-    kindeAuth: { status: 'loading' },
-    inngestWorkflows: { status: 'loading' },
-    environment: { status: 'loading' },
+    database: { status: "loading" },
+    openaiApi: { status: "loading" },
+    kindeAuth: { status: "loading" },
+    inngestWorkflows: { status: "loading" },
+    environment: { status: "loading" },
     isRefreshing: false,
-    lastFullCheck: null
+    lastFullCheck: null,
   });
 
   const [showCredentials, setShowCredentials] = useState(false);
@@ -80,157 +78,157 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
   // System health checks
   const checkDatabaseHealth = async (): Promise<SystemStatus> => {
     try {
-      const response = await fetch('/api/health/db');
+      const response = await fetch("/api/health/db");
       const data = await response.json();
-      
-      if (response.ok && data.status === 'healthy') {
+
+      if (response.ok && data.status === "healthy") {
         return {
-          status: 'healthy',
-          message: 'Database connected and operational',
+          status: "healthy",
+          message: "Database connected and operational",
           details: data,
-          lastChecked: new Date().toISOString()
+          lastChecked: new Date().toISOString(),
         };
       } else {
         return {
-          status: 'unhealthy',
-          message: data.error || 'Database connection issues',
+          status: "unhealthy",
+          message: data.error || "Database connection issues",
           details: data,
-          lastChecked: new Date().toISOString()
+          lastChecked: new Date().toISOString(),
         };
       }
     } catch (error) {
       return {
-        status: 'error',
-        message: `Database check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        lastChecked: new Date().toISOString()
+        status: "error",
+        message: `Database check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        lastChecked: new Date().toISOString(),
       };
     }
   };
 
   const checkOpenAiApi = async (): Promise<SystemStatus> => {
     try {
-      const response = await fetch('/api/health/openai');
+      const response = await fetch("/api/health/openai");
       const data = await response.json();
-      
-      if (response.ok && data.status === 'healthy') {
+
+      if (response.ok && data.status === "healthy") {
         return {
-          status: 'healthy',
-          message: 'OpenAI API configured and working',
+          status: "healthy",
+          message: "OpenAI API configured and working",
           details: data,
-          lastChecked: new Date().toISOString()
+          lastChecked: new Date().toISOString(),
         };
       } else {
         return {
-          status: 'unhealthy',
-          message: data.error || 'OpenAI API configuration issues',
+          status: "unhealthy",
+          message: data.error || "OpenAI API configuration issues",
           details: data,
-          lastChecked: new Date().toISOString()
+          lastChecked: new Date().toISOString(),
         };
       }
     } catch (error) {
       return {
-        status: 'error',
-        message: `OpenAI API check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        lastChecked: new Date().toISOString()
+        status: "error",
+        message: `OpenAI API check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        lastChecked: new Date().toISOString(),
       };
     }
   };
 
   const checkKindeAuth = async (): Promise<SystemStatus> => {
     try {
-      const response = await fetch('/api/auth/session');
-      
+      const response = await fetch("/api/auth/session");
+
       if (response.ok) {
         return {
-          status: 'healthy',
-          message: 'Authentication system working',
+          status: "healthy",
+          message: "Authentication system working",
           details: { authenticated: !!user },
-          lastChecked: new Date().toISOString()
+          lastChecked: new Date().toISOString(),
         };
       } else {
         return {
-          status: 'warning',
-          message: 'Authentication may have issues',
-          lastChecked: new Date().toISOString()
+          status: "warning",
+          message: "Authentication may have issues",
+          lastChecked: new Date().toISOString(),
         };
       }
     } catch (error) {
       return {
-        status: 'error',
-        message: `Authentication check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        lastChecked: new Date().toISOString()
+        status: "error",
+        message: `Authentication check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        lastChecked: new Date().toISOString(),
       };
     }
   };
 
   const checkInngestWorkflows = async (): Promise<SystemStatus> => {
     try {
-      const response = await fetch('/api/workflow-status');
+      const response = await fetch("/api/workflow-status");
       const data = await response.json();
-      
+
       if (response.ok || data.fallbackData) {
         return {
-          status: data.fallbackData ? 'warning' : 'healthy',
-          message: data.fallbackData ? 'Workflows in fallback mode' : 'Workflows operational',
+          status: data.fallbackData ? "warning" : "healthy",
+          message: data.fallbackData ? "Workflows in fallback mode" : "Workflows operational",
           details: data,
-          lastChecked: new Date().toISOString()
+          lastChecked: new Date().toISOString(),
         };
       } else {
         return {
-          status: 'unhealthy',
-          message: 'Workflows not responding',
-          lastChecked: new Date().toISOString()
+          status: "unhealthy",
+          message: "Workflows not responding",
+          lastChecked: new Date().toISOString(),
         };
       }
     } catch (error) {
       return {
-        status: 'error',
-        message: `Workflow check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        lastChecked: new Date().toISOString()
+        status: "error",
+        message: `Workflow check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        lastChecked: new Date().toISOString(),
       };
     }
   };
 
   const checkEnvironment = async (): Promise<SystemStatus> => {
     try {
-      const response = await fetch('/api/health/environment');
+      const response = await fetch("/api/health/environment");
       const data = await response.json();
-      
+
       if (response.ok) {
         return {
-          status: data.status as 'healthy' | 'unhealthy' | 'warning',
-          message: data.message || 'Environment configuration checked',
+          status: data.status as "healthy" | "unhealthy" | "warning",
+          message: data.message || "Environment configuration checked",
           details: data,
-          lastChecked: new Date().toISOString()
+          lastChecked: new Date().toISOString(),
         };
       } else {
         return {
-          status: 'unhealthy',
-          message: data.error || 'Environment configuration issues',
+          status: "unhealthy",
+          message: data.error || "Environment configuration issues",
           details: data,
-          lastChecked: new Date().toISOString()
+          lastChecked: new Date().toISOString(),
         };
       }
     } catch (error) {
       return {
-        status: 'error',
-        message: `Environment check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        lastChecked: new Date().toISOString()
+        status: "error",
+        message: `Environment check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        lastChecked: new Date().toISOString(),
       };
     }
   };
 
   // Run comprehensive system check
   const runSystemCheck = async () => {
-    setSystemState(prev => ({ ...prev, isRefreshing: true }));
-    
+    setSystemState((prev) => ({ ...prev, isRefreshing: true }));
+
     try {
       const [database, openaiApi, kindeAuth, inngestWorkflows, environment] = await Promise.all([
         checkDatabaseHealth(),
         checkOpenAiApi(),
         checkKindeAuth(),
         checkInngestWorkflows(),
-        checkEnvironment()
+        checkEnvironment(),
       ]);
 
       // Also refresh centralized status
@@ -243,14 +241,14 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
         inngestWorkflows,
         environment,
         isRefreshing: false,
-        lastFullCheck: new Date().toISOString()
+        lastFullCheck: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('System check failed:', error);
-      setSystemState(prev => ({ 
-        ...prev, 
+      console.error("System check failed:", error);
+      setSystemState((prev) => ({
+        ...prev,
         isRefreshing: false,
-        lastFullCheck: new Date().toISOString()
+        lastFullCheck: new Date().toISOString(),
       }));
     }
   };
@@ -264,37 +262,42 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
       systemState.inngestWorkflows.status,
       systemState.environment.status,
       // Include MEXC API status from centralized status
-      (centralizedStatus?.network?.connected && centralizedStatus?.credentials?.isValid) ? 'healthy' : 
-      !centralizedStatus?.credentials?.hasCredentials ? 'warning' : 'unhealthy'
+      centralizedStatus?.network?.connected && centralizedStatus?.credentials?.isValid
+        ? "healthy"
+        : !centralizedStatus?.credentials?.hasCredentials
+          ? "warning"
+          : "unhealthy",
     ];
 
-    const healthyCount = components.filter(status => status === 'healthy').length;
-    const warningCount = components.filter(status => status === 'warning').length;
-    const unhealthyCount = components.filter(status => status === 'unhealthy' || status === 'error').length;
-    const loadingCount = components.filter(status => status === 'loading').length;
+    const healthyCount = components.filter((status) => status === "healthy").length;
+    const warningCount = components.filter((status) => status === "warning").length;
+    const unhealthyCount = components.filter(
+      (status) => status === "unhealthy" || status === "error"
+    ).length;
+    const loadingCount = components.filter((status) => status === "loading").length;
 
     const totalComponents = components.length;
     const healthScore = Math.round((healthyCount / totalComponents) * 100);
 
     if (loadingCount > 0) {
-      return { status: 'loading', score: 0, summary: 'Checking system...' };
+      return { status: "loading", score: 0, summary: "Checking system..." };
     } else if (unhealthyCount > 0) {
-      return { 
-        status: 'error', 
-        score: healthScore, 
-        summary: `${unhealthyCount} critical issue${unhealthyCount > 1 ? 's' : ''} detected` 
+      return {
+        status: "error",
+        score: healthScore,
+        summary: `${unhealthyCount} critical issue${unhealthyCount > 1 ? "s" : ""} detected`,
       };
     } else if (warningCount > 0) {
-      return { 
-        status: 'warning', 
-        score: healthScore, 
-        summary: `${warningCount} warning${warningCount > 1 ? 's' : ''} found` 
+      return {
+        status: "warning",
+        score: healthScore,
+        summary: `${warningCount} warning${warningCount > 1 ? "s" : ""} found`,
       };
     } else {
-      return { 
-        status: 'healthy', 
-        score: healthScore, 
-        summary: 'All systems operational' 
+      return {
+        status: "healthy",
+        score: healthScore,
+        summary: "All systems operational",
       };
     }
   };
@@ -304,17 +307,17 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
   // Get status icon and color
   const getStatusDisplay = (status: string) => {
     switch (status) {
-      case 'healthy':
-        return { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500/10' };
-      case 'unhealthy':
-      case 'error':
-        return { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' };
-      case 'warning':
-        return { icon: AlertTriangle, color: 'text-yellow-500', bg: 'bg-yellow-500/10' };
-      case 'loading':
-        return { icon: RefreshCw, color: 'text-blue-500', bg: 'bg-blue-500/10' };
+      case "healthy":
+        return { icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10" };
+      case "unhealthy":
+      case "error":
+        return { icon: XCircle, color: "text-red-500", bg: "bg-red-500/10" };
+      case "warning":
+        return { icon: AlertTriangle, color: "text-yellow-500", bg: "bg-yellow-500/10" };
+      case "loading":
+        return { icon: RefreshCw, color: "text-blue-500", bg: "bg-blue-500/10" };
       default:
-        return { icon: XCircle, color: 'text-gray-500', bg: 'bg-gray-500/10' };
+        return { icon: XCircle, color: "text-gray-500", bg: "bg-gray-500/10" };
     }
   };
 
@@ -328,9 +331,9 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
     setIsLoadingIP(true);
     try {
       const services = [
-        'https://ipapi.co/ip/',
-        'https://api.ipify.org?format=text',
-        'https://ipinfo.io/ip'
+        "https://ipapi.co/ip/",
+        "https://api.ipify.org?format=text",
+        "https://ipinfo.io/ip",
       ];
 
       for (const service of services) {
@@ -349,11 +352,11 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
       }
 
       if (!publicIP) {
-        throw new Error('All IP services failed');
+        throw new Error("All IP services failed");
       }
     } catch (error) {
-      console.error('Failed to fetch public IP:', error);
-      setPublicIP('Unable to fetch IP');
+      console.error("Failed to fetch public IP:", error);
+      setPublicIP("Unable to fetch IP");
     } finally {
       setIsLoadingIP(false);
     }
@@ -378,7 +381,11 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
     runSystemCheck();
   }, []);
 
-  const { icon: OverallIcon, color: overallColor, bg: overallBg } = getStatusDisplay(overallHealth.status);
+  const {
+    icon: OverallIcon,
+    color: overallColor,
+    bg: overallBg,
+  } = getStatusDisplay(overallHealth.status);
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -388,7 +395,9 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className={`p-3 rounded-lg ${overallBg}`}>
-                <OverallIcon className={`h-6 w-6 ${overallColor} ${overallHealth.status === 'loading' ? 'animate-spin' : ''}`} />
+                <OverallIcon
+                  className={`h-6 w-6 ${overallColor} ${overallHealth.status === "loading" ? "animate-spin" : ""}`}
+                />
               </div>
               <div>
                 <CardTitle className="text-xl">System Health</CardTitle>
@@ -404,21 +413,23 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
         <CardContent>
           <div className="space-y-4">
             <Progress value={overallHealth.score} className="w-full h-2" />
-            
+
             <div className="flex items-center justify-between">
               {systemState.lastFullCheck && (
                 <Badge variant="outline" className="text-xs">
                   Last check: {new Date(systemState.lastFullCheck).toLocaleTimeString()}
                 </Badge>
               )}
-              <Button 
+              <Button
                 onClick={runSystemCheck}
                 disabled={systemState.isRefreshing}
                 variant="outline"
                 size="sm"
               >
-                <RefreshCw className={`mr-2 h-4 w-4 ${systemState.isRefreshing ? 'animate-spin' : ''}`} />
-                {systemState.isRefreshing ? 'Checking...' : 'Refresh Status'}
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${systemState.isRefreshing ? "animate-spin" : ""}`}
+                />
+                {systemState.isRefreshing ? "Checking..." : "Refresh Status"}
               </Button>
             </div>
           </div>
@@ -453,29 +464,54 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${getStatusDisplay(
-                  centralizedStatus?.credentials?.isValid ? 'healthy' : 
-                  centralizedStatus?.credentials?.hasCredentials ? 'warning' : 'error'
-                ).bg}`}>
-                  <Key className={`h-5 w-5 ${getStatusDisplay(
-                    centralizedStatus?.credentials?.isValid ? 'healthy' : 
-                    centralizedStatus?.credentials?.hasCredentials ? 'warning' : 'error'
-                  ).color}`} />
+                <div
+                  className={`p-2 rounded-lg ${
+                    getStatusDisplay(
+                      centralizedStatus?.credentials?.isValid
+                        ? "healthy"
+                        : centralizedStatus?.credentials?.hasCredentials
+                          ? "warning"
+                          : "error"
+                    ).bg
+                  }`}
+                >
+                  <Key
+                    className={`h-5 w-5 ${
+                      getStatusDisplay(
+                        centralizedStatus?.credentials?.isValid
+                          ? "healthy"
+                          : centralizedStatus?.credentials?.hasCredentials
+                            ? "warning"
+                            : "error"
+                      ).color
+                    }`}
+                  />
                 </div>
                 <div>
                   <h4 className="font-medium">MEXC API</h4>
                   <p className="text-sm text-muted-foreground">
-                    {centralizedStatus?.credentials?.isValid ? 'Configured & Valid' : 
-                     centralizedStatus?.credentials?.hasCredentials ? 'Configured' : 'Not Configured'}
+                    {centralizedStatus?.credentials?.isValid
+                      ? "Configured & Valid"
+                      : centralizedStatus?.credentials?.hasCredentials
+                        ? "Configured"
+                        : "Not Configured"}
                   </p>
                 </div>
               </div>
-              <Badge variant={
-                centralizedStatus?.credentials?.isValid ? 'default' : 
-                centralizedStatus?.credentials?.hasCredentials ? 'secondary' : 'destructive'
-              }>
-                {centralizedStatus?.credentials?.isValid ? 'Valid' : 
-                 centralizedStatus?.credentials?.hasCredentials ? 'Needs Check' : 'Missing'}
+              <Badge
+                variant={
+                  centralizedStatus?.credentials?.isValid
+                    ? "default"
+                    : centralizedStatus?.credentials?.hasCredentials
+                      ? "secondary"
+                      : "destructive"
+                }
+              >
+                {centralizedStatus?.credentials?.isValid
+                  ? "Valid"
+                  : centralizedStatus?.credentials?.hasCredentials
+                    ? "Needs Check"
+                    : "Missing"}
               </Badge>
             </div>
           </CardContent>
@@ -486,22 +522,36 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${getStatusDisplay(systemState.database.status).bg}`}>
-                  <Database className={`h-5 w-5 ${getStatusDisplay(systemState.database.status).color}`} />
+                <div
+                  className={`p-2 rounded-lg ${getStatusDisplay(systemState.database.status).bg}`}
+                >
+                  <Database
+                    className={`h-5 w-5 ${getStatusDisplay(systemState.database.status).color}`}
+                  />
                 </div>
                 <div>
                   <h4 className="font-medium">Database</h4>
                   <p className="text-sm text-muted-foreground">
-                    {systemState.database.status === 'healthy' ? 'Connected' : 
-                     systemState.database.status === 'loading' ? 'Checking...' : 'Issues'}
+                    {systemState.database.status === "healthy"
+                      ? "Connected"
+                      : systemState.database.status === "loading"
+                        ? "Checking..."
+                        : "Issues"}
                   </p>
                 </div>
               </div>
-              <Badge variant={
-                systemState.database.status === 'healthy' ? 'default' : 
-                systemState.database.status === 'warning' ? 'secondary' : 'destructive'
-              }>
-                {systemState.database.status === 'loading' ? 'Checking' : systemState.database.status}
+              <Badge
+                variant={
+                  systemState.database.status === "healthy"
+                    ? "default"
+                    : systemState.database.status === "warning"
+                      ? "secondary"
+                      : "destructive"
+                }
+              >
+                {systemState.database.status === "loading"
+                  ? "Checking"
+                  : systemState.database.status}
               </Badge>
             </div>
           </CardContent>
@@ -512,22 +562,44 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-lg ${getStatusDisplay(
-                  systemState.openaiApi.status === 'healthy' && systemState.kindeAuth.status === 'healthy' ? 'healthy' : 'warning'
-                ).bg}`}>
-                  <Settings className={`h-5 w-5 ${getStatusDisplay(
-                    systemState.openaiApi.status === 'healthy' && systemState.kindeAuth.status === 'healthy' ? 'healthy' : 'warning'
-                  ).color}`} />
+                <div
+                  className={`p-2 rounded-lg ${
+                    getStatusDisplay(
+                      systemState.openaiApi.status === "healthy" &&
+                        systemState.kindeAuth.status === "healthy"
+                        ? "healthy"
+                        : "warning"
+                    ).bg
+                  }`}
+                >
+                  <Settings
+                    className={`h-5 w-5 ${
+                      getStatusDisplay(
+                        systemState.openaiApi.status === "healthy" &&
+                          systemState.kindeAuth.status === "healthy"
+                          ? "healthy"
+                          : "warning"
+                      ).color
+                    }`}
+                  />
                 </div>
                 <div>
                   <h4 className="font-medium">Core Services</h4>
                   <p className="text-sm text-muted-foreground">OpenAI, Auth, Workflows</p>
                 </div>
               </div>
-              <Badge variant={
-                systemState.openaiApi.status === 'healthy' && systemState.kindeAuth.status === 'healthy' ? 'default' : 'secondary'
-              }>
-                {systemState.openaiApi.status === 'healthy' && systemState.kindeAuth.status === 'healthy' ? 'Ready' : 'Partial'}
+              <Badge
+                variant={
+                  systemState.openaiApi.status === "healthy" &&
+                  systemState.kindeAuth.status === "healthy"
+                    ? "default"
+                    : "secondary"
+                }
+              >
+                {systemState.openaiApi.status === "healthy" &&
+                systemState.kindeAuth.status === "healthy"
+                  ? "Ready"
+                  : "Partial"}
               </Badge>
             </div>
           </CardContent>
@@ -553,9 +625,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
               onClick={() => setShowCredentials(!showCredentials)}
             >
               {showCredentials ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              <span className="ml-2">
-                {showCredentials ? 'Hide' : 'Show'} Configuration
-              </span>
+              <span className="ml-2">{showCredentials ? "Hide" : "Show"} Configuration</span>
             </Button>
           </div>
         </CardHeader>
@@ -563,7 +633,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
           <CardContent>
             <div className="space-y-6">
               <ApiCredentialsForm userId={getUserId()} />
-              
+
               {/* Security Notice */}
               <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div className="flex items-start space-x-2">
@@ -594,30 +664,30 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
         <CardContent>
           <div className="space-y-4">
             <div className="grid md:grid-cols-3 gap-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="h-auto p-4 flex flex-col space-y-2"
-                onClick={() => window.open('/workflows', '_self')}
+                onClick={() => window.open("/workflows", "_self")}
               >
                 <GitBranch className="h-6 w-6" />
                 <span>Monitoring</span>
                 <span className="text-xs text-muted-foreground">View detailed system status</span>
               </Button>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 className="h-auto p-4 flex flex-col space-y-2"
-                onClick={() => window.open('/settings', '_self')}
+                onClick={() => window.open("/settings", "_self")}
               >
                 <Settings className="h-6 w-6" />
                 <span>Trading Settings</span>
                 <span className="text-xs text-muted-foreground">Advanced configuration</span>
               </Button>
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 className="h-auto p-4 flex flex-col space-y-2"
-                onClick={() => window.open('/api/health/db', '_blank')}
+                onClick={() => window.open("/api/health/db", "_blank")}
               >
                 <Database className="h-6 w-6" />
                 <span>Database Health</span>
@@ -634,7 +704,9 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
                 </div>
                 <div>
                   <h4 className="font-medium">Public IP Address</h4>
-                  <p className="text-xs text-muted-foreground">For MEXC API allowlist configuration</p>
+                  <p className="text-xs text-muted-foreground">
+                    For MEXC API allowlist configuration
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
@@ -643,20 +715,13 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
                     {publicIP}
                   </Badge>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={fetchPublicIP}
-                  disabled={isLoadingIP}
-                >
+                <Button variant="outline" size="sm" onClick={fetchPublicIP} disabled={isLoadingIP}>
                   {isLoadingIP ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
                   ) : (
                     <Globe className="h-4 w-4" />
                   )}
-                  <span className="ml-2">
-                    {publicIP ? 'Hide IP' : 'Show IP'}
-                  </span>
+                  <span className="ml-2">{publicIP ? "Hide IP" : "Show IP"}</span>
                 </Button>
               </div>
             </div>

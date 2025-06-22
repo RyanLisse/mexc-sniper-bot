@@ -156,14 +156,14 @@ export class MexcConfigValidator {
     try {
       // Test pattern detection capability with mock symbol data
       const mockSymbol = {
-        cd: "BTCUSDT",         // symbol code (required)
-        symbol: "BTCUSDT",     // symbol for compatibility (optional)
-        sts: 2,                // status (required for ready state pattern)
-        st: 2,                 // state (required for ready state pattern)
-        tt: 4,                 // type (required for ready state pattern)
-        ca: 1000,              // market cap indicator (optional)
-        ps: 100,               // price score (optional)
-        qs: 50,                // quality score (optional)
+        cd: "BTCUSDT", // symbol code (required)
+        symbol: "BTCUSDT", // symbol for compatibility (optional)
+        sts: 2, // status (required for ready state pattern)
+        st: 2, // state (required for ready state pattern)
+        tt: 4, // type (required for ready state pattern)
+        ca: 1000, // market cap indicator (optional)
+        ps: 100, // price score (optional)
+        qs: 50, // quality score (optional)
       };
 
       const testPatterns = await this.patternEngine.detectReadyStatePattern(mockSymbol);

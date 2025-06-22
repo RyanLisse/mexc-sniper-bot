@@ -402,7 +402,7 @@ export class MultiPhaseTradingBot {
       this.symbol = symbol;
       this.entryPrice = entryPrice;
       this.position = amount;
-      
+
       // Recreate executor with new entry price and position
       const strategyConfig = {
         id: this.executor.getStrategy().id,
@@ -708,15 +708,20 @@ export class MultiPhaseTradingBot {
     try {
       // Simulate database persistence
       // In a real implementation, this would save to database
-      console.log("[MultiPhaseTradingBot] Persisting trade data:", JSON.stringify(data).slice(0, 100) + "...");
-      
+      console.log(
+        "[MultiPhaseTradingBot] Persisting trade data:",
+        JSON.stringify(data).slice(0, 100) + "..."
+      );
+
       // Simulate async database operation
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       // Mark as persisted in internal tracking
       if (data.phase && (this.executor as any).phaseHistory) {
         const history = (this.executor as any).phaseHistory;
-        const record = history.find((h: any) => h.phase === data.phase && h.timestamp === data.timestamp);
+        const record = history.find(
+          (h: any) => h.phase === data.phase && h.timestamp === data.timestamp
+        );
         if (record) {
           record.persisted = true;
         }

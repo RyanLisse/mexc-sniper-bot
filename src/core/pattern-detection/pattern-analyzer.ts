@@ -1,9 +1,9 @@
 /**
  * Pattern Analyzer - Core Analysis Module
- * 
+ *
  * Extracted from the monolithic pattern-detection-engine.ts (1503 lines).
  * Handles core pattern detection algorithms with improved modularity.
- * 
+ *
  * Architecture:
  * - Clean separation of analysis logic
  * - Type-safe pattern matching
@@ -11,20 +11,19 @@
  * - Comprehensive error handling
  */
 
-import { createLogger } from '../../lib/structured-logger';
-import { toSafeError } from '../../lib/error-type-utils';
-import type { SymbolEntry, CalendarEntry } from '../../services/mexc-unified-exports';
-import type { 
-  IPatternAnalyzer, 
-  PatternMatch, 
-  CorrelationAnalysis, 
+import { toSafeError } from "../../lib/error-type-utils";
+import { createLogger } from "../../lib/structured-logger";
+import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
+import type {
+  CorrelationAnalysis,
+  IPatternAnalyzer,
+  PatternMatch,
   ReadyStatePattern,
-  PatternAnalysisError 
-} from './interfaces';
+} from "./interfaces";
 
 /**
  * Pattern Analyzer Implementation
- * 
+ *
  * Implements core pattern detection algorithms extracted from the original engine.
  * Focuses on performance and maintainability.
  */
@@ -32,7 +31,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   private static instance: PatternAnalyzer;
   private readonly READY_STATE_PATTERN: ReadyStatePattern = { sts: 2, st: 2, tt: 4 };
   private readonly MIN_ADVANCE_HOURS = 3.5; // Core competitive advantage
-  private logger = createLogger('pattern-analyzer');
+  private logger = createLogger("pattern-analyzer");
 
   static getInstance(): PatternAnalyzer {
     if (!PatternAnalyzer.instance) {
@@ -43,16 +42,16 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
   /**
    * Detect Ready State Pattern (Core Algorithm)
-   * 
+   *
    * Detects the critical sts:2, st:2, tt:4 ready state pattern.
    * This is the heart of our competitive advantage.
    */
   async detectReadyStatePattern(symbolData: SymbolEntry | SymbolEntry[]): Promise<PatternMatch[]> {
     const startTime = Date.now();
-    
+
     // Handle null/undefined input gracefully
     if (!symbolData) {
-      this.logger.warn('Null/undefined symbol data provided to detectReadyStatePattern');
+      this.logger.warn("Null/undefined symbol data provided to detectReadyStatePattern");
       return [];
     }
 
@@ -68,20 +67,20 @@ export class PatternAnalyzer implements IPatternAnalyzer {
       try {
         // Validate symbol data
         if (!this.validateSymbolData(symbol)) {
-          this.logger.warn('Invalid symbol data', { symbol: symbol?.cd || 'unknown' });
+          this.logger.warn("Invalid symbol data", { symbol: symbol?.cd || "unknown" });
           continue;
         }
 
         // Core ready state pattern validation
         const isExactMatch = this.validateExactReadyState(symbol);
-        
+
         if (isExactMatch) {
           // Import confidence calculator (lazy loading)
-          const { ConfidenceCalculator } = await import('./confidence-calculator');
+          const { ConfidenceCalculator } = await import("./confidence-calculator");
           const confidenceCalculator = new ConfidenceCalculator();
-          
+
           const confidence = await confidenceCalculator.calculateReadyStateConfidence(symbol);
-          
+
           if (confidence >= 85) {
             const match: PatternMatch = {
               patternType: "ready_state",
@@ -105,22 +104,27 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        this.logger.error('Error processing symbol', {
-          symbol: symbol?.cd || 'unknown',
-          error: safeError.message,
-        }, safeError);
+        this.logger.error(
+          "Error processing symbol",
+          {
+            symbol: symbol?.cd || "unknown",
+            error: safeError.message,
+          },
+          safeError
+        );
         // Continue with other symbols
       }
     }
 
     const duration = Date.now() - startTime;
-    this.logger.info('Ready state detection completed', {
+    this.logger.info("Ready state detection completed", {
       symbolsAnalyzed: symbols.length,
       patternsFound: matches.length,
       duration,
-      averageConfidence: matches.length > 0 
-        ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
-        : 0,
+      averageConfidence:
+        matches.length > 0
+          ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
+          : 0,
     });
 
     return matches;
@@ -128,12 +132,12 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
   /**
    * Detect Advance Opportunities
-   * 
+   *
    * 3.5+ Hour Early Warning System - Core competitive advantage.
    */
   async detectAdvanceOpportunities(calendarEntries: CalendarEntry[]): Promise<PatternMatch[]> {
     const startTime = Date.now();
-    
+
     if (!calendarEntries || !Array.isArray(calendarEntries)) {
       return [];
     }
@@ -148,20 +152,21 @@ export class PatternAnalyzer implements IPatternAnalyzer {
           continue;
         }
 
-        const launchTimestamp = typeof entry.firstOpenTime === "number"
-          ? entry.firstOpenTime
-          : new Date(entry.firstOpenTime).getTime();
+        const launchTimestamp =
+          typeof entry.firstOpenTime === "number"
+            ? entry.firstOpenTime
+            : new Date(entry.firstOpenTime).getTime();
 
         const advanceHours = (launchTimestamp - now) / (1000 * 60 * 60);
 
         // Filter for our 3.5+ hour advantage window
         if (advanceHours >= this.MIN_ADVANCE_HOURS) {
           // Import confidence calculator (lazy loading)
-          const { ConfidenceCalculator } = await import('./confidence-calculator');
+          const { ConfidenceCalculator } = await import("./confidence-calculator");
           const confidenceCalculator = new ConfidenceCalculator();
-          
+
           const confidence = await confidenceCalculator.calculateAdvanceOpportunityConfidence(
-            entry, 
+            entry,
             advanceHours
           );
 
@@ -193,23 +198,30 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        this.logger.error('Error processing calendar entry', {
-          symbol: entry?.symbol || 'unknown',
-          error: safeError.message,
-        }, safeError);
+        this.logger.error(
+          "Error processing calendar entry",
+          {
+            symbol: entry?.symbol || "unknown",
+            error: safeError.message,
+          },
+          safeError
+        );
         // Continue with other entries
       }
     }
 
     const duration = Date.now() - startTime;
-    this.logger.info('Advance opportunity detection completed', {
+    this.logger.info("Advance opportunity detection completed", {
       calendarEntriesAnalyzed: calendarEntries.length,
       opportunitiesFound: matches.length,
       duration,
       minAdvanceHours: this.MIN_ADVANCE_HOURS,
-      averageAdvanceHours: matches.length > 0
-        ? Math.round((matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10) / 10
-        : 0,
+      averageAdvanceHours:
+        matches.length > 0
+          ? Math.round(
+              (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
+            ) / 10
+          : 0,
     });
 
     return matches;
@@ -217,7 +229,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
   /**
    * Detect Pre-Ready Patterns
-   * 
+   *
    * Identifies symbols approaching ready state for monitoring setup.
    */
   async detectPreReadyPatterns(symbolData: SymbolEntry[]): Promise<PatternMatch[]> {
@@ -256,10 +268,14 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        this.logger.error('Error processing pre-ready symbol', {
-          symbol: symbol?.cd || 'unknown',
-          error: safeError.message,
-        }, safeError);
+        this.logger.error(
+          "Error processing pre-ready symbol",
+          {
+            symbol: symbol?.cd || "unknown",
+            error: safeError.message,
+          },
+          safeError
+        );
         // Continue with other symbols
       }
     }
@@ -269,7 +285,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
   /**
    * Analyze Symbol Correlations
-   * 
+   *
    * Identifies correlated movements and market-wide patterns.
    */
   async analyzeSymbolCorrelations(symbolData: SymbolEntry[]): Promise<CorrelationAnalysis[]> {
@@ -291,13 +307,16 @@ export class PatternAnalyzer implements IPatternAnalyzer {
       if (sectorCorrelations.strength >= 0.3) {
         correlations.push(sectorCorrelations);
       }
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Error analyzing correlations', {
-        symbolsAnalyzed: symbolData.length,
-        error: safeError.message,
-      }, safeError);
+      this.logger.error(
+        "Error analyzing correlations",
+        {
+          symbolsAnalyzed: symbolData.length,
+          error: safeError.message,
+        },
+        safeError
+      );
     }
 
     return correlations;
@@ -305,12 +324,12 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
   /**
    * Validate Exact Ready State
-   * 
+   *
    * Core validation for the sts:2, st:2, tt:4 pattern.
    */
   validateExactReadyState(symbol: SymbolEntry): boolean {
     if (!symbol) return false;
-    
+
     return (
       symbol.sts === this.READY_STATE_PATTERN.sts &&
       symbol.st === this.READY_STATE_PATTERN.st &&
@@ -324,11 +343,13 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
   private validateSymbolData(symbol: SymbolEntry): boolean {
     if (!symbol) return false;
-    
+
     // Check required fields
-    if (typeof symbol.sts !== 'number' || 
-        typeof symbol.st !== 'number' || 
-        typeof symbol.tt !== 'number') {
+    if (
+      typeof symbol.sts !== "number" ||
+      typeof symbol.st !== "number" ||
+      typeof symbol.tt !== "number"
+    ) {
       return false;
     }
 
@@ -337,7 +358,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
   private validateCalendarEntry(entry: CalendarEntry): boolean {
     if (!entry) return false;
-    
+
     // Check required fields
     if (!entry.symbol || !entry.firstOpenTime) {
       return false;

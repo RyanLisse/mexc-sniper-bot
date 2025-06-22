@@ -1,16 +1,16 @@
 /**
  * Pattern Storage Test Suite
- * 
+ *
  * TDD tests for the PatternStorage module following Slice 2 of the roadmap.
  * These tests define storage, caching, and retrieval behavior.
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import type { SymbolEntry, CalendarEntry } from '../../../services/mexc-unified-exports';
-import type { IPatternStorage } from '../interfaces';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
+import type { IPatternStorage } from "../interfaces";
 
 // Mock database
-vi.mock('../../../db', () => ({
+vi.mock("../../../db", () => ({
   db: {
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockReturnValue({
@@ -18,14 +18,14 @@ vi.mock('../../../db', () => ({
           limit: vi.fn().mockResolvedValue([
             {
               id: 1,
-              patternType: 'ready_state',
+              patternType: "ready_state",
               truePositives: 8,
               falsePositives: 2,
               confidence: 85,
             },
             {
               id: 2,
-              patternType: 'ready_state',
+              patternType: "ready_state",
               truePositives: 7,
               falsePositives: 3,
               confidence: 80,
@@ -42,13 +42,13 @@ vi.mock('../../../db', () => ({
   },
 }));
 
-describe('PatternStorage - TDD Implementation', () => {
+describe("PatternStorage - TDD Implementation", () => {
   let patternStorage: IPatternStorage;
 
   beforeEach(async () => {
     // Import the actual implementation once it exists
     try {
-      const { PatternStorage } = await import('../pattern-storage');
+      const { PatternStorage } = await import("../pattern-storage");
       patternStorage = new PatternStorage();
     } catch {
       // Skip tests if implementation doesn't exist yet
@@ -63,15 +63,15 @@ describe('PatternStorage - TDD Implementation', () => {
     }
   });
 
-  describe('Pattern Storage Operations', () => {
-    it('should store successful patterns correctly', async () => {
+  describe("Pattern Storage Operations", () => {
+    it("should store successful patterns correctly", async () => {
       if (!patternStorage.storeSuccessfulPattern) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const mockSymbol: SymbolEntry = {
-        cd: 'STOREUSDT',
+        cd: "STOREUSDT",
         sts: 2,
         st: 2,
         tt: 4,
@@ -81,42 +81,42 @@ describe('PatternStorage - TDD Implementation', () => {
       };
 
       await expect(
-        patternStorage.storeSuccessfulPattern(mockSymbol, 'ready_state', 85)
+        patternStorage.storeSuccessfulPattern(mockSymbol, "ready_state", 85)
       ).resolves.not.toThrow();
     });
 
-    it('should store calendar entry patterns correctly', async () => {
+    it("should store calendar entry patterns correctly", async () => {
       if (!patternStorage.storeSuccessfulPattern) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const mockCalendarEntry: CalendarEntry = {
-        symbol: 'CALENDARUSDT',
-        vcoinId: 'calendar-id',
-        firstOpenTime: Date.now() + (6 * 60 * 60 * 1000),
-        projectName: 'Calendar Project',
+        symbol: "CALENDARUSDT",
+        vcoinId: "calendar-id",
+        firstOpenTime: Date.now() + 6 * 60 * 60 * 1000,
+        projectName: "Calendar Project",
       };
 
       await expect(
-        patternStorage.storeSuccessfulPattern(mockCalendarEntry, 'launch_sequence', 90)
+        patternStorage.storeSuccessfulPattern(mockCalendarEntry, "launch_sequence", 90)
       ).resolves.not.toThrow();
     });
 
-    it('should handle storage errors gracefully', async () => {
+    it("should handle storage errors gracefully", async () => {
       if (!patternStorage.storeSuccessfulPattern) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       // Mock database error
-      const originalDb = vi.mocked(await import('../../../db')).db;
+      const originalDb = vi.mocked(await import("../../../db")).db;
       vi.mocked(originalDb.insert).mockImplementationOnce(() => {
-        throw new Error('Database connection failed');
+        throw new Error("Database connection failed");
       });
 
       const mockSymbol: SymbolEntry = {
-        cd: 'ERRORUSDT',
+        cd: "ERRORUSDT",
         sts: 2,
         st: 2,
         tt: 4,
@@ -124,18 +124,18 @@ describe('PatternStorage - TDD Implementation', () => {
 
       // Should not throw, but handle gracefully
       await expect(
-        patternStorage.storeSuccessfulPattern(mockSymbol, 'ready_state', 75)
+        patternStorage.storeSuccessfulPattern(mockSymbol, "ready_state", 75)
       ).resolves.not.toThrow();
     });
 
-    it('should validate confidence scores before storage', async () => {
+    it("should validate confidence scores before storage", async () => {
       if (!patternStorage.storeSuccessfulPattern) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const mockSymbol: SymbolEntry = {
-        cd: 'VALIDATIONUSDT',
+        cd: "VALIDATIONUSDT",
         sts: 2,
         st: 2,
         tt: 4,
@@ -143,49 +143,49 @@ describe('PatternStorage - TDD Implementation', () => {
 
       // Test with invalid confidence scores
       await expect(
-        patternStorage.storeSuccessfulPattern(mockSymbol, 'ready_state', -1)
+        patternStorage.storeSuccessfulPattern(mockSymbol, "ready_state", -1)
       ).resolves.not.toThrow();
 
       await expect(
-        patternStorage.storeSuccessfulPattern(mockSymbol, 'ready_state', 101)
+        patternStorage.storeSuccessfulPattern(mockSymbol, "ready_state", 101)
       ).resolves.not.toThrow();
 
       await expect(
-        patternStorage.storeSuccessfulPattern(mockSymbol, 'ready_state', NaN)
+        patternStorage.storeSuccessfulPattern(mockSymbol, "ready_state", Number.NaN)
       ).resolves.not.toThrow();
     });
   });
 
-  describe('Historical Success Rate Retrieval', () => {
-    it('should retrieve historical success rate for pattern types', async () => {
+  describe("Historical Success Rate Retrieval", () => {
+    it("should retrieve historical success rate for pattern types", async () => {
       if (!patternStorage.getHistoricalSuccessRate) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
-      const successRate = await patternStorage.getHistoricalSuccessRate('ready_state');
+      const successRate = await patternStorage.getHistoricalSuccessRate("ready_state");
 
-      expect(typeof successRate).toBe('number');
+      expect(typeof successRate).toBe("number");
       expect(successRate).toBeGreaterThanOrEqual(0);
       expect(successRate).toBeLessThanOrEqual(100);
     });
 
-    it('should return default success rate for unknown pattern types', async () => {
+    it("should return default success rate for unknown pattern types", async () => {
       if (!patternStorage.getHistoricalSuccessRate) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
-      const successRate = await patternStorage.getHistoricalSuccessRate('unknown_pattern');
+      const successRate = await patternStorage.getHistoricalSuccessRate("unknown_pattern");
 
-      expect(typeof successRate).toBe('number');
+      expect(typeof successRate).toBe("number");
       expect(successRate).toBeGreaterThanOrEqual(0);
       expect(successRate).toBeLessThanOrEqual(100);
     });
 
-    it('should calculate success rate from stored patterns', async () => {
+    it("should calculate success rate from stored patterns", async () => {
       if (!patternStorage.getHistoricalSuccessRate) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -196,42 +196,42 @@ describe('PatternStorage - TDD Implementation', () => {
       ];
 
       // Expected: (8+7)/(8+2+7+3) = 15/20 = 75%
-      const successRate = await patternStorage.getHistoricalSuccessRate('ready_state');
+      const successRate = await patternStorage.getHistoricalSuccessRate("ready_state");
 
       expect(successRate).toBeCloseTo(75, 1); // Allow 1 decimal place difference
     });
 
-    it('should handle database errors when retrieving success rate', async () => {
+    it("should handle database errors when retrieving success rate", async () => {
       if (!patternStorage.getHistoricalSuccessRate) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       // Mock database error
-      const originalDb = vi.mocked(await import('../../../db')).db;
+      const originalDb = vi.mocked(await import("../../../db")).db;
       vi.mocked(originalDb.select).mockImplementationOnce(() => {
-        throw new Error('Database query failed');
+        throw new Error("Database query failed");
       });
 
-      const successRate = await patternStorage.getHistoricalSuccessRate('ready_state');
+      const successRate = await patternStorage.getHistoricalSuccessRate("ready_state");
 
       // Should return default fallback value
-      expect(typeof successRate).toBe('number');
+      expect(typeof successRate).toBe("number");
       expect(successRate).toBeGreaterThanOrEqual(0);
       expect(successRate).toBeLessThanOrEqual(100);
     });
   });
 
-  describe('Similar Pattern Finding', () => {
-    it('should find similar patterns with default options', async () => {
+  describe("Similar Pattern Finding", () => {
+    it("should find similar patterns with default options", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const testPattern = {
-        symbolName: 'TESTUSDT',
-        type: 'ready_state',
+        symbolName: "TESTUSDT",
+        type: "ready_state",
         data: { sts: 2, st: 2, tt: 4 },
         confidence: 85,
       };
@@ -243,15 +243,15 @@ describe('PatternStorage - TDD Implementation', () => {
       expect(similarPatterns.length).toBeLessThanOrEqual(50);
     });
 
-    it('should respect threshold parameter', async () => {
+    it("should respect threshold parameter", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const testPattern = {
-        symbolName: 'THRESHOLDUSDT',
-        type: 'ready_state',
+        symbolName: "THRESHOLDUSDT",
+        type: "ready_state",
         data: { sts: 2, st: 2, tt: 4 },
         confidence: 85,
       };
@@ -268,15 +268,15 @@ describe('PatternStorage - TDD Implementation', () => {
       expect(highThresholdResults.length).toBeLessThanOrEqual(lowThresholdResults.length);
     });
 
-    it('should respect limit parameter', async () => {
+    it("should respect limit parameter", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const testPattern = {
-        symbolName: 'LIMITUSDT',
-        type: 'ready_state',
+        symbolName: "LIMITUSDT",
+        type: "ready_state",
         data: { sts: 2, st: 2, tt: 4 },
         confidence: 85,
       };
@@ -288,15 +288,15 @@ describe('PatternStorage - TDD Implementation', () => {
       expect(limitedResults.length).toBeLessThanOrEqual(5);
     });
 
-    it('should filter by same type when sameTypeOnly is true', async () => {
+    it("should filter by same type when sameTypeOnly is true", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const testPattern = {
-        symbolName: 'SAMETYPEUSDT',
-        type: 'ready_state',
+        symbolName: "SAMETYPEUSDT",
+        type: "ready_state",
         data: { sts: 2, st: 2, tt: 4 },
         confidence: 85,
       };
@@ -306,22 +306,22 @@ describe('PatternStorage - TDD Implementation', () => {
       });
 
       // All results should be the same type
-      sameTypeResults.forEach(pattern => {
+      sameTypeResults.forEach((pattern) => {
         if (pattern.type) {
-          expect(pattern.type).toBe('ready_state');
+          expect(pattern.type).toBe("ready_state");
         }
       });
     });
 
-    it('should handle empty results gracefully', async () => {
+    it("should handle empty results gracefully", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const uniquePattern = {
-        symbolName: 'UNIQUEUSDT',
-        type: 'very_rare_pattern',
+        symbolName: "UNIQUEUSDT",
+        type: "very_rare_pattern",
         data: { sts: 999, st: 999, tt: 999 },
         confidence: 1,
       };
@@ -335,28 +335,28 @@ describe('PatternStorage - TDD Implementation', () => {
     });
   });
 
-  describe('Cache Management', () => {
-    it('should provide cache clearing functionality', () => {
+  describe("Cache Management", () => {
+    it("should provide cache clearing functionality", () => {
       if (!patternStorage.clearCache) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       expect(() => patternStorage.clearCache()).not.toThrow();
     });
 
-    it('should provide cache statistics', () => {
+    it("should provide cache statistics", () => {
       if (!patternStorage.getCacheStats) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const stats = patternStorage.getCacheStats();
 
-      expect(typeof stats).toBe('object');
-      expect(typeof stats.hitRatio).toBe('number');
-      expect(typeof stats.size).toBe('number');
-      expect(typeof stats.memoryUsage).toBe('number');
+      expect(typeof stats).toBe("object");
+      expect(typeof stats.hitRatio).toBe("number");
+      expect(typeof stats.size).toBe("number");
+      expect(typeof stats.memoryUsage).toBe("number");
 
       // Validate ranges
       expect(stats.hitRatio).toBeGreaterThanOrEqual(0);
@@ -365,15 +365,15 @@ describe('PatternStorage - TDD Implementation', () => {
       expect(stats.memoryUsage).toBeGreaterThanOrEqual(0);
     });
 
-    it('should improve performance with caching', async () => {
+    it("should improve performance with caching", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const testPattern = {
-        symbolName: 'CACHEUSDT',
-        type: 'ready_state',
+        symbolName: "CACHEUSDT",
+        type: "ready_state",
         data: { sts: 2, st: 2, tt: 4 },
         confidence: 85,
       };
@@ -392,16 +392,16 @@ describe('PatternStorage - TDD Implementation', () => {
       expect(secondCallTime).toBeLessThanOrEqual(firstCallTime + 50); // Allow 50ms tolerance
     });
 
-    it('should handle cache memory limits', async () => {
+    it("should handle cache memory limits", async () => {
       if (!patternStorage.findSimilarPatterns || !patternStorage.getCacheStats) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       // Fill cache with many patterns
       const patterns = Array.from({ length: 100 }, (_, i) => ({
         symbolName: `CACHE${i}USDT`,
-        type: 'ready_state',
+        type: "ready_state",
         data: { sts: 2, st: 2, tt: 4 },
         confidence: 85,
       }));
@@ -411,17 +411,17 @@ describe('PatternStorage - TDD Implementation', () => {
       }
 
       const stats = patternStorage.getCacheStats();
-      
+
       // Cache should have reasonable limits
       expect(stats.size).toBeLessThan(1000); // Should not grow unbounded
       expect(stats.memoryUsage).toBeLessThan(100 * 1024 * 1024); // Should not exceed 100MB
     });
   });
 
-  describe('Performance and Concurrency', () => {
-    it('should handle concurrent storage operations', async () => {
+  describe("Performance and Concurrency", () => {
+    it("should handle concurrent storage operations", async () => {
       if (!patternStorage.storeSuccessfulPattern) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -432,55 +432,55 @@ describe('PatternStorage - TDD Implementation', () => {
         tt: 4,
       }));
 
-      const storePromises = symbols.map(symbol =>
-        patternStorage.storeSuccessfulPattern(symbol, 'ready_state', 85)
+      const storePromises = symbols.map((symbol) =>
+        patternStorage.storeSuccessfulPattern(symbol, "ready_state", 85)
       );
 
       await expect(Promise.all(storePromises)).resolves.not.toThrow();
     });
 
-    it('should handle concurrent retrieval operations', async () => {
+    it("should handle concurrent retrieval operations", async () => {
       if (!patternStorage.getHistoricalSuccessRate) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
-      const patternTypes = ['ready_state', 'launch_sequence', 'pre_ready'];
-      
-      const retrievalPromises = patternTypes.map(type =>
+      const patternTypes = ["ready_state", "launch_sequence", "pre_ready"];
+
+      const retrievalPromises = patternTypes.map((type) =>
         patternStorage.getHistoricalSuccessRate(type)
       );
 
       const results = await Promise.all(retrievalPromises);
 
       expect(results).toHaveLength(3);
-      results.forEach(result => {
-        expect(typeof result).toBe('number');
+      results.forEach((result) => {
+        expect(typeof result).toBe("number");
         expect(result).toBeGreaterThanOrEqual(0);
         expect(result).toBeLessThanOrEqual(100);
       });
     });
 
-    it('should maintain performance under load', async () => {
+    it("should maintain performance under load", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        console.warn('PatternStorage not implemented yet - skipping test');
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       const testPattern = {
-        symbolName: 'LOADTESTUSDT',
-        type: 'ready_state',
+        symbolName: "LOADTESTUSDT",
+        type: "ready_state",
         data: { sts: 2, st: 2, tt: 4 },
         confidence: 85,
       };
 
       const startTime = Date.now();
-      
+
       // Perform many concurrent searches
       const searchPromises = Array.from({ length: 50 }, () =>
         patternStorage.findSimilarPatterns(testPattern)
       );
-      
+
       await Promise.all(searchPromises);
       const executionTime = Date.now() - startTime;
 

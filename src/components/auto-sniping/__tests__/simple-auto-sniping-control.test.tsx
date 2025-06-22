@@ -1,14 +1,14 @@
 /**
  * Tests for Simple Auto-Sniping Control Component
- * 
+ *
  * Tests the user-friendly auto-sniping control interface that replaces
  * the complex technical dashboard.
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SimpleAutoSnipingControl } from "../simple-auto-sniping-control";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { StatusProvider } from "../../../contexts/status-context";
+import { SimpleAutoSnipingControl } from "../simple-auto-sniping-control";
 
 // Mock the hooks
 jest.mock("../../../hooks/use-auto-sniping-execution", () => ({
@@ -55,9 +55,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusProvider>
-        {children}
-      </StatusProvider>
+      <StatusProvider>{children}</StatusProvider>
     </QueryClientProvider>
   );
 };
@@ -75,7 +73,9 @@ describe("SimpleAutoSnipingControl", () => {
     );
 
     expect(screen.getByText("Auto-Sniping")).toBeInTheDocument();
-    expect(screen.getByText("Automatically trade new MEXC listings when patterns are detected")).toBeInTheDocument();
+    expect(
+      screen.getByText("Automatically trade new MEXC listings when patterns are detected")
+    ).toBeInTheDocument();
   });
 
   it("shows ready status when system is healthy", () => {
@@ -202,7 +202,7 @@ describe("SimpleAutoSnipingControl", () => {
 
     // Toggle off
     fireEvent.click(toggle);
-    
+
     await waitFor(() => {
       expect(mockUpdateConfig).toHaveBeenCalledWith({ enabled: false });
     });

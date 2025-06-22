@@ -12,7 +12,7 @@ import { Switch } from "../ui/switch";
 
 /**
  * Simple Auto-Sniping Control Component
- * 
+ *
  * This replaces the complex technical dashboard with a user-friendly control panel.
  * Features:
  * - Clear on/off status with visual indicators
@@ -27,13 +27,13 @@ interface SimpleAutoSnipingControlProps {
   showAdvancedSettings?: boolean;
 }
 
-export function SimpleAutoSnipingControl({ 
+export function SimpleAutoSnipingControl({
   className = "",
-  showAdvancedSettings = false 
+  showAdvancedSettings = false,
 }: SimpleAutoSnipingControlProps) {
   const { status, getOverallStatus } = useStatus();
   const overallStatus = getOverallStatus();
-  
+
   const {
     config,
     isExecutionActive,
@@ -50,7 +50,7 @@ export function SimpleAutoSnipingControl({
     stopExecution,
     updateConfig,
     refreshData,
-    clearError
+    clearError,
   } = useAutoSnipingExecution({
     autoRefresh: true,
     refreshInterval: 30000,
@@ -86,25 +86,28 @@ export function SimpleAutoSnipingControl({
     return () => clearTimeout(timer);
   }, [autoSnipingEnabled, isExecutionActive, isLoading, overallStatus, startExecution]);
 
-  const handleToggleAutoSniping = useCallback(async (enabled: boolean) => {
-    setAutoSnipingEnabled(enabled);
-    
-    // Update config first
-    if (config) {
-      await updateConfig({ enabled });
-    }
-    
-    // Then control execution
-    if (enabled && !isExecutionActive) {
-      await startExecution();
-    } else if (!enabled && isExecutionActive) {
-      await stopExecution();
-    }
-  }, [config, isExecutionActive, updateConfig, startExecution, stopExecution]);
+  const handleToggleAutoSniping = useCallback(
+    async (enabled: boolean) => {
+      setAutoSnipingEnabled(enabled);
+
+      // Update config first
+      if (config) {
+        await updateConfig({ enabled });
+      }
+
+      // Then control execution
+      if (enabled && !isExecutionActive) {
+        await startExecution();
+      } else if (!enabled && isExecutionActive) {
+        await stopExecution();
+      }
+    },
+    [config, isExecutionActive, updateConfig, startExecution, stopExecution]
+  );
 
   const getConnectionStatus = () => {
     const { network, credentials, trading } = status;
-    
+
     if (!network.connected) {
       return {
         status: "error",
@@ -112,10 +115,10 @@ export function SimpleAutoSnipingControl({
         description: "Check your internet connection",
         color: "text-red-600",
         bgColor: "bg-red-50 border-red-200",
-        icon: AlertTriangle
+        icon: AlertTriangle,
       };
     }
-    
+
     if (!credentials.hasCredentials || !credentials.isValid) {
       return {
         status: "warning",
@@ -123,10 +126,10 @@ export function SimpleAutoSnipingControl({
         description: "Configure your MEXC API credentials",
         color: "text-yellow-600",
         bgColor: "bg-yellow-50 border-yellow-200",
-        icon: Settings
+        icon: Settings,
       };
     }
-    
+
     if (!trading.canTrade) {
       return {
         status: "warning",
@@ -134,17 +137,17 @@ export function SimpleAutoSnipingControl({
         description: "Check your MEXC account permissions",
         color: "text-yellow-600",
         bgColor: "bg-yellow-50 border-yellow-200",
-        icon: AlertTriangle
+        icon: AlertTriangle,
       };
     }
-    
+
     return {
       status: "ready",
       label: "Ready to Trade",
       description: "All systems operational",
       color: "text-green-600",
       bgColor: "bg-green-50 border-green-200",
-      icon: CheckCircle
+      icon: CheckCircle,
     };
   };
 
@@ -223,8 +226,11 @@ export function SimpleAutoSnipingControl({
           {isReadyToTrade && autoSnipingEnabled && (
             <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 rounded-lg">
               <div className="text-center">
-                <div className={`text-lg font-bold ${pnlValue >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {pnlValue >= 0 ? "+" : ""}{pnlValue.toFixed(2)} USDT
+                <div
+                  className={`text-lg font-bold ${pnlValue >= 0 ? "text-green-600" : "text-red-600"}`}
+                >
+                  {pnlValue >= 0 ? "+" : ""}
+                  {pnlValue.toFixed(2)} USDT
                 </div>
                 <div className="text-xs text-muted-foreground">Total P&L</div>
               </div>
@@ -243,7 +249,7 @@ export function SimpleAutoSnipingControl({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Status:</span>
-              <Badge 
+              <Badge
                 variant={autoSnipingEnabled && isExecutionActive ? "default" : "secondary"}
                 className="flex items-center gap-1"
               >
@@ -265,9 +271,7 @@ export function SimpleAutoSnipingControl({
                 )}
               </Badge>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Today: {dailyTradeCount} trades
-            </div>
+            <div className="text-xs text-muted-foreground">Today: {dailyTradeCount} trades</div>
           </div>
 
           {/* Quick Help */}
@@ -277,7 +281,7 @@ export function SimpleAutoSnipingControl({
                 {connectionStatus.status === "warning" ? "Setup Required" : "Connection Issue"}
               </div>
               <div className="text-sm text-blue-600 mt-1">
-                {connectionStatus.status === "warning" 
+                {connectionStatus.status === "warning"
                   ? "Go to Settings → API Configuration to set up your MEXC credentials"
                   : "Check your internet connection and try refreshing"}
               </div>

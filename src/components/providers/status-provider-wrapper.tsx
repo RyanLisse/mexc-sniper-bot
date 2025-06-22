@@ -31,7 +31,7 @@ export function StatusProviderWrapper({
 
   // Show a minimal loading state during hydration
   if (!isHydrated) {
-    return <div style={{ visibility: 'hidden' }}>{children}</div>;
+    return <div style={{ visibility: "hidden" }}>{children}</div>;
   }
 
   return (

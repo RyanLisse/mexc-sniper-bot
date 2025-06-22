@@ -6,9 +6,8 @@
  * for credential validation and connection management.
  */
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
-import { toSafeError } from "../lib/error-type-utils";
 
 // ============================================================================
 // Types and Interfaces
@@ -21,12 +20,12 @@ export interface EnhancedConnectivityData {
   credentialsValid: boolean;
   canAuthenticate: boolean;
   isTestCredentials: boolean;
-  
+
   // Credential Source Info
   credentialSource: "database" | "environment" | "none";
   hasUserCredentials: boolean;
   hasEnvironmentCredentials: boolean;
-  
+
   // Connection Health
   connectionHealth: "excellent" | "good" | "fair" | "poor";
   connectionQuality: {
@@ -35,7 +34,7 @@ export interface EnhancedConnectivityData {
     reasons: string[];
     recommendations: string[];
   };
-  
+
   // Performance Metrics
   metrics: {
     totalChecks: number;
@@ -45,7 +44,7 @@ export interface EnhancedConnectivityData {
     uptime: number;
     responseTime?: number;
   };
-  
+
   // Circuit Breaker Status
   circuitBreaker: {
     isOpen: boolean;
@@ -53,7 +52,7 @@ export interface EnhancedConnectivityData {
     nextAttemptTime?: string;
     reason?: string;
   };
-  
+
   // Alerts and Issues
   alerts: {
     count: number;
@@ -66,18 +65,24 @@ export interface EnhancedConnectivityData {
       timestamp: string;
     }>;
   };
-  
+
   // Recommendations
   recommendedActions: string[];
-  
+
   // Status Details
   error?: string;
   message: string;
-  status: "fully_connected" | "credentials_invalid" | "test_credentials" | "no_credentials" | "network_error" | "error";
+  status:
+    | "fully_connected"
+    | "credentials_invalid"
+    | "test_credentials"
+    | "no_credentials"
+    | "network_error"
+    | "error";
   timestamp: string;
   lastChecked: string;
   nextCheckIn: number;
-  
+
   // Trends and Analysis
   trends: {
     period: string;
@@ -86,7 +91,7 @@ export interface EnhancedConnectivityData {
     statusChanges: number;
     mostCommonIssue?: string;
   };
-  
+
   // System Status
   monitoring: {
     isActive: boolean;
@@ -191,11 +196,11 @@ export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ forceRefresh: true }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
       await refetch();
       return result.data;
@@ -213,11 +218,11 @@ export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resetCircuitBreaker: true }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       await refetch();
       return response.json();
     },
@@ -229,16 +234,16 @@ export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
       const response = await fetch("/api/mexc/enhanced-connectivity", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           testCredentials: true,
-          ...(credentials && { credentials })
+          ...(credentials && { credentials }),
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       return response.json();
     },
   });
@@ -247,11 +252,11 @@ export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
   useEffect(() => {
     if (connectivity && onStatusChange) {
       const previousStatus = previousStatusRef.current;
-      
+
       if (previousStatus && hasStatusChanged(previousStatus, connectivity)) {
         onStatusChange(connectivity);
       }
-      
+
       previousStatusRef.current = connectivity;
     }
   }, [connectivity, onStatusChange]);
@@ -295,55 +300,63 @@ export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
       }
     }, [resetCircuitBreakerMutation]),
 
-    testCredentials: useCallback(async (credentials?: { apiKey: string; secretKey: string }) => {
-      try {
-        return await testCredentialsMutation.mutateAsync(credentials);
-      } catch (error) {
-        console.error("Failed to test credentials:", error);
-        throw error;
-      }
-    }, [testCredentialsMutation]),
+    testCredentials: useCallback(
+      async (credentials?: { apiKey: string; secretKey: string }) => {
+        try {
+          return await testCredentialsMutation.mutateAsync(credentials);
+        } catch (error) {
+          console.error("Failed to test credentials:", error);
+          throw error;
+        }
+      },
+      [testCredentialsMutation]
+    ),
   };
 
   // Analysis
-  const analysis: ConnectivityAnalysis | null = connectivity ? analyzeConnectivity(connectivity) : null;
+  const analysis: ConnectivityAnalysis | null = connectivity
+    ? analyzeConnectivity(connectivity)
+    : null;
 
   // Status helpers
   const isRefreshing = refreshMutation.isPending || forceRefreshMutation.isPending;
-  const isHealthy = connectivity ? connectivity.connectionHealth === "excellent" || connectivity.connectionHealth === "good" : false;
+  const isHealthy = connectivity
+    ? connectivity.connectionHealth === "excellent" || connectivity.connectionHealth === "good"
+    : false;
   const hasCriticalIssues = connectivity ? analysis?.criticalIssues.length > 0 : true;
-  const needsImmedateAttention = connectivity ? 
-    connectivity.circuitBreaker.isOpen || 
-    connectivity.alerts.severity === "critical" ||
-    connectivity.metrics.consecutiveFailures > 5 : true;
+  const needsImmedateAttention = connectivity
+    ? connectivity.circuitBreaker.isOpen ||
+      connectivity.alerts.severity === "critical" ||
+      connectivity.metrics.consecutiveFailures > 5
+    : true;
 
   return {
     // Data
     connectivity,
     analysis,
-    
+
     // Loading states
     isLoading,
     isFetching,
     isRefreshing,
     isError,
     error,
-    
+
     // Status helpers
     isHealthy,
     hasCriticalIssues,
     needsImmedateAttention,
-    
+
     // Actions
     ...actions,
-    
+
     // Mutation states
     isResettingCircuitBreaker: resetCircuitBreakerMutation.isPending,
     isTestingCredentials: testCredentialsMutation.isPending,
-    
+
     // Metadata
     lastUpdated: dataUpdatedAt,
-    nextRefresh: connectivity?.lastChecked 
+    nextRefresh: connectivity?.lastChecked
       ? new Date(new Date(connectivity.lastChecked).getTime() + refreshInterval)
       : null,
   };
@@ -402,7 +415,7 @@ function analyzeConnectivity(connectivity: EnhancedConnectivityData): Connectivi
 
   // Determine overall health
   let overallHealth: ConnectivityAnalysis["overallHealth"] = "excellent";
-  
+
   if (criticalIssues.length > 0) {
     overallHealth = "critical";
   } else if (warnings.length > 3) {
@@ -414,11 +427,12 @@ function analyzeConnectivity(connectivity: EnhancedConnectivityData): Connectivi
   }
 
   // Determine if can trade
-  const canTrade = connectivity.hasCredentials && 
-                  connectivity.credentialsValid && 
-                  !connectivity.isTestCredentials &&
-                  !connectivity.circuitBreaker.isOpen &&
-                  connectivity.connectionHealth !== "poor";
+  const canTrade =
+    connectivity.hasCredentials &&
+    connectivity.credentialsValid &&
+    !connectivity.isTestCredentials &&
+    !connectivity.circuitBreaker.isOpen &&
+    connectivity.connectionHealth !== "poor";
 
   // Determine next action
   let nextAction: string | undefined;
@@ -463,7 +477,7 @@ function hasStatusChanged(
  */
 export function useMexcConnectivityEnhanced() {
   const { connectivity, isLoading, error, refresh } = useEnhancedConnectivity();
-  
+
   return {
     data: connectivity?.connected || false,
     isConnected: connectivity?.connected || false,

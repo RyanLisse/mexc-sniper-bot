@@ -1432,7 +1432,7 @@ export class PatternDetectionEngine {
     try {
       // Check if data is SymbolEntry (has sts, st, tt) or CalendarEntry
       const isSymbolEntry = "sts" in data && "st" in data && "tt" in data;
-      const symbolName = isSymbolEntry 
+      const symbolName = isSymbolEntry
         ? (data as any).cd || (data as any).symbol || "unknown"
         : (data as any).symbol || "unknown";
 

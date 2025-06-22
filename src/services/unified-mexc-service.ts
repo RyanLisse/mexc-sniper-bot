@@ -1343,14 +1343,14 @@ export class UnifiedMexcService {
         cacheTTL: 0, // Don't cache connectivity tests
         timeout: 5000, // Short timeout for connectivity test
       });
-      
+
       if (response.success) {
         return {
           success: true,
-          data: { 
-            connected: true, 
+          data: {
+            connected: true,
             timestamp: new Date().toISOString(),
-            serverTime: response.data?.serverTime
+            serverTime: response.data?.serverTime,
           },
           timestamp: new Date().toISOString(),
         };
@@ -1368,13 +1368,13 @@ export class UnifiedMexcService {
           cacheTTL: 0,
           timeout: 5000,
         });
-        
+
         return {
           success: pingResponse.success,
-          data: { 
-            connected: pingResponse.success, 
+          data: {
+            connected: pingResponse.success,
             timestamp: new Date().toISOString(),
-            method: "ping_fallback"
+            method: "ping_fallback",
           },
           timestamp: new Date().toISOString(),
           error: pingResponse.success ? undefined : pingResponse.error,
@@ -1511,7 +1511,7 @@ export class UnifiedMexcService {
           // Handle MEXC API error responses
           return {
             success: false,
-            error: `Failed to fetch activity data: ${result.data.msg || 'API error'}`,
+            error: `Failed to fetch activity data: ${result.data.msg || "API error"}`,
             timestamp: new Date().toISOString(),
             executionTimeMs: Date.now() - startTime,
           };
@@ -1522,7 +1522,7 @@ export class UnifiedMexcService {
       if (!result.success) {
         return {
           success: false,
-          error: `Failed to fetch activity data: ${result.error || 'Unknown error'}`,
+          error: `Failed to fetch activity data: ${result.error || "Unknown error"}`,
           timestamp: new Date().toISOString(),
           executionTimeMs: Date.now() - startTime,
         };

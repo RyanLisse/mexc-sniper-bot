@@ -283,7 +283,7 @@ export class DatabasePerformanceAnalyzer {
     // Get list of tables from schema - only include tables that exist
     const tables = [
       "snipe_targets",
-      "execution_history", 
+      "execution_history",
       "transactions",
       "pattern_embeddings",
       "user_preferences",

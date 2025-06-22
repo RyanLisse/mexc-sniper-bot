@@ -82,10 +82,10 @@ export class EnhancedCredentialValidator {
   // Known test/placeholder credential patterns
   // FIXED: Removed hardcoded production credential patterns that were blocking legitimate trading
   private readonly TEST_CREDENTIAL_PATTERNS = [
-    /^(test|demo|example|placeholder|sample)/i,      // Obvious test keywords
-    /^(your_api_key|your_secret|api_key_here|secret_here)/i,  // Placeholder text
-    /^(12345|00000|11111|aaaaa|bbbbb)/,              // Sequential/repeated patterns
-    /^(undefined|null|empty|none)$/i,                // Null-like values
+    /^(test|demo|example|placeholder|sample)/i, // Obvious test keywords
+    /^(your_api_key|your_secret|api_key_here|secret_here)/i, // Placeholder text
+    /^(12345|00000|11111|aaaaa|bbbbb)/, // Sequential/repeated patterns
+    /^(undefined|null|empty|none)$/i, // Null-like values
   ];
 
   constructor(config: Partial<EnhancedCredentialValidatorConfig> = {}) {
@@ -138,7 +138,8 @@ export class EnhancedCredentialValidator {
           isTestCredentials: false,
           validFormat: false,
           canAuthenticate: false,
-          error: "No API credentials configured. Please set MEXC_API_KEY and MEXC_SECRET_KEY environment variables or configure credentials in the database.",
+          error:
+            "No API credentials configured. Please set MEXC_API_KEY and MEXC_SECRET_KEY environment variables or configure credentials in the database.",
           timestamp,
           details: {
             apiKeyValid: false,
@@ -152,11 +153,14 @@ export class EnhancedCredentialValidator {
       const formatValidation = this.validateFormat();
 
       // Step 3: Check for test credentials
-      const isTestCredentials = this.detectTestCredentials(credentials.apiKey, credentials.secretKey);
+      const isTestCredentials = this.detectTestCredentials(
+        credentials.apiKey,
+        credentials.secretKey
+      );
 
       // FIXED: Allow test credentials for demo mode - auto-sniping should ALWAYS be enabled as per user requirements
       if (isTestCredentials) {
-        console.warn('🔍 Test credentials detected - auto-sniping will run in demo mode');
+        console.warn("🔍 Test credentials detected - auto-sniping will run in demo mode");
         return {
           hasCredentials: true,
           isValid: true, // Allow operation in demo mode
@@ -164,12 +168,17 @@ export class EnhancedCredentialValidator {
           isTestCredentials: true,
           validFormat: formatValidation.validFormat,
           canAuthenticate: true, // Enable authentication for demo mode
-          error: "Test credentials detected - running in demo mode. Configure real MEXC API credentials for live trading.",
+          error:
+            "Test credentials detected - running in demo mode. Configure real MEXC API credentials for live trading.",
           timestamp,
           details: {
             apiKeyValid: formatValidation.apiKeyValid,
             secretKeyValid: formatValidation.secretKeyValid,
-            formatValidation: ["Test credentials detected", "Demo mode enabled", "Auto-sniping remains active"],
+            formatValidation: [
+              "Test credentials detected",
+              "Demo mode enabled",
+              "Auto-sniping remains active",
+            ],
           },
         };
       }
@@ -190,7 +199,9 @@ export class EnhancedCredentialValidator {
         isTestCredentials: false,
         validFormat: formatValidation.validFormat,
         canAuthenticate: authResult?.canAuthenticate || false,
-        error: authResult?.error || (!formatValidation.validFormat ? "Invalid credential format" : undefined),
+        error:
+          authResult?.error ||
+          (!formatValidation.validFormat ? "Invalid credential format" : undefined),
         responseTime,
         timestamp,
         details: {
@@ -327,7 +338,7 @@ export class EnhancedCredentialValidator {
 
       if (result.success) {
         this.recordSuccess();
-        
+
         // Extract account details
         const authenticationDetails = {
           accountAccessible: true,
@@ -407,7 +418,7 @@ export class EnhancedCredentialValidator {
     if (!apiKey || apiKey.length < 16) return false;
     if (!apiKey.startsWith("mx")) return false;
     if (!/^[a-zA-Z0-9]+$/.test(apiKey)) return false;
-    
+
     // Don't validate against test patterns here - that's handled separately
     // This validation is purely for format
     return true;
@@ -417,7 +428,7 @@ export class EnhancedCredentialValidator {
     // MEXC secret keys are typically 32+ character hex/alphanumeric strings
     if (!secretKey || secretKey.length < 32) return false;
     if (!/^[a-fA-F0-9]+$/.test(secretKey)) return false;
-    
+
     // Don't validate against test patterns here - that's handled separately
     // This validation is purely for format
     return true;
@@ -429,7 +440,7 @@ export class EnhancedCredentialValidator {
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     const baseUrl = process.env.MEXC_BASE_URL || "https://api.mexc.com";
     const timestamp = Date.now();
-    
+
     // Create signature
     const queryString = `timestamp=${timestamp}`;
     const signature = crypto
@@ -503,10 +514,7 @@ export class EnhancedCredentialValidator {
   }
 
   private shouldAttemptReset(): boolean {
-    return (
-      this.circuitBreaker.nextAttemptTime &&
-      new Date() >= this.circuitBreaker.nextAttemptTime
-    );
+    return this.circuitBreaker.nextAttemptTime && new Date() >= this.circuitBreaker.nextAttemptTime;
   }
 
   private resetCircuitBreaker(): void {

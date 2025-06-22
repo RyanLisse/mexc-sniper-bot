@@ -169,13 +169,14 @@ export function ConfigStatusPanel({
     // Map display component names to API component names
     const componentMapping: Record<string, string> = {
       "mexc api credentials": "mexc_credentials",
-      "pattern detection engine": "pattern_detection", 
+      "pattern detection engine": "pattern_detection",
       "safety & risk management": "safety_systems",
-      "trading configuration": "trading_config"
+      "trading configuration": "trading_config",
     };
-    
-    const componentKey = componentMapping[component.toLowerCase()] || 
-                        component.toLowerCase().replace(/[^a-z0-9]/g, "_");
+
+    const componentKey =
+      componentMapping[component.toLowerCase()] ||
+      component.toLowerCase().replace(/[^a-z0-9]/g, "_");
     await validateComponent(componentKey);
   };
 

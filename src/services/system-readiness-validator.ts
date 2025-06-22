@@ -1,18 +1,15 @@
 /**
  * System Readiness Validator
- * 
+ *
  * Comprehensive validation framework for system readiness before auto-sniping activation.
  * Validates all critical components and provides clear, actionable feedback.
  */
 
-import { environmentValidation } from './enhanced-environment-validation';
-import { getRecommendedMexcService } from './mexc-unified-exports';
-import { getUserCredentials } from './user-credentials-service';
-import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
+import { environmentValidation } from "./enhanced-environment-validation";
 
 export interface SystemReadinessCheck {
   component: string;
-  status: 'pass' | 'warning' | 'fail';
+  status: "pass" | "warning" | "fail";
   message: string;
   details?: string;
   required: boolean;
@@ -21,7 +18,7 @@ export interface SystemReadinessCheck {
 }
 
 export interface SystemReadinessResult {
-  overall: 'ready' | 'issues' | 'critical_failure';
+  overall: "ready" | "issues" | "critical_failure";
   readyForAutoSniping: boolean;
   score: number;
   timestamp: string;
@@ -58,7 +55,7 @@ export class SystemReadinessValidator {
     const timestamp = new Date().toISOString();
     const checks: SystemReadinessCheck[] = [];
 
-    console.log('[SystemValidator] Starting comprehensive system validation...');
+    console.log("[SystemValidator] Starting comprehensive system validation...");
 
     // 1. Environment Configuration Validation
     const envChecks = await this.validateEnvironmentConfiguration();
@@ -87,28 +84,26 @@ export class SystemReadinessValidator {
     // Calculate summary
     const summary = {
       total: checks.length,
-      passed: checks.filter(c => c.status === 'pass').length,
-      warnings: checks.filter(c => c.status === 'warning').length,
-      failures: checks.filter(c => c.status === 'fail').length,
-      requiredPassed: checks.filter(c => c.required && c.status === 'pass').length,
-      requiredTotal: checks.filter(c => c.required).length,
+      passed: checks.filter((c) => c.status === "pass").length,
+      warnings: checks.filter((c) => c.status === "warning").length,
+      failures: checks.filter((c) => c.status === "fail").length,
+      requiredPassed: checks.filter((c) => c.required && c.status === "pass").length,
+      requiredTotal: checks.filter((c) => c.required).length,
     };
 
     // Determine overall status
-    const criticalFailures = checks.filter(c => c.required && c.status === 'fail');
-    const hasWarnings = checks.filter(c => c.status === 'warning').length > 0;
+    const criticalFailures = checks.filter((c) => c.required && c.status === "fail");
+    const hasWarnings = checks.filter((c) => c.status === "warning").length > 0;
 
-    let overall: 'ready' | 'issues' | 'critical_failure' = 'ready';
+    let overall: "ready" | "issues" | "critical_failure" = "ready";
     if (criticalFailures.length > 0) {
-      overall = 'critical_failure';
+      overall = "critical_failure";
     } else if (hasWarnings) {
-      overall = 'issues';
+      overall = "issues";
     }
 
     // Calculate readiness score
-    const score = Math.round(
-      (summary.passed / summary.total) * 100
-    );
+    const score = Math.round((summary.passed / summary.total) * 100);
 
     // FIXED: Adjusted auto-sniping readiness criteria to be less restrictive
     // User wants auto-sniping ALWAYS enabled, so focus on critical failures only
@@ -118,7 +113,9 @@ export class SystemReadinessValidator {
     const recommendations = this.generateRecommendations(checks);
     const nextSteps = this.generateNextSteps(checks, readyForAutoSniping);
 
-    console.log(`[SystemValidator] Validation complete. Overall: ${overall}, Score: ${score}%, Auto-sniping ready: ${readyForAutoSniping}`);
+    console.log(
+      `[SystemValidator] Validation complete. Overall: ${overall}, Score: ${score}%, Auto-sniping ready: ${readyForAutoSniping}`
+    );
 
     return {
       overall,
@@ -139,32 +136,36 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log('[SystemValidator] Validating environment configuration...');
-      
+      console.log("[SystemValidator] Validating environment configuration...");
+
       const validation = environmentValidation.validateEnvironment();
       const healthSummary = environmentValidation.getHealthSummary();
 
       // Overall environment status
       checks.push({
-        component: 'Environment Configuration',
-        status: healthSummary.status === 'healthy' ? 'pass' : 
-                healthSummary.status === 'warning' ? 'warning' : 'fail',
+        component: "Environment Configuration",
+        status:
+          healthSummary.status === "healthy"
+            ? "pass"
+            : healthSummary.status === "warning"
+              ? "warning"
+              : "fail",
         message: `Environment health score: ${healthSummary.score}/100`,
         details: `${validation.summary.configured}/${validation.summary.total} variables configured, ${validation.summary.missing} missing`,
         required: true,
         fixable: true,
-        fix: 'Review missing environment variables and configure as needed',
+        fix: "Review missing environment variables and configure as needed",
       });
 
       // Critical environment variables
       // FIXED: Removed OPENAI_API_KEY from critical vars since auto-sniping should work without AI
-      const criticalVars = ['ENCRYPTION_MASTER_KEY', 'KINDE_CLIENT_ID'];
+      const criticalVars = ["ENCRYPTION_MASTER_KEY", "KINDE_CLIENT_ID"];
       for (const varName of criticalVars) {
-        const varResult = validation.results.find(r => r.key === varName);
+        const varResult = validation.results.find((r) => r.key === varName);
         checks.push({
           component: `Environment Variable: ${varName}`,
-          status: varResult?.status === 'configured' ? 'pass' : 'fail',
-          message: varResult?.status === 'configured' ? 'Configured' : 'Missing or invalid',
+          status: varResult?.status === "configured" ? "pass" : "fail",
+          message: varResult?.status === "configured" ? "Configured" : "Missing or invalid",
           required: true,
           fixable: true,
           fix: `Set ${varName} in .env.local file`,
@@ -174,24 +175,23 @@ export class SystemReadinessValidator {
       // FIXED: Auto-sniping is ALWAYS enabled as per user requirements
       // Removed dependency on AUTO_SNIPING_ENABLED environment variable
       checks.push({
-        component: 'Auto-Sniping Configuration',
-        status: 'pass',
-        message: 'Auto-sniping permanently enabled',
-        details: 'Auto-sniping is always enabled by system design',
+        component: "Auto-Sniping Configuration",
+        status: "pass",
+        message: "Auto-sniping permanently enabled",
+        details: "Auto-sniping is always enabled by system design",
         required: true,
         fixable: false,
-        fix: 'Auto-sniping is permanently enabled - no action needed',
+        fix: "Auto-sniping is permanently enabled - no action needed",
       });
-
     } catch (error) {
       checks.push({
-        component: 'Environment Configuration',
-        status: 'fail',
-        message: 'Environment validation failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        component: "Environment Configuration",
+        status: "fail",
+        message: "Environment validation failed",
+        details: error instanceof Error ? error.message : "Unknown error",
         required: true,
         fixable: true,
-        fix: 'Check environment configuration and fix any issues',
+        fix: "Check environment configuration and fix any issues",
       });
     }
 
@@ -205,30 +205,29 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log('[SystemValidator] Validating database connection...');
-      
-      const response = await fetch('/api/health/db');
+      console.log("[SystemValidator] Validating database connection...");
+
+      const response = await fetch("/api/health/db");
       const data = await response.json();
 
       checks.push({
-        component: 'Database Connection',
-        status: response.ok && data.success ? 'pass' : 'fail',
-        message: response.ok && data.success ? 'Database connected' : 'Database connection failed',
-        details: data.message || 'No details available',
+        component: "Database Connection",
+        status: response.ok && data.success ? "pass" : "fail",
+        message: response.ok && data.success ? "Database connected" : "Database connection failed",
+        details: data.message || "No details available",
         required: true,
         fixable: true,
-        fix: 'Check DATABASE_URL and database server status',
+        fix: "Check DATABASE_URL and database server status",
       });
-
     } catch (error) {
       checks.push({
-        component: 'Database Connection',
-        status: 'fail',
-        message: 'Unable to test database connection',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        component: "Database Connection",
+        status: "fail",
+        message: "Unable to test database connection",
+        details: error instanceof Error ? error.message : "Unknown error",
         required: true,
         fixable: true,
-        fix: 'Ensure database service is running and accessible',
+        fix: "Ensure database service is running and accessible",
       });
     }
 
@@ -242,43 +241,45 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log('[SystemValidator] Validating MEXC API connectivity...');
-      
-      const response = await fetch('/api/mexc/connectivity');
+      console.log("[SystemValidator] Validating MEXC API connectivity...");
+
+      const response = await fetch("/api/mexc/connectivity");
       const data = await response.json();
 
       // Network connectivity
       checks.push({
-        component: 'MEXC Network Connectivity',
-        status: data.connected ? 'pass' : 'fail',
-        message: data.connected ? 'MEXC API reachable' : 'MEXC API unreachable',
-        details: data.error || `Connection health: ${data.details?.connectionHealth || 'unknown'}`,
+        component: "MEXC Network Connectivity",
+        status: data.connected ? "pass" : "fail",
+        message: data.connected ? "MEXC API reachable" : "MEXC API unreachable",
+        details: data.error || `Connection health: ${data.details?.connectionHealth || "unknown"}`,
         required: true,
         fixable: true,
-        fix: 'Check internet connection and MEXC API status',
+        fix: "Check internet connection and MEXC API status",
       });
 
       // API credentials
       checks.push({
-        component: 'MEXC API Credentials',
-        status: data.hasCredentials ? (data.credentialsValid ? 'pass' : 'fail') : 'warning',
-        message: !data.hasCredentials ? 'No credentials configured' : 
-                data.credentialsValid ? 'Valid credentials' : 'Invalid credentials',
+        component: "MEXC API Credentials",
+        status: data.hasCredentials ? (data.credentialsValid ? "pass" : "fail") : "warning",
+        message: !data.hasCredentials
+          ? "No credentials configured"
+          : data.credentialsValid
+            ? "Valid credentials"
+            : "Invalid credentials",
         details: `Source: ${data.credentialSource}, Valid: ${data.credentialsValid}`,
         required: false, // Not required for demo mode
         fixable: true,
-        fix: 'Configure MEXC API credentials in settings or environment variables',
+        fix: "Configure MEXC API credentials in settings or environment variables",
       });
-
     } catch (error) {
       checks.push({
-        component: 'MEXC API Connectivity',
-        status: 'fail',
-        message: 'Unable to test MEXC connectivity',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        component: "MEXC API Connectivity",
+        status: "fail",
+        message: "Unable to test MEXC connectivity",
+        details: error instanceof Error ? error.message : "Unknown error",
         required: true,
         fixable: true,
-        fix: 'Check network connection and MEXC API configuration',
+        fix: "Check network connection and MEXC API configuration",
       });
     }
 
@@ -292,30 +293,29 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log('[SystemValidator] Validating authentication system...');
-      
-      const response = await fetch('/api/health/auth');
+      console.log("[SystemValidator] Validating authentication system...");
+
+      const response = await fetch("/api/health/auth");
       const data = await response.json();
 
       checks.push({
-        component: 'Authentication System',
-        status: response.ok && data.success ? 'pass' : 'fail',
-        message: response.ok && data.success ? 'Authentication working' : 'Authentication issues',
-        details: data.message || 'No details available',
+        component: "Authentication System",
+        status: response.ok && data.success ? "pass" : "fail",
+        message: response.ok && data.success ? "Authentication working" : "Authentication issues",
+        details: data.message || "No details available",
         required: true,
         fixable: true,
-        fix: 'Check Kinde authentication configuration',
+        fix: "Check Kinde authentication configuration",
       });
-
     } catch (error) {
       checks.push({
-        component: 'Authentication System',
-        status: 'fail',
-        message: 'Unable to test authentication',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        component: "Authentication System",
+        status: "fail",
+        message: "Unable to test authentication",
+        details: error instanceof Error ? error.message : "Unknown error",
         required: true,
         fixable: true,
-        fix: 'Verify authentication service is running',
+        fix: "Verify authentication service is running",
       });
     }
 
@@ -329,30 +329,29 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log('[SystemValidator] Validating critical services...');
-      
-      const response = await fetch('/api/health/system');
+      console.log("[SystemValidator] Validating critical services...");
+
+      const response = await fetch("/api/health/system");
       const data = await response.json();
 
       checks.push({
-        component: 'System Health',
-        status: response.ok && data.success ? 'pass' : 'fail',
-        message: response.ok && data.success ? 'All systems operational' : 'System health issues',
-        details: data.message || 'No details available',
+        component: "System Health",
+        status: response.ok && data.success ? "pass" : "fail",
+        message: response.ok && data.success ? "All systems operational" : "System health issues",
+        details: data.message || "No details available",
         required: true,
         fixable: true,
-        fix: 'Check system logs and restart services if needed',
+        fix: "Check system logs and restart services if needed",
       });
-
     } catch (error) {
       checks.push({
-        component: 'System Health',
-        status: 'fail',
-        message: 'Unable to check system health',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        component: "System Health",
+        status: "fail",
+        message: "Unable to check system health",
+        details: error instanceof Error ? error.message : "Unknown error",
         required: true,
         fixable: true,
-        fix: 'Ensure all system services are running',
+        fix: "Ensure all system services are running",
       });
     }
 
@@ -366,43 +365,43 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log('[SystemValidator] Validating auto-sniping configuration...');
+      console.log("[SystemValidator] Validating auto-sniping configuration...");
 
       // Check if auto-sniping is enabled
-      const autoSnipingEnabled = process.env.AUTO_SNIPING_ENABLED === 'true';
-      
+      const autoSnipingEnabled = process.env.AUTO_SNIPING_ENABLED === "true";
+
       checks.push({
-        component: 'Auto-Sniping Enable Flag',
-        status: autoSnipingEnabled ? 'pass' : 'fail',
-        message: autoSnipingEnabled ? 'Auto-sniping enabled' : 'Auto-sniping disabled',
+        component: "Auto-Sniping Enable Flag",
+        status: autoSnipingEnabled ? "pass" : "fail",
+        message: autoSnipingEnabled ? "Auto-sniping enabled" : "Auto-sniping disabled",
         required: true,
         fixable: true,
         fix: 'Set AUTO_SNIPING_ENABLED="true" in environment variables',
       });
 
       // Check auto-sniping configuration endpoint
-      const configResponse = await fetch('/api/auto-sniping/config-validation');
+      const configResponse = await fetch("/api/auto-sniping/config-validation");
       const configData = await configResponse.json();
 
       checks.push({
-        component: 'Auto-Sniping Configuration',
-        status: configResponse.ok && configData.success ? 'pass' : 'warning',
-        message: configResponse.ok && configData.success ? 'Configuration valid' : 'Configuration issues',
-        details: configData.message || 'No configuration details available',
+        component: "Auto-Sniping Configuration",
+        status: configResponse.ok && configData.success ? "pass" : "warning",
+        message:
+          configResponse.ok && configData.success ? "Configuration valid" : "Configuration issues",
+        details: configData.message || "No configuration details available",
         required: false,
         fixable: true,
-        fix: 'Review auto-sniping configuration settings',
+        fix: "Review auto-sniping configuration settings",
       });
-
     } catch (error) {
       checks.push({
-        component: 'Auto-Sniping Configuration',
-        status: 'warning',
-        message: 'Unable to validate auto-sniping configuration',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        component: "Auto-Sniping Configuration",
+        status: "warning",
+        message: "Unable to validate auto-sniping configuration",
+        details: error instanceof Error ? error.message : "Unknown error",
         required: false,
         fixable: true,
-        fix: 'Check auto-sniping service configuration',
+        fix: "Check auto-sniping service configuration",
       });
     }
 
@@ -414,13 +413,13 @@ export class SystemReadinessValidator {
    */
   private generateRecommendations(checks: SystemReadinessCheck[]): string[] {
     const recommendations: string[] = [];
-    
-    const failedRequired = checks.filter(c => c.required && c.status === 'fail');
-    const warnings = checks.filter(c => c.status === 'warning');
+
+    const failedRequired = checks.filter((c) => c.required && c.status === "fail");
+    const warnings = checks.filter((c) => c.status === "warning");
 
     if (failedRequired.length > 0) {
-      recommendations.push('Address critical system failures before enabling auto-sniping');
-      failedRequired.forEach(check => {
+      recommendations.push("Address critical system failures before enabling auto-sniping");
+      failedRequired.forEach((check) => {
         if (check.fix) {
           recommendations.push(`${check.component}: ${check.fix}`);
         }
@@ -428,17 +427,17 @@ export class SystemReadinessValidator {
     }
 
     if (warnings.length > 0) {
-      recommendations.push('Consider addressing warnings for optimal system performance');
+      recommendations.push("Consider addressing warnings for optimal system performance");
     }
 
-    const envIssues = checks.filter(c => c.component.includes('Environment'));
-    if (envIssues.some(c => c.status !== 'pass')) {
-      recommendations.push('Review and update environment configuration');
+    const envIssues = checks.filter((c) => c.component.includes("Environment"));
+    if (envIssues.some((c) => c.status !== "pass")) {
+      recommendations.push("Review and update environment configuration");
     }
 
-    const mexcIssues = checks.filter(c => c.component.includes('MEXC'));
-    if (mexcIssues.some(c => c.status !== 'pass')) {
-      recommendations.push('Verify MEXC API credentials and connectivity');
+    const mexcIssues = checks.filter((c) => c.component.includes("MEXC"));
+    if (mexcIssues.some((c) => c.status !== "pass")) {
+      recommendations.push("Verify MEXC API credentials and connectivity");
     }
 
     return recommendations;
@@ -447,26 +446,29 @@ export class SystemReadinessValidator {
   /**
    * Generate next steps based on validation results
    */
-  private generateNextSteps(checks: SystemReadinessCheck[], readyForAutoSniping: boolean): string[] {
+  private generateNextSteps(
+    checks: SystemReadinessCheck[],
+    readyForAutoSniping: boolean
+  ): string[] {
     const nextSteps: string[] = [];
 
     if (readyForAutoSniping) {
-      nextSteps.push('✅ System is ready for auto-sniping activation');
-      nextSteps.push('Navigate to the auto-sniping dashboard to begin trading');
-      nextSteps.push('Monitor system performance and trading metrics');
+      nextSteps.push("✅ System is ready for auto-sniping activation");
+      nextSteps.push("Navigate to the auto-sniping dashboard to begin trading");
+      nextSteps.push("Monitor system performance and trading metrics");
     } else {
-      nextSteps.push('❌ System is not ready for auto-sniping');
-      
-      const criticalIssues = checks.filter(c => c.required && c.status === 'fail');
+      nextSteps.push("❌ System is not ready for auto-sniping");
+
+      const criticalIssues = checks.filter((c) => c.required && c.status === "fail");
       if (criticalIssues.length > 0) {
         nextSteps.push(`Fix ${criticalIssues.length} critical issue(s) first`);
-        criticalIssues.slice(0, 3).forEach(issue => {
+        criticalIssues.slice(0, 3).forEach((issue) => {
           nextSteps.push(`- ${issue.component}: ${issue.message}`);
         });
       }
 
-      nextSteps.push('Run system validation again after fixes');
-      nextSteps.push('Check system logs for detailed error information');
+      nextSteps.push("Run system validation again after fixes");
+      nextSteps.push("Check system logs for detailed error information");
     }
 
     return nextSteps;

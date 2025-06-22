@@ -1,22 +1,22 @@
 /**
  * Confidence Calculator Test Suite
- * 
+ *
  * TDD tests for the ConfidenceCalculator module following Slice 2 of the roadmap.
  * These tests define confidence scoring and validation behavior.
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import type { SymbolEntry, CalendarEntry } from '../../../services/mexc-unified-exports';
-import type { ActivityData } from '../../../schemas/mexc-schemas';
-import type { IConfidenceCalculator } from '../interfaces';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ActivityData } from "../../../schemas/mexc-schemas";
+import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
+import type { IConfidenceCalculator } from "../interfaces";
 
-describe('ConfidenceCalculator - TDD Implementation', () => {
+describe("ConfidenceCalculator - TDD Implementation", () => {
   let confidenceCalculator: IConfidenceCalculator;
 
   beforeEach(async () => {
     // Import the actual implementation once it exists
     try {
-      const { ConfidenceCalculator } = await import('../confidence-calculator');
+      const { ConfidenceCalculator } = await import("../confidence-calculator");
       confidenceCalculator = new ConfidenceCalculator();
     } catch {
       // Skip tests if implementation doesn't exist yet
@@ -28,15 +28,15 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
     vi.clearAllMocks();
   });
 
-  describe('Ready State Confidence Calculation', () => {
-    it('should calculate high confidence for perfect ready state symbols', async () => {
+  describe("Ready State Confidence Calculation", () => {
+    it("should calculate high confidence for perfect ready state symbols", async () => {
       if (!confidenceCalculator.calculateReadyStateConfidence) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
       const perfectSymbol: SymbolEntry = {
-        cd: 'PERFECTUSDT',
+        cd: "PERFECTUSDT",
         sts: 2,
         st: 2,
         tt: 4,
@@ -51,14 +51,14 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       expect(confidence).toBeLessThanOrEqual(100);
     });
 
-    it('should calculate lower confidence for incomplete symbols', async () => {
+    it("should calculate lower confidence for incomplete symbols", async () => {
       if (!confidenceCalculator.calculateReadyStateConfidence) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
       const incompleteSymbol: SymbolEntry = {
-        cd: 'INCOMPLETEUSDT',
+        cd: "INCOMPLETEUSDT",
         sts: 2,
         st: 2,
         tt: 4,
@@ -71,14 +71,14 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       expect(confidence).toBeLessThan(85);
     });
 
-    it('should calculate very low confidence for incorrect states', async () => {
+    it("should calculate very low confidence for incorrect states", async () => {
       if (!confidenceCalculator.calculateReadyStateConfidence) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
       const incorrectSymbol: SymbolEntry = {
-        cd: 'INCORRECTUSDT',
+        cd: "INCORRECTUSDT",
         sts: 1, // Not ready state
         st: 1,
         tt: 1,
@@ -89,25 +89,25 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       expect(confidence).toBeLessThan(60);
     });
 
-    it('should enhance confidence with activity data', async () => {
+    it("should enhance confidence with activity data", async () => {
       if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
       const baseConfidence = 70;
       const activities: ActivityData[] = [
         {
-          activityId: 'test-activity-1',
-          currency: 'ENHANCED',
-          currencyId: 'enhanced-id',
-          activityType: 'SUN_SHINE',
+          activityId: "test-activity-1",
+          currency: "ENHANCED",
+          currencyId: "enhanced-id",
+          activityType: "SUN_SHINE",
         },
         {
-          activityId: 'test-activity-2',
-          currency: 'ENHANCED',
-          currencyId: 'enhanced-id',
-          activityType: 'PROMOTION',
+          activityId: "test-activity-2",
+          currency: "ENHANCED",
+          currencyId: "enhanced-id",
+          activityType: "PROMOTION",
         },
       ];
 
@@ -120,18 +120,18 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       expect(enhancedConfidence).toBeLessThanOrEqual(100);
     });
 
-    it('should cap confidence at maximum 100', async () => {
+    it("should cap confidence at maximum 100", async () => {
       if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
       const highBaseConfidence = 95;
       const manyActivities: ActivityData[] = Array.from({ length: 10 }, (_, i) => ({
         activityId: `activity-${i}`,
-        currency: 'MANY',
-        currencyId: 'many-id',
-        activityType: 'SUN_SHINE',
+        currency: "MANY",
+        currencyId: "many-id",
+        activityType: "SUN_SHINE",
       }));
 
       const enhancedConfidence = confidenceCalculator.enhanceConfidenceWithActivity(
@@ -144,19 +144,19 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
     });
   });
 
-  describe('Advance Opportunity Confidence Calculation', () => {
-    it('should calculate high confidence for optimal advance timing', async () => {
+  describe("Advance Opportunity Confidence Calculation", () => {
+    it("should calculate high confidence for optimal advance timing", async () => {
       if (!confidenceCalculator.calculateAdvanceOpportunityConfidence) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
-      const futureTime = Date.now() + (6 * 60 * 60 * 1000); // 6 hours
+      const futureTime = Date.now() + 6 * 60 * 60 * 1000; // 6 hours
       const optimalEntry: CalendarEntry = {
-        symbol: 'OPTIMALUSDT',
-        vcoinId: 'optimal-id',
+        symbol: "OPTIMALUSDT",
+        vcoinId: "optimal-id",
         firstOpenTime: futureTime,
-        projectName: 'Optimal Project',
+        projectName: "Optimal Project",
       };
 
       const confidence = await confidenceCalculator.calculateAdvanceOpportunityConfidence(
@@ -168,18 +168,18 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       expect(confidence).toBeLessThanOrEqual(100);
     });
 
-    it('should calculate lower confidence for very early opportunities', async () => {
+    it("should calculate lower confidence for very early opportunities", async () => {
       if (!confidenceCalculator.calculateAdvanceOpportunityConfidence) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
-      const veryFutureTime = Date.now() + (72 * 60 * 60 * 1000); // 72 hours (very early)
+      const veryFutureTime = Date.now() + 72 * 60 * 60 * 1000; // 72 hours (very early)
       const veryEarlyEntry: CalendarEntry = {
-        symbol: 'VERYEARLYUSDT',
-        vcoinId: 'early-id',
+        symbol: "VERYEARLYUSDT",
+        vcoinId: "early-id",
         firstOpenTime: veryFutureTime,
-        projectName: 'Very Early Project',
+        projectName: "Very Early Project",
       };
 
       const confidence = await confidenceCalculator.calculateAdvanceOpportunityConfidence(
@@ -190,24 +190,24 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       expect(confidence).toBeLessThan(80); // Should be lower for very early
     });
 
-    it('should calculate confidence based on project quality', async () => {
+    it("should calculate confidence based on project quality", async () => {
       if (!confidenceCalculator.calculateAdvanceOpportunityConfidence) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
       const aiProjectEntry: CalendarEntry = {
-        symbol: 'AIPROJECTUSDT',
-        vcoinId: 'ai-id',
-        firstOpenTime: Date.now() + (6 * 60 * 60 * 1000),
-        projectName: 'AI Revolution Platform', // AI projects typically score higher
+        symbol: "AIPROJECTUSDT",
+        vcoinId: "ai-id",
+        firstOpenTime: Date.now() + 6 * 60 * 60 * 1000,
+        projectName: "AI Revolution Platform", // AI projects typically score higher
       };
 
       const memeProjectEntry: CalendarEntry = {
-        symbol: 'MEMEPROJECTUSDT',
-        vcoinId: 'meme-id',
-        firstOpenTime: Date.now() + (6 * 60 * 60 * 1000),
-        projectName: 'MEME COIN FUN', // Meme projects typically score lower
+        symbol: "MEMEPROJECTUSDT",
+        vcoinId: "meme-id",
+        firstOpenTime: Date.now() + 6 * 60 * 60 * 1000,
+        projectName: "MEME COIN FUN", // Meme projects typically score lower
       };
 
       const aiConfidence = await confidenceCalculator.calculateAdvanceOpportunityConfidence(
@@ -224,15 +224,15 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
     });
   });
 
-  describe('Pre-Ready Score Calculation', () => {
-    it('should calculate pre-ready score for symbols approaching ready state', async () => {
+  describe("Pre-Ready Score Calculation", () => {
+    it("should calculate pre-ready score for symbols approaching ready state", async () => {
       if (!confidenceCalculator.calculatePreReadyScore) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
       const approachingSymbol: SymbolEntry = {
-        cd: 'APPROACHINGUSDT',
+        cd: "APPROACHINGUSDT",
         sts: 2,
         st: 1, // Not quite ready
         tt: 1,
@@ -245,14 +245,14 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       expect(result.estimatedTimeToReady).toBeGreaterThan(0);
     });
 
-    it('should not identify ready symbols as pre-ready', async () => {
+    it("should not identify ready symbols as pre-ready", async () => {
       if (!confidenceCalculator.calculatePreReadyScore) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
       const readySymbol: SymbolEntry = {
-        cd: 'ALREADYREADYUSDT',
+        cd: "ALREADYREADYUSDT",
         sts: 2,
         st: 2,
         tt: 4, // Already ready
@@ -263,28 +263,29 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       expect(result.isPreReady).toBe(false);
     });
 
-    it('should estimate shorter time for closer-to-ready symbols', async () => {
+    it("should estimate shorter time for closer-to-ready symbols", async () => {
       if (!confidenceCalculator.calculatePreReadyScore) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
       const veryCloseSymbol: SymbolEntry = {
-        cd: 'VERYCLOSEUSDT',
+        cd: "VERYCLOSEUSDT",
         sts: 2,
         st: 2,
         tt: 3, // Very close to ready (tt: 4)
       };
 
       const somewhatCloseSymbol: SymbolEntry = {
-        cd: 'SOMEWHATCLOSEUSDT',
+        cd: "SOMEWHATCLOSEUSDT",
         sts: 1,
         st: 1,
         tt: 1, // Further from ready
       };
 
       const veryCloseResult = await confidenceCalculator.calculatePreReadyScore(veryCloseSymbol);
-      const somewhatCloseResult = await confidenceCalculator.calculatePreReadyScore(somewhatCloseSymbol);
+      const somewhatCloseResult =
+        await confidenceCalculator.calculatePreReadyScore(somewhatCloseSymbol);
 
       if (veryCloseResult.isPreReady && somewhatCloseResult.isPreReady) {
         expect(veryCloseResult.estimatedTimeToReady).toBeLessThan(
@@ -294,10 +295,10 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
     });
   });
 
-  describe('Confidence Score Validation', () => {
-    it('should validate confidence scores within valid range', async () => {
+  describe("Confidence Score Validation", () => {
+    it("should validate confidence scores within valid range", async () => {
       if (!confidenceCalculator.validateConfidenceScore) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -309,13 +310,13 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       // Invalid scores
       expect(confidenceCalculator.validateConfidenceScore(-1)).toBe(false);
       expect(confidenceCalculator.validateConfidenceScore(101)).toBe(false);
-      expect(confidenceCalculator.validateConfidenceScore(NaN)).toBe(false);
-      expect(confidenceCalculator.validateConfidenceScore(Infinity)).toBe(false);
+      expect(confidenceCalculator.validateConfidenceScore(Number.NaN)).toBe(false);
+      expect(confidenceCalculator.validateConfidenceScore(Number.POSITIVE_INFINITY)).toBe(false);
     });
 
-    it('should validate decimal confidence scores', async () => {
+    it("should validate decimal confidence scores", async () => {
       if (!confidenceCalculator.validateConfidenceScore) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -325,10 +326,10 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
     });
   });
 
-  describe('Performance and Edge Cases', () => {
-    it('should handle batch confidence calculations efficiently', async () => {
+  describe("Performance and Edge Cases", () => {
+    it("should handle batch confidence calculations efficiently", async () => {
       if (!confidenceCalculator.calculateReadyStateConfidence) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -340,33 +341,33 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       }));
 
       const startTime = Date.now();
-      
+
       // Calculate confidence for all symbols
-      const confidencePromises = symbols.map(symbol =>
+      const confidencePromises = symbols.map((symbol) =>
         confidenceCalculator.calculateReadyStateConfidence(symbol)
       );
-      
+
       const confidences = await Promise.all(confidencePromises);
       const executionTime = Date.now() - startTime;
 
       expect(confidences).toHaveLength(100);
       expect(executionTime).toBeLessThan(5000); // Should complete within 5 seconds
-      
+
       // All confidences should be valid
-      confidences.forEach(confidence => {
+      confidences.forEach((confidence) => {
         expect(confidence).toBeGreaterThanOrEqual(0);
         expect(confidence).toBeLessThanOrEqual(100);
       });
     });
 
-    it('should handle missing or null symbol data gracefully', async () => {
+    it("should handle missing or null symbol data gracefully", async () => {
       if (!confidenceCalculator.calculateReadyStateConfidence) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
       const incompleteSymbol = {
-        cd: 'INCOMPLETE',
+        cd: "INCOMPLETE",
         // Missing sts, st, tt
       } as SymbolEntry;
 
@@ -375,13 +376,13 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       }).not.toThrow();
 
       const confidence = await confidenceCalculator.calculateReadyStateConfidence(incompleteSymbol);
-      expect(typeof confidence).toBe('number');
+      expect(typeof confidence).toBe("number");
       expect(confidence).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle empty activity arrays', async () => {
+    it("should handle empty activity arrays", async () => {
       if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -396,18 +397,20 @@ describe('ConfidenceCalculator - TDD Implementation', () => {
       expect(enhancedConfidence).toBe(baseConfidence); // Should remain unchanged
     });
 
-    it('should handle extreme confidence values properly', async () => {
+    it("should handle extreme confidence values properly", async () => {
       if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        console.warn('ConfidenceCalculator not implemented yet - skipping test');
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
-      const activities: ActivityData[] = [{
-        activityId: 'test',
-        currency: 'TEST',
-        currencyId: 'test-id',
-        activityType: 'SUN_SHINE',
-      }];
+      const activities: ActivityData[] = [
+        {
+          activityId: "test",
+          currency: "TEST",
+          currencyId: "test-id",
+          activityType: "SUN_SHINE",
+        },
+      ];
 
       // Test with 0 base confidence
       const enhancedFromZero = confidenceCalculator.enhanceConfidenceWithActivity(0, activities);

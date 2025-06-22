@@ -12,6 +12,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useState } from "react";
+import { useStatus } from "../contexts/status-context";
 import {
   type ApiCredentials,
   useApiCredentials,
@@ -19,7 +20,6 @@ import {
   useSaveApiCredentials,
   useTestApiCredentials,
 } from "../hooks/use-api-credentials";
-import { useStatus } from "../contexts/status-context";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";

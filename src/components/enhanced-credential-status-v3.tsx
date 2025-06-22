@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   AlertTriangle,
@@ -9,7 +10,6 @@ import {
   Globe,
   Info,
   Key,
-  Lock,
   RefreshCw,
   Settings,
   TrendingDown,
@@ -17,8 +17,7 @@ import {
   WifiOff,
   XCircle,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -85,7 +84,13 @@ interface EnhancedConnectivityData {
   recommendedActions: string[];
   error?: string;
   message: string;
-  status: "fully_connected" | "credentials_invalid" | "test_credentials" | "no_credentials" | "network_error" | "error";
+  status:
+    | "fully_connected"
+    | "credentials_invalid"
+    | "test_credentials"
+    | "no_credentials"
+    | "network_error"
+    | "error";
   timestamp: string;
   lastChecked: string;
   nextCheckIn: number;
@@ -244,19 +249,19 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
           </span>
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="pt-0 space-y-4">
         {/* Main Status Row */}
-        <MainStatusRow 
-          connectivity={connectivity} 
-          onRefresh={handleRefresh} 
+        <MainStatusRow
+          connectivity={connectivity}
+          onRefresh={handleRefresh}
           onForceRefresh={handleForceRefresh}
-          refreshing={refreshing} 
+          refreshing={refreshing}
         />
 
         {/* Circuit Breaker Warning */}
         {connectivity.circuitBreaker.isOpen && (
-          <CircuitBreakerAlert 
+          <CircuitBreakerAlert
             circuitBreaker={connectivity.circuitBreaker}
             onReset={handleResetCircuitBreaker}
           />
@@ -269,17 +274,10 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
         {showHealthMetrics && <HealthMetrics connectivity={connectivity} />}
 
         {/* Alerts */}
-        {connectivity.alerts.count > 0 && (
-          <AlertsSection alerts={connectivity.alerts} />
-        )}
+        {connectivity.alerts.count > 0 && <AlertsSection alerts={connectivity.alerts} />}
 
         {/* Detailed Information (expandable) */}
-        {showDetails && (
-          <DetailedStatusInfo 
-            connectivity={connectivity} 
-            showTrends={showTrends}
-          />
-        )}
+        {showDetails && <DetailedStatusInfo connectivity={connectivity} showTrends={showTrends} />}
 
         {/* Action Suggestions */}
         <ActionSuggestions connectivity={connectivity} />
@@ -362,12 +360,12 @@ function MonitoringIndicator({ connectivity }: { connectivity: EnhancedConnectiv
   );
 }
 
-function MainStatusRow({ 
-  connectivity, 
-  onRefresh, 
+function MainStatusRow({
+  connectivity,
+  onRefresh,
   onForceRefresh,
-  refreshing 
-}: { 
+  refreshing,
+}: {
   connectivity: EnhancedConnectivityData;
   onRefresh: () => void;
   onForceRefresh: () => void;
@@ -381,7 +379,7 @@ function MainStatusRow({
           <span className="text-sm font-medium">Source:</span>
           <Badge variant="outline">{connectivity.credentialSource}</Badge>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Globe className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">Health:</span>
@@ -394,7 +392,7 @@ function MainStatusRow({
           <RefreshCw className={`mr-2 h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />
           Refresh
         </Button>
-        
+
         <Button variant="ghost" size="sm" onClick={onForceRefresh} disabled={refreshing}>
           Force Check
         </Button>
@@ -419,10 +417,10 @@ function HealthBadge({ health }: { health: string }) {
   );
 }
 
-function CircuitBreakerAlert({ 
-  circuitBreaker, 
-  onReset 
-}: { 
+function CircuitBreakerAlert({
+  circuitBreaker,
+  onReset,
+}: {
   circuitBreaker: EnhancedConnectivityData["circuitBreaker"];
   onReset: () => void;
 }) {
@@ -456,7 +454,7 @@ function CredentialSourceInfo({ connectivity }: { connectivity: EnhancedConnecti
           {connectivity.hasUserCredentials ? "Configured" : "Not Set"}
         </Badge>
       </div>
-      
+
       <div className="flex items-center space-x-2">
         <Settings className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm">Environment:</span>
@@ -477,9 +475,9 @@ function HealthMetrics({ connectivity }: { connectivity: EnhancedConnectivityDat
         <span className="text-sm font-medium">Connection Quality</span>
         <span className="text-sm text-muted-foreground">{connectionQuality.score}/100</span>
       </div>
-      
+
       <Progress value={connectionQuality.score} className="h-2" />
-      
+
       <div className="grid grid-cols-3 gap-4 text-sm">
         <div>
           <div className="text-muted-foreground">Success Rate</div>
@@ -515,7 +513,9 @@ function AlertsSection({ alerts }: { alerts: EnhancedConnectivityData["alerts"] 
       <AlertDescription>
         <div className="flex items-center justify-between">
           <div>
-            <strong>{alerts.count} Alert{alerts.count !== 1 ? "s" : ""}</strong>
+            <strong>
+              {alerts.count} Alert{alerts.count !== 1 ? "s" : ""}
+            </strong>
             {alerts.latest && (
               <div className="text-sm text-muted-foreground mt-1">{alerts.latest}</div>
             )}
@@ -527,17 +527,17 @@ function AlertsSection({ alerts }: { alerts: EnhancedConnectivityData["alerts"] 
   );
 }
 
-function DetailedStatusInfo({ 
-  connectivity, 
-  showTrends 
-}: { 
+function DetailedStatusInfo({
+  connectivity,
+  showTrends,
+}: {
   connectivity: EnhancedConnectivityData;
   showTrends: boolean;
 }) {
   return (
     <div className="space-y-4">
       <Separator />
-      
+
       {/* Connection Quality Details */}
       <div>
         <h4 className="text-sm font-medium mb-2">Connection Analysis</h4>
@@ -616,7 +616,7 @@ function ActionSuggestions({ connectivity }: { connectivity: EnhancedConnectivit
           </div>
         ))}
       </div>
-      
+
       {connectivity.status === "test_credentials" && (
         <div className="mt-3">
           <Button variant="outline" size="sm" asChild>

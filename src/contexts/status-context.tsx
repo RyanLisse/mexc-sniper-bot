@@ -267,7 +267,11 @@ export function StatusProvider({
           hasUserCredentials: enhanced.hasUserCredentials || false,
           hasEnvironmentCredentials: enhanced.hasEnvironmentCredentials || false,
           lastValidated: new Date().toISOString(),
-          error: enhanced.error || (enhanced.isTestCredentials ? "Test credentials detected - configure real MEXC API credentials" : undefined),
+          error:
+            enhanced.error ||
+            (enhanced.isTestCredentials
+              ? "Test credentials detected - configure real MEXC API credentials"
+              : undefined),
           // Additional enhanced fields
           isTestCredentials: enhanced.isTestCredentials,
           connectionHealth: enhanced.connectionHealth,
@@ -380,8 +384,12 @@ export function StatusProvider({
       if (validationData && validationData.success) {
         const validationResult = validationData.data;
         components.validation = {
-          status: validationResult.status === "ready" ? "active" : 
-                 validationResult.status === "issues" ? "warning" : "error",
+          status:
+            validationResult.status === "ready"
+              ? "active"
+              : validationResult.status === "issues"
+                ? "warning"
+                : "error",
           message: `System validation score: ${validationResult.score}%`,
           lastChecked: new Date().toISOString(),
           readyForAutoSniping: validationResult.readyForAutoSniping,
@@ -395,7 +403,11 @@ export function StatusProvider({
 
       // If validation shows critical issues, mark as error
       const validationComponent = components.validation;
-      if (validationComponent && !validationComponent.readyForAutoSniping && validationComponent.criticalIssues > 0) {
+      if (
+        validationComponent &&
+        !validationComponent.readyForAutoSniping &&
+        validationComponent.criticalIssues > 0
+      ) {
         return {
           overall: "error",
           components,
@@ -550,19 +562,22 @@ export function StatusProvider({
     if (!status.network.connected) return "error";
     if (status.syncErrors.length > 0) return "error";
     if (status.system.overall === "error") return "error";
-    
+
     // Enhanced credential status evaluation
     if (!status.credentials.hasCredentials) return "warning";
     if (status.credentials.isTestCredentials) return "warning";
     if (!status.credentials.isValid) return "error";
-    
+
     // Enhanced health evaluation
     if (status.credentials.connectionHealth === "poor") return "error";
     if (status.credentials.alerts?.severity === "critical") return "error";
-    if (status.credentials.metrics?.consecutiveFailures && status.credentials.metrics.consecutiveFailures > 5) {
+    if (
+      status.credentials.metrics?.consecutiveFailures &&
+      status.credentials.metrics.consecutiveFailures > 5
+    ) {
       return "error";
     }
-    
+
     if (status.system.overall === "warning") return "warning";
     if (status.credentials.connectionHealth === "fair") return "warning";
     if (status.credentials.alerts?.severity === "warning") return "warning";
@@ -575,19 +590,23 @@ export function StatusProvider({
 
     if (!status.network.connected) return "Network connection unavailable";
     if (status.syncErrors.length > 0) return `System errors detected (${status.syncErrors.length})`;
-    
+
     // Enhanced credential status messages
     if (!status.credentials.hasCredentials) return "API credentials not configured";
-    if (status.credentials.isTestCredentials) return "Test credentials detected - configure real MEXC API credentials for live trading";
+    if (status.credentials.isTestCredentials)
+      return "Test credentials detected - configure real MEXC API credentials for live trading";
     if (!status.credentials.isValid) return "API credentials invalid";
-    
+
     // Enhanced health status
     if (status.credentials.connectionHealth === "poor") return "Poor connection quality detected";
     if (status.credentials.alerts?.severity === "critical") return "Critical alerts detected";
-    if (status.credentials.metrics?.consecutiveFailures && status.credentials.metrics.consecutiveFailures > 5) {
+    if (
+      status.credentials.metrics?.consecutiveFailures &&
+      status.credentials.metrics.consecutiveFailures > 5
+    ) {
       return "Multiple connection failures detected";
     }
-    
+
     if (status.system.overall === "error") return "System components have errors";
     if (status.system.overall === "warning") return "System components have warnings";
 

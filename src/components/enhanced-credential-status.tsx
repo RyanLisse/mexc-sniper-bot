@@ -4,11 +4,9 @@ import {
   AlertTriangle,
   CheckCircle,
   Database,
-  ExternalLink,
   Globe,
   Info,
   Key,
-  Lock,
   RefreshCw,
   Settings,
   XCircle,
@@ -17,7 +15,6 @@ import React, { useState } from "react";
 import { useStatus } from "../contexts/status-context";
 import { UnifiedStatusBadge } from "./status/unified-status-display";
 import { Alert, AlertDescription } from "./ui/alert";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
@@ -30,7 +27,8 @@ export const EnhancedCredentialStatus = React.memo(function EnhancedCredentialSt
   showDetailsButton = true,
   className = "",
 }: EnhancedCredentialStatusProps) {
-  const { status, refreshAll, refreshCredentials, getOverallStatus, getStatusMessage } = useStatus();
+  const { status, refreshAll, refreshCredentials, getOverallStatus, getStatusMessage } =
+    useStatus();
   const [showDetails, setShowDetails] = useState(false);
   const overallStatus = getOverallStatus();
   const statusMessage = getStatusMessage();
@@ -107,7 +105,7 @@ function UnifiedMainStatusRow({ onRefresh }: { onRefresh: () => void }) {
       case "warning":
         return {
           text: "Minor Issues Detected",
-          color: "text-yellow-500", 
+          color: "text-yellow-500",
           bgColor: "bg-yellow-500",
           icon: AlertTriangle,
         };
@@ -143,20 +141,13 @@ function UnifiedMainStatusRow({ onRefresh }: { onRefresh: () => void }) {
       <div className="flex items-center space-x-3">
         <div className={`w-3 h-3 rounded-full ${statusDisplay.bgColor}`} />
         <div>
-          <div className={`font-medium ${statusDisplay.color}`}>
-            {statusDisplay.text}
-          </div>
+          <div className={`font-medium ${statusDisplay.color}`}>{statusDisplay.text}</div>
           <div className="text-sm text-muted-foreground">
             Last updated: {new Date(status.lastGlobalUpdate).toLocaleTimeString()}
           </div>
         </div>
       </div>
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={onRefresh}
-        disabled={status.isLoading}
-      >
+      <Button variant="ghost" size="sm" onClick={onRefresh} disabled={status.isLoading}>
         <RefreshCw className={`h-4 w-4 ${status.isLoading ? "animate-spin" : ""}`} />
       </Button>
     </div>
@@ -180,7 +171,7 @@ function UnifiedCredentialSourceInfo() {
     } else if (credentials.source === "environment") {
       return {
         icon: Settings,
-        title: "Environment Variables", 
+        title: "Environment Variables",
         description: "Using API credentials from server environment",
         color: "text-green-500",
         bgColor: "bg-green-50 dark:bg-green-950/20",
@@ -246,9 +237,7 @@ function UnifiedDetailedStatusInfo() {
         </div>
         <div>
           <div className="font-medium">Credential Source</div>
-          <div className="text-muted-foreground capitalize">
-            {credentials.source || "None"}
-          </div>
+          <div className="text-muted-foreground capitalize">{credentials.source || "None"}</div>
         </div>
         <div>
           <div className="font-medium">Last Updated</div>
@@ -286,7 +275,7 @@ function UnifiedActionSuggestions() {
     suggestions.push(
       <Button
         key="configure"
-        variant="outline" 
+        variant="outline"
         size="sm"
         onClick={() => {
           const formElement = document.getElementById("api-credentials-form");

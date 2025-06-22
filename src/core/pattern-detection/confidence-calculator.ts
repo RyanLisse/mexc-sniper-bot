@@ -1,9 +1,9 @@
 /**
  * Confidence Calculator - Scoring and Validation Module
- * 
+ *
  * Extracted from the monolithic pattern-detection-engine.ts (1503 lines).
  * Handles confidence scoring, validation, and enhancement with activity data.
- * 
+ *
  * Architecture:
  * - Type-safe confidence scoring (0-100 range)
  * - Activity data enhancement
@@ -11,26 +11,22 @@
  * - Comprehensive validation framework
  */
 
-import { createLogger } from '../../lib/structured-logger';
-import { toSafeError } from '../../lib/error-type-utils';
-import type { SymbolEntry, CalendarEntry } from '../../services/mexc-unified-exports';
-import type { ActivityData } from '../../schemas/mexc-schemas';
-import { 
-  calculateActivityBoost, 
-  hasHighPriorityActivity, 
-  getUniqueActivityTypes 
-} from '../../schemas/mexc-schemas';
-import type { IConfidenceCalculator } from './interfaces';
+import { toSafeError } from "../../lib/error-type-utils";
+import { createLogger } from "../../lib/structured-logger";
+import type { ActivityData } from "../../schemas/mexc-schemas";
+import { calculateActivityBoost, hasHighPriorityActivity } from "../../schemas/mexc-schemas";
+import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
+import type { IConfidenceCalculator } from "./interfaces";
 
 /**
  * Confidence Calculator Implementation
- * 
+ *
  * Implements sophisticated confidence scoring extracted from the original engine.
  * Focuses on accuracy and performance.
  */
 export class ConfidenceCalculator implements IConfidenceCalculator {
   private static instance: ConfidenceCalculator;
-  private logger = createLogger('confidence-calculator');
+  private logger = createLogger("confidence-calculator");
 
   static getInstance(): ConfidenceCalculator {
     if (!ConfidenceCalculator.instance) {
@@ -41,13 +37,13 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
 
   /**
    * Calculate Ready State Confidence
-   * 
+   *
    * Core confidence calculation for ready state patterns.
    * Includes activity enhancement and AI integration.
    */
   async calculateReadyStateConfidence(symbol: SymbolEntry): Promise<number> {
     if (!symbol) {
-      this.logger.warn('Null symbol provided to calculateReadyStateConfidence');
+      this.logger.warn("Null symbol provided to calculateReadyStateConfidence");
       return 0;
     }
 
@@ -70,10 +66,14 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        this.logger.warn('Activity enhancement failed', {
-          symbol: symbol.cd || 'unknown',
-          error: safeError.message,
-        }, safeError);
+        this.logger.warn(
+          "Activity enhancement failed",
+          {
+            symbol: symbol.cd || "unknown",
+            error: safeError.message,
+          },
+          safeError
+        );
         // Continue without activity enhancement
       }
 
@@ -93,14 +93,17 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
 
       // Ensure confidence is within valid range
       return Math.min(Math.max(confidence, 0), 100);
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Error calculating ready state confidence', {
-        symbol: symbol.cd || 'unknown',
-        error: safeError.message,
-      }, safeError);
-      
+      this.logger.error(
+        "Error calculating ready state confidence",
+        {
+          symbol: symbol.cd || "unknown",
+          error: safeError.message,
+        },
+        safeError
+      );
+
       // Return base confidence on error
       return 50;
     }
@@ -108,14 +111,14 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
 
   /**
    * Calculate Advance Opportunity Confidence
-   * 
+   *
    * Confidence calculation for advance opportunities (3.5+ hour early warning).
    */
   async calculateAdvanceOpportunityConfidence(
-    entry: CalendarEntry, 
+    entry: CalendarEntry,
     advanceHours: number
   ): Promise<number> {
-    if (!entry || typeof advanceHours !== 'number') {
+    if (!entry || typeof advanceHours !== "number") {
       return 0;
     }
 
@@ -154,28 +157,31 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
           ? entry.firstOpenTime
           : new Date(entry.firstOpenTime).getTime()
       );
-      
+
       if (!timing.isWeekend) confidence += 5;
       if (timing.marketSession === "peak") confidence += 5;
 
       // Ensure confidence is within valid range
       return Math.min(Math.max(confidence, 0), 100);
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Error calculating advance opportunity confidence', {
-        symbol: entry.symbol || 'unknown',
-        advanceHours,
-        error: safeError.message,
-      }, safeError);
-      
+      this.logger.error(
+        "Error calculating advance opportunity confidence",
+        {
+          symbol: entry.symbol || "unknown",
+          advanceHours,
+          error: safeError.message,
+        },
+        safeError
+      );
+
       return 40; // Return base confidence on error
     }
   }
 
   /**
    * Calculate Pre-Ready Score
-   * 
+   *
    * Score calculation for symbols approaching ready state.
    */
   async calculatePreReadyScore(symbol: SymbolEntry): Promise<{
@@ -206,32 +212,35 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       const isPreReady = confidence > 0;
 
       return { isPreReady, confidence, estimatedTimeToReady: estimatedHours };
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Error calculating pre-ready score', {
-        symbol: symbol.cd || 'unknown',
-        error: safeError.message,
-      }, safeError);
-      
+      this.logger.error(
+        "Error calculating pre-ready score",
+        {
+          symbol: symbol.cd || "unknown",
+          error: safeError.message,
+        },
+        safeError
+      );
+
       return { isPreReady: false, confidence: 0, estimatedTimeToReady: 0 };
     }
   }
 
   /**
    * Validate Confidence Score
-   * 
+   *
    * Ensures confidence scores are within valid range (0-100).
    */
   validateConfidenceScore(score: number): boolean {
-    if (typeof score !== 'number') return false;
+    if (typeof score !== "number") return false;
     if (isNaN(score) || !isFinite(score)) return false;
     return score >= 0 && score <= 100;
   }
 
   /**
    * Enhance Confidence with Activity Data
-   * 
+   *
    * Applies activity-based confidence enhancement.
    */
   enhanceConfidenceWithActivity(baseConfidence: number, activities: ActivityData[]): number {
@@ -257,15 +266,18 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
 
       // Ensure we don't exceed maximum confidence
       return Math.min(enhancedConfidence, 100);
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.warn('Activity enhancement calculation failed', {
-        baseConfidence,
-        activitiesCount: activities.length,
-        error: safeError.message,
-      }, safeError);
-      
+      this.logger.warn(
+        "Activity enhancement calculation failed",
+        {
+          baseConfidence,
+          activitiesCount: activities.length,
+          error: safeError.message,
+        },
+        safeError
+      );
+
       return baseConfidence;
     }
   }
