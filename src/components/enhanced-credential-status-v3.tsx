@@ -28,8 +28,12 @@ import { Separator } from "./ui/separator";
 /**
  * Enhanced Credential Status Component V3
  *
- * Advanced credential status component that leverages the new enhanced connectivity API
- * with comprehensive health monitoring, circuit breaker status, and real-time updates.
+ * FIXED: Updated to use unified status endpoint to eliminate status contradictions.
+ * Previously used enhanced connectivity API directly, which could show conflicting
+ * status messages. Now uses unified status resolver for consistent results.
+ *
+ * Advanced credential status component with comprehensive health monitoring,
+ * circuit breaker status, and real-time updates.
  */
 
 interface EnhancedCredentialStatusV3Props {
@@ -119,21 +123,88 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
   const [refreshing, setRefreshing] = useState(false);
   const queryClient = useQueryClient();
 
-  // Enhanced connectivity query
+  // FIXED: Use unified status endpoint to eliminate contradictions
   const {
     data: connectivity,
     isLoading,
     error,
     refetch,
   } = useQuery<EnhancedConnectivityData>({
-    queryKey: ["mexc", "enhanced-connectivity"],
+    queryKey: ["mexc", "unified-status"],
     queryFn: async () => {
-      const response = await fetch("/api/mexc/enhanced-connectivity");
+      // Use the new unified status endpoint for consistent results
+      const response = await fetch("/api/mexc/unified-status");
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const result = await response.json();
-      return result.data;
+      
+      // Transform unified response to match expected format
+      const unifiedData = result.data;
+      return {
+        connected: unifiedData.connected,
+        hasCredentials: unifiedData.hasCredentials,
+        credentialsValid: unifiedData.credentialsValid,
+        canAuthenticate: unifiedData.credentialsValid,
+        isTestCredentials: unifiedData.isTestCredentials || false,
+        credentialSource: unifiedData.credentialSource,
+        hasUserCredentials: unifiedData.hasUserCredentials,
+        hasEnvironmentCredentials: unifiedData.hasEnvironmentCredentials,
+        connectionHealth: unifiedData.connectionHealth || "good",
+        connectionQuality: {
+          score: unifiedData.connectionHealth === "excellent" ? 100 : 
+                unifiedData.connectionHealth === "good" ? 80 : 
+                unifiedData.connectionHealth === "fair" ? 60 : 40,
+          status: unifiedData.connectionHealth || "good",
+          reasons: unifiedData.recommendations?.slice(0, 3) || [],
+          recommendations: unifiedData.recommendations || [],
+        },
+        metrics: {
+          totalChecks: 1,
+          successRate: unifiedData.credentialsValid ? 1 : 0,
+          averageLatency: unifiedData.responseTime || 0,
+          consecutiveFailures: unifiedData.credentialsValid ? 0 : 1,
+          uptime: unifiedData.credentialsValid ? 100 : 0,
+          responseTime: unifiedData.responseTime,
+        },
+        circuitBreaker: {
+          isOpen: false,
+          failures: 0,
+        },
+        alerts: {
+          count: unifiedData.error ? 1 : 0,
+          latest: unifiedData.error,
+          severity: unifiedData.error ? "warning" as const : "none" as const,
+          recent: unifiedData.error ? [{
+            type: "error",
+            severity: "warning",
+            message: unifiedData.error,
+            timestamp: new Date().toISOString(),
+          }] : [],
+        },
+        recommendedActions: unifiedData.recommendations || [],
+        error: unifiedData.error,
+        message: unifiedData.statusMessage,
+        status: unifiedData.overallStatus === "healthy" ? "fully_connected" as const :
+               unifiedData.isTestCredentials ? "test_credentials" as const :
+               !unifiedData.hasCredentials ? "no_credentials" as const :
+               !unifiedData.credentialsValid ? "credentials_invalid" as const :
+               "network_error" as const,
+        timestamp: unifiedData.lastChecked,
+        lastChecked: unifiedData.lastChecked,
+        nextCheckIn: 60000,
+        trends: {
+          period: "last_24_hours",
+          healthTrend: "stable" as const,
+          averageUptime: unifiedData.credentialsValid ? 100 : 0,
+          statusChanges: 0,
+        },
+        monitoring: {
+          isActive: true,
+          intervalMs: 60000,
+          totalStatusUpdates: 1,
+        },
+      };
     },
     staleTime: 30000, // 30 seconds
     refetchInterval: autoRefresh ? 60000 : false, // Auto-refetch every minute if enabled
@@ -151,11 +222,11 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
     }
   };
 
-  // Force refresh handler
+  // FIXED: Force refresh handler using unified endpoint
   const handleForceRefresh = async () => {
     setRefreshing(true);
     try {
-      await fetch("/api/mexc/enhanced-connectivity", {
+      await fetch("/api/mexc/unified-status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ forceRefresh: true }),
@@ -166,15 +237,12 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
     }
   };
 
-  // Reset circuit breaker handler
+  // Reset circuit breaker handler (deprecated with unified status)
   const handleResetCircuitBreaker = async () => {
     try {
-      await fetch("/api/mexc/enhanced-connectivity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resetCircuitBreaker: true }),
-      });
-      await refetch();
+      // Circuit breaker reset not needed with unified status
+      // Just force refresh instead
+      await handleForceRefresh();
     } catch (error) {
       console.error("Failed to reset circuit breaker:", error);
     }

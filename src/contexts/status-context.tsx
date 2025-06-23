@@ -234,13 +234,14 @@ export function StatusProvider({
   // API Fetching Functions
   const fetchNetworkStatus = useCallback(async (): Promise<NetworkStatus> => {
     try {
-      const response = await fetch("/api/health/system");
-      const data = await response.json();
-
+      // Use unified status resolver for consistent network status
+      const { getUnifiedStatus } = await import("../services/unified-status-resolver");
+      const unifiedStatus = await getUnifiedStatus();
+      
       return {
-        connected: response.ok && data.success,
-        lastChecked: new Date().toISOString(),
-        error: !response.ok ? data.error || "Network unreachable" : undefined,
+        connected: unifiedStatus.network.connected,
+        lastChecked: unifiedStatus.network.lastChecked,
+        error: unifiedStatus.network.error,
       };
     } catch (error) {
       return {
@@ -253,49 +254,23 @@ export function StatusProvider({
 
   const fetchCredentialStatus = useCallback(async (): Promise<CredentialStatus> => {
     try {
-      // Try enhanced connectivity first, fallback to legacy endpoint
-      let response = await fetch("/api/mexc/enhanced-connectivity");
-      let data = await response.json();
-
-      if (response.ok && data.data) {
-        // Enhanced connectivity response format
-        const enhanced = data.data;
-        return {
-          hasCredentials: enhanced.hasCredentials || false,
-          isValid: enhanced.credentialsValid || false,
-          source: enhanced.credentialSource || "none",
-          hasUserCredentials: enhanced.hasUserCredentials || false,
-          hasEnvironmentCredentials: enhanced.hasEnvironmentCredentials || false,
-          lastValidated: new Date().toISOString(),
-          error:
-            enhanced.error ||
-            (enhanced.isTestCredentials
-              ? "Test credentials detected - configure real MEXC API credentials"
-              : undefined),
-          // Additional enhanced fields
-          isTestCredentials: enhanced.isTestCredentials,
-          connectionHealth: enhanced.connectionHealth,
-          metrics: enhanced.metrics,
-          alerts: enhanced.alerts,
-        };
-      }
-
-      // Fallback to legacy endpoint
-      response = await fetch("/api/mexc/connectivity");
-      data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch credentials");
-      }
-
+      // Use unified status resolver to eliminate contradictions
+      const { getUnifiedStatus } = await import("../services/unified-status-resolver");
+      const unifiedStatus = await getUnifiedStatus();
+      
       return {
-        hasCredentials: data.hasCredentials || false,
-        isValid: data.credentialsValid || false,
-        source: data.credentialSource || "none",
-        hasUserCredentials: data.hasUserCredentials || false,
-        hasEnvironmentCredentials: data.hasEnvironmentCredentials || false,
-        lastValidated: new Date().toISOString(),
-        error: data.error,
+        hasCredentials: unifiedStatus.credentials.hasCredentials,
+        isValid: unifiedStatus.credentials.isValid,
+        source: unifiedStatus.credentials.source,
+        hasUserCredentials: unifiedStatus.credentials.hasUserCredentials,
+        hasEnvironmentCredentials: unifiedStatus.credentials.hasEnvironmentCredentials,
+        lastValidated: unifiedStatus.credentials.lastValidated,
+        error: unifiedStatus.credentials.error,
+        // Enhanced fields
+        isTestCredentials: unifiedStatus.credentials.isTestCredentials,
+        connectionHealth: unifiedStatus.credentials.connectionHealth,
+        metrics: unifiedStatus.credentials.metrics,
+        alerts: unifiedStatus.credentials.alerts,
       };
     } catch (error) {
       return {
@@ -559,16 +534,17 @@ export function StatusProvider({
   const getOverallStatus = useCallback((): "healthy" | "warning" | "error" | "loading" => {
     if (status.isLoading) return "loading";
 
+    // Use unified status logic for consistency
     if (!status.network.connected) return "error";
     if (status.syncErrors.length > 0) return "error";
     if (status.system.overall === "error") return "error";
 
-    // Enhanced credential status evaluation
+    // Unified credential status evaluation
     if (!status.credentials.hasCredentials) return "warning";
     if (status.credentials.isTestCredentials) return "warning";
     if (!status.credentials.isValid) return "error";
 
-    // Enhanced health evaluation
+    // Enhanced health evaluation (same as before but documented as unified)
     if (status.credentials.connectionHealth === "poor") return "error";
     if (status.credentials.alerts?.severity === "critical") return "error";
     if (
@@ -588,16 +564,17 @@ export function StatusProvider({
   const getStatusMessage = useCallback((): string => {
     if (status.isLoading) return "Checking system status...";
 
+    // Unified status message logic to eliminate contradictions
     if (!status.network.connected) return "Network connection unavailable";
     if (status.syncErrors.length > 0) return `System errors detected (${status.syncErrors.length})`;
 
-    // Enhanced credential status messages
+    // Unified credential status messages
     if (!status.credentials.hasCredentials) return "API credentials not configured";
     if (status.credentials.isTestCredentials)
-      return "Test credentials detected - configure real MEXC API credentials for live trading";
+      return "Demo mode active with test credentials - configure real MEXC API credentials for live trading";
     if (!status.credentials.isValid) return "API credentials invalid";
 
-    // Enhanced health status
+    // Enhanced health status (consistent with unified resolver)
     if (status.credentials.connectionHealth === "poor") return "Poor connection quality detected";
     if (status.credentials.alerts?.severity === "critical") return "Critical alerts detected";
     if (
