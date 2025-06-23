@@ -22,6 +22,28 @@ describe('Pattern Monitoring Integration', () => {
   let mexcService: UnifiedMexcService;
 
   beforeEach(async () => {
+    // Setup global fetch mock with proper headers for MEXC API
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: new Headers({
+        'content-type': 'application/json',
+        'x-ratelimit-limit': '1200',
+        'x-ratelimit-remaining': '1199'
+      }),
+      json: () => Promise.resolve({ 
+        symbols: [], 
+        timezone: 'UTC',
+        serverTime: Date.now()
+      }),
+      text: () => Promise.resolve(JSON.stringify({ 
+        symbols: [], 
+        timezone: 'UTC',
+        serverTime: Date.now()
+      }))
+    });
+
     // Initialize services
     monitoringService = PatternMonitoringService.getInstance();
     patternEngine = PatternDetectionEngine.getInstance();
@@ -42,6 +64,11 @@ describe('Pattern Monitoring Integration', () => {
     // Clean up after each test
     monitoringService.stopMonitoring();
     vi.restoreAllMocks();
+    
+    // Clean up global fetch mock
+    if (global.fetch && 'mockRestore' in global.fetch) {
+      (global.fetch as any).mockRestore?.();
+    }
   });
 
   describe('Pattern Monitoring Service', () => {

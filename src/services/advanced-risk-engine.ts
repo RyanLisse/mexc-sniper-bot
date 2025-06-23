@@ -1207,10 +1207,10 @@ export class AdvancedRiskEngine extends EventEmitter {
     try {
       // Update market conditions based on stress event
       await this.updateMarketConditions({
-        volatilityIndex:
-          this.marketConditions.volatilityIndex * (1 + marketStressEvent.volatilityIncrease / 100),
-        liquidityIndex:
-          this.marketConditions.liquidityIndex * (1 - marketStressEvent.liquidityDecrease / 100),
+        volatilityIndex: Math.min(100, Math.max(0,
+          this.marketConditions.volatilityIndex * (1 + marketStressEvent.volatilityIncrease / 100))),
+        liquidityIndex: Math.min(100, Math.max(0,
+          this.marketConditions.liquidityIndex * (1 - marketStressEvent.liquidityDecrease / 100))),
         correlationRisk: marketStressEvent.correlationSpike,
       });
 

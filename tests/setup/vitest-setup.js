@@ -736,6 +736,37 @@ global.testUtils = {
     })
   }),
 
+  // MEXC API specific mock response helper
+  mockMexcApiResponse: (data, status = 200, extraHeaders = {}) => ({
+    ok: status >= 200 && status < 300,
+    status,
+    statusText: status === 200 ? 'OK' : 'Error',
+    json: () => Promise.resolve(data),
+    text: () => Promise.resolve(JSON.stringify(data)),
+    headers: new Headers({
+      'content-type': 'application/json',
+      'x-ratelimit-remaining': '100',
+      'x-ratelimit-limit': '1000',
+      ...extraHeaders
+    })
+  }),
+
+  // Validate fetch mock structure (helps catch missing headers in tests)
+  validateFetchMock: (mockResponse) => {
+    const required = ['ok', 'status', 'headers', 'json'];
+    const missing = required.filter(prop => !(prop in mockResponse));
+    if (missing.length > 0) {
+      throw new Error(`Fetch mock missing required properties: ${missing.join(', ')}. Use testUtils.mockApiResponse() or testUtils.mockMexcApiResponse() helpers.`);
+    }
+    
+    // Validate headers is a proper Headers object or has forEach method
+    if (!mockResponse.headers || typeof mockResponse.headers.forEach !== 'function') {
+      throw new Error('Fetch mock headers must be a Headers object with forEach method. Use new Headers({...}) or testUtils.mockApiResponse() helper.');
+    }
+    
+    return true;
+  },
+
   // Register cleanup function
   registerCleanup: (fn) => {
     if (!global.testCleanupFunctions) {
