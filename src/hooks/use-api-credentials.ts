@@ -37,7 +37,10 @@ export function useApiCredentials(userId?: string, provider = "mexc") {
       }
 
       const response = await fetch(
-        `/api/api-credentials?userId=${encodeURIComponent(userId)}&provider=${encodeURIComponent(provider)}`
+        `/api/api-credentials?userId=${encodeURIComponent(userId)}&provider=${encodeURIComponent(provider)}`,
+        {
+          credentials: "include" // Include authentication cookies
+        }
       );
 
       if (!response.ok) {
@@ -93,6 +96,7 @@ export function useSaveApiCredentials() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Include authentication cookies
         body: requestPayload,
       });
 
@@ -159,6 +163,7 @@ export function useDeleteApiCredentials() {
         `/api/api-credentials?userId=${encodeURIComponent(userId)}&provider=${encodeURIComponent(provider)}`,
         {
           method: "DELETE",
+          credentials: "include", // Include authentication cookies
         }
       );
 
@@ -207,6 +212,7 @@ export function useTestApiCredentials() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Include authentication cookies
         body: JSON.stringify({ userId, provider }),
       });
 

@@ -1620,6 +1620,196 @@ export class PatternDetectionEngine extends EventEmitter {
       return 75; // Default fallback
     }
   }
+
+  /**
+   * Calendar-specific pattern analysis
+   * Analyzes calendar entries for trading patterns and opportunities
+   */
+  async analyzeCalendarPatterns(
+    calendarEntries: CalendarEntry[],
+    options?: PatternAnalysisRequest
+  ): Promise<PatternAnalysisResult> {
+    const startTime = Date.now();
+
+    try {
+      this.logger.info("Starting calendar pattern analysis", {
+        operation: "calendar_pattern_analysis",
+        entriesCount: calendarEntries.length,
+        analysisType: options?.analysisType || "discovery",
+        confidenceThreshold: options?.confidenceThreshold || 70,
+      });
+
+      // Convert calendar entries to symbol-like format for pattern analysis
+      const symbolData: SymbolEntry[] = calendarEntries.map((entry) => ({
+        cd: entry.symbol,
+        vcoinId: entry.vcoinId,
+        sts: 1, // Assume preparing state
+        st: 1, // Assume inactive initially
+        tt: 1, // Assume no trading yet
+        firstOpenTime: entry.firstOpenTime,
+        projectName: entry.projectName,
+      }));
+
+      // Calculate timing metrics for each entry
+      const enrichedSymbols = symbolData.map((symbol) => {
+        const launchTime = new Date(symbol.firstOpenTime as string).getTime();
+        const advanceHours = (launchTime - Date.now()) / (1000 * 60 * 60);
+
+        // Predict pattern state based on timing
+        let predictedSts = 1;
+        let predictedSt = 1;
+        let predictedTt = 1;
+
+        if (advanceHours <= 0.5 && advanceHours >= -0.5) {
+          // Near launch - might be in ready state
+          predictedSts = 2;
+          predictedSt = 2;
+          predictedTt = 4;
+        } else if (advanceHours <= 2) {
+          // Close to launch - pre-ready state
+          predictedSts = 2;
+          predictedSt = 1;
+          predictedTt = 2;
+        }
+
+        return {
+          ...symbol,
+          sts: predictedSts,
+          st: predictedSt,
+          tt: predictedTt,
+          advanceHours,
+        };
+      });
+
+      // Analyze patterns using existing methods
+      const readyStateMatches = await this.detectReadyStatePattern(
+        enrichedSymbols,
+        options?.confidenceThreshold || 70
+      );
+
+      const advanceOpportunities = await this.detectAdvanceOpportunities(
+        enrichedSymbols,
+        options?.confidenceThreshold || 70
+      );
+
+      const preReadyMatches = await this.detectPreReadyPatterns(
+        enrichedSymbols,
+        options?.confidenceThreshold || 60
+      );
+
+      // Combine all matches
+      const allMatches = [...readyStateMatches, ...advanceOpportunities, ...preReadyMatches];
+
+      // Enhance matches with calendar-specific metadata
+      const enhancedMatches = allMatches.map((match) => {
+        const calendarEntry = calendarEntries.find((entry) => entry.symbol === match.symbol);
+        return {
+          ...match,
+          vcoinId: calendarEntry?.vcoinId || match.vcoinId,
+          indicators: {
+            ...match.indicators,
+            projectName: calendarEntry?.projectName,
+            launchTime: calendarEntry?.firstOpenTime,
+          },
+        };
+      });
+
+      // Generate summary statistics
+      const summary = {
+        totalAnalyzed: calendarEntries.length,
+        readyStateFound: readyStateMatches.length,
+        highConfidenceMatches: allMatches.filter((m) => m.confidence >= 80).length,
+        advanceOpportunities: advanceOpportunities.length,
+        averageConfidence:
+          allMatches.length > 0
+            ? Math.round(allMatches.reduce((sum, m) => sum + m.confidence, 0) / allMatches.length)
+            : 0,
+      };
+
+      // Categorize recommendations
+      const recommendations = {
+        immediate: enhancedMatches.filter((m) => m.recommendation === "immediate_action"),
+        monitor: enhancedMatches.filter((m) => m.recommendation === "monitor_closely"),
+        prepare: enhancedMatches.filter((m) => m.recommendation === "prepare_entry"),
+      };
+
+      const result: PatternAnalysisResult = {
+        matches: enhancedMatches,
+        summary,
+        recommendations,
+        analysisMetadata: {
+          analysisTimestamp: new Date().toISOString(),
+          totalDuration: Date.now() - startTime,
+          source: "calendar-pattern-analysis",
+          calendarEntriesAnalyzed: calendarEntries.length,
+        },
+      };
+
+      this.logger.info("Calendar pattern analysis completed", {
+        operation: "calendar_pattern_analysis",
+        entriesAnalyzed: calendarEntries.length,
+        readyStateFound: summary.readyStateFound,
+        highConfidenceMatches: summary.highConfidenceMatches,
+        averageConfidence: summary.averageConfidence,
+        duration: Date.now() - startTime,
+      });
+
+      // Emit patterns_detected event for automatic target creation
+      const isTestEnv = process.env.NODE_ENV === "test";
+      const shouldEmitEvents = enhancedMatches.length > 0 && (!isTestEnv || options?.forceEmitEvents);
+      
+      if (shouldEmitEvents) {
+        this.emit("patterns_detected", {
+          patternType: "calendar_analysis",
+          matches: enhancedMatches,
+          metadata: {
+            calendarEntriesAnalyzed: calendarEntries.length,
+            duration: Date.now() - startTime,
+            source: "calendar-pattern-analysis",
+            averageAdvanceHours:
+              enhancedMatches.length > 0
+                ? enhancedMatches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / enhancedMatches.length
+                : 0,
+          },
+        });
+      }
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        "Calendar pattern analysis failed",
+        {
+          operation: "calendar_pattern_analysis",
+          entriesCount: calendarEntries.length,
+          duration: Date.now() - startTime,
+        },
+        error
+      );
+
+      // Return empty result on failure
+      return {
+        matches: [],
+        summary: {
+          totalAnalyzed: calendarEntries.length,
+          readyStateFound: 0,
+          highConfidenceMatches: 0,
+          advanceOpportunities: 0,
+          averageConfidence: 0,
+        },
+        recommendations: {
+          immediate: [],
+          monitor: [],
+          prepare: [],
+        },
+        analysisMetadata: {
+          analysisTimestamp: new Date().toISOString(),
+          totalDuration: Date.now() - startTime,
+          source: "calendar-pattern-analysis",
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+      };
+    }
+  }
 }
 
 // Export singleton instance
