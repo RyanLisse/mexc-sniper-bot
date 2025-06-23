@@ -354,7 +354,7 @@ jobs:
 
       - name: Create Issue for Critical Failures
         if: needs.auth-health-monitoring.result == 'failure'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const title = `🚨 Critical Authentication System Alert - ${new Date().toISOString()}`;
@@ -404,7 +404,7 @@ jobs:
     
     steps:
       - name: Close resolved monitoring issues
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             // Get open monitoring issues
