@@ -237,7 +237,7 @@ export function StatusProvider({
       // Use unified status resolver for consistent network status
       const { getUnifiedStatus } = await import("../services/unified-status-resolver");
       const unifiedStatus = await getUnifiedStatus();
-      
+
       return {
         connected: unifiedStatus.network.connected,
         lastChecked: unifiedStatus.network.lastChecked,
@@ -257,7 +257,7 @@ export function StatusProvider({
       // Use unified status resolver to eliminate contradictions
       const { getUnifiedStatus } = await import("../services/unified-status-resolver");
       const unifiedStatus = await getUnifiedStatus();
-      
+
       return {
         hasCredentials: unifiedStatus.credentials.hasCredentials,
         isValid: unifiedStatus.credentials.isValid,

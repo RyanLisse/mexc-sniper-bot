@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, AlertTriangle, CheckCircle, Pause, Play, Settings, Zap } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle, Pause, Play, Settings, Zap, type LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useStatus } from "../../contexts/status-context";
 import { useAutoSnipingExecution } from "../../hooks/use-auto-sniping-execution";
@@ -27,6 +27,137 @@ interface SimpleAutoSnipingControlProps {
   showAdvancedSettings?: boolean;
 }
 
+interface ConnectionStatus {
+  status: string;
+  label: string;
+  description: string;
+  color: string;
+  bgColor: string;
+  icon: LucideIcon;
+}
+
+interface StatusType {
+  network: { connected: boolean };
+  credentials: { hasCredentials: boolean; isValid: boolean };
+  trading: { canTrade: boolean };
+}
+
+// Extract connection status logic to reduce complexity
+function getConnectionStatus(status: StatusType): ConnectionStatus {
+  const { network, credentials, trading } = status;
+
+  if (!network.connected) {
+    return {
+      status: "error",
+      label: "Network Disconnected",
+      description: "Check your internet connection",
+      color: "text-red-600",
+      bgColor: "bg-red-50 border-red-200",
+      icon: AlertTriangle,
+    };
+  }
+
+  if (!credentials.hasCredentials || !credentials.isValid) {
+    return {
+      status: "warning",
+      label: "API Setup Required",
+      description: "Configure your MEXC API credentials",
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50 border-yellow-200",
+      icon: Settings,
+    };
+  }
+
+  if (!trading.canTrade) {
+    return {
+      status: "warning",
+      label: "Trading Unavailable",
+      description: "Check your MEXC account permissions",
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50 border-yellow-200",
+      icon: AlertTriangle,
+    };
+  }
+
+  return {
+    status: "ready",
+    label: "Ready to Trade",
+    description: "All systems operational",
+    color: "text-green-600",
+    bgColor: "bg-green-50 border-green-200",
+    icon: CheckCircle,
+  };
+}
+
+// Trading stats component to reduce complexity
+function TradingStats({
+  totalPnl,
+  activePositionsCount,
+  successRate,
+}: {
+  totalPnl: string;
+  activePositionsCount: number;
+  successRate: number;
+}) {
+  const pnlValue = Number.parseFloat(totalPnl);
+
+  return (
+    <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 rounded-lg">
+      <div className="text-center">
+        <div className={`text-lg font-bold ${pnlValue >= 0 ? "text-green-600" : "text-red-600"}`}>
+          {pnlValue >= 0 ? "+" : ""}
+          {pnlValue.toFixed(2)} USDT
+        </div>
+        <div className="text-xs text-muted-foreground">Total P&L</div>
+      </div>
+      <div className="text-center">
+        <div className="text-lg font-bold text-blue-600">{activePositionsCount}</div>
+        <div className="text-xs text-muted-foreground">Active Trades</div>
+      </div>
+      <div className="text-center">
+        <div className="text-lg font-bold text-purple-600">{successRate.toFixed(0)}%</div>
+        <div className="text-xs text-muted-foreground">Success Rate</div>
+      </div>
+    </div>
+  );
+}
+
+// Status badge component to reduce complexity
+function StatusBadge({
+  autoSnipingEnabled,
+  isExecutionActive,
+  isStartingExecution,
+}: {
+  autoSnipingEnabled: boolean;
+  isExecutionActive: boolean;
+  isStartingExecution: boolean;
+}) {
+  if (autoSnipingEnabled && isExecutionActive) {
+    return (
+      <Badge variant="default" className="flex items-center gap-1">
+        <Play className="h-3 w-3" />
+        Running
+      </Badge>
+    );
+  }
+
+  if (autoSnipingEnabled && isStartingExecution) {
+    return (
+      <Badge variant="secondary" className="flex items-center gap-1">
+        <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+        Starting
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge variant="secondary" className="flex items-center gap-1">
+      <Pause className="h-3 w-3" />
+      Stopped
+    </Badge>
+  );
+}
+
 export function SimpleAutoSnipingControl({
   className = "",
   showAdvancedSettings = false,
@@ -37,7 +168,6 @@ export function SimpleAutoSnipingControl({
   const {
     config,
     isExecutionActive,
-    executionStatus,
     activePositionsCount,
     totalPnl,
     successRate,
@@ -105,55 +235,8 @@ export function SimpleAutoSnipingControl({
     [config, isExecutionActive, updateConfig, startExecution, stopExecution]
   );
 
-  const getConnectionStatus = () => {
-    const { network, credentials, trading } = status;
-
-    if (!network.connected) {
-      return {
-        status: "error",
-        label: "Network Disconnected",
-        description: "Check your internet connection",
-        color: "text-red-600",
-        bgColor: "bg-red-50 border-red-200",
-        icon: AlertTriangle,
-      };
-    }
-
-    if (!credentials.hasCredentials || !credentials.isValid) {
-      return {
-        status: "warning",
-        label: "API Setup Required",
-        description: "Configure your MEXC API credentials",
-        color: "text-yellow-600",
-        bgColor: "bg-yellow-50 border-yellow-200",
-        icon: Settings,
-      };
-    }
-
-    if (!trading.canTrade) {
-      return {
-        status: "warning",
-        label: "Trading Unavailable",
-        description: "Check your MEXC account permissions",
-        color: "text-yellow-600",
-        bgColor: "bg-yellow-50 border-yellow-200",
-        icon: AlertTriangle,
-      };
-    }
-
-    return {
-      status: "ready",
-      label: "Ready to Trade",
-      description: "All systems operational",
-      color: "text-green-600",
-      bgColor: "bg-green-50 border-green-200",
-      icon: CheckCircle,
-    };
-  };
-
-  const connectionStatus = getConnectionStatus();
+  const connectionStatus = getConnectionStatus(status);
   const isReadyToTrade = connectionStatus.status === "ready";
-  const pnlValue = Number.parseFloat(totalPnl);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -224,52 +307,22 @@ export function SimpleAutoSnipingControl({
 
           {/* Trading Status - Only show if ready */}
           {isReadyToTrade && autoSnipingEnabled && (
-            <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 rounded-lg">
-              <div className="text-center">
-                <div
-                  className={`text-lg font-bold ${pnlValue >= 0 ? "text-green-600" : "text-red-600"}`}
-                >
-                  {pnlValue >= 0 ? "+" : ""}
-                  {pnlValue.toFixed(2)} USDT
-                </div>
-                <div className="text-xs text-muted-foreground">Total P&L</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-blue-600">{activePositionsCount}</div>
-                <div className="text-xs text-muted-foreground">Active Trades</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-purple-600">{successRate.toFixed(0)}%</div>
-                <div className="text-xs text-muted-foreground">Success Rate</div>
-              </div>
-            </div>
+            <TradingStats
+              totalPnl={totalPnl}
+              activePositionsCount={activePositionsCount}
+              successRate={successRate}
+            />
           )}
 
           {/* Status Badge */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Status:</span>
-              <Badge
-                variant={autoSnipingEnabled && isExecutionActive ? "default" : "secondary"}
-                className="flex items-center gap-1"
-              >
-                {autoSnipingEnabled && isExecutionActive ? (
-                  <>
-                    <Play className="h-3 w-3" />
-                    Running
-                  </>
-                ) : autoSnipingEnabled && isStartingExecution ? (
-                  <>
-                    <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
-                    Starting
-                  </>
-                ) : (
-                  <>
-                    <Pause className="h-3 w-3" />
-                    Stopped
-                  </>
-                )}
-              </Badge>
+              <StatusBadge
+                autoSnipingEnabled={autoSnipingEnabled}
+                isExecutionActive={isExecutionActive}
+                isStartingExecution={isStartingExecution}
+              />
             </div>
             <div className="text-xs text-muted-foreground">Today: {dailyTradeCount} trades</div>
           </div>

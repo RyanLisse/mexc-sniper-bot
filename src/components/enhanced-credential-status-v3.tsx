@@ -138,7 +138,7 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const result = await response.json();
-      
+
       // Transform unified response to match expected format
       const unifiedData = result.data;
       return {
@@ -152,9 +152,14 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
         hasEnvironmentCredentials: unifiedData.hasEnvironmentCredentials,
         connectionHealth: unifiedData.connectionHealth || "good",
         connectionQuality: {
-          score: unifiedData.connectionHealth === "excellent" ? 100 : 
-                unifiedData.connectionHealth === "good" ? 80 : 
-                unifiedData.connectionHealth === "fair" ? 60 : 40,
+          score:
+            unifiedData.connectionHealth === "excellent"
+              ? 100
+              : unifiedData.connectionHealth === "good"
+                ? 80
+                : unifiedData.connectionHealth === "fair"
+                  ? 60
+                  : 40,
           status: unifiedData.connectionHealth || "good",
           reasons: unifiedData.recommendations?.slice(0, 3) || [],
           recommendations: unifiedData.recommendations || [],
@@ -174,22 +179,31 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
         alerts: {
           count: unifiedData.error ? 1 : 0,
           latest: unifiedData.error,
-          severity: unifiedData.error ? "warning" as const : "none" as const,
-          recent: unifiedData.error ? [{
-            type: "error",
-            severity: "warning",
-            message: unifiedData.error,
-            timestamp: new Date().toISOString(),
-          }] : [],
+          severity: unifiedData.error ? ("warning" as const) : ("none" as const),
+          recent: unifiedData.error
+            ? [
+                {
+                  type: "error",
+                  severity: "warning",
+                  message: unifiedData.error,
+                  timestamp: new Date().toISOString(),
+                },
+              ]
+            : [],
         },
         recommendedActions: unifiedData.recommendations || [],
         error: unifiedData.error,
         message: unifiedData.statusMessage,
-        status: unifiedData.overallStatus === "healthy" ? "fully_connected" as const :
-               unifiedData.isTestCredentials ? "test_credentials" as const :
-               !unifiedData.hasCredentials ? "no_credentials" as const :
-               !unifiedData.credentialsValid ? "credentials_invalid" as const :
-               "network_error" as const,
+        status:
+          unifiedData.overallStatus === "healthy"
+            ? ("fully_connected" as const)
+            : unifiedData.isTestCredentials
+              ? ("test_credentials" as const)
+              : !unifiedData.hasCredentials
+                ? ("no_credentials" as const)
+                : !unifiedData.credentialsValid
+                  ? ("credentials_invalid" as const)
+                  : ("network_error" as const),
         timestamp: unifiedData.lastChecked,
         lastChecked: unifiedData.lastChecked,
         nextCheckIn: 60000,

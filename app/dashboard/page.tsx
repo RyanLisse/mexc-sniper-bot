@@ -20,6 +20,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../src/components/ui/tabs";
 import { Button } from "../../src/components/ui/button";
 import { Plus } from "lucide-react";
+import { ManualTradingPanel } from "../../src/components/manual-trading-panel";
 import { useMexcCalendar, useReadyTargets } from "../../src/hooks/use-mexc-data";
 import { usePortfolio } from "../../src/hooks/use-portfolio";
 import { useAccountBalance } from "../../src/hooks/use-account-balance";
@@ -170,6 +171,7 @@ export default function DashboardPage() {
               >
                 Recent Trades
               </TabsTrigger>
+              <TabsTrigger value="manual-trading">Manual Trading</TabsTrigger>
               <TabsTrigger value="patterns">Pattern Detection</TabsTrigger>
             </TabsList>
             <div className="flex items-center gap-2">
@@ -248,6 +250,12 @@ export default function DashboardPage() {
             <LazyTableWrapper>
               <RecentTradesTable userId={userId} />
             </LazyTableWrapper>
+          </TabsContent>
+
+          <TabsContent value="manual-trading" className="space-y-4">
+            <LazyDashboardWrapper>
+              <ManualTradingPanel userId={userId} />
+            </LazyDashboardWrapper>
           </TabsContent>
 
           <TabsContent value="patterns" className="space-y-4">

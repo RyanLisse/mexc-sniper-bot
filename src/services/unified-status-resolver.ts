@@ -1,7 +1,7 @@
 /**
  * Unified Status Resolver
- * 
- * Single source of truth for MEXC API status that eliminates contradictory 
+ *
+ * Single source of truth for MEXC API status that eliminates contradictory
  * status reporting by normalizing responses from multiple endpoints.
  */
 
@@ -45,7 +45,7 @@ export class UnifiedStatusResolver {
   private isResolving = false;
 
   /**
-   * Resolve unified status by attempting enhanced endpoint first, 
+   * Resolve unified status by attempting enhanced endpoint first,
    * then falling back to legacy with proper response normalization
    */
   async resolveStatus(): Promise<StatusResolutionResult> {
@@ -74,7 +74,6 @@ export class UnifiedStatusResolver {
 
       // Both failed - return error status
       return this.createFallbackStatus("All connectivity checks failed");
-
     } catch (error) {
       const safeError = toSafeError(error);
       console.error("[UnifiedStatusResolver] Resolution failed:", safeError.message);
@@ -233,7 +232,8 @@ export class UnifiedStatusResolver {
     if (credentials.isTestCredentials) {
       return {
         status: "warning",
-        message: "Demo mode active with test credentials - configure real MEXC API credentials for live trading",
+        message:
+          "Demo mode active with test credentials - configure real MEXC API credentials for live trading",
         canTrade: false, // Cannot trade with test credentials
       };
     }
@@ -311,9 +311,9 @@ export class UnifiedStatusResolver {
   /**
    * Check if status is stale (older than specified time)
    */
-  isStale(maxAgeMs: number = 30000): boolean {
+  isStale(maxAgeMs = 30000): boolean {
     if (!this.lastKnownStatus) return true;
-    
+
     const age = Date.now() - new Date(this.lastKnownStatus.timestamp).getTime();
     return age > maxAgeMs;
   }

@@ -194,7 +194,12 @@ export class SecureEncryptionService {
   /**
    * Masks sensitive data for display (shows first/last 4 chars)
    */
-  static maskSensitiveData(data: string, visibleChars = 4): string {
+  static maskSensitiveData(data: string | undefined | null, visibleChars = 4): string {
+    // Handle undefined/null data
+    if (!data || typeof data !== "string") {
+      return "***undefined***";
+    }
+
     if (data.length <= visibleChars * 2) {
       return "*".repeat(data.length);
     }

@@ -22,7 +22,13 @@ import {
   LazyChartWrapper,
   preloadMonitoringComponents
 } from "@/components/dynamic-component-loader";
-import { PatternMonitoringDashboard } from "@/src/components/auto-sniping/pattern-monitoring-dashboard";
+import { lazy } from "react";
+
+const PatternMonitoringDashboard = lazy(() => 
+  import("@/src/components/auto-sniping/pattern-monitoring-dashboard").then(module => ({
+    default: module.PatternMonitoringDashboard
+  }))
+);
 import { 
   Activity, 
   BarChart3, 

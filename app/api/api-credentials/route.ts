@@ -159,14 +159,27 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
       hasSecretKey: !!secretKey,
       hasPassphrase: !!passphrase,
       apiKeyLength: apiKey?.length || 0,
-      secretKeyLength: secretKey?.length || 0
+      secretKeyLength: secretKey?.length || 0,
+      apiKeyValue: apiKey ? 'present' : 'missing',
+      secretKeyValue: secretKey ? 'present' : 'missing',
+      bodyContents: Object.keys(body || {})
     });
 
   // Validate required fields
   const missingField = validateRequiredFields(body, ['userId', 'apiKey', 'secretKey']);
   if (missingField) {
+    console.log('[DEBUG] Missing required field:', missingField, 'Body:', body);
     return apiResponse(
       createValidationErrorResponse('required_fields', missingField),
+      HTTP_STATUS.BAD_REQUEST
+    );
+  }
+
+  // Additional validation for undefined values
+  if (!apiKey || !secretKey) {
+    console.log('[DEBUG] API key or secret key is undefined:', { apiKey, secretKey });
+    return apiResponse(
+      createValidationErrorResponse('api_credentials', 'API key and secret key cannot be empty or undefined'),
       HTTP_STATUS.BAD_REQUEST
     );
   }

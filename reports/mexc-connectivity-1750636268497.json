@@ -6,9 +6,7 @@
   "balanceCheck": true,
   "orderCapability": true,
   "errors": [],
-  "warnings": [
-    "Order capability verified by signature only - no live order placed"
-  ],
+  "warnings": ["Order capability verified by signature only - no live order placed"],
   "recommendations": [],
   "accountInfo": {
     "makerCommission": null,
@@ -37,9 +35,7 @@
         "locked": "1000"
       }
     ],
-    "permissions": [
-      "SPOT"
-    ]
+    "permissions": ["SPOT"]
   },
   "balances": [
     {

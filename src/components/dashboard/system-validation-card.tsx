@@ -313,9 +313,9 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
 
               {showDetails && (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {validationData.checks.map((check, index) => (
+                  {validationData.checks.map((check) => (
                     <div
-                      key={index}
+                      key={check.component}
                       className="flex items-start space-x-3 p-2 border rounded text-sm"
                     >
                       <div className="mt-0.5">

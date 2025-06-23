@@ -52,9 +52,26 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
       return;
     }
 
+    // Additional validation for undefined/null values
+    if (apiKeyInput === "undefined" || secretKeyInput === "undefined") {
+      setTestResult({
+        success: false,
+        message: "Invalid API credentials - please re-enter your keys",
+      });
+      return;
+    }
+
     try {
       // Clear any previous test results
       setTestResult(null);
+
+      console.log("[DEBUG] Client-side save request:", {
+        userId,
+        hasApiKey: !!apiKeyInput.trim(),
+        hasSecretKey: !!secretKeyInput.trim(),
+        apiKeyLength: apiKeyInput.trim().length,
+        secretKeyLength: secretKeyInput.trim().length,
+      });
 
       const result = await saveApiCredentials.mutateAsync({
         userId,
@@ -67,10 +84,12 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
       setApiKeyInput("");
       setSecretKeyInput("");
 
+      console.log("[DEBUG] Save result:", result);
+
       // Show success message with masked credentials for verification
       setTestResult({
         success: true,
-        message: `API credentials saved successfully! API Key: ${result.maskedApiKey}, Secret: ${result.maskedSecretKey}`,
+        message: `API credentials saved successfully! API Key: ${result.maskedApiKey || "masked"}, Secret: ${result.maskedSecretKey || "masked"}`,
       });
 
       // Auto-clear success message after 5 seconds
