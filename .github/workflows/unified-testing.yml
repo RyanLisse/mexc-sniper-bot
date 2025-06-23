@@ -134,7 +134,7 @@ jobs:
         run: npm run test:${{ matrix.test-type }}
         
       - name: 📊 Upload coverage reports
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: matrix.test-type == 'unit'
         with:
           file: ./coverage/lcov.info
