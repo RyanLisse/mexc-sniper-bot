@@ -87,7 +87,8 @@ export class MexcCoreClient {
     const startTime = Date.now();
 
     try {
-      const url = `${this.config.baseUrl}/api/v3/exchangeInfo`;
+      const timestamp = Date.now();
+      const url = `${this.config.baseUrl}/api/v3/exchangeInfo?timestamp=${timestamp}`;
       const response = await this.makeAuthenticatedRequest(url);
 
       if (response.data?.symbols && Array.isArray(response.data.symbols)) {
@@ -139,7 +140,8 @@ export class MexcCoreClient {
     const startTime = Date.now();
 
     try {
-      const url = `${this.config.baseUrl}/api/v3/exchangeInfo`;
+      const timestamp = Date.now();
+      const url = `${this.config.baseUrl}/api/v3/exchangeInfo?timestamp=${timestamp}`;
       const response = await this.makeAuthenticatedRequest(url);
 
       if (response.data?.symbols && Array.isArray(response.data.symbols)) {
@@ -185,7 +187,8 @@ export class MexcCoreClient {
     const startTime = Date.now();
 
     try {
-      const url = `${this.config.baseUrl}/api/v3/account`;
+      const timestamp = Date.now();
+      const url = `${this.config.baseUrl}/api/v3/account?timestamp=${timestamp}`;
       const response = await this.makeAuthenticatedRequest(url);
 
       if (response.data?.balances && Array.isArray(response.data.balances)) {
@@ -332,7 +335,7 @@ export class MexcCoreClient {
     options: RequestInit = {}
   ): Promise<MexcApiResponse> {
     // Add authentication headers here
-    const authHeaders = this.generateAuthHeaders();
+    const authHeaders = this.generateAuthHeaders(url, options);
 
     return this.makeRequest(url, {
       ...options,
@@ -343,12 +346,40 @@ export class MexcCoreClient {
     });
   }
 
-  private generateAuthHeaders(): Record<string, string> {
-    // Simplified auth header generation
-    // In production, this would include proper MEXC signature generation
+  private generateAuthHeaders(url: string, options: RequestInit = {}): Record<string, string> {
+    // Parse URL to get query string (timestamp should already be included)
+    const urlObj = new URL(url);
+    const queryString = urlObj.search ? urlObj.search.substring(1) : '';
+    
+    // MEXC signature is based on the query string for GET requests
+    const stringToSign = queryString;
+    
+    // Generate HMAC-SHA256 signature
+    const signature = this.createSignature(stringToSign);
+    
     return {
       "X-MEXC-APIKEY": this.config.apiKey,
+      "X-MEXC-SIGNATURE": signature,
     };
+  }
+
+  private createSignature(data: string): string {
+    if (typeof window !== 'undefined') {
+      // Browser environment - return a placeholder
+      console.warn('MEXC API signatures cannot be generated in browser environment');
+      return 'browser-placeholder';
+    }
+    
+    try {
+      const crypto = require('crypto');
+      return crypto
+        .createHmac('sha256', this.config.secretKey)
+        .update(data)
+        .digest('hex');
+    } catch (error) {
+      console.error('Failed to create MEXC signature:', error);
+      return 'signature-error';
+    }
   }
 
   private parseTimestamp(timestamp: any): number {
