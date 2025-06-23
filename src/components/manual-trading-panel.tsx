@@ -178,38 +178,61 @@ const TradingForm = ({
             </div>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="asset">Asset</Label>
-            <Select value={selectedAsset} onValueChange={setSelectedAsset}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select asset to trade" />
-              </SelectTrigger>
-              <SelectContent>
-                {side === "SELL"
-                  ? // For selling, only show assets the user owns
-                    availableAssets
-                      .filter(
-                        (asset) => Number.parseFloat(asset.free) > 0 && asset.asset !== "USDT"
-                      )
-                      .map((asset) => (
-                        <SelectItem key={asset.asset} value={asset.asset}>
-                          <div className="flex items-center justify-between w-full">
-                            <span>{asset.asset}</span>
-                            <span className="text-xs text-muted-foreground ml-2">
-                              {Number.parseFloat(asset.free).toFixed(4)} available
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))
-                  : // For buying, show popular trading pairs (you could expand this list)
-                    ["BTC", "ETH", "BNB", "ADA", "DOT", "LINK", "UNI", "AVAX"].map((asset) => (
-                      <SelectItem key={asset} value={asset}>
-                        {asset}
-                      </SelectItem>
-                    ))}
-              </SelectContent>
-            </Select>
-            {selectedAssetData && side === "SELL" && (
+            <div className="relative">
+              <Select value={selectedAsset} onValueChange={setSelectedAsset}>
+                <SelectTrigger className="bg-background border-border text-foreground hover:bg-accent/50 focus:ring-primary/50">
+                  <SelectValue placeholder="Select asset to trade" />
+                </SelectTrigger>
+                <SelectContent
+                  className="bg-popover border-border shadow-lg backdrop-blur-sm max-h-[300px] overflow-y-auto min-w-[var(--radix-select-trigger-width)]"
+                  position="popper"
+                  sideOffset={4}
+                  align="start"
+                  sticky="always"
+                >
+                  {side === "SELL"
+                    ? // For selling, only show non-USDT assets the user owns
+                      availableAssets
+                        .filter(
+                          (asset) => Number.parseFloat(asset.free) > 0 && asset.asset !== "USDT"
+                        )
+                        .map((asset) => (
+                          <SelectItem
+                            key={asset.asset}
+                            value={asset.asset}
+                            className="focus:bg-accent focus:text-accent-foreground cursor-pointer min-h-[44px] sm:min-h-[32px]"
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="font-medium">{asset.asset}</span>
+                              <span className="text-xs text-muted-foreground ml-2 shrink-0">
+                                {Number.parseFloat(asset.free).toFixed(4)} available
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))
+                    : // For buying, only show assets the user owns (they can trade between their holdings)
+                      availableAssets
+                        .filter((asset) => Number.parseFloat(asset.free) > 0)
+                        .map((asset) => (
+                          <SelectItem
+                            key={asset.asset}
+                            value={asset.asset}
+                            className="focus:bg-accent focus:text-accent-foreground cursor-pointer min-h-[44px] sm:min-h-[32px]"
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="font-medium">{asset.asset}</span>
+                              <span className="text-xs text-muted-foreground ml-2 shrink-0">
+                                {Number.parseFloat(asset.free).toFixed(4)} available
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedAssetData && (
               <p className="text-xs text-muted-foreground mt-1">
                 Available: {Number.parseFloat(selectedAssetData.free).toFixed(4)} {selectedAsset}
                 {selectedAssetData.usdtValue && ` (≈ $${selectedAssetData.usdtValue.toFixed(2)})`}
