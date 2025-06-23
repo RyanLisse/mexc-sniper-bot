@@ -140,7 +140,7 @@ jobs:
           VITEST_REPORTER: github-actions
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-report-${{ github.run_number }}
@@ -171,7 +171,7 @@ jobs:
           kill $APP_PID || true
 
       - name: Archive build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: success()
         with:
           name: build-artifacts-${{ github.run_number }}
@@ -234,7 +234,7 @@ jobs:
           PLAYWRIGHT_REPORTER: github
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report-${{ github.run_number }}
@@ -242,7 +242,7 @@ jobs:
           retention-days: 7
 
       - name: Upload test videos
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-videos-${{ github.run_number }}
@@ -305,7 +305,7 @@ jobs:
         run: bun run test:bench --reporter=verbose
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: benchmark-results-${{ github.run_number }}
           path: benchmark-results.json
