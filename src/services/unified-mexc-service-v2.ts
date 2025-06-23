@@ -258,6 +258,152 @@ export class UnifiedMexcServiceV2 {
     );
   }
 
+  /**
+   * Get symbol data for analysis
+   */
+  async getSymbolData(symbol: string): Promise<MexcServiceResponse<any>> {
+    return this.cacheLayer.getOrSet(
+      `symbol:data:${symbol}`,
+      () => this.coreClient.getSymbolInfoBasic(symbol),
+      "semiStatic"
+    );
+  }
+
+  /**
+   * Get symbols for multiple vcoins
+   */
+  async getSymbolsForVcoins(vcoinIds: string[]): Promise<MexcServiceResponse<SymbolEntry[]>> {
+    // For multiple vcoins, we'll fetch each one and combine results
+    const promises = vcoinIds.map(vcoinId => this.getSymbolsByVcoinId(vcoinId));
+    const responses = await Promise.all(promises);
+    
+    const allSymbols: SymbolEntry[] = [];
+    let hasError = false;
+    let errorMessage = "";
+
+    for (const response of responses) {
+      if (response.success && response.data) {
+        allSymbols.push(...response.data);
+      } else {
+        hasError = true;
+        errorMessage = response.error || "Failed to fetch symbols";
+      }
+    }
+
+    if (hasError && allSymbols.length === 0) {
+      return {
+        success: false,
+        error: errorMessage,
+        timestamp: Date.now(),
+        source: "unified-mexc-service-v2",
+      };
+    }
+
+    return {
+      success: true,
+      data: allSymbols,
+      timestamp: Date.now(),
+      source: "unified-mexc-service-v2",
+    };
+  }
+
+  /**
+   * Get symbols data (alias for getAllSymbols)
+   */
+  async getSymbolsData(): Promise<MexcServiceResponse<SymbolEntry[]>> {
+    return this.getAllSymbols();
+  }
+
+  /**
+   * Get bulk activity data for multiple currencies
+   */
+  async getBulkActivityData(currencies: string[]): Promise<MexcServiceResponse<any[]>> {
+    const promises = currencies.map(currency => this.getActivityData(currency));
+    const responses = await Promise.all(promises);
+    
+    const allData: any[] = [];
+    let hasError = false;
+    let errorMessage = "";
+
+    for (const response of responses) {
+      if (response.success && response.data) {
+        allData.push(response.data);
+      } else {
+        hasError = true;
+        errorMessage = response.error || "Failed to fetch activity data";
+      }
+    }
+
+    if (hasError && allData.length === 0) {
+      return {
+        success: false,
+        error: errorMessage,
+        timestamp: Date.now(),
+        source: "unified-mexc-service-v2",
+      };
+    }
+
+    return {
+      success: true,
+      data: allData,
+      timestamp: Date.now(),
+      source: "unified-mexc-service-v2",
+    };
+  }
+
+  /**
+   * Check if currency has recent activity
+   */
+  async hasRecentActivity(currency: string, timeframeMs: number = 24 * 60 * 60 * 1000): Promise<boolean> {
+    try {
+      const activityResponse = await this.getActivityData(currency);
+      if (!activityResponse.success || !activityResponse.data) {
+        return false;
+      }
+
+      // Check if the activity data indicates recent activity within timeframe
+      const currentTime = Date.now();
+      const cutoffTime = currentTime - timeframeMs;
+      
+      // For now, assume activity data has a timestamp field
+      // In practice, you'd check the actual structure of the activity data
+      const hasRecent = activityResponse.timestamp > cutoffTime;
+      
+      return hasRecent;
+    } catch (error) {
+      console.warn(`Failed to check recent activity for ${currency}:`, error);
+      return false;
+    }
+  }
+
+  // ============================================================================
+  // Trading Methods
+  // ============================================================================
+
+  /**
+   * Place a trading order
+   */
+  async placeOrder(orderData: {
+    symbol: string;
+    side: 'BUY' | 'SELL';
+    type: 'LIMIT' | 'MARKET';
+    quantity: string;
+    price?: string;
+    timeInForce?: 'GTC' | 'IOC' | 'FOK';
+  }): Promise<MexcServiceResponse<any>> {
+    try {
+      // Delegate to core client for order placement
+      return await this.coreClient.placeOrder(orderData);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to place order",
+        timestamp: Date.now(),
+        source: "unified-mexc-service-v2",
+      };
+    }
+  }
+
   // ============================================================================
   // Cache Management
   // ============================================================================

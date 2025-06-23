@@ -278,6 +278,9 @@ export class UnifiedMexcClient {
                 throw new Error("MEXC API credentials not configured for authenticated request");
               }
 
+              // MEXC requires this specific Content-Type for authenticated requests
+              headers["Content-Type"] = "application/x-www-form-urlencoded";
+
               const timestamp = Date.now();
               params.timestamp = timestamp;
 
@@ -309,11 +312,34 @@ export class UnifiedMexcClient {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
-            const response = await fetch(urlObj.toString(), {
-              method: "GET",
-              headers,
-              signal: controller.signal,
-            });
+            let response: Response;
+
+            if (authenticated) {
+              // MEXC authenticated requests must be POST with signature in body
+              const body = new URLSearchParams();
+              Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                  body.append(key, String(value));
+                }
+              });
+
+              response = await fetch(url, {
+                method: "POST",
+                headers: {
+                  ...headers,
+                  "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: body.toString(),
+                signal: controller.signal,
+              });
+            } else {
+              // Public requests remain as GET with query parameters
+              response = await fetch(urlObj.toString(), {
+                method: "GET",
+                headers,
+                signal: controller.signal,
+              });
+            }
 
             clearTimeout(timeoutId);
 

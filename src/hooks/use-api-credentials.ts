@@ -197,6 +197,7 @@ export function useDeleteApiCredentials() {
 
 // Test API credentials
 export function useTestApiCredentials() {
+  const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
 
   return useMutation({
@@ -260,6 +261,39 @@ export function useTestApiCredentials() {
         message: result.message || "API credentials are valid and connection successful",
         ...result.data,
       };
+    },
+    onSuccess: (data, variables) => {
+      console.log("[DEBUG] API credentials test succeeded, invalidating status caches");
+      
+      // Invalidate all related caches when credentials test succeeds
+      // This fixes the status synchronization issue identified by the swarm
+      
+      // 1. Invalidate status queries - fixes system status not updating
+      queryClient.invalidateQueries({
+        queryKey: ["status"]
+      });
+      
+      // 2. Invalidate connectivity status - refreshes connection state
+      queryClient.invalidateQueries({
+        queryKey: ["mexc", "connectivity"]
+      });
+      
+      // 3. Invalidate unified status - refreshes enhanced status displays
+      queryClient.invalidateQueries({
+        queryKey: ["mexc", "unified-status"]
+      });
+      
+      // 4. Invalidate account balance - may now be accessible with valid credentials
+      queryClient.invalidateQueries({
+        queryKey: ["account-balance"]
+      });
+      
+      // 5. Invalidate API credentials cache for the tested user
+      queryClient.invalidateQueries({
+        queryKey: ["api-credentials", variables.userId, variables.provider || "mexc"]
+      });
+      
+      console.log("[DEBUG] Cache invalidation completed - status should update immediately");
     },
   });
 }

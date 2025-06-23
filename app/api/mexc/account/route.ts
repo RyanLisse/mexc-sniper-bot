@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         message,
         serviceLayer: true,
         timestamp: new Date().toISOString()
-      });
+      }, { status: 400 }); // Bad Request - client configuration issue
     }
 
     // Get account balances via service layer
@@ -73,6 +73,16 @@ export async function GET(request: NextRequest) {
     if (!balancesResponse.success) {
       console.error(`❌ MEXC Account Service Error:`, balancesResponse.error);
       
+      // Determine appropriate status code based on error type
+      let statusCode = 502; // Default: Bad Gateway (upstream service issue)
+      if (balancesResponse.error?.includes("API key") || balancesResponse.error?.includes("signature")) {
+        statusCode = 401; // Unauthorized - invalid credentials
+      } else if (balancesResponse.error?.includes("IP") || balancesResponse.error?.includes("allowlist")) {
+        statusCode = 403; // Forbidden - IP not allowlisted
+      } else if (balancesResponse.error?.includes("timeout") || balancesResponse.error?.includes("connect")) {
+        statusCode = 504; // Gateway Timeout - connection issues
+      }
+      
       return NextResponse.json({
         success: false,
         hasCredentials: true,
@@ -80,17 +90,19 @@ export async function GET(request: NextRequest) {
         error: balancesResponse.error,
         message: "API credentials configured but account access failed",
         serviceLayer: true,
-        executionTimeMs: balancesResponse.executionTimeMs,
+        executionTimeMs: (balancesResponse as any).executionTimeMs || 0,
         timestamp: balancesResponse.timestamp
-      });
+      }, { status: statusCode });
     }
 
     if (!balancesResponse.data) {
       return NextResponse.json({
         success: false,
         error: "No account data received from MEXC API",
-        code: "NO_DATA"
-      }, { status: 500 });
+        code: "NO_DATA",
+        serviceLayer: true,
+        timestamp: new Date().toISOString()
+      }, { status: 502 }); // Bad Gateway - upstream service issue
     }
     
     const { balances, totalUsdtValue } = balancesResponse.data;
@@ -110,8 +122,8 @@ export async function GET(request: NextRequest) {
       lastUpdated,
       message,
       serviceLayer: true,
-      cached: balancesResponse.cached,
-      executionTimeMs: balancesResponse.executionTimeMs,
+      cached: (balancesResponse as any).cached || false,
+      executionTimeMs: (balancesResponse as any).executionTimeMs || 0,
       timestamp: balancesResponse.timestamp
     });
 

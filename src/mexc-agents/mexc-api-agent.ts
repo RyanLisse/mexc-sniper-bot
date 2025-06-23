@@ -818,9 +818,9 @@ Focus on actionable operational insights and performance optimization recommenda
   // Direct MEXC API call as fallback (no longer uses private properties)
   private async directMexcApiCall(endpoint: string, _params?: MexcApiParams): Promise<unknown> {
     try {
-      // Note: This method is deprecated and should use the service layer instead
-      console.warn(
-        `[MexcApiAgent] Direct API call fallback used for: ${endpoint}. Consider using service layer.`
+      // Note: This method is for fallback and should use the service layer instead
+      console.log(
+        `[MexcApiAgent] Direct API call fallback used for: ${endpoint}`
       );
 
       // Use public MEXC endpoints that don't require authentication

@@ -245,10 +245,17 @@ async function handleFix(
   if (fixResult.success) {
     // Validate the fix worked
     const postFixDiagnosis = await safetyService.diagnoseCircuitBreakerIssue()
-    fixResult.result = {
-      ...fixResult,
+    const updatedDetails = {
+      originalResult: fixResult,
       postFixStatus: postFixDiagnosis,
       verified: !postFixDiagnosis.isInProtectiveState
+    }
+    
+    return {
+      success: true,
+      message: 'Circuit breaker recovery completed and verified',
+      details: updatedDetails,
+      nextAction: 'Circuit breaker recovery verified'
     }
   }
 

@@ -75,7 +75,7 @@ export default function DashboardPage() {
     userId,
     enabled: !!userId && !userLoading 
   });
-  const { data: portfolio } = usePortfolio(userId);
+  const { data: portfolio } = usePortfolio(userId || "");
   const { data: calendarData } = useMexcCalendar();
   const { data: readyTargets } = useReadyTargets();
   const { data: enhancedPatterns, isLoading: patternsLoading } = useEnhancedPatterns({
@@ -199,7 +199,7 @@ export default function DashboardPage() {
                 />
               </div>
             </div>
-            <RecentTradesTable userId={userId} />
+            <RecentTradesTable userId={userId || ""} />
           </TabsContent>
 
           <TabsContent value="listings" className="space-y-4">
@@ -251,13 +251,13 @@ export default function DashboardPage() {
 
           <TabsContent value="trades" className="space-y-4">
             <LazyTableWrapper>
-              <RecentTradesTable userId={userId} />
+              <RecentTradesTable userId={userId || ""} />
             </LazyTableWrapper>
           </TabsContent>
 
           <TabsContent value="manual-trading" className="space-y-4">
             <LazyDashboardWrapper>
-              <ManualTradingPanel userId={userId} />
+              <ManualTradingPanel userId={userId || ""} />
             </LazyDashboardWrapper>
           </TabsContent>
 

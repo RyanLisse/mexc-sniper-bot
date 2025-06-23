@@ -663,14 +663,14 @@ class AutoSnipingReadinessAnalyzer {
   }
 
   printReport(): void {
-    console.log("=" * 80);
+    console.log("=".repeat(80));
     console.log("🎯 MEXC AUTO-SNIPING SYSTEM READINESS REPORT");
-    console.log("=" * 80);
+    console.log("=".repeat(80));
     console.log();
     
     // Overall status
     console.log("📊 OVERALL STATUS");
-    console.log("-" * 40);
+    console.log("-".repeat(40));
     console.log(`Status: ${this.report.overallStatus}`);
     console.log(`Readiness Score: ${this.report.readinessScore}%`);
     console.log(`Analysis Time: ${new Date().toISOString()}`);
@@ -679,14 +679,14 @@ class AutoSnipingReadinessAnalyzer {
 
     // Summary
     console.log("📝 EXECUTIVE SUMMARY");
-    console.log("-" * 40);
+    console.log("-".repeat(40));
     console.log(this.report.summary);
     console.log();
 
     // Critical blockers (if any)
     if (this.report.criticalBlockers.length > 0) {
       console.log("🚨 CRITICAL BLOCKERS");
-      console.log("-" * 40);
+      console.log("-".repeat(40));
       for (let i = 0; i < this.report.criticalBlockers.length; i++) {
         console.log(`${i + 1}. ${this.report.criticalBlockers[i]}`);
       }
@@ -695,7 +695,7 @@ class AutoSnipingReadinessAnalyzer {
 
     // Detailed checks
     console.log("🔍 DETAILED SYSTEM CHECKS");
-    console.log("-" * 40);
+    console.log("-".repeat(40));
     
     for (const check of this.report.checks) {
       console.log(`\n${check.status} ${check.name}`);
@@ -730,7 +730,7 @@ class AutoSnipingReadinessAnalyzer {
     }
 
     console.log();
-    console.log("=" * 80);
+    console.log("=".repeat(80));
     
     if (this.report.overallStatus === "READY") {
       console.log("🎉 SYSTEM READY FOR AUTO-SNIPING TODAY'S TOKEN LAUNCHES!");
@@ -740,7 +740,7 @@ class AutoSnipingReadinessAnalyzer {
       console.log("❌ SYSTEM BLOCKED - RESOLVE CRITICAL ISSUES BEFORE TRADING");
     }
     
-    console.log("=" * 80);
+    console.log("=".repeat(80));
   }
 }
 
@@ -774,7 +774,7 @@ async function main() {
 }
 
 // Execute if called directly
-if (import.meta.main) {
+if (require.main === module) {
   main();
 }
 

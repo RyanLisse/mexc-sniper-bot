@@ -77,6 +77,7 @@ export default function MonitoringPage() {
       const interval = setInterval(fetchQuickMetrics, 30000); // Update every 30 seconds
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isHydrated]);
 
   // PHASE 6: Intelligent preloading for 70% faster load times
@@ -86,9 +87,9 @@ export default function MonitoringPage() {
       const timer = setTimeout(() => {
         preloadMonitoringComponents().catch(console.error);
       }, 1000);
-
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isHydrated]);
 
   // Tab hover preloading for instant switching

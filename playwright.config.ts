@@ -167,8 +167,8 @@ export default defineConfig({
   ],
 
   // Enhanced web server configuration
-  webServer: {
-    command: TEST_ENVIRONMENT === 'test' ? 'PLAYWRIGHT_TEST=true bun run dev' : undefined,
+  webServer: TEST_ENVIRONMENT === 'test' ? {
+    command: 'PLAYWRIGHT_TEST=true bun run dev',
     url: BASE_URL,
     reuseExistingServer: !CI,
     timeout: 120 * 1000, // 2 minutes to start
@@ -189,9 +189,8 @@ export default defineConfig({
       OPENAI_API_KEY: 'test-key',
       MEXC_API_KEY: 'test-key',
       MEXC_SECRET_KEY: 'test-secret',
-      ...process.env,
     },
-  },
+  } : undefined,
 
   // Output directory for test artifacts
   outputDir: 'test-results/',

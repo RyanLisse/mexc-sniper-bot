@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, lt, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   type NewWorkflowActivity,
@@ -284,7 +284,7 @@ export class WorkflowStatusService {
             and(
               eq(workflowActivity.userId, this.userId),
               // Activities older than the 50th most recent
-              sql`${workflowActivity.timestamp} < ${cutoffActivity[0].timestamp}`
+              lt(workflowActivity.timestamp, cutoffActivity[0].timestamp)
             )
           );
         }

@@ -26,6 +26,13 @@ import {
   resetUnifiedMexcServiceV2,
 } from "./unified-mexc-service-v2";
 
+// Import the production-ready unified client
+import {
+  UnifiedMexcClient,
+  getUnifiedMexcClient as getUnifiedMexcClientFactory,
+  resetUnifiedMexcClient,
+} from "./unified-mexc-client";
+
 // Import types from schemas module
 import {
   type BalanceEntry,
@@ -82,12 +89,13 @@ export type { MarketStats, PatternAnalysis, TradingOpportunity, Portfolio, RiskA
 /**
  * Get a configured MEXC service instance
  * This is the recommended way to access MEXC functionality
+ * FIXED: Now uses production-ready UnifiedMexcClient with real MEXC data
  */
 export function getMexcService(config?: {
   apiKey?: string;
   secretKey?: string;
-}): UnifiedMexcServiceV2 {
-  return getUnifiedMexcServiceV2(config);
+}): UnifiedMexcClient {
+  return getUnifiedMexcClientFactory(config);
 }
 
 /**
@@ -95,8 +103,8 @@ export function getMexcService(config?: {
  */
 export function createMexcService(
   config: { apiKey?: string; secretKey?: string } = {}
-): UnifiedMexcServiceV2 {
-  return getUnifiedMexcServiceV2(config);
+): UnifiedMexcClient {
+  return getUnifiedMexcClientFactory(config);
 }
 
 /**
@@ -105,8 +113,8 @@ export function createMexcService(
 export function getMexcClient(config?: {
   apiKey?: string;
   secretKey?: string;
-}): UnifiedMexcServiceV2 {
-  return getUnifiedMexcServiceV2(config);
+}): UnifiedMexcClient {
+  return getUnifiedMexcClientFactory(config);
 }
 
 /**
@@ -132,14 +140,13 @@ export function resetEnhancedMexcService(): void {
 
 /**
  * Legacy compatibility - Unified MEXC Client
- * @deprecated Use getUnifiedMexcServiceV2 instead
+ * Now properly returns the production-ready UnifiedMexcClient
  */
 export function getUnifiedMexcClient(config?: {
   apiKey?: string;
   secretKey?: string;
-}): UnifiedMexcServiceV2 {
-  console.warn("getUnifiedMexcClient is deprecated. Use getUnifiedMexcServiceV2 instead.");
-  return getUnifiedMexcServiceV2(config);
+}): UnifiedMexcClient {
+  return getUnifiedMexcClientFactory(config);
 }
 
 // ============================================================================
@@ -167,4 +174,4 @@ export type AdvancedOrderParameters = OrderParameters;
  * const calendar = await mexcService.getCalendarListings();
  * ```
  */
-export default getUnifiedMexcServiceV2;
+export default getUnifiedMexcClientFactory;

@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     console.error("Error in multi-phase strategy trigger:", error);
     
     if (error instanceof z.ZodError) {
-      return apiResponse.error("Invalid request data", 400, error.errors);
+      return apiResponse.error("Invalid request data", 400, { validationErrors: error.errors });
     }
 
     return apiResponse.error("Failed to process strategy request", 500);
@@ -305,15 +305,15 @@ async function handleStrategyRecommendation(data: any, userId: string) {
   return {
     workflowId,
     recommendation: {
-      primaryStrategy: {
+      primaryStrategy: recommendation.recommendedStrategy ? {
         name: recommendation.recommendedStrategy.name,
         description: recommendation.recommendedStrategy.description,
-        riskLevel: recommendation.riskAssessment.riskLevel,
-        timeHorizon: recommendation.riskAssessment.timeHorizon,
-        suitabilityScore: recommendation.riskAssessment.suitabilityScore,
+        riskLevel: recommendation.riskAssessment?.riskLevel,
+        timeHorizon: recommendation.riskAssessment?.timeHorizon,
+        suitabilityScore: recommendation.riskAssessment?.suitabilityScore,
         phases: recommendation.recommendedStrategy.levels.length,
-      },
-      alternatives: recommendation.alternativeStrategies.map(alt => ({
+      } : null,
+      alternatives: recommendation.alternativeStrategies?.map(alt => ({
         name: alt.name,
         description: alt.description,
         phases: alt.levels.length,

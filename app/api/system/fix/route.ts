@@ -14,7 +14,7 @@ import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/l
 import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
 import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
-import { MultiPhaseTradingService } from '@/src/services/multi-phase-trading-service';
+import { multiPhaseTradingService } from '@/src/services/multi-phase-trading-service';
 import { resetGlobalReliabilityManager } from '@/src/services/mexc-circuit-breaker';
 
 interface SystemFixReport {
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const mexcService = new UnifiedMexcServiceV2();
     const patternEngine = PatternDetectionCore.getInstance();
     const configValidator = MexcConfigValidator.getInstance();
-    const tradingService = MultiPhaseTradingService.getInstance();
+    const tradingService = multiPhaseTradingService;
 
     // 1. Fix MEXC API Configuration
     console.log('[SystemFix] Validating MEXC API credentials...');
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
           qs: 1000000
         };
         
-        const testPatterns = await patternEngine.detectReadyStatePattern(testSymbol);
+        const testPatterns = await patternEngine.detectReadyStatePattern([testSymbol]);
         
         if (Array.isArray(testPatterns)) {
           fixesApplied.push('Pattern detection engine validated with test data');
@@ -142,9 +142,9 @@ export async function POST(request: NextRequest) {
     } else {
       // Attempt to initialize trading service with defaults
       try {
-        // Test trading service initialization
-        const isInitialized = tradingService.isInitialized();
-        if (isInitialized) {
+        // Test trading service functionality
+        const strategyTemplates = await tradingService.getStrategyTemplates();
+        if (Array.isArray(strategyTemplates)) {
           fixesApplied.push('Multi-phase trading strategy system verified');
           tradingStatus = 'fixed';
           recommendations.push('Trading strategies are configured and operational');

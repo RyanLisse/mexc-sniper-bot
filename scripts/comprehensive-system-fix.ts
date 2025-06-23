@@ -152,11 +152,11 @@ class ComprehensiveSystemFix {
 
     try {
       // Test pattern detection engine imports and basic functionality
-      const { PatternDetectionEngine } = await import('../src/services/pattern-detection-engine');
+      const { patternDetectionEngine } = await import('../src/services/pattern-detection-engine');
       const { patternEmbeddingService } = await import('../src/services/pattern-embedding-service');
       const { patternStrategyOrchestrator } = await import('../src/services/pattern-strategy-orchestrator');
       
-      const engine = PatternDetectionEngine.getInstance();
+      const engine = patternDetectionEngine;
 
       // Check if engine has core detection methods
       const hasDetectReadyState = typeof engine.detectReadyStatePattern === 'function';
@@ -645,9 +645,8 @@ class ComprehensiveSystemFix {
       let tradingServiceTestDetails: any = {};
 
       try {
-        const tradingService = typeof MultiPhaseTradingService.getInstance === 'function' 
-          ? MultiPhaseTradingService.getInstance()
-          : new MultiPhaseTradingService();
+        const { multiPhaseTradingService } = await import('../src/services/multi-phase-trading-service');
+        const tradingService = multiPhaseTradingService;
         
         tradingServiceReady = typeof tradingService.isInitialized === 'function' 
           ? tradingService.isInitialized()

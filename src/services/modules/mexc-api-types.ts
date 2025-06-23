@@ -79,9 +79,19 @@ export interface MexcServiceResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
-  code?: number;
-  timestamp: number;
-  source: string;
+  code?: string | number;
+  timestamp: string | number;
+  source?: string;
+  requestId?: string;
+  cached?: boolean;
+  executionTimeMs?: number;
+  responseTime?: number;
+  retryCount?: number;
+  metadata?: {
+    fromCache?: boolean;
+    cacheKey?: string;
+    [key: string]: any;
+  };
 }
 
 // ============================================================================

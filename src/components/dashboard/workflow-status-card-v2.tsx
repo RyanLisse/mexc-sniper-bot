@@ -1,7 +1,7 @@
 "use client";
 
 import { Activity, AlertTriangle, Bot, Loader2, Pause, Play, RefreshCw } from "lucide-react";
-import { useStatus } from "../../contexts/status-context";
+import { useStatus } from "../../contexts/status-context-v2";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";

@@ -42,7 +42,7 @@ export default function SettingsPage() {
   const updatePreferencesMutation = useUpdateUserPreferences();
 
   // Multi-level take profit hooks
-  const { config: multiLevelConfig } = useMultiLevelTakeProfit(userId);
+  const { config: multiLevelConfig } = useMultiLevelTakeProfit(userId || "");
   const updateMultiLevelTakeProfit = useUpdateMultiLevelTakeProfit();
 
   // State for form values
@@ -123,7 +123,7 @@ export default function SettingsPage() {
 
     try {
       await updateMultiLevelTakeProfit.mutateAsync({
-        userId,
+        userId: userId || "",
         config: updatedConfig,
       });
 
@@ -151,7 +151,7 @@ export default function SettingsPage() {
     try {
       // Save preferences
       await updatePreferencesMutation.mutateAsync({
-        userId,
+        userId: userId || "",
         // Enhanced take profit strategy
         takeProfitStrategy: takeProfitStrategy,
         takeProfitLevelsConfig: JSON.stringify(customTakeProfitStrategy),

@@ -89,7 +89,9 @@ export class MexcCoreClient {
     try {
       const timestamp = Date.now();
       const url = `${this.config.baseUrl}/api/v3/exchangeInfo?timestamp=${timestamp}`;
-      const response = await this.makeAuthenticatedRequest(url);
+      const response = await this.makeAuthenticatedRequest(url, {
+        method: "GET",
+      });
 
       if (response.data?.symbols && Array.isArray(response.data.symbols)) {
         const matchingSymbols = response.data.symbols
@@ -142,7 +144,9 @@ export class MexcCoreClient {
     try {
       const timestamp = Date.now();
       const url = `${this.config.baseUrl}/api/v3/exchangeInfo?timestamp=${timestamp}`;
-      const response = await this.makeAuthenticatedRequest(url);
+      const response = await this.makeAuthenticatedRequest(url, {
+        method: "GET",
+      });
 
       if (response.data?.symbols && Array.isArray(response.data.symbols)) {
         const allSymbols = response.data.symbols.map((symbol: any) => ({
@@ -189,7 +193,9 @@ export class MexcCoreClient {
     try {
       const timestamp = Date.now();
       const url = `${this.config.baseUrl}/api/v3/account?timestamp=${timestamp}`;
-      const response = await this.makeAuthenticatedRequest(url);
+      const response = await this.makeAuthenticatedRequest(url, {
+        method: "GET",
+      });
 
       if (response.data?.balances && Array.isArray(response.data.balances)) {
         const balances = response.data.balances
@@ -303,6 +309,57 @@ export class MexcCoreClient {
     }
   }
 
+  /**
+   * Place a trading order
+   */
+  async placeOrder(orderData: {
+    symbol: string;
+    side: 'BUY' | 'SELL';
+    type: 'LIMIT' | 'MARKET';
+    quantity: string;
+    price?: string;
+    timeInForce?: 'GTC' | 'IOC' | 'FOK';
+  }): Promise<MexcServiceResponse<any>> {
+    const startTime = Date.now();
+
+    try {
+      // Construct order parameters
+      const params = new URLSearchParams({
+        symbol: orderData.symbol,
+        side: orderData.side,
+        type: orderData.type,
+        quantity: orderData.quantity,
+        timestamp: Date.now().toString(),
+      });
+
+      if (orderData.price) {
+        params.append('price', orderData.price);
+      }
+
+      if (orderData.timeInForce) {
+        params.append('timeInForce', orderData.timeInForce);
+      }
+
+      // Build authenticated request URL
+      const baseUrl = `${this.config.baseUrl}/api/v3/order`;
+      const url = `${baseUrl}?${params.toString()}`;
+
+      const response = await this.makeAuthenticatedRequest(url, {
+        method: "POST",
+      });
+
+      return {
+        success: true,
+        data: response.data,
+        timestamp: Date.now(),
+        source: "mexc-core-client",
+        executionTimeMs: Date.now() - startTime,
+      };
+    } catch (error) {
+      return this.handleError(error, "placeOrder", startTime);
+    }
+  }
+
   // ============================================================================
   // Private Helper Methods
   // ============================================================================
@@ -360,6 +417,7 @@ export class MexcCoreClient {
     return {
       "X-MEXC-APIKEY": this.config.apiKey,
       "X-MEXC-SIGNATURE": signature,
+      "Content-Type": "application/x-www-form-urlencoded", // MEXC requires this for authenticated requests
     };
   }
 

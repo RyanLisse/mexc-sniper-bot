@@ -2,7 +2,7 @@ import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-export
 import type {
   PatternAnalysisResult as EngineResult,
   PatternMatch,
-} from "../services/pattern-detection-engine";
+} from "../core/pattern-detection/interfaces";
 import {
   type PatternWorkflowRequest,
   patternStrategyOrchestrator,

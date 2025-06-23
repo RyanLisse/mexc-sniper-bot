@@ -108,10 +108,10 @@ export async function GET(request: NextRequest) {
       .offset(offset);
 
     // Calculate summary statistics
-    const completedTrades = userTransactions.filter(t => t.status === 'completed' && t.transactionType === 'complete_trade');
-    const totalProfitLoss = completedTrades.reduce((sum, t) => sum + (t.profitLoss || 0), 0);
-    const profitableTrades = completedTrades.filter(t => (t.profitLoss || 0) > 0);
-    const losingTrades = completedTrades.filter(t => (t.profitLoss || 0) < 0);
+    const completedTrades = userTransactions.filter((t: typeof userTransactions[0]) => t.status === 'completed' && t.transactionType === 'complete_trade');
+    const totalProfitLoss = completedTrades.reduce((sum: number, t: typeof completedTrades[0]) => sum + (t.profitLoss || 0), 0);
+    const profitableTrades = completedTrades.filter((t: typeof completedTrades[0]) => (t.profitLoss || 0) > 0);
+    const losingTrades = completedTrades.filter((t: typeof completedTrades[0]) => (t.profitLoss || 0) < 0);
     const winRate = completedTrades.length > 0 ? (profitableTrades.length / completedTrades.length) * 100 : 0;
 
     const summary = {

@@ -115,7 +115,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         const userId = body.userId || "system";
 
         // Get market data
-        const symbolsResponse = await mexcService.getSymbolData();
+        const symbolsResponse = await mexcService.getSymbolsData();
         if (!symbolsResponse.success || !symbolsResponse.data) {
           return NextResponse.json(createErrorResponse(
             'Failed to fetch market data from MEXC',

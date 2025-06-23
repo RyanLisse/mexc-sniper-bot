@@ -45,6 +45,24 @@ export class UnifiedStatusResolver {
   private isResolving = false;
 
   /**
+   * Resolve API URL for both client and server environments
+   */
+  private resolveApiUrl(relativePath: string): string {
+    // Check if we're in a browser environment
+    if (typeof window !== "undefined" && window.location) {
+      // Browser environment - relative URLs work fine
+      return relativePath;
+    }
+
+    // Server environment - need to construct absolute URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
+                   "http://localhost:3000";
+    
+    return new URL(relativePath, baseUrl).toString();
+  }
+
+  /**
    * Resolve unified status by attempting enhanced endpoint first,
    * then falling back to legacy with proper response normalization
    */
@@ -88,7 +106,8 @@ export class UnifiedStatusResolver {
    */
   private async tryEnhancedEndpoint(): Promise<StatusResolutionResult | null> {
     try {
-      const response = await fetch("/api/mexc/enhanced-connectivity", {
+      const url = this.resolveApiUrl("/api/mexc/enhanced-connectivity");
+      const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // Include authentication cookies
@@ -117,7 +136,8 @@ export class UnifiedStatusResolver {
    */
   private async tryLegacyEndpoint(): Promise<StatusResolutionResult | null> {
     try {
-      const response = await fetch("/api/mexc/connectivity", {
+      const url = this.resolveApiUrl("/api/mexc/connectivity");
+      const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // Include authentication cookies

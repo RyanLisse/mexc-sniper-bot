@@ -1,7 +1,7 @@
 "use client";
 
 import { Activity, AlertTriangle, DollarSign, Hash, TrendingUp } from "lucide-react";
-import { useStatus } from "../../contexts/status-context";
+import { useStatus } from "../../contexts/status-context-v2";
 import { useAutoSnipingExecution } from "../../hooks/use-auto-sniping-execution";
 import { SimpleAutoSnipingControl } from "../auto-sniping/simple-auto-sniping-control";
 import { UnifiedStatusBadge } from "../status/unified-status-display";

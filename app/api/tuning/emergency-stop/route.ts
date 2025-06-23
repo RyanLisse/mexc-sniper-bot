@@ -26,14 +26,14 @@ export async function POST(request: NextRequest) {
     const emergencyReport = {
       timestamp: new Date(),
       reason: reason || 'Manual emergency stop',
-      actionsPerformed: [],
-      errors: [],
+      actionsPerformed: [] as string[],
+      errors: [] as string[],
       success: true
     };
 
     try {
       // 1. Stop all active optimizations immediately
-      const activeOptimizations = []; // In real implementation, get from engine
+      const activeOptimizations: Array<{ id: string }> = []; // In real implementation, get from engine
       
       for (const optimization of activeOptimizations) {
         try {

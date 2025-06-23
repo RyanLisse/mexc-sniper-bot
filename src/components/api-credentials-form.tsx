@@ -12,7 +12,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useState } from "react";
-import { useStatus } from "../contexts/status-context";
+import { useStatus } from "../contexts/status-context-v2";
 import {
   type ApiCredentials,
   useApiCredentials,

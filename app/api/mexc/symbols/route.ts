@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       ? await mexcService.getSymbolsForVcoins(vcoinId.split(','))
       : await mexcService.getSymbolsData();
     
-    if (!symbolsResponse.success) {
+    if (!symbolsResponse.success || !symbolsResponse.data) {
       return apiResponse(
         createErrorResponse(
           symbolsResponse.error || "Failed to fetch symbols",

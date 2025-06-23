@@ -27,7 +27,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useStatus } from "../contexts/status-context";
+import { useStatus } from "../contexts/status-context-v2";
 import { useAuth } from "../lib/kinde-auth-client";
 import { ApiCredentialsForm } from "./api-credentials-form";
 import { Badge } from "./ui/badge";

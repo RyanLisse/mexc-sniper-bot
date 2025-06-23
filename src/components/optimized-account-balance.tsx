@@ -8,6 +8,7 @@ import { useCurrencyFormatting } from "../hooks/use-currency-formatting";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { HydrationBoundary } from "./hydration-boundary";
 
 interface AccountBalanceProps {
   userId?: string;
@@ -225,8 +226,8 @@ const LoadingSkeleton = React.memo(() => (
 ));
 LoadingSkeleton.displayName = "LoadingSkeleton";
 
-// Main component
-export const OptimizedAccountBalance = React.memo(
+// Main component (internal)
+const OptimizedAccountBalanceInternal = React.memo(
   ({ userId, className }: AccountBalanceProps) => {
     const [showBalances, setShowBalances] = useState(true);
     const [autoRefresh, setAutoRefresh] = useState(true);
@@ -520,6 +521,39 @@ export const OptimizedAccountBalance = React.memo(
       </Card>
     );
   }
+);
+
+OptimizedAccountBalanceInternal.displayName = "OptimizedAccountBalanceInternal";
+
+// Loading fallback component
+const BalanceLoadingFallback = () => (
+  <Card className="bg-card border-border backdrop-blur-sm">
+    <CardHeader className="pb-3">
+      <div className="flex items-center space-x-2">
+        <Wallet className="h-5 w-5 text-primary" />
+        <CardTitle className="text-lg text-foreground">Account Balance</CardTitle>
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-3">
+        {Array.from({ length: 3 }, (_, i) => `balance-loading-${i}`).map((key) => (
+          <div key={key} className="animate-pulse">
+            <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+            <div className="h-3 bg-muted rounded w-1/2" />
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// Exported component with hydration boundary
+export const OptimizedAccountBalance = React.memo(
+  ({ userId, className }: AccountBalanceProps) => (
+    <HydrationBoundary fallback={<BalanceLoadingFallback />}>
+      <OptimizedAccountBalanceInternal userId={userId} className={className} />
+    </HydrationBoundary>
+  )
 );
 
 OptimizedAccountBalance.displayName = "OptimizedAccountBalance";
