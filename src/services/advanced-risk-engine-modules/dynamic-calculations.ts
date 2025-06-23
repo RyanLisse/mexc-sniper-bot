@@ -1,10 +1,10 @@
 /**
  * Dynamic Calculations Module
- * 
+ *
  * Provides dynamic calculation functionality for stop-loss, take-profit,
  * position sizing, and volatility adjustments for the Advanced Risk Engine.
  * This module handles adaptive risk calculations based on market conditions.
- * 
+ *
  * Part of the modular refactoring of advanced-risk-engine.ts
  */
 

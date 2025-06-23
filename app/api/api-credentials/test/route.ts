@@ -103,18 +103,36 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
 
     // Test authentication by getting account info
     try {
-      const accountResult = await mexcService.getAccountBalances();
+      // First get raw account info for account type and permissions
+      const accountInfoResult = await mexcService.getAccountInfo();
       
-      if (accountResult.success) {
+      if (accountInfoResult.success) {
+        // Extract dynamic account information from MEXC API response
+        const accountData = accountInfoResult.data;
+        const accountType = accountData?.accountType || "SPOT";
+        const permissions = accountData?.permissions || ["SPOT"];
+        
+        // Derive canTrade from permissions or explicit field
+        // MEXC API may return canTrade boolean or we derive it from permissions
+        const canTrade = accountData?.canTrade !== undefined 
+          ? accountData.canTrade 
+          : permissions.includes("SPOT") || permissions.includes("MARGIN") || permissions.includes("TRADE");
+
+        // Get balance count from balances array if available
+        const balanceCount = accountData?.balances?.length || 0;
+
         // Success - credentials are valid
         return apiResponse(
           createSuccessResponse({
             connectivity: true,
             authentication: true,
-            accountType: "spot",
-            canTrade: true,
-            balanceCount: accountResult.data?.balances?.length || 0,
-            credentialSource: "database"
+            accountType: accountType.toLowerCase(), // Normalize to lowercase for consistency
+            canTrade,
+            balanceCount,
+            credentialSource: "database",
+            // Include additional account metadata if available
+            ...(permissions.length > 0 && { permissions }),
+            ...(accountData?.updateTime && { lastUpdate: accountData.updateTime })
           }, {
             message: "API credentials are valid and working correctly",
             code: "TEST_SUCCESS"
@@ -125,13 +143,13 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
         // Authentication failed
         return apiResponse(
           createErrorResponse("API credentials are invalid", {
-            message: accountResult.error || "Authentication failed with MEXC API",
+            message: accountInfoResult.error || "Authentication failed with MEXC API",
             code: "INVALID_CREDENTIALS",
             details: {
               connectivity: true,
               authentication: false,
               step: "authentication_test",
-              mexcError: accountResult.error
+              mexcError: accountInfoResult.error
             }
           }),
           HTTP_STATUS.UNAUTHORIZED

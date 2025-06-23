@@ -13,6 +13,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useAccountBalance } from "../hooks/use-account-balance";
 import { TransactionDebugPanel } from "./transaction-debug-panel";
 import { Badge } from "./ui/badge";
@@ -22,7 +23,6 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Separator } from "./ui/separator";
-import { toast } from "./ui/use-toast";
 
 interface ManualTradingPanelProps {
   userId: string;
@@ -75,19 +75,15 @@ const TradingForm = ({
       e.preventDefault();
 
       if (!selectedAsset || !quantity) {
-        toast({
-          title: "Missing Information",
+        toast.error("Missing Information", {
           description: "Please select an asset and enter quantity",
-          variant: "destructive",
         });
         return;
       }
 
       if (orderType === "LIMIT" && !price) {
-        toast({
-          title: "Missing Price",
+        toast.error("Missing Price", {
           description: "Limit orders require a price",
-          variant: "destructive",
         });
         return;
       }
@@ -98,10 +94,8 @@ const TradingForm = ({
         const requestedQuantity = Number.parseFloat(quantity);
 
         if (requestedQuantity > availableBalance) {
-          toast({
-            title: "Insufficient Balance",
+          toast.error("Insufficient Balance", {
             description: `You only have ${availableBalance} ${selectedAsset} available`,
-            variant: "destructive",
           });
           return;
         }
@@ -137,14 +131,20 @@ const TradingForm = ({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="side">Order Side</Label>
               <Select value={side} onValueChange={(value: "BUY" | "SELL") => setSide(value)}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border text-foreground hover:bg-accent/50 focus:ring-primary/50">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent
+                  className="bg-popover border-border shadow-lg backdrop-blur-sm z-50"
+                  position="popper"
+                  sideOffset={4}
+                  align="start"
+                  avoidCollisions={true}
+                >
                   <SelectItem value="BUY">
                     <div className="flex items-center gap-2">
                       <ArrowUpRight className="h-4 w-4 text-green-500" />
@@ -167,10 +167,16 @@ const TradingForm = ({
                 value={orderType}
                 onValueChange={(value: "MARKET" | "LIMIT") => setOrderType(value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border text-foreground hover:bg-accent/50 focus:ring-primary/50">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent
+                  className="bg-popover border-border shadow-lg backdrop-blur-sm z-50"
+                  position="popper"
+                  sideOffset={4}
+                  align="start"
+                  avoidCollisions={true}
+                >
                   <SelectItem value="MARKET">Market</SelectItem>
                   <SelectItem value="LIMIT">Limit</SelectItem>
                 </SelectContent>
@@ -186,11 +192,11 @@ const TradingForm = ({
                   <SelectValue placeholder="Select asset to trade" />
                 </SelectTrigger>
                 <SelectContent
-                  className="bg-popover border-border shadow-lg backdrop-blur-sm max-h-[300px] overflow-y-auto min-w-[var(--radix-select-trigger-width)]"
+                  className="bg-popover border-border shadow-lg backdrop-blur-sm max-h-[300px] overflow-y-auto min-w-[var(--radix-select-trigger-width)] z-50"
                   position="popper"
                   sideOffset={4}
                   align="start"
-                  sticky="always"
+                  avoidCollisions={true}
                 >
                   {side === "SELL"
                     ? // For selling, only show non-USDT assets the user owns
@@ -285,18 +291,27 @@ const TradingForm = ({
             <Button
               type="submit"
               disabled={isLoading || !selectedAsset || !quantity}
-              className={`flex-1 ${
-                side === "BUY" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+              className={`flex-1 transition-colors ${
+                side === "BUY"
+                  ? "bg-green-600 hover:bg-green-700 disabled:bg-green-400"
+                  : "bg-red-600 hover:bg-red-700 disabled:bg-red-400"
               }`}
             >
               {isLoading ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              ) : side === "BUY" ? (
-                <Plus className="h-4 w-4 mr-2" />
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
               ) : (
-                <Minus className="h-4 w-4 mr-2" />
+                <>
+                  {side === "BUY" ? (
+                    <Plus className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Minus className="h-4 w-4 mr-2" />
+                  )}
+                  {side === "BUY" ? "Buy" : "Sell"} {selectedAsset || "Asset"}
+                </>
               )}
-              {side === "BUY" ? "Buy" : "Sell"} {selectedAsset}
             </Button>
             <Button type="button" variant="outline" onClick={resetForm}>
               Clear
@@ -435,20 +450,24 @@ export function ManualTradingPanel({ userId, className }: ManualTradingPanelProp
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Trade Successful",
-        description: `Order placed successfully: ${data.data?.orderId || "N/A"}`,
+      const orderData = data.data;
+      const orderInfo = `${orderData?.side || side} ${orderData?.symbol || "asset"}`;
+      const orderId = orderData?.orderId || orderData?.data?.orderId || "N/A";
+
+      toast.success("Trade Executed Successfully", {
+        description: `${orderInfo} order completed. Order ID: ${orderId}`,
       });
 
       // Refresh both balance and execution history
       refetchBalance();
       queryClient.invalidateQueries({ queryKey: ["execution-history", userId] });
+
+      // Reset form on successful trade
+      resetForm();
     },
     onError: (error: Error) => {
-      toast({
-        title: "Trade Failed",
-        description: error.message,
-        variant: "destructive",
+      toast.error("Trade Failed", {
+        description: `Unable to execute trade: ${error.message}. Please check your balance and credentials.`,
       });
     },
   });

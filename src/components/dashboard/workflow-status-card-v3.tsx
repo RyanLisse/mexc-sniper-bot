@@ -12,11 +12,11 @@ import {
   RefreshCw,
   XCircle,
 } from "lucide-react";
+import { queryKeys } from "../../lib/query-client";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
-import { queryKeys } from "../../lib/query-client";
 
 /**
  * React Query-based Workflow Status Card
@@ -86,13 +86,15 @@ export function WorkflowStatusCardV3({
         throw new Error(result.error || "Failed to fetch workflow status");
       }
 
-      return result.data || {
-        discoveryRunning: false,
-        sniperActive: false,
-        activeWorkflows: [],
-        systemStatus: "stopped",
-        lastUpdate: new Date().toISOString(),
-      };
+      return (
+        result.data || {
+          discoveryRunning: false,
+          sniperActive: false,
+          activeWorkflows: [],
+          systemStatus: "stopped",
+          lastUpdate: new Date().toISOString(),
+        }
+      );
     },
     staleTime: 10000, // 10 seconds
     refetchInterval: autoRefresh ? refreshInterval : false,
@@ -120,11 +122,11 @@ export function WorkflowStatusCardV3({
         body: JSON.stringify({ action: "start", workflowType }),
       });
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to start workflow");
       }
-      
+
       return result.data;
     },
     onSuccess: () => {
@@ -140,11 +142,11 @@ export function WorkflowStatusCardV3({
         body: JSON.stringify({ action: "stop", workflowType }),
       });
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to stop workflow");
       }
-      
+
       return result.data;
     },
     onSuccess: () => {
@@ -180,10 +182,10 @@ export function WorkflowStatusCardV3({
     }
 
     if (!workflowData) {
-      return { 
-        color: "gray", 
-        icon: Loader2, 
-        bgClass: "bg-gray-50 dark:bg-gray-950/20 dark:border-gray-800" 
+      return {
+        color: "gray",
+        icon: Loader2,
+        bgClass: "bg-gray-50 dark:bg-gray-950/20 dark:border-gray-800",
       };
     }
 
@@ -221,7 +223,8 @@ export function WorkflowStatusCardV3({
   const StatusIcon = statusConfig.icon;
   const lastUpdate = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
 
-  const isAnyWorkflowRunning = workflowData?.discoveryRunning || workflowData?.sniperActive || false;
+  const isAnyWorkflowRunning =
+    workflowData?.discoveryRunning || workflowData?.sniperActive || false;
   const activeWorkflowCount = workflowData?.activeWorkflows?.length || 0;
 
   // Handle error state
@@ -273,13 +276,13 @@ export function WorkflowStatusCardV3({
                 {workflowData?.systemStatus === "error" && "Error"}
               </span>
             </Badge>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleRefresh} 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
               disabled={isLoading || refreshMutation.isPending}
             >
-              <RefreshCw className={`h-4 w-4 ${(isLoading || isFetching) ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-4 w-4 ${isLoading || isFetching ? "animate-spin" : ""}`} />
             </Button>
           </div>
         </div>
@@ -306,9 +309,15 @@ export function WorkflowStatusCardV3({
             <div className={`p-3 rounded-lg border ${statusConfig.bgClass}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <StatusIcon className={`h-5 w-5 text-${statusConfig.color}-500 ${isFetching ? "animate-pulse" : ""}`} />
-                  <span className={`font-medium text-${statusConfig.color}-600 dark:text-${statusConfig.color}-400`}>
-                    Workflow System {workflowData.systemStatus.charAt(0).toUpperCase() + workflowData.systemStatus.slice(1)}
+                  <StatusIcon
+                    className={`h-5 w-5 text-${statusConfig.color}-500 ${isFetching ? "animate-pulse" : ""}`}
+                  />
+                  <span
+                    className={`font-medium text-${statusConfig.color}-600 dark:text-${statusConfig.color}-400`}
+                  >
+                    Workflow System{" "}
+                    {workflowData.systemStatus.charAt(0).toUpperCase() +
+                      workflowData.systemStatus.slice(1)}
                   </span>
                 </div>
                 {lastUpdate && (
@@ -325,14 +334,16 @@ export function WorkflowStatusCardV3({
               <div className="p-3 border rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${workflowData.discoveryRunning ? "bg-green-500 animate-pulse" : "bg-gray-300"}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${workflowData.discoveryRunning ? "bg-green-500 animate-pulse" : "bg-gray-300"}`}
+                    />
                     <span className="font-medium text-sm">Coin Discovery</span>
                   </div>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => 
-                      workflowData.discoveryRunning 
+                    onClick={() =>
+                      workflowData.discoveryRunning
                         ? handleStopWorkflow("discovery")
                         : handleStartWorkflow("discovery")
                     }
@@ -346,7 +357,9 @@ export function WorkflowStatusCardV3({
                   </Button>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {workflowData.discoveryRunning ? "Actively scanning for new listings" : "Not running"}
+                  {workflowData.discoveryRunning
+                    ? "Actively scanning for new listings"
+                    : "Not running"}
                 </div>
               </div>
 
@@ -354,14 +367,16 @@ export function WorkflowStatusCardV3({
               <div className="p-3 border rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <div className={`w-2 h-2 rounded-full ${workflowData.sniperActive ? "bg-green-500 animate-pulse" : "bg-gray-300"}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${workflowData.sniperActive ? "bg-green-500 animate-pulse" : "bg-gray-300"}`}
+                    />
                     <span className="font-medium text-sm">Auto Sniper</span>
                   </div>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => 
-                      workflowData.sniperActive 
+                    onClick={() =>
+                      workflowData.sniperActive
                         ? handleStopWorkflow("sniper")
                         : handleStartWorkflow("sniper")
                     }
@@ -390,8 +405,14 @@ export function WorkflowStatusCardV3({
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium">{job.name}</span>
                         <div className="flex items-center space-x-2">
-                          <Badge 
-                            variant={job.status === "running" ? "default" : job.status === "failed" ? "destructive" : "secondary"}
+                          <Badge
+                            variant={
+                              job.status === "running"
+                                ? "default"
+                                : job.status === "failed"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
                             className="text-xs"
                           >
                             {job.status}
@@ -441,31 +462,42 @@ export function WorkflowStatusCardV3({
             )}
 
             {/* Recent Activity */}
-            {showRecentActivity && workflowData.recentActivity && workflowData.recentActivity.length > 0 && (
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">Recent Activity</div>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {workflowData.recentActivity.slice(0, 5).map((activity, index) => (
-                    <div key={index} className="flex items-start space-x-2 p-2 text-xs border rounded">
-                      <div className="mt-0.5">
-                        {activity.status === "success" && <CheckCircle className="h-3 w-3 text-green-500" />}
-                        {activity.status === "warning" && <AlertCircle className="h-3 w-3 text-yellow-500" />}
-                        {activity.status === "error" && <XCircle className="h-3 w-3 text-red-500" />}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{activity.event}</div>
-                        {activity.details && (
-                          <div className="text-muted-foreground">{activity.details}</div>
-                        )}
-                        <div className="text-muted-foreground">
-                          {new Date(activity.timestamp).toLocaleTimeString()}
+            {showRecentActivity &&
+              workflowData.recentActivity &&
+              workflowData.recentActivity.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-muted-foreground">Recent Activity</div>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {workflowData.recentActivity.slice(0, 5).map((activity, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start space-x-2 p-2 text-xs border rounded"
+                      >
+                        <div className="mt-0.5">
+                          {activity.status === "success" && (
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                          )}
+                          {activity.status === "warning" && (
+                            <AlertCircle className="h-3 w-3 text-yellow-500" />
+                          )}
+                          {activity.status === "error" && (
+                            <XCircle className="h-3 w-3 text-red-500" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium">{activity.event}</div>
+                          {activity.details && (
+                            <div className="text-muted-foreground">{activity.details}</div>
+                          )}
+                          <div className="text-muted-foreground">
+                            {new Date(activity.timestamp).toLocaleTimeString()}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Update Indicator */}
             {isFetching && (

@@ -1,33 +1,33 @@
 /**
  * Pattern-Target Integration Service
- * 
+ *
  * Bridges the gap between pattern detection and snipe target creation.
  * This service listens for pattern detection results and automatically creates
  * snipe targets in the database for auto-sniping execution.
  */
 
+import { and, eq } from "drizzle-orm";
+import type { PatternMatch } from "../core/pattern-detection/interfaces";
 import { db } from "../db";
 import { snipeTargets } from "../db/schemas/trading";
-import { eq, and } from "drizzle-orm";
-import type { PatternMatch } from "../core/pattern-detection/interfaces";
 import { createLogger } from "../lib/structured-logger";
 
 export interface PatternTargetConfig {
   // User configuration
   defaultUserId: string;
-  
+
   // Entry strategy
   preferredEntryStrategy: "market" | "limit";
   defaultPositionSizeUsdt: number;
-  
+
   // Risk management
   defaultStopLossPercent: number;
   takeProfitLevel: number; // Which level from user preferences
-  
+
   // Execution settings
   defaultPriority: number;
   maxRetries: number;
-  
+
   // Pattern filtering
   minConfidenceForTarget: number;
   enabledPatternTypes: string[];
@@ -45,7 +45,7 @@ export interface TargetCreationResult {
 export class PatternTargetIntegrationService {
   private static instance: PatternTargetIntegrationService;
   private logger = createLogger("pattern-target-integration");
-  
+
   // Default configuration
   private config: PatternTargetConfig = {
     defaultUserId: "system", // Will be overridden
@@ -64,9 +64,9 @@ export class PatternTargetIntegrationService {
     if (config) {
       this.config = { ...this.config, ...config };
     }
-    
+
     this.logger.info("Pattern-Target Integration Service initialized", {
-      config: this.config
+      config: this.config,
     });
   }
 
@@ -81,7 +81,7 @@ export class PatternTargetIntegrationService {
    * Main Integration Method: Convert Pattern Matches to Snipe Targets
    */
   async createTargetsFromPatterns(
-    patterns: PatternMatch[], 
+    patterns: PatternMatch[],
     userId: string,
     overrideConfig?: Partial<PatternTargetConfig>
   ): Promise<TargetCreationResult[]> {
@@ -94,12 +94,12 @@ export class PatternTargetIntegrationService {
       this.logger.warn("Max concurrent targets reached", {
         userId,
         currentTargets: currentTargets.length,
-        maxAllowed: config.maxConcurrentTargets
+        maxAllowed: config.maxConcurrentTargets,
       });
-      
+
       return patterns.map(() => ({
         success: false,
-        reason: "Max concurrent targets reached"
+        reason: "Max concurrent targets reached",
       }));
     }
 
@@ -108,25 +108,29 @@ export class PatternTargetIntegrationService {
       try {
         const result = await this.createTargetFromPattern(pattern, userId, config);
         results.push(result);
-        
+
         if (result.success) {
           this.logger.info("Snipe target created from pattern", {
             targetId: result.targetId,
             symbol: pattern.symbol,
             vcoinId: pattern.vcoinId,
             patternType: pattern.patternType,
-            confidence: pattern.confidence
+            confidence: pattern.confidence,
           });
         }
       } catch (error) {
-        this.logger.error("Failed to create target from pattern", {
-          symbol: pattern.symbol,
-          error: error instanceof Error ? error.message : "Unknown error"
-        }, error);
-        
+        this.logger.error(
+          "Failed to create target from pattern",
+          {
+            symbol: pattern.symbol,
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
+          error
+        );
+
         results.push({
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error"
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
@@ -142,21 +146,23 @@ export class PatternTargetIntegrationService {
     userId: string,
     config: PatternTargetConfig
   ): Promise<TargetCreationResult> {
-    
     // Filter patterns based on configuration
     if (!this.shouldCreateTarget(pattern, config)) {
       return {
         success: false,
-        reason: `Pattern filtered out: ${pattern.patternType} with ${pattern.confidence}% confidence`
+        reason: `Pattern filtered out: ${pattern.patternType} with ${pattern.confidence}% confidence`,
       };
     }
 
     // Check if target already exists
-    const existingTarget = await this.checkExistingTarget(pattern.vcoinId || pattern.symbol, userId);
+    const existingTarget = await this.checkExistingTarget(
+      pattern.vcoinId || pattern.symbol,
+      userId
+    );
     if (existingTarget) {
       return {
         success: false,
-        reason: "Target already exists for this symbol"
+        reason: "Target already exists for this symbol",
       };
     }
 
@@ -192,7 +198,7 @@ export class PatternTargetIntegrationService {
     return {
       success: true,
       targetId: result[0].id,
-      target: result[0]
+      target: result[0],
     };
   }
 
@@ -268,19 +274,19 @@ export class PatternTargetIntegrationService {
       case "ready_state":
         // Execute immediately for ready state
         return new Date(now.getTime() + 2 * 60 * 1000); // 2 minutes buffer
-      
+
       case "pre_ready":
         // Execute when pattern is expected to be ready
         const estimatedMinutes = pattern.advanceNoticeHours ? pattern.advanceNoticeHours * 60 : 120;
         return new Date(now.getTime() + estimatedMinutes * 60 * 1000);
-      
+
       case "launch_sequence":
         // Execute at launch time
         if (pattern.advanceNoticeHours) {
           return new Date(now.getTime() + pattern.advanceNoticeHours * 60 * 60 * 1000);
         }
         return null;
-      
+
       default:
         return null;
     }
@@ -292,7 +298,7 @@ export class PatternTargetIntegrationService {
   private calculatePositionSize(pattern: PatternMatch, config: PatternTargetConfig): number {
     const baseSize = config.defaultPositionSizeUsdt;
     const confidenceMultiplier = pattern.confidence / 100;
-    
+
     // Adjust size based on confidence
     let adjustedSize = baseSize * confidenceMultiplier;
 
@@ -313,10 +319,10 @@ export class PatternTargetIntegrationService {
   private calculateTakeProfit(pattern: PatternMatch): number {
     // Base take profit percentages
     const baseTakeProfit = pattern.patternType === "ready_state" ? 15 : 10;
-    
+
     // Adjust based on confidence
-    const confidenceBonus = (pattern.confidence - 50) / 50 * 5; // 0-5% bonus
-    
+    const confidenceBonus = ((pattern.confidence - 50) / 50) * 5; // 0-5% bonus
+
     return Math.min(baseTakeProfit + confidenceBonus, 25); // Max 25%
   }
 
@@ -341,19 +347,19 @@ export class PatternTargetIntegrationService {
    */
   private calculatePriority(pattern: PatternMatch): number {
     // Priority 1 (highest) to 5 (lowest)
-    
+
     if (pattern.patternType === "ready_state" && pattern.confidence >= 85) {
       return 1; // Highest priority
     }
-    
+
     if (pattern.confidence >= 80) {
       return 2; // High priority
     }
-    
+
     if (pattern.confidence >= 70) {
       return 3; // Medium priority
     }
-    
+
     return 4; // Lower priority
   }
 
@@ -383,19 +389,20 @@ export class PatternTargetIntegrationService {
     executingTargets: number;
   }> {
     let baseQuery = db.select().from(snipeTargets);
-    
+
     if (userId) {
       baseQuery = baseQuery.where(eq(snipeTargets.userId, userId));
     }
 
     const allTargets = await baseQuery;
-    
+
     return {
       totalTargetsCreated: allTargets.length,
-      activeTargets: allTargets.filter(t => ["pending", "ready", "executing"].includes(t.status)).length,
-      readyTargets: allTargets.filter(t => t.status === "ready").length,
-      pendingTargets: allTargets.filter(t => t.status === "pending").length,
-      executingTargets: allTargets.filter(t => t.status === "executing").length,
+      activeTargets: allTargets.filter((t) => ["pending", "ready", "executing"].includes(t.status))
+        .length,
+      readyTargets: allTargets.filter((t) => t.status === "ready").length,
+      pendingTargets: allTargets.filter((t) => t.status === "pending").length,
+      executingTargets: allTargets.filter((t) => t.status === "executing").length,
     };
   }
 }

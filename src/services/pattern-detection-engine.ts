@@ -12,6 +12,7 @@
  * - Integration with AI agents for intelligent analysis
  */
 
+import { EventEmitter } from "events";
 import { and, eq, or } from "drizzle-orm";
 import { db } from "../db";
 import type { PatternEmbedding } from "../db/schemas/patterns";
@@ -115,11 +116,16 @@ export interface CorrelationAnalysis {
 // Central Pattern Detection Engine
 // ============================================================================
 
-export class PatternDetectionEngine {
+export class PatternDetectionEngine extends EventEmitter {
   private static instance: PatternDetectionEngine;
   private readonly READY_STATE_PATTERN: ReadyStatePattern = { sts: 2, st: 2, tt: 4 };
   private readonly MIN_ADVANCE_HOURS = 3.5; // Core competitive advantage
   private logger = createLogger("pattern-detection-engine");
+
+  private constructor() {
+    super();
+    this.logger.info("Pattern Detection Engine initialized with event emission capabilities");
+  }
 
   static getInstance(): PatternDetectionEngine {
     if (!PatternDetectionEngine.instance) {
@@ -191,7 +197,10 @@ export class PatternDetectionEngine {
    * Core Pattern Detection - The Heart of Our Competitive Advantage
    * Detects the critical sts:2, st:2, tt:4 ready state pattern
    */
-  async detectReadyStatePattern(symbolData: SymbolEntry | SymbolEntry[]): Promise<PatternMatch[]> {
+  async detectReadyStatePattern(
+    symbolData: SymbolEntry | SymbolEntry[],
+    options?: { forceEmitEvents?: boolean }
+  ): Promise<PatternMatch[]> {
     const startTime = Date.now();
     const symbols = Array.isArray(symbolData) ? symbolData : [symbolData];
     const matches: PatternMatch[] = [];
@@ -268,6 +277,28 @@ export class PatternDetectionEngine {
           : 0,
       isTestEnv,
     });
+
+    // 🚀 PATTERN-TARGET INTEGRATION BRIDGE: Emit events for automatic target creation
+    const shouldEmitEvents = matches.length > 0 && (!isTestEnv || options?.forceEmitEvents);
+    if (shouldEmitEvents) {
+      this.emit("patterns_detected", {
+        patternType: "ready_state",
+        matches,
+        metadata: {
+          symbolsAnalyzed: symbols.length,
+          duration,
+          source: "ready_state_detection",
+        },
+      });
+
+      this.logger.info("Pattern detection events emitted for auto-target creation", {
+        readyStateMatches: matches.length,
+        highConfidenceMatches: matches.filter((m) => m.confidence >= 90).length,
+        testMode: isTestEnv,
+        forceEmitted: options?.forceEmitEvents,
+      });
+    }
+
     return matches;
   }
 
@@ -275,7 +306,10 @@ export class PatternDetectionEngine {
    * Advance Detection - 3.5+ Hour Early Warning System
    * This is our core competitive advantage for early opportunity identification
    */
-  async detectAdvanceOpportunities(calendarEntries: CalendarEntry[]): Promise<PatternMatch[]> {
+  async detectAdvanceOpportunities(
+    calendarEntries: CalendarEntry[],
+    options?: { forceEmitEvents?: boolean }
+  ): Promise<PatternMatch[]> {
     const startTime = Date.now();
     const matches: PatternMatch[] = [];
     const now = Date.now();
@@ -359,6 +393,41 @@ export class PatternDetectionEngine {
           ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
           : 0,
     });
+
+    // 🚀 PATTERN-TARGET INTEGRATION BRIDGE: Emit events for automatic target creation
+    const isTestEnv = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    const shouldEmitEvents = matches.length > 0 && (!isTestEnv || options?.forceEmitEvents);
+    if (shouldEmitEvents) {
+      this.emit("patterns_detected", {
+        patternType: "advance_opportunities",
+        matches,
+        metadata: {
+          calendarEntriesAnalyzed: calendarEntries.length,
+          duration,
+          source: "advance_opportunity_detection",
+          averageAdvanceHours:
+            matches.length > 0
+              ? Math.round(
+                  (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
+                ) / 10
+              : 0,
+        },
+      });
+
+      this.logger.info("Advance opportunity events emitted for auto-target creation", {
+        advanceOpportunityMatches: matches.length,
+        highConfidenceMatches: matches.filter((m) => m.confidence >= 80).length,
+        averageAdvanceHours:
+          matches.length > 0
+            ? Math.round(
+                (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
+              ) / 10
+            : 0,
+        testMode: isTestEnv,
+        forceEmitted: options?.forceEmitEvents,
+      });
+    }
+
     return matches;
   }
 
@@ -366,7 +435,11 @@ export class PatternDetectionEngine {
    * Pre-Ready State Detection - Early Stage Pattern Recognition
    * Identifies symbols approaching ready state for monitoring setup
    */
-  async detectPreReadyPatterns(symbolData: SymbolEntry[]): Promise<PatternMatch[]> {
+  async detectPreReadyPatterns(
+    symbolData: SymbolEntry[],
+    options?: { forceEmitEvents?: boolean }
+  ): Promise<PatternMatch[]> {
+    const startTime = Date.now();
     const matches: PatternMatch[] = [];
 
     for (const symbol of symbolData) {
@@ -389,6 +462,55 @@ export class PatternDetectionEngine {
           recommendation: "monitor_closely",
         });
       }
+    }
+
+    const duration = Date.now() - startTime;
+    this.logger.pattern("pre_ready", matches.length, {
+      operation: "pre_ready_detection",
+      symbolsAnalyzed: symbolData.length,
+      preReadyFound: matches.length,
+      duration,
+      averageConfidence:
+        matches.length > 0
+          ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
+          : 0,
+    });
+
+    // 🚀 PATTERN-TARGET INTEGRATION BRIDGE: Emit events for automatic target creation
+    const isTestEnv = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    const shouldEmitEvents = matches.length > 0 && (!isTestEnv || options?.forceEmitEvents);
+    if (shouldEmitEvents) {
+      this.emit("patterns_detected", {
+        patternType: "pre_ready",
+        matches,
+        metadata: {
+          symbolsAnalyzed: symbolData.length,
+          duration,
+          source: "pre_ready_detection",
+          averageEstimatedTimeToReady:
+            matches.length > 0
+              ? Math.round(
+                  (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
+                ) / 10
+              : 0,
+        },
+      });
+
+      this.logger.info("Pre-ready pattern events emitted for auto-target creation", {
+        preReadyMatches: matches.length,
+        averageConfidence:
+          matches.length > 0
+            ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
+            : 0,
+        averageTimeToReady:
+          matches.length > 0
+            ? Math.round(
+                (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
+              ) / 10
+            : 0,
+        testMode: isTestEnv,
+        forceEmitted: options?.forceEmitEvents,
+      });
     }
 
     return matches;

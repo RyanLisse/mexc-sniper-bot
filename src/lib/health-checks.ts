@@ -68,27 +68,27 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
         status: "unhealthy",
         latency: Date.now() - startTime,
         error: "MEXC API credentials not configured",
-        details: { 
+        details: {
           hasApiKey: !!process.env.MEXC_API_KEY,
           hasApiSecret: !!process.env.MEXC_API_SECRET,
-          message: "API key and secret required for MEXC connectivity"
+          message: "API key and secret required for MEXC connectivity",
         },
       };
     }
 
     // Test authenticated endpoint to verify credentials
-    const testUrl = new URL('https://api.mexc.com/api/v3/account');
-    testUrl.searchParams.set('timestamp', Date.now().toString());
-    
+    const testUrl = new URL("https://api.mexc.com/api/v3/account");
+    testUrl.searchParams.set("timestamp", Date.now().toString());
+
     // Create signature for authenticated request
-    const crypto = require('crypto');
+    const crypto = require("crypto");
     const queryString = testUrl.searchParams.toString();
     const signature = crypto
-      .createHmac('sha256', process.env.MEXC_API_SECRET)
+      .createHmac("sha256", process.env.MEXC_API_SECRET)
       .update(queryString)
-      .digest('hex');
-    
-    testUrl.searchParams.set('signature', signature);
+      .digest("hex");
+
+    testUrl.searchParams.set("signature", signature);
 
     const response = await fetch(testUrl.toString(), {
       method: "GET",
@@ -108,9 +108,9 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
         status: "unhealthy",
         latency,
         error: "Invalid MEXC API credentials",
-        details: { 
+        details: {
           message: "API key or secret is invalid",
-          statusCode: response.status
+          statusCode: response.status,
         },
       };
     }
@@ -121,9 +121,9 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
         status: "unhealthy",
         latency,
         error: "MEXC API access forbidden",
-        details: { 
+        details: {
           message: "API permissions insufficient or IP not whitelisted",
-          statusCode: response.status
+          statusCode: response.status,
         },
       };
     }
@@ -134,9 +134,9 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
         status: "degraded",
         latency,
         error: `HTTP ${response.status}: ${response.statusText}`,
-        details: { 
+        details: {
           message: "MEXC API responding with errors",
-          statusCode: response.status
+          statusCode: response.status,
         },
       };
     }
@@ -147,9 +147,9 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
         service: "mexc-api",
         status: "degraded",
         latency,
-        details: { 
+        details: {
           message: "High API latency detected",
-          credentialsValid: true
+          credentialsValid: true,
         },
       };
     }
@@ -158,9 +158,9 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
       service: "mexc-api",
       status: "healthy",
       latency,
-      details: { 
+      details: {
         credentialsValid: true,
-        message: "MEXC API credentials validated successfully"
+        message: "MEXC API credentials validated successfully",
       },
     };
   } catch (error) {
@@ -169,8 +169,8 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
       status: "unhealthy",
       latency: Date.now() - startTime,
       error: error instanceof Error ? error.message : String(error),
-      details: { 
-        message: "Failed to connect to MEXC API"
+      details: {
+        message: "Failed to connect to MEXC API",
       },
     };
   }

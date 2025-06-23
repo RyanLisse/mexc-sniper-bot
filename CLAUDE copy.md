@@ -18,21 +18,6 @@
     - Write conventional commits
 
 try to use the make commands to run, test and build the project
-
-## Recent Improvements
-
-### API Credentials Dynamic Response Implementation (2025-06)
-- **Fixed**: Replaced hardcoded API credentials test responses with dynamic MEXC API data
-- **Before**: Hardcoded `accountType: "spot"` and `canTrade: true` in test endpoint
-- **After**: Dynamic extraction from MEXC API via `getAccountInfo()` method
-- **Features**: 
-  - Dynamic account type detection (SPOT, MARGIN, FUTURES)
-  - Real-time permissions validation from MEXC API
-  - Smart canTrade derivation from permissions or explicit field
-  - Balance count from actual account balances
-  - Comprehensive error handling for authentication failures
-- **Tests**: Added comprehensive test suite for dynamic response verification
-- **Location**: `/app/api/api-credentials/test/route.ts`
 ## Claude-Flow Complete Command Reference
 
 Claude-Flow Complete Command Reference

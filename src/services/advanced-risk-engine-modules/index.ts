@@ -1,17 +1,17 @@
 /**
  * Advanced Risk Engine - Modular Integration
- * 
+ *
  * Main entry point for the modular Advanced Risk Engine. This module integrates
  * all the specialized modules and provides backward compatibility with the
  * original AdvancedRiskEngine interface.
- * 
+ *
  * Modules:
  * - Core Risk Assessment: Main risk calculation logic
  * - Market Conditions Manager: Market data and portfolio management
  * - Dynamic Calculations: Stop-loss, take-profit, and adaptive calculations
  * - Stress Testing Validation: Stress testing and emergency protocols
  * - Event Management Health: Event emission and health monitoring
- * 
+ *
  * This refactoring maintains 100% backward compatibility while providing
  * improved modularity, testability, and maintainability.
  */
@@ -21,61 +21,58 @@ import type { TradeRiskAssessment } from "../../mexc-agents/risk-manager-agent";
 import { type CircuitBreaker, circuitBreakerRegistry } from "../circuit-breaker";
 
 // Import schemas and types
-import {
-  type MarketConditions,
-  type PortfolioRiskMetrics,
-  type PositionRiskProfile,
-  type RiskAlert,
-  type RiskEngineConfig,
-  type StressTestScenario,
-  validateMarketConditions,
-  validatePortfolioRiskMetrics,
-  validatePositionRiskProfile,
+import type {
+  MarketConditions,
+  PortfolioRiskMetrics,
+  PositionRiskProfile,
+  RiskAlert,
+  RiskEngineConfig,
+  StressTestScenario,
 } from "../../schemas/risk-engine-schemas-extracted";
 
 // Import modular components
 import {
   CoreRiskAssessment,
-  createCoreRiskAssessment,
   type CoreRiskAssessmentConfig,
   type TradeRiskResult,
+  createCoreRiskAssessment,
 } from "./core-risk-assessment";
 
 import {
   MarketConditionsManager,
-  createMarketConditionsManager,
   type MarketConditionsManagerConfig,
   type PortfolioUpdate,
+  createMarketConditionsManager,
 } from "./market-conditions-manager";
 
 import {
-  DynamicCalculations,
-  createDynamicCalculations,
-  type DynamicCalculationsConfig,
-  type StopLossRecommendation,
-  type TakeProfitRecommendation,
-  type PositionSizeValidation,
-  type VolatilityAdjustment,
-  type StopLossValidation,
   type DiversificationAssessment,
+  DynamicCalculations,
+  type DynamicCalculationsConfig,
+  type PositionSizeValidation,
+  type StopLossRecommendation,
+  type StopLossValidation,
+  type TakeProfitRecommendation,
+  type VolatilityAdjustment,
+  createDynamicCalculations,
 } from "./dynamic-calculations";
 
 import {
+  type FlashCrashDetection,
+  type LiquidityAssessment,
+  type ManipulationDetection,
+  type PortfolioRiskCalculation,
+  type StressTestResult,
+  type StressTestingConfig,
   StressTestingValidation,
   createStressTestingValidation,
-  type StressTestingConfig,
-  type StressTestResult,
-  type FlashCrashDetection,
-  type ManipulationDetection,
-  type LiquidityAssessment,
-  type PortfolioRiskCalculation,
 } from "./stress-testing-validation";
 
 import {
-  EventManagementHealth,
-  createEventManagementHealth,
   type EventManagementConfig,
+  EventManagementHealth,
   type HealthStatus,
+  createEventManagementHealth,
 } from "./event-management-health";
 
 // Re-export types for backward compatibility
@@ -97,14 +94,14 @@ export type {
  * - Multi-layered risk assessments
  * - Stress testing and scenario analysis
  * - Adaptive risk scaling based on market conditions
- * 
+ *
  * This modular implementation maintains full backward compatibility
  * while providing improved architecture and maintainability.
  */
 export class AdvancedRiskEngine extends EventEmitter {
   private config: RiskEngineConfig;
   private circuitBreaker: CircuitBreaker;
-  
+
   // Module instances
   private coreRiskAssessment!: CoreRiskAssessment;
   private marketConditionsManager!: MarketConditionsManager;
@@ -192,15 +189,15 @@ export class AdvancedRiskEngine extends EventEmitter {
   private setupEventForwarding(): void {
     // Forward all events from event management module
     const events = [
-      'risk_alert',
-      'alert_resolved',
-      'risk_threshold_exceeded',
-      'emergency_stop',
-      'emergency_stop_reset',
-      'position_risk_update',
+      "risk_alert",
+      "alert_resolved",
+      "risk_threshold_exceeded",
+      "emergency_stop",
+      "emergency_stop_reset",
+      "position_risk_update",
     ];
 
-    events.forEach(eventName => {
+    events.forEach((eventName) => {
       this.eventManagementHealth.on(eventName, (data) => {
         this.emit(eventName, data);
       });
@@ -276,10 +273,10 @@ export class AdvancedRiskEngine extends EventEmitter {
    */
   async updateMarketConditions(conditions: Partial<MarketConditions>): Promise<void> {
     await this.marketConditionsManager.updateMarketConditions(conditions);
-    
+
     // Check for emergency market conditions
     await this.eventManagementHealth.checkEmergencyMarketConditions();
-    
+
     this.updateAllModules();
     this.eventManagementHealth.updateLastRiskUpdate();
   }
@@ -290,16 +287,16 @@ export class AdvancedRiskEngine extends EventEmitter {
   async updatePosition(position: PositionRiskProfile): Promise<void> {
     // Update in market conditions manager (handles validation)
     await this.marketConditionsManager.updatePosition(position);
-    
+
     // Update local positions map
     this.positions.set(position.symbol, position);
-    
+
     // Recalculate portfolio risk metrics
     const portfolioMetrics = await this.marketConditionsManager.getPortfolioRiskMetrics();
-    
+
     // Check for risk threshold breaches
     await this.eventManagementHealth.checkRiskThresholds(portfolioMetrics);
-    
+
     this.updateAllModules();
   }
 
@@ -419,7 +416,7 @@ export class AdvancedRiskEngine extends EventEmitter {
     }>
   ): Promise<void> {
     await this.marketConditionsManager.updatePortfolioPositions(portfolioPositions);
-    
+
     // Update local positions map
     for (const pos of portfolioPositions) {
       const existing = this.positions.get(pos.symbol);
@@ -430,7 +427,7 @@ export class AdvancedRiskEngine extends EventEmitter {
         }
       }
     }
-    
+
     this.updateAllModules();
   }
 
@@ -462,7 +459,10 @@ export class AdvancedRiskEngine extends EventEmitter {
       liquidityDecrease: number;
     }
   ): Promise<void> {
-    await this.marketConditionsManager.updateCorrelationMatrix(correlatedPositions, marketStressEvent);
+    await this.marketConditionsManager.updateCorrelationMatrix(
+      correlatedPositions,
+      marketStressEvent
+    );
     this.updateAllModules();
   }
 
@@ -514,13 +514,14 @@ export class AdvancedRiskEngine extends EventEmitter {
     }
   ): Promise<void> {
     await this.stressTestingValidation.updatePositionRisk(symbol, riskData);
-    
+
     // Update position in local map
     const position = this.positions.get(symbol);
     if (position) {
-      const priceChange = ((riskData.currentPrice - riskData.entryPrice) / riskData.entryPrice) * 100;
+      const priceChange =
+        ((riskData.currentPrice - riskData.entryPrice) / riskData.entryPrice) * 100;
       const drawdown = priceChange < 0 ? Math.abs(priceChange) : 0;
-      
+
       position.unrealizedPnL = riskData.unrealizedPnL;
       position.size = riskData.positionSize * riskData.currentPrice;
       position.maxDrawdown = Math.max(position.maxDrawdown, drawdown);
@@ -534,7 +535,7 @@ export class AdvancedRiskEngine extends EventEmitter {
         currentPrice: riskData.currentPrice,
       });
     }
-    
+
     this.updateAllModules();
   }
 

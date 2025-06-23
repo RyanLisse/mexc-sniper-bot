@@ -1,6 +1,6 @@
 /**
  * MEXC Cache Layer
- * 
+ *
  * Intelligent caching system for MEXC API responses.
  * Provides different TTL strategies for different data types.
  */
@@ -33,16 +33,16 @@ interface CacheMetrics {
 
 const CACHE_TTL_PROFILES = {
   // Real-time data - short cache
-  realTime: 15 * 1000,      // 15 seconds
-  
-  // Semi-static data - medium cache  
+  realTime: 15 * 1000, // 15 seconds
+
+  // Semi-static data - medium cache
   semiStatic: 5 * 60 * 1000, // 5 minutes
-  
+
   // Static data - long cache
-  static: 30 * 60 * 1000,    // 30 minutes
-  
+  static: 30 * 60 * 1000, // 30 minutes
+
   // User-specific data
-  user: 10 * 60 * 1000,      // 10 minutes
+  user: 10 * 60 * 1000, // 10 minutes
 } as const;
 
 // ============================================================================
@@ -67,9 +67,12 @@ export class MexcCacheLayer {
     };
 
     // Start cleanup process every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanup();
+      },
+      5 * 60 * 1000
+    );
   }
 
   // ============================================================================
@@ -83,7 +86,7 @@ export class MexcCacheLayer {
     this.metrics.totalRequests++;
 
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       this.metrics.misses++;
       return null;
@@ -104,9 +107,9 @@ export class MexcCacheLayer {
   /**
    * Set data in cache with appropriate TTL
    */
-  set<T>(key: string, data: T, ttlType: keyof typeof CACHE_TTL_PROFILES = 'semiStatic'): void {
+  set<T>(key: string, data: T, ttlType: keyof typeof CACHE_TTL_PROFILES = "semiStatic"): void {
     const ttl = CACHE_TTL_PROFILES[ttlType];
-    
+
     const entry: CacheEntry<T> = {
       data,
       timestamp: Date.now(),
@@ -156,7 +159,7 @@ export class MexcCacheLayer {
   wrapWithCache<T>(
     key: string,
     fn: () => Promise<MexcServiceResponse<T>>,
-    ttlType: keyof typeof CACHE_TTL_PROFILES = 'semiStatic'
+    ttlType: keyof typeof CACHE_TTL_PROFILES = "semiStatic"
   ): () => Promise<MexcServiceResponse<T>> {
     return async () => {
       // Try cache first
@@ -170,7 +173,7 @@ export class MexcCacheLayer {
 
       // Execute function and cache result
       const result = await fn();
-      
+
       // Only cache successful responses
       if (result.success) {
         this.set(key, result, ttlType);
@@ -186,7 +189,7 @@ export class MexcCacheLayer {
   async getOrSet<T>(
     key: string,
     fn: () => Promise<MexcServiceResponse<T>>,
-    ttlType: keyof typeof CACHE_TTL_PROFILES = 'semiStatic'
+    ttlType: keyof typeof CACHE_TTL_PROFILES = "semiStatic"
   ): Promise<MexcServiceResponse<T>> {
     const wrapped = this.wrapWithCache(key, fn, ttlType);
     return wrapped();
@@ -201,7 +204,7 @@ export class MexcCacheLayer {
    */
   invalidateByPattern(pattern: string): number {
     let invalidated = 0;
-    
+
     for (const key of this.cache.keys()) {
       if (key.includes(pattern)) {
         this.cache.delete(key);
@@ -231,9 +234,11 @@ export class MexcCacheLayer {
    * Invalidate all user-specific cache
    */
   invalidateUserData(): number {
-    return this.invalidateByPattern("account") + 
-           this.invalidateByPattern("balance") + 
-           this.invalidateByPattern("portfolio");
+    return (
+      this.invalidateByPattern("account") +
+      this.invalidateByPattern("balance") +
+      this.invalidateByPattern("portfolio")
+    );
   }
 
   // ============================================================================
@@ -264,9 +269,8 @@ export class MexcCacheLayer {
    * Get cache statistics
    */
   getMetrics(): CacheMetrics & { hitRate: number; size: number } {
-    const hitRate = this.metrics.totalRequests > 0 
-      ? (this.metrics.hits / this.metrics.totalRequests) * 100 
-      : 0;
+    const hitRate =
+      this.metrics.totalRequests > 0 ? (this.metrics.hits / this.metrics.totalRequests) * 100 : 0;
 
     return {
       ...this.metrics,
@@ -301,7 +305,7 @@ export class MexcCacheLayer {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = undefined;
     }
-    
+
     this.clear();
   }
 }

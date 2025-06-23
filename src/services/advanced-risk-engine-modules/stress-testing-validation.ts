@@ -1,10 +1,10 @@
 /**
  * Stress Testing & Validation Module
- * 
+ *
  * Provides stress testing, scenario analysis, and risk validation functionality
  * for the Advanced Risk Engine. This module handles stress test scenarios,
  * position risk updates, and emergency detection mechanisms.
- * 
+ *
  * Part of the modular refactoring of advanced-risk-engine.ts
  */
 
@@ -427,7 +427,7 @@ export class StressTestingValidation {
     // Apply market conditions
     const volatilityRisk = this.config.marketConditions.volatilityIndex;
     const liquidityRisk = 100 - this.config.marketConditions.liquidityIndex;
-    
+
     riskScore += volatilityRisk * 0.3;
     riskScore += liquidityRisk * 0.2;
 
@@ -458,9 +458,10 @@ export class StressTestingValidation {
     const concentrationRisk = totalValue > 0 ? (maxPosition / totalValue) * 100 : 0;
 
     // Calculate correlation risk (simplified)
-    const correlationRisk = positions.length > 0 
-      ? positions.reduce((sum, p) => sum + p.correlationScore, 0) / positions.length * 100
-      : 0;
+    const correlationRisk =
+      positions.length > 0
+        ? (positions.reduce((sum, p) => sum + p.correlationScore, 0) / positions.length) * 100
+        : 0;
 
     // Calculate liquidity risk
     const liquidityRisk = Math.max(0, 100 - this.config.marketConditions.liquidityIndex);
@@ -470,10 +471,7 @@ export class StressTestingValidation {
 
     // Overall risk (weighted average)
     const overallRisk =
-      concentrationRisk * 0.3 +
-      correlationRisk * 0.3 +
-      liquidityRisk * 0.2 +
-      volatilityRisk * 0.2;
+      concentrationRisk * 0.3 + correlationRisk * 0.3 + liquidityRisk * 0.2 + volatilityRisk * 0.2;
 
     return {
       overallRisk,
@@ -502,7 +500,9 @@ export class StressTestingValidation {
 }
 
 // Factory function for creating stress testing validation instance
-export function createStressTestingValidation(config: StressTestingConfig): StressTestingValidation {
+export function createStressTestingValidation(
+  config: StressTestingConfig
+): StressTestingValidation {
   return new StressTestingValidation(config);
 }
 

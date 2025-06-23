@@ -1,6 +1,6 @@
 /**
  * Unified MEXC Service v2 - Modular Architecture
- * 
+ *
  * Refactored service that orchestrates modular components for:
  * - Better maintainability (under 300 lines!)
  * - Improved performance through focused modules
@@ -9,17 +9,17 @@
  */
 
 import type {
+  BalanceEntry,
+  CalendarEntry,
   MexcApiConfig,
   MexcCacheConfig,
   MexcReliabilityConfig,
   MexcServiceResponse,
-  CalendarEntry,
   SymbolEntry,
-  BalanceEntry,
 } from "./modules/mexc-api-types";
 
-import { MexcCoreClient } from "./modules/mexc-core-client";
 import { MexcCacheLayer } from "./modules/mexc-cache-layer";
+import { MexcCoreClient } from "./modules/mexc-core-client";
 
 // ============================================================================
 // Service Configuration
@@ -45,7 +45,7 @@ const DEFAULT_CONFIG: Required<UnifiedMexcConfigV2> = {
   cacheTTL: 30000,
   apiResponseTTL: 1500,
 
-  // Reliability Configuration  
+  // Reliability Configuration
   enableCircuitBreaker: true,
   enableRateLimiter: true,
   maxFailures: 5,
@@ -66,7 +66,7 @@ export class UnifiedMexcServiceV2 {
 
   constructor(config: Partial<UnifiedMexcConfigV2> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    
+
     // Initialize modular components
     this.coreClient = new MexcCoreClient({
       apiKey: this.config.apiKey,
@@ -183,10 +183,10 @@ export class UnifiedMexcServiceV2 {
    */
   async testConnectivity(): Promise<MexcServiceResponse<{ serverTime: number; latency: number }>> {
     const startTime = Date.now();
-    
+
     try {
       const serverTimeResponse = await this.getServerTime();
-      
+
       if (!serverTimeResponse.success) {
         return {
           success: false,
@@ -252,7 +252,9 @@ export class UnifiedMexcServiceV2 {
 /**
  * Create a new unified MEXC service instance
  */
-export function createUnifiedMexcServiceV2(config?: Partial<UnifiedMexcConfigV2>): UnifiedMexcServiceV2 {
+export function createUnifiedMexcServiceV2(
+  config?: Partial<UnifiedMexcConfigV2>
+): UnifiedMexcServiceV2 {
   return new UnifiedMexcServiceV2(config);
 }
 
@@ -261,7 +263,9 @@ export function createUnifiedMexcServiceV2(config?: Partial<UnifiedMexcConfigV2>
  */
 let globalServiceInstance: UnifiedMexcServiceV2 | null = null;
 
-export function getUnifiedMexcServiceV2(config?: Partial<UnifiedMexcConfigV2>): UnifiedMexcServiceV2 {
+export function getUnifiedMexcServiceV2(
+  config?: Partial<UnifiedMexcConfigV2>
+): UnifiedMexcServiceV2 {
   if (!globalServiceInstance) {
     globalServiceInstance = new UnifiedMexcServiceV2(config);
   }

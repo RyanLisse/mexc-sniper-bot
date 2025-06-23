@@ -1,23 +1,23 @@
 /**
  * Market Conditions & Portfolio Management Module
- * 
+ *
  * Manages market conditions, position tracking, and portfolio metrics
  * for the Advanced Risk Engine. This module handles data validation,
  * market condition updates, and portfolio risk calculations.
- * 
+ *
  * Part of the modular refactoring of advanced-risk-engine.ts
  */
 
 import type {
   MarketConditions,
-  PositionRiskProfile,
   PortfolioRiskMetrics,
+  PositionRiskProfile,
   RiskEngineConfig,
 } from "../../schemas/risk-engine-schemas-extracted";
 import {
   validateMarketConditions,
-  validatePositionRiskProfile,
   validatePortfolioRiskMetrics,
+  validatePositionRiskProfile,
 } from "../../schemas/risk-engine-schemas-extracted";
 
 export interface MarketConditionsManagerConfig {
@@ -196,7 +196,9 @@ export class MarketConditionsManager {
           position.size *= scaleFactor;
         }
 
-        console.log(`[MarketConditionsManager] Portfolio value updated: ${oldValue} -> ${newValue}`);
+        console.log(
+          `[MarketConditionsManager] Portfolio value updated: ${oldValue} -> ${newValue}`
+        );
       }
 
       // Store historical metrics with proper validation
@@ -271,7 +273,9 @@ export class MarketConditionsManager {
       // Recalculate portfolio metrics
       await this.calculatePortfolioRiskMetrics();
 
-      console.log(`[MarketConditionsManager] Updated ${portfolioPositions.length} portfolio positions`);
+      console.log(
+        `[MarketConditionsManager] Updated ${portfolioPositions.length} portfolio positions`
+      );
     } catch (error) {
       console.error("[MarketConditionsManager] Portfolio positions update failed:", error);
     }
@@ -353,10 +357,20 @@ export class MarketConditionsManager {
     try {
       // Update market conditions based on stress event
       await this.updateMarketConditions({
-        volatilityIndex: Math.min(100, Math.max(0,
-          this.marketConditions.volatilityIndex * (1 + marketStressEvent.volatilityIncrease / 100))),
-        liquidityIndex: Math.min(100, Math.max(0,
-          this.marketConditions.liquidityIndex * (1 - marketStressEvent.liquidityDecrease / 100))),
+        volatilityIndex: Math.min(
+          100,
+          Math.max(
+            0,
+            this.marketConditions.volatilityIndex * (1 + marketStressEvent.volatilityIncrease / 100)
+          )
+        ),
+        liquidityIndex: Math.min(
+          100,
+          Math.max(
+            0,
+            this.marketConditions.liquidityIndex * (1 - marketStressEvent.liquidityDecrease / 100)
+          )
+        ),
         correlationRisk: marketStressEvent.correlationSpike,
       });
 
@@ -414,7 +428,7 @@ export class MarketConditionsManager {
   } {
     const positions = Array.from(this.positions.values());
     const totalValue = this.calculatePortfolioValue();
-    const positionSizes = positions.map(p => p.size);
+    const positionSizes = positions.map((p) => p.size);
     const largestPosition = positionSizes.length > 0 ? Math.max(...positionSizes) : 0;
 
     return {
@@ -435,7 +449,9 @@ export class MarketConditionsManager {
 }
 
 // Factory function for creating market conditions manager instance
-export function createMarketConditionsManager(config: MarketConditionsManagerConfig): MarketConditionsManager {
+export function createMarketConditionsManager(
+  config: MarketConditionsManagerConfig
+): MarketConditionsManager {
   return new MarketConditionsManager(config);
 }
 

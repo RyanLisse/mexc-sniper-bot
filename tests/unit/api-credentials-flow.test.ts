@@ -38,6 +38,61 @@ vi.mock('@/src/hooks/use-mexc-data', () => ({
   })
 }));
 
+// Mock the status context hook for successful status
+vi.mock('@/src/contexts/status-context', async () => {
+  const actual = await vi.importActual('@/src/contexts/status-context');
+  return {
+    ...actual,
+    useStatus: () => ({
+      status: {
+        network: {
+          connected: true,
+          lastChecked: new Date().toISOString(),
+          error: undefined
+        },
+        credentials: {
+          hasCredentials: true,
+          isValid: true,
+          source: 'database',
+          hasUserCredentials: true,
+          hasEnvironmentCredentials: false,
+          lastValidated: new Date().toISOString(),
+          error: undefined
+        },
+        trading: {
+          canTrade: true,
+          accountType: 'spot',
+          balanceLoaded: true,
+          lastUpdate: new Date().toISOString()
+        },
+        system: {
+          overall: 'healthy',
+          components: {},
+          lastHealthCheck: new Date().toISOString()
+        },
+        workflows: {
+          discoveryRunning: false,
+          sniperActive: false,
+          activeWorkflows: [],
+          systemStatus: 'active',
+          lastUpdate: new Date().toISOString()
+        }
+      },
+      refreshNetwork: vi.fn(),
+      refreshCredentials: vi.fn(),
+      refreshTrading: vi.fn(),
+      refreshSystem: vi.fn(),
+      refreshWorkflows: vi.fn(),
+      refreshAll: vi.fn(),
+      updateCredentials: vi.fn(),
+      updateTradingStatus: vi.fn(),
+      syncStatus: vi.fn(),
+      getOverallStatus: () => 'connected',
+      isFullyConnected: () => true
+    })
+  };
+});
+
 // Create mock functions that will be used in tests
 const mockSaveMutateAsync = vi.fn();
 const mockTestMutateAsync = vi.fn();
@@ -268,14 +323,20 @@ describe('API Credentials Authentication Flow', () => {
     it('should display fully connected status correctly', () => {
       renderWithQueryClient(React.createElement(ConsolidatedCredentialStatus));
 
-      expect(screen.getByText(/Fully Connected/i)).toBeInTheDocument();
-      expect(screen.getByText(/Network OK/i)).toBeInTheDocument();
-      expect(screen.getByText(/Keys Found/i)).toBeInTheDocument();
-      // Use getAllByText to handle multiple "Valid" elements and check the specific one
-      const validElements = screen.getAllByText(/Valid/i);
-      expect(validElements.length).toBeGreaterThan(0);
-      // Check that at least one is the status indicator (not in description)
-      expect(validElements.some(el => el.className.includes('text-green-600'))).toBe(true);
+      // Check individual status indicators that are actually rendered
+      expect(screen.getByText(/Connected/i)).toBeInTheDocument(); // Network status
+      expect(screen.getByText(/Valid/i)).toBeInTheDocument(); // Credentials status  
+      expect(screen.getByText(/Can Trade/i)).toBeInTheDocument(); // Trading status
+      
+      // Check that the status elements have the correct styling (green = success)
+      const validElement = screen.getByText(/Valid/i);
+      expect(validElement.className).toContain('text-green');
+      
+      const connectedElement = screen.getByText(/Connected/i);
+      expect(connectedElement.className).toContain('text-green');
+      
+      const canTradeElement = screen.getByText(/Can Trade/i);
+      expect(canTradeElement.className).toContain('text-green');
     });
 
     it('should show refresh button and handle clicks', () => {

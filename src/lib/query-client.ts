@@ -4,7 +4,7 @@ import { mexcQueryKeys } from "../services/modules/mexc-api-types";
 
 /**
  * Optimized TanStack Query Client Configuration
- * 
+ *
  * Enhanced configuration for better performance and type safety:
  * - Optimized stale times for different data types
  * - Intelligent retry logic with circuit breaker awareness
@@ -27,15 +27,12 @@ export const queryClient = new QueryClient({
         ) {
           return false;
         }
-        
+
         // Don't retry if circuit breaker is open
-        if (
-          error instanceof Error &&
-          error.message.includes('Circuit breaker open')
-        ) {
+        if (error instanceof Error && error.message.includes("Circuit breaker open")) {
           return false;
         }
-        
+
         return failureCount < 3;
       },
       refetchOnWindowFocus: false, // Avoid unnecessary refetches
@@ -46,7 +43,7 @@ export const queryClient = new QueryClient({
       retry: 1,
       // Add error handling for mutations
       onError: (error) => {
-        console.error('[QueryClient] Mutation error:', error);
+        console.error("[QueryClient] Mutation error:", error);
       },
     },
   },
@@ -59,10 +56,10 @@ export const queryKeys = {
 
   // MEXC data - using optimized modular keys
   mexc: mexcQueryKeys,
-  
+
   // Legacy compatibility (gradually migrate these)
   mexcCalendar: () => mexcQueryKeys.calendar(),
-  mexcSymbols: (vcoinId?: string) => 
+  mexcSymbols: (vcoinId?: string) =>
     vcoinId ? mexcQueryKeys.symbol(vcoinId) : mexcQueryKeys.symbols(),
   mexcServerTime: () => mexcQueryKeys.serverTime(),
 

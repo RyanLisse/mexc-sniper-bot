@@ -6,12 +6,11 @@
  */
 
 import { EventEmitter } from "events";
+import { and, eq, lt } from "drizzle-orm";
 import { db } from "../db";
 import { snipeTargets } from "../db/schemas/trading";
-import { eq, and, lt } from "drizzle-orm";
 import { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
 import { MexcConfigValidator } from "./mexc-config-validator";
-import type { SymbolEntry } from "./mexc-unified-exports";
 import { MultiPhaseTradingBot } from "./multi-phase-trading-bot";
 import { PatternDetectionEngine } from "./pattern-detection-engine";
 import { TRADING_STRATEGIES } from "./trading-strategy-manager";
@@ -435,7 +434,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
       // Get ready snipe targets from database instead of running pattern detection
       const readyTargets = await this.getReadySnipeTargets();
-      
+
       if (readyTargets.length === 0) {
         console.log("[AutoSnipingOrchestrator] No ready snipe targets found in database");
         return;
@@ -456,7 +455,6 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         readyTargets.length > 0
           ? readyTargets.reduce((sum, t) => sum + t.confidenceScore, 0) / readyTargets.length
           : 0;
-
     } catch (error) {
       console.error("[AutoSnipingOrchestrator] Database target check failed:", error);
       this.status.systemHealth.patternDetection = "degraded";
@@ -470,7 +468,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
   private async getReadySnipeTargets() {
     try {
       const now = new Date();
-      
+
       // Query for targets that are ready for execution
       const targets = await db
         .select()
@@ -479,7 +477,8 @@ export class AutoSnipingOrchestrator extends EventEmitter {
           and(
             eq(snipeTargets.status, "ready"),
             // Check if execution time has arrived (or no specific time set)
-            snipeTargets.targetExecutionTime.isNull()
+            snipeTargets.targetExecutionTime
+              .isNull()
               .or(lt(snipeTargets.targetExecutionTime, now))
           )
         )
@@ -505,9 +504,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
       // Check if we can take new positions
       if (this.activePositions.size >= this.config.maxConcurrentPositions) {
-        console.log(
-          "[AutoSnipingOrchestrator] Max concurrent positions reached, skipping target"
-        );
+        console.log("[AutoSnipingOrchestrator] Max concurrent positions reached, skipping target");
         return;
       }
 
@@ -527,12 +524,15 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         symbol: target.symbolName,
         result: "success",
       };
-
     } catch (error) {
       console.error("[AutoSnipingOrchestrator] Failed to process snipe target:", error);
-      
+
       // Update target status to failed
-      await this.updateTargetStatus(target.id, "failed", error instanceof Error ? error.message : "Unknown error");
+      await this.updateTargetStatus(
+        target.id,
+        "failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
 
       this.status.lastOperation = {
         timestamp: new Date().toISOString(),
@@ -610,7 +610,11 @@ export class AutoSnipingOrchestrator extends EventEmitter {
   /**
    * Update snipe target status in database
    */
-  private async updateTargetStatus(targetId: number, status: string, errorMessage?: string): Promise<void> {
+  private async updateTargetStatus(
+    targetId: number,
+    status: string,
+    errorMessage?: string
+  ): Promise<void> {
     try {
       const updateData: any = {
         status,
@@ -625,11 +629,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         updateData.errorMessage = errorMessage;
       }
 
-      await db
-        .update(snipeTargets)
-        .set(updateData)
-        .where(eq(snipeTargets.id, targetId));
-
+      await db.update(snipeTargets).set(updateData).where(eq(snipeTargets.id, targetId));
     } catch (error) {
       console.error("[AutoSnipingOrchestrator] Failed to update target status:", error);
     }
@@ -676,7 +676,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
   private async executeTradeFromTarget(target: any): Promise<void> {
     // Real trading implementation would go here
     console.log(`[AutoSnipingOrchestrator] Executing real trade for target ${target.symbolName}`);
-    
+
     // For now, delegate to simulated trade
     // TODO: Implement real trading logic with MEXC API
     await this.simulateTradeFromTarget(target);

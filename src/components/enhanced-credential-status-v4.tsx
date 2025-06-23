@@ -2,6 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import type { CredentialStatus, NetworkStatus, TradingStatus } from "../contexts/status-context-v2";
+import { queryKeys } from "../lib/query-client";
 import {
   CredentialStatusIndicator,
   NetworkStatusIndicator,
@@ -9,12 +11,6 @@ import {
   TradingStatusIndicator,
   UnifiedStatusBadge,
 } from "./status/unified-status-display";
-import { queryKeys } from "../lib/query-client";
-import type { 
-  NetworkStatus, 
-  CredentialStatus, 
-  TradingStatus 
-} from "../contexts/status-context-v2";
 
 /**
  * React Query-based Enhanced Credential Status Component
@@ -77,18 +73,18 @@ export function EnhancedCredentialStatusV4({
     queryFn: async (): Promise<UnifiedStatusResponse> => {
       const response = await fetch("/api/mexc/unified-status");
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to fetch unified status");
       }
-      
+
       return result.data;
     },
     staleTime: 15000, // 15 seconds
     refetchInterval: autoRefresh ? refreshInterval : false,
     refetchIntervalInBackground: false,
     retry: (failureCount, error) => {
-      if (error.message.includes('fetch')) {
+      if (error.message.includes("fetch")) {
         return failureCount < 2;
       }
       return failureCount < 1;
@@ -104,11 +100,11 @@ export function EnhancedCredentialStatusV4({
         body: JSON.stringify({ forceRefresh: true }),
       });
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to refresh status");
       }
-      
+
       return result.data;
     },
     onSuccess: () => {
@@ -212,9 +208,9 @@ export function EnhancedCredentialStatusV4({
   };
 
   const handleClearError = () => {
-    queryClient.removeQueries({ 
-      queryKey: queryKeys.status.unified(), 
-      type: "all"
+    queryClient.removeQueries({
+      queryKey: queryKeys.status.unified(),
+      type: "all",
     });
   };
 
@@ -232,9 +228,7 @@ export function EnhancedCredentialStatusV4({
         <NetworkStatusIndicator status={networkStatus} size="sm" />
         <CredentialStatusIndicator status={credentialStatus} size="sm" />
         <TradingStatusIndicator status={tradingStatus} size="sm" />
-        {isFetching && (
-          <div className="text-xs text-muted-foreground animate-pulse">•</div>
-        )}
+        {isFetching && <div className="text-xs text-muted-foreground animate-pulse">•</div>}
       </div>
     );
   }
@@ -257,7 +251,7 @@ export function EnhancedCredentialStatusV4({
               title="Refresh status"
             >
               <svg
-                className={`w-4 h-4 ${(isRefreshing || isFetching) ? "animate-spin" : ""}`}
+                className={`w-4 h-4 ${isRefreshing || isFetching ? "animate-spin" : ""}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -406,7 +400,7 @@ export function EnhancedCredentialStatusV4({
           title="Refresh status"
         >
           <svg
-            className={`w-4 h-4 mr-1 ${(isRefreshing || isFetching) ? "animate-spin" : ""}`}
+            className={`w-4 h-4 mr-1 ${isRefreshing || isFetching ? "animate-spin" : ""}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

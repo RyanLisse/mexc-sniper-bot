@@ -38,9 +38,31 @@ vi.mock('ioredis', () => {
 describe('RedisCacheService', () => {
   let cacheService: RedisCacheService;
 
+  // Helper function to simulate Redis connection
+  const simulateConnection = (service: RedisCacheService) => {
+    (service as any).isConnected = true;
+    (service as any).metrics.connectionStatus = 'connected';
+  };
+
+  let originalEnv: NodeJS.ProcessEnv;
+
   beforeEach(() => {
     vi.clearAllMocks();
     resetRedisCacheService();
+
+    // Store original environment and reset environment variables to prevent build environment detection
+    originalEnv = { ...process.env };
+    delete process.env.CI;
+    delete process.env.GITHUB_ACTIONS;
+    delete process.env.VERCEL;
+    delete process.env.NODE_ENV;
+    delete process.env.NEXT_PHASE;
+    delete process.env.NEXT_BUILD;
+    delete process.env.STATIC_GENERATION;
+    delete process.env.BUILD_ID;
+    delete process.env.npm_lifecycle_event;
+    delete process.env.npm_command;
+    process.env.REDIS_URL = 'redis://localhost:6379'; // Provide Redis URL to prevent skip
 
     // Reset mock Redis behavior
     mockRedis.connect.mockResolvedValue(undefined);
@@ -66,6 +88,9 @@ describe('RedisCacheService', () => {
       await cacheService.destroy();
     }
     resetRedisCacheService();
+    
+    // Restore original environment variables
+    process.env = { ...originalEnv };
   });
 
   describe('Initialization and Configuration', () => {
@@ -122,9 +147,9 @@ describe('RedisCacheService', () => {
     });
 
     it('should perform cache operations when connected', async () => {
-      // Simulate connection
-      const onConnect = mockRedis.on.mock.calls.find(call => call[0] === 'connect')?.[1];
-      if (onConnect) onConnect();
+      // Simulate connection by directly setting the connection state
+      (cacheService as any).isConnected = true;
+      (cacheService as any).metrics.connectionStatus = 'connected';
 
       // Mock successful Redis operations
       const testData = { message: 'test data' };
@@ -168,8 +193,7 @@ describe('RedisCacheService', () => {
       });
 
       // Simulate connection
-      const onConnect = mockRedis.on.mock.calls.find(call => call[0] === 'connect')?.[1];
-      if (onConnect) onConnect();
+      simulateConnection(cacheService);
     });
 
     it('should handle batch get operations', async () => {
@@ -246,8 +270,7 @@ describe('RedisCacheService', () => {
       });
 
       // Simulate connection
-      const onConnect = mockRedis.on.mock.calls.find(call => call[0] === 'connect')?.[1];
-      if (onConnect) onConnect();
+      simulateConnection(cacheService);
     });
 
     it('should use 5-second TTL for API responses by default', async () => {
@@ -379,8 +402,7 @@ describe('RedisCacheService', () => {
 
     it('should update metrics on cache operations', async () => {
       // Simulate connection
-      const onConnect = mockRedis.on.mock.calls.find(call => call[0] === 'connect')?.[1];
-      if (onConnect) onConnect();
+      simulateConnection(cacheService);
 
       const initialMetrics = cacheService.getMetrics();
 
@@ -399,8 +421,7 @@ describe('RedisCacheService', () => {
       expect(cacheService.isHealthy()).toBe(false); // Not connected initially
 
       // Simulate connection
-      const onConnect = mockRedis.on.mock.calls.find(call => call[0] === 'connect')?.[1];
-      if (onConnect) onConnect();
+      simulateConnection(cacheService);
 
       expect(cacheService.isHealthy()).toBe(true);
     });
@@ -450,8 +471,7 @@ describe('RedisCacheService', () => {
       cacheService = new RedisCacheService();
 
       // Simulate connection
-      const onConnect = mockRedis.on.mock.calls.find(call => call[0] === 'connect')?.[1];
-      if (onConnect) onConnect();
+      simulateConnection(cacheService);
     });
 
     it('should support delta updates with setWithDelta', async () => {

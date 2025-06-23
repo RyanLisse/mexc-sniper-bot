@@ -1,21 +1,21 @@
 /**
  * MEXC API Types and Query Keys
- * 
+ *
  * Extracted from unified MEXC service for better modularity.
  * Contains optimized query keys and type definitions.
  */
 
 import type {
-  CalendarEntry,
-  SymbolEntry,
   BalanceEntry,
+  CalendarEntry,
   ExchangeInfo,
-  Ticker,
-  OrderBook,
   Kline,
   MarketStats,
+  OrderBook,
   Portfolio,
   RiskAssessment,
+  SymbolEntry,
+  Ticker,
 } from "../mexc-schemas";
 
 // ============================================================================
@@ -29,39 +29,39 @@ import type {
 export const mexcQueryKeys = {
   // Base keys
   all: () => ["mexc"] as const,
-  
+
   // Calendar and listings
   calendar: () => [...mexcQueryKeys.all(), "calendar"] as const,
-  
+
   // Symbols and market data
   symbols: () => [...mexcQueryKeys.all(), "symbols"] as const,
   symbol: (vcoinId: string) => [...mexcQueryKeys.symbols(), vcoinId] as const,
-  
+
   // Account and portfolio
   account: () => [...mexcQueryKeys.all(), "account"] as const,
   balance: () => [...mexcQueryKeys.account(), "balance"] as const,
   portfolio: () => [...mexcQueryKeys.account(), "portfolio"] as const,
-  
+
   // Market data
-  ticker: (symbol?: string) => 
-    symbol 
-      ? [...mexcQueryKeys.all(), "ticker", symbol] as const
-      : [...mexcQueryKeys.all(), "ticker"] as const,
-  
+  ticker: (symbol?: string) =>
+    symbol
+      ? ([...mexcQueryKeys.all(), "ticker", symbol] as const)
+      : ([...mexcQueryKeys.all(), "ticker"] as const),
+
   orderBook: (symbol: string) => [...mexcQueryKeys.all(), "orderBook", symbol] as const,
-  klines: (symbol: string, interval: string) => 
+  klines: (symbol: string, interval: string) =>
     [...mexcQueryKeys.all(), "klines", symbol, interval] as const,
-  
+
   // System status
   serverTime: () => [...mexcQueryKeys.all(), "serverTime"] as const,
   exchangeInfo: () => [...mexcQueryKeys.all(), "exchangeInfo"] as const,
-  
+
   // Trading
   trades: (symbol: string) => [...mexcQueryKeys.all(), "trades", symbol] as const,
-  orders: (symbol?: string) => 
+  orders: (symbol?: string) =>
     symbol
-      ? [...mexcQueryKeys.all(), "orders", symbol] as const 
-      : [...mexcQueryKeys.all(), "orders"] as const,
+      ? ([...mexcQueryKeys.all(), "orders", symbol] as const)
+      : ([...mexcQueryKeys.all(), "orders"] as const),
 } as const;
 
 // ============================================================================

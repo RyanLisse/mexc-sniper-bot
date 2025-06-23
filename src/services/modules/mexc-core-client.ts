@@ -1,19 +1,17 @@
 /**
  * MEXC Core API Client
- * 
+ *
  * Lightweight, focused HTTP client for MEXC API communication.
  * Extracted from unified service for better separation of concerns.
  */
 
 import type {
+  BalanceEntry,
+  CalendarEntry,
   MexcApiConfig,
   MexcApiResponse,
   MexcServiceResponse,
-  CalendarEntry,
   SymbolEntry,
-  BalanceEntry,
-  ExchangeInfo,
-  Ticker,
 } from "./mexc-api-types";
 
 // ============================================================================
@@ -94,9 +92,10 @@ export class MexcCoreClient {
 
       if (response.data?.symbols && Array.isArray(response.data.symbols)) {
         const matchingSymbols = response.data.symbols
-          .filter((symbol: any) => 
-            symbol.symbol?.includes(vcoinId.toUpperCase()) ||
-            symbol.baseAsset === vcoinId.toUpperCase()
+          .filter(
+            (symbol: any) =>
+              symbol.symbol?.includes(vcoinId.toUpperCase()) ||
+              symbol.baseAsset === vcoinId.toUpperCase()
           )
           .map((symbol: any) => ({
             symbol: symbol.symbol,
@@ -145,8 +144,9 @@ export class MexcCoreClient {
 
       if (response.data?.balances && Array.isArray(response.data.balances)) {
         const balances = response.data.balances
-          .filter((balance: any) => 
-            Number.parseFloat(balance.free) > 0 || Number.parseFloat(balance.locked) > 0
+          .filter(
+            (balance: any) =>
+              Number.parseFloat(balance.free) > 0 || Number.parseFloat(balance.locked) > 0
           )
           .map((balance: any) => ({
             asset: balance.asset,
@@ -236,7 +236,7 @@ export class MexcCoreClient {
   ): Promise<MexcApiResponse> {
     // Add authentication headers here
     const authHeaders = this.generateAuthHeaders();
-    
+
     return this.makeRequest(url, {
       ...options,
       headers: {

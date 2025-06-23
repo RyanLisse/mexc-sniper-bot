@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CheckCircle,
@@ -10,14 +11,13 @@ import {
   Target,
   XCircle,
 } from "lucide-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { queryKeys } from "../../lib/query-client";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
-import { queryKeys } from "../../lib/query-client";
 
 /**
  * React Query-based System Validation Card
@@ -60,10 +60,10 @@ interface SystemValidationCardProps {
   refreshInterval?: number;
 }
 
-export function SystemValidationCardV2({ 
+export function SystemValidationCardV2({
   className = "",
   autoRefresh = true,
-  refreshInterval = 30000 // 30 seconds
+  refreshInterval = 30000, // 30 seconds
 }: SystemValidationCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const queryClient = useQueryClient();
@@ -123,11 +123,11 @@ export function SystemValidationCardV2({
         body: JSON.stringify({ action: "force_validation" }),
       });
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to refresh validation");
       }
-      
+
       return result.data;
     },
     onSuccess: () => {
@@ -153,10 +153,10 @@ export function SystemValidationCardV2({
     }
 
     if (!validationData) {
-      return { 
-        color: "gray", 
-        icon: Loader2, 
-        bgClass: "bg-gray-50 dark:bg-gray-950/20 dark:border-gray-800" 
+      return {
+        color: "gray",
+        icon: Loader2,
+        bgClass: "bg-gray-50 dark:bg-gray-950/20 dark:border-gray-800",
       };
     }
 
@@ -180,10 +180,10 @@ export function SystemValidationCardV2({
           bgClass: "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800",
         };
       default:
-        return { 
-          color: "gray", 
-          icon: Clock, 
-          bgClass: "bg-gray-50 dark:bg-gray-950/20 dark:border-gray-800" 
+        return {
+          color: "gray",
+          icon: Clock,
+          bgClass: "bg-gray-50 dark:bg-gray-950/20 dark:border-gray-800",
         };
     }
   };
@@ -202,7 +202,12 @@ export function SystemValidationCardV2({
               <Target className="h-5 w-5" />
               <CardTitle>Auto-Sniping Readiness</CardTitle>
             </div>
-            <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshMutation.isPending}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshMutation.isPending}
+            >
               <RefreshCw className={`h-4 w-4 ${refreshMutation.isPending ? "animate-spin" : ""}`} />
             </Button>
           </div>
@@ -240,13 +245,15 @@ export function SystemValidationCardV2({
                 <span>{validationData.readyForAutoSniping ? "Ready" : "Not Ready"}</span>
               </Badge>
             )}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleRefresh} 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
               disabled={isLoading || refreshMutation.isPending}
             >
-              <RefreshCw className={`h-4 w-4 ${(isLoading || refreshMutation.isPending) ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading || refreshMutation.isPending ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
         </div>
@@ -273,14 +280,14 @@ export function SystemValidationCardV2({
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>System Health Score</span>
-                <span className={`font-medium text-${statusConfig.color}-600 dark:text-${statusConfig.color}-400`}>
+                <span
+                  className={`font-medium text-${statusConfig.color}-600 dark:text-${statusConfig.color}-400`}
+                >
                   {validationData.score}%
                 </span>
               </div>
               <Progress value={validationData.score} className="h-2" />
-              {isFetching && (
-                <div className="text-xs text-muted-foreground">Updating...</div>
-              )}
+              {isFetching && <div className="text-xs text-muted-foreground">Updating...</div>}
             </div>
 
             {/* Overall Status Banner */}
@@ -290,7 +297,9 @@ export function SystemValidationCardV2({
                   <div
                     className={`w-3 h-3 rounded-full bg-${statusConfig.color}-500 ${isFetching ? "animate-pulse" : ""}`}
                   />
-                  <span className={`font-medium text-${statusConfig.color}-600 dark:text-${statusConfig.color}-400`}>
+                  <span
+                    className={`font-medium text-${statusConfig.color}-600 dark:text-${statusConfig.color}-400`}
+                  >
                     {validationData.readyForAutoSniping
                       ? "System Ready for Auto-Sniping"
                       : validationData.overall === "critical_failure"
@@ -424,7 +433,9 @@ export function SystemValidationCardV2({
                           <div className="text-xs text-muted-foreground mt-1">{check.details}</div>
                         )}
                         {check.status !== "pass" && check.fix && (
-                          <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">💡 {check.fix}</div>
+                          <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                            💡 {check.fix}
+                          </div>
                         )}
                       </div>
                     </div>

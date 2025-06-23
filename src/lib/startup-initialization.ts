@@ -7,6 +7,7 @@
 
 import { AutoSnipingExecutionService } from "../services/auto-sniping-execution-service";
 import { environmentValidation } from "../services/enhanced-environment-validation";
+import { patternTargetBridgeService } from "../services/pattern-target-bridge-service";
 import { strategyInitializationService } from "../services/strategy-initialization-service";
 
 interface StartupResult {
@@ -127,6 +128,27 @@ export class StartupInitializer {
       failed.push("auto-sniping-system");
       errors["auto-sniping-system"] = errorMessage;
       console.error("[Startup] ❌ Auto-sniping system initialization failed:", errorMessage);
+    }
+
+    // Initialize Pattern-Target Bridge Service for automatic target creation
+    try {
+      console.log("[Startup] Initializing Pattern-Target Bridge Service...");
+
+      // Start listening for pattern detection events with system user
+      patternTargetBridgeService.startListening("system");
+
+      initialized.push("pattern-target-bridge");
+      console.log(
+        "[Startup] ✅ Pattern-Target Bridge Service initialized and listening for events"
+      );
+      console.log(
+        "[Startup] 🔗 Auto-target creation enabled: Pattern Detection → Snipe Targets → Auto-Execution"
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      failed.push("pattern-target-bridge");
+      errors["pattern-target-bridge"] = errorMessage;
+      console.error("[Startup] ❌ Pattern-Target Bridge initialization failed:", errorMessage);
     }
 
     // Add other critical system initializations here as needed

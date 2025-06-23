@@ -1,20 +1,20 @@
 /**
  * Event Management & Health Module
- * 
+ *
  * Provides event emission, alert management, and health monitoring functionality
  * for the Advanced Risk Engine. This module handles risk alerts, system health
  * status, and emergency event management.
- * 
+ *
  * Part of the modular refactoring of advanced-risk-engine.ts
  */
 
 import { EventEmitter } from "events";
 import type {
   MarketConditions,
-  PositionRiskProfile,
   PortfolioRiskMetrics,
-  RiskEngineConfig,
+  PositionRiskProfile,
   RiskAlert,
+  RiskEngineConfig,
 } from "../../schemas/risk-engine-schemas-extracted";
 import type { CircuitBreaker } from "../circuit-breaker";
 
@@ -84,18 +84,18 @@ export class EventManagementHealth extends EventEmitter {
    */
   addAlert(alert: RiskAlert): void {
     this.alerts.push(alert);
-    this.emit('risk_alert', alert);
+    this.emit("risk_alert", alert);
   }
 
   /**
    * Resolve alert by ID
    */
   resolveAlert(alertId: string): boolean {
-    const alert = this.alerts.find(a => a.id === alertId);
+    const alert = this.alerts.find((a) => a.id === alertId);
     if (alert) {
       alert.resolved = true;
       alert.resolvedAt = new Date().toISOString();
-      this.emit('alert_resolved', alert);
+      this.emit("alert_resolved", alert);
       return true;
     }
     return false;
@@ -229,7 +229,10 @@ export class EventManagementHealth extends EventEmitter {
     const alerts: RiskAlert[] = [];
 
     // Check volatility
-    if (this.config.marketConditions.volatilityIndex > this.config.riskConfig.emergencyVolatilityThreshold) {
+    if (
+      this.config.marketConditions.volatilityIndex >
+      this.config.riskConfig.emergencyVolatilityThreshold
+    ) {
       const alert = this.createAlert(
         "market",
         "critical",
@@ -250,7 +253,10 @@ export class EventManagementHealth extends EventEmitter {
     }
 
     // Check liquidity
-    if (this.config.marketConditions.liquidityIndex < this.config.riskConfig.emergencyLiquidityThreshold) {
+    if (
+      this.config.marketConditions.liquidityIndex <
+      this.config.riskConfig.emergencyLiquidityThreshold
+    ) {
       const alert = this.createAlert(
         "market",
         "critical",
@@ -344,7 +350,7 @@ export class EventManagementHealth extends EventEmitter {
    */
   resetEmergencyStop(): void {
     this.emergencyStopActive = false;
-    this.emit('emergency_stop_reset', {
+    this.emit("emergency_stop_reset", {
       timestamp: new Date().toISOString(),
     });
   }
@@ -423,8 +429,8 @@ export class EventManagementHealth extends EventEmitter {
   cleanupOldAlerts(maxAge: number = 24 * 60 * 60 * 1000): void {
     const cutoffTime = Date.now() - maxAge;
     const oldAlertsCount = this.alerts.length;
-    
-    this.alerts = this.alerts.filter(alert => {
+
+    this.alerts = this.alerts.filter((alert) => {
       if (alert.resolved && alert.resolvedAt) {
         return new Date(alert.resolvedAt).getTime() > cutoffTime;
       }
@@ -432,7 +438,9 @@ export class EventManagementHealth extends EventEmitter {
     });
 
     if (this.alerts.length < oldAlertsCount) {
-      console.log(`[EventManagementHealth] Cleaned up ${oldAlertsCount - this.alerts.length} old alerts`);
+      console.log(
+        `[EventManagementHealth] Cleaned up ${oldAlertsCount - this.alerts.length} old alerts`
+      );
     }
   }
 
@@ -447,12 +455,12 @@ export class EventManagementHealth extends EventEmitter {
     bySeverity: Record<string, number>;
   } {
     const activeAlerts = this.getActiveAlerts();
-    const resolvedAlerts = this.alerts.filter(a => a.resolved);
+    const resolvedAlerts = this.alerts.filter((a) => a.resolved);
 
     const byType: Record<string, number> = {};
     const bySeverity: Record<string, number> = {};
 
-    this.alerts.forEach(alert => {
+    this.alerts.forEach((alert) => {
       byType[alert.type] = (byType[alert.type] || 0) + 1;
       bySeverity[alert.severity] = (bySeverity[alert.severity] || 0) + 1;
     });
@@ -487,9 +495,4 @@ export function createEventManagementHealth(config: EventManagementConfig): Even
 }
 
 // Export types for external use
-export type {
-  EventManagementConfig,
-  HealthStatus,
-  EmergencyState,
-  RiskThresholdEvent,
-};
+export type { EventManagementConfig, HealthStatus, EmergencyState, RiskThresholdEvent };

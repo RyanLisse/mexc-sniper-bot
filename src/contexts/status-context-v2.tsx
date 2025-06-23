@@ -160,11 +160,11 @@ export function StatusProvider({
     queryFn: async (): Promise<UnifiedStatusResponse> => {
       const response = await fetch("/api/mexc/unified-status");
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to fetch unified status");
       }
-      
+
       return result.data;
     },
     staleTime: 15000, // 15 seconds
@@ -172,7 +172,7 @@ export function StatusProvider({
     refetchIntervalInBackground: false,
     retry: (failureCount, error) => {
       // More aggressive retry for network issues
-      if (error.message.includes('fetch')) {
+      if (error.message.includes("fetch")) {
         return failureCount < 2;
       }
       return failureCount < 1;
@@ -226,11 +226,11 @@ export function StatusProvider({
         body: JSON.stringify({ forceRefresh }),
       });
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to refresh status");
       }
-      
+
       return result.data;
     },
     onSuccess: () => {
@@ -369,11 +369,11 @@ export function StatusProvider({
 
   const clearErrors = useCallback(() => {
     // Clear React Query errors
-    queryClient.removeQueries({ 
-      queryKey: ["status"], 
-      type: "all"
+    queryClient.removeQueries({
+      queryKey: ["status"],
+      type: "all",
     });
-    
+
     // Reset error boundary if needed
     queryClient.resetQueries({ queryKey: STATUS_QUERY_KEYS.unified() });
   }, [queryClient]);
@@ -512,7 +512,7 @@ export function useMexcConnectivityStatus() {
 // React Query-specific hooks for advanced usage
 export function useStatusRefresh() {
   const queryClient = useQueryClient();
-  
+
   return useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["status"] });
   }, [queryClient]);
@@ -520,7 +520,7 @@ export function useStatusRefresh() {
 
 export function useStatusMutation() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ forceRefresh = true }: { forceRefresh?: boolean } = {}) => {
       const response = await fetch("/api/mexc/unified-status", {
@@ -529,11 +529,11 @@ export function useStatusMutation() {
         body: JSON.stringify({ forceRefresh }),
       });
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to refresh status");
       }
-      
+
       return result.data;
     },
     onSuccess: () => {

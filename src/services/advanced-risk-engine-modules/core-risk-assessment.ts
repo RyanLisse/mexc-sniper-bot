@@ -1,18 +1,18 @@
 /**
  * Core Risk Assessment Module
- * 
+ *
  * Provides core risk calculation functionality for the Advanced Risk Engine.
  * This module handles the primary risk assessment logic including trade risk
  * evaluation, position size calculations, and composite risk scoring.
- * 
+ *
  * Part of the modular refactoring of advanced-risk-engine.ts
  */
 
 import type { TradeRiskAssessment } from "../../mexc-agents/risk-manager-agent";
-import type { 
-  MarketConditions, 
-  PositionRiskProfile, 
-  RiskEngineConfig 
+import type {
+  MarketConditions,
+  PositionRiskProfile,
+  RiskEngineConfig,
 } from "../../schemas/risk-engine-schemas-extracted";
 
 export interface CoreRiskAssessmentConfig {
