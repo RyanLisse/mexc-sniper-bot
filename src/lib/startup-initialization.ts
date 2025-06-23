@@ -6,6 +6,7 @@
  */
 
 import { AutoSnipingExecutionService } from "../services/auto-sniping-execution-service";
+import { calendarPatternBridgeService } from "../services/calendar-pattern-bridge-service";
 import { environmentValidation } from "../services/enhanced-environment-validation";
 import { patternTargetBridgeService } from "../services/pattern-target-bridge-service";
 import { strategyInitializationService } from "../services/strategy-initialization-service";
@@ -149,6 +150,27 @@ export class StartupInitializer {
       failed.push("pattern-target-bridge");
       errors["pattern-target-bridge"] = errorMessage;
       console.error("[Startup] ❌ Pattern-Target Bridge initialization failed:", errorMessage);
+    }
+
+    // Initialize Calendar-Pattern Bridge Service for automated calendar monitoring
+    try {
+      console.log("[Startup] Initializing Calendar-Pattern Bridge Service...");
+
+      // Start calendar monitoring with 15-minute intervals
+      calendarPatternBridgeService.startMonitoring(15);
+
+      initialized.push("calendar-pattern-bridge");
+      console.log(
+        "[Startup] ✅ Calendar-Pattern Bridge Service initialized and monitoring"
+      );
+      console.log(
+        "[Startup] 📅 Auto-discovery enabled: Calendar Monitoring → Pattern Detection → Target Creation"
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      failed.push("calendar-pattern-bridge");
+      errors["calendar-pattern-bridge"] = errorMessage;
+      console.error("[Startup] ❌ Calendar-Pattern Bridge initialization failed:", errorMessage);
     }
 
     // Add other critical system initializations here as needed
