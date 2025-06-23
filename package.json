@@ -63,7 +63,6 @@
     "build:analyze": "npm run analyze && npm run build:production",
     "// ===== DEVELOPMENT & MAINTENANCE =====": "",
     "pre-commit": "bun run lint:all && bun run type-check && bun run test:smoke",
-    "ci:quality": "bun run lint:check && bun run format:check && bun run type-check",
     "ci:test": "bun run test:ci:full",
     "ci:build": "bun run build",
     "db:generate": "drizzle-kit generate",

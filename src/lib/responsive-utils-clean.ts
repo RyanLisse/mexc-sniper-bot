@@ -22,7 +22,10 @@ export const MOBILE_BREAKPOINT = BREAKPOINTS.md;
 const BreakpointKeySchema = z.enum(["sm", "md", "lg", "xl", "2xl"]);
 const ResponsiveValueSchema = z.string().min(1);
 
-const ResponsiveConfigItemSchema = z.record(z.string(), z.union([z.string(), z.record(z.string(), z.string())]));
+const ResponsiveConfigItemSchema = z.record(
+  z.string(),
+  z.union([z.string(), z.record(z.string(), z.string())])
+);
 
 const ResponsiveClassConfigSchema = z.object({
   mobile: ResponsiveValueSchema,
@@ -52,7 +55,7 @@ export function getDeviceCategory(): "mobile" | "tablet" | "desktop" {
 
   const width = window.innerWidth;
   if (width < BREAKPOINTS.sm) return "mobile";
-  if (width < BREAKPOINTS.md) return "tablet"; 
+  if (width < BREAKPOINTS.md) return "tablet";
   return "desktop";
 }
 
@@ -72,8 +75,8 @@ export function isTouchDevice(): boolean {
 
   return Boolean(
     "ontouchstart" in window ||
-    navigator.maxTouchPoints > 0 ||
-    (navigator as any).msMaxTouchPoints > 0
+      navigator.maxTouchPoints > 0 ||
+      (navigator as any).msMaxTouchPoints > 0
   );
 }
 
@@ -185,19 +188,23 @@ export function validateResponsiveConfig(config: unknown): ResponsiveConfigItem 
  */
 export function createResponsiveClasses(config: ResponsiveClassConfig): string {
   const validatedConfig = ResponsiveClassConfigSchema.parse(config);
-  
+
   // Split the classes and add prefixes properly
   const mobileClasses = validatedConfig.mobile;
-  const tabletClasses = validatedConfig.tablet 
-    ? validatedConfig.tablet.split(' ').map(cls => `sm:${cls}`).join(' ')
-    : '';
-  const desktopClasses = validatedConfig.desktop 
-    ? validatedConfig.desktop.split(' ').map(cls => `md:${cls}`).join(' ')
-    : '';
-  
-  return [mobileClasses, tabletClasses, desktopClasses]
-    .filter(Boolean)
-    .join(' ');
+  const tabletClasses = validatedConfig.tablet
+    ? validatedConfig.tablet
+        .split(" ")
+        .map((cls) => `sm:${cls}`)
+        .join(" ")
+    : "";
+  const desktopClasses = validatedConfig.desktop
+    ? validatedConfig.desktop
+        .split(" ")
+        .map((cls) => `md:${cls}`)
+        .join(" ")
+    : "";
+
+  return [mobileClasses, tabletClasses, desktopClasses].filter(Boolean).join(" ");
 }
 
 /**
@@ -205,20 +212,20 @@ export function createResponsiveClasses(config: ResponsiveClassConfig): string {
  */
 export function parseBreakpointValue(value: BreakpointKey | number | string): number {
   if (typeof value === "number") return value;
-  
+
   if (typeof value === "string") {
     // Handle px values
     if (value.endsWith("px")) {
-      const parsed = parseInt(value.replace("px", ""), 10);
+      const parsed = Number.parseInt(value.replace("px", ""), 10);
       if (isNaN(parsed)) throw new Error(`Invalid breakpoint value: ${value}`);
       return parsed;
     }
-    
+
     // Handle predefined breakpoints
     if (value in BREAKPOINTS) {
       return BREAKPOINTS[value as BreakpointKey];
     }
   }
-  
+
   throw new Error(`Invalid breakpoint value: ${value}`);
 }

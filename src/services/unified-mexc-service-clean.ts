@@ -1,14 +1,14 @@
 "use client";
 
-import { type UnifiedMexcConfig, type MexcServiceResponse } from "./mexc-schemas";
-import { getMexcCalendarService, type MexcCalendarService } from "./mexc-calendar-service";
-import { getMexcMarketService, type MexcMarketService } from "./mexc-market-service";
-import { getMexcPortfolioService, type MexcPortfolioService } from "./mexc-portfolio-service";
+import { type MexcCalendarService, getMexcCalendarService } from "./mexc-calendar-service";
+import { type MexcMarketService, getMexcMarketService } from "./mexc-market-service";
+import { type MexcPortfolioService, getMexcPortfolioService } from "./mexc-portfolio-service";
+import type { MexcServiceResponse, UnifiedMexcConfig } from "./mexc-schemas";
 
 /**
  * Clean Unified MEXC Service
  * Orchestrates specialized services with a clean, focused API
- * 
+ *
  * PERFORMANCE IMPROVEMENTS:
  * - 80% smaller than original (from 2463 lines to ~300 lines)
  * - Better separation of concerns
@@ -82,7 +82,7 @@ export class UnifiedMexcServiceClean {
   /**
    * Get order book depth
    */
-  async getOrderBookDepth(symbol: string, limit: number = 100) {
+  async getOrderBookDepth(symbol: string, limit = 100) {
     return this.market.getOrderBookDepth(symbol, limit);
   }
 
@@ -111,7 +111,7 @@ export class UnifiedMexcServiceClean {
     // Get market data first for enhanced portfolio calculation
     const tickersResponse = await this.market.getTicker24hr();
     const tickers = tickersResponse.success ? tickersResponse.data : undefined;
-    
+
     return this.portfolio.getEnhancedPortfolio(tickers);
   }
 
@@ -140,7 +140,7 @@ export class UnifiedMexcServiceClean {
       const overview = {
         exchange: exchangeInfo.success ? exchangeInfo.data : null,
         topPerformers: this.getTopPerformers(tickers.success ? tickers.data || [] : []),
-        upcomingListings: calendar.success 
+        upcomingListings: calendar.success
           ? (calendar.data || []).slice(0, 5) // Top 5 upcoming
           : [],
         marketStats: this.calculateMarketStats(tickers.success ? tickers.data || [] : []),
@@ -224,10 +224,12 @@ export class UnifiedMexcServiceClean {
   /**
    * Get top performing assets
    */
-  private getTopPerformers(tickers: any[], limit: number = 10): any[] {
+  private getTopPerformers(tickers: any[], limit = 10): any[] {
     return tickers
       .filter((ticker) => ticker.priceChangePercent)
-      .sort((a, b) => parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent))
+      .sort(
+        (a, b) => Number.parseFloat(b.priceChangePercent) - Number.parseFloat(a.priceChangePercent)
+      )
       .slice(0, limit)
       .map((ticker) => ({
         symbol: ticker.symbol,
@@ -246,20 +248,20 @@ export class UnifiedMexcServiceClean {
     }
 
     const totalVolume = tickers.reduce(
-      (sum, ticker) => sum + (parseFloat(ticker.quoteVolume) || 0),
+      (sum, ticker) => sum + (Number.parseFloat(ticker.quoteVolume) || 0),
       0
     );
 
     const gainers = tickers.filter(
-      (ticker) => parseFloat(ticker.priceChangePercent) > 0
+      (ticker) => Number.parseFloat(ticker.priceChangePercent) > 0
     ).length;
 
     const losers = tickers.filter(
-      (ticker) => parseFloat(ticker.priceChangePercent) < 0
+      (ticker) => Number.parseFloat(ticker.priceChangePercent) < 0
     ).length;
 
     return {
-      totalVolume: parseFloat(totalVolume.toFixed(2)),
+      totalVolume: Number.parseFloat(totalVolume.toFixed(2)),
       gainers,
       losers,
       totalSymbols: tickers.length,

@@ -1,6 +1,15 @@
 "use client";
 
-import { Activity, AlertTriangle, CheckCircle, Pause, Play, Settings, Zap, type LucideIcon } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  type LucideIcon,
+  Pause,
+  Play,
+  Settings,
+  Zap,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useStatus } from "../../contexts/status-context";
 import { useAutoSnipingExecution } from "../../hooks/use-auto-sniping-execution";

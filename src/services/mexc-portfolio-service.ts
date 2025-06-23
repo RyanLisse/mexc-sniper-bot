@@ -33,7 +33,7 @@ export class MexcPortfolioService extends BaseMexcService {
       "getAccountBalances",
       async () => {
         const balancesResponse = await this.apiClient.get("/api/v3/account");
-        
+
         if (!balancesResponse?.balances || !Array.isArray(balancesResponse.balances)) {
           throw new Error("Invalid balances response");
         }
@@ -45,7 +45,7 @@ export class MexcPortfolioService extends BaseMexcService {
 
         // Filter out zero balances for performance
         const nonZeroBalances = validatedBalances.filter(
-          (balance) => parseFloat(balance.free) > 0 || parseFloat(balance.locked) > 0
+          (balance) => Number.parseFloat(balance.free) > 0 || Number.parseFloat(balance.locked) > 0
         );
 
         const portfolio: Portfolio = {
@@ -80,13 +80,13 @@ export class MexcPortfolioService extends BaseMexcService {
       "getEnhancedPortfolio",
       async () => {
         const balancesResponse = await this.getAccountBalances();
-        
+
         if (!balancesResponse.success || !balancesResponse.data) {
           throw new Error("Failed to get account balances");
         }
 
         const portfolio = balancesResponse.data;
-        
+
         // If tickers provided, calculate enhanced metrics
         if (tickers && tickers.length > 0) {
           return this.calculatePortfolioMetrics(portfolio.balances, tickers);
@@ -116,7 +116,7 @@ export class MexcPortfolioService extends BaseMexcService {
 
     // Calculate enhanced balance data
     const enhancedBalances = balances.map((balance) => {
-      const total = parseFloat(balance.free) + parseFloat(balance.locked);
+      const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
       let usdtValue = 0;
       let btcValue = 0;
 
@@ -127,18 +127,18 @@ export class MexcPortfolioService extends BaseMexcService {
         // Get BTC/USDT price for USDT value
         const btcTicker = tickerMap.get("BTCUSDT");
         if (btcTicker) {
-          usdtValue = total * parseFloat(btcTicker.lastPrice);
+          usdtValue = total * Number.parseFloat(btcTicker.lastPrice);
         }
       } else {
         // Try to find ticker for this asset
-        const assetTicker = 
+        const assetTicker =
           tickerMap.get(`${balance.asset}USDT`) ||
           tickerMap.get(`${balance.asset}BTC`) ||
           tickerMap.get(`${balance.asset}ETH`);
 
         if (assetTicker) {
-          const price = parseFloat(assetTicker.lastPrice);
-          const priceChange = parseFloat(assetTicker.priceChangePercent);
+          const price = Number.parseFloat(assetTicker.lastPrice);
+          const priceChange = Number.parseFloat(assetTicker.priceChangePercent);
 
           if (assetTicker.symbol.endsWith("USDT")) {
             usdtValue = total * price;
@@ -147,7 +147,7 @@ export class MexcPortfolioService extends BaseMexcService {
             // Convert to USDT using BTC price
             const btcTicker = tickerMap.get("BTCUSDT");
             if (btcTicker) {
-              usdtValue = btcValue * parseFloat(btcTicker.lastPrice);
+              usdtValue = btcValue * Number.parseFloat(btcTicker.lastPrice);
             }
           }
 
@@ -166,14 +166,14 @@ export class MexcPortfolioService extends BaseMexcService {
       return {
         ...balance,
         total,
-        usdtValue: parseFloat(usdtValue.toFixed(6)),
+        usdtValue: Number.parseFloat(usdtValue.toFixed(6)),
       };
     });
 
     // Calculate allocation percentages
     enhancedBalances.forEach((balance) => {
       if (balance.usdtValue && balance.usdtValue > 0) {
-        allocation[balance.asset] = parseFloat(
+        allocation[balance.asset] = Number.parseFloat(
           ((balance.usdtValue / totalUsdtValue) * 100).toFixed(2)
         );
       }
@@ -182,14 +182,14 @@ export class MexcPortfolioService extends BaseMexcService {
     const pnlPercent = totalUsdtValue > 0 ? (totalPnl / totalUsdtValue) * 100 : 0;
 
     return {
-      totalValue: parseFloat(totalUsdtValue.toFixed(6)),
-      totalValueBTC: parseFloat(totalValueBTC.toFixed(8)),
-      totalUsdtValue: parseFloat(totalUsdtValue.toFixed(6)),
+      totalValue: Number.parseFloat(totalUsdtValue.toFixed(6)),
+      totalValueBTC: Number.parseFloat(totalValueBTC.toFixed(8)),
+      totalUsdtValue: Number.parseFloat(totalUsdtValue.toFixed(6)),
       balances: enhancedBalances,
       allocation,
       performance24h: {
-        pnl: parseFloat(totalPnl.toFixed(6)),
-        pnlPercent: parseFloat(pnlPercent.toFixed(2)),
+        pnl: Number.parseFloat(totalPnl.toFixed(6)),
+        pnlPercent: Number.parseFloat(pnlPercent.toFixed(2)),
         gainers,
         losers,
       },
@@ -204,17 +204,20 @@ export class MexcPortfolioService extends BaseMexcService {
       "getPortfolioAnalysis",
       async () => {
         const portfolioResponse = await this.getAccountBalances();
-        
+
         if (!portfolioResponse.success || !portfolioResponse.data) {
           throw new Error("Failed to get portfolio data");
         }
 
         const portfolio = portfolioResponse.data;
-        
+
         // Calculate basic risk metrics
         const assetCount = portfolio.balances.length;
         const concentrationRisk = this.calculateConcentrationRisk(portfolio.allocation);
-        const diversificationScore = this.calculateDiversificationScore(assetCount, portfolio.allocation);
+        const diversificationScore = this.calculateDiversificationScore(
+          assetCount,
+          portfolio.allocation
+        );
 
         return {
           summary: {
@@ -247,24 +250,27 @@ export class MexcPortfolioService extends BaseMexcService {
 
     // Calculate Herfindahl-Hirschman Index (HHI)
     const hhi = allocations.reduce((sum, percentage) => sum + (percentage / 100) ** 2, 0);
-    
+
     // Convert to 0-100 scale (higher = more concentrated = more risk)
-    return parseFloat((hhi * 100).toFixed(2));
+    return Number.parseFloat((hhi * 100).toFixed(2));
   }
 
   /**
    * Calculate diversification score (0-100, higher = better diversified)
    */
-  private calculateDiversificationScore(assetCount: number, allocation: Record<string, number>): number {
+  private calculateDiversificationScore(
+    assetCount: number,
+    allocation: Record<string, number>
+  ): number {
     if (assetCount === 0) return 0;
 
     const maxAllocation = Math.max(...Object.values(allocation));
-    
+
     // Ideal diversification: many assets with balanced allocation
     const assetScore = Math.min(assetCount / 10, 1) * 50; // Up to 50 points for asset count
     const balanceScore = (1 - maxAllocation / 100) * 50; // Up to 50 points for balance
-    
-    return parseFloat((assetScore + balanceScore).toFixed(2));
+
+    return Number.parseFloat((assetScore + balanceScore).toFixed(2));
   }
 
   /**
@@ -279,7 +285,10 @@ export class MexcPortfolioService extends BaseMexcService {
   /**
    * Generate portfolio recommendations
    */
-  private generateRecommendations(concentrationRisk: number, diversificationScore: number): string[] {
+  private generateRecommendations(
+    concentrationRisk: number,
+    diversificationScore: number
+  ): string[] {
     const recommendations: string[] = [];
 
     if (concentrationRisk > 50) {

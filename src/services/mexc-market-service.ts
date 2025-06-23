@@ -56,9 +56,8 @@ export class MexcMarketService extends BaseMexcService {
           throw new Error("Failed to get exchange info");
         }
 
-        return this.validateAndMapArray(
-          exchangeResponse.data.symbols,
-          (symbol: any) => validateMexcData(symbol, SymbolEntrySchema)
+        return this.validateAndMapArray(exchangeResponse.data.symbols, (symbol: any) =>
+          validateMexcData(symbol, SymbolEntrySchema)
         ) as SymbolEntry[];
       },
       {
@@ -76,16 +75,15 @@ export class MexcMarketService extends BaseMexcService {
     return this.executeRequest(
       "getTicker24hr",
       async () => {
-        const endpoint = symbols?.length 
-          ? `/api/v3/ticker/24hr?symbols=[${symbols.map(s => `"${s}"`).join(",")}]`
+        const endpoint = symbols?.length
+          ? `/api/v3/ticker/24hr?symbols=[${symbols.map((s) => `"${s}"`).join(",")}]`
           : "/api/v3/ticker/24hr";
 
         const response = await this.apiClient.get(endpoint);
         const data = Array.isArray(response) ? response : [response];
 
-        return this.validateAndMapArray(
-          data,
-          (ticker: any) => validateMexcData(ticker, TickerSchema)
+        return this.validateAndMapArray(data, (ticker: any) =>
+          validateMexcData(ticker, TickerSchema)
         ) as Ticker[];
       },
       {
@@ -126,9 +124,7 @@ export class MexcMarketService extends BaseMexcService {
           throw new Error("Failed to get exchange info");
         }
 
-        const symbolInfo = exchangeResponse.data.symbols.find(
-          (s: any) => s.symbol === symbol
-        );
+        const symbolInfo = exchangeResponse.data.symbols.find((s: any) => s.symbol === symbol);
 
         if (!symbolInfo) {
           throw new Error(`Symbol ${symbol} not found`);
@@ -152,14 +148,12 @@ export class MexcMarketService extends BaseMexcService {
   /**
    * Get order book depth
    */
-  async getOrderBookDepth(symbol: string, limit: number = 100): Promise<MexcServiceResponse<any>> {
+  async getOrderBookDepth(symbol: string, limit = 100): Promise<MexcServiceResponse<any>> {
     return this.executeRequest(
       "getOrderBookDepth",
       async () => {
-        const response = await this.apiClient.get(
-          `/api/v3/depth?symbol=${symbol}&limit=${limit}`
-        );
-        
+        const response = await this.apiClient.get(`/api/v3/depth?symbol=${symbol}&limit=${limit}`);
+
         // Validate basic structure
         if (!response || !response.bids || !response.asks) {
           throw new Error("Invalid order book response");
@@ -184,32 +178,29 @@ export class MexcMarketService extends BaseMexcService {
     bidPrice: number;
     askPrice: number;
   }> {
-    const result = await this.executeRequest(
-      "detectPriceGap",
-      async () => {
-        const orderBookResponse = await this.getOrderBookDepth(symbol, 5);
-        if (!orderBookResponse.success || !orderBookResponse.data) {
-          throw new Error("Failed to get order book");
-        }
-
-        const { bids, asks } = orderBookResponse.data;
-        
-        if (!bids?.length || !asks?.length) {
-          throw new Error("Empty order book");
-        }
-
-        const bestBid = parseFloat(bids[0][0]);
-        const bestAsk = parseFloat(asks[0][0]);
-        const gapPercentage = ((bestAsk - bestBid) / bestBid) * 100;
-
-        return {
-          hasGap: gapPercentage > 1, // Gap > 1%
-          gapPercentage,
-          bidPrice: bestBid,
-          askPrice: bestAsk,
-        };
+    const result = await this.executeRequest("detectPriceGap", async () => {
+      const orderBookResponse = await this.getOrderBookDepth(symbol, 5);
+      if (!orderBookResponse.success || !orderBookResponse.data) {
+        throw new Error("Failed to get order book");
       }
-    );
+
+      const { bids, asks } = orderBookResponse.data;
+
+      if (!bids?.length || !asks?.length) {
+        throw new Error("Empty order book");
+      }
+
+      const bestBid = Number.parseFloat(bids[0][0]);
+      const bestAsk = Number.parseFloat(asks[0][0]);
+      const gapPercentage = ((bestAsk - bestBid) / bestBid) * 100;
+
+      return {
+        hasGap: gapPercentage > 1, // Gap > 1%
+        gapPercentage,
+        bidPrice: bestBid,
+        askPrice: bestAsk,
+      };
+    });
 
     return result.success
       ? result.data!

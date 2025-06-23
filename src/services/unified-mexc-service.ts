@@ -2361,6 +2361,40 @@ export class UnifiedMexcService {
   }
 
   // ============================================================================
+  // Missing Method Aliases Required by Tests and Integration Services
+  // ============================================================================
+
+  /**
+   * Get order book (alias for getOrderBookDepth for test compatibility)
+   */
+  async getOrderBook(symbol: string, limit = 100): Promise<any> {
+    try {
+      return await this.apiClient.getOrderBook(symbol, limit);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get order book",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Get account info (alias for account balance endpoint for test compatibility)
+   */
+  async getAccountInfo(): Promise<MexcServiceResponse<any>> {
+    try {
+      return await this.apiClient.getAccountInfo();
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get account info",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  // ============================================================================
   // Missing Methods Required for Legacy Support
   // ============================================================================
 

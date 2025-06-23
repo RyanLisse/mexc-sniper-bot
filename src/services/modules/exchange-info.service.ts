@@ -1,9 +1,9 @@
 /**
  * Exchange Info Service Module
- * 
+ *
  * Modular service for handling MEXC exchange information with type safety,
  * Zod validation, caching, and error handling.
- * 
+ *
  * Key Features:
  * - Type-safe with Zod schema validation
  * - Efficient caching with TTL
@@ -12,17 +12,22 @@
  * - Under 500 lines as per requirements
  */
 
-import { z } from 'zod';
-import type { MexcServiceResponse } from '../mexc-schemas';
-import { instrumentServiceMethod } from '../../lib/opentelemetry-service-instrumentation';
-import { toSafeError } from '../../lib/error-type-utils';
+import { z } from "zod";
+import { toSafeError } from "../../lib/error-type-utils";
+import { instrumentServiceMethod } from "../../lib/opentelemetry-service-instrumentation";
 
 // ============================================================================
 // Zod Schemas for Type Safety
 // ============================================================================
 
 export const TradingFilterSchema = z.object({
-  filterType: z.enum(['PRICE_FILTER', 'LOT_SIZE', 'MIN_NOTIONAL', 'ICEBERG_PARTS', 'MAX_NUM_ORDERS']),
+  filterType: z.enum([
+    "PRICE_FILTER",
+    "LOT_SIZE",
+    "MIN_NOTIONAL",
+    "ICEBERG_PARTS",
+    "MAX_NUM_ORDERS",
+  ]),
   minPrice: z.string().optional(),
   maxPrice: z.string().optional(),
   tickSize: z.string().optional(),
@@ -34,14 +39,16 @@ export const TradingFilterSchema = z.object({
 });
 
 export const ExchangeSymbolSchema = z.object({
-  symbol: z.string().min(1, 'Symbol is required'),
-  status: z.enum(['TRADING', 'HALT', 'BREAK', 'AUCTION_MATCH']),
-  baseAsset: z.string().min(1, 'Base asset is required'),
+  symbol: z.string().min(1, "Symbol is required"),
+  status: z.enum(["TRADING", "HALT", "BREAK", "AUCTION_MATCH"]),
+  baseAsset: z.string().min(1, "Base asset is required"),
   baseAssetPrecision: z.number().int().nonnegative(),
-  quoteAsset: z.string().min(1, 'Quote asset is required'),
+  quoteAsset: z.string().min(1, "Quote asset is required"),
   quotePrecision: z.number().int().nonnegative(),
   quoteAssetPrecision: z.number().int().nonnegative(),
-  orderTypes: z.array(z.enum(['LIMIT', 'LIMIT_MAKER', 'MARKET', 'STOP_LOSS_LIMIT', 'TAKE_PROFIT_LIMIT'])),
+  orderTypes: z.array(
+    z.enum(["LIMIT", "LIMIT_MAKER", "MARKET", "STOP_LOSS_LIMIT", "TAKE_PROFIT_LIMIT"])
+  ),
   icebergAllowed: z.boolean().optional(),
   ocoAllowed: z.boolean().optional(),
   isSpotTradingAllowed: z.boolean().optional(),
@@ -53,12 +60,16 @@ export const ExchangeSymbolSchema = z.object({
 export const ExchangeInfoSchema = z.object({
   timezone: z.string(),
   serverTime: z.number().int().positive(),
-  rateLimits: z.array(z.object({
-    rateLimitType: z.string(),
-    interval: z.string(),
-    intervalNum: z.number().int().positive(),
-    limit: z.number().int().positive(),
-  })).optional(),
+  rateLimits: z
+    .array(
+      z.object({
+        rateLimitType: z.string(),
+        interval: z.string(),
+        intervalNum: z.number().int().positive(),
+        limit: z.number().int().positive(),
+      })
+    )
+    .optional(),
   symbols: z.array(ExchangeSymbolSchema),
 });
 
@@ -74,7 +85,7 @@ export const SymbolFilterSchema = z.object({
   symbol: z.string().optional(),
   baseAsset: z.string().optional(),
   quoteAsset: z.string().optional(),
-  status: z.enum(['TRADING', 'HALT', 'BREAK', 'AUCTION_MATCH']).optional(),
+  status: z.enum(["TRADING", "HALT", "BREAK", "AUCTION_MATCH"]).optional(),
   permissions: z.array(z.string()).optional(),
   isSpotTradingAllowed: z.boolean().optional(),
   isMarginTradingAllowed: z.boolean().optional(),
@@ -114,7 +125,7 @@ export interface ExchangeInfoConfig {
 export class ExchangeInfoService {
   private readonly config: ExchangeInfoConfig;
   private readonly cacheTTL: number;
-  private readonly cacheKeyPrefix = 'mexc:exchange-info';
+  private readonly cacheKeyPrefix = "mexc:exchange-info";
 
   constructor(config: ExchangeInfoConfig) {
     this.config = config;
@@ -124,39 +135,39 @@ export class ExchangeInfoService {
   /**
    * Get complete exchange information
    */
-  @instrumentServiceMethod('exchange-info', 'getExchangeInfo')
+  @instrumentServiceMethod("exchange-info", "getExchangeInfo")
   async getExchangeInfo(): Promise<ExchangeInfoResponse> {
     const startTime = Date.now();
-    
+
     try {
       const cacheKey = `${this.cacheKeyPrefix}:full`;
-      
+
       // Try cache first
       if (this.config.cache) {
         const cached = await this.getCachedData(cacheKey);
         if (cached) {
-          this.recordMetric('cache_hit', 1, { operation: 'getExchangeInfo' });
+          this.recordMetric("cache_hit", 1, { operation: "getExchangeInfo" });
           return cached;
         }
       }
 
       // Fetch from API
       const response = await this.fetchFromAPI();
-      
+
       // Cache the result
       if (this.config.cache && response.success) {
         await this.cacheData(cacheKey, response);
       }
 
       // Record metrics
-      this.recordMetric('response_time', Date.now() - startTime, { operation: 'getExchangeInfo' });
-      this.recordMetric('cache_miss', 1, { operation: 'getExchangeInfo' });
+      this.recordMetric("response_time", Date.now() - startTime, { operation: "getExchangeInfo" });
+      this.recordMetric("cache_miss", 1, { operation: "getExchangeInfo" });
 
       return response;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.recordMetric('error_count', 1, { operation: 'getExchangeInfo', error: safeError.name });
-      
+      this.recordMetric("error_count", 1, { operation: "getExchangeInfo", error: safeError.name });
+
       return {
         success: false,
         data: this.getEmptyExchangeInfo(),
@@ -169,13 +180,13 @@ export class ExchangeInfoService {
   /**
    * Get trading rules for a specific symbol
    */
-  @instrumentServiceMethod('exchange-info', 'getSymbolTradingRules')
+  @instrumentServiceMethod("exchange-info", "getSymbolTradingRules")
   async getSymbolTradingRules(symbol: string): Promise<ExchangeInfoResponse> {
-    if (!symbol || typeof symbol !== 'string') {
+    if (!symbol || typeof symbol !== "string") {
       return {
         success: false,
         data: this.getEmptyExchangeInfo(),
-        error: 'Invalid symbol provided',
+        error: "Invalid symbol provided",
         timestamp: Date.now(),
       };
     }
@@ -185,8 +196,8 @@ export class ExchangeInfoService {
       return exchangeInfo;
     }
 
-    const symbolInfo = exchangeInfo.data.symbols.find(s => s.symbol === symbol.toUpperCase());
-    
+    const symbolInfo = exchangeInfo.data.symbols.find((s) => s.symbol === symbol.toUpperCase());
+
     return {
       success: true,
       data: {
@@ -200,36 +211,46 @@ export class ExchangeInfoService {
   /**
    * Get symbols filtered by criteria
    */
-  @instrumentServiceMethod('exchange-info', 'getFilteredSymbols')
+  @instrumentServiceMethod("exchange-info", "getFilteredSymbols")
   async getFilteredSymbols(filter: SymbolFilter): Promise<ExchangeInfoResponse> {
     try {
       // Validate filter input
       const validatedFilter = SymbolFilterSchema.parse(filter);
-      
+
       const exchangeInfo = await this.getExchangeInfo();
       if (!exchangeInfo.success) {
         return exchangeInfo;
       }
 
-      const filteredSymbols = exchangeInfo.data.symbols.filter(symbol => {
+      const filteredSymbols = exchangeInfo.data.symbols.filter((symbol) => {
         if (validatedFilter.symbol && symbol.symbol !== validatedFilter.symbol.toUpperCase()) {
           return false;
         }
-        if (validatedFilter.baseAsset && symbol.baseAsset !== validatedFilter.baseAsset.toUpperCase()) {
+        if (
+          validatedFilter.baseAsset &&
+          symbol.baseAsset !== validatedFilter.baseAsset.toUpperCase()
+        ) {
           return false;
         }
-        if (validatedFilter.quoteAsset && symbol.quoteAsset !== validatedFilter.quoteAsset.toUpperCase()) {
+        if (
+          validatedFilter.quoteAsset &&
+          symbol.quoteAsset !== validatedFilter.quoteAsset.toUpperCase()
+        ) {
           return false;
         }
         if (validatedFilter.status && symbol.status !== validatedFilter.status) {
           return false;
         }
-        if (validatedFilter.isSpotTradingAllowed !== undefined && 
-            symbol.isSpotTradingAllowed !== validatedFilter.isSpotTradingAllowed) {
+        if (
+          validatedFilter.isSpotTradingAllowed !== undefined &&
+          symbol.isSpotTradingAllowed !== validatedFilter.isSpotTradingAllowed
+        ) {
           return false;
         }
-        if (validatedFilter.isMarginTradingAllowed !== undefined && 
-            symbol.isMarginTradingAllowed !== validatedFilter.isMarginTradingAllowed) {
+        if (
+          validatedFilter.isMarginTradingAllowed !== undefined &&
+          symbol.isMarginTradingAllowed !== validatedFilter.isMarginTradingAllowed
+        ) {
           return false;
         }
         return true;
@@ -257,21 +278,21 @@ export class ExchangeInfoService {
   /**
    * Get all trading symbols (status = TRADING)
    */
-  @instrumentServiceMethod('exchange-info', 'getTradingSymbols')
+  @instrumentServiceMethod("exchange-info", "getTradingSymbols")
   async getTradingSymbols(): Promise<ExchangeInfoResponse> {
-    return this.getFilteredSymbols({ status: 'TRADING' });
+    return this.getFilteredSymbols({ status: "TRADING" });
   }
 
   /**
    * Get symbols by base asset
    */
-  @instrumentServiceMethod('exchange-info', 'getSymbolsByBaseAsset')
+  @instrumentServiceMethod("exchange-info", "getSymbolsByBaseAsset")
   async getSymbolsByBaseAsset(baseAsset: string): Promise<ExchangeInfoResponse> {
-    if (!baseAsset || typeof baseAsset !== 'string') {
+    if (!baseAsset || typeof baseAsset !== "string") {
       return {
         success: false,
         data: this.getEmptyExchangeInfo(),
-        error: 'Invalid base asset provided',
+        error: "Invalid base asset provided",
         timestamp: Date.now(),
       };
     }
@@ -282,13 +303,13 @@ export class ExchangeInfoService {
   /**
    * Get symbols by quote asset (e.g., all USDT pairs)
    */
-  @instrumentServiceMethod('exchange-info', 'getSymbolsByQuoteAsset')
+  @instrumentServiceMethod("exchange-info", "getSymbolsByQuoteAsset")
   async getSymbolsByQuoteAsset(quoteAsset: string): Promise<ExchangeInfoResponse> {
-    if (!quoteAsset || typeof quoteAsset !== 'string') {
+    if (!quoteAsset || typeof quoteAsset !== "string") {
       return {
         success: false,
         data: this.getEmptyExchangeInfo(),
-        error: 'Invalid quote asset provided',
+        error: "Invalid quote asset provided",
         timestamp: Date.now(),
       };
     }
@@ -310,10 +331,11 @@ export class ExchangeInfoService {
   // ============================================================================
 
   private async fetchFromAPI(): Promise<ExchangeInfoResponse> {
-    const executeWithCircuitBreaker = this.config.circuitBreaker?.execute ?? ((fn: () => Promise<any>) => fn());
+    const executeWithCircuitBreaker =
+      this.config.circuitBreaker?.execute ?? ((fn: () => Promise<any>) => fn());
 
     const rawResponse = await executeWithCircuitBreaker(async () => {
-      return this.config.apiClient.get('/api/v3/exchangeInfo');
+      return this.config.apiClient.get("/api/v3/exchangeInfo");
     });
 
     // Validate with Zod schema
@@ -354,7 +376,7 @@ export class ExchangeInfoService {
 
   private getEmptyExchangeInfo(): ExchangeInfo {
     return {
-      timezone: 'UTC',
+      timezone: "UTC",
       serverTime: Date.now(),
       symbols: [],
     };
@@ -362,7 +384,7 @@ export class ExchangeInfoService {
 
   private recordMetric(name: string, value: number, tags?: Record<string, string>): void {
     this.config.performanceMonitor?.recordMetric(name, value, {
-      service: 'exchange-info',
+      service: "exchange-info",
       ...tags,
     });
   }
@@ -380,6 +402,4 @@ export function createExchangeInfoService(config: ExchangeInfoConfig): ExchangeI
 // Exports
 // ============================================================================
 
-export type {
-  ExchangeInfoConfig,
-};
+export type { ExchangeInfoConfig };

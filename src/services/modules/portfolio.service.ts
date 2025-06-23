@@ -1,9 +1,9 @@
 /**
  * Portfolio Service Module
- * 
+ *
  * Modular service for handling MEXC portfolio management with type safety,
  * Zod validation, caching, and analytics.
- * 
+ *
  * Key Features:
  * - Type-safe with Zod schema validation
  * - Real-time portfolio calculations
@@ -13,30 +13,29 @@
  * - Under 500 lines as per requirements
  */
 
-import { z } from 'zod';
-import type { MexcServiceResponse } from '../mexc-schemas';
-import { instrumentServiceMethod } from '../../lib/opentelemetry-service-instrumentation';
-import { toSafeError } from '../../lib/error-type-utils';
+import { z } from "zod";
+import { toSafeError } from "../../lib/error-type-utils";
+import { instrumentServiceMethod } from "../../lib/opentelemetry-service-instrumentation";
 
 // ============================================================================
 // Zod Schemas for Type Safety
 // ============================================================================
 
 export const BalanceEntrySchema = z.object({
-  asset: z.string().min(1, 'Asset symbol is required'),
-  free: z.string().regex(/^\d+(\.\d+)?$/, 'Free balance must be a valid number string'),
-  locked: z.string().regex(/^\d+(\.\d+)?$/, 'Locked balance must be a valid number string'),
+  asset: z.string().min(1, "Asset symbol is required"),
+  free: z.string().regex(/^\d+(\.\d+)?$/, "Free balance must be a valid number string"),
+  locked: z.string().regex(/^\d+(\.\d+)?$/, "Locked balance must be a valid number string"),
 });
 
 export const PortfolioMetricsSchema = z.object({
-  totalValue: z.number().nonnegative('Total value must be non-negative'),
+  totalValue: z.number().nonnegative("Total value must be non-negative"),
   totalPnl: z.number(),
   totalPnlPercentage: z.number(),
-  topPerformers: z.array(z.string()).max(10, 'Maximum 10 top performers'),
-  worstPerformers: z.array(z.string()).max(10, 'Maximum 10 worst performers'),
+  topPerformers: z.array(z.string()).max(10, "Maximum 10 top performers"),
+  worstPerformers: z.array(z.string()).max(10, "Maximum 10 worst performers"),
   assetDistribution: z.record(z.string(), z.number().nonnegative()),
-  riskScore: z.number().min(0).max(100, 'Risk score must be between 0-100'),
-  diversificationScore: z.number().min(0).max(100, 'Diversification score must be between 0-100'),
+  riskScore: z.number().min(0).max(100, "Risk score must be between 0-100"),
+  diversificationScore: z.number().min(0).max(100, "Diversification score must be between 0-100"),
 });
 
 export const PortfolioSchema = z.object({
@@ -101,7 +100,7 @@ export interface PortfolioConfig {
 export class PortfolioService {
   private readonly config: PortfolioConfig;
   private readonly cacheTTL: number;
-  private readonly cacheKeyPrefix = 'mexc:portfolio';
+  private readonly cacheKeyPrefix = "mexc:portfolio";
 
   constructor(config: PortfolioConfig) {
     this.config = config;
@@ -111,42 +110,44 @@ export class PortfolioService {
   /**
    * Get complete portfolio with metrics
    */
-  @instrumentServiceMethod('portfolio', 'getPortfolio')
+  @instrumentServiceMethod("portfolio", "getPortfolio")
   async getPortfolio(filter?: PortfolioFilter): Promise<PortfolioResponse> {
     const startTime = Date.now();
-    
+
     try {
       // Validate input filter
-      const validatedFilter = filter ? PortfolioFilterSchema.parse(filter) : PortfolioFilterSchema.parse({});
-      
+      const validatedFilter = filter
+        ? PortfolioFilterSchema.parse(filter)
+        : PortfolioFilterSchema.parse({});
+
       const cacheKey = this.generateCacheKey(validatedFilter);
-      
+
       // Try cache first
       if (this.config.cache) {
         const cached = await this.getCachedPortfolio(cacheKey);
         if (cached) {
-          this.recordMetric('cache_hit', 1, { operation: 'getPortfolio' });
+          this.recordMetric("cache_hit", 1, { operation: "getPortfolio" });
           return cached;
         }
       }
 
       // Fetch portfolio data
       const portfolio = await this.fetchPortfolioData(validatedFilter);
-      
+
       // Cache the result
       if (this.config.cache && portfolio.success) {
         await this.cachePortfolio(cacheKey, portfolio);
       }
 
       // Record metrics
-      this.recordMetric('response_time', Date.now() - startTime, { operation: 'getPortfolio' });
-      this.recordMetric('cache_miss', 1, { operation: 'getPortfolio' });
+      this.recordMetric("response_time", Date.now() - startTime, { operation: "getPortfolio" });
+      this.recordMetric("cache_miss", 1, { operation: "getPortfolio" });
 
       return portfolio;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.recordMetric('error_count', 1, { operation: 'getPortfolio', error: safeError.name });
-      
+      this.recordMetric("error_count", 1, { operation: "getPortfolio", error: safeError.name });
+
       return {
         success: false,
         data: this.getEmptyPortfolio(),
@@ -159,7 +160,7 @@ export class PortfolioService {
   /**
    * Get portfolio balances only (no metrics)
    */
-  @instrumentServiceMethod('portfolio', 'getBalances')
+  @instrumentServiceMethod("portfolio", "getBalances")
   async getBalances(filter?: PortfolioFilter): Promise<PortfolioResponse> {
     const filterWithoutMetrics = { ...filter, includeMetrics: false };
     return this.getPortfolio(filterWithoutMetrics);
@@ -168,8 +169,12 @@ export class PortfolioService {
   /**
    * Get asset allocation breakdown
    */
-  @instrumentServiceMethod('portfolio', 'getAssetAllocation')
-  async getAssetAllocation(): Promise<{ success: boolean; data: Record<string, number>; error?: string }> {
+  @instrumentServiceMethod("portfolio", "getAssetAllocation")
+  async getAssetAllocation(): Promise<{
+    success: boolean;
+    data: Record<string, number>;
+    error?: string;
+  }> {
     try {
       const portfolio = await this.getPortfolio({ includeMetrics: true });
       if (!portfolio.success) {
@@ -193,7 +198,7 @@ export class PortfolioService {
   /**
    * Get portfolio performance summary
    */
-  @instrumentServiceMethod('portfolio', 'getPerformanceSummary')
+  @instrumentServiceMethod("portfolio", "getPerformanceSummary")
   async getPerformanceSummary(): Promise<{
     success: boolean;
     data: {
@@ -210,7 +215,13 @@ export class PortfolioService {
       if (!portfolio.success) {
         return {
           success: false,
-          data: { totalValue: 0, totalPnl: 0, totalPnlPercentage: 0, riskScore: 0, diversificationScore: 0 },
+          data: {
+            totalValue: 0,
+            totalPnl: 0,
+            totalPnlPercentage: 0,
+            riskScore: 0,
+            diversificationScore: 0,
+          },
           error: portfolio.error,
         };
       }
@@ -230,7 +241,13 @@ export class PortfolioService {
       const safeError = toSafeError(error);
       return {
         success: false,
-        data: { totalValue: 0, totalPnl: 0, totalPnlPercentage: 0, riskScore: 0, diversificationScore: 0 },
+        data: {
+          totalValue: 0,
+          totalPnl: 0,
+          totalPnlPercentage: 0,
+          riskScore: 0,
+          diversificationScore: 0,
+        },
         error: safeError.message,
       };
     }
@@ -250,7 +267,7 @@ export class PortfolioService {
       this.generateCacheKey({ excludeZeroBalances: true, includeMetrics: true }),
     ];
 
-    await Promise.all(commonKeys.map(key => this.config.cache?.set(key, null, 0)));
+    await Promise.all(commonKeys.map((key) => this.config.cache?.set(key, null, 0)));
   }
 
   // ============================================================================
@@ -258,15 +275,16 @@ export class PortfolioService {
   // ============================================================================
 
   private async fetchPortfolioData(filter: PortfolioFilter): Promise<PortfolioResponse> {
-    const executeWithCircuitBreaker = this.config.circuitBreaker?.execute ?? ((fn: () => Promise<any>) => fn());
+    const executeWithCircuitBreaker =
+      this.config.circuitBreaker?.execute ?? ((fn: () => Promise<any>) => fn());
 
     const rawBalances = await executeWithCircuitBreaker(async () => {
-      return this.config.apiClient.get('/api/v3/account');
+      return this.config.apiClient.get("/api/v3/account");
     });
 
     // Transform and filter balances
     const balances = this.transformAndFilterBalances(rawBalances.balances || [], filter);
-    
+
     // Calculate metrics if requested
     let metrics = this.getEmptyMetrics();
     if (filter.includeMetrics) {
@@ -294,48 +312,48 @@ export class PortfolioService {
 
   private transformAndFilterBalances(rawBalances: any[], filter: PortfolioFilter): BalanceEntry[] {
     const balances = rawBalances
-      .map(balance => ({
-        asset: balance.asset || '',
-        free: balance.free || '0',
-        locked: balance.locked || '0',
+      .map((balance) => ({
+        asset: balance.asset || "",
+        free: balance.free || "0",
+        locked: balance.locked || "0",
       }))
-      .filter(balance => {
-        const totalBalance = parseFloat(balance.free) + parseFloat(balance.locked);
-        
+      .filter((balance) => {
+        const totalBalance = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
+
         if (filter.excludeZeroBalances && totalBalance === 0) {
           return false;
         }
-        
+
         if (filter.minBalance && totalBalance < filter.minBalance) {
           return false;
         }
-        
+
         if (filter.maxBalance && totalBalance > filter.maxBalance) {
           return false;
         }
-        
+
         if (filter.assets && !filter.assets.includes(balance.asset)) {
           return false;
         }
-        
+
         return true;
       });
 
     // Validate each balance entry
-    return balances.map(balance => BalanceEntrySchema.parse(balance));
+    return balances.map((balance) => BalanceEntrySchema.parse(balance));
   }
 
   private async calculatePortfolioMetrics(balances: BalanceEntry[]): Promise<PortfolioMetrics> {
     // This is a simplified calculation - in a real implementation,
     // you'd fetch current prices and calculate actual values
     const totalValue = balances.reduce((sum, balance) => {
-      const total = parseFloat(balance.free) + parseFloat(balance.locked);
+      const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
       return sum + total; // Simplified: assuming 1:1 USDT value
     }, 0);
 
     const assetDistribution: Record<string, number> = {};
-    balances.forEach(balance => {
-      const total = parseFloat(balance.free) + parseFloat(balance.locked);
+    balances.forEach((balance) => {
+      const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
       assetDistribution[balance.asset] = totalValue > 0 ? (total / totalValue) * 100 : 0;
     });
 
@@ -379,8 +397,8 @@ export class PortfolioService {
     const filterString = Object.entries(filter)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, value]) => `${key}:${JSON.stringify(value)}`)
-      .join('|');
-    
+      .join("|");
+
     return `${this.cacheKeyPrefix}:${filterString}`;
   }
 
@@ -409,7 +427,7 @@ export class PortfolioService {
 
   private recordMetric(name: string, value: number, tags?: Record<string, string>): void {
     this.config.performanceMonitor?.recordMetric(name, value, {
-      service: 'portfolio',
+      service: "portfolio",
       ...tags,
     });
   }
@@ -427,6 +445,4 @@ export function createPortfolioService(config: PortfolioConfig): PortfolioServic
 // Exports
 // ============================================================================
 
-export type {
-  PortfolioConfig,
-};
+export type { PortfolioConfig };

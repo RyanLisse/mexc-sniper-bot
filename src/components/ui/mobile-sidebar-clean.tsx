@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useCallback } from "react";
-import { X, Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect } from "react";
 import { useIsMobile } from "../../hooks/use-mobile-clean";
 import { cn } from "../../lib/utils";
 
@@ -27,12 +28,7 @@ export interface MobileSidebarContentProps {
  * Mobile Sidebar Component
  * Touch-optimized sidebar with accessibility features
  */
-export function MobileSidebar({ 
-  open, 
-  onOpenChange, 
-  children, 
-  className 
-}: MobileSidebarProps) {
+export function MobileSidebar({ open, onOpenChange, children, className }: MobileSidebarProps) {
   const { isMobile } = useIsMobile();
 
   // Handle escape key
@@ -71,11 +67,8 @@ export function MobileSidebar({
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
-        onClick={handleClose}
-      />
-      
+      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
+
       {/* Sidebar */}
       <div
         role="dialog"
@@ -103,9 +96,7 @@ export function MobileSidebar({
         </button>
 
         {/* Content */}
-        <div className="h-full overflow-hidden pt-16">
-          {children}
-        </div>
+        <div className="h-full overflow-hidden pt-16">{children}</div>
       </div>
     </>
   );
@@ -115,11 +106,7 @@ export function MobileSidebar({
  * Mobile Sidebar Trigger Button
  * Touch-optimized trigger with proper accessibility
  */
-export function MobileSidebarTrigger({ 
-  open, 
-  onClick, 
-  className 
-}: MobileSidebarTriggerProps) {
+export function MobileSidebarTrigger({ open, onClick, className }: MobileSidebarTriggerProps) {
   return (
     <button
       onClick={onClick}
@@ -146,18 +133,14 @@ export function MobileSidebarTrigger({
  * Mobile Sidebar Content Wrapper
  * Mobile-optimized content container
  */
-export function MobileSidebarContent({ 
-  children, 
+export function MobileSidebarContent({
+  children,
   className,
-  ...props 
+  ...props
 }: MobileSidebarContentProps & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "flex h-full w-full flex-col overflow-hidden",
-        "px-4 py-2",
-        className
-      )}
+      className={cn("flex h-full w-full flex-col overflow-hidden", "px-4 py-2", className)}
       {...props}
     >
       {children}

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type {
-  MobileDetection,
-  TouchGesture,
   Breakpoints,
   DeviceType,
+  MobileDetection,
   Orientation,
+  TouchGesture,
 } from "../schemas/mobile-schemas";
 
 const MOBILE_BREAKPOINT = 768;
@@ -35,8 +35,8 @@ export function useIsMobile(breakpoint = MOBILE_BREAKPOINT): MobileDetection {
 
     const isTouch = Boolean(
       "ontouchstart" in window ||
-      navigator.maxTouchPoints > 0 ||
-      (navigator as any).msMaxTouchPoints > 0
+        navigator.maxTouchPoints > 0 ||
+        (navigator as any).msMaxTouchPoints > 0
     );
 
     setState({
@@ -65,7 +65,7 @@ export function useIsMobile(breakpoint = MOBILE_BREAKPOINT): MobileDetection {
  */
 export function useDeviceType(): DeviceType {
   const { isMobile, isTablet } = useIsMobile();
-  
+
   if (isMobile) return "mobile";
   if (isTablet) return "tablet";
   return "desktop";
@@ -136,7 +136,7 @@ export function useOrientation(): Orientation {
  */
 export function useMobileDevice() {
   const { isMobile, isTouch } = useIsMobile();
-  
+
   return {
     isMobileDevice: isMobile,
     isTouchDevice: isTouch,
@@ -165,7 +165,7 @@ export function useTouchGestures(): TouchGesture {
 
       const handleTouchMove = (moveEvent: TouchEvent) => {
         if (moveEvent.touches.length === 0) return;
-        
+
         const moveTouch = moveEvent.touches[0];
         const deltaX = moveTouch.clientX - startX;
         const deltaY = moveTouch.clientY - startY;
@@ -276,7 +276,7 @@ export function useWindowSize() {
   useEffect(() => {
     const updateSize = () => {
       if (typeof window === "undefined") return;
-      
+
       setWindowSize({
         width: window.innerWidth,
         height: window.innerHeight,
@@ -303,8 +303,8 @@ export function useIsTouchDevice(): boolean {
 
     const hasTouch = Boolean(
       "ontouchstart" in window ||
-      navigator.maxTouchPoints > 0 ||
-      (navigator as any).msMaxTouchPoints > 0
+        navigator.maxTouchPoints > 0 ||
+        (navigator as any).msMaxTouchPoints > 0
     );
 
     setIsTouch(hasTouch);

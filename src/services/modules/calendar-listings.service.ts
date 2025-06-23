@@ -1,9 +1,9 @@
 /**
  * Calendar Listings Service Module
- * 
+ *
  * Modular service for handling MEXC calendar listings with type safety,
  * Zod validation, caching, and error handling.
- * 
+ *
  * Key Features:
  * - Type-safe with Zod schema validation
  * - Efficient caching with TTL
@@ -12,21 +12,20 @@
  * - Under 500 lines as per requirements
  */
 
-import { z } from 'zod';
-import type { MexcServiceResponse } from '../mexc-schemas';
-import { instrumentServiceMethod } from '../../lib/opentelemetry-service-instrumentation';
-import { toSafeError } from '../../lib/error-type-utils';
+import { z } from "zod";
+import { toSafeError } from "../../lib/error-type-utils";
+import { instrumentServiceMethod } from "../../lib/opentelemetry-service-instrumentation";
 
 // ============================================================================
 // Zod Schemas for Type Safety
 // ============================================================================
 
 export const CalendarEntrySchema = z.object({
-  symbol: z.string().min(1, 'Symbol is required'),
-  baseAsset: z.string().min(1, 'Base asset is required'),
-  quoteAsset: z.string().min(1, 'Quote asset is required'),
-  tradingStartTime: z.number().int().positive('Trading start time must be positive'),
-  status: z.enum(['PENDING', 'TRADING', 'BREAK', 'ENDED']),
+  symbol: z.string().min(1, "Symbol is required"),
+  baseAsset: z.string().min(1, "Base asset is required"),
+  quoteAsset: z.string().min(1, "Quote asset is required"),
+  tradingStartTime: z.number().int().positive("Trading start time must be positive"),
+  status: z.enum(["PENDING", "TRADING", "BREAK", "ENDED"]),
   priceScale: z.number().int().nonnegative().optional(),
   quantityScale: z.number().int().nonnegative().optional(),
   minNotional: z.string().optional(),
@@ -42,7 +41,7 @@ export const CalendarListingsResponseSchema = z.object({
 });
 
 export const CalendarFilterSchema = z.object({
-  status: z.enum(['PENDING', 'TRADING', 'BREAK', 'ENDED']).optional(),
+  status: z.enum(["PENDING", "TRADING", "BREAK", "ENDED"]).optional(),
   baseAsset: z.string().optional(),
   quoteAsset: z.string().optional(),
   fromTime: z.number().int().positive().optional(),
@@ -82,7 +81,7 @@ export interface CalendarListingsConfig {
 export class CalendarListingsService {
   private readonly config: CalendarListingsConfig;
   private readonly cacheTTL: number;
-  private readonly cacheKeyPrefix = 'mexc:calendar';
+  private readonly cacheKeyPrefix = "mexc:calendar";
 
   constructor(config: CalendarListingsConfig) {
     this.config = config;
@@ -92,43 +91,43 @@ export class CalendarListingsService {
   /**
    * Get calendar listings with optional filtering
    */
-  @instrumentServiceMethod('calendar-listings', 'getListings')
+  @instrumentServiceMethod("calendar-listings", "getListings")
   async getListings(filter?: CalendarFilter): Promise<CalendarListingsResponse> {
     const startTime = Date.now();
-    
+
     try {
       // Validate input filter
       const validatedFilter = filter ? CalendarFilterSchema.parse(filter) : {};
-      
+
       // Generate cache key
       const cacheKey = this.generateCacheKey(validatedFilter);
-      
+
       // Try cache first
       if (this.config.cache) {
         const cached = await this.getCachedListings(cacheKey);
         if (cached) {
-          this.recordMetric('cache_hit', 1, { operation: 'getListings' });
+          this.recordMetric("cache_hit", 1, { operation: "getListings" });
           return cached;
         }
       }
 
       // Fetch from API
       const response = await this.fetchFromAPI(validatedFilter);
-      
+
       // Cache the result
       if (this.config.cache && response.success) {
         await this.cacheListings(cacheKey, response);
       }
 
       // Record metrics
-      this.recordMetric('response_time', Date.now() - startTime, { operation: 'getListings' });
-      this.recordMetric('cache_miss', 1, { operation: 'getListings' });
+      this.recordMetric("response_time", Date.now() - startTime, { operation: "getListings" });
+      this.recordMetric("cache_miss", 1, { operation: "getListings" });
 
       return response;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.recordMetric('error_count', 1, { operation: 'getListings', error: safeError.name });
-      
+      this.recordMetric("error_count", 1, { operation: "getListings", error: safeError.name });
+
       return {
         success: false,
         data: [],
@@ -141,35 +140,35 @@ export class CalendarListingsService {
   /**
    * Get active trading pairs from calendar
    */
-  @instrumentServiceMethod('calendar-listings', 'getActivePairs')
+  @instrumentServiceMethod("calendar-listings", "getActivePairs")
   async getActivePairs(): Promise<CalendarListingsResponse> {
-    return this.getListings({ status: 'TRADING' });
+    return this.getListings({ status: "TRADING" });
   }
 
   /**
    * Get upcoming listings
    */
-  @instrumentServiceMethod('calendar-listings', 'getUpcomingListings')
+  @instrumentServiceMethod("calendar-listings", "getUpcomingListings")
   async getUpcomingListings(): Promise<CalendarListingsResponse> {
     const filter: CalendarFilter = {
-      status: 'PENDING',
+      status: "PENDING",
       fromTime: Date.now(),
       limit: 50,
     };
-    
+
     return this.getListings(filter);
   }
 
   /**
    * Get calendar entry by symbol
    */
-  @instrumentServiceMethod('calendar-listings', 'getBySymbol')
+  @instrumentServiceMethod("calendar-listings", "getBySymbol")
   async getBySymbol(symbol: string): Promise<CalendarListingsResponse> {
-    if (!symbol || typeof symbol !== 'string') {
+    if (!symbol || typeof symbol !== "string") {
       return {
         success: false,
         data: [],
-        error: 'Invalid symbol provided',
+        error: "Invalid symbol provided",
         timestamp: Date.now(),
       };
     }
@@ -179,8 +178,8 @@ export class CalendarListingsService {
       return allListings;
     }
 
-    const matchedEntry = allListings.data.find(entry => entry.symbol === symbol.toUpperCase());
-    
+    const matchedEntry = allListings.data.find((entry) => entry.symbol === symbol.toUpperCase());
+
     return {
       success: true,
       data: matchedEntry ? [matchedEntry] : [],
@@ -198,11 +197,11 @@ export class CalendarListingsService {
     // This is a simplified version
     const keys = [
       this.generateCacheKey({}),
-      this.generateCacheKey({ status: 'TRADING' }),
-      this.generateCacheKey({ status: 'PENDING' }),
+      this.generateCacheKey({ status: "TRADING" }),
+      this.generateCacheKey({ status: "PENDING" }),
     ];
 
-    await Promise.all(keys.map(key => this.config.cache?.set(key, null, 0)));
+    await Promise.all(keys.map((key) => this.config.cache?.set(key, null, 0)));
   }
 
   // ============================================================================
@@ -210,16 +209,17 @@ export class CalendarListingsService {
   // ============================================================================
 
   private async fetchFromAPI(filter: CalendarFilter): Promise<CalendarListingsResponse> {
-    const executeWithCircuitBreaker = this.config.circuitBreaker?.execute ?? ((fn: () => Promise<any>) => fn());
+    const executeWithCircuitBreaker =
+      this.config.circuitBreaker?.execute ?? ((fn: () => Promise<any>) => fn());
 
     const rawResponse = await executeWithCircuitBreaker(async () => {
       const params = this.buildAPIParams(filter);
-      return this.config.apiClient.get('/api/v3/exchangeInfo', params);
+      return this.config.apiClient.get("/api/v3/exchangeInfo", params);
     });
 
     // Transform and validate the API response
     const transformedData = this.transformAPIResponse(rawResponse);
-    
+
     // Validate with Zod schema
     const validatedData = z.array(CalendarEntrySchema).parse(transformedData);
 
@@ -260,8 +260,8 @@ export class CalendarListingsService {
     const filterString = Object.entries(filter)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, value]) => `${key}:${value}`)
-      .join('|');
-    
+      .join("|");
+
     return `${this.cacheKeyPrefix}:listings:${filterString}`;
   }
 
@@ -283,13 +283,13 @@ export class CalendarListingsService {
     }
 
     return rawResponse.symbols
-      .filter((symbol: any) => symbol.status === 'TRADING')
+      .filter((symbol: any) => symbol.status === "TRADING")
       .map((symbol: any) => ({
         symbol: symbol.symbol,
         baseAsset: symbol.baseAsset,
         quoteAsset: symbol.quoteAsset,
         tradingStartTime: Date.now(), // API might not provide this
-        status: 'TRADING' as const,
+        status: "TRADING" as const,
         priceScale: symbol.quotePrecision,
         quantityScale: symbol.baseAssetPrecision,
       }));
@@ -297,7 +297,7 @@ export class CalendarListingsService {
 
   private recordMetric(name: string, value: number, tags?: Record<string, string>): void {
     this.config.performanceMonitor?.recordMetric(name, value, {
-      service: 'calendar-listings',
+      service: "calendar-listings",
       ...tags,
     });
   }
@@ -307,7 +307,9 @@ export class CalendarListingsService {
 // Factory Function
 // ============================================================================
 
-export function createCalendarListingsService(config: CalendarListingsConfig): CalendarListingsService {
+export function createCalendarListingsService(
+  config: CalendarListingsConfig
+): CalendarListingsService {
   return new CalendarListingsService(config);
 }
 
@@ -315,6 +317,4 @@ export function createCalendarListingsService(config: CalendarListingsConfig): C
 // Exports
 // ============================================================================
 
-export type {
-  CalendarListingsConfig,
-};
+export type { CalendarListingsConfig };

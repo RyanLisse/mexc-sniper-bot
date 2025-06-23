@@ -165,6 +165,7 @@ export function ConsolidatedCredentialStatus({
           <div className="flex items-center space-x-2">
             <UnifiedStatusBadge status={overallStatus} />
             <button
+              type="button"
               onClick={handleRefresh}
               disabled={isRefreshing}
               className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
@@ -217,6 +218,7 @@ export function ConsolidatedCredentialStatus({
                 <span className="text-sm text-red-700 dark:text-red-300">{syncError}</span>
               </div>
               <button
+                type="button"
                 onClick={clearSyncError}
                 className="text-red-500 hover:text-red-700"
                 title="Clear error"
@@ -236,6 +238,7 @@ export function ConsolidatedCredentialStatus({
           {showActions && actionSuggestions.length > 0 && (
             <div className="mt-4">
               <button
+                type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
@@ -282,6 +285,7 @@ export function ConsolidatedCredentialStatus({
 
                   {!credentialStatus.hasCredentials && (
                     <button
+                      type="button"
                       onClick={handleCredentialConfigure}
                       className="mt-3 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
                     >

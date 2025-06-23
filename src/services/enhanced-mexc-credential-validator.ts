@@ -162,7 +162,9 @@ export class EnhancedCredentialValidator {
 
       // Check for test credentials
       if (isTestCredentials) {
-        console.warn("🔍 Test credentials detected - system will flag as invalid for proper validation");
+        console.warn(
+          "🔍 Test credentials detected - system will flag as invalid for proper validation"
+        );
         return {
           hasCredentials: true,
           isValid: false, // Test credentials are flagged as invalid
