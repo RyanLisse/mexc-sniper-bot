@@ -91,6 +91,7 @@ export class UnifiedStatusResolver {
       const response = await fetch("/api/mexc/enhanced-connectivity", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Include authentication cookies
       });
 
       if (!response.ok) {
@@ -119,6 +120,7 @@ export class UnifiedStatusResolver {
       const response = await fetch("/api/mexc/connectivity", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Include authentication cookies
       });
 
       if (!response.ok) {
