@@ -20,6 +20,11 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
     console.log('[DEBUG] API credentials test endpoint called', {
       userAuthenticated: !!user,
       userId: user?.id,
+      userObject: user ? {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      } : null,
       timestamp: new Date().toISOString()
     });
 
@@ -30,7 +35,10 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
       bodyKeys: Object.keys(body),
       providedUserId: userId,
       authenticatedUserId: user?.id,
-      provider
+      provider,
+      userIdMatch: user?.id === userId,
+      hasUserId: !!userId,
+      hasProvider: !!provider
     });
 
     // Validate required fields
@@ -57,12 +65,40 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
     // Get user credentials
     let userCredentials = null;
     try {
+      console.log('[DEBUG] Attempting to retrieve credentials', {
+        userId,
+        provider,
+        timestamp: new Date().toISOString()
+      });
+      
       userCredentials = await getUserCredentials(userId, provider);
+      
+      console.log('[DEBUG] Credentials retrieval result', {
+        found: !!userCredentials,
+        hasApiKey: !!(userCredentials?.apiKey),
+        hasSecretKey: !!(userCredentials?.secretKey),
+        provider: userCredentials?.provider,
+        isActive: userCredentials?.isActive,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
+      console.error('[DEBUG] Credentials retrieval failed', {
+        userId,
+        provider,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error?.constructor?.name,
+        timestamp: new Date().toISOString()
+      });
+      
       return apiResponse(
         createErrorResponse("No API credentials found", {
           message: "Please configure your MEXC API credentials first",
-          code: "NO_CREDENTIALS"
+          code: "NO_CREDENTIALS",
+          details: {
+            userId,
+            provider,
+            error: error instanceof Error ? error.message : String(error)
+          }
         }),
         HTTP_STATUS.BAD_REQUEST
       );
@@ -79,14 +115,31 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
     }
 
     // Initialize MEXC service with user credentials
+    console.log('[DEBUG] Initializing MEXC service', {
+      hasApiKey: !!userCredentials.apiKey,
+      apiKeyLength: userCredentials.apiKey?.length,
+      hasSecretKey: !!userCredentials.secretKey,
+      secretKeyLength: userCredentials.secretKey?.length,
+      timestamp: new Date().toISOString()
+    });
+    
     const mexcService = getRecommendedMexcService({
       apiKey: userCredentials.apiKey,
       secretKey: userCredentials.secretKey
     });
 
     // Test basic connectivity first
+    console.log('[DEBUG] Testing MEXC connectivity...');
     const connectivityTest = await mexcService.testConnectivity();
-    if (!connectivityTest) {
+    
+    console.log('[DEBUG] Connectivity test result', {
+      success: !!connectivityTest?.success,
+      data: connectivityTest?.data,
+      error: connectivityTest?.error,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (!connectivityTest?.success) {
       return apiResponse(
         createErrorResponse("Network connectivity failed", {
           message: "Unable to reach MEXC API. Please check your internet connection.",
@@ -103,8 +156,19 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
 
     // Test authentication by getting account balance
     try {
+      console.log('[DEBUG] Testing MEXC authentication by getting account balances...');
+      
       // Get account balances to verify credentials work
       const balanceResult = await mexcService.getAccountBalances();
+      
+      console.log('[DEBUG] Balance result received', {
+        success: balanceResult?.success,
+        hasData: !!balanceResult?.data,
+        dataType: typeof balanceResult?.data,
+        error: balanceResult?.error,
+        source: balanceResult?.source,
+        timestamp: new Date().toISOString()
+      });
       
       if (balanceResult.success) {
         // Extract dynamic account information from MEXC API response
