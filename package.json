@@ -129,7 +129,7 @@
     "@opentelemetry/auto-instrumentations-node": "^0.56.1",
     "@opentelemetry/exporter-jaeger": "^1.26.0",
     "@opentelemetry/exporter-prometheus": "^0.202.0",
-    "@opentelemetry/resources": "^1.26.0",
+    "@opentelemetry/resources": "^2.0.1",
     "@opentelemetry/sdk-metrics": "^2.0.1",
     "@opentelemetry/sdk-node": "^0.56.0",
     "@opentelemetry/sdk-trace-node": "^2.0.1",
