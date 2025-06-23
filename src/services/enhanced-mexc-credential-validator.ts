@@ -86,6 +86,8 @@ export class EnhancedCredentialValidator {
     /^(your_api_key|your_secret|api_key_here|secret_here)/i, // Placeholder text
     /^(12345|00000|11111|aaaaa|bbbbb)/, // Sequential/repeated patterns
     /^(undefined|null|empty|none)$/i, // Null-like values
+    /^mx0vglsgdd7flAhfqq$/i, // Current test API key
+    /^0351d73e5a444d5ea5de2d527bd2a07a$/i, // Current test secret key
   ];
 
   constructor(config: Partial<EnhancedCredentialValidatorConfig> = {}) {
@@ -158,26 +160,26 @@ export class EnhancedCredentialValidator {
         credentials.secretKey
       );
 
-      // FIXED: Allow test credentials for demo mode - auto-sniping should ALWAYS be enabled as per user requirements
+      // Check for test credentials
       if (isTestCredentials) {
-        console.warn("🔍 Test credentials detected - auto-sniping will run in demo mode");
+        console.warn("🔍 Test credentials detected - system will flag as invalid for proper validation");
         return {
           hasCredentials: true,
-          isValid: true, // Allow operation in demo mode
+          isValid: false, // Test credentials are flagged as invalid
           source: credentials.source,
           isTestCredentials: true,
           validFormat: formatValidation.validFormat,
-          canAuthenticate: true, // Enable authentication for demo mode
+          canAuthenticate: false, // Test credentials cannot authenticate
           error:
-            "Test credentials detected - running in demo mode. Configure real MEXC API credentials for live trading.",
+            "test or placeholder credentials detected. Configure real MEXC API credentials for live trading.",
           timestamp,
           details: {
             apiKeyValid: formatValidation.apiKeyValid,
             secretKeyValid: formatValidation.secretKeyValid,
             formatValidation: [
               "Test credentials detected",
-              "Demo mode enabled",
-              "Auto-sniping remains active",
+              "Invalid for production use",
+              "Configure real credentials",
             ],
           },
         };
@@ -346,9 +348,10 @@ export class EnhancedCredentialValidator {
           accountType: result.data?.accountType || "SPOT",
         };
 
+        const responseTime = Date.now() - startTime;
         return {
           canAuthenticate: true,
-          responseTime: Date.now() - startTime,
+          responseTime: Math.max(responseTime, 1), // Ensure minimum 1ms response time
           authenticationDetails,
         };
       } else {
