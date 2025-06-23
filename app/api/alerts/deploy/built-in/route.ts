@@ -59,6 +59,7 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
         fromName: "MEXC Sniper Alert System",
         toAddresses: [process.env.ADMIN_EMAIL || "admin@example.com"],
       },
+      isDefault: true,
       severityFilter: ["critical" as const],
       rateLimitPerHour: 20,
       titleTemplate: "🚨 CRITICAL: {{alert.message}}",
@@ -87,6 +88,7 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
           username: "MEXC Sniper Bot",
           iconEmoji: ":warning:",
         },
+        isDefault: false,
         severityFilter: ["critical" as const, "high" as const, "medium" as const],
         rateLimitPerHour: 100,
         titleTemplate: "{{alert.severity}} Alert: {{alert.message}}",
@@ -124,6 +126,7 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
           retryDelay: 1000,
           timeout: 10000,
         },
+        isDefault: false,
         rateLimitPerHour: 1000,
       };
 
@@ -152,6 +155,7 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
           toPhoneNumbers: [process.env.ADMIN_PHONE],
           maxMessageLength: 160,
         },
+        isDefault: false,
         severityFilter: ["critical" as const],
         rateLimitPerHour: 5,
         titleTemplate: "URGENT: {{alert.message}}",

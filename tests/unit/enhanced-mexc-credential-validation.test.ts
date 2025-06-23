@@ -8,11 +8,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import type { MexcApiClient } from "../../src/services/mexc-api-client";
 import type { MexcAuthenticationService } from "../../src/services/mexc-authentication-service";
+import type { MockedFunction } from "vitest";
 
 // Test implementation will be built incrementally following TDD
 describe("Enhanced MEXC Credential Validation System", () => {
-  let mockApiClient: jest.Mocked<MexcApiClient>;
-  let mockAuthService: jest.Mocked<MexcAuthenticationService>;
+  let mockApiClient: Partial<MexcApiClient>;
+  let mockAuthService: Partial<MexcAuthenticationService>;
 
   beforeEach(() => {
     // Reset all mocks
@@ -83,14 +84,13 @@ describe("Enhanced MEXC Credential Validation System", () => {
       const { EnhancedCredentialValidator } = await import("../../src/services/enhanced-mexc-credential-validator");
       const validator = new EnhancedCredentialValidator();
       
-      // Mock successful API response
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ 
+      // Mock successful API response using test utilities
+      const mockFetch = vi.fn().mockResolvedValue(
+        global.testUtils.mockMexcApiResponse({ 
           permissions: ["spot"], 
           accountType: "SPOT" 
         })
-      });
+      );
       global.fetch = mockFetch;
 
       const result = await validator.testAuthentication();
@@ -156,14 +156,13 @@ describe("Enhanced MEXC Credential Validation System", () => {
       // Wait for reset timeout
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      // Mock successful response
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ 
+      // Mock successful response using test utilities
+      mockFetch.mockResolvedValue(
+        global.testUtils.mockMexcApiResponse({ 
           permissions: ["spot"], 
           accountType: "SPOT" 
         })
-      });
+      );
 
       const result = await validator.testAuthentication();
       expect(result.circuitOpen).toBeUndefined(); // Should not be set when circuit is working
@@ -181,13 +180,9 @@ describe("Enhanced MEXC Credential Validation System", () => {
         // Simulate some network latency
         return new Promise(resolve => {
           setTimeout(() => {
-            resolve({
-              ok: true,
-              status: 200,
-              statusText: "OK",
-              headers: new Map([["content-length", "42"]]),
-              json: () => Promise.resolve({})
-            });
+            resolve(global.testUtils.mockMexcApiResponse({}, 200, {
+              'content-length': '42'
+            }));
           }, 50); // 50ms simulated latency
         });
       });
@@ -230,17 +225,15 @@ describe("Enhanced MEXC Credential Validation System", () => {
       process.env.MEXC_API_KEY = "mx1234567890abcdef1234567890abcdef";
       process.env.MEXC_SECRET_KEY = "abcdef1234567890abcdef1234567890ab";
 
-      // Mock successful API responses
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        statusText: "OK",
-        headers: new Map([["content-length", "42"]]),
-        json: () => Promise.resolve({ 
+      // Mock successful API responses using test utilities
+      const mockFetch = vi.fn().mockResolvedValue(
+        global.testUtils.mockMexcApiResponse({ 
           permissions: ["spot"], 
           accountType: "SPOT" 
+        }, 200, {
+          'content-length': '42'
         })
-      });
+      );
       global.fetch = mockFetch;
 
       const { RealTimeCredentialMonitor } = await import("../../src/services/real-time-credential-monitor");
