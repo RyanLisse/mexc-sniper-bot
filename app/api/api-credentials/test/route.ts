@@ -128,30 +128,26 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
       secretKey: userCredentials.secretKey
     });
 
-    // Test basic connectivity first
+    // Test basic connectivity first (optional)
     console.log('[DEBUG] Testing MEXC connectivity...');
-    const connectivityTest = await mexcService.testConnectivity();
-    
-    console.log('[DEBUG] Connectivity test result', {
-      success: !!connectivityTest?.success,
-      data: connectivityTest?.data,
-      error: connectivityTest?.error,
-      timestamp: new Date().toISOString()
-    });
-    
-    if (!connectivityTest?.success) {
-      return apiResponse(
-        createErrorResponse("Network connectivity failed", {
-          message: "Unable to reach MEXC API. Please check your internet connection.",
-          code: "NETWORK_ERROR",
-          details: {
-            connectivity: false,
-            authentication: false,
-            step: "connectivity_test"
-          }
-        }),
-        HTTP_STATUS.SERVICE_UNAVAILABLE
-      );
+    let connectivityTest = null;
+    try {
+      connectivityTest = await mexcService.testConnectivity();
+      
+      console.log('[DEBUG] Connectivity test result', {
+        success: !!connectivityTest?.success,
+        data: connectivityTest?.data,
+        error: connectivityTest?.error,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.log('[DEBUG] Connectivity test failed, but continuing with auth test', {
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
+      
+      // Don't fail here - continue to authentication test
+      // Connectivity issues don't necessarily mean invalid credentials
     }
 
     // Test authentication by getting account balance
@@ -193,7 +189,7 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
         // Success - credentials are valid
         return apiResponse(
           createSuccessResponse({
-            connectivity: true,
+            connectivity: connectivityTest?.success ?? false,
             authentication: true,
             accountType: accountType.toLowerCase(),
             canTrade,
@@ -206,7 +202,11 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
             serverTime: new Date().toISOString(),
             // Include additional metadata
             ...(permissions.length > 0 && { permissions }),
-            ...(balanceResult.timestamp && { lastUpdate: balanceResult.timestamp })
+            ...(balanceResult.timestamp && { lastUpdate: balanceResult.timestamp }),
+            // Connectivity status
+            connectivityNote: connectivityTest?.success 
+              ? "MEXC API connectivity verified"
+              : "MEXC API connectivity could not be verified, but credentials are valid"
           }, {
             message: "API credentials are valid and working correctly",
             code: "TEST_SUCCESS"
@@ -220,10 +220,13 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
             message: balanceResult.error || "Authentication failed with MEXC API",
             code: "INVALID_CREDENTIALS",
             details: {
-              connectivity: true,
+              connectivity: connectivityTest?.success ?? false,
               authentication: false,
               step: "authentication_test",
-              mexcError: balanceResult.error
+              mexcError: balanceResult.error,
+              connectivityNote: connectivityTest?.success 
+                ? "MEXC API connectivity verified"
+                : "MEXC API connectivity could not be verified"
             }
           }),
           HTTP_STATUS.UNAUTHORIZED
@@ -250,10 +253,13 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
           message: userMessage,
           code: errorCode,
           details: {
-            connectivity: true,
+            connectivity: connectivityTest?.success ?? false,
             authentication: false,
             step: "authentication_test",
-            originalError: errorMessage
+            originalError: errorMessage,
+            connectivityNote: connectivityTest?.success 
+              ? "MEXC API connectivity verified"
+              : "MEXC API connectivity could not be verified"
           }
         }),
         HTTP_STATUS.UNAUTHORIZED
