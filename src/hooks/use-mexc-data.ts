@@ -100,6 +100,7 @@ export function useMexcConnectivity() {
         try {
           const response = await fetch("/api/mexc/connectivity", {
             signal: AbortSignal.timeout(15000), // 15 second timeout
+            credentials: "include", // Include authentication cookies
           });
 
           if (!response.ok) {
@@ -296,7 +297,9 @@ export function useMexcAccount(userId?: string) {
         throw new Error("User ID is required");
       }
 
-      const response = await fetch(`/api/mexc/account?userId=${userId}`);
+      const response = await fetch(`/api/mexc/account?userId=${userId}`, {
+        credentials: "include" // Include authentication cookies
+      });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }

@@ -34,6 +34,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Include authentication cookies
       });
 
       if (!response.ok) {
