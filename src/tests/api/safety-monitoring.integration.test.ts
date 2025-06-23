@@ -8,10 +8,10 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { GET, POST } from "../../app/api/auto-sniping/safety-monitoring/route";
-import { RealTimeSafetyMonitoringService } from "../../services/real-time-safety-monitoring-service";
+import { RealTimeSafetyMonitoringService } from "../../services/real-time-safety-monitoring-modules";
 
 // Mock the service
-vi.mock("../../services/real-time-safety-monitoring-service");
+vi.mock("../../services/real-time-safety-monitoring-modules");
 
 // Mock auth decorators
 vi.mock("../../lib/auth-decorators", () => ({

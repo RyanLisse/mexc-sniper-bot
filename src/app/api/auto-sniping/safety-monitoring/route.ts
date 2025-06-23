@@ -7,11 +7,11 @@ import {
 } from "../../../../lib/api-response";
 import { authenticatedRoute } from "../../../../lib/auth-decorators";
 import { createLogger } from "../../../../lib/structured-logger";
-import { RealTimeSafetyMonitoringService } from "../../../../services/real-time-safety-monitoring-service";
+import { RealTimeSafetyMonitoringService } from "../../../../services/real-time-safety-monitoring-modules";
 import type {
   SafetyConfiguration,
   SafetyThresholds,
-} from "../../../../services/real-time-safety-monitoring-service";
+} from "../../../../schemas/safety-monitoring-schemas";
 
 const logger = createLogger("safety-monitoring-api");
 

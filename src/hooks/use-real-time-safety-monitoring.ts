@@ -13,7 +13,7 @@ import type {
   SafetyAlert,
   SafetyConfiguration,
   SafetyMonitoringReport,
-} from "@/src/services/real-time-safety-monitoring-service";
+} from "@/src/schemas/safety-monitoring-schemas";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface UseRealTimeSafetyMonitoringOptions {

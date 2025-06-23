@@ -29,7 +29,7 @@ import type {
   SafetyAction,
   SafetyAlert,
   SafetyConfiguration,
-} from "@/src/services/real-time-safety-monitoring-service";
+} from "@/src/schemas/safety-monitoring-schemas";
 import {
   AlertCircle,
   AlertTriangle,

@@ -5,7 +5,7 @@
  * all endpoints work correctly in a real environment.
  */
 
-import { RealTimeSafetyMonitoringService } from "../../services/real-time-safety-monitoring-service";
+import { RealTimeSafetyMonitoringService } from "../../services/real-time-safety-monitoring-modules";
 
 interface TestResult {
   endpoint: string;
