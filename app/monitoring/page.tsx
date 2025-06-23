@@ -25,9 +25,7 @@ import {
 import { lazy } from "react";
 
 const PatternMonitoringDashboard = lazy(() => 
-  import("@/src/components/auto-sniping/pattern-monitoring-dashboard").then(module => ({
-    default: module.PatternMonitoringDashboard
-  }))
+  import("@/src/components/auto-sniping/pattern-monitoring-dashboard")
 );
 import { 
   Activity, 

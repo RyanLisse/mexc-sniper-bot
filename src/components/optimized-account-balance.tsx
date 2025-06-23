@@ -227,7 +227,7 @@ LoadingSkeleton.displayName = "LoadingSkeleton";
 
 // Main component
 export const OptimizedAccountBalance = React.memo(
-  ({ userId = "default-user", className }: AccountBalanceProps) => {
+  ({ userId, className }: AccountBalanceProps) => {
     const [showBalances, setShowBalances] = useState(true);
     const [autoRefresh, setAutoRefresh] = useState(true);
 

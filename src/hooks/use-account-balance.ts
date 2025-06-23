@@ -17,18 +17,17 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
 
   const { user, isAuthenticated } = useAuth();
 
+  // Use the provided userId or fallback to authenticated user ID or default
+  const effectiveUserId = userId || user?.id || "default-user";
+
   return useQuery({
-    queryKey: ["account-balance", userId || "anonymous", "active"],
+    queryKey: ["account-balance", effectiveUserId, "active"],
     queryFn: async (): Promise<{
       balances: BalanceEntry[];
       totalUsdtValue: number;
       lastUpdated: string;
     }> => {
-      if (!userId) {
-        throw new Error("User ID is required");
-      }
-
-      const url = `/api/account/balance?userId=${encodeURIComponent(userId)}`;
+      const url = `/api/account/balance?userId=${encodeURIComponent(effectiveUserId)}`;
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -38,7 +37,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       });
 
       if (!response.ok) {
-        // Don't throw errors for 403/401 when not authenticated
+        // Don't throw errors for 403/401 when not authenticated - return empty data instead
         if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
           return {
             balances: [],
@@ -52,6 +51,14 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       const data = await response.json();
 
       if (!data.success) {
+        // For auth errors, return empty data instead of throwing
+        if (data.error?.includes('401') || data.error?.includes('403')) {
+          return {
+            balances: [],
+            totalUsdtValue: 0,
+            lastUpdated: new Date().toISOString(),
+          };
+        }
         throw new Error(data.error || "Failed to fetch account balance");
       }
 
@@ -61,8 +68,8 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
         lastUpdated: data.data.lastUpdated || new Date().toISOString(),
       };
     },
-    // Only fetch if user is authenticated and we have a valid userId
-    enabled: enabled && !!userId && isAuthenticated && (user?.id === userId || !user?.id),
+    // Enable the query when enabled flag is true
+    enabled: enabled,
     refetchInterval: refreshInterval,
     staleTime: 25 * 1000, // 25 seconds - balance data cache
     gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
