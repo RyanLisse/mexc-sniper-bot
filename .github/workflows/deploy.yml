@@ -1,0 +1,217 @@
+name: Deploy Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Vercel CLI
+        run: bun add -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview-url=$url" >> $GITHUB_OUTPUT
+
+      - name: Run deployment validation tests
+        run: |
+          bun install --frozen-lockfile
+          TEST_ENVIRONMENT=staging TEST_BASE_URL=${{ steps.deploy.outputs.preview-url }} bun run test:deployment:staging
+        continue-on-error: true
+
+      - name: Comment PR with preview URL
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Staging Deployment Ready**
+              
+              Preview URL: ${{ steps.deploy.outputs.preview-url }}
+              
+              - ✅ Build completed successfully
+              - 🧪 Deployment validation: ${process.env.VALIDATION_STATUS || 'In Progress'}
+              
+              *This preview will be automatically updated with new commits.*`
+            })
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    needs: []
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run pre-deployment checks
+        run: |
+          bun run ci:quality
+          bun run test:smoke
+
+      - name: Install Vercel CLI
+        run: bun add -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "production-url=$url" >> $GITHUB_OUTPUT
+
+      - name: Run production validation tests
+        run: |
+          sleep 30  # Wait for deployment to propagate
+          TEST_ENVIRONMENT=production TEST_BASE_URL=${{ steps.deploy.outputs.production-url }} bun run test:deployment:production
+        continue-on-error: true
+
+      - name: Create deployment success issue
+        uses: actions/github-script@v7
+        if: success()
+        with:
+          script: |
+            const now = new Date().toISOString();
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `✅ Production Deployment Success - ${now}`,
+              body: `🚀 **Production Deployment Completed Successfully**
+              
+              **Deployment Details:**
+              - **URL:** ${{ steps.deploy.outputs.production-url }}
+              - **Commit:** ${context.sha.substring(0, 7)}
+              - **Branch:** ${context.ref.replace('refs/heads/', '')}
+              - **Triggered by:** ${context.actor}
+              - **Timestamp:** ${now}
+              
+              **Validation Status:**
+              - ✅ Build successful
+              - ✅ Pre-deployment checks passed
+              - 🧪 Production validation: Completed
+              
+              **Next Steps:**
+              - Monitor application health
+              - Check error reporting dashboards
+              - Verify critical user flows
+              
+              This issue was automatically created by the deployment pipeline.`,
+              labels: ['deployment', 'production', 'success']
+            })
+
+      - name: Notify deployment failure
+        uses: actions/github-script@v7
+        if: failure()
+        with:
+          script: |
+            const now = new Date().toISOString();
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `❌ Production Deployment Failed - ${now}`,
+              body: `🚨 **Production Deployment Failed**
+              
+              **Deployment Details:**
+              - **Commit:** ${context.sha.substring(0, 7)}
+              - **Branch:** ${context.ref.replace('refs/heads/', '')}
+              - **Triggered by:** ${context.actor}
+              - **Timestamp:** ${now}
+              
+              **Failure Information:**
+              Check the [deployment logs](${context.payload.repository.html_url}/actions/runs/${context.runId}) for detailed error information.
+              
+              **Action Required:**
+              - Review deployment logs
+              - Fix identified issues
+              - Re-run deployment once resolved
+              
+              This issue was automatically created by the deployment pipeline.`,
+              labels: ['deployment', 'production', 'failed', 'urgent']
+            })
+
+  rollback-production:
+    name: Emergency Rollback
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Rollback to previous deployment
+        run: |
+          vercel rollback --token=${{ secrets.VERCEL_TOKEN }} --yes
+          
+      - name: Notify rollback completion
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const now = new Date().toISOString();
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔄 Emergency Rollback Completed - ${now}`,
+              body: `⚡ **Emergency Rollback Executed**
+              
+              **Rollback Details:**
+              - **Triggered by:** ${context.actor}
+              - **Timestamp:** ${now}
+              - **Previous deployment:** Restored
+              
+              **Post-Rollback Actions:**
+              - Verify application stability
+              - Investigate root cause of issues
+              - Plan proper fix and re-deployment
+              
+              This issue was automatically created by the rollback pipeline.`,
+              labels: ['deployment', 'rollback', 'urgent']
+            })

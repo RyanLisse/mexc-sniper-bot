@@ -1,0 +1,356 @@
+name: Environment Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to validate'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+  schedule:
+    # Run weekly on Sundays at 6 AM UTC
+    - cron: '0 6 * * 0'
+
+jobs:
+  validate-secrets:
+    name: Validate Required Secrets
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate GitHub Secrets
+        run: |
+          echo "🔍 Validating GitHub repository secrets..."
+          
+          # Required secrets for CI/CD
+          REQUIRED_SECRETS=(
+            "VERCEL_TOKEN"
+            "VERCEL_ORG_ID" 
+            "VERCEL_PROJECT_ID"
+            "DATABASE_URL"
+            "MEXC_API_KEY"
+            "MEXC_SECRET_KEY"
+            "OPENAI_API_KEY"
+            "KINDE_CLIENT_ID"
+            "KINDE_CLIENT_SECRET"
+            "KINDE_ISSUER_URL"
+            "NEXTAUTH_SECRET"
+          )
+          
+          MISSING_SECRETS=()
+          
+          # Check each required secret
+          for secret in "${REQUIRED_SECRETS[@]}"; do
+            if [ -z "${!secret}" ]; then
+              MISSING_SECRETS+=("$secret")
+              echo "❌ Missing required secret: $secret"
+            else
+              echo "✅ Secret configured: $secret"
+            fi
+          done
+          
+          # Report results
+          if [ ${#MISSING_SECRETS[@]} -eq 0 ]; then
+            echo "🎉 All required secrets are configured!"
+          else
+            echo "🚨 Missing ${#MISSING_SECRETS[@]} required secrets:"
+            printf '%s\n' "${MISSING_SECRETS[@]}"
+            exit 1
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MEXC_API_KEY: ${{ secrets.MEXC_API_KEY }}
+          MEXC_SECRET_KEY: ${{ secrets.MEXC_SECRET_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          KINDE_CLIENT_ID: ${{ secrets.KINDE_CLIENT_ID }}
+          KINDE_CLIENT_SECRET: ${{ secrets.KINDE_CLIENT_SECRET }}
+          KINDE_ISSUER_URL: ${{ secrets.KINDE_ISSUER_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+
+  validate-vercel-environment:
+    name: Validate Vercel Environment
+    runs-on: ubuntu-latest
+    needs: validate-secrets
+    if: github.event.inputs.environment != 'development'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Vercel CLI
+        run: bun add -g vercel@latest
+
+      - name: Validate Vercel Configuration
+        run: |
+          echo "🔍 Validating Vercel environment configuration..."
+          
+          # Set environment based on input or default to staging
+          ENVIRONMENT="${{ github.event.inputs.environment || 'staging' }}"
+          
+          if [ "$ENVIRONMENT" = "production" ]; then
+            VERCEL_ENV="production"
+          else
+            VERCEL_ENV="preview"
+          fi
+          
+          echo "Checking environment: $VERCEL_ENV"
+          
+          # List environment variables
+          vercel env ls --token=${{ secrets.VERCEL_TOKEN }} > vercel_env_list.txt
+          
+          # Required environment variables for the application
+          REQUIRED_ENV_VARS=(
+            "DATABASE_URL"
+            "KINDE_CLIENT_ID"
+            "KINDE_CLIENT_SECRET"
+            "KINDE_ISSUER_URL"
+            "MEXC_API_KEY"
+            "MEXC_SECRET_KEY"
+            "OPENAI_API_KEY"
+            "NEXTAUTH_SECRET"
+          )
+          
+          MISSING_ENV_VARS=()
+          
+          for env_var in "${REQUIRED_ENV_VARS[@]}"; do
+            if grep -q "$env_var" vercel_env_list.txt; then
+              echo "✅ Environment variable configured: $env_var"
+            else
+              MISSING_ENV_VARS+=("$env_var")
+              echo "❌ Missing environment variable: $env_var"
+            fi
+          done
+          
+          if [ ${#MISSING_ENV_VARS[@]} -eq 0 ]; then
+            echo "🎉 All required environment variables are configured in Vercel!"
+          else
+            echo "🚨 Missing ${#MISSING_ENV_VARS[@]} environment variables in Vercel:"
+            printf '%s\n' "${MISSING_ENV_VARS[@]}"
+            exit 1
+          fi
+
+  test-database-connectivity:
+    name: Test Database Connectivity
+    runs-on: ubuntu-latest
+    needs: validate-secrets
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Test database connection
+        run: |
+          echo "🔍 Testing database connectivity..."
+          bun run db:check
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Test database migrations
+        run: |
+          echo "🔍 Validating database schema..."
+          bun run db:migrate --dry-run
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  test-external-services:
+    name: Test External Service Connectivity
+    runs-on: ubuntu-latest
+    needs: validate-secrets
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Test MEXC API connectivity
+        run: |
+          echo "🔍 Testing MEXC API connectivity..."
+          bun run test:mexc-credentials
+        env:
+          MEXC_API_KEY: ${{ secrets.MEXC_API_KEY }}
+          MEXC_SECRET_KEY: ${{ secrets.MEXC_SECRET_KEY }}
+
+      - name: Test OpenAI API connectivity
+        run: |
+          echo "🔍 Testing OpenAI API connectivity..."
+          # Create a simple test script for OpenAI
+          cat > test-openai.js << 'EOF'
+          import { OpenAI } from 'openai';
+          
+          const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+          });
+          
+          try {
+            const response = await openai.models.list();
+            console.log('✅ OpenAI API connectivity successful');
+            console.log(`Available models: ${response.data.length}`);
+          } catch (error) {
+            console.error('❌ OpenAI API connectivity failed:', error.message);
+            process.exit(1);
+          }
+          EOF
+          
+          bun run test-openai.js
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Test Kinde authentication
+        run: |
+          echo "🔍 Testing Kinde authentication setup..."
+          # Create a simple validation script
+          cat > test-kinde.js << 'EOF'
+          const requiredEnvVars = [
+            'KINDE_CLIENT_ID',
+            'KINDE_CLIENT_SECRET', 
+            'KINDE_ISSUER_URL'
+          ];
+          
+          let allValid = true;
+          
+          requiredEnvVars.forEach(envVar => {
+            if (!process.env[envVar]) {
+              console.error(`❌ Missing ${envVar}`);
+              allValid = false;
+            } else {
+              console.log(`✅ ${envVar} is configured`);
+            }
+          });
+          
+          // Basic URL validation for issuer
+          const issuerUrl = process.env.KINDE_ISSUER_URL;
+          if (issuerUrl && !issuerUrl.startsWith('https://')) {
+            console.error('❌ KINDE_ISSUER_URL must start with https://');
+            allValid = false;
+          }
+          
+          if (allValid) {
+            console.log('🎉 Kinde authentication configuration is valid');
+          } else {
+            process.exit(1);
+          }
+          EOF
+          
+          bun run test-kinde.js
+        env:
+          KINDE_CLIENT_ID: ${{ secrets.KINDE_CLIENT_ID }}
+          KINDE_CLIENT_SECRET: ${{ secrets.KINDE_CLIENT_SECRET }}
+          KINDE_ISSUER_URL: ${{ secrets.KINDE_ISSUER_URL }}
+
+  environment-health-report:
+    name: Generate Environment Health Report
+    runs-on: ubuntu-latest
+    needs: [validate-secrets, validate-vercel-environment, test-database-connectivity, test-external-services]
+    if: always()
+    
+    steps:
+      - name: Generate health report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const environment = '${{ github.event.inputs.environment || "all environments" }}';
+            const timestamp = new Date().toISOString();
+            
+            // Collect job results
+            const jobs = {
+              'Secrets Validation': '${{ needs.validate-secrets.result }}',
+              'Vercel Environment': '${{ needs.validate-vercel-environment.result }}',
+              'Database Connectivity': '${{ needs.test-database-connectivity.result }}',
+              'External Services': '${{ needs.test-external-services.result }}'
+            };
+            
+            // Count successes and failures
+            let successCount = 0;
+            let failureCount = 0;
+            let statusEmoji = '';
+            
+            const jobsReport = Object.entries(jobs).map(([job, result]) => {
+              let emoji = '';
+              if (result === 'success') {
+                emoji = '✅';
+                successCount++;
+              } else if (result === 'failure') {
+                emoji = '❌';
+                failureCount++;
+              } else if (result === 'skipped') {
+                emoji = '⏭️';
+              } else {
+                emoji = '❓';
+              }
+              return `${emoji} ${job}: ${result}`;
+            }).join('\n');
+            
+            // Determine overall status
+            if (failureCount === 0) {
+              statusEmoji = '🟢';
+            } else if (failureCount < successCount) {
+              statusEmoji = '🟡';
+            } else {
+              statusEmoji = '🔴';
+            }
+            
+            const issueBody = `${statusEmoji} **Environment Health Report - ${environment}**
+            
+            **Report Generated:** ${timestamp}
+            **Validation Results:**
+            
+            ${jobsReport}
+            
+            **Summary:**
+            - ✅ Successful checks: ${successCount}
+            - ❌ Failed checks: ${failureCount}
+            - Overall Status: ${statusEmoji === '🟢' ? 'Healthy' : statusEmoji === '🟡' ? 'Warning' : 'Critical'}
+            
+            ${failureCount > 0 ? `
+            **Action Required:**
+            Review the [workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for detailed error information and resolve any configuration issues.
+            ` : `
+            **Status:** All environment validations passed successfully! 🎉
+            `}
+            
+            **Next Steps:**
+            - Review any failed validations
+            - Update missing secrets or environment variables
+            - Re-run validation after making changes
+            
+            *This report was automatically generated by the Environment Validation workflow.*`;
+            
+            // Create issue for the report
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `${statusEmoji} Environment Health Report - ${timestamp}`,
+              body: issueBody,
+              labels: ['environment', 'health-check', 'automated', 
+                       failureCount > 0 ? 'needs-attention' : 'healthy']
+            });

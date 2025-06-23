@@ -1,0 +1,306 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.2.3)'
+        required: true
+        type: string
+      release_type:
+        description: 'Type of release'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - prerelease
+
+env:
+  NODE_VERSION: '20.11.0'
+  BUN_VERSION: 'latest'
+
+jobs:
+  validate-release:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          if [[ "$VERSION" =~ -[a-zA-Z] ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run full test suite
+        run: bun run test:ci:full
+
+      - name: Build application
+        run: bun run build
+
+      - name: Run security audit
+        run: bun audit --audit-level moderate
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: validate-release
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build release artifacts
+        run: |
+          bun run build:production
+          bun run analyze:server
+          bun run analyze:browser
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get the previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "First release - no previous tag found"
+            CHANGELOG="Initial release of MEXC Sniper Bot"
+          else
+            echo "Generating changelog from $PREVIOUS_TAG to ${{ needs.validate-release.outputs.version }}"
+            
+            # Generate detailed changelog
+            CHANGELOG=$(cat << 'EOF'
+          ## 🚀 What's New
+          
+          $(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --grep="feat:" --grep="add:" | head -10)
+          
+          ## 🐛 Bug Fixes
+          
+          $(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --grep="fix:" --grep="bug:" | head -10)
+          
+          ## 🔧 Improvements
+          
+          $(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --grep="refactor:" --grep="improve:" --grep="enhance:" | head -10)
+          
+          ## 📚 Documentation
+          
+          $(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --grep="docs:" | head -5)
+          
+          ## 🔒 Security
+          
+          $(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --grep="security:" --grep="sec:" | head -5)
+          
+          ---
+          
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...${{ needs.validate-release.outputs.version }}
+          EOF
+          )
+          fi
+          
+          # Save changelog to file and output
+          echo "$CHANGELOG" > release-notes.md
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.validate-release.outputs.version }}
+          release_name: ${{ needs.validate-release.outputs.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: ${{ needs.validate-release.outputs.is_prerelease }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./.next/
+          asset_name: build-artifacts-${{ needs.validate-release.outputs.version }}.tar.gz
+          asset_content_type: application/gzip
+
+  deploy-release:
+    name: Deploy Release
+    runs-on: ubuntu-latest
+    needs: [validate-release, create-release]
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install Vercel CLI
+        run: bun add -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Production
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "production-url=$url" >> $GITHUB_OUTPUT
+
+      - name: Update release with deployment info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: '${{ needs.validate-release.outputs.version }}'
+            });
+            
+            const updatedBody = release.body + `
+            
+            ## 🚀 Deployment
+            
+            - **Production URL**: ${{ steps.deploy.outputs.production-url }}
+            - **Deployed at**: ${new Date().toISOString()}
+            - **Status**: ✅ Successfully deployed
+            `;
+            
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              body: updatedBody
+            });
+
+  post-release:
+    name: Post-Release Tasks
+    runs-on: ubuntu-latest
+    needs: [validate-release, create-release, deploy-release]
+    if: always()
+    
+    steps:
+      - name: Notify team of release
+        uses: actions/github-script@v7
+        if: needs.deploy-release.result == 'success'
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🎉 Release ${{ needs.validate-release.outputs.version }} Deployed Successfully`,
+              body: `## 🚀 Release ${{ needs.validate-release.outputs.version }} is Live!
+              
+              **Release Details:**
+              - **Version**: ${{ needs.validate-release.outputs.version }}
+              - **Type**: ${{ needs.validate-release.outputs.is_prerelease == 'true' && 'Pre-release' || 'Stable Release' }}
+              - **Deployment**: ✅ Production
+              
+              **Links:**
+              - [Release Notes](https://github.com/${{ github.repository }}/releases/tag/${{ needs.validate-release.outputs.version }})
+              - [Production App](https://mexcsniper.com)
+              
+              **Post-Release Checklist:**
+              - [ ] Monitor application health and error rates
+              - [ ] Verify critical user workflows
+              - [ ] Check performance metrics
+              - [ ] Update documentation if needed
+              - [ ] Announce release to users
+              
+              **Monitoring:**
+              - Application health: Monitor for next 24 hours
+              - Error tracking: Check dashboard for anomalies
+              - Performance: Verify load times and API response times
+              
+              Great work team! 🎊
+              
+              *This issue was automatically created by the release pipeline.*`,
+              labels: ['release', 'deployed', 'monitoring']
+            })
+
+      - name: Handle release failure
+        uses: actions/github-script@v7
+        if: needs.deploy-release.result == 'failure'
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `❌ Release ${{ needs.validate-release.outputs.version }} Deployment Failed`,
+              body: `## 🚨 Release Deployment Failed
+              
+              **Release Details:**
+              - **Version**: ${{ needs.validate-release.outputs.version }}
+              - **Status**: ❌ Deployment Failed
+              
+              **Action Required:**
+              - Review [deployment logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              - Identify and fix deployment issues
+              - Consider emergency rollback if needed
+              - Re-run deployment once issues are resolved
+              
+              **Emergency Contacts:**
+              - DevOps Team: @devops-team
+              - Engineering Lead: @eng-lead
+              
+              **Priority**: 🔥 Critical - Immediate attention required
+              
+              *This issue was automatically created by the release pipeline.*`,
+              labels: ['release', 'failed', 'urgent', 'deployment'],
+              assignees: ['@repository-admins']
+            })
