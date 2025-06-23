@@ -6,7 +6,6 @@ import { AnomalyDetectionService } from "../../../../src/services/anomaly-detect
 import { AlertCorrelationEngine } from "../../../../src/services/alert-correlation-engine";
 import { validateRequest } from "../../../../src/lib/api-auth";
 import { handleApiError } from "../../../../src/lib/api-response";
-import { z } from "zod";
 
 const alertingService = new AutomatedAlertingService(db);
 const anomalyService = new AnomalyDetectionService(db);
@@ -20,7 +19,7 @@ export async function GET(request: NextRequest) {
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request.url!);
     const bucket = (searchParams.get("bucket") as "hourly" | "daily") || "hourly";
     const limit = parseInt(searchParams.get("limit") || "24");
     const startDate = searchParams.get("startDate");
