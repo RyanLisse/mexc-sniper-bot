@@ -154,6 +154,61 @@ export class UnifiedMexcServiceV2 {
   }
 
   /**
+   * Get account balances as Portfolio object
+   */
+  async getAccountBalances(): Promise<MexcServiceResponse<{ balances: BalanceEntry[]; totalUsdtValue: number; totalValue: number; totalValueBTC: number; allocation: Record<string, number>; performance24h: { change: number; changePercent: number } }>> {
+    return this.cacheLayer.getOrSet(
+      "account:portfolio",
+      async () => {
+        // Get the basic balance data
+        const balanceResponse = await this.coreClient.getAccountBalance();
+        
+        if (!balanceResponse.success) {
+          return balanceResponse;
+        }
+
+        const balances = balanceResponse.data || [];
+        
+        // Calculate portfolio metrics
+        const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
+        const totalValue = totalUsdtValue; // For now, treat as same as USDT value
+        const totalValueBTC = totalUsdtValue * 0.000025; // Rough BTC conversion (this should be fetched from price API)
+
+        // Calculate allocation percentages
+        const allocation: Record<string, number> = {};
+        if (totalUsdtValue > 0) {
+          balances.forEach(balance => {
+            if (balance.usdtValue && balance.usdtValue > 0) {
+              allocation[balance.asset] = (balance.usdtValue / totalUsdtValue) * 100;
+            }
+          });
+        }
+
+        // Placeholder performance data (should be calculated from historical data)
+        const performance24h = {
+          change: 0,
+          changePercent: 0,
+        };
+
+        return {
+          success: true,
+          data: {
+            balances,
+            totalUsdtValue,
+            totalValue,
+            totalValueBTC,
+            allocation,
+            performance24h,
+          },
+          timestamp: Date.now(),
+          source: "unified-mexc-service-v2",
+        };
+      },
+      "user" // 10 minute cache for user data
+    );
+  }
+
+  /**
    * Get basic symbol information by symbol name
    */
   async getSymbolInfoBasic(symbolName: string): Promise<MexcServiceResponse<any>> {
