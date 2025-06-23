@@ -32,9 +32,9 @@ export const SECURITY_CONFIG = {
       "style-src 'self' 'unsafe-inline'", // Required for Tailwind CSS
       "img-src 'self' data: https:",
       "font-src 'self'",
-      "connect-src 'self' https://api.mexc.com wss://wbs.mexc.com https://*.kinde.com",
+      "connect-src 'self' https://api.mexc.com wss://wbs.mexc.com https://*.kinde.com https://ryanlisse.kinde.com",
       "frame-ancestors 'none'",
-      "form-action 'self'",
+      "form-action 'self' https://*.kinde.com https://ryanlisse.kinde.com",
       "base-uri 'self'",
     ].join("; "),
 
@@ -148,8 +148,8 @@ export const SECURITY_CONFIG = {
     // Cookie settings
     COOKIE: {
       httpOnly: true,
-      secure: true, // HTTPS only
-      sameSite: "strict" as const,
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // Relaxed for development
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       domain: undefined, // Will be set based on environment
     },
@@ -209,6 +209,26 @@ export function getSecurityHeaders(): Record<string, string> {
   }
 
   return SECURITY_CONFIG.SECURITY_HEADERS;
+}
+
+/**
+ * Get cookie configuration based on environment
+ */
+export function getCookieConfig() {
+  const isDevelopment = process.env.NODE_ENV === "development";
+  
+  if (isDevelopment) {
+    // Development-friendly cookie settings
+    return {
+      httpOnly: true,
+      secure: false, // Allow HTTP in development
+      sameSite: "lax" as const, // Less restrictive for development
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      domain: undefined,
+    };
+  }
+  
+  return SECURITY_CONFIG.SESSION_SECURITY.COOKIE;
 }
 
 /**
@@ -280,6 +300,7 @@ export function isAllowedOrigin(origin: string): boolean {
  */
 export const SecurityUtils = {
   headers: getSecurityHeaders,
+  cookies: getCookieConfig,
   rateLimit: getRateLimitConfig,
   validate: validateInput,
   sanitize: sanitizeInput,
