@@ -17,10 +17,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
-import { PatternDetectionEngine } from '../../src/services/pattern-detection-engine';
+import { PatternDetectionCore } from '../../src/core/pattern-detection';
 import { MultiPhaseTradingBot } from '../../src/services/multi-phase-trading-bot';
 import { ComprehensiveSafetyCoordinator } from '../../src/services/comprehensive-safety-coordinator';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { UnifiedMexcServiceV2 } from '../../src/services/unified-mexc-service-v2';
 import { AdvancedRiskEngine } from '../../src/services/advanced-risk-engine';
 import { MultiPhaseExecutor } from '../../src/services/multi-phase-executor';
 import { multiPhaseTradingService } from '../../src/services/multi-phase-trading-service';
@@ -28,10 +28,10 @@ import type { SymbolEntry, CalendarEntry } from '../../src/services/mexc-unified
 import type { ActivityData } from '../../src/schemas/mexc-schemas';
 
 describe('End-to-End Autosniping Workflow Integration', () => {
-  let patternEngine: PatternDetectionEngine;
+  let patternEngine: PatternDetectionCore;
   let tradingBot: MultiPhaseTradingBot;
   let safetyCoordinator: ComprehensiveSafetyCoordinator;
-  let mexcService: UnifiedMexcService;
+  let mexcService: UnifiedMexcServiceV2;
   let riskEngine: AdvancedRiskEngine;
   let executor: MultiPhaseExecutor;
 
@@ -99,7 +99,7 @@ describe('End-to-End Autosniping Workflow Integration', () => {
 
   beforeEach(async () => {
     // Initialize core services with test configuration
-    patternEngine = PatternDetectionEngine.getInstance();
+    patternEngine = PatternDetectionCore.getInstance();
     
     riskEngine = new AdvancedRiskEngine({
       maxPortfolioValue: testConfig.portfolioValue,
@@ -108,7 +108,7 @@ describe('End-to-End Autosniping Workflow Integration', () => {
       emergencyVolatilityThreshold: 80
     });
 
-    mexcService = new UnifiedMexcService({
+    mexcService = new UnifiedMexcServiceV2({
       apiKey: 'test-api-key',
       secretKey: 'test-secret-key',
       enableCaching: true,

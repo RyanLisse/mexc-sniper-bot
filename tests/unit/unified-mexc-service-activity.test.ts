@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { UnifiedMexcServiceV2 } from '../../src/services/unified-mexc-service-v2';
 import type { ActivityData, ActivityResponse } from '../../src/schemas/mexc-schemas';
 
 describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
-  let mexcService: UnifiedMexcService;
+  let mexcService: UnifiedMexcServiceV2;
 
   beforeEach(() => {
-    mexcService = new UnifiedMexcService({
+    mexcService = new UnifiedMexcServiceV2({
       enableCaching: false, // Disable caching for tests
       enableCircuitBreaker: false,
     });

@@ -12,8 +12,7 @@ import { createLogger } from "../lib/structured-logger";
 import { CalendarAgent } from "../mexc-agents/calendar-agent";
 import { CalendarWorkflow } from "../mexc-agents/calendar-workflow";
 import type { CalendarEntry } from "../services/mexc-unified-exports";
-import { patternDetectionEngine } from "./pattern-detection-engine";
-import type { PatternAnalysisRequest } from "./pattern-detection-engine";
+import { PatternDetectionCore, type PatternAnalysisRequest } from "../core/pattern-detection";
 
 export interface CalendarEventData {
   eventType: "new_listings" | "upcoming_launches" | "ready_candidates" | "schedule_changes";
@@ -270,7 +269,7 @@ export class CalendarPatternBridgeService {
       };
 
       // Trigger pattern detection using calendar data
-      const patternResults = await patternDetectionEngine.analyzeCalendarPatterns(
+      const patternResults = await PatternDetectionCore.getInstance().analyzePatterns(
         candidates,
         analysisRequest
       );

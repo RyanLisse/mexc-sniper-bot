@@ -20,7 +20,7 @@ import { createLogger } from "../../lib/structured-logger";
 import { AutoSnipingExecutionService } from "../auto-sniping-execution-service";
 import { EmergencySafetySystem } from "../emergency-safety-system";
 import { PatternMonitoringService } from "../pattern-monitoring-service";
-import { UnifiedMexcService } from "../unified-mexc-service";
+import { UnifiedMexcServiceV2 } from "../unified-mexc-service-v2";
 
 // Import types from schemas
 import type {
@@ -143,7 +143,7 @@ export class RealTimeSafetyMonitoringService {
   private emergencySystem: EmergencySafetySystem;
   private executionService: AutoSnipingExecutionService;
   private patternMonitoring: PatternMonitoringService;
-  private mexcService: UnifiedMexcService;
+  private mexcService: UnifiedMexcServiceV2;
 
   private logger = createLogger("safety-monitoring");
   private isMonitoringActive = false;
@@ -153,7 +153,7 @@ export class RealTimeSafetyMonitoringService {
     this.emergencySystem = new EmergencySafetySystem();
     this.executionService = AutoSnipingExecutionService.getInstance();
     this.patternMonitoring = PatternMonitoringService.getInstance();
-    this.mexcService = new UnifiedMexcService();
+    this.mexcService = new UnifiedMexcServiceV2();
 
     // Initialize modules
     this.initializeModules();
@@ -605,7 +605,7 @@ export class RealTimeSafetyMonitoringService {
     emergencySystem?: EmergencySafetySystem;
     executionService?: AutoSnipingExecutionService;
     patternMonitoring?: PatternMonitoringService;
-    mexcService?: UnifiedMexcService;
+    mexcService?: UnifiedMexcServiceV2;
   }): void {
     if (dependencies.emergencySystem) {
       this.emergencySystem = dependencies.emergencySystem;

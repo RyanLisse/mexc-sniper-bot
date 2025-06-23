@@ -22,7 +22,7 @@ import type {
   TradingSignalMessage,
 } from "../lib/websocket-types";
 import { webSocketAgentBridge } from "../mexc-agents/websocket-agent-bridge";
-import { patternDetectionEngine } from "./pattern-detection-engine";
+import { PatternDetectionCore } from "../core/pattern-detection";
 import { webSocketServer } from "./websocket-server";
 
 // ======================
@@ -224,7 +224,7 @@ class MarketDataManager {
 
     try {
       // Use pattern detection engine for enhanced confidence scoring
-      const patternResult = await patternDetectionEngine.analyzeSymbolReadiness({
+      const patternResult = await PatternDetectionCore.getInstance().analyzeSymbolReadiness({
         cd: status.s,
         sts: status.sts,
         st: status.st,
@@ -319,7 +319,7 @@ class MarketDataManager {
   async performEnhancedAnalysis(status: SymbolStatusData): Promise<void> {
     try {
       // Use the pattern detection engine for enhanced AI analysis
-      const result = await patternDetectionEngine.analyzeSymbolReadiness({
+      const result = await PatternDetectionCore.getInstance().analyzeSymbolReadiness({
         cd: status.s,
         sts: status.sts,
         st: status.st,
@@ -916,7 +916,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
       };
 
       // Perform pattern analysis with enhanced confidence
-      const patternResult = await patternDetectionEngine.analyzeSymbolReadiness(symbolData);
+      const patternResult = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(symbolData);
 
       if (patternResult && patternResult.confidence > 70) {
         // Broadcast high-confidence patterns to WebSocket clients
@@ -981,7 +981,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
           vcoinId: symbol,
         };
 
-        const patternResult = await patternDetectionEngine.analyzeSymbolReadiness(symbolData);
+        const patternResult = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(symbolData);
 
         if (patternResult && patternResult.confidence > 75) {
           // Broadcast pattern correlation with price movement
@@ -1044,7 +1044,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
       };
 
       // Get enhanced pattern analysis
-      const patternResult = await patternDetectionEngine.analyzeSymbolReadiness(symbolData);
+      const patternResult = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(symbolData);
 
       if (patternResult) {
         // Broadcast enhanced ready state analysis

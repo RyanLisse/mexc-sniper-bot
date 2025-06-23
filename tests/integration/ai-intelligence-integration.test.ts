@@ -10,7 +10,7 @@
 
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { aiIntelligenceService } from "../../src/services/ai-intelligence-service";
-import { patternDetectionEngine } from "../../src/services/pattern-detection-engine";
+import { PatternDetectionCore } from "../../src/core/pattern-detection";
 import { patternEmbeddingService } from "../../src/services/pattern-embedding-service";
 import type { PatternData } from "../../src/services/pattern-embedding-service";
 
@@ -163,7 +163,7 @@ describe("AI Intelligence Integration", () => {
     });
 
     // Mock pattern detection engine
-    vi.spyOn(patternDetectionEngine, 'analyzeSymbolReadiness').mockResolvedValue({
+    vi.spyOn(PatternDetectionCore.getInstance(), 'analyzeSymbolReadiness').mockResolvedValue({
       confidence: 95,
       isReady: true,
       patternType: "ready_state",
@@ -232,7 +232,7 @@ Long-term: Strategic hold`
           json: () => Promise.resolve(mockPerplexityResponse)
         });
 
-      const result = await patternDetectionEngine.analyzeSymbolReadiness(testSymbolData);
+      const result = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(testSymbolData);
 
       expect(result).toBeDefined();
       expect(result?.confidence).toBeGreaterThan(90); // Should be enhanced by AI
@@ -261,14 +261,14 @@ Long-term: Strategic hold`
       (fetch as any).mockRejectedValue(new Error("Network error"));
 
       // Update pattern detection engine mock for this test to simulate fallback
-      vi.spyOn(patternDetectionEngine, 'analyzeSymbolReadiness').mockResolvedValueOnce({
+      vi.spyOn(PatternDetectionCore.getInstance(), 'analyzeSymbolReadiness').mockResolvedValueOnce({
         confidence: 82, // Base confidence without AI enhancement
         isReady: true,
         patternType: "ready_state",
         enhancedAnalysis: false // No AI enhancement due to failure
       });
 
-      const result = await patternDetectionEngine.analyzeSymbolReadiness(testSymbolData);
+      const result = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(testSymbolData);
 
       expect(result).toBeDefined();
       expect(result?.confidence).toBeGreaterThan(80); // Base confidence without AI enhancement
@@ -278,10 +278,10 @@ Long-term: Strategic hold`
 
     it("should cache AI results for performance optimization", async () => {
       // First analysis
-      const result1 = await patternDetectionEngine.analyzeSymbolReadiness(testSymbolData);
+      const result1 = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(testSymbolData);
 
       // Second analysis should use cached results
-      const result2 = await patternDetectionEngine.analyzeSymbolReadiness(testSymbolData);
+      const result2 = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(testSymbolData);
 
       // Verify both analyses return results
       expect(result1).toBeDefined();
@@ -290,7 +290,7 @@ Long-term: Strategic hold`
       expect(result2.confidence).toBe(95);
 
       // Verify the service was called twice (once for each analysis)
-      expect(vi.mocked(patternDetectionEngine.analyzeSymbolReadiness)).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(PatternDetectionCore.getInstance().analyzeSymbolReadiness)).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -380,7 +380,7 @@ Long-term: Strategic hold`
         vcoinId: "link-001"
       };
 
-      const result = await patternDetectionEngine.analyzeSymbolReadiness(realtimeData);
+      const result = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(realtimeData);
 
       expect(result).toBeDefined();
       expect(result?.enhancedAnalysis).toBe(true);
@@ -400,7 +400,7 @@ Long-term: Strategic hold`
 
       const symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT", "SOLUSDT", "DOTUSDT"];
       const promises = symbols.map(symbol =>
-        patternDetectionEngine.analyzeSymbolReadiness({
+        PatternDetectionCore.getInstance().analyzeSymbolReadiness({
           cd: symbol,
           sts: 2,
           st: 2,
@@ -632,7 +632,7 @@ Long-term: Strategic hold`
         vcoinId: "uni-001"
       };
 
-      const patternResult = await patternDetectionEngine.analyzeSymbolReadiness(symbolData);
+      const patternResult = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(symbolData);
 
       // Step 2: Enhanced pattern embedding
       const testPattern: PatternData = {

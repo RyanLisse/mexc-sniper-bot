@@ -125,7 +125,7 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
         success: true,
         message: result.message,
         details: result.accountType
-          ? `Account Type: ${result.accountType}, Can Trade: ${result.canTrade ? "Yes" : "No"}`
+          ? `Account Type: ${result.accountType}, Can Trade: ${result.canTrade ? "Yes" : "No"}, Assets: ${result.totalAssets || 0}, Balance Count: ${result.balanceCount || 0}${result.hasNonZeroBalances ? ', Has Funds' : ', Empty Balances'}`
           : undefined,
       });
 

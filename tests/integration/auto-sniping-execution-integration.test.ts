@@ -13,16 +13,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setTestTimeout, withApiTimeout } from '../utils/timeout-utilities';
 import { AutoSnipingExecutionService } from '../../src/services/auto-sniping-execution-service';
-import { PatternDetectionEngine } from '../../src/services/pattern-detection-engine';
+import { PatternDetectionCore } from '../../src/core/pattern-detection';
 import { PatternMonitoringService } from '../../src/services/pattern-monitoring-service';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { UnifiedMexcServiceV2 } from '../../src/services/unified-mexc-service-v2';
 import { EmergencySafetySystem } from '../../src/services/emergency-safety-system';
 
 describe('Auto-Sniping Execution Integration', () => {
   const TEST_TIMEOUT = setTestTimeout('integration');
   let executionService: AutoSnipingExecutionService;
   let patternMonitoring: PatternMonitoringService;
-  let mexcService: UnifiedMexcService;
+  let mexcService: UnifiedMexcServiceV2;
   let safetySystem: EmergencySafetySystem;
 
   beforeEach(async () => {
@@ -49,7 +49,7 @@ describe('Auto-Sniping Execution Integration', () => {
     // Initialize services
     executionService = AutoSnipingExecutionService.getInstance();
     patternMonitoring = PatternMonitoringService.getInstance();
-    mexcService = new UnifiedMexcService();
+    mexcService = new UnifiedMexcServiceV2();
     safetySystem = new EmergencySafetySystem();
 
     // Ensure execution is stopped before each test

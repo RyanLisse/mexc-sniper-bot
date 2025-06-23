@@ -15,7 +15,7 @@ import { setTestTimeout, withApiTimeout } from '../utils/timeout-utilities';
 import { RealTimeSafetyMonitoringService } from '../../src/services/real-time-safety-monitoring-service';
 import { AutoSnipingExecutionService } from '../../src/services/auto-sniping-execution-service';
 import { PatternMonitoringService } from '../../src/services/pattern-monitoring-service';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { UnifiedMexcServiceV2V2 } from '../../src/services/unified-mexc-service-v2';
 import { EmergencySafetySystem } from '../../src/services/emergency-safety-system';
 
 describe('Real-time Safety Monitoring Integration', () => {
@@ -23,7 +23,7 @@ describe('Real-time Safety Monitoring Integration', () => {
   let safetyMonitoringService: RealTimeSafetyMonitoringService;
   let executionService: AutoSnipingExecutionService;
   let patternMonitoring: PatternMonitoringService;
-  let mexcService: UnifiedMexcService;
+  let mexcService: UnifiedMexcServiceV2;
   let emergencySystem: EmergencySafetySystem;
 
   beforeEach(async () => {
@@ -31,7 +31,7 @@ describe('Real-time Safety Monitoring Integration', () => {
     safetyMonitoringService = RealTimeSafetyMonitoringService.getInstance();
     executionService = AutoSnipingExecutionService.getInstance();
     patternMonitoring = PatternMonitoringService.getInstance();
-    mexcService = new UnifiedMexcService();
+    mexcService = new UnifiedMexcServiceV2();
     emergencySystem = new EmergencySafetySystem();
 
     // Inject dependencies for testing

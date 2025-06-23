@@ -194,6 +194,10 @@ export async function POST(request: NextRequest) {
       // Service layer returns ServiceResponse<OrderResult>, we need the OrderResult
       const orderResult = orderResponse.data;
       
+      if (!orderResult) {
+        throw new Error("Order result is missing from response");
+      }
+      
       if (!orderResult.success) {
         throw new Error(orderResult.error || "Order execution failed");
       }

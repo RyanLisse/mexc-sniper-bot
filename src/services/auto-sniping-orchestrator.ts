@@ -12,9 +12,9 @@ import { snipeTargets } from "../db/schemas/trading";
 import { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
 import { MexcConfigValidator } from "./mexc-config-validator";
 import { MultiPhaseTradingBot } from "./multi-phase-trading-bot";
-import { PatternDetectionEngine } from "./pattern-detection-engine";
+import { PatternDetectionCore } from "../core/pattern-detection";
 import { TRADING_STRATEGIES } from "./trading-strategy-manager";
-import { UnifiedMexcService } from "./unified-mexc-service";
+import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
 
 export interface AutoSnipingConfig {
   enabled: boolean;
@@ -95,10 +95,10 @@ export class AutoSnipingOrchestrator extends EventEmitter {
   private static instance: AutoSnipingOrchestrator;
 
   // Core services
-  private patternEngine: PatternDetectionEngine;
+  private patternEngine: PatternDetectionCore;
   private tradingBot: MultiPhaseTradingBot | null = null;
   private safetyCoordinator: ComprehensiveSafetyCoordinator;
-  private mexcService: UnifiedMexcService;
+  private mexcService: UnifiedMexcServiceV2;
   private configValidator: MexcConfigValidator;
 
   // State management
@@ -135,9 +135,9 @@ export class AutoSnipingOrchestrator extends EventEmitter {
     };
 
     // Initialize core services
-    this.patternEngine = PatternDetectionEngine.getInstance();
+    this.patternEngine = PatternDetectionCore.getInstance();
     this.safetyCoordinator = new ComprehensiveSafetyCoordinator();
-    this.mexcService = new UnifiedMexcService();
+    this.mexcService = new UnifiedMexcServiceV2();
     this.configValidator = MexcConfigValidator.getInstance();
 
     // Initialize state

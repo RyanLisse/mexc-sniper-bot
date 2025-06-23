@@ -11,8 +11,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
-import { UnifiedMexcService } from '@/src/services/unified-mexc-service';
-import { PatternDetectionEngine } from '@/src/services/pattern-detection-engine';
+import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
+import { PatternDetectionCore } from '@/src/core/pattern-detection';
 import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
 import { MultiPhaseTradingService } from '@/src/services/multi-phase-trading-service';
 import { resetGlobalReliabilityManager } from '@/src/services/mexc-circuit-breaker';
@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
     const recommendations: string[] = [];
     
     // Initialize services
-    const mexcService = new UnifiedMexcService();
-    const patternEngine = PatternDetectionEngine.getInstance();
+    const mexcService = new UnifiedMexcServiceV2();
+    const patternEngine = PatternDetectionCore.getInstance();
     const configValidator = MexcConfigValidator.getInstance();
     const tradingService = MultiPhaseTradingService.getInstance();
 

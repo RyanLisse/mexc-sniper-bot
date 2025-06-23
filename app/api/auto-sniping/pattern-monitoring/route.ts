@@ -109,9 +109,9 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         // NEW ACTION: Trigger pattern detection and create snipe targets
         const { patternStrategyOrchestrator } = await import('@/src/services/pattern-strategy-orchestrator');
         const { patternTargetIntegrationService } = await import('@/src/services/pattern-target-integration-service');
-        const { UnifiedMexcService } = await import('@/src/services/unified-mexc-service');
+        const { UnifiedMexcServiceV2 } = await import('@/src/services/unified-mexc-service-v2');
 
-        const mexcService = new UnifiedMexcService();
+        const mexcService = new UnifiedMexcServiceV2();
         const userId = body.userId || "system";
 
         // Get market data

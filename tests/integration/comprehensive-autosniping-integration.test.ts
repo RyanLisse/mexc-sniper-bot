@@ -24,10 +24,10 @@ import {
   withApiTimeout,
   globalTimeoutMonitor 
 } from '../utils/timeout-utilities';
-import { PatternDetectionEngine } from '../../src/services/pattern-detection-engine';
+import { PatternDetectionCore } from '../../src/core/pattern-detection';
 import { MultiPhaseTradingBot } from '../../src/services/multi-phase-trading-bot';
 import { ComprehensiveSafetyCoordinator } from '../../src/services/comprehensive-safety-coordinator';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { UnifiedMexcServiceV2V2 } from '../../src/services/unified-mexc-service-v2';
 import { AdvancedRiskEngine } from '../../src/services/advanced-risk-engine';
 import { MultiPhaseExecutor } from '../../src/services/multi-phase-executor';
 import type { SymbolEntry, CalendarEntry } from '../../src/services/mexc-unified-exports';
@@ -37,10 +37,10 @@ describe('Comprehensive Autosniping Workflow Integration Tests', () => {
   // Set extended timeout for integration tests (45 seconds)
   const TEST_TIMEOUT = setTestTimeout('integration');
   console.log(`🕐 Integration tests configured with ${TEST_TIMEOUT}ms timeout`);
-  let patternEngine: PatternDetectionEngine;
+  let patternEngine: PatternDetectionCore;
   let tradingBot: MultiPhaseTradingBot;
   let safetyCoordinator: ComprehensiveSafetyCoordinator;
-  let mexcService: UnifiedMexcService;
+  let mexcService: UnifiedMexcServiceV2;
   let riskEngine: AdvancedRiskEngine;
 
   // Test configuration for realistic autosniping scenarios
@@ -107,7 +107,7 @@ describe('Comprehensive Autosniping Workflow Integration Tests', () => {
 
   beforeEach(async () => {
     // Initialize core services with test configuration
-    patternEngine = PatternDetectionEngine.getInstance();
+    patternEngine = PatternDetectionCore.getInstance();
     
     riskEngine = new AdvancedRiskEngine({
       maxPortfolioValue: testConfig.portfolioValue,
@@ -116,7 +116,7 @@ describe('Comprehensive Autosniping Workflow Integration Tests', () => {
       emergencyVolatilityThreshold: 80
     });
 
-    mexcService = new UnifiedMexcService({
+    mexcService = new UnifiedMexcServiceV2({
       apiKey: 'test-api-key',
       secretKey: 'test-secret-key',
       enableCaching: true,

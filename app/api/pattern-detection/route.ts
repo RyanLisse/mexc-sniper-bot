@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { patternDetectionEngine } from "../../../src/services/pattern-detection-engine";
+import { PatternDetectionCore } from "../../../src/core/pattern-detection";
 import { patternStrategyOrchestrator } from "../../../src/services/pattern-strategy-orchestrator";
 import { patternEmbeddingService } from "../../../src/services/pattern-embedding-service";
 import { apiAuthWrapper } from "../../../src/lib/api-auth";
 import { createApiResponse } from "../../../src/lib/api-response";
 import { z } from "zod";
 
-// Import schemas from unified service (correct schemas)
-import { CalendarEntrySchema, SymbolEntrySchema } from "../../../src/services/unified-mexc-service";
+// Import schemas from MEXC schemas module
+import { CalendarEntrySchema, SymbolEntrySchema } from "../../../src/services/mexc-schemas";
 
 // Request schemas
 const PatternDetectionRequestSchema = z.object({
@@ -86,7 +86,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 // ============================================================================
 
 async function handlePatternAnalysis(request: z.infer<typeof PatternDetectionRequestSchema>) {
-  const result = await patternDetectionEngine.analyzePatterns({
+  const result = await PatternDetectionCore.getInstance().analyzePatterns({
     symbols: request.symbolData || [],
     calendarEntries: request.calendarEntries || [],
     analysisType: request.analysisType || "discovery",

@@ -30,7 +30,7 @@ export function useApiCredentials(userId?: string, provider = "mexc") {
   const { user, isAuthenticated } = useAuth();
 
   return useQuery({
-    queryKey: ["api-credentials", userId || "anonymous", provider],
+    queryKey: ["api-credentials", userId || "anonymous", provider, "active"],
     queryFn: async (): Promise<ApiCredentials | null> => {
       if (!userId) {
         throw new Error("User ID is required");
@@ -55,6 +55,18 @@ export function useApiCredentials(userId?: string, provider = "mexc") {
     },
     // Only fetch credentials if user is authenticated and it's their own data
     enabled: !!userId && isAuthenticated && user?.id === userId,
+    staleTime: 5 * 60 * 1000, // 5 minutes - user data cache
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection  
+    refetchOnWindowFocus: false,
+    placeholderData: null, // Prevent loading flicker
+    retry: (failureCount, error) => {
+      // Don't retry auth errors
+      const errorMessage = error?.message || '';
+      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+        return false;
+      }
+      return failureCount < 2;
+    }
   });
 }
 

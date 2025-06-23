@@ -180,7 +180,7 @@ async function getRecentExecutions() {
       .orderBy(desc(executionHistory.createdAt))
       .limit(50);
     
-    return executions.map(exec => ({
+    return executions.map((exec: any) => ({
       id: exec.id,
       type: (exec as any).executionType || exec.action,
       status: exec.status,
@@ -218,7 +218,7 @@ async function getPatternAnalyticsMetrics() {
       total: result[0]?.total || 0,
       averageConfidence: result[0]?.averageConfidence || 0,
       successful: result[0]?.successful || 0,
-      types: types.map(t => ({ type: t.type, count: t.count }))
+      types: types.map((t: any) => ({ type: t.type, count: t.count }))
     };
   } catch (error) {
     console.error("Error fetching pattern analytics:", error);
@@ -238,7 +238,7 @@ async function getWorkflowMetrics() {
       .groupBy(workflowActivity.type);
 
     return {
-      distribution: distribution.map(d => ({ type: d.workflowType, count: d.count }))
+      distribution: distribution.map((d: any) => ({ type: d.workflowType, count: d.count }))
     };
   } catch (error) {
     console.error("Error fetching workflow metrics:", error);

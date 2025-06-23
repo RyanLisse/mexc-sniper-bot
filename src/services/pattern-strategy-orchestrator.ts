@@ -22,8 +22,8 @@ import type { CalendarEntry, SymbolEntry } from "./mexc-unified-exports";
 import {
   type PatternAnalysisResult,
   type PatternMatch,
-  patternDetectionEngine,
-} from "./pattern-detection-engine";
+  PatternDetectionCore,
+} from "../core/pattern-detection";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 // ============================================================================
@@ -227,7 +227,7 @@ export class PatternStrategyOrchestrator {
 
     // Step 2: Core Pattern Detection Engine Analysis
     console.log("[PatternOrchestrator] Running pattern detection engine");
-    const patternAnalysis = await patternDetectionEngine.analyzePatterns({
+    const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
       calendarEntries,
       analysisType: "discovery",
       confidenceThreshold: request.options?.confidenceThreshold || 70,
@@ -305,7 +305,7 @@ export class PatternStrategyOrchestrator {
     if (symbolData.length > 0) {
       console.log("[PatternOrchestrator] Analyzing symbol readiness");
 
-      const patternAnalysis = await patternDetectionEngine.analyzePatterns({
+      const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
         symbols: symbolData,
         analysisType: "monitoring",
         confidenceThreshold: request.options?.confidenceThreshold || 80,
@@ -371,7 +371,7 @@ export class PatternStrategyOrchestrator {
       agentsUsed.push("pattern-discovery-agent", "symbol-analysis-agent");
 
       // Run pattern validation
-      const patternAnalysis = await patternDetectionEngine.analyzePatterns({
+      const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
         symbols: request.input.symbolData,
         analysisType: "validation",
         confidenceThreshold: 85, // Higher threshold for validation
@@ -422,7 +422,7 @@ export class PatternStrategyOrchestrator {
       agentsUsed.push("strategy-agent", "pattern-discovery-agent");
 
       // First validate the pattern
-      const patternAnalysis = await patternDetectionEngine.analyzePatterns({
+      const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
         symbols: request.input.symbolData,
         analysisType: "validation",
         confidenceThreshold: 80,

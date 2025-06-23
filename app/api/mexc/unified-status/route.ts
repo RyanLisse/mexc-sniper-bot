@@ -96,19 +96,25 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       success: true,
       data: response,
       message: "Unified status retrieved successfully",
-      timestamp: new Date().toISOString(),
-      requestId,
-      responseTime,
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId,
+        responseTime,
+      },
     });
 
   } catch (error) {
     console.error("[Unified Status] Error:", error);
     const safeError = toSafeError(error);
     
-    return handleApiError(safeError, "Unified status check failed", {
-      requestId,
-      responseTime: Date.now() - startTime,
-    });
+    return apiResponse.error(
+      safeError.message || "Unified status check failed",
+      500,
+      {
+        requestId,
+        responseTime: Date.now() - startTime,
+      }
+    );
   }
 }
 
@@ -155,25 +161,33 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         success: true,
         data: response,
         message: "Status refreshed successfully",
-        timestamp: new Date().toISOString(),
-        requestId,
-        responseTime: Date.now() - startTime,
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId,
+          responseTime: Date.now() - startTime,
+        },
       });
     }
 
     return apiResponse({
       success: false,
       error: "Invalid request - specify forceRefresh: true",
-      timestamp: new Date().toISOString(),
-      requestId,
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId,
+      },
     });
 
   } catch (error) {
     console.error("[Unified Status POST] Error:", error);
-    return handleApiError(error, "Unified status refresh failed", {
-      requestId,
-      responseTime: Date.now() - startTime,
-    });
+    return apiResponse.error(
+      error instanceof Error ? error.message : "Unified status refresh failed",
+      500,
+      {
+        requestId,
+        responseTime: Date.now() - startTime,
+      }
+    );
   }
 }
 

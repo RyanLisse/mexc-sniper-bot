@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { PatternDetectionEngine } from '../../src/services/pattern-detection-engine';
+import { PatternDetectionCore } from '../../src/core/pattern-detection';
 import type { SymbolEntry, CalendarEntry } from '../../src/services/mexc-unified-exports';
 import type { ActivityData } from '../../src/schemas/mexc-schemas';
 
-describe('PatternDetectionEngine - Phase 1 Week 2 Enhancement', () => {
-  let patternEngine: PatternDetectionEngine;
+describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
+  let patternEngine: PatternDetectionCore;
 
   beforeEach(() => {
-    patternEngine = PatternDetectionEngine.getInstance();
+    patternEngine = PatternDetectionCore.getInstance();
 
     // Mock database queries to avoid actual database calls in unit tests
     vi.mock('../../src/db', () => ({

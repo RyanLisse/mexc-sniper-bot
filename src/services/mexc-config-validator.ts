@@ -6,8 +6,8 @@
  */
 
 import { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
-import { PatternDetectionEngine } from "./pattern-detection-engine";
-import { UnifiedMexcService } from "./unified-mexc-service";
+import { PatternDetectionCore } from "../core/pattern-detection";
+import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
 
 export interface ConfigValidationResult {
   isValid: boolean;
@@ -29,13 +29,13 @@ export interface SystemReadinessReport {
 
 export class MexcConfigValidator {
   private static instance: MexcConfigValidator;
-  private mexcService: UnifiedMexcService;
-  private patternEngine: PatternDetectionEngine;
+  private mexcService: UnifiedMexcServiceV2;
+  private patternEngine: PatternDetectionCore;
   private safetyCoordinator: ComprehensiveSafetyCoordinator;
 
   private constructor() {
-    this.mexcService = new UnifiedMexcService();
-    this.patternEngine = PatternDetectionEngine.getInstance();
+    this.mexcService = new UnifiedMexcServiceV2();
+    this.patternEngine = PatternDetectionCore.getInstance();
     this.safetyCoordinator = new ComprehensiveSafetyCoordinator();
   }
 

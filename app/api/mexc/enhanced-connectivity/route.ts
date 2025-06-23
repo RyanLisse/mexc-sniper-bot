@@ -192,15 +192,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         averageLatency: metrics.averageLatency,
         consecutiveFailures: metrics.consecutiveFailures,
         uptime: metrics.uptime,
-        responseTime: validation.responseTime || responseTime,
+        responseTime: (validation as any).responseTime || responseTime,
       },
       
       // Circuit Breaker Status
       circuitBreaker: {
         isOpen: circuitBreaker.isOpen,
         failures: circuitBreaker.failures,
-        nextAttemptTime: circuitBreaker.nextAttemptTime?.toISOString(),
-        reason: circuitBreaker.reason,
+        nextAttemptTime: (circuitBreaker as any).nextAttemptTime?.toISOString(),
+        reason: (circuitBreaker as any).reason,
       },
       
       // Alerts and Issues
@@ -242,19 +242,25 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return apiResponse({
       success: true,
       data: response,
-      timestamp: new Date().toISOString(),
-      requestId,
-      responseTime,
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId,
+        responseTime,
+      },
     });
 
   } catch (error) {
     console.error("[Enhanced Connectivity] Error:", error);
     const safeError = toSafeError(error);
     
-    return handleApiError(safeError, "Enhanced connectivity check failed", {
-      requestId,
-      responseTime: Date.now() - startTime,
-    });
+    return apiResponse.error(
+      safeError.message || "Enhanced connectivity check failed",
+      500,
+      {
+        requestId,
+        responseTime: Date.now() - startTime,
+      }
+    );
   }
 }
 
@@ -386,8 +392,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return apiResponse({
         success: true,
         message: "Circuit breaker reset successfully",
-        timestamp: new Date().toISOString(),
-        requestId,
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId,
+        },
       });
     }
 
@@ -397,8 +405,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         success: true,
         data: status,
         message: "Status refreshed successfully",
-        timestamp: new Date().toISOString(),
-        requestId,
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId,
+        },
       });
     }
 
@@ -412,24 +422,32 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         message: testResult.canAuthenticate 
           ? "Credentials test successful" 
           : `Credentials test failed: ${testResult.error}`,
-        timestamp: new Date().toISOString(),
-        requestId,
-        responseTime: testResult.responseTime,
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId,
+          responseTime: testResult.responseTime,
+        },
       });
     }
 
     return apiResponse({
       success: false,
       error: "Invalid request - specify testCredentials, resetCircuitBreaker, or forceRefresh",
-      timestamp: new Date().toISOString(),
-      requestId,
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId,
+      },
     });
 
   } catch (error) {
     console.error("[Enhanced Connectivity POST] Error:", error);
-    return handleApiError(error, "Enhanced connectivity action failed", {
-      requestId,
-      responseTime: Date.now() - startTime,
-    });
+    return apiResponse.error(
+      error instanceof Error ? error.message : "Enhanced connectivity action failed",
+      500,
+      {
+        requestId,
+        responseTime: Date.now() - startTime,
+      }
+    );
   }
 }

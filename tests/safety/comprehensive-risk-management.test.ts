@@ -17,7 +17,7 @@ import { ComprehensiveSafetyCoordinator } from '../../src/services/comprehensive
 import { EmergencySafetySystem } from '../../src/services/emergency-safety-system';
 import { MultiPhaseTradingBot } from '../../src/services/multi-phase-trading-bot';
 import { TradingStrategyManager } from '../../src/services/trading-strategy-manager';
-import { PatternDetectionEngine } from '../../src/services/pattern-detection-engine';
+import { PatternDetectionCore } from '../../src/core/pattern-detection';
 import { TransactionLockService } from '../../src/services/transaction-lock-service';
 import type { AgentBehaviorMetrics } from '../../src/mexc-agents/safety-monitor-agent';
 
@@ -27,7 +27,7 @@ describe('Comprehensive Risk Management', () => {
   let emergencySystem: EmergencySafetySystem;
   let tradingBot: MultiPhaseTradingBot;
   let strategyManager: TradingStrategyManager;
-  let patternEngine: PatternDetectionEngine;
+  let patternEngine: PatternDetectionCore;
   let lockService: TransactionLockService;
 
   // Risk testing scenarios
@@ -194,7 +194,7 @@ describe('Comprehensive Risk Management', () => {
 
     // Initialize trading components
     strategyManager = new TradingStrategyManager();
-    patternEngine = PatternDetectionEngine.getInstance();
+    patternEngine = PatternDetectionCore.getInstance();
     
     const testStrategy = {
       id: 'risk-test-strategy',

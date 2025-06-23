@@ -11,7 +11,7 @@ import type { SafetyConfiguration, RiskMetrics, SafetyAlert } from '../../../sch
 import { AutoSnipingExecutionService } from '../../auto-sniping-execution-service';
 import { PatternMonitoringService } from '../../pattern-monitoring-service';
 import { EmergencySafetySystem } from '../../emergency-safety-system';
-import { UnifiedMexcService } from '../../unified-mexc-service';
+import { UnifiedMexcServiceV2V2 } from '../../unified-mexc-service-v2';
 
 // Mock all dependencies
 vi.mock('../../auto-sniping-execution-service');
@@ -24,7 +24,7 @@ describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
   let mockExecutionService: vi.Mocked<AutoSnipingExecutionService>;
   let mockPatternMonitoring: vi.Mocked<PatternMonitoringService>;
   let mockEmergencySystem: vi.Mocked<EmergencySafetySystem>;
-  let mockMexcService: vi.Mocked<UnifiedMexcService>;
+  let mockMexcService: vi.Mocked<UnifiedMexcServiceV2>;
 
   beforeEach(() => {
     // Reset all mocks

@@ -6,19 +6,19 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PatternDetectionEngine } from '@/src/services/pattern-detection-engine';
+import { PatternDetectionCore } from '@/src/core/pattern-detection';
 import { PatternTargetBridgeService } from '@/src/services/pattern-target-bridge-service';
 import { PatternTargetIntegrationService } from '@/src/services/pattern-target-integration-service';
 import type { SymbolEntry, CalendarEntry } from '@/src/services/mexc-unified-exports';
 
 describe('Pattern-Target Integration Bridge', () => {
-  let patternEngine: PatternDetectionEngine;
+  let patternEngine: PatternDetectionCore;
   let bridgeService: PatternTargetBridgeService;
   let integrationService: PatternTargetIntegrationService;
 
   beforeEach(() => {
     // Get singleton instances
-    patternEngine = PatternDetectionEngine.getInstance();
+    patternEngine = PatternDetectionCore.getInstance();
     bridgeService = PatternTargetBridgeService.getInstance();
     integrationService = PatternTargetIntegrationService.getInstance();
 

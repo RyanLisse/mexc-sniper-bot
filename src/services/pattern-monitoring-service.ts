@@ -6,8 +6,8 @@
  */
 
 import type { CalendarEntry, SymbolEntry } from "./mexc-unified-exports";
-import { PatternDetectionEngine, type PatternMatch } from "./pattern-detection-engine";
-import { UnifiedMexcService } from "./unified-mexc-service";
+import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
+import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
 
 export interface PatternMonitoringStats {
   // Overall monitoring metrics
@@ -62,8 +62,8 @@ export interface PatternMonitoringReport {
 
 export class PatternMonitoringService {
   private static instance: PatternMonitoringService;
-  private patternEngine: PatternDetectionEngine;
-  private mexcService: UnifiedMexcService;
+  private patternEngine: PatternDetectionCore;
+  private mexcService: UnifiedMexcServiceV2;
 
   // Monitoring state
   private isMonitoring = false;
@@ -80,8 +80,8 @@ export class PatternMonitoringService {
   private readonly confidenceThreshold = 80; // Alert on patterns above 80% confidence
 
   private constructor() {
-    this.patternEngine = PatternDetectionEngine.getInstance();
-    this.mexcService = new UnifiedMexcService();
+    this.patternEngine = PatternDetectionCore.getInstance();
+    this.mexcService = new UnifiedMexcServiceV2();
 
     this.stats = {
       totalPatternsDetected: 0,

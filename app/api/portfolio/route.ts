@@ -10,18 +10,27 @@ import {
   createValidationErrorResponse
 } from "../../../src/lib/api-response";
 import { handleApiError } from "../../../src/lib/error-handler";
+import {
+  PortfolioQuerySchema,
+  PortfolioResponseSchema,
+  validateApiQuery,
+  createValidatedApiResponse,
+} from "../../../src/schemas/api-validation-schemas";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
+    
+    // Validate query parameters
+    const queryValidation = validateApiQuery(PortfolioQuerySchema, searchParams);
+    if (!queryValidation.success) {
       return apiResponse(
-        createValidationErrorResponse('userId', 'Missing required parameter'),
+        createErrorResponse(queryValidation.error),
         HTTP_STATUS.BAD_REQUEST
       );
     }
+    
+    const { userId } = queryValidation.data;
 
     // Get active positions (targets that have been successfully executed)
     const activePositions = await db.select()
@@ -58,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     // Get current prices for active positions (simplified calculation)
     const positionsWithPnL = await Promise.all(
-      activePositions.map(async (position) => {
+      activePositions.map(async (position: any) => {
         try {
           // Get current price from MEXC API
           const response = await fetch(
@@ -107,10 +116,10 @@ export async function GET(request: NextRequest) {
 
     // Calculate success rate from execution history
     const buyExecutions = recentExecutions.filter(
-      (exec) => exec.action === "buy" && exec.status === "success"
+      (exec: any) => exec.action === "buy" && exec.status === "success"
     );
     const sellExecutions = recentExecutions.filter(
-      (exec) => exec.action === "sell" && exec.status === "success"
+      (exec: any) => exec.action === "sell" && exec.status === "success"
     );
 
     const portfolio = {
@@ -122,11 +131,11 @@ export async function GET(request: NextRequest) {
         successfulTrades: buyExecutions.length,
         successRate: buyExecutions.length > 0 ? (buyExecutions.length / (buyExecutions.length + (recentExecutions.length - buyExecutions.length - sellExecutions.length))) * 100 : 0,
         totalCapitalDeployed: activePositions.reduce(
-          (sum, pos) => sum + (pos.positionSizeUsdt || 0),
+          (sum: any, pos: any) => sum + (pos.positionSizeUsdt || 0),
           0
         ),
       },
-      recentActivity: recentExecutions.map((exec) => ({
+      recentActivity: recentExecutions.map((exec: any) => ({
         id: exec.id,
         symbol: exec.symbolName,
         action: exec.action,
@@ -139,11 +148,12 @@ export async function GET(request: NextRequest) {
       })),
     };
 
-    return apiResponse(
-      createSuccessResponse(portfolio, {
-        message: "Portfolio data retrieved successfully",
-        totalPositions: activePositions.length,
-      })
+    return NextResponse.json(
+      createValidatedApiResponse(
+        portfolio,
+        PortfolioResponseSchema,
+        "Portfolio data retrieved successfully"
+      )
     );
   } catch (error) {
     console.error("❌ Error fetching portfolio:", error);

@@ -16,12 +16,12 @@ import {
   withApiTimeout 
 } from '../utils/timeout-utilities';
 import { MexcConfigValidator } from '../../src/services/mexc-config-validator';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { UnifiedMexcServiceV2 } from '../../src/services/unified-mexc-service-v2';
 
 describe('Configuration Validation Integration', () => {
   const TEST_TIMEOUT = setTestTimeout('integration');
   let configValidator: MexcConfigValidator;
-  let mexcService: UnifiedMexcService;
+  let mexcService: UnifiedMexcServiceV2;
 
   beforeAll(() => {
     // Setup comprehensive mocking for external dependencies

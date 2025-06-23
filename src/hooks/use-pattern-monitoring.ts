@@ -7,7 +7,7 @@
 
 import { ApiClient } from "@/src/lib/api-client";
 import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
-import type { PatternMatch } from "@/src/services/pattern-detection-engine";
+import type { PatternMatch } from "@/src/core/pattern-detection";
 import type { PatternMonitoringReport } from "@/src/services/pattern-monitoring-service";
 import { useCallback, useEffect, useState } from "react";
 

@@ -133,6 +133,52 @@ export class MexcCoreClient {
   }
 
   /**
+   * Get all symbols from the exchange
+   */
+  async getAllSymbols(): Promise<MexcServiceResponse<SymbolEntry[]>> {
+    const startTime = Date.now();
+
+    try {
+      const url = `${this.config.baseUrl}/api/v3/exchangeInfo`;
+      const response = await this.makeAuthenticatedRequest(url);
+
+      if (response.data?.symbols && Array.isArray(response.data.symbols)) {
+        const allSymbols = response.data.symbols.map((symbol: any) => ({
+          symbol: symbol.symbol,
+          baseAsset: symbol.baseAsset,
+          quoteAsset: symbol.quoteAsset,
+          status: symbol.status,
+          quoteOrderQtyMarketAllowed: symbol.quoteOrderQtyMarketAllowed,
+          baseAssetPrecision: symbol.baseAssetPrecision,
+          quotePrecision: symbol.quotePrecision,
+          orderTypes: symbol.orderTypes,
+          icebergAllowed: symbol.icebergAllowed,
+          ocoAllowed: symbol.ocoAllowed,
+          isSpotTradingAllowed: symbol.isSpotTradingAllowed,
+          isMarginTradingAllowed: symbol.isMarginTradingAllowed,
+          filters: symbol.filters,
+        }));
+
+        return {
+          success: true,
+          data: allSymbols,
+          timestamp: Date.now(),
+          source: "mexc-core-client",
+        };
+      }
+
+      return {
+        success: false,
+        error: "Invalid symbols response format",
+        timestamp: Date.now(),
+        source: "mexc-core-client",
+      };
+    } catch (error) {
+      return this.handleError(error, "getAllSymbols", startTime);
+    }
+  }
+
+  /**
    * Get account balance
    */
   async getAccountBalance(): Promise<MexcServiceResponse<BalanceEntry[]>> {
@@ -200,6 +246,57 @@ export class MexcCoreClient {
       };
     } catch (error) {
       return this.handleError(error, "getServerTime", startTime);
+    }
+  }
+
+  /**
+   * Get basic symbol information by symbol name
+   */
+  async getSymbolInfoBasic(symbolName: string): Promise<MexcServiceResponse<any>> {
+    const startTime = Date.now();
+
+    try {
+      const url = `${this.config.baseUrl}/api/v3/exchangeInfo?symbol=${symbolName}`;
+      const response = await this.makeRequest(url);
+
+      if (response.data?.symbols?.[0]) {
+        return {
+          success: true,
+          data: response.data.symbols[0],
+          timestamp: Date.now(),
+          source: "mexc-core-client",
+        };
+      }
+
+      return {
+        success: false,
+        error: "Symbol not found",
+        timestamp: Date.now(),
+        source: "mexc-core-client",
+      };
+    } catch (error) {
+      return this.handleError(error, "getSymbolInfoBasic", startTime);
+    }
+  }
+
+  /**
+   * Get activity data for a currency
+   */
+  async getActivityData(currency: string): Promise<MexcServiceResponse<any>> {
+    const startTime = Date.now();
+
+    try {
+      const url = `https://www.mexc.com/api/operation/new_coin_calendar?currency=${currency}`;
+      const response = await this.makeRequest(url);
+
+      return {
+        success: true,
+        data: response.data,
+        timestamp: Date.now(),
+        source: "mexc-core-client",
+      };
+    } catch (error) {
+      return this.handleError(error, "getActivityData", startTime);
     }
   }
 

@@ -14,8 +14,8 @@
 import { and, desc, eq, gte } from "drizzle-orm";
 import { db } from "../db";
 import { coinActivities, monitoredListings } from "../db/schemas/patterns";
-import { PatternDetectionEngine } from "../services/pattern-detection-engine";
-import { UnifiedMexcService } from "../services/unified-mexc-service";
+import { PatternDetectionCore } from "../core/pattern-detection";
+import { UnifiedMexcServiceV2 } from "../services/unified-mexc-service-v2";
 import { type EnhancedUnifiedCacheSystem, getEnhancedUnifiedCache } from "./enhanced-unified-cache";
 
 // ============================================================================
@@ -64,8 +64,8 @@ export interface CacheWarmupConfig {
 
 export class CacheWarmingService {
   private cache: EnhancedUnifiedCacheSystem;
-  private mexcService: UnifiedMexcService;
-  private patternEngine: PatternDetectionEngine;
+  private mexcService: UnifiedMexcServiceV2;
+  private patternEngine: PatternDetectionCore;
   private config: CacheWarmupConfig;
   private strategies = new Map<string, WarmupStrategy>();
   private metrics: WarmupMetrics;
@@ -81,8 +81,8 @@ export class CacheWarmingService {
       this.patternEngine = this.createMockPatternEngine();
     } else {
       this.cache = getEnhancedUnifiedCache();
-      this.mexcService = new UnifiedMexcService();
-      this.patternEngine = new PatternDetectionEngine();
+      this.mexcService = new UnifiedMexcServiceV2();
+      this.patternEngine = new PatternDetectionCore();
     }
 
     this.config = {

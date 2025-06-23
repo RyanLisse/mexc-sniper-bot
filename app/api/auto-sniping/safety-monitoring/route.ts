@@ -8,8 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
-import { RealTimeSafetyMonitoringService } from '@/src/services/real-time-safety-monitoring-service';
-import type { SafetyConfiguration } from '@/src/services/real-time-safety-monitoring-service';
+import { RealTimeSafetyMonitoringService, type SafetyConfiguration } from '@/src/services/real-time-safety-monitoring-modules';
 
 // Global service instance
 const safetyMonitoringService = RealTimeSafetyMonitoringService.getInstance();

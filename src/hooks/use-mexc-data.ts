@@ -9,7 +9,9 @@ export function useMexcCalendar() {
   return useQuery({
     queryKey: queryKeys.mexcCalendar(),
     queryFn: async () => {
-      const response = await fetch("/api/mexc/calendar");
+      const response = await fetch("/api/mexc/calendar", {
+        credentials: "include", // Include authentication cookies
+      });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -21,9 +23,19 @@ export function useMexcCalendar() {
 
       return result.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - calendar data cache
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
     refetchInterval: 5 * 60 * 1000, // Auto-refetch every 5 minutes
-    retry: 3,
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    placeholderData: [], // Prevent loading flicker
+    retry: (failureCount, error) => {
+      // Don't retry auth errors
+      const errorMessage = error?.message || '';
+      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 }
 
@@ -33,7 +45,9 @@ export function useMexcSymbols(vcoinId?: string) {
     queryKey: queryKeys.mexcSymbols(vcoinId),
     queryFn: async () => {
       const url = vcoinId ? `/api/mexc/symbols?vcoinId=${vcoinId}` : "/api/mexc/symbols";
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: "include", // Include authentication cookies
+      });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -46,9 +60,19 @@ export function useMexcSymbols(vcoinId?: string) {
       return result.data;
     },
     enabled: true, // Always enabled for symbols data
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000, // 30 seconds - symbols data cache
+    gcTime: 2 * 60 * 1000, // 2 minutes garbage collection 
     refetchInterval: 30 * 1000, // Auto-refetch every 30 seconds
-    retry: 3,
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    placeholderData: [], // Prevent loading flicker
+    retry: (failureCount, error) => {
+      // Don't retry auth errors
+      const errorMessage = error?.message || '';
+      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 }
 
@@ -57,16 +81,28 @@ export function useMexcServerTime() {
   return useQuery({
     queryKey: queryKeys.mexcServerTime(),
     queryFn: async () => {
-      const response = await fetch("/api/mexc/server-time");
+      const response = await fetch("/api/mexc/server-time", {
+        credentials: "include", // Include authentication cookies
+      });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const result = await response.json();
       return result.serverTime;
     },
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 60 * 1000, // 1 minute - server time cache
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
     refetchInterval: 60 * 1000, // Auto-refetch every minute
-    retry: 3,
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    placeholderData: Date.now(), // Prevent loading flicker with current time
+    retry: (failureCount, error) => {
+      // Don't retry auth errors
+      const errorMessage = error?.message || '';
+      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 }
 
@@ -167,7 +203,9 @@ export function useRefreshMexcCalendar() {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/mexc/calendar");
+      const response = await fetch("/api/mexc/calendar", {
+        credentials: "include", // Include authentication cookies
+      });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -191,7 +229,9 @@ export function useRefreshMexcSymbols() {
   return useMutation({
     mutationFn: async (vcoinId?: string) => {
       const url = vcoinId ? `/api/mexc/symbols?vcoinId=${vcoinId}` : "/api/mexc/symbols";
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: "include", // Include authentication cookies
+      });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -291,7 +331,7 @@ export function useMexcAccount(userId?: string) {
   const { user, isAuthenticated } = useAuth();
 
   return useQuery({
-    queryKey: ["mexc", "account", userId || "anonymous"],
+    queryKey: ["mexc", "account", userId || "anonymous", "active"],
     queryFn: async () => {
       if (!userId) {
         throw new Error("User ID is required");
@@ -301,14 +341,28 @@ export function useMexcAccount(userId?: string) {
         credentials: "include" // Include authentication cookies
       });
       if (!response.ok) {
+        // Don't throw errors for 403/401 when not authenticated
+        if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
+          return null;
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const result = await response.json();
       return result;
     },
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000, // 30 seconds - account data cache
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
     refetchInterval: 60 * 1000, // Auto-refetch every minute
-    retry: 2,
+    refetchOnWindowFocus: false, // Don't refetch on window focus for account data
+    placeholderData: null, // Prevent loading flicker
+    retry: (failureCount, error) => {
+      // Don't retry auth errors
+      const errorMessage = error?.message || '';
+      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
     // Only fetch if user is authenticated and accessing their own data
     enabled: !!userId && isAuthenticated && user?.id === userId,
   });

@@ -327,6 +327,64 @@ export class PatternDetectionCore {
     this.logger.info("Configuration updated", { newConfig });
   }
 
+  /**
+   * Detect ready state patterns in symbols
+   */
+  async detectReadyStatePattern(symbols: SymbolEntry[]): Promise<PatternMatch[]> {
+    try {
+      return await this.patternAnalyzer.detectReadyStatePattern(symbols);
+    } catch (error) {
+      const safeError = toSafeError(error);
+      this.logger.error("Ready state pattern detection failed", {
+        symbolCount: symbols.length,
+        error: safeError.message,
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Detect pre-ready patterns in symbols
+   */
+  async detectPreReadyPatterns(symbols: SymbolEntry[]): Promise<PatternMatch[]> {
+    try {
+      return await this.patternAnalyzer.detectPreReadyPatterns(symbols);
+    } catch (error) {
+      const safeError = toSafeError(error);
+      this.logger.error("Pre-ready pattern detection failed", {
+        symbolCount: symbols.length,
+        error: safeError.message,
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Detect advance opportunities from calendar entries
+   */
+  async detectAdvanceOpportunities(calendarEntries: any[]): Promise<PatternMatch[]> {
+    try {
+      return await this.patternAnalyzer.detectAdvanceOpportunities(calendarEntries);
+    } catch (error) {
+      const safeError = toSafeError(error);
+      this.logger.error("Advance opportunity detection failed", {
+        entryCount: calendarEntries.length,
+        error: safeError.message,
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Get singleton instance (for compatibility with legacy code)
+   */
+  static getInstance(): PatternDetectionCore {
+    if (!PatternDetectionCore.instance) {
+      PatternDetectionCore.instance = new PatternDetectionCore();
+    }
+    return PatternDetectionCore.instance;
+  }
+
   // ============================================================================
   // Private Helper Methods
   // ============================================================================

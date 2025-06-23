@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
-import { PatternDetectionEngine } from '../../src/services/pattern-detection-engine';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { PatternDetectionCore } from '../../src/core/pattern-detection';
+import { UnifiedMexcServiceV2 } from '../../src/services/unified-mexc-service-v2';
 import { db } from '../../src/db';
 import { coinActivities } from '../../src/db/schemas/patterns';
 import { eq } from 'drizzle-orm';
@@ -8,13 +8,13 @@ import type { SymbolEntry, CalendarEntry } from '../../src/services/mexc-unified
 import type { ActivityData } from '../../src/schemas/mexc-schemas';
 
 describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => {
-  let patternEngine: PatternDetectionEngine;
-  let mexcService: UnifiedMexcService;
+  let patternEngine: PatternDetectionCore;
+  let mexcService: UnifiedMexcServiceV2;
 
   beforeAll(async () => {
     // Initialize services
-    patternEngine = PatternDetectionEngine.getInstance();
-    mexcService = new UnifiedMexcService({
+    patternEngine = PatternDetectionCore.getInstance();
+    mexcService = new UnifiedMexcServiceV2({
       enableCaching: false, // Disable caching for tests
       enableCircuitBreaker: false,
     });

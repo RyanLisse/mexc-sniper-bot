@@ -11,17 +11,17 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
-import { PatternDetectionEngine } from '../../src/services/pattern-detection-engine';
+import { PatternDetectionCore } from '../../src/core/pattern-detection';
 import { MultiPhaseTradingBot } from '../../src/services/multi-phase-trading-bot';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { UnifiedMexcServiceV2 } from '../../src/services/unified-mexc-service-v2';
 import { AdvancedRiskEngine } from '../../src/services/advanced-risk-engine';
 import { EmergencySafetySystem } from '../../src/services/emergency-safety-system';
 import type { SymbolEntry } from '../../src/services/mexc-unified-exports';
 
 describe('Market Simulation Edge Cases', () => {
-  let patternEngine: PatternDetectionEngine;
+  let patternEngine: PatternDetectionCore;
   let tradingBot: MultiPhaseTradingBot;
-  let mexcService: UnifiedMexcService;
+  let mexcService: UnifiedMexcServiceV2;
   let riskEngine: AdvancedRiskEngine;
   let emergencySystem: EmergencySafetySystem;
 
@@ -113,7 +113,7 @@ describe('Market Simulation Edge Cases', () => {
 
   beforeEach(() => {
     // Initialize services with aggressive test configuration
-    patternEngine = PatternDetectionEngine.getInstance();
+    patternEngine = PatternDetectionCore.getInstance();
     
     riskEngine = new AdvancedRiskEngine({
       maxPortfolioValue: 50000,
@@ -133,7 +133,7 @@ describe('Market Simulation Edge Cases', () => {
       emergencyCorrelationThreshold: 0.9
     });
 
-    mexcService = new UnifiedMexcService({
+    mexcService = new UnifiedMexcServiceV2({
       apiKey: 'test-api-key',
       secretKey: 'test-secret-key',
       enableCircuitBreaker: true,

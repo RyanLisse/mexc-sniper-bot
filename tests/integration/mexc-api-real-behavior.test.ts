@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { UnifiedMexcServiceV2 } from '../../src/services/unified-mexc-service-v2';
 import { AdaptiveRateLimiterService } from '../../src/services/adaptive-rate-limiter';
 import type { ActivityData, ActivityQueryOptions } from '../../src/schemas/mexc-schemas';
 
@@ -30,7 +30,7 @@ const TEST_CONFIG = {
 };
 
 describe('MEXC API Real Behavior Integration', () => {
-  let mexcService: UnifiedMexcService;
+  let mexcService: UnifiedMexcServiceV2;
   let rateLimiter: AdaptiveRateLimiterService;
   
   // Mock objects for services that may not exist or have different APIs
@@ -127,7 +127,7 @@ describe('MEXC API Real Behavior Integration', () => {
       isConnected: vi.fn().mockReturnValue(true)
     };
 
-    mexcService = new UnifiedMexcService({
+    mexcService = new UnifiedMexcServiceV2({
       apiKey: TEST_CONFIG.apiKey,
       secretKey: TEST_CONFIG.secretKey,
       baseUrl: TEST_CONFIG.baseUrl,
@@ -216,7 +216,7 @@ describe('MEXC API Real Behavior Integration', () => {
 
     it('should handle authentication errors gracefully', async () => {
       // Arrange: Invalid credentials
-      const invalidService = new UnifiedMexcService({
+      const invalidService = new UnifiedMexcServiceV2({
         apiKey: 'invalid-key',
         secretKey: 'invalid-secret',
         baseUrl: TEST_CONFIG.baseUrl

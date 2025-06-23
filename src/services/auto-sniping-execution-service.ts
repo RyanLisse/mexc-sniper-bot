@@ -10,10 +10,9 @@ import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
 import { createLogger, createTimer } from "../lib/structured-logger";
 import { EmergencySafetySystem } from "./emergency-safety-system";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
-import { PatternDetectionEngine } from "./pattern-detection-engine";
-import type { PatternMatch } from "./pattern-detection-engine";
+import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
 import { PatternMonitoringService } from "./pattern-monitoring-service";
-import type { UnifiedMexcService } from "./unified-mexc-service";
+import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
 
 export interface AutoSnipingConfig {
   // Execution parameters
@@ -127,9 +126,9 @@ type PatternType = "ready_state" | "pre_ready" | "launch_sequence" | "risk_warni
 export class AutoSnipingExecutionService {
   private static instance: AutoSnipingExecutionService;
 
-  private patternEngine: PatternDetectionEngine;
+  private patternEngine: PatternDetectionCore;
   private patternMonitoring: PatternMonitoringService;
-  private mexcService: UnifiedMexcService;
+  private mexcService: UnifiedMexcServiceV2;
   private safetySystem: EmergencySafetySystem;
   private logger = createLogger("auto-sniping-execution");
 
@@ -144,10 +143,10 @@ export class AutoSnipingExecutionService {
   private monitoringInterval: NodeJS.Timeout | null = null;
 
   private constructor() {
-    this.patternEngine = PatternDetectionEngine.getInstance();
+    this.patternEngine = PatternDetectionCore.getInstance();
     this.patternMonitoring = PatternMonitoringService.getInstance();
     // FIXED: Use singleton instances instead of creating new instances
-    this.mexcService = getRecommendedMexcService();
+    this.mexcService = new UnifiedMexcServiceV2();
     this.safetySystem = new EmergencySafetySystem();
 
     this.config = this.getDefaultConfig();

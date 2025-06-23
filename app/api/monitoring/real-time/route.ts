@@ -134,7 +134,7 @@ async function getRealTimeData(type: string) {
       case 'trading':
         return {
           timestamp,
-          activeWorkflows: activeWorkflows.filter(w => w.type === 'trading'),
+          activeWorkflows: activeWorkflows.filter((w: any) => w.type === 'trading'),
           transactionLocks: transactionLockStatus,
           alerts: alerts.filter(a => a.category === 'trading')
         };
@@ -200,7 +200,7 @@ async function getActiveWorkflows() {
       .orderBy(desc(workflowActivity.createdAt))
       .limit(20);
 
-    return workflows.map(w => ({
+    return workflows.map((w: any) => ({
       id: w.id,
       type: w.type,
       status: w.level === 'error' ? 'failed' : w.level === 'success' ? 'completed' : 'running',
@@ -225,9 +225,9 @@ async function getTransactionLockStatus() {
       .limit(10);
 
     return {
-      activeLocks: locks.filter(l => l.status === 'active').length,
+      activeLocks: locks.filter((l: any) => l.status === 'active').length,
       totalLocks: locks.length,
-      locks: locks.map(l => ({
+      locks: locks.map((l: any) => ({
         id: l.id,
         resource: l.resourceId,
         type: l.lockType,

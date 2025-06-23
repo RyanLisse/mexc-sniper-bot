@@ -17,15 +17,15 @@ vi.mock('../../src/lib/enhanced-unified-cache', () => ({
   })),
 }));
 
-vi.mock('../../src/services/unified-mexc-service', () => ({
-  UnifiedMexcService: vi.fn(() => ({
-    getSymbolInfo: vi.fn().mockResolvedValue({ symbol: 'BTCUSDT', price: 50000 }),
-    getActivityData: vi.fn().mockResolvedValue({ currency: 'BTC', activities: [] }),
+vi.mock('../../src/services/unified-mexc-service-v2', () => ({
+  UnifiedMexcServiceV2: vi.fn(() => ({
+    getSymbolInfoBasic: vi.fn().mockResolvedValue({ success: true, data: { symbol: 'BTCUSDT', price: 50000 } }),
+    getActivityData: vi.fn().mockResolvedValue({ success: true, data: { currency: 'BTC', activities: [] } }),
   })),
 }));
 
-vi.mock('../../src/services/pattern-detection-engine', () => ({
-  PatternDetectionEngine: vi.fn(() => ({
+vi.mock('../../src/core/pattern-detection', () => ({
+  PatternDetectionCore: vi.fn(() => ({
     analyzeSymbolReadiness: vi.fn().mockResolvedValue({ confidence: 85, readyState: true }),
   })),
 }));

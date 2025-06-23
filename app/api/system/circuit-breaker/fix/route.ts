@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { CircuitBreakerSafetyService } from '@/src/services/circuit-breaker-safety-service'
-import { UnifiedMexcService } from '@/src/services/unified-mexc-service'
+import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2'
 import { getGlobalReliabilityManager } from '@/src/services/mexc-circuit-breaker'
 import { z } from 'zod'
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const validatedRequest = FixRequestSchema.parse(body)
     
     // Initialize services
-    const mexcService = new UnifiedMexcService()
+    const mexcService = new UnifiedMexcServiceV2()
     const safetyService = new CircuitBreakerSafetyService(mexcService)
     const reliabilityManager = getGlobalReliabilityManager()
     
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  */
 export async function GET(): Promise<NextResponse> {
   try {
-    const mexcService = new UnifiedMexcService()
+    const mexcService = new UnifiedMexcServiceV2()
     const safetyService = new CircuitBreakerSafetyService(mexcService)
     
     // Get current status without making changes

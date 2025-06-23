@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePatternMonitoring } from "@/src/hooks/use-pattern-monitoring";
-import type { PatternMatch } from "@/src/services/pattern-detection-engine";
+import type { PatternMatch } from "@/src/core/pattern-detection";
 import type { PatternAlert } from "@/src/services/pattern-monitoring-service";
 import {
   Activity,

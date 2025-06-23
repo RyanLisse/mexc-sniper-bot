@@ -117,6 +117,17 @@ export class UnifiedMexcServiceV2 {
   }
 
   /**
+   * Get all symbols from the exchange
+   */
+  async getAllSymbols(): Promise<MexcServiceResponse<SymbolEntry[]>> {
+    return this.cacheLayer.getOrSet(
+      "symbols:all",
+      () => this.coreClient.getAllSymbols(),
+      "semiStatic" // 5 minute cache for all symbols
+    );
+  }
+
+  /**
    * Get server time
    */
   async getServerTime(): Promise<MexcServiceResponse<number>> {
@@ -139,6 +150,28 @@ export class UnifiedMexcServiceV2 {
       "account:balance",
       () => this.coreClient.getAccountBalance(),
       "user" // 10 minute cache for user data
+    );
+  }
+
+  /**
+   * Get basic symbol information by symbol name
+   */
+  async getSymbolInfoBasic(symbolName: string): Promise<MexcServiceResponse<any>> {
+    return this.cacheLayer.getOrSet(
+      `symbol:basic:${symbolName}`,
+      () => this.coreClient.getSymbolInfoBasic(symbolName),
+      "semiStatic" // 5 minute cache for symbol info
+    );
+  }
+
+  /**
+   * Get activity data for a currency
+   */
+  async getActivityData(currency: string): Promise<MexcServiceResponse<any>> {
+    return this.cacheLayer.getOrSet(
+      `activity:${currency}`,
+      () => this.coreClient.getActivityData(currency),
+      "semiStatic" // 5 minute cache for activity data
     );
   }
 
@@ -177,6 +210,18 @@ export class UnifiedMexcServiceV2 {
   // ============================================================================
   // Configuration & Status
   // ============================================================================
+
+  /**
+   * Check if valid credentials are configured
+   */
+  hasValidCredentials(): boolean {
+    return Boolean(
+      this.config.apiKey && 
+      this.config.secretKey && 
+      this.config.apiKey.length > 0 && 
+      this.config.secretKey.length > 0
+    );
+  }
 
   /**
    * Test API connectivity

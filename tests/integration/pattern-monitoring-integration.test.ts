@@ -12,14 +12,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setTestTimeout, withApiTimeout } from '../utils/timeout-utilities';
 import { PatternMonitoringService } from '../../src/services/pattern-monitoring-service';
-import { PatternDetectionEngine } from '../../src/services/pattern-detection-engine';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { PatternDetectionCore } from '../../src/core/pattern-detection';
+import { UnifiedMexcServiceV2 } from '../../src/services/unified-mexc-service-v2';
 
 describe('Pattern Monitoring Integration', () => {
   const TEST_TIMEOUT = setTestTimeout('integration');
   let monitoringService: PatternMonitoringService;
-  let patternEngine: PatternDetectionEngine;
-  let mexcService: UnifiedMexcService;
+  let patternEngine: PatternDetectionCore;
+  let mexcService: UnifiedMexcServiceV2;
 
   beforeEach(async () => {
     // Setup global fetch mock with proper headers for MEXC API
@@ -46,8 +46,8 @@ describe('Pattern Monitoring Integration', () => {
 
     // Initialize services
     monitoringService = PatternMonitoringService.getInstance();
-    patternEngine = PatternDetectionEngine.getInstance();
-    mexcService = new UnifiedMexcService();
+    patternEngine = PatternDetectionCore.getInstance();
+    mexcService = new UnifiedMexcServiceV2();
 
     // Ensure monitoring is stopped before each test
     monitoringService.stopMonitoring();

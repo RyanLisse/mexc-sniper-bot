@@ -3,7 +3,7 @@
  *
  * This module provides unified access to all MEXC API capabilities through a single,
  * consistent interface. All legacy MEXC client implementations have been consolidated
- * into the UnifiedMexcService.
+ * into the UnifiedMexcServiceV2.
  *
  * @example
  * ```typescript
@@ -17,14 +17,22 @@
  * ```
  */
 
-// Import the new unified service
+// Import the new unified V2 service
+import {
+  type UnifiedMexcConfig,
+  type MexcServiceResponse,
+  UnifiedMexcServiceV2,
+  getUnifiedMexcServiceV2,
+  resetUnifiedMexcServiceV2,
+} from "./unified-mexc-service-v2";
+
+// Import types from schemas module
 import {
   type BalanceEntry,
   type CalendarEntry,
   type ExchangeSymbol,
   type Kline,
   type MarketStats,
-  type MexcServiceResponse,
   type OrderBook,
   type OrderParameters,
   type OrderResult,
@@ -35,21 +43,17 @@ import {
   type SymbolEntry,
   type Ticker,
   type TradingOpportunity,
-  type UnifiedMexcConfig,
-  UnifiedMexcService,
-  getUnifiedMexcService,
-  resetUnifiedMexcService,
-} from "./unified-mexc-service";
+} from "./mexc-schemas";
 
 // ============================================================================
-// Primary Exports - Use These (Updated to use UnifiedMexcService)
+// Primary Exports - Use These (Updated to use UnifiedMexcServiceV2)
 // ============================================================================
 
 // Main service class and factory function
 export {
-  UnifiedMexcService as MexcServiceLayer,
-  getUnifiedMexcService as getRecommendedMexcService,
-  resetUnifiedMexcService as resetMexcService,
+  UnifiedMexcServiceV2 as MexcServiceLayer,
+  getUnifiedMexcServiceV2 as getRecommendedMexcService,
+  resetUnifiedMexcServiceV2 as resetMexcService,
   type UnifiedMexcConfig as MexcServiceConfig,
   type MexcServiceResponse as ServiceResponse,
 };
@@ -82,8 +86,8 @@ export type { MarketStats, PatternAnalysis, TradingOpportunity, Portfolio, RiskA
 export function getMexcService(config?: {
   apiKey?: string;
   secretKey?: string;
-}): UnifiedMexcService {
-  return getUnifiedMexcService(config);
+}): UnifiedMexcServiceV2 {
+  return getUnifiedMexcServiceV2(config);
 }
 
 /**
@@ -91,8 +95,8 @@ export function getMexcService(config?: {
  */
 export function createMexcService(
   config: { apiKey?: string; secretKey?: string } = {}
-): UnifiedMexcService {
-  return getUnifiedMexcService(config);
+): UnifiedMexcServiceV2 {
+  return getUnifiedMexcServiceV2(config);
 }
 
 /**
@@ -101,41 +105,41 @@ export function createMexcService(
 export function getMexcClient(config?: {
   apiKey?: string;
   secretKey?: string;
-}): UnifiedMexcService {
-  return getUnifiedMexcService(config);
+}): UnifiedMexcServiceV2 {
+  return getUnifiedMexcServiceV2(config);
 }
 
 /**
  * Legacy compatibility - Enhanced MEXC Service
- * @deprecated Use getUnifiedMexcService instead
+ * @deprecated Use getUnifiedMexcServiceV2 instead
  */
 export function getEnhancedMexcService(config?: {
   apiKey?: string;
   secretKey?: string;
-}): UnifiedMexcService {
-  console.warn("getEnhancedMexcService is deprecated. Use getUnifiedMexcService instead.");
-  return getUnifiedMexcService(config);
+}): UnifiedMexcServiceV2 {
+  console.warn("getEnhancedMexcService is deprecated. Use getUnifiedMexcServiceV2 instead.");
+  return getUnifiedMexcServiceV2(config);
 }
 
 /**
  * Legacy compatibility - Reset Enhanced MEXC Service
- * @deprecated Use resetUnifiedMexcService instead
+ * @deprecated Use resetUnifiedMexcServiceV2 instead
  */
 export function resetEnhancedMexcService(): void {
-  console.warn("resetEnhancedMexcService is deprecated. Use resetUnifiedMexcService instead.");
-  resetUnifiedMexcService();
+  console.warn("resetEnhancedMexcService is deprecated. Use resetUnifiedMexcServiceV2 instead.");
+  resetUnifiedMexcServiceV2();
 }
 
 /**
  * Legacy compatibility - Unified MEXC Client
- * @deprecated Use getUnifiedMexcService instead
+ * @deprecated Use getUnifiedMexcServiceV2 instead
  */
 export function getUnifiedMexcClient(config?: {
   apiKey?: string;
   secretKey?: string;
-}): UnifiedMexcService {
-  console.warn("getUnifiedMexcClient is deprecated. Use getUnifiedMexcService instead.");
-  return getUnifiedMexcService(config);
+}): UnifiedMexcServiceV2 {
+  console.warn("getUnifiedMexcClient is deprecated. Use getUnifiedMexcServiceV2 instead.");
+  return getUnifiedMexcServiceV2(config);
 }
 
 // ============================================================================
@@ -163,4 +167,4 @@ export type AdvancedOrderParameters = OrderParameters;
  * const calendar = await mexcService.getCalendarListings();
  * ```
  */
-export default getUnifiedMexcService;
+export default getUnifiedMexcServiceV2;

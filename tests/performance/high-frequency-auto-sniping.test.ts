@@ -18,9 +18,9 @@ import {
   timeoutPromise,
   globalTimeoutMonitor 
 } from '../utils/timeout-utilities';
-import { PatternDetectionEngine } from '../../src/services/pattern-detection-engine';
+import { PatternDetectionCore } from '../../src/core/pattern-detection';
 import { MultiPhaseTradingBot } from '../../src/services/multi-phase-trading-bot';
-import { UnifiedMexcService } from '../../src/services/unified-mexc-service';
+import { UnifiedMexcServiceV2 } from '../../src/services/unified-mexc-service-v2';
 import { ComprehensiveSafetyCoordinator } from '../../src/services/comprehensive-safety-coordinator';
 import { webSocketClient } from '../../src/services/websocket-client';
 import { 
@@ -35,9 +35,9 @@ describe('High-Frequency Auto Sniping Performance', () => {
   // Set extended timeout for performance tests (60 seconds)
   const TEST_TIMEOUT = setTestTimeout('performance');
   console.log(`🕐 Performance tests configured with ${TEST_TIMEOUT}ms timeout`);
-  let patternEngine: PatternDetectionEngine;
+  let patternEngine: PatternDetectionCore;
   let tradingBots: Map<string, MultiPhaseTradingBot>;
-  let mexcService: UnifiedMexcService;
+  let mexcService: UnifiedMexcServiceV2;
   let safetyCoordinator: ComprehensiveSafetyCoordinator;
   let wsClient = webSocketClient;
 
@@ -59,10 +59,10 @@ describe('High-Frequency Auto Sniping Performance', () => {
 
   beforeEach(() => {
     // Initialize core services
-    patternEngine = PatternDetectionEngine.getInstance();
+    patternEngine = PatternDetectionCore.getInstance();
     tradingBots = new Map();
     
-    mexcService = new UnifiedMexcService({
+    mexcService = new UnifiedMexcServiceV2({
       apiKey: 'perf-test-key',
       secretKey: 'perf-test-secret',
       enableCaching: true,

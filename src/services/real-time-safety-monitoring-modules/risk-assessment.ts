@@ -14,14 +14,14 @@ import type { AutoSnipingExecutionService } from "../auto-sniping-execution-serv
 import type { ExecutionPosition } from "../auto-sniping-execution-service";
 import type { EmergencySafetySystem } from "../emergency-safety-system";
 import type { PatternMonitoringService } from "../pattern-monitoring-service";
-import type { UnifiedMexcService } from "../unified-mexc-service";
+import type { UnifiedMexcServiceV2 } from "../unified-mexc-service-v2";
 
 export interface RiskAssessmentConfig {
   configuration: SafetyConfiguration;
   executionService: AutoSnipingExecutionService;
   patternMonitoring: PatternMonitoringService;
   emergencySystem: EmergencySafetySystem;
-  mexcService: UnifiedMexcService;
+  mexcService: UnifiedMexcServiceV2;
 }
 
 export interface PortfolioRiskAssessment {

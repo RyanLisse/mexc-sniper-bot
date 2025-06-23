@@ -3,14 +3,30 @@ import { transactionLockService } from "../../../src/services/transaction-lock-s
 import { db } from "../../../src/db";
 import { transactionLocks, transactionQueue } from "../../../src/db/schema";
 import { eq, and, gte, or, desc } from "drizzle-orm";
+import {
+  TransactionLockQuerySchema,
+  ReleaseLockRequestSchema,
+  CheckLockRequestSchema,
+  TransactionLocksResponseSchema,
+  validateApiQuery,
+  validateApiBody,
+  createValidatedApiResponse,
+} from "../../../src/schemas/api-validation-schemas";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const resourceId = searchParams.get("resourceId");
-    const ownerId = searchParams.get("ownerId");
-    const status = searchParams.get("status");
-    const limit = parseInt(searchParams.get("limit") || "50");
+    
+    // Validate query parameters
+    const queryValidation = validateApiQuery(TransactionLockQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return NextResponse.json(
+        { success: false, error: queryValidation.error },
+        { status: 400 }
+      );
+    }
+    
+    const { resourceId, ownerId, status, limit } = queryValidation.data;
 
     // Build query conditions
     const conditions = [];
@@ -36,28 +52,33 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     const stats = {
       activeLocks: activeLocks.filter(
-        (lock) => lock.status === "active" && new Date(lock.expiresAt) > now
+        (lock: any) => lock.status === "active" && new Date(lock.expiresAt) > now
       ).length,
       expiredLocks: activeLocks.filter(
-        (lock) => lock.status === "active" && new Date(lock.expiresAt) <= now
+        (lock: any) => lock.status === "active" && new Date(lock.expiresAt) <= now
       ).length,
       queueLength: queueItems.length,
       recentlyCompleted: activeLocks.filter(
-        (lock) => lock.status === "released"
+        (lock: any) => lock.status === "released"
       ).length,
       recentlyFailed: activeLocks.filter(
-        (lock) => lock.status === "failed"
+        (lock: any) => lock.status === "failed"
       ).length,
     };
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        locks: activeLocks,
-        queue: queueItems,
-        stats,
-      },
-    });
+    const responseData = {
+      locks: activeLocks,
+      queue: queueItems,
+      stats,
+    };
+
+    return NextResponse.json(
+      createValidatedApiResponse(
+        responseData,
+        TransactionLocksResponseSchema,
+        "Transaction locks data retrieved successfully"
+      )
+    );
   } catch (error) {
     console.error("Transaction locks API error:", error);
     return NextResponse.json(
@@ -73,19 +94,23 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const lockId = searchParams.get("lockId");
-    const ownerId = searchParams.get("ownerId");
-    const forceRelease = searchParams.get("force") === "true";
-
-    if (!lockId && !ownerId) {
+    
+    // Validate request parameters
+    const requestData = {
+      lockId: searchParams.get("lockId") || undefined,
+      ownerId: searchParams.get("ownerId") || undefined,
+      force: searchParams.get("force") === "true",
+    };
+    
+    const validation = validateApiBody(ReleaseLockRequestSchema, requestData);
+    if (!validation.success) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Either lockId or ownerId is required",
-        },
+        { success: false, error: validation.error },
         { status: 400 }
       );
     }
+    
+    const { lockId, ownerId, force: forceRelease } = validation.data;
 
     if (lockId) {
       // Release specific lock
@@ -109,6 +134,15 @@ export async function DELETE(request: NextRequest) {
         releasedCount,
       });
     }
+
+    // Fallback (should not reach here due to validation above)
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Invalid request parameters",
+      },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("Transaction locks release error:", error);
     return NextResponse.json(
@@ -125,18 +159,19 @@ export async function DELETE(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, resourceId } = body;
+    
+    // Validate request body
+    const validation = validateApiBody(CheckLockRequestSchema, body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: validation.error },
+        { status: 400 }
+      );
+    }
+    
+    const { action, resourceId } = validation.data;
 
     if (action === "check") {
-      if (!resourceId) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "resourceId is required for check action",
-          },
-          { status: 400 }
-        );
-      }
 
       const lockStatus = await transactionLockService.getLockStatus(resourceId);
       

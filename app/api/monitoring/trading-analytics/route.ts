@@ -8,6 +8,10 @@ import {
   executionHistory 
 } from "../../../../src/db/schema";
 import { desc, gte, sql, eq, and } from "drizzle-orm";
+import {
+  TradingAnalyticsResponseSchema,
+  createValidatedApiResponse,
+} from "../../../../src/schemas/api-validation-schemas";
 
 export async function GET(request: NextRequest) {
   try {
@@ -125,7 +129,15 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    return NextResponse.json(response);
+    try {
+      // Validate the response structure (partial validation for core fields)
+      const validatedResponse = TradingAnalyticsResponseSchema.partial().parse(response);
+      return NextResponse.json(validatedResponse);
+    } catch (validationError) {
+      console.warn("Trading analytics response validation warning:", validationError);
+      // Return response anyway with warning logged (graceful degradation)
+      return NextResponse.json(response);
+    }
   } catch (error) {
     console.error("[Monitoring API] Trading analytics failed:", error);
     return NextResponse.json(
@@ -148,17 +160,17 @@ async function getTradingPerformanceMetrics() {
       .orderBy(desc(transactions.createdAt));
 
     const totalTrades = trades.length;
-    const successfulTrades = trades.filter(t => t.status === 'completed' && (t.profitLoss || 0) > 0).length;
+    const successfulTrades = trades.filter((t: any) => t.status === 'completed' && (t.profitLoss || 0) > 0).length;
     const successRate = totalTrades > 0 ? (successfulTrades / totalTrades) * 100 : 0;
 
-    const averageTradeSize = trades.reduce((sum, t) => sum + (t.buyTotalCost || 0), 0) / totalTrades || 0;
-    const tradingVolume = trades.reduce((sum, t) => sum + (t.buyTotalCost || 0), 0);
+    const averageTradeSize = trades.reduce((sum: any, t: any) => sum + (t.buyTotalCost || 0), 0) / totalTrades || 0;
+    const tradingVolume = trades.reduce((sum: any, t: any) => sum + (t.buyTotalCost || 0), 0);
 
-    const profits = trades.filter(t => (t.profitLoss || 0) > 0).map(t => t.profitLoss || 0);
-    const losses = trades.filter(t => (t.profitLoss || 0) < 0).map(t => Math.abs(t.profitLoss || 0));
+    const profits = trades.filter((t: any) => (t.profitLoss || 0) > 0).map((t: any) => t.profitLoss || 0);
+    const losses = trades.filter((t: any) => (t.profitLoss || 0) < 0).map((t: any) => Math.abs(t.profitLoss || 0));
     
-    const averageProfit = profits.reduce((sum, p) => sum + p, 0) / profits.length || 0;
-    const averageLoss = losses.reduce((sum, l) => sum + l, 0) / losses.length || 0;
+    const averageProfit = profits.reduce((sum: any, p: any) => sum + p, 0) / profits.length || 0;
+    const averageLoss = losses.reduce((sum: any, l: any) => sum + l, 0) / losses.length || 0;
     const winLossRatio = averageLoss > 0 ? averageProfit / averageLoss : 0;
 
     return {
@@ -199,10 +211,10 @@ async function getPortfolioMetrics() {
       .limit(30);
 
     const current = recentPortfolio[0];
-    const dayAgo = recentPortfolio.find(p => 
+    const dayAgo = recentPortfolio.find((p: any) => 
       new Date(p.timestamp).getTime() < Date.now() - 24 * 60 * 60 * 1000
     );
-    const weekAgo = recentPortfolio.find(p => 
+    const weekAgo = recentPortfolio.find((p: any) => 
       new Date(p.timestamp).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000
     );
 
@@ -258,17 +270,17 @@ async function getPatternSuccessRates() {
       .where(gte(patternEmbeddings.createdAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)));
 
     const totalPatterns = recentPatterns.length;
-    const successfulPatterns = recentPatterns.filter(p => p.isActive && p.truePositives > 0).length;
+    const successfulPatterns = recentPatterns.filter((p: any) => p.isActive && p.truePositives > 0).length;
     const successRate = totalPatterns > 0 ? (successfulPatterns / totalPatterns) * 100 : 0;
-    const averageConfidence = recentPatterns.reduce((sum, p) => sum + (p.confidence || 0), 0) / totalPatterns || 0;
+    const averageConfidence = recentPatterns.reduce((sum: any, p: any) => sum + (p.confidence || 0), 0) / totalPatterns || 0;
 
-    const patternTypes = recentPatterns.reduce((acc, p) => {
+    const patternTypes = recentPatterns.reduce((acc: any, p: any) => {
       const type = p.patternType || 'unknown';
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    const readyStatePatterns = recentPatterns.filter(p => 
+    const readyStatePatterns = recentPatterns.filter((p: any) => 
       p.patternType === 'ready_state'
     ).length;
 
@@ -349,12 +361,12 @@ async function getPositionAnalytics() {
 
     return {
       activePositions: activeTargets.length,
-      positionSizes: activeTargets.map(t => ({
+      positionSizes: activeTargets.map((t: any) => ({
         symbol: t.symbolName,
         size: t.positionSizeUsdt || 0,
         percentage: Math.random() * 10 + 2 // 2-12% mock
       })),
-      positionDurations: activeTargets.map(t => ({
+      positionDurations: activeTargets.map((t: any) => ({
         symbol: t.symbolName,
         duration: Math.floor((Date.now() - new Date(t.createdAt).getTime()) / (1000 * 60 * 60)) // hours
       })),
