@@ -32,7 +32,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 
 interface ConfigStatusPanelProps {
   className?: string;
@@ -41,7 +41,7 @@ interface ConfigStatusPanelProps {
 }
 
 interface StatusInfo {
-  icon: JSX.Element;
+  icon: React.ReactNode;
   title: string;
   description: string;
 }

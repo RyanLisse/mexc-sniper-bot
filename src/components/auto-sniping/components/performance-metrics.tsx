@@ -6,18 +6,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Progress } from "@/src/components/ui/progress";
+import type { ExecutionStats } from "@/src/services/auto-sniping-execution-service";
 import { BarChart3 } from "lucide-react";
 
 interface PerformanceMetricsProps {
   successRate: number;
   dailyTradeCount: number;
   maxDailyTrades?: number;
-  stats?: {
-    averageExecutionTime: number;
-    averageSlippage: number;
-    maxDrawdown: number;
-    averageTradeReturn: number;
-  };
+  stats?: ExecutionStats | null;
 }
 
 export function PerformanceMetrics({
