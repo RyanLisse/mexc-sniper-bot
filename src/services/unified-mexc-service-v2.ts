@@ -157,55 +157,83 @@ export class UnifiedMexcServiceV2 {
    * Get account balances as Portfolio object
    */
   async getAccountBalances(): Promise<MexcServiceResponse<{ balances: BalanceEntry[]; totalUsdtValue: number; totalValue: number; totalValueBTC: number; allocation: Record<string, number>; performance24h: { change: number; changePercent: number } }>> {
-    return this.cacheLayer.getOrSet(
-      "account:portfolio",
-      async () => {
-        // Get the basic balance data
-        const balanceResponse = await this.coreClient.getAccountBalance();
-        
-        if (!balanceResponse.success) {
-          return balanceResponse;
+    // Get the basic balance data
+    const balanceResponse = await this.coreClient.getAccountBalance();
+    
+    if (!balanceResponse.success) {
+      // Return error in Portfolio format
+      return {
+        success: false,
+        error: balanceResponse.error,
+        timestamp: Date.now(),
+        source: "unified-mexc-service-v2",
+      };
+    }
+
+    const rawBalances = balanceResponse.data || [];
+    
+    // Transform raw balances to include calculated fields
+    const balances = rawBalances.map((balance: any) => {
+      const free = parseFloat(balance.free || '0');
+      const locked = parseFloat(balance.locked || '0');
+      const total = free + locked;
+      
+      // For now, use simplified USDT value calculation
+      // In production, this should fetch real-time prices from MEXC price API
+      let usdtValue = 0;
+      if (balance.asset === 'USDT') {
+        usdtValue = total;
+      } else if (balance.asset === 'BTC') {
+        usdtValue = total * 40000; // Placeholder BTC price
+      } else if (balance.asset === 'ETH') {
+        usdtValue = total * 2500; // Placeholder ETH price
+      } else {
+        usdtValue = total * 1; // Placeholder for other assets
+      }
+
+      return {
+        asset: balance.asset,
+        free: balance.free,
+        locked: balance.locked,
+        total,
+        usdtValue,
+      };
+    });
+    
+    // Calculate portfolio metrics
+    const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
+    const totalValue = totalUsdtValue; // For now, treat as same as USDT value
+    const totalValueBTC = totalUsdtValue * 0.000025; // Rough BTC conversion (this should be fetched from price API)
+
+    // Calculate allocation percentages
+    const allocation: Record<string, number> = {};
+    if (totalUsdtValue > 0) {
+      balances.forEach(balance => {
+        if (balance.usdtValue && balance.usdtValue > 0) {
+          allocation[balance.asset] = (balance.usdtValue / totalUsdtValue) * 100;
         }
+      });
+    }
 
-        const balances = balanceResponse.data || [];
-        
-        // Calculate portfolio metrics
-        const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
-        const totalValue = totalUsdtValue; // For now, treat as same as USDT value
-        const totalValueBTC = totalUsdtValue * 0.000025; // Rough BTC conversion (this should be fetched from price API)
+    // Placeholder performance data (should be calculated from historical data)
+    const performance24h = {
+      change: 0,
+      changePercent: 0,
+    };
 
-        // Calculate allocation percentages
-        const allocation: Record<string, number> = {};
-        if (totalUsdtValue > 0) {
-          balances.forEach(balance => {
-            if (balance.usdtValue && balance.usdtValue > 0) {
-              allocation[balance.asset] = (balance.usdtValue / totalUsdtValue) * 100;
-            }
-          });
-        }
-
-        // Placeholder performance data (should be calculated from historical data)
-        const performance24h = {
-          change: 0,
-          changePercent: 0,
-        };
-
-        return {
-          success: true,
-          data: {
-            balances,
-            totalUsdtValue,
-            totalValue,
-            totalValueBTC,
-            allocation,
-            performance24h,
-          },
-          timestamp: Date.now(),
-          source: "unified-mexc-service-v2",
-        };
+    return {
+      success: true,
+      data: {
+        balances,
+        totalUsdtValue,
+        totalValue,
+        totalValueBTC,
+        allocation,
+        performance24h,
       },
-      "user" // 10 minute cache for user data
-    );
+      timestamp: Date.now(),
+      source: "unified-mexc-service-v2",
+    };
   }
 
   /**
