@@ -61,23 +61,23 @@ export async function GET(request: NextRequest) {
     const totalCount = executions.length;
 
     // Calculate summary statistics
-    const buyExecutions = executions.filter(exec => exec.action === "buy" && exec.status === "success");
-    const sellExecutions = executions.filter(exec => exec.action === "sell" && exec.status === "success");
+    const buyExecutions = executions.filter((exec: any) => exec.action === "buy" && exec.status === "success");
+    const sellExecutions = executions.filter((exec: any) => exec.action === "sell" && exec.status === "success");
     
-    const totalBuyVolume = buyExecutions.reduce((sum, exec) => sum + (exec.totalCost || 0), 0);
-    const totalSellVolume = sellExecutions.reduce((sum, exec) => sum + (exec.totalCost || 0), 0);
-    const totalFees = executions.reduce((sum, exec) => sum + (exec.fees || 0), 0);
+    const totalBuyVolume = buyExecutions.reduce((sum: number, exec: any) => sum + (exec.totalCost || 0), 0);
+    const totalSellVolume = sellExecutions.reduce((sum: number, exec: any) => sum + (exec.totalCost || 0), 0);
+    const totalFees = executions.reduce((sum: number, exec: any) => sum + (exec.fees || 0), 0);
     
     const avgExecutionLatency = executions
-      .filter(exec => exec.executionLatencyMs)
-      .reduce((sum, exec, _, arr) => sum + (exec.executionLatencyMs || 0) / arr.length, 0);
+      .filter((exec: any) => exec.executionLatencyMs)
+      .reduce((sum: number, exec: any, _: number, arr: any[]) => sum + (exec.executionLatencyMs || 0) / arr.length, 0);
 
     const avgSlippage = executions
-      .filter(exec => exec.slippagePercent)
-      .reduce((sum, exec, _, arr) => sum + (exec.slippagePercent || 0) / arr.length, 0);
+      .filter((exec: any) => exec.slippagePercent)
+      .reduce((sum: number, exec: any, _: number, arr: any[]) => sum + (exec.slippagePercent || 0) / arr.length, 0);
 
     // Group executions by symbol for analysis
-    const symbolStats = executions.reduce((acc, exec) => {
+    const symbolStats = executions.reduce((acc: any, exec: any) => {
       const symbol = exec.symbolName;
       if (!acc[symbol]) {
         acc[symbol] = {
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
     }, {} as Record<string, any>);
 
     const response = {
-      executions: executions.map(exec => ({
+      executions: executions.map((exec: any) => ({
         ...exec,
         // Add human-readable timestamps
         executedAtFormatted: exec.executedAt ? (exec.executedAt instanceof Date ? exec.executedAt.toISOString() : new Date((exec.executedAt as number) * 1000).toISOString()) : null,
@@ -118,15 +118,15 @@ export async function GET(request: NextRequest) {
       },
       summary: {
         totalExecutions: executions.length,
-        successfulExecutions: executions.filter(exec => exec.status === "success").length,
-        failedExecutions: executions.filter(exec => exec.status === "failed").length,
+        successfulExecutions: executions.filter((exec: any) => exec.status === "success").length,
+        failedExecutions: executions.filter((exec: any) => exec.status === "failed").length,
         totalBuyVolume,
         totalSellVolume,
         totalFees,
         avgExecutionLatencyMs: Math.round(avgExecutionLatency),
         avgSlippagePercent: Number(avgSlippage.toFixed(3)),
         successRate: executions.length > 0 ? 
-          (executions.filter(exec => exec.status === "success").length / executions.length) * 100 : 0,
+          (executions.filter((exec: any) => exec.status === "success").length / executions.length) * 100 : 0,
       },
       symbolStats: Object.values(symbolStats),
     };

@@ -24,7 +24,7 @@ import { ManualTradingPanel } from "../../src/components/manual-trading-panel";
 import { useMexcCalendar, useReadyTargets } from "../../src/hooks/use-mexc-data";
 import { usePortfolio } from "../../src/hooks/use-portfolio";
 import { useAccountBalance } from "../../src/hooks/use-account-balance";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useAuth } from "../../src/lib/kinde-auth-client";
 import { AIServiceStatusPanel } from "../../src/components/dashboard/ai-intelligence/ai-service-status-panel";
 import { AIEnhancedPatternDisplay } from "../../src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
 import { CacheWarmingControlPanel } from "../../src/components/dashboard/cache-warming/cache-warming-control-panel";
@@ -34,7 +34,7 @@ import { useEnhancedPatterns } from "../../src/hooks/use-enhanced-patterns";
 import { Phase3IntegrationSummary } from "../../src/components/dashboard/phase3-integration-summary";
 
 export default function DashboardPage() {
-  const { user, isLoading: userLoading } = useKindeBrowserClient();
+  const { user, isLoading: userLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Use authenticated user ID
@@ -71,7 +71,10 @@ export default function DashboardPage() {
         break;
     }
   };
-  const { data: accountBalance, isLoading: balanceLoading } = useAccountBalance({ userId });
+  const { data: accountBalance, isLoading: balanceLoading } = useAccountBalance({ 
+    userId,
+    enabled: !!userId && !userLoading 
+  });
   const { data: portfolio } = usePortfolio(userId);
   const { data: calendarData } = useMexcCalendar();
   const { data: readyTargets } = useReadyTargets();

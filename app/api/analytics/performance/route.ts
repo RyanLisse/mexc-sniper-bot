@@ -296,7 +296,12 @@ function identifyBottlenecks(metrics: any[]): Array<{
   description: string;
   impact: string;
 }> {
-  const bottlenecks = [];
+  const bottlenecks: Array<{
+    type: string;
+    severity: 'low' | 'medium' | 'high';
+    description: string;
+    impact: string;
+  }> = [];
   
   if (metrics.length === 0) return bottlenecks;
 
@@ -336,7 +341,7 @@ function identifyBottlenecks(metrics: any[]): Array<{
 }
 
 function generatePerformanceRecommendations(metrics: any[], stats: any): string[] {
-  const recommendations = [];
+  const recommendations: string[] = [];
   
   if (metrics.length === 0) {
     recommendations.push("Enable performance monitoring to get actionable insights");

@@ -6,6 +6,9 @@
  */
 
 import { EventEmitter } from "events";
+import { db } from "../db";
+import { snipeTargets } from "../db/schemas/trading";
+import { eq, and, lt } from "drizzle-orm";
 import { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
 import { MexcConfigValidator } from "./mexc-config-validator";
 import type { SymbolEntry } from "./mexc-unified-exports";
@@ -428,35 +431,115 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
   private async performPatternDetection(): Promise<void> {
     try {
-      console.log("[AutoSnipingOrchestrator] Performing pattern detection...");
+      console.log("[AutoSnipingOrchestrator] Checking database for ready snipe targets...");
 
-      // Get market data from MEXC
-      const symbolsResponse = await this.mexcService.getSymbolData();
-      if (!symbolsResponse.success || !symbolsResponse.data) {
-        console.warn("[AutoSnipingOrchestrator] Failed to get symbols from MEXC");
+      // Get ready snipe targets from database instead of running pattern detection
+      const readyTargets = await this.getReadySnipeTargets();
+      
+      if (readyTargets.length === 0) {
+        console.log("[AutoSnipingOrchestrator] No ready snipe targets found in database");
         return;
       }
 
-      const symbols = symbolsResponse.data as SymbolEntry[];
+      console.log(`[AutoSnipingOrchestrator] Found ${readyTargets.length} ready snipe targets`);
+      this.status.detectedOpportunities += readyTargets.length;
 
-      // Detect ready state patterns
-      const patterns = await this.patternEngine.detectReadyStatePattern(symbols);
-      this.status.detectedOpportunities += patterns.length;
-
-      // Process high-confidence patterns
-      for (const pattern of patterns) {
-        if (pattern.confidence >= this.config.confidenceThreshold) {
-          await this.processOpportunity(pattern);
+      // Process each ready target
+      for (const target of readyTargets) {
+        if (target.confidenceScore >= this.config.confidenceThreshold) {
+          await this.processSnipeTarget(target);
         }
       }
 
+      // Update average confidence based on targets
       this.status.avgConfidenceScore =
-        patterns.length > 0
-          ? patterns.reduce((sum, p) => sum + p.confidence, 0) / patterns.length
+        readyTargets.length > 0
+          ? readyTargets.reduce((sum, t) => sum + t.confidenceScore, 0) / readyTargets.length
           : 0;
+
     } catch (error) {
-      console.error("[AutoSnipingOrchestrator] Pattern detection failed:", error);
+      console.error("[AutoSnipingOrchestrator] Database target check failed:", error);
       this.status.systemHealth.patternDetection = "degraded";
+    }
+  }
+
+  /**
+   * Get ready snipe targets from database
+   * This replaces the old pattern detection with database-driven approach
+   */
+  private async getReadySnipeTargets() {
+    try {
+      const now = new Date();
+      
+      // Query for targets that are ready for execution
+      const targets = await db
+        .select()
+        .from(snipeTargets)
+        .where(
+          and(
+            eq(snipeTargets.status, "ready"),
+            // Check if execution time has arrived (or no specific time set)
+            snipeTargets.targetExecutionTime.isNull()
+              .or(lt(snipeTargets.targetExecutionTime, now))
+          )
+        )
+        .orderBy(snipeTargets.priority, snipeTargets.createdAt)
+        .limit(10); // Limit to prevent overload
+
+      return targets;
+    } catch (error) {
+      console.error("[AutoSnipingOrchestrator] Failed to fetch ready targets:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Process a snipe target from the database
+   * This replaces the old processOpportunity method
+   */
+  private async processSnipeTarget(target: any): Promise<void> {
+    try {
+      console.log(
+        `[AutoSnipingOrchestrator] Processing snipe target: ${target.symbolName} (confidence: ${target.confidenceScore}%)`
+      );
+
+      // Check if we can take new positions
+      if (this.activePositions.size >= this.config.maxConcurrentPositions) {
+        console.log(
+          "[AutoSnipingOrchestrator] Max concurrent positions reached, skipping target"
+        );
+        return;
+      }
+
+      // Update target status to executing
+      await this.updateTargetStatus(target.id, "executing");
+
+      // Execute the trade
+      if (this.config.paperTradingMode) {
+        await this.simulateTradeFromTarget(target);
+      } else {
+        await this.executeTradeFromTarget(target);
+      }
+
+      this.status.lastOperation = {
+        timestamp: new Date().toISOString(),
+        action: "execute_snipe_target",
+        symbol: target.symbolName,
+        result: "success",
+      };
+
+    } catch (error) {
+      console.error("[AutoSnipingOrchestrator] Failed to process snipe target:", error);
+      
+      // Update target status to failed
+      await this.updateTargetStatus(target.id, "failed", error instanceof Error ? error.message : "Unknown error");
+
+      this.status.lastOperation = {
+        timestamp: new Date().toISOString(),
+        action: "execute_snipe_target",
+        symbol: target.symbolName,
+        result: "failed",
+      };
     }
   }
 
@@ -522,6 +605,81 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         result: "failed",
       };
     }
+  }
+
+  /**
+   * Update snipe target status in database
+   */
+  private async updateTargetStatus(targetId: number, status: string, errorMessage?: string): Promise<void> {
+    try {
+      const updateData: any = {
+        status,
+        updatedAt: new Date(),
+      };
+
+      if (status === "executing") {
+        updateData.actualExecutionTime = new Date();
+      }
+
+      if (errorMessage) {
+        updateData.errorMessage = errorMessage;
+      }
+
+      await db
+        .update(snipeTargets)
+        .set(updateData)
+        .where(eq(snipeTargets.id, targetId));
+
+    } catch (error) {
+      console.error("[AutoSnipingOrchestrator] Failed to update target status:", error);
+    }
+  }
+
+  /**
+   * Simulate trade from snipe target (paper trading)
+   */
+  private async simulateTradeFromTarget(target: any): Promise<void> {
+    console.log(`[AutoSnipingOrchestrator] Simulating trade for target ${target.symbolName}`);
+
+    // Create simulated position
+    const position = {
+      id: `target-${target.id}-${Date.now()}`,
+      targetId: target.id,
+      symbol: target.symbolName,
+      vcoinId: target.vcoinId,
+      entryPrice: 100, // Simulated price
+      amount: target.positionSizeUsdt / 100, // Convert USDT to quantity
+      strategy: this.config.strategy,
+      timestamp: new Date().toISOString(),
+      confidence: target.confidenceScore,
+      stopLoss: target.stopLossPercent,
+      takeProfit: target.takeProfitCustom || 15,
+    };
+
+    this.activePositions.set(position.id, position);
+    this.status.currentPositions = this.activePositions.size;
+    this.status.executedTrades++;
+    this.metrics.session.successfulTrades++;
+
+    // Update target status to completed
+    await this.updateTargetStatus(target.id, "completed");
+
+    // Simulate position closure after a delay
+    setTimeout(() => {
+      this.closeSimulatedPosition(position.id);
+    }, 60000); // Close after 1 minute for simulation
+  }
+
+  /**
+   * Execute real trade from snipe target
+   */
+  private async executeTradeFromTarget(target: any): Promise<void> {
+    // Real trading implementation would go here
+    console.log(`[AutoSnipingOrchestrator] Executing real trade for target ${target.symbolName}`);
+    
+    // For now, delegate to simulated trade
+    // TODO: Implement real trading logic with MEXC API
+    await this.simulateTradeFromTarget(target);
   }
 
   private async simulateTrade(pattern: any): Promise<void> {

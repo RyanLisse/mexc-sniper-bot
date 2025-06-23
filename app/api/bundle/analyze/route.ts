@@ -249,7 +249,7 @@ export const PUT = createApiHandler({
     // Validate configuration
     const validationResult = validateBundleConfig(config);
     if (!validationResult.valid) {
-      return context.validationError('config', validationResult.error);
+      return context.validationError('config', validationResult.error || 'Invalid configuration');
     }
 
     // In a real implementation, this would update the bundle configuration

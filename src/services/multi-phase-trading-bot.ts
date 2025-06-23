@@ -36,7 +36,7 @@ export class MultiPhaseTradingBot {
   } {
     const actions: string[] = [];
     const execution = this.executor.executePhases(currentPrice, {
-      maxPhasesPerExecution: 1, // Execute only one phase at a time for better control
+      maxPhasesPerExecution: 10, // Allow multiple phases to execute when price jumps significantly
     });
 
     // Execute pending phases synchronously for immediate tracking
@@ -66,8 +66,7 @@ export class MultiPhaseTradingBot {
 
     return {
       actions,
-      status: simpleStatus, // Return simple string for test compatibility
-      detailedStatus: {
+      status: {
         currentPrice,
         priceIncrease: `${priceIncreasePercent.toFixed(2)}%`,
         summary: updatedSummary,
@@ -76,6 +75,7 @@ export class MultiPhaseTradingBot {
         nextTarget: updatedSummary.nextPhaseTarget
           ? `${updatedSummary.nextPhaseTarget.toFixed(2)}`
           : "All phases completed",
+        simpleStatus, // Keep the simple status for backward compatibility
       },
     };
   }

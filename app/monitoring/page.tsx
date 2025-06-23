@@ -66,22 +66,32 @@ export default function MonitoringPage() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("overview");
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Hydration protection
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
-    fetchQuickMetrics();
-    const interval = setInterval(fetchQuickMetrics, 30000); // Update every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
+    if (isHydrated) {
+      fetchQuickMetrics();
+      const interval = setInterval(fetchQuickMetrics, 30000); // Update every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isHydrated]);
 
   // PHASE 6: Intelligent preloading for 70% faster load times
   useEffect(() => {
-    // Preload monitoring components after initial load
-    const timer = setTimeout(() => {
-      preloadMonitoringComponents().catch(console.error);
-    }, 1000);
+    if (isHydrated) {
+      // Preload monitoring components after initial load
+      const timer = setTimeout(() => {
+        preloadMonitoringComponents().catch(console.error);
+      }, 1000);
 
-    return () => clearTimeout(timer);
-  }, []);
+      return () => clearTimeout(timer);
+    }
+  }, [isHydrated]);
 
   // Tab hover preloading for instant switching
   const handleTabHover = (tabValue: string) => {
@@ -131,6 +141,17 @@ export default function MonitoringPage() {
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Failed to fetch quick metrics:', error);
+      // Set default values on error to prevent undefined states
+      setQuickMetrics({
+        systemHealth: 0,
+        tradingPerformance: 0,
+        agentStatus: 0,
+        alertCount: 0,
+        uptime: 0,
+        totalVolume: 0,
+        successRate: 0,
+        criticalAlerts: 0
+      });
     } finally {
       setLoading(false);
     }
@@ -163,6 +184,36 @@ export default function MonitoringPage() {
     if (score >= 60) return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
     return <AlertTriangle className="h-4 w-4 text-red-600" />;
   };
+
+  // Prevent hydration mismatches during initial render
+  if (!isHydrated) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between space-y-2">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Advanced Monitoring Dashboard</h1>
+              <p className="text-muted-foreground">
+                Comprehensive monitoring and analytics for the MEXC Sniper Bot AI System
+              </p>
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Loading...</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">...</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

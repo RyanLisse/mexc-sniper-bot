@@ -1,365 +1,298 @@
 /**
- * TDD Test Suite for MEXC Core Client
+ * MEXC Core Client Tests
  * 
- * Following TDD principles to ensure the core client works correctly
- * before integrating with the larger unified service.
+ * Comprehensive test suite for the modular MEXC core client.
+ * Tests are focused on specific functionality without complexity.
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { z } from 'zod';
-import { 
-  MexcCoreClient, 
-  createMexcCoreClient, 
-  getMexcCoreClient, 
-  resetMexcCoreClient 
-} from './mexc-core-client';
-import type { UnifiedMexcConfig } from './mexc-api-types';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { MexcCoreClient, createMexcCoreClient } from "./mexc-core-client";
+import type { MexcApiConfig } from "./mexc-api-types";
 
-describe('MexcCoreClient - TDD', () => {
+// ============================================================================
+// Test Configuration
+// ============================================================================
+
+const TEST_CONFIG: MexcApiConfig = {
+  apiKey: "test-api-key",
+  secretKey: "test-secret-key",
+  passphrase: "test-passphrase",
+  baseUrl: "https://api.mexc.com",
+  timeout: 5000,
+  maxRetries: 2,
+  retryDelay: 100,
+  rateLimitDelay: 50,
+};
+
+// ============================================================================
+// Mock Utilities
+// ============================================================================
+
+const createMockResponse = (data: any, status = 200) => {
+  return Promise.resolve({
+    ok: status >= 200 && status < 300,
+    status,
+    json: () => Promise.resolve(data),
+    text: () => Promise.resolve(JSON.stringify(data)),
+  } as Response);
+};
+
+// ============================================================================
+// Test Suite
+// ============================================================================
+
+describe("MexcCoreClient", () => {
   let client: MexcCoreClient;
-  let mockConfig: UnifiedMexcConfig;
+  let mockFetch: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    resetMexcCoreClient();
-    
-    mockConfig = {
-      apiKey: 'test-api-key-123',
-      secretKey: 'test-secret-key-456',
-      baseUrl: 'https://api.mexc.com',
-      timeout: 10000,
-      maxRetries: 3,
-      retryDelay: 1000,
-      rateLimitDelay: 100,
-      enableCaching: true,
-      cacheTTL: 30000,
-      enableCircuitBreaker: true,
-      enableMetrics: true,
-      enableEnhancedCaching: true,
-      enablePerformanceMonitoring: true,
-      apiResponseTTL: 1500,
-    };
-
-    // Mock fetch
-    global.fetch = vi.fn();
+    client = new MexcCoreClient(TEST_CONFIG);
+    mockFetch = vi.fn();
+    global.fetch = mockFetch;
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
-  describe('Client Initialization', () => {
-    it('should create client with valid configuration', () => {
-      expect(() => {
-        client = createMexcCoreClient(mockConfig);
-      }).not.toThrow();
-      
+  // ============================================================================
+  // Constructor Tests
+  // ============================================================================
+
+  describe("Constructor", () => {
+    it("should create client with provided config", () => {
       expect(client).toBeInstanceOf(MexcCoreClient);
-      expect(client.isConfigured()).toBe(true);
     });
 
-    it('should throw error with missing API credentials', () => {
-      const invalidConfig = { ...mockConfig, apiKey: '', secretKey: '' };
-      
-      expect(() => {
-        createMexcCoreClient(invalidConfig);
-      }).toThrow('MEXC API credentials are required');
-    });
-
-    it('should use environment variables as fallback', () => {
-      process.env.MEXC_API_KEY = 'env-api-key';
-      process.env.MEXC_SECRET_KEY = 'env-secret-key';
-      
-      const configWithoutKeys = { ...mockConfig };
-      delete configWithoutKeys.apiKey;
-      delete configWithoutKeys.secretKey;
-      
-      expect(() => {
-        client = createMexcCoreClient(configWithoutKeys);
-      }).not.toThrow();
-      
-      expect(client.isConfigured()).toBe(true);
-    });
-
-    it('should merge with default configuration', () => {
-      const minimalConfig = {
-        apiKey: 'test-key',
-        secretKey: 'test-secret',
-      };
-      
-      client = createMexcCoreClient(minimalConfig);
-      const config = client.getConfig();
-      
-      expect(config.baseUrl).toBe('https://api.mexc.com');
-      expect(config.timeout).toBe(10000);
-      expect(config.maxRetries).toBe(3);
-      expect(config.enableCaching).toBe(true);
+    it("should create client using factory function", () => {
+      const factoryClient = createMexcCoreClient(TEST_CONFIG);
+      expect(factoryClient).toBeInstanceOf(MexcCoreClient);
     });
   });
 
-  describe('Calendar Listings API', () => {
-    beforeEach(() => {
-      client = createMexcCoreClient(mockConfig);
-    });
+  // ============================================================================
+  // Calendar API Tests  
+  // ============================================================================
 
-    it('should fetch calendar listings successfully', async () => {
-      // Arrange
-      const mockResponse = {
-        data: [
-          {
-            symbol: 'BTCUSDT',
-            baseAsset: 'BTC',
-            quoteAsset: 'USDT',
-            tradingStartTime: Date.now(),
-            status: 'TRADING' as const,
-          }
-        ]
+  describe("Calendar API", () => {
+    it("should get calendar listings successfully", async () => {
+      const mockData = {
+        data: {
+          newCoins: [
+            {
+              vcoinId: "BTC123",
+              vcoinName: "Bitcoin Test",
+              vcoinNameFull: "Bitcoin Test Coin",
+              firstOpenTime: "2024-01-01T00:00:00Z",
+              zone: "Innovation",
+            },
+          ],
+        },
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-        headers: new Headers(),
-      });
+      mockFetch.mockResolvedValue(createMockResponse(mockData));
 
-      // Act
       const result = await client.getCalendarListings();
 
-      // Assert
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
-      expect(result.data![0].symbol).toBe('BTCUSDT');
-      expect(result.error).toBeUndefined();
+      expect(result.data![0].vcoinId).toBe("BTC123");
+      expect(result.source).toBe("mexc-core-client");
     });
 
-    it('should handle validation errors gracefully', async () => {
-      // Arrange - Invalid response data
-      const invalidResponse = {
-        data: [
-          {
-            symbol: '', // Invalid: empty symbol
-            baseAsset: 'BTC',
-            // Missing required fields
-          }
-        ]
-      };
+    it("should handle calendar API errors", async () => {
+      mockFetch.mockResolvedValue(createMockResponse({}, 500));
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(invalidResponse),
-        headers: new Headers(),
-      });
-
-      // Act
       const result = await client.getCalendarListings();
 
-      // Assert
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Calendar validation failed');
-      expect(result.data).toBeUndefined();
+      expect(result.error).toContain("HTTP 500");
     });
 
-    it('should handle network errors', async () => {
-      // Arrange
-      global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+    it("should handle invalid calendar response format", async () => {
+      mockFetch.mockResolvedValue(createMockResponse({ data: {} }));
 
-      // Act
       const result = await client.getCalendarListings();
 
-      // Assert
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Network error');
-      expect(result.data).toBeUndefined();
+      expect(result.error).toBe("Invalid calendar response format");
     });
   });
 
-  describe('Exchange Symbols API', () => {
-    beforeEach(() => {
-      client = createMexcCoreClient(mockConfig);
-    });
+  // ============================================================================
+  // Symbols API Tests
+  // ============================================================================
 
-    it('should fetch exchange symbols successfully', async () => {
-      // Arrange
-      const mockResponse = {
-        symbols: [
-          {
-            symbol: 'BTCUSDT',
-            status: 'TRADING' as const,
-            baseAsset: 'BTC',
-            quoteAsset: 'USDT',
-          }
-        ]
+  describe("Symbols API", () => {
+    it("should get symbols by vcoin ID successfully", async () => {
+      const mockData = {
+        data: {
+          symbols: [
+            {
+              symbol: "BTCUSDT",
+              baseAsset: "BTC",
+              quoteAsset: "USDT",
+              status: "TRADING",
+              baseAssetPrecision: 8,
+              quotePrecision: 2,
+              orderTypes: ["LIMIT", "MARKET"],
+              filters: [],
+            },
+          ],
+        },
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-        headers: new Headers(),
-      });
+      mockFetch.mockResolvedValue(createMockResponse(mockData));
 
-      // Act
-      const result = await client.getExchangeSymbols();
+      const result = await client.getSymbolsByVcoinId("BTC");
 
-      // Assert
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
-      expect(result.data![0].symbol).toBe('BTCUSDT');
-    });
-  });
-
-  describe('Ticker API', () => {
-    beforeEach(() => {
-      client = createMexcCoreClient(mockConfig);
+      expect(result.data![0].symbol).toBe("BTCUSDT");
+      expect(result.data![0].baseAsset).toBe("BTC");
     });
 
-    it('should fetch ticker data successfully', async () => {
-      // Arrange
-      const mockTicker = {
-        symbol: 'BTCUSDT',
-        priceChange: '100.00',
-        priceChangePercent: '1.23',
-        weightedAvgPrice: '45000.00',
-        prevClosePrice: '44900.00',
-        lastPrice: '45000.00',
-        lastQty: '0.1',
-        bidPrice: '44999.00',
-        bidQty: '0.5',
-        askPrice: '45001.00',
-        askQty: '0.3',
-        openPrice: '44900.00',
-        highPrice: '45100.00',
-        lowPrice: '44800.00',
-        volume: '1000.0',
-        quoteVolume: '45000000.00',
-        openTime: Date.now() - 86400000,
-        closeTime: Date.now(),
-        firstId: 1,
-        lastId: 1000,
-        count: 1000,
+    it("should filter symbols correctly", async () => {
+      const mockData = {
+        data: {
+          symbols: [
+            { symbol: "BTCUSDT", baseAsset: "BTC", quoteAsset: "USDT" },
+            { symbol: "ETHUSDT", baseAsset: "ETH", quoteAsset: "USDT" },
+            { symbol: "BTCETH", baseAsset: "BTC", quoteAsset: "ETH" },
+          ],
+        },
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockTicker),
-        headers: new Headers(),
-      });
+      mockFetch.mockResolvedValue(createMockResponse(mockData));
 
-      // Act
-      const result = await client.getTicker('BTCUSDT');
+      const result = await client.getSymbolsByVcoinId("BTC");
 
-      // Assert
       expect(result.success).toBe(true);
-      expect(result.data!.symbol).toBe('BTCUSDT');
-      expect(result.data!.lastPrice).toBe('45000.00');
+      expect(result.data).toHaveLength(2); // BTCUSDT and BTCETH
     });
   });
 
-  describe('Server Time API', () => {
-    beforeEach(() => {
-      client = createMexcCoreClient(mockConfig);
-    });
+  // ============================================================================
+  // Account API Tests
+  // ============================================================================
 
-    it('should fetch server time successfully', async () => {
-      // Arrange
-      const mockTime = { serverTime: Date.now() };
-      
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockTime),
-        headers: new Headers(),
-      });
+  describe("Account API", () => {
+    it("should get account balance successfully", async () => {
+      const mockData = {
+        data: {
+          balances: [
+            { asset: "BTC", free: "1.00000000", locked: "0.00000000" },
+            { asset: "USDT", free: "1000.00000000", locked: "0.00000000" },
+            { asset: "ETH", free: "0.00000000", locked: "0.00000000" }, // Should be filtered out
+          ],
+        },
+      };
 
-      // Act
-      const result = await client.getServerTime();
+      mockFetch.mockResolvedValue(createMockResponse(mockData));
 
-      // Assert
+      const result = await client.getAccountBalance();
+
       expect(result.success).toBe(true);
-      expect(result.data!.serverTime).toBe(mockTime.serverTime);
+      expect(result.data).toHaveLength(2); // Only BTC and USDT (ETH filtered out)
+      expect(result.data![0].asset).toBe("BTC");
+      expect(result.data![1].asset).toBe("USDT");
     });
   });
 
-  describe('Error Handling and Resilience', () => {
-    beforeEach(() => {
-      client = createMexcCoreClient(mockConfig);
-    });
+  // ============================================================================
+  // Server Time API Tests
+  // ============================================================================
 
-    it('should retry on network failures', async () => {
-      // Arrange
-      let callCount = 0;
-      global.fetch = vi.fn().mockImplementation(() => {
-        callCount++;
-        if (callCount < 3) {
-          return Promise.reject(new Error('Network failure'));
-        }
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ serverTime: Date.now() }),
-          headers: new Headers(),
-        });
-      });
+  describe("Server Time API", () => {
+    it("should get server time successfully", async () => {
+      const mockServerTime = Date.now();
+      const mockData = { data: { serverTime: mockServerTime } };
 
-      // Act
+      mockFetch.mockResolvedValue(createMockResponse(mockData));
+
       const result = await client.getServerTime();
 
-      // Assert
-      expect(callCount).toBe(3);
       expect(result.success).toBe(true);
+      expect(result.data).toBe(mockServerTime);
     });
 
-    it('should handle HTTP error responses', async () => {
-      // Arrange
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request',
-      });
+    it("should handle invalid server time response", async () => {
+      mockFetch.mockResolvedValue(createMockResponse({ data: {} }));
 
-      // Act
+      const result = await client.getServerTime();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Invalid server time response");
+    });
+  });
+
+  // ============================================================================
+  // Error Handling Tests
+  // ============================================================================
+
+  describe("Error Handling", () => {
+    it("should handle network errors", async () => {
+      mockFetch.mockRejectedValue(new Error("Network error"));
+
+      const result = await client.getServerTime();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Network error");
+    });
+
+    it("should handle timeout errors", async () => {
+      mockFetch.mockRejectedValue(new Error("The operation was aborted"));
+
       const result = await client.getCalendarListings();
 
-      // Assert
       expect(result.success).toBe(false);
-      expect(result.error).toContain('HTTP 400: Bad Request');
+      expect(result.error).toContain("aborted");
     });
 
-    it('should timeout requests appropriately', async () => {
-      // Arrange
-      global.fetch = vi.fn().mockImplementation(() => 
-        new Promise(() => {}) // Never resolves
-      );
+    it("should handle unknown errors", async () => {
+      mockFetch.mockRejectedValue("Unknown error type");
 
-      // Act & Assert
-      await expect(client.getServerTime()).rejects.toThrow();
+      const result = await client.getAccountBalance();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Unknown error");
     });
   });
 
-  describe('Factory Functions', () => {
-    it('should create and cache global client instance', () => {
-      // Act
-      const client1 = getMexcCoreClient(mockConfig);
-      const client2 = getMexcCoreClient();
+  // ============================================================================
+  // Request Headers Tests
+  // ============================================================================
 
-      // Assert
-      expect(client1).toBe(client2);
-      expect(client1.isConfigured()).toBe(true);
-    });
+  describe("Request Headers", () => {
+    it("should include correct headers for regular requests", async () => {
+      mockFetch.mockResolvedValue(createMockResponse({ data: { serverTime: Date.now() } }));
 
-    it('should throw error when accessing uninitialized global client', () => {
-      // Act & Assert
-      expect(() => getMexcCoreClient()).toThrow(
-        'MexcCoreClient not initialized. Call with config first.'
+      await client.getServerTime();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            "Content-Type": "application/json",
+            "User-Agent": "MEXC-Sniper-Bot/2.0",
+          }),
+        })
       );
     });
 
-    it('should reset global client instance', () => {
-      // Arrange
-      getMexcCoreClient(mockConfig);
+    it("should include auth headers for authenticated requests", async () => {
+      mockFetch.mockResolvedValue(createMockResponse({ data: { balances: [] } }));
 
-      // Act
-      resetMexcCoreClient();
+      await client.getAccountBalance();
 
-      // Assert
-      expect(() => getMexcCoreClient()).toThrow();
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            "X-MEXC-APIKEY": TEST_CONFIG.apiKey,
+          }),
+        })
+      );
     });
   });
 });

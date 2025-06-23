@@ -1,81 +1,34 @@
 /**
  * MEXC Core API Client
  * 
- * Focused, lightweight HTTP client for MEXC API communication.
- * This module handles core API requests while keeping under 500 lines.
- * 
- * Features:
- * - Clean HTTP request interface
- * - Built-in error handling
- * - Request/response logging
- * - TypeScript strict mode
- * - Zod validation integration
+ * Lightweight, focused HTTP client for MEXC API communication.
+ * Extracted from unified service for better separation of concerns.
  */
 
-import { z } from 'zod';
-import type { 
-  UnifiedMexcConfig, 
+import type {
+  MexcApiConfig,
+  MexcApiResponse,
   MexcServiceResponse,
   CalendarEntry,
-  ExchangeSymbol,
-  Portfolio,
-  Ticker
-} from './mexc-api-types';
-import { 
-  UnifiedMexcConfigSchema,
-  CalendarEntrySchema,
-  ExchangeSymbolSchema,
-  PortfolioSchema,
-  TickerSchema,
-  validateMexcData,
-  safeMexcValidation
-} from './mexc-api-types';
+  SymbolEntry,
+  BalanceEntry,
+  ExchangeInfo,
+  Ticker,
+} from "./mexc-api-types";
 
 // ============================================================================
-// Request/Response Types
-// ============================================================================
-
-interface ApiRequestOptions {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  endpoint: string;
-  params?: Record<string, string | number | boolean>;
-  data?: Record<string, unknown>;
-  requiresAuth?: boolean;
-  timeout?: number;
-}
-
-interface ApiResponse<T> {
-  data: T;
-  status: number;
-  headers: Record<string, string>;
-  timestamp: number;
-}
-
-// ============================================================================
-// Core API Client Class
+// Core HTTP Client
 // ============================================================================
 
 export class MexcCoreClient {
-  private readonly config: Required<UnifiedMexcConfig>;
-  private readonly baseHeaders: Record<string, string>;
+  private config: MexcApiConfig;
+  private baseHeaders: Record<string, string>;
 
-  constructor(config: UnifiedMexcConfig) {
-    // Validate and merge configuration
-    this.config = {
-      ...UnifiedMexcConfigSchema.parse(config),
-      apiKey: config.apiKey || process.env.MEXC_API_KEY || '',
-      secretKey: config.secretKey || process.env.MEXC_SECRET_KEY || '',
-      passphrase: config.passphrase || process.env.MEXC_PASSPHRASE || '',
-    };
-
-    if (!this.config.apiKey || !this.config.secretKey) {
-      throw new Error('MEXC API credentials are required');
-    }
-
+  constructor(config: MexcApiConfig) {
+    this.config = config;
     this.baseHeaders = {
-      'Content-Type': 'application/json',
-      'User-Agent': 'mexc-sniper-bot/1.0.0',
-      'X-MEXC-APIKEY': this.config.apiKey,
+      "Content-Type": "application/json",
+      "User-Agent": "MEXC-Sniper-Bot/2.0",
     };
   }
 
@@ -84,268 +37,244 @@ export class MexcCoreClient {
   // ============================================================================
 
   /**
-   * Get calendar listings with Zod validation
+   * Get calendar listings from MEXC
    */
   async getCalendarListings(): Promise<MexcServiceResponse<CalendarEntry[]>> {
+    const startTime = Date.now();
+
     try {
-      const response = await this.makeRequest<CalendarEntry[]>({
-        method: 'GET',
-        endpoint: '/api/v3/calendar',
-        requiresAuth: false,
+      const timestamp = Date.now();
+      const url = `https://www.mexc.com/api/operation/new_coin_calendar?timestamp=${timestamp}`;
+
+      const response = await this.makeRequest(url, {
+        method: "GET",
+        timeout: 30000,
       });
 
-      // Validate response data
-      const validation = safeMexcValidation(response.data, z.array(CalendarEntrySchema));
-      
-      if (!validation.success) {
+      // Handle MEXC's specific response structure
+      if (response.data?.newCoins && Array.isArray(response.data.newCoins)) {
+        const calendarData = response.data.newCoins.map((coin: any) => ({
+          vcoinId: coin.vcoinId || coin.id || "",
+          symbol: coin.vcoinName || coin.symbol || coin.vcoinId || "",
+          projectName: coin.vcoinNameFull || coin.vcoinName || coin.projectName || "",
+          firstOpenTime: this.parseTimestamp(coin.firstOpenTime || coin.first_open_time),
+          vcoinName: coin.vcoinName,
+          vcoinNameFull: coin.vcoinNameFull,
+          zone: coin.zone,
+        }));
+
         return {
-          success: false,
-          error: `Calendar validation failed: ${validation.error}`,
+          success: true,
+          data: calendarData,
           timestamp: Date.now(),
-          cached: false,
+          source: "mexc-core-client",
         };
       }
 
       return {
-        success: true,
-        data: validation.data,
+        success: false,
+        error: "Invalid calendar response format",
         timestamp: Date.now(),
-        cached: false,
+        source: "mexc-core-client",
       };
     } catch (error) {
-      return this.handleError('getCalendarListings', error);
+      return this.handleError(error, "getCalendarListings", startTime);
     }
   }
 
   /**
-   * Get exchange symbols with validation
+   * Get symbols for a specific coin
    */
-  async getExchangeSymbols(): Promise<MexcServiceResponse<ExchangeSymbol[]>> {
-    try {
-      const response = await this.makeRequest<{ symbols: ExchangeSymbol[] }>({
-        method: 'GET',
-        endpoint: '/api/v3/exchangeInfo',
-        requiresAuth: false,
-      });
+  async getSymbolsByVcoinId(vcoinId: string): Promise<MexcServiceResponse<SymbolEntry[]>> {
+    const startTime = Date.now();
 
-      const validation = safeMexcValidation(
-        response.data.symbols, 
-        z.array(ExchangeSymbolSchema)
-      );
-      
-      if (!validation.success) {
+    try {
+      const url = `${this.config.baseUrl}/api/v3/exchangeInfo`;
+      const response = await this.makeAuthenticatedRequest(url);
+
+      if (response.data?.symbols && Array.isArray(response.data.symbols)) {
+        const matchingSymbols = response.data.symbols
+          .filter((symbol: any) => 
+            symbol.symbol?.includes(vcoinId.toUpperCase()) ||
+            symbol.baseAsset === vcoinId.toUpperCase()
+          )
+          .map((symbol: any) => ({
+            symbol: symbol.symbol,
+            baseAsset: symbol.baseAsset,
+            quoteAsset: symbol.quoteAsset,
+            status: symbol.status,
+            quoteOrderQtyMarketAllowed: symbol.quoteOrderQtyMarketAllowed,
+            baseAssetPrecision: symbol.baseAssetPrecision,
+            quotePrecision: symbol.quotePrecision,
+            orderTypes: symbol.orderTypes,
+            icebergAllowed: symbol.icebergAllowed,
+            ocoAllowed: symbol.ocoAllowed,
+            isSpotTradingAllowed: symbol.isSpotTradingAllowed,
+            isMarginTradingAllowed: symbol.isMarginTradingAllowed,
+            filters: symbol.filters,
+          }));
+
         return {
-          success: false,
-          error: `Exchange symbols validation failed: ${validation.error}`,
+          success: true,
+          data: matchingSymbols,
           timestamp: Date.now(),
-          cached: false,
+          source: "mexc-core-client",
         };
       }
 
       return {
-        success: true,
-        data: validation.data,
+        success: false,
+        error: "Invalid symbols response format",
         timestamp: Date.now(),
-        cached: false,
+        source: "mexc-core-client",
       };
     } catch (error) {
-      return this.handleError('getExchangeSymbols', error);
+      return this.handleError(error, "getSymbolsByVcoinId", startTime);
     }
   }
 
   /**
-   * Get account portfolio information
+   * Get account balance
    */
-  async getPortfolio(): Promise<MexcServiceResponse<Portfolio>> {
-    try {
-      const response = await this.makeRequest<Portfolio>({
-        method: 'GET',
-        endpoint: '/api/v3/account',
-        requiresAuth: true,
-      });
+  async getAccountBalance(): Promise<MexcServiceResponse<BalanceEntry[]>> {
+    const startTime = Date.now();
 
-      const validation = safeMexcValidation(response.data, PortfolioSchema);
-      
-      if (!validation.success) {
+    try {
+      const url = `${this.config.baseUrl}/api/v3/account`;
+      const response = await this.makeAuthenticatedRequest(url);
+
+      if (response.data?.balances && Array.isArray(response.data.balances)) {
+        const balances = response.data.balances
+          .filter((balance: any) => 
+            Number.parseFloat(balance.free) > 0 || Number.parseFloat(balance.locked) > 0
+          )
+          .map((balance: any) => ({
+            asset: balance.asset,
+            free: balance.free,
+            locked: balance.locked,
+          }));
+
         return {
-          success: false,
-          error: `Portfolio validation failed: ${validation.error}`,
+          success: true,
+          data: balances,
           timestamp: Date.now(),
-          cached: false,
+          source: "mexc-core-client",
         };
       }
 
       return {
-        success: true,
-        data: validation.data,
+        success: false,
+        error: "Invalid balance response format",
         timestamp: Date.now(),
-        cached: false,
+        source: "mexc-core-client",
       };
     } catch (error) {
-      return this.handleError('getPortfolio', error);
-    }
-  }
-
-  /**
-   * Get ticker information for a symbol
-   */
-  async getTicker(symbol: string): Promise<MexcServiceResponse<Ticker>> {
-    try {
-      const response = await this.makeRequest<Ticker>({
-        method: 'GET',
-        endpoint: '/api/v3/ticker/24hr',
-        params: { symbol },
-        requiresAuth: false,
-      });
-
-      const validation = safeMexcValidation(response.data, TickerSchema);
-      
-      if (!validation.success) {
-        return {
-          success: false,
-          error: `Ticker validation failed: ${validation.error}`,
-          timestamp: Date.now(),
-          cached: false,
-        };
-      }
-
-      return {
-        success: true,
-        data: validation.data,
-        timestamp: Date.now(),
-        cached: false,
-      };
-    } catch (error) {
-      return this.handleError('getTicker', error);
+      return this.handleError(error, "getAccountBalance", startTime);
     }
   }
 
   /**
    * Get server time
    */
-  async getServerTime(): Promise<MexcServiceResponse<{ serverTime: number }>> {
+  async getServerTime(): Promise<MexcServiceResponse<number>> {
+    const startTime = Date.now();
+
     try {
-      const response = await this.makeRequest<{ serverTime: number }>({
-        method: 'GET',
-        endpoint: '/api/v3/time',
-        requiresAuth: false,
-      });
+      const url = `${this.config.baseUrl}/api/v3/time`;
+      const response = await this.makeRequest(url);
+
+      if (response.data?.serverTime) {
+        return {
+          success: true,
+          data: response.data.serverTime,
+          timestamp: Date.now(),
+          source: "mexc-core-client",
+        };
+      }
 
       return {
-        success: true,
-        data: response.data,
+        success: false,
+        error: "Invalid server time response",
         timestamp: Date.now(),
-        cached: false,
+        source: "mexc-core-client",
       };
     } catch (error) {
-      return this.handleError('getServerTime', error);
+      return this.handleError(error, "getServerTime", startTime);
     }
   }
 
   // ============================================================================
-  // Core HTTP Request Method
+  // Private Helper Methods
   // ============================================================================
 
-  private async makeRequest<T>(options: ApiRequestOptions): Promise<ApiResponse<T>> {
-    const url = new URL(options.endpoint, this.config.baseUrl);
-    
-    // Add query parameters
-    if (options.params) {
-      Object.entries(options.params).forEach(([key, value]) => {
-        url.searchParams.append(key, value.toString());
-      });
+  private async makeRequest(
+    url: string,
+    options: RequestInit & { timeout?: number } = {}
+  ): Promise<MexcApiResponse> {
+    const { timeout = this.config.timeout, ...fetchOptions } = options;
+
+    const response = await fetch(url, {
+      ...fetchOptions,
+      headers: {
+        ...this.baseHeaders,
+        ...fetchOptions.headers,
+      },
+      signal: AbortSignal.timeout(timeout),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
-    // Prepare headers
-    const headers = { ...this.baseHeaders };
-    
-    // Add authentication if required
-    if (options.requiresAuth) {
-      const timestamp = Date.now();
-      const signature = this.generateSignature(options, timestamp);
-      headers['X-MEXC-TIMESTAMP'] = timestamp.toString();
-      headers['X-MEXC-SIGNATURE'] = signature;
-    }
+    return await response.json();
+  }
 
-    // Prepare request options
-    const fetchOptions: RequestInit = {
-      method: options.method,
-      headers,
-      signal: AbortSignal.timeout(options.timeout || this.config.timeout),
+  private async makeAuthenticatedRequest(
+    url: string,
+    options: RequestInit = {}
+  ): Promise<MexcApiResponse> {
+    // Add authentication headers here
+    const authHeaders = this.generateAuthHeaders();
+    
+    return this.makeRequest(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        ...authHeaders,
+      },
+    });
+  }
+
+  private generateAuthHeaders(): Record<string, string> {
+    // Simplified auth header generation
+    // In production, this would include proper MEXC signature generation
+    return {
+      "X-MEXC-APIKEY": this.config.apiKey,
     };
-
-    if (options.data && ['POST', 'PUT'].includes(options.method)) {
-      fetchOptions.body = JSON.stringify(options.data);
-    }
-
-    // Make request with retry logic
-    let lastError: Error;
-    for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
-      try {
-        const response = await fetch(url.toString(), fetchOptions);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        const responseHeaders: Record<string, string> = {};
-        response.headers.forEach((value, key) => {
-          responseHeaders[key] = value;
-        });
-
-        return {
-          data,
-          status: response.status,
-          headers: responseHeaders,
-          timestamp: Date.now(),
-        };
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error');
-        
-        if (attempt < this.config.maxRetries) {
-          const delay = this.config.retryDelay * Math.pow(2, attempt);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-    }
-
-    throw lastError!;
   }
 
-  // ============================================================================
-  // Authentication & Utility Methods
-  // ============================================================================
-
-  private generateSignature(options: ApiRequestOptions, timestamp: number): string {
-    // Simple signature generation (implement MEXC's actual algorithm)
-    const payload = `${options.method}${options.endpoint}${timestamp}`;
-    return btoa(payload + this.config.secretKey).substring(0, 32);
+  private parseTimestamp(timestamp: any): number {
+    if (typeof timestamp === "string") {
+      return new Date(timestamp).getTime();
+    }
+    return timestamp || Date.now();
   }
 
-  private handleError(method: string, error: unknown): MexcServiceResponse<never> {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
-    console.error(`[MexcCoreClient.${method}] Error:`, errorMessage);
-    
+  private handleError(
+    error: unknown,
+    methodName: string,
+    startTime: number
+  ): MexcServiceResponse<never> {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error(`[MexcCoreClient.${methodName}] Error:`, errorMessage);
+
     return {
       success: false,
       error: errorMessage,
       timestamp: Date.now(),
-      cached: false,
+      source: "mexc-core-client",
     };
-  }
-
-  // ============================================================================
-  // Configuration Access
-  // ============================================================================
-
-  getConfig(): Readonly<Required<UnifiedMexcConfig>> {
-    return { ...this.config };
-  }
-
-  isConfigured(): boolean {
-    return !!(this.config.apiKey && this.config.secretKey);
   }
 }
 
@@ -353,24 +282,15 @@ export class MexcCoreClient {
 // Factory Function
 // ============================================================================
 
-let globalClient: MexcCoreClient | null = null;
-
-export function createMexcCoreClient(config: UnifiedMexcConfig): MexcCoreClient {
+/**
+ * Create a new MEXC core client instance
+ */
+export function createMexcCoreClient(config: MexcApiConfig): MexcCoreClient {
   return new MexcCoreClient(config);
 }
 
-export function getMexcCoreClient(config?: UnifiedMexcConfig): MexcCoreClient {
-  if (!globalClient && config) {
-    globalClient = new MexcCoreClient(config);
-  }
-  
-  if (!globalClient) {
-    throw new Error('MexcCoreClient not initialized. Call with config first.');
-  }
-  
-  return globalClient;
-}
+// ============================================================================
+// Exports
+// ============================================================================
 
-export function resetMexcCoreClient(): void {
-  globalClient = null;
-}
+export default MexcCoreClient;

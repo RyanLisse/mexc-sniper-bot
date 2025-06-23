@@ -36,7 +36,10 @@ export async function GET(request: NextRequest) {
     const activeCorrelations = await correlationEngine.getActiveCorrelations();
 
     // Calculate additional metrics
-    const additionalMetrics = await calculateAdditionalMetrics(startDate, endDate);
+    const additionalMetrics = await calculateAdditionalMetrics(
+      startDate ?? undefined, 
+      endDate ?? undefined
+    );
 
     const analyticsData = {
       timeSeries: {

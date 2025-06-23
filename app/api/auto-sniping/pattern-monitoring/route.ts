@@ -105,6 +105,60 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           message: `Manual pattern detection completed: ${patterns.length} patterns found`
         }));
 
+      case 'trigger_pattern_to_targets':
+        // NEW ACTION: Trigger pattern detection and create snipe targets
+        const { patternStrategyOrchestrator } = await import('@/src/services/pattern-strategy-orchestrator');
+        const { patternTargetIntegrationService } = await import('@/src/services/pattern-target-integration-service');
+        const { UnifiedMexcService } = await import('@/src/services/unified-mexc-service');
+
+        const mexcService = new UnifiedMexcService();
+        const userId = body.userId || "system";
+
+        // Get market data
+        const symbolsResponse = await mexcService.getSymbolData();
+        if (!symbolsResponse.success || !symbolsResponse.data) {
+          return NextResponse.json(createErrorResponse(
+            'Failed to fetch market data from MEXC',
+            { code: 'MEXC_DATA_FAILED' }
+          ), { status: 500 });
+        }
+
+        // Run pattern detection workflow (this will auto-create snipe targets)
+        const workflowResult = await patternStrategyOrchestrator.executePatternWorkflow({
+          type: "monitoring",
+          input: {
+            symbolData: symbolsResponse.data as any[],
+          },
+          options: {
+            confidenceThreshold: body.confidenceThreshold || 75,
+            enableAgentAnalysis: true,
+            maxExecutionTime: 30000
+          }
+        });
+
+        // Get integration statistics
+        const stats = await patternTargetIntegrationService.getStatistics(userId);
+
+        return NextResponse.json(createSuccessResponse({
+          workflow: {
+            success: workflowResult.success,
+            patternsDetected: workflowResult.results.patternAnalysis?.matches?.length || 0,
+            readyStatePatterns: workflowResult.results.patternAnalysis?.matches?.filter(m => 
+              m.patternType === "ready_state"
+            ).length || 0,
+            executionTime: workflowResult.performance.executionTime,
+          },
+          targetIntegration: stats,
+          message: "Pattern detection triggered and snipe targets created",
+          nextSteps: [
+            "Snipe targets have been created in the database",
+            "Auto-sniping orchestrator will pick them up automatically",
+            "Monitor /api/auto-sniping/control for execution status"
+          ]
+        }, {
+          message: `Pattern-to-targets integration completed: ${stats.totalTargetsCreated} total targets`
+        }));
+
       case 'acknowledge_alert':
         if (!alertId) {
           return NextResponse.json(createErrorResponse(

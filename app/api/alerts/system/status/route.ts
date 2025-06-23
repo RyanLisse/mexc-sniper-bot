@@ -183,7 +183,7 @@ async function getTopAlertSources(): Promise<Array<{ source: string; count: numb
       .orderBy(sql`count(*) desc`)
       .limit(5);
     
-    return result.map(row => ({
+    return result.map((row: { source: string; count: number }) => ({
       source: row.source,
       count: Number(row.count),
     }));

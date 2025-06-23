@@ -22,19 +22,19 @@ export async function GET() {
     );
   } catch (error) {
     console.error("Auto-sniping config GET error:", error);
-    return handleApiError(error, "Failed to get auto-sniping configuration");
+    return handleApiError(error, { message: "Failed to get auto-sniping configuration" });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, config } = body;
+    const { action, config } = body as { action: string; config?: Record<string, unknown> };
 
     if (!action) {
       return apiResponse(
         createErrorResponse("Action is required", {
-          message: "Please specify action: enable, disable, or update"
+          message: "Please specify action: update, start, or stop"
         }),
         HTTP_STATUS.BAD_REQUEST
       );
@@ -42,25 +42,28 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case "enable":
-        console.log("🚀 Enabling auto-sniping with config:", config);
-        autoSnipingService.enableAutoSniping(config);
+        console.log("🚀 Auto-sniping is always enabled. Updating config:", config);
+        if (config) {
+          autoSnipingService.updateConfig(config);
+        }
         
+        const enabledReport = await autoSnipingService.getExecutionReport();
         return apiResponse(
           createSuccessResponse(
-            { enabled: true, config: autoSnipingService.getExecutionReport().config },
-            { message: "Auto-sniping enabled successfully" }
+            { enabled: true, config: enabledReport.config },
+            { message: "Auto-sniping is always enabled. Configuration updated successfully." }
           ),
           HTTP_STATUS.OK
         );
 
       case "disable":
-        console.log("⏹️ Disabling auto-sniping");
-        autoSnipingService.disableAutoSniping();
+        console.log("⏹️ Auto-sniping cannot be disabled. Stopping execution instead.");
+        autoSnipingService.stopExecution();
         
         return apiResponse(
           createSuccessResponse(
-            { enabled: false },
-            { message: "Auto-sniping disabled successfully" }
+            { enabled: true, status: "idle" },
+            { message: "Auto-sniping execution stopped. Auto-sniping remains enabled." }
           ),
           HTTP_STATUS.OK
         );
@@ -78,9 +81,10 @@ export async function POST(request: NextRequest) {
         console.log("⚙️ Updating auto-sniping config:", config);
         autoSnipingService.updateConfig(config);
         
+        const updatedReport = await autoSnipingService.getExecutionReport();
         return apiResponse(
           createSuccessResponse(
-            { config: autoSnipingService.getExecutionReport().config },
+            { config: updatedReport.config },
             { message: "Auto-sniping configuration updated successfully" }
           ),
           HTTP_STATUS.OK
@@ -90,10 +94,11 @@ export async function POST(request: NextRequest) {
         console.log("▶️ Starting auto-sniping execution");
         
         if (!autoSnipingService.isReadyForTrading()) {
+          const currentReport = await autoSnipingService.getExecutionReport();
           return apiResponse(
             createErrorResponse("Auto-sniping is not ready for trading", {
-              message: "Auto-sniping must be enabled and not already running",
-              currentStatus: autoSnipingService.getExecutionReport().status
+              message: "Auto-sniping must not be already running",
+              currentStatus: currentReport.status
             }),
             HTTP_STATUS.BAD_REQUEST
           );
@@ -132,6 +137,6 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Auto-sniping config POST error:", error);
-    return handleApiError(error, "Failed to configure auto-sniping");
+    return handleApiError(error, { message: "Failed to configure auto-sniping" });
   }
 }

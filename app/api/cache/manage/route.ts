@@ -374,7 +374,7 @@ export const PUT = createApiHandler({
     // Validate configuration
     const validationResult = validateCacheConfig(config);
     if (!validationResult.valid) {
-      return context.validationError('config', validationResult.error);
+      return context.validationError('config', validationResult.error || 'Invalid configuration');
     }
 
     // Note: In a real implementation, this would update the cache configuration

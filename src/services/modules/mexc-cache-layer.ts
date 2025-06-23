@@ -1,158 +1,75 @@
 /**
- * MEXC Cache Management Layer
+ * MEXC Cache Layer
  * 
- * Intelligent caching system for MEXC API responses with TanStack Query optimization.
- * This module provides advanced caching strategies while staying under 500 lines.
- * 
- * Features:
- * - TanStack Query integration
- * - Smart cache invalidation
- * - Memory-efficient storage
- * - Performance monitoring
- * - TypeScript strict mode
+ * Intelligent caching system for MEXC API responses.
+ * Provides different TTL strategies for different data types.
  */
 
-import { z } from 'zod';
-import type { MexcServiceResponse } from './mexc-api-types';
-import { mexcQueryKeys } from './mexc-api-types';
+import type { MexcCacheConfig, MexcServiceResponse } from "./mexc-api-types";
 
 // ============================================================================
-// Cache Configuration Schema
+// Cache Entry Types
 // ============================================================================
 
-export const CacheConfigSchema = z.object({
-  defaultTTL: z.number().positive("Default TTL must be positive").default(30000),
-  maxEntries: z.number().positive("Max entries must be positive").default(1000),
-  enableMetrics: z.boolean().default(true),
-  enableAutoCleanup: z.boolean().default(true),
-  cleanupInterval: z.number().positive("Cleanup interval must be positive").default(60000),
-  enableCompression: z.boolean().default(false),
-  enablePersistence: z.boolean().default(false),
-});
-
-export type CacheConfig = z.infer<typeof CacheConfigSchema>;
-
-// ============================================================================
-// Cache Entry and Metrics Types
-// ============================================================================
-
-interface CacheEntry<T = unknown> {
+interface CacheEntry<T> {
   data: T;
   timestamp: number;
   ttl: number;
-  accessCount: number;
-  lastAccessed: number;
-  size: number;
+  key: string;
 }
 
 interface CacheMetrics {
   hits: number;
   misses: number;
+  sets: number;
+  deletions: number;
   evictions: number;
   totalRequests: number;
-  memoryUsage: number;
-  averageResponseTime: number;
-  hitRate: number;
 }
 
 // ============================================================================
-// Cache Key Management
+// Cache Configuration
 // ============================================================================
 
-type CacheKeyFactory = typeof mexcQueryKeys;
-
-class CacheKeyManager {
-  private readonly keyFactories: CacheKeyFactory;
-
-  constructor() {
-    this.keyFactories = mexcQueryKeys;
-  }
-
-  /**
-   * Generate cache key for calendar data
-   */
-  calendar(): string {
-    return this.keyFactories.calendar().join(':');
-  }
-
-  /**
-   * Generate cache key for symbols data
-   */
-  symbols(): string {
-    return this.keyFactories.symbols().join(':');
-  }
-
-  /**
-   * Generate cache key for specific symbol
-   */
-  symbol(symbol: string): string {
-    return this.keyFactories.symbol(symbol).join(':');
-  }
-
-  /**
-   * Generate cache key for ticker data
-   */
-  ticker(symbol: string): string {
-    return this.keyFactories.ticker(symbol).join(':');
-  }
-
-  /**
-   * Generate cache key for portfolio data
-   */
-  portfolio(): string {
-    return this.keyFactories.portfolio().join(':');
-  }
-
-  /**
-   * Generate cache key for server time
-   */
-  serverTime(): string {
-    return this.keyFactories.serverTime().join(':');
-  }
-
-  /**
-   * Generate cache key for exchange info
-   */
-  exchangeInfo(): string {
-    return this.keyFactories.exchangeInfo().join(':');
-  }
-
-  /**
-   * Generate custom cache key
-   */
-  custom(parts: string[]): string {
-    return ['mexc', 'custom', ...parts].join(':');
-  }
-}
+const CACHE_TTL_PROFILES = {
+  // Real-time data - short cache
+  realTime: 15 * 1000,      // 15 seconds
+  
+  // Semi-static data - medium cache  
+  semiStatic: 5 * 60 * 1000, // 5 minutes
+  
+  // Static data - long cache
+  static: 30 * 60 * 1000,    // 30 minutes
+  
+  // User-specific data
+  user: 10 * 60 * 1000,      // 10 minutes
+} as const;
 
 // ============================================================================
-// Main Cache Manager Class
+// Smart Cache Implementation
 // ============================================================================
 
 export class MexcCacheLayer {
-  private readonly config: Required<CacheConfig>;
-  private readonly cache: Map<string, CacheEntry>;
-  private readonly keyManager: CacheKeyManager;
+  private cache = new Map<string, CacheEntry<any>>();
+  private config: MexcCacheConfig;
   private metrics: CacheMetrics;
-  private cleanupTimer?: NodeJS.Timeout;
+  private cleanupInterval?: NodeJS.Timeout;
 
-  constructor(config: CacheConfig = {}) {
-    this.config = CacheConfigSchema.parse(config);
-    this.cache = new Map();
-    this.keyManager = new CacheKeyManager();
+  constructor(config: MexcCacheConfig) {
+    this.config = config;
     this.metrics = {
       hits: 0,
       misses: 0,
+      sets: 0,
+      deletions: 0,
       evictions: 0,
       totalRequests: 0,
-      memoryUsage: 0,
-      averageResponseTime: 0,
-      hitRate: 0,
     };
 
-    if (this.config.enableAutoCleanup) {
-      this.startCleanupTimer();
-    }
+    // Start cleanup process every 5 minutes
+    this.cleanupInterval = setInterval(() => {
+      this.cleanup();
+    }, 5 * 60 * 1000);
   }
 
   // ============================================================================
@@ -160,73 +77,54 @@ export class MexcCacheLayer {
   // ============================================================================
 
   /**
-   * Get cached value with metrics tracking
+   * Get data from cache with automatic TTL handling
    */
   get<T>(key: string): T | null {
-    const startTime = Date.now();
     this.metrics.totalRequests++;
 
     const entry = this.cache.get(key);
     
     if (!entry) {
       this.metrics.misses++;
-      this.updateHitRate();
       return null;
     }
 
     // Check if entry has expired
-    if (this.isExpired(entry)) {
+    if (Date.now() - entry.timestamp > entry.ttl) {
       this.cache.delete(key);
       this.metrics.misses++;
-      this.updateHitRate();
+      this.metrics.evictions++;
       return null;
     }
 
-    // Update access metrics
-    entry.accessCount++;
-    entry.lastAccessed = Date.now();
     this.metrics.hits++;
-    
-    // Update performance metrics
-    const responseTime = Date.now() - startTime;
-    this.updateAverageResponseTime(responseTime);
-    this.updateHitRate();
-
-    return entry.data as T;
+    return entry.data;
   }
 
   /**
-   * Set cache value with TTL and size tracking
+   * Set data in cache with appropriate TTL
    */
-  set<T>(key: string, data: T, ttl?: number): void {
-    const entryTTL = ttl || this.config.defaultTTL;
-    const size = this.estimateSize(data);
+  set<T>(key: string, data: T, ttlType: keyof typeof CACHE_TTL_PROFILES = 'semiStatic'): void {
+    const ttl = CACHE_TTL_PROFILES[ttlType];
     
-    // Check if we need to evict entries
-    if (this.cache.size >= this.config.maxEntries) {
-      this.evictLeastRecentlyUsed();
-    }
-
     const entry: CacheEntry<T> = {
       data,
       timestamp: Date.now(),
-      ttl: entryTTL,
-      accessCount: 0,
-      lastAccessed: Date.now(),
-      size,
+      ttl,
+      key,
     };
 
     this.cache.set(key, entry);
-    this.updateMemoryUsage();
+    this.metrics.sets++;
   }
 
   /**
-   * Delete cache entry
+   * Delete specific cache entry
    */
   delete(key: string): boolean {
     const deleted = this.cache.delete(key);
     if (deleted) {
-      this.updateMemoryUsage();
+      this.metrics.deletions++;
     }
     return deleted;
   }
@@ -235,226 +133,193 @@ export class MexcCacheLayer {
    * Clear all cache entries
    */
   clear(): void {
+    const size = this.cache.size;
     this.cache.clear();
-    this.updateMemoryUsage();
+    this.metrics.deletions += size;
   }
 
   /**
    * Check if key exists and is not expired
    */
   has(key: string): boolean {
-    const entry = this.cache.get(key);
-    return entry ? !this.isExpired(entry) : false;
+    const data = this.get(key);
+    return data !== null;
   }
 
   // ============================================================================
-  // High-Level API Methods
+  // Smart Cache Wrappers
   // ============================================================================
 
   /**
-   * Get or set calendar data with intelligent caching
+   * Wrap an async function with intelligent caching
    */
-  async getOrSetCalendar<T>(
-    fetcher: () => Promise<MexcServiceResponse<T>>,
-    ttl?: number
-  ): Promise<MexcServiceResponse<T>> {
-    const key = this.keyManager.calendar();
-    const cached = this.get<MexcServiceResponse<T>>(key);
-    
-    if (cached) {
-      return { ...cached, cached: true };
-    }
+  wrapWithCache<T>(
+    key: string,
+    fn: () => Promise<MexcServiceResponse<T>>,
+    ttlType: keyof typeof CACHE_TTL_PROFILES = 'semiStatic'
+  ): () => Promise<MexcServiceResponse<T>> {
+    return async () => {
+      // Try cache first
+      const cached = this.get<MexcServiceResponse<T>>(key);
+      if (cached) {
+        return {
+          ...cached,
+          source: `${cached.source}-cached`,
+        };
+      }
 
-    const result = await fetcher();
-    if (result.success) {
-      this.set(key, result, ttl);
-    }
-    
-    return result;
+      // Execute function and cache result
+      const result = await fn();
+      
+      // Only cache successful responses
+      if (result.success) {
+        this.set(key, result, ttlType);
+      }
+
+      return result;
+    };
   }
 
   /**
-   * Get or set symbols data with caching
+   * Get or set pattern for common cache operations
    */
-  async getOrSetSymbols<T>(
-    fetcher: () => Promise<MexcServiceResponse<T>>,
-    ttl?: number
+  async getOrSet<T>(
+    key: string,
+    fn: () => Promise<MexcServiceResponse<T>>,
+    ttlType: keyof typeof CACHE_TTL_PROFILES = 'semiStatic'
   ): Promise<MexcServiceResponse<T>> {
-    const key = this.keyManager.symbols();
-    const cached = this.get<MexcServiceResponse<T>>(key);
-    
-    if (cached) {
-      return { ...cached, cached: true };
-    }
-
-    const result = await fetcher();
-    if (result.success) {
-      this.set(key, result, ttl);
-    }
-    
-    return result;
+    const wrapped = this.wrapWithCache(key, fn, ttlType);
+    return wrapped();
   }
+
+  // ============================================================================
+  // Cache Invalidation Strategies
+  // ============================================================================
 
   /**
-   * Get or set ticker data with caching
+   * Invalidate cache entries by pattern
    */
-  async getOrSetTicker<T>(
-    symbol: string,
-    fetcher: () => Promise<MexcServiceResponse<T>>,
-    ttl?: number
-  ): Promise<MexcServiceResponse<T>> {
-    const key = this.keyManager.ticker(symbol);
-    const cached = this.get<MexcServiceResponse<T>>(key);
+  invalidateByPattern(pattern: string): number {
+    let invalidated = 0;
     
-    if (cached) {
-      return { ...cached, cached: true };
-    }
-
-    const result = await fetcher();
-    if (result.success) {
-      this.set(key, result, ttl || 30000); // Shorter TTL for real-time data
-    }
-    
-    return result;
-  }
-
-  // ============================================================================
-  // Cache Management Utilities
-  // ============================================================================
-
-  private isExpired(entry: CacheEntry): boolean {
-    return (Date.now() - entry.timestamp) > entry.ttl;
-  }
-
-  private evictLeastRecentlyUsed(): void {
-    let oldestKey: string | null = null;
-    let oldestTime = Number.MAX_SAFE_INTEGER;
-
-    for (const [key, entry] of this.cache.entries()) {
-      if (entry.lastAccessed < oldestTime) {
-        oldestTime = entry.lastAccessed;
-        oldestKey = key;
+    for (const key of this.cache.keys()) {
+      if (key.includes(pattern)) {
+        this.cache.delete(key);
+        invalidated++;
       }
     }
 
-    if (oldestKey) {
-      this.cache.delete(oldestKey);
-      this.metrics.evictions++;
-    }
+    this.metrics.deletions += invalidated;
+    return invalidated;
   }
 
-  private estimateSize(data: unknown): number {
-    try {
-      return JSON.stringify(data).length * 2; // Rough estimate in bytes
-    } catch {
-      return 1000; // Default size estimate
-    }
+  /**
+   * Invalidate all calendar-related cache
+   */
+  invalidateCalendar(): number {
+    return this.invalidateByPattern("calendar");
   }
 
-  private updateMemoryUsage(): void {
-    let totalSize = 0;
-    for (const entry of this.cache.values()) {
-      totalSize += entry.size;
-    }
-    this.metrics.memoryUsage = totalSize;
+  /**
+   * Invalidate all symbol-related cache
+   */
+  invalidateSymbols(): number {
+    return this.invalidateByPattern("symbols");
   }
 
-  private updateHitRate(): void {
-    this.metrics.hitRate = this.metrics.totalRequests > 0 
-      ? this.metrics.hits / this.metrics.totalRequests 
-      : 0;
+  /**
+   * Invalidate all user-specific cache
+   */
+  invalidateUserData(): number {
+    return this.invalidateByPattern("account") + 
+           this.invalidateByPattern("balance") + 
+           this.invalidateByPattern("portfolio");
   }
 
-  private updateAverageResponseTime(responseTime: number): void {
-    if (this.metrics.totalRequests === 1) {
-      this.metrics.averageResponseTime = responseTime;
-    } else {
-      this.metrics.averageResponseTime = 
-        (this.metrics.averageResponseTime * (this.metrics.totalRequests - 1) + responseTime) 
-        / this.metrics.totalRequests;
-    }
-  }
+  // ============================================================================
+  // Cache Maintenance
+  // ============================================================================
 
-  private startCleanupTimer(): void {
-    this.cleanupTimer = setInterval(() => {
-      this.cleanup();
-    }, this.config.cleanupInterval);
-  }
-
+  /**
+   * Clean up expired entries
+   */
   private cleanup(): void {
     const now = Date.now();
+    let cleaned = 0;
+
     for (const [key, entry] of this.cache.entries()) {
-      if (this.isExpired(entry)) {
+      if (now - entry.timestamp > entry.ttl) {
         this.cache.delete(key);
+        cleaned++;
       }
     }
-    this.updateMemoryUsage();
-  }
 
-  // ============================================================================
-  // Public API
-  // ============================================================================
-
-  /**
-   * Get current cache metrics
-   */
-  getMetrics(): Readonly<CacheMetrics> {
-    return { ...this.metrics };
-  }
-
-  /**
-   * Get cache configuration
-   */
-  getConfig(): Readonly<Required<CacheConfig>> {
-    return { ...this.config };
-  }
-
-  /**
-   * Get current cache size
-   */
-  size(): number {
-    return this.cache.size;
-  }
-
-  /**
-   * Shutdown cache and cleanup timers
-   */
-  shutdown(): void {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer);
-      this.cleanupTimer = undefined;
+    if (cleaned > 0) {
+      this.metrics.evictions += cleaned;
+      console.log(`[MexcCacheLayer] Cleaned up ${cleaned} expired entries`);
     }
-    this.clear();
   }
 
   /**
-   * Get cache key manager for external use
+   * Get cache statistics
    */
-  getKeyManager(): CacheKeyManager {
-    return this.keyManager;
+  getMetrics(): CacheMetrics & { hitRate: number; size: number } {
+    const hitRate = this.metrics.totalRequests > 0 
+      ? (this.metrics.hits / this.metrics.totalRequests) * 100 
+      : 0;
+
+    return {
+      ...this.metrics,
+      hitRate: Math.round(hitRate * 100) / 100,
+      size: this.cache.size,
+    };
+  }
+
+  /**
+   * Reset cache metrics
+   */
+  resetMetrics(): void {
+    this.metrics = {
+      hits: 0,
+      misses: 0,
+      sets: 0,
+      deletions: 0,
+      evictions: 0,
+      totalRequests: 0,
+    };
+  }
+
+  // ============================================================================
+  // Lifecycle Management
+  // ============================================================================
+
+  /**
+   * Destroy cache and cleanup resources
+   */
+  destroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = undefined;
+    }
+    
+    this.clear();
   }
 }
 
 // ============================================================================
-// Factory Functions
+// Factory Function
 // ============================================================================
 
-export function createMexcCacheLayer(config?: CacheConfig): MexcCacheLayer {
+/**
+ * Create a new MEXC cache layer instance
+ */
+export function createMexcCacheLayer(config: MexcCacheConfig): MexcCacheLayer {
   return new MexcCacheLayer(config);
 }
 
-let globalCacheLayer: MexcCacheLayer | null = null;
+// ============================================================================
+// Exports
+// ============================================================================
 
-export function getMexcCacheLayer(config?: CacheConfig): MexcCacheLayer {
-  if (!globalCacheLayer) {
-    globalCacheLayer = new MexcCacheLayer(config);
-  }
-  return globalCacheLayer;
-}
-
-export function resetMexcCacheLayer(): void {
-  if (globalCacheLayer) {
-    globalCacheLayer.shutdown();
-    globalCacheLayer = null;
-  }
-}
+export default MexcCacheLayer;
+export { CACHE_TTL_PROFILES };

@@ -310,7 +310,10 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
         timestamp: new Date().toISOString(),
       });
 
-      const result = await mexcService.getBulkActivityData(largeCurrencyList, { batchSize: 50 });
+      const result = await mexcService.getBulkActivityData(largeCurrencyList, { 
+        batchSize: 50, 
+        rateLimitDelay: 0 // Disable rate limiting delay for test performance 
+      });
 
       expect(result.success).toBe(true);
       expect(result.metadata?.totalCurrencies).toBe(100);

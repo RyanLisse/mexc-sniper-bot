@@ -101,6 +101,43 @@ describe('Comprehensive Risk Management', () => {
           set: vi.fn().mockReturnValue({
             where: vi.fn().mockResolvedValue([])
           })
+        }),
+        delete: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            execute: vi.fn().mockResolvedValue({ rowsAffected: 0 })
+          })
+        }),
+        // Add transaction method to prevent "db.transaction is not a function" errors
+        transaction: vi.fn().mockImplementation(async (callback) => {
+          // Simulate transaction context with same mock structure
+          const txContext = {
+            insert: vi.fn().mockReturnValue({
+              values: vi.fn().mockReturnValue({
+                returning: vi.fn().mockResolvedValue([{ id: '1', createdAt: new Date() }])
+              })
+            }),
+            select: vi.fn().mockReturnValue({
+              from: vi.fn().mockReturnValue({
+                where: vi.fn().mockReturnValue({
+                  limit: vi.fn().mockResolvedValue([]),
+                  execute: vi.fn().mockResolvedValue([])
+                })
+              })
+            }),
+            update: vi.fn().mockReturnValue({
+              set: vi.fn().mockReturnValue({
+                where: vi.fn().mockReturnValue({
+                  execute: vi.fn().mockResolvedValue({ rowsAffected: 1 })
+                })
+              })
+            }),
+            delete: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                execute: vi.fn().mockResolvedValue({ rowsAffected: 1 })
+              })
+            })
+          };
+          return await callback(txContext);
         })
       }
     }));

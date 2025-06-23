@@ -29,15 +29,11 @@ export function StatusProviderWrapper({
     setIsHydrated(true);
   }, []);
 
-  // Show a minimal loading state during hydration
-  if (!isHydrated) {
-    return <div style={{ visibility: "hidden" }}>{children}</div>;
-  }
-
+  // Render the same content during SSR and hydration to prevent mismatches
   return (
     <StatusProvider
-      autoRefreshInterval={autoRefreshInterval}
-      enableRealTimeUpdates={enableRealTimeUpdates}
+      autoRefreshInterval={isHydrated ? autoRefreshInterval : 0}
+      enableRealTimeUpdates={isHydrated && enableRealTimeUpdates}
     >
       {children}
     </StatusProvider>

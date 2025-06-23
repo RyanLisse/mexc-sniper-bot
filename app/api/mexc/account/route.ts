@@ -85,7 +85,16 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const { balances, totalUsdtValue, lastUpdated } = balancesResponse.data;
+    if (!balancesResponse.data) {
+      return NextResponse.json({
+        success: false,
+        error: "No account data received from MEXC API",
+        code: "NO_DATA"
+      }, { status: 500 });
+    }
+    
+    const { balances, totalUsdtValue } = balancesResponse.data;
+    const lastUpdated = (balancesResponse.data as any).lastUpdated || new Date().toISOString();
     console.log(`✅ MEXC Account Service Success - Found ${balances.length} balances with total value: ${totalUsdtValue.toFixed(2)} USDT`);
 
     const message = userCredentials

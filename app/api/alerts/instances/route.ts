@@ -62,7 +62,8 @@ export async function GET(request: NextRequest) {
       formattedTimestamp: new Date(alert.firstTriggeredAt).toISOString(),
       formattedLastTriggered: new Date(alert.lastTriggeredAt).toISOString(),
       isResolved: !!alert.resolvedAt,
-      resolutionTime: alert.resolvedAt ? alert.resolvedAt - alert.firstTriggeredAt : null,
+      resolutionTime: alert.resolvedAt ? 
+        new Date(alert.resolvedAt).getTime() - new Date(alert.firstTriggeredAt).getTime() : null,
     }));
 
     return NextResponse.json({

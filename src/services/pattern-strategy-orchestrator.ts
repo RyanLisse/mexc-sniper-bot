@@ -24,6 +24,7 @@ import {
   type PatternMatch,
   patternDetectionEngine,
 } from "./pattern-detection-engine";
+import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 // ============================================================================
 // Orchestrator Types
@@ -261,6 +262,15 @@ export class PatternStrategyOrchestrator {
 
     // Step 6: Store Discovered Patterns in Database
     await this.storeDiscoveredPatterns(patternAnalysis.matches);
+
+    // Step 7: Create Snipe Targets for Actionable Patterns
+    const targetCreationResults = await this.createSnipeTargetsFromPatterns(
+      patternAnalysis.matches,
+      "system" // TODO: Get actual user ID from request context
+    );
+    
+    const successfulTargets = targetCreationResults.filter(r => r.success).length;
+    console.log(`[PatternOrchestrator] Created ${successfulTargets} snipe targets from ${patternAnalysis.matches.length} patterns`);
 
     const executionTime = Date.now() - startTime;
     console.log(`[PatternOrchestrator] Discovery workflow completed in ${executionTime}ms`);
@@ -690,6 +700,61 @@ export class PatternStrategyOrchestrator {
   // ============================================================================
   // Pattern Storage and Database Operations
   // ============================================================================
+
+  /**
+   * Create Snipe Targets from Pattern Matches
+   * 
+   * This is the KEY integration point that bridges pattern detection to auto-sniping
+   */
+  private async createSnipeTargetsFromPatterns(
+    patterns: PatternMatch[], 
+    userId: string
+  ): Promise<any[]> {
+    try {
+      // Filter patterns that should become snipe targets
+      const actionablePatterns = patterns.filter(pattern => 
+        (pattern.patternType === "ready_state" && pattern.confidence >= 75) ||
+        (pattern.patternType === "pre_ready" && pattern.confidence >= 80)
+      );
+
+      if (actionablePatterns.length === 0) {
+        console.log("[PatternOrchestrator] No actionable patterns found for snipe target creation");
+        return [];
+      }
+
+      console.log(`[PatternOrchestrator] Creating snipe targets for ${actionablePatterns.length} actionable patterns`);
+      
+      // Use the pattern-target integration service
+      const results = await patternTargetIntegrationService.createTargetsFromPatterns(
+        actionablePatterns,
+        userId,
+        {
+          minConfidenceForTarget: 75,
+          enabledPatternTypes: ["ready_state", "pre_ready"],
+          defaultPositionSizeUsdt: 100,
+          maxConcurrentTargets: 5
+        }
+      );
+
+      // Log results
+      const successful = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
+      
+      if (successful.length > 0) {
+        console.log(`[PatternOrchestrator] Successfully created ${successful.length} snipe targets`);
+      }
+      
+      if (failed.length > 0) {
+        console.log(`[PatternOrchestrator] Failed to create ${failed.length} snipe targets:`, 
+          failed.map(f => f.reason || f.error));
+      }
+
+      return results;
+    } catch (error) {
+      console.error("[PatternOrchestrator] Failed to create snipe targets from patterns:", error);
+      return [];
+    }
+  }
 
   private async storeDiscoveredPatterns(patterns: PatternMatch[]): Promise<void> {
     try {

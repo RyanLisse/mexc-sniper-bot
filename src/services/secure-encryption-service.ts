@@ -196,8 +196,13 @@ export class SecureEncryptionService {
    */
   static maskSensitiveData(data: string | undefined | null, visibleChars = 4): string {
     // Handle undefined/null data
-    if (!data || typeof data !== "string") {
+    if (data === undefined || data === null || typeof data !== "string") {
       return "***undefined***";
+    }
+
+    // Handle empty strings
+    if (data.length === 0) {
+      return "";
     }
 
     if (data.length <= visibleChars * 2) {
