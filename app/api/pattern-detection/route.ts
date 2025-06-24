@@ -95,8 +95,6 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 // Action Handlers
 // ============================================================================
 
-const logger = createLogger('route');
-
 async function handlePatternAnalysis(request: z.infer<typeof PatternDetectionRequestSchema>) {
   const result = await PatternDetectionCore.getInstance().analyzePatterns({
     symbols: request.symbolData || [],

@@ -15,7 +15,14 @@ import type { AgentBehaviorMetrics } from "../../../../src/mexc-agents/safety-mo
 // Initialize safety monitor
 const safetyMonitor = new SafetyMonitorAgent();
 
-const logger = createLogger('route');
+// Lazy logger initialization to prevent build-time errors
+let _logger: ReturnType<typeof createLogger> | undefined;
+function getLogger() {
+  if (!_logger) {
+    _logger = createLogger('route');
+  }
+  return _logger;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -161,7 +168,7 @@ export async function GET(request: NextRequest) {
     return apiResponse.success(response);
 
   } catch (error) {
-    logger.error("[Agent Monitoring] GET Error:", { error: error });
+    getLogger().error("[Agent Monitoring] GET Error:", { error: error });
     return apiResponse.error(
       "Failed to get agent monitoring data",
       500
@@ -259,7 +266,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Mock agent restart (in production, would restart actual agent)
-        logger.info(`[Agent Monitoring] Restarting agent: ${agentId}`);
+        getLogger().info(`[Agent Monitoring] Restarting agent: ${agentId}`);
         result = {
           success: true,
           message: `Agent ${agentId} restart initiated`,
@@ -273,7 +280,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Mock agent shutdown (in production, would shutdown actual agent)
-        logger.info(`[Agent Monitoring] Shutting down agent: ${agentId}`);
+        getLogger().info(`[Agent Monitoring] Shutting down agent: ${agentId}`);
         result = {
           success: true,
           message: `Agent ${agentId} shutdown initiated`,
@@ -305,7 +312,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.success(result);
 
   } catch (error) {
-    logger.error("[Agent Monitoring] POST Error:", { error: error });
+    getLogger().error("[Agent Monitoring] POST Error:", { error: error });
     return apiResponse.error(
       "Failed to execute agent monitoring action",
       500
