@@ -5,6 +5,12 @@ import { patternStrategyOrchestrator } from "../../../src/services/pattern-strat
 import { patternEmbeddingService } from "../../../src/services/pattern-embedding-service";
 import { apiAuthWrapper } from "../../../src/lib/api-auth";
 import { createApiResponse } from "../../../src/lib/api-response";
+import { 
+  withApiErrorHandling, 
+  withDatabaseErrorHandling,
+  handleApiError,
+  ValidationError 
+} from "../../../src/lib/central-api-error-handler";
 import { z } from "zod";
 
 // Import schemas from MEXC schemas module
@@ -32,7 +38,7 @@ const PatternDetectionRequestSchema = z.object({
   timeWindow: z.number().optional(), // hours
 });
 
-export const POST = apiAuthWrapper(async (request: NextRequest) => {
+export const POST = apiAuthWrapper(withApiErrorHandling(async (request: NextRequest) => {
   // Build-safe logger - use console logger to avoid webpack bundling issues
   const logger = {
     info: (message: string, context?: any) => console.info('[pattern-detection]', message, context || ''),
@@ -41,10 +47,10 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
     debug: (message: string, context?: any) => console.debug('[pattern-detection]', message, context || ''),
   };
   
+  const body = await request.json();
+  
   try {
-    const body = await request.json();
     const validatedRequest = PatternDetectionRequestSchema.parse(body);
-
     logger.info(`[PatternDetection API] Processing ${validatedRequest.action} request`);
 
     switch (validatedRequest.action) {
@@ -67,28 +73,15 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         return await handlePatternPerformance(validatedRequest);
       
       default:
-        return createApiResponse({ 
-          success: false, 
-          error: `Unknown action: ${validatedRequest.action}` 
-        }, 400);
+        throw new ValidationError(`Unknown action: ${validatedRequest.action}`);
     }
   } catch (error) {
-    logger.error("[PatternDetection API] Request failed:", { error: error });
-    
     if (error instanceof z.ZodError) {
-      return createApiResponse({
-        success: false,
-        error: "Invalid request format",
-        details: { issues: error.errors }
-      }, 400);
+      throw new ValidationError("Invalid request format", undefined, { issues: error.errors });
     }
-
-    return createApiResponse({
-      success: false,
-      error: error instanceof Error ? error.message : "Pattern detection failed"
-    }, 500);
+    throw error;
   }
-});
+}, "pattern-detection"));
 
 // ============================================================================
 // Action Handlers
@@ -394,7 +387,7 @@ async function handlePatternPerformance(request: z.infer<typeof PatternDetection
 }
 
 // GET endpoint for health check and basic info
-export async function GET(request: NextRequest) {
+export const GET = withApiErrorHandling(async (request: NextRequest) => {
   // Build-safe logger - use console logger to avoid webpack bundling issues
   const logger = {
     info: (message: string, context?: any) => console.info('[pattern-detection-get]', message, context || ''),
@@ -403,39 +396,77 @@ export async function GET(request: NextRequest) {
     debug: (message: string, context?: any) => console.debug('[pattern-detection-get]', message, context || ''),
   };
   
-  try {
-    const url = new URL(request.url);
-    const action = url.searchParams.get("action");
+  const url = new URL(request.url);
+  const action = url.searchParams.get("action");
 
-    if (action === "health") {
-      // Basic health check
+  if (action === "analyze") {
+    // Handle GET requests with analyze action (the failing requests)
+    // Extract query parameters for pattern analysis
+    const enableAgentAnalysis = url.searchParams.get("enableAgentAnalysis") === "true";
+    const confidenceThreshold = parseInt(url.searchParams.get("confidenceThreshold") || "70");
+    const enableAdvanceDetection = url.searchParams.get("enableAdvanceDetection") === "true";
+    const patternTypes = url.searchParams.get("patternTypes")?.split(",") || [];
+
+    return await withDatabaseErrorHandling(async () => {
+      const result = await PatternDetectionCore.getInstance().analyzePatterns({
+        symbols: [],
+        calendarEntries: [],
+        analysisType: "discovery",
+        confidenceThreshold,
+        includeHistorical: true
+      });
+
       return createApiResponse({
         success: true,
         data: {
-          status: "healthy",
-          services: {
-            patternDetectionEngine: "active",
-            patternStrategyOrchestrator: "active", 
-            patternEmbeddingService: "active"
+          analysis: result,
+          summary: {
+            totalMatches: result.matches.length,
+            readyStatePatterns: result.matches.filter(m => m.patternType === "ready_state").length,
+            advanceOpportunities: result.matches.filter(m => 
+              m.patternType === "ready_state" && m.advanceNoticeHours >= 3.5
+            ).length,
+            highConfidenceMatches: result.matches.filter(m => m.confidence >= 80).length,
+            averageConfidence: result.summary.averageConfidence
           },
-          capabilities: {
-            readyStateDetection: true,
-            advanceDetection: true,
-            correlationAnalysis: true,
-            trendAnalysis: true,
-            performanceAnalysis: true
-          },
-          competitiveAdvantage: {
-            minAdvanceHours: 3.5,
-            readyStatePattern: "sts:2, st:2, tt:4",
-            confidence: "85%+ for ready state"
-          }
+          recommendations: result.recommendations,
+          correlations: result.correlations,
+          metadata: result.analysisMetadata
         }
       });
-    }
+    }, "pattern-analysis-get");
+  }
 
-    if (action === "stats") {
-      // Get performance metrics
+  if (action === "health") {
+    // Basic health check
+    return createApiResponse({
+      success: true,
+      data: {
+        status: "healthy",
+        services: {
+          patternDetectionEngine: "active",
+          patternStrategyOrchestrator: "active", 
+          patternEmbeddingService: "active"
+        },
+        capabilities: {
+          readyStateDetection: true,
+          advanceDetection: true,
+          correlationAnalysis: true,
+          trendAnalysis: true,
+          performanceAnalysis: true
+        },
+        competitiveAdvantage: {
+          minAdvanceHours: 3.5,
+          readyStatePattern: "sts:2, st:2, tt:4",
+          confidence: "85%+ for ready state"
+        }
+      }
+    });
+  }
+
+  if (action === "stats") {
+    // Get performance metrics with database operation protection
+    return await withDatabaseErrorHandling(async () => {
       const orchestratorMetrics = patternStrategyOrchestrator.getPerformanceMetrics();
       
       return createApiResponse({
@@ -445,35 +476,29 @@ export async function GET(request: NextRequest) {
           timestamp: new Date().toISOString()
         }
       });
-    }
-
-    return createApiResponse({
-      success: true,
-      data: {
-        message: "MEXC Pattern Detection System",
-        version: "2.0.0",
-        features: [
-          "Centralized Pattern Detection Engine",
-          "3.5+ Hour Advance Detection",
-          "Ready State Pattern Recognition (sts:2, st:2, tt:4)",
-          "Multi-Symbol Correlation Analysis",
-          "Strategic Workflow Orchestration",
-          "Enhanced Pattern Analytics",
-          "Real-time Pattern Monitoring"
-        ],
-        endpoints: {
-          "POST /api/pattern-detection": "Main pattern detection API",
-          "GET /api/pattern-detection?action=health": "Health check",
-          "GET /api/pattern-detection?action=stats": "Performance metrics"
-        }
-      }
-    });
-  } catch (error) {
-    logger.error("[PatternDetection API] GET request failed:", { error: error });
-    
-    return createApiResponse({
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error"
-    }, 500);
+    }, "pattern-stats");
   }
-}
+
+  return createApiResponse({
+    success: true,
+    data: {
+      message: "MEXC Pattern Detection System",
+      version: "2.0.0",
+      features: [
+        "Centralized Pattern Detection Engine",
+        "3.5+ Hour Advance Detection",
+        "Ready State Pattern Recognition (sts:2, st:2, tt:4)",
+        "Multi-Symbol Correlation Analysis",
+        "Strategic Workflow Orchestration",
+        "Enhanced Pattern Analytics",
+        "Real-time Pattern Monitoring"
+      ],
+      endpoints: {
+        "POST /api/pattern-detection": "Main pattern detection API",
+        "GET /api/pattern-detection?action=health": "Health check",
+        "GET /api/pattern-detection?action=stats": "Performance metrics",
+        "GET /api/pattern-detection?action=analyze": "Pattern analysis via GET"
+      }
+    }
+  });
+}, "pattern-detection-get");

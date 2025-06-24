@@ -15,29 +15,40 @@ import {
 } from "../../../../src/schemas/mexc-api-validation-schemas";
 import { balancePersistenceService } from "../../../../src/services/balance-persistence-service";
 import { publicRoute } from "../../../../src/lib/auth-decorators";
+import { 
+  withApiErrorHandling, 
+  withDatabaseErrorHandling,
+  ValidationError,
+  validateUserId
+} from "../../../../src/lib/central-api-error-handler";
 
-export const GET = publicRoute(async (request: NextRequest) => {
+export const GET = publicRoute(withApiErrorHandling(async (request: NextRequest) => {
   const startTime = Date.now();
   
-  try {
-    console.info('[API] Account balance request received');
+  console.info('[API] Account balance request received');
 
-    // Validate query parameters
-    const { searchParams } = new URL(request.url);
-    const queryParams = Object.fromEntries(searchParams.entries());
-    
-    const queryValidation = validateMexcApiRequest(AccountBalanceQuerySchema, queryParams);
-    if (!queryValidation.success) {
-      return apiResponse(
-        createErrorResponse(queryValidation.error, {
-          code: 'VALIDATION_ERROR',
-          details: queryValidation.details
-        }),
-        HTTP_STATUS.BAD_REQUEST
+  // Validate query parameters
+  const { searchParams } = new URL(request.url);
+  const queryParams = Object.fromEntries(searchParams.entries());
+  
+  const queryValidation = validateMexcApiRequest(AccountBalanceQuerySchema, queryParams);
+  if (!queryValidation.success) {
+    throw new ValidationError(queryValidation.error, "query", queryValidation.details);
+  }
+
+  let { userId } = queryValidation.data;
+
+  // Validate userId using our central validator to catch invalid values
+  if (userId) {
+    try {
+      userId = validateUserId(userId);
+    } catch (error) {
+      throw new ValidationError(
+        `Invalid userId: ${error instanceof Error ? error.message : 'Unknown validation error'}`,
+        "userId"
       );
     }
-
-    const { userId } = queryValidation.data;
+  }
 
     // Use unified service factory for consistent credential resolution
     const mexcService = await getUnifiedMexcService({
@@ -94,14 +105,16 @@ export const GET = publicRoute(async (request: NextRequest) => {
     // Save balance data to database for persistence (addressing critical gap)
     if (userId && portfolio?.balances && portfolio.balances.length > 0) {
       try {
-        await balancePersistenceService.saveBalanceSnapshot(userId, {
-          balances: portfolio.balances,
-          totalUsdtValue: portfolio.totalUsdtValue || 0,
-        }, {
-          snapshotType: 'periodic',
-          dataSource: 'api',
-          priceSource: 'mexc'
-        });
+        await withDatabaseErrorHandling(async () => {
+          await balancePersistenceService.saveBalanceSnapshot(userId, {
+            balances: portfolio.balances,
+            totalUsdtValue: portfolio.totalUsdtValue || 0,
+          }, {
+            snapshotType: 'periodic',
+            dataSource: 'api',
+            priceSource: 'mexc'
+          });
+        }, "balance-persistence", 5000); // 5 second timeout for persistence
         
         console.info('[API] Balance data persisted to database', {
           userId,
@@ -109,28 +122,13 @@ export const GET = publicRoute(async (request: NextRequest) => {
           totalUsdValue: portfolio.totalUsdtValue
         });
       } catch (persistError) {
-        // Check if this is a database connectivity issue
-        const isDbError = persistError instanceof Error && (
-          persistError.message.includes('ECONNREFUSED') ||
-          persistError.message.includes('timeout') ||
-          persistError.message.includes('connection') ||
-          persistError.message.includes('ENOTFOUND')
-        );
-        
-        if (isDbError) {
-          console.error('[API] Database connectivity error during balance persistence', {
-            userId,
-            error: persistError.message,
-            code: 'DB_CONNECTION_ERROR'
-          });
-          // Don't fail the API request, but log as DB issue
-        } else {
-          // Log but don't fail the API request if persistence fails
-          console.error('[API] Failed to persist balance data', {
-            userId,
-            error: persistError instanceof Error ? persistError.message : String(persistError)
-          });
-        }
+        // Log but don't fail the API request if persistence fails
+        console.error('[API] Failed to persist balance data', {
+          userId,
+          error: persistError instanceof Error ? persistError.message : String(persistError),
+          isDbError: persistError.constructor.name === 'DatabaseConnectionError'
+        });
+        // Continue with the API response even if persistence fails
       }
     }
 
@@ -153,28 +151,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
         credentialSource: hasUserCredentials ? 'user-database' : 'environment-variables'
       })
     );
-  } catch (error) {
-    console.error('[API] Account balance error:', { operation: 'account_balance' }, error instanceof Error ? error : new Error(String(error)));
-    
-    return apiResponse(
-      createErrorResponse(
-        error instanceof Error ? error.message : 'Unknown error occurred',
-        {
-          code: 'INTERNAL_ERROR',
-          fallbackData: {
-            balances: [],
-            totalUsdtValue: 0,
-            lastUpdated: new Date().toISOString(),
-            hasUserCredentials: false,
-            credentialsType: 'environment-fallback' as const,
-          },
-          requestDuration: `${Date.now() - startTime}ms`
-        }
-      ),
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
-    );
-  }
-});
+}, "account-balance"));
 
 // For testing purposes, allow OPTIONS
 
