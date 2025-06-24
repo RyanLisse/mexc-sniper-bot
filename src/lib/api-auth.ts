@@ -19,6 +19,8 @@ export const validateRequest = requireApiAuth;
  * Returns the authenticated user or throws an error response
  */
 // Lazy logger initialization to prevent build-time errors
+let _logger: any = null;
+
 function getLogger() {
   if (!_logger) {
     _logger = {
