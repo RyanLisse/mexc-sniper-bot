@@ -62,6 +62,8 @@ interface QuickMetrics {
   criticalAlerts: number;
 }
 
+const logger = createLogger('page');
+
 export default function MonitoringPage() {
   const [quickMetrics, setQuickMetrics] = useState<QuickMetrics | null>(null);
   const [loading, setLoading] = useState(true);

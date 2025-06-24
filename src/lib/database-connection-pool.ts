@@ -1,5 +1,6 @@
-/**
 import { createLogger } from './structured-logger';
+
+/**
  * Database Connection Pool & Caching Manager
  *
  * Phase 4: Connection Pooling & Caching (4h)
