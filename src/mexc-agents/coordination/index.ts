@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 
 /**
  * Agent Coordination System

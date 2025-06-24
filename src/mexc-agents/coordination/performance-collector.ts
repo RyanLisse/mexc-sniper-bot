@@ -1,5 +1,5 @@
 import { PERFORMANCE_CONSTANTS, TIME_CONSTANTS } from "../../lib/constants";
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 import type { AgentRegistry } from "./agent-registry";
 import type { WorkflowExecutionResult } from "./workflow-engine";
 

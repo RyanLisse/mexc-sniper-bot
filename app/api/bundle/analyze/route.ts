@@ -1,5 +1,6 @@
-/**
 import { createLogger } from '../../../../src/lib/structured-logger';
+
+/**
  * Bundle Analysis API Endpoint
  * Provides real-time bundle size and optimization insights
  * Part of Task 5.1: Bundle Size Optimization

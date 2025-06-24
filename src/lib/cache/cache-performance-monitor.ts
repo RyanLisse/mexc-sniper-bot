@@ -1,4 +1,4 @@
-import { createLogger } from "./structured-logger";
+import { createLogger } from "../structured-logger";
 
 /**
  * Cache Performance Monitor

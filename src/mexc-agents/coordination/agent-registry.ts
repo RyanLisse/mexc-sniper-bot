@@ -2,7 +2,7 @@ import { DATA_CONSTANTS, RISK_CONSTANTS, SYSTEM_CONFIG, TIME_CONSTANTS } from ".
 // OpenTelemetry agent instrumentation
 import { instrumentAgentMethod } from "../../lib/opentelemetry-agent-instrumentation";
 import type { BaseAgent } from "../base-agent";
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 
 export type AgentStatus = "healthy" | "degraded" | "unhealthy" | "unknown" | "recovering";
 
