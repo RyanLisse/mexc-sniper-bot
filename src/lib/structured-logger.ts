@@ -381,8 +381,15 @@ export function createSafeLogger(
     service = "mexc-trading-bot";
   }
 
-  // Always use the main StructuredLogger for consistency
-  return new StructuredLogger(service, component);
+  // Build-time safety check for webpack bundling
+  try {
+    // Always use the main StructuredLogger for consistency
+    return new StructuredLogger(service, component);
+  } catch (error) {
+    // Fallback for build-time issues - return simple console logger
+    console.warn(`[Logger] Fallback logger used for ${component}:`, error);
+    return createFallbackLogger(component, service);
+  }
 }
 
 /**

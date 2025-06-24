@@ -4,14 +4,8 @@ import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
 import { AgentManager } from "../../../../src/mexc-agents/agent-manager";
 import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "../../../../src/lib/health-checks";
 
-// Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createSafeLogger> | undefined;
-function getLogger() {
-  if (!_logger) {
-    _logger = createSafeLogger('route');
-  }
-  return _logger;
-}
+// Create logger at module level like other working routes
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -130,7 +124,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    getLogger().error("[Monitoring API] System overview failed:", { error: error });
+    logger.error("[Monitoring API] System overview failed:", { error: error });
     return NextResponse.json(
       { 
         error: "Failed to fetch system overview",

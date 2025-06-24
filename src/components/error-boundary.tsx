@@ -81,7 +81,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
     if (process.env.NODE_ENV === "development") {
-      logger.error("Error Boundary caught an error:", error, errorInfo);
+      this.logger.error("Error Boundary caught an error:", error, errorInfo);
     }
 
     // Call custom error handler if provided
@@ -119,7 +119,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     };
 
     // For now, just log to console
-    logger.error("Error logged to monitoring service:", errorData);
+    this.logger.error("Error logged to monitoring service:", errorData);
   };
 
   handleReset = () => {

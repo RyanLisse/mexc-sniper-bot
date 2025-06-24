@@ -6,16 +6,10 @@ import { workflowActivity, transactionLocks } from "../../../../src/db/schema";
 import { desc, gte } from "drizzle-orm";
 
 // Server-Sent Events for real-time monitoring
-// Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createSafeLogger> | undefined;
-function getLogger() {
-  if (!_logger) {
-    _logger = createSafeLogger('route');
-  }
-  return _logger;
-}
 
 export async function GET(request: NextRequest) {
+  // Build-safe logger initialization inside function
+  const logger = createSafeLogger('real-time-route');
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'all';
 
@@ -85,7 +79,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (error) {
-    getLogger().error("[Real-time API] Action failed:", { error: error });
+    logger.error("[Real-time API] Action failed:", { error: error });
     return NextResponse.json(
       { error: "Action failed", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
@@ -158,7 +152,7 @@ async function getRealTimeData(type: string) {
         return baseData;
     }
   } catch (error) {
-    getLogger().error("Error fetching real-time data:", { error: error });
+    logger.error("Error fetching real-time data:", { error: error });
     return {
       timestamp,
       error: "Failed to fetch real-time data",
@@ -221,7 +215,7 @@ async function getActiveWorkflows() {
       currentStep: w.level === 'success' ? 'Completed' : `Step ${Math.floor(Math.random() * 5 + 1)}`
     }));
   } catch (error) {
-    getLogger().error("Error fetching active workflows:", { error: error });
+    logger.error("Error fetching active workflows:", { error: error });
     return [];
   }
 }
@@ -248,7 +242,7 @@ async function getTransactionLockStatus() {
       }))
     };
   } catch (error) {
-    getLogger().error("Error fetching transaction locks:", { error: error });
+    logger.error("Error fetching transaction locks:", { error: error });
     return { activeLocks: 0, totalLocks: 0, locks: [] };
   }
 }
@@ -377,7 +371,7 @@ async function triggerWorkflow(data: any) {
     const { workflowType, parameters } = data;
     
     // Mock workflow trigger - replace with actual implementation
-    getLogger().info(`Triggering workflow: ${workflowType} with parameters:`, parameters);
+    logger.info(`Triggering workflow: ${workflowType} with parameters:`, parameters);
     
     return NextResponse.json({
       success: true,
@@ -397,7 +391,7 @@ async function triggerEmergencyStop(data: any) {
     const { reason, scope } = data;
     
     // Mock emergency stop - replace with actual implementation
-    getLogger().info(`Emergency stop triggered: ${reason}, scope: ${scope}`);
+    logger.info(`Emergency stop triggered: ${reason}, scope: ${scope}`);
     
     return NextResponse.json({
       success: true,
@@ -417,7 +411,7 @@ async function updateAgentConfig(data: any) {
     const { agentName, config } = data;
     
     // Mock config update - replace with actual implementation
-    getLogger().info(`Updating agent config for ${agentName}:`, config);
+    logger.info(`Updating agent config for ${agentName}:`, config);
     
     return NextResponse.json({
       success: true,

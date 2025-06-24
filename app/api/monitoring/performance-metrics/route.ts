@@ -16,8 +16,23 @@ const logger = {
 
 export async function GET(request: NextRequest) {
   try {
-    const orchestrator = new MexcOrchestrator({ useEnhancedCoordination: true });
-    const agentManager = new AgentManager();
+    // Build-safe initialization with try-catch to prevent webpack issues
+    let orchestrator, agentManager;
+    try {
+      orchestrator = new MexcOrchestrator({ useEnhancedCoordination: true });
+      agentManager = new AgentManager();
+    } catch (initError) {
+      logger.warn('Failed to initialize orchestrator/agent manager, using fallback', { initError });
+      // Return minimal response if initialization fails during build
+      return NextResponse.json({
+        timestamp: new Date().toISOString(),
+        orchestrationMetrics: { totalExecutions: 0, successRate: 0, errorRate: 0, averageDuration: 0 },
+        agentPerformance: { core: {}, safety: {}, overall: { totalAgents: 0 } },
+        patternDiscoveryAnalytics: { patternsDetected: 0, averageConfidence: 0 },
+        systemPerformance: { cpuUsage: {}, memoryUsage: {} },
+        recentActivity: { executions: [], trends: [], alerts: [] }
+      });
+    }
 
     // Get performance metrics from various sources
     const [

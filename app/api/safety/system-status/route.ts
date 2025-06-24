@@ -22,16 +22,10 @@ const safetyMonitor = new SafetyMonitorAgent();
 emergencySystem.setRiskEngine(riskEngine);
 safetyMonitor.setIntegrations(riskEngine, emergencySystem);
 
-// Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createSafeLogger> | undefined;
-function getLogger() {
-  if (!_logger) {
-    _logger = createSafeLogger('route');
-  }
-  return _logger;
-}
-
 export async function GET(request: NextRequest) {
+  // Build-safe logger initialization inside function
+  const logger = createSafeLogger('system-status-route');
+  
   try {
     // Verify authentication
     const { searchParams } = new URL(request.url);
@@ -117,7 +111,7 @@ export async function GET(request: NextRequest) {
     return apiResponse.success(response);
 
   } catch (error) {
-    getLogger().error("[Safety System Status] Error:", { error: error });
+    logger.error("[Safety System Status] Error:", { error: error });
     return apiResponse.error(
       "Failed to get safety system status",
       500
@@ -126,6 +120,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Build-safe logger initialization inside function
+  const logger = createSafeLogger('system-status-route');
+  
   try {
     // Verify authentication
     try {
@@ -194,7 +191,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.success(result);
 
   } catch (error) {
-    getLogger().error("[Safety System Status] POST Error:", { error: error });
+    logger.error("[Safety System Status] POST Error:", { error: error });
     return apiResponse.error(
       "Failed to execute safety system action",
       500

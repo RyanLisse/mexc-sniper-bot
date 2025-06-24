@@ -93,6 +93,7 @@ const nextConfig: NextConfig = {
         "@opentelemetry/auto-instrumentations-node": "commonjs @opentelemetry/auto-instrumentations-node",
         "@opentelemetry/instrumentation": "commonjs @opentelemetry/instrumentation"
       });
+
     } else {
       // For client-side, completely exclude Node.js modules
       config.resolve.fallback = {

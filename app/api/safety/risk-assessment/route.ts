@@ -16,9 +16,10 @@ import { SafetyMonitorAgent } from "../../../../src/mexc-agents/safety-monitor-a
 const riskEngine = new AdvancedRiskEngine();
 const safetyMonitor = new SafetyMonitorAgent();
 
-const logger = createSafeLogger('route');
-
 export async function GET(request: NextRequest) {
+  // Build-safe logger initialization inside function
+  const logger = createSafeLogger('risk-assessment-route');
+  
   try {
     const { searchParams } = new URL(request.url);
     const includeHistory = searchParams.get("includeHistory") === "true";
@@ -87,6 +88,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Build-safe logger initialization inside function  
+  const logger = createSafeLogger('risk-assessment-route');
+  
   try {
     // Verify authentication
     try {

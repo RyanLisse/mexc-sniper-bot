@@ -16,9 +16,8 @@ function getExecutionService() {
   return OptimizedAutoSnipingCore.getInstance();
 }
 
-function getLogger() {
-  return createSafeLogger('route');
-}
+// Create logger at module level like other working routes
+const logger = createSafeLogger('route');
 
 /**
  * GET /api/auto-sniping/execution
@@ -56,7 +55,7 @@ export const GET = instrumentedTradingRoute(
       message: 'Execution report retrieved successfully',
     }));
   } catch (error) {
-    getLogger().error('[API] Auto-sniping execution GET failed:', { error });
+    logger.error('[API] Auto-sniping execution GET failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to get execution report',
       { 
@@ -241,7 +240,7 @@ export const POST = instrumentedTradingRoute(
         ), { status: 400 });
     }
   } catch (error) {
-    getLogger().error('[API] Auto-sniping execution POST failed:', { error });
+    logger.error('[API] Auto-sniping execution POST failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Execution operation failed',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -303,7 +302,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       ), { status: 400 });
     }
   } catch (error) {
-    getLogger().error('[API] Auto-sniping execution PUT failed:', { error });
+    logger.error('[API] Auto-sniping execution PUT failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to update execution configuration',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -318,7 +317,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
 export const DELETE = instrumentedTradingRoute(
   apiAuthWrapper(async (request: NextRequest) => {
     try {
-      getLogger().info('[API] Emergency shutdown requested');
+      logger.info('[API] Emergency shutdown requested');
       
       // Stop execution
       getExecutionService().stopExecution();
@@ -331,7 +330,7 @@ export const DELETE = instrumentedTradingRoute(
         { message: `Emergency shutdown completed: ${closedCount} positions closed` }
       ));
     } catch (error) {
-      getLogger().error('[API] Emergency shutdown failed:', { error });
+      logger.error('[API] Emergency shutdown failed:', { error });
       return NextResponse.json(createErrorResponse(
         'Emergency shutdown failed',
         { details: error instanceof Error ? error.message : 'Unknown error' }
