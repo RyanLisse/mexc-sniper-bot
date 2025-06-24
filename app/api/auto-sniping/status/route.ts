@@ -17,13 +17,24 @@ export async function GET() {
     // Get current execution report which includes status
     const report = await autoSnipingService.getExecutionReport();
     
-    // Structure the status response
+    // Structure the status response to match frontend expectations
     const statusData = {
       enabled: true, // Auto-sniping is always enabled
       status: report.status || 'idle',
       isActive: report.status === 'active',
       isIdle: report.status === 'idle',
-      lastExecution: report.lastExecution || null,
+      
+      // Frontend-expected fields
+      activeTargets: report.activeTargets || 0,
+      readyTargets: report.readyTargets || 0,
+      executedToday: report.executedToday || 0,
+      successRate: report.successRate || 0,
+      totalProfit: report.totalProfit || 0,
+      lastExecution: report.lastExecution || new Date().toISOString(),
+      safetyStatus: report.safetyStatus || 'safe',
+      patternDetectionActive: report.patternDetectionActive ?? true,
+      
+      // Legacy fields for backward compatibility
       executionCount: report.executionCount || 0,
       successCount: report.successCount || 0,
       errorCount: report.errorCount || 0,
@@ -63,7 +74,18 @@ export async function GET() {
         status: 'idle',
         isActive: false,
         isIdle: true,
-        lastExecution: null,
+        
+        // Frontend-expected fields with fallback values
+        activeTargets: 0,
+        readyTargets: 0,
+        executedToday: 0,
+        successRate: 0,
+        totalProfit: 0,
+        lastExecution: new Date().toISOString(),
+        safetyStatus: 'safe',
+        patternDetectionActive: true,
+        
+        // Legacy fields for backward compatibility
         executionCount: 0,
         successCount: 0,
         errorCount: 0,

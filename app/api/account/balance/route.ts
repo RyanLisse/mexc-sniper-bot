@@ -39,14 +39,16 @@ export const GET = publicRoute(withApiErrorHandling(async (request: NextRequest)
   let { userId } = queryValidation.data;
 
   // Validate userId using our central validator to catch invalid values
+  // If userId is invalid, treat it as "no userId provided" and use environment credentials
   if (userId) {
     try {
       userId = validateUserId(userId);
     } catch (error) {
-      throw new ValidationError(
-        `Invalid userId: ${error instanceof Error ? error.message : 'Unknown validation error'}`,
-        "userId"
-      );
+      console.warn('[API] Invalid userId provided, falling back to environment credentials:', {
+        providedUserId: userId,
+        error: error instanceof Error ? error.message : 'Unknown validation error'
+      });
+      userId = undefined; // Treat as no userId provided
     }
   }
 
