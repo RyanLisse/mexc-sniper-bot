@@ -21,7 +21,7 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
     try {
       body = await request.json();
     } catch (jsonError) {
-      logger.error('[DEBUG] JSON parsing failed:', jsonError);
+      logger.error('[DEBUG] JSON parsing failed:', { error: jsonError instanceof Error ? jsonError.message : String(jsonError) });
       return apiResponse(
         createErrorResponse('Invalid request body', {
           message: 'Request body must be valid JSON',
@@ -143,7 +143,7 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
     const balances = accountResult.data?.balances || [];
     const totalUsdtValue = balances.reduce((sum: number, balance: any) => sum + (balance.usdtValue || 0), 0);
     
-    logger.info('[DEBUG] Enhanced credential validation successful - balances found:', balances?.length || 0);
+    logger.info('[DEBUG] Enhanced credential validation successful - balances found:', { balanceCount: balances?.length || 0 });
 
     return apiResponse(
       createSuccessResponse({

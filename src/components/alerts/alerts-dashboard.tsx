@@ -570,7 +570,7 @@ export function AlertsDashboard() {
         refetchStatus();
       }
     } catch (error) {
-      logger.error("Failed to resolve alert:", error);
+      logger.error("Failed to resolve alert:", { error: error instanceof Error ? error.message : String(error) });
     }
   };
 

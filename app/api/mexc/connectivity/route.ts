@@ -55,7 +55,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
     const testResult = await mexcConnectivityService.testConnectivity(connectivityRequest);
 
     if (!testResult.success) {
-      logger.error('[API] Connectivity test failed:', testResult.error);
+      logger.error('[API] Connectivity test failed:', { error: testResult.error });
       return apiResponse(
         createErrorResponse(testResult.error, {
           code: testResult.code,

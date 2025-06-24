@@ -144,7 +144,7 @@ export default function MonitoringPage() {
 
       setLastUpdated(new Date());
     } catch (error) {
-      logger.error('Failed to fetch quick metrics:', error);
+      logger.error('Failed to fetch quick metrics:', { error: error instanceof Error ? error.message : String(error) });
       // Set default values on error to prevent undefined states
       setQuickMetrics({
         systemHealth: 0,

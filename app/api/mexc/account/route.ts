@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     const balancesResponse = await mexcService.getAccountBalances();
 
     if (!balancesResponse.success) {
-      logger.error(`❌ MEXC Account Service Error:`, balancesResponse.error);
+      logger.error(`❌ MEXC Account Service Error:`, { error: balancesResponse.error });
       
       // Determine appropriate status code based on error type
       let statusCode = 502; // Default: Bad Gateway (upstream service issue)

@@ -12,9 +12,13 @@ import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { instrumentedTradingRoute } from '@/src/lib/opentelemetry-api-middleware';
 
-const logger = createLogger('route');
+function getExecutionService() {
+  return OptimizedAutoSnipingCore.getInstance();
+}
 
-const executionService = OptimizedAutoSnipingCore.getInstance();
+function getLogger() {
+  return createLogger('route');
+}
 
 /**
  * GET /api/auto-sniping/execution
@@ -29,7 +33,7 @@ export const GET = instrumentedTradingRoute(
     const includeAlerts = searchParams.get('include_alerts') === 'true';
 
     // Get execution report
-    const report = await executionService.getExecutionReport();
+    const report = await getExecutionService().getExecutionReport();
 
     const responseData = {
       report: {
@@ -52,7 +56,7 @@ export const GET = instrumentedTradingRoute(
       message: 'Execution report retrieved successfully',
     }));
   } catch (error) {
-    logger.error('[API] Auto-sniping execution GET failed:', { error });
+    getLogger().error('[API] Auto-sniping execution GET failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to get execution report',
       { 
@@ -77,7 +81,7 @@ export const POST = instrumentedTradingRoute(
     switch (action) {
       case 'start_execution':
         try {
-          await executionService.startExecution();
+          await getExecutionService().startExecution();
           return NextResponse.json(createSuccessResponse(
             { status: 'started' },
             { message: 'Auto-sniping execution started successfully' }
@@ -90,14 +94,14 @@ export const POST = instrumentedTradingRoute(
         }
 
       case 'stop_execution':
-        executionService.stopExecution();
+        getExecutionService().stopExecution();
         return NextResponse.json(createSuccessResponse(
           { status: 'stopped' },
           { message: 'Auto-sniping execution stopped successfully' }
         ));
 
       case 'pause_execution':
-        executionService.pauseExecution();
+        getExecutionService().pauseExecution();
         return NextResponse.json(createSuccessResponse(
           { status: 'paused' },
           { message: 'Auto-sniping execution paused successfully' }
@@ -105,7 +109,7 @@ export const POST = instrumentedTradingRoute(
 
       case 'resume_execution':
         try {
-          await executionService.resumeExecution();
+          await getExecutionService().resumeExecution();
           return NextResponse.json(createSuccessResponse(
             { status: 'resumed' },
             { message: 'Auto-sniping execution resumed successfully' }
@@ -126,7 +130,7 @@ export const POST = instrumentedTradingRoute(
         }
 
         try {
-          const success = await executionService.closePosition(positionId, reason || 'manual');
+          const success = await getExecutionService().closePosition(positionId, reason || 'manual');
           if (!success) {
             return NextResponse.json(createErrorResponse(
               'Failed to close position',
@@ -147,7 +151,7 @@ export const POST = instrumentedTradingRoute(
 
       case 'emergency_close_all':
         try {
-          const closedCount = await executionService.emergencyCloseAll();
+          const closedCount = await getExecutionService().emergencyCloseAll();
           return NextResponse.json(createSuccessResponse(
             { closedCount },
             { message: `Emergency close completed: ${closedCount} positions closed` }
@@ -160,7 +164,7 @@ export const POST = instrumentedTradingRoute(
         }
 
       case 'get_active_positions':
-        const activePositions = executionService.getActivePositions();
+        const activePositions = getExecutionService().getActivePositions();
         return NextResponse.json(createSuccessResponse(
           { positions: activePositions },
           { message: `Retrieved ${activePositions.length} active positions` }
@@ -174,7 +178,7 @@ export const POST = instrumentedTradingRoute(
           ), { status: 400 });
         }
 
-        const acknowledged = executionService.acknowledgeAlert(body.alertId);
+        const acknowledged = getExecutionService().acknowledgeAlert(body.alertId);
         if (!acknowledged) {
           return NextResponse.json(createErrorResponse(
             'Alert not found',
@@ -188,7 +192,7 @@ export const POST = instrumentedTradingRoute(
         ));
 
       case 'clear_acknowledged_alerts':
-        const clearedCount = executionService.clearAcknowledgedAlerts();
+        const clearedCount = getExecutionService().clearAcknowledgedAlerts();
         return NextResponse.json(createSuccessResponse(
           { clearedCount },
           { message: `${clearedCount} acknowledged alerts cleared` }
@@ -203,7 +207,7 @@ export const POST = instrumentedTradingRoute(
         }
 
         try {
-          executionService.updateConfig(config);
+          getExecutionService().updateConfig(config);
           return NextResponse.json(createSuccessResponse(
             { updated: true, configKeys: Object.keys(config) },
             { message: 'Configuration updated successfully' }
@@ -216,7 +220,7 @@ export const POST = instrumentedTradingRoute(
         }
 
       case 'get_execution_status':
-        const report = await executionService.getExecutionReport();
+        const report = await getExecutionService().getExecutionReport();
         return NextResponse.json(createSuccessResponse({
           status: report.status,
           isActive: report.status === 'active',
@@ -237,7 +241,7 @@ export const POST = instrumentedTradingRoute(
         ), { status: 400 });
     }
   } catch (error) {
-    logger.error('[API] Auto-sniping execution POST failed:', { error });
+    getLogger().error('[API] Auto-sniping execution POST failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Execution operation failed',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -286,7 +290,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
     }
 
     try {
-      executionService.updateConfig(config);
+      getExecutionService().updateConfig(config);
       
       return NextResponse.json(createSuccessResponse(
         { updatedFields: Object.keys(config) },
@@ -299,7 +303,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       ), { status: 400 });
     }
   } catch (error) {
-    logger.error('[API] Auto-sniping execution PUT failed:', { error });
+    getLogger().error('[API] Auto-sniping execution PUT failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to update execution configuration',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -314,20 +318,20 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
 export const DELETE = instrumentedTradingRoute(
   apiAuthWrapper(async (request: NextRequest) => {
     try {
-      logger.info('[API] Emergency shutdown requested');
+      getLogger().info('[API] Emergency shutdown requested');
       
       // Stop execution
-      executionService.stopExecution();
+      getExecutionService().stopExecution();
       
       // Close all positions
-      const closedCount = await executionService.emergencyCloseAll();
+      const closedCount = await getExecutionService().emergencyCloseAll();
       
       return NextResponse.json(createSuccessResponse(
         { closedPositions: closedCount },
         { message: `Emergency shutdown completed: ${closedCount} positions closed` }
       ));
     } catch (error) {
-      logger.error('[API] Emergency shutdown failed:', { error });
+      getLogger().error('[API] Emergency shutdown failed:', { error });
       return NextResponse.json(createErrorResponse(
         'Emergency shutdown failed',
         { details: error instanceof Error ? error.message : 'Unknown error' }

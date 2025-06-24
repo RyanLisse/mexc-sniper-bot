@@ -63,7 +63,7 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
     try {
       encryptionService = getEncryptionService();
     } catch (encryptionError) {
-      logger.error('[API] Encryption service initialization failed:', encryptionError);
+      logger.error('[API] Encryption service initialization failed:', { error: encryptionError instanceof Error ? encryptionError.message : String(encryptionError) });
       return apiResponse(
         createErrorResponse('Encryption service unavailable', {
           message: 'Unable to decrypt credentials. Please contact support.',
@@ -208,7 +208,7 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
   try {
     encryptionService = getEncryptionService();
   } catch (encryptionError) {
-    logger.error('[API] Encryption service initialization failed:', encryptionError);
+    logger.error('[API] Encryption service initialization failed:', { error: encryptionError instanceof Error ? encryptionError.message : String(encryptionError) });
     return apiResponse(
       createErrorResponse('Encryption service unavailable', {
         message: 'Unable to encrypt credentials. Please contact support.',

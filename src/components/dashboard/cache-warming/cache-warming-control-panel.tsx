@@ -278,7 +278,7 @@ export function CacheWarmingControlPanel() {
         }
       );
     } catch (error) {
-      logger.error("Error triggering cache warming:", error);
+      logger.error("Error triggering cache warming:", { error: error instanceof Error ? error.message : String(error) });
     }
   };
 
@@ -313,7 +313,7 @@ export function CacheWarmingControlPanel() {
         }
       );
     } catch (error) {
-      logger.error("Error triggering multiple strategies:", error);
+      logger.error("Error triggering multiple strategies:", { error: error instanceof Error ? error.message : String(error) });
     }
   };
 

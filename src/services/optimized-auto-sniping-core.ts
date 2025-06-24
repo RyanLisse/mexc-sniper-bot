@@ -160,7 +160,7 @@ export interface AutoSnipingExecutionReport {
  */
 export class OptimizedAutoSnipingCore {
   private static instance: OptimizedAutoSnipingCore;
-  private logger = createLogger("optimized-auto-sniping-core");
+  private logger: ReturnType<typeof createLogger>;
 
   // Configuration with validation
   private config: AutoSnipingConfig;
@@ -177,6 +177,7 @@ export class OptimizedAutoSnipingCore {
   private monitoringInterval: NodeJS.Timeout | null = null;
 
   private constructor(config?: Partial<AutoSnipingConfig>) {
+    this.logger = createLogger("optimized-auto-sniping-core");
     // Validate and set configuration
     this.config = AutoSnipingConfigSchema.parse({
       ...this.getDefaultConfig(),

@@ -99,7 +99,7 @@ interface PerplexityResearchResult {
 // ======================
 
 export class AIIntelligenceService {
-  private logger = createLogger("ai-intelligence-service");
+  private logger: ReturnType<typeof createLogger>;
 
   private cohereApiKey: string;
   private perplexityApiKey: string;
@@ -113,6 +113,7 @@ export class AIIntelligenceService {
   private cacheTimeout = 30 * 60 * 1000; // 30 minutes
 
   constructor() {
+    this.logger = createLogger("ai-intelligence-service");
     this.cohereApiKey = process.env.COHERE_API_KEY || "";
     this.perplexityApiKey = process.env.PERPLEXITY_API_KEY || "";
 

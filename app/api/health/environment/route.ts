@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       healthSummary = environmentValidation.getHealthSummary();
       missingByCategory = environmentValidation.getMissingByCategory();
     } catch (validationError) {
-      logger.warn('[Environment Health] Validation service failed, using fallback:', validationError);
+      logger.warn('[Environment Health] Validation service failed, using fallback:', { error: validationError instanceof Error ? validationError.message : String(validationError) });
       
       // Fallback validation response
       validation = {

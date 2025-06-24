@@ -74,7 +74,7 @@ export async function GET() {
         auth_status: authResult || false
       };
     } catch (sdkError) {
-      logger.error('[Auth Health Check] Kinde SDK Error:', sdkError);
+      logger.error('[Auth Health Check] Kinde SDK Error:', { error: sdkError instanceof Error ? sdkError.message : String(sdkError) });
       kindeStatus = 'error';
       authTestResult = {
         sdk_accessible: false,

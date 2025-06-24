@@ -94,7 +94,7 @@ export default function DashboardPage() {
   };
 
   const handleRemoveTarget = (vcoinId: string) => {
-    logger.info("Removing target:", vcoinId);
+    logger.info("Removing target:", { vcoinId });
     // TODO: Implement target removal logic
   };
 

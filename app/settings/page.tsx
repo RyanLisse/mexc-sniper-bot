@@ -137,7 +137,7 @@ export default function SettingsPage() {
 
       logger.info('✅ Successfully saved multi-level take-profit configuration');
     } catch (error) {
-      logger.error('❌ Failed to save multi-level take-profit configuration:', error);
+      logger.error('❌ Failed to save multi-level take-profit configuration:', { error: error instanceof Error ? error.message : String(error) });
 
       toast({
         title: "Error saving take-profit configuration",

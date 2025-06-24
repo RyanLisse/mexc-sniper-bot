@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
         };
 
       } catch (riskError) {
-        logger.error(`❌ Risk Assessment Failed for ${symbol}:`, riskError);
+        logger.error(`❌ Risk Assessment Failed for ${symbol}:`, { error: riskError instanceof Error ? riskError.message : String(riskError) });
         
         // On risk assessment failure, block the trade for safety
         return apiResponse(

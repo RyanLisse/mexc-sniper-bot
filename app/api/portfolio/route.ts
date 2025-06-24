@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
             unrealizedPnLPercent,
           };
         } catch (error) {
-          logger.warn(`Could not get price for ${position.symbolName}:`, error);
+          logger.warn(`Could not get price for ${position.symbolName}:`, { error: error instanceof Error ? error.message : String(error) });
           return {
             ...position,
             currentPrice: position.executionPrice || 0,

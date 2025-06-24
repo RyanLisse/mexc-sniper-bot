@@ -122,7 +122,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
 
   } catch (error) {
-    logger.error('Circuit breaker fix API error:', error)
+    logger.error('Circuit breaker fix API error:', { error: error instanceof Error ? error.message : String(error) })
     
     const errorResponse: FixResponse = {
       success: false,
@@ -191,7 +191,7 @@ export async function GET(): Promise<NextResponse> {
     })
 
   } catch (error) {
-    logger.error('Circuit breaker status API error:', error)
+    logger.error('Circuit breaker status API error:', { error: error instanceof Error ? error.message : String(error) })
     
     return NextResponse.json({
       success: false,

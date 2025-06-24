@@ -218,7 +218,7 @@ export function SimpleAutoSnipingControl({
         try {
           await startExecution();
         } catch (error) {
-          logger.info("Auto-start execution skipped:", error);
+          logger.info("Auto-start execution skipped:", { error: error instanceof Error ? error.message : String(error) });
         }
       }
     };
