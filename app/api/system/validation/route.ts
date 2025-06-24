@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * System Validation API Route
  * 
  * Provides comprehensive system readiness validation for auto-sniping activation.
@@ -8,6 +7,7 @@ import { createLogger } from '../../../../src/lib/structured-logger';
 
 import { NextRequest } from 'next/server';
 import { apiResponse } from '@/src/lib/api-response';
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { systemReadinessValidator } from '@/src/services/system-readiness-validator';
 
 /**

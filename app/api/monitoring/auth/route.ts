@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * Authentication Monitoring Dashboard API
  * 
  * Provides comprehensive monitoring data for authentication system health,
@@ -9,6 +8,7 @@ import { createLogger } from '../../../../src/lib/structured-logger';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
+import { createLogger } from '../../../../src/lib/structured-logger';
 
 interface MonitoringMetrics {
   timestamp: string;

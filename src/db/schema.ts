@@ -48,7 +48,9 @@ import {
 } from "./schemas/strategies";
 import {
   apiCredentials,
+  balanceSnapshots,
   executionHistory,
+  portfolioSummary,
   snipeTargets,
   transactionLocks,
   transactionQueue,
@@ -71,6 +73,8 @@ export {
   transactions,
   transactionLocks,
   transactionQueue,
+  balanceSnapshots,
+  portfolioSummary,
   // Safety tables
   simulationSessions,
   simulationTrades,

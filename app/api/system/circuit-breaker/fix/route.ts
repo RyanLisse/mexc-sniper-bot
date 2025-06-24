@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * Circuit Breaker Fix API Route
  * 
  * Endpoint to safely fix "Circuit breaker in protective state" issues
@@ -8,6 +7,7 @@ import { createLogger } from '../../../../src/lib/structured-logger';
 
 import { NextRequest, NextResponse } from 'next/server'
 import { CircuitBreakerSafetyService } from '@/src/services/circuit-breaker-safety-service'
+import { createLogger } from '../../../../../src/lib/structured-logger';
 import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2'
 import { getGlobalReliabilityManager } from '@/src/services/mexc-circuit-breaker'
 import { z } from 'zod'

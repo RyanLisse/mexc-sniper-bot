@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * Unified MEXC Status API Endpoint
  * 
  * Single source of truth for MEXC API status that consolidates all status 
@@ -11,6 +10,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { apiResponse, handleApiError } from "../../../../src/lib/api-response";
 import { getUnifiedStatus } from "../../../../src/services/unified-status-resolver";
 import { toSafeError } from "../../../../src/lib/error-type-utils";
+import { createLogger } from "../../../../src/lib/structured-logger";
 
 interface UnifiedStatusResponse {
   // Core Status

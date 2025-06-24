@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * System Fix API - Comprehensive System Repair
  * 
  * This endpoint addresses all critical system issues identified in health checks:
@@ -11,6 +10,7 @@ import { createLogger } from '../../../../src/lib/structured-logger';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';

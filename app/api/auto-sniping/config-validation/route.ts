@@ -124,21 +124,149 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 
 /**
  * PUT /api/auto-sniping/config-validation
- * Update configuration settings (for future use)
+ * Update and validate auto-sniping configuration settings
  */
 export const PUT = apiAuthWrapper(async (request: NextRequest) => {
   try {
-    // For now, return a placeholder response
-    // This will be implemented when we add configuration management UI
-    return Response.json(createSuccessResponse({
-      message: 'Configuration update endpoint ready',
-      data: {
-        note: 'Configuration updates will be implemented in the next phase',
-        currentlySupported: false,
-      },
-    }));
+    const body = await request.json();
+    const { config, validateOnly = false } = body;
+    
+    if (!config || typeof config !== 'object') {
+      return Response.json(createErrorResponse(
+        'Invalid request: config object is required',
+        { code: 'MISSING_CONFIG' }
+      ), { status: 400 });
+    }
+
+    // Validate configuration using the auto-sniping core
+    const { OptimizedAutoSnipingCore } = await import('../../../../src/services/optimized-auto-sniping-core');
+    const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
+    
+    // Perform validation
+    const validationResult = await validateAutoSnipingConfig(config);
+    
+    if (!validationResult.isValid) {
+      return Response.json(createErrorResponse(
+        'Configuration validation failed',
+        { 
+          errors: validationResult.errors,
+          code: 'VALIDATION_FAILED'
+        }
+      ), { status: 400 });
+    }
+    
+    // If validateOnly is true, just return validation results
+    if (validateOnly) {
+      return Response.json(createSuccessResponse({
+        message: 'Configuration validation passed',
+        validation: validationResult,
+        wouldUpdate: Object.keys(config)
+      }));
+    }
+    
+    // Update the configuration
+    try {
+      autoSnipingService.updateConfig(config);
+      
+      // Get updated configuration to confirm changes
+      const updatedConfig = await autoSnipingService.getConfig();
+      
+      return Response.json(createSuccessResponse({
+        message: 'Configuration updated successfully',
+        updatedFields: Object.keys(config),
+        currentConfig: updatedConfig,
+        validation: validationResult
+      }));
+    } catch (updateError) {
+      return Response.json(createErrorResponse(
+        'Configuration update failed',
+        { 
+          error: updateError instanceof Error ? updateError.message : 'Unknown error',
+          code: 'UPDATE_FAILED'
+        }
+      ), { status: 500 });
+    }
   } catch (error) {
     logger.error('[Config Validation] Configuration update failed:', { error });
+    
+    // Add the missing validation function
+    async function validateAutoSnipingConfig(config: any): Promise<{
+      isValid: boolean;
+      errors: string[];
+      warnings: string[];
+    }> {
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      // Validate required fields
+      if (config.maxPositions !== undefined) {
+        if (typeof config.maxPositions !== 'number' || config.maxPositions < 1 || config.maxPositions > 50) {
+          errors.push('maxPositions must be a number between 1 and 50');
+        }
+      }
+      
+      if (config.maxDailyTrades !== undefined) {
+        if (typeof config.maxDailyTrades !== 'number' || config.maxDailyTrades < 1 || config.maxDailyTrades > 1000) {
+          errors.push('maxDailyTrades must be a number between 1 and 1000');
+        }
+      }
+      
+      if (config.positionSizeUSDT !== undefined) {
+        if (typeof config.positionSizeUSDT !== 'number' || config.positionSizeUSDT <= 0 || config.positionSizeUSDT > 10000) {
+          errors.push('positionSizeUSDT must be a number between 0 and 10000');
+        }
+      }
+      
+      if (config.minConfidence !== undefined) {
+        if (typeof config.minConfidence !== 'number' || config.minConfidence < 0 || config.minConfidence > 100) {
+          errors.push('minConfidence must be a number between 0 and 100');
+        }
+      }
+      
+      if (config.stopLossPercentage !== undefined) {
+        if (typeof config.stopLossPercentage !== 'number' || config.stopLossPercentage < 0 || config.stopLossPercentage > 50) {
+          errors.push('stopLossPercentage must be a number between 0 and 50');
+        }
+      }
+      
+      if (config.maxDrawdownPercentage !== undefined) {
+        if (typeof config.maxDrawdownPercentage !== 'number' || config.maxDrawdownPercentage < 0 || config.maxDrawdownPercentage > 100) {
+          errors.push('maxDrawdownPercentage must be a number between 0 and 100');
+        }
+      }
+      
+      // Validate pattern types
+      if (config.allowedPatternTypes !== undefined) {
+        if (!Array.isArray(config.allowedPatternTypes)) {
+          errors.push('allowedPatternTypes must be an array');
+        } else {
+          const validTypes = ['ready_state', 'pre_ready', 'launch_sequence', 'risk_warning'];
+          const invalidTypes = config.allowedPatternTypes.filter((type: any) => !validTypes.includes(type));
+          if (invalidTypes.length > 0) {
+            errors.push(`Invalid pattern types: ${invalidTypes.join(', ')}. Valid types: ${validTypes.join(', ')}`);
+          }
+        }
+      }
+      
+      // Add warnings for potentially risky configurations
+      if (config.maxPositions > 20) {
+        warnings.push('High maxPositions value may increase risk exposure');
+      }
+      
+      if (config.stopLossPercentage < 2) {
+        warnings.push('Low stop loss percentage may result in frequent small losses');
+      }
+      
+      if (config.minConfidence < 60) {
+        warnings.push('Low minimum confidence may result in lower quality trades');
+      }
+      
+      return {
+        isValid: errors.length === 0,
+        errors,
+        warnings
+      };
+    }
     return Response.json(
       createErrorResponse('Configuration update failed', {
         error: error instanceof Error ? error.message : 'Unknown error',

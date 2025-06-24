@@ -3,7 +3,7 @@
  * Properly typed system interfaces for Claude-Flow architecture
  */
 
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 
 // Core type definitions for system configuration
 export interface CoreSystemConfig {
@@ -249,7 +249,7 @@ export class CoreSystem {
   };
 
   startREPL = async () => {
-    logger.info("REPL mode started (stub)");
+    this.logger.info("REPL mode started (stub)");
   };
 
   async initialize(_options?: Partial<CoreSystemConfig>): Promise<void> {

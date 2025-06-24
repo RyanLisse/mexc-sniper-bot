@@ -201,9 +201,41 @@ export class ErrorLoggingService {
    * Store error logs in database
    */
   private async storeInDatabase(entries: ErrorLogEntry[]): Promise<void> {
-    // TODO: Create error_logs table and store entries
-    // For now, just log count
-    logger.info(`Would store ${entries.length} error logs in database`);
+    try {
+      // Import database connection
+      const { db } = await import('../db');
+      const { errorLogs } = await import('../db/schema');
+      
+      // Convert entries to database format
+      const dbEntries = entries.map(entry => ({
+        level: entry.level,
+        message: entry.message,
+        error_code: entry.code,
+        stack_trace: entry.stack,
+        user_id: entry.userId,
+        session_id: entry.sessionId,
+        metadata: JSON.stringify(entry.metadata || {}),
+        context: JSON.stringify(entry.context || {}),
+        timestamp: entry.timestamp,
+        created_at: new Date(),
+        updated_at: new Date()
+      }));
+      
+      // Insert entries in batches for better performance
+      const batchSize = 100;
+      for (let i = 0; i < dbEntries.length; i += batchSize) {
+        const batch = dbEntries.slice(i, i + batchSize);
+        await db.insert(errorLogs).values(batch);
+      }
+      
+      logger.info(`Successfully stored ${entries.length} error logs in database`);
+    } catch (error) {
+      logger.error('Failed to store error logs in database:', { 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        entryCount: entries.length 
+      });
+      // Don't throw - logging to database shouldn't break the application
+    }
   }
 
   /**
@@ -231,9 +263,75 @@ export class ErrorLoggingService {
    * Query error logs
    */
   async queryLogs(filter: ErrorLogFilter): Promise<ErrorLogEntry[]> {
-    // TODO: Implement database query
-    logger.info("Would query error logs with filter:", filter);
-    return [];
+    try {
+      const { db } = await import('../db');
+      const { errorLogs } = await import('../db/schema');
+      const { and, eq, gte, lte, like, desc } = await import('drizzle-orm');
+      
+      // Build query conditions
+      const conditions = [];
+      
+      if (filter.level) {
+        conditions.push(eq(errorLogs.level, filter.level));
+      }
+      
+      if (filter.code) {
+        conditions.push(eq(errorLogs.error_code, filter.code));
+      }
+      
+      if (filter.userId) {
+        conditions.push(eq(errorLogs.user_id, filter.userId));
+      }
+      
+      if (filter.sessionId) {
+        conditions.push(eq(errorLogs.session_id, filter.sessionId));
+      }
+      
+      if (filter.message) {
+        conditions.push(like(errorLogs.message, `%${filter.message}%`));
+      }
+      
+      if (filter.startTime) {
+        conditions.push(gte(errorLogs.timestamp, filter.startTime));
+      }
+      
+      if (filter.endTime) {
+        conditions.push(lte(errorLogs.timestamp, filter.endTime));
+      }
+      
+      // Execute query
+      const query = db.select().from(errorLogs);
+      
+      if (conditions.length > 0) {
+        query.where(and(...conditions));
+      }
+      
+      const results = await query
+        .orderBy(desc(errorLogs.timestamp))
+        .limit(filter.limit || 100);
+      
+      // Convert database results to ErrorLogEntry format
+      return results.map(row => ({
+        id: row.id?.toString(),
+        level: row.level as 'error' | 'warn' | 'info',
+        message: row.message,
+        code: row.error_code,
+        stack: row.stack_trace,
+        userId: row.user_id,
+        sessionId: row.session_id,
+        metadata: row.metadata ? JSON.parse(row.metadata) : {},
+        context: row.context ? JSON.parse(row.context) : {},
+        timestamp: row.timestamp,
+        component: 'error-logging-service',
+        severity: row.level === 'error' ? 'high' : 'medium'
+      }));
+    } catch (error) {
+      logger.error('Failed to query error logs:', { 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        filter 
+      });
+      return [];
+    }
   }
 
   /**
@@ -248,25 +346,124 @@ export class ErrorLoggingService {
     byCode: Record<string, number>;
     byHour: Record<string, number>;
   }> {
-    // TODO: Implement statistics calculation
-    return {
-      total: 0,
-      byLevel: {},
-      byCode: {},
-      byHour: {},
-    };
+    try {
+      const { db } = await import('../db');
+      const { errorLogs } = await import('../db/schema');
+      const { count, sql, gte } = await import('drizzle-orm');
+      
+      const endDate = end || new Date();
+      const startDate = start || new Date(endDate.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+      
+      // Get total count
+      const totalResult = await db
+        .select({ count: count() })
+        .from(errorLogs)
+        .where(gte(errorLogs.timestamp, startDate));
+      
+      const total = totalResult[0]?.count || 0;
+      
+      // Get counts by level
+      const levelResults = await db
+        .select({ 
+          level: errorLogs.level,
+          count: count()
+        })
+        .from(errorLogs)
+        .where(gte(errorLogs.timestamp, startDate))
+        .groupBy(errorLogs.level);
+      
+      const byLevel = levelResults.reduce((acc, row) => {
+        acc[row.level] = row.count;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      // Get counts by error code
+      const codeResults = await db
+        .select({ 
+          code: errorLogs.error_code,
+          count: count()
+        })
+        .from(errorLogs)
+        .where(gte(errorLogs.timestamp, startDate))
+        .groupBy(errorLogs.error_code);
+      
+      const byCode = codeResults.reduce((acc, row) => {
+        if (row.code) {
+          acc[row.code] = row.count;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+      
+      // Get counts by hour (simplified)
+      const byHour: Record<string, number> = {};
+      for (let i = 0; i < 24; i++) {
+        const hourStart = new Date(startDate.getTime() + i * 60 * 60 * 1000);
+        const hourEnd = new Date(hourStart.getTime() + 60 * 60 * 1000);
+        
+        const hourResult = await db
+          .select({ count: count() })
+          .from(errorLogs)
+          .where(
+            sql`${errorLogs.timestamp} >= ${hourStart} AND ${errorLogs.timestamp} < ${hourEnd}`
+          );
+        
+        byHour[hourStart.getHours().toString()] = hourResult[0]?.count || 0;
+      }
+      
+      return { total, byLevel, byCode, byHour };
+    } catch (error) {
+      logger.error('Failed to calculate error statistics:', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+      
+      return {
+        total: 0,
+        byLevel: {},
+        byCode: {},
+        byHour: {},
+      };
+    }
   }
 
   /**
    * Clear old error logs
    */
   async clearOldLogs(daysToKeep = 30): Promise<number> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-
-    // TODO: Implement database cleanup
-    logger.info(`Would delete error logs older than ${cutoffDate.toISOString()}`);
-    return 0;
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+      
+      const { db } = await import('../db');
+      const { errorLogs } = await import('../db/schema');
+      const { lt, count } = await import('drizzle-orm');
+      
+      // First, count how many logs will be deleted
+      const countResult = await db
+        .select({ count: count() })
+        .from(errorLogs)
+        .where(lt(errorLogs.timestamp, cutoffDate));
+      
+      const logsToDelete = countResult[0]?.count || 0;
+      
+      if (logsToDelete === 0) {
+        logger.info('No old error logs to clean up');
+        return 0;
+      }
+      
+      // Delete old logs
+      await db
+        .delete(errorLogs)
+        .where(lt(errorLogs.timestamp, cutoffDate));
+      
+      logger.info(`Successfully deleted ${logsToDelete} error logs older than ${cutoffDate.toISOString()}`);
+      return logsToDelete;
+    } catch (error) {
+      logger.error('Failed to clean up old error logs:', { 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        daysToKeep 
+      });
+      return 0;
+    }
   }
 }
 

@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * WebSocket API Route
  * 
  * Next.js API route to manage WebSocket server lifecycle and integration.
@@ -21,6 +20,7 @@ import {
   publicHandler,
   authenticatedHandler,
 } from "../../../src/lib/api-middleware";
+import { createLogger } from '../../../src/lib/structured-logger';
 
 // ======================
 // WebSocket Server Status

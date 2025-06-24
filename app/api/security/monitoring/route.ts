@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * Security Monitoring API Endpoint
  * 
  * Provides access to security monitoring metrics, automated credential rotation,
@@ -8,6 +7,7 @@ import { createLogger } from '../../../../src/lib/structured-logger';
 
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { securityMonitoring } from "../../../../src/services/security-monitoring-service";
 import { checkRateLimit, getClientIP } from "../../../../src/lib/rate-limiter";
 

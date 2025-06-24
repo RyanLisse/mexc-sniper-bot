@@ -14,6 +14,7 @@ import {
   validateMexcApiResponse,
   type AccountBalanceResponse
 } from "../../../../src/schemas/mexc-api-validation-schemas";
+import { balancePersistenceService } from "../../../../src/services/balance-persistence-service";
 import { publicRoute } from "../../../../src/lib/auth-decorators";
 
 export const GET = publicRoute(async (request: NextRequest) => {
@@ -91,6 +92,32 @@ export const GET = publicRoute(async (request: NextRequest) => {
       hasUserCredentials,
       credentialsType: hasUserCredentials ? 'user-specific' : 'environment-fallback',
     };
+
+    // Save balance data to database for persistence (addressing critical gap)
+    if (userId && portfolio?.balances && portfolio.balances.length > 0) {
+      try {
+        await balancePersistenceService.saveBalanceSnapshot(userId, {
+          balances: portfolio.balances,
+          totalUsdtValue: portfolio.totalUsdtValue || 0,
+        }, {
+          snapshotType: 'periodic',
+          dataSource: 'api',
+          priceSource: 'mexc'
+        });
+        
+        logger.info('[API] Balance data persisted to database', {
+          userId,
+          assetCount: portfolio.balances.length,
+          totalUsdValue: portfolio.totalUsdtValue
+        });
+      } catch (persistError) {
+        // Log but don't fail the API request if persistence fails
+        logger.error('[API] Failed to persist balance data', {
+          userId,
+          error: persistError instanceof Error ? persistError.message : String(persistError)
+        });
+      }
+    }
 
     // Validate response data
     const responseValidation = validateMexcApiResponse(

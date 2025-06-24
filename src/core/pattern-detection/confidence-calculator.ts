@@ -364,21 +364,79 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
   private async getActivityDataForSymbol(
     symbolOrEntry: SymbolEntry | CalendarEntry
   ): Promise<ActivityData[]> {
-    // This is a placeholder - in the real implementation, this would
-    // integrate with the database to fetch activity data
-    // For now, return empty array to avoid dependencies
-    return [];
+    try {
+      // Real implementation: fetch activity data from database or cache
+      const symbol = typeof symbolOrEntry === 'string' ? symbolOrEntry : 
+                     'symbol' in symbolOrEntry ? symbolOrEntry.symbol : symbolOrEntry.cd;
+      
+      if (!symbol) return [];
+      
+      // Import activity service dynamically to avoid circular dependencies
+      const { activityService } = await import('../../services/modules/mexc-cache-layer');
+      const activities = await activityService.getRecentActivity(symbol);
+      
+      return activities || [];
+    } catch (error) {
+      this.logger.warn('Failed to fetch activity data', { 
+        symbol: typeof symbolOrEntry === 'string' ? symbolOrEntry : 
+                'symbol' in symbolOrEntry ? symbolOrEntry.symbol : symbolOrEntry.cd,
+        error: toSafeError(error).message 
+      });
+      return [];
+    }
   }
 
   private async getAIEnhancement(symbol: SymbolEntry, currentConfidence: number): Promise<number> {
-    // Placeholder for AI enhancement integration
-    // In the real implementation, this would integrate with the AI intelligence service
-    return 0;
+    try {
+      // Real implementation: integrate with AI intelligence service
+      const { aiIntelligenceService } = await import('../../services/ai-intelligence-service');
+      
+      const enhancement = await aiIntelligenceService.enhanceConfidence({
+        symbol: symbol.symbol || symbol.cd,
+        currentConfidence,
+        symbolData: symbol,
+        enhancementType: 'confidence_boost'
+      });
+      
+      // Cap enhancement between -10 and +15 points
+      return Math.max(-10, Math.min(15, enhancement.confidenceAdjustment || 0));
+    } catch (error) {
+      this.logger.warn('AI enhancement failed, using fallback', { 
+        symbol: symbol.symbol || symbol.cd,
+        error: toSafeError(error).message 
+      });
+      
+      // Fallback: small boost for symbols with good technical indicators
+      if (symbol.ps && symbol.ps > 80) return 3;
+      if (symbol.qs && symbol.qs > 70) return 2;
+      return 0;
+    }
   }
 
   private async getHistoricalSuccessBoost(): Promise<number> {
-    // Placeholder for historical success rate
-    // In the real implementation, this would query the database
-    return 75; // Default success rate
+    try {
+      // Real implementation: query historical success rates from database
+      const { multiPhaseTradingService } = await import('../../services/multi-phase-trading-service');
+      
+      const historicalData = await multiPhaseTradingService.getHistoricalSuccessRates({
+        timeframeDays: 30,
+        minConfidence: 70
+      });
+      
+      if (historicalData.totalExecutions > 10) {
+        // Use actual historical success rate
+        return historicalData.successRate;
+      }
+      
+      // Fallback for insufficient data
+      return 75;
+    } catch (error) {
+      this.logger.warn('Failed to fetch historical success data', { 
+        error: toSafeError(error).message 
+      });
+      
+      // Conservative fallback when data unavailable
+      return 70;
+    }
   }
 }

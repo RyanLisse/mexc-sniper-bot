@@ -6,7 +6,7 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 import type { MexcServiceResponse } from "../mexc-schemas";
 import type { MexcApiClient } from "./mexc-api-client-refactored";
 

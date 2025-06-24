@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * Enhanced MEXC Connectivity API Endpoint
  *
  * Advanced connectivity endpoint that leverages the enhanced credential validation,
@@ -15,6 +14,7 @@ import { getGlobalHealthMonitor } from "../../../../src/services/connection-heal
 import { getGlobalRealTimeMonitor } from "../../../../src/services/real-time-credential-monitor";
 import { getUserCredentials } from "../../../../src/services/user-credentials-service";
 import { toSafeError } from "../../../../src/lib/error-type-utils";
+import { createLogger } from "../../../../src/lib/structured-logger";
 
 interface EnhancedConnectivityResponse {
   // Core Status

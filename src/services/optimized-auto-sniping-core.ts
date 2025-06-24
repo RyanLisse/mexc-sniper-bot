@@ -642,12 +642,56 @@ export class OptimizedAutoSnipingCore {
   }
 
   private async checkSystemHealth(): SystemHealth {
+    // Real system health checks
+    const apiConnection = await this.validateApiConnection();
+    const patternEngine = await this.validatePatternEngine();
+    const safetySystem = this.validateSafetySystem();
+    const riskLimits = this.stats.currentDrawdown < this.config.maxDrawdownPercentage;
+
     return {
-      apiConnection: true, // Would check actual API connectivity
-      patternEngine: true, // Would check pattern engine status
-      safetySystem: true, // Would check safety system status
-      riskLimits: this.stats.currentDrawdown < this.config.maxDrawdownPercentage,
+      apiConnection,
+      patternEngine,
+      safetySystem,
+      riskLimits,
     };
+  }
+
+  private async validateApiConnection(): Promise<boolean> {
+    try {
+      // Use existing MEXC API client to test connectivity
+      const mexcClient = await import('../services/mexc-api-client');
+      const client = mexcClient.mexcApiClient;
+      
+      // Test basic API connectivity by checking server time
+      const serverTime = await client.getServerTime();
+      return typeof serverTime === 'number' && serverTime > 0;
+    } catch (error) {
+      this.logger.error('API connectivity check failed', { error: toSafeError(error).message });
+      return false;
+    }
+  }
+
+  private async validatePatternEngine(): Promise<boolean> {
+    try {
+      // Test pattern engine with a minimal symbol
+      const testSymbol = { cd: 'BTCUSDT', sts: 2, st: 2, tt: 4 };
+      const { PatternDetectionEngine } = await import('../services/pattern-detection-engine');
+      const engine = PatternDetectionEngine.getInstance();
+      const patterns = await engine.detectReadyStatePattern(testSymbol);
+      return Array.isArray(patterns);
+    } catch (error) {
+      this.logger.error('Pattern engine validation failed', { error: toSafeError(error).message });
+      return false;
+    }
+  }
+
+  private validateSafetySystem(): boolean {
+    // Check critical safety parameters
+    const hasValidConfig = this.config.maxPositions > 0 && this.config.maxDailyTrades > 0;
+    const hasValidRiskLimits = this.config.stopLossPercentage > 0 && this.config.maxDrawdownPercentage > 0;
+    const withinRiskLimits = this.stats.currentDrawdown < this.config.maxDrawdownPercentage;
+    
+    return hasValidConfig && hasValidRiskLimits && withinRiskLimits;
   }
 
   private generateIntelligentRecommendations(): string[] {
