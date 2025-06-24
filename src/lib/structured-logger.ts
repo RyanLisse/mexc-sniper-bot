@@ -1,22 +1,13 @@
 /**
  * Structured Logger for MEXC Trading Bot
  *
- * Replaces console.log statements with structured, contextual logging
- * integrated with OpenTelemetry for comprehensive observability.
+ * Build-safe structured logging without OpenTelemetry dependencies during compilation
  */
 
-// Safe OpenTelemetry import for build environments
-let trace: any;
-try {
-  if (typeof process !== 'undefined' && process.env.NODE_ENV) {
-    trace = require("@opentelemetry/api").trace;
-  }
-} catch (error) {
-  // OpenTelemetry not available during build - create safe fallback
-  trace = {
-    getActiveSpan: () => null,
-  };
-}
+// Build-safe trace fallback - no dynamic imports during build
+const trace = {
+  getActiveSpan: () => null,
+};
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -106,21 +97,6 @@ export class StructuredLogger {
    * Create structured log entry
    */
   private createLogEntry(level: LogLevel, message: string, context: LogContext = {}): LogEntry {
-    let traceId: string | undefined;
-    let spanId: string | undefined;
-
-    try {
-      // Safe OpenTelemetry access
-      if (trace && trace.getActiveSpan) {
-        const activeSpan = trace.getActiveSpan();
-        const spanContext = activeSpan?.spanContext();
-        traceId = spanContext?.traceId;
-        spanId = spanContext?.spanId;
-      }
-    } catch (error) {
-      // Silently ignore OpenTelemetry errors
-    }
-
     return {
       timestamp: new Date().toISOString(),
       level,
@@ -130,8 +106,8 @@ export class StructuredLogger {
         service: context.service || this.service,
         component: context.component || this.component,
       },
-      traceId,
-      spanId,
+      traceId: undefined,
+      spanId: undefined,
       service: this.service,
       component: this.component,
     };
@@ -143,23 +119,6 @@ export class StructuredLogger {
   private emit(entry: LogEntry): void {
     if (!this.shouldLog(entry.level)) return;
 
-    // Add log entry to active span if available (runtime only)
-    try {
-      // Safe OpenTelemetry access
-      if (trace && trace.getActiveSpan) {
-        const activeSpan = trace.getActiveSpan();
-        if (activeSpan && activeSpan.addEvent) {
-          activeSpan.addEvent(`log.${entry.level}`, {
-            message: entry.message,
-            component: entry.component,
-            ...entry.context,
-          });
-        }
-      }
-    } catch (error) {
-      // Silently ignore OpenTelemetry errors
-    }
-
     // Format for console output (development) or structured output (production)
     if (process.env.NODE_ENV === "production") {
       // JSON output for log aggregation systems
@@ -167,12 +126,11 @@ export class StructuredLogger {
     } else {
       // Human-readable format for development
       const timestamp = entry.timestamp;
-      const traceInfo = entry.traceId ? `[${entry.traceId.substring(0, 8)}]` : "";
       const contextStr =
         Object.keys(entry.context).length > 0 ? JSON.stringify(entry.context, null, 2) : "";
 
       console.log(
-        `${timestamp} [${entry.level.toUpperCase()}] ${traceInfo} ${entry.component}: ${entry.message}`
+        `${timestamp} [${entry.level.toUpperCase()}] ${entry.component}: ${entry.message}`
       );
       if (contextStr) {
         console.log(`Context: ${contextStr}`);
@@ -213,21 +171,6 @@ export class StructuredLogger {
     };
 
     this.emit(this.createLogEntry("error", message, errorContext));
-
-    // Also record exception in OpenTelemetry span (runtime only)
-    if (error) {
-      try {
-        // Safe OpenTelemetry access
-        if (trace && trace.getActiveSpan) {
-          const activeSpan = trace.getActiveSpan();
-          if (activeSpan && activeSpan.recordException) {
-            activeSpan.recordException(error);
-          }
-        }
-      } catch (telemetryError) {
-        // Silently ignore OpenTelemetry errors
-      }
-    }
   }
 
   /**

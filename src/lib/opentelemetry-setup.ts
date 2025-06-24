@@ -387,16 +387,10 @@ export const TelemetryMonitoring = {
 };
 
 /**
- * Initialize OpenTelemetry on module load (only in Node.js environment)
- * Uses enhanced production configuration for optimal performance
+ * OpenTelemetry initialization is now handled by instrumentation.ts (Vercel pattern)
+ * This ensures proper compatibility with Vercel's deployment environment
+ * 
+ * The functions above are kept for backward compatibility and advanced configurations
  */
-if (typeof window === "undefined" && !telemetryDisabled) {
-  // Use the enhanced initialization instead of the basic one
-  initializeEnhancedTelemetry().catch((error) => {
-    logger.error("[OpenTelemetry] Failed to initialize enhanced telemetry:", error);
-    // Fallback to basic initialization if enhanced fails
-    initializeOpenTelemetry();
-  });
-}
 
 export default TRADING_TELEMETRY_CONFIG;

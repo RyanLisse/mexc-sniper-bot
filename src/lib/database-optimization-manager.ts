@@ -1,5 +1,4 @@
 /**
-import { createLogger } from './structured-logger';
  * Database Optimization Manager
  *
  * Comprehensive database optimization system that orchestrates all phases:
@@ -11,6 +10,7 @@ import { createLogger } from './structured-logger';
  * Achieves 50%+ query performance improvement as targeted.
  */
 
+import { createLogger } from './structured-logger';
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
 import { databaseConnectionPool } from "./database-connection-pool";
 import { databaseIndexOptimizer } from "./database-index-optimizer";

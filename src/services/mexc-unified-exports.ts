@@ -36,6 +36,9 @@ import type {
   TradingOpportunity,
 } from "./mexc-schemas";
 
+// Import logger
+import { createLogger } from '../lib/structured-logger';
+
 // Import the production-ready unified client (modular)
 import {
   getUnifiedMexcClient as getUnifiedMexcClientFactory,
@@ -121,7 +124,6 @@ export function getEnhancedMexcService(config?: {
   apiKey?: string;
   secretKey?: string;
 }): UnifiedMexcServiceV2 {
-  const { createLogger } = require('../lib/structured-logger');
   const logger = createLogger("mexc-unified-exports");
   logger.warn("getEnhancedMexcService is deprecated. Use getUnifiedMexcServiceV2 instead.");
   return getUnifiedMexcServiceV2(config);
@@ -132,7 +134,6 @@ export function getEnhancedMexcService(config?: {
  * @deprecated Use resetUnifiedMexcServiceV2 instead
  */
 export function resetEnhancedMexcService(): void {
-  const { createLogger } = require('../lib/structured-logger');
   const logger = createLogger("mexc-unified-exports");
   logger.warn("resetEnhancedMexcService is deprecated. Use resetUnifiedMexcServiceV2 instead.");
   resetUnifiedMexcServiceV2();
