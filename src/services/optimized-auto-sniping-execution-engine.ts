@@ -1,6 +1,6 @@
 /**
  * Optimized Auto-Sniping Execution Engine
- * 
+ *
  * Core execution engine for auto-sniping operations.
  * Replaces the monolithic auto-sniping-execution-service.ts (1042 lines)
  * with focused, optimized modules under 500 lines each.
@@ -13,14 +13,14 @@ import { EmergencySafetySystem } from "./emergency-safety-system";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
 import {
   type AutoSnipingConfig,
+  AutoSnipingConfigSchema,
+  type ExecutionAlert,
   type ExecutionPosition,
   type ExecutionStats,
-  type ExecutionAlert,
+  ExecutionStatsSchema,
   type PatternType,
   validateAutoSnipingConfig,
   validateExecutionPosition,
-  AutoSnipingConfigSchema,
-  ExecutionStatsSchema
 } from "./optimized-auto-sniping-schemas";
 import { PatternMonitoringService } from "./pattern-monitoring-service";
 import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
@@ -73,7 +73,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     this.logger.info("Optimized execution engine initialized", {
       operation: "initialization",
       maxPositions: this.config.maxPositions,
-      enabled: this.config.enabled
+      enabled: this.config.enabled,
     });
   }
 
@@ -97,8 +97,8 @@ export class OptimizedAutoSnipingExecutionEngine {
       config: {
         maxPositions: this.config.maxPositions,
         minConfidence: this.config.minConfidence,
-        enableAdvanceDetection: this.config.enableAdvanceDetection
-      }
+        enableAdvanceDetection: this.config.enableAdvanceDetection,
+      },
     });
 
     await this.performPreflightChecks();
@@ -110,7 +110,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       type: "position_opened",
       severity: "info",
       message: "Optimized auto-sniping execution started",
-      details: { config: this.config }
+      details: { config: this.config },
     });
   }
 
@@ -121,7 +121,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     this.logger.info("Stopping auto-sniping execution", {
       operation: "stop_execution",
       activePositions: this.activePositions.size,
-      totalTrades: this.stats.totalTrades
+      totalTrades: this.stats.totalTrades,
     });
 
     this.isExecutionActive = false;
@@ -131,7 +131,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       type: "position_closed",
       severity: "info",
       message: "Auto-sniping execution stopped",
-      details: { activePositions: this.activePositions.size }
+      details: { activePositions: this.activePositions.size },
     });
   }
 
@@ -146,12 +146,12 @@ export class OptimizedAutoSnipingExecutionEngine {
       type: "position_opened",
       severity: "info",
       message: "Configuration updated",
-      details: { updatedFields: Object.keys(newConfig) }
+      details: { updatedFields: Object.keys(newConfig) },
     });
 
     this.logger.info("Configuration updated", {
       operation: "config_update",
-      updatedFields: Object.keys(newConfig)
+      updatedFields: Object.keys(newConfig),
     });
   }
 
@@ -204,7 +204,7 @@ export class OptimizedAutoSnipingExecutionEngine {
   public async emergencyCloseAll(): Promise<number> {
     this.logger.warn("Emergency close all positions initiated", {
       operation: "emergency_close_all",
-      totalPositions: this.activePositions.size
+      totalPositions: this.activePositions.size,
     });
 
     let closedCount = 0;
@@ -222,14 +222,14 @@ export class OptimizedAutoSnipingExecutionEngine {
 
     const results = await Promise.allSettled(closePromises);
     closedCount = results
-      .filter(result => result.status === "fulfilled")
+      .filter((result) => result.status === "fulfilled")
       .reduce((sum, result) => sum + (result.value || 0), 0);
 
     this.addAlert({
       type: "execution_error",
       severity: "critical",
       message: `Emergency close completed: ${closedCount}/${positions.length} positions closed`,
-      details: { closedCount, totalPositions: positions.length }
+      details: { closedCount, totalPositions: positions.length },
     });
 
     return closedCount;
@@ -264,7 +264,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     this.logger.info("Pre-flight checks passed", {
       operation: "preflight_checks",
       duration,
-      safetyStatus: safetyStatus.overall
+      safetyStatus: safetyStatus.overall,
     });
   }
 
@@ -272,12 +272,16 @@ export class OptimizedAutoSnipingExecutionEngine {
     // Optimized execution cycle - every 5 seconds
     this.executionInterval = setInterval(() => {
       this.performExecutionCycle().catch((error) => {
-        this.logger.error("Execution cycle failed", { activePositions: this.activePositions.size }, error);
+        this.logger.error(
+          "Execution cycle failed",
+          { activePositions: this.activePositions.size },
+          error
+        );
         this.addAlert({
           type: "execution_error",
           severity: "error",
           message: `Execution cycle failed: ${getErrorMessage(error)}`,
-          details: { error: getErrorMessage(error) }
+          details: { error: getErrorMessage(error) },
         });
       });
     }, 5000);
@@ -285,7 +289,11 @@ export class OptimizedAutoSnipingExecutionEngine {
     // Optimized monitoring cycle - every 10 seconds
     this.monitoringInterval = setInterval(() => {
       this.monitorActivePositions().catch((error) => {
-        this.logger.error("Position monitoring failed", { activePositions: this.activePositions.size }, error);
+        this.logger.error(
+          "Position monitoring failed",
+          { activePositions: this.activePositions.size },
+          error
+        );
       });
     }, 10000);
   }
@@ -314,27 +322,31 @@ export class OptimizedAutoSnipingExecutionEngine {
     // Execute trades in parallel for efficiency
     const executionPromises = eligiblePatterns
       .slice(0, this.config.maxPositions - this.activePositions.size)
-      .map(pattern => this.executeTradeForPattern(pattern));
+      .map((pattern) => this.executeTradeForPattern(pattern));
 
     await Promise.allSettled(executionPromises);
   }
 
   private canExecuteNewTrades(): boolean {
-    return this.stats.dailyTradeCount < this.config.maxDailyTrades &&
-           this.activePositions.size < this.config.maxPositions;
+    return (
+      this.stats.dailyTradeCount < this.config.maxDailyTrades &&
+      this.activePositions.size < this.config.maxPositions
+    );
   }
 
   private filterEligiblePatterns(patterns: PatternMatch[]): PatternMatch[] {
-    return patterns.filter(pattern => {
-      return pattern.confidence >= this.config.minConfidence &&
-             this.config.allowedPatternTypes.includes(pattern.patternType as PatternType) &&
-             !this.hasActivePositionForSymbol(pattern.symbol) &&
-             this.isPatternTypeAllowed(pattern);
+    return patterns.filter((pattern) => {
+      return (
+        pattern.confidence >= this.config.minConfidence &&
+        this.config.allowedPatternTypes.includes(pattern.patternType as PatternType) &&
+        !this.hasActivePositionForSymbol(pattern.symbol) &&
+        this.isPatternTypeAllowed(pattern)
+      );
     });
   }
 
   private hasActivePositionForSymbol(symbol: string): boolean {
-    return Array.from(this.activePositions.values()).some(pos => pos.symbol === symbol);
+    return Array.from(this.activePositions.values()).some((pos) => pos.symbol === symbol);
   }
 
   private isPatternTypeAllowed(pattern: PatternMatch): boolean {
@@ -349,7 +361,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     const context: TradingContext = {
       requestId: `trade_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       startTime,
-      userId: "system"
+      userId: "system",
     };
 
     try {
@@ -358,14 +370,19 @@ export class OptimizedAutoSnipingExecutionEngine {
         symbol: pattern.symbol,
         side: "BUY",
         type: "MARKET",
-        quantity: quantity.toString()
+        quantity: quantity.toString(),
       });
 
       if (!orderResult.success) {
         throw new Error(`Order execution failed: ${orderResult.error}`);
       }
 
-      const position = this.createPositionRecord(pattern, orderResult, quantity, Date.now() - startTime);
+      const position = this.createPositionRecord(
+        pattern,
+        orderResult,
+        quantity,
+        Date.now() - startTime
+      );
       this.activePositions.set(position.id, position);
       this.updateStatsAfterExecution();
       this.logSuccessfulTrade(position, context);
@@ -397,8 +414,8 @@ export class OptimizedAutoSnipingExecutionEngine {
         confidence: pattern.confidence,
         executionLatency,
         slippage: 0,
-        orderType: "MARKET"
-      }
+        orderType: "MARKET",
+      },
     };
 
     // Set stop loss and take profit
@@ -416,8 +433,8 @@ export class OptimizedAutoSnipingExecutionEngine {
     if (this.activePositions.size === 0) return;
 
     const positions = Array.from(this.activePositions.values());
-    const monitoringPromises = positions.map(position => this.monitorSinglePosition(position));
-    
+    const monitoringPromises = positions.map((position) => this.monitorSinglePosition(position));
+
     await Promise.allSettled(monitoringPromises);
   }
 
@@ -459,7 +476,7 @@ export class OptimizedAutoSnipingExecutionEngine {
         message: `Stop loss triggered: ${position.symbol}`,
         positionId: position.id,
         symbol: position.symbol,
-        details: { stopLossPrice: position.stopLossPrice, currentPrice }
+        details: { stopLossPrice: position.stopLossPrice, currentPrice },
       });
       return;
     }
@@ -473,7 +490,7 @@ export class OptimizedAutoSnipingExecutionEngine {
         message: `Take profit triggered: ${position.symbol}`,
         positionId: position.id,
         symbol: position.symbol,
-        details: { takeProfitPrice: position.takeProfitPrice, currentPrice }
+        details: { takeProfitPrice: position.takeProfitPrice, currentPrice },
       });
     }
   }
@@ -498,18 +515,18 @@ export class OptimizedAutoSnipingExecutionEngine {
         symbol: position.symbol,
         side: "SELL",
         type: "MARKET",
-        quantity: position.quantity
+        quantity: position.quantity,
       });
 
       return {
         success: orderResult.success,
         orderId: orderResult.data?.orderId,
-        executedPrice: orderResult.data?.executedPrice
+        executedPrice: orderResult.data?.executedPrice,
       };
     } catch (error) {
       return {
         success: false,
-        error: getErrorMessage(error)
+        error: getErrorMessage(error),
       };
     }
   }
@@ -526,17 +543,25 @@ export class OptimizedAutoSnipingExecutionEngine {
       message: `Position closed: ${position.symbol} (${reason})`,
       positionId: position.id,
       symbol: position.symbol,
-      details: { reason, pnl: position.unrealizedPnl }
+      details: { reason, pnl: position.unrealizedPnl },
     });
   }
 
-  private handlePositionCloseError(position: ExecutionPosition, error: unknown, reason: string): void {
+  private handlePositionCloseError(
+    position: ExecutionPosition,
+    error: unknown,
+    reason: string
+  ): void {
     const safeError = toSafeError(error);
-    this.logger.error("Failed to close position", {
-      positionId: position.id,
-      symbol: position.symbol,
-      reason
-    }, error);
+    this.logger.error(
+      "Failed to close position",
+      {
+        positionId: position.id,
+        symbol: position.symbol,
+        reason,
+      },
+      error
+    );
 
     this.addAlert({
       type: "execution_error",
@@ -544,7 +569,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       message: `Failed to close position: ${safeError.message}`,
       positionId: position.id,
       symbol: position.symbol,
-      details: { error: safeError.message }
+      details: { error: safeError.message },
     });
   }
 
@@ -556,7 +581,7 @@ export class OptimizedAutoSnipingExecutionEngine {
 
   private updateStatsAfterClose(position: ExecutionPosition): void {
     const pnl = parseFloat(position.unrealizedPnl);
-    
+
     if (pnl > 0) {
       this.stats.successfulTrades++;
     } else {
@@ -565,7 +590,7 @@ export class OptimizedAutoSnipingExecutionEngine {
 
     this.stats.successRate = (this.stats.successfulTrades / this.stats.totalTrades) * 100;
     this.stats.activePositions = this.activePositions.size;
-    
+
     const currentPnl = parseFloat(this.stats.totalPnl || "0");
     this.stats.totalPnl = (currentPnl + pnl).toString();
   }
@@ -581,8 +606,8 @@ export class OptimizedAutoSnipingExecutionEngine {
         patternType: position.patternMatch.patternType,
         confidence: position.patternMatch.confidence,
         quantity: position.quantity,
-        executionLatency: position.executionMetadata.executionLatency
-      }
+        executionLatency: position.executionMetadata.executionLatency,
+      },
     });
 
     this.logger.trading("Trade executed successfully", {
@@ -590,7 +615,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       positionId: position.id,
       symbol: position.symbol,
       entryPrice: position.entryPrice,
-      quantity: position.quantity
+      quantity: position.quantity,
     });
   }
 
@@ -599,7 +624,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date().toISOString(),
       acknowledged: false,
-      ...alertData
+      ...alertData,
     };
 
     this.alerts.push(alert);
@@ -615,7 +640,9 @@ export class OptimizedAutoSnipingExecutionEngine {
       maxDailyTrades: parseInt(process.env.AUTO_SNIPING_MAX_DAILY_TRADES || "10"),
       positionSizeUSDT: parseFloat(process.env.AUTO_SNIPING_POSITION_SIZE_USDT || "10"),
       minConfidence: parseFloat(process.env.AUTO_SNIPING_MIN_CONFIDENCE || "80"),
-      allowedPatternTypes: (process.env.AUTO_SNIPING_ALLOWED_PATTERNS?.split(",") as PatternType[]) || ["ready_state"],
+      allowedPatternTypes: (process.env.AUTO_SNIPING_ALLOWED_PATTERNS?.split(
+        ","
+      ) as PatternType[]) || ["ready_state"],
       requireCalendarConfirmation: process.env.AUTO_SNIPING_REQUIRE_CALENDAR !== "false",
       stopLossPercentage: parseFloat(process.env.AUTO_SNIPING_STOP_LOSS_PERCENT || "5"),
       takeProfitPercentage: parseFloat(process.env.AUTO_SNIPING_TAKE_PROFIT_PERCENT || "10"),
@@ -623,7 +650,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       enableAdvanceDetection: process.env.AUTO_SNIPING_ENABLE_ADVANCE_DETECTION !== "false",
       advanceHoursThreshold: parseFloat(process.env.AUTO_SNIPING_ADVANCE_HOURS_THRESHOLD || "3.5"),
       enableMultiPhaseStrategy: process.env.AUTO_SNIPING_ENABLE_MULTI_PHASE === "true",
-      slippageTolerancePercentage: parseFloat(process.env.AUTO_SNIPING_SLIPPAGE_TOLERANCE || "1")
+      slippageTolerancePercentage: parseFloat(process.env.AUTO_SNIPING_SLIPPAGE_TOLERANCE || "1"),
     });
     return result;
   }
@@ -647,10 +674,10 @@ export class OptimizedAutoSnipingExecutionEngine {
         ready_state: 0,
         pre_ready: 0,
         launch_sequence: 0,
-        risk_warning: 0
+        risk_warning: 0,
       },
       averagePatternConfidence: 0,
-      mostSuccessfulPattern: null
+      mostSuccessfulPattern: null,
     });
   }
 }

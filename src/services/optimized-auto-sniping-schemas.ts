@@ -1,6 +1,6 @@
 /**
  * Optimized Auto-Sniping Schemas and Types
- * 
+ *
  * Comprehensive Zod validation schemas for all auto-sniping operations.
  * Ensures type safety and data validation across the entire system.
  */
@@ -14,9 +14,9 @@ import type { PatternMatch } from "../core/pattern-detection";
 
 export const PatternTypeSchema = z.enum([
   "ready_state",
-  "pre_ready", 
+  "pre_ready",
   "launch_sequence",
-  "risk_warning"
+  "risk_warning",
 ]);
 
 export const AlertSeveritySchema = z.enum(["info", "warning", "error", "critical"]);
@@ -27,7 +27,7 @@ export const AlertTypeSchema = z.enum([
   "stop_loss_hit",
   "take_profit_hit",
   "execution_error",
-  "risk_limit_hit"
+  "risk_limit_hit",
 ]);
 
 export const PositionStatusSchema = z.enum(["ACTIVE", "PARTIAL_FILLED", "FILLED", "CLOSED"]);
@@ -52,18 +52,18 @@ export const AutoSnipingConfigSchema = z.object({
   enableAdvanceDetection: z.boolean().default(true),
   advanceHoursThreshold: z.number().positive().default(3.5),
   enableMultiPhaseStrategy: z.boolean().default(false),
-  slippageTolerancePercentage: z.number().min(0).max(10).default(1)
+  slippageTolerancePercentage: z.number().min(0).max(10).default(1),
 });
 
 // ============================================================================
-// Position and Execution Schemas 
+// Position and Execution Schemas
 // ============================================================================
 
 export const ExecutionMetadataSchema = z.object({
   confidence: z.number().min(0).max(100),
   executionLatency: z.number().nonnegative(),
   slippage: z.number(),
-  orderType: z.string()
+  orderType: z.string(),
 });
 
 export const ExecutionPositionSchema = z.object({
@@ -80,7 +80,7 @@ export const ExecutionPositionSchema = z.object({
   status: PositionStatusSchema,
   entryTime: z.string(),
   patternMatch: z.any(), // PatternMatch type
-  executionMetadata: ExecutionMetadataSchema
+  executionMetadata: ExecutionMetadataSchema,
 });
 
 export const ExecutionStatsSchema = z.object({
@@ -99,7 +99,7 @@ export const ExecutionStatsSchema = z.object({
   dailyTradeCount: z.number().nonnegative().default(0),
   patternSuccessRates: z.record(PatternTypeSchema, z.number()).default({}),
   averagePatternConfidence: z.number().default(0),
-  mostSuccessfulPattern: PatternTypeSchema.nullable().default(null)
+  mostSuccessfulPattern: PatternTypeSchema.nullable().default(null),
 });
 
 export const ExecutionAlertSchema = z.object({
@@ -111,14 +111,14 @@ export const ExecutionAlertSchema = z.object({
   positionId: z.string().optional(),
   symbol: z.string().optional(),
   details: z.record(z.any()),
-  acknowledged: z.boolean().default(false)
+  acknowledged: z.boolean().default(false),
 });
 
 export const SystemHealthSchema = z.object({
   apiConnection: z.boolean(),
   patternEngine: z.boolean(),
   safetySystem: z.boolean(),
-  riskLimits: z.boolean()
+  riskLimits: z.boolean(),
 });
 
 export const AutoSnipingExecutionReportSchema = z.object({
@@ -130,25 +130,27 @@ export const AutoSnipingExecutionReportSchema = z.object({
   activeAlerts: z.array(ExecutionAlertSchema),
   systemHealth: SystemHealthSchema,
   recommendations: z.array(z.string()),
-  lastUpdated: z.string()
+  lastUpdated: z.string(),
 });
 
 // ============================================================================
 // Trading Request/Response Schemas
 // ============================================================================
 
-export const TradingOrderRequestSchema = z.object({
-  symbol: z.string().min(1),
-  side: OrderSideSchema,
-  type: z.enum(["MARKET", "LIMIT", "STOP_LOSS", "TAKE_PROFIT"]),
-  quantity: z.string().optional(),
-  quoteOrderQty: z.string().optional(),
-  price: z.string().optional(),
-  timeInForce: z.enum(["GTC", "IOC", "FOK"]).optional(),
-  userId: z.string().min(1)
-}).refine(data => data.quantity || data.quoteOrderQty, {
-  message: "Either quantity or quoteOrderQty must be provided"
-});
+export const TradingOrderRequestSchema = z
+  .object({
+    symbol: z.string().min(1),
+    side: OrderSideSchema,
+    type: z.enum(["MARKET", "LIMIT", "STOP_LOSS", "TAKE_PROFIT"]),
+    quantity: z.string().optional(),
+    quoteOrderQty: z.string().optional(),
+    price: z.string().optional(),
+    timeInForce: z.enum(["GTC", "IOC", "FOK"]).optional(),
+    userId: z.string().min(1),
+  })
+  .refine((data) => data.quantity || data.quoteOrderQty, {
+    message: "Either quantity or quoteOrderQty must be provided",
+  });
 
 export const TradingOrderResponseSchema = z.object({
   success: z.boolean(),
@@ -159,7 +161,7 @@ export const TradingOrderResponseSchema = z.object({
   price: z.string().optional(),
   status: z.string().optional(),
   executedQty: z.string().optional(),
-  timestamp: z.string()
+  timestamp: z.string(),
 });
 
 // ============================================================================
@@ -187,7 +189,10 @@ export type TradingOrderResponse = z.infer<typeof TradingOrderResponseSchema>;
 // ============================================================================
 
 export class ValidationError extends Error {
-  constructor(message: string, public errors: z.ZodError) {
+  constructor(
+    message: string,
+    public errors: z.ZodError
+  ) {
     super(message);
     this.name = "ValidationError";
   }

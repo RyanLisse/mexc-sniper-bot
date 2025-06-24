@@ -115,15 +115,17 @@ export const PatternEmbeddingSchema = BaseEntitySchema.extend({
 // Portfolio and Position Schemas
 // ============================================================================
 
-export const PositionSnapshotSchema = BaseEntitySchema.merge(UserReferenceSchema).merge(TimestampSchema).extend({
-  totalBalance: z.number().min(0),
-  availableBalance: z.number().min(0),
-  lockedBalance: z.number().min(0),
-  totalPnL: z.number().default(0),
-  unrealizedPnL: z.number().default(0),
-  activePositions: z.number().min(0).default(0),
-  metadata: MetadataSchema,
-});
+export const PositionSnapshotSchema = BaseEntitySchema.merge(UserReferenceSchema)
+  .merge(TimestampSchema)
+  .extend({
+    totalBalance: z.number().min(0),
+    availableBalance: z.number().min(0),
+    lockedBalance: z.number().min(0),
+    totalPnL: z.number().default(0),
+    unrealizedPnL: z.number().default(0),
+    activePositions: z.number().min(0).default(0),
+    metadata: MetadataSchema,
+  });
 
 // ============================================================================
 // System and Monitoring Schemas
@@ -183,7 +185,9 @@ export const PerformanceMetricSchema = BaseEntitySchema.merge(TimestampSchema).e
   duration: z.number().min(0),
   success: z.boolean(),
   errorMessage: z.string().max(500).optional(),
-  executionContext: z.enum(["api", "database", "auto-sniping", "pattern-detection", "websocket"]).optional(),
+  executionContext: z
+    .enum(["api", "database", "auto-sniping", "pattern-detection", "websocket"])
+    .optional(),
   metadata: MetadataSchema,
 });
 
