@@ -169,8 +169,13 @@ export class MexcClientCore {
                 throw new Error("MEXC API credentials not configured for authenticated request");
               }
 
-              // MEXC requires this specific Content-Type for authenticated requests
-              headers["Content-Type"] = "application/x-www-form-urlencoded";
+              // Determine if this is an account endpoint
+              const isAccountEndpoint = endpoint.includes('/account') || endpoint.includes('/balance');
+              
+              // Only set Content-Type for non-account endpoints (trading endpoints need form data)
+              if (!isAccountEndpoint) {
+                headers["Content-Type"] = "application/x-www-form-urlencoded";
+              }
 
               const timestamp = Date.now();
               params.timestamp = timestamp;
@@ -180,7 +185,7 @@ export class MexcClientCore {
               headers["X-MEXC-APIKEY"] = this.config.apiKey;
 
               this.logger.debug(
-                `[MexcClientCore] Authenticated request: ${endpoint} (${requestId})`
+                `[MexcClientCore] Authenticated ${isAccountEndpoint ? 'GET' : 'POST'} request: ${endpoint} (${requestId})`
               );
             }
 
@@ -208,23 +213,48 @@ export class MexcClientCore {
             let response: Response;
 
             if (authenticated) {
-              // MEXC authenticated requests must be POST with signature in body
-              const body = new URLSearchParams();
-              Object.entries(params).forEach(([key, value]) => {
-                if (value !== undefined && value !== null) {
-                  body.append(key, String(value));
-                }
-              });
+              // Determine request method based on endpoint
+              // Account endpoints like /api/v3/account use GET with query parameters
+              // Trading endpoints use POST with form data
+              const isAccountEndpoint = endpoint.includes('/account') || endpoint.includes('/balance');
+              
+              if (isAccountEndpoint) {
+                // Account endpoints: GET with query parameters and signature
+                Object.entries(params).forEach(([key, value]) => {
+                  if (value !== undefined && value !== null) {
+                    urlObj.searchParams.set(key, String(value));
+                  }
+                });
 
-              response = await fetch(url, {
-                method: "POST",
-                headers: {
-                  ...headers,
-                  "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: body.toString(),
-                signal: controller.signal,
-              });
+                response = await fetch(urlObj.toString(), {
+                  method: "GET",
+                  headers: {
+                    "X-MEXC-APIKEY": headers["X-MEXC-APIKEY"],
+                    "User-Agent": headers["User-Agent"],
+                    "X-Request-ID": headers["X-Request-ID"],
+                    // Do NOT set Content-Type for GET requests to avoid "Invalid content Type" error
+                  },
+                  signal: controller.signal,
+                });
+              } else {
+                // Trading endpoints: POST with form data
+                const body = new URLSearchParams();
+                Object.entries(params).forEach(([key, value]) => {
+                  if (value !== undefined && value !== null) {
+                    body.append(key, String(value));
+                  }
+                });
+
+                response = await fetch(url, {
+                  method: "POST",
+                  headers: {
+                    ...headers,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                  },
+                  body: body.toString(),
+                  signal: controller.signal,
+                });
+              }
             } else {
               // Public requests remain as GET with query parameters
               response = await fetch(urlObj.toString(), {
