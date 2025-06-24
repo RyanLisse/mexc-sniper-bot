@@ -33,7 +33,7 @@ interface EncryptedData {
 }
 
 export class SecureEncryptionService {
-  private _logger?: ReturnType<typeof createSafeLogger>;
+  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
   private getLogger() {
     if (!this._logger) {
       this._logger = {

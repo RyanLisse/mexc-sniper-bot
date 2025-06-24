@@ -44,7 +44,7 @@ const RATE_LIMITS = {
 };
 
 // Security event logging - lazy initialization
-function getLogger(): ReturnType<typeof createSafeLogger> {
+function getLogger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
   if (!_logger) {
     try {
       _logger = {

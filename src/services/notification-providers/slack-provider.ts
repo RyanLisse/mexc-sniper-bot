@@ -37,7 +37,7 @@ interface SlackBlock {
 }
 
 export class SlackProvider implements NotificationProvider {
-  private get logger(): ReturnType<typeof createSafeLogger> {
+  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
     if (!this._logger) {
       try {
         this._logger = {

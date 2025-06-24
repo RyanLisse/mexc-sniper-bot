@@ -39,7 +39,7 @@ export interface ApiResponse<T = unknown> {
 let _/**
  * Lazy logger initialization to prevent webpack bundling issues
  */
-function getLogger(): ReturnType<typeof createSafeLogger> {
+function getLogger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
   if (!_logger) {
     try {
       _logger = {
