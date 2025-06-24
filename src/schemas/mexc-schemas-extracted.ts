@@ -69,7 +69,7 @@ export const ExchangeSymbolSchema = z.object({
 export const TickerSchema = z.object({
   symbol: z.string(),
   lastPrice: z.string(),
-  price: z.string(),
+  price: z.string().optional(), // MEXC API uses lastPrice, price is optional
   priceChange: z.string(),
   priceChangePercent: z.string(),
   volume: z.string(),
@@ -77,7 +77,7 @@ export const TickerSchema = z.object({
   openPrice: z.string().optional(),
   highPrice: z.string().optional(),
   lowPrice: z.string().optional(),
-  count: z.string().optional(),
+  count: z.union([z.string(), z.null()]).optional(), // MEXC API returns null for count
 });
 
 /**

@@ -22,6 +22,8 @@ export interface SafeError {
  * Safely converts unknown error to Error object with proper typing
  */
 // Lazy logger initialization to prevent build-time errors
+let _logger: any = null;
+
 function getLogger() {
   if (!_logger) {
     _logger = {

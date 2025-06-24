@@ -26,13 +26,11 @@ let postgresClient: ReturnType<typeof postgres> | null = null;
 // Sleep utility for retry logic
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Logger instance - declared before getLogger function
-let _logger: any = null;
-
-// Retry logic wrapper - Lazy logger initialization to prevent build-time errors
+// Lazy logger initialization to prevent build-time errors and race conditions
 function getLogger() {
-  if (!_logger) {
-    _logger = {
+  // Use a local static variable to ensure thread-safety
+  if (!getLogger._logger) {
+    getLogger._logger = {
       info: (message: string, context?: any) => console.info("[db-index]", message, context || ""),
       warn: (message: string, context?: any) => console.warn("[db-index]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
@@ -41,7 +39,7 @@ function getLogger() {
         console.debug("[db-index]", message, context || ""),
     };
   }
-  return _logger;
+  return getLogger._logger;
 }
 
 async function withRetry<T>(

@@ -1,0 +1,13 @@
+{
+  "objective": "analyze the codebase make sure\n  1. Remove all createSafeLogger imports\n  2. Replace with OpenTelemetry spans for important operations\n  3. Use simple console.log/error for essential debugging\n  4. Fix the OpenTelemetry setup (it ironically uses the problematic loggerto remove all the redundant files, code , folders and scripts. remove and update docs so there's no confusion and cleanup the codebase.  think hard and plan and execute,make sure vercel build is succesfull and commit and push",
+  "strategy": "development",
+  "mode": "centralized",
+  "maxAgents": 5,
+  "timeout": 60,
+  "parallel": true,
+  "monitor": true,
+  "output": "json",
+  "outputDir": "./reports",
+  "timestamp": "2025-06-24T17:10:01.917Z",
+  "id": "swarm-development-centralized-1750785001918"
+}

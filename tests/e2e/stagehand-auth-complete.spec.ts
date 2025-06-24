@@ -11,9 +11,9 @@ test.describe('Complete Authentication Flow (Stagehand Enhanced)', () => {
   let stagehand: Stagehand;
   let userId: string;
 
-  // Generate unique test credentials
-  const TEST_EMAIL = `stagehand-auth-${Date.now()}@example.com`;
-  const TEST_PASSWORD = 'TestPass123!';
+  // Use real test credentials if provided, otherwise generate unique ones
+  const TEST_EMAIL = process.env.TEST_USER_EMAIL || `stagehand-auth-${Date.now()}@example.com`;
+  const TEST_PASSWORD = process.env.TEST_USER_PASSWORD || 'TestPass123!';
   const TEST_NAME = 'Stagehand Test User';
 
   test.beforeAll(async () => {

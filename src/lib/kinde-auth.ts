@@ -20,6 +20,8 @@ export interface KindeSession {
  * Get the current Kinde session
  */
 // Lazy logger initialization to prevent build-time errors
+let _logger: any = null;
+
 function getLogger() {
   if (!_logger) {
     _logger = {

@@ -1,0 +1,979 @@
+{
+  "0d83ed77313b036ec5076ca846c42030bea839c829cbf0d09b636ee2f80b7d5d": {
+    "data": {
+      "title": "Hey friend! Welcome back"
+    },
+    "timestamp": 1750793860323,
+    "requestId": "3sbk2jd07vm"
+  },
+  "9cfa07d1c4e1fa68e787be337a1113b6c8417e0f8c534498eef073a4998bf38e": {
+    "data": {
+      "progress": "Main dashboard title extracted: 'Hey friend! Welcome back'",
+      "completed": true
+    },
+    "timestamp": 1750793861021,
+    "requestId": "3sbk2jd07vm"
+  },
+  "9a6da3b6756b9d34a178cc988543369150b4372849d605f4c0734b7f725500a1": {
+    "data": {
+      "isDashboard": false,
+      "isAuthPage": true,
+      "isHomepage": false,
+      "mainContent": "Sign in | ryanlisse\n\nHey friend! Welcome back\n\nEmail\n\nNo account?\nCreate one\n\nPowered by\nKinde\n\nVisit Kinde\n",
+      "accessDenied": false
+    },
+    "timestamp": 1750793770780,
+    "requestId": "l2aeakhnupa"
+  },
+  "95e58f079ede885153e3d85992ffdc199e418542531004c0af5f880a0f818357": {
+    "data": {
+      "progress": "The extracted content indicates that the page is an authentication page, not a dashboard or homepage.",
+      "completed": true
+    },
+    "timestamp": 1750793862506,
+    "requestId": "otu675x3hrg"
+  },
+  "fd897d459d64f23919d2c2de853142523c54be04ae44210fd2bfd7074d523d31": {
+    "data": {
+      "currentMode": "login",
+      "hasRegistrationOption": true,
+      "formFields": [
+        "Sign In",
+        "Don't have an account? Sign Up"
+      ]
+    },
+    "timestamp": 1750793628200,
+    "requestId": "m6pc57wgjh"
+  },
+  "05193607fcfec44f45796cb358fc27f9dd89a8d17f8b1d2b5749077459fd0a43": {
+    "data": {
+      "progress": "The current mode is 'login' and there is a registration option available.",
+      "completed": true
+    },
+    "timestamp": 1750793865972,
+    "requestId": "0kqyb9kcgxx"
+  },
+  "e1ca5ada0688cb624fb91b0e76a34682fb13481768f2d3a8ae56f3d59cad1e86": {
+    "data": {
+      "isCorrectHomepage": false,
+      "title": "MEXC Sniper Bot - AI Trading Platform",
+      "availableActions": [],
+      "hasLoadingState": true
+    },
+    "timestamp": 1750793630391,
+    "requestId": "5fh2xdzil2m"
+  },
+  "c920e4e564d5f20f7a210202b8a4a0a0c01175e31e887fd7b2077f828fa494c3": {
+    "data": {
+      "progress": "The extracted content indicates that the homepage is not correct, and there are no available actions identified.",
+      "completed": false
+    },
+    "timestamp": 1750793631363,
+    "requestId": "5fh2xdzil2m"
+  },
+  "edc75c1c53ec0380967a1a27055117b90bbb8ee8f256c372304ef9422ca43b10": {
+    "data": {
+      "isResponsive": true,
+      "visibleElements": [
+        "Sign in | ryanlisse",
+        "Hey friend! Welcome back",
+        "Email",
+        "Continue",
+        "No account?",
+        "Create one",
+        "Powered by",
+        "Kinde",
+        "Visit Kinde"
+      ]
+    },
+    "timestamp": 1750793631591,
+    "requestId": "hmrtmc8hzr"
+  },
+  "9811cfc63201412a7cdd9fe4131ae9b2c774db39d255823cb4dfb6942a7d66e4": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-60",
+          "description": "The link for users who don't have an account, prompting them to sign up for a new account.",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793631689,
+    "requestId": "hi3j6hd88sb"
+  },
+  "97a1b1f18eb17a32257f681d37022aca6dc6281b41e6078deadf36cb968a68b3": {
+    "data": {
+      "progress": "The page is confirmed to be responsive on mobile with visible elements listed.",
+      "completed": true
+    },
+    "timestamp": 1750793632628,
+    "requestId": "hmrtmc8hzr"
+  },
+  "619f546a1ac641d581471b133cd3195955162f2bf541831571fca64f918dd708": {
+    "data": {
+      "hasSettingsPage": false,
+      "mainTitle": "",
+      "hasTabs": false,
+      "tabNames": [],
+      "takeProfitTabExists": false,
+      "designConsistency": {
+        "hasCardLayout": false,
+        "hasGridStructure": false,
+        "hasStrategySelection": false,
+        "hasVisualCharts": false
+      }
+    },
+    "timestamp": 1750793874039,
+    "requestId": "aispqa81gq"
+  },
+  "8bd3e5a43377658c432fcbd0f0a87e8d57e057fedb5680ed2aa18b9eba5b3256": {
+    "data": {
+      "progress": "The extraction indicates that there is no settings page and the take profit tab does not exist, along with a lack of design consistency features.",
+      "completed": true
+    },
+    "timestamp": 1750793875186,
+    "requestId": "aispqa81gq"
+  },
+  "7eb295a4244626f184c34ece157f10a8d7f2902004e706288367980aadd6b0cb": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793873048,
+    "requestId": "f4hzv5ycirf"
+  },
+  "23ec682d9a8cfdefe0c513c600bc3584112a25d78b2469e22e4983a428cb25b4": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793636767,
+    "requestId": "wm79qbnrwqi"
+  },
+  "43600e7933409cadd9e5f4a1bbf5480aac590eb85ab28ffa8140f40f435d905d": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-55",
+          "description": "The 'Create Account' heading indicating the section for account creation.",
+          "method": "fill",
+          "arguments": [
+            "Dashboard Test User"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1750793637113,
+    "requestId": "2smhsauj91d"
+  },
+  "bf5198b697c3126438457293279b152e0d6d4955ebbbe3155f2e555bd73629f6": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793637869,
+    "requestId": "x2b8kmmp57h"
+  },
+  "fe0dd03ebefa65c6d1075636371684c1a00569ee0b21adfdfc7fba430dcc8d71": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-67",
+          "description": "The 'Take Profit' tab which is likely a button or link for navigating to the Take Profit section.",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793899337,
+    "requestId": "cuqg5yaw369"
+  },
+  "96bf7bbfbe61293679063028179a6aa9e97b23286a9906b0b94da07facea83e2": {
+    "data": {
+      "accessGranted": false,
+      "redirectedTo": "/sign-in",
+      "protectionWorking": true,
+      "currentUrl": "/sign-in"
+    },
+    "timestamp": 1750793898008,
+    "requestId": "67oh3xywch"
+  },
+  "5270b95434a40fa7b032c4288530da10ee965101d91e6fe00698ffaaf4a4b549": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793639371,
+    "requestId": "b920igwt47f"
+  },
+  "e9077183c92ba0fa9ade8c50769473b4da819cfa4aca65833826ee84e8d1021d": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793640471,
+    "requestId": "8wef05x81ac"
+  },
+  "90c5023a9039f78952246048bb0abb25a1325461826a4b59b020c9476d4281f2": {
+    "data": {
+      "progress": "The anonymous user was not granted access to /dashboard and was properly redirected to /sign-in.",
+      "completed": true
+    },
+    "timestamp": 1750793899194,
+    "requestId": "67oh3xywch"
+  },
+  "c3314323f6c2f274b1e536041ff4a60477203f82180d8b7c51fd757c78b27374": {
+    "data": {
+      "settings": []
+    },
+    "timestamp": 1750793643213,
+    "requestId": "r6e4w6f8g4"
+  },
+  "a4b4f1ed97566571ba064e784e1a37650829654581b501358f4eab5f61861010": {
+    "data": {
+      "accessGranted": false,
+      "redirectedTo": "/config",
+      "protectionWorking": true,
+      "currentUrl": "/config"
+    },
+    "timestamp": 1750793643365,
+    "requestId": "ct9960txnk5"
+  },
+  "bd3525e70e6e09ed2c446ffecac9605b582523b7510f28fec27f6b7df8c94cc3": {
+    "data": {
+      "progress": "No trading configuration options were found; the settings array is empty.",
+      "completed": true
+    },
+    "timestamp": 1750793883757,
+    "requestId": "2xv4ek5tjhw"
+  },
+  "f032a8967e677b57dfba693af203c1564b6e59c9017bd39fb14da3e660a03c85": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-59",
+          "description": "Button to sign up for a new user account",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793644261,
+    "requestId": "rmcos9o5b6"
+  },
+  "48932ed5099a8cfb2b7f3d792b2b4e6c78ded9f567cc46bb760ffb24d3674fd1": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-48",
+          "description": "The button to continue after selecting a strategy option",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793644394,
+    "requestId": "2h50qjnt7aq"
+  },
+  "4819a4509d2be114aed487181cffadc012bb0b4d880ffe8a01ce472fd2fd11d4": {
+    "data": {
+      "progress": "The anonymous user was redirected to /config but did not gain access to it, indicating that the protection is working as intended.",
+      "completed": true
+    },
+    "timestamp": 1750793644411,
+    "requestId": "ct9960txnk5"
+  },
+  "f56bcc1a1f4f9f692586510b7ee9fe1b0d3362d82b8a870525862bbdedbaccd2": {
+    "data": {
+      "progress": "The extraction indicates that the page is an authentication page, not a dashboard or homepage.",
+      "completed": true
+    },
+    "timestamp": 1750793771773,
+    "requestId": "l2aeakhnupa"
+  },
+  "6447c08ed185e9db8a90241f91c35cd2b5af8aa288f535c3a5ae343465d44705": {
+    "data": {
+      "isCorrectHomepage": true,
+      "title": "MEXC Sniper Bot - AI Trading Platform",
+      "availableActions": [
+        "Sign In",
+        "Get Started",
+        "Sign Up Now"
+      ],
+      "hasLoadingState": false
+    },
+    "timestamp": 1750793780190,
+    "requestId": "ba0dwjih4e"
+  },
+  "3cf8271d443dac244f63c0f1a4c241261ed36e15f42de83e97752ee91f106807": {
+    "data": {
+      "progress": "The extraction confirms that this is the MEXC Sniper Bot homepage and lists available actions: Sign In, Get Started, Sign Up Now.",
+      "completed": true
+    },
+    "timestamp": 1750793867605,
+    "requestId": "gbgb8biabsw"
+  },
+  "28f41a890a53f63b39ba9488e6c382378fa383a9131944d0d962a1b3a32454e4": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-53",
+          "description": "Get Started button to begin registration",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793783614,
+    "requestId": "q8iyshmro5l"
+  },
+  "406eb9fa8bb3619c51350dfcba5732cd496f00610276f83810d49c39c3638ea0": {
+    "data": {
+      "isAuthPage": true,
+      "currentMode": "login",
+      "hasCreateAccountLink": true,
+      "formFields": []
+    },
+    "timestamp": 1750793787524,
+    "requestId": "pi6hnkrfn2"
+  },
+  "6628c094ea938d8a964f04fb94452e51e7c079c114bc5f7060e17a8bb536b169": {
+    "data": {
+      "progress": "Confirmed we are on the authentication page and identified the current mode as login.",
+      "completed": true
+    },
+    "timestamp": 1750793876705,
+    "requestId": "qzqyou71ak"
+  },
+  "4c366bb0886f1ab668e4bea75b519b206bee4c5dfdddf260b56107a1807542b7": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-640",
+          "description": "The link for users who don't have an account, prompting them to sign up for a new account.",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793791750,
+    "requestId": "ud1p7howo6"
+  },
+  "13cb9c70adf5adebffc041199182f3b183fc3ebff15cfeed86b7dec20f36017d": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-635",
+          "description": "The name field where users can input their name during account creation.",
+          "method": "fill",
+          "arguments": [
+            "Stagehand Test User"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1750793797060,
+    "requestId": "hqtk71tixcv"
+  },
+  "21d2a2dcdd8f784b64d79be7480684517fa3ef02020879afd4e79847069eb1ec": {
+    "data": {
+      "accessGranted": false,
+      "redirectedTo": "/sign-in",
+      "protectionWorking": true,
+      "currentUrl": "/sign-in"
+    },
+    "timestamp": 1750793806942,
+    "requestId": "vic71o1pkci"
+  },
+  "ecfa5cd8c6595260c793b885c779fb6cfb6a8de2e1e34c0765e5a4e5836657f0": {
+    "data": {
+      "accessGranted": false,
+      "redirectedTo": "/sign-in",
+      "protectionWorking": true,
+      "currentUrl": "/config"
+    },
+    "timestamp": 1750793901400,
+    "requestId": "s7qg2tp78ao"
+  },
+  "2c61e0fda854d8e9ad3e1da01c0e2e0a84380f4ef541182167126ff78322e3ea": {
+    "data": {
+      "progress": "The user was redirected to /config, but access was not granted, indicating proper redirection.",
+      "completed": true
+    },
+    "timestamp": 1750793811169,
+    "requestId": "bags6kqevnc"
+  },
+  "5acd0ab63ca81a0d82bc33541b9c0a60c18450fad37df57eadc9864f5388b0f9": {
+    "data": {
+      "accessGranted": false,
+      "redirectedTo": "/signin",
+      "protectionWorking": true,
+      "currentUrl": "/settings"
+    },
+    "timestamp": 1750793813378,
+    "requestId": "oduewnqlua"
+  },
+  "db95eb7a0891d86f179dce13d9f45cae2da0479af2462e2b0a63137ce017315f": {
+    "data": {
+      "progress": "The user was not granted access to /settings and was properly redirected to /signin, indicating that the protection mechanism is working as intended.",
+      "completed": true
+    },
+    "timestamp": 1750793905662,
+    "requestId": "gxn1qh9j2ve"
+  },
+  "2a291249a3a019e783c5d19ff1c95fccc15bf0bcb63d9ef901f768b19f29d9be": {
+    "data": {
+      "accessGranted": true,
+      "redirectedTo": "null",
+      "protectionWorking": true,
+      "currentUrl": "/safety"
+    },
+    "timestamp": 1750793821462,
+    "requestId": "zc9j71911t"
+  },
+  "219c8ead2282dddebd05eee5431069b8b515f25453f9b284242d179f954da565": {
+    "data": {
+      "progress": "The anonymous user gained access to /safety as accessGranted is true and there was no redirection.",
+      "completed": true
+    },
+    "timestamp": 1750793822679,
+    "requestId": "zc9j71911t"
+  },
+  "2201466a5bf9a3a7396ce45e3640ab546554a663ab7bd45b372a6393dc455a55": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-60",
+          "description": "Button to switch to registration mode by signing up for an account",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793827805,
+    "requestId": "zdo8arju1yk"
+  },
+  "bb33002ef8b0b6f1b6ba92bc6a68e004ad503b53faa24e7fe987575dc59082d4": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-6",
+          "description": "The 'Sign Up' button to submit the registration form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793831956,
+    "requestId": "mepvbidxgl"
+  },
+  "ca1b25584c3daa53f6fe1faf9c15bf4bdd92cde159e86379f5d12bcf50b418ea": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-51",
+          "description": "Button to submit the registration form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793836320,
+    "requestId": "4vnxl0fvsv"
+  },
+  "b261ae604438245777fb16a519e1d9d5fc5ff60db29d78bdc687065728d6a218": {
+    "data": {
+      "isDashboard": false,
+      "isAuthPage": true,
+      "isHomepage": false,
+      "mainContent": "Sign in | ryanlisse\n\nHey friend! Welcome back\n\nEmail\n\nNo account?\nCreate one\n\nPowered by\nKinde\n\n",
+      "accessDenied": false
+    },
+    "timestamp": 1750793861493,
+    "requestId": "otu675x3hrg"
+  },
+  "5451b1cfc24f709dbfdea40723aa48af27c141a59e9c359990db394c65f7655d": {
+    "data": {
+      "currentMode": "login",
+      "hasRegistrationOption": true,
+      "formFields": [
+        "Sign In",
+        "Don't have an account? Sign Up"
+      ]
+    },
+    "timestamp": 1750793865105,
+    "requestId": "0kqyb9kcgxx"
+  },
+  "385fa7c332f0cc14ad0f8c921031cf836b4973246216b4c8ae18c42be7dd71dc": {
+    "data": {
+      "isCorrectHomepage": true,
+      "title": "MEXC Sniper Bot - AI Trading Platform",
+      "availableActions": [
+        "Sign In",
+        "Get Started",
+        "Sign Up Now"
+      ],
+      "hasLoadingState": false
+    },
+    "timestamp": 1750793866659,
+    "requestId": "gbgb8biabsw"
+  },
+  "5fcda59c4dac1e52375251470c98901eea632803b84c4f5ac8c2a4fcc19e1996": {
+    "data": {
+      "isResponsive": true,
+      "visibleElements": [
+        "ryanlisse",
+        "Hey friend! Welcome back",
+        "Email",
+        "Continue",
+        "No account?",
+        "Create one",
+        "Powered by",
+        "Kinde",
+        "Visit Kinde"
+      ]
+    },
+    "timestamp": 1750793866985,
+    "requestId": "dk5if04kigm"
+  },
+  "82c9b0e8db186d534d4669606ab997d308eccd7a356c5d0fa50185090096ddf0": {
+    "data": {
+      "progress": "The page is confirmed to be responsive on mobile with visible elements listed.",
+      "completed": true
+    },
+    "timestamp": 1750793867827,
+    "requestId": "dk5if04kigm"
+  },
+  "18f61d44f4584be06a51e2f8eb1d10ea4d0a503ae35c2df79b44341ec536a4b5": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-59",
+          "description": "The link for users who don't have an account, prompting them to sign up for a new account.",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793869274,
+    "requestId": "qa2089ffef"
+  },
+  "23dcecdbf3807ae1472ddc5a03a70d89d0546046c6d878396d311f9ea871cb2b": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-54",
+          "description": "Get Started button to begin registration",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793869712,
+    "requestId": "onv5cpp7gc"
+  },
+  "b379eb4f17ff7c11ecf3c6ef21043a5fb9d143291a95e440b4f10c01e5adc930": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793874697,
+    "requestId": "has2m7yi5yg"
+  },
+  "d5abd8209b3bed5283c89ee2da466885fdc5284c35e0cf5347e7950e001d18c9": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793875465,
+    "requestId": "z26ursp2mr"
+  },
+  "d4beef8baacb39385f8d62a139e8111c4f4076429f0b8d5c01f92876a56e6363": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793875664,
+    "requestId": "2tvwa61zjj8"
+  },
+  "74a9136217cd800281e0901286ee6fc01ea45a563ff6fbe075f6a67d0f8584a1": {
+    "data": {
+      "isAuthPage": true,
+      "currentMode": "login",
+      "hasCreateAccountLink": true,
+      "formFields": []
+    },
+    "timestamp": 1750793875868,
+    "requestId": "qzqyou71ak"
+  },
+  "0276f6bf5be4d001a23dd03cc3faed61664550249ee35d623bc11460bdce0faa": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793876577,
+    "requestId": "tympza5wxh"
+  },
+  "74b247eec0698178efe181b6523a6aa168d013ca31859c3e5a0c1be2cf17a0a0": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793876598,
+    "requestId": "s6hw8nhxwn"
+  },
+  "b4fd2e0f9ba3118d6c393e80465929c12622beda913385edb71d0666cf767942": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793877784,
+    "requestId": "uxsberwrtvo"
+  },
+  "a9ce231e61eaf622faf0800d6799a8fc75191c6b2a90ac36b982099c7c4a58b1": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793877972,
+    "requestId": "535vsrky6ep"
+  },
+  "da5af2c2a76832d16ef51e0966b0cdc3c7f6b1d9fc9acc394efe2d02085259e1": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-639",
+          "description": "The link for users who don't have an account, prompting them to sign up.",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793879151,
+    "requestId": "c147mi18xm"
+  },
+  "861527943d3f00fc8aa9e82da4c7aca97818fae8452fe1abfe3ef496ebcae977": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-6",
+          "description": "The button to submit the registration form and create an account.",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793879427,
+    "requestId": "l0e831jybpq"
+  },
+  "8a47a96c6c1d41c0d9a57bbf75b7d1c6582b258a2d1d138660374a8acbdfdd53": {
+    "data": {
+      "settings": []
+    },
+    "timestamp": 1750793882852,
+    "requestId": "2xv4ek5tjhw"
+  },
+  "542b51ec282ede2ca0417d8dca542c2ef65e257fc61c60e0ae5d9a463ba92165": {
+    "data": {
+      "isDashboard": false,
+      "mainTitle": "Register",
+      "navigationSections": [
+        "Sign up",
+        "ryanlisse"
+      ],
+      "contentAreas": [
+        "Get started today!",
+        "Email",
+        "Already have an account?",
+        "Powered by Kinde"
+      ],
+      "hasCalendarSection": false,
+      "hasMetricsCards": false,
+      "hasControlPanels": false,
+      "errorMessages": [
+        "null"
+      ]
+    },
+    "timestamp": 1750793884195,
+    "requestId": "i07po3ye3io"
+  },
+  "0c94d9ce33e3c6c0b43979054094a4b5c689605438d6870c92600f69b0d5dc95": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-634",
+          "description": "The name field for creating an account where the user can input their name.",
+          "method": "fill",
+          "arguments": [
+            "Stagehand Test User"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1750793885141,
+    "requestId": "fvl1lbcs7kn"
+  },
+  "70f5e24488dc98f275177ed7dca3a48262f1bb3c80da35c3f23c071623da89e2": {
+    "data": {
+      "progress": "The extracted content includes the main title, navigation sections, content areas, and indicates the absence of certain features like calendar sections and metrics cards.",
+      "completed": true
+    },
+    "timestamp": 1750793885956,
+    "requestId": "i07po3ye3io"
+  },
+  "2539a8d4cbab0b0d97b4d8c52a29f073a3b71deb74e7bd7a7c59abd8bb6fc810": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-48",
+          "description": "Continue button to proceed with the form submission",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793888981,
+    "requestId": "fkk9zi8lp24"
+  },
+  "11428d0aabeba0a730607156526e39d19395ec338462c5b2a7d3a1659c19a319": {
+    "data": {
+      "mainValueProposition": "MEXC Sniper Bot - AI Trading Platform",
+      "keyFeatures": [],
+      "callsToAction": [],
+      "trustIndicators": [],
+      "isCompelling": false,
+      "hasLoadingState": true
+    },
+    "timestamp": 1750793890865,
+    "requestId": "vvu0226gbds"
+  },
+  "b804a2dabc093c6656aaaa65c398753de6b4ed167458c70e8bce1e24009aa125": {
+    "data": {
+      "progress": "The extraction response identifies the main value proposition as 'MEXC Sniper Bot - AI Trading Platform', but lacks details on key features, calls to action, and trust indicators. The offering is deemed not compelling.",
+      "completed": true
+    },
+    "timestamp": 1750793892233,
+    "requestId": "vvu0226gbds"
+  },
+  "9e524c1823afdd75188fd055d4e4f142d4fe6269732af2507eca545485394d09": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1",
+          "description": "Email input field for entering the user's email address during registration",
+          "method": "fill",
+          "arguments": [
+            "test@example.com"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1750793893538,
+    "requestId": "kcmuto72x2l"
+  },
+  "c46752afb8cb0c7e416109dbeb0dfe0df4993ab009d0dbe38b4e3624842ed31a": {
+    "data": {
+      "selectedStrategy": "Conservative",
+      "hasVisualChart": false,
+      "chartBars": 0,
+      "riskLevel": "null",
+      "profitLevels": [
+        "null"
+      ],
+      "summaryData": {
+        "strategyType": "Conservative",
+        "profitLevels": "null",
+        "stopLoss": "null"
+      }
+    },
+    "timestamp": 1750793893812,
+    "requestId": "48kexhzfb89"
+  },
+  "f10b9a3c03444677591035ae04cd800632de85f5f8c494ffb35d5f47bd32759c": {
+    "data": {
+      "progress": "Analyzed the Conservative strategy; no visual representation available, and key metrics are null.",
+      "completed": true
+    },
+    "timestamp": 1750793894896,
+    "requestId": "48kexhzfb89"
+  },
+  "f93d443a76af47c44f19ccf1ec3ee12cac624d35c15ca4e0a548c2668a2b4c91": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1",
+          "description": "Email input field for registration form",
+          "method": "fill",
+          "arguments": [
+            "dashboard-test-1750793887218@example.com"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1750793895991,
+    "requestId": "e0s4kcwxl4m"
+  },
+  "afb8b345077eab257da61a2400a8c4de905a6d92cdec55143f64a3ca11d1f228": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-47",
+          "description": "Continue button to submit the registration form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793898004,
+    "requestId": "fys6h37deh"
+  },
+  "b9c3599eaed9cc96dd2a30436b859cb59646e3d450f6855d49a456328b453a02": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1",
+          "description": "textbox for Email input where the user can enter their email address",
+          "method": "fill",
+          "arguments": [
+            "journey-test-1750793896186@example.com"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1750793901434,
+    "requestId": "avqqsvqyiij"
+  },
+  "ab82aedbb5bab7c02bea15c8e93a4ad3b48a0424de043375b95c447fa9a025bd": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793901673,
+    "requestId": "9oxyxknrsjn"
+  },
+  "44d2edea0efb94c39faa47167192ba6f2d2ba4b9df9641aceda19c090bd8249d": {
+    "data": {
+      "progress": "The anonymous user was not granted access to /config and was properly redirected to /sign-in, indicating that the protection mechanism is working as intended.",
+      "completed": true
+    },
+    "timestamp": 1750793902591,
+    "requestId": "s7qg2tp78ao"
+  },
+  "e9a2aaadde666c47d3a02f42cba198f016760b67c709b349b94b45b068b30aed": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793902742,
+    "requestId": "gnavxfnt89"
+  },
+  "38bd0782e7b54f23fcc0883206c771a5fe03eac16f0425469491e3f3b14856ff": {
+    "data": {
+      "tasksCompleted": [
+        "Signed in with email journey-test-1750793896186@example.com"
+      ],
+      "timeSpent": "null",
+      "engagementLevel": "high",
+      "exitPoint": "null",
+      "likelyToReturn": true
+    },
+    "timestamp": 1750793903442,
+    "requestId": "rdy21p0iw4s"
+  },
+  "742f20100bbe7e1d398473c87c7c798a2f829563c77947435698b630d95ea8a9": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793903769,
+    "requestId": "48ee6tkn0kz"
+  },
+  "3d8270a9736a6e29857c9894605291ecd4728ba013fcdc3591027906f3acae21": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-48",
+          "description": "Continue button to proceed with the form submission",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793904423,
+    "requestId": "tzf0e09ofmo"
+  },
+  "17b1892a466f4bec6ece21eb8862263f272f03c2969a4388dd1611f45fd3b3d9": {
+    "data": {
+      "progress": "User signed in successfully and demonstrated high engagement during their first session.",
+      "completed": true
+    },
+    "timestamp": 1750793904424,
+    "requestId": "rdy21p0iw4s"
+  },
+  "f44d0322d4cb97327110d32127c2c76475a886a14ae0c06159d839e94d095964": {
+    "data": {
+      "accessGranted": false,
+      "redirectedTo": "/signin",
+      "protectionWorking": true,
+      "currentUrl": "/settings"
+    },
+    "timestamp": 1750793904589,
+    "requestId": "gxn1qh9j2ve"
+  },
+  "147a4fbf0cab54260c5fa373b5b053360021dc95a23f7eb154dc7c4fba41e634": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793904633,
+    "requestId": "4kz2e9akdhu"
+  },
+  "875b3ff6b349a818c41b08c27678237dc6a83e5f87cba3196c50cc8344922dcb": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793905453,
+    "requestId": "8yenlhtvuds"
+  },
+  "0ad48a4ab99ca8c3dab53cc54fc3ca8ecdd0429a6c51038d38a12edf2be5eb88": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1750793905588,
+    "requestId": "h0z551x2nym"
+  },
+  "e36b1528e5128eca6a8beabc90a05ed2213e451d818ff79abfedbf5863faf4ea": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-4",
+          "description": "Sign In button for returning users",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793910061,
+    "requestId": "84pwloo4fi9"
+  },
+  "aacff49df3bd795348d4d324c85a3345e42e7fc27fb503853525e67fcd6b42b6": {
+    "data": {
+      "selectedStrategy": "null",
+      "hasCustomLevels": false,
+      "hasAddLevelButton": false,
+      "customLevelInputs": [],
+      "hasValidationErrors": false,
+      "validationMessages": []
+    },
+    "timestamp": 1750793911263,
+    "requestId": "0b1f09yioiej"
+  },
+  "f1e3ecca48761d1f09420862d0f0d613df45e5d8155e0f60f19590a5fe35e137": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-56",
+          "description": "The 'Sign Up' button that allows users to register a new account.",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1750793912248,
+    "requestId": "r3s24np8yu8"
+  },
+  "e229059fee5a869ce42dcddcb73f84e0c2dde5ae173fa32e42c34d397b7bbb22": {
+    "data": {
+      "progress": "Analyzed the custom strategy interface and available configuration options, including selected strategy, custom levels, and validation errors.",
+      "completed": true
+    },
+    "timestamp": 1750793912448,
+    "requestId": "0b1f09yioiej"
+  }
+}

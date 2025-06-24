@@ -36,9 +36,10 @@ export interface ApiResponse<T = unknown> {
 /**
  * Creates a successful API response
  */
-let _; /**
- * Lazy logger initialization to prevent webpack bundling issues
- */
+
+// Lazy logger initialization to prevent webpack bundling issues
+let _logger: any = null;
+
 function getLogger(): {
   info: (message: string, context?: any) => void;
   warn: (message: string, context?: any) => void;
