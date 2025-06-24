@@ -6,7 +6,14 @@ import { workflowActivity, transactionLocks } from "../../../../src/db/schema";
 import { desc, gte } from "drizzle-orm";
 
 // Server-Sent Events for real-time monitoring
-const logger = createLogger('route');
+// Lazy logger initialization to prevent build-time errors
+let _logger: ReturnType<typeof createLogger> | undefined;
+function getLogger() {
+  if (!_logger) {
+    _logger = createLogger('route');
+  }
+  return _logger;
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -78,7 +85,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (error) {
-    logger.error("[Real-time API] Action failed:", { error: error });
+    getLogger().error("[Real-time API] Action failed:", { error: error });
     return NextResponse.json(
       { error: "Action failed", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
@@ -151,7 +158,7 @@ async function getRealTimeData(type: string) {
         return baseData;
     }
   } catch (error) {
-    logger.error("Error fetching real-time data:", { error: error });
+    getLogger().error("Error fetching real-time data:", { error: error });
     return {
       timestamp,
       error: "Failed to fetch real-time data",
@@ -241,7 +248,7 @@ async function getTransactionLockStatus() {
       }))
     };
   } catch (error) {
-    logger.error("Error fetching transaction locks:", { error: error });
+    getLogger().error("Error fetching transaction locks:", { error: error });
     return { activeLocks: 0, totalLocks: 0, locks: [] };
   }
 }
@@ -390,7 +397,7 @@ async function triggerEmergencyStop(data: any) {
     const { reason, scope } = data;
     
     // Mock emergency stop - replace with actual implementation
-    logger.info(`Emergency stop triggered: ${reason}, scope: ${scope}`);
+    getLogger().info(`Emergency stop triggered: ${reason}, scope: ${scope}`);
     
     return NextResponse.json({
       success: true,
@@ -410,7 +417,7 @@ async function updateAgentConfig(data: any) {
     const { agentName, config } = data;
     
     // Mock config update - replace with actual implementation
-    logger.info(`Updating agent config for ${agentName}:`, config);
+    getLogger().info(`Updating agent config for ${agentName}:`, config);
     
     return NextResponse.json({
       success: true,
