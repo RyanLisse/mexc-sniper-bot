@@ -32,12 +32,21 @@ const PatternDetectionRequestSchema = z.object({
   timeWindow: z.number().optional(), // hours
 });
 
+// Lazy logger initialization to prevent build-time errors
+let _logger: ReturnType<typeof createLogger> | undefined;
+function getLogger() {
+  if (!_logger) {
+    _logger = createLogger('route');
+  }
+  return _logger;
+}
+
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
   try {
     const body = await request.json();
     const validatedRequest = PatternDetectionRequestSchema.parse(body);
 
-    logger.info(`[PatternDetection API] Processing ${validatedRequest.action} request`);
+    getLogger().info(`[PatternDetection API] Processing ${validatedRequest.action} request`);
 
     switch (validatedRequest.action) {
       case "analyze":
@@ -65,7 +74,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         }, 400);
     }
   } catch (error) {
-    logger.error("[PatternDetection API] Request failed:", { error: error });
+    getLogger().error("[PatternDetection API] Request failed:", { error: error });
     
     if (error instanceof z.ZodError) {
       return createApiResponse({
@@ -351,7 +360,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    logger.error("[PatternDetection API] GET request failed:", { error: error });
+    getLogger().error("[PatternDetection API] GET request failed:", { error: error });
     
     return createApiResponse({
       success: false,
