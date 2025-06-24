@@ -1,5 +1,5 @@
 import type { AgentResponse } from "../base-agent";
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 import type { AgentRegistry } from "./agent-registry";
 
 export type WorkflowExecutionMode = "sequential" | "parallel" | "mixed";

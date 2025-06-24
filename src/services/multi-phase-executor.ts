@@ -1,6 +1,7 @@
 import type { TradingStrategy } from "../db/schemas/strategies";
 import type { PriceMultiplier, TradingStrategyConfig } from "./multi-phase-trading-service";
 import { multiPhaseTradingService } from "./multi-phase-trading-service";
+import { createLogger } from "../lib/structured-logger";
 
 // ===========================================
 // MULTI-PHASE STRATEGY EXECUTOR
@@ -484,7 +485,6 @@ export class MultiPhaseExecutor {
    * @param state Previously exported state
    */
   importState(state: { executedPhases: number[]; phaseHistory: PhaseExecutionHistory[] }): void {
-import { createLogger } from '../lib/structured-logger';
     this.executedPhases = new Set(state.executedPhases);
     this.phaseHistory = state.phaseHistory;
   }

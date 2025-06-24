@@ -1,5 +1,6 @@
-/**
 import { createLogger } from './structured-logger';
+
+/**
  * Database Index Optimizer
  *
  * Phase 2: Index Optimization (4h)

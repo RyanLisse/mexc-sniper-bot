@@ -1,53 +1,73 @@
 import { z } from "zod";
 
 /**
- * Database Entity Validation Schemas
- * Comprehensive Zod validation for database entities and operations
+ * Optimized Database Validation Schemas
+ * Consolidated Zod validation for auto-sniping database operations
  */
+
+// ============================================================================
+// Base Validation Primitives
+// ============================================================================
+
+// Shared base schemas for reusability
+const BaseEntitySchema = z.object({
+  id: z.string().min(1),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+const UserReferenceSchema = z.object({
+  userId: z.string().min(1),
+});
+
+const TimestampSchema = z.object({
+  timestamp: z.date().default(() => new Date()),
+});
+
+const MetadataSchema = z.record(z.unknown()).optional();
+
+// Status enums for consistency
+const TargetStatusEnum = z.enum(["pending", "ready", "executed", "failed", "completed"]);
+const TransactionStatusEnum = z.enum(["pending", "completed", "failed", "partial"]);
+const ExecutionStatusEnum = z.enum(["success", "failed", "pending"]);
+const PatternTypeEnum = z.enum(["ready_state", "volume_surge", "momentum_shift", "unknown"]);
+const AlertSeverityEnum = z.enum(["low", "medium", "high", "critical"]);
+const SystemStatusEnum = z.enum(["healthy", "warning", "critical"]);
 
 // ============================================================================
 // User and Authentication Schemas
 // ============================================================================
 
-export const UserSchema = z.object({
-  id: z.string(),
-  kindeId: z.string(),
+export const UserSchema = BaseEntitySchema.extend({
+  kindeId: z.string().min(1),
   email: z.string().email(),
   name: z.string().optional(),
   picture: z.string().url().optional(),
-  apiCredentials: z.record(z.unknown()).optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  apiCredentials: MetadataSchema,
 });
 
 // ============================================================================
 // Trading Entity Schemas
 // ============================================================================
 
-export const SnipeTargetSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  vcoinId: z.string(),
-  symbolName: z.string(),
-  projectName: z.string(),
+export const SnipeTargetSchema = BaseEntitySchema.merge(UserReferenceSchema).extend({
+  vcoinId: z.string().min(1),
+  symbolName: z.string().min(1),
+  projectName: z.string().min(1),
   launchTime: z.date(),
-  discoveredAt: z.date(),
-  confidence: z.number().min(0).max(100),
+  discoveredAt: z.date().default(() => new Date()),
+  confidence: z.number().min(0).max(100).default(0),
   positionSizeUsdt: z.number().positive(),
   executionPrice: z.number().positive().optional(),
   actualPositionSize: z.number().positive().optional(),
   actualExecutionTime: z.date().optional(),
-  status: z.enum(["pending", "ready", "executed", "failed", "completed"]),
-  metadata: z.record(z.unknown()).optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  status: TargetStatusEnum.default("pending"),
+  metadata: MetadataSchema,
 });
 
-export const TransactionSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  snipeTargetId: z.string(),
-  symbolName: z.string(),
+export const TransactionSchema = BaseEntitySchema.merge(UserReferenceSchema).extend({
+  snipeTargetId: z.string().min(1),
+  symbolName: z.string().min(1),
   buyOrderId: z.string().optional(),
   sellOrderId: z.string().optional(),
   buyPrice: z.number().positive().optional(),
@@ -56,70 +76,60 @@ export const TransactionSchema = z.object({
   buyTotalCost: z.number().positive().optional(),
   sellTotalRevenue: z.number().positive().optional(),
   profitLoss: z.number().optional(),
-  feesPaid: z.number().min(0).optional(),
-  status: z.enum(["pending", "completed", "failed", "partial"]),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  feesPaid: z.number().min(0).default(0),
+  status: TransactionStatusEnum.default("pending"),
 });
 
-export const ExecutionHistorySchema = z.object({
-  id: z.string(),
-  userId: z.string(),
+export const ExecutionHistorySchema = BaseEntitySchema.merge(UserReferenceSchema).extend({
   snipeTargetId: z.string().optional(),
-  symbolName: z.string(),
+  symbolName: z.string().min(1),
   action: z.enum(["buy", "sell"]),
   exchangeOrderId: z.string().optional(),
   executedQuantity: z.number().positive(),
   executedPrice: z.number().positive(),
   totalCost: z.number().positive(),
-  status: z.enum(["success", "failed", "pending"]),
-  executedAt: z.date(),
-  metadata: z.record(z.unknown()).optional(),
+  status: ExecutionStatusEnum.default("pending"),
+  executedAt: z.date().default(() => new Date()),
+  metadata: MetadataSchema,
 });
 
 // ============================================================================
-// Pattern Detection Schemas
+// Pattern Detection Schemas (Optimized for Auto-Sniping)
 // ============================================================================
 
-export const PatternEmbeddingSchema = z.object({
-  id: z.string(),
-  vcoinId: z.string(),
-  symbolName: z.string(),
-  patternType: z.enum(["ready_state", "volume_surge", "momentum_shift", "unknown"]),
-  confidence: z.number().min(0).max(100),
-  embedding: z.array(z.number()),
-  isActive: z.boolean(),
-  truePositives: z.number().min(0),
-  falsePositives: z.number().min(0),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  metadata: z.record(z.unknown()).optional(),
+export const PatternEmbeddingSchema = BaseEntitySchema.extend({
+  vcoinId: z.string().min(1),
+  symbolName: z.string().min(1),
+  patternType: PatternTypeEnum.default("unknown"),
+  confidence: z.number().min(0).max(100).default(0),
+  embedding: z.array(z.number()).min(1).max(1536), // OpenAI embedding size limit
+  isActive: z.boolean().default(true),
+  truePositives: z.number().min(0).default(0),
+  falsePositives: z.number().min(0).default(0),
+  successRate: z.number().min(0).max(100).optional(),
+  lastSeenAt: z.date().default(() => new Date()),
+  metadata: MetadataSchema,
 });
 
 // ============================================================================
 // Portfolio and Position Schemas
 // ============================================================================
 
-export const PositionSnapshotSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  timestamp: z.date(),
+export const PositionSnapshotSchema = BaseEntitySchema.merge(UserReferenceSchema).merge(TimestampSchema).extend({
   totalBalance: z.number().min(0),
   availableBalance: z.number().min(0),
   lockedBalance: z.number().min(0),
-  totalPnL: z.number(),
-  unrealizedPnL: z.number(),
-  activePositions: z.number().min(0),
-  metadata: z.record(z.unknown()).optional(),
+  totalPnL: z.number().default(0),
+  unrealizedPnL: z.number().default(0),
+  activePositions: z.number().min(0).default(0),
+  metadata: MetadataSchema,
 });
 
 // ============================================================================
 // System and Monitoring Schemas
 // ============================================================================
 
-export const SystemHealthSchema = z.object({
-  id: z.string(),
-  timestamp: z.date(),
+export const SystemHealthSchema = BaseEntitySchema.merge(TimestampSchema).extend({
   cpuUsage: z.number().min(0).max(100),
   memoryUsage: z.number().min(0).max(100),
   diskUsage: z.number().min(0).max(100),
@@ -127,59 +137,54 @@ export const SystemHealthSchema = z.object({
   dbConnections: z.number().min(0),
   queueLength: z.number().min(0),
   errorRate: z.number().min(0).max(100),
-  status: z.enum(["healthy", "warning", "critical"]),
+  status: SystemStatusEnum.default("healthy"),
 });
 
-export const AlertSchema = z.object({
-  id: z.string(),
+export const AlertSchema = BaseEntitySchema.extend({
   type: z.enum(["error", "warning", "info", "critical"]),
-  severity: z.enum(["low", "medium", "high", "critical"]),
-  title: z.string(),
-  message: z.string(),
-  source: z.string(),
-  acknowledged: z.boolean(),
+  severity: AlertSeverityEnum.default("medium"),
+  title: z.string().min(1).max(200),
+  message: z.string().min(1).max(1000),
+  source: z.string().min(1),
+  acknowledged: z.boolean().default(false),
   resolvedAt: z.date().optional(),
-  createdAt: z.date(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: MetadataSchema,
 });
 
 // ============================================================================
 // Configuration Schemas
 // ============================================================================
 
-export const ConfigurationSchema = z.object({
-  id: z.string(),
-  key: z.string(),
+export const ConfigurationSchema = BaseEntitySchema.extend({
+  key: z.string().min(1).max(100),
   value: z.unknown(),
-  category: z.enum(["trading", "safety", "monitoring", "system"]),
-  description: z.string().optional(),
-  isActive: z.boolean(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  category: z.enum(["trading", "safety", "monitoring", "system", "auto-sniping"]),
+  description: z.string().max(500).optional(),
+  isActive: z.boolean().default(true),
 });
 
 // ============================================================================
-// Cache and Performance Schemas
+// Cache and Performance Schemas (Optimized)
 // ============================================================================
 
 export const CacheEntrySchema = z.object({
-  key: z.string(),
+  key: z.string().min(1).max(255),
   value: z.unknown(),
   expiresAt: z.date().optional(),
-  createdAt: z.date(),
-  lastAccessed: z.date(),
-  hitCount: z.number().min(0),
-  category: z.string().optional(),
+  createdAt: z.date().default(() => new Date()),
+  lastAccessed: z.date().default(() => new Date()),
+  hitCount: z.number().min(0).default(0),
+  category: z.string().max(50).optional(),
+  size: z.number().min(0).optional(), // Cache entry size in bytes
 });
 
-export const PerformanceMetricSchema = z.object({
-  id: z.string(),
-  operation: z.string(),
+export const PerformanceMetricSchema = BaseEntitySchema.merge(TimestampSchema).extend({
+  operation: z.string().min(1).max(100),
   duration: z.number().min(0),
-  timestamp: z.date(),
   success: z.boolean(),
-  errorMessage: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  errorMessage: z.string().max(500).optional(),
+  executionContext: z.enum(["api", "database", "auto-sniping", "pattern-detection", "websocket"]).optional(),
+  metadata: MetadataSchema,
 });
 
 // ============================================================================

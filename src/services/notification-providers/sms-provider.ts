@@ -1,5 +1,5 @@
 import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface SMSConfig {

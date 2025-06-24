@@ -1,5 +1,6 @@
 import { MultiPhaseExecutor } from "./multi-phase-executor";
 import type { TradingStrategy } from "./trading-strategy-manager";
+import { createLogger } from "../lib/structured-logger";
 
 /**
  * MULTI-PHASE TRADING BOT
@@ -233,7 +234,6 @@ export class MultiPhaseTradingBot {
 
   // Import bot state from persistence
   importState(state: { entryPrice: number; position: number; executorState: any }): void {
-import { createLogger } from '../lib/structured-logger';
     this.entryPrice = state.entryPrice;
     this.position = state.position;
     this.executor.importState(state.executorState);

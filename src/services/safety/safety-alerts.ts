@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from "events";
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 import type { WebSocketServerService } from "../websocket-server";
 import type { SafetyAction, SafetyAlert, SafetyCoordinatorConfig } from "./safety-types";
 

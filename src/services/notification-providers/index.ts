@@ -6,7 +6,7 @@ import {
   type SelectAlertInstance,
   type SelectNotificationChannel,
 } from "../../db/schemas/alerts";
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 import { EmailProvider } from "./email-provider";
 import { SlackProvider } from "./slack-provider";
 import { SMSProvider } from "./sms-provider";
