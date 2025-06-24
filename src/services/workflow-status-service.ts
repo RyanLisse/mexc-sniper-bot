@@ -9,7 +9,6 @@ import {
   workflowActivity,
   workflowSystemStatus,
 } from "../db/schema";
-import { createSafeLogger } from "../lib/structured-logger";
 import { databaseBreaker } from "./circuit-breaker";
 
 export interface WorkflowMetrics {
@@ -32,7 +31,12 @@ export interface ActivityEntry {
 }
 
 export class WorkflowStatusService {
-  private logger = createSafeLogger("workflow-status-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[workflow-status-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[workflow-status-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[workflow-status-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[workflow-status-service]', message, context || ''),
+    };
 
   private userId: string;
 
@@ -59,7 +63,7 @@ export class WorkflowStatusService {
 
             return result.length > 0 ? result[0] : null;
           } catch (error) {
-            logger.error(
+            console.error(
               `[WorkflowStatusService] Failed to get system status (attempt ${attempt}/${maxRetries}):`,
               error
             );
@@ -70,7 +74,7 @@ export class WorkflowStatusService {
 
             // Exponential backoff: wait before retrying
             const delay = baseDelay * 2 ** (attempt - 1);
-            logger.info(`[WorkflowStatusService] Retrying in ${delay}ms...`);
+            console.info(`[WorkflowStatusService] Retrying in ${delay}ms...`);
             await new Promise((resolve) => setTimeout(resolve, delay));
           }
         }
@@ -79,7 +83,7 @@ export class WorkflowStatusService {
       },
       async () => {
         // Fallback when database circuit breaker is open
-        logger.warn("[WorkflowStatusService] Database circuit breaker fallback triggered");
+        console.warn("[WorkflowStatusService] Database circuit breaker fallback triggered");
         return null;
       }
     );
@@ -111,7 +115,7 @@ export class WorkflowStatusService {
         const result = await db.insert(workflowSystemStatus).values(newStatus).returning();
         status = result[0];
       } catch (error) {
-        logger.error("[WorkflowStatusService] Failed to create system status:", error);
+        console.error("[WorkflowStatusService] Failed to create system status:", error);
 
         // Return a fallback status object to prevent total failure
         return {
@@ -255,7 +259,7 @@ export class WorkflowStatusService {
 
       return activities;
     } catch (error) {
-      logger.error("[WorkflowStatusService] Failed to get activities:", error);
+      console.error("[WorkflowStatusService] Failed to get activities:", error);
       return [];
     }
   }
@@ -293,7 +297,7 @@ export class WorkflowStatusService {
         }
       }
     } catch (error) {
-      logger.error("[WorkflowStatusService] Failed to cleanup activities:", error);
+      console.error("[WorkflowStatusService] Failed to cleanup activities:", error);
     }
   }
 

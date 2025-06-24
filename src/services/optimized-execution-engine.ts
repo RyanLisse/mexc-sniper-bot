@@ -14,7 +14,6 @@
 import { z } from "zod";
 import type { PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger, createTimer } from "../lib/structured-logger";
 import type { AutoSnipingConfig, ExecutionPosition } from "./optimized-auto-sniping-core";
 import { getUnifiedMexcService } from "./unified-mexc-service-factory";
 
@@ -83,7 +82,12 @@ export type ExecutionStrategy = z.infer<typeof ExecutionStrategySchema>;
 
 export class OptimizedExecutionEngine {
   private static instance: OptimizedExecutionEngine;
-  private logger = createSafeLogger("optimized-execution-engine");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[optimized-execution-engine]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[optimized-execution-engine]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[optimized-execution-engine]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[optimized-execution-engine]', message, context || ''),
+    };
 
   // Execution metrics
   private totalExecutions = 0;
@@ -92,7 +96,7 @@ export class OptimizedExecutionEngine {
   private averageSlippage = 0;
 
   private constructor() {
-    this.logger.info("Optimized Execution Engine initialized");
+    console.info("Optimized Execution Engine initialized");
   }
 
   static getInstance(): OptimizedExecutionEngine {
@@ -112,7 +116,7 @@ export class OptimizedExecutionEngine {
     const timer = createTimer("execute_optimized_trade", "execution-engine");
 
     try {
-      this.logger.info("Starting optimized trade execution", {
+      console.info("Starting optimized trade execution", {
         symbol: pattern.symbol,
         patternType: pattern.patternType,
         confidence: pattern.confidence,
@@ -145,7 +149,7 @@ export class OptimizedExecutionEngine {
 
       const duration = timer.end();
 
-      this.logger.info("Trade execution completed", {
+      console.info("Trade execution completed", {
         symbol: pattern.symbol,
         success: result.success,
         executionTime: duration,
@@ -158,7 +162,7 @@ export class OptimizedExecutionEngine {
       const safeError = toSafeError(error);
       const duration = timer.end();
 
-      this.logger.error("Trade execution failed", {
+      console.error("Trade execution failed", {
         symbol: pattern.symbol,
         error: safeError.message,
         duration,
@@ -181,15 +185,7 @@ export class OptimizedExecutionEngine {
   ): Promise<PositionSizingResult> {
     try {
       // Validate input
-      const validatedRequest = PositionSizingRequestSchema.parse(request);
-
-      this.logger.debug("Calculating optimal position size", {
-        symbol: validatedRequest.symbol,
-        confidence: validatedRequest.patternConfidence,
-        riskLevel: validatedRequest.riskLevel,
-      });
-
-      // Get current market data for the symbol
+      const validatedRequest = PositionSizingRequestSchema.parse(request);// Get current market data for the symbol
       const mexcService = await getUnifiedMexcService();
       const ticker = await mexcService.getSymbolTicker(validatedRequest.symbol);
 
@@ -239,18 +235,10 @@ export class OptimizedExecutionEngine {
           riskAdjustedQuantity,
           currentPrice
         ),
-      });
-
-      this.logger.debug("Position sizing calculated", {
-        symbol: validatedRequest.symbol,
-        recommendedQuantity: result.recommendedQuantity,
-        riskPercentage: result.riskPercentage,
-      });
-
-      return result;
+      });return result;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Position sizing calculation failed", {
+      console.error("Position sizing calculation failed", {
         error: safeError.message,
         request,
       });
@@ -266,16 +254,7 @@ export class OptimizedExecutionEngine {
 
     try {
       // Validate order request
-      const validatedOrder = OptimizedOrderRequestSchema.parse(orderRequest);
-
-      this.logger.debug("Executing smart order", {
-        symbol: validatedOrder.symbol,
-        side: validatedOrder.side,
-        quantity: validatedOrder.quantity,
-        strategy: validatedOrder.executionStrategy,
-      });
-
-      // Get MEXC service
+      const validatedOrder = OptimizedOrderRequestSchema.parse(orderRequest);// Get MEXC service
       const mexcService = await getUnifiedMexcService();
 
       // Pre-execution price check for slippage estimation
@@ -326,7 +305,7 @@ export class OptimizedExecutionEngine {
       const safeError = toSafeError(error);
       const duration = timer.end();
 
-      this.logger.error("Smart order execution failed", {
+      console.error("Smart order execution failed", {
         error: safeError.message,
         order: orderRequest,
         duration,
@@ -346,7 +325,7 @@ export class OptimizedExecutionEngine {
    */
   async closePositionOptimized(position: ExecutionPosition): Promise<ExecutionResult> {
     try {
-      this.logger.info("Closing position with optimization", {
+      console.info("Closing position with optimization", {
         positionId: position.id,
         symbol: position.symbol,
         quantity: position.quantity,
@@ -363,7 +342,7 @@ export class OptimizedExecutionEngine {
       return await this.executeSmartOrder(closeOrder);
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Optimized position close failed", {
+      console.error("Optimized position close failed", {
         positionId: position.id,
         error: safeError.message,
       });

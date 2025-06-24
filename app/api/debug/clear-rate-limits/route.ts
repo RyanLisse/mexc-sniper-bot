@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { 
   clearAllRateLimitData, 
   clearSecurityEvents,
   getClientIP
 } from "../../../../src/lib/rate-limiter";
-
-const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +17,7 @@ export async function POST(request: NextRequest) {
       clearAllRateLimitData();
       clearSecurityEvents();
       
-      logger.info(`[DEBUG] Rate limits cleared by IP: ${ip}`);
+      console.info(`[DEBUG] Rate limits cleared by IP: ${ip}`);
       
       return NextResponse.json({
         success: true,
@@ -36,7 +33,7 @@ export async function POST(request: NextRequest) {
     }, { status: 400 });
 
   } catch (error) {
-    logger.error('[DEBUG] Failed to clear rate limits:', { error });
+    console.error('[DEBUG] Failed to clear rate limits:', { error });
     
     return NextResponse.json({
       success: false,

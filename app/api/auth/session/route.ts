@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getSession } from "../../../../src/lib/kinde-auth";
-
-const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +25,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    logger.error("Session API error:", { error: error });
+    console.error("Session API error:", { error: error });
     return NextResponse.json({ user: null }, { status: 401 });
   }
 }

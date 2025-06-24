@@ -7,7 +7,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ApiClient } from "@/src/lib/api-client";
-import { createSafeLogger } from "../lib/structured-logger";
 import type {
   ConfigValidationResult,
   SystemReadinessReport,
@@ -59,8 +58,6 @@ interface UseConfigValidationOptions {
   loadOnMount?: boolean;
 }
 
-const logger = createSafeLogger("use-config-validation");
-
 export function useConfigValidation(
   options: UseConfigValidationOptions = {}
 ): ConfigValidationState & ConfigValidationActions {
@@ -106,7 +103,7 @@ export function useConfigValidation(
         lastUpdated: new Date().toISOString(),
       }));
     } catch (error) {
-      logger.error("[useConfigValidation] Failed to generate readiness report:", error);
+      console.error("[useConfigValidation] Failed to generate readiness report:", error);
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -143,7 +140,7 @@ export function useConfigValidation(
 
         return validationResult;
       } catch (error) {
-        logger.error(`[useConfigValidation] Failed to validate ${component}:`, error);
+        console.error(`[useConfigValidation] Failed to validate ${component}:`, error);
         setState((prev) => ({
           ...prev,
           isValidating: false,
@@ -178,7 +175,7 @@ export function useConfigValidation(
         lastUpdated: new Date().toISOString(),
       }));
     } catch (error) {
-      logger.error("[useConfigValidation] Health check failed:", error);
+      console.error("[useConfigValidation] Health check failed:", error);
       setState((prev) => ({
         ...prev,
         isValidating: false,

@@ -8,8 +8,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
 import type { IPatternStorage } from "../interfaces";
-import { createSafeLogger } from "../lib/structured-logger";
-
 // Mock database
 vi.mock("../../../db", () => ({
   db: {
@@ -67,7 +65,7 @@ describe("PatternStorage - TDD Implementation", () => {
   describe("Pattern Storage Operations", () => {
     it("should store successful patterns correctly", async () => {
       if (!patternStorage.storeSuccessfulPattern) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -88,7 +86,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should store calendar entry patterns correctly", async () => {
       if (!patternStorage.storeSuccessfulPattern) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -106,7 +104,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should handle storage errors gracefully", async () => {
       if (!patternStorage.storeSuccessfulPattern) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -131,7 +129,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should validate confidence scores before storage", async () => {
       if (!patternStorage.storeSuccessfulPattern) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -160,7 +158,7 @@ describe("PatternStorage - TDD Implementation", () => {
   describe("Historical Success Rate Retrieval", () => {
     it("should retrieve historical success rate for pattern types", async () => {
       if (!patternStorage.getHistoricalSuccessRate) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -173,7 +171,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should return default success rate for unknown pattern types", async () => {
       if (!patternStorage.getHistoricalSuccessRate) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -186,7 +184,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should calculate success rate from stored patterns", async () => {
       if (!patternStorage.getHistoricalSuccessRate) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -204,14 +202,13 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should handle database errors when retrieving success rate", async () => {
       if (!patternStorage.getHistoricalSuccessRate) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
       // Mock database error
       const originalDb = vi.mocked(await import("../../../db")).db;
 
-      const logger = createSafeLogger("pattern-storage.test");
       vi.mocked(originalDb.select).mockImplementationOnce(() => {
         throw new Error("Database query failed");
       });
@@ -228,7 +225,7 @@ describe("PatternStorage - TDD Implementation", () => {
   describe("Similar Pattern Finding", () => {
     it("should find similar patterns with default options", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -248,7 +245,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should respect threshold parameter", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -273,7 +270,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should respect limit parameter", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -293,7 +290,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should filter by same type when sameTypeOnly is true", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -318,7 +315,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should handle empty results gracefully", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -341,7 +338,7 @@ describe("PatternStorage - TDD Implementation", () => {
   describe("Cache Management", () => {
     it("should provide cache clearing functionality", () => {
       if (!patternStorage.clearCache) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -350,7 +347,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should provide cache statistics", () => {
       if (!patternStorage.getCacheStats) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -370,7 +367,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should improve performance with caching", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -397,7 +394,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should handle cache memory limits", async () => {
       if (!patternStorage.findSimilarPatterns || !patternStorage.getCacheStats) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -424,7 +421,7 @@ describe("PatternStorage - TDD Implementation", () => {
   describe("Performance and Concurrency", () => {
     it("should handle concurrent storage operations", async () => {
       if (!patternStorage.storeSuccessfulPattern) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -444,7 +441,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should handle concurrent retrieval operations", async () => {
       if (!patternStorage.getHistoricalSuccessRate) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 
@@ -466,7 +463,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
     it("should maintain performance under load", async () => {
       if (!patternStorage.findSimilarPatterns) {
-        logger.warn("PatternStorage not implemented yet - skipping test");
+        console.warn("PatternStorage not implemented yet - skipping test");
         return;
       }
 

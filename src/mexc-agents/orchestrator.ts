@@ -35,10 +35,14 @@ export interface MexcOrchestratorOptions {
 export class MexcOrchestrator {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[orchestrator]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[orchestrator]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[orchestrator]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[orchestrator]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[orchestrator]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[orchestrator]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[orchestrator]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[orchestrator]", message, context || ""),
   };
 
   private agentManager: AgentManager;

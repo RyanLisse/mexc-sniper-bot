@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { AgentRegistry } from "./agent-registry";
 import { WorkflowDependencyResolver } from "./workflow-dependency-resolver";
 import type { WorkflowDefinition } from "./workflow-engine-types";
@@ -7,7 +7,13 @@ import type { WorkflowDefinition } from "./workflow-engine-types";
  * Workflow definition validation and agent registration checking
  */
 export class WorkflowValidator {
-  private logger = createSafeLogger("workflow-validator");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[workflow-validator]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[workflow-validator]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[workflow-validator]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[workflow-validator]', message, context || ''),
+  };
   private deferredWarnings: string[] = [];
   private dependencyResolver = new WorkflowDependencyResolver();
 

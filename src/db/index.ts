@@ -27,10 +27,14 @@ let postgresClient: ReturnType<typeof postgres> | null = null;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Retry logic wrapper - Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createSafeLogger> | undefined;
 function getLogger() {
   if (!_logger) {
-    _logger = createSafeLogger("index");
+    _logger = {
+      info: (message: string, context?: any) => console.info('[db-index]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[db-index]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[db-index]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[db-index]', message, context || ''),
+    };
   }
   return _logger;
 }
@@ -224,7 +228,6 @@ export * from "./schema";
 import { databaseConnectionPool } from "../lib/database-connection-pool";
 // Import optimization tools
 import { databaseOptimizationManager } from "../lib/database-optimization-manager";
-import { createSafeLogger } from "../lib/structured-logger";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
 
 // Database utilities with retry logic

@@ -7,7 +7,6 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createSafeLogger } from "../../lib/structured-logger";
 import type {
   SafetyConfiguration,
   SafetyThresholds,
@@ -44,7 +43,12 @@ export interface ConfigurationPreset {
 }
 
 export class ConfigurationManagement {
-  private logger = createSafeLogger("configuration-management");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[configuration-management]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[configuration-management]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[configuration-management]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[configuration-management]', message, context || ''),
+    };
   private configuration: SafetyConfiguration;
   private updateHistory: ConfigurationUpdate[] = [];
   private readonly enableValidation: boolean;
@@ -63,7 +67,7 @@ export class ConfigurationManagement {
     if (this.enableValidation) {
       const validation = this.validateConfiguration(this.configuration);
       if (!validation.isValid) {
-        this.logger.error("Invalid initial configuration", {
+        console.error("Invalid initial configuration", {
           operation: "initialization",
           errors: validation.errors,
           warnings: validation.warnings,
@@ -72,7 +76,7 @@ export class ConfigurationManagement {
       }
     }
 
-    this.logger.info("Configuration management initialized", {
+    console.info("Configuration management initialized", {
       operation: "initialization",
       monitoringInterval: this.configuration.monitoringIntervalMs,
       riskCheckInterval: this.configuration.riskCheckIntervalMs,
@@ -101,7 +105,7 @@ export class ConfigurationManagement {
     if (this.enableValidation) {
       const validation = this.validateConfiguration(newConfig);
       if (!validation.isValid) {
-        this.logger.error("Configuration update validation failed", {
+        console.error("Configuration update validation failed", {
           operation: "update_configuration",
           errors: validation.errors,
           warnings: validation.warnings,
@@ -111,7 +115,7 @@ export class ConfigurationManagement {
       }
 
       if (validation.warnings.length > 0) {
-        this.logger.warn("Configuration update warnings", {
+        console.warn("Configuration update warnings", {
           operation: "update_configuration",
           warnings: validation.warnings,
           updateFields: Object.keys(updates),
@@ -140,7 +144,7 @@ export class ConfigurationManagement {
       try {
         this.config.onConfigUpdate(this.configuration);
       } catch (error) {
-        this.logger.error(
+        console.error(
           "Configuration update callback failed",
           {
             operation: "update_configuration",
@@ -151,7 +155,7 @@ export class ConfigurationManagement {
       }
     }
 
-    this.logger.info("Configuration updated", {
+    console.info("Configuration updated", {
       operation: "update_configuration",
       updateFields: Object.keys(updates),
       monitoringInterval: this.configuration.monitoringIntervalMs,
@@ -174,7 +178,7 @@ export class ConfigurationManagement {
       try {
         validateSafetyThresholds(updatedThresholds);
       } catch (error) {
-        this.logger.error("Threshold update validation failed", {
+        console.error("Threshold update validation failed", {
           operation: "update_thresholds",
           updateFields: Object.keys(thresholdUpdates),
           error: error.message,
@@ -186,7 +190,7 @@ export class ConfigurationManagement {
     // Update configuration with new thresholds
     this.updateConfiguration({ thresholds: updatedThresholds });
 
-    this.logger.info("Thresholds updated", {
+    console.info("Thresholds updated", {
       operation: "update_thresholds",
       updateFields: Object.keys(thresholdUpdates),
       thresholdCount: Object.keys(updatedThresholds).length,
@@ -265,7 +269,7 @@ export class ConfigurationManagement {
     const clearedCount = this.updateHistory.length;
     this.updateHistory = [];
 
-    this.logger.info("Configuration update history cleared", {
+    console.info("Configuration update history cleared", {
       operation: "clear_update_history",
       clearedCount,
     });
@@ -277,7 +281,7 @@ export class ConfigurationManagement {
   public resetToDefaults(): SafetyConfiguration {
     const defaultConfig = this.getDefaultConfiguration();
 
-    this.logger.info("Configuration reset to defaults", {
+    console.info("Configuration reset to defaults", {
       operation: "reset_to_defaults",
       previousConfig: {
         monitoringInterval: this.configuration.monitoringIntervalMs,
@@ -378,7 +382,7 @@ export class ConfigurationManagement {
       throw new Error(`Preset "${presetName}" not found. Available presets: ${availablePresets}`);
     }
 
-    this.logger.info("Applying configuration preset", {
+    console.info("Applying configuration preset", {
       operation: "apply_preset",
       presetName: preset.name,
       presetDescription: preset.description,

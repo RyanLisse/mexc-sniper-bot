@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * Agent Health Cache Manager
+* Agent Health Cache Manager
  *
  * Manages caching of agent health status with real-time monitoring capabilities.
  * Provides fast access to agent health metrics with automatic cache invalidation
@@ -22,7 +21,12 @@ export class AgentHealthCacheManager {
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("agent-health-cache");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[agent-health-cache]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[agent-health-cache]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[agent-health-cache]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[agent-health-cache]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -61,7 +65,7 @@ export class AgentHealthCacheManager {
       this.healthCache.delete(agentId);
       return null;
     } catch (error) {
-      logger.error(`[AgentHealthCache] Error getting agent health for ${agentId}:`, error);
+      console.error(`[AgentHealthCache] Error getting agent health for ${agentId}:`, error);
       return null;
     }
   }
@@ -89,7 +93,7 @@ export class AgentHealthCacheManager {
       // Update local health cache
       this.healthCache.set(agentId, health);
     } catch (error) {
-      logger.error(`[AgentHealthCache] Error caching agent health for ${agentId}:`, error);
+      console.error(`[AgentHealthCache] Error caching agent health for ${agentId}:`, error);
     }
   }
 
@@ -198,7 +202,7 @@ export class AgentHealthCacheManager {
       await globalCacheManager.delete(cacheKey);
       this.healthCache.delete(agentId);
     } catch (error) {
-      logger.error(`[AgentHealthCache] Error removing agent health for ${agentId}:`, error);
+      console.error(`[AgentHealthCache] Error removing agent health for ${agentId}:`, error);
     }
   }
 
@@ -210,9 +214,9 @@ export class AgentHealthCacheManager {
       const pattern = /^health:/;
       await globalCacheManager.invalidatePattern(pattern);
       this.healthCache.clear();
-      logger.info("[AgentHealthCache] Cleared all health cache entries");
+      console.info("[AgentHealthCache] Cleared all health cache entries");
     } catch (error) {
-      logger.error("[AgentHealthCache] Error clearing health cache:", error);
+      console.error("[AgentHealthCache] Error clearing health cache:", error);
     }
   }
 

@@ -1,4 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
 import {
   type AnalysisResult,
   combineConfidenceScores,
@@ -48,7 +47,13 @@ export interface SymbolAnalysisResult {
 }
 
 export class SymbolAnalysisWorkflow {
-  private logger = createSafeLogger("symbol-analysis-workflow");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[symbol-analysis-workflow]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[symbol-analysis-workflow]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[symbol-analysis-workflow]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[symbol-analysis-workflow]', message, context || ''),
+  };
 
   async combineSymbolAnalysis(
     readinessAnalysis: AgentResponse,
@@ -56,7 +61,7 @@ export class SymbolAnalysisWorkflow {
     marketAnalysis: AgentResponse,
     symbolData: SymbolData
   ): Promise<SymbolAnalysisResult> {
-    logger.info(`[SymbolAnalysisWorkflow] Combining analysis for ${symbolData.symbol}`);
+    console.info(`[SymbolAnalysisWorkflow] Combining analysis for ${symbolData.symbol}`);
 
     const readinessInsights = this.extractReadinessInsights(readinessAnalysis);
     const patternInsights = this.extractPatternValidationInsights(patternAnalysis);

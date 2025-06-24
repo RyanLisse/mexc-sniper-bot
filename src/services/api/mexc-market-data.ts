@@ -5,7 +5,6 @@
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
-import { createSafeLogger } from "../../lib/structured-logger";
 import { getGlobalErrorRecoveryService } from "../mexc-error-recovery-service";
 import { MexcClientCore } from "./mexc-client-core";
 import type {
@@ -32,7 +31,12 @@ export class MexcMarketDataClient extends MexcClientCore {
   private exchangeSymbolsCache: ExchangeSymbol[] | null = null;
   private exchangeSymbolsCacheTime = 0;
   private readonly symbolsCacheExpiry = 300000; // 5 minutes
-  private logger = createSafeLogger("mexc-market-data");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-market-data]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-market-data]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-market-data]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-market-data]', message, context || ''),
+    };
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);
@@ -47,7 +51,7 @@ export class MexcMarketDataClient extends MexcClientCore {
    */
   async getCalendarListings(): Promise<UnifiedMexcResponse<CalendarEntry[]>> {
     try {
-      this.logger.info("[MexcMarketData] Fetching calendar listings...");
+      console.info("[MexcMarketData] Fetching calendar listings...");
 
       const timestamp = Date.now();
       const response = await this.makeRequest<{ data: unknown[] }>(
@@ -92,7 +96,7 @@ export class MexcMarketDataClient extends MexcClientCore {
                 firstOpenTime: Number(entry.firstOpenTime),
               });
             } catch (_error) {
-              this.logger.warn("[MexcMarketData] Invalid calendar entry:", entry);
+              console.warn("[MexcMarketData] Invalid calendar entry:", entry);
               return undefined;
             }
           })
@@ -121,14 +125,14 @@ export class MexcMarketDataClient extends MexcClientCore {
                 firstOpenTime: Number(entry.firstOpenTime),
               });
             } catch (_error) {
-              this.logger.warn("[MexcMarketData] Invalid calendar entry:", entry);
+              console.warn("[MexcMarketData] Invalid calendar entry:", entry);
               return undefined;
             }
           })
           .filter((entry): entry is CalendarEntry => entry !== undefined);
       }
 
-      this.logger.info(`[MexcMarketData] Retrieved ${calendarData.length} calendar entries`);
+      console.info(`[MexcMarketData] Retrieved ${calendarData.length} calendar entries`);
 
       return {
         success: true, // API call successful regardless of data count
@@ -138,7 +142,7 @@ export class MexcMarketDataClient extends MexcClientCore {
         requestId: response.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcMarketData] Calendar listings failed:", error);
+      console.error("[MexcMarketData] Calendar listings failed:", error);
       return {
         success: false,
         data: [],
@@ -157,7 +161,7 @@ export class MexcMarketDataClient extends MexcClientCore {
    */
   async getSymbolsV2(vcoinId?: string): Promise<UnifiedMexcResponse<SymbolEntry[]>> {
     try {
-      this.logger.info(
+      console.info(
         `[MexcMarketData] Fetching symbols data${vcoinId ? ` for ${vcoinId}` : ""}...`
       );
 
@@ -212,14 +216,14 @@ export class MexcMarketDataClient extends MexcClientCore {
                 ot: entry.ot as Record<string, unknown>,
               });
             } catch (_error) {
-              this.logger.warn("[MexcMarketData] Invalid symbol entry:", entry);
+              console.warn("[MexcMarketData] Invalid symbol entry:", entry);
               return null;
             }
           })
           .filter((entry): entry is SymbolEntry => entry !== null);
       }
 
-      this.logger.info(`[MexcMarketData] Retrieved ${symbolData.length} symbol entries`);
+      console.info(`[MexcMarketData] Retrieved ${symbolData.length} symbol entries`);
 
       return {
         success: symbolData.length > 0,
@@ -229,7 +233,7 @@ export class MexcMarketDataClient extends MexcClientCore {
         requestId: response.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcMarketData] Symbols data failed:", error);
+      console.error("[MexcMarketData] Symbols data failed:", error);
       return {
         success: false,
         data: [],
@@ -258,7 +262,7 @@ export class MexcMarketDataClient extends MexcClientCore {
         };
       }
 
-      this.logger.info("[MexcMarketData] Fetching exchange info...");
+      console.info("[MexcMarketData] Fetching exchange info...");
       const response = await this.makeRequest<{
         symbols: Array<{
           symbol: string;
@@ -296,7 +300,7 @@ export class MexcMarketDataClient extends MexcClientCore {
           try {
             return ExchangeSymbolSchema.parse(symbol);
           } catch (_error) {
-            this.logger.warn("[MexcMarketData] Invalid exchange symbol:", symbol);
+            console.warn("[MexcMarketData] Invalid exchange symbol:", symbol);
             return null;
           }
         })
@@ -305,7 +309,7 @@ export class MexcMarketDataClient extends MexcClientCore {
       this.exchangeSymbolsCache = validSymbols;
       this.exchangeSymbolsCacheTime = now;
 
-      this.logger.info(`[MexcMarketData] Retrieved ${validSymbols.length} USDT trading pairs`);
+      console.info(`[MexcMarketData] Retrieved ${validSymbols.length} USDT trading pairs`);
 
       return {
         success: true,
@@ -315,7 +319,7 @@ export class MexcMarketDataClient extends MexcClientCore {
         requestId: response.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcMarketData] Exchange info failed:", error);
+      console.error("[MexcMarketData] Exchange info failed:", error);
       return {
         success: false,
         data: [],
@@ -354,7 +358,7 @@ export class MexcMarketDataClient extends MexcClientCore {
           try {
             return TickerSchema.parse(ticker);
           } catch (_error) {
-            this.logger.warn("[MexcMarketData] Invalid ticker data:", ticker);
+            console.warn("[MexcMarketData] Invalid ticker data:", ticker);
             return null;
           }
         })
@@ -368,7 +372,7 @@ export class MexcMarketDataClient extends MexcClientCore {
         requestId: response.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcMarketData] 24hr ticker failed:", error);
+      console.error("[MexcMarketData] 24hr ticker failed:", error);
       return {
         success: false,
         data: [],
@@ -410,7 +414,7 @@ export class MexcMarketDataClient extends MexcClientCore {
         requestId: response.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcMarketData] Price data failed:", error);
+      console.error("[MexcMarketData] Price data failed:", error);
       return {
         success: false,
         data: [],
@@ -431,7 +435,7 @@ export class MexcMarketDataClient extends MexcClientCore {
     const recoveryService = getGlobalErrorRecoveryService();
 
     try {
-      this.logger.info("[MexcMarketData] Testing connectivity with error recovery...");
+      console.info("[MexcMarketData] Testing connectivity with error recovery...");
 
       const result = await recoveryService.executeWithRecovery(
         () => this.makeRequest("/api/v3/ping"),
@@ -440,10 +444,10 @@ export class MexcMarketDataClient extends MexcClientCore {
       );
 
       const success = result.success && result.data?.success;
-      this.logger.info("[MexcMarketData] Connectivity test result:", success);
+      console.info("[MexcMarketData] Connectivity test result:", success);
       return success;
     } catch (error) {
-      this.logger.error("[MexcMarketData] Connectivity test failed:", error);
+      console.error("[MexcMarketData] Connectivity test failed:", error);
       return false;
     }
   }
@@ -456,7 +460,7 @@ export class MexcMarketDataClient extends MexcClientCore {
       const response = await this.makeRequest<{ serverTime: number }>("/api/v3/time");
       return response.success ? response.data.serverTime : Date.now();
     } catch (error) {
-      this.logger.error("[MexcMarketData] Failed to get server time:", error);
+      console.error("[MexcMarketData] Failed to get server time:", error);
       return Date.now();
     }
   }
@@ -471,7 +475,7 @@ export class MexcMarketDataClient extends MexcClientCore {
   clearExchangeCache(): void {
     this.exchangeSymbolsCache = null;
     this.exchangeSymbolsCacheTime = 0;
-    this.logger.info("[MexcMarketData] Exchange symbols cache cleared");
+    console.info("[MexcMarketData] Exchange symbols cache cleared");
   }
 
   /**

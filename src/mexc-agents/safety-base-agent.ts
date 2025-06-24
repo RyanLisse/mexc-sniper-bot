@@ -1,7 +1,5 @@
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { type AgentConfig, BaseAgent } from "./base-agent";
-
-const logger = createSafeLogger("safety-base-agent");
 
 export interface SafetyConfig {
   simulation: {
@@ -98,6 +96,14 @@ export abstract class SafetyBaseAgent extends BaseAgent {
     message: string,
     data?: Record<string, unknown>
   ): Promise<void> {
+    // Build-safe logger - use console logger to avoid webpack bundling issues
+    const logger = {
+      info: (message: string, context?: any) => console.info('[safety-base-agent]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[safety-base-agent]', message, context || ''),
+      error: (message: string, context?: any) => console.error('[safety-base-agent]', message, context || ''),
+      debug: (message: string, context?: any) => console.debug('[safety-base-agent]', message, context || ''),
+    };
+
     const event: SafetyEvent = {
       id: `${this.config.name}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type,
@@ -129,6 +135,14 @@ export abstract class SafetyBaseAgent extends BaseAgent {
   }
 
   protected async notifyExternalSystems(event: SafetyEvent): Promise<void> {
+    // Build-safe logger - use console logger to avoid webpack bundling issues
+    const logger = {
+      info: (message: string, context?: any) => console.info('[safety-base-agent-notify]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[safety-base-agent-notify]', message, context || ''),
+      error: (message: string, context?: any) => console.error('[safety-base-agent-notify]', message, context || ''),
+      debug: (message: string, context?: any) => console.debug('[safety-base-agent-notify]', message, context || ''),
+    };
+
     // Override in subclasses to send to monitoring systems
     // For now, just store in database if needed
     try {

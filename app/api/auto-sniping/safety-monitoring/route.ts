@@ -6,7 +6,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { RealTimeSafetyMonitoringService, type SafetyConfiguration } from '@/src/services/real-time-safety-monitoring-modules';
@@ -21,13 +20,12 @@ function getSafetyMonitoringService() {
  * Get comprehensive safety monitoring report
  */
 export const GET = apiAuthWrapper(async (request: NextRequest) => {
-  const logger = createSafeLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const includeRecommendations = searchParams.get('include_recommendations') === 'true';
     const includeSystemHealth = searchParams.get('include_system_health') === 'true';
 
-    logger.info('[SafetyMonitoringAPI] Fetching safety monitoring report...');
+    console.info('[SafetyMonitoringAPI] Fetching safety monitoring report...');
     
     const report = await getSafetyMonitoringService().getSafetyReport();
     
@@ -49,7 +47,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       }
     }));
   } catch (error: any) {
-    logger.error('[SafetyMonitoringAPI] Failed to get safety report:', { error });
+    console.error('[SafetyMonitoringAPI] Failed to get safety report:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to retrieve safety monitoring report',
       { code: 'SAFETY_REPORT_ERROR', details: error.message }
@@ -62,12 +60,11 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
  * Handle safety monitoring actions
  */
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
-  const logger = createSafeLogger('route');
   try {
     const body = await request.json();
     const { action, configuration, alertId, reason } = body;
 
-    logger.info(`[SafetyMonitoringAPI] Processing action: ${action}`);
+    console.info(`[SafetyMonitoringAPI] Processing action: ${action}`);
 
     switch (action) {
       case 'start_monitoring':
@@ -182,7 +179,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         ), { status: 400 });
     }
   } catch (error: any) {
-    logger.error('[SafetyMonitoringAPI] Action failed:', { error });
+    console.error('[SafetyMonitoringAPI] Action failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Safety monitoring action failed',
       { code: 'ACTION_FAILED', details: error.message }

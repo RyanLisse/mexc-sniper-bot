@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
+// Using simple console logger to avoid webpack bundling issues
 import { OptimizedAutoSnipingCore } from '@/src/services/optimized-auto-sniping-core';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
@@ -16,15 +16,20 @@ function getExecutionService() {
   return OptimizedAutoSnipingCore.getInstance();
 }
 
-// Create logger at module level like other working routes
-const logger = createSafeLogger('route');
-
 /**
  * GET /api/auto-sniping/execution
  * Get execution status and report
  */
 export const GET = instrumentedTradingRoute(
   apiAuthWrapper(async (request: NextRequest) => {
+  // Build-safe logger - simple console implementation
+  const logger = {
+    info: (message: string, context?: any) => console.info('[auto-sniping-execution]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[auto-sniping-execution]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[auto-sniping-execution]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[auto-sniping-execution]', message, context || ''),
+  };
+  
   try {
     const { searchParams } = new URL(request.url);
     const includePositions = searchParams.get('include_positions') === 'true';
@@ -55,7 +60,7 @@ export const GET = instrumentedTradingRoute(
       message: 'Execution report retrieved successfully',
     }));
   } catch (error) {
-    logger.error('[API] Auto-sniping execution GET failed:', { error });
+    console.error('[API] Auto-sniping execution GET failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to get execution report',
       { 
@@ -73,6 +78,14 @@ export const GET = instrumentedTradingRoute(
  */
 export const POST = instrumentedTradingRoute(
   apiAuthWrapper(async (request: NextRequest) => {
+  // Build-safe logger - simple console implementation
+  const logger = {
+    info: (message: string, context?: any) => console.info('[auto-sniping-execution]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[auto-sniping-execution]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[auto-sniping-execution]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[auto-sniping-execution]', message, context || ''),
+  };
+  
   try {
     const body = await request.json();
     const { action, positionId, reason, config } = body;
@@ -240,7 +253,7 @@ export const POST = instrumentedTradingRoute(
         ), { status: 400 });
     }
   } catch (error) {
-    logger.error('[API] Auto-sniping execution POST failed:', { error });
+    console.error('[API] Auto-sniping execution POST failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Execution operation failed',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -255,6 +268,7 @@ export const POST = instrumentedTradingRoute(
  * Update execution configuration
  */
 export const PUT = apiAuthWrapper(async (request: NextRequest) => {
+  // Build-safe logger - initialize inside function
   try {
     const body = await request.json();
     const { config } = body;
@@ -302,7 +316,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       ), { status: 400 });
     }
   } catch (error) {
-    logger.error('[API] Auto-sniping execution PUT failed:', { error });
+    console.error('[API] Auto-sniping execution PUT failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to update execution configuration',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -316,8 +330,9 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
  */
 export const DELETE = instrumentedTradingRoute(
   apiAuthWrapper(async (request: NextRequest) => {
+    // Build-safe logger - initialize inside function
     try {
-      logger.info('[API] Emergency shutdown requested');
+      console.info('[API] Emergency shutdown requested');
       
       // Stop execution
       getExecutionService().stopExecution();
@@ -330,7 +345,7 @@ export const DELETE = instrumentedTradingRoute(
         { message: `Emergency shutdown completed: ${closedCount} positions closed` }
       ));
     } catch (error) {
-      logger.error('[API] Emergency shutdown failed:', { error });
+      console.error('[API] Emergency shutdown failed:', { error });
       return NextResponse.json(createErrorResponse(
         'Emergency shutdown failed',
         { details: error instanceof Error ? error.message : 'Unknown error' }

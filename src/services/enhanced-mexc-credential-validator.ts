@@ -11,8 +11,6 @@
 
 import * as crypto from "node:crypto";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
-
 // ============================================================================
 // Types and Interfaces
 // ============================================================================
@@ -74,7 +72,12 @@ export interface EnhancedCredentialValidatorConfig {
 // ============================================================================
 
 export class EnhancedCredentialValidator {
-  private logger = createSafeLogger("enhanced-mexc-credential-validator");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[enhanced-mexc-credential-validator]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[enhanced-mexc-credential-validator]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[enhanced-mexc-credential-validator]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[enhanced-mexc-credential-validator]', message, context || ''),
+    };
 
   private config: EnhancedCredentialValidatorConfig;
   private circuitBreaker: CircuitBreakerState;
@@ -165,7 +168,7 @@ export class EnhancedCredentialValidator {
 
       // Check for test credentials
       if (isTestCredentials) {
-        logger.warn(
+        console.warn(
           "🔍 Test credentials detected - system will flag as invalid for proper validation"
         );
         return {
@@ -647,7 +650,7 @@ export class EnhancedCredentialValidator {
       try {
         callback(status);
       } catch (error) {
-        logger.error("Error in status change callback:", error);
+        console.error("Error in status change callback:", error);
       }
     });
   }

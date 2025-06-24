@@ -1,11 +1,17 @@
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { WorkflowContext, WorkflowStepConfig } from "./workflow-engine-types";
 
 /**
  * Workflow dependency resolution and execution ordering
  */
 export class WorkflowDependencyResolver {
-  private logger = createSafeLogger("workflow-dependency-resolver");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[workflow-dependency-resolver]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[workflow-dependency-resolver]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[workflow-dependency-resolver]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[workflow-dependency-resolver]', message, context || ''),
+  };
 
   /**
    * Resolve step dependencies and return execution order

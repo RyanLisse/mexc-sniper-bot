@@ -14,8 +14,6 @@ import { getGlobalHealthMonitor } from "../../../../src/services/connection-heal
 import { getGlobalRealTimeMonitor } from "../../../../src/services/real-time-credential-monitor";
 import { getUserCredentials } from "../../../../src/services/user-credentials-service";
 import { toSafeError } from "../../../../src/lib/error-type-utils";
-import { createSafeLogger } from "../../../../src/lib/structured-logger";
-
 interface EnhancedConnectivityResponse {
   // Core Status
   connected: boolean;
@@ -96,8 +94,6 @@ interface EnhancedConnectivityResponse {
     totalStatusUpdates: number;
   };
 }
-
-const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const requestId = `enhanced_conn_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -253,7 +249,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
 
   } catch (error) {
-    logger.error("[Enhanced Connectivity] Error:", { error: error });
+    console.error("[Enhanced Connectivity] Error:", { error: error });
     const safeError = toSafeError(error);
     
     return apiResponse.error(
@@ -283,7 +279,7 @@ async function getUserCredentialInfo(userId?: string): Promise<{
       hasUserCredentials = !!userCredentials;
     } catch (error) {
       // Ignore credential fetch errors for this status check
-      logger.warn("Failed to fetch user credentials for status check:", { error: error });
+      console.warn("Failed to fetch user credentials for status check:", { error: error });
     }
   }
   
@@ -443,7 +439,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
   } catch (error) {
-    logger.error("[Enhanced Connectivity POST] Error:", { error: error });
+    console.error("[Enhanced Connectivity POST] Error:", { error: error });
     return apiResponse.error(
       error instanceof Error ? error.message : "Enhanced connectivity action failed",
       500,

@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from '../../lib/structured-logger';
- * Event Management & Health Module
+* Event Management & Health Module
  *
  * Provides event emission, alert management, and health monitoring functionality
  * for the Advanced Risk Engine. This module handles risk alerts, system health
@@ -59,7 +58,12 @@ export class EventManagementHealth extends EventEmitter {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("event-management-health");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[event-management-health]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[event-management-health]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[event-management-health]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[event-management-health]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -71,7 +75,7 @@ export class EventManagementHealth extends EventEmitter {
 
   constructor(private config: EventManagementConfig) {
     super();
-    this.logger.info(
+    console.info(
       "[EventManagementHealth] Initialized with event management and health monitoring"
     );
   }
@@ -336,9 +340,9 @@ export class EventManagementHealth extends EventEmitter {
         });
       }
 
-      this.logger.info(`[EventManagementHealth] Portfolio risk updated: ${riskLevel.toFixed(2)}%`);
+      console.info(`[EventManagementHealth] Portfolio risk updated: ${riskLevel.toFixed(2)}%`);
     } catch (error) {
-      this.logger.error("[EventManagementHealth] Portfolio risk update failed:", error);
+      console.error("[EventManagementHealth] Portfolio risk update failed:", error);
     }
   }
 
@@ -449,7 +453,7 @@ export class EventManagementHealth extends EventEmitter {
     });
 
     if (this.alerts.length < oldAlertsCount) {
-      this.logger.info(
+      console.info(
         `[EventManagementHealth] Cleaned up ${oldAlertsCount - this.alerts.length} old alerts`
       );
     }

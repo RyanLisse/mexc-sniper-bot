@@ -1,4 +1,3 @@
-import { createSafeLogger } from "./structured-logger";
 /**
  * Error Type Utilities
  *
@@ -23,10 +22,14 @@ export interface SafeError {
  * Safely converts unknown error to Error object with proper typing
  */
 // Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createSafeLogger> | undefined;
 function getLogger() {
   if (!_logger) {
-    _logger = createSafeLogger("error-type-utils");
+    _logger = {
+      info: (message: string, context?: any) => console.info('[error-type-utils]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[error-type-utils]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[error-type-utils]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[error-type-utils]', message, context || ''),
+    };
   }
   return _logger;
 }

@@ -1,28 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Play,
+  AlertTriangle,
   Pause,
+  Play,
+  RefreshCw,
+  Settings,
+  Shield,
   Target,
   TrendingUp,
-  AlertTriangle,
-  Shield,
   Zap,
-  Settings,
-  RefreshCw,
 } from "lucide-react";
+import { useState } from "react";
+import { z } from "zod";
 import { queryKeys } from "../lib/query-client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Switch } from "./ui/switch";
-import { Label } from "./ui/label";
-import { Alert, AlertDescription } from "./ui/alert";
 import { StreamlinedCredentialStatus } from "./streamlined-credential-status";
 import { StreamlinedWorkflowStatus } from "./streamlined-workflow-status";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
 
 // Zod schema for auto-sniping configuration
 const AutoSnipingConfigSchema = z.object({
@@ -83,10 +83,7 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
   });
 
   // Fetch configuration
-  const {
-    data: config,
-    isLoading: configLoading,
-  } = useQuery({
+  const { data: config, isLoading: configLoading } = useQuery({
     queryKey: queryKeys.autoSniping.config(),
     queryFn: async (): Promise<AutoSnipingConfig> => {
       const response = await fetch("/api/auto-sniping/config");
@@ -207,7 +204,9 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.autoSniping.status() })}
+                onClick={() =>
+                  queryClient.invalidateQueries({ queryKey: queryKeys.autoSniping.status() })
+                }
                 disabled={statusLoading}
               >
                 <RefreshCw className={`h-4 w-4 ${statusLoading ? "animate-spin" : ""}`} />
@@ -217,8 +216,7 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
           <CardDescription>
             {status
               ? `${status.activeTargets} active • ${status.readyTargets} ready • ${status.executedToday} trades today`
-              : "Loading auto-sniping status..."
-            }
+              : "Loading auto-sniping status..."}
           </CardDescription>
         </CardHeader>
 
@@ -228,17 +226,18 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
             <div className="space-y-1">
               <div className="font-medium">Auto-Sniping System</div>
               <div className="text-sm text-muted-foreground">
-                {status?.isActive 
+                {status?.isActive
                   ? "Actively monitoring for sniping opportunities"
-                  : "Ready to start monitoring patterns and executing trades"
-                }
+                  : "Ready to start monitoring patterns and executing trades"}
               </div>
             </div>
             <Button
               size="lg"
               onClick={handleToggleSniping}
               disabled={toggleSnipingMutation.isPending}
-              className={status?.isActive ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}
+              className={
+                status?.isActive ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+              }
             >
               {status?.isActive ? (
                 <>
@@ -270,17 +269,23 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
                 <div className="text-muted-foreground">Trades Today</div>
               </div>
               <div className="text-center p-3 border rounded">
-                <div className="font-bold text-lg text-orange-600">{status.successRate.toFixed(1)}%</div>
+                <div className="font-bold text-lg text-orange-600">
+                  {status.successRate.toFixed(1)}%
+                </div>
                 <div className="text-muted-foreground">Success Rate</div>
               </div>
             </div>
           )}
 
           {/* Safety Status */}
-          <div className={`p-3 border rounded-lg bg-${safetyConfig.color}-50 dark:bg-${safetyConfig.color}-950/20 border-${safetyConfig.color}-200 dark:border-${safetyConfig.color}-800`}>
+          <div
+            className={`p-3 border rounded-lg bg-${safetyConfig.color}-50 dark:bg-${safetyConfig.color}-950/20 border-${safetyConfig.color}-200 dark:border-${safetyConfig.color}-800`}
+          >
             <div className="flex items-center space-x-2">
               <SafetyIcon className={`h-4 w-4 text-${safetyConfig.color}-600`} />
-              <span className={`font-medium text-${safetyConfig.color}-700 dark:text-${safetyConfig.color}-300`}>
+              <span
+                className={`font-medium text-${safetyConfig.color}-700 dark:text-${safetyConfig.color}-300`}
+              >
                 Safety Status: {safetyConfig.text}
               </span>
             </div>
@@ -291,11 +296,7 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Quick Configuration</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                >
+                <Button variant="ghost" size="sm" onClick={() => setShowAdvanced(!showAdvanced)}>
                   <Settings className="h-4 w-4 mr-1" />
                   {showAdvanced ? "Hide" : "Show"} Advanced
                 </Button>
@@ -303,7 +304,9 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="safety-checks" className="text-sm">Safety Checks</Label>
+                  <Label htmlFor="safety-checks" className="text-sm">
+                    Safety Checks
+                  </Label>
                   <Switch
                     id="safety-checks"
                     checked={config.enableSafetyChecks}
@@ -312,11 +315,15 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="pattern-detection" className="text-sm">Pattern Detection</Label>
+                  <Label htmlFor="pattern-detection" className="text-sm">
+                    Pattern Detection
+                  </Label>
                   <Switch
                     id="pattern-detection"
                     checked={config.enablePatternDetection}
-                    onCheckedChange={(checked) => handleConfigUpdate("enablePatternDetection", checked)}
+                    onCheckedChange={(checked) =>
+                      handleConfigUpdate("enablePatternDetection", checked)
+                    }
                     disabled={updateConfigMutation.isPending}
                   />
                 </div>

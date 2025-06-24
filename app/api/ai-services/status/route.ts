@@ -1,23 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getAiIntelligenceService } from "../../../../src/services/ai-intelligence-service";
 import { createApiResponse } from "../../../../src/lib/api-response";
 
 export async function GET(request: NextRequest) {
-  // Create logger lazily to prevent build-time issues
-  let logger: ReturnType<typeof createSafeLogger>;
-  try {
-    logger = createSafeLogger('route');
-  } catch {
-    // Fallback to console during build
-    logger = { 
-      error: console.error.bind(console),
-      info: console.log.bind(console),
-      warn: console.warn.bind(console),
-      debug: console.debug.bind(console)
-    } as any;
-  }
-
   try {
     // Check AI service health and configuration
     const cohereStatus = await checkCohereStatus();
@@ -44,7 +29,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error("[AI Services Status] Error:", { error: error });
+    console.error("[AI Services Status] Error:", { error: error });
     return createApiResponse(
       {
         success: false,

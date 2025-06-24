@@ -1,5 +1,3 @@
-import { createSafeLogger } from "../structured-logger";
-
 /**
  * Workflow Cache Manager
  *
@@ -22,7 +20,12 @@ import type {
 } from "./agent-cache-types";
 
 export class WorkflowCache {
-  private logger = createSafeLogger("workflow-cache");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[workflow-cache]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[workflow-cache]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[workflow-cache]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[workflow-cache]', message, context || ''),
+    };
 
   private config: AgentCacheConfig;
   private workflowCache: Map<string, WorkflowCacheEntry> = new Map();
@@ -58,7 +61,7 @@ export class WorkflowCache {
       await globalCacheManager.delete(cacheKey);
       return null;
     } catch (error) {
-      logger.error(`[WorkflowCache] Error getting workflow result for ${workflowType}:`, error);
+      console.error(`[WorkflowCache] Error getting workflow result for ${workflowType}:`, error);
       return null;
     }
   }
@@ -95,7 +98,7 @@ export class WorkflowCache {
       // Update workflow cache map for quick access
       this.workflowCache.set(cacheKey, result);
     } catch (error) {
-      logger.error(`[WorkflowCache] Error caching workflow result for ${workflowType}:`, error);
+      console.error(`[WorkflowCache] Error caching workflow result for ${workflowType}:`, error);
     }
   }
 
@@ -133,9 +136,9 @@ export class WorkflowCache {
         }
       }
 
-      logger.info(`[WorkflowCache] Invalidated ${invalidated} workflow results`);
+      console.info(`[WorkflowCache] Invalidated ${invalidated} workflow results`);
     } catch (error) {
-      logger.error("[WorkflowCache] Error invalidating workflow results:", error);
+      console.error("[WorkflowCache] Error invalidating workflow results:", error);
     }
 
     return invalidated;
@@ -175,9 +178,9 @@ export class WorkflowCache {
       const pattern = /^workflow:/;
       await globalCacheManager.invalidatePattern(pattern);
       this.workflowCache.clear();
-      logger.info("[WorkflowCache] Cleared all workflow cache entries");
+      console.info("[WorkflowCache] Cleared all workflow cache entries");
     } catch (error) {
-      logger.error("[WorkflowCache] Error clearing workflow cache:", error);
+      console.error("[WorkflowCache] Error clearing workflow cache:", error);
     }
   }
 

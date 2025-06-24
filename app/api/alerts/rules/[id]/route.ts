@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../../src/db";
 import { AlertConfigurationService } from "../../../../../src/lib/alert-configuration";
@@ -11,8 +10,6 @@ const alertConfigService = new AlertConfigurationService(db);
 // ==========================================
 // GET /api/alerts/rules/[id] - Get specific alert rule
 // ==========================================
-const logger = createSafeLogger('route');
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -43,7 +40,7 @@ export async function GET(
       data: formattedRule,
     });
   } catch (error) {
-    logger.error("Error fetching alert rule:", { error: error });
+    console.error("Error fetching alert rule:", { error: error });
     return handleApiError(error);
   }
 }
@@ -94,7 +91,7 @@ export async function PUT(
       message: "Alert rule updated successfully",
     });
   } catch (error) {
-    logger.error("Error updating alert rule:", { error: error });
+    console.error("Error updating alert rule:", { error: error });
     return handleApiError(error);
   }
 }
@@ -127,7 +124,7 @@ export async function DELETE(
       message: "Alert rule disabled successfully",
     });
   } catch (error) {
-    logger.error("Error deleting alert rule:", { error: error });
+    console.error("Error deleting alert rule:", { error: error });
     return handleApiError(error);
   }
 }

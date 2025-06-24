@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { OptimizedAutoSnipingCore } from "../../../../src/services/optimized-auto-sniping-core";
 import { 
   createSuccessResponse, 
@@ -10,8 +9,6 @@ import {
 import { handleApiError } from "../../../../src/lib/error-handler";
 
 const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
-
-const logger = createSafeLogger('route');
 
 export async function GET() {
   try {
@@ -24,7 +21,7 @@ export async function GET() {
       HTTP_STATUS.OK
     );
   } catch (error) {
-    logger.error("Auto-sniping config GET error:", { error: error });
+    console.error("Auto-sniping config GET error:", { error: error });
     return handleApiError(error, { message: "Failed to get auto-sniping configuration" });
   }
 }
@@ -45,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case "enable":
-        logger.info("🚀 Auto-sniping is always enabled. Updating config:", { context: config });
+        console.info("🚀 Auto-sniping is always enabled. Updating config:", { context: config });
         if (config) {
           autoSnipingService.updateConfig(config);
         }
@@ -60,7 +57,7 @@ export async function POST(request: NextRequest) {
         );
 
       case "disable":
-        logger.info("⏹️ Auto-sniping cannot be disabled. Stopping execution instead.");
+        console.info("⏹️ Auto-sniping cannot be disabled. Stopping execution instead.");
         autoSnipingService.stopExecution();
         
         return apiResponse(
@@ -81,7 +78,7 @@ export async function POST(request: NextRequest) {
           );
         }
         
-        logger.info("⚙️ Updating auto-sniping config:", { context: config });
+        console.info("⚙️ Updating auto-sniping config:", { context: config });
         autoSnipingService.updateConfig(config);
         
         const updatedReport = await autoSnipingService.getExecutionReport();
@@ -94,7 +91,7 @@ export async function POST(request: NextRequest) {
         );
 
       case "start":
-        logger.info("▶️ Starting auto-sniping execution");
+        console.info("▶️ Starting auto-sniping execution");
         
         if (!autoSnipingService.isReadyForTrading()) {
           const currentReport = await autoSnipingService.getExecutionReport();
@@ -118,7 +115,7 @@ export async function POST(request: NextRequest) {
         );
 
       case "stop":
-        logger.info("⏹️ Stopping auto-sniping execution");
+        console.info("⏹️ Stopping auto-sniping execution");
         autoSnipingService.stopExecution();
         
         return apiResponse(
@@ -139,7 +136,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    logger.error("Auto-sniping config POST error:", { error: error });
+    console.error("Auto-sniping config POST error:", { error: error });
     return handleApiError(error, { message: "Failed to configure auto-sniping" });
   }
 }

@@ -7,7 +7,6 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createSafeLogger } from "@/src/lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 
 // Lazy import to avoid build-time initialization issues
@@ -18,7 +17,12 @@ async function getPatternMonitoringService() {
 
 // Lazy logger initialization
 function getLogger() {
-  return createSafeLogger("api-pattern-monitoring");
+  return {
+      info: (message: string, context?: any) => console.info('[api-pattern-monitoring]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[api-pattern-monitoring]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[api-pattern-monitoring]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[api-pattern-monitoring]', message, context || ''),
+    };
 }
 
 // Request validation schemas
@@ -63,7 +67,7 @@ export async function GET(request: NextRequest) {
     const patternLimit = parseInt(query.pattern_limit);
 
     const logger = getLogger();
-    logger.info("[GET] Getting pattern monitoring report", {
+    console.info("[GET] Getting pattern monitoring report", {
       includePatterns,
       patternLimit,
     });
@@ -98,7 +102,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     const logger = getLogger();
-    logger.error("[GET] Failed to get pattern monitoring report:", { error });
+    console.error("[GET] Failed to get pattern monitoring report:", { error });
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -131,7 +135,7 @@ export async function POST(request: NextRequest) {
     const validatedBody = PostActionSchema.parse(body);
 
     const logger = getLogger();
-    logger.info("[POST] Processing pattern monitoring action", {
+    console.info("[POST] Processing pattern monitoring action", {
       action: validatedBody.action,
     });
 
@@ -161,7 +165,7 @@ export async function POST(request: NextRequest) {
       case "manual_detection": {
         const { symbols, calendarEntries } = validatedBody;
 
-        logger.info("[POST] Running manual pattern detection", {
+        console.info("[POST] Running manual pattern detection", {
           symbolCount: symbols.length,
           calendarEntriesCount: calendarEntries?.length || 0,
         });
@@ -239,7 +243,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     const logger = getLogger();
-    logger.error("[POST] Pattern monitoring action failed:", { error });
+    console.error("[POST] Pattern monitoring action failed:", { error });
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

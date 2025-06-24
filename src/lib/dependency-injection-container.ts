@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * Dependency Injection Container
+* Dependency Injection Container
  *
  * Provides a comprehensive dependency injection system that eliminates tight coupling
  * and improves testability by managing service lifecycles and dependencies.
@@ -68,7 +67,12 @@ export interface ContainerConfiguration {
  * Manages service registration, resolution, and lifecycle
  */
 export class DependencyContainer extends EventEmitter {
-  private logger = createSafeLogger("dependency-injection-container");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[dependency-injection-container]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[dependency-injection-container]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[dependency-injection-container]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[dependency-injection-container]', message, context || ''),
+    };
 
   private services = new Map<string, ServiceDescriptor>();
   private singletonInstances = new Map<string, any>();
@@ -103,7 +107,7 @@ export class DependencyContainer extends EventEmitter {
     this.services.set(descriptor.name, descriptor);
 
     if (this.configuration.enableLifecycleLogging) {
-      logger.info(`📝 Registered service: ${descriptor.name} (${descriptor.lifetime})`);
+      console.info(`📝 Registered service: ${descriptor.name} (${descriptor.lifetime})`);
     }
 
     this.emit("serviceRegistered", descriptor);
@@ -206,13 +210,13 @@ export class DependencyContainer extends EventEmitter {
 
       if (this.configuration.enablePerformanceTracking) {
         const duration = Date.now() - startTime;
-        logger.info(`⚡ Resolved '${name}' in ${duration}ms`);
+        console.info(`⚡ Resolved '${name}' in ${duration}ms`);
       }
 
       return instance;
     } catch (error) {
       if (this.configuration.enableLifecycleLogging) {
-        logger.error(`❌ Failed to resolve service '${name}':`, error);
+        console.error(`❌ Failed to resolve service '${name}':`, error);
       }
       throw error;
     } finally {
@@ -306,7 +310,7 @@ export class DependencyContainer extends EventEmitter {
     this.singletonInstances.set(descriptor.name, instance);
 
     if (this.configuration.enableLifecycleLogging) {
-      logger.info(`🏗️ Created singleton: ${descriptor.name}`);
+      console.info(`🏗️ Created singleton: ${descriptor.name}`);
     }
 
     this.emit("singletonCreated", descriptor.name, instance);
@@ -320,7 +324,7 @@ export class DependencyContainer extends EventEmitter {
     const instance = this.createInstance<T>(descriptor);
 
     if (this.configuration.enableLifecycleLogging) {
-      logger.info(`🔄 Created transient: ${descriptor.name}`);
+      console.info(`🔄 Created transient: ${descriptor.name}`);
     }
 
     this.emit("transientCreated", descriptor.name, instance);
@@ -348,7 +352,7 @@ export class DependencyContainer extends EventEmitter {
     scope.services.set(descriptor.name, instance);
 
     if (this.configuration.enableLifecycleLogging) {
-      logger.info(`🎯 Created scoped: ${descriptor.name} (scope: ${scopeId})`);
+      console.info(`🎯 Created scoped: ${descriptor.name} (scope: ${scopeId})`);
     }
 
     this.emit("scopedCreated", descriptor.name, instance, scopeId);
@@ -398,7 +402,7 @@ export class DependencyContainer extends EventEmitter {
     }, this.configuration.scopeTimeout);
 
     if (this.configuration.enableLifecycleLogging) {
-      logger.info(`📦 Created scope: ${scopeId}`);
+      console.info(`📦 Created scope: ${scopeId}`);
     }
 
     this.emit("scopeCreated", scopeId);
@@ -420,7 +424,7 @@ export class DependencyContainer extends EventEmitter {
         try {
           service.cleanup();
         } catch (error) {
-          logger.error(`Error disposing service '${serviceName}' in scope '${scopeId}':`, error);
+          console.error(`Error disposing service '${serviceName}' in scope '${scopeId}':`, error);
         }
       }
     }
@@ -430,7 +434,7 @@ export class DependencyContainer extends EventEmitter {
     this.scopes.delete(scopeId);
 
     if (this.configuration.enableLifecycleLogging) {
-      logger.info(`🗑️ Disposed scope: ${scopeId}`);
+      console.info(`🗑️ Disposed scope: ${scopeId}`);
     }
 
     this.emit("scopeDisposed", scopeId);
@@ -457,10 +461,10 @@ export class DependencyContainer extends EventEmitter {
         }
 
         if (this.configuration.enableLifecycleLogging) {
-          logger.info(`✅ Initialized: ${descriptor.name}`);
+          console.info(`✅ Initialized: ${descriptor.name}`);
         }
       } catch (error) {
-        logger.error(`❌ Failed to initialize '${descriptor.name}':`, error);
+        console.error(`❌ Failed to initialize '${descriptor.name}':`, error);
         throw error;
       }
     }
@@ -512,10 +516,10 @@ export class DependencyContainer extends EventEmitter {
         try {
           await instance.cleanup();
           if (this.configuration.enableLifecycleLogging) {
-            logger.info(`🧹 Cleaned up: ${name}`);
+            console.info(`🧹 Cleaned up: ${name}`);
           }
         } catch (error) {
-          logger.error(`Error cleaning up service '${name}':`, error);
+          console.error(`Error cleaning up service '${name}':`, error);
         }
       }
     }
@@ -816,7 +820,7 @@ export class ExampleTradingService implements BaseService {
   async initialize(dependencies: ServiceDependencies): Promise<void> {
     this.mexcService = (dependencies as any).MexcIntegrationService;
     this.riskService = (dependencies as any).RiskManagementService;
-    logger.info("ExampleTradingService initialized");
+    console.info("ExampleTradingService initialized");
   }
 
   async isHealthy(): Promise<boolean> {
@@ -837,7 +841,7 @@ export class ExampleTradingService implements BaseService {
   }
 
   async cleanup(): Promise<void> {
-    logger.info("ExampleTradingService cleaned up");
+    console.info("ExampleTradingService cleaned up");
   }
 
   // Service-specific methods

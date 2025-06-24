@@ -20,7 +20,7 @@ import {
   publicHandler,
   authenticatedHandler,
 } from "../../../src/lib/api-middleware";
-import { createSafeLogger } from '../../../src/lib/structured-logger';
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 
 // ======================
 // WebSocket Server Status
@@ -32,7 +32,13 @@ export const GET = publicHandler({
     ttl: 5000, // 5 seconds
   },
 })(async (request, context) => {
-  const logger = createSafeLogger('websocket-api');
+  // Simple console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[websocket-api]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[websocket-api]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[websocket-api]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[websocket-api]', message, context || ''),
+  };
   try {
     // Get WebSocket server status
     const serverMetrics = webSocketServer.getServerMetrics();
@@ -79,7 +85,7 @@ export const GET = publicHandler({
     });
 
   } catch (error) {
-    logger.error('[WebSocket API] Error getting status:', { error });
+    console.error('[WebSocket API] Error getting status:', { error });
     return context.error(
       'Failed to get WebSocket status',
       500,
@@ -98,7 +104,13 @@ export const POST = authenticatedHandler({
     action: 'required',
   },
 })(async (request, context) => {
-  const logger = createSafeLogger('websocket-api');
+  // Simple console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[websocket-api]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[websocket-api]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[websocket-api]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[websocket-api]', message, context || ''),
+  };
   try {
     const { action, ...params } = context.body;
 
@@ -217,7 +229,7 @@ export const POST = authenticatedHandler({
     }
 
   } catch (error) {
-    logger.error('[WebSocket API] Error in POST action:', { error });
+    console.error('[WebSocket API] Error in POST action:', { error });
     return context.error(
       `Failed to execute action: ${context.body?.action}`,
       500,
@@ -233,7 +245,13 @@ export const POST = authenticatedHandler({
 export const PUT = authenticatedHandler({
   parseBody: true,
 })(async (request, context) => {
-  const logger = createSafeLogger('websocket-api');
+  // Simple console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[websocket-api]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[websocket-api]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[websocket-api]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[websocket-api]', message, context || ''),
+  };
   try {
     const { connectionId, action, ...params } = context.body;
 
@@ -285,7 +303,7 @@ export const PUT = authenticatedHandler({
     }
 
   } catch (error) {
-    logger.error('[WebSocket API] Error in PUT action:', { error });
+    console.error('[WebSocket API] Error in PUT action:', { error });
     return context.error(
       'Failed to manage connection',
       500,
@@ -302,7 +320,13 @@ export const PATCH = authenticatedHandler({
   parseBody: true,
   // Admin only operations - auth is handled by authenticatedHandler
 })(async (request, context) => {
-  const logger = createSafeLogger('websocket-api');
+  // Simple console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[websocket-api]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[websocket-api]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[websocket-api]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[websocket-api]', message, context || ''),
+  };
   try {
     const { operation, ...params } = context.body;
 
@@ -347,7 +371,7 @@ export const PATCH = authenticatedHandler({
 
       case 'restart_all':
         // Restart all WebSocket services
-        logger.info('[WebSocket API] Restarting all WebSocket services...');
+        console.info('[WebSocket API] Restarting all WebSocket services...');
 
         // Stop services
         if (webSocketAgentBridge.isRunning()) {
@@ -419,7 +443,7 @@ export const PATCH = authenticatedHandler({
     }
 
   } catch (error) {
-    logger.error('[WebSocket API] Error in PATCH operation:', { error });
+    console.error('[WebSocket API] Error in PATCH operation:', { error });
     return context.error(
       'Failed to execute operation',
       500,
@@ -431,8 +455,6 @@ export const PATCH = authenticatedHandler({
 // ======================
 // Helper Functions
 // ======================
-
-// MOVED: const logger = createSafeLogger('route');
 
 function generatePerformanceRecommendations(serverMetrics: any, connectionMetrics: any[]): string[] {
   const recommendations: string[] = [];

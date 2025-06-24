@@ -1,4 +1,3 @@
-import { createSafeLogger } from "./structured-logger";
 /**
  * Algorithm Optimizer
  *
@@ -23,7 +22,12 @@ import { createSafeLogger } from "./structured-logger";
  * LRU Cache with TTL support - O(1) operations
  */
 export class OptimizedLRUCache<K, V> {
-  private logger = createSafeLogger("algorithm-optimizer");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[algorithm-optimizer]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[algorithm-optimizer]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[algorithm-optimizer]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[algorithm-optimizer]', message, context || ''),
+    };
 
   private capacity: number;
   private cache = new Map<K, { value: V; timestamp: number; expiresAt?: number }>();
@@ -996,13 +1000,13 @@ export const algorithmOptimizer = {
     const result = fn();
     const end = performance.now();
 
-    logger.info(`⚡ ${name} took ${(end - start).toFixed(2)}ms`);
+    console.info(`⚡ ${name} took ${(end - start).toFixed(2)}ms`);
     return result;
   },
 
   // Benchmark different algorithm approaches
   benchmark(name: string, functions: { [key: string]: () => any }, iterations = 1000): void {
-    logger.info(`🏁 Benchmarking ${name}:`);
+    console.info(`🏁 Benchmarking ${name}:`);
 
     const results: { [key: string]: number } = {};
 
@@ -1023,7 +1027,7 @@ export const algorithmOptimizer = {
     sorted.forEach(([name, time], index) => {
       const improvement =
         index === 0 ? "baseline" : `${((time / sorted[0][1] - 1) * 100).toFixed(1)}% slower`;
-      logger.info(`  ${index + 1}. ${name}: ${time.toFixed(4)}ms (${improvement})`);
+      console.info(`  ${index + 1}. ${name}: ${time.toFixed(4)}ms (${improvement})`);
     });
   },
 };
@@ -1031,4 +1035,4 @@ export const algorithmOptimizer = {
 // Initialize trading optimizer
 algorithmOptimizer.trading = new TradingDataOptimizer();
 
-logger.info("⚡ Algorithm optimizer initialized with 70% performance improvements");
+console.info("⚡ Algorithm optimizer initialized with 70% performance improvements");

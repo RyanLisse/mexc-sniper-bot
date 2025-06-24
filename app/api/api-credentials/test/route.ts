@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -15,15 +14,13 @@ import {
 } from "../../../../src/schemas/mexc-api-validation-schemas";
 import { apiCredentialsTestService } from "../../../../src/services/api-credentials-test-service";
 
-const logger = createSafeLogger('route');
-
 // POST /api/api-credentials/test
 export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) => {
   const startTime = Date.now();
   const requestId = `api_cred_test_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   
   try {
-    logger.info('[API] API credentials test endpoint called', {
+    console.info('[API] API credentials test endpoint called', {
       requestId,
       userAuthenticated: !!user,
       userId: user?.id,
@@ -35,7 +32,7 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
     // Validate request body with Zod schema
     const validation = validateMexcApiRequest(ApiCredentialsTestRequestSchema, body);
     if (!validation.success) {
-      logger.info('[API] Request validation failed', {
+      console.info('[API] Request validation failed', {
         requestId,
         error: validation.error,
         details: validation.details
@@ -53,7 +50,7 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
 
     const testRequest: ApiCredentialsTestRequest = validation.data;
 
-    logger.info('[API] Validated test request', {
+    console.info('[API] Validated test request', {
       requestId,
       providedUserId: testRequest.userId,
       authenticatedUserId: user?.id,
@@ -68,7 +65,7 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
     );
 
     if (!testResult.success) {
-      logger.info('[API] Credential test failed', {
+      console.info('[API] Credential test failed', {
         requestId,
         error: testResult.error,
         code: testResult.code,
@@ -94,7 +91,7 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
       );
     }
 
-    logger.info('[API] Credential test completed successfully', {
+    console.info('[API] Credential test completed successfully', {
       requestId,
       userId: testRequest.userId,
       provider: testRequest.provider,
@@ -114,7 +111,7 @@ export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) =
     );
 
   } catch (error) {
-    logger.error('[API] Unexpected error in credentials test:', {
+    console.error('[API] Unexpected error in credentials test:', {
       requestId,
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

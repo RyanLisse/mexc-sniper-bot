@@ -27,10 +27,6 @@ import { UnifiedTakeProfitSettings } from "../../src/components/unified-take-pro
 import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "../../src/hooks/use-user-preferences";
 import { TakeProfitStrategy, TAKE_PROFIT_STRATEGIES, getTakeProfitStrategyById } from "../../src/types/take-profit-strategies";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { createSafeLogger } from '../../src/lib/structured-logger';
-
-const logger = createSafeLogger('page');
-
 export default function SettingsPage() {
   const { toast } = useToast();
   const { user, isLoading: userLoading } = useKindeBrowserClient();
@@ -50,8 +46,6 @@ export default function SettingsPage() {
 
   // State for form values
   const [isDirty, setIsDirty] = useState(false);
-
-
 
   // Enhanced take profit strategy
   const [takeProfitStrategy, setTakeProfitStrategy] = useState(
@@ -112,7 +106,7 @@ export default function SettingsPage() {
 
   // Handle saving editable take-profit table
   const handleSaveMultiLevelTakeProfit = async (levels: any[]) => {
-    logger.info('Saving multi-level take-profit levels:', levels);
+    console.info('Saving multi-level take-profit levels:', levels);
 
     // Update the multi-level configuration
     const updatedConfig = {
@@ -135,9 +129,9 @@ export default function SettingsPage() {
         description: "Your advanced take-profit configuration has been updated successfully.",
       });
 
-      logger.info('✅ Successfully saved multi-level take-profit configuration');
+      console.info('✅ Successfully saved multi-level take-profit configuration');
     } catch (error) {
-      logger.error('❌ Failed to save multi-level take-profit configuration:', { error: error instanceof Error ? error.message : String(error) });
+      console.error('❌ Failed to save multi-level take-profit configuration:', { error: error instanceof Error ? error.message : String(error) });
 
       toast({
         title: "Error saving take-profit configuration",
@@ -263,7 +257,6 @@ export default function SettingsPage() {
             <TabsTrigger value="risk">Risk Management</TabsTrigger>
             <TabsTrigger value="automation">Automation</TabsTrigger>
           </TabsList>
-
 
           {/* Take Profit Tab */}
           <TabsContent value="profit" className="space-y-4">

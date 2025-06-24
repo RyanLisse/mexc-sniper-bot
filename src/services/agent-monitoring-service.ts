@@ -1,4 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
 import type {
   AgentRegistryStats,
   AgentStatus,
@@ -6,6 +5,8 @@ import type {
 } from "../mexc-agents/coordination/agent-registry";
 import { getGlobalAgentRegistry } from "../mexc-agents/coordination/agent-registry";
 import { ErrorLoggingService } from "./error-logging-service";
+import { BaseService } from "../lib/logger-injection";
+import type { ILogger } from "../lib/structured-logger";
 
 export interface MonitoringAlert {
   id: string;
@@ -90,9 +91,7 @@ export interface MonitoringConfig {
 /**
  * Centralized monitoring service for all agent health and performance metrics
  */
-export class AgentMonitoringService {
-  private logger = createSafeLogger("agent-monitoring-service");
-
+export class AgentMonitoringService extends BaseService {
   private static instance: AgentMonitoringService | null = null;
   private config: MonitoringConfig;
   private alerts: Map<string, MonitoringAlert> = new Map();
@@ -104,7 +103,8 @@ export class AgentMonitoringService {
   private alertIdCounter = 0;
   private reportIdCounter = 0;
 
-  private constructor(config?: Partial<MonitoringConfig>) {
+  private constructor(config?: Partial<MonitoringConfig>, logger?: ILogger) {
+    super("agent-monitoring-service", logger);
     this.config = {
       enabled: true,
       alertThresholds: {
@@ -137,9 +137,9 @@ export class AgentMonitoringService {
   /**
    * Get singleton instance
    */
-  public static getInstance(config?: Partial<MonitoringConfig>): AgentMonitoringService {
+  public static getInstance(config?: Partial<MonitoringConfig>, logger?: ILogger): AgentMonitoringService {
     if (!AgentMonitoringService.instance) {
-      AgentMonitoringService.instance = new AgentMonitoringService(config);
+      AgentMonitoringService.instance = new AgentMonitoringService(config, logger);
     }
     return AgentMonitoringService.instance;
   }
@@ -149,12 +149,12 @@ export class AgentMonitoringService {
    */
   public start(): void {
     if (this.isRunning) {
-      logger.warn("[AgentMonitoringService] Service is already running");
+      this.logger.warn("[AgentMonitoringService] Service is already running");
       return;
     }
 
     if (!this.config.enabled) {
-      logger.info("[AgentMonitoringService] Service is disabled");
+      this.logger.info("[AgentMonitoringService] Service is disabled");
       return;
     }
 
@@ -165,7 +165,7 @@ export class AgentMonitoringService {
       try {
         await this.performHealthCheck();
       } catch (error) {
-        logger.error("[AgentMonitoringService] Health check failed:", error);
+        this.logger.error("[AgentMonitoringService] Health check failed:", error);
         await this.errorLoggingService.logError(error as Error, {
           service: "AgentMonitoringService",
           operation: "performHealthCheck",
@@ -179,7 +179,7 @@ export class AgentMonitoringService {
         try {
           await this.generateReport();
         } catch (error) {
-          logger.error("[AgentMonitoringService] Report generation failed:", error);
+          this.logger.error("[AgentMonitoringService] Report generation failed:", error);
           await this.errorLoggingService.logError(error as Error, {
             service: "AgentMonitoringService",
             operation: "generateReport",
@@ -188,7 +188,7 @@ export class AgentMonitoringService {
       }, this.config.reporting.interval);
     }
 
-    logger.info("[AgentMonitoringService] Monitoring service started");
+    this.logger.info("[AgentMonitoringService] Monitoring service started");
   }
 
   /**
@@ -206,7 +206,7 @@ export class AgentMonitoringService {
     }
 
     this.isRunning = false;
-    logger.info("[AgentMonitoringService] Monitoring service stopped");
+    this.logger.info("[AgentMonitoringService] Monitoring service stopped");
   }
 
   /**
@@ -402,7 +402,7 @@ export class AgentMonitoringService {
     await this.sendNotification(alert);
 
     // Log alert
-    logger.info(
+    this.logger.info(
       `[AgentMonitoringService] Alert generated: ${alert.severity.toUpperCase()} - ${alert.title}`
     );
 
@@ -421,11 +421,11 @@ export class AgentMonitoringService {
     if (channels.includes("console")) {
       const prefix =
         alert.severity === "critical" ? "🚨" : alert.severity === "warning" ? "⚠️" : "ℹ️";
-      logger.info(`${prefix} [${alert.severity.toUpperCase()}] ${alert.title}: ${alert.message}`);
+      this.logger.info(`${prefix} [${alert.severity.toUpperCase()}] ${alert.title}: ${alert.message}`);
 
       if (alert.suggestedActions && alert.suggestedActions.length > 0) {
-        logger.info("   Suggested actions:");
-        alert.suggestedActions.forEach((action) => logger.info(`   - ${action}`));
+        this.logger.info("   Suggested actions:");
+        alert.suggestedActions.forEach((action) => this.logger.info(`   - ${action}`));
       }
     }
 
@@ -442,7 +442,7 @@ export class AgentMonitoringService {
           }),
         });
       } catch (error) {
-        logger.error("[AgentMonitoringService] Webhook notification failed:", error);
+        this.logger.error("[AgentMonitoringService] Webhook notification failed:", error);
       }
     }
 
@@ -522,7 +522,7 @@ export class AgentMonitoringService {
     // Clean up old reports
     this.cleanupOldReports();
 
-    logger.info(`[AgentMonitoringService] Generated monitoring report: ${reportId}`);
+    this.logger.info(`[AgentMonitoringService] Generated monitoring report: ${reportId}`);
     return report;
   }
 
@@ -549,7 +549,7 @@ export class AgentMonitoringService {
     if (alert && !alert.resolved) {
       alert.resolved = true;
       alert.resolvedAt = new Date();
-      logger.info(`[AgentMonitoringService] Alert resolved: ${alertId}`);
+      this.logger.info(`[AgentMonitoringService] Alert resolved: ${alertId}`);
       return true;
     }
     return false;
@@ -560,7 +560,7 @@ export class AgentMonitoringService {
    */
   public updateConfig(newConfig: Partial<MonitoringConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    logger.info("[AgentMonitoringService] Configuration updated");
+    this.logger.info("[AgentMonitoringService] Configuration updated");
   }
 
   /**
@@ -721,7 +721,7 @@ export class AgentMonitoringService {
     this.alertIdCounter = 0;
     this.reportIdCounter = 0;
     AgentMonitoringService.instance = null;
-    logger.info("[AgentMonitoringService] Service destroyed");
+    this.logger.info("[AgentMonitoringService] Service destroyed");
   }
 
   /**

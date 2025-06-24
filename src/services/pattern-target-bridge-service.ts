@@ -8,7 +8,6 @@
 
 import type { PatternMatch } from "../core/pattern-detection";
 import { PatternDetectionCore } from "../core/pattern-detection";
-import { createSafeLogger } from "../lib/structured-logger";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 export interface PatternEventData {
@@ -37,7 +36,12 @@ export interface BridgeStatistics {
 
 export class PatternTargetBridgeService {
   private static instance: PatternTargetBridgeService;
-  private logger = createSafeLogger("pattern-target-bridge");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[pattern-target-bridge]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[pattern-target-bridge]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[pattern-target-bridge]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[pattern-target-bridge]', message, context || ''),
+    };
   private isListening = false;
 
   // Statistics tracking
@@ -55,7 +59,7 @@ export class PatternTargetBridgeService {
   private processingTimes: number[] = [];
 
   private constructor() {
-    this.logger.info("Pattern-Target Bridge Service initialized");
+    console.info("Pattern-Target Bridge Service initialized");
   }
 
   static getInstance(): PatternTargetBridgeService {
@@ -70,7 +74,7 @@ export class PatternTargetBridgeService {
    */
   startListening(defaultUserId = "system"): void {
     if (this.isListening) {
-      this.logger.warn("Pattern-Target Bridge already listening");
+      console.warn("Pattern-Target Bridge already listening");
       return;
     }
 
@@ -83,7 +87,7 @@ export class PatternTargetBridgeService {
     );
 
     this.isListening = true;
-    this.logger.info("Pattern-Target Bridge started - listening for pattern detection events", {
+    console.info("Pattern-Target Bridge started - listening for pattern detection events", {
       defaultUserId,
       listeningFor: ["ready_state", "advance_opportunities", "pre_ready"],
     });
@@ -94,13 +98,13 @@ export class PatternTargetBridgeService {
    */
   stopListening(): void {
     if (!this.isListening) {
-      this.logger.warn("Pattern-Target Bridge not currently listening");
+      console.warn("Pattern-Target Bridge not currently listening");
       return;
     }
 
     PatternDetectionCore.getInstance().removeAllListeners("patterns_detected");
     this.isListening = false;
-    this.logger.info("Pattern-Target Bridge stopped listening");
+    console.info("Pattern-Target Bridge stopped listening");
   }
 
   /**
@@ -113,7 +117,7 @@ export class PatternTargetBridgeService {
     const startTime = Date.now();
 
     try {
-      this.logger.info("Processing pattern detection event", {
+      console.info("Processing pattern detection event", {
         patternType: eventData.patternType,
         matchesCount: eventData.matches.length,
         source: eventData.metadata.source,
@@ -124,7 +128,7 @@ export class PatternTargetBridgeService {
       const eligibleMatches = this.filterEligibleMatches(eventData.matches, eventData.patternType);
 
       if (eligibleMatches.length === 0) {
-        this.logger.info("No eligible matches for target creation", {
+        console.info("No eligible matches for target creation", {
           patternType: eventData.patternType,
           totalMatches: eventData.matches.length,
           filteredMatches: eligibleMatches.length,
@@ -144,7 +148,7 @@ export class PatternTargetBridgeService {
       const successfulTargets = targetResults.filter((r) => r.success).length;
       const failedTargets = targetResults.filter((r) => !r.success).length;
 
-      this.logger.info("Pattern-to-target integration completed", {
+      console.info("Pattern-to-target integration completed", {
         patternType: eventData.patternType,
         eligibleMatches: eligibleMatches.length,
         successfulTargets,
@@ -162,7 +166,7 @@ export class PatternTargetBridgeService {
           .filter((r) => r.success && r.targetId)
           .map((r) => r.targetId);
 
-        this.logger.info("Snipe targets created and ready for auto-execution", {
+        console.info("Snipe targets created and ready for auto-execution", {
           patternType: eventData.patternType,
           targetIds,
           count: successfulTargets,
@@ -176,14 +180,14 @@ export class PatternTargetBridgeService {
           .filter((r) => !r.success)
           .map((r) => ({ error: r.error, reason: r.reason }));
 
-        this.logger.warn("Some target creations failed", {
+        console.warn("Some target creations failed", {
           patternType: eventData.patternType,
           failedCount: failedTargets,
           failures,
         });
       }
     } catch (error) {
-      this.logger.error(
+      console.error(
         "Failed to process pattern detection event",
         {
           patternType: eventData.patternType,
@@ -340,7 +344,7 @@ export class PatternTargetBridgeService {
       averageProcessingTime: 0,
     };
     this.processingTimes = [];
-    this.logger.info("Pattern-Target Bridge statistics reset");
+    console.info("Pattern-Target Bridge statistics reset");
   }
 
   /**

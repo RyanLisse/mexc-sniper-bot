@@ -135,7 +135,7 @@ async function migrateFile(analysis: FileAnalysis): Promise<void> {
       
       if (lastImportIndex !== -1) {
         const insertPoint = content.indexOf('\n', lastImportIndex) + 1;
-        const loggerImport = `import { createSafeLogger } from '../lib/structured-logger';\n`;
+        const loggerImport = `\n`;
         content = content.slice(0, insertPoint) + loggerImport + content.slice(insertPoint);
         modified = true;
         stats.filesWithLoggerAdded++;
@@ -162,14 +162,14 @@ async function migrateFile(analysis: FileAnalysis): Promise<void> {
         // Add as module-level constant
         const functionStart = content.indexOf(functionMatch[0]);
         insertPoint = functionStart;
-        loggerDeclaration = `const logger = createSafeLogger('${analysis.suggestedLoggerName}');\n\n`;
+        loggerDeclaration = `\n\n`;
       } else {
         // Add at the top after imports
         const lastImport = content.lastIndexOf('import');
         if (lastImport !== -1) {
           const nextLine = content.indexOf('\n', lastImport);
           insertPoint = nextLine + 1;
-          loggerDeclaration = `\nconst logger = createSafeLogger('${analysis.suggestedLoggerName}');\n`;
+          loggerDeclaration = `\n\n`;
         }
       }
       
@@ -186,17 +186,17 @@ async function migrateFile(analysis: FileAnalysis): Promise<void> {
     const replacements = [
       {
         pattern: /console\.log\s*\(/g,
-        replacement: 'logger.info(',
+        replacement: 'console.info(',
         logLevel: 'info'
       },
       {
         pattern: /console\.warn\s*\(/g,
-        replacement: 'logger.warn(',
+        replacement: 'console.warn(',
         logLevel: 'warn'
       },
       {
         pattern: /console\.error\s*\(/g,
-        replacement: 'logger.error(',
+        replacement: 'console.error(',
         logLevel: 'error'
       },
       {
@@ -206,7 +206,7 @@ async function migrateFile(analysis: FileAnalysis): Promise<void> {
       },
       {
         pattern: /console\.info\s*\(/g,
-        replacement: 'logger.info(',
+        replacement: 'console.info(',
         logLevel: 'info'
       }
     ];

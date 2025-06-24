@@ -1,15 +1,18 @@
 import { lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { executionHistory, workflowActivity } from "../db/schema";
-import { createSafeLogger } from "../lib/structured-logger";
-
 /**
  * Data Archival Service
  * Manages automatic archival of old execution history and activity logs
  * to maintain database performance and manage storage growth
  */
 export class DataArchivalService {
-  private logger = createSafeLogger("data-archival-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[data-archival-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[data-archival-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[data-archival-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[data-archival-service]', message, context || ''),
+    };
 
   private static instance: DataArchivalService;
   private isArchiving = false;
@@ -35,11 +38,11 @@ export class DataArchivalService {
    */
   async startArchival(): Promise<void> {
     if (this.isArchiving) {
-      logger.info("📦 Data archival already running");
+      console.info("📦 Data archival already running");
       return;
     }
 
-    logger.info("🚀 Starting automatic data archival service...");
+    console.info("🚀 Starting automatic data archival service...");
     this.isArchiving = true;
 
     // Run initial archival
@@ -51,13 +54,13 @@ export class DataArchivalService {
         try {
           await this.performArchival();
         } catch (error) {
-          logger.error("❌ Error in scheduled archival:", error);
+          console.error("❌ Error in scheduled archival:", error);
         }
       },
       this.ARCHIVAL_INTERVAL_HOURS * 60 * 60 * 1000
     );
 
-    logger.info(
+    console.info(
       `✅ Data archival service started (runs every ${this.ARCHIVAL_INTERVAL_HOURS} hours)`
     );
   }
@@ -71,14 +74,14 @@ export class DataArchivalService {
       this.archivalInterval = undefined;
     }
     this.isArchiving = false;
-    logger.info("⏹️ Data archival service stopped");
+    console.info("⏹️ Data archival service stopped");
   }
 
   /**
    * Perform archival operations
    */
   private async performArchival(): Promise<void> {
-    logger.info("📦 Starting data archival process...");
+    console.info("📦 Starting data archival process...");
 
     const startTime = Date.now();
     let totalArchived = 0;
@@ -96,10 +99,10 @@ export class DataArchivalService {
       await this.vacuumDatabase();
 
       const duration = Date.now() - startTime;
-      logger.info(`✅ Data archival completed in ${duration}ms`);
-      logger.info(`📊 Total records archived: ${totalArchived}`);
+      console.info(`✅ Data archival completed in ${duration}ms`);
+      console.info(`📊 Total records archived: ${totalArchived}`);
     } catch (error) {
-      logger.error("❌ Error during data archival:", error);
+      console.error("❌ Error during data archival:", error);
     }
   }
 
@@ -110,7 +113,7 @@ export class DataArchivalService {
     const cutoffDate = new Date(
       Date.now() - this.EXECUTION_HISTORY_RETENTION_DAYS * 24 * 60 * 60 * 1000
     );
-    logger.info(`📦 Archiving execution history older than ${cutoffDate.toISOString()}`);
+    console.info(`📦 Archiving execution history older than ${cutoffDate.toISOString()}`);
 
     let totalArchived = 0;
 
@@ -120,11 +123,11 @@ export class DataArchivalService {
       const recordsToArchive = 0;
 
       if (recordsToArchive === 0) {
-        logger.info("📦 No execution history records to archive");
+        console.info("📦 No execution history records to archive");
         return 0;
       }
 
-      logger.info(`📦 Found ${recordsToArchive} execution history records to archive`);
+      console.info(`📦 Found ${recordsToArchive} execution history records to archive`);
 
       // Archive in batches to avoid overwhelming the system
       let batchCount = 0;
@@ -141,7 +144,7 @@ export class DataArchivalService {
         if (oldRecords.length === 0) break;
 
         batchCount++;
-        logger.info(
+        console.info(
           `📦 Processing batch ${batchCount}/${totalBatches} (${oldRecords.length} records)`
         );
 
@@ -168,10 +171,10 @@ export class DataArchivalService {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
-      logger.info(`✅ Archived ${totalArchived} execution history records`);
+      console.info(`✅ Archived ${totalArchived} execution history records`);
       return totalArchived;
     } catch (error) {
-      logger.error("❌ Error archiving execution history:", error);
+      console.error("❌ Error archiving execution history:", error);
       return totalArchived;
     }
   }
@@ -183,7 +186,7 @@ export class DataArchivalService {
     const cutoffDate = new Date(
       Date.now() - this.WORKFLOW_ACTIVITY_RETENTION_DAYS * 24 * 60 * 60 * 1000
     );
-    logger.info(`📦 Archiving workflow activity older than ${cutoffDate.toISOString()}`);
+    console.info(`📦 Archiving workflow activity older than ${cutoffDate.toISOString()}`);
 
     let totalArchived = 0;
 
@@ -193,11 +196,11 @@ export class DataArchivalService {
       const recordsToArchive = 0;
 
       if (recordsToArchive === 0) {
-        logger.info("📦 No workflow activity records to archive");
+        console.info("📦 No workflow activity records to archive");
         return 0;
       }
 
-      logger.info(`📦 Found ${recordsToArchive} workflow activity records to archive`);
+      console.info(`📦 Found ${recordsToArchive} workflow activity records to archive`);
 
       // Delete old workflow activity records (they're less critical than execution history)
       const _deleteResult = await db
@@ -205,10 +208,10 @@ export class DataArchivalService {
         .where(lte(workflowActivity.timestamp, cutoffDate));
 
       totalArchived = recordsToArchive;
-      logger.info(`✅ Archived ${totalArchived} workflow activity records`);
+      console.info(`✅ Archived ${totalArchived} workflow activity records`);
       return totalArchived;
     } catch (error) {
-      logger.error("❌ Error archiving workflow activity:", error);
+      console.error("❌ Error archiving workflow activity:", error);
       return totalArchived;
     }
   }
@@ -218,7 +221,7 @@ export class DataArchivalService {
    */
   private async vacuumDatabase(): Promise<void> {
     try {
-      logger.info("🧹 Running database vacuum to reclaim space...");
+      console.info("🧹 Running database vacuum to reclaim space...");
 
       // Run VACUUM to reclaim space from deleted records
       await db.execute(sql`VACUUM`);
@@ -226,9 +229,9 @@ export class DataArchivalService {
       // Run ANALYZE to update query planner statistics
       await db.execute(sql`ANALYZE`);
 
-      logger.info("✅ Database vacuum completed");
+      console.info("✅ Database vacuum completed");
     } catch (error) {
-      logger.error("❌ Error during database vacuum:", error);
+      console.error("❌ Error during database vacuum:", error);
     }
   }
 
@@ -253,7 +256,7 @@ export class DataArchivalService {
         isArchiving: this.isArchiving,
       };
     } catch (error) {
-      logger.error("❌ Error getting archival stats:", error);
+      console.error("❌ Error getting archival stats:", error);
       return {
         executionHistoryCount: 0,
         workflowActivityCount: 0,
@@ -277,7 +280,7 @@ export class DataArchivalService {
     }
 
     try {
-      logger.info("🚀 Manual archival triggered");
+      console.info("🚀 Manual archival triggered");
       const startTime = Date.now();
 
       const executionHistoryArchived = await this.archiveExecutionHistory();
@@ -287,10 +290,10 @@ export class DataArchivalService {
       const totalArchived = executionHistoryArchived + workflowActivityArchived;
       const duration = Date.now() - startTime;
 
-      logger.info(`✅ Manual archival completed in ${duration}ms`);
+      console.info(`✅ Manual archival completed in ${duration}ms`);
       return { success: true, recordsArchived: totalArchived };
     } catch (error) {
-      logger.error("❌ Manual archival failed:", error);
+      console.error("❌ Manual archival failed:", error);
       return {
         success: false,
         recordsArchived: 0,

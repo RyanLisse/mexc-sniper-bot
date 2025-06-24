@@ -1,11 +1,8 @@
 import { emergencyRecoveryService } from "../lib/emergency-recovery";
 import { getConnectivityStatus, performSystemHealthCheck } from "../lib/health-checks";
-import { createSafeLogger } from "../lib/structured-logger";
 import { inngest } from "./client";
 
 // Helper function to update workflow status
-const logger = createSafeLogger("scheduled-functions");
-
 async function updateWorkflowStatus(action: string, data: unknown) {
   try {
     // Use environment variable or default to localhost for development
@@ -23,10 +20,10 @@ async function updateWorkflowStatus(action: string, data: unknown) {
     });
 
     if (!response.ok) {
-      logger.warn("Failed to update workflow status:", response.statusText);
+      console.warn("Failed to update workflow status:", response.statusText);
     }
   } catch (error) {
-    logger.warn("Error updating workflow status:", error);
+    console.warn("Error updating workflow status:", error);
   }
 }
 
@@ -35,7 +32,7 @@ export const scheduledCalendarMonitoring = inngest.createFunction(
   { id: "scheduled-calendar-monitoring" },
   { cron: "*/30 * * * *" }, // Every 30 minutes
   async ({ step }) => {
-    logger.info("[Scheduled] Starting calendar monitoring cycle");
+    console.info("[Scheduled] Starting calendar monitoring cycle");
 
     await updateWorkflowStatus("addActivity", {
       activity: {
@@ -78,7 +75,7 @@ export const scheduledPatternAnalysis = inngest.createFunction(
   { id: "scheduled-pattern-analysis" },
   { cron: "*/15 * * * *" }, // Every 15 minutes
   async ({ step }) => {
-    logger.info("[Scheduled] Starting pattern analysis cycle");
+    console.info("[Scheduled] Starting pattern analysis cycle");
 
     await updateWorkflowStatus("addActivity", {
       activity: {
@@ -122,7 +119,7 @@ export const scheduledHealthCheck = inngest.createFunction(
   { id: "scheduled-health-check" },
   { cron: "*/5 * * * *" }, // Every 5 minutes
   async ({ step }) => {
-    logger.info("[Scheduled] Starting health check");
+    console.info("[Scheduled] Starting health check");
 
     // Step 1: Check system health metrics
     const healthResult = await step.run("system-health-check", async () => {
@@ -229,7 +226,7 @@ export const scheduledDailyReport = inngest.createFunction(
   { id: "scheduled-daily-report" },
   { cron: "0 9 * * *" }, // Daily at 9 AM UTC
   async ({ step }) => {
-    logger.info("[Scheduled] Generating daily report");
+    console.info("[Scheduled] Generating daily report");
 
     await updateWorkflowStatus("addActivity", {
       activity: {
@@ -256,7 +253,7 @@ export const scheduledDailyReport = inngest.createFunction(
 
         return metrics;
       } catch (error) {
-        logger.error("Failed to collect daily metrics from database:", error);
+        console.error("Failed to collect daily metrics from database:", error);
 
         // Fallback to minimal metrics if database query fails
         return {
@@ -304,7 +301,7 @@ export const scheduledIntensiveAnalysis = inngest.createFunction(
   { id: "scheduled-intensive-analysis" },
   { cron: "0 */2 * * *" }, // Every 2 hours
   async ({ step }) => {
-    logger.info("[Scheduled] Starting intensive analysis cycle");
+    console.info("[Scheduled] Starting intensive analysis cycle");
 
     await updateWorkflowStatus("addActivity", {
       activity: {
@@ -362,7 +359,7 @@ export const emergencyResponseHandler = inngest.createFunction(
   async ({ event, step }) => {
     const { emergencyType, severity, data } = event.data;
 
-    logger.info(`[Emergency] ${emergencyType} detected with severity: ${severity}`);
+    console.info(`[Emergency] ${emergencyType} detected with severity: ${severity}`);
 
     await updateWorkflowStatus("addActivity", {
       activity: {

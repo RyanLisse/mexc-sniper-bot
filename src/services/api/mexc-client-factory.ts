@@ -6,7 +6,6 @@
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { UnifiedMexcConfig } from "./mexc-client-types";
 import { MexcTradingApiClient } from "./mexc-trading-api";
 
@@ -22,14 +21,19 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("mexc-client-factory");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[mexc-client-factory]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-client-factory]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-client-factory]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-client-factory]', message, context || ''),
+    };
     }
     return this._logger;
   }
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);
-    this.logger.info("[UnifiedMexcClient] Initialized with modular architecture");
+    console.info("[UnifiedMexcClient] Initialized with modular architecture");
   }
 
   // ============================================================================
@@ -42,7 +46,7 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
   clearCache(): void {
     this.cache.clear();
     this.clearExchangeCache();
-    this.logger.info("[UnifiedMexcClient] All caches cleared");
+    console.info("[UnifiedMexcClient] All caches cleared");
   }
 
   /**
@@ -73,7 +77,7 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
    */
   updateConfig(config: Partial<UnifiedMexcConfig>): void {
     this.config = { ...this.config, ...config };
-    this.logger.info("[UnifiedMexcClient] Configuration updated");
+    console.info("[UnifiedMexcClient] Configuration updated");
   }
 
   // ============================================================================
@@ -122,7 +126,7 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
         },
       };
     } catch (error) {
-      this.logger.error("[UnifiedMexcClient] Health check failed:", error);
+      console.error("[UnifiedMexcClient] Health check failed:", error);
       return {
         connectivity: false,
         authentication: false,

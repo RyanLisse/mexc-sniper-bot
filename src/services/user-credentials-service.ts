@@ -1,6 +1,5 @@
 import { and, eq } from "drizzle-orm";
 import { apiCredentials, db } from "../db";
-import { createSafeLogger } from "../lib/structured-logger";
 import { getEncryptionService } from "./secure-encryption-service";
 
 export interface DecryptedCredentials {
@@ -19,7 +18,6 @@ export async function getUserCredentials(
   userId: string,
   provider = "mexc"
 ): Promise<DecryptedCredentials | null> {
-  const logger = createSafeLogger("user-credentials-service");
   try {
     // Query the database for user credentials
     const result = await db
@@ -29,7 +27,7 @@ export async function getUserCredentials(
       .limit(1);
 
     if (result.length === 0) {
-      logger.info(
+      console.info(
         `[UserCredentialsService] No credentials found for user ${userId} and provider ${provider}`
       );
       return null;
@@ -38,7 +36,7 @@ export async function getUserCredentials(
     const creds = result[0];
 
     if (!creds.isActive) {
-      logger.info(`[UserCredentialsService] Credentials found but inactive for user ${userId}`);
+      console.info(`[UserCredentialsService] Credentials found but inactive for user ${userId}`);
       return null;
     }
 
@@ -47,7 +45,7 @@ export async function getUserCredentials(
     try {
       encryptionService = getEncryptionService();
     } catch (encryptionError) {
-      logger.error(
+      console.error(
         `[UserCredentialsService] Encryption service initialization failed for user ${userId}:`,
         encryptionError
       );
@@ -69,7 +67,7 @@ export async function getUserCredentials(
         passphrase = encryptionService.decrypt(creds.encryptedPassphrase);
       }
     } catch (decryptError) {
-      logger.error(
+      console.error(
         `[UserCredentialsService] Failed to decrypt credentials for user ${userId}:`,
         decryptError
       );
@@ -91,7 +89,7 @@ export async function getUserCredentials(
       lastUsed: creds.lastUsed || undefined,
     };
   } catch (error) {
-    logger.error(`[UserCredentialsService] Error getting credentials for user ${userId}:`, error);
+    console.error(`[UserCredentialsService] Error getting credentials for user ${userId}:`, error);
     throw error;
   }
 }
@@ -115,7 +113,7 @@ export async function hasUserCredentials(userId: string, provider = "mexc"): Pro
 
     return result.length > 0;
   } catch (error) {
-    logger.error(`[UserCredentialsService] Error checking credentials for user ${userId}:`, error);
+    console.error(`[UserCredentialsService] Error checking credentials for user ${userId}:`, error);
     return false;
   }
 }

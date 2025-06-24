@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -11,10 +10,7 @@ import {
   HTTP_STATUS 
 } from "../../../../src/lib/api-response";
 
-// MOVED: const logger = createSafeLogger('route');
-
 export async function POST(request: NextRequest) {
-  const logger = createSafeLogger('database-migrate');
   try {
     // Security check - only allow in production with proper headers
     const authHeader = request.headers.get('authorization');
@@ -35,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.info("[Migration] Starting database migration in production...");
+    console.info("[Migration] Starting database migration in production...");
     
     // Create PostgreSQL client
     const client = postgres(process.env.DATABASE_URL, {
@@ -47,10 +43,10 @@ export async function POST(request: NextRequest) {
     const db = drizzle(client, { schema });
 
     // Run migrations
-    logger.info("[Migration] Running migrations...");
+    console.info("[Migration] Running migrations...");
     await migrate(db, { migrationsFolder: "./src/db/migrations" });
     
-    logger.info("[Migration] Migrations completed successfully");
+    console.info("[Migration] Migrations completed successfully");
     
     // Close the client connection
     await client.end();
@@ -65,7 +61,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    logger.error("[Migration] Migration failed:", { error: error });
+    console.error("[Migration] Migration failed:", { error: error });
     
     return apiResponse(
       createErrorResponse(

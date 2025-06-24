@@ -10,8 +10,6 @@
  */
 
 import { generateCacheKey, globalCacheManager } from "./cache-manager";
-import { createSafeLogger } from "./structured-logger";
-
 // =======================
 // API Cache Types
 // =======================
@@ -180,7 +178,12 @@ export class APIResponseCache {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("api-response-cache");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[api-response-cache]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[api-response-cache]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[api-response-cache]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[api-response-cache]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -877,14 +880,13 @@ export function withAPICache<_T extends (...args: any[]) => Promise<any>>(
  * Initialize API cache for specific endpoints
  */
 export async function initializeAPICache(endpoints: string[]): Promise<void> {
-  const logger = createSafeLogger("initialize-api-cache");
-  logger.info(`[APIResponseCache] Initializing cache for ${endpoints.length} endpoints`);
+  console.info(`[APIResponseCache] Initializing cache for ${endpoints.length} endpoints`);
 
   for (const endpoint of endpoints) {
     // Pre-warm critical endpoints
     const config = ENDPOINT_CONFIGS[endpoint];
     if (config && config.priority === "critical") {
-      logger.info(`[APIResponseCache] Pre-warming critical endpoint: ${endpoint}`);
+      console.info(`[APIResponseCache] Pre-warming critical endpoint: ${endpoint}`);
       // This would trigger a cache warm-up for critical endpoints
     }
   }
@@ -894,12 +896,11 @@ export async function initializeAPICache(endpoints: string[]): Promise<void> {
  * Refresh cache for specific endpoints
  */
 export async function refreshEndpointCache(endpoint: string): Promise<void> {
-  const logger = createSafeLogger("refresh-endpoint-cache");
-  logger.info(`[APIResponseCache] Refreshing cache for endpoint: ${endpoint}`);
+  console.info(`[APIResponseCache] Refreshing cache for endpoint: ${endpoint}`);
 
   // Invalidate existing cache
   await globalAPIResponseCache.invalidate({ endpoint });
 
   // Trigger refresh (implementation depends on your API client)
-  logger.info(`[APIResponseCache] Cache refreshed for: ${endpoint}`);
+  console.info(`[APIResponseCache] Cache refreshed for: ${endpoint}`);
 }

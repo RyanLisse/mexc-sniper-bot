@@ -1,8 +1,5 @@
 import { checkDatabaseHealth, checkAuthTables } from "../../../../src/lib/db-health-check";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { createHealthResponse, apiResponse, handleApiError } from "../../../../src/lib/api-response";
-
-const logger = createSafeLogger('route');
 
 export async function GET() {
   try {
@@ -35,7 +32,7 @@ export async function GET() {
     const response = createHealthResponse(healthResult);
     return apiResponse(response, isHealthy ? 200 : 503);
   } catch (error) {
-    logger.error("[Health Check] Error:", { error: error });
+    console.error("[Health Check] Error:", { error: error });
     return handleApiError(error, "Database health check failed");
   }
 }

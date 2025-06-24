@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
 import { db } from "../../../../src/db";
 import { workflowActivity, transactionLocks } from "../../../../src/db/schema";
@@ -8,8 +8,13 @@ import { desc, gte } from "drizzle-orm";
 // Server-Sent Events for real-time monitoring
 
 export async function GET(request: NextRequest) {
-  // Build-safe logger initialization inside function
-  const logger = createSafeLogger('real-time-route');
+  // Build-safe logger - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[real-time-route]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[real-time-route]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[real-time-route]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[real-time-route]', message, context || ''),
+  };
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'all';
 
@@ -64,6 +69,14 @@ export async function GET(request: NextRequest) {
 
 // POST endpoint for triggering real-time events
 export async function POST(request: NextRequest) {
+  // Build-safe logger - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[real-time-post]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[real-time-post]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[real-time-post]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[real-time-post]', message, context || ''),
+  };
+  
   try {
     const body = await request.json();
     const { action, data } = body;
@@ -88,6 +101,13 @@ export async function POST(request: NextRequest) {
 }
 
 async function getRealTimeData(type: string) {
+  // Build-safe logger - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[real-time-data]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[real-time-data]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[real-time-data]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[real-time-data]', message, context || ''),
+  };
   const timestamp = new Date().toISOString();
   
   try {
@@ -196,6 +216,14 @@ async function getSystemStatus() {
 }
 
 async function getActiveWorkflows() {
+  // Build-safe logger - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[active-workflows]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[active-workflows]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[active-workflows]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[active-workflows]', message, context || ''),
+  };
+  
   try {
     const workflows = await db
       .select()
@@ -221,6 +249,14 @@ async function getActiveWorkflows() {
 }
 
 async function getTransactionLockStatus() {
+  // Build-safe logger - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[transaction-locks]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[transaction-locks]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[transaction-locks]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[transaction-locks]', message, context || ''),
+  };
+  
   try {
     const locks = await db
       .select()
@@ -367,6 +403,14 @@ function generateAlertMessage(): string {
 
 // Action handlers
 async function triggerWorkflow(data: any) {
+  // Build-safe logger - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[trigger-workflow]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[trigger-workflow]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[trigger-workflow]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[trigger-workflow]', message, context || ''),
+  };
+  
   try {
     const { workflowType, parameters } = data;
     
@@ -387,6 +431,14 @@ async function triggerWorkflow(data: any) {
 }
 
 async function triggerEmergencyStop(data: any) {
+  // Build-safe logger - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[emergency-stop]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[emergency-stop]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[emergency-stop]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[emergency-stop]', message, context || ''),
+  };
+  
   try {
     const { reason, scope } = data;
     
@@ -407,6 +459,14 @@ async function triggerEmergencyStop(data: any) {
 }
 
 async function updateAgentConfig(data: any) {
+  // Build-safe logger - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[update-agent-config]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[update-agent-config]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[update-agent-config]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[update-agent-config]', message, context || ''),
+  };
+  
   try {
     const { agentName, config } = data;
     

@@ -9,7 +9,7 @@
  * - Real-time safety protocol enforcement
  */
 
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { AdvancedRiskEngine } from "../services/advanced-risk-engine";
 import type { EmergencySafetySystem } from "../services/emergency-safety-system";
 import type { AgentConfig } from "./base-agent";
@@ -127,13 +127,13 @@ export interface SafetyMonitorConfig extends SafetyConfig {
  * mechanisms for high-risk trading decisions.
  */
 export class SafetyMonitorAgent extends SafetyBaseAgent {
-  private _logger?: ReturnType<typeof createSafeLogger>;
-  private get logger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("safety-monitor-agent");
-    }
-    return this._logger;
-  }
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[safety-monitor-agent]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[safety-monitor-agent]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[safety-monitor-agent]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[safety-monitor-agent]', message, context || ''),
+  };
 
   private riskEngine?: AdvancedRiskEngine;
   private emergencySystem?: EmergencySafetySystem;
@@ -184,7 +184,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     };
 
     super(config, safetyConfig);
-    logger.info("[SafetyMonitorAgent] Initialized with comprehensive AI safety monitoring");
+    this.logger.info("[SafetyMonitorAgent] Initialized with comprehensive AI safety monitoring");
   }
 
   /**
@@ -193,7 +193,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
   setIntegrations(riskEngine: AdvancedRiskEngine, emergencySystem: EmergencySafetySystem): void {
     this.riskEngine = riskEngine;
     this.emergencySystem = emergencySystem;
-    logger.info("[SafetyMonitorAgent] Integrated with risk engine and emergency system");
+    this.logger.info("[SafetyMonitorAgent] Integrated with risk engine and emergency system");
   }
 
   /**
@@ -928,7 +928,7 @@ Provide analysis in JSON format.`,
   }
 
   private async handleSafetyViolation(violation: SafetyProtocolViolation): Promise<void> {
-    logger.info(
+    this.logger.info(
       `[SafetyMonitorAgent] Handling violation: ${violation.id} - ${violation.description}`
     );
 
@@ -945,16 +945,16 @@ Provide analysis in JSON format.`,
         break;
 
       case "restrict":
-        logger.warn(`[SafetyMonitorAgent] Restricting agent: ${violation.agentId}`);
+        this.logger.warn(`[SafetyMonitorAgent] Restricting agent: ${violation.agentId}`);
         // Would implement agent restriction logic
         break;
 
       case "warn":
-        logger.warn(`[SafetyMonitorAgent] Warning for agent: ${violation.agentId}`);
+        this.logger.warn(`[SafetyMonitorAgent] Warning for agent: ${violation.agentId}`);
         break;
 
       case "monitor":
-        logger.info(`[SafetyMonitorAgent] Monitoring agent: ${violation.agentId}`);
+        this.logger.info(`[SafetyMonitorAgent] Monitoring agent: ${violation.agentId}`);
         break;
     }
 

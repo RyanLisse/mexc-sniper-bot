@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from '../lib/structured-logger';
- * Circuit Breaker Safety Service
+* Circuit Breaker Safety Service
  *
  * Comprehensive service to fix "Circuit breaker in protective state" issues
  * and implement safety validation before enabling auto-sniping operations.
@@ -89,8 +88,6 @@ export interface AutoSnipingSafetyGate {
 // ============================================================================
 
 export class CircuitBreakerSafetyService {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
   private errorHandler: UnifiedErrorHandler;
   private mexcService: any;
   private coordinatedRegistry: CoordinatedCircuitBreakerRegistry;
@@ -103,7 +100,12 @@ export class CircuitBreakerSafetyService {
   private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createSafeLogger("circuit-breaker-safety-service");
+        this._logger = {
+      info: (message: string, context?: any) => console.info('[circuit-breaker-safety-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[circuit-breaker-safety-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[circuit-breaker-safety-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[circuit-breaker-safety-service]', message, context || ''),
+    };
       } catch (error) {
         // Fallback to console logging during build time
         this._logger = {
@@ -347,7 +349,7 @@ export class CircuitBreakerSafetyService {
 
       // FIXED: Auto-sniping is ALWAYS enabled by system design
       // Removed dependency on AUTO_SNIPING_ENABLED environment variable
-      logger.info("ℹ️ Auto-sniping is permanently enabled by system configuration");
+      console.info("ℹ️ Auto-sniping is permanently enabled by system configuration");
 
       // Risk management configuration
       const maxPositionSize = process.env.MAX_POSITION_SIZE;
@@ -634,7 +636,7 @@ export class CircuitBreakerSafetyService {
       // Reset all circuit breakers with emergency authority
       await this.coordinatedRegistry.resetAll(`${this.serviceId}-emergency`);
     } catch (error) {
-      logger.error("Emergency coordination reset failed:", error);
+      console.error("Emergency coordination reset failed:", error);
       throw error;
     }
   }

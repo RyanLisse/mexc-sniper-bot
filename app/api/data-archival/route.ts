@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { dataArchivalService } from "../../../src/services/data-archival-service";
 
-// MOVED: const logger = createSafeLogger('route');
-
 export async function GET() {
-  const logger = createSafeLogger('data-archival');
   try {
     const [status, stats] = await Promise.all([
       dataArchivalService.getStatus(),
@@ -20,7 +16,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    logger.error("❌ Error getting data archival status:", { error: error });
+    console.error("❌ Error getting data archival status:", { error: error });
     return NextResponse.json(
       {
         success: false,
@@ -32,7 +28,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const logger = createSafeLogger('data-archival');
   try {
     const body = await request.json();
     const { action } = body;
@@ -84,7 +79,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    logger.error("❌ Error controlling data archival service:", { error: error });
+    console.error("❌ Error controlling data archival service:", { error: error });
     return NextResponse.json(
       {
         success: false,

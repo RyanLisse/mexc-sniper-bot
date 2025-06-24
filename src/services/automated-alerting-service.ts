@@ -8,7 +8,6 @@ import {
   type SelectAlertInstance,
   type SelectAlertRule,
 } from "../db/schemas/alerts";
-import { createSafeLogger } from "../lib/structured-logger";
 import { AlertCorrelationEngine } from "./alert-correlation-engine";
 import { AnomalyDetectionService } from "./anomaly-detection-service";
 import { NotificationService } from "./notification-providers";
@@ -43,15 +42,18 @@ export interface AlertingConfig {
 }
 
 export class AutomatedAlertingService {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
-  /**
+  private _/**
    * Lazy logger initialization to prevent webpack bundling issues
    */
   private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createSafeLogger("automated-alerting-service");
+        this._logger = {
+      info: (message: string, context?: any) => console.info('[automated-alerting-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[automated-alerting-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[automated-alerting-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[automated-alerting-service]', message, context || ''),
+    };
       } catch (error) {
         this._logger = {
           debug: console.debug.bind(console),
@@ -97,11 +99,11 @@ export class AutomatedAlertingService {
 
   async start(): Promise<void> {
     if (this.isRunning) {
-      logger.warn("AutomatedAlertingService is already running");
+      console.warn("AutomatedAlertingService is already running");
       return;
     }
 
-    logger.info("Starting Automated Alerting Service...");
+    console.info("Starting Automated Alerting Service...");
     this.isRunning = true;
 
     // Initialize ML models if anomaly detection is enabled
@@ -115,7 +117,7 @@ export class AutomatedAlertingService {
       this.config.evaluationIntervalMs
     );
 
-    logger.info(
+    console.info(
       `Alerting service started with ${this.config.evaluationIntervalMs}ms evaluation interval`
     );
   }
@@ -125,7 +127,7 @@ export class AutomatedAlertingService {
       return;
     }
 
-    logger.info("Stopping Automated Alerting Service...");
+    console.info("Stopping Automated Alerting Service...");
     this.isRunning = false;
 
     if (this.evaluationTimer) {
@@ -133,7 +135,7 @@ export class AutomatedAlertingService {
       this.evaluationTimer = null;
     }
 
-    logger.info("Alerting service stopped");
+    console.info("Alerting service stopped");
   }
 
   // ==========================================
@@ -190,12 +192,12 @@ export class AutomatedAlertingService {
     if (!this.isRunning) return;
 
     try {
-      logger.info("Starting alert evaluation cycle...");
+      console.info("Starting alert evaluation cycle...");
 
       // Get all enabled alert rules
       const rules = await this.db.select().from(alertRules).where(eq(alertRules.isEnabled, true));
 
-      logger.info(`Evaluating ${rules.length} alert rules`);
+      console.info(`Evaluating ${rules.length} alert rules`);
 
       // Process rules in batches
       for (let i = 0; i < rules.length; i += this.config.batchSize) {
@@ -211,9 +213,9 @@ export class AutomatedAlertingService {
       // Update analytics
       await this.updateAnalytics();
 
-      logger.info("Alert evaluation cycle completed");
+      console.info("Alert evaluation cycle completed");
     } catch (error) {
-      logger.error("Error during alert evaluation:", error);
+      console.error("Error during alert evaluation:", error);
     }
   }
 
@@ -262,7 +264,7 @@ export class AutomatedAlertingService {
         }
       }
     } catch (error) {
-      logger.error(`Error evaluating rule ${rule.id}:`, error);
+      console.error(`Error evaluating rule ${rule.id}:`, error);
     }
   }
 
@@ -408,7 +410,7 @@ export class AutomatedAlertingService {
     }
 
     // Log alert creation
-    logger.info(`Created alert: ${alertId} - ${evaluation.message}`);
+    console.info(`Created alert: ${alertId} - ${evaluation.message}`);
 
     return alertId;
   }
@@ -475,7 +477,7 @@ export class AutomatedAlertingService {
       await this.notificationService.sendResolutionNotifications(alert[0]);
     }
 
-    logger.info(`Resolved alert: ${alertId}`);
+    console.info(`Resolved alert: ${alertId}`);
   }
 
   // ==========================================
@@ -557,7 +559,7 @@ export class AutomatedAlertingService {
       createdBy,
     });
 
-    logger.info(`Created alert suppression: ${suppressionId}`);
+    console.info(`Created alert suppression: ${suppressionId}`);
     return suppressionId;
   }
 

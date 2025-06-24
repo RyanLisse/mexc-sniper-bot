@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { AgentManager } from "./agent-manager";
 import type { CoordinationSystemManager } from "./coordination-manager";
 import type { DataFetcher } from "./data-fetcher";
@@ -17,7 +17,13 @@ import { WorkflowExecutor } from "./workflow-executor";
  * Extracted from MexcOrchestrator to follow Single Responsibility Principle
  */
 export class WorkflowExecutionService {
-  private logger = createSafeLogger("workflow-execution-service");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[workflow-execution-service]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[workflow-execution-service]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[workflow-execution-service]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[workflow-execution-service]', message, context || ''),
+  };
 
   private workflowExecutor: WorkflowExecutor;
 
@@ -45,8 +51,8 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        logger.warn(
-          "[WorkflowExecutionService] Enhanced coordination failed, falling back to legacy mode:",
+        this.logger.warn(
+          "Enhanced coordination failed, falling back to legacy mode:",
           error
         );
         // Fall through to legacy execution
@@ -84,8 +90,8 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        logger.warn(
-          "[WorkflowExecutionService] Enhanced coordination failed, falling back to legacy mode:",
+        this.logger.warn(
+          "Enhanced coordination failed, falling back to legacy mode:",
           error
         );
         // Fall through to legacy execution
@@ -123,8 +129,8 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        logger.warn(
-          "[WorkflowExecutionService] Enhanced coordination failed, falling back to legacy mode:",
+        this.logger.warn(
+          "Enhanced coordination failed, falling back to legacy mode:",
           error
         );
         // Fall through to legacy execution
@@ -162,8 +168,8 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        logger.warn(
-          "[WorkflowExecutionService] Enhanced coordination failed, falling back to legacy mode:",
+        this.logger.warn(
+          "Enhanced coordination failed, falling back to legacy mode:",
           error
         );
         // Fall through to legacy execution
@@ -194,7 +200,7 @@ export class WorkflowExecutionService {
     agentsUsed: string[],
     context: string
   ): MexcWorkflowResult {
-    logger.error(`[WorkflowExecutionService] ${context}:`, error);
+    this.logger.error(`${context}:`, error);
 
     return {
       success: false,

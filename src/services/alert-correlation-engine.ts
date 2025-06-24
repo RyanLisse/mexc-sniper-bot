@@ -8,8 +8,6 @@ import {
   type SelectAlertCorrelation,
   type SelectAlertInstance,
 } from "../db/schemas/alerts";
-import { createSafeLogger } from "../lib/structured-logger";
-
 export interface CorrelationPattern {
   id: string;
   type: "temporal" | "source" | "metric" | "severity" | "custom";
@@ -48,15 +46,18 @@ export interface AlertSignature {
 }
 
 export class AlertCorrelationEngine {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
-  /**
+  private _/**
    * Lazy logger initialization to prevent webpack bundling issues
    */
   private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createSafeLogger("alert-correlation-engine");
+        this._logger = {
+      info: (message: string, context?: any) => console.info('[alert-correlation-engine]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[alert-correlation-engine]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[alert-correlation-engine]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[alert-correlation-engine]', message, context || ''),
+    };
       } catch (error) {
         this._logger = {
           debug: console.debug.bind(console),
@@ -108,7 +109,7 @@ export class AlertCorrelationEngine {
 
       return null;
     } catch (error) {
-      logger.error("Error finding correlation:", error);
+      console.error("Error finding correlation:", error);
       return null;
     }
   }
@@ -137,7 +138,7 @@ export class AlertCorrelationEngine {
 
       return results;
     } catch (error) {
-      logger.error("Error analyzing recent alerts:", error);
+      console.error("Error analyzing recent alerts:", error);
       return [];
     }
   }
@@ -393,7 +394,7 @@ export class AlertCorrelationEngine {
         .where(eq(alertInstances.id, alert.id));
     }
 
-    logger.info(
+    console.info(
       `Created correlation: ${correlationKey} with ${correlationResult.alerts.length} alerts`
     );
     return correlationKey;
@@ -774,7 +775,7 @@ export class AlertCorrelationEngine {
 
   async addCustomPattern(pattern: CorrelationPattern): Promise<void> {
     this.patterns.set(pattern.id, pattern);
-    logger.info(`Added custom correlation pattern: ${pattern.id}`);
+    console.info(`Added custom correlation pattern: ${pattern.id}`);
   }
 
   getHealthStatus() {

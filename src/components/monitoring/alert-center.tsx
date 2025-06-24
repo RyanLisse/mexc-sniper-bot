@@ -62,8 +62,6 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateChartCellKey, generateListKey, useSkeletonItems } from "../../lib/react-utilities";
-import { createSafeLogger } from "../../lib/structured-logger";
-
 interface Alert {
   id: string;
   severity: string;
@@ -121,8 +119,6 @@ interface AlertTrends {
   }>;
   recommendations: string[];
 }
-
-const logger = createSafeLogger("alert-center");
 
 export function AlertCenter() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -235,7 +231,7 @@ export function AlertCenter() {
           });
         }
       } catch (err) {
-        logger.error("Error parsing real-time alert data:", err);
+        console.error("Error parsing real-time alert data:", err);
       }
     };
 
@@ -305,7 +301,7 @@ export function AlertCenter() {
         );
       }
     } catch (err) {
-      logger.error("Failed to acknowledge alert:", err);
+      console.error("Failed to acknowledge alert:", err);
     }
   };
 
@@ -340,7 +336,7 @@ export function AlertCenter() {
         setSelectedAlerts(new Set());
       }
     } catch (err) {
-      logger.error("Failed to bulk acknowledge alerts:", err);
+      console.error("Failed to bulk acknowledge alerts:", err);
     }
   };
 
@@ -361,7 +357,7 @@ export function AlertCenter() {
         setAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
       }
     } catch (err) {
-      logger.error("Failed to dismiss alert:", err);
+      console.error("Failed to dismiss alert:", err);
     }
   };
 

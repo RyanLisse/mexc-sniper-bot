@@ -1,6 +1,4 @@
 import type { TradingStrategy } from "../db/schemas/strategies";
-import { createSafeLogger } from "../lib/structured-logger";
-
 interface PerformanceMetrics {
   memoryUsage: number;
   executionTime: number;
@@ -16,7 +14,12 @@ interface OptimizationConfig {
 }
 
 export class StrategyPerformanceOptimizer {
-  private logger = createSafeLogger("strategy-performance-optimizer");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[strategy-performance-optimizer]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[strategy-performance-optimizer]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[strategy-performance-optimizer]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[strategy-performance-optimizer]', message, context || ''),
+    };
 
   private static instance: StrategyPerformanceOptimizer;
   private activeExecutions = new Set<string>();
@@ -172,7 +175,7 @@ export class StrategyPerformanceOptimizer {
         estimatedProfit: this.calculateEstimatedProfitOptimized(strategy, currentPrice, levels),
       };
     } catch (error) {
-      logger.error(`Error calculating metrics for strategy ${strategy.id}:`, error);
+      console.error(`Error calculating metrics for strategy ${strategy.id}:`, error);
       return null;
     }
   }
@@ -211,7 +214,7 @@ export class StrategyPerformanceOptimizer {
       const heapUsedMB = memoryUsage.heapUsed / 1024 / 1024;
 
       if (heapUsedMB > this.config.memoryThresholdMB) {
-        logger.warn(
+        console.warn(
           `[Performance] Memory usage high: ${heapUsedMB.toFixed(2)}MB, triggering cleanup`
         );
         await this.performGarbageCollection();
@@ -222,7 +225,7 @@ export class StrategyPerformanceOptimizer {
             10,
             this.config.maxConcurrentExecutions - 5
           );
-          logger.warn(
+          console.warn(
             `[Performance] Reduced concurrent executions to ${this.config.maxConcurrentExecutions}`
           );
         }

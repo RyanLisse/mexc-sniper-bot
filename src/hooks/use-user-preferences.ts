@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "../lib/api-response";
 import { useAuth } from "../lib/kinde-auth-client";
 import { queryKeys } from "../lib/query-client";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { ExitStrategy } from "../types/exit-strategies";
 
 export interface TakeProfitLevels {
@@ -65,8 +64,6 @@ export interface UserTradingPreferences {
 }
 
 // Hook to get user preferences
-const logger = createSafeLogger("use-user-preferences");
-
 export function useUserPreferences(userId?: string) {
   const { user, isAuthenticated } = useAuth();
 
@@ -92,7 +89,7 @@ export function useUserPreferences(userId?: string) {
 
         return apiResponse.data || null;
       } catch (error) {
-        logger.error("[useUserPreferences] Failed to fetch preferences:", error);
+        console.error("[useUserPreferences] Failed to fetch preferences:", error);
         throw error;
       }
     },
@@ -129,7 +126,7 @@ export function useUpdateUserPreferences() {
 
         return apiResponse.data || data;
       } catch (error) {
-        logger.error("[useUpdateUserPreferences] Failed to update preferences:", error);
+        console.error("[useUpdateUserPreferences] Failed to update preferences:", error);
         throw error;
       }
     },

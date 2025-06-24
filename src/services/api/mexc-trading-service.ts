@@ -6,7 +6,6 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { MexcServiceResponse } from "../mexc-schemas";
 import type { MexcApiClient } from "./mexc-api-client-refactored";
 
@@ -64,7 +63,12 @@ export interface CredentialTestResult {
 }
 
 export class MexcTradingService {
-  private logger = createSafeLogger("mexc-trading-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-trading-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-trading-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-trading-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-trading-service]', message, context || ''),
+    };
 
   constructor(private apiClient: MexcApiClient) {}
 
@@ -156,7 +160,7 @@ export class MexcTradingService {
       throw new Error(response.error || "Failed to get order book");
     } catch (error) {
       const safeError = toSafeError(error);
-      logger.error(
+      console.error(
         `[MexcTradingService] Failed to get order book for ${symbol}:`,
         safeError.message
       );

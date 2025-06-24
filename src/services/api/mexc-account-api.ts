@@ -5,7 +5,6 @@
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
-import { createSafeLogger } from "../../lib/structured-logger";
 import { getGlobalErrorRecoveryService } from "../mexc-error-recovery-service";
 import { MexcClientCore } from "./mexc-client-core";
 import type { BalanceEntry, UnifiedMexcConfig, UnifiedMexcResponse } from "./mexc-client-types";
@@ -17,7 +16,12 @@ import { MexcMarketDataClient } from "./mexc-market-data";
 // ============================================================================
 
 export class MexcAccountApiClient extends MexcMarketDataClient {
-  private logger = createSafeLogger("mexc-account-api");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-account-api]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-account-api]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-account-api]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-account-api]', message, context || ''),
+    };
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);
@@ -44,7 +48,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       const response = await this.makeRequest("/api/v3/account", {}, true, true); // Skip cache for account info
       return response as UnifiedMexcResponse<Record<string, unknown>>;
     } catch (error) {
-      this.logger.error("[MexcAccountApi] Account info failed:", error);
+      console.error("[MexcAccountApi] Account info failed:", error);
       return {
         success: false,
         data: {},
@@ -65,7 +69,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
     UnifiedMexcResponse<{ balances: BalanceEntry[]; totalUsdtValue: number; lastUpdated: string }>
   > {
     if (!this.config.apiKey || !this.config.secretKey) {
-      this.logger.error("[MexcAccountApi] MEXC API credentials not configured");
+      console.error("[MexcAccountApi] MEXC API credentials not configured");
       return {
         success: false,
         data: {
@@ -83,7 +87,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
     const recoveryService = getGlobalErrorRecoveryService();
 
     try {
-      this.logger.info("[MexcAccountApi] Fetching account balances with error recovery...");
+      console.info("[MexcAccountApi] Fetching account balances with error recovery...");
 
       // Get account info with balances using error recovery
       const accountResponse = await recoveryService.handleMexcApiCall(
@@ -149,7 +153,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
         .map((balance) => `${balance.asset}USDT`)
         .filter((symbol) => validTradingPairs.has(symbol));
 
-      this.logger.info(`[MexcAccountApi] Need prices for ${symbolsNeeded.length} symbols`);
+      console.info(`[MexcAccountApi] Need prices for ${symbolsNeeded.length} symbols`);
 
       // Fetch prices for specific symbols
       const priceMap = new Map<string, number>();
@@ -161,12 +165,10 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
             const ticker = tickerResponse.data[0];
             const price = ticker?.lastPrice || ticker?.price;
             if (price && Number.parseFloat(price) > 0) {
-              priceMap.set(symbol, Number.parseFloat(price));
-              this.logger.debug(`[MexcAccountApi] Got price for ${symbol}: ${price}`);
-            }
+              priceMap.set(symbol, Number.parseFloat(price));}
           }
         } catch (error) {
-          this.logger.error(`[MexcAccountApi] Failed to get price for ${symbol}:`, error);
+          console.error(`[MexcAccountApi] Failed to get price for ${symbol}:`, error);
         }
       }
 
@@ -199,7 +201,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
               usdtValue,
             });
           } catch (_error) {
-            this.logger.warn("[MexcAccountApi] Invalid balance entry:", balance);
+            console.warn("[MexcAccountApi] Invalid balance entry:", balance);
             return null;
           }
         })
@@ -209,7 +211,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
       const balancesWithValue = balances.filter((b) => (b.usdtValue || 0) > 0);
 
-      this.logger.info(
+      console.info(
         `[MexcAccountApi] Retrieved ${balances.length} non-zero balances (${balancesWithValue.length} with USDT value), total value: ${totalUsdtValue.toFixed(2)} USDT`
       );
 
@@ -224,7 +226,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
         requestId: accountResponse.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcAccountApi] Account balances failed:", error);
+      console.error("[MexcAccountApi] Account balances failed:", error);
 
       // Provide more helpful error messages for common MEXC API issues
       let errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -274,7 +276,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
           }
         : null;
     } catch (error) {
-      this.logger.error("[MexcAccountApi] Failed to get asset balance:", error);
+      console.error("[MexcAccountApi] Failed to get asset balance:", error);
       return null;
     }
   }
@@ -296,7 +298,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       // MEXC account info includes canTrade field
       return Boolean(accountInfo.data?.canTrade);
     } catch (error) {
-      this.logger.error("[MexcAccountApi] Failed to check trading permission:", error);
+      console.error("[MexcAccountApi] Failed to check trading permission:", error);
       return false;
     }
   }
@@ -313,7 +315,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
 
       return (accountInfo.data?.accountType as string) || "SPOT";
     } catch (error) {
-      this.logger.error("[MexcAccountApi] Failed to get account type:", error);
+      console.error("[MexcAccountApi] Failed to get account type:", error);
       return "UNKNOWN";
     }
   }
@@ -330,7 +332,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       const balances = await this.getAccountBalances();
       return balances.success ? balances.data.totalUsdtValue : 0;
     } catch (error) {
-      this.logger.error("[MexcAccountApi] Failed to get portfolio value:", error);
+      console.error("[MexcAccountApi] Failed to get portfolio value:", error);
       return 0;
     }
   }
@@ -347,7 +349,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
 
       return balances.data.balances.filter((b) => (b.usdtValue || 0) > 0).slice(0, limit);
     } catch (error) {
-      this.logger.error("[MexcAccountApi] Failed to get top assets:", error);
+      console.error("[MexcAccountApi] Failed to get top assets:", error);
       return [];
     }
   }
@@ -365,7 +367,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       const availableAmount = Number.parseFloat(balance.free);
       return availableAmount >= requiredAmount;
     } catch (error) {
-      this.logger.error("[MexcAccountApi] Failed to check balance sufficiency:", error);
+      console.error("[MexcAccountApi] Failed to check balance sufficiency:", error);
       return false;
     }
   }

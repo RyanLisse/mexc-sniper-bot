@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { inngest } from "../../../../src/inngest/client";
 
-// MOVED: const logger = createSafeLogger('route');
-
 export async function POST(request: NextRequest) {
-  const logger = createSafeLogger('schedule-control');
+  // Simple console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[schedule-control]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[schedule-control]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[schedule-control]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[schedule-control]', message, context || ''),
+  };
   try {
     const body = await request.json();
     const { action, scheduleType, data } = body;
@@ -149,7 +153,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error('Schedule control error:', { error });
+    console.error('Schedule control error:', { error });
     return NextResponse.json(
       {
         success: false,

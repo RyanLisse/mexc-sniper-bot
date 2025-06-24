@@ -5,7 +5,6 @@
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { CacheEntry, CacheStats } from "./mexc-client-types";
 
 // ============================================================================
@@ -17,7 +16,12 @@ export class MexcRequestCache {
   private maxSize: number;
   private hitCount = 0;
   private missCount = 0;
-  private logger = createSafeLogger("mexc-request-cache");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-request-cache]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-request-cache]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-request-cache]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-request-cache]', message, context || ''),
+    };
 
   constructor(maxSize = 1000) {
     this.maxSize = maxSize;
@@ -49,15 +53,7 @@ export class MexcRequestCache {
       data,
       timestamp: Date.now(),
       ttl,
-    });
-
-    this.logger.debug("Cache set", {
-      key,
-      ttl,
-      cacheSize: this.cache.size,
-      dataType: typeof data,
-    });
-  }
+    });}
 
   /**
    * Retrieve data from cache
@@ -66,9 +62,7 @@ export class MexcRequestCache {
     const entry = this.cache.get(key) as CacheEntry<T> | undefined;
 
     if (!entry) {
-      this.missCount++;
-      this.logger.debug("Cache miss", { key });
-      return null;
+      this.missCount++;return null;
     }
 
     // Check if expired
@@ -108,9 +102,7 @@ export class MexcRequestCache {
    */
   delete(key: string): boolean {
     const result = this.cache.delete(key);
-    if (result) {
-      this.logger.debug("Cache delete", { key });
-    }
+    if (result) {}
     return result;
   }
 
@@ -123,7 +115,7 @@ export class MexcRequestCache {
     this.hitCount = 0;
     this.missCount = 0;
 
-    this.logger.info("Cache cleared", { previousSize });
+    console.info("Cache cleared", { previousSize });
   }
 
   /**
@@ -163,12 +155,7 @@ export class MexcRequestCache {
     const removedCount = expiredKeys.length;
     expiredKeys.forEach((key) => this.cache.delete(key));
 
-    if (removedCount > 0) {
-      this.logger.debug("Cache cleanup completed", {
-        removedCount,
-        remainingSize: this.cache.size,
-      });
-    }
+    if (removedCount > 0) {}
   }
 
   /**
@@ -183,13 +170,7 @@ export class MexcRequestCache {
 
     for (const [key] of toRemove) {
       this.cache.delete(key);
-    }
-
-    this.logger.debug("Removed oldest cache entries", {
-      removedCount: toRemove.length,
-      remainingSize: this.cache.size,
-    });
-  }
+    }}
 
   /**
    * Generate cache key for API requests
@@ -292,7 +273,7 @@ export class CacheWarmer {
     getTicker24hr: () => Promise<unknown>;
   }): Promise<void> {
     try {
-      this.logger.info("Starting cache warm-up");
+      console.info("Starting cache warm-up");
 
       const warmupTasks = [
         apiClient.getServerTime(),
@@ -302,11 +283,11 @@ export class CacheWarmer {
 
       await Promise.allSettled(warmupTasks);
 
-      this.logger.info("Cache warm-up completed", {
+      console.info("Cache warm-up completed", {
         cacheStats: this.cache.getStats(),
       });
     } catch (error) {
-      this.logger.error("Cache warm-up failed", {
+      console.error("Cache warm-up failed", {
         error: error instanceof Error ? error.message : String(error),
       });
     }

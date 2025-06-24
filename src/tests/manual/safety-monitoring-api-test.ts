@@ -6,8 +6,6 @@
  */
 
 import { RealTimeSafetyMonitoringService } from "../../services/real-time-safety-monitoring-modules";
-import { createSafeLogger } from "../lib/structured-logger";
-
 interface TestResult {
   endpoint: string;
   method: string;
@@ -20,7 +18,12 @@ interface TestResult {
 }
 
 class SafetyMonitoringAPITester {
-  private logger = createSafeLogger("safety-monitoring-api-test");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[safety-monitoring-api-test]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[safety-monitoring-api-test]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[safety-monitoring-api-test]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[safety-monitoring-api-test]', message, context || ''),
+    };
 
   private baseUrl = "http://localhost:3000/api/auto-sniping/safety-monitoring";
   private results: TestResult[] = [];
@@ -31,7 +34,7 @@ class SafetyMonitoringAPITester {
   }
 
   async runAllTests(): Promise<TestResult[]> {
-    logger.info("🧪 Starting Safety Monitoring API Tests\n");
+    console.info("🧪 Starting Safety Monitoring API Tests\n");
 
     // Test GET endpoints
     await this.testGetEndpoints();
@@ -50,7 +53,7 @@ class SafetyMonitoringAPITester {
   }
 
   private async testGetEndpoints(): Promise<void> {
-    logger.info("📥 Testing GET endpoints...");
+    console.info("📥 Testing GET endpoints...");
 
     const getTests = [
       { action: "status", description: "Get monitoring status" },
@@ -72,7 +75,7 @@ class SafetyMonitoringAPITester {
     const startTime = Date.now();
 
     try {
-      logger.info(`  Testing: ${description} (${action})`);
+      console.info(`  Testing: ${description} (${action})`);
 
       // Simulate authenticated request (in real test, would include auth headers)
       const url = `${this.baseUrl}?action=${action}`;
@@ -93,7 +96,7 @@ class SafetyMonitoringAPITester {
         details: result.data || result.error,
       });
 
-      logger.info(`  ✅ ${description}: ${responseTime}ms`);
+      console.info(`  ✅ ${description}: ${responseTime}ms`);
     } catch (error) {
       const responseTime = Date.now() - startTime;
       this.results.push({
@@ -105,7 +108,7 @@ class SafetyMonitoringAPITester {
         error: error instanceof Error ? error.message : String(error),
       });
 
-      logger.info(
+      console.info(
         `  ❌ ${description}: Failed - ${error instanceof Error ? error.message : String(error)}`
       );
     }
@@ -222,7 +225,7 @@ class SafetyMonitoringAPITester {
   }
 
   private async testPostEndpoints(): Promise<void> {
-    logger.info("\n📤 Testing POST endpoints...");
+    console.info("\n📤 Testing POST endpoints...");
 
     const postTests = [
       {
@@ -298,7 +301,7 @@ class SafetyMonitoringAPITester {
     const startTime = Date.now();
 
     try {
-      logger.info(`  Testing: ${description} (${action})`);
+      console.info(`  Testing: ${description} (${action})`);
 
       const result = await this.simulatePostRequest(body);
       const responseTime = Date.now() - startTime;
@@ -313,7 +316,7 @@ class SafetyMonitoringAPITester {
         details: result.data || result.error,
       });
 
-      logger.info(`  ✅ ${description}: ${responseTime}ms`);
+      console.info(`  ✅ ${description}: ${responseTime}ms`);
     } catch (error) {
       const responseTime = Date.now() - startTime;
       this.results.push({
@@ -325,7 +328,7 @@ class SafetyMonitoringAPITester {
         error: error instanceof Error ? error.message : String(error),
       });
 
-      logger.info(
+      console.info(
         `  ❌ ${description}: Failed - ${error instanceof Error ? error.message : String(error)}`
       );
     }
@@ -460,7 +463,7 @@ class SafetyMonitoringAPITester {
   }
 
   private async testErrorScenarios(): Promise<void> {
-    logger.info("\n🚨 Testing error scenarios...");
+    console.info("\n🚨 Testing error scenarios...");
 
     const errorTests = [
       {
@@ -488,7 +491,7 @@ class SafetyMonitoringAPITester {
     for (const errorTest of errorTests) {
       const startTime = Date.now();
       try {
-        logger.info(`  Testing: ${errorTest.description}`);
+        console.info(`  Testing: ${errorTest.description}`);
 
         const result = await errorTest.test();
         const responseTime = Date.now() - startTime;
@@ -504,7 +507,7 @@ class SafetyMonitoringAPITester {
           details: result,
         });
 
-        logger.info(
+        console.info(
           `  ${status === "PASS" ? "✅" : "❌"} ${errorTest.description}: ${responseTime}ms`
         );
       } catch (error) {
@@ -517,7 +520,7 @@ class SafetyMonitoringAPITester {
           error: error instanceof Error ? error.message : String(error),
         });
 
-        logger.info(
+        console.info(
           `  ❌ ${errorTest.description}: Unexpected error - ${error instanceof Error ? error.message : String(error)}`
         );
       }
@@ -525,7 +528,7 @@ class SafetyMonitoringAPITester {
   }
 
   private async testEdgeCases(): Promise<void> {
-    logger.info("\n🎯 Testing edge cases...");
+    console.info("\n🎯 Testing edge cases...");
 
     const edgeTests = [
       {
@@ -559,7 +562,7 @@ class SafetyMonitoringAPITester {
     for (const edgeTest of edgeTests) {
       const startTime = Date.now();
       try {
-        logger.info(`  Testing: ${edgeTest.description}`);
+        console.info(`  Testing: ${edgeTest.description}`);
 
         const result = await edgeTest.test();
         const responseTime = Date.now() - startTime;
@@ -572,7 +575,7 @@ class SafetyMonitoringAPITester {
           details: result,
         });
 
-        logger.info(`  ✅ ${edgeTest.description}: ${responseTime}ms`);
+        console.info(`  ✅ ${edgeTest.description}: ${responseTime}ms`);
       } catch (error) {
         this.results.push({
           endpoint: this.baseUrl,
@@ -582,7 +585,7 @@ class SafetyMonitoringAPITester {
           error: error instanceof Error ? error.message : String(error),
         });
 
-        logger.info(
+        console.info(
           `  ❌ ${edgeTest.description}: Failed - ${error instanceof Error ? error.message : String(error)}`
         );
       }
@@ -590,25 +593,25 @@ class SafetyMonitoringAPITester {
   }
 
   private printSummary(): void {
-    logger.info("\n📊 Test Summary:");
-    logger.info("================");
+    console.info("\n📊 Test Summary:");
+    console.info("================");
 
     const totalTests = this.results.length;
     const passedTests = this.results.filter((r) => r.status === "PASS").length;
     const failedTests = this.results.filter((r) => r.status === "FAIL").length;
     const avgResponseTime = this.results.reduce((sum, r) => sum + r.responseTime, 0) / totalTests;
 
-    logger.info(`Total Tests: ${totalTests}`);
-    logger.info(`Passed: ${passedTests} (${Math.round((passedTests / totalTests) * 100)}%)`);
-    logger.info(`Failed: ${failedTests} (${Math.round((failedTests / totalTests) * 100)}%)`);
-    logger.info(`Average Response Time: ${Math.round(avgResponseTime)}ms`);
+    console.info(`Total Tests: ${totalTests}`);
+    console.info(`Passed: ${passedTests} (${Math.round((passedTests / totalTests) * 100)}%)`);
+    console.info(`Failed: ${failedTests} (${Math.round((failedTests / totalTests) * 100)}%)`);
+    console.info(`Average Response Time: ${Math.round(avgResponseTime)}ms`);
 
     // Performance analysis
     const slowTests = this.results.filter((r) => r.responseTime > 1000);
     if (slowTests.length > 0) {
-      logger.info(`\n⚠️  Slow Tests (>1000ms): ${slowTests.length}`);
+      console.info(`\n⚠️  Slow Tests (>1000ms): ${slowTests.length}`);
       slowTests.forEach((test) => {
-        logger.info(
+        console.info(
           `  - ${test.method} ${test.endpoint} (${test.action || "N/A"}): ${test.responseTime}ms`
         );
       });
@@ -617,15 +620,15 @@ class SafetyMonitoringAPITester {
     // Failed tests details
     const failed = this.results.filter((r) => r.status === "FAIL");
     if (failed.length > 0) {
-      logger.info(`\n❌ Failed Tests:`);
+      console.info(`\n❌ Failed Tests:`);
       failed.forEach((test) => {
-        logger.info(
+        console.info(
           `  - ${test.method} ${test.endpoint} (${test.action || "N/A"}): ${test.error || "No error details"}`
         );
       });
     }
 
-    logger.info("\n🎉 Testing completed!");
+    console.info("\n🎉 Testing completed!");
   }
 }
 
@@ -641,7 +644,7 @@ if (require.main === module) {
       process.exit(0);
     })
     .catch((error) => {
-      logger.error("Test execution failed:", error);
+      console.error("Test execution failed:", error);
       process.exit(1);
     });
 }

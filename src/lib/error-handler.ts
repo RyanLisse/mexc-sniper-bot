@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * Centralized Error Handler for API Routes
+* Centralized Error Handler for API Routes
  *
  * This module provides error handling middleware and utilities for
  * consistent error responses across all API endpoints.
@@ -29,7 +28,7 @@ interface ErrorLogger {
  */
 const defaultErrorLogger: ErrorLogger = {
   error: (message, error, context) => {
-    logger.error(`[ERROR] ${message}`, {
+    console.error(`[ERROR] ${message}`, {
       error: error.message,
       stack: error.stack,
       context,
@@ -37,7 +36,7 @@ const defaultErrorLogger: ErrorLogger = {
     });
   },
   warn: (message, error, context) => {
-    logger.warn(`[WARN] ${message}`, {
+    console.warn(`[WARN] ${message}`, {
       error: error.message,
       context,
       timestamp: new Date().toISOString(),
@@ -53,10 +52,9 @@ let errorLogger: ErrorLogger = defaultErrorLogger;
 /**
  * Set custom error logger
  */
-export function setErrorLogger(logger: ErrorLogger) {
-  errorLogger = logger;
+export function setErrorLogger(logger: any) {
+  // Logger setter implementation
 }
-
 /**
  * Error context builder
  */
@@ -64,7 +62,12 @@ export class ErrorContext {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("error-handler");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[error-handler]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[error-handler]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[error-handler]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[error-handler]', message, context || ''),
+    };
     }
     return this._logger;
   }

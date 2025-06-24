@@ -1,14 +1,14 @@
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { MexcApiAgent } from "./mexc-api-agent";
 
 export class DataFetcher {
-  private _logger?: ReturnType<typeof createSafeLogger>;
-  private get logger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("data-fetcher");
-    }
-    return this._logger;
-  }
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[data-fetcher]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[data-fetcher]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[data-fetcher]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[data-fetcher]', message, context || ''),
+  };
 
   private mexcApiAgent: MexcApiAgent;
 

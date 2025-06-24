@@ -10,8 +10,6 @@ import type { PatternMatch } from "@/src/core/pattern-detection";
 import { ApiClient } from "@/src/lib/api-client";
 import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 import type { PatternMonitoringReport } from "@/src/services/pattern-monitoring-service";
-import { createSafeLogger } from "../lib/structured-logger";
-
 interface PatternMonitoringState {
   // Monitoring report data
   report: PatternMonitoringReport | null;
@@ -69,8 +67,6 @@ interface UsePatternMonitoringOptions {
   includePatterns?: boolean;
   patternLimit?: number;
 }
-
-const logger = createSafeLogger("use-pattern-monitoring");
 
 export function usePatternMonitoring(
   options: UsePatternMonitoringOptions = {}
@@ -140,7 +136,7 @@ export function usePatternMonitoring(
         lastUpdated: new Date().toISOString(),
       }));
     } catch (error) {
-      logger.error("[usePatternMonitoring] Failed to load monitoring report:", error);
+      console.error("[usePatternMonitoring] Failed to load monitoring report:", error);
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -169,7 +165,7 @@ export function usePatternMonitoring(
 
       return true;
     } catch (error) {
-      logger.error("[usePatternMonitoring] Failed to start monitoring:", error);
+      console.error("[usePatternMonitoring] Failed to start monitoring:", error);
       setState((prev) => ({
         ...prev,
         isStartingMonitoring: false,
@@ -196,7 +192,7 @@ export function usePatternMonitoring(
 
       return true;
     } catch (error) {
-      logger.error("[usePatternMonitoring] Failed to stop monitoring:", error);
+      console.error("[usePatternMonitoring] Failed to stop monitoring:", error);
       setState((prev) => ({
         ...prev,
         isStoppingMonitoring: false,
@@ -240,7 +236,7 @@ export function usePatternMonitoring(
 
         return response.data.patterns;
       } catch (error) {
-        logger.error("[usePatternMonitoring] Manual detection failed:", error);
+        console.error("[usePatternMonitoring] Manual detection failed:", error);
         setState((prev) => ({
           ...prev,
           isDetecting: false,
@@ -276,7 +272,7 @@ export function usePatternMonitoring(
 
       return true;
     } catch (error) {
-      logger.error("[usePatternMonitoring] Failed to acknowledge alert:", error);
+      console.error("[usePatternMonitoring] Failed to acknowledge alert:", error);
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Failed to acknowledge alert",
@@ -300,7 +296,7 @@ export function usePatternMonitoring(
 
       return response.data.clearedCount;
     } catch (error) {
-      logger.error("[usePatternMonitoring] Failed to clear alerts:", error);
+      console.error("[usePatternMonitoring] Failed to clear alerts:", error);
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Failed to clear alerts",

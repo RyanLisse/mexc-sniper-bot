@@ -1,6 +1,4 @@
 "use client";
-import { createSafeLogger } from "../../lib/structured-logger";
-
 /**
  * Optimization Control Panel
  *
@@ -66,8 +64,6 @@ interface OptimizationControlPanelProps {
   onStartOptimization: (config: OptimizationConfig) => void;
   systemHealth: SystemHealth | null;
 }
-
-const logger = createSafeLogger("optimization-control-panel");
 
 export function OptimizationControlPanel({
   onStartOptimization,
@@ -182,7 +178,7 @@ export function OptimizationControlPanel({
     try {
       await onStartOptimization(config);
     } catch (error) {
-      logger.error("Failed to start optimization:", error);
+      console.error("Failed to start optimization:", error);
     } finally {
       setIsStarting(false);
     }

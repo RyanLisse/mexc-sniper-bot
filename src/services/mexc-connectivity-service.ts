@@ -7,7 +7,6 @@
 
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { ErrorFactory } from "../lib/error-types";
-import { createSafeLogger } from "../lib/structured-logger";
 import {
   type ConnectivityMetrics,
   type ConnectivityTestRequest,
@@ -65,7 +64,12 @@ export interface CredentialTestResult {
 // ============================================================================
 
 export class MexcConnectivityService {
-  private logger = createSafeLogger("mexc-connectivity-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-connectivity-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-connectivity-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-connectivity-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-connectivity-service]', message, context || ''),
+    };
 
   /**
    * Test MEXC connectivity with comprehensive validation and monitoring
@@ -83,7 +87,7 @@ export class MexcConnectivityService {
       includeCredentialTest: request.includeCredentialTest,
     };
 
-    logger.info("[MexcConnectivityService] Starting connectivity test", {
+    console.info("[MexcConnectivityService] Starting connectivity test", {
       requestId: context.requestId,
       userId: context.userId,
       includeCredentialTest: context.includeCredentialTest,
@@ -155,14 +159,14 @@ export class MexcConnectivityService {
       );
 
       if (!responseValidation.success) {
-        logger.error(
+        console.error(
           "[MexcConnectivityService] Response validation failed:",
           responseValidation.error
         );
         // Continue anyway but log the issue
       }
 
-      logger.info("[MexcConnectivityService] Connectivity test completed", {
+      console.info("[MexcConnectivityService] Connectivity test completed", {
         requestId: context.requestId,
         duration: `${Date.now() - context.startTime}ms`,
         connected: response.connected,
@@ -172,7 +176,7 @@ export class MexcConnectivityService {
 
       return { success: true, data: response };
     } catch (error) {
-      logger.error("[MexcConnectivityService] Unexpected error:", {
+      console.error("[MexcConnectivityService] Unexpected error:", {
         requestId: context.requestId,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
@@ -209,7 +213,7 @@ export class MexcConnectivityService {
 
     if (userId) {
       try {
-        logger.info("[MexcConnectivityService] Fetching credentials for user", {
+        console.info("[MexcConnectivityService] Fetching credentials for user", {
           requestId: context?.requestId,
           userId,
         });
@@ -219,7 +223,7 @@ export class MexcConnectivityService {
 
         if (hasUserCredentials) {
           credentialSource = "database";
-          logger.info("[MexcConnectivityService] User credentials found", {
+          console.info("[MexcConnectivityService] User credentials found", {
             requestId: context?.requestId,
             hasApiKey: !!userCredentials?.apiKey,
             hasSecretKey: !!userCredentials?.secretKey,
@@ -233,7 +237,7 @@ export class MexcConnectivityService {
           );
         }
 
-        logger.warn("[MexcConnectivityService] Failed to retrieve user credentials:", {
+        console.warn("[MexcConnectivityService] Failed to retrieve user credentials:", {
           requestId: context?.requestId,
           error: error instanceof Error ? error.message : String(error),
         });
@@ -256,7 +260,7 @@ export class MexcConnectivityService {
   }
 
   private getRecommendedMexcService(userCredentials?: any, context?: ConnectivityTestContext) {
-    logger.info("[MexcConnectivityService] Initializing MEXC service", {
+    console.info("[MexcConnectivityService] Initializing MEXC service", {
       requestId: context?.requestId,
       hasUserCredentials: !!userCredentials,
     });
@@ -305,7 +309,7 @@ export class MexcConnectivityService {
           const avgLatency = totalLatency / (attempt + 1);
           const connectionHealth = this.determineConnectionHealth(avgLatency, retryCount);
 
-          logger.info("[MexcConnectivityService] Connectivity test successful", {
+          console.info("[MexcConnectivityService] Connectivity test successful", {
             requestId: context.requestId,
             attempt: attempt + 1,
             latency: avgLatency,
@@ -340,7 +344,7 @@ export class MexcConnectivityService {
           error: errorMessage,
         });
 
-        logger.error("[MexcConnectivityService] Connectivity test failed", {
+        console.error("[MexcConnectivityService] Connectivity test failed", {
           requestId: context.requestId,
           attempt: attempt + 1,
           maxRetries,
@@ -356,7 +360,7 @@ export class MexcConnectivityService {
             errorMsg.includes("invalid") ||
             errorMsg.includes("unauthorized")
           ) {
-            logger.warn(
+            console.warn(
               "[MexcConnectivityService] Authentication error detected, skipping retries",
               {
                 requestId: context.requestId,
@@ -444,7 +448,7 @@ export class MexcConnectivityService {
     }
 
     try {
-      logger.info("[MexcConnectivityService] Testing credentials", {
+      console.info("[MexcConnectivityService] Testing credentials", {
         requestId: context.requestId,
         source: credentials.source,
       });
@@ -461,7 +465,7 @@ export class MexcConnectivityService {
         error: accountResult.success ? undefined : accountResult.error,
       };
 
-      logger.info("[MexcConnectivityService] Credential test completed", {
+      console.info("[MexcConnectivityService] Credential test completed", {
         requestId: context.requestId,
         isValid: result.isValid,
         status: result.status,
@@ -471,7 +475,7 @@ export class MexcConnectivityService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
-      logger.error("[MexcConnectivityService] Credential test failed", {
+      console.error("[MexcConnectivityService] Credential test failed", {
         requestId: context.requestId,
         error: errorMessage,
       });

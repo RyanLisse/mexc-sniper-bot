@@ -1,5 +1,3 @@
-import { createSafeLogger } from "../structured-logger";
-
 /**
  * Cache Performance Monitor
  *
@@ -26,7 +24,12 @@ export class CachePerformanceMonitor {
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("cache-performance-monitor");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[cache-performance-monitor]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[cache-performance-monitor]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[cache-performance-monitor]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[cache-performance-monitor]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -67,7 +70,7 @@ export class CachePerformanceMonitor {
 
       this.performanceMetrics.set(agentId, metrics);
     } catch (error) {
-      logger.error(`[CachePerformanceMonitor] Error tracking cache hit for ${agentId}:`, error);
+      console.error(`[CachePerformanceMonitor] Error tracking cache hit for ${agentId}:`, error);
     }
   }
 
@@ -103,7 +106,7 @@ export class CachePerformanceMonitor {
 
       this.performanceMetrics.set(agentId, metrics);
     } catch (error) {
-      logger.error(`[CachePerformanceMonitor] Error tracking cache set for ${agentId}:`, error);
+      console.error(`[CachePerformanceMonitor] Error tracking cache set for ${agentId}:`, error);
     }
   }
 
@@ -132,7 +135,7 @@ export class CachePerformanceMonitor {
 
       this.performanceMetrics.set(agentId, metrics);
     } catch (error) {
-      logger.error(`[CachePerformanceMonitor] Error tracking cache miss for ${agentId}:`, error);
+      console.error(`[CachePerformanceMonitor] Error tracking cache miss for ${agentId}:`, error);
     }
   }
 
@@ -162,7 +165,7 @@ export class CachePerformanceMonitor {
 
       this.performanceMetrics.set(agentId, metrics);
     } catch (trackingError) {
-      logger.error(
+      console.error(
         `[CachePerformanceMonitor] Error tracking cache error for ${agentId}:`,
         trackingError
       );
@@ -395,14 +398,14 @@ export class CachePerformanceMonitor {
    */
   startTracking(): void {
     // Reset any existing metrics to start fresh
-    logger.info("[CachePerformanceMonitor] Starting performance tracking");
+    console.info("[CachePerformanceMonitor] Starting performance tracking");
   }
 
   /**
    * Stop performance tracking
    */
   stopTracking(): void {
-    logger.info("[CachePerformanceMonitor] Stopping performance tracking");
+    console.info("[CachePerformanceMonitor] Stopping performance tracking");
     // Keep metrics for analysis but stop active tracking
   }
 

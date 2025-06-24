@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { mexcConnectivityService } from "../../../../src/services/mexc-connectivity-service";
 import { 
   createSuccessResponse,
@@ -14,13 +13,11 @@ import {
 } from "../../../../src/schemas/mexc-api-validation-schemas";
 import { publicRoute } from "../../../../src/lib/auth-decorators";
 
-const logger = createSafeLogger('route');
-
 export const GET = publicRoute(async (request: NextRequest) => {
   const startTime = Date.now();
   
   try {
-    logger.info('[API] MEXC connectivity test request received');
+    console.info('[API] MEXC connectivity test request received');
 
     // Validate query parameters
     const { searchParams } = new URL(request.url);
@@ -45,7 +42,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
 
     const connectivityRequest: ConnectivityTestRequest = queryValidation.data;
 
-    logger.info('[API] Validated connectivity test request', {
+    console.info('[API] Validated connectivity test request', {
       userId: connectivityRequest.userId || 'none',
       includeCredentialTest: connectivityRequest.includeCredentialTest,
       requestDuration: `${Date.now() - startTime}ms`
@@ -55,7 +52,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
     const testResult = await mexcConnectivityService.testConnectivity(connectivityRequest);
 
     if (!testResult.success) {
-      logger.error('[API] Connectivity test failed:', { error: testResult.error });
+      console.error('[API] Connectivity test failed:', { error: testResult.error });
       return apiResponse(
         createErrorResponse(testResult.error, {
           code: testResult.code,
@@ -66,7 +63,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
       );
     }
 
-    logger.info('[API] Connectivity test completed successfully', {
+    console.info('[API] Connectivity test completed successfully', {
       connected: testResult.data.connected,
       credentialsValid: testResult.data.credentialsValid,
       connectionHealth: testResult.data.metrics?.connectionHealth,
@@ -85,7 +82,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
     );
 
   } catch (error) {
-    logger.error('[API] MEXC connectivity test error:', { error });
+    console.error('[API] MEXC connectivity test error:', { error });
     
     return apiResponse(
       createErrorResponse(

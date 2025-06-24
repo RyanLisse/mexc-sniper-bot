@@ -1,5 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
-
 /**
  * WebSocket Price Service
  * Provides real-time price feeds using MEXC WebSocket streams
@@ -38,7 +36,12 @@ type PriceCallback = (priceUpdate: PriceUpdate) => void;
 
 // LRU Cache implementation for bounded memory usage
 class LRUCache<K, V> {
-  private logger = createSafeLogger("websocket-price-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[websocket-price-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[websocket-price-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[websocket-price-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[websocket-price-service]', message, context || ''),
+    };
 
   private maxSize: number;
   private cache: Map<K, V>;
@@ -176,7 +179,7 @@ export class WebSocketPriceService {
 
       // Check for memory issues
       if (metrics.heapUsed > this.MEMORY_WARNING_THRESHOLD) {
-        logger.warn(
+        console.warn(
           `⚠️ High memory usage detected: ${(metrics.heapUsed / 1024 / 1024).toFixed(2)}MB`
         );
         this.performMemoryCleanup();
@@ -191,7 +194,7 @@ export class WebSocketPriceService {
 
         if (growthRate > 50 * 1024 * 1024) {
           // 50MB/hour
-          logger.error(
+          console.error(
             `🚨 Memory leak detected: ${(growthRate / 1024 / 1024).toFixed(2)}MB/hour growth rate`
           );
         }
@@ -242,7 +245,7 @@ export class WebSocketPriceService {
    * Perform memory cleanup
    */
   private performMemoryCleanup(): void {
-    logger.info("🧹 Performing memory cleanup...");
+    console.info("🧹 Performing memory cleanup...");
 
     // Clean up empty subscription sets
     const emptySymbols: string[] = [];
@@ -261,7 +264,7 @@ export class WebSocketPriceService {
       global.gc();
     }
 
-    logger.info(`✅ Cleanup complete. Removed ${emptySymbols.length} empty subscriptions`);
+    console.info(`✅ Cleanup complete. Removed ${emptySymbols.length} empty subscriptions`);
   }
 
   /**
@@ -279,7 +282,7 @@ export class WebSocketPriceService {
     this.isConnecting = true;
 
     try {
-      logger.info("🔌 Connecting to MEXC WebSocket...");
+      console.info("🔌 Connecting to MEXC WebSocket...");
 
       // Clean up any existing connection first
       this.cleanupConnection();
@@ -291,7 +294,7 @@ export class WebSocketPriceService {
       } else {
         // For server-side, we'll create a mock connection
         // In production, you'd use the 'ws' package
-        logger.info("⚠️ WebSocket not available in Node.js environment. Using polling fallback.");
+        console.info("⚠️ WebSocket not available in Node.js environment. Using polling fallback.");
         this.isConnecting = false;
         return;
       }
@@ -308,7 +311,7 @@ export class WebSocketPriceService {
       this.ws.addEventListener("error", this.boundHandlers.onError);
       this.ws.addEventListener("close", this.boundHandlers.onClose);
     } catch (error) {
-      logger.error("❌ Failed to connect to WebSocket:", error);
+      console.error("❌ Failed to connect to WebSocket:", error);
       this.isConnecting = false;
       this.scheduleReconnect();
     }
@@ -318,7 +321,7 @@ export class WebSocketPriceService {
    * Handle WebSocket open event
    */
   private handleOpen(): void {
-    logger.info("✅ WebSocket connected to MEXC");
+    console.info("✅ WebSocket connected to MEXC");
     this.isConnected = true;
     this.isConnecting = false;
     this.reconnectAttempts = 0;
@@ -344,7 +347,7 @@ export class WebSocketPriceService {
         this.sendPong(message.ping);
       }
     } catch (error) {
-      logger.error("❌ Error parsing WebSocket message:", error);
+      console.error("❌ Error parsing WebSocket message:", error);
     }
   }
 
@@ -352,14 +355,14 @@ export class WebSocketPriceService {
    * Handle WebSocket error event
    */
   private handleError(event: Event): void {
-    logger.error("❌ WebSocket error:", event);
+    console.error("❌ WebSocket error:", event);
   }
 
   /**
    * Handle WebSocket close event
    */
   private handleClose(event: CloseEvent): void {
-    logger.info("🔌 WebSocket disconnected:", event.code, event.reason);
+    console.info("🔌 WebSocket disconnected:", event.code, event.reason);
     this.isConnected = false;
     this.isConnecting = false;
     this.stopHeartbeat();
@@ -415,7 +418,7 @@ export class WebSocketPriceService {
    * Disconnect from WebSocket
    */
   disconnect(): void {
-    logger.info("🔌 Disconnecting from MEXC WebSocket...");
+    console.info("🔌 Disconnecting from MEXC WebSocket...");
 
     this.isShuttingDown = true;
     this.stopHeartbeat();
@@ -511,7 +514,7 @@ export class WebSocketPriceService {
         try {
           callback(priceUpdate);
         } catch (error) {
-          logger.error("❌ Error in price update callback:", error);
+          console.error("❌ Error in price update callback:", error);
         }
       });
     }
@@ -530,7 +533,7 @@ export class WebSocketPriceService {
     };
 
     this.ws.send(JSON.stringify(subscriptionMessage));
-    logger.info(`📊 Subscribed to ${symbol} price updates`);
+    console.info(`📊 Subscribed to ${symbol} price updates`);
   }
 
   /**
@@ -546,7 +549,7 @@ export class WebSocketPriceService {
     };
 
     this.ws.send(JSON.stringify(unsubscriptionMessage));
-    logger.info(`📊 Unsubscribed from ${symbol} price updates`);
+    console.info(`📊 Unsubscribed from ${symbol} price updates`);
   }
 
   /**
@@ -595,7 +598,7 @@ export class WebSocketPriceService {
    */
   private scheduleReconnect(): void {
     if (this.isShuttingDown || this.reconnectAttempts >= this.maxReconnectAttempts) {
-      logger.error("❌ Max reconnection attempts reached. Giving up.");
+      console.error("❌ Max reconnection attempts reached. Giving up.");
       return;
     }
 
@@ -605,7 +608,7 @@ export class WebSocketPriceService {
     }
 
     this.reconnectAttempts++;
-    logger.info(
+    console.info(
       `🔄 Scheduling reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${this.reconnectDelay}ms`
     );
 
@@ -669,7 +672,7 @@ export class WebSocketPriceService {
    * Graceful shutdown
    */
   async shutdown(): Promise<void> {
-    logger.info("🛑 Shutting down WebSocket Price Service...");
+    console.info("🛑 Shutting down WebSocket Price Service...");
 
     this.isShuttingDown = true;
 
@@ -685,7 +688,7 @@ export class WebSocketPriceService {
     // Clear all data
     this.memoryMetrics = [];
 
-    logger.info("✅ WebSocket Price Service shutdown complete");
+    console.info("✅ WebSocket Price Service shutdown complete");
   }
 }
 

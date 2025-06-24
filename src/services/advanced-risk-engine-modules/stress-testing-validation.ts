@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from '../../lib/structured-logger';
- * Stress Testing & Validation Module
+* Stress Testing & Validation Module
  *
  * Provides stress testing, scenario analysis, and risk validation functionality
  * for the Advanced Risk Engine. This module handles stress test scenarios,
@@ -73,7 +72,12 @@ export class StressTestingValidation {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("stress-testing-validation");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[stress-testing-validation]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[stress-testing-validation]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[stress-testing-validation]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[stress-testing-validation]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -153,7 +157,7 @@ export class StressTestingValidation {
     try {
       const position = this.config.positions.get(symbol);
       if (!position) {
-        this.logger.warn(`[StressTestingValidation] Position ${symbol} not found for risk update`);
+        console.warn(`[StressTestingValidation] Position ${symbol} not found for risk update`);
         return;
       }
 
@@ -167,11 +171,11 @@ export class StressTestingValidation {
       position.size = riskData.positionSize * riskData.currentPrice;
       position.maxDrawdown = Math.max(position.maxDrawdown, drawdown);
 
-      this.logger.info(
+      console.info(
         `[StressTestingValidation] Position risk updated for ${symbol}: ${drawdown.toFixed(2)}% drawdown`
       );
     } catch (error) {
-      this.logger.error("[StressTestingValidation] Position risk update failed:", error);
+      console.error("[StressTestingValidation] Position risk update failed:", error);
     }
   }
 
@@ -276,7 +280,7 @@ export class StressTestingValidation {
         emergencyActionsTriggered,
       };
     } catch (error) {
-      this.logger.error("[StressTestingValidation] Stress test failed:", error);
+      console.error("[StressTestingValidation] Stress test failed:", error);
       return {
         portfolioSurvival: false,
         maxDrawdown: 100,

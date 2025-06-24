@@ -15,7 +15,6 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { patternEmbeddings } from "../../db/schemas/patterns";
 import { toSafeError } from "../../lib/error-type-utils";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type { IPatternStorage } from "./interfaces";
 
@@ -27,7 +26,12 @@ import type { IPatternStorage } from "./interfaces";
  */
 export class PatternStorage implements IPatternStorage {
   private static instance: PatternStorage;
-  private logger = createSafeLogger("pattern-storage");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[pattern-storage]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[pattern-storage]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[pattern-storage]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[pattern-storage]', message, context || ''),
+    };
 
   // In-memory cache for performance
   private cache = new Map<string, any>();
@@ -56,7 +60,7 @@ export class PatternStorage implements IPatternStorage {
     try {
       // Validate inputs
       if (!data || !type || !this.validateConfidenceScore(confidence)) {
-        this.logger.warn("Invalid pattern storage parameters", {
+        console.warn("Invalid pattern storage parameters", {
           hasData: !!data,
           type,
           confidence,
@@ -93,14 +97,14 @@ export class PatternStorage implements IPatternStorage {
       // Invalidate relevant cache entries
       this.invalidateCacheByPattern(type);
 
-      this.logger.info("Pattern stored successfully", {
+      console.info("Pattern stored successfully", {
         symbolName,
         patternType: type,
         confidence,
       });
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(
+      console.error(
         "Failed to store pattern",
         {
           type,
@@ -161,7 +165,7 @@ export class PatternStorage implements IPatternStorage {
       return successRate;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.warn(
+      console.warn(
         "Failed to get historical success rate",
         {
           patternType,
@@ -233,7 +237,7 @@ export class PatternStorage implements IPatternStorage {
       return similarPatterns;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(
+      console.error(
         "Failed to find similar patterns",
         {
           patternType: pattern.type,
@@ -256,7 +260,7 @@ export class PatternStorage implements IPatternStorage {
     this.cacheHits = 0;
     this.cacheAccesses = 0;
 
-    this.logger.info("Pattern storage cache cleared");
+    console.info("Pattern storage cache cleared");
   }
 
   /**
@@ -384,7 +388,7 @@ export class PatternStorage implements IPatternStorage {
 
       return comparisons > 0 ? similarity / comparisons : 0;
     } catch (error) {
-      this.logger.warn("Pattern similarity calculation failed", {
+      console.warn("Pattern similarity calculation failed", {
         pattern1Type: pattern1.type,
         pattern2Type: pattern2.patternType,
         error: error instanceof Error ? error.message : "Unknown error",

@@ -7,7 +7,6 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createSafeLogger, createTimer } from "../../lib/structured-logger";
 import type { ScheduledOperation } from "../../schemas/safety-monitoring-schemas";
 import { validateScheduledOperation } from "../../schemas/safety-monitoring-schemas";
 
@@ -61,7 +60,12 @@ export class EventHandling {
   private readonly baseTickMs: number;
   private readonly maxConcurrentOperations: number;
   private readonly operationTimeoutMs: number;
-  private logger = createSafeLogger("event-handling");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[event-handling]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[event-handling]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[event-handling]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[event-handling]', message, context || ''),
+    };
 
   private stats = {
     totalExecutions: 0,
@@ -75,7 +79,7 @@ export class EventHandling {
     this.maxConcurrentOperations = config.maxConcurrentOperations || 5;
     this.operationTimeoutMs = config.operationTimeoutMs || 30000; // 30 seconds
 
-    this.logger.info("Event handling initialized", {
+    console.info("Event handling initialized", {
       operation: "initialization",
       baseTickMs: this.baseTickMs,
       maxConcurrentOperations: this.maxConcurrentOperations,
@@ -105,7 +109,7 @@ export class EventHandling {
 
     this.operations.set(operation.id, scheduledOp);
 
-    this.logger.info("Operation registered", {
+    console.info("Operation registered", {
       operation: "register_operation",
       operationId: operation.id,
       operationName: operation.name,
@@ -120,7 +124,7 @@ export class EventHandling {
   public unregisterOperation(operationId: string): boolean {
     const operation = this.operations.get(operationId);
     if (!operation) {
-      this.logger.warn("Operation not found for unregistration", {
+      console.warn("Operation not found for unregistration", {
         operation: "unregister_operation",
         operationId,
         totalOperations: this.operations.size,
@@ -129,7 +133,7 @@ export class EventHandling {
     }
 
     if (operation.isRunning) {
-      this.logger.warn("Cannot unregister running operation", {
+      console.warn("Cannot unregister running operation", {
         operation: "unregister_operation",
         operationId,
         operationName: operation.name,
@@ -140,7 +144,7 @@ export class EventHandling {
 
     this.operations.delete(operationId);
 
-    this.logger.info("Operation unregistered", {
+    console.info("Operation unregistered", {
       operation: "unregister_operation",
       operationId,
       operationName: operation.name,
@@ -155,7 +159,7 @@ export class EventHandling {
    */
   public start(): void {
     if (this.isActive) {
-      this.logger.warn("Timer coordinator already active", {
+      console.warn("Timer coordinator already active", {
         operation: "start_coordinator",
         isActive: this.isActive,
         operationsCount: this.operations.size,
@@ -166,7 +170,7 @@ export class EventHandling {
     this.isActive = true;
     this.stats.startTime = Date.now();
 
-    this.logger.info("Starting timer coordination", {
+    console.info("Starting timer coordination", {
       operation: "start_coordinator",
       baseTickMs: this.baseTickMs,
       operationsCount: this.operations.size,
@@ -175,7 +179,7 @@ export class EventHandling {
 
     this.coordinatorTimer = setInterval(() => {
       this.coordinateCycle().catch((error) => {
-        this.logger.error(
+        console.error(
           "Coordination cycle failed",
           {
             operation: "coordination_cycle",
@@ -192,7 +196,7 @@ export class EventHandling {
    * Stop the timer coordinator and cleanup
    */
   public stop(): void {
-    this.logger.info("Stopping timer coordination", {
+    console.info("Stopping timer coordination", {
       operation: "stop_coordinator",
       isActive: this.isActive,
       totalOperations: this.operations.size,
@@ -211,7 +215,7 @@ export class EventHandling {
     const runningOps = allOperations.filter((op) => op.isRunning);
 
     if (runningOps.length > 0) {
-      this.logger.info("Waiting for operations to complete", {
+      console.info("Waiting for operations to complete", {
         operation: "stop_coordinator",
         runningOperations: runningOps.length,
         runningOperationNames: runningOps.map((op) => op.name),
@@ -230,7 +234,7 @@ export class EventHandling {
     const clearedCount = this.operations.size;
     this.operations.clear();
 
-    this.logger.info("All operations cleared", {
+    console.info("All operations cleared", {
       operation: "clear_operations",
       clearedCount,
     });
@@ -279,7 +283,7 @@ export class EventHandling {
   public async forceExecution(operationId: string): Promise<boolean> {
     const operation = this.operations.get(operationId);
     if (!operation) {
-      this.logger.warn("Operation not found for forced execution", {
+      console.warn("Operation not found for forced execution", {
         operation: "force_execution",
         operationId,
       });
@@ -287,7 +291,7 @@ export class EventHandling {
     }
 
     if (operation.isRunning) {
-      this.logger.warn("Operation already running", {
+      console.warn("Operation already running", {
         operation: "force_execution",
         operationId,
         operationName: operation.name,
@@ -299,7 +303,7 @@ export class EventHandling {
       await this.executeOperationSafely(operation);
       return true;
     } catch (error) {
-      this.logger.error(
+      console.error(
         "Forced execution failed",
         {
           operation: "force_execution",
@@ -341,14 +345,7 @@ export class EventHandling {
     const runningCount = allOperations.filter((op) => op.isRunning).length;
     const availableSlots = this.maxConcurrentOperations - runningCount;
 
-    if (availableSlots <= 0) {
-      this.logger.debug("Max concurrent operations reached", {
-        operation: "coordination_cycle",
-        runningCount,
-        maxConcurrent: this.maxConcurrentOperations,
-        readyOperations: readyOperations.length,
-      });
-      return;
+    if (availableSlots <= 0) {return;
     }
 
     // Execute ready operations in order of priority (shortest interval first)
@@ -360,7 +357,7 @@ export class EventHandling {
 
         // Execute asynchronously to prevent blocking
         this.executeOperationSafely(operation).catch((error) => {
-          this.logger.error(
+          console.error(
             "Operation execution failed in coordination cycle",
             {
               operation: "coordination_cycle",
@@ -383,17 +380,7 @@ export class EventHandling {
 
     try {
       operation.isRunning = true;
-      operation.lastExecuted = Date.now();
-
-      this.logger.debug("Executing operation", {
-        operation: "execute_operation",
-        operationId: operation.id,
-        operationName: operation.name,
-        intervalMs: operation.intervalMs,
-        executionCount: operation.executionCount,
-      });
-
-      // Create timeout promise
+      operation.lastExecuted = Date.now();// Create timeout promise
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(
           () => reject(new Error(`Operation timeout after ${this.operationTimeoutMs}ms`)),
@@ -415,17 +402,7 @@ export class EventHandling {
       this.stats.totalExecutions++;
 
       // Clear any previous error
-      delete operation.lastError;
-
-      this.logger.debug("Operation completed", {
-        operation: "execute_operation",
-        operationId: operation.id,
-        operationName: operation.name,
-        duration,
-        executionCount: operation.executionCount,
-        status: "success",
-      });
-    } catch (error) {
+      delete operation.lastError;} catch (error) {
       const duration = timer.end({
         operationId: operation.id,
         operationName: operation.name,
@@ -435,7 +412,7 @@ export class EventHandling {
       operation.lastError = error.message;
       this.stats.totalErrors++;
 
-      this.logger.error(
+      console.error(
         "Operation failed",
         {
           operation: "execute_operation",

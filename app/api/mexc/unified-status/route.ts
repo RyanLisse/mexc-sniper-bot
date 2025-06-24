@@ -10,8 +10,6 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { apiResponse, handleApiError } from "../../../../src/lib/api-response";
 import { getUnifiedStatus } from "../../../../src/services/unified-status-resolver";
 import { toSafeError } from "../../../../src/lib/error-type-utils";
-import { createSafeLogger } from "../../../../src/lib/structured-logger";
-
 interface UnifiedStatusResponse {
   // Core Status
   connected: boolean;
@@ -42,8 +40,6 @@ interface UnifiedStatusResponse {
   recommendations: string[];
   nextSteps: string[];
 }
-
-const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const requestId = `unified_status_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -107,7 +103,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
 
   } catch (error) {
-    logger.error("[Unified Status] Error:", { error: error });
+    console.error("[Unified Status] Error:", { error: error });
     const safeError = toSafeError(error);
     
     return apiResponse.error(
@@ -182,7 +178,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
   } catch (error) {
-    logger.error("[Unified Status POST] Error:", { error: error });
+    console.error("[Unified Status POST] Error:", { error: error });
     return apiResponse.error(
       error instanceof Error ? error.message : "Unified status refresh failed",
       500,

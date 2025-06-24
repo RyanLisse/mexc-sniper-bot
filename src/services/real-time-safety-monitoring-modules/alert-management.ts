@@ -7,7 +7,6 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createSafeLogger } from "../../lib/structured-logger";
 import type {
   SafetyAction,
   SafetyAlert,
@@ -44,7 +43,12 @@ export interface AlertStatistics {
 }
 
 export class AlertManagement {
-  private logger = createSafeLogger("alert-management");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[alert-management]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[alert-management]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[alert-management]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[alert-management]', message, context || ''),
+    };
   private alerts: SafetyAlert[] = [];
   private recentActions: SafetyAction[] = [];
   private stats = {
@@ -53,7 +57,7 @@ export class AlertManagement {
   };
 
   constructor(private config: AlertManagementConfig) {
-    this.logger.info("Alert management initialized", {
+    console.info("Alert management initialized", {
       operation: "initialization",
       autoActionEnabled: config.configuration.autoActionEnabled,
       alertRetentionHours: config.configuration.alertRetentionHours,
@@ -86,7 +90,7 @@ export class AlertManagement {
     // Execute auto-actions if enabled
     if (this.config.configuration.autoActionEnabled && validatedAlert.autoActions.length > 0) {
       this.executeAutoActions(validatedAlert.autoActions).catch((error) => {
-        this.logger.error(
+        console.error(
           "Auto-action execution failed",
           {
             operation: "execute_auto_actions",
@@ -106,20 +110,7 @@ export class AlertManagement {
         alertsGenerated: this.stats.alertsGenerated,
         actionsExecuted: this.stats.actionsExecuted,
       });
-    }
-
-    this.logger.safety("Alert generated", validatedAlert.riskLevel, {
-      alertId: validatedAlert.id,
-      alertType: validatedAlert.type,
-      alertSeverity: validatedAlert.severity,
-      alertCategory: validatedAlert.category,
-      alertTitle: validatedAlert.title,
-      alertSource: validatedAlert.source,
-      autoActionsCount: validatedAlert.autoActions.length,
-      operation: "generate_alert",
-    });
-
-    return validatedAlert;
+    }return validatedAlert;
   }
 
   /**
@@ -129,7 +120,7 @@ export class AlertManagement {
     const alert = this.alerts.find((a) => a.id === alertId);
 
     if (!alert) {
-      this.logger.warn("Alert not found for acknowledgment", {
+      console.warn("Alert not found for acknowledgment", {
         operation: "acknowledge_alert",
         alertId,
         totalAlerts: this.alerts.length,
@@ -138,7 +129,7 @@ export class AlertManagement {
     }
 
     if (alert.acknowledged) {
-      this.logger.warn("Alert already acknowledged", {
+      console.warn("Alert already acknowledged", {
         operation: "acknowledge_alert",
         alertId,
         alertType: alert.type,
@@ -149,7 +140,7 @@ export class AlertManagement {
 
     alert.acknowledged = true;
 
-    this.logger.info("Alert acknowledged", {
+    console.info("Alert acknowledged", {
       operation: "acknowledge_alert",
       alertId,
       alertType: alert.type,
@@ -168,7 +159,7 @@ export class AlertManagement {
     this.alerts = this.alerts.filter((alert) => !alert.acknowledged);
     const cleared = countBefore - this.alerts.length;
 
-    this.logger.info("Acknowledged alerts cleared", {
+    console.info("Acknowledged alerts cleared", {
       operation: "clear_acknowledged_alerts",
       clearedCount: cleared,
       remainingAlerts: this.alerts.length,
@@ -274,7 +265,7 @@ export class AlertManagement {
     const cleaned = countBefore - this.alerts.length;
 
     if (cleaned > 0) {
-      this.logger.info("Old alerts cleaned up", {
+      console.info("Old alerts cleaned up", {
         operation: "cleanup_old_alerts",
         cleanedCount: cleaned,
         remainingAlerts: this.alerts.length,
@@ -293,7 +284,7 @@ export class AlertManagement {
     this.alerts = [];
     this.recentActions = [];
 
-    this.logger.info("All alerts cleared", {
+    console.info("All alerts cleared", {
       operation: "clear_all_alerts",
       clearedCount,
     });
@@ -309,7 +300,7 @@ export class AlertManagement {
         this.recentActions.push(action);
         this.stats.actionsExecuted++;
       } catch (error) {
-        this.logger.error(
+        console.error(
           "Auto-action execution failed",
           {
             operation: "execute_action",
@@ -338,7 +329,7 @@ export class AlertManagement {
     // Validate action before execution
     validateSafetyAction(action);
 
-    this.logger.info("Executing safety action", {
+    console.info("Executing safety action", {
       operation: "execute_action",
       actionId: action.id,
       actionType: action.type,
@@ -406,7 +397,7 @@ export class AlertManagement {
 
       action.executedAt = new Date().toISOString();
 
-      this.logger.info("Safety action executed", {
+      console.info("Safety action executed", {
         operation: "execute_action",
         actionId: action.id,
         actionType: action.type,
@@ -419,7 +410,7 @@ export class AlertManagement {
       action.details = `Execution failed: ${error.message}`;
       action.executedAt = new Date().toISOString();
 
-      this.logger.error(
+      console.error(
         "Safety action failed",
         {
           operation: "execute_action",

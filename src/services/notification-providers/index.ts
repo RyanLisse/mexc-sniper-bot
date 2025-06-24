@@ -6,7 +6,6 @@ import {
   type SelectAlertInstance,
   type SelectNotificationChannel,
 } from "../../db/schemas/alerts";
-import { createSafeLogger } from "../../lib/structured-logger";
 import { EmailProvider } from "./email-provider";
 import { SlackProvider } from "./slack-provider";
 import { SMSProvider } from "./sms-provider";
@@ -55,8 +54,6 @@ export interface EscalationStep {
 }
 
 export class NotificationService {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
   private db: any;
   private providers: Map<string, NotificationProvider> = new Map();
   private rateLimitCache: Map<string, number[]> = new Map();
@@ -67,7 +64,12 @@ export class NotificationService {
   private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createSafeLogger("notification-service");
+        this._logger = {
+      info: (message: string, context?: any) => console.info('[notification-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[notification-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[notification-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[notification-service]', message, context || ''),
+    };
       } catch (error) {
         // Fallback to console logging during build time
         this._logger = {
@@ -103,7 +105,7 @@ export class NotificationService {
     try {
       // Get applicable notification channels
       const channels = await this.getChannelsForAlert(alert);
-      this.logger.info(`Sending alert ${alert.id} to ${channels.length} channels`);
+      console.info(`Sending alert ${alert.id} to ${channels.length} channels`);
 
       // Send to each channel
       const notificationPromises = channels.map((channel) =>
@@ -115,7 +117,7 @@ export class NotificationService {
       // Start escalation timer if configured
       await this.scheduleEscalation(alert);
     } catch (error) {
-      this.logger.error("Error sending alert notifications:", error);
+      console.error("Error sending alert notifications:", error);
     }
   }
 
@@ -139,7 +141,7 @@ export class NotificationService {
 
       await Promise.allSettled(notificationPromises);
     } catch (error) {
-      this.logger.error("Error sending resolution notifications:", error);
+      console.error("Error sending resolution notifications:", error);
     }
   }
 
@@ -151,7 +153,7 @@ export class NotificationService {
     try {
       // Check rate limiting
       if (await this.isChannelRateLimited(channel)) {
-        this.logger.warn(`Channel ${channel.id} is rate limited`);
+        console.warn(`Channel ${channel.id} is rate limited`);
         await this.recordNotificationAttempt(alert.id, channel.id, "rate_limited");
         return;
       }
@@ -159,7 +161,7 @@ export class NotificationService {
       // Get the appropriate provider
       const provider = this.providers.get(channel.type);
       if (!provider) {
-        this.logger.error(`No provider found for channel type: ${channel.type}`);
+        console.error(`No provider found for channel type: ${channel.type}`);
         return;
       }
 
@@ -178,11 +180,11 @@ export class NotificationService {
       // Update rate limiting cache
       this.updateRateLimit(channel);
 
-      this.logger.info(
+      console.info(
         `Notification sent to ${channel.name}: ${result.success ? "success" : "failed"}`
       );
     } catch (error) {
-      this.logger.error(`Error sending to channel ${channel.name}:`, error);
+      console.error(`Error sending to channel ${channel.name}:`, error);
     }
   }
 
@@ -220,7 +222,7 @@ export class NotificationService {
         .limit(1);
 
       if (currentAlert.length === 0 || currentAlert[0].status !== "firing") {
-        this.logger.info(`Alert ${alert.id} is no longer active, skipping escalation`);
+        console.info(`Alert ${alert.id} is no longer active, skipping escalation`);
         return;
       }
 
@@ -254,9 +256,9 @@ export class NotificationService {
         })
         .where(eq(alertInstances.id, alert.id));
 
-      this.logger.info(`Escalated alert ${alert.id} to level ${level}`);
+      console.info(`Escalated alert ${alert.id} to level ${level}`);
     } catch (error) {
-      this.logger.error(`Error executing escalation step:`, error);
+      console.error(`Error executing escalation step:`, error);
     }
   }
 
@@ -567,7 +569,7 @@ export class NotificationService {
       createdBy,
     });
 
-    this.logger.info(`Created notification channel: ${channelId}`);
+    console.info(`Created notification channel: ${channelId}`);
     return channelId;
   }
 

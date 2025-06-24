@@ -1,5 +1,4 @@
 import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface WebhookConfig {
@@ -22,12 +21,15 @@ interface WebhookConfig {
 }
 
 export class WebhookProvider implements NotificationProvider {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
   private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createSafeLogger("webhook-provider");
+        this._logger = {
+      info: (message: string, context?: any) => console.info('[webhook-provider]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[webhook-provider]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[webhook-provider]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[webhook-provider]', message, context || ''),
+    };
       } catch {
         // Fallback during build time
         this._logger = {
@@ -113,7 +115,7 @@ export class WebhookProvider implements NotificationProvider {
           return result; // Return the last failed attempt
         }
       } catch (error) {
-        logger.error(`Webhook attempt ${attempt} failed:`, error);
+        console.error(`Webhook attempt ${attempt} failed:`, error);
 
         if (attempt >= maxRetries) {
           return {
@@ -146,7 +148,7 @@ export class WebhookProvider implements NotificationProvider {
       // For production, you would make an actual HTTP request
       // For now, we'll simulate the webhook call
 
-      logger.info("Sending webhook:", {
+      console.info("Sending webhook:", {
         url: config.url,
         method,
         headers,
@@ -178,7 +180,7 @@ export class WebhookProvider implements NotificationProvider {
         response: { simulated: true },
       };
     } catch (error) {
-      logger.error("Webhook request failed:", error);
+      console.error("Webhook request failed:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown webhook error",
@@ -306,7 +308,7 @@ export class WebhookProvider implements NotificationProvider {
     try {
       return JSON.parse(processedTemplate);
     } catch (error) {
-      logger.error("Failed to parse custom payload template:", error);
+      console.error("Failed to parse custom payload template:", error);
       return this.buildStandardPayload(alert, message);
     }
   }

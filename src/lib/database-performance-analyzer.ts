@@ -11,8 +11,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
-import { createSafeLogger } from "./structured-logger";
-
 interface DatabaseStats {
   totalQueries: number;
   averageExecutionTime: number;
@@ -58,7 +56,12 @@ interface OptimizationRecommendation {
 }
 
 export class DatabasePerformanceAnalyzer {
-  private logger = createSafeLogger("database-performance-analyzer");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[database-performance-analyzer]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[database-performance-analyzer]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[database-performance-analyzer]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[database-performance-analyzer]', message, context || ''),
+    };
 
   private static instance: DatabasePerformanceAnalyzer;
   private analysisResults: Map<string, any> = new Map();
@@ -74,7 +77,7 @@ export class DatabasePerformanceAnalyzer {
    * Analyze database query plans for performance issues
    */
   async analyzeQueryPlans(): Promise<ExpensiveQuery[]> {
-    logger.info("🔍 Analyzing database query plans...");
+    console.info("🔍 Analyzing database query plans...");
 
     const expensiveQueries: ExpensiveQuery[] = [];
 
@@ -143,9 +146,9 @@ export class DatabasePerformanceAnalyzer {
           suggestedIndexes: this.analyzeMissingIndexes(explanation, queryInfo.query),
         });
 
-        logger.info(`📊 ${queryInfo.name}: ${executionTime.toFixed(2)}ms`);
+        console.info(`📊 ${queryInfo.name}: ${executionTime.toFixed(2)}ms`);
       } catch (error) {
-        logger.error(`❌ Failed to analyze query ${queryInfo.name}:`, error);
+        console.error(`❌ Failed to analyze query ${queryInfo.name}:`, error);
       }
     }
 
@@ -186,7 +189,7 @@ export class DatabasePerformanceAnalyzer {
       const result = await db.execute(sql.raw(analyzedQuery));
       return Array.isArray(result) ? result : (result as any).rows || [];
     } catch (error) {
-      logger.warn(`Query execution failed during analysis: ${error}`);
+      console.warn(`Query execution failed during analysis: ${error}`);
       return [];
     }
   }
@@ -279,7 +282,7 @@ export class DatabasePerformanceAnalyzer {
    * Analyze table statistics
    */
   async analyzeTableStats(): Promise<TableScanStats[]> {
-    logger.info("📈 Analyzing table statistics...");
+    console.info("📈 Analyzing table statistics...");
 
     const stats: TableScanStats[] = [];
 
@@ -331,9 +334,9 @@ export class DatabasePerformanceAnalyzer {
           rowsScanned: rowCount,
         });
 
-        logger.info(`📊 ${tableName}: ${rowCount} rows, ${indexList.length} indexes`);
+        console.info(`📊 ${tableName}: ${rowCount} rows, ${indexList.length} indexes`);
       } catch (error) {
-        logger.warn(`Failed to analyze table ${tableName}:`, error);
+        console.warn(`Failed to analyze table ${tableName}:`, error);
       }
     }
 
@@ -357,7 +360,7 @@ export class DatabasePerformanceAnalyzer {
    * Analyze index usage effectiveness
    */
   async analyzeIndexUsage(): Promise<IndexUsageStats[]> {
-    logger.info("🗂️ Analyzing index usage...");
+    console.info("🗂️ Analyzing index usage...");
 
     const indexStats: IndexUsageStats[] = [];
 
@@ -409,7 +412,7 @@ export class DatabasePerformanceAnalyzer {
           });
         }
       } catch (error) {
-        logger.warn(`Failed to analyze indexes for ${tableName}:`, error);
+        console.warn(`Failed to analyze indexes for ${tableName}:`, error);
       }
     }
 
@@ -517,7 +520,7 @@ export class DatabasePerformanceAnalyzer {
    * Run comprehensive performance analysis
    */
   async runComprehensiveAnalysis(): Promise<DatabaseStats> {
-    logger.info("🚀 Starting comprehensive database performance analysis...");
+    console.info("🚀 Starting comprehensive database performance analysis...");
 
     const startTime = performance.now();
 
@@ -535,7 +538,7 @@ export class DatabasePerformanceAnalyzer {
     const recommendations = this.generateRecommendations(expensiveQueries, tableStats, indexStats);
 
     const analysisTime = performance.now() - startTime;
-    logger.info(`✅ Analysis completed in ${analysisTime.toFixed(2)}ms`);
+    console.info(`✅ Analysis completed in ${analysisTime.toFixed(2)}ms`);
 
     const results: DatabaseStats = {
       totalQueries: monitoringStats.totalQueries,

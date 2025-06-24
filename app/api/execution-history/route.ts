@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { db } from "../../../src/db";
 import { executionHistory, snipeTargets } from "../../../src/db/schema";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 
-// MOVED: const logger = createSafeLogger('route');
-
 export async function GET(request: NextRequest) {
-  const logger = createSafeLogger('execution-history');
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
@@ -140,7 +136,7 @@ export async function GET(request: NextRequest) {
       data: response,
     });
   } catch (error) {
-    logger.error("❌ Error fetching execution history:", { error: error });
+    console.error("❌ Error fetching execution history:", { error: error });
     return NextResponse.json(
       {
         success: false,

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { getUserCredentials } from "../../../../src/services/user-credentials-service";
-
-const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +19,7 @@ export async function GET(request: NextRequest) {
     try {
       userCredentials = await getUserCredentials(userId, 'mexc');
     } catch (error) {
-      logger.error(`Error retrieving credentials for user ${userId}:`, { error });
+      console.error(`Error retrieving credentials for user ${userId}:`, { error });
       // Check if it's an encryption service error
       if (error instanceof Error && error.message.includes("Encryption service unavailable")) {
         return NextResponse.json({
@@ -74,7 +71,7 @@ export async function GET(request: NextRequest) {
     const balancesResponse = await mexcService.getAccountBalances();
 
     if (!balancesResponse.success) {
-      logger.error(`❌ MEXC Account Service Error:`, { error: balancesResponse.error });
+      console.error(`❌ MEXC Account Service Error:`, { error: balancesResponse.error });
       
       // Determine appropriate status code based on error type
       let statusCode = 502; // Default: Bad Gateway (upstream service issue)
@@ -110,7 +107,7 @@ export async function GET(request: NextRequest) {
     
     const { balances, totalUsdtValue } = balancesResponse.data;
     const lastUpdated = (balancesResponse.data as any).lastUpdated || new Date().toISOString();
-    logger.info(`✅ MEXC Account Service Success - Found ${balances.length} balances with total value: ${totalUsdtValue.toFixed(2)} USDT`);
+    console.info(`✅ MEXC Account Service Success - Found ${balances.length} balances with total value: ${totalUsdtValue.toFixed(2)} USDT`);
 
     const message = userCredentials
       ? `Using user API credentials - ${balances.length} assets with balance`
@@ -131,7 +128,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error("MEXC account fetch failed:", { error: error });
+    console.error("MEXC account fetch failed:", { error: error });
     
     return NextResponse.json(
       {

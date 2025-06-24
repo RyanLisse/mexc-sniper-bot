@@ -18,8 +18,6 @@
 
 import EventEmitter from "events";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
-
 export { EmergencyManager } from "./safety/emergency-management";
 
 // Export individual services for advanced usage
@@ -59,7 +57,12 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("safety-coordinator");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[safety-coordinator]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[safety-coordinator]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[safety-coordinator]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[safety-coordinator]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -109,7 +112,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
     // Set up event forwarding
     this.setupEventForwarding();
 
-    this.logger.info("Comprehensive Safety Coordinator initialized", {
+    console.info("Comprehensive Safety Coordinator initialized", {
       config: this.config,
     });
   }
@@ -119,7 +122,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
    */
   async start(): Promise<void> {
     if (this.isActive) {
-      this.logger.warn("Safety coordinator already active");
+      console.warn("Safety coordinator already active");
       return;
     }
 
@@ -127,7 +130,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
     await this.alertsManager.start();
     await this.emergencyManager.start();
 
-    this.logger.info("Safety monitoring started");
+    console.info("Safety monitoring started");
     this.emit("started");
   }
 
@@ -143,7 +146,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
     await this.alertsManager.stop();
     await this.emergencyManager.stop();
 
-    this.logger.info("Safety monitoring stopped");
+    console.info("Safety monitoring stopped");
     this.emit("stopped");
   }
 
@@ -208,7 +211,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
     this.alertsManager.updateConfig(this.config);
     this.emergencyManager.updateConfig(this.config);
 
-    this.logger.info("Safety coordinator configuration updated", { updates });
+    console.info("Safety coordinator configuration updated", { updates });
   }
 
   /**
@@ -227,7 +230,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
       return isHealthy;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Health check failed", { error: safeError.message });
+      console.error("Health check failed", { error: safeError.message });
       this.status.overall = "unhealthy";
       return false;
     }

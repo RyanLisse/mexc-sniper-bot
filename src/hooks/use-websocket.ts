@@ -15,7 +15,6 @@
 
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createSafeLogger } from "../lib/structured-logger";
 import type {
   ConnectionMetrics,
   MessageHandler,
@@ -79,8 +78,6 @@ export interface UseWebSocketResult {
 // Main WebSocket Hook
 // ======================
 
-const logger = createSafeLogger("use-websocket");
-
 export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResult {
   const {
     autoConnect = true,
@@ -116,7 +113,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
         const token = await getToken();
         return token || "";
       } catch (error) {
-        logger.warn("[WebSocket Hook] Failed to get auth token:", error);
+        console.warn("[WebSocket Hook] Failed to get auth token:", error);
         return "";
       }
     }
@@ -142,14 +139,14 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
       await clientRef.current.connect(token);
 
       if (debug) {
-        logger.info("[WebSocket Hook] Connected successfully");
+        console.info("[WebSocket Hook] Connected successfully");
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Connection failed";
       setError(errorMessage);
 
       if (debug) {
-        logger.error("[WebSocket Hook] Connection failed:", errorMessage);
+        console.error("[WebSocket Hook] Connection failed:", errorMessage);
       }
     } finally {
       if (isMountedRef.current) {
@@ -163,14 +160,14 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
     clientRef.current.disconnect();
 
     if (debug) {
-      logger.info("[WebSocket Hook] Disconnected");
+      console.info("[WebSocket Hook] Disconnected");
     }
   }, [debug]);
 
   // Reconnect function
   const reconnect = useCallback(() => {
     if (debug) {
-      logger.info("[WebSocket Hook] Reconnecting...");
+      console.info("[WebSocket Hook] Reconnecting...");
     }
 
     clientRef.current.reconnect();
@@ -182,7 +179,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
       const success = clientRef.current.send(message);
 
       if (debug && !success) {
-        logger.warn("[WebSocket Hook] Failed to send message:", message);
+        console.warn("[WebSocket Hook] Failed to send message:", message);
       }
 
       return success;
@@ -203,7 +200,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
       setSubscriptions(clientRef.current.getSubscriptions());
 
       if (debug) {
-        logger.info(`[WebSocket Hook] Subscribed to ${channel}`);
+        console.info(`[WebSocket Hook] Subscribed to ${channel}`);
       }
 
       // Return enhanced unsubscribe function
@@ -213,7 +210,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
         setSubscriptions(clientRef.current.getSubscriptions());
 
         if (debug) {
-          logger.info(`[WebSocket Hook] Unsubscribed from ${channel}`);
+          console.info(`[WebSocket Hook] Unsubscribed from ${channel}`);
         }
       };
     },
@@ -238,7 +235,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
         setConnectionId(client.getConnectionId());
 
         if (debug) {
-          logger.info("[WebSocket Hook] Connection established");
+          console.info("[WebSocket Hook] Connection established");
         }
       }
     };
@@ -248,7 +245,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
         setConnectionId(undefined);
 
         if (debug) {
-          logger.info("[WebSocket Hook] Connection lost");
+          console.info("[WebSocket Hook] Connection lost");
         }
       }
     };
@@ -259,14 +256,14 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
         setError(errorMessage);
 
         if (debug) {
-          logger.error("[WebSocket Hook] WebSocket error:", errorMessage);
+          console.error("[WebSocket Hook] WebSocket error:", errorMessage);
         }
       }
     };
 
     const handleMessage = (message: WebSocketMessage) => {
       if (debug) {
-        logger.info("[WebSocket Hook] Message received:", message);
+        console.info("[WebSocket Hook] Message received:", message);
       }
     };
 

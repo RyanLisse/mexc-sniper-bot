@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { inngest } from "../../../../src/inngest/client";
 import { patternStrategyOrchestrator } from "../../../../src/services/pattern-strategy-orchestrator";
-
-const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,11 +15,11 @@ export async function POST(request: NextRequest) {
       confidenceThreshold = 70
     } = body;
 
-    logger.info(`[PatternAnalysis Trigger] Processing ${analysisType} analysis for ${symbols.length || 0} symbols`);
+    console.info(`[PatternAnalysis Trigger] Processing ${analysisType} analysis for ${symbols.length || 0} symbols`);
 
     // Option 1: Direct analysis using centralized engine (faster)
     if (directAnalysis) {
-      logger.info("[PatternAnalysis Trigger] Running direct analysis with centralized engine");
+      console.info("[PatternAnalysis Trigger] Running direct analysis with centralized engine");
       
       const workflowResult = await patternStrategyOrchestrator.executePatternWorkflow({
         type: analysisType,
@@ -60,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Option 2: Trigger asynchronous Inngest workflow (for complex analysis)
-    logger.info("[PatternAnalysis Trigger] Triggering async workflow via Inngest");
+    console.info("[PatternAnalysis Trigger] Triggering async workflow via Inngest");
     
     const event = await inngest.send({
       name: "mexc/patterns.analyze",
@@ -87,7 +84,7 @@ export async function POST(request: NextRequest) {
       directAnalysis: false
     });
   } catch (error) {
-    logger.error("Failed to trigger pattern analysis:", { error: error });
+    console.error("Failed to trigger pattern analysis:", { error: error });
     return NextResponse.json(
       {
         success: false,

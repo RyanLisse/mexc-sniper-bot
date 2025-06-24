@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type {
   WorkflowContext,
   WorkflowExecutionResult,
@@ -9,7 +9,13 @@ import type {
  * Workflow execution tracking, metadata generation, and history management
  */
 export class WorkflowExecutionTracker {
-  private logger = createSafeLogger("workflow-execution-tracker");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[workflow-execution-tracker]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[workflow-execution-tracker]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[workflow-execution-tracker]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[workflow-execution-tracker]', message, context || ''),
+  };
   private executionHistory: WorkflowExecutionResult[] = [];
   private maxHistorySize = 1000;
 

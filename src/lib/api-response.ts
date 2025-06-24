@@ -5,8 +5,6 @@
  */
 
 import { toSafeError } from "./error-type-utils";
-import { createSafeLogger } from "./structured-logger";
-
 export interface ApiResponse<T = unknown> {
   /** Indicates if the request was successful */
   success: boolean;
@@ -38,15 +36,18 @@ export interface ApiResponse<T = unknown> {
 /**
  * Creates a successful API response
  */
-let _logger: ReturnType<typeof createSafeLogger> | null = null;
-
-/**
+let _/**
  * Lazy logger initialization to prevent webpack bundling issues
  */
 function getLogger(): ReturnType<typeof createSafeLogger> {
   if (!_logger) {
     try {
-      _logger = createSafeLogger("api-response");
+      _logger = {
+      info: (message: string, context?: any) => console.info('[api-response]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[api-response]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[api-response]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[api-response]', message, context || ''),
+    };
     } catch (error) {
       // Fallback to console logging during build time
       _logger = {

@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { SymbolV2Entry } from "../schemas/mexc-schemas";
 import type { CalendarEntry, SymbolEntry } from "../services/api/mexc-client-types";
 import { getRecommendedMexcService, type ServiceResponse } from "../services/mexc-unified-exports";
@@ -57,7 +57,13 @@ export interface MexcCalendarEntry {
 }
 
 export class MexcApiAgent extends BaseAgent {
-  private logger = createSafeLogger("mexc-api-agent");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[mexc-api-agent]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[mexc-api-agent]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[mexc-api-agent]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[mexc-api-agent]', message, context || ''),
+  };
 
   private mexcService = getRecommendedMexcService();
 

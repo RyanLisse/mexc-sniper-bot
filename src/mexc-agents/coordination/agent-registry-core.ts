@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { BaseAgent } from "../base-agent";
 
 export type AgentStatus = "healthy" | "degraded" | "unhealthy" | "unknown" | "recovering";
@@ -69,7 +69,12 @@ export interface AgentRegistryOptions {
  * Core agent registry for basic agent management
  */
 export class AgentRegistryCore {
-  protected logger = createSafeLogger("agent-registry-core");
+  protected logger = {
+    info: (message: string, context?: any) => console.info('[agent-registry-core]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[agent-registry-core]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[agent-registry-core]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[agent-registry-core]', message, context || ''),
+  };
   protected agents: Map<string, RegisteredAgent> = new Map();
   protected isRunning = false;
 

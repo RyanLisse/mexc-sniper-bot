@@ -15,7 +15,6 @@
 import { z } from "zod";
 import type { PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { ExecutionPosition } from "./optimized-auto-sniping-core";
 import {
   TRADING_STRATEGIES,
@@ -109,7 +108,12 @@ export type StrategySelectionCriteria = z.infer<typeof StrategySelectionCriteria
 
 export class OptimizedTradingStrategyEngine {
   private static instance: OptimizedTradingStrategyEngine;
-  private logger = createSafeLogger("optimized-trading-strategy-engine");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[optimized-trading-strategy-engine]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[optimized-trading-strategy-engine]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[optimized-trading-strategy-engine]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[optimized-trading-strategy-engine]', message, context || ''),
+    };
 
   // Enhanced strategies with performance tracking
   private enhancedStrategies = new Map<string, EnhancedTradingStrategy>();
@@ -137,7 +141,7 @@ export class OptimizedTradingStrategyEngine {
     this.initializeEnhancedStrategies();
     this.startPerformanceTracking();
 
-    this.logger.info("Optimized Trading Strategy Engine initialized", {
+    console.info("Optimized Trading Strategy Engine initialized", {
       strategiesLoaded: this.enhancedStrategies.size,
       performanceTracking: true,
     });
@@ -167,15 +171,7 @@ export class OptimizedTradingStrategyEngine {
     try {
       this.performanceMetrics.totalStrategySelections++;
 
-      const validatedCriteria = StrategySelectionCriteriaSchema.parse(criteria);
-
-      this.logger.debug("Selecting optimal strategy", {
-        patternType: validatedCriteria.patternType,
-        confidence: validatedCriteria.confidence,
-        portfolioRisk: validatedCriteria.portfolioRisk,
-      });
-
-      // Score all strategies based on criteria
+      const validatedCriteria = StrategySelectionCriteriaSchema.parse(criteria);// Score all strategies based on criteria
       const strategyScores = await this.scoreStrategies(validatedCriteria);
 
       // Select best strategy
@@ -197,7 +193,7 @@ export class OptimizedTradingStrategyEngine {
         validatedCriteria
       );
 
-      this.logger.info("Optimal strategy selected", {
+      console.info("Optimal strategy selected", {
         strategyId: bestStrategy.strategy.id,
         score: bestStrategy.score,
         adaptiveAdjustments: adaptiveAdjustments.length,
@@ -212,7 +208,7 @@ export class OptimizedTradingStrategyEngine {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to select optimal strategy", {
+      console.error("Failed to select optimal strategy", {
         error: safeError.message,
         criteria,
       });
@@ -245,14 +241,7 @@ export class OptimizedTradingStrategyEngine {
       momentum: number;
     }
   ): Promise<DynamicExitLevel[]> {
-    try {
-      this.logger.debug("Calculating dynamic exit levels", {
-        strategyId: strategy.id,
-        positionId: position.id,
-        currentPrice: currentMarketData.currentPrice,
-      });
-
-      const exitLevels: DynamicExitLevel[] = [];
+    try {const exitLevels: DynamicExitLevel[] = [];
 
       // Base exit levels from strategy
       for (const level of strategy.levels) {
@@ -290,7 +279,7 @@ export class OptimizedTradingStrategyEngine {
       return exitLevels.sort((a, b) => a.priority - b.priority);
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to calculate dynamic exit levels", {
+      console.error("Failed to calculate dynamic exit levels", {
         error: safeError.message,
         strategyId: strategy.id,
         positionId: position.id,
@@ -371,17 +360,9 @@ export class OptimizedTradingStrategyEngine {
       // Keep only last 1000 records
       if (this.strategyUsageHistory.length > 1000) {
         this.strategyUsageHistory = this.strategyUsageHistory.slice(-1000);
-      }
-
-      this.logger.debug("Strategy performance updated", {
-        strategyId,
-        totalTrades: performance.totalTrades,
-        successRate: performance.successRate,
-        averageReturn: performance.averageReturn,
-      });
-    } catch (error) {
+      }} catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to update strategy performance", {
+      console.error("Failed to update strategy performance", {
         error: safeError.message,
         strategyId,
       });
@@ -434,7 +415,7 @@ export class OptimizedTradingStrategyEngine {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to get strategy analytics", {
+      console.error("Failed to get strategy analytics", {
         error: safeError.message,
       });
 
@@ -673,9 +654,7 @@ export class OptimizedTradingStrategyEngine {
   }
 
   private startPerformanceTracking(): void {
-    // Performance tracking logic would be implemented here
-    this.logger.debug("Performance tracking started");
-  }
+    // Performance tracking logic would be implemented here}
 
   private mapStrategyToRiskProfile(
     strategyId: string

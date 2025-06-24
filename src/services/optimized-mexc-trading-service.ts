@@ -13,7 +13,6 @@ import type { NewExecutionHistory } from "../db/schema";
 import { apiCredentials, executionHistory } from "../db/schema";
 import { getCachedCredentials } from "../lib/credential-cache";
 import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { OrderParameters } from "./api/mexc-client-types";
 import { enhancedRiskManagementService } from "./enhanced-risk-management-service";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
@@ -96,7 +95,12 @@ type TradeExecutionResult = z.infer<typeof TradeExecutionResultSchema>;
 // ============================================================================
 
 export class OptimizedMexcTradingService {
-  private logger = createSafeLogger("optimized-mexc-trading");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[optimized-mexc-trading]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[optimized-mexc-trading]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[optimized-mexc-trading]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[optimized-mexc-trading]', message, context || ''),
+    };
 
   /**
    * Execute trading order with comprehensive validation and risk management
@@ -118,7 +122,7 @@ export class OptimizedMexcTradingService {
       skipRisk: false,
     });
 
-    this.logger.info("Starting optimized trade execution", {
+    console.info("Starting optimized trade execution", {
       requestId: context.requestId,
       symbol: validatedRequest.symbol,
       side: validatedRequest.side,
@@ -186,7 +190,7 @@ export class OptimizedMexcTradingService {
       await this.saveExecutionHistory(executionResult, validatedRequest, context);
       const response = this.buildTradingResponse(executionResult);
 
-      this.logger.info("Trade execution completed successfully", {
+      console.info("Trade execution completed successfully", {
         requestId: context.requestId,
         orderId: response.orderId,
         symbol: response.symbol,
@@ -196,7 +200,7 @@ export class OptimizedMexcTradingService {
       return { success: true, data: response };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(
+      console.error(
         "Unexpected trade execution error",
         {
           requestId: context.requestId,
@@ -223,7 +227,7 @@ export class OptimizedMexcTradingService {
     context: TradingContext
   ): Promise<TradingCredentials | null> {
     try {
-      this.logger.info("Retrieving credentials", {
+      console.info("Retrieving credentials", {
         requestId: context.requestId,
         userId,
       });
@@ -255,7 +259,7 @@ export class OptimizedMexcTradingService {
         source: "cache",
       });
 
-      this.logger.info("Credentials retrieved successfully", {
+      console.info("Credentials retrieved successfully", {
         requestId: context.requestId,
         hasApiKey: !!result.apiKey,
         hasSecretKey: !!result.secretKey,
@@ -264,7 +268,7 @@ export class OptimizedMexcTradingService {
 
       return result;
     } catch (error) {
-      this.logger.error("Failed to retrieve credentials", {
+      console.error("Failed to retrieve credentials", {
         requestId: context.requestId,
         error: getErrorMessage(error),
       });
@@ -273,7 +277,7 @@ export class OptimizedMexcTradingService {
   }
 
   private initializeMexcService(credentials: TradingCredentials, context: TradingContext) {
-    this.logger.info("Initializing MEXC service", {
+    console.info("Initializing MEXC service", {
       requestId: context.requestId,
       credentialSource: credentials.source,
     });
@@ -298,7 +302,7 @@ export class OptimizedMexcTradingService {
       timeInForce: request.timeInForce || "IOC", // Immediate or Cancel for safety
     };
 
-    this.logger.info("Order parameters prepared", {
+    console.info("Order parameters prepared", {
       requestId: context.requestId,
       symbol: orderParams.symbol,
       side: orderParams.side,
@@ -333,7 +337,7 @@ export class OptimizedMexcTradingService {
       }
       return { success: true };
     } catch (error) {
-      this.logger.error("Lock check failed", {
+      console.error("Lock check failed", {
         requestId: context.requestId,
         error: getErrorMessage(error),
       });
@@ -364,7 +368,7 @@ export class OptimizedMexcTradingService {
     }
 
     try {
-      this.logger.info("Performing risk assessment", {
+      console.info("Performing risk assessment", {
         requestId: context.requestId,
         userId,
         symbol: orderParams.symbol,
@@ -377,7 +381,7 @@ export class OptimizedMexcTradingService {
 
       const result = RiskAssessmentResultSchema.parse(riskAssessment);
 
-      this.logger.info("Risk assessment completed", {
+      console.info("Risk assessment completed", {
         requestId: context.requestId,
         approved: result.approved,
         riskLevel: result.riskLevel,
@@ -388,7 +392,7 @@ export class OptimizedMexcTradingService {
 
       return result;
     } catch (error) {
-      this.logger.error("Risk assessment failed", {
+      console.error("Risk assessment failed", {
         requestId: context.requestId,
         error: getErrorMessage(error),
       });
@@ -416,7 +420,7 @@ export class OptimizedMexcTradingService {
   ): Promise<TradeExecutionResult> {
     const executeTrade = async (): Promise<TradeExecutionResult> => {
       try {
-        this.logger.info("Executing trade", {
+        console.info("Executing trade", {
           requestId: context.requestId,
           symbol: orderParams.symbol,
         });
@@ -454,7 +458,7 @@ export class OptimizedMexcTradingService {
           },
         });
       } catch (error) {
-        this.logger.error("Trade execution failed", {
+        console.error("Trade execution failed", {
           requestId: context.requestId,
           error: getErrorMessage(error),
         });
@@ -514,7 +518,7 @@ export class OptimizedMexcTradingService {
     if (!result.success) return;
 
     try {
-      this.logger.info("Saving execution history", {
+      console.info("Saving execution history", {
         requestId: context.requestId,
         orderId: result.orderId,
       });
@@ -547,12 +551,12 @@ export class OptimizedMexcTradingService {
 
       await db.insert(executionHistory).values(executionRecord);
 
-      this.logger.info("Execution history saved", {
+      console.info("Execution history saved", {
         requestId: context.requestId,
         orderId: result.orderId,
       });
     } catch (error) {
-      this.logger.error("Failed to save execution history", {
+      console.error("Failed to save execution history", {
         requestId: context.requestId,
         error: getErrorMessage(error),
       });

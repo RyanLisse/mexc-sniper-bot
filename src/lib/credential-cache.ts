@@ -11,8 +11,6 @@
  */
 
 import { getEncryptionService } from "../services/secure-encryption-service";
-import { createSafeLogger } from "./structured-logger";
-
 interface CachedCredentials {
   apiKey: string;
   secretKey: string;
@@ -35,7 +33,12 @@ class CredentialCache {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("credential-cache");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[credential-cache]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[credential-cache]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[credential-cache]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[credential-cache]', message, context || ''),
+    };
     }
     return this._logger;
   }

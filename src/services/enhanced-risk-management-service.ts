@@ -9,10 +9,11 @@
  * - Compliance checks
  */
 
-import { createSafeLogger } from "../lib/structured-logger";
 import { getUnifiedMexcClient } from "./api/mexc-client-factory";
 import type { OrderParameters } from "./api/mexc-client-types";
 import { ErrorLoggingService } from "./error-logging-service";
+import { BaseService } from "../lib/logger-injection";
+import type { ILogger } from "../lib/structured-logger";
 
 export interface RiskProfile {
   userId: string;
@@ -94,15 +95,7 @@ export interface MarketConditions {
   riskMultiplier: number; // Adjustment factor for market conditions
 }
 
-export class EnhancedRiskManagementService {
-  private _logger?: ReturnType<typeof createSafeLogger>;
-  private getLogger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("enhanced-risk-management-service");
-    }
-    return this._logger;
-  }
-
+export class EnhancedRiskManagementService extends BaseService {
   private static instance: EnhancedRiskManagementService;
   private errorLogger = ErrorLoggingService.getInstance();
   private portfolioCache = new Map<string, { metrics: PortfolioMetrics; expiresAt: number }>();
@@ -126,11 +119,13 @@ export class EnhancedRiskManagementService {
     correlationLimit: 0.7, // Max 70% correlation between positions
   };
 
-  private constructor() {}
+  private constructor(logger?: ILogger) {
+    super("enhanced-risk-management-service", logger);
+  }
 
-  public static getInstance(): EnhancedRiskManagementService {
+  public static getInstance(logger?: ILogger): EnhancedRiskManagementService {
     if (!EnhancedRiskManagementService.instance) {
-      EnhancedRiskManagementService.instance = new EnhancedRiskManagementService();
+      EnhancedRiskManagementService.instance = new EnhancedRiskManagementService(logger);
     }
     return EnhancedRiskManagementService.instance;
   }
@@ -146,7 +141,7 @@ export class EnhancedRiskManagementService {
     const startTime = Date.now();
 
     try {
-      logger.info(
+      this.logger.info(
         `[Risk Management] Starting risk assessment for ${userId} - ${orderParams.symbol}`
       );
 
@@ -273,13 +268,13 @@ export class EnhancedRiskManagementService {
       assessment.recommendations.push(...this.generateRecommendations(assessment, profile));
 
       const assessmentTime = Date.now() - startTime;
-      logger.info(
+      this.logger.info(
         `[Risk Management] Risk assessment completed in ${assessmentTime}ms - Approved: ${assessment.approved}, Risk: ${assessment.riskLevel}`
       );
 
       return assessment;
     } catch (error) {
-      logger.error("[Risk Management] Risk assessment failed:", error);
+      this.logger.error("[Risk Management] Risk assessment failed:", error);
 
       await this.errorLogger.logError(error as Error, {
         context: "risk_assessment",
@@ -387,7 +382,7 @@ export class EnhancedRiskManagementService {
 
       return metrics;
     } catch (error) {
-      logger.error("[Risk Management] Failed to get portfolio metrics:", error);
+      this.logger.error("[Risk Management] Failed to get portfolio metrics:", error);
 
       // Return empty portfolio on error
       return {
@@ -461,7 +456,7 @@ export class EnhancedRiskManagementService {
         riskMultiplier,
       };
     } catch (error) {
-      logger.error("[Risk Management] Failed to assess market conditions:", error);
+      this.logger.error("[Risk Management] Failed to assess market conditions:", error);
       return this.getDefaultMarketConditions();
     }
   }
@@ -630,7 +625,7 @@ export class EnhancedRiskManagementService {
         warnings,
       };
     } catch (error) {
-      logger.error("[Risk Management] Correlation assessment failed:", error);
+      this.logger.error("[Risk Management] Correlation assessment failed:", error);
       return {
         compliant: true, // Default to compliant on error
         riskLevel: 50,
@@ -685,7 +680,7 @@ export class EnhancedRiskManagementService {
 
       return { riskLevel, warnings };
     } catch (error) {
-      logger.error("[Risk Management] Liquidity assessment failed:", error);
+      this.logger.error("[Risk Management] Liquidity assessment failed:", error);
       return {
         riskLevel: 50,
         warnings: ["Unable to assess liquidity risk"],
@@ -786,7 +781,7 @@ export class EnhancedRiskManagementService {
 
       return mockCorrelations;
     } catch (error) {
-      logger.error("[Risk Management] Failed to get correlations:", error);
+      this.logger.error("[Risk Management] Failed to get correlations:", error);
       return {};
     }
   }
@@ -896,7 +891,7 @@ export class EnhancedRiskManagementService {
   public clearCache(): void {
     this.portfolioCache.clear();
     this.correlationCache.clear();
-    logger.info("[Risk Management] Cache cleared");
+    this.logger.info("[Risk Management] Cache cleared");
   }
 
   public getCacheStats(): {
@@ -913,7 +908,7 @@ export class EnhancedRiskManagementService {
    * Initialize the service (required for integrated service compatibility)
    */
   async initialize(): Promise<void> {
-    logger.info("[Enhanced Risk Management] Initializing service...");
+    this.logger.info("[Enhanced Risk Management] Initializing service...");
     try {
       // Clear any stale cache on initialization
       this.clearCache();
@@ -922,9 +917,9 @@ export class EnhancedRiskManagementService {
       const mexcClient = getUnifiedMexcClient();
       await mexcClient.testConnectivity();
 
-      logger.info("[Enhanced Risk Management] Service initialized successfully");
+      this.logger.info("[Enhanced Risk Management] Service initialized successfully");
     } catch (error) {
-      logger.error("[Enhanced Risk Management] Service initialization failed:", error);
+      this.logger.error("[Enhanced Risk Management] Service initialization failed:", error);
       throw error;
     }
   }

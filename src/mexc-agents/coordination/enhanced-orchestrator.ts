@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { AgentMonitoringService } from "../../services/agent-monitoring-service";
 import type {
   AgentOrchestrationMetrics,
@@ -21,7 +21,13 @@ import type {
  * while maintaining backward compatibility with existing interfaces
  */
 export class EnhancedMexcOrchestrator {
-  private logger = createSafeLogger("enhanced-orchestrator");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[enhanced-orchestrator]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[enhanced-orchestrator]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[enhanced-orchestrator]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[enhanced-orchestrator]', message, context || ''),
+  };
 
   private agentRegistry: AgentRegistry;
   private workflowEngine: WorkflowEngine;

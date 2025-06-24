@@ -25,8 +25,6 @@ import {
   createSuccessResponse,
   HTTP_STATUS,
 } from "./api-response";
-import { createSafeLogger } from "./structured-logger";
-
 // ============================================================================
 // Types and Interfaces
 // ============================================================================
@@ -34,9 +32,7 @@ import { createSafeLogger } from "./structured-logger";
 export interface ApiRouteContext {
   request: NextRequest;
   startTime: number;
-  requestId: string;
-  logger: ReturnType<typeof createSafeLogger>;
-}
+  requestId: string;}
 
 export interface ApiRouteOptions<TQuery = any, TBody = any, TResponse = any> {
   // Validation schemas
@@ -100,8 +96,6 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
     const startTime = Date.now();
     const requestId = `api_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     const routeName = options.routeName || "unknown-route";
-    const logger = createSafeLogger(`api-${routeName}`);
-
     const context: ApiRouteContext = {
       request,
       startTime,
@@ -111,7 +105,7 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 
     try {
       // Log request start
-      logger.info(`[${routeName.toUpperCase()}] API request received`, {
+      console.info(`[${routeName.toUpperCase()}] API request received`, {
         requestId,
         method: request.method,
         url: request.url,
@@ -139,7 +133,7 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 
         const queryValidation = validateMexcApiRequest(options.querySchema, queryParams);
         if (!queryValidation.success) {
-          logger.warn(`[${routeName.toUpperCase()}] Query validation failed`, {
+          console.warn(`[${routeName.toUpperCase()}] Query validation failed`, {
             requestId,
             error: queryValidation.error,
             details: queryValidation.details,
@@ -166,7 +160,7 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
           const bodyValidation = validateMexcApiRequest(options.bodySchema, rawBody);
 
           if (!bodyValidation.success) {
-            logger.warn(`[${routeName.toUpperCase()}] Body validation failed`, {
+            console.warn(`[${routeName.toUpperCase()}] Body validation failed`, {
               requestId,
               error: bodyValidation.error,
               details: bodyValidation.details,
@@ -184,7 +178,7 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
           }
           bodyData = bodyValidation.data;
         } catch (error) {
-          logger.warn(`[${routeName.toUpperCase()}] Invalid JSON in request body`, {
+          console.warn(`[${routeName.toUpperCase()}] Invalid JSON in request body`, {
             requestId,
             error: error instanceof Error ? error.message : "Unknown error",
           });
@@ -227,7 +221,7 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
         );
 
         if (!responseValidation.success) {
-          logger.warn(`[${routeName.toUpperCase()}] Response validation failed`, {
+          console.warn(`[${routeName.toUpperCase()}] Response validation failed`, {
             requestId,
             error: responseValidation.error,
             result: typeof result,
@@ -238,7 +232,7 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 
       const requestDuration = Date.now() - startTime;
 
-      logger.info(`[${routeName.toUpperCase()}] Request completed successfully`, {
+      console.info(`[${routeName.toUpperCase()}] Request completed successfully`, {
         requestId,
         requestDuration: `${requestDuration}ms`,
         responseSize: JSON.stringify(result).length,
@@ -256,7 +250,7 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
       const requestDuration = Date.now() - startTime;
       const safeError = error instanceof Error ? error : new Error("Unknown error occurred");
 
-      logger.error(`[${routeName.toUpperCase()}] Request failed`, {
+      console.error(`[${routeName.toUpperCase()}] Request failed`, {
         requestId,
         error: safeError.message,
         stack: safeError.stack,
@@ -268,7 +262,7 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
         try {
           return options.customErrorHandler(safeError, context);
         } catch (handlerError) {
-          logger.error(`[${routeName.toUpperCase()}] Custom error handler failed`, {
+          console.error(`[${routeName.toUpperCase()}] Custom error handler failed`, {
             requestId,
             originalError: safeError.message,
             handlerError: handlerError instanceof Error ? handlerError.message : "Unknown",

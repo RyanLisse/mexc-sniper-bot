@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { db } from "../../../src/db";
 import { snipeTargets, executionHistory } from "../../../src/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -17,8 +16,6 @@ import {
   validateApiQuery,
   createValidatedApiResponse,
 } from "../../../src/schemas/api-validation-schemas";
-
-const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -100,7 +97,7 @@ export async function GET(request: NextRequest) {
             unrealizedPnLPercent,
           };
         } catch (error) {
-          logger.warn(`Could not get price for ${position.symbolName}:`, { error: error instanceof Error ? error.message : String(error) });
+          console.warn(`Could not get price for ${position.symbolName}:`, { error: error instanceof Error ? error.message : String(error) });
           return {
             ...position,
             currentPrice: position.executionPrice || 0,
@@ -159,7 +156,7 @@ export async function GET(request: NextRequest) {
       )
     );
   } catch (error) {
-    logger.error("❌ Error fetching portfolio:", { error: error });
+    console.error("❌ Error fetching portfolio:", { error: error });
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"

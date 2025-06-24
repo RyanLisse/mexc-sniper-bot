@@ -2,12 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "../lib/api-response";
 import { useAuth } from "../lib/kinde-auth-client";
 import { queryKeys } from "../lib/query-client";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 
 // MEXC Calendar Data Hook
-const logger = createSafeLogger("use-mexc-data");
-
 export function useMexcCalendar() {
   return useQuery({
     queryKey: queryKeys.mexcCalendar(),
@@ -157,7 +154,7 @@ export function useMexcConnectivity() {
           return result;
         } catch (error) {
           lastError = error instanceof Error ? error : new Error("Unknown error");
-          logger.warn(
+          console.warn(
             `Connectivity check attempt ${attempt + 1}/${maxRetries} failed:`,
             lastError.message
           );
@@ -288,7 +285,7 @@ export function useUpcomingLaunches() {
             launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours24
           );
         } catch (_error) {
-          logger.warn("Invalid date in calendar entry:", entry.firstOpenTime);
+          console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
           return false;
         }
       })
@@ -316,7 +313,7 @@ export function useReadyTargets() {
             launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours4
           );
         } catch (_error) {
-          logger.warn("Invalid date in calendar entry:", entry.firstOpenTime);
+          console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
           return false;
         }
       })

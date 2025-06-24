@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../src/lib/structured-logger';
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { PatternDetectionCore } from "../../../src/core/pattern-detection";
 import { patternStrategyOrchestrator } from "../../../src/services/pattern-strategy-orchestrator";
 import { patternEmbeddingService } from "../../../src/services/pattern-embedding-service";
@@ -32,10 +32,15 @@ const PatternDetectionRequestSchema = z.object({
   timeWindow: z.number().optional(), // hours
 });
 
-// Create logger at module level like other working routes
-const logger = createSafeLogger('route');
-
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
+  // Build-safe logger - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[pattern-detection]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[pattern-detection]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[pattern-detection]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[pattern-detection]', message, context || ''),
+  };
+  
   try {
     const body = await request.json();
     const validatedRequest = PatternDetectionRequestSchema.parse(body);
@@ -286,6 +291,14 @@ async function handlePatternPerformance(request: z.infer<typeof PatternDetection
 
 // GET endpoint for health check and basic info
 export async function GET(request: NextRequest) {
+  // Build-safe logger - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[pattern-detection-get]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[pattern-detection-get]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[pattern-detection-get]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[pattern-detection-get]', message, context || ''),
+  };
+  
   try {
     const url = new URL(request.url);
     const action = url.searchParams.get("action");

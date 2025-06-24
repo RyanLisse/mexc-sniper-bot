@@ -4,8 +4,6 @@ import {
   type InsertAnomalyModel,
   type SelectAnomalyModel,
 } from "../db/schemas/alerts";
-import { createSafeLogger } from "../lib/structured-logger";
-
 export interface AnomalyDetectionResult {
   isAnomaly: boolean;
   score: number; // Standard deviations from normal
@@ -66,15 +64,18 @@ interface SeasonalModel {
 }
 
 export class AnomalyDetectionService {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
-  /**
+  private _/**
    * Lazy logger initialization to prevent webpack bundling issues
    */
   private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createSafeLogger("anomaly-detection-service");
+        this._logger = {
+      info: (message: string, context?: any) => console.info('[anomaly-detection-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[anomaly-detection-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[anomaly-detection-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[anomaly-detection-service]', message, context || ''),
+    };
       } catch (error) {
         this._logger = {
           debug: console.debug.bind(console),
@@ -99,7 +100,7 @@ export class AnomalyDetectionService {
   }
 
   async initialize(): Promise<void> {
-    logger.info("Initializing Anomaly Detection Service...");
+    console.info("Initializing Anomaly Detection Service...");
 
     // Load existing models from database
     await this.loadModelsFromDatabase();
@@ -107,7 +108,7 @@ export class AnomalyDetectionService {
     // Start background model maintenance
     this.startModelMaintenance();
 
-    logger.info(`Loaded ${this.models.size} anomaly detection models`);
+    console.info(`Loaded ${this.models.size} anomaly detection models`);
   }
 
   // ==========================================
@@ -150,7 +151,7 @@ export class AnomalyDetectionService {
 
       return result;
     } catch (error) {
-      logger.error(`Error detecting anomaly for ${metricName}:`, error);
+      console.error(`Error detecting anomaly for ${metricName}:`, error);
       return {
         isAnomaly: false,
         score: 0,
@@ -317,7 +318,7 @@ export class AnomalyDetectionService {
       .limit(1);
 
     this.models.set(metricName, newModel[0]);
-    logger.info(`Created new ${modelType} model for metric: ${metricName}`);
+    console.info(`Created new ${modelType} model for metric: ${metricName}`);
 
     return newModel[0];
   }
@@ -329,7 +330,7 @@ export class AnomalyDetectionService {
         throw new Error(`Model not found for metric: ${metricName}`);
       }
 
-      logger.info(`Training model for ${metricName} with ${trainingData.length} data points`);
+      console.info(`Training model for ${metricName} with ${trainingData.length} data points`);
 
       const trainedModel = await this.performTraining(model, trainingData);
       const performance = await this.evaluateModel(trainedModel, trainingData);
@@ -361,11 +362,11 @@ export class AnomalyDetectionService {
 
       this.models.set(metricName, updatedModel[0]);
 
-      logger.info(
+      console.info(
         `Model training completed for ${metricName}. Performance: ${performance.f1Score.toFixed(3)} F1-score`
       );
     } catch (error) {
-      logger.error(`Error training model for ${metricName}:`, error);
+      console.error(`Error training model for ${metricName}:`, error);
     }
   }
 
@@ -754,14 +755,14 @@ export class AnomalyDetectionService {
   }
 
   private async performModelMaintenance(): Promise<void> {
-    logger.info("Performing model maintenance...");
+    console.info("Performing model maintenance...");
 
     const now = Date.now();
 
     for (const [metricName, model] of this.models.entries()) {
       // Check if model needs retraining due to age
       if (now - model.lastTrainedAt.getTime() > this.maxModelAge) {
-        logger.info(`Model for ${metricName} is stale, scheduling retrain`);
+        console.info(`Model for ${metricName} is stale, scheduling retrain`);
         this.scheduleModelRetrain(metricName);
       }
     }

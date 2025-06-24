@@ -1,11 +1,15 @@
 /**
- * Structured Logger for MEXC Trading Bot
+ * Environment-Aware Structured Logger for MEXC Trading Bot
  *
- * Build-safe structured logging without OpenTelemetry dependencies during compilation
- * Webpack-optimized with static exports for proper bundling
+ * Provides different logger implementations for client vs server environments
+ * Eliminates webpack bundling issues through environment detection
+ * Zero client-side dependencies for Node.js modules
  */
 
-// Build-safe logger implementation inline to avoid import issues during webpack bundling
+// Environment detection utilities
+const isServer = typeof window === 'undefined';
+const isBrowser = typeof window !== 'undefined';
+const isNode = typeof process !== 'undefined' && process.versions?.node;
 
 // Build-safe trace fallback - completely static, no dynamic imports
 const NOOP_TRACE = {
@@ -13,9 +17,10 @@ const NOOP_TRACE = {
 } as const;
 
 /**
- * Build-safe logger that always works during webpack bundling
+ * Client-safe logger for browser environments
+ * Lightweight implementation with zero Node.js dependencies
  */
-class BuildSafeLogger {
+class ClientLogger implements ILogger {
   private component: string;
   private service: string;
 
@@ -26,21 +31,26 @@ class BuildSafeLogger {
 
   private formatMessage(level: string, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
-    const contextStr =
-      context && Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : "";
+    const contextStr = context && Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : "";
     return `${timestamp} [${level.toUpperCase()}] ${this.component}: ${message}${contextStr}`;
   }
 
   debug(message: string, context?: LogContext): void {
-    console.debug(this.formatMessage("debug", message, context));
+    if (isBrowser && console.debug) {
+      console.debug(this.formatMessage("debug", message, context));
+    }
   }
 
   info(message: string, context?: LogContext): void {
-    console.info(this.formatMessage("info", message, context));
+    if (isBrowser && console.info) {
+      console.info(this.formatMessage("info", message, context));
+    }
   }
 
   warn(message: string, context?: LogContext): void {
-    console.warn(this.formatMessage("warn", message, context));
+    if (isBrowser && console.warn) {
+      console.warn(this.formatMessage("warn", message, context));
+    }
   }
 
   error(message: string, context?: LogContext, error?: Error): void {
@@ -49,7 +59,9 @@ class BuildSafeLogger {
       error: error?.message,
       stack: error?.stack,
     };
-    console.error(this.formatMessage("error", message, errorContext));
+    if (isBrowser && console.error) {
+      console.error(this.formatMessage("error", message, errorContext));
+    }
   }
 
   fatal(message: string, context?: LogContext, error?: Error): void {
@@ -93,6 +105,24 @@ class BuildSafeLogger {
 }
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
+
+/**
+ * Common logger interface for both client and server implementations
+ */
+export interface ILogger {
+  debug(message: string, context?: LogContext): void;
+  info(message: string, context?: LogContext): void;
+  warn(message: string, context?: LogContext): void;
+  error(message: string, context?: LogContext, error?: Error): void;
+  fatal(message: string, context?: LogContext, error?: Error): void;
+  trading(operation: string, context: LogContext): void;
+  pattern(patternType: string, confidence: number, context?: LogContext): void;
+  api(endpoint: string, method: string, responseTime: number, context?: LogContext): void;
+  agent(agentId: string, taskType: string, context?: LogContext): void;
+  performance(operation: string, duration: number, context?: LogContext): void;
+  cache(operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext): void;
+  safety(event: string, riskScore: number, context?: LogContext): void;
+}
 
 export interface LogContext {
   // Trading context
@@ -140,9 +170,9 @@ export interface LogEntry {
 }
 
 /**
- * Structured Logger Class - Build-safe implementation
+ * Server-Side Structured Logger - Full-featured implementation for Node.js
  */
-export class StructuredLogger {
+export class StructuredLogger implements ILogger {
   private readonly service: string;
   private readonly component: string;
   private readonly logLevel: LogLevel;
@@ -150,9 +180,8 @@ export class StructuredLogger {
   constructor(service: string, component: string, logLevel: LogLevel = "info") {
     this.service = service;
     this.component = component;
-    // Ensure we safely access process.env during build time
-    const envLogLevel =
-      typeof process !== "undefined" && process.env ? process.env.LOG_LEVEL : undefined;
+    // Server-side environment variable access
+    const envLogLevel = isServer && typeof process !== "undefined" && process.env ? process.env.LOG_LEVEL : undefined;
     this.logLevel = this.parseLogLevel(envLogLevel || logLevel);
   }
 
@@ -200,14 +229,19 @@ export class StructuredLogger {
   }
 
   /**
-   * Emit log entry - Build-safe implementation
+   * Emit log entry - Server-side implementation with environment detection
    */
   private emit(entry: LogEntry): void {
     if (!this.shouldLog(entry.level)) return;
 
-    // Safely check environment during build time
-    const isProduction =
-      typeof process !== "undefined" && process.env && process.env.NODE_ENV === "production";
+    // Server-side environment detection
+    const isProduction = isServer && 
+      typeof process !== "undefined" && 
+      process.env && 
+      process.env.NODE_ENV === "production";
+
+    // Only emit on server-side to prevent client-side bundling issues
+    if (!isServer) return;
 
     // Format for console output (development) or structured output (production)
     if (isProduction) {
@@ -366,30 +400,67 @@ export class StructuredLogger {
 }
 
 /**
- * Create logger instance for a specific component
- * Build-safe factory function that handles webpack bundling gracefully
+ * Build-safe logger factory - Always returns simple console logger
+ * Eliminates webpack bundling issues completely
  */
 export function createSafeLogger(
   component: string,
   service: string = "mexc-trading-bot"
-): StructuredLogger {
-  // Validate inputs to ensure build-time safety
+): ILogger {
+  // Validate inputs
   if (typeof component !== "string" || !component) {
     component = "unknown";
   }
-  if (typeof service !== "string" || !service) {
-    service = "mexc-trading-bot";
-  }
+  
+  // Always return simple console logger to avoid any bundling issues
+  return {
+    debug: (message: string, context?: LogContext) => 
+      console.debug(`[${component}]`, message, context || ''),
+    info: (message: string, context?: LogContext) => 
+      console.info(`[${component}]`, message, context || ''),
+    warn: (message: string, context?: LogContext) => 
+      console.warn(`[${component}]`, message, context || ''),
+    error: (message: string, context?: LogContext, error?: Error) => 
+      console.error(`[${component}]`, message, context || '', error || ''),
+    fatal: (message: string, context?: LogContext, error?: Error) => 
+      console.error(`[${component}] FATAL:`, message, context || '', error || ''),
+    trading: (operation: string, context: LogContext) => 
+      console.info(`[${component}] Trading:`, operation, context),
+    pattern: (patternType: string, confidence: number, context?: LogContext) => 
+      console.info(`[${component}] Pattern:`, patternType, `confidence: ${confidence}`, context || ''),
+    api: (endpoint: string, method: string, responseTime: number, context?: LogContext) => 
+      console.info(`[${component}] API:`, method, endpoint, `${responseTime}ms`, context || ''),
+    agent: (agentId: string, taskType: string, context?: LogContext) => 
+      console.info(`[${component}] Agent:`, agentId, taskType, context || ''),
+    performance: (operation: string, duration: number, context?: LogContext) => 
+      console.info(`[${component}] Performance:`, operation, `${duration}ms`, context || ''),
+    cache: (operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext) => 
+      console.debug(`[${component}] Cache:`, operation, key, context || ''),
+    safety: (event: string, riskScore: number, context?: LogContext) => 
+      console.warn(`[${component}] Safety:`, event, `risk: ${riskScore}`, context || ''),
+  } as ILogger;
+}
 
-  // Build-time safety check for webpack bundling
-  try {
-    // Always use the main StructuredLogger for consistency
-    return new StructuredLogger(service, component);
-  } catch (error) {
-    // Fallback for build-time issues - return simple console logger
-    console.warn(`[Logger] Fallback logger used for ${component}:`, error);
-    return createFallbackLogger(component, service);
-  }
+/**
+ * Server-only logger creation (for dependency injection)
+ * Explicitly creates server-side logger regardless of environment
+ */
+export function createServerLogger(
+  component: string,
+  service: string = "mexc-trading-bot"
+): StructuredLogger {
+  return new StructuredLogger(service, component);
+}
+
+/**
+ * Client-only logger creation (for dependency injection)
+ * Explicitly creates client-side logger regardless of environment
+ */
+export function createClientLogger(
+  component: string,
+  service: string = "mexc-trading-bot"
+): ClientLogger {
+  return new ClientLogger(component, service);
 }
 
 /**
@@ -429,57 +500,167 @@ function createFallbackLogger(component: string, service: string): StructuredLog
 }
 
 /**
- * Default logger instances for common components
+ * Environment-aware logger instances for common components
  * Using lazy initialization to prevent circular dependencies during build
  */
 export const logger = {
   // Core services
   get trading() {
-    return createSafeLogger("trading");
+    return {
+      info: (message: string, context?: any) => console.info('[trading]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[trading]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[trading]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[trading]', message, context || ''),
+    };
   },
   get pattern() {
-    return createSafeLogger("pattern-detection");
+    return {
+      info: (message: string, context?: any) => console.info('[pattern-detection]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[pattern-detection]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[pattern-detection]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[pattern-detection]', message, context || ''),
+    };
   },
   get safety() {
-    return createSafeLogger("safety");
+    return {
+      info: (message: string, context?: any) => console.info('[safety]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[safety]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[safety]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[safety]', message, context || ''),
+    };
   },
   get api() {
-    return createSafeLogger("api");
+    return {
+      info: (message: string, context?: any) => console.info('[api]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[api]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[api]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[api]', message, context || ''),
+    };
   },
 
   // Infrastructure
   get cache() {
-    return createSafeLogger("cache");
+    return {
+      info: (message: string, context?: any) => console.info('[cache]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[cache]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[cache]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[cache]', message, context || ''),
+    };
   },
   get database() {
-    return createSafeLogger("database");
+    return {
+      info: (message: string, context?: any) => console.info('[database]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[database]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[database]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[database]', message, context || ''),
+    };
   },
   get websocket() {
-    return createSafeLogger("websocket");
+    return {
+      info: (message: string, context?: any) => console.info('[websocket]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[websocket]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[websocket]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[websocket]', message, context || ''),
+    };
   },
 
   // Agent system
   get agent() {
-    return createSafeLogger("agent");
+    return {
+      info: (message: string, context?: any) => console.info('[agent]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[agent]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[agent]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[agent]', message, context || ''),
+    };
   },
   get coordination() {
-    return createSafeLogger("coordination");
+    return {
+      info: (message: string, context?: any) => console.info('[coordination]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[coordination]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[coordination]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[coordination]', message, context || ''),
+    };
   },
 
   // Monitoring
   get monitoring() {
-    return createSafeLogger("monitoring");
+    return {
+      info: (message: string, context?: any) => console.info('[monitoring]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[monitoring]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[monitoring]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[monitoring]', message, context || ''),
+    };
   },
   get performance() {
-    return createSafeLogger("performance");
+    return {
+      info: (message: string, context?: any) => console.info('[performance]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[performance]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[performance]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[performance]', message, context || ''),
+    };
   },
 
   // General purpose
   get system() {
-    return createSafeLogger("system");
+    return {
+      info: (message: string, context?: any) => console.info('[system]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[system]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[system]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[system]', message, context || ''),
+    };
   },
   get default() {
-    return createSafeLogger("default");
+    return {
+      info: (message: string, context?: any) => console.info('[default]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[default]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[default]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[default]', message, context || ''),
+    };
+  },
+};
+
+/**
+ * Server-only logger instances (for explicit server-side usage)
+ */
+export const serverLogger = {
+  get trading() {
+    return createServerLogger("trading");
+  },
+  get pattern() {
+    return createServerLogger("pattern-detection");
+  },
+  get safety() {
+    return createServerLogger("safety");
+  },
+  get api() {
+    return createServerLogger("api");
+  },
+  get cache() {
+    return createServerLogger("cache");
+  },
+  get database() {
+    return createServerLogger("database");
+  },
+  get websocket() {
+    return createServerLogger("websocket");
+  },
+  get agent() {
+    return createServerLogger("agent");
+  },
+  get coordination() {
+    return createServerLogger("coordination");
+  },
+  get monitoring() {
+    return createServerLogger("monitoring");
+  },
+  get performance() {
+    return createServerLogger("performance");
+  },
+  get system() {
+    return createServerLogger("system");
+  },
+  get default() {
+    return createServerLogger("default");
   },
 };
 
@@ -529,8 +710,20 @@ export function createTimer(operation: string, component: string): PerformanceTi
 }
 
 // ===========================================
-// Build-safe module exports
+// Environment-aware module exports
 // ===========================================
 
-// Keep only named exports to ensure webpack compatibility
-// The individual exports above are already declared, so no re-exports needed
+// Type exports for dependency injection
+export type LoggerInstance = ILogger;
+export type ServerLoggerInstance = StructuredLogger;
+export type ClientLoggerInstance = ClientLogger;
+
+// Re-export key interfaces and types
+export { ClientLogger };
+
+// Environment detection exports (for testing and debugging)
+export const loggerEnvironment = {
+  isServer,
+  isBrowser,
+  isNode,
+};

@@ -12,13 +12,9 @@
 
 import { config } from 'dotenv';
 import { join } from 'path';
-import { createSafeLogger } from '../src/lib/structured-logger';
-
 // Load environment variables from both .env and .env.local
 config({ path: join(process.cwd(), '.env') });
 config({ path: join(process.cwd(), '.env.local') });
-
-const logger = createSafeLogger('SystemFix');
 
 interface SystemFixResult {
   component: string;
@@ -46,7 +42,7 @@ class ComprehensiveSystemFix {
   private results: SystemFixResult[] = [];
 
   async executeComprehensiveFix(): Promise<FixReport> {
-    logger.info('🚀 Starting comprehensive system fix...');
+    console.info('🚀 Starting comprehensive system fix...');
 
     // 1. Fix MEXC API Credentials Configuration
     await this.fixMexcCredentials();
@@ -71,7 +67,7 @@ class ComprehensiveSystemFix {
   }
 
   private async fixMexcCredentials(): Promise<void> {
-    logger.info('🔑 Fixing MEXC API credentials...');
+    console.info('🔑 Fixing MEXC API credentials...');
 
     try {
       const apiKey = process.env.MEXC_API_KEY;
@@ -148,7 +144,7 @@ class ComprehensiveSystemFix {
   }
 
   private async fixPatternDetectionEngine(): Promise<void> {
-    logger.info('🎯 Fixing pattern detection engine...');
+    console.info('🎯 Fixing pattern detection engine...');
 
     try {
       // Test pattern detection engine imports and basic functionality
@@ -280,7 +276,7 @@ class ComprehensiveSystemFix {
   }
 
   private async resetCircuitBreaker(): Promise<void> {
-    logger.info('⚡ Resetting circuit breaker from protective state...');
+    console.info('⚡ Resetting circuit breaker from protective state...');
 
     try {
       // Import and test circuit breaker functionality
@@ -382,7 +378,7 @@ class ComprehensiveSystemFix {
   }
 
   private async fixSafetyManagement(): Promise<void> {
-    logger.info('🛡️ Fixing safety & risk management systems...');
+    console.info('🛡️ Fixing safety & risk management systems...');
 
     try {
       // Test safety system components
@@ -570,7 +566,7 @@ class ComprehensiveSystemFix {
   }
 
   private async validateEnvironmentConfig(): Promise<void> {
-    logger.info('🌍 Validating environment configuration...');
+    console.info('🌍 Validating environment configuration...');
 
     const requiredVars = [
       'MEXC_API_KEY', 'MEXC_SECRET_KEY', 'MEXC_BASE_URL',
@@ -625,7 +621,7 @@ class ComprehensiveSystemFix {
   }
 
   private async validateTradingStrategies(): Promise<void> {
-    logger.info('📈 Validating trading strategy systems...');
+    console.info('📈 Validating trading strategy systems...');
 
     try {
       // Import and test trading services with comprehensive functional testing

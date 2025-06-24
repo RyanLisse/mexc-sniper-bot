@@ -20,7 +20,6 @@ import {
   useSaveApiCredentials,
   useTestApiCredentials,
 } from "../hooks/use-api-credentials";
-import { createSafeLogger } from "../lib/structured-logger";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -29,8 +28,6 @@ import { Input } from "./ui/input";
 interface ApiCredentialsFormProps {
   userId: string;
 }
-
-const logger = createSafeLogger("api-credentials-form");
 
 export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
   const { data: apiCredentials, isLoading: apiCredsLoading } = useApiCredentials(userId);
@@ -68,7 +65,7 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
       // Clear any previous test results
       setTestResult(null);
 
-      logger.info("[DEBUG] Client-side save request:", {
+      console.info("[DEBUG] Client-side save request:", {
         userId,
         hasApiKey: !!apiKeyInput.trim(),
         hasSecretKey: !!secretKeyInput.trim(),
@@ -87,7 +84,7 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
       setApiKeyInput("");
       setSecretKeyInput("");
 
-      logger.info("[DEBUG] Save result:", result);
+      console.info("[DEBUG] Save result:", result);
 
       // Show success message with masked credentials for verification
       setTestResult({

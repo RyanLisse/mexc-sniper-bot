@@ -9,7 +9,6 @@
  * - Security compliance checks
  */
 
-import { createSafeLogger } from "../lib/structured-logger";
 import { getUnifiedMexcClient } from "./api/mexc-client-factory";
 import { circuitBreakerRegistry } from "./circuit-breaker";
 import { ErrorLoggingService } from "./error-logging-service";
@@ -51,7 +50,12 @@ export interface ValidationResult {
 }
 
 export class EnhancedApiValidationService {
-  private logger = createSafeLogger("enhanced-api-validation-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[enhanced-api-validation-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[enhanced-api-validation-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[enhanced-api-validation-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[enhanced-api-validation-service]', message, context || ''),
+    };
 
   private static instance: EnhancedApiValidationService;
   private errorLogger = ErrorLoggingService.getInstance();
@@ -75,7 +79,7 @@ export class EnhancedApiValidationService {
     const cached = this.getCachedResult(cacheKey);
 
     if (cached) {
-      logger.info("[Enhanced API Validation] Using cached validation result");
+      console.info("[Enhanced API Validation] Using cached validation result");
       return cached;
     }
 
@@ -185,7 +189,7 @@ export class EnhancedApiValidationService {
       return this.cacheAndReturn(cacheKey, result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown validation error";
-      logger.error("[Enhanced API Validation] Validation failed:", error);
+      console.error("[Enhanced API Validation] Validation failed:", error);
 
       await this.errorLogger.logError(error as Error, {
         context: "api_validation",
@@ -562,7 +566,7 @@ export class EnhancedApiValidationService {
       } catch (error) {
         const latency = Date.now() - startTime;
         latencies.push(latency);
-        logger.warn(`[API Benchmark] Test ${i + 1} failed:`, error);
+        console.warn(`[API Benchmark] Test ${i + 1} failed:`, error);
       }
 
       // Small delay between tests
@@ -716,7 +720,7 @@ export class EnhancedApiValidationService {
    */
   public clearCache(): void {
     this.validationCache.clear();
-    logger.info("[Enhanced API Validation] Cache cleared");
+    console.info("[Enhanced API Validation] Cache cleared");
   }
 
   /**
@@ -733,7 +737,7 @@ export class EnhancedApiValidationService {
    * Initialize the service (required for integrated service compatibility)
    */
   async initialize(): Promise<void> {
-    logger.info("[Enhanced API Validation] Initializing service...");
+    console.info("[Enhanced API Validation] Initializing service...");
     try {
       // Clear any stale cache on initialization
       this.clearCache();
@@ -741,9 +745,9 @@ export class EnhancedApiValidationService {
       // Test basic connectivity
       await this.testNetworkConnectivity();
 
-      logger.info("[Enhanced API Validation] Service initialized successfully");
+      console.info("[Enhanced API Validation] Service initialized successfully");
     } catch (error) {
-      logger.error("[Enhanced API Validation] Service initialization failed:", error);
+      console.error("[Enhanced API Validation] Service initialization failed:", error);
       throw error;
     }
   }
@@ -793,7 +797,7 @@ export class EnhancedApiValidationService {
         validationDetails: validationResult,
       };
     } catch (error) {
-      logger.error("[Enhanced API Validation] Comprehensive validation failed:", error);
+      console.error("[Enhanced API Validation] Comprehensive validation failed:", error);
       return {
         credentialsValid: false,
         securityRisks: ["Validation system error"],

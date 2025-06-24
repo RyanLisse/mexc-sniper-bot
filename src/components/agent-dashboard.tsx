@@ -17,7 +17,6 @@ import {
   Zap,
 } from "lucide-react";
 import { useState } from "react";
-import { createSafeLogger } from "../lib/structured-logger";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -59,8 +58,6 @@ const agentDescriptions: Record<string, string> = {
   strategy: "Trading strategy generation and risk management",
   orchestrator: "Multi-agent workflow coordination",
 };
-
-const logger = createSafeLogger("agent-dashboard");
 
 export function AgentDashboard() {
   const { toast } = useToast();
@@ -207,7 +204,7 @@ export function AgentDashboard() {
   const executeAgentAction = useMutation({
     mutationFn: async ({ agentId, action }: { agentId: string; action: string }) => {
       // In real implementation, this would call an API endpoint
-      logger.info(`Executing ${action} on agent ${agentId}`);
+      console.info(`Executing ${action} on agent ${agentId}`);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       return { success: true };
     },

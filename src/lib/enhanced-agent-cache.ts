@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * Enhanced Agent Cache - Refactored Entry Point
+* Enhanced Agent Cache - Refactored Entry Point
  *
  * This file replaces the original 1228-line monolithic enhanced-agent-cache.ts
  * with a clean module-based architecture for better maintainability.
@@ -76,7 +75,12 @@ export class EnhancedAgentCache {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("enhanced-agent-cache");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[enhanced-agent-cache]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[enhanced-agent-cache]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[enhanced-agent-cache]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[enhanced-agent-cache]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -346,7 +350,7 @@ export class EnhancedAgentCache {
       return;
     }
 
-    this.logger.info("[EnhancedAgentCache] Initializing enhanced agent cache system...");
+    console.info("[EnhancedAgentCache] Initializing enhanced agent cache system...");
 
     // Initialize performance monitoring
     this.performanceMonitor.startTracking();
@@ -357,14 +361,14 @@ export class EnhancedAgentCache {
     }
 
     this.isInitialized = true;
-    this.logger.info("[EnhancedAgentCache] Enhanced agent cache system initialized");
+    console.info("[EnhancedAgentCache] Enhanced agent cache system initialized");
   }
 
   /**
    * Cleanup and destroy the enhanced agent cache
    */
   async destroy(): Promise<void> {
-    this.logger.info("[EnhancedAgentCache] Destroying enhanced agent cache system...");
+    console.info("[EnhancedAgentCache] Destroying enhanced agent cache system...");
 
     // Stop cache warming
     this.warmingManager.stopWarmup();
@@ -373,7 +377,7 @@ export class EnhancedAgentCache {
     this.performanceMonitor.stopTracking();
 
     this.isInitialized = false;
-    this.logger.info("[EnhancedAgentCache] Enhanced agent cache destroyed");
+    console.info("[EnhancedAgentCache] Enhanced agent cache destroyed");
   }
 }
 
@@ -435,8 +439,7 @@ export function withAgentCache<T extends (...args: any[]) => Promise<AgentRespon
  * Initialize agent cache for a specific agent
  */
 export async function initializeAgentCache(agentId: string): Promise<void> {
-  const logger = createSafeLogger("enhanced-agent-cache");
-  logger.info(`[EnhancedAgentCache] Initializing cache for agent: ${agentId}`);
+  console.info(`[EnhancedAgentCache] Initializing cache for agent: ${agentId}`);
 
   // Initialize the global cache if not already done
   await globalEnhancedAgentCache.initialize();

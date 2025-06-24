@@ -7,7 +7,6 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createSafeLogger, createTimer } from "../../lib/structured-logger";
 import type { SafetyConfiguration, SystemHealth } from "../../schemas/safety-monitoring-schemas";
 import { validateSystemHealth } from "../../schemas/safety-monitoring-schemas";
 import type {
@@ -76,10 +75,15 @@ export interface ComprehensiveRiskAssessment {
 }
 
 export class RiskAssessment {
-  private logger = createSafeLogger("risk-assessment");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[risk-assessment]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[risk-assessment]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[risk-assessment]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[risk-assessment]', message, context || ''),
+    };
 
   constructor(private config: RiskAssessmentConfig) {
-    this.logger.info("Risk assessment module initialized", {
+    console.info("Risk assessment module initialized", {
       operation: "initialization",
       hasExecutionService: !!config.executionService,
       hasPatternMonitoring: !!config.patternMonitoring,
@@ -94,12 +98,7 @@ export class RiskAssessment {
   public async performComprehensiveAssessment(): Promise<ComprehensiveRiskAssessment> {
     const timer = createTimer("comprehensive_assessment", "risk-assessment");
 
-    try {
-      this.logger.debug("Starting comprehensive risk assessment", {
-        operation: "comprehensive_assessment",
-      });
-
-      // Run all assessments in parallel for better performance
+    try {// Run all assessments in parallel for better performance
       const [portfolio, performance, pattern, system] = await Promise.all([
         this.assessPortfolioRisk(),
         this.assessPerformanceRisk(),
@@ -144,7 +143,7 @@ export class RiskAssessment {
         status: "success",
       });
 
-      this.logger.info("Comprehensive risk assessment completed", {
+      console.info("Comprehensive risk assessment completed", {
         operation: "comprehensive_assessment",
         duration,
         overallRiskScore,
@@ -156,7 +155,7 @@ export class RiskAssessment {
     } catch (error) {
       const duration = timer.end({ status: "failed" });
 
-      this.logger.error(
+      console.error(
         "Comprehensive risk assessment failed",
         {
           operation: "comprehensive_assessment",
@@ -217,7 +216,7 @@ export class RiskAssessment {
         recommendations,
       };
     } catch (error) {
-      this.logger.error(
+      console.error(
         "Portfolio risk assessment failed",
         {
           operation: "assess_portfolio_risk",
@@ -263,7 +262,7 @@ export class RiskAssessment {
         recommendations,
       };
     } catch (error) {
-      this.logger.error(
+      console.error(
         "Performance risk assessment failed",
         {
           operation: "assess_performance_risk",
@@ -307,7 +306,7 @@ export class RiskAssessment {
         recommendations,
       };
     } catch (error) {
-      this.logger.error(
+      console.error(
         "Pattern risk assessment failed",
         {
           operation: "assess_pattern_risk",
@@ -371,7 +370,7 @@ export class RiskAssessment {
         recommendations,
       };
     } catch (error) {
-      this.logger.error(
+      console.error(
         "System risk assessment failed",
         {
           operation: "assess_system_risk",

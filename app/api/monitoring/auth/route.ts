@@ -8,8 +8,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
-
 interface MonitoringMetrics {
   timestamp: string;
   uptime: number;
@@ -74,8 +72,6 @@ interface AuthMonitoringData {
 // In-memory storage for demonstration (in production, use Redis or database)
 const monitoringData: MonitoringMetrics[] = [];
 const alerts: AuthMonitoringData['alerts'] = [];
-
-const logger = createSafeLogger('route');
 
 function generateMockMetrics(): AuthMonitoringData {
   const now = new Date();
@@ -243,7 +239,7 @@ auth_requests_per_minute{environment="${monitoringData.environment.name}"} ${mon
     });
     
   } catch (error) {
-    logger.error('Monitoring endpoint error:', { error });
+    console.error('Monitoring endpoint error:', { error });
     
     return NextResponse.json({
       status: 'critical',

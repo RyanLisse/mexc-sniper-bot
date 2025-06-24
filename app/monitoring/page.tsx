@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { createSafeLogger } from '../../src/lib/structured-logger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -61,8 +60,6 @@ interface QuickMetrics {
   successRate: number;
   criticalAlerts: number;
 }
-
-const logger = createSafeLogger('page');
 
 export default function MonitoringPage() {
   const [quickMetrics, setQuickMetrics] = useState<QuickMetrics | null>(null);
@@ -144,7 +141,7 @@ export default function MonitoringPage() {
 
       setLastUpdated(new Date());
     } catch (error) {
-      logger.error('Failed to fetch quick metrics:', { error: error instanceof Error ? error.message : String(error) });
+      console.error('Failed to fetch quick metrics:', { error: error instanceof Error ? error.message : String(error) });
       // Set default values on error to prevent undefined states
       setQuickMetrics({
         systemHealth: 0,

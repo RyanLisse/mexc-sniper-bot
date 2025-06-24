@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { db, apiCredentials, type NewApiCredentials } from "../../../src/db";
 import { eq, and } from 'drizzle-orm';
 import { getEncryptionService, SecureEncryptionService } from "../../../src/services/secure-encryption-service";
@@ -18,12 +17,10 @@ import {
   validateRequiredFields
 } from "../../../src/lib/auth-decorators";
 
-const logger = createSafeLogger('route');
-
 // GET /api/api-credentials?userId=xxx&provider=mexc
 export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) => {
   try {
-    logger.info('[DEBUG] GET api-credentials endpoint called', {
+    console.info('[DEBUG] GET api-credentials endpoint called', {
       userAuthenticated: !!user,
       userId: user?.id,
       timestamp: new Date().toISOString()
@@ -33,7 +30,7 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
     const userId = searchParams.get('userId');
     const provider = searchParams.get('provider') || 'mexc';
 
-    logger.info('[DEBUG] GET request details', {
+    console.info('[DEBUG] GET request details', {
       searchParamsUserId: userId,
       authenticatedUserId: user?.id,
       provider,
@@ -63,7 +60,7 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
     try {
       encryptionService = getEncryptionService();
     } catch (encryptionError) {
-      logger.error('[API] Encryption service initialization failed:', { error: encryptionError instanceof Error ? encryptionError.message : String(encryptionError) });
+      console.error('[API] Encryption service initialization failed:', { error: encryptionError instanceof Error ? encryptionError.message : String(encryptionError) });
       return apiResponse(
         createErrorResponse('Encryption service unavailable', {
           message: 'Unable to decrypt credentials. Please contact support.',
@@ -104,7 +101,7 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
         passphrase = encryptionService.decrypt(creds.encryptedPassphrase);
       }
     } catch (decryptError) {
-      logger.error('[API] Failed to decrypt credentials:', { error: decryptError instanceof Error ? decryptError.message : String(decryptError) });
+      console.error('[API] Failed to decrypt credentials:', { error: decryptError instanceof Error ? decryptError.message : String(decryptError) });
       // Return error but don't leak encryption details
       return apiResponse(
         createErrorResponse('Failed to retrieve credentials', {
@@ -131,7 +128,7 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
       createSuccessResponse(response)
     );
   } catch (error) {
-    logger.error('[API] GET api-credentials failed:', { error });
+    console.error('[API] GET api-credentials failed:', { error });
     return apiResponse(
       createErrorResponse('Failed to retrieve credentials', {
         message: 'An unexpected error occurred while retrieving API credentials',
@@ -145,7 +142,7 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
 // POST /api/api-credentials
 export const POST = userBodyRoute(async (request: NextRequest, user: any, body: any) => {
   try {
-    logger.info('[DEBUG] POST api-credentials endpoint called', {
+    console.info('[DEBUG] POST api-credentials endpoint called', {
       userAuthenticated: !!user,
       userId: user?.id,
       bodyKeys: Object.keys(body || {}),
@@ -154,7 +151,7 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
 
     const { userId, provider = 'mexc', apiKey, secretKey, passphrase } = body;
     
-    logger.info('[DEBUG] Credential save request', {
+    console.info('[DEBUG] Credential save request', {
       providedUserId: userId,
       authenticatedUserId: user?.id,
       provider,
@@ -171,7 +168,7 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
   // Validate required fields
   const missingField = validateRequiredFields(body, ['userId', 'apiKey', 'secretKey']);
   if (missingField) {
-    logger.info('[DEBUG] Missing required field:', { field: missingField, body: body });
+    console.info('[DEBUG] Missing required field:', { field: missingField, body: body });
     return apiResponse(
       createValidationErrorResponse('required_fields', missingField),
       HTTP_STATUS.BAD_REQUEST
@@ -180,7 +177,7 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
 
   // Additional validation for undefined values
   if (!apiKey || !secretKey) {
-    logger.info('[DEBUG] API key or secret key is undefined:', { apiKey, secretKey });
+    console.info('[DEBUG] API key or secret key is undefined:', { apiKey, secretKey });
     return apiResponse(
       createValidationErrorResponse('api_credentials', 'API key and secret key cannot be empty or undefined'),
       HTTP_STATUS.BAD_REQUEST
@@ -208,7 +205,7 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
   try {
     encryptionService = getEncryptionService();
   } catch (encryptionError) {
-    logger.error('[API] Encryption service initialization failed:', { error: encryptionError instanceof Error ? encryptionError.message : String(encryptionError) });
+    console.error('[API] Encryption service initialization failed:', { error: encryptionError instanceof Error ? encryptionError.message : String(encryptionError) });
     return apiResponse(
       createErrorResponse('Encryption service unavailable', {
         message: 'Unable to encrypt credentials. Please contact support.',
@@ -230,7 +227,7 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
       encryptedPassphrase = encryptionService.encrypt(passphrase);
     }
   } catch (encryptError) {
-    logger.error('[API] Failed to encrypt credentials:', { error: encryptError instanceof Error ? encryptError.message : String(encryptError) });
+    console.error('[API] Failed to encrypt credentials:', { error: encryptError instanceof Error ? encryptError.message : String(encryptError) });
     return apiResponse(
       createErrorResponse('Failed to secure credentials', {
         code: 'ENCRYPT_ERROR'
@@ -281,7 +278,7 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
     HTTP_STATUS.CREATED
   );
   } catch (error) {
-    logger.error('[API] POST api-credentials failed:', { error });
+    console.error('[API] POST api-credentials failed:', { error });
     return apiResponse(
       createErrorResponse('Failed to save credentials', {
         message: 'An unexpected error occurred while saving API credentials',

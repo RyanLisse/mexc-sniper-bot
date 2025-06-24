@@ -6,7 +6,6 @@
  */
 
 import { EventEmitter } from "events";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type {
   AgentConsensusRequest,
   SafetyMonitorAgent,
@@ -45,7 +44,12 @@ export interface EmergencyState {
 }
 
 export class EmergencyManager extends EventEmitter {
-  private logger = createSafeLogger("emergency-management");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[emergency-management]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[emergency-management]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[emergency-management]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[emergency-management]', message, context || ''),
+    };
 
   private emergencyState: EmergencyState;
   private activeProcedures: Map<string, EmergencyProcedure> = new Map();
@@ -83,7 +87,7 @@ export class EmergencyManager extends EventEmitter {
    * Execute emergency shutdown
    */
   async executeEmergencyShutdown(reason: string, userId: string): Promise<boolean> {
-    logger.info(`[EmergencyManager] Executing emergency shutdown: ${reason}`);
+    console.info(`[EmergencyManager] Executing emergency shutdown: ${reason}`);
 
     try {
       // Update emergency state
@@ -126,7 +130,7 @@ export class EmergencyManager extends EventEmitter {
 
       return true;
     } catch (error) {
-      logger.error("[EmergencyManager] Emergency shutdown failed:", error);
+      console.error("[EmergencyManager] Emergency shutdown failed:", error);
 
       await this.alertsManager.createAlert({
         type: "system_degradation",
@@ -170,7 +174,7 @@ export class EmergencyManager extends EventEmitter {
 
       return response;
     } catch (error) {
-      logger.error("[EmergencyManager] Consensus request failed:", error);
+      console.error("[EmergencyManager] Consensus request failed:", error);
       throw error;
     }
   }
@@ -255,7 +259,7 @@ export class EmergencyManager extends EventEmitter {
       throw new Error(`Emergency procedure not found: ${procedureId}`);
     }
 
-    logger.info(`[EmergencyManager] Executing procedure: ${procedure.name}`);
+    console.info(`[EmergencyManager] Executing procedure: ${procedure.name}`);
 
     try {
       // Check if consensus is required
@@ -298,7 +302,7 @@ export class EmergencyManager extends EventEmitter {
 
       return true;
     } catch (error) {
-      logger.error(`[EmergencyManager] Procedure execution failed:`, error);
+      console.error(`[EmergencyManager] Procedure execution failed:`, error);
 
       await this.alertsManager.createAlert({
         type: "emergency_condition",
@@ -429,7 +433,7 @@ export class EmergencyManager extends EventEmitter {
    * Execute an emergency step
    */
   private async executeEmergencyStep(step: EmergencyStep, procedureId: string): Promise<void> {
-    logger.info(`[EmergencyManager] Executing step: ${step.name}`);
+    console.info(`[EmergencyManager] Executing step: ${step.name}`);
 
     // Add timeout wrapper
     const executeWithTimeout = new Promise<void>((resolve, reject) => {
@@ -457,7 +461,7 @@ export class EmergencyManager extends EventEmitter {
    */
   private async executeStepAction(action: string): Promise<void> {
     // This would contain the actual implementation of various emergency actions
-    logger.info(`[EmergencyManager] Executing action: ${action}`);
+    console.info(`[EmergencyManager] Executing action: ${action}`);
 
     // For now, just simulate the action
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -481,6 +485,6 @@ export class EmergencyManager extends EventEmitter {
       this.procedureHistory = this.procedureHistory.slice(-100);
     }
 
-    logger.info(`[EmergencyManager] Recorded action: ${action.type} - ${action.reason}`);
+    console.info(`[EmergencyManager] Recorded action: ${action.type} - ${action.reason}`);
   }
 }

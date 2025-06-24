@@ -14,7 +14,6 @@
  */
 
 import { z } from "zod";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { UnifiedMexcConfig } from "./mexc-schemas";
 
 // ============================================================================
@@ -115,7 +114,12 @@ export interface ConfigurationMetrics {
  * Handles validation, updates, and health monitoring of all configuration
  */
 export class MexcConfigurationService {
-  private logger = createSafeLogger("mexc-configuration-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-configuration-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-configuration-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-configuration-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-configuration-service]', message, context || ''),
+    };
 
   private config: ServiceConfig;
   private metrics: ConfigurationMetrics;
@@ -448,7 +452,7 @@ export class MexcConfigurationService {
 
       return defaultConfig;
     } catch (error) {
-      logger.error("[MexcConfigurationService] Failed to load configuration:", error);
+      console.error("[MexcConfigurationService] Failed to load configuration:", error);
       // Return minimal safe configuration
       return ServiceConfigSchema.parse({});
     }
@@ -548,7 +552,7 @@ export async function initializeConfiguration(initialConfig?: Partial<ServiceCon
   const isReady = health.isValid && health.hasCredentials;
 
   if (!isReady) {
-    logger.warn("[Configuration] Service not ready:", {
+    console.warn("[Configuration] Service not ready:", {
       isValid: health.isValid,
       hasCredentials: health.hasCredentials,
       errors: health.validationErrors,

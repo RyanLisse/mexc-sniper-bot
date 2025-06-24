@@ -3,8 +3,6 @@
  * Properly typed system interfaces for Claude-Flow architecture
  */
 
-import { createSafeLogger } from "../../lib/structured-logger";
-
 // Core type definitions for system configuration
 export interface CoreSystemConfig {
   apiKey?: string;
@@ -141,7 +139,12 @@ export interface CoreSystemConstructorConfig {
 }
 
 export class CoreSystem {
-  private logger = createSafeLogger("system");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[system]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[system]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[system]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[system]', message, context || ''),
+    };
 
   private config: CoreSystemConstructorConfig;
 
@@ -249,7 +252,7 @@ export class CoreSystem {
   };
 
   startREPL = async () => {
-    this.logger.info("REPL mode started (stub)");
+    console.info("REPL mode started (stub)");
   };
 
   async initialize(_options?: Partial<CoreSystemConfig>): Promise<void> {

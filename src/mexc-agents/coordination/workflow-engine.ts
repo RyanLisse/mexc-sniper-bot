@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { AgentRegistry } from "./agent-registry";
 import { WorkflowDependencyResolver } from "./workflow-dependency-resolver";
 import type {
@@ -16,13 +16,12 @@ import { WorkflowValidator } from "./workflow-validator";
  * parallel/sequential execution, and comprehensive failure handling
  */
 export class WorkflowEngine {
-  private _logger?: ReturnType<typeof createSafeLogger>;
-  private get logger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("workflow-engine");
-    }
-    return this._logger;
-  }
+  private logger = {
+    info: (message: string, context?: any) => console.info('[workflow-engine]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[workflow-engine]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[workflow-engine]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[workflow-engine]', message, context || ''),
+  };
 
   private agentRegistry: AgentRegistry;
   private runningWorkflows: Map<string, WorkflowContext> = new Map();

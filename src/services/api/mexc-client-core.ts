@@ -6,7 +6,6 @@
  */
 
 import * as crypto from "node:crypto";
-import { createSafeLogger } from "../../lib/structured-logger";
 import { mexcApiBreaker } from "../circuit-breaker";
 import type { UnifiedMexcConfig, UnifiedMexcResponse } from "./mexc-client-types";
 import { MexcClientError } from "./mexc-client-types";
@@ -21,7 +20,12 @@ export class MexcClientCore {
   private lastRequestTime = 0;
   protected cache: MexcRequestCache;
   private requestCounter = 0;
-  private logger = createSafeLogger("mexc-client-core");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-client-core]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-client-core]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-client-core]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-client-core]', message, context || ''),
+    };
 
   constructor(config: UnifiedMexcConfig = {}) {
     this.config = {
@@ -38,7 +42,7 @@ export class MexcClientCore {
 
     this.cache = new MexcRequestCache(1000);
 
-    this.logger.info(`[MexcClientCore] Initialized with config:`, {
+    console.info(`[MexcClientCore] Initialized with config:`, {
       hasApiKey: Boolean(this.config.apiKey),
       hasSecretKey: Boolean(this.config.secretKey),
       baseUrl: this.config.baseUrl,
@@ -129,7 +133,7 @@ export class MexcClientCore {
     if (this.config.enableCaching && !skipCache && !authenticated) {
       const cached = this.cache.get<T>(cacheKey);
       if (cached) {
-        this.logger.info(`[MexcClientCore] Cache hit for ${endpoint} (${requestId})`);
+        console.info(`[MexcClientCore] Cache hit for ${endpoint} (${requestId})`);
         return {
           success: true,
           data: cached,
@@ -278,7 +282,7 @@ export class MexcClientCore {
                 error.message.includes("ECONNRESET") ||
                 error.message.includes("ENOTFOUND"));
 
-            this.logger.error(
+            console.error(
               `[MexcClientCore] Request failed (attempt ${attempt}/${maxRetries}) (${requestId}):`,
               error instanceof Error ? error.message : error
             );
@@ -330,7 +334,7 @@ export class MexcClientCore {
       },
       async () => {
         // Fallback mechanism - return a minimal error response
-        this.logger.warn(`[MexcClientCore] Circuit breaker fallback triggered (${requestId})`);
+        console.warn(`[MexcClientCore] Circuit breaker fallback triggered (${requestId})`);
         return {
           success: false,
           data: null as T,

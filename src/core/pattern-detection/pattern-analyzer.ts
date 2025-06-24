@@ -12,7 +12,6 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type {
   CorrelationAnalysis,
@@ -31,7 +30,12 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   private static instance: PatternAnalyzer;
   private readonly READY_STATE_PATTERN: ReadyStatePattern = { sts: 2, st: 2, tt: 4 };
   private readonly MIN_ADVANCE_HOURS = 3.5; // Core competitive advantage
-  private logger = createSafeLogger("pattern-analyzer");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[pattern-analyzer]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[pattern-analyzer]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[pattern-analyzer]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[pattern-analyzer]', message, context || ''),
+    };
 
   static getInstance(): PatternAnalyzer {
     if (!PatternAnalyzer.instance) {
@@ -51,7 +55,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
     // Handle null/undefined input gracefully
     if (!symbolData) {
-      this.logger.warn("Null/undefined symbol data provided to detectReadyStatePattern");
+      console.warn("Null/undefined symbol data provided to detectReadyStatePattern");
       return [];
     }
 
@@ -67,7 +71,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
       try {
         // Validate symbol data
         if (!this.validateSymbolData(symbol)) {
-          this.logger.warn("Invalid symbol data", { symbol: symbol?.cd || "unknown" });
+          console.warn("Invalid symbol data", { symbol: symbol?.cd || "unknown" });
           continue;
         }
 
@@ -126,7 +130,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        this.logger.error(
+        console.error(
           "Error processing symbol",
           {
             symbol: symbol?.cd || "unknown",
@@ -139,7 +143,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     }
 
     const duration = Date.now() - startTime;
-    this.logger.info("Ready state detection completed", {
+    console.info("Ready state detection completed", {
       symbolsAnalyzed: symbols.length,
       patternsFound: matches.length,
       duration,
@@ -242,7 +246,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        this.logger.error(
+        console.error(
           "Error processing calendar entry",
           {
             symbol: entry?.symbol || "unknown",
@@ -255,7 +259,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     }
 
     const duration = Date.now() - startTime;
-    this.logger.info("Advance opportunity detection completed", {
+    console.info("Advance opportunity detection completed", {
       calendarEntriesAnalyzed: calendarEntries.length,
       opportunitiesFound: matches.length,
       duration,
@@ -312,7 +316,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        this.logger.error(
+        console.error(
           "Error processing pre-ready symbol",
           {
             symbol: symbol?.cd || "unknown",
@@ -353,7 +357,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
       }
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(
+      console.error(
         "Error analyzing correlations",
         {
           symbolsAnalyzed: symbolData.length,
@@ -549,7 +553,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
       // For now, return empty array for test compatibility
       return [];
     } catch (error) {
-      this.logger.warn("Failed to fetch activity data", { symbol, error });
+      console.warn("Failed to fetch activity data", { symbol, error });
       return [];
     }
   }

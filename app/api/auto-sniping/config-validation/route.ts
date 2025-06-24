@@ -6,13 +6,10 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
 import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
 // Function defined at bottom of file
-
-const logger = createSafeLogger('route');
 
 // Configuration validation function
 async function validateAutoSnipingConfig(config: any): Promise<{
@@ -107,7 +104,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       data: report,
     }));
   } catch (error) {
-    logger.error('[Config Validation] Failed to generate readiness report:', { error });
+    console.error('[Config Validation] Failed to generate readiness report:', { error });
     return Response.json(
       createErrorResponse('Failed to generate system readiness report', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -192,7 +189,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         );
     }
   } catch (error) {
-    logger.error('[Config Validation] API request failed:', { error });
+    console.error('[Config Validation] API request failed:', { error });
     return Response.json(
       createErrorResponse('Configuration validation request failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -267,7 +264,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       ), { status: 500 });
     }
   } catch (error) {
-    logger.error('[Config Validation] Configuration update failed:', { error: error instanceof Error ? error.message : String(error) });
+    console.error('[Config Validation] Configuration update failed:', { error: error instanceof Error ? error.message : String(error) });
     return Response.json(
       createErrorResponse('Configuration update failed', {
         error: error instanceof Error ? error.message : 'Unknown error',

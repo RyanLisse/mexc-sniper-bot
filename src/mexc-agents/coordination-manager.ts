@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { AgentManager } from "./agent-manager";
 import {
   type AgentRegistry,
@@ -36,12 +36,14 @@ export interface CoordinationSystemHealth {
  * Extracted from MexcOrchestrator to follow Single Responsibility Principle
  */
 export class CoordinationSystemManager {
-  private _logger?: ReturnType<typeof createSafeLogger>;
+  // Simple console logger to avoid webpack bundling issues
   private get logger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("coordination-manager");
-    }
-    return this._logger;
+    return {
+      info: (message: string, context?: any) => console.info('[coordination-manager]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[coordination-manager]', message, context || ''),
+      error: (message: string, context?: any) => console.error('[coordination-manager]', message, context || ''),
+      debug: (message: string, context?: any) => console.debug('[coordination-manager]', message, context || ''),
+    };
   }
 
   private coordinationSystem: {

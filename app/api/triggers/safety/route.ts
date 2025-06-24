@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { inngest } from "../../../../src/inngest/client";
 import { 
   createSuccessResponse, 
@@ -8,8 +7,6 @@ import {
   apiResponse, 
   HTTP_STATUS 
 } from "../../../../src/lib/api-response";
-
-const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest) {
   try {
@@ -146,7 +143,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    logger.error("Failed to trigger safety action:", { error: error });
+    console.error("Failed to trigger safety action:", { error: error });
     return apiResponse(
       createErrorResponse("Failed to trigger safety action", {
         error: error instanceof Error ? error.message : String(error)
@@ -261,7 +258,7 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    logger.error("Failed to get safety actions:", { error: error });
+    console.error("Failed to get safety actions:", { error: error });
     return apiResponse(
       createErrorResponse("Failed to get safety actions"),
       HTTP_STATUS.INTERNAL_SERVER_ERROR

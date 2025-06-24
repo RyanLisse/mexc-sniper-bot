@@ -9,7 +9,6 @@ import { and, eq, or } from "drizzle-orm";
 import { db } from "../../db";
 import { coinActivities } from "../../db/schemas/patterns";
 import { toSafeError } from "../../lib/error-type-utils";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { ActivityData } from "../../schemas/mexc-schemas";
 
 /**
@@ -20,7 +19,6 @@ export async function getActivityDataForSymbol(
   symbol: string,
   vcoinId?: string
 ): Promise<ActivityData[]> {
-  const logger = createSafeLogger("activity-integration");
   try {
     // Extract base currency from symbol (e.g., 'FCATUSDT' -> 'FCAT')
     const baseCurrency = symbol.replace(/USDT$|BTC$|ETH$|BNB$/, "");
@@ -57,7 +55,7 @@ export async function getActivityDataForSymbol(
     }));
   } catch (error) {
     const safeError = toSafeError(error);
-    logger.warn(
+    console.warn(
       "Failed to fetch activity data",
       {
         operation: "activity_data_fetch",

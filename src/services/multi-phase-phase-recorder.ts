@@ -1,4 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
 import type { PhaseExecutionHistory, RecordingOptions } from "./multi-phase-executor-types";
 import { multiPhaseTradingService } from "./multi-phase-trading-service";
 
@@ -6,7 +5,12 @@ import { multiPhaseTradingService } from "./multi-phase-trading-service";
  * Handles phase execution recording and database persistence
  */
 export class MultiPhasePhaseRecorder {
-  private logger = createSafeLogger("multi-phase-phase-recorder");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[multi-phase-phase-recorder]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[multi-phase-phase-recorder]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-phase-recorder]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[multi-phase-phase-recorder]', message, context || ''),
+    };
 
   constructor(
     private strategyId?: number,
@@ -58,11 +62,11 @@ export class MultiPhasePhaseRecorder {
           exchangeResponse: options?.exchangeResponse,
         });
 
-        this.logger.info(
+        console.info(
           `Phase ${phaseNumber} execution recorded: ${amount} @ ${executionPrice} (profit: ${profit.toFixed(2)})`
         );
       } catch (error) {
-        this.logger.error("Failed to record phase execution:", error);
+        console.error("Failed to record phase execution:", error);
         // Continue execution even if database recording fails
       }
     }

@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { CACHE_CONSTANTS, TIME_CONSTANTS } from "../lib/constants";
 import { globalEnhancedAgentCache, initializeAgentCache } from "../lib/enhanced-agent-cache";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { ErrorLoggingService } from "../services/error-logging-service";
 
 export interface AgentConfig {
@@ -46,13 +46,13 @@ export interface AgentResponse {
 export type AgentStatus = "idle" | "running" | "error" | "offline";
 
 export class BaseAgent {
-  private _logger?: ReturnType<typeof createSafeLogger>;
-  protected get logger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("base-agent");
-    }
-    return this._logger;
-  }
+  // Simple console logger to avoid webpack bundling issues
+  protected logger = {
+    info: (message: string, context?: any) => console.info('[base-agent]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[base-agent]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[base-agent]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[base-agent]', message, context || ''),
+  };
 
   protected openai: OpenAI;
   protected config: AgentConfig;
@@ -72,7 +72,7 @@ export class BaseAgent {
         apiKey: process.env.OPENAI_API_KEY,
       });
     } else {
-      logger.warn(
+      this.logger.warn(
         `[${this.config.name}] OpenAI API key not available - AI features will be disabled`
       );
       // Create a mock OpenAI instance to prevent runtime errors
@@ -90,7 +90,7 @@ export class BaseAgent {
     if (this.config.cacheEnabled) {
       initializeAgentCache(this.config.name).catch((error) => {
         const safeError = toSafeError(error);
-        logger.error(
+        this.logger.error(
           `[${this.config.name}] Failed to initialize enhanced cache:`,
           safeError.message
         );
@@ -164,7 +164,7 @@ export class BaseAgent {
       );
 
       if (enhancedCached) {
-        logger.info(`[${this.config.name}] Enhanced cache hit for request`);
+        this.logger.info(`[${this.config.name}] Enhanced cache hit for request`);
         return enhancedCached;
       }
 
@@ -172,7 +172,7 @@ export class BaseAgent {
       if (this.config.cacheEnabled) {
         // Inform enhanced cache about the miss
         await globalEnhancedAgentCache.trackCacheMiss(this.config.name).catch((error) => {
-          logger.warn(`[${this.config.name}] Failed to track cache miss:`, error);
+          this.logger.warn(`[${this.config.name}] Failed to track cache miss:`, error);
           // Continue execution - cache tracking is not critical
         });
       }
@@ -192,9 +192,9 @@ export class BaseAgent {
         // If enhanced cache returns null, it means it was invalidated, so clear local cache too
         if (!enhancedCheck) {
           this.responseCache.delete(cacheKey);
-          logger.info(`[${this.config.name}] Local cache invalidated based on enhanced cache`);
+          this.logger.info(`[${this.config.name}] Local cache invalidated based on enhanced cache`);
         } else {
-          logger.info(`[${this.config.name}] Local cache hit for request`);
+          this.logger.info(`[${this.config.name}] Local cache hit for request`);
           return {
             ...cached.response,
             metadata: {
@@ -363,7 +363,7 @@ export class BaseAgent {
    */
   clearLocalCache(): void {
     this.responseCache.clear();
-    logger.info(`[${this.config.name}] Local cache cleared`);
+    this.logger.info(`[${this.config.name}] Local cache cleared`);
   }
 
   /**

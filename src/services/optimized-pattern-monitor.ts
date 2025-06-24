@@ -14,7 +14,6 @@
 import { z } from "zod";
 import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { PatternType } from "./optimized-auto-sniping-core";
 
 // ============================================================================
@@ -89,7 +88,12 @@ export type EnhancedPatternMatch = z.infer<typeof EnhancedPatternMatchSchema>;
 
 export class OptimizedPatternMonitor {
   private static instance: OptimizedPatternMonitor;
-  private logger = createSafeLogger("optimized-pattern-monitor");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[optimized-pattern-monitor]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[optimized-pattern-monitor]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[optimized-pattern-monitor]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[optimized-pattern-monitor]', message, context || ''),
+    };
 
   // Pattern detection engine
   private patternEngine: PatternDetectionCore;
@@ -122,7 +126,7 @@ export class OptimizedPatternMonitor {
     // Clean up cache every 2 minutes
     setInterval(() => this.cleanupCache(), 120000);
 
-    this.logger.info("Optimized Pattern Monitor initialized");
+    console.info("Optimized Pattern Monitor initialized");
   }
 
   static getInstance(): OptimizedPatternMonitor {
@@ -146,14 +150,7 @@ export class OptimizedPatternMonitor {
       const filterCriteria = PatternFilterCriteriaSchema.parse({
         ...this.getDefaultCriteria(),
         ...criteria,
-      });
-
-      this.logger.debug("Getting eligible patterns", {
-        criteria: filterCriteria,
-        limit,
-      });
-
-      // Get fresh patterns from detection engine
+      });// Get fresh patterns from detection engine
       const freshPatterns = await this.fetchFreshPatterns();
 
       // Enhance patterns with scoring and metadata
@@ -169,18 +166,10 @@ export class OptimizedPatternMonitor {
 
       // Update metrics
       const processingTime = Date.now() - startTime;
-      this.updateMetrics(enhancedPatterns.length, eligiblePatterns.length, processingTime);
-
-      this.logger.debug("Eligible patterns retrieved", {
-        totalPatterns: enhancedPatterns.length,
-        eligiblePatterns: eligiblePatterns.length,
-        processingTime,
-      });
-
-      return eligiblePatterns;
+      this.updateMetrics(enhancedPatterns.length, eligiblePatterns.length, processingTime);return eligiblePatterns;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to get eligible patterns", {
+      console.error("Failed to get eligible patterns", {
         error: safeError.message,
         criteria,
       });
@@ -287,7 +276,7 @@ export class OptimizedPatternMonitor {
   clearCache(): void {
     this.patternCache.clear();
     this.symbolLastSeen.clear();
-    this.logger.info("Pattern cache cleared");
+    console.info("Pattern cache cleared");
   }
 
   // Private helper methods
@@ -299,7 +288,7 @@ export class OptimizedPatternMonitor {
       return [];
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to fetch fresh patterns", {
+      console.error("Failed to fetch fresh patterns", {
         error: safeError.message,
       });
       return [];
@@ -351,7 +340,7 @@ export class OptimizedPatternMonitor {
       return enhanced;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to enhance pattern", {
+      console.error("Failed to enhance pattern", {
         symbol: pattern.symbol,
         error: safeError.message,
       });
@@ -531,12 +520,7 @@ export class OptimizedPatternMonitor {
       }
     }
 
-    if (cleanedCount > 0) {
-      this.logger.debug("Cache cleanup completed", {
-        itemsCleaned: cleanedCount,
-        remainingItems: this.patternCache.size,
-      });
-    }
+    if (cleanedCount > 0) {}
   }
 
   private updateMetrics(

@@ -8,7 +8,7 @@
  * - Optimized bundle size through tree-shaking
  */
 
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type {
   BalanceEntry,
   CalendarEntry,
@@ -60,7 +60,13 @@ const DEFAULT_CONFIG: Required<UnifiedMexcConfigV2> = {
 // ============================================================================
 
 export class UnifiedMexcServiceV2 {
-  private logger = createSafeLogger("unified-mexc-service-v2");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[unified-mexc-service-v2]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[unified-mexc-service-v2]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[unified-mexc-service-v2]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[unified-mexc-service-v2]', message, context || ''),
+  };
 
   private config: Required<UnifiedMexcConfigV2>;
   private coreClient: MexcCoreClient;
@@ -385,7 +391,7 @@ export class UnifiedMexcServiceV2 {
 
       return hasRecent;
     } catch (error) {
-      logger.warn(`Failed to check recent activity for ${currency}:`, error);
+      this.logger.warn(`Failed to check recent activity for ${currency}:`, error);
       return false;
     }
   }

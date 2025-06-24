@@ -2,8 +2,6 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { user } from "../db/schema";
-import { createSafeLogger } from "./structured-logger";
-
 export interface KindeUser {
   id: string;
   email: string;
@@ -22,10 +20,14 @@ export interface KindeSession {
  * Get the current Kinde session
  */
 // Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createSafeLogger> | undefined;
 function getLogger() {
   if (!_logger) {
-    _logger = createSafeLogger("kinde-auth");
+    _logger = {
+      info: (message: string, context?: any) => console.info('[kinde-auth]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[kinde-auth]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[kinde-auth]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[kinde-auth]', message, context || ''),
+    };
   }
   return _logger;
 }

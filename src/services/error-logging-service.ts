@@ -7,7 +7,7 @@
  */
 
 import { ApplicationError } from "../lib/errors";
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 
 export interface ErrorLogEntry {
   id?: string;
@@ -39,12 +39,14 @@ export interface ErrorLogFilter {
  * Error logging service for centralized error tracking
  */
 export class ErrorLoggingService {
-  private _logger?: ReturnType<typeof createSafeLogger>;
+  // Simple console logger to avoid webpack bundling issues
   private getLogger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("error-logging-service");
-    }
-    return this._logger;
+    return {
+      info: (message: string, context?: any) => console.info('[error-logging-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[error-logging-service]', message, context || ''),
+      error: (message: string, context?: any) => console.error('[error-logging-service]', message, context || ''),
+      debug: (message: string, context?: any) => console.debug('[error-logging-service]', message, context || ''),
+    };
   }
 
   private static instance: ErrorLoggingService;

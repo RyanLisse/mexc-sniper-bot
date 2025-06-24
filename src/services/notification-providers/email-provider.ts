@@ -1,5 +1,4 @@
 import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface EmailConfig {
@@ -16,12 +15,15 @@ interface EmailConfig {
 }
 
 export class EmailProvider implements NotificationProvider {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
   private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createSafeLogger("email-provider");
+        this._logger = {
+      info: (message: string, context?: any) => console.info('[email-provider]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[email-provider]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[email-provider]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[email-provider]', message, context || ''),
+    };
       } catch {
         // Fallback during build time
         this._logger = {
@@ -106,7 +108,7 @@ export class EmailProvider implements NotificationProvider {
       };
 
       // Simulate email sending (replace with actual SMTP implementation)
-      logger.info("Sending email:", emailData);
+      console.info("Sending email:", emailData);
 
       // In production, you would:
       // const nodemailer = require('nodemailer');
@@ -119,7 +121,7 @@ export class EmailProvider implements NotificationProvider {
         response: { simulated: true },
       };
     } catch (error) {
-      logger.error("Email sending failed:", error);
+      console.error("Email sending failed:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown email error",

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getSession } from "../../../../src/lib/kinde-auth";
 import { db } from "../../../../src/db";
 import { AutomatedAlertingService } from "../../../../src/services/automated-alerting-service";
@@ -13,7 +12,6 @@ import { handleApiError } from "../../../../src/lib/api-response";
 // ==========================================
 
 export async function GET(request: NextRequest) {
-  const logger = createSafeLogger('route');
   try {
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
@@ -108,7 +106,7 @@ export async function GET(request: NextRequest) {
       data: analyticsData,
     });
   } catch (error) {
-    logger.error("Error fetching alert analytics:", { error: error });
+    console.error("Error fetching alert analytics:", { error: error });
     return handleApiError(error);
   }
 }

@@ -8,7 +8,6 @@
 
 import { z } from "zod";
 import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
 import { OptimizedAutoSnipingExecutionEngine } from "./optimized-auto-sniping-execution-engine";
 import {
   type AutoSnipingConfig,
@@ -67,7 +66,12 @@ export type BackendOptimizationReport = z.infer<typeof BackendOptimizationReport
  */
 export class OptimizedBackendOptimizationManager {
   private static instance: OptimizedBackendOptimizationManager;
-  private logger = createSafeLogger("backend-optimization-manager");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[backend-optimization-manager]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[backend-optimization-manager]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[backend-optimization-manager]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[backend-optimization-manager]', message, context || ''),
+    };
 
   // Optimized Services
   private autoSnipingEngine: OptimizedAutoSnipingExecutionEngine;
@@ -82,7 +86,7 @@ export class OptimizedBackendOptimizationManager {
     this.initializeOptimizedServices();
     this.trackOptimizations();
 
-    this.logger.info("Backend optimization manager initialized", {
+    console.info("Backend optimization manager initialized", {
       operation: "initialization",
       optimizedServices: this.optimizedServices.size,
     });
@@ -142,7 +146,7 @@ export class OptimizedBackendOptimizationManager {
     error?: string;
   }> {
     try {
-      this.logger.info("Executing auto-sniping with optimized engine", {
+      console.info("Executing auto-sniping with optimized engine", {
         operation: "execute_auto_sniping",
         hasConfig: !!config,
       });
@@ -161,7 +165,7 @@ export class OptimizedBackendOptimizationManager {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(
+      console.error(
         "Auto-sniping execution failed",
         {
           operation: "execute_auto_sniping",
@@ -187,7 +191,7 @@ export class OptimizedBackendOptimizationManager {
     code?: string;
   }> {
     try {
-      this.logger.info("Executing trade with optimized service", {
+      console.info("Executing trade with optimized service", {
         operation: "execute_trade",
       });
 
@@ -208,7 +212,7 @@ export class OptimizedBackendOptimizationManager {
       }
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(
+      console.error(
         "Trade execution failed",
         {
           operation: "execute_trade",
@@ -335,7 +339,7 @@ export class OptimizedBackendOptimizationManager {
     this.autoSnipingEngine = OptimizedAutoSnipingExecutionEngine.getInstance();
     this.mexcTradingService = new OptimizedMexcTradingService();
 
-    this.logger.info("Optimized services initialized", {
+    console.info("Optimized services initialized", {
       operation: "initialize_services",
       services: ["autoSnipingEngine", "mexcTradingService"],
     });
@@ -370,7 +374,7 @@ export class OptimizedBackendOptimizationManager {
       status: "optimized",
     });
 
-    this.logger.info("Optimization tracking initialized", {
+    console.info("Optimization tracking initialized", {
       operation: "track_optimizations",
       trackedServices: this.optimizedServices.size,
     });

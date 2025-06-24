@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { inngest } from "../../../../src/inngest/client";
-
-const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.info(`[Manual Trigger] Emergency: ${emergencyType} (${severity})`);
+    console.info(`[Manual Trigger] Emergency: ${emergencyType} (${severity})`);
 
     // Trigger the emergency response workflow
     const result = await inngest.send({
@@ -64,7 +61,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error("Failed to trigger emergency response:", { error: error });
+    console.error("Failed to trigger emergency response:", { error: error });
     return NextResponse.json(
       {
         success: false,

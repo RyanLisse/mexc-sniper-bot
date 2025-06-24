@@ -9,8 +9,6 @@ import {
   isIPSuspicious,
   logSecurityEvent,
 } from "./rate-limiter";
-import { createSafeLogger } from "./structured-logger";
-
 /**
  * Alias for requireApiAuth to maintain compatibility
  */
@@ -21,10 +19,14 @@ export const validateRequest = requireApiAuth;
  * Returns the authenticated user or throws an error response
  */
 // Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createSafeLogger> | undefined;
 function getLogger() {
   if (!_logger) {
-    _logger = createSafeLogger("api-auth");
+    _logger = {
+      info: (message: string, context?: any) => console.info('[api-auth]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[api-auth]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[api-auth]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[api-auth]', message, context || ''),
+    };
   }
   return _logger;
 }

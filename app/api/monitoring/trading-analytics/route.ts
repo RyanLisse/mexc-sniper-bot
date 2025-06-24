@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { db } from "../../../../src/db";
 import { 
   transactions, 
@@ -13,8 +12,6 @@ import {
   TradingAnalyticsResponseSchema,
   createValidatedApiResponse,
 } from "../../../../src/schemas/api-validation-schemas";
-
-const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -137,12 +134,12 @@ export async function GET(request: NextRequest) {
       const validatedResponse = TradingAnalyticsResponseSchema.partial().parse(response);
       return NextResponse.json(validatedResponse);
     } catch (validationError) {
-      logger.warn("Trading analytics response validation warning:", { error: validationError });
+      console.warn("Trading analytics response validation warning:", { error: validationError });
       // Return response anyway with warning logged (graceful degradation)
       return NextResponse.json(response);
     }
   } catch (error) {
-    logger.error("[Monitoring API] Trading analytics failed:", { error: error });
+    console.error("[Monitoring API] Trading analytics failed:", { error: error });
     return NextResponse.json(
       { 
         error: "Failed to fetch trading analytics",
@@ -189,7 +186,7 @@ async function getTradingPerformanceMetrics() {
       profitFactor: winLossRatio > 0 ? winLossRatio * 1.2 : 1.0
     };
   } catch (error) {
-    logger.error("Error calculating trading performance:", { error: error });
+    console.error("Error calculating trading performance:", { error: error });
     return {
       totalTrades: 0,
       successfulTrades: 0,
@@ -248,7 +245,7 @@ async function getPortfolioMetrics() {
       volatility: Math.random() * 20 + 10 // 10-30% mock
     };
   } catch (error) {
-    logger.error("Error calculating portfolio metrics:", { error: error });
+    console.error("Error calculating portfolio metrics:", { error: error });
     return {
       currentValue: 10000,
       totalReturn: 0,
@@ -304,7 +301,7 @@ async function getPatternSuccessRates() {
       ]
     };
   } catch (error) {
-    logger.error("Error calculating pattern success rates:", { error: error });
+    console.error("Error calculating pattern success rates:", { error: error });
     return {
       totalPatterns: 0,
       successfulPatterns: 0,
@@ -393,7 +390,7 @@ async function getPositionAnalytics() {
       realizedPnL: Math.random() * 5000 - 2500 // -2.5k to +2.5k mock
     };
   } catch (error) {
-    logger.error("Error calculating position analytics:", { error: error });
+    console.error("Error calculating position analytics:", { error: error });
     return {
       activePositions: 0,
       positionSizes: [],

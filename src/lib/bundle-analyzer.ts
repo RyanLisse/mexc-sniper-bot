@@ -1,5 +1,3 @@
-import { createSafeLogger } from "./structured-logger";
-
 /**
  * Bundle Size Analyzer and Optimizer
  * Provides detailed analysis and recommendations for bundle optimization
@@ -58,7 +56,12 @@ export class BundleAnalyzer {
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("bundle-analyzer");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[bundle-analyzer]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[bundle-analyzer]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[bundle-analyzer]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[bundle-analyzer]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -113,7 +116,7 @@ export class BundleAnalyzer {
 
       return analysis;
     } catch (error) {
-      this.logger.error("[BundleAnalyzer] Error analyzing bundle:", error);
+      console.error("[BundleAnalyzer] Error analyzing bundle:", error);
       throw error;
     }
   }

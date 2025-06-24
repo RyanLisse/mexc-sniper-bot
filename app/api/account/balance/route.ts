@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getUnifiedMexcService } from "../../../../src/services/unified-mexc-service-factory";
 import { 
   createSuccessResponse, 
@@ -18,11 +17,10 @@ import { balancePersistenceService } from "../../../../src/services/balance-pers
 import { publicRoute } from "../../../../src/lib/auth-decorators";
 
 export const GET = publicRoute(async (request: NextRequest) => {
-  const logger = createSafeLogger('account-balance-api');
   const startTime = Date.now();
   
   try {
-    logger.info('[API] Account balance request received');
+    console.info('[API] Account balance request received');
 
     // Validate query parameters
     const { searchParams } = new URL(request.url);
@@ -50,7 +48,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
     // Determine if we're using user-specific credentials
     const hasUserCredentials = Boolean(userId);
 
-    logger.info('[API] MEXC service initialized:', {
+    console.info('[API] MEXC service initialized:', {
       hasCredentials: mexcService.hasCredentials(),
       userId: userId || 'none',
       hasUserCredentials,
@@ -61,7 +59,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
     const balanceResponse = await mexcService.getAccountBalances();
     
     if (!balanceResponse.success) {
-      logger.error('[API] Account balance fetch failed:', { error: balanceResponse.error });
+      console.error('[API] Account balance fetch failed:', { error: balanceResponse.error });
       return apiResponse(
         createErrorResponse(
           balanceResponse.error || 'Failed to fetch account balances',
@@ -81,7 +79,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
       );
     }
 
-    logger.info(`[API] Account balance success: ${balanceResponse.data?.balances?.length || 0} balances`);
+    console.info(`[API] Account balance success: ${balanceResponse.data?.balances?.length || 0} balances`);
 
     // Extract and structure response data
     const portfolio = balanceResponse.data;
@@ -105,14 +103,14 @@ export const GET = publicRoute(async (request: NextRequest) => {
           priceSource: 'mexc'
         });
         
-        logger.info('[API] Balance data persisted to database', {
+        console.info('[API] Balance data persisted to database', {
           userId,
           assetCount: portfolio.balances.length,
           totalUsdValue: portfolio.totalUsdtValue
         });
       } catch (persistError) {
         // Log but don't fail the API request if persistence fails
-        logger.error('[API] Failed to persist balance data', {
+        console.error('[API] Failed to persist balance data', {
           userId,
           error: persistError instanceof Error ? persistError.message : String(persistError)
         });
@@ -127,7 +125,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
     );
     
     if (!responseValidation.success) {
-      logger.error('[API] Response validation failed:', { error: responseValidation.error });
+      console.error('[API] Response validation failed:', { error: responseValidation.error });
       // Return data anyway but log the validation issue
     }
     
@@ -139,7 +137,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
       })
     );
   } catch (error) {
-    logger.error('[API] Account balance error:', { operation: 'account_balance' }, error instanceof Error ? error : new Error(String(error)));
+    console.error('[API] Account balance error:', { operation: 'account_balance' }, error instanceof Error ? error : new Error(String(error)));
     
     return apiResponse(
       createErrorResponse(

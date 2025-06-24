@@ -8,7 +8,6 @@
 import { count } from "drizzle-orm";
 import { db } from "../db";
 import { strategyTemplates } from "../db/schemas/strategies";
-import { createSafeLogger } from "../lib/structured-logger";
 import { multiPhaseTradingService } from "./multi-phase-trading-service";
 
 export interface StrategySystemHealth {
@@ -20,7 +19,12 @@ export interface StrategySystemHealth {
 }
 
 export class StrategyInitializationService {
-  private logger = createSafeLogger("strategy-initialization-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[strategy-initialization-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[strategy-initialization-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[strategy-initialization-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[strategy-initialization-service]', message, context || ''),
+    };
 
   private static instance: StrategyInitializationService;
   private initializationPromise: Promise<void> | null = null;
@@ -53,13 +57,13 @@ export class StrategyInitializationService {
 
     while (attempts < maxRetries) {
       try {
-        logger.info(
+        console.info(
           `[Strategy Init] Starting initialization attempt ${attempts + 1}/${maxRetries}`
         );
 
         // Check if already initialized (unless forced)
         if (!force && (await this.isAlreadyInitialized())) {
-          logger.info("[Strategy Init] Templates already initialized, skipping");
+          console.info("[Strategy Init] Templates already initialized, skipping");
           this.lastInitialization = new Date();
           this.errors = [];
           return;
@@ -73,19 +77,19 @@ export class StrategyInitializationService {
 
         this.lastInitialization = new Date();
         this.errors = [];
-        logger.info("[Strategy Init] Strategy templates initialized successfully");
+        console.info("[Strategy Init] Strategy templates initialized successfully");
         return;
       } catch (error) {
         attempts++;
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        logger.error(`[Strategy Init] Attempt ${attempts} failed:`, errorMessage);
+        console.error(`[Strategy Init] Attempt ${attempts} failed:`, errorMessage);
 
         this.errors.push(`Attempt ${attempts}: ${errorMessage}`);
 
         if (attempts < maxRetries) {
           // Exponential backoff
           const delay = 2 ** attempts * 1000;
-          logger.info(`[Strategy Init] Retrying in ${delay}ms...`);
+          console.info(`[Strategy Init] Retrying in ${delay}ms...`);
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
@@ -101,7 +105,7 @@ export class StrategyInitializationService {
       const result = await db.select({ count: count() }).from(strategyTemplates);
       return result[0]?.count > 0;
     } catch (error) {
-      logger.error("[Strategy Init] Error checking initialization status:", error);
+      console.error("[Strategy Init] Error checking initialization status:", error);
       return false;
     }
   }
@@ -113,14 +117,14 @@ export class StrategyInitializationService {
     // Initialize predefined strategies
     await multiPhaseTradingService.initializePredefinedStrategies();
 
-    logger.info("[Strategy Init] Predefined strategies initialized");
+    console.info("[Strategy Init] Predefined strategies initialized");
   }
 
   private async testDatabaseConnectivity(): Promise<void> {
     try {
       // Simple connectivity test
       await db.select().from(strategyTemplates).limit(1);
-      logger.info("[Strategy Init] Database connectivity verified");
+      console.info("[Strategy Init] Database connectivity verified");
     } catch (error) {
       throw new Error(
         `Database connectivity test failed: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -146,7 +150,7 @@ export class StrategyInitializationService {
         }
       }
 
-      logger.info(`[Strategy Init] Verified ${templates.length} strategy templates`);
+      console.info(`[Strategy Init] Verified ${templates.length} strategy templates`);
     } catch (error) {
       throw new Error(
         `Initialization verification failed: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -185,7 +189,7 @@ export class StrategyInitializationService {
       await db.select().from(strategyTemplates).limit(1);
       return true;
     } catch (error) {
-      logger.error("[Strategy Init] Database connection test failed:", error);
+      console.error("[Strategy Init] Database connection test failed:", error);
       return false;
     }
   }
@@ -195,11 +199,11 @@ export class StrategyInitializationService {
    */
   async initializeOnStartup(): Promise<void> {
     try {
-      logger.info("[Strategy Init] Initializing strategies on startup...");
+      console.info("[Strategy Init] Initializing strategies on startup...");
       await this.initializeStrategies();
-      logger.info("[Strategy Init] Startup initialization completed");
+      console.info("[Strategy Init] Startup initialization completed");
     } catch (error) {
-      logger.error("[Strategy Init] Startup initialization failed:", error);
+      console.error("[Strategy Init] Startup initialization failed:", error);
       // Don't throw on startup - let the app continue and retry later
     }
   }
@@ -208,7 +212,7 @@ export class StrategyInitializationService {
    * Force re-initialization (for admin/debugging purposes)
    */
   async forceReinitialize(): Promise<void> {
-    logger.info("[Strategy Init] Forcing re-initialization...");
+    console.info("[Strategy Init] Forcing re-initialization...");
     this.initializationPromise = null;
     this.errors = [];
     await this.initializeStrategies(true);

@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { MexcOrchestrator } from "../mexc-agents/orchestrator";
 import { inngest } from "./client";
 // Import safety functions
@@ -53,7 +53,13 @@ interface AgentWorkflowResult {
 }
 
 // Type guards for agent results
-const logger = createSafeLogger("functions");
+// Simple console logger to avoid webpack bundling issues
+const logger = {
+  info: (message: string, context?: any) => console.info('[inngest-functions]', message, context || ''),
+  warn: (message: string, context?: any) => console.warn('[inngest-functions]', message, context || ''),
+  error: (message: string, context?: any) => console.error('[inngest-functions]', message, context || ''),
+  debug: (message: string, context?: any) => console.debug('[inngest-functions]', message, context || ''),
+};
 
 function isAgentWorkflowResult(value: unknown): value is AgentWorkflowResult {
   return (

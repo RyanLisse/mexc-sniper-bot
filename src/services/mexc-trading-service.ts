@@ -10,7 +10,7 @@ import { db } from "../db";
 import type { NewExecutionHistory } from "../db/schema";
 import { apiCredentials, executionHistory } from "../db/schema";
 import { getCachedCredentials } from "../lib/credential-cache";
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import {
   type TradingOrderRequest,
   TradingOrderRequestSchema,
@@ -86,7 +86,13 @@ export interface TradeExecutionResult {
 // ============================================================================
 
 export class MexcTradingService {
-  private logger = createSafeLogger("mexc-trading-service");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[mexc-trading-service]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[mexc-trading-service]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[mexc-trading-service]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[mexc-trading-service]', message, context || ''),
+  };
 
   /**
    * Execute a trading order with comprehensive validation and risk management
@@ -105,7 +111,7 @@ export class MexcTradingService {
       skipRisk: false,
     };
 
-    logger.info("[MexcTradingService] Starting trade execution", {
+    this.logger.info("[MexcTradingService] Starting trade execution", {
       requestId: context.requestId,
       symbol: request.symbol,
       side: request.side,
@@ -208,11 +214,11 @@ export class MexcTradingService {
       );
 
       if (!responseValidation.success) {
-        logger.error("[MexcTradingService] Response validation failed:", responseValidation.error);
+        this.logger.error("[MexcTradingService] Response validation failed:", responseValidation.error);
         // Continue anyway but log the issue
       }
 
-      logger.info("[MexcTradingService] Trade execution completed successfully", {
+      this.logger.info("[MexcTradingService] Trade execution completed successfully", {
         requestId: context.requestId,
         orderId: response.orderId,
         symbol: response.symbol,
@@ -221,7 +227,7 @@ export class MexcTradingService {
 
       return { success: true, data: response };
     } catch (error) {
-      logger.error("[MexcTradingService] Unexpected error:", {
+      this.logger.error("[MexcTradingService] Unexpected error:", {
         requestId: context.requestId,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
@@ -253,7 +259,7 @@ export class MexcTradingService {
     context: TradingContext
   ): Promise<TradingCredentials | null> {
     try {
-      logger.info("[MexcTradingService] Retrieving credentials", {
+      this.logger.info("[MexcTradingService] Retrieving credentials", {
         requestId: context.requestId,
         userId,
       });
@@ -283,7 +289,7 @@ export class MexcTradingService {
         credentials[0].encryptedPassphrase
       );
 
-      logger.info("[MexcTradingService] Credentials retrieved successfully", {
+      this.logger.info("[MexcTradingService] Credentials retrieved successfully", {
         requestId: context.requestId,
         hasApiKey: !!apiKey,
         hasSecretKey: !!secretKey,
@@ -292,7 +298,7 @@ export class MexcTradingService {
 
       return { apiKey, secretKey, source: "cache" };
     } catch (error) {
-      logger.error("[MexcTradingService] Failed to retrieve credentials:", {
+      this.logger.error("[MexcTradingService] Failed to retrieve credentials:", {
         requestId: context.requestId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -301,7 +307,7 @@ export class MexcTradingService {
   }
 
   private initializeMexcService(credentials: TradingCredentials, context: TradingContext) {
-    logger.info("[MexcTradingService] Initializing MEXC service", {
+    this.logger.info("[MexcTradingService] Initializing MEXC service", {
       requestId: context.requestId,
       credentialSource: credentials.source,
     });
@@ -326,7 +332,7 @@ export class MexcTradingService {
       timeInForce: request.timeInForce || "IOC", // Immediate or Cancel for safety
     };
 
-    logger.info("[MexcTradingService] Order parameters prepared", {
+    this.logger.info("[MexcTradingService] Order parameters prepared", {
       requestId: context.requestId,
       symbol: orderParams.symbol,
       side: orderParams.side,
@@ -343,7 +349,7 @@ export class MexcTradingService {
     context: TradingContext
   ): Promise<{ success: boolean; error?: string; details?: any }> {
     if (context.skipLock) {
-      logger.info("[MexcTradingService] Skipping lock check", {
+      this.logger.info("[MexcTradingService] Skipping lock check", {
         requestId: context.requestId,
         resourceId,
       });
@@ -353,7 +359,7 @@ export class MexcTradingService {
     try {
       const lockStatus = await transactionLockService.getLockStatus(resourceId);
       if (lockStatus.isLocked) {
-        logger.info("[MexcTradingService] Resource is locked", {
+        this.logger.info("[MexcTradingService] Resource is locked", {
           requestId: context.requestId,
           resourceId,
           queueLength: lockStatus.queueLength,
@@ -372,7 +378,7 @@ export class MexcTradingService {
 
       return { success: true };
     } catch (error) {
-      logger.error("[MexcTradingService] Lock check failed:", {
+      this.logger.error("[MexcTradingService] Lock check failed:", {
         requestId: context.requestId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -391,7 +397,7 @@ export class MexcTradingService {
     context: TradingContext
   ): Promise<RiskAssessmentResult> {
     if (context.skipRisk) {
-      logger.info("[MexcTradingService] Skipping risk assessment", {
+      this.logger.info("[MexcTradingService] Skipping risk assessment", {
         requestId: context.requestId,
       });
 
@@ -408,7 +414,7 @@ export class MexcTradingService {
     }
 
     try {
-      logger.info("[MexcTradingService] Performing risk assessment", {
+      this.logger.info("[MexcTradingService] Performing risk assessment", {
         requestId: context.requestId,
         userId,
         symbol: orderParams.symbol,
@@ -419,7 +425,7 @@ export class MexcTradingService {
         orderParams
       );
 
-      logger.info("[MexcTradingService] Risk assessment completed", {
+      this.logger.info("[MexcTradingService] Risk assessment completed", {
         requestId: context.requestId,
         approved: riskAssessment.approved,
         riskLevel: riskAssessment.riskLevel,
@@ -430,7 +436,7 @@ export class MexcTradingService {
 
       return riskAssessment;
     } catch (error) {
-      logger.error("[MexcTradingService] Risk assessment failed:", {
+      this.logger.error("[MexcTradingService] Risk assessment failed:", {
         requestId: context.requestId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -458,7 +464,7 @@ export class MexcTradingService {
   ): Promise<TradeExecutionResult> {
     const executeTrade = async (): Promise<TradeExecutionResult> => {
       try {
-        logger.info("[MexcTradingService] Executing trade", {
+        this.logger.info("[MexcTradingService] Executing trade", {
           requestId: context.requestId,
           symbol: orderParams.symbol,
         });
@@ -498,7 +504,7 @@ export class MexcTradingService {
           },
         };
       } catch (error) {
-        logger.error("[MexcTradingService] Trade execution failed:", {
+        this.logger.error("[MexcTradingService] Trade execution failed:", {
           requestId: context.requestId,
           error: error instanceof Error ? error.message : String(error),
         });
@@ -560,7 +566,7 @@ export class MexcTradingService {
     }
 
     try {
-      logger.info("[MexcTradingService] Saving execution history", {
+      this.logger.info("[MexcTradingService] Saving execution history", {
         requestId: context.requestId,
         orderId: result.orderId,
       });
@@ -593,12 +599,12 @@ export class MexcTradingService {
 
       await db.insert(executionHistory).values(executionRecord);
 
-      logger.info("[MexcTradingService] Execution history saved", {
+      this.logger.info("[MexcTradingService] Execution history saved", {
         requestId: context.requestId,
         orderId: result.orderId,
       });
     } catch (error) {
-      logger.error("[MexcTradingService] Failed to save execution history:", {
+      this.logger.error("[MexcTradingService] Failed to save execution history:", {
         requestId: context.requestId,
         error: error instanceof Error ? error.message : String(error),
       });

@@ -8,8 +8,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
 import type { IPatternAnalyzer } from "../interfaces";
-import { createSafeLogger } from "../lib/structured-logger";
-
 // Mock the dependencies
 vi.mock("../../../db", () => ({
   db: {
@@ -31,7 +29,6 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     try {
       const { PatternAnalyzer } = await import("../pattern-analyzer");
 
-      const logger = createSafeLogger("pattern-analyzer.test");
       patternAnalyzer = new PatternAnalyzer();
     } catch {
       // Skip tests if implementation doesn't exist yet
@@ -46,7 +43,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
   describe("Ready State Pattern Detection", () => {
     it("should detect exact ready state pattern (sts:2, st:2, tt:4)", async () => {
       if (!patternAnalyzer.detectReadyStatePattern) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -73,7 +70,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
     it("should not detect patterns with incorrect states", async () => {
       if (!patternAnalyzer.detectReadyStatePattern) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -91,7 +88,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
     it("should handle array of symbols efficiently", async () => {
       if (!patternAnalyzer.detectReadyStatePattern) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -117,7 +114,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
     it("should validate exact ready state correctly", async () => {
       if (!patternAnalyzer.validateExactReadyState) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -143,7 +140,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
   describe("Advance Opportunity Detection", () => {
     it("should detect opportunities with 3.5+ hour advance notice", async () => {
       if (!patternAnalyzer.detectAdvanceOpportunities) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -166,7 +163,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
     it("should filter out opportunities with insufficient advance notice", async () => {
       if (!patternAnalyzer.detectAdvanceOpportunities) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -186,7 +183,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
     it("should handle multiple calendar entries efficiently", async () => {
       if (!patternAnalyzer.detectAdvanceOpportunities) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -224,7 +221,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
   describe("Pre-Ready Pattern Detection", () => {
     it("should detect pre-ready patterns approaching ready state", async () => {
       if (!patternAnalyzer.detectPreReadyPatterns) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -248,7 +245,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
     it("should estimate time to ready state", async () => {
       if (!patternAnalyzer.detectPreReadyPatterns) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -270,7 +267,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
   describe("Symbol Correlation Analysis", () => {
     it("should analyze correlations between symbols", async () => {
       if (!patternAnalyzer.analyzeSymbolCorrelations) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -299,7 +296,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
     it("should handle insufficient symbols for correlation", async () => {
       if (!patternAnalyzer.analyzeSymbolCorrelations) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -313,7 +310,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
     it("should perform correlation analysis efficiently", async () => {
       if (!patternAnalyzer.analyzeSymbolCorrelations) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -337,7 +334,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
   describe("Error Handling and Edge Cases", () => {
     it("should handle malformed symbol data gracefully", async () => {
       if (!patternAnalyzer.detectReadyStatePattern) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -353,7 +350,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
     it("should handle empty arrays", async () => {
       if (!patternAnalyzer.detectReadyStatePattern) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 
@@ -363,7 +360,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
     it("should handle null/undefined inputs", async () => {
       if (!patternAnalyzer.detectReadyStatePattern) {
-        logger.warn("PatternAnalyzer not implemented yet - skipping test");
+        console.warn("PatternAnalyzer not implemented yet - skipping test");
         return;
       }
 

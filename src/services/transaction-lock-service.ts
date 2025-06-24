@@ -2,8 +2,6 @@ import crypto from "node:crypto";
 import { and, eq, gte, lte, or } from "drizzle-orm";
 import { db } from "../db";
 import { transactionLocks, transactionQueue } from "../db/schema";
-import { createSafeLogger } from "../lib/structured-logger";
-
 export interface TransactionLockConfig {
   resourceId: string;
   ownerId: string;
@@ -37,7 +35,12 @@ export class TransactionLockService {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("transaction-lock-service");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[transaction-lock-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[transaction-lock-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[transaction-lock-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[transaction-lock-service]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -219,7 +222,7 @@ export class TransactionLockService {
         }
       }
 
-      logger.error("Failed to acquire lock:", error);
+      console.error("Failed to acquire lock:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to acquire lock",
@@ -257,7 +260,7 @@ export class TransactionLockService {
 
       return true;
     } catch (err) {
-      logger.error("Failed to release lock:", err);
+      console.error("Failed to release lock:", err);
       return false;
     }
   }
@@ -560,7 +563,7 @@ export class TransactionLockService {
           )
         );
     } catch (error) {
-      logger.error("Cleanup process error:", error);
+      console.error("Cleanup process error:", error);
     }
   }
 
@@ -701,7 +704,7 @@ export class TransactionLockService {
 
       return updatedLocks.length > 0;
     } catch (error) {
-      logger.error("Error releasing lock by resource:", error);
+      console.error("Error releasing lock by resource:", error);
       return false;
     }
   }

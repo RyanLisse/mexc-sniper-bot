@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * STARTUP INITIALIZATION
+* STARTUP INITIALIZATION
  *
  * Handles all system initialization tasks that should run when the application starts
  * Ensures critical systems are properly initialized before handling requests
@@ -21,7 +20,12 @@ interface StartupResult {
 }
 
 export class StartupInitializer {
-  private logger = createSafeLogger("startup-initialization");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[startup-initialization]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[startup-initialization]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[startup-initialization]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[startup-initialization]', message, context || ''),
+    };
 
   private static instance: StartupInitializer;
   private isInitialized = false;
@@ -64,11 +68,11 @@ export class StartupInitializer {
     const failed: string[] = [];
     const errors: Record<string, string> = {};
 
-    logger.info("[Startup] Beginning system initialization...");
+    console.info("[Startup] Beginning system initialization...");
 
     // Validate environment configuration first
     try {
-      logger.info("[Startup] Validating environment configuration...");
+      console.info("[Startup] Validating environment configuration...");
       const envValidation = environmentValidation.validateEnvironment();
       const healthSummary = environmentValidation.getHealthSummary();
 
@@ -76,17 +80,17 @@ export class StartupInitializer {
         const errorMessage = `Critical environment issues: ${healthSummary.issues.join(", ")}`;
         failed.push("environment-validation");
         errors["environment-validation"] = errorMessage;
-        logger.error("[Startup] ❌ Environment validation failed:", errorMessage);
-        logger.error("[Startup] 💡 Run: bun run scripts/environment-setup.ts --check");
+        console.error("[Startup] ❌ Environment validation failed:", errorMessage);
+        console.error("[Startup] 💡 Run: bun run scripts/environment-setup.ts --check");
       } else {
         initialized.push("environment-validation");
-        logger.info(
+        console.info(
           `[Startup] ✅ Environment validated (${healthSummary.status}, score: ${healthSummary.score}/100)`
         );
 
         if (healthSummary.status === "warning") {
-          logger.warn(`[Startup] ⚠️ Environment warnings: ${healthSummary.issues.join(", ")}`);
-          logger.warn(
+          console.warn(`[Startup] ⚠️ Environment warnings: ${healthSummary.issues.join(", ")}`);
+          console.warn(
             "[Startup] 💡 Consider running: bun run scripts/environment-setup.ts --template"
           );
         }
@@ -95,83 +99,83 @@ export class StartupInitializer {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       failed.push("environment-validation");
       errors["environment-validation"] = errorMessage;
-      logger.error("[Startup] ❌ Environment validation failed:", errorMessage);
+      console.error("[Startup] ❌ Environment validation failed:", errorMessage);
     }
 
     // Initialize strategy templates
     try {
-      logger.info("[Startup] Initializing strategy templates...");
+      console.info("[Startup] Initializing strategy templates...");
       await strategyInitializationService.initializeOnStartup();
       initialized.push("strategy-templates");
-      logger.info("[Startup] ✅ Strategy templates initialized");
+      console.info("[Startup] ✅ Strategy templates initialized");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       failed.push("strategy-templates");
       errors["strategy-templates"] = errorMessage;
-      logger.error("[Startup] ❌ Strategy template initialization failed:", errorMessage);
+      console.error("[Startup] ❌ Strategy template initialization failed:", errorMessage);
     }
 
     // Initialize auto-sniping system if enabled
     try {
-      logger.info("[Startup] Initializing auto-sniping system...");
+      console.info("[Startup] Initializing auto-sniping system...");
       const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
 
       // Check if auto-sniping should be auto-started
       const autoSnipingConfig = await autoSnipingService.getConfig();
       if (autoSnipingConfig.enabled) {
-        logger.info("[Startup] Auto-sniping is enabled, preparing for automatic activation...");
+        console.info("[Startup] Auto-sniping is enabled, preparing for automatic activation...");
         // Don't start execution immediately - let the UI component handle it after status check
         initialized.push("auto-sniping-system");
-        logger.info("[Startup] ✅ Auto-sniping system ready for activation");
+        console.info("[Startup] ✅ Auto-sniping system ready for activation");
       } else {
         initialized.push("auto-sniping-system");
-        logger.info("[Startup] ✅ Auto-sniping system initialized (disabled)");
+        console.info("[Startup] ✅ Auto-sniping system initialized (disabled)");
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       failed.push("auto-sniping-system");
       errors["auto-sniping-system"] = errorMessage;
-      logger.error("[Startup] ❌ Auto-sniping system initialization failed:", errorMessage);
+      console.error("[Startup] ❌ Auto-sniping system initialization failed:", errorMessage);
     }
 
     // Initialize Pattern-Target Bridge Service for automatic target creation
     try {
-      logger.info("[Startup] Initializing Pattern-Target Bridge Service...");
+      console.info("[Startup] Initializing Pattern-Target Bridge Service...");
 
       // Start listening for pattern detection events with system user
       patternTargetBridgeService.startListening("system");
 
       initialized.push("pattern-target-bridge");
-      logger.info(
+      console.info(
         "[Startup] ✅ Pattern-Target Bridge Service initialized and listening for events"
       );
-      logger.info(
+      console.info(
         "[Startup] 🔗 Auto-target creation enabled: Pattern Detection → Snipe Targets → Auto-Execution"
       );
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       failed.push("pattern-target-bridge");
       errors["pattern-target-bridge"] = errorMessage;
-      logger.error("[Startup] ❌ Pattern-Target Bridge initialization failed:", errorMessage);
+      console.error("[Startup] ❌ Pattern-Target Bridge initialization failed:", errorMessage);
     }
 
     // Initialize Calendar-Pattern Bridge Service for automated calendar monitoring
     try {
-      logger.info("[Startup] Initializing Calendar-Pattern Bridge Service...");
+      console.info("[Startup] Initializing Calendar-Pattern Bridge Service...");
 
       // Start calendar monitoring with 15-minute intervals
       calendarPatternBridgeService.startMonitoring(15);
 
       initialized.push("calendar-pattern-bridge");
-      logger.info("[Startup] ✅ Calendar-Pattern Bridge Service initialized and monitoring");
-      logger.info(
+      console.info("[Startup] ✅ Calendar-Pattern Bridge Service initialized and monitoring");
+      console.info(
         "[Startup] 📅 Auto-discovery enabled: Calendar Monitoring → Pattern Detection → Target Creation"
       );
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       failed.push("calendar-pattern-bridge");
       errors["calendar-pattern-bridge"] = errorMessage;
-      logger.error("[Startup] ❌ Calendar-Pattern Bridge initialization failed:", errorMessage);
+      console.error("[Startup] ❌ Calendar-Pattern Bridge initialization failed:", errorMessage);
     }
 
     // Add other critical system initializations here as needed
@@ -190,14 +194,14 @@ export class StartupInitializer {
       duration,
     };
 
-    logger.info(
+    console.info(
       `[Startup] Initialization ${success ? "completed successfully" : "completed with errors"} in ${duration}ms`
     );
     if (initialized.length > 0) {
-      logger.info(`[Startup] ✅ Initialized: ${initialized.join(", ")}`);
+      console.info(`[Startup] ✅ Initialized: ${initialized.join(", ")}`);
     }
     if (failed.length > 0) {
-      logger.info(`[Startup] ❌ Failed: ${failed.join(", ")}`);
+      console.info(`[Startup] ❌ Failed: ${failed.join(", ")}`);
     }
 
     return result;
@@ -214,7 +218,7 @@ export class StartupInitializer {
    * Force re-initialization (for debugging or admin purposes)
    */
   async forceReinitialize(): Promise<StartupResult> {
-    logger.info("[Startup] Forcing re-initialization...");
+    console.info("[Startup] Forcing re-initialization...");
     this.isInitialized = false;
     this.initializationPromise = null;
     return this.initialize();
@@ -243,10 +247,10 @@ export const startupInitializer = StartupInitializer.getInstance();
  */
 export async function ensureStartupInitialization(): Promise<void> {
   if (!startupInitializer.isStartupComplete()) {
-    logger.info("[API] Startup not complete, initializing...");
+    console.info("[API] Startup not complete, initializing...");
     const result = await startupInitializer.initialize();
     if (!result.success) {
-      logger.warn("[API] Startup initialization had errors, but continuing...");
+      console.warn("[API] Startup initialization had errors, but continuing...");
     }
   }
 }

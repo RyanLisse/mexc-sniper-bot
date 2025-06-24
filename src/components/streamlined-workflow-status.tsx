@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
   AlertCircle,
@@ -13,6 +12,7 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
+import { z } from "zod";
 import { queryKeys } from "../lib/query-client";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -27,18 +27,24 @@ const WorkflowStatusSchema = z.object({
   activeTargets: z.number().default(0),
   systemStatus: z.enum(["running", "stopped", "error", "starting", "stopping"]),
   lastUpdate: z.string(),
-  performance: z.object({
-    uptime: z.number(),
-    successRate: z.number(),
-    totalExecutions: z.number(),
-    avgResponseTime: z.number(),
-  }).optional(),
-  recentActivity: z.array(z.object({
-    timestamp: z.string(),
-    event: z.string(),
-    status: z.enum(["success", "warning", "error"]),
-    details: z.string().optional(),
-  })).default([]),
+  performance: z
+    .object({
+      uptime: z.number(),
+      successRate: z.number(),
+      totalExecutions: z.number(),
+      avgResponseTime: z.number(),
+    })
+    .optional(),
+  recentActivity: z
+    .array(
+      z.object({
+        timestamp: z.string(),
+        event: z.string(),
+        status: z.enum(["success", "warning", "error"]),
+        details: z.string().optional(),
+      })
+    )
+    .default([]),
 });
 
 type WorkflowStatus = z.infer<typeof WorkflowStatusSchema>;
@@ -74,15 +80,17 @@ export function StreamlinedWorkflowStatus({
       }
 
       // Validate with Zod and provide defaults
-      return WorkflowStatusSchema.parse(result.data || {
-        discoveryRunning: false,
-        sniperActive: false,
-        patternDetectionActive: false,
-        activeTargets: 0,
-        systemStatus: "stopped",
-        lastUpdate: new Date().toISOString(),
-        recentActivity: [],
-      });
+      return WorkflowStatusSchema.parse(
+        result.data || {
+          discoveryRunning: false,
+          sniperActive: false,
+          patternDetectionActive: false,
+          activeTargets: 0,
+          systemStatus: "stopped",
+          lastUpdate: new Date().toISOString(),
+          recentActivity: [],
+        }
+      );
     },
     staleTime: 10000,
     refetchInterval: autoRefresh ? 15000 : false,
@@ -91,7 +99,13 @@ export function StreamlinedWorkflowStatus({
 
   // Control mutations
   const controlMutation = useMutation({
-    mutationFn: async ({ action, workflowType }: { action: "start" | "stop"; workflowType: string }) => {
+    mutationFn: async ({
+      action,
+      workflowType,
+    }: {
+      action: "start" | "stop";
+      workflowType: string;
+    }) => {
       const response = await fetch("/api/workflow-status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -151,7 +165,8 @@ export function StreamlinedWorkflowStatus({
   const lastUpdate = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
 
   const isSystemRunning = workflow?.systemStatus === "running";
-  const isAnyWorkflowActive = workflow?.discoveryRunning || workflow?.sniperActive || workflow?.patternDetectionActive;
+  const isAnyWorkflowActive =
+    workflow?.discoveryRunning || workflow?.sniperActive || workflow?.patternDetectionActive;
 
   const handleToggleWorkflow = (workflowType: string, isActive: boolean) => {
     controlMutation.mutate({
@@ -164,10 +179,10 @@ export function StreamlinedWorkflowStatus({
   if (variant === "compact") {
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
-        <StatusIcon className={`h-4 w-4 text-${statusConfig.color}-500 ${isFetching ? "animate-pulse" : ""}`} />
-        <Badge variant={statusConfig.variant}>
-          {statusConfig.text}
-        </Badge>
+        <StatusIcon
+          className={`h-4 w-4 text-${statusConfig.color}-500 ${isFetching ? "animate-pulse" : ""}`}
+        />
+        <Badge variant={statusConfig.variant}>{statusConfig.text}</Badge>
         {workflow?.activeTargets && workflow.activeTargets > 0 && (
           <Badge variant="outline" className="text-blue-600">
             <Target className="h-3 w-3 mr-1" />
@@ -191,9 +206,7 @@ export function StreamlinedWorkflowStatus({
         <CardContent>
           <div className="flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
             <AlertCircle className="h-5 w-5 text-red-500" />
-            <span className="text-sm text-red-700 dark:text-red-300">
-              {error.message}
-            </span>
+            <span className="text-sm text-red-700 dark:text-red-300">{error.message}</span>
           </div>
         </CardContent>
       </Card>
@@ -217,7 +230,9 @@ export function StreamlinedWorkflowStatus({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.status.workflows() })}
+              onClick={() =>
+                queryClient.invalidateQueries({ queryKey: queryKeys.status.workflows() })
+              }
               disabled={isLoading || isFetching}
             >
               <RefreshCw className={`h-4 w-4 ${isLoading || isFetching ? "animate-spin" : ""}`} />
@@ -227,8 +242,7 @@ export function StreamlinedWorkflowStatus({
         <CardDescription>
           {workflow
             ? `System ${workflow.systemStatus} • ${workflow.activeTargets || 0} active target${workflow.activeTargets !== 1 ? "s" : ""}`
-            : "Loading workflow information..."
-          }
+            : "Loading workflow information..."}
         </CardDescription>
       </CardHeader>
 
@@ -281,7 +295,9 @@ export function StreamlinedWorkflowStatus({
                   <div className="flex items-center space-x-2">
                     <div
                       className={`w-2 h-2 rounded-full ${
-                        workflow.patternDetectionActive ? "bg-blue-500 animate-pulse" : "bg-gray-300"
+                        workflow.patternDetectionActive
+                          ? "bg-blue-500 animate-pulse"
+                          : "bg-gray-300"
                       }`}
                     />
                     <span className="font-medium text-sm">Pattern Detection</span>
@@ -292,7 +308,9 @@ export function StreamlinedWorkflowStatus({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleToggleWorkflow("pattern-detection", workflow.patternDetectionActive)}
+                    onClick={() =>
+                      handleToggleWorkflow("pattern-detection", workflow.patternDetectionActive)
+                    }
                     disabled={controlMutation.isPending}
                   >
                     {workflow.patternDetectionActive ? (
@@ -370,10 +388,19 @@ export function StreamlinedWorkflowStatus({
                 <div className="text-sm font-medium text-muted-foreground">Recent Activity</div>
                 <div className="space-y-1 max-h-24 overflow-y-auto">
                   {workflow.recentActivity.slice(0, 3).map((activity, index) => (
-                    <div key={index} className="flex items-center space-x-2 p-2 text-xs border rounded">
-                      {activity.status === "success" && <CheckCircle className="h-3 w-3 text-green-500" />}
-                      {activity.status === "warning" && <AlertCircle className="h-3 w-3 text-yellow-500" />}
-                      {activity.status === "error" && <AlertCircle className="h-3 w-3 text-red-500" />}
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 p-2 text-xs border rounded"
+                    >
+                      {activity.status === "success" && (
+                        <CheckCircle className="h-3 w-3 text-green-500" />
+                      )}
+                      {activity.status === "warning" && (
+                        <AlertCircle className="h-3 w-3 text-yellow-500" />
+                      )}
+                      {activity.status === "error" && (
+                        <AlertCircle className="h-3 w-3 text-red-500" />
+                      )}
                       <div className="flex-1">
                         <div className="font-medium">{activity.event}</div>
                         <div className="text-muted-foreground">

@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { AgentMonitoringService } from "../../../../src/services/agent-monitoring-service";
+import { LoggerContainer } from "../../../../src/lib/logger-injection";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Get monitoring status and alerts
-const logger = createSafeLogger('route');
-
 export async function GET(request: NextRequest) {
+  // Get logger from injection container
+  const logger = LoggerContainer.getOrCreate('agents-monitoring');
+  
   try {
     const url = new URL(request.url);
     const action = url.searchParams.get("action");
     const includeResolved = url.searchParams.get("includeResolved") === "true";
     const limit = parseInt(url.searchParams.get("limit") || "10");
 
-    const monitoringService = AgentMonitoringService.getInstance();
+    // Inject logger into service instance
+    const monitoringService = AgentMonitoringService.getInstance(undefined, logger);
 
     switch (action) {
       case "alerts":
@@ -70,7 +72,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error("[API] Monitoring service request failed:", { error: error });
+    console.error("[API] Monitoring service request failed:", { error: error });
     return NextResponse.json(
       { 
         success: false, 
@@ -84,11 +86,15 @@ export async function GET(request: NextRequest) {
 
 // Control monitoring service and resolve alerts
 export async function POST(request: NextRequest) {
+  // Get logger from injection container
+  const logger = LoggerContainer.getOrCreate('agents-monitoring-post');
+  
   try {
     const body = await request.json();
     const { action, ...params } = body;
 
-    const monitoringService = AgentMonitoringService.getInstance();
+    // Inject logger into service instance
+    const monitoringService = AgentMonitoringService.getInstance(undefined, logger);
 
     switch (action) {
       case "start":
@@ -141,7 +147,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error("[API] Monitoring service action failed:", { error: error });
+    console.error("[API] Monitoring service action failed:", { error: error });
     return NextResponse.json(
       { 
         success: false, 
@@ -155,6 +161,7 @@ export async function POST(request: NextRequest) {
 
 // Update monitoring configuration
 export async function PATCH(request: NextRequest) {
+  // Build-safe logger - initialize inside function
   try {
     const body = await request.json();
     const monitoringService = AgentMonitoringService.getInstance();
@@ -169,7 +176,7 @@ export async function PATCH(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error("[API] Monitoring configuration update failed:", { error: error });
+    console.error("[API] Monitoring configuration update failed:", { error: error });
     return NextResponse.json(
       { 
         success: false, 

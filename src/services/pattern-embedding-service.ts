@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import type { NewPatternEmbedding } from "../db/schema";
 import { vectorUtils } from "../db/vector-utils";
-import { createSafeLogger } from "../lib/structured-logger";
 import { getAiIntelligenceService } from "./ai-intelligence-service";
 
 export interface PatternData {
@@ -24,7 +23,12 @@ export class PatternEmbeddingService {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("pattern-embedding-service");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[pattern-embedding-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[pattern-embedding-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[pattern-embedding-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[pattern-embedding-service]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -42,9 +46,9 @@ export class PatternEmbeddingService {
     this.useCohere = !!process.env.COHERE_API_KEY;
 
     if (this.useCohere) {
-      this.logger.info("[PatternEmbedding] Using Cohere Embed v4.0 as primary embedding model");
+      console.info("[PatternEmbedding] Using Cohere Embed v4.0 as primary embedding model");
     } else {
-      this.logger.info("[PatternEmbedding] Falling back to OpenAI text-embedding-ada-002");
+      console.info("[PatternEmbedding] Falling back to OpenAI text-embedding-ada-002");
     }
   }
 
@@ -124,7 +128,7 @@ export class PatternEmbeddingService {
         const embedding = await getAiIntelligenceService().generatePatternEmbedding(pattern);
         return embedding;
       } catch (error) {
-        logger.warn("[PatternEmbedding] Cohere embedding failed, falling back to OpenAI:", error);
+        console.warn("[PatternEmbedding] Cohere embedding failed, falling back to OpenAI:", error);
         // Fall through to OpenAI fallback
       }
     }
@@ -140,7 +144,7 @@ export class PatternEmbeddingService {
 
       return response.data[0].embedding;
     } catch (error) {
-      logger.error(
+      console.error(
         "[PatternEmbedding] Failed to generate embedding (both Cohere and OpenAI):",
         error
       );
@@ -174,7 +178,7 @@ export class PatternEmbeddingService {
 
       return patternId;
     } catch (error) {
-      logger.error("[PatternEmbedding] Failed to store pattern:", error);
+      console.error("[PatternEmbedding] Failed to store pattern:", error);
       throw error;
     }
   }
@@ -205,7 +209,7 @@ export class PatternEmbeddingService {
         patternData: JSON.parse(result.patternData),
       }));
     } catch (error) {
-      logger.error("[PatternEmbedding] Failed to find similar patterns:", error);
+      console.error("[PatternEmbedding] Failed to find similar patterns:", error);
       throw error;
     }
   }
@@ -221,7 +225,7 @@ export class PatternEmbeddingService {
         const patternId = await this.storePattern(pattern);
         patternIds.push(patternId);
       } catch (error) {
-        logger.error(
+        console.error(
           `[PatternEmbedding] Failed to process pattern for ${pattern.symbolName}:`,
           error
         );
@@ -263,7 +267,7 @@ export class PatternEmbeddingService {
         falsePositive: !result.success,
       });
     } catch (error) {
-      logger.error("[PatternEmbedding] Failed to update pattern performance:", error);
+      console.error("[PatternEmbedding] Failed to update pattern performance:", error);
       throw error;
     }
   }
@@ -317,7 +321,7 @@ export class PatternEmbeddingService {
 
       return sortedResults;
     } catch (error) {
-      logger.error("[PatternEmbedding] Advanced similarity search failed:", error);
+      console.error("[PatternEmbedding] Advanced similarity search failed:", error);
       throw error;
     }
   }
@@ -387,7 +391,7 @@ export class PatternEmbeddingService {
         recommendations,
       };
     } catch (error) {
-      logger.error("[PatternEmbedding] Confidence calculation failed:", error);
+      console.error("[PatternEmbedding] Confidence calculation failed:", error);
       return {
         confidence: pattern.confidence,
         components: { basePattern: pattern.confidence },
@@ -469,7 +473,7 @@ export class PatternEmbeddingService {
 
       return { trends, insights, alerts };
     } catch (error) {
-      logger.error("[PatternEmbedding] Trend detection failed:", error);
+      console.error("[PatternEmbedding] Trend detection failed:", error);
       return { trends: [], insights: ["Trend analysis unavailable"], alerts: [] };
     }
   }
@@ -581,7 +585,7 @@ export class PatternEmbeddingService {
         recommendations,
       };
     } catch (error) {
-      logger.error("[PatternEmbedding] Historical performance analysis failed:", error);
+      console.error("[PatternEmbedding] Historical performance analysis failed:", error);
       throw error;
     }
   }
@@ -595,7 +599,7 @@ export class PatternEmbeddingService {
     try {
       // Clean up expired cache
       const cacheDeleted = await vectorUtils.cleanupExpiredCache();
-      logger.info(`[PatternEmbedding] Cleaned up ${cacheDeleted} expired cache entries`);
+      console.info(`[PatternEmbedding] Cleaned up ${cacheDeleted} expired cache entries`);
 
       // Clean up old inactive patterns
       const cutoffDate = new Date(Date.now() - inactiveDays * 24 * 60 * 60 * 1000);
@@ -604,14 +608,14 @@ export class PatternEmbeddingService {
         lowConfidenceThreshold
       );
 
-      logger.info(`[PatternEmbedding] Deactivated ${patternsDeactivated} old patterns`);
+      console.info(`[PatternEmbedding] Deactivated ${patternsDeactivated} old patterns`);
 
       return {
         cacheDeleted,
         patternsDeactivated,
       };
     } catch (error) {
-      logger.error("[PatternEmbedding] Cleanup failed:", error);
+      console.error("[PatternEmbedding] Cleanup failed:", error);
       throw error;
     }
   }

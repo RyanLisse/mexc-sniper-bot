@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * Performance Monitoring Service for MEXC Sniper Bot
+* Performance Monitoring Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Real-time Performance Dashboards & Monitoring
  *
@@ -118,7 +117,12 @@ export class PerformanceMonitoringService {
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("performance-monitoring-service");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[performance-monitoring-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[performance-monitoring-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[performance-monitoring-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[performance-monitoring-service]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -196,7 +200,7 @@ export class PerformanceMonitoringService {
       await this.collectMetrics();
     }, this.config.metricsCollectionInterval);
 
-    logger.info("[PerformanceMonitoring] Real-time monitoring started");
+    console.info("[PerformanceMonitoring] Real-time monitoring started");
   }
 
   private async collectMetrics(): Promise<void> {
@@ -234,11 +238,11 @@ export class PerformanceMonitoringService {
         this.generateRecommendations(metrics);
       }
 
-      logger.info(
+      console.info(
         `[PerformanceMonitoring] Metrics collected at ${new Date(timestamp).toISOString()}`
       );
     } catch (error) {
-      logger.error("[PerformanceMonitoring] Failed to collect metrics:", error);
+      console.error("[PerformanceMonitoring] Failed to collect metrics:", error);
     }
   }
 
@@ -269,7 +273,7 @@ export class PerformanceMonitoringService {
         activeConnections: redisMetrics.connectionStatus === "connected" ? 1 : 0,
       };
     } catch (error) {
-      logger.error("[PerformanceMonitoring] Failed to collect system metrics:", error);
+      console.error("[PerformanceMonitoring] Failed to collect system metrics:", error);
       return {
         memoryUsage: { used: 0, total: 0, percentage: 0 },
         cpuUsage: 0,
@@ -372,7 +376,7 @@ export class PerformanceMonitoringService {
     this.addToAlerts(alerts);
 
     if (alerts.length > 0) {
-      logger.warn(`[PerformanceMonitoring] Generated ${alerts.length} new alerts`);
+      console.warn(`[PerformanceMonitoring] Generated ${alerts.length} new alerts`);
     }
   }
 
@@ -434,7 +438,7 @@ export class PerformanceMonitoringService {
     this.addToRecommendations(newRecommendations);
 
     if (newRecommendations.length > 0) {
-      logger.info(
+      console.info(
         `[PerformanceMonitoring] Generated ${newRecommendations.length} new recommendations`
       );
     }
@@ -639,7 +643,7 @@ export class PerformanceMonitoringService {
     this.recommendations = [];
     this.responseTimes = [];
 
-    logger.info("[PerformanceMonitoring] Service destroyed");
+    console.info("[PerformanceMonitoring] Service destroyed");
   }
 }
 

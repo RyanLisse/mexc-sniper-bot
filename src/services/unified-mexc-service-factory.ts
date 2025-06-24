@@ -8,7 +8,6 @@
 
 import { and, eq } from "drizzle-orm";
 import { apiCredentials, db } from "../db";
-import { createSafeLogger } from "../lib/structured-logger";
 import { getUnifiedMexcClient, type UnifiedMexcClient } from "./api/mexc-client-factory";
 import type { UnifiedMexcConfig } from "./api/mexc-client-types";
 import { getEncryptionService } from "./secure-encryption-service";
@@ -38,7 +37,12 @@ interface CachedCredential {
 }
 
 class CredentialCache {
-  private logger = createSafeLogger("unified-mexc-service-factory");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[unified-mexc-service-factory]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[unified-mexc-service-factory]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[unified-mexc-service-factory]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[unified-mexc-service-factory]', message, context || ''),
+    };
 
   private cache = new Map<string, CachedCredential>();
   private readonly defaultTTL = 300000; // 5 minutes
@@ -140,7 +144,12 @@ class ServiceInstanceCache {
 // ============================================================================
 
 export class UnifiedMexcServiceFactory {
-  private logger = createSafeLogger("unified-mexc-service-factory");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[unified-mexc-service-factory]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[unified-mexc-service-factory]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[unified-mexc-service-factory]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[unified-mexc-service-factory]', message, context || ''),
+    };
   private config: ServiceFactoryConfig;
   private credentialCache = new CredentialCache();
   private serviceCache = new ServiceInstanceCache();
@@ -156,7 +165,7 @@ export class UnifiedMexcServiceFactory {
       ...config,
     };
 
-    this.logger.info("[UnifiedMexcServiceFactory] Initialized with config:", {
+    console.info("[UnifiedMexcServiceFactory] Initialized with config:", {
       enableGlobalCache: this.config.enableGlobalCache,
       credentialCacheTTL: this.config.credentialCacheTTL,
       serviceInstanceCacheTTL: this.config.serviceInstanceCacheTTL,
@@ -192,7 +201,7 @@ export class UnifiedMexcServiceFactory {
       });
 
       if (!credentials) {
-        logger.warn("[UnifiedMexcServiceFactory] No valid credentials found");
+        console.warn("[UnifiedMexcServiceFactory] No valid credentials found");
         // Return service with environment fallback
         return this.createServiceInstance({
           apiKey: process.env.MEXC_API_KEY || "",
@@ -205,7 +214,7 @@ export class UnifiedMexcServiceFactory {
       if (this.config.enableGlobalCache && !skipCache) {
         const cachedService = this.serviceCache.get(credentials.apiKey, credentials.secretKey);
         if (cachedService) {
-          logger.info("[UnifiedMexcServiceFactory] Using cached service instance");
+          console.info("[UnifiedMexcServiceFactory] Using cached service instance");
           return cachedService;
         }
       }
@@ -223,7 +232,7 @@ export class UnifiedMexcServiceFactory {
         );
       }
 
-      logger.info("[UnifiedMexcServiceFactory] Created new service instance:", {
+      console.info("[UnifiedMexcServiceFactory] Created new service instance:", {
         hasApiKey: Boolean(credentials.apiKey),
         hasSecretKey: Boolean(credentials.secretKey),
         source: credentials.source,
@@ -232,11 +241,11 @@ export class UnifiedMexcServiceFactory {
 
       return service;
     } catch (error) {
-      logger.error("[UnifiedMexcServiceFactory] Failed to get service:", error);
+      console.error("[UnifiedMexcServiceFactory] Failed to get service:", error);
 
       // Fallback to environment credentials
       if (this.config.fallbackToEnvironment) {
-        logger.info("[UnifiedMexcServiceFactory] Falling back to environment credentials");
+        console.info("[UnifiedMexcServiceFactory] Falling back to environment credentials");
         return this.createServiceInstance({
           apiKey: process.env.MEXC_API_KEY || "",
           secretKey: process.env.MEXC_SECRET_KEY || "",
@@ -306,7 +315,7 @@ export class UnifiedMexcServiceFactory {
       if (!skipCache && this.config.enableGlobalCache) {
         const cached = this.credentialCache.get(userId);
         if (cached && cached.source === "database") {
-          logger.info("[UnifiedMexcServiceFactory] Using cached user credentials");
+          console.info("[UnifiedMexcServiceFactory] Using cached user credentials");
           return {
             apiKey: cached.apiKey,
             secretKey: cached.secretKey,
@@ -347,7 +356,7 @@ export class UnifiedMexcServiceFactory {
         });
       }
 
-      logger.info("[UnifiedMexcServiceFactory] Retrieved user credentials from database");
+      console.info("[UnifiedMexcServiceFactory] Retrieved user credentials from database");
 
       return {
         apiKey,
@@ -355,7 +364,7 @@ export class UnifiedMexcServiceFactory {
         source: "database",
       };
     } catch (error) {
-      logger.error("[UnifiedMexcServiceFactory] Failed to get user credentials:", error);
+      console.error("[UnifiedMexcServiceFactory] Failed to get user credentials:", error);
       return null;
     }
   }
@@ -393,7 +402,7 @@ export class UnifiedMexcServiceFactory {
    */
   invalidateUserCredentials(userId: string): void {
     this.credentialCache.invalidate(userId);
-    logger.info(`[UnifiedMexcServiceFactory] Invalidated credentials cache for user: ${userId}`);
+    console.info(`[UnifiedMexcServiceFactory] Invalidated credentials cache for user: ${userId}`);
   }
 
   /**
@@ -402,7 +411,7 @@ export class UnifiedMexcServiceFactory {
   clearAllCaches(): void {
     this.credentialCache.clear();
     this.serviceCache.clear();
-    logger.info("[UnifiedMexcServiceFactory] Cleared all caches");
+    console.info("[UnifiedMexcServiceFactory] Cleared all caches");
   }
 
   /**
@@ -433,7 +442,7 @@ export class UnifiedMexcServiceFactory {
 
     // TODO: Implement status synchronization callbacks
     // This would trigger React Query cache invalidation
-    logger.info(`[UnifiedMexcServiceFactory] Credential operation success - invalidated caches`);
+    console.info(`[UnifiedMexcServiceFactory] Credential operation success - invalidated caches`);
   }
 
   /**

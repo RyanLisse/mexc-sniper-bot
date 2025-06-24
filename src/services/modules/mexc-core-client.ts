@@ -1,11 +1,11 @@
 /**
-import { createSafeLogger } from '../lib/structured-logger';
  * MEXC Core API Client
  *
  * Lightweight, focused HTTP client for MEXC API communication.
  * Extracted from unified service for better separation of concerns.
  */
 
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type {
   BalanceEntry,
   CalendarEntry,
@@ -20,7 +20,13 @@ import type {
 // ============================================================================
 
 export class MexcCoreClient {
-  private logger = createSafeLogger("mexc-core-client");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[mexc-core-client]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[mexc-core-client]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[mexc-core-client]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[mexc-core-client]', message, context || ''),
+  };
 
   private config: MexcApiConfig;
   private baseHeaders: Record<string, string>;
@@ -431,7 +437,7 @@ export class MexcCoreClient {
   private createSignature(data: string): string {
     if (typeof window !== "undefined") {
       // Browser environment - return a placeholder
-      logger.warn("MEXC API signatures cannot be generated in browser environment");
+      this.logger.warn("MEXC API signatures cannot be generated in browser environment");
       return "browser-placeholder";
     }
 
@@ -439,7 +445,7 @@ export class MexcCoreClient {
       const crypto = require("crypto");
       return crypto.createHmac("sha256", this.config.secretKey).update(data).digest("hex");
     } catch (error) {
-      logger.error("Failed to create MEXC signature:", error);
+      this.logger.error("Failed to create MEXC signature:", error);
       return "signature-error";
     }
   }
@@ -457,7 +463,7 @@ export class MexcCoreClient {
     startTime: number
   ): MexcServiceResponse<never> {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error(`[MexcCoreClient.${methodName}] Error:`, errorMessage);
+    this.logger.error(`[MexcCoreClient.${methodName}] Error:`, errorMessage);
 
     return {
       success: false,

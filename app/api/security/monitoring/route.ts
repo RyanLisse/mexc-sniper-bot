@@ -7,7 +7,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { securityMonitoring } from "../../../../src/services/security-monitoring-service";
 import { checkRateLimit, getClientIP } from "../../../../src/lib/rate-limiter";
 
@@ -17,7 +16,6 @@ import { checkRateLimit, getClientIP } from "../../../../src/lib/rate-limiter";
 // ============================================================================
 
 export async function GET(request: NextRequest) {
-  const logger = createSafeLogger('security-monitoring');
   const ip = getClientIP(request);
   const userAgent = request.headers.get("user-agent") || "unknown";
 
@@ -82,7 +80,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error("[SecurityMonitoring API] GET failed:", { error: error });
+    console.error("[SecurityMonitoring API] GET failed:", { error: error });
     
     return NextResponse.json(
       {
@@ -102,7 +100,6 @@ export async function GET(request: NextRequest) {
 // ============================================================================
 
 export async function POST(request: NextRequest) {
-  const logger = createSafeLogger('security-monitoring');
   const ip = getClientIP(request);
   const userAgent = request.headers.get("user-agent") || "unknown";
 
@@ -155,22 +152,22 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case "rotate_credentials":
-        logger.info(`[SecurityMonitoring API] User ${user.id} triggered credential rotation`);
+        console.info(`[SecurityMonitoring API] User ${user.id} triggered credential rotation`);
         result = await securityMonitoring.performAutomatedCredentialRotation();
         break;
 
       case "detect_anomalies":
-        logger.info(`[SecurityMonitoring API] User ${user.id} triggered anomaly detection`);
+        console.info(`[SecurityMonitoring API] User ${user.id} triggered anomaly detection`);
         result = await securityMonitoring.detectSecurityAnomalies();
         break;
 
       case "generate_recommendations":
-        logger.info(`[SecurityMonitoring API] User ${user.id} requested security recommendations`);
+        console.info(`[SecurityMonitoring API] User ${user.id} requested security recommendations`);
         result = await securityMonitoring.generateSecurityRecommendations();
         break;
 
       case "security_assessment":
-        logger.info(`[SecurityMonitoring API] User ${user.id} triggered security assessment`);
+        console.info(`[SecurityMonitoring API] User ${user.id} triggered security assessment`);
         result = {
           metrics: await securityMonitoring.getSecurityMetrics(),
           anomalies: await securityMonitoring.detectSecurityAnomalies(),
@@ -206,7 +203,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error("[SecurityMonitoring API] POST failed:", { error: error });
+    console.error("[SecurityMonitoring API] POST failed:", { error: error });
     
     return NextResponse.json(
       {
@@ -226,7 +223,6 @@ export async function POST(request: NextRequest) {
 // ============================================================================
 
 export async function PUT(request: NextRequest) {
-  const logger = createSafeLogger('security-monitoring');
   const ip = getClientIP(request);
   const userAgent = request.headers.get("user-agent") || "unknown";
 
@@ -277,7 +273,7 @@ export async function PUT(request: NextRequest) {
 
     // For now, just log the configuration update request
     // In a full implementation, this would update monitoring settings
-    logger.info(`[SecurityMonitoring API] User ${user.id} updated security settings:`, settings);
+    console.info(`[SecurityMonitoring API] User ${user.id} updated security settings:`, settings);
 
     return NextResponse.json({
       success: true,
@@ -290,7 +286,7 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error("[SecurityMonitoring API] PUT failed:", { error: error });
+    console.error("[SecurityMonitoring API] PUT failed:", { error: error });
     
     return NextResponse.json(
       {

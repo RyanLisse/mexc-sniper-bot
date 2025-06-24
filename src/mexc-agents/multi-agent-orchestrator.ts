@@ -5,7 +5,7 @@
  * Manages agent lifecycle, communication, and workflow coordination.
  */
 
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { tradingAnalytics } from "../services/trading-analytics-service";
 import type { AgentResponse, AgentStatus, BaseAgent } from "./base-agent";
 import { CalendarAgent } from "./calendar-agent";
@@ -62,13 +62,13 @@ export interface AgentWorkflowResult {
 }
 
 export class MultiAgentOrchestrator {
-  private _logger?: ReturnType<typeof createSafeLogger>;
-  private get logger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("multi-agent-orchestrator");
-    }
-    return this._logger;
-  }
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[multi-agent-orchestrator]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[multi-agent-orchestrator]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[multi-agent-orchestrator]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[multi-agent-orchestrator]', message, context || ''),
+  };
 
   private static instance: MultiAgentOrchestrator;
   private agents: Map<string, BaseAgent> = new Map();

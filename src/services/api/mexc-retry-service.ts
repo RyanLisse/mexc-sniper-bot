@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from '../lib/structured-logger';
- * MEXC Retry Service
+* MEXC Retry Service
  *
  * Handles retry logic, error classification, and backoff strategies for MEXC API requests.
  * Extracted from mexc-api-client.ts for better modularity.
@@ -14,7 +13,12 @@ import type {
 } from "./mexc-api-types";
 
 export class MexcRetryService {
-  private logger = createSafeLogger("mexc-retry-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-retry-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-retry-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-retry-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-retry-service]', message, context || ''),
+    };
 
   private retryConfig: RetryConfig;
   private recentErrors: Error[] = [];
@@ -240,7 +244,7 @@ export class MexcRetryService {
     // Cap delay at max
     delay = Math.min(delay, this.retryConfig.maxDelay);
 
-    logger.warn(
+    console.warn(
       `Rate limited. Waiting ${delay}ms before retry. Remaining: ${rateLimitInfo.remaining}/${rateLimitInfo.limit}`
     );
 
@@ -322,7 +326,7 @@ export class MexcRetryService {
         const adaptiveMultiplier = this.getAdaptiveRetryMultiplier();
         const delay = baseDelay * adaptiveMultiplier;
 
-        logger.warn(
+        console.warn(
           `Request failed (attempt ${attempt}/${retries + 1}). Retrying in ${delay}ms...`,
           {
             error: lastError.message,

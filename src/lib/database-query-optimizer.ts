@@ -1,5 +1,3 @@
-import { createSafeLogger } from "./structured-logger";
-
 /**
  * Database Query Optimizer
  *
@@ -46,7 +44,12 @@ interface BatchQueryOperation<T> {
 }
 
 export class DatabaseQueryOptimizer {
-  private logger = createSafeLogger("database-query-optimizer");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[database-query-optimizer]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[database-query-optimizer]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[database-query-optimizer]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[database-query-optimizer]', message, context || ''),
+    };
 
   private static instance: DatabaseQueryOptimizer;
   private config: QueryOptimizationConfig;
@@ -617,7 +620,7 @@ export class DatabaseQueryOptimizer {
    */
   clearCache(): void {
     this.queryCache.clear();
-    logger.info("🗑️ Query cache cleared");
+    console.info("🗑️ Query cache cleared");
   }
 }
 

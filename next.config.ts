@@ -94,6 +94,15 @@ const nextConfig: NextConfig = {
         "@opentelemetry/instrumentation": "commonjs @opentelemetry/instrumentation"
       });
 
+      // Configure webpack DefinePlugin for server-side logger
+      const webpack = require('webpack');
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'process.env.LOGGER_CLIENT_SIDE': JSON.stringify('false'),
+          'process.env.LOGGER_SERVER_SIDE': JSON.stringify('true'),
+        })
+      );
+
     } else {
       // For client-side, completely exclude Node.js modules
       config.resolve.fallback = {
@@ -154,6 +163,14 @@ const nextConfig: NextConfig = {
         '@opentelemetry/otlp-grpc-exporter-base': false,
         '@opentelemetry/exporter-logs-otlp-grpc': false,
       };
+
+      // Configure webpack DefinePlugin for logger environment detection
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'process.env.LOGGER_CLIENT_SIDE': JSON.stringify('true'),
+          'process.env.LOGGER_SERVER_SIDE': JSON.stringify('false'),
+        })
+      );
 
       // Advanced code splitting and optimization
       if (!dev) {
@@ -240,6 +257,14 @@ const nextConfig: NextConfig = {
                 name: 'dashboard',
                 priority: 16,
                 reuseExistingChunk: true,
+              },
+              // Logger utilities - separate bundle for optimal loading
+              logger: {
+                test: /[\\/]src[\\/]lib[\\/]structured-logger[\\/]/,
+                name: 'logger',
+                priority: 20,
+                reuseExistingChunk: true,
+                enforce: true,
               },
               // Radix UI components - split by frequency of use
               radixCore: {

@@ -14,7 +14,6 @@
 import { z } from "zod";
 import type { PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { AutoSnipingConfig, ExecutionPosition } from "./optimized-auto-sniping-core";
 
 // ============================================================================
@@ -105,7 +104,12 @@ export type RiskAction = z.infer<typeof RiskActionSchema>;
 
 export class OptimizedRiskManager {
   private static instance: OptimizedRiskManager;
-  private logger = createSafeLogger("optimized-risk-manager");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[optimized-risk-manager]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[optimized-risk-manager]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[optimized-risk-manager]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[optimized-risk-manager]', message, context || ''),
+    };
 
   // Risk configuration
   private riskLimits: RiskLimits;
@@ -135,7 +139,7 @@ export class OptimizedRiskManager {
     // Update portfolio metrics every 30 seconds
     setInterval(() => this.updatePortfolioMetrics(), 30000);
 
-    this.logger.info("Optimized Risk Manager initialized", {
+    console.info("Optimized Risk Manager initialized", {
       riskLimits: this.riskLimits,
     });
   }
@@ -156,16 +160,7 @@ export class OptimizedRiskManager {
     activePositions: ExecutionPosition[]
   ): Promise<RiskAssessment> {
     try {
-      this.riskMetrics.totalAssessments++;
-
-      this.logger.debug("Assessing trade risk", {
-        symbol: pattern.symbol,
-        confidence: pattern.confidence,
-        positionSize,
-        activePositions: activePositions.length,
-      });
-
-      // Calculate various risk components
+      this.riskMetrics.totalAssessments++;// Calculate various risk components
       const positionRisk = this.calculatePositionRisk(pattern, positionSize);
       const portfolioRisk = this.calculatePortfolioRisk(activePositions, positionSize);
       const drawdownRisk = this.calculateDrawdownRisk(activePositions);
@@ -233,19 +228,10 @@ export class OptimizedRiskManager {
       // Track blocked trades
       if (recommendedAction === "block" || recommendedAction === "emergency_stop") {
         this.riskMetrics.blockedTrades++;
-      }
-
-      this.logger.debug("Risk assessment completed", {
-        symbol: pattern.symbol,
-        riskScore,
-        overallRiskLevel,
-        recommendedAction,
-      });
-
-      return assessment;
+      }return assessment;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Risk assessment failed", {
+      console.error("Risk assessment failed", {
         symbol: pattern.symbol,
         error: safeError.message,
       });
@@ -345,7 +331,7 @@ export class OptimizedRiskManager {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Position risk monitoring failed", {
+      console.error("Position risk monitoring failed", {
         positionId: position.id,
         error: safeError.message,
       });
@@ -420,13 +406,13 @@ export class OptimizedRiskManager {
         ...newLimits,
       });
 
-      this.logger.info("Risk limits updated", {
+      console.info("Risk limits updated", {
         updatedFields: Object.keys(newLimits),
         newLimits: this.riskLimits,
       });
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to update risk limits", {
+      console.error("Failed to update risk limits", {
         error: safeError.message,
         attemptedLimits: newLimits,
       });
@@ -676,9 +662,7 @@ export class OptimizedRiskManager {
 
   private updatePortfolioMetrics(): void {
     // This would be updated with real portfolio data
-    // For now, maintaining existing structure
-    this.logger.debug("Portfolio metrics updated");
-  }
+    // For now, maintaining existing structure}
 
   private getDefaultRiskLimits(): RiskLimits {
     return {

@@ -1,5 +1,5 @@
 import { PERFORMANCE_CONSTANTS, TIME_CONSTANTS } from "../../lib/constants";
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { AgentRegistry } from "./agent-registry";
 import type { WorkflowExecutionResult } from "./workflow-engine";
 
@@ -101,13 +101,12 @@ export interface PerformanceReport {
  * Comprehensive performance metrics collection and analysis system
  */
 export class PerformanceCollector {
-  private _logger?: ReturnType<typeof createSafeLogger>;
-  private get logger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("performance-collector");
-    }
-    return this._logger;
-  }
+  private logger = {
+    info: (message: string, context?: any) => console.info('[performance-collector]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[performance-collector]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[performance-collector]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[performance-collector]', message, context || ''),
+  };
 
   private agentRegistry: AgentRegistry;
   private collectionInterval: NodeJS.Timeout | null = null;
@@ -160,7 +159,7 @@ export class PerformanceCollector {
       }
     }, this.collectionIntervalMs);
 
-    logger.info(
+    this.logger.info(
       `[PerformanceCollector] Started metrics collection (interval: ${this.collectionIntervalMs}ms)`
     );
   }
@@ -780,6 +779,6 @@ export class PerformanceCollector {
     this.workflowMetricsHistory = [];
     this.systemSnapshotHistory = [];
 
-    logger.info("[PerformanceCollector] Performance collector destroyed");
+    this.logger.info("[PerformanceCollector] Performance collector destroyed");
   }
 }

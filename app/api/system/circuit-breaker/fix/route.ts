@@ -7,7 +7,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { CircuitBreakerSafetyService } from '@/src/services/circuit-breaker-safety-service'
-import { createSafeLogger } from '../../../../../src/lib/structured-logger';
 import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2'
 import { getGlobalReliabilityManager } from '@/src/services/mexc-circuit-breaker'
 import { z } from 'zod'
@@ -42,8 +41,6 @@ type FixResponse = z.infer<typeof FixResponseSchema>
  * POST /api/system/circuit-breaker/fix
  * Fix circuit breaker protective state issues
  */
-const logger = createSafeLogger('route');
-
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json()
@@ -122,7 +119,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
 
   } catch (error) {
-    logger.error('Circuit breaker fix API error:', { error: error instanceof Error ? error.message : String(error) })
+    console.error('Circuit breaker fix API error:', { error: error instanceof Error ? error.message : String(error) })
     
     const errorResponse: FixResponse = {
       success: false,
@@ -191,7 +188,7 @@ export async function GET(): Promise<NextResponse> {
     })
 
   } catch (error) {
-    logger.error('Circuit breaker status API error:', { error: error instanceof Error ? error.message : String(error) })
+    console.error('Circuit breaker status API error:', { error: error instanceof Error ? error.message : String(error) })
     
     return NextResponse.json({
       success: false,

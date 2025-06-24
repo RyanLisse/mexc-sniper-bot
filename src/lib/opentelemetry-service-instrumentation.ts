@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * OpenTelemetry Service Layer Instrumentation
+* OpenTelemetry Service Layer Instrumentation
  *
  * Provides comprehensive instrumentation for key services including
  * MEXC API operations, pattern detection, and auto-sniping execution.
@@ -26,8 +25,6 @@ export interface ServiceSpanOptions {
 /**
  * Decorator for instrumenting service methods
  */
-const logger = createSafeLogger("opentelemetry-service-instrumentation");
-
 export function instrumentServiceMethod(options: ServiceSpanOptions) {
   return (_target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     // Safety check for undefined descriptor
@@ -37,7 +34,7 @@ export function instrumentServiceMethod(options: ServiceSpanOptions) {
         return descriptor;
       }
 
-      logger.warn(
+      console.warn(
         `@instrumentServiceMethod applied to non-method ${propertyKey}, skipping instrumentation`
       );
       return descriptor;

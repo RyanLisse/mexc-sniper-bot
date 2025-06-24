@@ -1,23 +1,23 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { z } from "zod";
 import {
-  Calendar,
-  Target,
-  BarChart3,
-  Settings,
-  Bot,
   Activity,
-  CheckCircle,
   AlertTriangle,
-  XCircle,
+  BarChart3,
+  Bot,
+  Calendar,
+  CheckCircle,
   RefreshCw,
+  Settings,
+  Target,
+  XCircle,
 } from "lucide-react";
+import { z } from "zod";
 import { queryKeys } from "../lib/query-client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 
 // Zod schema for agent status validation
@@ -280,8 +280,7 @@ export function OptimizedAgentsDashboard({
           <CardDescription>
             {agentData
               ? `${agentData.activeAgents}/${agentData.totalAgents} agents active • Specialized TypeScript agents for auto-sniping`
-              : "Loading agent information..."
-            }
+              : "Loading agent information..."}
           </CardDescription>
         </CardHeader>
 
@@ -295,13 +294,22 @@ export function OptimizedAgentsDashboard({
               </div>
               <div className="text-center p-3 border rounded">
                 <div className="font-bold text-lg text-blue-600">
-                  {agentData.agents.reduce((sum, agent) => sum + agent.performance.totalOperations, 0)}
+                  {agentData.agents.reduce(
+                    (sum, agent) => sum + agent.performance.totalOperations,
+                    0
+                  )}
                 </div>
                 <div className="text-muted-foreground">Total Operations</div>
               </div>
               <div className="text-center p-3 border rounded">
                 <div className="font-bold text-lg text-purple-600">
-                  {(agentData.agents.reduce((sum, agent) => sum + agent.performance.successRate, 0) / agentData.agents.length).toFixed(1)}%
+                  {(
+                    agentData.agents.reduce(
+                      (sum, agent) => sum + agent.performance.successRate,
+                      0
+                    ) / agentData.agents.length
+                  ).toFixed(1)}
+                  %
                 </div>
                 <div className="text-muted-foreground">Avg Success Rate</div>
               </div>
@@ -335,7 +343,9 @@ export function OptimizedAgentsDashboard({
                       <CardTitle className="text-base">{agent.name}</CardTitle>
                     </div>
                     <Badge variant={statusConfig.variant}>
-                      <StatusIcon className={`h-3 w-3 mr-1 ${agent.status === "starting" || agent.status === "stopping" ? "animate-spin" : ""}`} />
+                      <StatusIcon
+                        className={`h-3 w-3 mr-1 ${agent.status === "starting" || agent.status === "stopping" ? "animate-spin" : ""}`}
+                      />
                       {statusConfig.text}
                     </Badge>
                   </div>
@@ -407,9 +417,7 @@ export function OptimizedAgentsDashboard({
                   {agent.errors.length > 0 && (
                     <div className="text-xs">
                       <div className="font-medium text-red-600 mb-1">Recent Errors</div>
-                      <div className="text-red-700 dark:text-red-300">
-                        {agent.errors[0]}
-                      </div>
+                      <div className="text-red-700 dark:text-red-300">{agent.errors[0]}</div>
                     </div>
                   )}
 
@@ -439,7 +447,8 @@ export function OptimizedAgentsDashboard({
               <div>
                 <div className="font-medium">Calendar Agent</div>
                 <div className="text-muted-foreground">
-                  Monitors MEXC calendar for new listing announcements and schedules monitoring workflows
+                  Monitors MEXC calendar for new listing announcements and schedules monitoring
+                  workflows
                 </div>
               </div>
             </div>
@@ -457,7 +466,8 @@ export function OptimizedAgentsDashboard({
               <div>
                 <div className="font-medium">Symbol Analysis Agent</div>
                 <div className="text-muted-foreground">
-                  Performs real-time readiness assessment and market analysis with confidence scoring
+                  Performs real-time readiness assessment and market analysis with confidence
+                  scoring
                 </div>
               </div>
             </div>
@@ -466,7 +476,8 @@ export function OptimizedAgentsDashboard({
               <div>
                 <div className="font-medium">MEXC API Agent</div>
                 <div className="text-muted-foreground">
-                  Handles all MEXC API interactions, data analysis, and trade execution with AI insights
+                  Handles all MEXC API interactions, data analysis, and trade execution with AI
+                  insights
                 </div>
               </div>
             </div>

@@ -1,5 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
-
 /**
  * Query Performance Monitor
  * Tracks database query performance and identifies slow queries
@@ -35,7 +33,12 @@ interface QueryPattern {
 }
 
 export class QueryPerformanceMonitor {
-  private logger = createSafeLogger("query-performance-monitor");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[query-performance-monitor]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[query-performance-monitor]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[query-performance-monitor]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[query-performance-monitor]', message, context || ''),
+    };
 
   private static instance: QueryPerformanceMonitor;
   private metrics: QueryMetric[] = [];
@@ -58,7 +61,7 @@ export class QueryPerformanceMonitor {
    */
   startMonitoring(): void {
     this.isMonitoring = true;
-    logger.info("📊 Query performance monitoring started");
+    console.info("📊 Query performance monitoring started");
   }
 
   /**
@@ -66,7 +69,7 @@ export class QueryPerformanceMonitor {
    */
   stopMonitoring(): void {
     this.isMonitoring = false;
-    logger.info("📊 Query performance monitoring stopped");
+    console.info("📊 Query performance monitoring stopped");
   }
 
   /**
@@ -104,14 +107,14 @@ export class QueryPerformanceMonitor {
         // Log slow queries immediately
         if (duration > this.slowQueryThreshold) {
           const level = duration > this.verySlowQueryThreshold ? "ERROR" : "WARN";
-          logger.info(`[${level}] Slow query detected: ${queryName} took ${duration.toFixed(2)}ms`);
+          console.info(`[${level}] Slow query detected: ${queryName} took ${duration.toFixed(2)}ms`);
 
           if (options?.query) {
-            logger.info(`Query: ${options.query}`);
+            console.info(`Query: ${options.query}`);
           }
 
           if (options?.parameters) {
-            logger.info(`Parameters:`, options.parameters);
+            console.info(`Parameters:`, options.parameters);
           }
         }
 
@@ -129,7 +132,7 @@ export class QueryPerformanceMonitor {
           userId: options?.userId,
         });
 
-        logger.error(`❌ Query failed: ${queryName} took ${duration.toFixed(2)}ms`, error);
+        console.error(`❌ Query failed: ${queryName} took ${duration.toFixed(2)}ms`, error);
         throw error;
       });
   }
@@ -291,7 +294,7 @@ export class QueryPerformanceMonitor {
    */
   clearMetrics(): void {
     this.metrics = [];
-    logger.info("📊 Query performance metrics cleared");
+    console.info("📊 Query performance metrics cleared");
   }
 
   /**

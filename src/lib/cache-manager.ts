@@ -1,8 +1,11 @@
-import { createSafeLogger } from "./structured-logger";
-
 // Lazy logger initialization for global functions
 function getLogger() {
-  return createSafeLogger("cache-manager");
+  return {
+      info: (message: string, context?: any) => console.info('[cache-manager]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[cache-manager]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[cache-manager]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[cache-manager]', message, context || ''),
+    };
 }
 
 /**
@@ -102,11 +105,14 @@ export interface TTLConfig {
 // =======================
 
 class LRUCache<T = any> {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("cache-manager");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[cache-manager]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[cache-manager]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[cache-manager]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[cache-manager]', message, context || ''),
+    };
     }
     return this._logger;
   }

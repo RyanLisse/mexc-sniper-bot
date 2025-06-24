@@ -1,8 +1,4 @@
 import { NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
-
-const logger = createSafeLogger('route');
-
 export async function GET() {
   try {
     // Check if OpenAI API key is configured
@@ -41,7 +37,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    logger.error("[OpenAI Health Check] Error:", { error: error });
+    console.error("[OpenAI Health Check] Error:", { error: error });
     const errorObj = error as Error | { message?: string };
     return NextResponse.json({
       status: 'error',

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../../../src/db";
 import { NotificationService } from "../../../../../../src/services/notification-providers";
@@ -14,20 +13,6 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // Create logger lazily to prevent build-time issues
-  let logger: ReturnType<typeof createSafeLogger>;
-  try {
-    logger = createSafeLogger('route');
-  } catch {
-    // Fallback to console during build
-    logger = { 
-      error: console.error.bind(console),
-      info: console.log.bind(console),
-      warn: console.warn.bind(console),
-      debug: console.debug.bind(console)
-    } as any;
-  }
-
   try {
     const { id } = await params;
     const user = await validateRequest(request);
@@ -54,7 +39,7 @@ export async function POST(
       }, { status: 400 });
     }
   } catch (error) {
-    logger.error("Error testing notification channel:", { error: error });
+    console.error("Error testing notification channel:", { error: error });
     return handleApiError(error);
   }
 }

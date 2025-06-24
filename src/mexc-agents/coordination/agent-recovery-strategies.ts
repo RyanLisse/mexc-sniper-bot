@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { RegisteredAgent } from "./agent-registry-core";
 
 export interface RecoveryStrategy {
@@ -22,9 +22,14 @@ export interface RecoveryAttempt {
  * Agent recovery strategies manager
  */
 export class AgentRecoveryStrategies {
-  private logger = createSafeLogger("agent-recovery-strategies");
+  private logger = {
+    info: (message: string, context?: any) => console.info('[agent-recovery-strategies]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[agent-recovery-strategies]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[agent-recovery-strategies]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[agent-recovery-strategies]', message, context || ''),
+  };
   private recoveryStrategies: Map<string, () => Promise<boolean>> = new Map();
-  private recoveryHistory: RecoveryAttempt[] = new Map();
+  private recoveryHistory: RecoveryAttempt[] = [];
 
   constructor() {
     this.setupDefaultRecoveryStrategies();

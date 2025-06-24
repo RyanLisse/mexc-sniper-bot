@@ -16,7 +16,6 @@
  * improved modularity, testability, and maintainability.
  */
 
-import { createSafeLogger } from "../../lib/structured-logger";
 // Import types from schemas
 import type {
   MonitoringStats,
@@ -144,7 +143,12 @@ export class RealTimeSafetyMonitoringService {
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("safety-monitoring");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[safety-monitoring]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[safety-monitoring]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[safety-monitoring]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[safety-monitoring]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -159,7 +163,7 @@ export class RealTimeSafetyMonitoringService {
     // Initialize modules
     this.initializeModules();
 
-    this.logger.info("Real-time safety monitoring service initialized with modular architecture", {
+    console.info("Real-time safety monitoring service initialized with modular architecture", {
       operation: "initialization",
       moduleCount: 5,
       hasBackwardCompatibility: true,
@@ -222,7 +226,7 @@ export class RealTimeSafetyMonitoringService {
    * Handle configuration updates by reinitializing affected modules
    */
   private handleConfigurationUpdate(newConfig: SafetyConfiguration): void {
-    this.logger.info("Configuration updated, reinitializing modules", {
+    console.info("Configuration updated, reinitializing modules", {
       operation: "handle_config_update",
       monitoringInterval: newConfig.monitoringIntervalMs,
       riskCheckInterval: newConfig.riskCheckIntervalMs,
@@ -257,7 +261,7 @@ export class RealTimeSafetyMonitoringService {
     if (this.isMonitoringActive) {
       this.stopMonitoring();
       this.startMonitoring().catch((error) => {
-        this.logger.error(
+        console.error(
           "Failed to restart monitoring with new configuration",
           {
             operation: "handle_config_update",
@@ -282,7 +286,7 @@ export class RealTimeSafetyMonitoringService {
 
     const config = this.configurationManagement.getConfiguration();
 
-    this.logger.info("Starting real-time safety monitoring", {
+    console.info("Starting real-time safety monitoring", {
       operation: "start_monitoring",
       monitoringIntervalMs: config.monitoringIntervalMs,
       riskCheckIntervalMs: config.riskCheckIntervalMs,
@@ -330,7 +334,7 @@ export class RealTimeSafetyMonitoringService {
     try {
       await this.emergencySystem.performSystemHealthCheck();
     } catch (error) {
-      this.logger.warn("Initial health check failed during monitoring start", {
+      console.warn("Initial health check failed during monitoring start", {
         operation: "start_monitoring",
         error: error.message,
       });
@@ -354,7 +358,7 @@ export class RealTimeSafetyMonitoringService {
    * Stop safety monitoring
    */
   public stopMonitoring(): void {
-    this.logger.info("Stopping real-time safety monitoring", {
+    console.info("Stopping real-time safety monitoring", {
       operation: "stop_monitoring",
       wasActive: this.isMonitoringActive,
     });
@@ -427,7 +431,7 @@ export class RealTimeSafetyMonitoringService {
    * Trigger emergency safety response
    */
   public async triggerEmergencyResponse(reason: string): Promise<SafetyAction[]> {
-    this.logger.warn("Triggering emergency response", {
+    console.warn("Triggering emergency response", {
       operation: "emergency_response",
       reason,
       activePositions: this.executionService.getActivePositions().length,
@@ -506,7 +510,7 @@ export class RealTimeSafetyMonitoringService {
 
       return actions;
     } catch (error) {
-      this.logger.error(
+      console.error(
         "Emergency response failed",
         {
           operation: "emergency_response",
@@ -664,7 +668,7 @@ export class RealTimeSafetyMonitoringService {
       const comprehensiveAssessment = await this.riskAssessment.performComprehensiveAssessment();
       return comprehensiveAssessment.priorityRecommendations;
     } catch (error) {
-      this.logger.error(
+      console.error(
         "Failed to generate safety recommendations",
         {
           operation: "generate_safety_recommendations",

@@ -1,5 +1,3 @@
-import { createSafeLogger } from "../../lib/structured-logger";
-
 /**
  * Dynamic Calculations Module
  *
@@ -64,7 +62,12 @@ export class DynamicCalculations {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("dynamic-calculations");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[dynamic-calculations]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[dynamic-calculations]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[dynamic-calculations]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[dynamic-calculations]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -243,7 +246,7 @@ export class DynamicCalculations {
         adjustedSize = 0;
       }
 
-      this.logger.info(
+      console.info(
         `[DynamicCalculations] Position validation: ${positionRequest.symbol} - Requested: ${positionRequest.requestedPositionSize}, Adjusted: ${adjustedSize}, Approved: ${approved}`
       );
 
@@ -256,7 +259,7 @@ export class DynamicCalculations {
         warnings,
       };
     } catch (error) {
-      this.logger.error("[DynamicCalculations] Position size validation failed:", error);
+      console.error("[DynamicCalculations] Position size validation failed:", error);
       return {
         approved: false,
         adjustedPositionSize: 0,

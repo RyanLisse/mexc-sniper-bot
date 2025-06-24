@@ -1,4 +1,3 @@
-import { createSafeLogger } from "./structured-logger";
 /**
  * Service Layer Architecture - Improved Separation of Concerns
  *
@@ -537,7 +536,12 @@ export interface ComplianceViolation {
  * Provides centralized service access and lifecycle management
  */
 export class ServiceRegistry {
-  private logger = createSafeLogger("service-layer-architecture");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[service-layer-architecture]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[service-layer-architecture]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[service-layer-architecture]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[service-layer-architecture]', message, context || ''),
+    };
 
   private services = new Map<string, BaseService>();
   private dependencies: ServiceDependencies = {};
@@ -563,9 +567,9 @@ export class ServiceRegistry {
     for (const [name, service] of this.services) {
       try {
         await service.initialize(this.dependencies);
-        logger.info(`✅ Service '${name}' initialized successfully`);
+        console.info(`✅ Service '${name}' initialized successfully`);
       } catch (error) {
-        logger.error(`❌ Failed to initialize service '${name}':`, error);
+        console.error(`❌ Failed to initialize service '${name}':`, error);
         throw error;
       }
     }
@@ -579,7 +583,7 @@ export class ServiceRegistry {
         const isHealthy = await service.isHealthy();
         healthStatus.set(name, isHealthy);
       } catch (error) {
-        logger.error(`Health check failed for service '${name}':`, error);
+        console.error(`Health check failed for service '${name}':`, error);
         healthStatus.set(name, false);
       }
     }
@@ -591,9 +595,9 @@ export class ServiceRegistry {
     for (const [name, service] of this.services) {
       try {
         await service.cleanup();
-        logger.info(`✅ Service '${name}' cleaned up successfully`);
+        console.info(`✅ Service '${name}' cleaned up successfully`);
       } catch (error) {
-        logger.error(`❌ Failed to cleanup service '${name}':`, error);
+        console.error(`❌ Failed to cleanup service '${name}':`, error);
       }
     }
   }

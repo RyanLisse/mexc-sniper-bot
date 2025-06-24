@@ -15,7 +15,6 @@
 
 import * as crypto from "node:crypto";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { MexcApiClient } from "./mexc-api-client";
 
 // ============================================================================
@@ -73,7 +72,12 @@ export interface AuthenticationMetrics {
  * Handles all credential validation and authentication status
  */
 export class MexcAuthenticationService {
-  private logger = createSafeLogger("mexc-authentication-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-authentication-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-authentication-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-authentication-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-authentication-service]', message, context || ''),
+    };
 
   private config: AuthenticationConfig;
   private status: AuthenticationStatus;
@@ -283,7 +287,7 @@ export class MexcAuthenticationService {
         secretKey: encryptedSecretKey,
       };
     } catch (error) {
-      logger.error("[MexcAuthenticationService] Failed to encrypt credentials:", error);
+      console.error("[MexcAuthenticationService] Failed to encrypt credentials:", error);
       return null;
     }
   }
@@ -296,7 +300,7 @@ export class MexcAuthenticationService {
     secretKey: string;
   }): Promise<boolean> {
     if (!this.config.enableEncryption || !this.config.encryptionKey) {
-      logger.error("[MexcAuthenticationService] Encryption not enabled or key missing");
+      console.error("[MexcAuthenticationService] Encryption not enabled or key missing");
       return false;
     }
 
@@ -311,7 +315,7 @@ export class MexcAuthenticationService {
       await this.updateCredentials({ apiKey, secretKey });
       return true;
     } catch (error) {
-      logger.error("[MexcAuthenticationService] Failed to decrypt credentials:", error);
+      console.error("[MexcAuthenticationService] Failed to decrypt credentials:", error);
       return false;
     }
   }

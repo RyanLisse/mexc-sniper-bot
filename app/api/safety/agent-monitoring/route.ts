@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { requireAuth } from "../../../../src/lib/kinde-auth";
 import { apiResponse } from "../../../../src/lib/api-response";
 import { SafetyMonitorAgent } from "../../../../src/mexc-agents/safety-monitor-agent";
@@ -12,13 +12,16 @@ import type { AgentBehaviorMetrics } from "../../../../src/mexc-agents/safety-mo
  * POST /api/safety/agent-monitoring - Update agent metrics or trigger monitoring actions
  */
 
-// Initialize safety monitor
-const safetyMonitor = new SafetyMonitorAgent();
-
-// Create logger at module level like other working routes
-const logger = createSafeLogger('route');
-
 export async function GET(request: NextRequest) {
+  // Build-safe initialization - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[agent-monitoring]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[agent-monitoring]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[agent-monitoring]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[agent-monitoring]', message, context || ''),
+  };
+  const safetyMonitor = new SafetyMonitorAgent();
+  
   try {
     const { searchParams } = new URL(request.url);
     const includeHistory = searchParams.get("includeHistory") === "true";
@@ -171,6 +174,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Build-safe initialization - use console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[agent-monitoring-post]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[agent-monitoring-post]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[agent-monitoring-post]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[agent-monitoring-post]', message, context || ''),
+  };
+  const safetyMonitor = new SafetyMonitorAgent();
+  
   try {
     // Verify authentication
     try {

@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { validateCalendarEntry } from "../schemas/mexc-schemas";
 import type { CalendarEntry } from "../services/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
@@ -33,12 +33,14 @@ export interface ProcessedCalendarEntry extends CalendarEntry {
 }
 
 export class CalendarAgent extends BaseAgent {
-  private _agentLogger?: ReturnType<typeof createSafeLogger>;
+  // Simple console logger to avoid webpack bundling issues
   protected get agentLogger() {
-    if (!this._agentLogger) {
-      this._agentLogger = createSafeLogger("calendar-agent");
-    }
-    return this._agentLogger;
+    return {
+      info: (message: string, context?: any) => console.info('[calendar-agent]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[calendar-agent]', message, context || ''),
+      error: (message: string, context?: any) => console.error('[calendar-agent]', message, context || ''),
+      debug: (message: string, context?: any) => console.debug('[calendar-agent]', message, context || ''),
+    };
   }
 
   constructor() {

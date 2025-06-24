@@ -1,5 +1,3 @@
-import { createSafeLogger } from "./structured-logger";
-
 /**
  * Standardized API Middleware System
  *
@@ -317,7 +315,7 @@ async function applyCacheMiddleware(
 
     return null;
   } catch (error) {
-    logger.error("[API Middleware] Cache retrieval error:", error);
+    console.error("[API Middleware] Cache retrieval error:", error);
     return null;
   }
 }
@@ -358,7 +356,7 @@ async function cacheResponse(
         : undefined,
     });
   } catch (error) {
-    logger.error("[API Middleware] Cache storage error:", error);
+    console.error("[API Middleware] Cache storage error:", error);
   }
 }
 
@@ -607,7 +605,12 @@ class ValidationError extends Error {
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("api-middleware");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[api-middleware]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[api-middleware]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[api-middleware]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[api-middleware]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -643,11 +646,11 @@ function logRequest(
     logData.headers = Object.fromEntries(request.headers.entries());
   }
 
-  logger.info("[API Request]", logData);
+  console.info("[API Request]", logData);
 }
 
 function logResponse(context: ApiContext, response: Response, duration: number): void {
-  logger.info("[API Response]", {
+  console.info("[API Response]", {
     endpoint: context.endpoint,
     status: response.status,
     duration: `${duration}ms`,
@@ -660,7 +663,7 @@ function handleMiddlewareError(
   context: Partial<ApiContext>,
   duration: number
 ): Response {
-  logger.error("[API Middleware Error]", {
+  console.error("[API Middleware Error]", {
     endpoint: context.endpoint,
     duration: `${duration}ms`,
     error: error instanceof Error ? error.message : "Unknown error",

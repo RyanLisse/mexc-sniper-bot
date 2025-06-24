@@ -8,7 +8,6 @@
 
 import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
 import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger, createTimer } from "../lib/structured-logger";
 import { EmergencySafetySystem } from "./emergency-safety-system";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
 import {
@@ -49,7 +48,12 @@ export class OptimizedAutoSnipingExecutionEngine {
   private patternMonitoring: PatternMonitoringService;
   private mexcService: UnifiedMexcServiceV2;
   private safetySystem: EmergencySafetySystem;
-  private logger = createSafeLogger("optimized-auto-sniping-execution");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[optimized-auto-sniping-execution]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[optimized-auto-sniping-execution]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[optimized-auto-sniping-execution]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[optimized-auto-sniping-execution]', message, context || ''),
+    };
 
   private config: AutoSnipingConfig;
   private isExecutionActive = false;
@@ -70,7 +74,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     this.config = this.getDefaultConfig();
     this.stats = this.getDefaultStats();
 
-    this.logger.info("Optimized execution engine initialized", {
+    console.info("Optimized execution engine initialized", {
       operation: "initialization",
       maxPositions: this.config.maxPositions,
       enabled: this.config.enabled,
@@ -92,7 +96,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       throw new Error("Auto-sniping execution is already active");
     }
 
-    this.logger.info("Starting optimized auto-sniping execution", {
+    console.info("Starting optimized auto-sniping execution", {
       operation: "start_execution",
       config: {
         maxPositions: this.config.maxPositions,
@@ -118,7 +122,7 @@ export class OptimizedAutoSnipingExecutionEngine {
    * Stop execution and cleanup resources
    */
   public stopExecution(): void {
-    this.logger.info("Stopping auto-sniping execution", {
+    console.info("Stopping auto-sniping execution", {
       operation: "stop_execution",
       activePositions: this.activePositions.size,
       totalTrades: this.stats.totalTrades,
@@ -149,7 +153,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       details: { updatedFields: Object.keys(newConfig) },
     });
 
-    this.logger.info("Configuration updated", {
+    console.info("Configuration updated", {
       operation: "config_update",
       updatedFields: Object.keys(newConfig),
     });
@@ -202,7 +206,7 @@ export class OptimizedAutoSnipingExecutionEngine {
    * Emergency close all positions
    */
   public async emergencyCloseAll(): Promise<number> {
-    this.logger.warn("Emergency close all positions initiated", {
+    console.warn("Emergency close all positions initiated", {
       operation: "emergency_close_all",
       totalPositions: this.activePositions.size,
     });
@@ -215,7 +219,7 @@ export class OptimizedAutoSnipingExecutionEngine {
         const success = await this.closePosition(position.id, "emergency");
         return success ? 1 : 0;
       } catch (error) {
-        this.logger.error("Emergency close failed", { positionId: position.id }, error);
+        console.error("Emergency close failed", { positionId: position.id }, error);
         return 0;
       }
     });
@@ -261,7 +265,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     }
 
     const duration = timer.end();
-    this.logger.info("Pre-flight checks passed", {
+    console.info("Pre-flight checks passed", {
       operation: "preflight_checks",
       duration,
       safetyStatus: safetyStatus.overall,
@@ -272,7 +276,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     // Optimized execution cycle - every 5 seconds
     this.executionInterval = setInterval(() => {
       this.performExecutionCycle().catch((error) => {
-        this.logger.error(
+        console.error(
           "Execution cycle failed",
           { activePositions: this.activePositions.size },
           error
@@ -289,7 +293,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     // Optimized monitoring cycle - every 10 seconds
     this.monitoringInterval = setInterval(() => {
       this.monitorActivePositions().catch((error) => {
-        this.logger.error(
+        console.error(
           "Position monitoring failed",
           { activePositions: this.activePositions.size },
           error
@@ -388,7 +392,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       this.logSuccessfulTrade(position, context);
     } catch (error) {
       this.stats.failedTrades++;
-      this.logger.error("Trade execution failed", { symbol: pattern.symbol }, error);
+      console.error("Trade execution failed", { symbol: pattern.symbol }, error);
     }
   }
 
@@ -460,7 +464,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       position.unrealizedPnl = unrealizedPnl.toString();
       position.unrealizedPnlPercentage = unrealizedPnlPercentage;
     } catch (error) {
-      this.logger.error("Failed to update PnL", { positionId: position.id }, error);
+      console.error("Failed to update PnL", { positionId: position.id }, error);
     }
   }
 
@@ -553,7 +557,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     reason: string
   ): void {
     const safeError = toSafeError(error);
-    this.logger.error(
+    console.error(
       "Failed to close position",
       {
         positionId: position.id,
@@ -608,16 +612,7 @@ export class OptimizedAutoSnipingExecutionEngine {
         quantity: position.quantity,
         executionLatency: position.executionMetadata.executionLatency,
       },
-    });
-
-    this.logger.trading("Trade executed successfully", {
-      requestId: context.requestId,
-      positionId: position.id,
-      symbol: position.symbol,
-      entryPrice: position.entryPrice,
-      quantity: position.quantity,
-    });
-  }
+    });}
 
   private addAlert(alertData: Omit<ExecutionAlert, "id" | "timestamp" | "acknowledged">): void {
     const alert: ExecutionAlert = {

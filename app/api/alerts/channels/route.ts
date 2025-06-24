@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../src/db";
 import { NotificationService } from "../../../../src/services/notification-providers";
@@ -13,7 +12,6 @@ import { z } from "zod";
 // ==========================================
 
 export async function GET(request: NextRequest) {
-  const logger = createSafeLogger('route');
   try {
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
@@ -47,7 +45,7 @@ export async function GET(request: NextRequest) {
       count: formattedChannels.length,
     });
   } catch (error) {
-    logger.error("Error fetching notification channels:", { error: error });
+    console.error("Error fetching notification channels:", { error: error });
     return handleApiError(error);
   }
 }
@@ -56,7 +54,6 @@ export async function GET(request: NextRequest) {
 // POST /api/alerts/channels - Create notification channel
 // ==========================================
 export async function POST(request: NextRequest) {
-  const logger = createSafeLogger('route');
   try {
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
@@ -74,7 +71,7 @@ export async function POST(request: NextRequest) {
       message: "Notification channel created successfully",
     }, { status: 201 });
   } catch (error) {
-    logger.error("Error creating notification channel:", { error: error });
+    console.error("Error creating notification channel:", { error: error });
     return handleApiError(error);
   }
 }

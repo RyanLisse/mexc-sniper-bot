@@ -1,5 +1,3 @@
-import { createSafeLogger } from "../../lib/structured-logger";
-
 /**
  * Advanced Risk Engine - Modular Integration
  *
@@ -99,7 +97,12 @@ export class AdvancedRiskEngine extends EventEmitter {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("index");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[index]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[index]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[index]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[index]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -129,7 +132,7 @@ export class AdvancedRiskEngine extends EventEmitter {
     // Initialize modules
     this.initializeModules();
 
-    this.logger.info("[AdvancedRiskEngine] Initialized with modular architecture");
+    console.info("[AdvancedRiskEngine] Initialized with modular architecture");
   }
 
   /**
@@ -312,7 +315,7 @@ export class AdvancedRiskEngine extends EventEmitter {
     this.marketConditionsManager.removePosition(symbol);
     this.positions.delete(symbol);
     this.updateAllModules();
-    this.logger.info(`[AdvancedRiskEngine] Removed position tracking for ${symbol}`);
+    console.info(`[AdvancedRiskEngine] Removed position tracking for ${symbol}`);
   }
 
   /**

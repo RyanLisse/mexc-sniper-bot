@@ -40,10 +40,6 @@ import {
   type PerformanceMetrics,
   useSkeletonItems,
 } from "../../lib/react-utilities";
-import { createSafeLogger } from "../../lib/structured-logger";
-
-const logger = createSafeLogger("real-time-performance");
-
 interface PerformanceData {
   timestamp: string;
   orchestrationMetrics: {
@@ -209,7 +205,7 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
           });
         }
       } catch (err) {
-        logger.error("Error parsing real-time data:", err);
+        console.error("Error parsing real-time data:", err);
       }
     };
 

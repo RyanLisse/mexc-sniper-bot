@@ -3,7 +3,6 @@
 import { AlertCircle, ChevronDown, ChevronUp, Home, RefreshCcw } from "lucide-react";
 import type React from "react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { createSafeLogger } from "../lib/structured-logger";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -34,7 +33,12 @@ interface ErrorBoundaryState {
  * customizable fallback UI and error recovery options.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private logger = createSafeLogger("error-boundary");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[error-boundary]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[error-boundary]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[error-boundary]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[error-boundary]', message, context || ''),
+    };
 
   private resetTimeoutId: NodeJS.Timeout | null = null;
   private previousResetKeys: Array<string | number> = [];
@@ -81,7 +85,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
     if (process.env.NODE_ENV === "development") {
-      this.logger.error("Error Boundary caught an error:", error, errorInfo);
+      console.error("Error Boundary caught an error:", error, errorInfo);
     }
 
     // Call custom error handler if provided
@@ -119,7 +123,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     };
 
     // For now, just log to console
-    this.logger.error("Error logged to monitoring service:", errorData);
+    console.error("Error logged to monitoring service:", errorData);
   };
 
   handleReset = () => {

@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
@@ -33,7 +33,13 @@ export interface PatternMatch {
 }
 
 export class PatternDiscoveryAgent extends BaseAgent {
-  private logger = createSafeLogger("pattern-discovery-agent");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[pattern-discovery-agent]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[pattern-discovery-agent]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[pattern-discovery-agent]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[pattern-discovery-agent]', message, context || ''),
+  };
 
   constructor() {
     const config: AgentConfig = {

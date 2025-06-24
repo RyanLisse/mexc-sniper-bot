@@ -6,8 +6,6 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
-
 // Standardized Status Types
 export interface UnifiedCredentialStatus {
   hasCredentials: boolean;
@@ -42,7 +40,12 @@ export interface StatusResolutionResult {
 }
 
 export class UnifiedStatusResolver {
-  private logger = createSafeLogger("unified-status-resolver");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[unified-status-resolver]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[unified-status-resolver]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[unified-status-resolver]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[unified-status-resolver]', message, context || ''),
+    };
 
   private lastKnownStatus: StatusResolutionResult | null = null;
   private isResolving = false;
@@ -98,7 +101,7 @@ export class UnifiedStatusResolver {
       return this.createFallbackStatus("All connectivity checks failed");
     } catch (error) {
       const safeError = toSafeError(error);
-      logger.error("[UnifiedStatusResolver] Resolution failed:", safeError.message);
+      console.error("[UnifiedStatusResolver] Resolution failed:", safeError.message);
       return this.createFallbackStatus(`Status resolution error: ${safeError.message}`);
     } finally {
       this.isResolving = false;
@@ -118,19 +121,19 @@ export class UnifiedStatusResolver {
       });
 
       if (!response.ok) {
-        logger.warn("[UnifiedStatusResolver] Enhanced endpoint failed:", response.status);
+        console.warn("[UnifiedStatusResolver] Enhanced endpoint failed:", response.status);
         return null;
       }
 
       const data = await response.json();
       if (!data.success || !data.data) {
-        logger.warn("[UnifiedStatusResolver] Enhanced endpoint returned invalid data");
+        console.warn("[UnifiedStatusResolver] Enhanced endpoint returned invalid data");
         return null;
       }
 
       return this.normalizeEnhancedResponse(data.data);
     } catch (error) {
-      logger.warn("[UnifiedStatusResolver] Enhanced endpoint error:", error);
+      console.warn("[UnifiedStatusResolver] Enhanced endpoint error:", error);
       return null;
     }
   }
@@ -148,19 +151,19 @@ export class UnifiedStatusResolver {
       });
 
       if (!response.ok) {
-        logger.warn("[UnifiedStatusResolver] Legacy endpoint failed:", response.status);
+        console.warn("[UnifiedStatusResolver] Legacy endpoint failed:", response.status);
         return null;
       }
 
       const data = await response.json();
       if (!data.success) {
-        logger.warn("[UnifiedStatusResolver] Legacy endpoint returned error:", data.error);
+        console.warn("[UnifiedStatusResolver] Legacy endpoint returned error:", data.error);
         return null;
       }
 
       return this.normalizeLegacyResponse(data.data);
     } catch (error) {
-      logger.warn("[UnifiedStatusResolver] Legacy endpoint error:", error);
+      console.warn("[UnifiedStatusResolver] Legacy endpoint error:", error);
       return null;
     }
   }

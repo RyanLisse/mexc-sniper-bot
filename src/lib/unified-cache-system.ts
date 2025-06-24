@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * Unified Cache System for MEXC Sniper Bot
+* Unified Cache System for MEXC Sniper Bot
  *
  * This system consolidates all caching functionality from:
  * - cache-manager.ts (multi-level cache)
@@ -130,7 +129,12 @@ interface CacheBackend<T = any> {
  * L1 Cache: In-Memory LRU Cache
  */
 class MemoryCache implements CacheBackend {
-  private logger = createSafeLogger("unified-cache-system");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[unified-cache-system]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[unified-cache-system]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[unified-cache-system]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[unified-cache-system]', message, context || ''),
+    };
 
   private cache = new Map<string, CacheEntry>();
   private accessOrder = new Map<string, number>();
@@ -436,7 +440,7 @@ export class UnifiedCacheSystem {
       return null;
     } catch (error) {
       this.metrics.errors++;
-      logger.error("[UnifiedCache] Get error:", error);
+      console.error("[UnifiedCache] Get error:", error);
       return null;
     }
   }
@@ -481,7 +485,7 @@ export class UnifiedCacheSystem {
       this.updateMemoryUsage();
     } catch (error) {
       this.metrics.errors++;
-      logger.error("[UnifiedCache] Set error:", error);
+      console.error("[UnifiedCache] Set error:", error);
     }
   }
 
@@ -499,7 +503,7 @@ export class UnifiedCacheSystem {
       return false;
     } catch (error) {
       this.metrics.errors++;
-      logger.error("[UnifiedCache] Delete error:", error);
+      console.error("[UnifiedCache] Delete error:", error);
       return false;
     }
   }
@@ -512,7 +516,7 @@ export class UnifiedCacheSystem {
       this.resetMetrics();
     } catch (error) {
       this.metrics.errors++;
-      logger.error("[UnifiedCache] Clear error:", error);
+      console.error("[UnifiedCache] Clear error:", error);
     }
   }
 
@@ -763,7 +767,7 @@ export class UnifiedCacheSystem {
       this.metrics.lastCleanup = now;
       this.updateMemoryUsage();
     } catch (error) {
-      logger.error("[UnifiedCache] Cleanup error:", error);
+      console.error("[UnifiedCache] Cleanup error:", error);
       this.metrics.errors++;
     }
   }

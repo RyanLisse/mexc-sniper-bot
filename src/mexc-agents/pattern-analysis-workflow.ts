@@ -2,7 +2,6 @@ import type {
   PatternAnalysisResult as EngineResult,
   PatternMatch,
 } from "../core/pattern-detection/interfaces";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 import {
   type PatternWorkflowRequest,
@@ -47,7 +46,12 @@ export interface PatternSignal {
 }
 
 export class PatternAnalysisWorkflow {
-  private logger = createSafeLogger("pattern-analysis-workflow");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[pattern-analysis-workflow]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[pattern-analysis-workflow]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[pattern-analysis-workflow]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[pattern-analysis-workflow]', message, context || ''),
+    };
 
   /**
    * Enhanced Pattern Analysis using Centralized Detection Engine
@@ -67,7 +71,7 @@ export class PatternAnalysisWorkflow {
       enableAdvanceDetection?: boolean;
     }
   ): Promise<PatternAnalysisResult> {
-    logger.info(`[PatternAnalysisWorkflow] Enhanced pattern analysis for ${analysisType}`);
+    console.info(`[PatternAnalysisWorkflow] Enhanced pattern analysis for ${analysisType}`);
 
     try {
       // Use the centralized pattern strategy orchestrator
@@ -117,7 +121,7 @@ export class PatternAnalysisWorkflow {
         strategicRecommendations,
       };
     } catch (error) {
-      logger.error("[PatternAnalysisWorkflow] Enhanced analysis failed:", error);
+      console.error("[PatternAnalysisWorkflow] Enhanced analysis failed:", error);
 
       // Fallback to legacy analysis
       return await this.analyzePatternsLegacy(
@@ -148,7 +152,7 @@ export class PatternAnalysisWorkflow {
     _symbols?: string[],
     analysisType: "discovery" | "monitoring" | "execution" = "discovery"
   ): Promise<PatternAnalysisResult> {
-    logger.info(`[PatternAnalysisWorkflow] Legacy pattern analysis for ${analysisType}`);
+    console.info(`[PatternAnalysisWorkflow] Legacy pattern analysis for ${analysisType}`);
 
     const actionablePatterns = this.extractActionablePatterns(patternAnalysis, analysisType);
     const patternSignals = this.extractPatternSignals(patternAnalysis);

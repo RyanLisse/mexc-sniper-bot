@@ -1,4 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
 import {
   type AnalysisResult,
   type CalendarEntry,
@@ -21,20 +20,20 @@ export interface CalendarWorkflowResult {
 }
 
 export class CalendarWorkflow {
-  private _logger?: ReturnType<typeof createSafeLogger>;
-  private get logger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("calendar-workflow");
-    }
-    return this._logger;
-  }
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[calendar-workflow]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[calendar-workflow]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[calendar-workflow]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[calendar-workflow]', message, context || ''),
+  };
 
   async analyzeDiscoveryResults(
     calendarAnalysis: AgentResponse,
     patternAnalysis: AgentResponse,
     calendarData: any
   ): Promise<CalendarWorkflowResult> {
-    this.logger.info("[CalendarWorkflow] Analyzing discovery results");
+    console.info("[CalendarWorkflow] Analyzing discovery results");
 
     const calendarInsights = this.extractCalendarInsights(calendarAnalysis);
     const patternInsights = this.extractPatternInsights(patternAnalysis);
@@ -122,10 +121,10 @@ export class CalendarWorkflow {
     calendarInsights: AnalysisResult,
     patternInsights: AnalysisResult
   ): Promise<CalendarEntry[]> {
-    this.logger.info("[CalendarWorkflow] Processing listings with AI insights");
+    console.info("[CalendarWorkflow] Processing listings with AI insights");
 
     if (!Array.isArray(calendarEntries)) {
-      this.logger.warn("[CalendarWorkflow] Invalid calendar entries, using empty array");
+      console.warn("[CalendarWorkflow] Invalid calendar entries, using empty array");
       return [];
     }
 
@@ -160,7 +159,7 @@ export class CalendarWorkflow {
     highPotential: CalendarEntry[];
     monitoring: CalendarEntry[];
   } {
-    this.logger.info("[CalendarWorkflow] Categorizing opportunities");
+    console.info("[CalendarWorkflow] Categorizing opportunities");
 
     const newListings: CalendarEntry[] = [];
     const readyTargets: CalendarEntry[] = [];
@@ -206,7 +205,7 @@ export class CalendarWorkflow {
     watchlist: string[];
     total: number;
   } {
-    this.logger.info("[CalendarWorkflow] Generating actionable recommendations");
+    console.info("[CalendarWorkflow] Generating actionable recommendations");
 
     const immediate: string[] = [];
     const planned: string[] = [];
@@ -255,7 +254,7 @@ export class CalendarWorkflow {
     recommendation: string;
     summary: string;
   } {
-    this.logger.info("[CalendarWorkflow] Calculating overall assessment");
+    console.info("[CalendarWorkflow] Calculating overall assessment");
 
     const immediateCount = recommendations.immediate.length;
     const plannedCount = recommendations.planned.length;

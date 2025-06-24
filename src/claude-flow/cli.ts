@@ -8,15 +8,12 @@
  */
 
 import { Command } from "commander";
-import { createSafeLogger } from "../lib/structured-logger";
 import { CoreSystem, type CoreSystemConstructorConfig } from "./core/system";
 
 const program = new Command();
 
 // Global system instance
 let coreSystem: CoreSystem;
-
-const logger = createSafeLogger("cli");
 
 async function initializeSystem(): Promise<CoreSystem> {
   if (!coreSystem) {
@@ -74,7 +71,7 @@ program
   .action(async () => {
     const system = await initializeSystem();
     const status = await system.getStatus();
-    logger.info(JSON.stringify(status, null, 2));
+    console.info(JSON.stringify(status, null, 2));
   });
 
 program
@@ -94,7 +91,7 @@ configCmd
   .action(async () => {
     const system = await initializeSystem();
     const config = await system.getConfig();
-    logger.info(JSON.stringify(config, null, 2));
+    console.info(JSON.stringify(config, null, 2));
   });
 
 configCmd
@@ -111,7 +108,7 @@ configCmd
   .action(async (key: string) => {
     const system = await initializeSystem();
     const value = await system.getConfig(key);
-    logger.info(value);
+    console.info(value);
   });
 
 // ============================================================================
@@ -128,7 +125,7 @@ agentCmd
   .action(async (type, options) => {
     const system = await initializeSystem();
     const agent = await system.agentPool.spawn(type, options);
-    logger.info(`Agent spawned: ${agent.id} (${type})`);
+    console.info(`Agent spawned: ${agent.id} (${type})`);
   });
 
 agentCmd
@@ -146,7 +143,7 @@ agentCmd
   .action(async (agentId) => {
     const system = await initializeSystem();
     await system.agentPool.kill(agentId);
-    logger.info(`Agent ${agentId} terminated`);
+    console.info(`Agent ${agentId} terminated`);
   });
 
 // Alias for quick spawning
@@ -157,7 +154,7 @@ program
   .action(async (type, options) => {
     const system = await initializeSystem();
     const agent = await system.agentPool.spawn(type, options);
-    logger.info(`Agent spawned: ${agent.id} (${type})`);
+    console.info(`Agent spawned: ${agent.id} (${type})`);
   });
 
 // ============================================================================
@@ -174,7 +171,7 @@ taskCmd
   .action(async (type, description, options) => {
     const system = await initializeSystem();
     const task = await system.orchestrator.createTask(type, description, options);
-    logger.info(`Task created: ${task.id}`);
+    console.info(`Task created: ${task.id}`);
   });
 
 taskCmd
@@ -192,7 +189,7 @@ taskCmd
   .action(async (taskId) => {
     const system = await initializeSystem();
     const status = await system.orchestrator.getTaskStatus(taskId);
-    logger.info(JSON.stringify(status, null, 2));
+    console.info(JSON.stringify(status, null, 2));
   });
 
 program
@@ -216,7 +213,7 @@ memoryCmd
   .action(async (key, data) => {
     const system = await initializeSystem();
     await system.memoryBank.store(key, data);
-    logger.info(`Stored: ${key}`);
+    console.info(`Stored: ${key}`);
   });
 
 memoryCmd
@@ -225,7 +222,7 @@ memoryCmd
   .action(async (key: string) => {
     const system = await initializeSystem();
     const data = await system.memoryBank.get(key);
-    logger.info(data);
+    console.info(data);
   });
 
 memoryCmd
@@ -234,7 +231,7 @@ memoryCmd
   .action(async () => {
     const system = await initializeSystem();
     const keys = await system.memoryBank.list();
-    logger.info(JSON.stringify(keys, null, 2));
+    console.info(JSON.stringify(keys, null, 2));
   });
 
 memoryCmd
@@ -243,7 +240,7 @@ memoryCmd
   .action(async (file) => {
     const system = await initializeSystem();
     await system.memoryBank.export(file);
-    logger.info(`Memory exported to: ${file}`);
+    console.info(`Memory exported to: ${file}`);
   });
 
 memoryCmd
@@ -252,7 +249,7 @@ memoryCmd
   .action(async (file) => {
     const system = await initializeSystem();
     await system.memoryBank.import(file);
-    logger.info(`Memory imported from: ${file}`);
+    console.info(`Memory imported from: ${file}`);
   });
 
 memoryCmd
@@ -261,7 +258,7 @@ memoryCmd
   .action(async () => {
     const system = await initializeSystem();
     const stats = await system.memoryBank.getStats();
-    logger.info(JSON.stringify(stats, null, 2));
+    console.info(JSON.stringify(stats, null, 2));
   });
 
 memoryCmd
@@ -270,7 +267,7 @@ memoryCmd
   .action(async () => {
     const system = await initializeSystem();
     const cleaned = await system.memoryBank.cleanup();
-    logger.info(`Cleaned ${cleaned} entries`);
+    console.info(`Cleaned ${cleaned} entries`);
   });
 
 // ============================================================================
@@ -359,12 +356,12 @@ program
 program.exitOverride();
 
 process.on("unhandledRejection", (reason, promise) => {
-  logger.error("Unhandled Rejection", { promise, reason });
+  console.error("Unhandled Rejection", { promise, reason });
   process.exit(1);
 });
 
 process.on("uncaughtException", (error) => {
-  logger.error("Uncaught Exception:", error);
+  console.error("Uncaught Exception:", error);
   process.exit(1);
 });
 

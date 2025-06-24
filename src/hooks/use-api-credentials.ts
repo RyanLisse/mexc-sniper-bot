@@ -1,7 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../lib/kinde-auth-client";
-import { createSafeLogger } from "../lib/structured-logger";
-
 export interface ApiCredentials {
   id?: number;
   userId: string;
@@ -27,8 +25,6 @@ export interface SaveApiCredentialsRequest {
 }
 
 // Fetch API credentials for a user and provider
-const logger = createSafeLogger("use-api-credentials");
-
 export function useApiCredentials(userId?: string, provider = "mexc") {
   const { user, isAuthenticated } = useAuth();
 
@@ -93,7 +89,7 @@ export function useSaveApiCredentials() {
       // Enhanced debugging for request (development only)
       const requestPayload = JSON.stringify(data);
       if (process.env.NODE_ENV === "development") {
-        logger.info("[DEBUG] Sending API credentials request:", {
+        console.info("[DEBUG] Sending API credentials request:", {
           url: "/api/api-credentials",
           method: "POST",
           contentType: "application/json",
@@ -116,7 +112,7 @@ export function useSaveApiCredentials() {
       });
 
       if (process.env.NODE_ENV === "development") {
-        logger.info("[DEBUG] API credentials response:", {
+        console.info("[DEBUG] API credentials response:", {
           status: response.status,
           statusText: response.statusText,
           ok: response.ok,
@@ -128,9 +124,9 @@ export function useSaveApiCredentials() {
         let errorDetails: any;
         try {
           errorDetails = await response.json();
-          logger.error("[DEBUG] API credentials error response:", errorDetails);
+          console.error("[DEBUG] API credentials error response:", errorDetails);
         } catch (parseError) {
-          logger.error("[DEBUG] Failed to parse error response:", parseError);
+          console.error("[DEBUG] Failed to parse error response:", parseError);
           errorDetails = {
             error: `HTTP ${response.status}: ${response.statusText}`,
             details: "Failed to parse error response",
@@ -216,7 +212,7 @@ export function useTestApiCredentials() {
       }
 
       if (process.env.NODE_ENV === "development") {
-        logger.info("[DEBUG] Testing API credentials:", {
+        console.info("[DEBUG] Testing API credentials:", {
           userId,
           provider,
           timestamp: new Date().toISOString(),
@@ -232,7 +228,7 @@ export function useTestApiCredentials() {
         body: JSON.stringify({ userId, provider }),
       });
 
-      logger.info("[DEBUG] API credentials test response:", {
+      console.info("[DEBUG] API credentials test response:", {
         status: response.status,
         statusText: response.statusText,
         ok: response.ok,
@@ -242,9 +238,9 @@ export function useTestApiCredentials() {
         let errorDetails: any;
         try {
           errorDetails = await response.json();
-          logger.error("[DEBUG] API credentials test error:", errorDetails);
+          console.error("[DEBUG] API credentials test error:", errorDetails);
         } catch (parseError) {
-          logger.error("[DEBUG] Failed to parse test error response:", parseError);
+          console.error("[DEBUG] Failed to parse test error response:", parseError);
           errorDetails = {
             error: `HTTP ${response.status}: ${response.statusText}`,
             message: "Failed to parse error response",
@@ -257,7 +253,7 @@ export function useTestApiCredentials() {
       }
 
       const result = await response.json();
-      logger.info("[DEBUG] API credentials test success:", result);
+      console.info("[DEBUG] API credentials test success:", result);
 
       return {
         success: true,
@@ -266,7 +262,7 @@ export function useTestApiCredentials() {
       };
     },
     onSuccess: (data, variables) => {
-      logger.info("[DEBUG] API credentials test succeeded, invalidating status caches");
+      console.info("[DEBUG] API credentials test succeeded, invalidating status caches");
 
       // Invalidate all related caches when credentials test succeeds
       // This fixes the status synchronization issue identified by the swarm
@@ -296,7 +292,7 @@ export function useTestApiCredentials() {
         queryKey: ["api-credentials", variables.userId, variables.provider || "mexc"],
       });
 
-      logger.info("[DEBUG] Cache invalidation completed - status should update immediately");
+      console.info("[DEBUG] Cache invalidation completed - status should update immediately");
     },
   });
 }

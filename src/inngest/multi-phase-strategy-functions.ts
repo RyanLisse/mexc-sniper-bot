@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { tradingStrategies } from "../db/schemas/strategies";
-import { createSafeLogger } from "../lib/structured-logger";
 import { CalendarAgent } from "../mexc-agents/calendar-agent";
 import { RiskManagerAgent } from "../mexc-agents/risk-manager-agent";
 import { StrategyAgent } from "../mexc-agents/strategy-agent";
@@ -16,8 +15,6 @@ import {
   PREDEFINED_STRATEGIES,
 } from "../services/multi-phase-trading-service";
 import { inngest } from "./client";
-
-const logger = createSafeLogger("multi-phase-strategy-functions");
 
 // ===========================================
 // MULTI-PHASE STRATEGY INNGEST WORKFLOWS
@@ -835,7 +832,7 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
               success: true,
             });
           } catch (error) {
-            logger.error(`Failed to execute phase ${phase.phase}:`, error);
+            console.error(`Failed to execute phase ${phase.phase}:`, error);
             results.push({
               phase: phase.phase,
               amount: phase.amount,
@@ -876,7 +873,7 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
         isComplete: (executor as any).isComplete(),
       };
     } catch (error) {
-      logger.error("Error executing multi-phase strategy:", error);
+      console.error("Error executing multi-phase strategy:", error);
 
       // Update strategy status to failed
       await multiPhaseTradingService.updateStrategyStatus(strategyId, userId, "failed", {
@@ -994,7 +991,7 @@ export const strategyHealthCheck = inngest.createFunction(
         },
       };
     } catch (error) {
-      logger.error("Error in strategy health check:", error);
+      console.error("Error in strategy health check:", error);
       throw error;
     }
   }

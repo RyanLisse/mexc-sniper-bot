@@ -1,4 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
 import { extractConfidencePercentage, sanitizeSymbolName } from "./analysis-utils";
 import type { AgentResponse } from "./base-agent";
 
@@ -56,7 +55,13 @@ export interface ExecutionPlan {
 }
 
 export class TradingStrategyWorkflow {
-  private logger = createSafeLogger("trading-strategy-workflow");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[trading-strategy-workflow]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[trading-strategy-workflow]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[trading-strategy-workflow]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[trading-strategy-workflow]', message, context || ''),
+  };
 
   async compileTradingStrategy(
     strategyAnalysis: AgentResponse,
@@ -65,7 +70,7 @@ export class TradingStrategyWorkflow {
     riskLevel: "low" | "medium" | "high" = "medium",
     capital = 1000
   ): Promise<TradingStrategyResult> {
-    logger.info(`[TradingStrategyWorkflow] Compiling strategy for ${vcoinId}`);
+    console.info(`[TradingStrategyWorkflow] Compiling strategy for ${vcoinId}`);
 
     const baseStrategy = this.extractBaseStrategy(strategyAnalysis, symbolData);
     const riskManagement = this.createRiskManagementPlan(strategyAnalysis, riskLevel, capital);

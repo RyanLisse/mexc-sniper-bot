@@ -1,4 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
 import { MultiPhaseExecutor } from "./multi-phase-executor";
 import type { TradingStrategy } from "./trading-strategy-manager";
 
@@ -6,7 +5,12 @@ import type { TradingStrategy } from "./trading-strategy-manager";
  * Core multi-phase trading bot functionality
  */
 export class MultiPhaseTradingBotCore {
-  protected logger = createSafeLogger("multi-phase-trading-bot-core");
+  protected logger = {
+      info: (message: string, context?: any) => console.info('[multi-phase-trading-bot-core]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[multi-phase-trading-bot-core]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-trading-bot-core]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[multi-phase-trading-bot-core]', message, context || ''),
+    };
   protected executor: MultiPhaseExecutor;
   protected entryPrice: number;
   protected position: number;
@@ -233,7 +237,7 @@ export class MultiPhaseTradingBotCore {
     this.executor
       .recordPhaseExecution(phaseNumber, executionPrice, amount, options)
       .catch((error) => {
-        this.logger.error("Failed to persist phase execution to database:", error);
+        console.error("Failed to persist phase execution to database:", error);
       });
   }
 }

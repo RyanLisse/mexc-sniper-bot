@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * API Route Migration Example
+* API Route Migration Example
  * 
  * This file demonstrates how to migrate existing API routes to use the
  * standardized createApiRouteHandler wrapper, showing the code reduction
@@ -15,8 +14,6 @@ import {
 import { mexcConnectivityService } from "../services/mexc-connectivity-service";
 import { createPublicApiRoute } from "./api-route-handler";
 
-const logger = createSafeLogger("api-route-migration-example");
-
 // ============================================================================
 // BEFORE: Traditional API Route (98 lines)
 // ============================================================================
@@ -25,7 +22,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
   const startTime = Date.now();
   
   try {
-    logger.info('[API] MEXC connectivity test request received');
+    console.info('[API] MEXC connectivity test request received');
 
     // Validate query parameters
     const { searchParams } = new URL(request.url);
@@ -50,7 +47,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
 
     const connectivityRequest: ConnectivityTestRequest = queryValidation.data;
 
-    logger.info('[API] Validated connectivity test request', {
+    console.info('[API] Validated connectivity test request', {
       userId: connectivityRequest.userId || 'none',
       includeCredentialTest: connectivityRequest.includeCredentialTest,
       requestDuration: `${Date.now() - startTime}ms`
@@ -60,7 +57,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
     const testResult = await mexcConnectivityService.testConnectivity(connectivityRequest);
 
     if (!testResult.success) {
-      logger.error('[API] Connectivity test failed:', testResult.error);
+      console.error('[API] Connectivity test failed:', testResult.error);
       return apiResponse(
         createErrorResponse(testResult.error, {
           code: testResult.code,
@@ -71,7 +68,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
       );
     }
 
-    logger.info('[API] Connectivity test completed successfully', {
+    console.info('[API] Connectivity test completed successfully', {
       connected: testResult.data.connected,
       credentialsValid: testResult.data.credentialsValid,
       connectionHealth: testResult.data.metrics?.connectionHealth,
@@ -90,7 +87,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
     );
 
   } catch (error) {
-    logger.error('[API] MEXC connectivity test error:', error);
+    console.error('[API] MEXC connectivity test error:', error);
     
     return apiResponse(
       createErrorResponse(
@@ -128,7 +125,7 @@ export const GET = createPublicApiRoute(
       ...query,
     };
 
-    logger.info("Starting connectivity test", {
+    console.info("Starting connectivity test", {
       userId: connectivityRequest.userId || "none",
       includeCredentialTest: connectivityRequest.includeCredentialTest,
     });
@@ -137,14 +134,14 @@ export const GET = createPublicApiRoute(
     const testResult = await mexcConnectivityService.testConnectivity(connectivityRequest);
 
     if (!testResult.success) {
-      logger.error("Connectivity test failed", {
+      console.error("Connectivity test failed", {
         error: testResult.error,
         code: testResult.code,
       });
       throw new Error(testResult.error);
     }
 
-    logger.info("Connectivity test completed successfully", {
+    console.info("Connectivity test completed successfully", {
       connected: testResult.data.connected,
       credentialsValid: testResult.data.credentialsValid,
       connectionHealth: testResult.data.metrics?.connectionHealth,

@@ -1,5 +1,3 @@
-import { createSafeLogger } from "../structured-logger";
-
 /**
  * Agent Response Cache
  *
@@ -17,7 +15,12 @@ import type {
 } from "./agent-cache-types";
 
 export class AgentResponseCache {
-  private logger = createSafeLogger("agent-response-cache");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[agent-response-cache]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[agent-response-cache]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[agent-response-cache]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[agent-response-cache]', message, context || ''),
+    };
 
   private config: AgentCacheConfig;
 
@@ -66,7 +69,7 @@ export class AgentResponseCache {
 
       return cachedResponse;
     } catch (error) {
-      logger.error(`[AgentResponseCache] Error getting agent response for ${agentId}:`, error);
+      console.error(`[AgentResponseCache] Error getting agent response for ${agentId}:`, error);
       return null;
     }
   }
@@ -115,11 +118,11 @@ export class AgentResponseCache {
         },
       });
 
-      logger.info(
+      console.info(
         `[AgentResponseCache] Cached response for ${agentId} with TTL ${intelligentTTL}ms`
       );
     } catch (error) {
-      logger.error(`[AgentResponseCache] Error caching agent response for ${agentId}:`, error);
+      console.error(`[AgentResponseCache] Error caching agent response for ${agentId}:`, error);
     }
   }
 
@@ -172,10 +175,10 @@ export class AgentResponseCache {
         }
       }
 
-      logger.info(`[AgentResponseCache] Invalidated ${deletedCount} agent responses`);
+      console.info(`[AgentResponseCache] Invalidated ${deletedCount} agent responses`);
       return deletedCount;
     } catch (error) {
-      logger.error("[AgentResponseCache] Error invalidating agent responses:", error);
+      console.error("[AgentResponseCache] Error invalidating agent responses:", error);
       return 0;
     }
   }
@@ -243,7 +246,7 @@ export class AgentResponseCache {
         newestEntry,
       };
     } catch (error) {
-      logger.error(`[AgentResponseCache] Error getting cache stats for ${agentId}:`, error);
+      console.error(`[AgentResponseCache] Error getting cache stats for ${agentId}:`, error);
       return {
         totalKeys: 0,
         hitRate: 0,
@@ -362,7 +365,7 @@ export class AgentResponseCache {
 
       return newHits;
     } catch (error) {
-      logger.error(`[AgentResponseCache] Error incrementing hit count for ${cacheKey}:`, error);
+      console.error(`[AgentResponseCache] Error incrementing hit count for ${cacheKey}:`, error);
       return 1;
     }
   }
@@ -381,10 +384,10 @@ export class AgentResponseCache {
         deletedCount++;
       }
 
-      logger.info(`[AgentResponseCache] Cleared ${deletedCount} entries for agent ${agentId}`);
+      console.info(`[AgentResponseCache] Cleared ${deletedCount} entries for agent ${agentId}`);
       return deletedCount;
     } catch (error) {
-      logger.error(`[AgentResponseCache] Error clearing cache for agent ${agentId}:`, error);
+      console.error(`[AgentResponseCache] Error clearing cache for agent ${agentId}:`, error);
       return 0;
     }
   }

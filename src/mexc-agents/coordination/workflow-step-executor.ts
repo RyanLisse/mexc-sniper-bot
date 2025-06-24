@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { AgentResponse } from "../base-agent";
 import type { AgentRegistry } from "./agent-registry";
 import type {
@@ -11,7 +11,13 @@ import type {
  * Workflow step execution with comprehensive error handling
  */
 export class WorkflowStepExecutor {
-  private logger = createSafeLogger("workflow-step-executor");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[workflow-step-executor]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[workflow-step-executor]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[workflow-step-executor]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[workflow-step-executor]', message, context || ''),
+  };
 
   constructor(private agentRegistry: AgentRegistry) {}
 

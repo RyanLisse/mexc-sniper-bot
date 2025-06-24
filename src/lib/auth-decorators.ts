@@ -7,8 +7,6 @@ import {
   withUserAuth,
 } from "./api-auth";
 import { createErrorResponse, HTTP_STATUS } from "./api-response";
-import { createSafeLogger } from "./structured-logger";
-
 /**
  * Authentication decorators for common API route patterns
  * These provide a clean, declarative way to add authentication to API routes
@@ -18,8 +16,6 @@ import { createSafeLogger } from "./structured-logger";
  * Decorator for public API routes (no authentication required)
  * Provides consistent error handling and response formatting
  */
-const logger = createSafeLogger("auth-decorators");
-
 export function publicRoute<T extends any[]>(
   handler: (request: NextRequest, ...args: T) => Promise<Response>
 ) {
@@ -27,7 +23,7 @@ export function publicRoute<T extends any[]>(
     try {
       return await handler(request, ...args);
     } catch (error) {
-      logger.error("[Public Route] Error:", error);
+      console.error("[Public Route] Error:", error);
       return new Response(JSON.stringify(createErrorResponse("Internal server error")), {
         status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
         headers: { "Content-Type": "application/json" },
@@ -85,7 +81,7 @@ export function userBodyRoute<T extends any[]>(
         }
 
         // Enhanced request debugging
-        logger.info("[DEBUG] Request details:", {
+        console.info("[DEBUG] Request details:", {
           method: request.method,
           contentType: request.headers.get("content-type"),
           hasBody: request.body !== null,
@@ -97,9 +93,9 @@ export function userBodyRoute<T extends any[]>(
         let body: any;
         try {
           body = await request.json();
-          logger.info("[DEBUG] JSON parsing successful, body keys:", Object.keys(body || {}));
+          console.info("[DEBUG] JSON parsing successful, body keys:", Object.keys(body || {}));
         } catch (jsonError) {
-          logger.error("[DEBUG] JSON parsing failed:", {
+          console.error("[DEBUG] JSON parsing failed:", {
             error: jsonError instanceof Error ? jsonError.message : String(jsonError),
             errorType: jsonError?.constructor?.name,
             contentType: request.headers.get("content-type"),
@@ -134,7 +130,7 @@ export function userBodyRoute<T extends any[]>(
         const userId = body.userId;
 
         if (!userId) {
-          logger.info("[DEBUG] Missing userId in body:", Object.keys(body || {}));
+          console.info("[DEBUG] Missing userId in body:", Object.keys(body || {}));
           return new Response(
             JSON.stringify(
               createErrorResponse("User ID required", {
@@ -154,7 +150,7 @@ export function userBodyRoute<T extends any[]>(
         }
 
         if (user.id !== userId) {
-          logger.info("[DEBUG] User ID mismatch:", {
+          console.info("[DEBUG] User ID mismatch:", {
             authenticatedUserId: user.id,
             bodyUserId: userId,
           });
@@ -172,14 +168,14 @@ export function userBodyRoute<T extends any[]>(
           );
         }
 
-        logger.info("[DEBUG] Request validation successful, proceeding to handler");
+        console.info("[DEBUG] Request validation successful, proceeding to handler");
         return await handler(request, user, body, ...args);
       } catch (error) {
         if (error instanceof Response) {
           return error;
         }
 
-        logger.error("[DEBUG] Unexpected error in userBodyRoute:", {
+        console.error("[DEBUG] Unexpected error in userBodyRoute:", {
           error: error instanceof Error ? error.message : String(error),
           errorType: error?.constructor?.name,
           stack: error instanceof Error ? error.stack : undefined,

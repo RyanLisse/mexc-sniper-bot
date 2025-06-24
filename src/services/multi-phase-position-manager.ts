@@ -1,4 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
 import type { MultiPhaseExecutor } from "./multi-phase-executor";
 
 export interface PositionInfo {
@@ -55,7 +54,12 @@ export interface PositionInitResult {
  * Position management for multi-phase trading
  */
 export class MultiPhasePositionManager {
-  private logger = createSafeLogger("multi-phase-position-manager");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[multi-phase-position-manager]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[multi-phase-position-manager]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-position-manager]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[multi-phase-position-manager]', message, context || ''),
+    };
 
   constructor(
     private entryPrice: number,
@@ -181,7 +185,7 @@ export class MultiPhasePositionManager {
         status: "active",
       };
 
-      this.logger.info(
+      console.info(
         `Position initialized: ${symbol} @ ${entryPrice} x ${amount} = ${value} USDT`
       );
 
@@ -191,7 +195,7 @@ export class MultiPhasePositionManager {
         details,
       };
     } catch (error) {
-      this.logger.error("Position initialization failed:", error);
+      console.error("Position initialization failed:", error);
       return {
         success: false,
         positionId: "",
@@ -239,7 +243,7 @@ export class MultiPhasePositionManager {
       adjustments.timeoutAdjustment = 2.0;
     }
 
-    this.logger.info(
+    console.info(
       `Partial fill handled: ${fillPercentage.toFixed(1)}% filled, ${nextAction} recommended`
     );
 

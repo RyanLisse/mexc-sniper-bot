@@ -28,8 +28,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createSafeLogger } from "../lib/structured-logger";
-
 // Import the trading strategy types and manager
 import {
   TRADING_STRATEGIES,
@@ -57,8 +55,6 @@ interface ActivePosition {
   triggeredLevels: number;
   nextTarget: number;
 }
-
-const logger = createSafeLogger("strategy-manager");
 
 export function StrategyManager() {
   const [strategyManager] = useState(() => new TradingStrategyManager());
@@ -132,7 +128,7 @@ export function StrategyManager() {
         setSelectedStrategyId(strategyId);
       }
     } catch (error) {
-      logger.error("Failed to switch strategy:", error);
+      console.error("Failed to switch strategy:", error);
     } finally {
       setLoading(false);
     }

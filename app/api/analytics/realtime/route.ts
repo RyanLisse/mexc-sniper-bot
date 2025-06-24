@@ -6,7 +6,6 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { z } from "zod";
 import { tradingAnalytics } from "../../../../src/services/trading-analytics-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
@@ -18,8 +17,6 @@ const RealtimeQuerySchema = z.object({
   includeHealthScore: z.coerce.boolean().optional().default(true),
   includeEvents: z.coerce.boolean().optional().default(false),
 });
-
-const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -74,7 +71,7 @@ export async function GET(request: NextRequest) {
             const sseData = `data: ${JSON.stringify(realtimeData)}\n\n`;
             controller.enqueue(encoder.encode(sseData));
           } catch (error) {
-            logger.error('[Realtime Analytics] Stream error:', { error });
+            console.error('[Realtime Analytics] Stream error:', { error });
             const errorData = {
               type: 'error',
               message: 'Error generating real-time data',
@@ -109,7 +106,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[Realtime Analytics] Error:', { error });
+    console.error('[Realtime Analytics] Error:', { error });
     
     return NextResponse.json(
       { 
@@ -185,7 +182,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[Realtime Analytics] POST Error:', { error });
+    console.error('[Realtime Analytics] POST Error:', { error });
     
     return NextResponse.json(
       { 

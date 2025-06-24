@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { AgentResponse } from "../base-agent";
 import type { AgentHealth, AgentStatus, RegisteredAgent } from "./agent-registry-core";
 
@@ -30,13 +30,12 @@ export interface AgentRegistryStats {
  * Agent health monitoring system
  */
 export class AgentHealthMonitor {
-  private _logger?: ReturnType<typeof createSafeLogger>;
-  private get logger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("agent-health-monitor");
-    }
-    return this._logger;
-  }
+  private logger = {
+    info: (message: string, context?: any) => console.info('[agent-health-monitor]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[agent-health-monitor]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[agent-health-monitor]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[agent-health-monitor]', message, context || ''),
+  };
   private healthCheckInterval: NodeJS.Timeout | null = null;
   private healthHistory: Map<string, HealthCheckResult[]> = new Map();
   private maxHealthHistorySize = 100;

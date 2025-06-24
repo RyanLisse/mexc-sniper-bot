@@ -12,7 +12,6 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { SymbolEntry } from "../../services/mexc-unified-exports";
 import { ConfidenceCalculator } from "./confidence-calculator";
 import type {
@@ -43,7 +42,12 @@ export class PatternDetectionCore {
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("pattern-detection-core");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[pattern-detection-core]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[pattern-detection-core]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[pattern-detection-core]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[pattern-detection-core]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -89,7 +93,7 @@ export class PatternDetectionCore {
     this.patternStorage = PatternStorage.getInstance();
     this.patternValidator = PatternValidator.getInstance();
 
-    this.logger.info("Pattern Detection Core initialized", {
+    console.info("Pattern Detection Core initialized", {
       config: this.config,
     });
   }
@@ -122,7 +126,7 @@ export class PatternDetectionCore {
         }
 
         if (validation.warnings.length > 0 && this.config.logValidationErrors) {
-          this.logger.warn("Analysis request warnings", {
+          console.warn("Analysis request warnings", {
             warnings: validation.warnings,
           });
           this.metrics.warningCount += validation.warnings.length;
@@ -175,7 +179,7 @@ export class PatternDetectionCore {
       // Update metrics
       this.updateMetrics(allMatches, filteredMatches, executionTime);
 
-      this.logger.info("Pattern analysis completed", {
+      console.info("Pattern analysis completed", {
         analysisType: request.analysisType,
         symbolsAnalyzed: request.symbols?.length || 0,
         calendarEntriesAnalyzed: request.calendarEntries?.length || 0,
@@ -203,7 +207,7 @@ export class PatternDetectionCore {
 
       this.metrics.errorCount++;
 
-      this.logger.error(
+      console.error(
         "Pattern analysis failed",
         {
           analysisType: request.analysisType,
@@ -286,7 +290,7 @@ export class PatternDetectionCore {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(
+      console.error(
         "Symbol readiness analysis failed",
         {
           symbol: symbol.cd || "unknown",
@@ -320,7 +324,7 @@ export class PatternDetectionCore {
    */
   clearCaches(): void {
     this.patternStorage.clearCache();
-    this.logger.info("All caches cleared");
+    console.info("All caches cleared");
   }
 
   /**
@@ -330,7 +334,7 @@ export class PatternDetectionCore {
    */
   updateConfig(newConfig: Partial<PatternDetectionConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    this.logger.info("Configuration updated", { newConfig });
+    console.info("Configuration updated", { newConfig });
   }
 
   /**
@@ -341,7 +345,7 @@ export class PatternDetectionCore {
       return await this.patternAnalyzer.detectReadyStatePattern(symbols);
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Ready state pattern detection failed", {
+      console.error("Ready state pattern detection failed", {
         symbolCount: symbols.length,
         error: safeError.message,
       });
@@ -357,7 +361,7 @@ export class PatternDetectionCore {
       return await this.patternAnalyzer.detectPreReadyPatterns(symbols);
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Pre-ready pattern detection failed", {
+      console.error("Pre-ready pattern detection failed", {
         symbolCount: symbols.length,
         error: safeError.message,
       });
@@ -373,7 +377,7 @@ export class PatternDetectionCore {
       return await this.patternAnalyzer.detectAdvanceOpportunities(calendarEntries);
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Advance opportunity detection failed", {
+      console.error("Advance opportunity detection failed", {
         entryCount: calendarEntries.length,
         error: safeError.message,
       });
@@ -400,7 +404,7 @@ export class PatternDetectionCore {
 
       return [];
     } catch (error) {
-      this.logger.warn("Failed to fetch activity data", { symbol, error });
+      console.warn("Failed to fetch activity data", { symbol, error });
       return [];
     }
   }
@@ -420,7 +424,7 @@ export class PatternDetectionCore {
       } else {
         this.metrics.errorCount++;
         if (this.config.logValidationErrors) {
-          this.logger.warn("Invalid pattern match filtered out", {
+          console.warn("Invalid pattern match filtered out", {
             symbol: match.symbol,
             patternType: match.patternType,
             errors: validation.errors,
@@ -431,7 +435,7 @@ export class PatternDetectionCore {
       if (validation.warnings.length > 0) {
         this.metrics.warningCount += validation.warnings.length;
         if (this.config.logValidationErrors) {
-          this.logger.warn("Pattern match warnings", {
+          console.warn("Pattern match warnings", {
             symbol: match.symbol,
             warnings: validation.warnings,
           });

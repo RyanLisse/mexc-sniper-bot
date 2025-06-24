@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getGlobalAgentRegistry } from "../../../../src/mexc-agents/coordination/agent-registry";
 import { AgentMonitoringService } from "../../../../src/services/agent-monitoring-service";
 
@@ -7,9 +6,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Quick status endpoint for all agents and monitoring
-const logger = createSafeLogger('route');
-
 export async function GET() {
+  // Build-safe logger - simple console implementation
+  const logger = {
+    info: (message: string, context?: any) => console.info('[agents-status]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[agents-status]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[agents-status]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[agents-status]', message, context || ''),
+  };
+  
   try {
     const registry = getGlobalAgentRegistry();
     const monitoringService = AgentMonitoringService.getInstance();

@@ -3,7 +3,6 @@
 import { Calendar, Clock, RefreshCw, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 import { useMexcCalendar, useRefreshMexcCalendar } from "../../hooks/use-mexc-data";
-import { createSafeLogger } from "../../lib/structured-logger";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -19,8 +18,6 @@ interface GroupedLaunches {
   today: UpcomingCalendarEntry[];
   tomorrow: UpcomingCalendarEntry[];
 }
-
-const logger = createSafeLogger("upcoming-coins-section");
 
 export function UpcomingCoinsSection() {
   // Use the main calendar hook to get all data instead of filtered data
@@ -52,7 +49,7 @@ export function UpcomingCoinsSection() {
           tomorrow.push(entry);
         }
       } catch (_error) {
-        logger.warn("Invalid date in calendar entry:", { firstOpenTime: entry.firstOpenTime });
+        console.warn("Invalid date in calendar entry:", { firstOpenTime: entry.firstOpenTime });
       }
     });
 

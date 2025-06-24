@@ -7,7 +7,6 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
 import { getUnifiedMexcService } from "./unified-mexc-service-factory";
 
 // ============================================================================
@@ -50,7 +49,12 @@ export interface ConnectivityValidationResult {
 // ============================================================================
 
 export class MexcConnectivityValidator {
-  private logger = createSafeLogger("mexc-connectivity-validator");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-connectivity-validator]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-connectivity-validator]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-connectivity-validator]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-connectivity-validator]', message, context || ''),
+    };
 
   private timeout = 15000; // 15 seconds
   private minPositionSize = 10; // Minimum USDT for trading
@@ -84,7 +88,7 @@ export class MexcConnectivityValidator {
       timestamp: new Date().toISOString(),
     };
 
-    logger.info("[MexcConnectivityValidator] Starting comprehensive validation...");
+    console.info("[MexcConnectivityValidator] Starting comprehensive validation...");
 
     try {
       // Get MEXC service instance
@@ -116,7 +120,7 @@ export class MexcConnectivityValidator {
       // Step 5: Determine overall status
       this.determineOverallStatus(result);
 
-      logger.info("[MexcConnectivityValidator] Validation completed:", {
+      console.info("[MexcConnectivityValidator] Validation completed:", {
         overall: result.overall,
         connectivity: result.connectivity.apiReachable,
         authentication: result.authentication.valid,
@@ -127,7 +131,7 @@ export class MexcConnectivityValidator {
       return result;
     } catch (error) {
       const safeError = toSafeError(error);
-      logger.error("[MexcConnectivityValidator] Validation failed:", safeError.message);
+      console.error("[MexcConnectivityValidator] Validation failed:", safeError.message);
 
       result.errors.push(`Validation failed: ${safeError.message}`);
       result.recommendations.push("Check network connectivity and API credentials");
@@ -144,7 +148,7 @@ export class MexcConnectivityValidator {
     mexcService: any,
     result: ConnectivityValidationResult
   ): Promise<void> {
-    logger.info("[MexcConnectivityValidator] Testing basic connectivity...");
+    console.info("[MexcConnectivityValidator] Testing basic connectivity...");
 
     try {
       const startTime = Date.now();
@@ -160,21 +164,21 @@ export class MexcConnectivityValidator {
           const serverTime = await mexcService.getServerTime();
           result.connectivity.serverTime = serverTime;
         } catch (error) {
-          logger.warn("[MexcConnectivityValidator] Could not get server time:", error);
+          console.warn("[MexcConnectivityValidator] Could not get server time:", error);
         }
 
-        logger.info(
+        console.info(
           `[MexcConnectivityValidator] ✅ API connectivity successful (${responseTime}ms)`
         );
       } else {
         result.errors.push("Cannot reach MEXC API endpoints");
         result.recommendations.push("Check internet connectivity and DNS resolution");
-        logger.info("[MexcConnectivityValidator] ❌ API connectivity failed");
+        console.info("[MexcConnectivityValidator] ❌ API connectivity failed");
       }
     } catch (error) {
       const safeError = toSafeError(error);
       result.errors.push(`Connectivity test failed: ${safeError.message}`);
-      logger.error("[MexcConnectivityValidator] Connectivity test error:", safeError.message);
+      console.error("[MexcConnectivityValidator] Connectivity test error:", safeError.message);
     }
   }
 
@@ -182,7 +186,7 @@ export class MexcConnectivityValidator {
     mexcService: any,
     result: ConnectivityValidationResult
   ): Promise<void> {
-    logger.info("[MexcConnectivityValidator] Testing authentication...");
+    console.info("[MexcConnectivityValidator] Testing authentication...");
 
     try {
       const accountInfo = await mexcService.getAccountInfo();
@@ -194,7 +198,7 @@ export class MexcConnectivityValidator {
         result.authentication.canTrade = accountInfo.data.canTrade !== false;
         result.authentication.permissions = accountInfo.data.permissions || ["SPOT"];
 
-        logger.info("[MexcConnectivityValidator] ✅ Authentication successful:", {
+        console.info("[MexcConnectivityValidator] ✅ Authentication successful:", {
           accountType: result.authentication.accountType,
           canTrade: result.authentication.canTrade,
           permissions: result.authentication.permissions,
@@ -219,12 +223,12 @@ export class MexcConnectivityValidator {
           result.recommendations.push("Verify MEXC API credentials are correct and active");
         }
 
-        logger.error("[MexcConnectivityValidator] ❌ Authentication failed:", accountInfo.error);
+        console.error("[MexcConnectivityValidator] ❌ Authentication failed:", accountInfo.error);
       }
     } catch (error) {
       const safeError = toSafeError(error);
       result.errors.push(`Authentication test failed: ${safeError.message}`);
-      logger.error("[MexcConnectivityValidator] Authentication test error:", safeError.message);
+      console.error("[MexcConnectivityValidator] Authentication test error:", safeError.message);
     }
   }
 
@@ -232,7 +236,7 @@ export class MexcConnectivityValidator {
     mexcService: any,
     result: ConnectivityValidationResult
   ): Promise<void> {
-    logger.info("[MexcConnectivityValidator] Testing balance access...");
+    console.info("[MexcConnectivityValidator] Testing balance access...");
 
     try {
       const balanceResponse = await mexcService.getAccountBalances();
@@ -260,14 +264,14 @@ export class MexcConnectivityValidator {
           result.recommendations.push("Deposit USDT to enable trading");
         }
 
-        logger.info("[MexcConnectivityValidator] ✅ Balance access successful:", {
+        console.info("[MexcConnectivityValidator] ✅ Balance access successful:", {
           totalAssets: result.balances.totalAssets,
           usdtBalance: result.balances.usdtBalance,
           sufficientForTrading: result.balances.sufficientForTrading,
         });
       } else {
         result.errors.push(`Balance access failed: ${balanceResponse.error || "Unknown error"}`);
-        logger.error(
+        console.error(
           "[MexcConnectivityValidator] ❌ Balance access failed:",
           balanceResponse.error
         );
@@ -275,7 +279,7 @@ export class MexcConnectivityValidator {
     } catch (error) {
       const safeError = toSafeError(error);
       result.errors.push(`Balance test failed: ${safeError.message}`);
-      logger.error("[MexcConnectivityValidator] Balance test error:", safeError.message);
+      console.error("[MexcConnectivityValidator] Balance test error:", safeError.message);
     }
   }
 
@@ -283,7 +287,7 @@ export class MexcConnectivityValidator {
     mexcService: any,
     result: ConnectivityValidationResult
   ): Promise<void> {
-    logger.info("[MexcConnectivityValidator] Testing trading capabilities...");
+    console.info("[MexcConnectivityValidator] Testing trading capabilities...");
 
     try {
       // Get exchange info to check available trading pairs
@@ -300,7 +304,7 @@ export class MexcConnectivityValidator {
         result.trading.ordersAllowed =
           result.authentication.canTrade && result.trading.hasUsdtPairs;
 
-        logger.info("[MexcConnectivityValidator] ✅ Trading capabilities checked:", {
+        console.info("[MexcConnectivityValidator] ✅ Trading capabilities checked:", {
           totalSymbols: symbols.length,
           usdtPairs: usdtPairs.length,
           ordersAllowed: result.trading.ordersAllowed,
@@ -315,7 +319,7 @@ export class MexcConnectivityValidator {
           `Trading capability check failed: ${exchangeInfo.error || "Unknown error"}`
         );
         result.trading.tradingStatus = "unknown";
-        logger.warn(
+        console.warn(
           "[MexcConnectivityValidator] ⚠️ Trading capability check failed:",
           exchangeInfo.error
         );
@@ -323,7 +327,7 @@ export class MexcConnectivityValidator {
     } catch (error) {
       const safeError = toSafeError(error);
       result.warnings.push(`Trading test failed: ${safeError.message}`);
-      logger.error("[MexcConnectivityValidator] Trading test error:", safeError.message);
+      console.error("[MexcConnectivityValidator] Trading test error:", safeError.message);
     }
   }
 

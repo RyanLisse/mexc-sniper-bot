@@ -5,7 +5,6 @@
  * Verifies all 5 TypeScript agents are operational
  */
 
-import { createSafeLogger } from "../lib/structured-logger";
 import { CalendarAgent } from "./calendar-agent.js";
 import { MexcApiAgent } from "./mexc-api-agent.js";
 import { MexcOrchestrator } from "./orchestrator.js";
@@ -20,7 +19,12 @@ interface HealthCheckResult {
 }
 
 class AgentHealthChecker {
-  private logger = createSafeLogger("health-check");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[health-check]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[health-check]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[health-check]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[health-check]', message, context || ''),
+    };
 
   private results: HealthCheckResult[] = [];
 
@@ -143,7 +147,7 @@ class AgentHealthChecker {
   }
 
   async runAllChecks(): Promise<HealthCheckResult[]> {
-    logger.info("🤖 Starting Multi-Agent System Health Check...\n");
+    console.info("🤖 Starting Multi-Agent System Health Check...\n");
 
     await this.checkEnvironmentVariables();
     await this.checkMexcApiAgent();
@@ -156,8 +160,8 @@ class AgentHealthChecker {
   }
 
   printResults(): void {
-    logger.info("📊 Health Check Results:");
-    logger.info("========================\n");
+    console.info("📊 Health Check Results:");
+    console.info("========================\n");
 
     const healthyCount = this.results.filter((r) => r.status === "healthy").length;
     const warningCount = this.results.filter((r) => r.status === "warning").length;
@@ -167,18 +171,18 @@ class AgentHealthChecker {
       const statusIcon =
         result.status === "healthy" ? "✅" : result.status === "warning" ? "⚠️" : "❌";
 
-      logger.info(`${statusIcon} ${result.agent}: ${result.message}`);
+      console.info(`${statusIcon} ${result.agent}: ${result.message}`);
     }
 
-    logger.info("\n========================");
-    logger.info(
+    console.info("\n========================");
+    console.info(
       `Summary: ${healthyCount} healthy, ${warningCount} warnings, ${unhealthyCount} unhealthy`
     );
 
     if (unhealthyCount === 0) {
-      logger.info("🎉 All critical systems operational!");
+      console.info("🎉 All critical systems operational!");
     } else {
-      logger.info("🚨 Some systems require attention");
+      console.info("🚨 Some systems require attention");
       process.exit(1);
     }
   }
@@ -199,7 +203,7 @@ if (isMainModule) {
       checker.printResults();
     })
     .catch((error) => {
-      logger.error("❌ Health check failed:", error);
+      console.error("❌ Health check failed:", error);
       process.exit(1);
     });
 }

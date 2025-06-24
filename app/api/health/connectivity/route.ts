@@ -1,13 +1,11 @@
 /**
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
- * Connectivity Health Check API
+* Connectivity Health Check API
  * 
  * Provides lightweight connectivity monitoring with fast response times
  * for real-time health monitoring and dashboard updates.
  */
 
 import { NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { getUserCredentials } from "../../../../src/services/user-credentials-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
@@ -39,8 +37,6 @@ interface HealthCheckResponse {
     healthScore: number;
   };
 }
-
-const logger = createSafeLogger('route');
 
 export async function GET() {
   const startTime = Date.now();
@@ -80,7 +76,7 @@ export async function GET() {
           credentialSource = "database";
         }
       } catch (error) {
-        logger.warn("Failed to retrieve user credentials:", { error: error });
+        console.warn("Failed to retrieve user credentials:", { error: error });
       }
     }
 
@@ -251,7 +247,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    logger.error("Health check failed:", { error: error });
+    console.error("Health check failed:", { error: error });
     
     const overallLatency = Date.now() - startTime;
     response.status = "unhealthy";

@@ -11,8 +11,6 @@
  */
 
 import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from "node:crypto";
-import { createSafeLogger } from "../lib/structured-logger";
-
 // Constants for cryptographic operations
 const ALGORITHM = "aes-256-gcm";
 const SALT_LENGTH = 32; // 256 bits
@@ -38,7 +36,12 @@ export class SecureEncryptionService {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("secure-encryption-service");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[secure-encryption-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[secure-encryption-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[secure-encryption-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[secure-encryption-service]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -244,12 +247,11 @@ export function getEncryptionService(): SecureEncryptionService {
  */
 export function generateMasterKey(): void {
   const key = SecureEncryptionService.generateSecureKey();
-  const logger = createSafeLogger("generate-master-key");
-  logger.info("\n🔐 Generated new master encryption key:");
-  logger.info(`ENCRYPTION_MASTER_KEY="${key}"`);
-  logger.info("\n⚠️  Add this to your .env.local file and keep it secure!");
-  logger.info("⚠️  Never commit this key to version control!");
-  logger.info("⚠️  Loss of this key means loss of all encrypted data!\n");
+  console.info("\n🔐 Generated new master encryption key:");
+  console.info(`ENCRYPTION_MASTER_KEY="${key}"`);
+  console.info("\n⚠️  Add this to your .env.local file and keep it secure!");
+  console.info("⚠️  Never commit this key to version control!");
+  console.info("⚠️  Loss of this key means loss of all encrypted data!\n");
 }
 
 // For testing and key generation

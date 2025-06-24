@@ -9,8 +9,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActivityData } from "../../../schemas/mexc-schemas";
 import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
 import type { IConfidenceCalculator } from "../interfaces";
-import { createSafeLogger } from "../lib/structured-logger";
-
 describe("ConfidenceCalculator - TDD Implementation", () => {
   let confidenceCalculator: IConfidenceCalculator;
 
@@ -19,7 +17,6 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     try {
       const { ConfidenceCalculator } = await import("../confidence-calculator");
 
-      const logger = createSafeLogger("confidence-calculator.test");
       confidenceCalculator = new ConfidenceCalculator();
     } catch {
       // Skip tests if implementation doesn't exist yet
@@ -34,7 +31,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
   describe("Ready State Confidence Calculation", () => {
     it("should calculate high confidence for perfect ready state symbols", async () => {
       if (!confidenceCalculator.calculateReadyStateConfidence) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -56,7 +53,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should calculate lower confidence for incomplete symbols", async () => {
       if (!confidenceCalculator.calculateReadyStateConfidence) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -76,7 +73,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should calculate very low confidence for incorrect states", async () => {
       if (!confidenceCalculator.calculateReadyStateConfidence) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -94,7 +91,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should enhance confidence with activity data", async () => {
       if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -125,7 +122,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should cap confidence at maximum 100", async () => {
       if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -150,7 +147,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
   describe("Advance Opportunity Confidence Calculation", () => {
     it("should calculate high confidence for optimal advance timing", async () => {
       if (!confidenceCalculator.calculateAdvanceOpportunityConfidence) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -173,7 +170,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should calculate lower confidence for very early opportunities", async () => {
       if (!confidenceCalculator.calculateAdvanceOpportunityConfidence) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -195,7 +192,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should calculate confidence based on project quality", async () => {
       if (!confidenceCalculator.calculateAdvanceOpportunityConfidence) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -230,7 +227,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
   describe("Pre-Ready Score Calculation", () => {
     it("should calculate pre-ready score for symbols approaching ready state", async () => {
       if (!confidenceCalculator.calculatePreReadyScore) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -250,7 +247,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should not identify ready symbols as pre-ready", async () => {
       if (!confidenceCalculator.calculatePreReadyScore) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -268,7 +265,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should estimate shorter time for closer-to-ready symbols", async () => {
       if (!confidenceCalculator.calculatePreReadyScore) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -301,7 +298,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
   describe("Confidence Score Validation", () => {
     it("should validate confidence scores within valid range", async () => {
       if (!confidenceCalculator.validateConfidenceScore) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -319,7 +316,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should validate decimal confidence scores", async () => {
       if (!confidenceCalculator.validateConfidenceScore) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -332,7 +329,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
   describe("Performance and Edge Cases", () => {
     it("should handle batch confidence calculations efficiently", async () => {
       if (!confidenceCalculator.calculateReadyStateConfidence) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -365,7 +362,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should handle missing or null symbol data gracefully", async () => {
       if (!confidenceCalculator.calculateReadyStateConfidence) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -385,7 +382,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should handle empty activity arrays", async () => {
       if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 
@@ -402,7 +399,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
     it("should handle extreme confidence values properly", async () => {
       if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        logger.warn("ConfidenceCalculator not implemented yet - skipping test");
+        console.warn("ConfidenceCalculator not implemented yet - skipping test");
         return;
       }
 

@@ -14,8 +14,6 @@
  */
 
 import { z } from "zod";
-import { createSafeLogger } from "../lib/structured-logger";
-
 // ============================================================================
 // Types and Schemas
 // ============================================================================
@@ -131,12 +129,15 @@ const ANALYTICS_CONFIG = {
 // ============================================================================
 
 export class TradingAnalyticsService {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
   private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createSafeLogger("trading-analytics-service");
+        this._logger = {
+      info: (message: string, context?: any) => console.info('[trading-analytics-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[trading-analytics-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[trading-analytics-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[trading-analytics-service]', message, context || ''),
+    };
       } catch {
         // Fallback during build time
         this._logger = {
@@ -167,7 +168,7 @@ export class TradingAnalyticsService {
    * Initialize the analytics service
    */
   initialize(): void {
-    this.logger.info("[TradingAnalytics] Initializing trading analytics service...");
+    console.info("[TradingAnalytics] Initializing trading analytics service...");
 
     // Start periodic flushing of events
     this.startPeriodicFlush();
@@ -175,7 +176,7 @@ export class TradingAnalyticsService {
     // Set up default alert handlers
     this.setupDefaultAlerts();
 
-    this.logger.info("[TradingAnalytics] Trading analytics service initialized");
+    console.info("[TradingAnalytics] Trading analytics service initialized");
   }
 
   /**
@@ -209,7 +210,7 @@ export class TradingAnalyticsService {
       // Update performance metrics
       this.updatePerformanceMetrics(validatedEvent);
     } catch (error) {
-      this.logger.error("[TradingAnalytics] Failed to log trading event:", error);
+      console.error("[TradingAnalytics] Failed to log trading event:", error);
     }
   }
 
@@ -513,7 +514,7 @@ export class TradingAnalyticsService {
   clearAnalyticsData(): void {
     this.events.length = 0;
     this.metricsCache.clear();
-    this.logger.info("[TradingAnalytics] Analytics data cleared");
+    console.info("[TradingAnalytics] Analytics data cleared");
   }
 
   /**
@@ -640,7 +641,7 @@ export class TradingAnalyticsService {
         try {
           callback(event);
         } catch (error) {
-          this.logger.error("[TradingAnalytics] Alert callback failed:", error);
+          console.error("[TradingAnalytics] Alert callback failed:", error);
         }
       });
     }
@@ -661,7 +662,7 @@ export class TradingAnalyticsService {
     // For now, just log the flush operation
     const eventCount = this.events.length;
     if (eventCount > 0) {
-      this.logger.info(`[TradingAnalytics] Flushing ${eventCount} events to persistent storage`);
+      console.info(`[TradingAnalytics] Flushing ${eventCount} events to persistent storage`);
 
       // Simulate persistent storage by keeping only recent events
       const keepRecent = ANALYTICS_CONFIG.storage.maxEvents * 0.8;
@@ -674,7 +675,7 @@ export class TradingAnalyticsService {
   private setupDefaultAlerts(): void {
     this.addAlertCallback((event: TradingEvent) => {
       if (!event.success && event.eventType.includes("TRADE")) {
-        this.logger.warn(
+        console.warn(
           `[TradingAnalytics] ALERT: Trading operation failed for user ${event.userId}: ${event.error}`
         );
       }
@@ -835,7 +836,7 @@ ${report.recommendations.length > 0 ? report.recommendations.map((r) => `• ${r
       this.flushInterval = null;
     }
     this.alertCallbacks.length = 0;
-    this.logger.info("[TradingAnalytics] Trading analytics service disposed");
+    console.info("[TradingAnalytics] Trading analytics service disposed");
   }
 }
 

@@ -5,7 +5,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { PatternMonitoringService } from '@/src/services/pattern-monitoring-service';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
@@ -20,7 +19,6 @@ function getPatternMonitoringService() {
  * Get pattern monitoring report and statistics
  */
 export const GET = apiAuthWrapper(async (request: NextRequest) => {
-  const logger = createSafeLogger('pattern-monitoring-api');
   try {
     const { searchParams } = new URL(request.url);
     const includeActivity = searchParams.get('include_activity') === 'true';
@@ -51,7 +49,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       message: 'Pattern monitoring report retrieved successfully',
     }));
   } catch (error) {
-    logger.error('[API] Pattern monitoring GET failed:', { error });
+    console.error('[API] Pattern monitoring GET failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to get pattern monitoring report',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -64,7 +62,6 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
  * Control pattern monitoring and trigger manual detection
  */
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
-  const logger = createSafeLogger('pattern-monitoring-api');
   try {
     const body = await request.json();
     const { action, symbols, calendarEntries, alertId } = body;
@@ -213,7 +210,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         ), { status: 400 });
     }
   } catch (error) {
-    logger.error('[API] Pattern monitoring POST failed:', { error });
+    console.error('[API] Pattern monitoring POST failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Pattern monitoring operation failed',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -226,7 +223,6 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
  * Update monitoring configuration
  */
 export const PUT = apiAuthWrapper(async (request: NextRequest) => {
-  const logger = createSafeLogger('pattern-monitoring-api');
   try {
     const body = await request.json();
     const { config } = body;
@@ -239,7 +235,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       { message: 'Pattern monitoring configuration updated (note: requires service restart for changes to take effect)' }
     ));
   } catch (error) {
-    logger.error('[API] Pattern monitoring PUT failed:', { error });
+    console.error('[API] Pattern monitoring PUT failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to update pattern monitoring configuration',
       { details: error instanceof Error ? error.message : 'Unknown error' }

@@ -10,7 +10,6 @@
  */
 
 import { EventEmitter } from "events";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { AdvancedRiskEngine } from "./advanced-risk-engine";
 import { type CircuitBreaker, circuitBreakerRegistry } from "./circuit-breaker";
 
@@ -144,7 +143,12 @@ export class EmergencySafetySystem extends EventEmitter {
   private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("emergency-safety-system");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[emergency-safety-system]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[emergency-safety-system]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[emergency-safety-system]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[emergency-safety-system]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -174,7 +178,7 @@ export class EmergencySafetySystem extends EventEmitter {
       expectedFailureRate: 0.05,
     });
 
-    logger.info("[EmergencySafetySystem] Initialized with automated emergency response");
+    console.info("[EmergencySafetySystem] Initialized with automated emergency response");
   }
 
   /**
@@ -182,7 +186,7 @@ export class EmergencySafetySystem extends EventEmitter {
    */
   setRiskEngine(riskEngine: AdvancedRiskEngine): void {
     this.riskEngine = riskEngine;
-    logger.info("[EmergencySafetySystem] Risk engine integration established");
+    console.info("[EmergencySafetySystem] Risk engine integration established");
   }
 
   /**
@@ -254,7 +258,7 @@ export class EmergencySafetySystem extends EventEmitter {
       this.lastHealthCheck = Date.now();
       const checkDuration = this.lastHealthCheck - startTime;
 
-      logger.info(
+      console.info(
         `[EmergencySafetySystem] Health check completed in ${checkDuration}ms - Status: ${healthCheck.overall}`
       );
 
@@ -396,7 +400,7 @@ export class EmergencySafetySystem extends EventEmitter {
     this.emergencyActive = true;
     this.activeEmergencies++;
 
-    logger.info(`[EmergencySafetySystem] Emergency activated: ${condition.id} - ${description}`);
+    console.info(`[EmergencySafetySystem] Emergency activated: ${condition.id} - ${description}`);
 
     // Execute response actions
     const executedActions: EmergencyAction[] = [];
@@ -412,7 +416,7 @@ export class EmergencySafetySystem extends EventEmitter {
 
         if (!actionResult.success) {
           success = false;
-          logger.error(
+          console.error(
             `[EmergencySafetySystem] Action failed: ${action.id} - ${actionResult.error}`
           );
         }
@@ -422,7 +426,7 @@ export class EmergencySafetySystem extends EventEmitter {
         action.executedAt = new Date().toISOString();
         executedActions.push(action);
         success = false;
-        logger.error(`[EmergencySafetySystem] Action execution error: ${action.id}`, error);
+        console.error(`[EmergencySafetySystem] Action execution error: ${action.id}`, error);
       }
     }
 
@@ -479,10 +483,10 @@ export class EmergencySafetySystem extends EventEmitter {
         this.emergencyActive = false;
       }
 
-      logger.info(`[EmergencySafetySystem] Emergency deactivated: ${conditionId} - ${reason}`);
+      console.info(`[EmergencySafetySystem] Emergency deactivated: ${conditionId} - ${reason}`);
       return true;
     } catch (error) {
-      logger.error(`[EmergencySafetySystem] Failed to deactivate emergency: ${conditionId}`, error);
+      console.error(`[EmergencySafetySystem] Failed to deactivate emergency: ${conditionId}`, error);
       return false;
     }
   }
@@ -491,7 +495,7 @@ export class EmergencySafetySystem extends EventEmitter {
    * Force emergency halt of all trading activities
    */
   async forceEmergencyHalt(reason: string): Promise<void> {
-    logger.info(`[EmergencySafetySystem] FORCE EMERGENCY HALT: ${reason}`);
+    console.info(`[EmergencySafetySystem] FORCE EMERGENCY HALT: ${reason}`);
 
     this.tradingHalted = true;
 
@@ -504,11 +508,11 @@ export class EmergencySafetySystem extends EventEmitter {
     // Stop risk engine operations if available
     if (this.riskEngine) {
       // Risk engine doesn't have explicit stop method, but circuit breaker will protect it
-      logger.info("[EmergencySafetySystem] Risk engine operations halted via circuit breaker");
+      console.info("[EmergencySafetySystem] Risk engine operations halted via circuit breaker");
     }
 
     // This would integrate with actual trading system
-    logger.info("[EmergencySafetySystem] All trading activities halted");
+    console.info("[EmergencySafetySystem] All trading activities halted");
   }
 
   /**
@@ -538,10 +542,10 @@ export class EmergencySafetySystem extends EventEmitter {
       this.tradingHalted = false;
       this.agentsShutdown = [];
 
-      logger.info("[EmergencySafetySystem] Normal operations resumed");
+      console.info("[EmergencySafetySystem] Normal operations resumed");
       return true;
     } catch (error) {
-      logger.error("[EmergencySafetySystem] Failed to resume operations:", error);
+      console.error("[EmergencySafetySystem] Failed to resume operations:", error);
       return false;
     }
   }
@@ -715,9 +719,9 @@ export class EmergencySafetySystem extends EventEmitter {
     try {
       if (parameters.immediate || !parameters.newTradesOnly) {
         this.tradingHalted = true;
-        logger.info("[EmergencySafetySystem] Trading halted completely");
+        console.info("[EmergencySafetySystem] Trading halted completely");
       } else {
-        logger.info("[EmergencySafetySystem] New trades halted");
+        console.info("[EmergencySafetySystem] New trades halted");
       }
       return { success: true };
     } catch (error) {
@@ -734,7 +738,7 @@ export class EmergencySafetySystem extends EventEmitter {
     try {
       // This would integrate with actual position management
       const maxSize = (parameters.maxSize as number) || this.config.maxLiquidationSize;
-      logger.info(`[EmergencySafetySystem] Closing positions up to ${maxSize} USDT`);
+      console.info(`[EmergencySafetySystem] Closing positions up to ${maxSize} USDT`);
       return { success: true };
     } catch (error) {
       return {
@@ -749,7 +753,7 @@ export class EmergencySafetySystem extends EventEmitter {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const reductionPercent = (parameters.reductionPercent as number) || 50;
-      logger.info(`[EmergencySafetySystem] Reducing exposure by ${reductionPercent}%`);
+      console.info(`[EmergencySafetySystem] Reducing exposure by ${reductionPercent}%`);
       return { success: true };
     } catch (error) {
       return {
@@ -765,7 +769,7 @@ export class EmergencySafetySystem extends EventEmitter {
     try {
       const agentTypes = (parameters.agentTypes as string[]) || [];
       this.agentsShutdown.push(...agentTypes);
-      logger.info(`[EmergencySafetySystem] Shutdown agents: ${agentTypes.join(", ")}`);
+      console.info(`[EmergencySafetySystem] Shutdown agents: ${agentTypes.join(", ")}`);
       return { success: true };
     } catch (error) {
       return {
@@ -781,7 +785,7 @@ export class EmergencySafetySystem extends EventEmitter {
     try {
       const urgency = (parameters.urgency as string) || "medium";
       const channels = (parameters.channels as string[]) || ["email"];
-      logger.info(
+      console.info(
         `[EmergencySafetySystem] Notifying operators - Urgency: ${urgency}, Channels: ${channels.join(", ")}`
       );
       return { success: true };
@@ -794,7 +798,7 @@ export class EmergencySafetySystem extends EventEmitter {
   }
 
   private async handleCriticalMarketAnomalies(anomalies: unknown[]): Promise<void> {
-    logger.info(`[EmergencySafetySystem] Critical market anomalies detected: ${anomalies.length}`);
+    console.info(`[EmergencySafetySystem] Critical market anomalies detected: ${anomalies.length}`);
 
     await this.activateEmergencyResponse(
       "market_crash",
@@ -843,20 +847,20 @@ export class EmergencySafetySystem extends EventEmitter {
   }
 
   private async initiateRecovery(condition: EmergencyCondition, reason: string): Promise<void> {
-    logger.info(`[EmergencySafetySystem] Initiating recovery for ${condition.id}: ${reason}`);
+    console.info(`[EmergencySafetySystem] Initiating recovery for ${condition.id}: ${reason}`);
 
     if (this.config.autoRecoveryEnabled && condition.severity !== "catastrophic") {
       // Automated recovery steps
-      logger.info("[EmergencySafetySystem] Starting automated recovery process");
+      console.info("[EmergencySafetySystem] Starting automated recovery process");
 
       // This would implement actual recovery logic
       // For now, just log the steps
       const recoverySteps = this.generateRecoverySteps(condition);
       for (const step of recoverySteps) {
-        logger.info(`[EmergencySafetySystem] Recovery step: ${step}`);
+        console.info(`[EmergencySafetySystem] Recovery step: ${step}`);
       }
     } else {
-      logger.info("[EmergencySafetySystem] Manual recovery required");
+      console.info("[EmergencySafetySystem] Manual recovery required");
     }
   }
 
@@ -947,7 +951,7 @@ export class EmergencySafetySystem extends EventEmitter {
 
     // Check for emergency conditions
     if (this.consecutiveLossCount >= 5) {
-      logger.info(
+      console.info(
         `[EmergencySafetySystem] WARNING: ${this.consecutiveLossCount} consecutive losses detected`
       );
       this.emit("emergency_stop", {

@@ -1,10 +1,16 @@
 import { NextRequest } from "next/server";
-import { createSafeLogger } from '../../../src/lib/structured-logger';
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { queryPerformanceMonitor } from "../../../src/services/query-performance-monitor";
 import { apiResponse, createOperationResponse, handleApiError } from "../../../src/lib/api-response";
 
 export async function GET(request: NextRequest) {
-  const logger = createSafeLogger('route');
+  // Simple console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[query-performance]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[query-performance]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[query-performance]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[query-performance]', message, context || ''),
+  };
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
@@ -39,7 +45,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const logger = createSafeLogger('query-performance');
+  // Simple console logger to avoid webpack bundling issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[query-performance]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[query-performance]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[query-performance]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[query-performance]', message, context || ''),
+  };
   try {
     const body = await request.json();
     const { action } = body;

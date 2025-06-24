@@ -1,5 +1,3 @@
-import { createSafeLogger } from "./structured-logger";
-
 /**
  * Database Index Optimizer
  *
@@ -35,7 +33,12 @@ interface IndexOptimizationResult {
 }
 
 export class DatabaseIndexOptimizer {
-  private logger = createSafeLogger("database-index-optimizer");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[database-index-optimizer]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[database-index-optimizer]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[database-index-optimizer]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[database-index-optimizer]', message, context || ''),
+    };
 
   private static instance: DatabaseIndexOptimizer;
 
@@ -237,7 +240,7 @@ export class DatabaseIndexOptimizer {
    * TARGET: 60% query performance improvement
    */
   async createStrategicIndexes(): Promise<IndexOptimizationResult> {
-    logger.info("🗂️ Creating strategic database indexes...");
+    console.info("🗂️ Creating strategic database indexes...");
 
     const startTime = performance.now();
     const result: IndexOptimizationResult = {
@@ -262,25 +265,25 @@ export class DatabaseIndexOptimizer {
         try {
           await this.createIndex(index);
           result.created.push(index.name);
-          logger.info(`✅ Created ${index.priority} priority index: ${index.name}`);
+          console.info(`✅ Created ${index.priority} priority index: ${index.name}`);
 
           // Verify index effectiveness
           await this.analyzeIndexEffectiveness(index);
           result.analyzed.push(index.name);
         } catch (error) {
           result.failed.push(index.name);
-          logger.error(`❌ Failed to create index ${index.name}:`, error);
+          console.error(`❌ Failed to create index ${index.name}:`, error);
         }
       }
     }
 
     result.totalTime = performance.now() - startTime;
 
-    logger.info(`🎯 Index optimization completed:`);
-    logger.info(`   ✅ Created: ${result.created.length} indexes`);
-    logger.info(`   ❌ Failed: ${result.failed.length} indexes`);
-    logger.info(`   📊 Analyzed: ${result.analyzed.length} indexes`);
-    logger.info(`   ⏱️ Time: ${result.totalTime.toFixed(2)}ms`);
+    console.info(`🎯 Index optimization completed:`);
+    console.info(`   ✅ Created: ${result.created.length} indexes`);
+    console.info(`   ❌ Failed: ${result.failed.length} indexes`);
+    console.info(`   📊 Analyzed: ${result.analyzed.length} indexes`);
+    console.info(`   ⏱️ Time: ${result.totalTime.toFixed(2)}ms`);
 
     return result;
   }
@@ -341,7 +344,7 @@ export class DatabaseIndexOptimizer {
    * Drop unnecessary or ineffective indexes
    */
   async dropUnusedIndexes(): Promise<string[]> {
-    logger.info("🗑️ Analyzing and dropping unused indexes...");
+    console.info("🗑️ Analyzing and dropping unused indexes...");
 
     const droppedIndexes: string[] = [];
 
@@ -389,15 +392,15 @@ export class DatabaseIndexOptimizer {
               try {
                 await db.execute(sql.raw(`DROP INDEX IF EXISTS ${index.indexname}`));
                 droppedIndexes.push(index.indexname);
-                logger.info(`🗑️ Dropped ineffective index: ${index.indexname}`);
+                console.info(`🗑️ Dropped ineffective index: ${index.indexname}`);
               } catch (error) {
-                logger.warn(`Failed to drop index ${index.indexname}:`, error);
+                console.warn(`Failed to drop index ${index.indexname}:`, error);
               }
             }
           }
         }
       } catch (error) {
-        logger.warn(`Failed to analyze indexes for table ${tableName}:`, error);
+        console.warn(`Failed to analyze indexes for table ${tableName}:`, error);
       }
     }
 
@@ -471,13 +474,13 @@ export class DatabaseIndexOptimizer {
         );
 
         if (usesIndex) {
-          logger.info(`📈 Index ${index.name} is being used effectively`);
+          console.info(`📈 Index ${index.name} is being used effectively`);
         } else {
-          logger.warn(`⚠️ Index ${index.name} may not be used for query: ${query}`);
+          console.warn(`⚠️ Index ${index.name} may not be used for query: ${query}`);
         }
       }
     } catch (error) {
-      logger.warn(`Failed to analyze effectiveness of index ${index.name}:`, error);
+      console.warn(`Failed to analyze effectiveness of index ${index.name}:`, error);
     }
   }
 
@@ -511,18 +514,18 @@ export class DatabaseIndexOptimizer {
    * Rebuild and optimize existing indexes
    */
   async rebuildIndexes(): Promise<void> {
-    logger.info("🔄 Rebuilding and optimizing existing indexes...");
+    console.info("🔄 Rebuilding and optimizing existing indexes...");
 
     try {
       // PostgreSQL: Update table statistics
       await db.execute(sql.raw("ANALYZE"));
-      logger.info("✅ Table statistics updated");
+      console.info("✅ Table statistics updated");
 
       // PostgreSQL: VACUUM to optimize the database
       await db.execute(sql.raw("VACUUM ANALYZE"));
-      logger.info("✅ Database optimization completed");
+      console.info("✅ Database optimization completed");
     } catch (error) {
-      logger.error("❌ Failed to rebuild indexes:", error);
+      console.error("❌ Failed to rebuild indexes:", error);
       throw error;
     }
   }
@@ -531,7 +534,7 @@ export class DatabaseIndexOptimizer {
    * Validate all indexes are working correctly
    */
   async validateIndexes(): Promise<{ valid: number; invalid: number; details: any[] }> {
-    logger.info("🔍 Validating index integrity...");
+    console.info("🔍 Validating index integrity...");
 
     const results = { valid: 0, invalid: 0, details: [] };
     const strategicIndexes = this.getStrategicIndexes();
@@ -583,7 +586,7 @@ export class DatabaseIndexOptimizer {
       }
     }
 
-    logger.info(`📊 Index validation results: ${results.valid} valid, ${results.invalid} invalid`);
+    console.info(`📊 Index validation results: ${results.valid} valid, ${results.invalid} invalid`);
     return results;
   }
 

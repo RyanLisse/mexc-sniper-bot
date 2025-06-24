@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { transactionLockService } from "../../../src/services/transaction-lock-service";
 import { db } from "../../../src/db";
 import { transactionLocks, transactionQueue } from "../../../src/db/schema";
@@ -13,8 +12,6 @@ import {
   validateApiBody,
   createValidatedApiResponse,
 } from "../../../src/schemas/api-validation-schemas";
-
-const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -83,7 +80,7 @@ export async function GET(request: NextRequest) {
       )
     );
   } catch (error) {
-    logger.error("Transaction locks API error:", { error: error });
+    console.error("Transaction locks API error:", { error: error });
     return NextResponse.json(
       {
         success: false,
@@ -147,7 +144,7 @@ export async function DELETE(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
-    logger.error("Transaction locks release error:", { error: error });
+    console.error("Transaction locks release error:", { error: error });
     return NextResponse.json(
       {
         success: false,
@@ -192,7 +189,7 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
-    logger.error("Transaction locks API error:", { error: error });
+    console.error("Transaction locks API error:", { error: error });
     return NextResponse.json(
       {
         success: false,

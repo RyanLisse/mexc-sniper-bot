@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * Test Branch Setup Utilities
+* Test Branch Setup Utilities
  *
  * Provides utilities for setting up and managing test database branches
  * for the MEXC Sniper Bot testing framework.
@@ -54,7 +53,12 @@ export interface TestBranchManager {
  * In a real implementation, this would integrate with Neon or similar service
  */
 export class MockTestBranchManager implements TestBranchManager {
-  private logger = createSafeLogger("test-branch-setup");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[test-branch-setup]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[test-branch-setup]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[test-branch-setup]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[test-branch-setup]', message, context || ''),
+    };
 
   private branches: Map<string, BranchInfo> = new Map();
   private currentBranch = "main";
@@ -70,7 +74,7 @@ export class MockTestBranchManager implements TestBranchManager {
     };
 
     this.branches.set(config.name, branchInfo);
-    logger.info(`[TestBranch] Created branch: ${config.name}`);
+    console.info(`[TestBranch] Created branch: ${config.name}`);
 
     return branchInfo;
   }
@@ -82,7 +86,7 @@ export class MockTestBranchManager implements TestBranchManager {
     }
 
     branch.status = "deleted";
-    logger.info(`[TestBranch] Deleted branch: ${branchName}`);
+    console.info(`[TestBranch] Deleted branch: ${branchName}`);
     return true;
   }
 
@@ -102,7 +106,7 @@ export class MockTestBranchManager implements TestBranchManager {
     }
 
     this.currentBranch = branchName;
-    logger.info(`[TestBranch] Switched to branch: ${branchName}`);
+    console.info(`[TestBranch] Switched to branch: ${branchName}`);
   }
 
   async cleanup(): Promise<void> {
@@ -116,7 +120,7 @@ export class MockTestBranchManager implements TestBranchManager {
       await this.deleteBranch(branch.name);
     }
 
-    logger.info(`[TestBranch] Cleaned up ${expiredBranches.length} expired branches`);
+    console.info(`[TestBranch] Cleaned up ${expiredBranches.length} expired branches`);
   }
 
   getCurrentBranch(): string {
@@ -225,11 +229,11 @@ export async function seedTestDatabase(databaseUrl: string): Promise<void> {
     const _db = drizzle(sql);
 
     // Insert seed data here
-    logger.info(`[TestBranch] Seeded test database: ${databaseUrl}`);
+    console.info(`[TestBranch] Seeded test database: ${databaseUrl}`);
 
     await sql.end();
   } catch (error) {
-    logger.error("[TestBranch] Failed to seed test database:", error);
+    console.error("[TestBranch] Failed to seed test database:", error);
     throw error;
   }
 }
@@ -288,7 +292,7 @@ export async function initializeTestEnvironment(): Promise<void> {
   // Clean up any existing test branches
   await manager.cleanup();
 
-  logger.info("[TestBranch] Test environment initialized");
+  console.info("[TestBranch] Test environment initialized");
 }
 
 /**
@@ -305,7 +309,7 @@ export async function resetTestEnvironment(): Promise<void> {
     }
   }
 
-  logger.info("[TestBranch] Test environment reset");
+  console.info("[TestBranch] Test environment reset");
 }
 
 // Additional exports for scripts and tests
@@ -320,10 +324,10 @@ export async function migrateTestBranch(
     }
 
     const _db = createTestDatabase(branch);
-    logger.info(`[TestBranch] Running migrations for branch: ${contextOrBranchName}`);
+    console.info(`[TestBranch] Running migrations for branch: ${contextOrBranchName}`);
     // Migration logic would go here
   } else {
-    logger.info(`[TestBranch] Running migrations for branch: ${contextOrBranchName.branchName}`);
+    console.info(`[TestBranch] Running migrations for branch: ${contextOrBranchName.branchName}`);
     // Migration logic would go here - can use contextOrBranchName.connectionString
   }
 }
@@ -341,19 +345,19 @@ export async function checkTestBranchHealth(
     try {
       const _db = createTestDatabase(branch);
       // Health check logic would go here
-      logger.info(`[TestBranch] Health check passed for branch: ${contextOrBranchName}`);
+      console.info(`[TestBranch] Health check passed for branch: ${contextOrBranchName}`);
       return true;
     } catch (error) {
-      logger.error(`[TestBranch] Health check failed for branch: ${contextOrBranchName}`, error);
+      console.error(`[TestBranch] Health check failed for branch: ${contextOrBranchName}`, error);
       return false;
     }
   } else {
     try {
       // Health check logic using context
-      logger.info(`[TestBranch] Health check passed for branch: ${contextOrBranchName.branchName}`);
+      console.info(`[TestBranch] Health check passed for branch: ${contextOrBranchName.branchName}`);
       return true;
     } catch (error) {
-      logger.error(
+      console.error(
         `[TestBranch] Health check failed for branch: ${contextOrBranchName.branchName}`,
         error
       );
@@ -372,7 +376,7 @@ export async function cleanupAllTestBranches(): Promise<void> {
     }
   }
 
-  logger.info(`[TestBranch] Cleaned up all test branches`);
+  console.info(`[TestBranch] Cleaned up all test branches`);
 }
 
 // Global test branch context for tracking current test branch

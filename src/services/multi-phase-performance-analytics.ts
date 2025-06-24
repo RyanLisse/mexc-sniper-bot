@@ -1,4 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
 import type { MultiPhaseExecutor } from "./multi-phase-executor";
 
 export interface PerformanceSummary {
@@ -47,7 +46,12 @@ export interface PersistenceOperations {
  * Performance analytics and maintenance for multi-phase trading
  */
 export class MultiPhasePerformanceAnalytics {
-  private logger = createSafeLogger("multi-phase-performance-analytics");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[multi-phase-performance-analytics]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[multi-phase-performance-analytics]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-performance-analytics]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[multi-phase-performance-analytics]', message, context || ''),
+    };
 
   constructor(
     private entryPrice: number,
@@ -170,7 +174,7 @@ export class MultiPhasePerformanceAnalytics {
       operations.push("Verified position state integrity");
       operations.push("Optimized executor state");
 
-      this.logger.info(
+      console.info(
         `Maintenance completed: ${operations.length} operations, ${memoryFreed.toFixed(1)}KB freed`
       );
 
@@ -186,7 +190,7 @@ export class MultiPhasePerformanceAnalytics {
       };
     } catch (error) {
       errors.push(`Maintenance error: ${error}`);
-      this.logger.error("Maintenance cleanup failed:", error);
+      console.error("Maintenance cleanup failed:", error);
 
       return {
         success: false,
@@ -206,7 +210,7 @@ export class MultiPhasePerformanceAnalytics {
    */
   async persistTradeData(data: any): Promise<void> {
     try {
-      this.logger.info("Persisting trade data:", JSON.stringify(data).slice(0, 100) + "...");
+      console.info("Persisting trade data:", JSON.stringify(data).slice(0, 100) + "...");
 
       // Simulate async database operation
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -222,7 +226,7 @@ export class MultiPhasePerformanceAnalytics {
         }
       }
     } catch (error) {
-      this.logger.error("Failed to persist trade data:", error);
+      console.error("Failed to persist trade data:", error);
       throw error;
     }
   }

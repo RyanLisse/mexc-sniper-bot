@@ -1,5 +1,3 @@
-import { createSafeLogger } from "../../lib/structured-logger";
-
 /**
  * Agent Coordination System
  *
@@ -44,8 +42,6 @@ export type {
 export { WorkflowEngine } from "./workflow-engine";
 
 // Utility function to create a fully configured coordination system
-const logger = createSafeLogger("index");
-
 export async function createCoordinationSystem(options?: {
   healthCheckInterval?: number;
   performanceCollectionInterval?: number;
@@ -108,6 +104,7 @@ export function registerCommonAgents(
     getErrorRecoveryAgent: () => import("../base-agent").BaseAgent;
   }
 ): void {
+  // Build-safe logger - initialize inside function
   try {
     // Register core trading agents
     agentRegistry.registerAgent("mexc-api", agentManager.getMexcApiAgent(), {
@@ -192,9 +189,9 @@ export function registerCommonAgents(
       capabilities: ["error_detection", "system_recovery", "health_monitoring"],
     });
 
-    logger.info("[Coordination] Registered 9 agents successfully");
+    console.info("[Coordination] Registered 9 agents successfully");
   } catch (error) {
-    logger.error("[Coordination] Failed to register agents:", error);
+    console.error("[Coordination] Failed to register agents:", error);
     throw error;
   }
 }
@@ -229,7 +226,8 @@ export async function shutdownCoordinationSystem(components: {
   performanceCollector: import("./performance-collector").PerformanceCollector;
   orchestrator: import("./enhanced-orchestrator").EnhancedMexcOrchestrator;
 }): Promise<void> {
-  logger.info("[Coordination] Initiating graceful shutdown...");
+  // Build-safe logger - initialize inside function
+  console.info("[Coordination] Initiating graceful shutdown...");
 
   try {
     // Shutdown orchestrator first (stops workflows)
@@ -239,9 +237,9 @@ export async function shutdownCoordinationSystem(components: {
     components.performanceCollector.destroy();
     components.agentRegistry.destroy();
 
-    logger.info("[Coordination] Graceful shutdown completed");
+    console.info("[Coordination] Graceful shutdown completed");
   } catch (error) {
-    logger.error("[Coordination] Shutdown error:", error);
+    console.error("[Coordination] Shutdown error:", error);
     throw error;
   }
 }
@@ -271,6 +269,7 @@ export async function checkCoordinationSystemHealth(components: {
   };
   orchestrator: boolean;
 }> {
+  // Build-safe logger - initialize inside function
   try {
     const registryStats = components.agentRegistry.getStats();
     const runningWorkflows = components.workflowEngine.getRunningWorkflows();
@@ -311,7 +310,7 @@ export async function checkCoordinationSystemHealth(components: {
       orchestrator: orchestratorHealth,
     };
   } catch (error) {
-    logger.error("[Coordination] Health check failed:", error);
+    console.error("[Coordination] Health check failed:", error);
     return {
       overall: "unhealthy",
       agents: { total: 0, healthy: 0, degraded: 0, unhealthy: 0 },

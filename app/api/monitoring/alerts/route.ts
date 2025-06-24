@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { db } from "../../../../src/db";
 import { sql } from "drizzle-orm";
-
-const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +31,7 @@ export async function GET(request: NextRequest) {
       unacknowledged: alerts.filter(a => !a.acknowledged).length
     });
   } catch (error) {
-    logger.error("[Alerts API] Failed to fetch alerts:", { error: error });
+    console.error("[Alerts API] Failed to fetch alerts:", { error: error });
     return NextResponse.json(
       { 
         error: "Failed to fetch alerts",
@@ -63,7 +60,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (error) {
-    logger.error("[Alerts API] Action failed:", { error: error });
+    console.error("[Alerts API] Action failed:", { error: error });
     return NextResponse.json(
       { error: "Alert action failed", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
@@ -84,7 +81,7 @@ export async function PUT(request: NextRequest) {
       message: "Alert updated successfully"
     });
   } catch (error) {
-    logger.error("[Alerts API] Update failed:", { error: error });
+    console.error("[Alerts API] Update failed:", { error: error });
     return NextResponse.json(
       { error: "Failed to update alert" },
       { status: 500 }
@@ -332,7 +329,7 @@ async function acknowledgeAlert(data: any) {
   const { alertId, acknowledgedBy, notes } = data;
   
   // Mock acknowledgment - replace with actual database update
-  logger.info(`Alert ${alertId} acknowledged by ${acknowledgedBy}: ${notes}`);
+  console.info(`Alert ${alertId} acknowledged by ${acknowledgedBy}: ${notes}`);
   
   return NextResponse.json({
     success: true,
@@ -348,7 +345,7 @@ async function createAlert(data: any) {
   // Mock alert creation - replace with actual database insert
   const alertId = `alert-${Date.now()}`;
   
-  logger.info(`Creating alert ${alertId}:`, { severity, category, source, title, message });
+  console.info(`Creating alert ${alertId}:`, { severity, category, source, title, message });
   
   return NextResponse.json({
     success: true,
@@ -361,7 +358,7 @@ async function dismissAlert(data: any) {
   const { alertId, dismissedBy, reason } = data;
   
   // Mock dismissal - replace with actual database update
-  logger.info(`Alert ${alertId} dismissed by ${dismissedBy}: ${reason}`);
+  console.info(`Alert ${alertId} dismissed by ${dismissedBy}: ${reason}`);
   
   return NextResponse.json({
     success: true,
@@ -375,7 +372,7 @@ async function bulkAcknowledgeAlerts(data: any) {
   const { alertIds, acknowledgedBy, notes } = data;
   
   // Mock bulk acknowledgment - replace with actual database update
-  logger.info(`Bulk acknowledging ${alertIds.length} alerts by ${acknowledgedBy}`);
+  console.info(`Bulk acknowledging ${alertIds.length} alerts by ${acknowledgedBy}`);
   
   return NextResponse.json({
     success: true,
@@ -387,7 +384,7 @@ async function bulkAcknowledgeAlerts(data: any) {
 
 async function updateAlert(alertId: string, updates: any) {
   // Mock alert update - replace with actual database update
-  logger.info(`Updating alert ${alertId}:`, updates);
+  console.info(`Updating alert ${alertId}:`, updates);
   
   return {
     id: alertId,

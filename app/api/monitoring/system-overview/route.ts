@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
 import { AgentManager } from "../../../../src/mexc-agents/agent-manager";
 import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "../../../../src/lib/health-checks";
 
-// Create logger at module level like other working routes
-const logger = createSafeLogger('route');
-
 export async function GET(request: NextRequest) {
+  // Build-safe logger - simple console implementation to avoid webpack issues
+  const logger = {
+    info: (message: string, context?: any) => console.info('[system-overview]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[system-overview]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[system-overview]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[system-overview]', message, context || ''),
+  };
+  
   try {
+    // Initialize complex services inside function to avoid webpack issues
     const orchestrator = new MexcOrchestrator({ useEnhancedCoordination: true });
     const agentManager = new AgentManager();
 

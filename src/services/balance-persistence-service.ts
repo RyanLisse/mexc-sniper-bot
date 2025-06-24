@@ -10,8 +10,6 @@ import { and, desc, eq, gte } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db";
 import { balanceSnapshots, portfolioSummary } from "../db/schema";
-import { createSafeLogger } from "../lib/structured-logger";
-
 // Zod schemas for type-safe balance data validation
 export const BalanceItemSchema = z.object({
   asset: z.string().min(1).max(20),
@@ -53,14 +51,13 @@ export class BalancePersistenceService {
     balanceData: BalanceData,
     options: BalancePersistenceOptions = {}
   ): Promise<void> {
-    const logger = createSafeLogger("balance-persistence");
     try {
       // Validate input data
       const validatedData = BalanceDataSchema.parse(balanceData);
 
       const { snapshotType = "periodic", dataSource = "api", priceSource = "mexc" } = options;
 
-      logger.info("Saving balance snapshot", {
+      console.info("Saving balance snapshot", {
         userId,
         assetCount: validatedData.balances.length,
         totalUsdValue: validatedData.totalUsdtValue,
@@ -87,7 +84,7 @@ export class BalancePersistenceService {
       // Insert balance snapshots in batch
       if (balanceRecords.length > 0) {
         await db.insert(balanceSnapshots).values(balanceRecords);
-        logger.info("Balance snapshots saved successfully", {
+        console.info("Balance snapshots saved successfully", {
           userId,
           recordCount: balanceRecords.length,
         });
@@ -96,13 +93,13 @@ export class BalancePersistenceService {
       // Update portfolio summary
       await this.updatePortfolioSummary(userId, validatedData);
 
-      logger.info("Balance persistence completed successfully", {
+      console.info("Balance persistence completed successfully", {
         userId,
         totalUsdValue: validatedData.totalUsdtValue,
         assetCount: validatedData.balances.length,
       });
     } catch (error) {
-      logger.error("Failed to save balance snapshot", {
+      console.error("Failed to save balance snapshot", {
         userId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -114,7 +111,6 @@ export class BalancePersistenceService {
    * Update portfolio summary with latest balance data
    */
   private async updatePortfolioSummary(userId: string, balanceData: BalanceData): Promise<void> {
-    const logger = createSafeLogger("balance-persistence");
     try {
       // Calculate top assets (top 5 by USD value)
       const sortedAssets = balanceData.balances
@@ -165,7 +161,7 @@ export class BalancePersistenceService {
           })
           .where(eq(portfolioSummary.userId, userId));
 
-        logger.info("Portfolio summary updated", {
+        console.info("Portfolio summary updated", {
           userId,
           previousValue: previous.totalUsdValue,
           newValue: balanceData.totalUsdtValue,
@@ -181,14 +177,14 @@ export class BalancePersistenceService {
           createdAt: new Date(),
         });
 
-        logger.info("Portfolio summary created", {
+        console.info("Portfolio summary created", {
           userId,
           totalValue: balanceData.totalUsdtValue,
           assetCount: portfolioData.assetCount,
         });
       }
     } catch (error) {
-      logger.error("Failed to update portfolio summary", {
+      console.error("Failed to update portfolio summary", {
         userId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -218,7 +214,7 @@ export class BalancePersistenceService {
 
       return latestSnapshots;
     } catch (error) {
-      logger.error("Failed to get latest balance snapshot", {
+      console.error("Failed to get latest balance snapshot", {
         userId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -252,7 +248,7 @@ export class BalancePersistenceService {
 
       return history;
     } catch (error) {
-      logger.error("Failed to get asset balance history", {
+      console.error("Failed to get asset balance history", {
         userId,
         asset,
         error: error instanceof Error ? error.message : String(error),
@@ -274,7 +270,7 @@ export class BalancePersistenceService {
 
       return summary.length > 0 ? summary[0] : null;
     } catch (error) {
-      logger.error("Failed to get portfolio summary", {
+      console.error("Failed to get portfolio summary", {
         userId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -299,12 +295,12 @@ export class BalancePersistenceService {
           )
         );
 
-      logger.info("Old balance snapshots cleaned up", {
+      console.info("Old balance snapshots cleaned up", {
         cutoffDate: cutoffDate.toISOString(),
         deletedCount: "unknown", // Drizzle doesn't return affected rows count
       });
     } catch (error) {
-      logger.error("Failed to cleanup old snapshots", {
+      console.error("Failed to cleanup old snapshots", {
         error: error instanceof Error ? error.message : String(error),
       });
     }

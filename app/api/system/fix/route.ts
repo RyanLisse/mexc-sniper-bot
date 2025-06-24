@@ -10,7 +10,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
@@ -32,8 +31,6 @@ interface SystemFixReport {
   recommendations: string[];
 }
 
-const logger = createSafeLogger('route');
-
 export async function POST(request: NextRequest) {
   try {
     const fixesApplied: string[] = [];
@@ -47,7 +44,7 @@ export async function POST(request: NextRequest) {
     const tradingService = multiPhaseTradingService;
 
     // 1. Fix MEXC API Configuration
-    logger.info('[SystemFix] Validating MEXC API credentials...');
+    console.info('[SystemFix] Validating MEXC API credentials...');
     const mexcValidation = await configValidator.validateMexcCredentials();
     validationResults.push(mexcValidation);
     
@@ -71,18 +68,18 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Fix Circuit Breaker (reset from protective state)
-    logger.info('[SystemFix] Resetting circuit breaker...');
+    console.info('[SystemFix] Resetting circuit breaker...');
     try {
       resetGlobalReliabilityManager();
       fixesApplied.push('Circuit breaker reset from protective state');
       recommendations.push('Circuit breaker reset successfully - system protection restored');
     } catch (error) {
-      logger.error('[SystemFix] Failed to reset circuit breaker:', { error });
+      console.error('[SystemFix] Failed to reset circuit breaker:', { error });
       recommendations.push('Manual circuit breaker reset may be required');
     }
 
     // 3. Fix Pattern Detection Engine
-    logger.info('[SystemFix] Validating pattern detection engine...');
+    console.info('[SystemFix] Validating pattern detection engine...');
     const patternValidation = await configValidator.validatePatternDetection();
     validationResults.push(patternValidation);
     
@@ -113,14 +110,14 @@ export async function POST(request: NextRequest) {
           recommendations.push('Pattern detection engine is operational');
         }
       } catch (error) {
-        logger.error('[SystemFix] Pattern detection test failed:', { error });
+        console.error('[SystemFix] Pattern detection test failed:', { error });
         patternStatus = 'failed';
         recommendations.push('Pattern detection engine requires manual inspection');
       }
     }
 
     // 4. Fix Safety and Risk Management
-    logger.info('[SystemFix] Validating safety systems...');
+    console.info('[SystemFix] Validating safety systems...');
     const safetyValidation = await configValidator.validateSafetySystems();
     validationResults.push(safetyValidation);
     
@@ -135,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Fix Trading Strategies Configuration
-    logger.info('[SystemFix] Validating trading strategies...');
+    console.info('[SystemFix] Validating trading strategies...');
     const tradingValidation = await configValidator.validateTradingConfiguration();
     validationResults.push(tradingValidation);
     
@@ -156,14 +153,14 @@ export async function POST(request: NextRequest) {
           recommendations.push('Multi-phase trading strategy system requires configuration');
         }
       } catch (error) {
-        logger.error('[SystemFix] Trading system validation failed:', { error });
+        console.error('[SystemFix] Trading system validation failed:', { error });
         tradingStatus = 'failed';
         recommendations.push('Trading strategy system needs manual configuration');
       }
     }
 
     // 6. Environment Configuration Check
-    logger.info('[SystemFix] Checking environment configuration...');
+    console.info('[SystemFix] Checking environment configuration...');
     const requiredEnvVars = [
       'MEXC_API_KEY', 'MEXC_SECRET_KEY', 'MEXC_BASE_URL',
       'OPENAI_API_KEY', 'DATABASE_URL', 'ENCRYPTION_MASTER_KEY'
@@ -230,7 +227,7 @@ export async function POST(request: NextRequest) {
     }));
 
   } catch (error) {
-    logger.error('[SystemFix] System repair failed:', { error });
+    console.error('[SystemFix] System repair failed:', { error });
     return NextResponse.json(createErrorResponse(
       'System repair failed',
       { 
@@ -260,7 +257,7 @@ export async function GET(request: NextRequest) {
     }));
 
   } catch (error) {
-    logger.error('[SystemFix] Health check failed:', { error });
+    console.error('[SystemFix] Health check failed:', { error });
     return NextResponse.json(createErrorResponse(
       'System health check failed',
       { details: error instanceof Error ? error.message : 'Unknown error' }

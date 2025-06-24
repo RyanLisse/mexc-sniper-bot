@@ -1,6 +1,4 @@
 "use client";
-import { createSafeLogger } from "../lib/structured-logger";
-
 /**
  * Unified System Check Component
  *
@@ -57,8 +55,6 @@ interface SystemStatus {
 interface UnifiedSystemCheckProps {
   className?: string;
 }
-
-const logger = createSafeLogger("unified-system-check");
 
 export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) {
   const { status: centralizedStatus, refreshAll, clearErrors } = useStatus();
@@ -247,7 +243,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
         lastFullCheck: new Date().toISOString(),
       });
     } catch (error) {
-      logger.error("System check failed:", error);
+      console.error("System check failed:", error);
       setSystemState((prev) => ({
         ...prev,
         isRefreshing: false,
@@ -350,7 +346,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
             }
           }
         } catch (serviceError) {
-          logger.warn(`Failed to fetch IP from ${service}:`, serviceError);
+          console.warn(`Failed to fetch IP from ${service}:`, serviceError);
         }
       }
 
@@ -358,7 +354,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
         throw new Error("All IP services failed");
       }
     } catch (error) {
-      logger.error("Failed to fetch public IP:", error);
+      console.error("Failed to fetch public IP:", error);
       setPublicIP("Unable to fetch IP");
     } finally {
       setIsLoadingIP(false);

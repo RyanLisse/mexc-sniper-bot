@@ -10,7 +10,7 @@ import { EventEmitter } from "events";
 import { PatternDetectionCore } from "../core/pattern-detection";
 import { db } from "../db";
 import { snipeTargets } from "../db/schemas/trading";
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
 import { MexcConfigValidator } from "./mexc-config-validator";
 import { MexcTradingService, type TradeExecutionResult } from "./mexc-trading-service";
@@ -94,7 +94,13 @@ export interface AutoSnipingMetrics {
  * - Configuration validation and health monitoring
  */
 export class AutoSnipingOrchestrator extends EventEmitter {
-  private logger = createSafeLogger("auto-sniping-orchestrator");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[auto-sniping-orchestrator]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[auto-sniping-orchestrator]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[auto-sniping-orchestrator]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[auto-sniping-orchestrator]', message, context || ''),
+  };
 
   private static instance: AutoSnipingOrchestrator;
 

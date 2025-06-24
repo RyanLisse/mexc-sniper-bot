@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { requireAuth } from "../../../../src/lib/kinde-auth";
 import { apiResponse } from "../../../../src/lib/api-response";
 import { AdvancedRiskEngine } from "../../../../src/services/advanced-risk-engine";
@@ -17,8 +16,13 @@ const riskEngine = new AdvancedRiskEngine();
 const safetyMonitor = new SafetyMonitorAgent();
 
 export async function GET(request: NextRequest) {
-  // Build-safe logger initialization inside function
-  const logger = createSafeLogger('risk-assessment-route');
+  // Build-safe logger - simple console implementation
+  const logger = {
+    info: (message: string, context?: any) => console.info('[risk-assessment]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[risk-assessment]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[risk-assessment]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[risk-assessment]', message, context || ''),
+  };
   
   try {
     const { searchParams } = new URL(request.url);
@@ -88,8 +92,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  // Build-safe logger initialization inside function  
-  const logger = createSafeLogger('risk-assessment-route');
+  // Build-safe logger - simple console implementation
+  const logger = {
+    info: (message: string, context?: any) => console.info('[risk-assessment]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[risk-assessment]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[risk-assessment]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[risk-assessment]', message, context || ''),
+  };
   
   try {
     // Verify authentication

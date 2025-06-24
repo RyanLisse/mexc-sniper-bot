@@ -9,7 +9,6 @@
  */
 
 import { type PatternAnalysisRequest, PatternDetectionCore } from "../core/pattern-detection";
-import { createSafeLogger } from "../lib/structured-logger";
 import { CalendarAgent } from "../mexc-agents/calendar-agent";
 import { CalendarWorkflow } from "../mexc-agents/calendar-workflow";
 import type { CalendarEntry } from "../services/mexc-unified-exports";
@@ -40,7 +39,12 @@ export interface CalendarMonitoringStats {
 
 export class CalendarPatternBridgeService {
   private static instance: CalendarPatternBridgeService;
-  private logger = createSafeLogger("calendar-pattern-bridge");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[calendar-pattern-bridge]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[calendar-pattern-bridge]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[calendar-pattern-bridge]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[calendar-pattern-bridge]', message, context || ''),
+    };
   private isMonitoring = false;
   private monitoringInterval: NodeJS.Timer | null = null;
   private calendarAgent: CalendarAgent;
@@ -65,7 +69,7 @@ export class CalendarPatternBridgeService {
   private constructor() {
     this.calendarAgent = new CalendarAgent();
     this.calendarWorkflow = new CalendarWorkflow();
-    this.logger.info("Calendar-Pattern Bridge Service initialized");
+    console.info("Calendar-Pattern Bridge Service initialized");
   }
 
   static getInstance(): CalendarPatternBridgeService {
@@ -80,25 +84,25 @@ export class CalendarPatternBridgeService {
    */
   startMonitoring(intervalMinutes = 15): void {
     if (this.isMonitoring) {
-      this.logger.warn("Calendar-Pattern Bridge already monitoring");
+      console.warn("Calendar-Pattern Bridge already monitoring");
       return;
     }
 
     // Immediate scan on startup
     this.performCalendarScan().catch((error) => {
-      this.logger.error("Initial calendar scan failed", {}, error);
+      console.error("Initial calendar scan failed", {}, error);
     });
 
     // Set up periodic monitoring
     const intervalMs = intervalMinutes * 60 * 1000;
     this.monitoringInterval = setInterval(() => {
       this.performCalendarScan().catch((error) => {
-        this.logger.error("Scheduled calendar scan failed", {}, error);
+        console.error("Scheduled calendar scan failed", {}, error);
       });
     }, intervalMs);
 
     this.isMonitoring = true;
-    this.logger.info("Calendar-Pattern Bridge monitoring started", {
+    console.info("Calendar-Pattern Bridge monitoring started", {
       intervalMinutes,
       nextScan: new Date(Date.now() + intervalMs).toISOString(),
     });
@@ -109,7 +113,7 @@ export class CalendarPatternBridgeService {
    */
   stopMonitoring(): void {
     if (!this.isMonitoring) {
-      this.logger.warn("Calendar-Pattern Bridge not currently monitoring");
+      console.warn("Calendar-Pattern Bridge not currently monitoring");
       return;
     }
 
@@ -119,7 +123,7 @@ export class CalendarPatternBridgeService {
     }
 
     this.isMonitoring = false;
-    this.logger.info("Calendar-Pattern Bridge monitoring stopped");
+    console.info("Calendar-Pattern Bridge monitoring stopped");
   }
 
   /**
@@ -129,7 +133,7 @@ export class CalendarPatternBridgeService {
     const startTime = Date.now();
 
     try {
-      this.logger.info("Starting calendar monitoring scan");
+      console.info("Starting calendar monitoring scan");
 
       // Fetch latest calendar data using CalendarAgent
       const calendarData = await this.calendarAgent.fetchLatestCalendarData();
@@ -137,7 +141,7 @@ export class CalendarPatternBridgeService {
       this.stats.lastCalendarScan = new Date();
 
       if (calendarData.length === 0) {
-        this.logger.warn("No calendar data available for monitoring");
+        console.warn("No calendar data available for monitoring");
         return;
       }
 
@@ -145,7 +149,7 @@ export class CalendarPatternBridgeService {
       const changedEntries = this.detectCalendarChanges(calendarData);
 
       if (changedEntries.length === 0) {
-        this.logger.info("No calendar changes detected", {
+        console.info("No calendar changes detected", {
           totalEntries: calendarData.length,
           duration: Date.now() - startTime,
         });
@@ -172,7 +176,7 @@ export class CalendarPatternBridgeService {
         // Trigger pattern detection for promising candidates
         await this.triggerPatternDetection(patternCandidates);
 
-        this.logger.info("Calendar-Pattern bridge processing completed", {
+        console.info("Calendar-Pattern bridge processing completed", {
           newListings: changedEntries.length,
           readyTargets: workflowResult.readyTargets.length,
           patternCandidates: patternCandidates.length,
@@ -187,7 +191,7 @@ export class CalendarPatternBridgeService {
       // Update known state for future change detection
       this.lastKnownCalendarState = calendarData;
     } catch (error) {
-      this.logger.error(
+      console.error(
         "Calendar monitoring scan failed",
         {
           duration: Date.now() - startTime,
@@ -260,7 +264,7 @@ export class CalendarPatternBridgeService {
    */
   private async triggerPatternDetection(candidates: CalendarEntry[]): Promise<void> {
     try {
-      this.logger.info("Triggering pattern detection for calendar candidates", {
+      console.info("Triggering pattern detection for calendar candidates", {
         candidatesCount: candidates.length,
         symbols: candidates.map((c) => c.symbol),
       });
@@ -286,7 +290,7 @@ export class CalendarPatternBridgeService {
         patternResults.summary.readyStateFound > 0 ||
         patternResults.summary.highConfidenceMatches > 0
       ) {
-        this.logger.info("Pattern detection found opportunities from calendar data", {
+        console.info("Pattern detection found opportunities from calendar data", {
           readyStateFound: patternResults.summary.readyStateFound,
           highConfidenceMatches: patternResults.summary.highConfidenceMatches,
           totalAnalyzed: patternResults.summary.totalAnalyzed,
@@ -298,7 +302,7 @@ export class CalendarPatternBridgeService {
       }
     } catch (error) {
       this.stats.totalPatternAnalysisFailed++;
-      this.logger.error(
+      console.error(
         "Pattern detection trigger failed",
         {
           candidatesCount: candidates.length,
@@ -384,7 +388,7 @@ export class CalendarPatternBridgeService {
       averageProcessingTime: 0,
     };
     this.processingTimes = [];
-    this.logger.info("Calendar-Pattern Bridge statistics reset");
+    console.info("Calendar-Pattern Bridge statistics reset");
   }
 
   /**

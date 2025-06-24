@@ -6,7 +6,6 @@ import {
   HTTP_STATUS,
 } from "../../../../lib/api-response";
 import { authenticatedRoute } from "../../../../lib/auth-decorators";
-import { createSafeLogger } from "../../../../lib/structured-logger";
 import type {
   SafetyConfiguration,
   SafetyThresholds,
@@ -15,7 +14,12 @@ import { RealTimeSafetyMonitoringService } from "../../../../services/real-time-
 
 // Lazy logger initialization to avoid build-time issues
 function getLogger() {
-  return createSafeLogger("safety-monitoring-api");
+  return {
+      info: (message: string, context?: any) => console.info('[safety-monitoring-api]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[safety-monitoring-api]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[safety-monitoring-api]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[safety-monitoring-api]', message, context || ''),
+    };
 }
 
 interface AuthenticatedUser {
@@ -33,7 +37,7 @@ export const GET = authenticatedRoute(async (request: NextRequest, user: Authent
   const action = url.searchParams.get("action") || "status";
 
   const logger = getLogger();
-  logger.info("Safety monitoring API GET request", {
+  console.info("Safety monitoring API GET request", {
     operation: "api_get_request",
     userId: user.id,
     action,
@@ -63,7 +67,7 @@ export const GET = authenticatedRoute(async (request: NextRequest, user: Authent
         // Get comprehensive safety monitoring report
         const report = await safetyService.getSafetyReport();
 
-        logger.info("Safety monitoring report generated", {
+        console.info("Safety monitoring report generated", {
           operation: "generate_report",
           userId: user.id,
           overallStatus: report.status,
@@ -197,7 +201,7 @@ export const GET = authenticatedRoute(async (request: NextRequest, user: Authent
         );
     }
   } catch (error) {
-    logger.error(
+    console.error(
       "Safety monitoring API GET request failed",
       {
         operation: "api_get_request",
@@ -296,7 +300,7 @@ const actionHandlers: Record<string, ActionHandler> = {
 
     await safetyService.startMonitoring();
 
-    logger.info("Safety monitoring started via API", {
+    console.info("Safety monitoring started via API", {
       operation: "start_monitoring",
       userId: user.id,
       timestamp: new Date().toISOString(),
@@ -502,7 +506,7 @@ const actionHandlers: Record<string, ActionHandler> = {
     const logger = getLogger();
     const clearedCount = safetyService.clearAcknowledgedAlerts();
 
-    logger.info("Acknowledged alerts cleared via API", {
+    console.info("Acknowledged alerts cleared via API", {
       operation: "clear_acknowledged_alerts",
       userId: user.id,
       clearedCount,
@@ -560,7 +564,7 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: Authen
     }
 
     const logger = getLogger();
-    logger.info("Safety monitoring API POST request", {
+    console.info("Safety monitoring API POST request", {
       operation: "api_post_request",
       userId: user.id,
       action,

@@ -1,4 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
 import { MultiPhaseExecutionAnalyzer } from "./multi-phase-execution-analyzer";
 import type { PhaseExecutionHistory } from "./multi-phase-executor-types";
 import type { TradingStrategyConfig } from "./multi-phase-trading-service";
@@ -7,7 +6,12 @@ import type { TradingStrategyConfig } from "./multi-phase-trading-service";
  * Provides visual representations and status displays for multi-phase execution
  */
 export class MultiPhaseVisualizer {
-  private logger = createSafeLogger("multi-phase-visualizer");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[multi-phase-visualizer]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[multi-phase-visualizer]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-visualizer]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[multi-phase-visualizer]', message, context || ''),
+    };
   private analyzer = new MultiPhaseExecutionAnalyzer();
 
   /**

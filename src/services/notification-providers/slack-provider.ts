@@ -1,5 +1,4 @@
 import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface SlackConfig {
@@ -38,12 +37,15 @@ interface SlackBlock {
 }
 
 export class SlackProvider implements NotificationProvider {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
   private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createSafeLogger("slack-provider");
+        this._logger = {
+      info: (message: string, context?: any) => console.info('[slack-provider]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[slack-provider]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[slack-provider]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[slack-provider]', message, context || ''),
+    };
       } catch {
         // Fallback during build time
         this._logger = {
@@ -91,7 +93,7 @@ export class SlackProvider implements NotificationProvider {
       // For production, you would make an actual HTTP request to Slack
       // For now, we'll simulate the Slack API call
 
-      logger.info("Sending Slack notification:", payload);
+      console.info("Sending Slack notification:", payload);
 
       // In production, you would:
       // const response = await fetch(config.webhookUrl, {
@@ -106,7 +108,7 @@ export class SlackProvider implements NotificationProvider {
         response: { simulated: true },
       };
     } catch (error) {
-      logger.error("Slack notification failed:", error);
+      console.error("Slack notification failed:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown Slack error",

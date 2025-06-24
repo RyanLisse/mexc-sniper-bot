@@ -1,10 +1,14 @@
-import { createSafeLogger } from "./structured-logger";
 /**
  * Utility classes for error classification and handling
  */
 
 export class ValidationError extends Error {
-  private logger = createSafeLogger("error-utils");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[error-utils]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[error-utils]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[error-utils]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[error-utils]', message, context || ''),
+    };
 
   constructor(
     message: string,
@@ -173,7 +177,7 @@ export class RetryHandler {
 
         if (attempt < maxRetries) {
           const delay = ErrorClassifier.getRetryDelay(attempt, baseDelay);
-          logger.info(
+          console.info(
             `Retry attempt ${attempt}/${maxRetries} failed, retrying in ${Math.round(delay)}ms:`,
             error instanceof Error ? error.message : error
           );

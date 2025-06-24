@@ -6,8 +6,6 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
-
 // ============================================================================
 // Types and Interfaces
 // ============================================================================
@@ -44,7 +42,12 @@ export interface ErrorRecoveryResult<T> {
 // ============================================================================
 
 export class ErrorClassifier {
-  private logger = createSafeLogger("mexc-error-recovery-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-error-recovery-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-error-recovery-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-error-recovery-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-error-recovery-service]', message, context || ''),
+    };
 
   private readonly RETRYABLE_ERRORS = [
     "timeout",
@@ -139,7 +142,7 @@ export class MexcErrorRecoveryService {
       ...config,
     };
 
-    logger.info("[MexcErrorRecoveryService] Initialized with config:", {
+    console.info("[MexcErrorRecoveryService] Initialized with config:", {
       maxRetries: this.config.maxRetries,
       retryDelay: this.config.retryDelay,
       exponentialBackoff: this.config.exponentialBackoff,
@@ -158,18 +161,18 @@ export class MexcErrorRecoveryService {
     const startTime = Date.now();
     const attempts: RecoveryAttempt[] = [];
 
-    logger.info(`[MexcErrorRecoveryService] Starting ${operationName} with recovery...`);
+    console.info(`[MexcErrorRecoveryService] Starting ${operationName} with recovery...`);
 
     for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
       try {
-        logger.info(
+        console.info(
           `[MexcErrorRecoveryService] ${operationName} attempt ${attempt}/${this.config.maxRetries}`
         );
 
         const result = await operation();
 
         const totalTime = Date.now() - startTime;
-        logger.info(
+        console.info(
           `[MexcErrorRecoveryService] ✅ ${operationName} succeeded on attempt ${attempt} (${totalTime}ms)`
         );
 
@@ -184,7 +187,7 @@ export class MexcErrorRecoveryService {
         const safeError = toSafeError(error);
         const errorMessage = safeError.message;
 
-        logger.error(
+        console.error(
           `[MexcErrorRecoveryService] ❌ ${operationName} attempt ${attempt} failed:`,
           errorMessage
         );
@@ -212,7 +215,7 @@ export class MexcErrorRecoveryService {
 
         // If not retryable or max retries reached
         if (!isRetryable || attempt >= this.config.maxRetries) {
-          logger.info(
+          console.info(
             `[MexcErrorRecoveryService] ${operationName} not retryable or max attempts reached`
           );
 
@@ -223,11 +226,11 @@ export class MexcErrorRecoveryService {
             this.classifier.shouldUseFallback(errorMessage)
           ) {
             try {
-              logger.info(`[MexcErrorRecoveryService] Attempting fallback for ${operationName}...`);
+              console.info(`[MexcErrorRecoveryService] Attempting fallback for ${operationName}...`);
               const fallbackResult = await fallback();
 
               const totalTime = Date.now() - startTime;
-              logger.info(
+              console.info(
                 `[MexcErrorRecoveryService] ✅ ${operationName} fallback succeeded (${totalTime}ms)`
               );
 
@@ -240,7 +243,7 @@ export class MexcErrorRecoveryService {
               };
             } catch (fallbackError) {
               const safeFallbackError = toSafeError(fallbackError);
-              logger.error(
+              console.error(
                 `[MexcErrorRecoveryService] ❌ ${operationName} fallback failed:`,
                 safeFallbackError.message
               );
@@ -260,7 +263,7 @@ export class MexcErrorRecoveryService {
 
         // Wait before retry
         if (retryDelay > 0) {
-          logger.info(`[MexcErrorRecoveryService] Retrying ${operationName} in ${retryDelay}ms...`);
+          console.info(`[MexcErrorRecoveryService] Retrying ${operationName} in ${retryDelay}ms...`);
           await this.delay(retryDelay);
         }
       }
@@ -292,7 +295,7 @@ export class MexcErrorRecoveryService {
     }
 
     // Log recovery details for debugging
-    logger.error(`[MexcErrorRecoveryService] ${operationName} failed after recovery:`, {
+    console.error(`[MexcErrorRecoveryService] ${operationName} failed after recovery:`, {
       error: result.error,
       attempts: result.attempts.length,
       finalStrategy: result.finalStrategy,
@@ -333,7 +336,7 @@ export class MexcErrorRecoveryService {
    */
   updateConfig(newConfig: Partial<ErrorRecoveryConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    logger.info("[MexcErrorRecoveryService] Configuration updated:", newConfig);
+    console.info("[MexcErrorRecoveryService] Configuration updated:", newConfig);
   }
 }
 

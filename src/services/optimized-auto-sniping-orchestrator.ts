@@ -21,7 +21,6 @@
 import { z } from "zod";
 import type { PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger, createTimer } from "../lib/structured-logger";
 import {
   type AutoSnipingConfig,
   type AutoSnipingExecutionReport,
@@ -103,7 +102,12 @@ export interface RiskAssessment {
 
 export class OptimizedAutoSnipingOrchestrator {
   private static instance: OptimizedAutoSnipingOrchestrator;
-  private logger = createSafeLogger("optimized-auto-sniping-orchestrator");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[optimized-auto-sniping-orchestrator]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[optimized-auto-sniping-orchestrator]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[optimized-auto-sniping-orchestrator]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[optimized-auto-sniping-orchestrator]', message, context || ''),
+    };
 
   // Module instances
   private core: OptimizedAutoSnipingCore;
@@ -145,7 +149,7 @@ export class OptimizedAutoSnipingOrchestrator {
     // Initialize metrics
     this.metrics = this.getDefaultMetrics();
 
-    this.logger.info("Optimized Auto-Sniping Orchestrator initialized", {
+    console.info("Optimized Auto-Sniping Orchestrator initialized", {
       config: this.config,
       parallelProcessing: this.config.parallelProcessing,
       maxConcurrentTrades: this.config.maxConcurrentTrades,
@@ -170,7 +174,7 @@ export class OptimizedAutoSnipingOrchestrator {
     const timer = createTimer("start_optimized_execution", "orchestrator");
 
     try {
-      this.logger.info("Starting optimized auto-sniping orchestration", {
+      console.info("Starting optimized auto-sniping orchestration", {
         config: this.config,
         performanceOptimization: this.config.performanceOptimization,
       });
@@ -190,7 +194,7 @@ export class OptimizedAutoSnipingOrchestrator {
 
       const duration = timer.end();
 
-      this.logger.info("Optimized auto-sniping orchestration started", {
+      console.info("Optimized auto-sniping orchestration started", {
         startupTime: duration,
         parallelProcessing: this.config.parallelProcessing,
       });
@@ -198,7 +202,7 @@ export class OptimizedAutoSnipingOrchestrator {
       const safeError = toSafeError(error);
       timer.end();
 
-      this.logger.error("Failed to start optimized execution", {
+      console.error("Failed to start optimized execution", {
         error: safeError.message,
       });
 
@@ -210,7 +214,7 @@ export class OptimizedAutoSnipingOrchestrator {
    * Stop orchestrated execution with cleanup
    */
   stopOptimizedExecution(): void {
-    this.logger.info("Stopping optimized auto-sniping orchestration", {
+    console.info("Stopping optimized auto-sniping orchestration", {
       activeExecutions: this.activeExecutions.size,
       queuedPatterns: this.executionQueue.length,
       metrics: this.metrics,
@@ -231,7 +235,7 @@ export class OptimizedAutoSnipingOrchestrator {
     this.executionQueue = [];
     this.activeExecutions.clear();
 
-    this.logger.info("Optimized auto-sniping orchestration stopped");
+    console.info("Optimized auto-sniping orchestration stopped");
   }
 
   /**
@@ -274,7 +278,7 @@ export class OptimizedAutoSnipingOrchestrator {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to generate comprehensive report", {
+      console.error("Failed to generate comprehensive report", {
         error: safeError.message,
       });
       throw error;
@@ -294,7 +298,7 @@ export class OptimizedAutoSnipingOrchestrator {
     const timer = createTimer("execute_optimized_trade", "orchestrator");
 
     try {
-      this.logger.info("Starting orchestrated trade execution", {
+      console.info("Starting orchestrated trade execution", {
         symbol: pattern.symbol,
         confidence: pattern.confidence,
         patternType: pattern.patternType,
@@ -318,7 +322,7 @@ export class OptimizedAutoSnipingOrchestrator {
         riskAssessment.recommendedAction === "block" ||
         riskAssessment.recommendedAction === "emergency_stop"
       ) {
-        this.logger.warn("Trade blocked by risk management", {
+        console.warn("Trade blocked by risk management", {
           symbol: pattern.symbol,
           riskScore: riskAssessment.riskScore,
           action: riskAssessment.recommendedAction,
@@ -358,7 +362,7 @@ export class OptimizedAutoSnipingOrchestrator {
       if (executionResult.success) {
         this.metrics.successfulExecutions++;
 
-        this.logger.info("Orchestrated trade execution completed", {
+        console.info("Orchestrated trade execution completed", {
           symbol: pattern.symbol,
           executionTime: duration,
           riskScore: riskAssessment.riskScore,
@@ -367,7 +371,7 @@ export class OptimizedAutoSnipingOrchestrator {
       } else {
         this.metrics.failedExecutions++;
 
-        this.logger.error("Orchestrated trade execution failed", {
+        console.error("Orchestrated trade execution failed", {
           symbol: pattern.symbol,
           error: executionResult.error,
           riskScore: riskAssessment.riskScore,
@@ -386,7 +390,7 @@ export class OptimizedAutoSnipingOrchestrator {
 
       this.metrics.failedExecutions++;
 
-      this.logger.error("Orchestrated trade execution error", {
+      console.error("Orchestrated trade execution error", {
         symbol: pattern.symbol,
         error: safeError.message,
         duration,
@@ -433,12 +437,12 @@ export class OptimizedAutoSnipingOrchestrator {
         this.core.updateConfig(newConfig.autoSnipingConfig);
       }
 
-      this.logger.info("Orchestrator configuration updated", {
+      console.info("Orchestrator configuration updated", {
         updatedFields: Object.keys(newConfig),
       });
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to update orchestrator configuration", {
+      console.error("Failed to update orchestrator configuration", {
         error: safeError.message,
       });
       throw error;
@@ -463,17 +467,12 @@ export class OptimizedAutoSnipingOrchestrator {
 
   private startOrchestrationCycle(): void {
     // Main orchestration cycle - simplified for this implementation
-    // Would include pattern monitoring, queue management, etc.
-    this.logger.debug("Orchestration cycle started");
-  }
+    // Would include pattern monitoring, queue management, etc.}
 
   private startPerformanceMonitoring(): void {
     this.performanceInterval = setInterval(() => {
       this.updatePerformanceMetrics();
-    }, 60000); // Update every minute
-
-    this.logger.debug("Performance monitoring started");
-  }
+    }, 60000); // Update every minute}
 
   private updatePerformanceMetrics(): void {
     // Calculate performance score based on various factors
@@ -501,17 +500,7 @@ export class OptimizedAutoSnipingOrchestrator {
       performanceScore -= 15;
     }
 
-    this.metrics.performanceScore = Math.max(0, Math.min(100, performanceScore));
-
-    this.logger.debug("Performance metrics updated", {
-      performanceScore: this.metrics.performanceScore,
-      executionMetrics,
-      patternMetrics: {
-        eligibilityRate: patternMetrics.eligibilityRate,
-        cacheHitRatio: patternMetrics.cacheHitRatio,
-      },
-    });
-  }
+    this.metrics.performanceScore = Math.max(0, Math.min(100, performanceScore));}
 
   private updateOrchestrationMetrics(
     riskAssessment: RiskAssessment,

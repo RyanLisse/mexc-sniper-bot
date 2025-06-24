@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useTakeProfitLevels, useUpdateTakeProfitLevels } from "../hooks/use-user-preferences";
-import { createSafeLogger } from "../lib/structured-logger";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -11,8 +10,6 @@ import { Input } from "./ui/input";
 interface TakeProfitLevelsProps {
   userId: string;
 }
-
-const logger = createSafeLogger("take-profit-levels");
 
 export function TakeProfitLevels({ userId }: TakeProfitLevelsProps) {
   const { levels, defaultLevel, customLevel } = useTakeProfitLevels(userId);
@@ -38,7 +35,7 @@ export function TakeProfitLevels({ userId }: TakeProfitLevelsProps) {
       });
       setEditingLevels(false);
     } catch (error) {
-      logger.error("Failed to save take profit levels:", error);
+      console.error("Failed to save take profit levels:", error);
     }
   };
 

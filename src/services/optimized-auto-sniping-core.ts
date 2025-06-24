@@ -15,8 +15,6 @@
 import { z } from "zod";
 import type { PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
-
 // ============================================================================
 // Zod Schemas for Type Safety
 // ============================================================================
@@ -160,8 +158,6 @@ export interface AutoSnipingExecutionReport {
  */
 export class OptimizedAutoSnipingCore {
   private static instance: OptimizedAutoSnipingCore;
-  private logger: ReturnType<typeof createSafeLogger>;
-
   // Configuration with validation
   private config: AutoSnipingConfig;
   private isActive = false;
@@ -177,7 +173,6 @@ export class OptimizedAutoSnipingCore {
   private monitoringInterval: NodeJS.Timeout | null = null;
 
   private constructor(config?: Partial<AutoSnipingConfig>) {
-    this.logger = createSafeLogger("optimized-auto-sniping-core");
     // Validate and set configuration
     this.config = AutoSnipingConfigSchema.parse({
       ...this.getDefaultConfig(),
@@ -187,7 +182,7 @@ export class OptimizedAutoSnipingCore {
     // Initialize stats
     this.stats = ExecutionStatsSchema.parse(this.getDefaultStats());
 
-    this.logger.info("Optimized Auto-Sniping Core initialized", {
+    console.info("Optimized Auto-Sniping Core initialized", {
       config: this.config,
       maxPositions: this.config.maxPositions,
       enabled: this.config.enabled,
@@ -209,7 +204,7 @@ export class OptimizedAutoSnipingCore {
       throw new Error("Auto-sniping execution is already active");
     }
 
-    this.logger.info("Starting optimized auto-sniping execution", {
+    console.info("Starting optimized auto-sniping execution", {
       config: {
         maxPositions: this.config.maxPositions,
         minConfidence: this.config.minConfidence,
@@ -229,7 +224,7 @@ export class OptimizedAutoSnipingCore {
     this.executionInterval = setInterval(() => {
       this.executeOptimizedCycle().catch((error) => {
         const safeError = toSafeError(error);
-        this.logger.error("Optimized execution cycle failed", {
+        console.error("Optimized execution cycle failed", {
           error: safeError.message,
           activePositions: this.activePositions.size,
         });
@@ -246,7 +241,7 @@ export class OptimizedAutoSnipingCore {
     this.monitoringInterval = setInterval(() => {
       this.monitorPositionsParallel().catch((error) => {
         const safeError = toSafeError(error);
-        this.logger.error("Position monitoring failed", {
+        console.error("Position monitoring failed", {
           error: safeError.message,
           positionCount: this.activePositions.size,
         });
@@ -265,7 +260,7 @@ export class OptimizedAutoSnipingCore {
    * Stop execution with cleanup
    */
   stopExecution(): void {
-    this.logger.info("Stopping optimized auto-sniping execution", {
+    console.info("Stopping optimized auto-sniping execution", {
       activePositions: this.activePositions.size,
       totalTrades: this.stats.totalTrades,
       successRate: this.stats.successRate,
@@ -321,7 +316,7 @@ export class OptimizedAutoSnipingCore {
         ...newConfig,
       });
 
-      this.logger.info("Configuration updated successfully", {
+      console.info("Configuration updated successfully", {
         updatedFields: Object.keys(newConfig),
         newConfig: Object.fromEntries(
           Object.entries(newConfig).map(([key, value]) => [
@@ -339,7 +334,7 @@ export class OptimizedAutoSnipingCore {
       });
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Configuration validation failed", {
+      console.error("Configuration validation failed", {
         error: safeError.message,
         attemptedConfig: newConfig,
       });
@@ -376,7 +371,7 @@ export class OptimizedAutoSnipingCore {
   pauseExecution(): void {
     if (!this.isActive) return;
 
-    this.logger.info("Pausing auto-sniping execution");
+    console.info("Pausing auto-sniping execution");
 
     if (this.executionInterval) {
       clearInterval(this.executionInterval);
@@ -397,13 +392,13 @@ export class OptimizedAutoSnipingCore {
   async resumeExecution(): Promise<void> {
     if (!this.isActive || this.executionInterval) return;
 
-    this.logger.info("Resuming auto-sniping execution");
+    console.info("Resuming auto-sniping execution");
 
     // Restart execution cycle
     this.executionInterval = setInterval(() => {
       this.executeOptimizedCycle().catch((error) => {
         const safeError = toSafeError(error);
-        this.logger.error("Optimized execution cycle failed", {
+        console.error("Optimized execution cycle failed", {
           error: safeError.message,
           activePositions: this.activePositions.size,
         });
@@ -430,12 +425,12 @@ export class OptimizedAutoSnipingCore {
   async closePosition(positionId: string, reason = "manual"): Promise<boolean> {
     const position = this.activePositions.get(positionId);
     if (!position) {
-      this.logger.warn("Position not found for closing", { positionId });
+      console.warn("Position not found for closing", { positionId });
       return false;
     }
 
     try {
-      this.logger.info("Closing position", { positionId, reason, symbol: position.symbol });
+      console.info("Closing position", { positionId, reason, symbol: position.symbol });
 
       // Mark position as closed
       position.status = "CLOSED";
@@ -458,7 +453,7 @@ export class OptimizedAutoSnipingCore {
       return true;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to close position", { positionId, error: safeError.message });
+      console.error("Failed to close position", { positionId, error: safeError.message });
       return false;
     }
   }
@@ -470,7 +465,7 @@ export class OptimizedAutoSnipingCore {
     const positionIds = Array.from(this.activePositions.keys());
     let closedCount = 0;
 
-    this.logger.warn("Emergency close all positions initiated", {
+    console.warn("Emergency close all positions initiated", {
       positionCount: positionIds.length,
     });
 
@@ -497,7 +492,7 @@ export class OptimizedAutoSnipingCore {
     if (!alert) return false;
 
     alert.acknowledged = true;
-    this.logger.info("Alert acknowledged", { alertId, alertType: alert.type });
+    console.info("Alert acknowledged", { alertId, alertType: alert.type });
 
     return true;
   }
@@ -511,7 +506,7 @@ export class OptimizedAutoSnipingCore {
 
     this.alerts = this.alerts.filter((a) => !a.acknowledged);
 
-    this.logger.info("Acknowledged alerts cleared", { clearedCount });
+    console.info("Acknowledged alerts cleared", { clearedCount });
 
     return clearedCount;
   }
@@ -521,7 +516,7 @@ export class OptimizedAutoSnipingCore {
   private async validateConfiguration(): Promise<void> {
     try {
       AutoSnipingConfigSchema.parse(this.config);
-      this.logger.info("Configuration validation passed");
+      console.info("Configuration validation passed");
     } catch (error) {
       const safeError = toSafeError(error);
       throw new Error(`Configuration validation failed: ${safeError.message}`);
@@ -539,7 +534,7 @@ export class OptimizedAutoSnipingCore {
       throw new Error("Risk limits exceeded - cannot start execution");
     }
 
-    this.logger.info("Health checks passed", { health });
+    console.info("Health checks passed", { health });
   }
 
   private async executeOptimizedCycle(): Promise<void> {
@@ -547,7 +542,7 @@ export class OptimizedAutoSnipingCore {
 
     // Check limits before execution
     if (this.stats.dailyTradeCount >= this.config.maxDailyTrades) {
-      this.logger.warn("Daily trade limit reached", {
+      console.warn("Daily trade limit reached", {
         dailyTrades: this.stats.dailyTradeCount,
         maxDailyTrades: this.config.maxDailyTrades,
       });
@@ -555,7 +550,7 @@ export class OptimizedAutoSnipingCore {
     }
 
     if (this.activePositions.size >= this.config.maxPositions) {
-      this.logger.warn("Maximum positions reached", {
+      console.warn("Maximum positions reached", {
         activePositions: this.activePositions.size,
         maxPositions: this.config.maxPositions,
       });
@@ -564,10 +559,6 @@ export class OptimizedAutoSnipingCore {
 
     // This would integrate with pattern monitoring service
     // Implementation continues in execution modules
-    this.logger.debug("Optimized execution cycle completed", {
-      activePositions: this.activePositions.size,
-      dailyTrades: this.stats.dailyTradeCount,
-    });
   }
 
   private async monitorPositionsParallel(): Promise<void> {
@@ -584,7 +575,7 @@ export class OptimizedAutoSnipingCore {
     results.forEach((result, index) => {
       if (result.status === "rejected") {
         const position = positions[index];
-        this.logger.error("Position monitoring failed", {
+        console.error("Position monitoring failed", {
           positionId: position.id,
           symbol: position.symbol,
           error: result.reason,
@@ -602,12 +593,6 @@ export class OptimizedAutoSnipingCore {
     // - PnL updates
     // - Stop loss/take profit checks
     // - Risk management
-
-    this.logger.debug("Position monitored", {
-      positionId: validatedPosition.id,
-      symbol: validatedPosition.symbol,
-      unrealizedPnl: validatedPosition.unrealizedPnl,
-    });
   }
 
   private addValidatedAlert(
@@ -629,7 +614,7 @@ export class OptimizedAutoSnipingCore {
       }
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Alert validation failed", {
+      console.error("Alert validation failed", {
         error: safeError.message,
         alertData,
       });
@@ -667,7 +652,7 @@ export class OptimizedAutoSnipingCore {
       const serverTime = await client.getServerTime();
       return typeof serverTime === "number" && serverTime > 0;
     } catch (error) {
-      this.logger.error("API connectivity check failed", { error: toSafeError(error).message });
+      console.error("API connectivity check failed", { error: toSafeError(error).message });
       return false;
     }
   }
@@ -681,7 +666,7 @@ export class OptimizedAutoSnipingCore {
       const patterns = await engine.detectReadyStatePattern(testSymbol);
       return Array.isArray(patterns);
     } catch (error) {
-      this.logger.error("Pattern engine validation failed", { error: toSafeError(error).message });
+      console.error("Pattern engine validation failed", { error: toSafeError(error).message });
       return false;
     }
   }

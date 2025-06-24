@@ -9,7 +9,6 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { databaseOptimizationManager } from "../../../../src/lib/database-optimization-manager";
 import { databasePerformanceAnalyzer } from "../../../../src/lib/database-performance-analyzer";
 import { databaseIndexOptimizer } from "../../../../src/lib/database-index-optimizer";
@@ -18,10 +17,7 @@ import { databaseConnectionPool } from "../../../../src/lib/database-connection-
 import { queryPerformanceMonitor } from "../../../../src/services/query-performance-monitor";
 
 // GET - Get current optimization status and metrics
-// MOVED: const logger = createSafeLogger('route');
-
 export async function GET(request: NextRequest) {
-  const logger = createSafeLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get("action") || "status";
@@ -84,7 +80,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error("[Database Optimization API] GET error:", { error: error });
+    console.error("[Database Optimization API] GET error:", { error: error });
     return NextResponse.json({
       success: false,
       error: "Failed to retrieve optimization data",
@@ -95,14 +91,13 @@ export async function GET(request: NextRequest) {
 
 // POST - Trigger database optimization
 export async function POST(request: NextRequest) {
-  const logger = createSafeLogger('route');
   try {
     const body = await request.json().catch(() => ({}));
     const action = body.action || "optimize";
 
     switch (action) {
       case "optimize":
-        logger.info("🚀 Starting comprehensive database optimization...");
+        console.info("🚀 Starting comprehensive database optimization...");
         
         // Run the complete 4-phase optimization
         const optimizationResult = await databaseOptimizationManager.runCompleteOptimization();
@@ -122,7 +117,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "analyze":
-        logger.info("🔍 Running database performance analysis...");
+        console.info("🔍 Running database performance analysis...");
         
         // Start monitoring
         queryPerformanceMonitor.startMonitoring();
@@ -145,7 +140,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "createIndexes":
-        logger.info("🗂️ Creating strategic database indexes...");
+        console.info("🗂️ Creating strategic database indexes...");
         
         const indexResult = await databaseIndexOptimizer.createStrategicIndexes();
         
@@ -164,7 +159,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "optimizeForAgents":
-        logger.info("🤖 Optimizing database for AI agent workloads...");
+        console.info("🤖 Optimizing database for AI agent workloads...");
         
         await databaseOptimizationManager.optimizeForAgentWorkloads();
         
@@ -182,7 +177,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "clearCache":
-        logger.info("🗑️ Clearing database caches...");
+        console.info("🗑️ Clearing database caches...");
         
         databaseQueryOptimizer.clearCache();
         databaseConnectionPool.clearCache();
@@ -197,7 +192,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "validateIndexes":
-        logger.info("🔍 Validating database indexes...");
+        console.info("🔍 Validating database indexes...");
         
         const validation = await databaseIndexOptimizer.validateIndexes();
         
@@ -230,7 +225,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error("[Database Optimization API] POST error:", { error: error });
+    console.error("[Database Optimization API] POST error:", { error: error });
     return NextResponse.json({
       success: false,
       error: "Database optimization failed",
@@ -241,7 +236,6 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update optimization configuration
 export async function PUT(request: NextRequest) {
-  const logger = createSafeLogger('route');
   try {
     const body = await request.json();
     const { target, config } = body;
@@ -284,7 +278,7 @@ export async function PUT(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error("[Database Optimization API] PUT error:", { error: error });
+    console.error("[Database Optimization API] PUT error:", { error: error });
     return NextResponse.json({
       success: false,
       error: "Failed to update configuration",
@@ -295,7 +289,6 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Reset optimization settings
 export async function DELETE(request: NextRequest) {
-  const logger = createSafeLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const target = searchParams.get("target") || "all";
@@ -343,7 +336,7 @@ export async function DELETE(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error("[Database Optimization API] DELETE error:", { error: error });
+    console.error("[Database Optimization API] DELETE error:", { error: error });
     return NextResponse.json({
       success: false,
       error: "Failed to reset optimization settings",

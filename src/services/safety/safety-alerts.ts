@@ -6,12 +6,16 @@
  */
 
 import { EventEmitter } from "events";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { WebSocketServerService } from "../websocket-server";
 import type { SafetyAction, SafetyAlert, SafetyCoordinatorConfig } from "./safety-types";
 
 export class SafetyAlertsManager extends EventEmitter {
-  private logger = createSafeLogger("safety-alerts");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[safety-alerts]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[safety-alerts]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[safety-alerts]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[safety-alerts]', message, context || ''),
+    };
 
   private activeAlerts: Map<string, SafetyAlert> = new Map();
   private alertHistory: SafetyAlert[] = [];
@@ -77,7 +81,7 @@ export class SafetyAlertsManager extends EventEmitter {
       await this.broadcastSafetyUpdate("alert", alert);
     }
 
-    logger.info(`[SafetyAlertsManager] Created ${alert.severity} alert: ${alert.title}`);
+    console.info(`[SafetyAlertsManager] Created ${alert.severity} alert: ${alert.title}`);
 
     return alert.id;
   }
@@ -292,7 +296,7 @@ export class SafetyAlertsManager extends EventEmitter {
     // Emit action event
     this.emit("action_executed", action);
 
-    logger.info(`[SafetyAlertsManager] Executed ${action.type} action: ${action.reason}`);
+    console.info(`[SafetyAlertsManager] Executed ${action.type} action: ${action.reason}`);
   }
 
   /**
@@ -311,7 +315,7 @@ export class SafetyAlertsManager extends EventEmitter {
         },
       });
     } catch (error) {
-      logger.error("[SafetyAlertsManager] Failed to broadcast safety update:", error);
+      console.error("[SafetyAlertsManager] Failed to broadcast safety update:", error);
     }
   }
 

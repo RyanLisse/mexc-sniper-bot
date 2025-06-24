@@ -11,7 +11,6 @@ import {
   useOrientation,
 } from "../hooks/use-mobile-clean";
 import { RESPONSIVE_CONFIG, ResponsiveClassNames } from "../lib/responsive-utils-clean";
-import { createSafeLogger } from "../lib/structured-logger";
 import { cn } from "../lib/utils";
 
 /**
@@ -19,8 +18,6 @@ import { cn } from "../lib/utils";
  * Demonstrates mobile detection hooks and responsive system functionality
  * Used for testing and validation of mobile-first responsive infrastructure
  */
-const logger = createSafeLogger("mobile-test-dashboard");
-
 export function MobileTestDashboard() {
   const isMobile = useIsMobile();
   const deviceType = useDeviceType();
@@ -232,7 +229,7 @@ export function MobileTestDashboard() {
               isTouchDevice,
               deviceInfo,
             };
-            logger.info("Mobile Detection Details:", details);
+            console.info("Mobile Detection Details:", details);
             alert("Check console for detailed mobile detection info");
           }}
           className={cn(isMobile && "trading-button-mobile")}

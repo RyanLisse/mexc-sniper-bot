@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { createSafeLogger } from '../../src/lib/structured-logger';
 import { DashboardLayout } from "../../src/components/dashboard-layout";
 import { 
   MetricCard,
@@ -34,8 +33,6 @@ import PerformanceMonitoringDashboard from "../../src/components/dashboard/perfo
 import { useEnhancedPatterns } from "../../src/hooks/use-enhanced-patterns";
 import { Phase3IntegrationSummary } from "../../src/components/dashboard/phase3-integration-summary";
 import { AutoSnipingControlPanel } from "../../src/components/auto-sniping-control-panel";
-
-const logger = createSafeLogger('page');
 
 export default function DashboardPage() {
   const { user, isLoading: userLoading } = useAuth();
@@ -90,12 +87,12 @@ export default function DashboardPage() {
 
   // Handler functions for trading targets
   const handleExecuteSnipe = (target: any) => {
-    logger.info("Executing snipe for target:", target);
+    console.info("Executing snipe for target:", target);
     // TODO: Implement snipe execution logic
   };
 
   const handleRemoveTarget = (vcoinId: string) => {
-    logger.info("Removing target:", { vcoinId });
+    console.info("Removing target:", { vcoinId });
     // TODO: Implement target removal logic
   };
 
@@ -218,8 +215,6 @@ export default function DashboardPage() {
               <CoinListingsBoard />
             </LazyDashboardWrapper>
           </TabsContent>
-
-
 
           <TabsContent value="trades" className="space-y-4">
             <LazyTableWrapper>

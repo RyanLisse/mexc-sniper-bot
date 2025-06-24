@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * API Performance Optimizer
+* API Performance Optimizer
  *
  * Phase 3: API Performance Optimization (3h)
  * TARGET: 65% efficiency improvement through parallelization and batching
@@ -63,7 +62,12 @@ interface CircuitBreakerState {
 }
 
 export class ApiPerformanceOptimizer extends EventEmitter {
-  private logger = createSafeLogger("api-performance-optimizer");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[api-performance-optimizer]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[api-performance-optimizer]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[api-performance-optimizer]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[api-performance-optimizer]', message, context || ''),
+    };
 
   private cache = new Map<string, CacheEntry>();
   private requestQueue: BatchableRequest[] = [];
@@ -216,7 +220,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
           results[i] = result;
         })
         .catch((error) => {
-          logger.error(`Batch request failed:`, error);
+          console.error(`Batch request failed:`, error);
           results[i] = null as T; // Handle failed requests gracefully
         })
         .finally(() => {
@@ -293,7 +297,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
       this.metrics.circuitBreakerTrips++;
 
       this.emit("circuitBreakerTripped", { endpoint, failures: state.failures });
-      logger.warn(`🔌 Circuit breaker opened for ${endpoint} after ${state.failures} failures`);
+      console.warn(`🔌 Circuit breaker opened for ${endpoint} after ${state.failures} failures`);
     }
   }
 
@@ -480,7 +484,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
       }
 
       if (removedCount > 0) {
-        logger.info(`🧹 Cleaned ${removedCount} expired cache entries`);
+        console.info(`🧹 Cleaned ${removedCount} expired cache entries`);
       }
     }, 60000); // Clean every minute
   }
@@ -558,7 +562,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
 
   clearCache(): void {
     this.cache.clear();
-    logger.info("🗑️ API cache cleared");
+    console.info("🗑️ API cache cleared");
   }
 
   /**
@@ -566,7 +570,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
    */
   updateConfig(newConfig: Partial<typeof this.config>): void {
     Object.assign(this.config, newConfig);
-    logger.info("⚙️ API performance config updated:", newConfig);
+    console.info("⚙️ API performance config updated:", newConfig);
   }
 
   /**

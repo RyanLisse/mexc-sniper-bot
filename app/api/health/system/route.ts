@@ -1,8 +1,4 @@
 import { NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
-
-const logger = createSafeLogger('route');
-
 export async function GET() {
   try {
     const baseUrl = process.env.VERCEL_URL 
@@ -66,7 +62,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    logger.error("[System Health Check] Error:", { error: error });
+    console.error("[System Health Check] Error:", { error: error });
     const errorObj = error as Error | { message?: string };
     return NextResponse.json({
       status: 'error',

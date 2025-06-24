@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { 
   createSuccessResponse, 
@@ -7,8 +6,6 @@ import {
   apiResponse, 
   HTTP_STATUS 
 } from "../../../../src/lib/api-response";
-
-const logger = createSafeLogger('route');
 
 export async function GET() {
   try {
@@ -27,7 +24,7 @@ export async function GET() {
       })
     );
   } catch (error) {
-    logger.error("MEXC calendar fetch failed:", { error: error });
+    console.error("MEXC calendar fetch failed:", { error: error });
     
     // Always return an empty array on error for consistency
     return apiResponse(

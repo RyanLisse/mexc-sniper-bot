@@ -9,7 +9,6 @@
 
 import { EventEmitter } from "events";
 import { toSafeError } from "../../lib/error-type-utils";
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { SymbolEntry } from "../../services/mexc-unified-exports";
 import { ConfidenceCalculator } from "./confidence-calculator";
 import type {
@@ -55,7 +54,12 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("enhanced-pattern-detection-core");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[enhanced-pattern-detection-core]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[enhanced-pattern-detection-core]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[enhanced-pattern-detection-core]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[enhanced-pattern-detection-core]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -103,7 +107,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
     this.patternStorage = PatternStorage.getInstance();
     this.patternValidator = PatternValidator.getInstance();
 
-    this.logger.info("Enhanced Pattern Detection Core initialized", {
+    console.info("Enhanced Pattern Detection Core initialized", {
       config: this.config,
       eventsEnabled: true,
     });
@@ -131,7 +135,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
         }
 
         if (validation.warnings.length > 0 && this.config.logValidationErrors) {
-          this.logger.warn("Analysis request warnings", {
+          console.warn("Analysis request warnings", {
             warnings: validation.warnings,
           });
           this.metrics.warningCount += validation.warnings.length;
@@ -224,7 +228,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
         });
       }
 
-      this.logger.info("Pattern analysis completed with events", {
+      console.info("Pattern analysis completed with events", {
         analysisType: request.analysisType,
         symbolsAnalyzed: request.symbols?.length || 0,
         calendarEntriesAnalyzed: request.calendarEntries?.length || 0,
@@ -251,7 +255,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
 
       this.metrics.errorCount++;
 
-      this.logger.error(
+      console.error(
         "Enhanced pattern analysis failed",
         {
           analysisType: request.analysisType,
@@ -310,7 +314,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
       // Emit the event
       this.emit("patterns_detected", eventData);
 
-      this.logger.info("Pattern detection event emitted", {
+      console.info("Pattern detection event emitted", {
         patternType,
         matchesCount: matches.length,
         averageConfidence: eventData.metadata.averageConfidence,
@@ -318,7 +322,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
         listeners: this.listenerCount("patterns_detected"),
       });
     } catch (error) {
-      this.logger.error(
+      console.error(
         "Failed to emit pattern event",
         {
           patternType,
@@ -404,7 +408,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(
+      console.error(
         "Symbol readiness analysis failed",
         {
           symbol: symbol.cd || "unknown",
@@ -428,7 +432,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
       } else {
         this.metrics.errorCount++;
         if (this.config.logValidationErrors) {
-          this.logger.warn("Invalid pattern match filtered out", {
+          console.warn("Invalid pattern match filtered out", {
             symbol: match.symbol,
             patternType: match.patternType,
             errors: validation.errors,
@@ -439,7 +443,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
       if (validation.warnings.length > 0) {
         this.metrics.warningCount += validation.warnings.length;
         if (this.config.logValidationErrors) {
-          this.logger.warn("Pattern match warnings", {
+          console.warn("Pattern match warnings", {
             symbol: match.symbol,
             warnings: validation.warnings,
           });
@@ -535,7 +539,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
    */
   clearCaches(): void {
     this.patternStorage.clearCache();
-    this.logger.info("All caches cleared");
+    console.info("All caches cleared");
   }
 
   /**
@@ -543,7 +547,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
    */
   updateConfig(newConfig: Partial<PatternDetectionConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    this.logger.info("Configuration updated", { newConfig });
+    console.info("Configuration updated", { newConfig });
   }
 
   /**
@@ -565,7 +569,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
       return matches;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Ready state pattern detection failed", {
+      console.error("Ready state pattern detection failed", {
         symbolCount: symbols.length,
         error: safeError.message,
       });
@@ -592,7 +596,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
       return matches;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Pre-ready pattern detection failed", {
+      console.error("Pre-ready pattern detection failed", {
         symbolCount: symbols.length,
         error: safeError.message,
       });
@@ -620,7 +624,7 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
       return matches;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Advance opportunity detection failed", {
+      console.error("Advance opportunity detection failed", {
         entryCount: calendarEntries.length,
         error: safeError.message,
       });

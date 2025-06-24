@@ -1,5 +1,4 @@
 import type { TradingStrategy } from "../db/schemas/strategies";
-import { createSafeLogger } from "../lib/structured-logger";
 import { MultiPhaseExecutionAnalyzer } from "./multi-phase-execution-analyzer";
 import type {
   ExecutionAnalytics,
@@ -18,7 +17,12 @@ import { multiPhaseTradingService } from "./multi-phase-trading-service";
 import { MultiPhaseVisualizer } from "./multi-phase-visualizer";
 
 export class MultiPhaseExecutor {
-  private logger = createSafeLogger("multi-phase-executor");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[multi-phase-executor]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[multi-phase-executor]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-executor]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[multi-phase-executor]', message, context || ''),
+    };
 
   private executedPhases: Set<number> = new Set();
   private phaseHistory: PhaseExecutionHistory[] = [];

@@ -7,7 +7,7 @@
  * Build-safe implementation with dynamic imports to prevent bundling issues.
  */
 
-import { createSafeLogger } from "./structured-logger";
+// Build-safe imports - no structured logger to prevent webpack bundling issues
 
 // Environment configuration
 const isProduction = process.env.NODE_ENV === "production";
@@ -19,14 +19,13 @@ const telemetryDisabled =
   process.env.DISABLE_TELEMETRY === "true" ||
   (isTesting && process.env.ENABLE_TELEMETRY_IN_TESTS !== "true");
 
-// Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createSafeLogger> | undefined;
-function getLogger() {
-  if (!_logger) {
-    _logger = createSafeLogger("opentelemetry-setup");
-  }
-  return _logger;
-}
+// Simple console logger to avoid bundling issues
+const logger = {
+  info: (message: string, context?: any) => console.info('[opentelemetry-setup]', message, context || ''),
+  warn: (message: string, context?: any) => console.warn('[opentelemetry-setup]', message, context || ''),
+  error: (message: string, context?: any) => console.error('[opentelemetry-setup]', message, context || ''),
+  debug: (message: string, context?: any) => console.debug('[opentelemetry-setup]', message, context || ''),
+};
 
 /**
  * OpenTelemetry SDK Configuration
@@ -34,7 +33,7 @@ function getLogger() {
  */
 export async function initializeOpenTelemetry(): Promise<any | null> {
   if (telemetryDisabled) {
-    getLogger().info("[OpenTelemetry] Telemetry disabled");
+    logger.info("[OpenTelemetry] Telemetry disabled");
     return null;
   }
 
@@ -190,7 +189,7 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
     // Initialize the SDK
     sdk.start();
 
-    getLogger().info("[OpenTelemetry] SDK initialized successfully", {
+    logger.info("[OpenTelemetry] SDK initialized successfully", {
       environment: process.env.NODE_ENV,
       sampling: isProduction ? "10%" : "100%",
       exporters: traceExporters.length,
@@ -289,14 +288,14 @@ export async function initializeEnhancedTelemetry(): Promise<{
   healthCheck: () => Promise<boolean>;
 }> {
   if (telemetryDisabled) {
-    getLogger().info("[OpenTelemetry] Telemetry disabled");
+    logger.info("[OpenTelemetry] Telemetry disabled");
     return {
       success: false,
       healthCheck: async () => false,
     };
   }
 
-  const logger = getLogger();
+  // Logger already defined at module level
 
   try {
     // Use production-optimized configuration

@@ -1,4 +1,4 @@
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { AgentConfig, AgentResponse } from "./base-agent";
 import { SafetyBaseAgent, type SafetyConfig } from "./safety-base-agent";
 
@@ -51,7 +51,13 @@ export interface TradeRiskAssessment {
 }
 
 export class RiskManagerAgent extends SafetyBaseAgent {
-  private logger = createSafeLogger("risk-manager-agent");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[risk-manager-agent]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[risk-manager-agent]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[risk-manager-agent]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[risk-manager-agent]', message, context || ''),
+  };
 
   private riskMetrics: RiskMetrics;
   private circuitBreakers: Map<string, CircuitBreaker> = new Map();

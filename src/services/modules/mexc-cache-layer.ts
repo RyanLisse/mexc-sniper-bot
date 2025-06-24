@@ -5,7 +5,6 @@
  * Provides different TTL strategies for different data types.
  */
 
-import { createSafeLogger } from "../../lib/structured-logger";
 import type { MexcCacheConfig, MexcServiceResponse } from "./mexc-api-types";
 
 // ============================================================================
@@ -51,7 +50,12 @@ const CACHE_TTL_PROFILES = {
 // ============================================================================
 
 export class MexcCacheLayer {
-  private logger = createSafeLogger("mexc-cache-layer");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-cache-layer]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-cache-layer]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-cache-layer]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-cache-layer]', message, context || ''),
+    };
 
   private cache = new Map<string, CacheEntry<any>>();
   private config: MexcCacheConfig;
@@ -264,7 +268,7 @@ export class MexcCacheLayer {
 
     if (cleaned > 0) {
       this.metrics.evictions += cleaned;
-      logger.info(`[MexcCacheLayer] Cleaned up ${cleaned} expired entries`);
+      console.info(`[MexcCacheLayer] Cleaned up ${cleaned} expired entries`);
     }
   }
 

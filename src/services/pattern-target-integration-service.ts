@@ -10,8 +10,6 @@ import { and, eq } from "drizzle-orm";
 import type { PatternMatch } from "../core/pattern-detection/interfaces";
 import { db } from "../db";
 import { snipeTargets } from "../db/schemas/trading";
-import { createSafeLogger } from "../lib/structured-logger";
-
 export interface PatternTargetConfig {
   // User configuration
   defaultUserId: string;
@@ -44,7 +42,12 @@ export interface TargetCreationResult {
 
 export class PatternTargetIntegrationService {
   private static instance: PatternTargetIntegrationService;
-  private logger = createSafeLogger("pattern-target-integration");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[pattern-target-integration]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[pattern-target-integration]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[pattern-target-integration]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[pattern-target-integration]', message, context || ''),
+    };
 
   // Default configuration
   private config: PatternTargetConfig = {
@@ -65,7 +68,7 @@ export class PatternTargetIntegrationService {
       this.config = { ...this.config, ...config };
     }
 
-    this.logger.info("Pattern-Target Integration Service initialized", {
+    console.info("Pattern-Target Integration Service initialized", {
       config: this.config,
     });
   }
@@ -91,7 +94,7 @@ export class PatternTargetIntegrationService {
     // Check current concurrent targets
     const currentTargets = await this.getCurrentActiveTargets(userId);
     if (currentTargets.length >= config.maxConcurrentTargets) {
-      this.logger.warn("Max concurrent targets reached", {
+      console.warn("Max concurrent targets reached", {
         userId,
         currentTargets: currentTargets.length,
         maxAllowed: config.maxConcurrentTargets,
@@ -110,7 +113,7 @@ export class PatternTargetIntegrationService {
         results.push(result);
 
         if (result.success) {
-          this.logger.info("Snipe target created from pattern", {
+          console.info("Snipe target created from pattern", {
             targetId: result.targetId,
             symbol: pattern.symbol,
             vcoinId: pattern.vcoinId,
@@ -119,7 +122,7 @@ export class PatternTargetIntegrationService {
           });
         }
       } catch (error) {
-        this.logger.error(
+        console.error(
           "Failed to create target from pattern",
           {
             symbol: pattern.symbol,
@@ -369,7 +372,7 @@ export class PatternTargetIntegrationService {
    */
   updateConfiguration(newConfig: Partial<PatternTargetConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    this.logger.info("Configuration updated", { newConfig });
+    console.info("Configuration updated", { newConfig });
   }
 
   /**

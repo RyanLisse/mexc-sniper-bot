@@ -1,7 +1,5 @@
 import { ErrorLoggingService } from "../services/error-logging-service";
 import { AppError, ErrorCode, ErrorSeverity, isAppError, toAppError } from "./error-types";
-import { createSafeLogger } from "./structured-logger";
-
 export interface ErrorHandlerConfig {
   enableLogging?: boolean;
   enableRetry?: boolean;
@@ -27,7 +25,12 @@ export interface CircuitBreakerOptions {
  * Centralized error handling service with retry logic and circuit breaker pattern
  */
 export class ErrorHandlerService {
-  private logger = createSafeLogger("error-handler-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[error-handler-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[error-handler-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[error-handler-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[error-handler-service]', message, context || ''),
+    };
 
   private static instance: ErrorHandlerService;
   private errorLoggingService: ErrorLoggingService;
@@ -277,7 +280,7 @@ export class ErrorHandlerService {
       await this.errorLoggingService.logError(error, error.context);
     } catch (loggingError) {
       // Don't throw on logging errors, just console.error
-      logger.error("Failed to log error:", loggingError);
+      console.error("Failed to log error:", loggingError);
     }
   }
 

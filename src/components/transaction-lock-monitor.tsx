@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { AlertCircle, CheckCircle, Clock, Lock, Unlock, XCircle } from "lucide-react";
-import { createSafeLogger } from "../lib/structured-logger";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -42,8 +41,6 @@ interface LockStats {
   recentlyFailed: number;
 }
 
-const logger = createSafeLogger("transaction-lock-monitor");
-
 export function TransactionLockMonitor() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["transaction-locks"],
@@ -69,7 +66,7 @@ export function TransactionLockMonitor() {
         refetch();
       }
     } catch (error) {
-      logger.error("Failed to release lock:", error);
+      console.error("Failed to release lock:", error);
     }
   };
 

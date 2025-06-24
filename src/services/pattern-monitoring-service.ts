@@ -6,7 +6,6 @@
  */
 
 import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
-import { createSafeLogger } from "../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "./mexc-unified-exports";
 import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
 
@@ -62,11 +61,14 @@ export interface PatternMonitoringReport {
 }
 
 export class PatternMonitoringService {
-  private _logger: ReturnType<typeof createSafeLogger> | null = null;
-
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("pattern-monitoring-service");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[pattern-monitoring-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[pattern-monitoring-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[pattern-monitoring-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[pattern-monitoring-service]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -122,11 +124,11 @@ export class PatternMonitoringService {
    */
   async startMonitoring(): Promise<void> {
     if (this.isMonitoring) {
-      this.logger.info("[PatternMonitoring] Already monitoring");
+      console.info("[PatternMonitoring] Already monitoring");
       return;
     }
 
-    this.logger.info("[PatternMonitoring] Starting real-time pattern monitoring...");
+    console.info("[PatternMonitoring] Starting real-time pattern monitoring...");
     this.isMonitoring = true;
     this.stats.engineStatus = "active";
 
@@ -147,7 +149,7 @@ export class PatternMonitoringService {
       return;
     }
 
-    this.logger.info("[PatternMonitoring] Stopping pattern monitoring...");
+    console.info("[PatternMonitoring] Stopping pattern monitoring...");
     this.isMonitoring = false;
     this.stats.engineStatus = "idle";
 
@@ -205,7 +207,7 @@ export class PatternMonitoringService {
     const allPatterns: PatternMatch[] = [];
 
     try {
-      this.logger.info(`[PatternMonitoring] Manual pattern detection on ${symbols.length} symbols`);
+      console.info(`[PatternMonitoring] Manual pattern detection on ${symbols.length} symbols`);
 
       // Detect ready state patterns
       const readyPatterns = await this.patternEngine.detectReadyStatePattern(symbols);
@@ -241,7 +243,7 @@ export class PatternMonitoringService {
 
       return allPatterns;
     } catch (error) {
-      this.logger.error("[PatternMonitoring] Manual detection failed:", error);
+      console.error("[PatternMonitoring] Manual detection failed:", error);
       this.stats.consecutiveErrors++;
       throw error;
     }
@@ -275,7 +277,7 @@ export class PatternMonitoringService {
     const _startTime = Date.now();
 
     try {
-      this.logger.info("[PatternMonitoring] Performing monitoring cycle...");
+      console.info("[PatternMonitoring] Performing monitoring cycle...");
 
       // Get latest symbol data from MEXC
       const symbolsResponse = await this.mexcService.getAllSymbols();
@@ -287,7 +289,7 @@ export class PatternMonitoringService {
       const candidateSymbols = this.filterCandidateSymbols(symbolsResponse.data);
 
       if (candidateSymbols.length === 0) {
-        this.logger.info("[PatternMonitoring] No candidate symbols found");
+        console.info("[PatternMonitoring] No candidate symbols found");
         return;
       }
 
@@ -295,11 +297,11 @@ export class PatternMonitoringService {
       const allPatterns = await this.detectPatternsManually(candidateSymbols);
 
       this.stats.consecutiveErrors = 0; // Reset error count on success
-      this.logger.info(
+      console.info(
         `[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`
       );
     } catch (error) {
-      this.logger.error("[PatternMonitoring] Monitoring cycle failed:", error);
+      console.error("[PatternMonitoring] Monitoring cycle failed:", error);
       this.stats.consecutiveErrors++;
       this.stats.engineStatus = this.stats.consecutiveErrors > 3 ? "error" : "active";
     } finally {

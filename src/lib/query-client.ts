@@ -1,10 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 // Import optimized query keys from modular MEXC service
 import { mexcQueryKeys } from "../services/modules/mexc-api-types";
-import { createSafeLogger } from "./structured-logger";
-
-const logger = createSafeLogger("query-client");
-
 /**
  * Optimized TanStack Query Client Configuration
  *
@@ -46,7 +42,7 @@ export const queryClient = new QueryClient({
       retry: 1,
       // Add error handling for mutations
       onError: (error) => {
-        logger.error("[QueryClient] Mutation error:", error);
+        console.error("[QueryClient] Mutation error:", error);
       },
     },
   },

@@ -7,7 +7,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ApiClient } from "@/src/lib/api-client";
-import { createSafeLogger } from "../lib/structured-logger";
 import type {
   AutoSnipingConfig,
   AutoSnipingExecutionReport,
@@ -92,8 +91,6 @@ interface UseAutoSnipingExecutionOptions {
   includeHistory?: boolean;
   includeAlerts?: boolean;
 }
-
-const logger = createSafeLogger("use-auto-sniping-execution");
 
 export function useAutoSnipingExecution(
   options: UseAutoSnipingExecutionOptions = {}
@@ -209,7 +206,7 @@ export function useAutoSnipingExecution(
           lastUpdated: new Date().toISOString(),
         }));
       } catch (error) {
-        logger.error("[useAutoSnipingExecution] Failed to load execution report:", {
+        console.error("[useAutoSnipingExecution] Failed to load execution report:", {
           error: error instanceof Error ? error.message : String(error),
         });
         setState((prev) => ({
@@ -243,7 +240,7 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      logger.error("[useAutoSnipingExecution] Failed to start execution:", {
+      console.error("[useAutoSnipingExecution] Failed to start execution:", {
         error: error instanceof Error ? error.message : String(error),
       });
       setState((prev) => ({
@@ -273,7 +270,7 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      logger.error("[useAutoSnipingExecution] Failed to stop execution:", error);
+      console.error("[useAutoSnipingExecution] Failed to stop execution:", error);
       setState((prev) => ({
         ...prev,
         isStoppingExecution: false,
@@ -300,7 +297,7 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      logger.error("[useAutoSnipingExecution] Failed to pause execution:", error);
+      console.error("[useAutoSnipingExecution] Failed to pause execution:", error);
       setState((prev) => ({
         ...prev,
         isPausingExecution: false,
@@ -327,7 +324,7 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      logger.error("[useAutoSnipingExecution] Failed to resume execution:", error);
+      console.error("[useAutoSnipingExecution] Failed to resume execution:", error);
       setState((prev) => ({
         ...prev,
         isResumingExecution: false,
@@ -356,7 +353,7 @@ export function useAutoSnipingExecution(
 
         return true;
       } catch (error) {
-        logger.error("[useAutoSnipingExecution] Failed to close position:", error);
+        console.error("[useAutoSnipingExecution] Failed to close position:", error);
         setState((prev) => ({
           ...prev,
           isClosingPosition: false,
@@ -385,7 +382,7 @@ export function useAutoSnipingExecution(
 
       return response.data.closedCount;
     } catch (error) {
-      logger.error("[useAutoSnipingExecution] Emergency close failed:", error);
+      console.error("[useAutoSnipingExecution] Emergency close failed:", error);
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Emergency close failed",
@@ -415,7 +412,7 @@ export function useAutoSnipingExecution(
 
         return true;
       } catch (error) {
-        logger.error("[useAutoSnipingExecution] Failed to update config:", error);
+        console.error("[useAutoSnipingExecution] Failed to update config:", error);
         setState((prev) => ({
           ...prev,
           isUpdatingConfig: false,
@@ -446,7 +443,7 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      logger.error("[useAutoSnipingExecution] Failed to acknowledge alert:", error);
+      console.error("[useAutoSnipingExecution] Failed to acknowledge alert:", error);
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Failed to acknowledge alert",
@@ -470,7 +467,7 @@ export function useAutoSnipingExecution(
 
       return response.data.clearedCount;
     } catch (error) {
-      logger.error("[useAutoSnipingExecution] Failed to clear alerts:", error);
+      console.error("[useAutoSnipingExecution] Failed to clear alerts:", error);
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Failed to clear alerts",

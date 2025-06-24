@@ -1,5 +1,5 @@
 import { instrumentAgentMethod } from "../../lib/opentelemetry-agent-instrumentation";
-import { createSafeLogger } from "../../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { BaseAgent } from "../base-agent";
 import {
   AgentHealthMonitor,
@@ -30,13 +30,13 @@ export type {
  * Enhanced agent registry with comprehensive health monitoring and recovery
  */
 export class AgentRegistry extends AgentRegistryCore {
-  private _logger?: ReturnType<typeof createSafeLogger>;
-  private get logger() {
-    if (!this._logger) {
-      this._logger = createSafeLogger("agent-registry");
-    }
-    return this._logger;
-  }
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[agent-registry]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[agent-registry]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[agent-registry]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[agent-registry]', message, context || ''),
+  };
   private healthMonitor: AgentHealthMonitor;
   private recoveryStrategies: AgentRecoveryStrategies;
 

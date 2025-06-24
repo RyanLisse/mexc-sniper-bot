@@ -5,7 +5,6 @@
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
-import { createSafeLogger } from "../../lib/structured-logger";
 import { MexcAccountApiClient } from "./mexc-account-api";
 import type {
   OrderParameters,
@@ -19,7 +18,12 @@ import type {
 // ============================================================================
 
 export class MexcTradingApiClient extends MexcAccountApiClient {
-  private logger = createSafeLogger("mexc-trading-api");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[mexc-trading-api]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[mexc-trading-api]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[mexc-trading-api]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[mexc-trading-api]', message, context || ''),
+    };
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);
@@ -71,7 +75,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
     }
 
     try {
-      this.logger.info(
+      console.info(
         `[MexcTradingApi] Placing ${params.side} order: ${params.symbol}, quantity: ${params.quantity}`
       );
 
@@ -105,7 +109,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         };
       }
 
-      this.logger.info("[MexcTradingApi] Order placed successfully:", response.data);
+      console.info("[MexcTradingApi] Order placed successfully:", response.data);
 
       const orderData = response.data as any; // MEXC order response
       const orderResult: OrderResult = {
@@ -126,7 +130,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         requestId: response.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcTradingApi] Order placement failed:", error);
+      console.error("[MexcTradingApi] Order placement failed:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown trading error";
 
       return {
@@ -188,7 +192,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
     }
 
     try {
-      this.logger.info(
+      console.info(
         `[MexcTradingApi] Placing TEST ${params.side} order: ${params.symbol}, quantity: ${params.quantity}`
       );
 
@@ -222,7 +226,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         };
       }
 
-      this.logger.info("[MexcTradingApi] Test order successful");
+      console.info("[MexcTradingApi] Test order successful");
 
       const orderResult: OrderResult = {
         success: true,
@@ -242,7 +246,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         requestId: response.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcTradingApi] Test order failed:", error);
+      console.error("[MexcTradingApi] Test order failed:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown test trading error";
 
       return {
@@ -293,7 +297,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         requestId: response.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcTradingApi] Failed to get open orders:", error);
+      console.error("[MexcTradingApi] Failed to get open orders:", error);
       return {
         success: false,
         data: [],
@@ -332,7 +336,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         requestId: response.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcTradingApi] Failed to get order history:", error);
+      console.error("[MexcTradingApi] Failed to get order history:", error);
       return {
         success: false,
         data: [],
@@ -371,7 +375,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         requestId: response.requestId,
       };
     } catch (error) {
-      this.logger.error("[MexcTradingApi] Failed to cancel order:", error);
+      console.error("[MexcTradingApi] Failed to cancel order:", error);
       return {
         success: false,
         data: null,
@@ -442,7 +446,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
       // to parse symbol filters from exchange info
       return 0.001; // Default minimum for most USDT pairs
     } catch (error) {
-      this.logger.error("[MexcTradingApi] Failed to get min order size:", error);
+      console.error("[MexcTradingApi] Failed to get min order size:", error);
       return null;
     }
   }
@@ -454,7 +458,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
     try {
       return Number.parseFloat(quantity) * Number.parseFloat(price);
     } catch (error) {
-      this.logger.error("[MexcTradingApi] Failed to calculate order value:", error);
+      console.error("[MexcTradingApi] Failed to calculate order value:", error);
       return 0;
     }
   }
@@ -478,7 +482,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         return await this.hasSufficientBalance(baseAsset, Number.parseFloat(params.quantity));
       }
     } catch (error) {
-      this.logger.error("[MexcTradingApi] Failed to check order affordability:", error);
+      console.error("[MexcTradingApi] Failed to check order affordability:", error);
       return false;
     }
   }
@@ -504,7 +508,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
 
       return "LIMIT";
     } catch (error) {
-      this.logger.error("[MexcTradingApi] Failed to get recommended order type:", error);
+      console.error("[MexcTradingApi] Failed to get recommended order type:", error);
       return "LIMIT";
     }
   }

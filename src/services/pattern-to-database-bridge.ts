@@ -14,7 +14,7 @@ import { EnhancedPatternDetectionCore } from "../core/pattern-detection/pattern-
 import { snipeTargets, userPreferences } from "../db/schema";
 import { db } from "../lib/database-connection-pool";
 import { toSafeError } from "../lib/error-type-utils";
-import { createSafeLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 
 // ============================================================================
 // Configuration Schema
@@ -69,7 +69,37 @@ type SnipeTargetRecord = z.infer<typeof SnipeTargetRecordSchema>;
 
 export class PatternToDatabaseBridge {
   private static instance: PatternToDatabaseBridge;
-  private logger = createSafeLogger("pattern-to-database-bridge");
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any, error?: any) => {
+      if (error) {
+        console.info('[pattern-to-database-bridge]', message, context || '', error);
+      } else {
+        console.info('[pattern-to-database-bridge]', message, context || '');
+      }
+    },
+    warn: (message: string, context?: any, error?: any) => {
+      if (error) {
+        console.warn('[pattern-to-database-bridge]', message, context || '', error);
+      } else {
+        console.warn('[pattern-to-database-bridge]', message, context || '');
+      }
+    },
+    error: (message: string, context?: any, error?: any) => {
+      if (error) {
+        console.error('[pattern-to-database-bridge]', message, context || '', error);
+      } else {
+        console.error('[pattern-to-database-bridge]', message, context || '');
+      }
+    },
+    debug: (message: string, context?: any, error?: any) => {
+      if (error) {
+        console.debug('[pattern-to-database-bridge]', message, context || '', error);
+      } else {
+        console.debug('[pattern-to-database-bridge]', message, context || '');
+      }
+    },
+  };
   private isListening = false;
   private config: BridgeConfig;
   private patternDetectionCore: EnhancedPatternDetectionCore;

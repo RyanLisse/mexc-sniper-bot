@@ -1,4 +1,3 @@
-import { createSafeLogger } from "../lib/structured-logger";
 import {
   type MaintenanceResult,
   MultiPhasePerformanceAnalytics,
@@ -22,7 +21,12 @@ import type { TradingStrategy } from "./trading-strategy-manager";
  * Enhanced trading bot with modular architecture for scalability and maintainability
  */
 export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
-  private logger = createSafeLogger("multi-phase-trading-bot");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[multi-phase-trading-bot]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[multi-phase-trading-bot]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-trading-bot]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[multi-phase-trading-bot]', message, context || ''),
+    };
   private positionManager: MultiPhasePositionManager;
   private performanceAnalytics: MultiPhasePerformanceAnalytics;
 
@@ -216,8 +220,7 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
 
 // Export function to demonstrate multi-phase strategy
 export function demonstrateMultiPhaseStrategy(): void {
-  const logger = createSafeLogger("multi-phase-demo");
-  logger.info("=== Multi-Phase Trading Strategy Demo ===\n");
+  console.info("=== Multi-Phase Trading Strategy Demo ===\n");
 
   // Import required strategies
   const { TRADING_STRATEGIES } = require("./trading-strategy-manager");
@@ -239,26 +242,26 @@ export function demonstrateMultiPhaseStrategy(): void {
   ];
 
   priceMovements.forEach(({ price, description }) => {
-    logger.info(`\n📊 Price Update: ${price} - ${description}`);
+    console.info(`\n📊 Price Update: ${price} - ${description}`);
     const result = bot.onPriceUpdate(price);
 
     // Show actions
     if (result.actions.length > 0) {
-      logger.info("\n🚨 ACTIONS:");
-      result.actions.forEach((action) => logger.info(action));
+      console.info("\n🚨 ACTIONS:");
+      result.actions.forEach((action) => console.info(action));
     }
 
     // Show status
-    logger.info("\n📈 Portfolio Status:");
-    logger.info(`- Price increase: ${result.status.priceIncrease}`);
-    logger.info(`- Completed phases: ${result.status.summary.completedPhases}`);
-    logger.info(`- Remaining position: ${result.status.summary.totalRemaining} tokens`);
-    logger.info(`- Realized profit: ${result.status.summary.realizedProfit.toFixed(2)}`);
-    logger.info(`- Unrealized profit: ${result.status.summary.unrealizedProfit.toFixed(2)}`);
-    logger.info(`- Next target: ${result.status.nextTarget}`);
+    console.info("\n📈 Portfolio Status:");
+    console.info(`- Price increase: ${result.status.priceIncrease}`);
+    console.info(`- Completed phases: ${result.status.summary.completedPhases}`);
+    console.info(`- Remaining position: ${result.status.summary.totalRemaining} tokens`);
+    console.info(`- Realized profit: ${result.status.summary.realizedProfit.toFixed(2)}`);
+    console.info(`- Unrealized profit: ${result.status.summary.unrealizedProfit.toFixed(2)}`);
+    console.info(`- Next target: ${result.status.nextTarget}`);
 
-    logger.info("\n📋 Phase Overview:");
-    logger.info(result.status.visualization);
+    console.info("\n📋 Phase Overview:");
+    console.info(result.status.visualization);
   });
 }
 

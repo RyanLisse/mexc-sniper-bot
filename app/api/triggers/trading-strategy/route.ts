@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { inngest } from "../../../../src/inngest/client";
-
-const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,7 +44,7 @@ export async function POST(request: NextRequest) {
       riskParameters,
     });
   } catch (error) {
-    logger.error("Failed to trigger trading strategy:", { error: error });
+    console.error("Failed to trigger trading strategy:", { error: error });
     return NextResponse.json(
       {
         success: false,

@@ -8,7 +8,6 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createSafeLogger, createTimer } from "../../lib/structured-logger";
 import type {
   RiskMetrics,
   SafetyAlert,
@@ -55,14 +54,19 @@ export interface ThresholdCheckResult {
 }
 
 export class CoreSafetyMonitoring {
-  private logger = createSafeLogger("core-safety-monitoring");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[core-safety-monitoring]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[core-safety-monitoring]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[core-safety-monitoring]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[core-safety-monitoring]', message, context || ''),
+    };
   private riskMetrics: RiskMetrics;
   private isActive = false;
 
   constructor(private config: CoreSafetyMonitoringConfig) {
     this.riskMetrics = this.getDefaultRiskMetrics();
 
-    this.logger.info("Core safety monitoring initialized", {
+    console.info("Core safety monitoring initialized", {
       operation: "initialization",
       monitoringInterval: config.configuration.monitoringIntervalMs,
       autoActionEnabled: config.configuration.autoActionEnabled,
@@ -75,7 +79,7 @@ export class CoreSafetyMonitoring {
    */
   public start(): void {
     if (this.isActive) {
-      this.logger.warn("Core monitoring already active", {
+      console.warn("Core monitoring already active", {
         operation: "start_monitoring",
         isActive: this.isActive,
       });
@@ -83,7 +87,7 @@ export class CoreSafetyMonitoring {
     }
 
     this.isActive = true;
-    this.logger.info("Core safety monitoring started", {
+    console.info("Core safety monitoring started", {
       operation: "start_monitoring",
       monitoringInterval: this.config.configuration.monitoringIntervalMs,
     });
@@ -94,7 +98,7 @@ export class CoreSafetyMonitoring {
    */
   public stop(): void {
     this.isActive = false;
-    this.logger.info("Core safety monitoring stopped", {
+    console.info("Core safety monitoring stopped", {
       operation: "stop_monitoring",
     });
   }
@@ -151,7 +155,7 @@ export class CoreSafetyMonitoring {
         status: "success",
       });
 
-      this.logger.info("Monitoring cycle completed", {
+      console.info("Monitoring cycle completed", {
         operation: "monitoring_cycle",
         duration,
         riskScore: overallRiskScore,
@@ -162,7 +166,7 @@ export class CoreSafetyMonitoring {
     } catch (error) {
       const duration = timer.end({ status: "failed" });
 
-      this.logger.error(
+      console.error(
         "Monitoring cycle failed",
         {
           operation: "monitoring_cycle",
@@ -215,19 +219,9 @@ export class CoreSafetyMonitoring {
 
       // Validate updated metrics
       const validatedMetrics = validateRiskMetrics(this.riskMetrics);
-      this.riskMetrics = validatedMetrics;
-
-      this.logger.debug("Risk metrics updated", {
-        operation: "update_risk_metrics",
-        currentDrawdown: this.riskMetrics.currentDrawdown,
-        successRate: this.riskMetrics.successRate,
-        concentrationRisk: this.riskMetrics.concentrationRisk,
-        patternAccuracy: this.riskMetrics.patternAccuracy,
-      });
-
-      return { ...this.riskMetrics };
+      this.riskMetrics = validatedMetrics;return { ...this.riskMetrics };
     } catch (error) {
-      this.logger.error(
+      console.error(
         "Failed to update risk metrics",
         {
           operation: "update_risk_metrics",
@@ -457,7 +451,7 @@ export class CoreSafetyMonitoring {
    */
   public resetRiskMetrics(): void {
     this.riskMetrics = this.getDefaultRiskMetrics();
-    this.logger.info("Risk metrics reset to defaults", {
+    console.info("Risk metrics reset to defaults", {
       operation: "reset_risk_metrics",
     });
   }

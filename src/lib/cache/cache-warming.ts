@@ -1,6 +1,5 @@
 /**
-import { createSafeLogger } from './structured-logger';
- * Cache Warming Manager
+* Cache Warming Manager
  *
  * Handles intelligent cache warming strategies to improve cache hit rates
  * by pre-loading frequently used agent patterns and common queries.
@@ -22,7 +21,12 @@ export class CacheWarmingManager {
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createSafeLogger("cache-warming");
+      this._logger = {
+      info: (message: string, context?: any) => console.info('[cache-warming]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[cache-warming]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[cache-warming]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[cache-warming]', message, context || ''),
+    };
     }
     return this._logger;
   }
@@ -46,21 +50,21 @@ export class CacheWarmingManager {
       return;
     }
 
-    logger.info("[CacheWarming] Initializing cache warmup system");
+    console.info("[CacheWarming] Initializing cache warmup system");
 
     // Schedule periodic cache warmup
     this.warmupIntervalId = setInterval(async () => {
       try {
         await this.warmUpAgentCache();
       } catch (error) {
-        logger.error("[CacheWarming] Scheduled warmup error:", error);
+        console.error("[CacheWarming] Scheduled warmup error:", error);
       }
     }, this.DEFAULT_WARMUP_INTERVAL);
 
     // Perform initial warmup
     setTimeout(() => {
       this.warmUpAgentCache().catch((error) => {
-        logger.error("[CacheWarming] Initial warmup error:", error);
+        console.error("[CacheWarming] Initial warmup error:", error);
       });
     }, 5000); // Wait 5 seconds after initialization
   }
@@ -80,7 +84,7 @@ export class CacheWarmingManager {
     }
 
     this.isWarming = true;
-    logger.info("[CacheWarming] Starting cache warm-up...");
+    console.info("[CacheWarming] Starting cache warm-up...");
 
     try {
       const warmupPatterns = patterns || this.getDefaultWarmupPatterns();
@@ -114,15 +118,15 @@ export class CacheWarmingManager {
             warmedUp++;
           }
         } catch (error) {
-          logger.warn(`[CacheWarming] Failed to warm pattern for ${pattern.agentId}:`, error);
+          console.warn(`[CacheWarming] Failed to warm pattern for ${pattern.agentId}:`, error);
         }
       }
 
-      logger.info(
+      console.info(
         `[CacheWarming] Cache warm-up completed: ${warmedUp}/${warmupPatterns.length} patterns warmed`
       );
     } catch (error) {
-      logger.error("[CacheWarming] Cache warm-up error:", error);
+      console.error("[CacheWarming] Cache warm-up error:", error);
     } finally {
       this.isWarming = false;
     }
@@ -136,7 +140,7 @@ export class CacheWarmingManager {
       return;
     }
 
-    logger.info(`[CacheWarming] Warming up patterns for agent: ${agentId}`);
+    console.info(`[CacheWarming] Warming up patterns for agent: ${agentId}`);
 
     const warmupData = patterns.map((pattern) => ({
       agentId,
@@ -159,7 +163,7 @@ export class CacheWarmingManager {
     const cacheKey = this.generateAgentCacheKey(pattern.agentId, pattern.input, pattern.context);
 
     this.warmupPatterns.add(cacheKey);
-    logger.info(`[CacheWarming] Added warmup pattern for ${pattern.agentId}`);
+    console.info(`[CacheWarming] Added warmup pattern for ${pattern.agentId}`);
   }
 
   /**
@@ -168,7 +172,7 @@ export class CacheWarmingManager {
   removeWarmupPattern(agentId: string, input: string): void {
     const cacheKey = this.generateAgentCacheKey(agentId, input);
     this.warmupPatterns.delete(cacheKey);
-    logger.info(`[CacheWarming] Removed warmup pattern for ${agentId}`);
+    console.info(`[CacheWarming] Removed warmup pattern for ${agentId}`);
   }
 
   /**
@@ -179,7 +183,7 @@ export class CacheWarmingManager {
       return;
     }
 
-    logger.info(`[CacheWarming] Configuring bulk warmup for ${configs.length} agents`);
+    console.info(`[CacheWarming] Configuring bulk warmup for ${configs.length} agents`);
 
     for (const config of configs) {
       const patterns = config.patterns.map((pattern) => ({
@@ -230,7 +234,7 @@ export class CacheWarmingManager {
    */
   clearWarmupPatterns(): void {
     this.warmupPatterns.clear();
-    logger.info("[CacheWarming] Cleared all warmup patterns");
+    console.info("[CacheWarming] Cleared all warmup patterns");
   }
 
   /**
@@ -242,7 +246,7 @@ export class CacheWarmingManager {
       this.warmupIntervalId = undefined;
     }
     this.isWarming = false;
-    logger.info("[CacheWarming] Stopped cache warming");
+    console.info("[CacheWarming] Stopped cache warming");
   }
 
   /**
@@ -268,7 +272,7 @@ export class CacheWarmingManager {
       return;
     }
 
-    logger.info(`[CacheWarming] Starting adaptive warmup for ${usagePatterns.length} patterns`);
+    console.info(`[CacheWarming] Starting adaptive warmup for ${usagePatterns.length} patterns`);
 
     // Sort by frequency and recency
     const sortedPatterns = usagePatterns

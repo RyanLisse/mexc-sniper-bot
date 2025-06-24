@@ -5,7 +5,6 @@
  * and error handling. Extracted from API route for better maintainability.
  */
 
-import { createSafeLogger } from "../lib/structured-logger";
 import {
   type ApiCredentialsTestRequest,
   ApiCredentialsTestRequestSchema,
@@ -67,7 +66,12 @@ export interface AuthenticationTestResult {
 // ============================================================================
 
 export class ApiCredentialsTestService {
-  private logger = createSafeLogger("api-credentials-test-service");
+  private logger = {
+      info: (message: string, context?: any) => console.info('[api-credentials-test-service]', message, context || ''),
+      warn: (message: string, context?: any) => console.warn('[api-credentials-test-service]', message, context || ''),
+      error: (message: string, context?: any, error?: Error) => console.error('[api-credentials-test-service]', message, context || '', error || ''),
+      debug: (message: string, context?: any) => console.debug('[api-credentials-test-service]', message, context || ''),
+    };
 
   /**
    * Test API credentials with comprehensive validation
@@ -86,7 +90,7 @@ export class ApiCredentialsTestService {
       requestId: `cred_test_${Date.now()}_${Math.random().toString(36).substring(7)}`,
     };
 
-    logger.info("[CredentialTestService] Starting credential test", {
+    console.info("[CredentialTestService] Starting credential test", {
       requestId: context.requestId,
       userId: context.userId,
       provider: context.provider,
@@ -183,14 +187,14 @@ export class ApiCredentialsTestService {
       );
 
       if (!responseValidation.success) {
-        logger.error(
+        console.error(
           "[CredentialTestService] Response validation failed:",
           responseValidation.error
         );
         // Continue anyway but log the issue
       }
 
-      logger.info("[CredentialTestService] Credential test completed successfully", {
+      console.info("[CredentialTestService] Credential test completed successfully", {
         requestId: context.requestId,
         duration: `${Date.now() - context.startTime}ms`,
         connectivity: response.connectivity,
@@ -199,7 +203,7 @@ export class ApiCredentialsTestService {
 
       return { success: true, data: response };
     } catch (error) {
-      logger.error("[CredentialTestService] Unexpected error:", {
+      console.error("[CredentialTestService] Unexpected error:", {
         requestId: context.requestId,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
@@ -227,7 +231,7 @@ export class ApiCredentialsTestService {
     context: CredentialTestContext
   ): Promise<CredentialRetrievalResult> {
     try {
-      logger.info("[CredentialTestService] Retrieving credentials", {
+      console.info("[CredentialTestService] Retrieving credentials", {
         requestId: context.requestId,
         userId: context.userId,
         provider: context.provider,
@@ -243,7 +247,7 @@ export class ApiCredentialsTestService {
         };
       }
 
-      logger.info("[CredentialTestService] Credentials retrieved successfully", {
+      console.info("[CredentialTestService] Credentials retrieved successfully", {
         requestId: context.requestId,
         hasApiKey: !!userCredentials.apiKey,
         hasSecretKey: !!userCredentials.secretKey,
@@ -256,7 +260,7 @@ export class ApiCredentialsTestService {
         credentials: userCredentials,
       };
     } catch (error) {
-      logger.error("[CredentialTestService] Credential retrieval failed", {
+      console.error("[CredentialTestService] Credential retrieval failed", {
         requestId: context.requestId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -270,7 +274,7 @@ export class ApiCredentialsTestService {
   }
 
   private async initializeMexcService(credentials: any, context: CredentialTestContext) {
-    logger.info("[CredentialTestService] Initializing MEXC service", {
+    console.info("[CredentialTestService] Initializing MEXC service", {
       requestId: context.requestId,
       hasApiKey: !!credentials.apiKey,
       hasSecretKey: !!credentials.secretKey,
@@ -288,7 +292,7 @@ export class ApiCredentialsTestService {
     context: CredentialTestContext
   ): Promise<ConnectivityTestResult> {
     try {
-      logger.info("[CredentialTestService] Testing connectivity", { requestId: context.requestId });
+      console.info("[CredentialTestService] Testing connectivity", { requestId: context.requestId });
 
       const result = await mexcService.testConnectivity();
 
@@ -299,7 +303,7 @@ export class ApiCredentialsTestService {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      logger.info("[CredentialTestService] Connectivity test failed, but continuing", {
+      console.info("[CredentialTestService] Connectivity test failed, but continuing", {
         requestId: context.requestId,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -317,7 +321,7 @@ export class ApiCredentialsTestService {
     context: CredentialTestContext
   ): Promise<AuthenticationTestResult> {
     try {
-      logger.info("[CredentialTestService] Testing authentication", {
+      console.info("[CredentialTestService] Testing authentication", {
         requestId: context.requestId,
       });
 

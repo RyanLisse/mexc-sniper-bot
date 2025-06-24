@@ -1,12 +1,9 @@
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { NextResponse } from "next/server";
 
 /**
  * Validates URL format and protocol
  */
-const logger = createSafeLogger('route');
-
 function validateUrlFormat(url: string | undefined, allowedProtocols: string[]): boolean {
   if (!url) {
     return false;
@@ -74,7 +71,7 @@ export async function GET() {
         auth_status: authResult || false
       };
     } catch (sdkError) {
-      logger.error('[Auth Health Check] Kinde SDK Error:', { error: sdkError instanceof Error ? sdkError.message : String(sdkError) });
+      console.error('[Auth Health Check] Kinde SDK Error:', { error: sdkError instanceof Error ? sdkError.message : String(sdkError) });
       kindeStatus = 'error';
       authTestResult = {
         sdk_accessible: false,
@@ -145,7 +142,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    logger.error("[Auth Health Check] Unexpected error:", { error: error });
+    console.error("[Auth Health Check] Unexpected error:", { error: error });
     
     const errorObj = error as Error | { message?: string };
     return NextResponse.json({
