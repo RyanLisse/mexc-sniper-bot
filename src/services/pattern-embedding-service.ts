@@ -21,7 +21,13 @@ export interface PatternData {
 }
 
 export class PatternEmbeddingService {
-  private logger = createLogger("pattern-embedding-service");
+  private _logger?: ReturnType<typeof createLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("pattern-embedding-service");
+    }
+    return this._logger;
+  }
 
   private openai: OpenAI;
   private embeddingModel = "text-embedding-ada-002";

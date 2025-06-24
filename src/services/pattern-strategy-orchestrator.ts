@@ -129,7 +129,13 @@ export interface ResourceAllocation {
 // ============================================================================
 
 export class PatternStrategyOrchestrator {
-  private logger = createLogger("pattern-strategy-orchestrator");
+  private _logger?: ReturnType<typeof createLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("pattern-strategy-orchestrator");
+    }
+    return this._logger;
+  }
 
   private static instance: PatternStrategyOrchestrator;
 
