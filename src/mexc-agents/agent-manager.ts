@@ -12,7 +12,13 @@ import { StrategyAgent } from "./strategy-agent";
 import { SymbolAnalysisAgent } from "./symbol-analysis-agent";
 
 export class AgentManager {
-  private logger = createLogger("agent-manager");
+  private _logger?: ReturnType<typeof createLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("agent-manager");
+    }
+    return this._logger;
+  }
 
   // Core trading agents
   private mexcApiAgent: MexcApiAgent;
