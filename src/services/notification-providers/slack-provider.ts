@@ -38,7 +38,24 @@ interface SlackBlock {
 }
 
 export class SlackProvider implements NotificationProvider {
-  private logger = createLogger("slack-provider");
+  private _logger: ReturnType<typeof createLogger> | null = null;
+
+  private get logger(): ReturnType<typeof createLogger> {
+    if (!this._logger) {
+      try {
+        this._logger = createLogger("slack-provider");
+      } catch {
+        // Fallback during build time
+        this._logger = {
+          debug: console.debug.bind(console),
+          info: console.info.bind(console),
+          warn: console.warn.bind(console),
+          error: console.error.bind(console),
+        } as any;
+      }
+    }
+    return this._logger;
+  }
 
   getProviderType(): string {
     return "slack";

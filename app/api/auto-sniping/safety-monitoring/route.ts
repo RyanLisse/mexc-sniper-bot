@@ -1,5 +1,3 @@
-import { createLogger } from '../../../../src/lib/structured-logger';
-
 /**
  * Real-time Safety Monitoring API Route
  * 
@@ -8,20 +6,22 @@ import { createLogger } from '../../../../src/lib/structured-logger';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { RealTimeSafetyMonitoringService, type SafetyConfiguration } from '@/src/services/real-time-safety-monitoring-modules';
 
-const logger = createLogger('route');
-
-// Global service instance
-const safetyMonitoringService = RealTimeSafetyMonitoringService.getInstance();
+// Lazy service getter to avoid build-time initialization
+function getSafetyMonitoringService() {
+  return RealTimeSafetyMonitoringService.getInstance();
+}
 
 /**
  * GET /api/auto-sniping/safety-monitoring
  * Get comprehensive safety monitoring report
  */
 export const GET = apiAuthWrapper(async (request: NextRequest) => {
+  const logger = createLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const includeRecommendations = searchParams.get('include_recommendations') === 'true';
@@ -29,7 +29,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
 
     logger.info('[SafetyMonitoringAPI] Fetching safety monitoring report...');
     
-    const report = await safetyMonitoringService.getSafetyReport();
+    const report = await getSafetyMonitoringService().getSafetyReport();
     
     // Filter response based on query parameters
     const responseData = {
@@ -62,6 +62,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
  * Handle safety monitoring actions
  */
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
+  const logger = createLogger('route');
   try {
     const body = await request.json();
     const { action, configuration, alertId, reason } = body;
@@ -70,14 +71,14 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 
     switch (action) {
       case 'start_monitoring':
-        await safetyMonitoringService.startMonitoring();
+        await getSafetyMonitoringService().startMonitoring();
         return NextResponse.json(createSuccessResponse({
           message: 'Real-time safety monitoring started successfully',
           data: { status: 'active', timestamp: new Date().toISOString() }
         }));
 
       case 'stop_monitoring':
-        safetyMonitoringService.stopMonitoring();
+        getSafetyMonitoringService().stopMonitoring();
         return NextResponse.json(createSuccessResponse({
           message: 'Real-time safety monitoring stopped successfully',
           data: { status: 'inactive', timestamp: new Date().toISOString() }
@@ -91,7 +92,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           ), { status: 400 });
         }
         
-        safetyMonitoringService.updateConfiguration(configuration as Partial<SafetyConfiguration>);
+        getSafetyMonitoringService().updateConfiguration(configuration as Partial<SafetyConfiguration>);
         return NextResponse.json(createSuccessResponse({
           updatedFields: Object.keys(configuration),
           timestamp: new Date().toISOString()
@@ -107,7 +108,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           ), { status: 400 });
         }
         
-        const emergencyActions = await safetyMonitoringService.triggerEmergencyResponse(reason);
+        const emergencyActions = await getSafetyMonitoringService().triggerEmergencyResponse(reason);
         return NextResponse.json(createSuccessResponse({ 
           actions: emergencyActions,
           timestamp: new Date().toISOString(),
@@ -124,7 +125,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           ), { status: 400 });
         }
         
-        const acknowledged = safetyMonitoringService.acknowledgeAlert(alertId);
+        const acknowledged = getSafetyMonitoringService().acknowledgeAlert(alertId);
         if (!acknowledged) {
           return NextResponse.json(createErrorResponse(
             'Alert not found or already acknowledged',
@@ -138,21 +139,21 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         ));
 
       case 'clear_acknowledged_alerts':
-        const clearedCount = safetyMonitoringService.clearAcknowledgedAlerts();
+        const clearedCount = getSafetyMonitoringService().clearAcknowledgedAlerts();
         return NextResponse.json(createSuccessResponse({
           message: `${clearedCount} acknowledged alerts cleared successfully`,
           data: { clearedCount, timestamp: new Date().toISOString() }
         }));
 
       case 'get_risk_metrics':
-        const riskMetrics = safetyMonitoringService.getRiskMetrics();
+        const riskMetrics = getSafetyMonitoringService().getRiskMetrics();
         return NextResponse.json(createSuccessResponse({
           message: 'Risk metrics retrieved successfully',
           data: riskMetrics
         }));
 
       case 'check_system_safety':
-        const isSystemSafe = await safetyMonitoringService.isSystemSafe();
+        const isSystemSafe = await getSafetyMonitoringService().isSystemSafe();
         return NextResponse.json(createSuccessResponse({
           message: 'System safety status checked successfully',
           data: { 

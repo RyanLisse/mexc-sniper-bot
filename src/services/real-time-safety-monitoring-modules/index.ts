@@ -139,8 +139,15 @@ export class RealTimeSafetyMonitoringService {
   private patternMonitoring: PatternMonitoringService;
   private mexcService: UnifiedMexcServiceV2;
 
-  private logger = createLogger("safety-monitoring");
+  private _logger?: ReturnType<typeof createLogger>;
   private isMonitoringActive = false;
+
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("safety-monitoring");
+    }
+    return this._logger;
+  }
 
   private constructor() {
     // Initialize services

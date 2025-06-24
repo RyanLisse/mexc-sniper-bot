@@ -3,27 +3,10 @@
  *
  * Comprehensive OpenTelemetry setup for the MEXC Trading Bot.
  * Provides distributed tracing, metrics collection, and structured logging.
+ * 
+ * Build-safe implementation with dynamic imports to prevent bundling issues.
  */
 
-import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
-import { JaegerExporter } from "@opentelemetry/exporter-jaeger";
-import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
-import { Resource } from "@opentelemetry/resources";
-import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { BatchSpanProcessor, TraceIdRatioBasedSampler } from "@opentelemetry/sdk-trace-node";
-import {
-  SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
-  SEMRESATTRS_SERVICE_INSTANCE_ID,
-  SEMRESATTRS_SERVICE_NAME,
-  SEMRESATTRS_SERVICE_NAMESPACE,
-  SEMRESATTRS_SERVICE_VERSION,
-} from "@opentelemetry/semantic-conventions";
-import {
-  getProductionTelemetryConfig,
-  initializeProductionTelemetry,
-  ProductionTelemetryUtils,
-} from "./opentelemetry-production-config";
 import { createLogger } from "./structured-logger";
 
 // Environment configuration
@@ -36,16 +19,51 @@ const telemetryDisabled =
   process.env.DISABLE_TELEMETRY === "true" ||
   (isTesting && process.env.ENABLE_TELEMETRY_IN_TESTS !== "true");
 
+// Initialize logger
+const logger = createLogger("opentelemetry-setup");
+
 /**
  * OpenTelemetry SDK Configuration
+ * Build-safe implementation with dynamic imports
  */
-export function initializeOpenTelemetry(): NodeSDK | null {
+export async function initializeOpenTelemetry(): Promise<any | null> {
   if (telemetryDisabled) {
     logger.info("[OpenTelemetry] Telemetry disabled");
     return null;
   }
 
   try {
+    // Dynamic imports to prevent build-time bundling issues
+    const [
+      { getNodeAutoInstrumentations },
+      { JaegerExporter },
+      { PrometheusExporter },
+      { Resource },
+      { PeriodicExportingMetricReader },
+      { NodeSDK },
+      { BatchSpanProcessor, TraceIdRatioBasedSampler },
+      semanticConventions,
+      productionConfig
+    ] = await Promise.all([
+      import("@opentelemetry/auto-instrumentations-node"),
+      import("@opentelemetry/exporter-jaeger"),
+      import("@opentelemetry/exporter-prometheus"),
+      import("@opentelemetry/resources"),
+      import("@opentelemetry/sdk-metrics"),
+      import("@opentelemetry/sdk-node"),
+      import("@opentelemetry/sdk-trace-node"),
+      import("@opentelemetry/semantic-conventions"),
+      import("./opentelemetry-production-config")
+    ]);
+
+    const {
+      SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
+      SEMRESATTRS_SERVICE_INSTANCE_ID,
+      SEMRESATTRS_SERVICE_NAME,
+      SEMRESATTRS_SERVICE_NAMESPACE,
+      SEMRESATTRS_SERVICE_VERSION,
+    } = semanticConventions;
+
     // Resource configuration - identifies the service
     const resource = new Resource({
       [SEMRESATTRS_SERVICE_NAME]: "mexc-trading-bot",

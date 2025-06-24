@@ -1,5 +1,11 @@
-/**
 import { createLogger } from './structured-logger';
+
+// Lazy logger initialization for global functions
+function getLogger() {
+  return createLogger("cache-manager");
+}
+
+/**
  * Multi-Level Cache Manager
  *
  * Implements a comprehensive caching strategy with multiple levels:
@@ -96,7 +102,14 @@ export interface TTLConfig {
 // =======================
 
 class LRUCache<T = any> {
-  private logger = createLogger("cache-manager");
+  private _logger: ReturnType<typeof createLogger> | null = null;
+  
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("cache-manager");
+    }
+    return this._logger;
+  }
 
   private cache = new Map<string, CacheEntry<T>>();
   private maxSize: number;
@@ -338,7 +351,7 @@ export class CacheManager {
       this.updateGlobalMetrics("miss", performance.now() - startTime);
       return null;
     } catch (error) {
-      logger.error("[CacheManager] Get error:", error);
+      getLogger().error("[CacheManager] Get error:", error);
       this.updateGlobalMetrics("miss", performance.now() - startTime);
       return null;
     }
@@ -394,7 +407,7 @@ export class CacheManager {
       this.globalMetrics.sets++;
       this.emit("set", key, value);
     } catch (error) {
-      logger.error("[CacheManager] Set error:", error);
+      getLogger().error("[CacheManager] Set error:", error);
     }
   }
 
@@ -414,7 +427,7 @@ export class CacheManager {
         this.emit("delete", key, null);
       }
     } catch (error) {
-      logger.error("[CacheManager] Delete error:", error);
+      getLogger().error("[CacheManager] Delete error:", error);
     }
 
     return deleted;
@@ -448,7 +461,7 @@ export class CacheManager {
 
       this.emit("clear", "all", null);
     } catch (error) {
-      logger.error("[CacheManager] Clear error:", error);
+      getLogger().error("[CacheManager] Clear error:", error);
     }
   }
 
@@ -488,7 +501,7 @@ export class CacheManager {
 
       this.emit("invalidate", pattern.toString(), invalidated);
     } catch (error) {
-      logger.error("[CacheManager] Invalidate pattern error:", error);
+      getLogger().error("[CacheManager] Invalidate pattern error:", error);
     }
 
     return invalidated;
@@ -527,7 +540,7 @@ export class CacheManager {
 
       this.emit("invalidateType", type, invalidated);
     } catch (error) {
-      logger.error("[CacheManager] Invalidate by type error:", error);
+      getLogger().error("[CacheManager] Invalidate by type error:", error);
     }
 
     return invalidated;
@@ -567,7 +580,7 @@ export class CacheManager {
 
       this.emit("invalidateDependency", dependency, invalidated);
     } catch (error) {
-      logger.error("[CacheManager] Invalidate by dependency error:", error);
+      getLogger().error("[CacheManager] Invalidate by dependency error:", error);
     }
 
     return invalidated;
@@ -614,7 +627,7 @@ export class CacheManager {
         recommendations,
       };
     } catch (error) {
-      logger.error("[CacheManager] Analytics error:", error);
+      getLogger().error("[CacheManager] Analytics error:", error);
       return {
         performance: this.globalMetrics,
         topKeys: [],
@@ -676,7 +689,7 @@ export class CacheManager {
     this.globalMetrics.lastCleanup = Date.now();
 
     if (results.total > 0) {
-      logger.info(
+      getLogger().info(
         `[CacheManager] Cleaned up ${results.total} expired entries (L1: ${results.L1}, L2: ${results.L2}, L3: ${results.L3})`
       );
     }
@@ -737,10 +750,10 @@ export class CacheManager {
       }
 
       if (evicted > 0 || promoted > 0) {
-        logger.info(`[CacheManager] Optimized cache: evicted ${evicted}, promoted ${promoted}`);
+        getLogger().info(`[CacheManager] Optimized cache: evicted ${evicted}, promoted ${promoted}`);
       }
     } catch (error) {
-      logger.error("[CacheManager] Optimization error:", error);
+      getLogger().error("[CacheManager] Optimization error:", error);
     }
 
     return { evicted, promoted };
@@ -759,9 +772,9 @@ export class CacheManager {
       this.clear();
       this.eventListeners.clear();
 
-      logger.info("[CacheManager] Destroyed cache manager");
+      getLogger().info("[CacheManager] Destroyed cache manager");
     } catch (error) {
-      logger.error("[CacheManager] Destroy error:", error);
+      getLogger().error("[CacheManager] Destroy error:", error);
     }
   }
 
@@ -952,7 +965,7 @@ export class CacheManager {
         try {
           listener(key, value);
         } catch (error) {
-          logger.error(`[CacheManager] Event listener error for ${event}:`, error);
+          getLogger().error(`[CacheManager] Event listener error for ${event}:`, error);
         }
       }
     }
@@ -1044,11 +1057,11 @@ export async function warmUpCache(
     ttl?: number;
   }>
 ): Promise<void> {
-  logger.info(`[CacheManager] Warming up cache with ${data.length} entries...`);
+  getLogger().info(`[CacheManager] Warming up cache with ${data.length} entries...`);
 
   for (const { key, value, type, ttl } of data) {
     await globalCacheManager.set(key, value, { type, ttl });
   }
 
-  logger.info(`[CacheManager] Cache warm-up completed`);
+  getLogger().info(`[CacheManager] Cache warm-up completed`);
 }

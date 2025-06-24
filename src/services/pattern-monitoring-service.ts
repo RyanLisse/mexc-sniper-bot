@@ -62,7 +62,14 @@ export interface PatternMonitoringReport {
 }
 
 export class PatternMonitoringService {
-  private logger = createLogger("pattern-monitoring-service");
+  private _logger: ReturnType<typeof createLogger> | null = null;
+  
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("pattern-monitoring-service");
+    }
+    return this._logger;
+  }
 
   private static instance: PatternMonitoringService;
   private patternEngine: PatternDetectionCore;
@@ -115,11 +122,11 @@ export class PatternMonitoringService {
    */
   async startMonitoring(): Promise<void> {
     if (this.isMonitoring) {
-      logger.info("[PatternMonitoring] Already monitoring");
+      this.logger.info("[PatternMonitoring] Already monitoring");
       return;
     }
 
-    logger.info("[PatternMonitoring] Starting real-time pattern monitoring...");
+    this.logger.info("[PatternMonitoring] Starting real-time pattern monitoring...");
     this.isMonitoring = true;
     this.stats.engineStatus = "active";
 
@@ -140,7 +147,7 @@ export class PatternMonitoringService {
       return;
     }
 
-    logger.info("[PatternMonitoring] Stopping pattern monitoring...");
+    this.logger.info("[PatternMonitoring] Stopping pattern monitoring...");
     this.isMonitoring = false;
     this.stats.engineStatus = "idle";
 
@@ -181,6 +188,13 @@ export class PatternMonitoringService {
   }
 
   /**
+   * Get current monitoring status
+   */
+  get isMonitoringActive(): boolean {
+    return this.isMonitoring;
+  }
+
+  /**
    * Manually trigger pattern detection on specific symbols
    */
   async detectPatternsManually(
@@ -191,7 +205,7 @@ export class PatternMonitoringService {
     const allPatterns: PatternMatch[] = [];
 
     try {
-      logger.info(`[PatternMonitoring] Manual pattern detection on ${symbols.length} symbols`);
+      this.logger.info(`[PatternMonitoring] Manual pattern detection on ${symbols.length} symbols`);
 
       // Detect ready state patterns
       const readyPatterns = await this.patternEngine.detectReadyStatePattern(symbols);
@@ -227,7 +241,7 @@ export class PatternMonitoringService {
 
       return allPatterns;
     } catch (error) {
-      logger.error("[PatternMonitoring] Manual detection failed:", error);
+      this.logger.error("[PatternMonitoring] Manual detection failed:", error);
       this.stats.consecutiveErrors++;
       throw error;
     }
@@ -261,7 +275,7 @@ export class PatternMonitoringService {
     const _startTime = Date.now();
 
     try {
-      logger.info("[PatternMonitoring] Performing monitoring cycle...");
+      this.logger.info("[PatternMonitoring] Performing monitoring cycle...");
 
       // Get latest symbol data from MEXC
       const symbolsResponse = await this.mexcService.getAllSymbols();
@@ -273,7 +287,7 @@ export class PatternMonitoringService {
       const candidateSymbols = this.filterCandidateSymbols(symbolsResponse.data);
 
       if (candidateSymbols.length === 0) {
-        logger.info("[PatternMonitoring] No candidate symbols found");
+        this.logger.info("[PatternMonitoring] No candidate symbols found");
         return;
       }
 
@@ -281,9 +295,9 @@ export class PatternMonitoringService {
       const allPatterns = await this.detectPatternsManually(candidateSymbols);
 
       this.stats.consecutiveErrors = 0; // Reset error count on success
-      logger.info(`[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`);
+      this.logger.info(`[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`);
     } catch (error) {
-      logger.error("[PatternMonitoring] Monitoring cycle failed:", error);
+      this.logger.error("[PatternMonitoring] Monitoring cycle failed:", error);
       this.stats.consecutiveErrors++;
       this.stats.engineStatus = this.stats.consecutiveErrors > 3 ? "error" : "active";
     } finally {

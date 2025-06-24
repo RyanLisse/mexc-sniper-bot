@@ -7,17 +7,18 @@ import { NotificationService } from "../../../../../src/services/notification-pr
 import { validateRequest } from "../../../../../src/lib/api-auth";
 import { handleApiError } from "../../../../../src/lib/api-response";
 
-const alertConfigService = new AlertConfigurationService(db);
-const notificationService = new NotificationService(db);
-
 // ==========================================
 // POST /api/alerts/deploy/built-in - Deploy built-in alert rules and channels
 // ==========================================
-const logger = createLogger('route');
 
 export async function POST(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const user = await validateRequest(request);
+
+    // Initialize services at runtime
+    const alertConfigService = new AlertConfigurationService(db);
+    const notificationService = new NotificationService(db);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     logger.info("Deploying built-in alert rules and notification channels...");

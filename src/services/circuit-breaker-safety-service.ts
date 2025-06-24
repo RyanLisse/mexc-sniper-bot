@@ -89,13 +89,34 @@ export interface AutoSnipingSafetyGate {
 // ============================================================================
 
 export class CircuitBreakerSafetyService {
-  private logger = createLogger("circuit-breaker-safety-service");
+  private _logger: ReturnType<typeof createLogger> | null = null;
 
   private errorHandler: UnifiedErrorHandler;
   private mexcService: any;
   private coordinatedRegistry: CoordinatedCircuitBreakerRegistry;
   private coordinator: CircuitBreakerCoordinator;
   private serviceId: string;
+
+  /**
+   * Lazy logger initialization to prevent webpack bundling issues
+   */
+  private get logger(): ReturnType<typeof createLogger> {
+    if (!this._logger) {
+      try {
+        this._logger = createLogger("circuit-breaker-safety-service");
+      } catch (error) {
+        // Fallback to console logging during build time
+        this._logger = {
+          debug: console.debug.bind(console),
+          info: console.info.bind(console),
+          warn: console.warn.bind(console),
+          error: console.error.bind(console),
+          fatal: console.error.bind(console),
+        } as any;
+      }
+    }
+    return this._logger;
+  }
 
   constructor(mexcService: any, serviceId = "circuit-breaker-safety-service") {
     this.mexcService = mexcService;

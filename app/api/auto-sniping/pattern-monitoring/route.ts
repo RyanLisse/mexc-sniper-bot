@@ -1,5 +1,3 @@
-import { createLogger } from '../../../../src/lib/structured-logger';
-
 /**
  * Pattern Monitoring API Endpoints
  * 
@@ -7,18 +5,22 @@ import { createLogger } from '../../../../src/lib/structured-logger';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { PatternMonitoringService } from '@/src/services/pattern-monitoring-service';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 
-const logger = createLogger('pattern-monitoring-api');
-const patternMonitoringService = PatternMonitoringService.getInstance();
+// Lazy service getter to avoid build-time initialization
+function getPatternMonitoringService() {
+  return PatternMonitoringService.getInstance();
+}
 
 /**
  * GET /api/auto-sniping/pattern-monitoring
  * Get pattern monitoring report and statistics
  */
 export const GET = apiAuthWrapper(async (request: NextRequest) => {
+  const logger = createLogger('pattern-monitoring-api');
   try {
     const { searchParams } = new URL(request.url);
     const includeActivity = searchParams.get('include_activity') === 'true';
@@ -26,12 +28,12 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
     const patternLimit = parseInt(searchParams.get('pattern_limit') || '20', 10);
 
     // Get monitoring report
-    const report = await patternMonitoringService.getMonitoringReport();
+    const report = await getPatternMonitoringService().getMonitoringReport();
 
     // Optionally include recent patterns
     let recentPatterns;
     if (includePatterns) {
-      recentPatterns = patternMonitoringService.getRecentPatterns(patternLimit);
+      recentPatterns = getPatternMonitoringService().getRecentPatterns(patternLimit);
     }
 
     const responseData = {
@@ -62,20 +64,21 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
  * Control pattern monitoring and trigger manual detection
  */
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
+  const logger = createLogger('pattern-monitoring-api');
   try {
     const body = await request.json();
     const { action, symbols, calendarEntries, alertId } = body;
 
     switch (action) {
       case 'start_monitoring':
-        await patternMonitoringService.startMonitoring();
+        await getPatternMonitoringService().startMonitoring();
         return NextResponse.json(createSuccessResponse(
           { status: 'started' },
           { message: 'Pattern monitoring started successfully' }
         ));
 
       case 'stop_monitoring':
-        patternMonitoringService.stopMonitoring();
+        getPatternMonitoringService().stopMonitoring();
         return NextResponse.json(createSuccessResponse(
           { status: 'stopped' },
           { message: 'Pattern monitoring stopped successfully' }
@@ -89,7 +92,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           ), { status: 400 });
         }
 
-        const patterns = await patternMonitoringService.detectPatternsManually(
+        const patterns = await getPatternMonitoringService().detectPatternsManually(
           symbols,
           calendarEntries
         );
@@ -113,8 +116,6 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         const { patternStrategyOrchestrator } = await import('@/src/services/pattern-strategy-orchestrator');
         const { patternTargetIntegrationService } = await import('@/src/services/pattern-target-integration-service');
         const { UnifiedMexcServiceV2 } = await import('@/src/services/unified-mexc-service-v2');
-
-const logger = createLogger('route');
 
         const mexcService = new UnifiedMexcServiceV2();
         const userId = body.userId || "system";
@@ -172,7 +173,7 @@ const logger = createLogger('route');
           ), { status: 400 });
         }
 
-        const acknowledged = patternMonitoringService.acknowledgeAlert(alertId);
+        const acknowledged = getPatternMonitoringService().acknowledgeAlert(alertId);
         if (!acknowledged) {
           return NextResponse.json(createErrorResponse(
             'Alert not found',
@@ -186,14 +187,14 @@ const logger = createLogger('route');
         ));
 
       case 'clear_acknowledged_alerts':
-        const clearedCount = patternMonitoringService.clearAcknowledgedAlerts();
+        const clearedCount = getPatternMonitoringService().clearAcknowledgedAlerts();
         return NextResponse.json(createSuccessResponse(
           { clearedCount },
           { message: `${clearedCount} acknowledged alerts cleared` }
         ));
 
       case 'get_monitoring_status':
-        const report = await patternMonitoringService.getMonitoringReport();
+        const report = await getPatternMonitoringService().getMonitoringReport();
         return NextResponse.json(createSuccessResponse({
           status: report.status,
           engineStatus: report.stats.engineStatus,
@@ -225,6 +226,7 @@ const logger = createLogger('route');
  * Update monitoring configuration
  */
 export const PUT = apiAuthWrapper(async (request: NextRequest) => {
+  const logger = createLogger('pattern-monitoring-api');
   try {
     const body = await request.json();
     const { config } = body;

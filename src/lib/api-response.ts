@@ -1,9 +1,9 @@
 /**
-import { createLogger } from './structured-logger';
  * Standard API Response Interface
  *
  * This interface ensures consistent response format across all API routes
  */
+import { createLogger } from './structured-logger';
 import { toSafeError } from "./error-type-utils";
 
 export interface ApiResponse<T = unknown> {
@@ -37,7 +37,28 @@ export interface ApiResponse<T = unknown> {
 /**
  * Creates a successful API response
  */
-const logger = createLogger("api-response");
+let _logger: ReturnType<typeof createLogger> | null = null;
+
+/**
+ * Lazy logger initialization to prevent webpack bundling issues
+ */
+function getLogger(): ReturnType<typeof createLogger> {
+  if (!_logger) {
+    try {
+      _logger = createLogger("api-response");
+    } catch (error) {
+      // Fallback to console logging during build time
+      _logger = {
+        debug: console.debug.bind(console),
+        info: console.info.bind(console),
+        warn: console.warn.bind(console),
+        error: console.error.bind(console),
+        fatal: console.error.bind(console),
+      } as any;
+    }
+  }
+  return _logger;
+}
 
 export function createSuccessResponse<T>(data: T, meta?: ApiResponse<T>["meta"]): ApiResponse<T> {
   return {
@@ -202,7 +223,7 @@ export function createApiResponse<T>(response: ApiResponse<T>, status?: number):
  */
 export function handleApiError(error: unknown, defaultMessage = "An error occurred"): Response {
   const safeError = toSafeError(error);
-  logger.error("API Error:", safeError);
+  getLogger().error("API Error:", safeError);
 
   const errorMessage = safeError.message || defaultMessage;
   return createApiResponse(createErrorResponse(errorMessage), HTTP_STATUS.INTERNAL_SERVER_ERROR);
@@ -267,7 +288,7 @@ export function createApiRouteHandler<T = Record<string, unknown>>(
       const statusCode = result.success ? HTTP_STATUS.OK : HTTP_STATUS.BAD_REQUEST;
       return createApiResponse(result, statusCode);
     } catch (error) {
-      logger.error(`[${serviceName}] API request failed:`, error);
+      getLogger().error(`[${serviceName}] API request failed:`, error);
       return handleApiError(error, `${serviceName} request failed`);
     }
   };

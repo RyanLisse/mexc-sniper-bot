@@ -66,7 +66,27 @@ interface SeasonalModel {
 }
 
 export class AnomalyDetectionService {
-  private logger = createLogger("anomaly-detection-service");
+  private _logger: ReturnType<typeof createLogger> | null = null;
+
+  /**
+   * Lazy logger initialization to prevent webpack bundling issues
+   */
+  private get logger(): ReturnType<typeof createLogger> {
+    if (!this._logger) {
+      try {
+        this._logger = createLogger("anomaly-detection-service");
+      } catch (error) {
+        this._logger = {
+          debug: console.debug.bind(console),
+          info: console.info.bind(console),
+          warn: console.warn.bind(console),
+          error: console.error.bind(console),
+          fatal: console.error.bind(console),
+        } as any;
+      }
+    }
+    return this._logger;
+  }
 
   private db: any;
   private models: Map<string, any> = new Map();

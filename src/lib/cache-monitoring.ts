@@ -124,7 +124,14 @@ export interface PerformanceReport {
 // =======================
 
 export class CacheMonitoringSystem {
-  private logger = createLogger("cache-monitoring");
+  private _logger?: ReturnType<typeof createLogger>;
+
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("cache-monitoring");
+    }
+    return this._logger;
+  }
 
   private config: CacheMonitoringConfig;
   private metricsHistory: SystemCacheMetrics[] = [];

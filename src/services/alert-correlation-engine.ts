@@ -48,7 +48,27 @@ export interface AlertSignature {
 }
 
 export class AlertCorrelationEngine {
-  private logger = createLogger("alert-correlation-engine");
+  private _logger: ReturnType<typeof createLogger> | null = null;
+
+  /**
+   * Lazy logger initialization to prevent webpack bundling issues
+   */
+  private get logger(): ReturnType<typeof createLogger> {
+    if (!this._logger) {
+      try {
+        this._logger = createLogger("alert-correlation-engine");
+      } catch (error) {
+        this._logger = {
+          debug: console.debug.bind(console),
+          info: console.info.bind(console),
+          warn: console.warn.bind(console),
+          error: console.error.bind(console),
+          fatal: console.error.bind(console),
+        } as any;
+      }
+    }
+    return this._logger;
+  }
 
   private db: any;
   private patterns: Map<string, CorrelationPattern> = new Map();

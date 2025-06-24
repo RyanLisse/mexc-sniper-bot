@@ -228,7 +228,7 @@ export class AdaptiveRateLimiterService {
 
       return result;
     } catch (error) {
-      logger.error("[Adaptive Rate Limiter] Check failed:", error);
+      this.logger.error("[Adaptive Rate Limiter] Check failed:", error);
 
       await this.errorLogger.logError(error as Error, {
         context: "rate_limit_check",
@@ -302,7 +302,7 @@ export class AdaptiveRateLimiterService {
       const newFactor = this.calculateAdaptationFactor(metrics, responseTime, success);
 
       if (Math.abs(newFactor - metrics.adaptationFactor) > 0.1) {
-        logger.info(
+        this.logger.info(
           `[Adaptive Rate Limiter] Adapting ${key}: ${metrics.adaptationFactor.toFixed(2)} -> ${newFactor.toFixed(2)}`
         );
 
@@ -647,7 +647,7 @@ export class AdaptiveRateLimiterService {
       }
     }
 
-    logger.info(
+    this.logger.info(
       `[Adaptive Rate Limiter] Cleanup completed - ${this.slidingWindows.size} windows, ${this.endpointMetrics.size} metrics`
     );
   }
@@ -719,13 +719,13 @@ export class AdaptiveRateLimiterService {
         }
       }
 
-      logger.info(`[Adaptive Rate Limiter] Processed MEXC headers for ${endpoint}`, {
+      this.logger.info(`[Adaptive Rate Limiter] Processed MEXC headers for ${endpoint}`, {
         weightUsed: weightUsedHeaderKey ? headers[weightUsedHeaderKey] : "none",
         orderCount1s: orderCount1sHeaderKey ? headers[orderCount1sHeaderKey] : "none",
         orderCount1m: orderCount1mHeaderKey ? headers[orderCount1mHeaderKey] : "none",
       });
     } catch (error) {
-      logger.error(`[Adaptive Rate Limiter] Error processing MEXC headers for ${endpoint}:`, error);
+      this.logger.error(`[Adaptive Rate Limiter] Error processing MEXC headers for ${endpoint}:`, error);
     }
   }
 
@@ -752,7 +752,7 @@ export class AdaptiveRateLimiterService {
         metrics.adaptationFactor = Math.min(metrics.adaptationFactor * 0.1, 0.1); // Reduce to 10%
         metrics.lastAdaptation = Date.now();
 
-        logger.warn(`[Adaptive Rate Limiter] Rate limited on ${endpoint}`, {
+        this.logger.warn(`[Adaptive Rate Limiter] Rate limited on ${endpoint}`, {
           retryAfterSeconds,
           newAdaptationFactor: metrics.adaptationFactor,
           recommendation: `Wait ${retryAfterSeconds} seconds before retrying`,
@@ -762,7 +762,7 @@ export class AdaptiveRateLimiterService {
       // Update endpoint-specific rate limits for this endpoint
       this.temporarilyReduceEndpointLimits(endpoint, retryAfterSeconds);
     } catch (error) {
-      logger.error(
+      this.logger.error(
         `[Adaptive Rate Limiter] Error handling rate limit response for ${endpoint}:`,
         error
       );
@@ -845,7 +845,7 @@ export class AdaptiveRateLimiterService {
 
     // Only update if significant change
     if (Math.abs(newAdaptationFactor - metrics.adaptationFactor) > 0.05) {
-      logger.info(
+      this.logger.info(
         `[Adaptive Rate Limiter] Adjusting ${endpoint} based on ${limitType} utilization`,
         {
           utilizationRate: `${(utilizationRate * 100).toFixed(1)}%`,
@@ -879,10 +879,10 @@ export class AdaptiveRateLimiterService {
       // Reset limits after some time (double the retry-after period)
       setTimeout(() => {
         this.endpointConfigs[endpoint] = currentConfig;
-        logger.info(`[Adaptive Rate Limiter] Reset limits for ${endpoint} after rate limit period`);
+        this.logger.info(`[Adaptive Rate Limiter] Reset limits for ${endpoint} after rate limit period`);
       }, retryAfterSeconds * 2000);
 
-      logger.info(`[Adaptive Rate Limiter] Temporarily reduced limits for ${endpoint}`, {
+      this.logger.info(`[Adaptive Rate Limiter] Temporarily reduced limits for ${endpoint}`, {
         retryAfterSeconds,
         newMaxRequests: reducedConfig.maxRequests,
         newBurstAllowance: reducedConfig.burstAllowance,
@@ -909,7 +909,7 @@ export class AdaptiveRateLimiterService {
     }
 
     this.userLimits.set(userId, userLimits);
-    logger.info(`[Adaptive Rate Limiter] Set user ${userId} priority to ${priority}`);
+    this.logger.info(`[Adaptive Rate Limiter] Set user ${userId} priority to ${priority}`);
   }
 
   public setCustomLimits(userId: string, endpoint: string, config: Partial<RateLimitConfig>): void {
@@ -927,7 +927,7 @@ export class AdaptiveRateLimiterService {
     userLimits.customLimits[endpoint] = { ...this.defaultConfig, ...config };
     this.userLimits.set(userId, userLimits);
 
-    logger.info(
+    this.logger.info(
       `[Adaptive Rate Limiter] Set custom limits for user ${userId} endpoint ${endpoint}`
     );
   }
@@ -979,7 +979,7 @@ export class AdaptiveRateLimiterService {
     this.endpointMetrics.clear();
     this.tokenBuckets.clear();
     this.slidingWindows.clear();
-    logger.info("[Adaptive Rate Limiter] Cache cleared");
+    this.logger.info("[Adaptive Rate Limiter] Cache cleared");
   }
 
   public destroy(): void {

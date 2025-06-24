@@ -18,7 +18,14 @@ import { generateCacheKey, globalCacheManager } from "../cache-manager";
 import type { AgentCacheConfig, AgentHealthCache } from "./agent-cache-types";
 
 export class AgentHealthCacheManager {
-  private logger = createLogger("agent-health-cache");
+  private _logger?: ReturnType<typeof createLogger>;
+
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("agent-health-cache");
+    }
+    return this._logger;
+  }
 
   private config: AgentCacheConfig;
   private healthCache: Map<string, AgentHealthCache> = new Map();

@@ -12,7 +12,16 @@ const nextConfig: NextConfig = {
     "expo-secure-store",
     "expo-modules-core",
     "react-native",
-    "@react-native-async-storage/async-storage"
+    "@react-native-async-storage/async-storage",
+    // OpenTelemetry packages for server-side only
+    "@opentelemetry/auto-instrumentations-node",
+    "@opentelemetry/instrumentation",
+    "@opentelemetry/sdk-node",
+    "@opentelemetry/resources",
+    "@opentelemetry/exporter-jaeger",
+    "@opentelemetry/exporter-prometheus",
+    "@opentelemetry/sdk-trace-node",
+    "@opentelemetry/sdk-metrics"
   ],
 
   // TypeScript configuration
@@ -61,10 +70,29 @@ const nextConfig: NextConfig = {
       use: 'null-loader',
     });
 
+    // Exclude OpenTelemetry packages that use gRPC from client-side bundling
+    if (!isServer) {
+      config.module.rules.push({
+        test: /[\\/]node_modules[\\/]@grpc[\\/]grpc-js[\\/]/,
+        use: 'null-loader',
+      });
+      
+      config.module.rules.push({
+        test: /[\\/]node_modules[\\/]@opentelemetry[\\/](otlp-grpc-exporter-base|exporter-logs-otlp-grpc)[\\/]/,
+        use: 'null-loader',
+      });
+    }
+
     if (isServer) {
       // Also exclude expo modules on server side
       config.externals.push("expo-modules-core");
       config.externals.push("expo-secure-store");
+      
+      // Configure OpenTelemetry for server-side
+      config.externals.push({
+        "@opentelemetry/auto-instrumentations-node": "commonjs @opentelemetry/auto-instrumentations-node",
+        "@opentelemetry/instrumentation": "commonjs @opentelemetry/instrumentation"
+      });
     } else {
       // For client-side, completely exclude Node.js modules
       config.resolve.fallback = {
@@ -83,6 +111,20 @@ const nextConfig: NextConfig = {
         'expo-modules-core': false,
         'react-native': false,
         '@react-native-async-storage/async-storage': false,
+        // Exclude OpenTelemetry packages from client-side
+        '@opentelemetry/auto-instrumentations-node': false,
+        '@opentelemetry/instrumentation': false,
+        '@opentelemetry/sdk-node': false,
+        '@opentelemetry/resources': false,
+        '@opentelemetry/exporter-jaeger': false,
+        '@opentelemetry/exporter-prometheus': false,
+        '@opentelemetry/sdk-trace-node': false,
+        '@opentelemetry/sdk-metrics': false,
+        '@opentelemetry/core': false,
+        // Exclude gRPC and Node.js specific modules
+        '@grpc/grpc-js': false,
+        '@opentelemetry/otlp-grpc-exporter-base': false,
+        '@opentelemetry/exporter-logs-otlp-grpc': false,
       };
 
       // Keep minimal fallbacks for client-side exclusions
@@ -96,6 +138,20 @@ const nextConfig: NextConfig = {
         'expo-modules-core': false,
         'react-native': false,
         '@react-native-async-storage/async-storage': false,
+        // Explicitly exclude OpenTelemetry dependencies from client bundle
+        '@opentelemetry/auto-instrumentations-node': false,
+        '@opentelemetry/instrumentation': false,
+        '@opentelemetry/sdk-node': false,
+        '@opentelemetry/resources': false,
+        '@opentelemetry/exporter-jaeger': false,
+        '@opentelemetry/exporter-prometheus': false,
+        '@opentelemetry/sdk-trace-node': false,
+        '@opentelemetry/sdk-metrics': false,
+        '@opentelemetry/core': false,
+        // Explicitly exclude gRPC and Node.js specific modules
+        '@grpc/grpc-js': false,
+        '@opentelemetry/otlp-grpc-exporter-base': false,
+        '@opentelemetry/exporter-logs-otlp-grpc': false,
       };
 
       // Advanced code splitting and optimization

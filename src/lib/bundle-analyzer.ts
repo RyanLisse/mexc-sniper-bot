@@ -1,4 +1,5 @@
 import { createLogger } from "./structured-logger";
+
 /**
  * Bundle Size Analyzer and Optimizer
  * Provides detailed analysis and recommendations for bundle optimization
@@ -53,7 +54,14 @@ export interface PerformanceMetrics {
 }
 
 export class BundleAnalyzer {
-  private logger = createLogger("bundle-analyzer");
+  private _logger?: ReturnType<typeof createLogger>;
+
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("bundle-analyzer");
+    }
+    return this._logger;
+  }
 
   private static instance: BundleAnalyzer;
 
@@ -105,7 +113,7 @@ export class BundleAnalyzer {
 
       return analysis;
     } catch (error) {
-      logger.error("[BundleAnalyzer] Error analyzing bundle:", error);
+      this.logger.error("[BundleAnalyzer] Error analyzing bundle:", error);
       throw error;
     }
   }

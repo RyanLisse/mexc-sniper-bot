@@ -18,7 +18,14 @@ import { generateCacheKey, globalCacheManager } from "../cache-manager";
 import type { AgentCacheConfig, CacheWarmupConfig, CacheWarmupPattern } from "./agent-cache-types";
 
 export class CacheWarmingManager {
-  private logger = createLogger("cache-warming");
+  private _logger?: ReturnType<typeof createLogger>;
+
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("cache-warming");
+    }
+    return this._logger;
+  }
 
   private config: AgentCacheConfig;
   private warmupPatterns: Set<string> = new Set();

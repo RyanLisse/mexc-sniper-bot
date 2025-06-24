@@ -16,7 +16,24 @@ interface EmailConfig {
 }
 
 export class EmailProvider implements NotificationProvider {
-  private logger = createLogger("email-provider");
+  private _logger: ReturnType<typeof createLogger> | null = null;
+
+  private get logger(): ReturnType<typeof createLogger> {
+    if (!this._logger) {
+      try {
+        this._logger = createLogger("email-provider");
+      } catch {
+        // Fallback during build time
+        this._logger = {
+          debug: console.debug.bind(console),
+          info: console.info.bind(console),
+          warn: console.warn.bind(console),
+          error: console.error.bind(console),
+        } as any;
+      }
+    }
+    return this._logger;
+  }
 
   getProviderType(): string {
     return "email";

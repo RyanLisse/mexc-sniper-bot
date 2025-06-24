@@ -39,7 +39,14 @@ import { PatternValidator } from "./pattern-validator";
  */
 export class PatternDetectionCore {
   private static instance: PatternDetectionCore;
-  private logger = createLogger("pattern-detection-core");
+  private _logger?: ReturnType<typeof createLogger>;
+
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("pattern-detection-core");
+    }
+    return this._logger;
+  }
 
   // Module dependencies
   private patternAnalyzer: IPatternAnalyzer;

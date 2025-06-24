@@ -114,7 +114,14 @@ export interface MonitoringConfig {
 // ============================================================================
 
 export class PerformanceMonitoringService {
-  private logger = createLogger("performance-monitoring-service");
+  private _logger?: ReturnType<typeof createLogger>;
+
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("performance-monitoring-service");
+    }
+    return this._logger;
+  }
 
   // PERFORMANCE OPTIMIZATION: Memory leak prevention with size limits
   private static readonly MAX_HISTORY_SIZE = 1000;

@@ -122,7 +122,7 @@ export const GET = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache analytics error:', { error });
+    getLogger().error('[API] Cache analytics error:', { error });
     return context.error(
       'Failed to retrieve cache analytics',
       500,
@@ -176,7 +176,7 @@ export const POST = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache analytics report generation error:', { error });
+    getLogger().error('[API] Cache analytics report generation error:', { error });
     return context.error(
       'Failed to generate cache analytics report',
       500,
@@ -190,7 +190,14 @@ export const POST = createApiHandler({
 
 // Helper functions
 
-const logger = createLogger('route');
+// Lazy logger initialization to avoid build-time issues
+let _logger: ReturnType<typeof createLogger> | null = null;
+function getLogger() {
+  if (!_logger) {
+    _logger = createLogger('route');
+  }
+  return _logger;
+}
 
 function parseTimeRange(timeRange: string): number {
   const units = {

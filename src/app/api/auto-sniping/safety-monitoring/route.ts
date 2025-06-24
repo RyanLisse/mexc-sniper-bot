@@ -13,7 +13,10 @@ import type {
 } from "../../../../schemas/safety-monitoring-schemas";
 import { RealTimeSafetyMonitoringService } from "../../../../services/real-time-safety-monitoring-modules";
 
-const logger = createLogger("safety-monitoring-api");
+// Lazy logger initialization to avoid build-time issues
+function getLogger() {
+  return createLogger("safety-monitoring-api");
+}
 
 interface AuthenticatedUser {
   id: string;
@@ -29,6 +32,7 @@ export const GET = authenticatedRoute(async (request: NextRequest, user: Authent
   const url = new URL(request.url);
   const action = url.searchParams.get("action") || "status";
 
+  const logger = getLogger();
   logger.info("Safety monitoring API GET request", {
     operation: "api_get_request",
     userId: user.id,
@@ -280,6 +284,7 @@ const validateThresholdsUpdate = (thresholds: unknown): Partial<SafetyThresholds
 // Action handlers to reduce cognitive complexity
 const actionHandlers: Record<string, ActionHandler> = {
   start_monitoring: async (_body, user, safetyService) => {
+    const logger = getLogger();
     if (safetyService.getMonitoringStatus()) {
       return apiResponse(
         createErrorResponse("Safety monitoring is already active", {
@@ -494,6 +499,7 @@ const actionHandlers: Record<string, ActionHandler> = {
   },
 
   clear_acknowledged_alerts: async (_body, user, safetyService) => {
+    const logger = getLogger();
     const clearedCount = safetyService.clearAcknowledgedAlerts();
 
     logger.info("Acknowledged alerts cleared via API", {
@@ -553,6 +559,7 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: Authen
       );
     }
 
+    const logger = getLogger();
     logger.info("Safety monitoring API POST request", {
       operation: "api_post_request",
       userId: user.id,

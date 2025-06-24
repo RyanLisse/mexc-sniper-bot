@@ -2,12 +2,16 @@
  * Structured Logger for MEXC Trading Bot
  *
  * Build-safe structured logging without OpenTelemetry dependencies during compilation
+ * Webpack-optimized with static exports for proper bundling
  */
 
-// Build-safe trace fallback - no dynamic imports during build
-const trace = {
+// Import build-safe logger as fallback
+import { createBuildSafeLogger, type BuildSafeLogger } from './build-safe-logger';
+
+// Build-safe trace fallback - completely static, no dynamic imports
+const NOOP_TRACE = {
   getActiveSpan: () => null,
-};
+} as const;
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -57,17 +61,19 @@ export interface LogEntry {
 }
 
 /**
- * Structured Logger Class
+ * Structured Logger Class - Build-safe implementation
  */
 export class StructuredLogger {
-  private service: string;
-  private component: string;
-  private logLevel: LogLevel;
+  private readonly service: string;
+  private readonly component: string;
+  private readonly logLevel: LogLevel;
 
   constructor(service: string, component: string, logLevel: LogLevel = "info") {
     this.service = service;
     this.component = component;
-    this.logLevel = this.parseLogLevel(process.env.LOG_LEVEL || logLevel);
+    // Ensure we safely access process.env during build time
+    const envLogLevel = typeof process !== 'undefined' && process.env ? process.env.LOG_LEVEL : undefined;
+    this.logLevel = this.parseLogLevel(envLogLevel || logLevel);
   }
 
   /**
@@ -114,13 +120,16 @@ export class StructuredLogger {
   }
 
   /**
-   * Emit log entry
+   * Emit log entry - Build-safe implementation
    */
   private emit(entry: LogEntry): void {
     if (!this.shouldLog(entry.level)) return;
 
+    // Safely check environment during build time
+    const isProduction = typeof process !== 'undefined' && process.env && process.env.NODE_ENV === "production";
+
     // Format for console output (development) or structured output (production)
-    if (process.env.NODE_ENV === "production") {
+    if (isProduction) {
       // JSON output for log aggregation systems
       console.log(JSON.stringify(entry));
     } else {
@@ -277,37 +286,95 @@ export class StructuredLogger {
 
 /**
  * Create logger instance for a specific component
+ * Build-safe factory function that handles webpack bundling gracefully
  */
-export function createLogger(component: string, service = "mexc-trading-bot"): StructuredLogger {
-  return new StructuredLogger(service, component);
+export function createLogger(component: string, service: string = "mexc-trading-bot"): StructuredLogger {
+  // Validate inputs to ensure build-time safety
+  if (typeof component !== 'string' || !component) {
+    component = 'unknown';
+  }
+  if (typeof service !== 'string' || !service) {
+    service = 'mexc-trading-bot';
+  }
+  
+  // During webpack build process, environment checks might fail
+  // Use build-safe logger as fallback for maximum compatibility
+  if (typeof process === 'undefined' || typeof window !== 'undefined') {
+    return createBuildSafeLogger(component, service) as unknown as StructuredLogger;
+  }
+  
+  try {
+    return new StructuredLogger(service, component);
+  } catch (error) {
+    // If StructuredLogger construction fails, use build-safe fallback
+    return createBuildSafeLogger(component, service) as unknown as StructuredLogger;
+  }
+}
+
+/**
+ * Build-safe logger factory with error handling
+ */
+export function createSafeLogger(component: string, service: string = "mexc-trading-bot"): StructuredLogger {
+  try {
+    return createLogger(component, service);
+  } catch (error) {
+    // Fallback to console logging if structured logger fails
+    console.warn('Failed to create structured logger, falling back to console:', error);
+    return createFallbackLogger(component, service);
+  }
+}
+
+/**
+ * Fallback logger for build-time safety
+ * Creates a logger-like object that uses console methods when StructuredLogger fails
+ */
+function createFallbackLogger(component: string, service: string): StructuredLogger {
+  // Create a minimal logger-like object that mimics StructuredLogger interface
+  const fallbackLogger = {
+    debug: (message: string, context?: LogContext) => console.debug(`[${component}] ${message}`, context || {}),
+    info: (message: string, context?: LogContext) => console.info(`[${component}] ${message}`, context || {}),
+    warn: (message: string, context?: LogContext) => console.warn(`[${component}] ${message}`, context || {}),
+    error: (message: string, context?: LogContext, error?: Error) => console.error(`[${component}] ${message}`, context || {}, error || ''),
+    fatal: (message: string, context?: LogContext, error?: Error) => console.error(`[${component}] FATAL: ${message}`, context || {}, error || ''),
+    trading: (operation: string, context: LogContext) => console.info(`[${component}] Trading: ${operation}`, context),
+    pattern: (patternType: string, confidence: number, context?: LogContext) => console.info(`[${component}] Pattern: ${patternType} (${confidence})`, context || {}),
+    api: (endpoint: string, method: string, responseTime: number, context?: LogContext) => console.info(`[${component}] API: ${method} ${endpoint} (${responseTime}ms)`, context || {}),
+    agent: (agentId: string, taskType: string, context?: LogContext) => console.info(`[${component}] Agent: ${agentId} - ${taskType}`, context || {}),
+    performance: (operation: string, duration: number, context?: LogContext) => console.info(`[${component}] Performance: ${operation} (${duration}ms)`, context || {}),
+    cache: (operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext) => console.debug(`[${component}] Cache ${operation}: ${key}`, context || {}),
+    safety: (event: string, riskScore: number, context?: LogContext) => console.warn(`[${component}] Safety: ${event} (risk: ${riskScore})`, context || {}),
+  };
+  
+  return fallbackLogger as StructuredLogger;
 }
 
 /**
  * Default logger instances for common components
+ * Using lazy initialization to prevent circular dependencies during build
  */
 export const logger = {
   // Core services
-  trading: createLogger("trading"),
-  pattern: createLogger("pattern-detection"),
-  safety: createLogger("safety"),
-  api: createLogger("api"),
+  get trading() { return createLogger("trading"); },
+  get pattern() { return createLogger("pattern-detection"); },
+  get safety() { return createLogger("safety"); },
+  get api() { return createLogger("api"); },
 
   // Infrastructure
-  cache: createLogger("cache"),
-  database: createLogger("database"),
-  websocket: createLogger("websocket"),
+  get cache() { return createLogger("cache"); },
+  get database() { return createLogger("database"); },
+  get websocket() { return createLogger("websocket"); },
 
   // Agent system
-  agent: createLogger("agent"),
-  coordination: createLogger("coordination"),
+  get agent() { return createLogger("agent"); },
+  get coordination() { return createLogger("coordination"); },
 
   // Monitoring
-  monitoring: createLogger("monitoring"),
-  performance: createLogger("performance"),
+  get monitoring() { return createLogger("monitoring"); },
+  get performance() { return createLogger("performance"); },
 
   // General purpose
-  system: createLogger("system"),
-  default: createLogger("default"),
+  get system() { return createLogger("system"); },
+  get default() { return createLogger("default"); },
 };
 
 /**
@@ -354,3 +421,10 @@ export function createTimer(operation: string, component: string): PerformanceTi
   const logger = createLogger(component);
   return new PerformanceTimer(operation, logger);
 }
+
+// ===========================================
+// Build-safe module exports
+// ===========================================
+
+// Keep only named exports to ensure webpack compatibility
+// The individual exports above are already declared, so no re-exports needed

@@ -54,7 +54,7 @@ export const POST = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache management error:', { error });
+    getLogger().error('[API] Cache management error:', { error });
     return context.error(
       `Failed to execute cache operation: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,
@@ -166,7 +166,7 @@ export const GET = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache management info error:', { error });
+    getLogger().error('[API] Cache management info error:', { error });
     return context.error(
       'Failed to retrieve cache management information',
       500,
@@ -180,7 +180,14 @@ export const GET = createApiHandler({
 
 // Operation handlers
 
-// MOVED: const logger = createLogger('route');
+// Lazy logger initialization to avoid build-time issues
+let _logger: ReturnType<typeof createLogger> | null = null;
+function getLogger() {
+  if (!_logger) {
+    _logger = createLogger('route');
+  }
+  return _logger;
+}
 
 async function handleClearOperation(parameters: any) {
   const { level, pattern } = parameters;
@@ -264,7 +271,7 @@ async function handleWarmupOperation(parameters: any) {
   if (apis.length > 0) {
     for (const endpoint of apis) {
       // This would trigger API cache warming - implementation depends on specific API client
-      logger.info(`[CacheManage] Warming up API cache for endpoint: ${endpoint}`);
+      getLogger().info(`[CacheManage] Warming up API cache for endpoint: ${endpoint}`);
     }
     apiWarmupResults = { endpoints: apis.length };
   }
@@ -329,7 +336,7 @@ async function handleCleanupOperation(parameters: any) {
   let patternCleanup = null;
   if (aggressive) {
     // This would require implementing cleanup in pattern embedding service
-    logger.info('[CacheManage] Aggressive cleanup: cleaning pattern embeddings');
+    getLogger().info('[CacheManage] Aggressive cleanup: cleaning pattern embeddings');
     patternCleanup = { cleaned: 0 }; // Placeholder
   }
 
@@ -391,7 +398,7 @@ export const PUT = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache config update error:', { error });
+    getLogger().error('[API] Cache config update error:', { error });
     return context.error(
       'Failed to update cache configuration',
       500,

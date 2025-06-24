@@ -8,10 +8,6 @@ import { AlertCorrelationEngine } from "../../../../src/services/alert-correlati
 import { validateRequest } from "../../../../src/lib/api-auth";
 import { handleApiError } from "../../../../src/lib/api-response";
 
-const alertingService = new AutomatedAlertingService(db);
-const anomalyService = new AnomalyDetectionService(db);
-const correlationEngine = new AlertCorrelationEngine(db);
-
 // ==========================================
 // GET /api/alerts/analytics - Get alerting analytics
 // ==========================================
@@ -28,6 +24,11 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
+    // Initialize services at runtime
+    const alertingService = new AutomatedAlertingService(db);
+    const anomalyService = new AnomalyDetectionService(db);
+    const correlationEngine = new AlertCorrelationEngine(db);
+
     // Get alert analytics
     const analytics = await alertingService.getAlertAnalytics(bucket, limit);
 
@@ -39,6 +40,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate additional metrics
     const additionalMetrics = await calculateAdditionalMetrics(
+      alertingService,
       startDate ?? undefined, 
       endDate ?? undefined
     );
@@ -200,7 +202,11 @@ function calculateOverallMLPerformance(modelStats: any[]): {
   };
 }
 
-async function calculateAdditionalMetrics(startDate?: string, endDate?: string): Promise<{
+async function calculateAdditionalMetrics(
+  alertingService: any,
+  startDate?: string, 
+  endDate?: string
+): Promise<{
   trends: {
     alertVelocity: number;
     resolutionTrend: number;

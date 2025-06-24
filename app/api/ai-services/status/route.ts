@@ -4,7 +4,20 @@ import { getAiIntelligenceService } from "../../../../src/services/ai-intelligen
 import { createApiResponse } from "../../../../src/lib/api-response";
 
 export async function GET(request: NextRequest) {
-  const logger = createLogger('route');
+  // Create logger lazily to prevent build-time issues
+  let logger: ReturnType<typeof createLogger>;
+  try {
+    logger = createLogger('route');
+  } catch {
+    // Fallback to console during build
+    logger = { 
+      error: console.error.bind(console),
+      info: console.log.bind(console),
+      warn: console.warn.bind(console),
+      debug: console.debug.bind(console)
+    } as any;
+  }
+
   try {
     // Check AI service health and configuration
     const cohereStatus = await checkCohereStatus();

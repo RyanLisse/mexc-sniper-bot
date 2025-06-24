@@ -99,7 +99,7 @@ interface PerplexityResearchResult {
 // ======================
 
 export class AIIntelligenceService {
-  private logger: ReturnType<typeof createLogger>;
+  private _logger: ReturnType<typeof createLogger> | null = null;
 
   private cohereApiKey: string;
   private perplexityApiKey: string;
@@ -113,16 +113,38 @@ export class AIIntelligenceService {
   private cacheTimeout = 30 * 60 * 1000; // 30 minutes
 
   constructor() {
-    this.logger = createLogger("ai-intelligence-service");
+    // Defer logger initialization to prevent build-time issues
     this.cohereApiKey = process.env.COHERE_API_KEY || "";
     this.perplexityApiKey = process.env.PERPLEXITY_API_KEY || "";
+  }
 
-    if (!this.cohereApiKey) {
-      this.logger.warn("[AI Intelligence] Cohere API key not found - embedding features disabled");
+  /**
+   * Lazy logger initialization to prevent webpack bundling issues
+   */
+  private get logger(): ReturnType<typeof createLogger> {
+    if (!this._logger) {
+      try {
+        this._logger = createLogger("ai-intelligence-service");
+        
+        // Log configuration warnings only once when logger is first accessed
+        if (!this.cohereApiKey) {
+          this._logger.warn("[AI Intelligence] Cohere API key not found - embedding features disabled");
+        }
+        if (!this.perplexityApiKey) {
+          this._logger.warn("[AI Intelligence] Perplexity API key not found - research features disabled");
+        }
+      } catch (error) {
+        // Fallback to console logging during build time
+        this._logger = {
+          debug: console.debug.bind(console),
+          info: console.info.bind(console),
+          warn: console.warn.bind(console),
+          error: console.error.bind(console),
+          fatal: console.error.bind(console),
+        } as any;
+      }
     }
-    if (!this.perplexityApiKey) {
-      this.logger.warn("[AI Intelligence] Perplexity API key not found - research features disabled");
-    }
+    return this._logger;
   }
 
   // ======================
@@ -1091,9 +1113,24 @@ Focus on actionable insights and recent developments. Use current market data an
 
 // Export factory function to prevent build-time instantiation
 let aiIntelligenceServiceInstance: AIIntelligenceService | null = null;
+
+/**
+ * Build-safe factory function with lazy instantiation
+ * Prevents webpack from trying to instantiate during bundling
+ */
 export function getAiIntelligenceService(): AIIntelligenceService {
+  // Ensure we only instantiate at runtime, not during build
+  if (typeof process === 'undefined') {
+    throw new Error('AIIntelligenceService cannot be instantiated in browser environment');
+  }
+  
   if (!aiIntelligenceServiceInstance) {
-    aiIntelligenceServiceInstance = new AIIntelligenceService();
+    try {
+      aiIntelligenceServiceInstance = new AIIntelligenceService();
+    } catch (error) {
+      console.error('Failed to create AIIntelligenceService:', error);
+      throw error;
+    }
   }
   return aiIntelligenceServiceInstance;
 }

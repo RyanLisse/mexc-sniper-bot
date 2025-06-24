@@ -8,18 +8,18 @@ import { validateRequest } from "../../../../src/lib/api-auth";
 import { handleApiError } from "../../../../src/lib/api-response";
 import { z } from "zod";
 
-const notificationService = new NotificationService(db);
-const alertConfigService = new AlertConfigurationService(db);
-
 // ==========================================
 // GET /api/alerts/channels - List notification channels
 // ==========================================
-const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
+
+    // Initialize services at runtime
+    const alertConfigService = new AlertConfigurationService(db);
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || undefined;
@@ -56,9 +56,13 @@ export async function GET(request: NextRequest) {
 // POST /api/alerts/channels - Create notification channel
 // ==========================================
 export async function POST(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
+
+    // Initialize services at runtime
+    const alertConfigService = new AlertConfigurationService(db);
 
     const body = await request.json();
     

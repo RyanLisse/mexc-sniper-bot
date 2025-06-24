@@ -31,13 +31,34 @@ enum CircuitBreakerState {
 }
 
 export class CircuitBreaker {
-  private logger = createLogger("circuit-breaker");
+  private _logger: ReturnType<typeof createLogger> | null = null;
 
   private state: CircuitBreakerState = CircuitBreakerState.CLOSED;
   private failureCount = 0;
   private lastFailureTime?: Date;
   private lastSuccessTime?: Date;
   private nextRetryTime?: Date;
+
+  /**
+   * Lazy logger initialization to prevent webpack bundling issues
+   */
+  private get logger(): ReturnType<typeof createLogger> {
+    if (!this._logger) {
+      try {
+        this._logger = createLogger("circuit-breaker");
+      } catch (error) {
+        // Fallback to console logging during build time
+        this._logger = {
+          debug: console.debug.bind(console),
+          info: console.info.bind(console),
+          warn: console.warn.bind(console),
+          error: console.error.bind(console),
+          fatal: console.error.bind(console),
+        } as any;
+      }
+    }
+    return this._logger;
+  }
   private totalRequests = 0;
   private failedRequests = 0;
   private successfulRequests = 0;
@@ -64,15 +85,15 @@ export class CircuitBreaker {
     // Check if circuit should move from OPEN to HALF_OPEN
     if (this.state === CircuitBreakerState.OPEN && this.shouldAttemptReset()) {
       this.state = CircuitBreakerState.HALF_OPEN;
-      logger.info(`🔄 Circuit breaker [${this.name}] attempting reset - state: HALF_OPEN`);
+      this.logger.info(`🔄 Circuit breaker [${this.name}] attempting reset - state: HALF_OPEN`);
     }
 
     // Reject if circuit is OPEN
     if (this.state === CircuitBreakerState.OPEN) {
-      logger.warn(`⚡ Circuit breaker [${this.name}] is OPEN - rejecting request`);
+      this.logger.warn(`⚡ Circuit breaker [${this.name}] is OPEN - rejecting request`);
 
       if (fallback) {
-        logger.info(`🔄 Circuit breaker [${this.name}] using fallback mechanism`);
+        this.logger.info(`🔄 Circuit breaker [${this.name}] using fallback mechanism`);
         return await fallback();
       }
 
@@ -90,7 +111,7 @@ export class CircuitBreaker {
       this.onSuccess();
 
       const duration = performance.now() - startTime;
-      logger.info(
+      this.logger.info(
         `✅ Circuit breaker [${this.name}] request succeeded in ${duration.toFixed(2)}ms`
       );
 
@@ -99,18 +120,18 @@ export class CircuitBreaker {
       this.onFailure();
 
       const duration = performance.now() - startTime;
-      logger.error(
+      this.logger.error(
         `❌ Circuit breaker [${this.name}] request failed in ${duration.toFixed(2)}ms:`,
         error
       );
 
       // If we have a fallback and circuit breaker suggests using it, try the fallback
       if (fallback) {
-        logger.info(`🔄 Circuit breaker [${this.name}] using fallback after failure`);
+        this.logger.info(`🔄 Circuit breaker [${this.name}] using fallback after failure`);
         try {
           return await fallback();
         } catch (fallbackError) {
-          logger.error(`❌ Circuit breaker [${this.name}] fallback also failed:`, fallbackError);
+          this.logger.error(`❌ Circuit breaker [${this.name}] fallback also failed:`, fallbackError);
           throw error; // Throw original error, not fallback error
         }
       }
@@ -129,7 +150,7 @@ export class CircuitBreaker {
 
     if (this.state === CircuitBreakerState.HALF_OPEN) {
       this.state = CircuitBreakerState.CLOSED;
-      logger.info(`✅ Circuit breaker [${this.name}] recovered - state: CLOSED`);
+      this.logger.info(`✅ Circuit breaker [${this.name}] recovered - state: CLOSED`);
     }
   }
 
@@ -145,7 +166,7 @@ export class CircuitBreaker {
       // If we fail in HALF_OPEN, go back to OPEN
       this.state = CircuitBreakerState.OPEN;
       this.nextRetryTime = new Date(Date.now() + this.recoveryTimeout);
-      logger.info(`⚡ Circuit breaker [${this.name}] failed during recovery - state: OPEN`);
+      this.logger.info(`⚡ Circuit breaker [${this.name}] failed during recovery - state: OPEN`);
     } else if (
       this.state === CircuitBreakerState.CLOSED &&
       this.failureCount >= this.failureThreshold
@@ -153,7 +174,7 @@ export class CircuitBreaker {
       // If we exceed failure threshold, open the circuit
       this.state = CircuitBreakerState.OPEN;
       this.nextRetryTime = new Date(Date.now() + this.recoveryTimeout);
-      logger.info(`⚡ Circuit breaker [${this.name}] opened due to failures - state: OPEN`);
+      this.logger.info(`⚡ Circuit breaker [${this.name}] opened due to failures - state: OPEN`);
     }
   }
 
@@ -195,7 +216,7 @@ export class CircuitBreaker {
     this.failedRequests = 0;
     this.successfulRequests = 0;
 
-    logger.info(`🔄 Circuit breaker [${this.name}] manually reset`);
+    this.logger.info(`🔄 Circuit breaker [${this.name}] manually reset`);
   }
 
   /**
@@ -204,7 +225,7 @@ export class CircuitBreaker {
   forceOpen(): void {
     this.state = CircuitBreakerState.OPEN;
     this.nextRetryTime = new Date(Date.now() + this.recoveryTimeout);
-    logger.info(`⚡ Circuit breaker [${this.name}] manually opened`);
+    this.logger.info(`⚡ Circuit breaker [${this.name}] manually opened`);
   }
 
   /**
@@ -214,7 +235,7 @@ export class CircuitBreaker {
     this.state = CircuitBreakerState.CLOSED;
     this.failureCount = 0;
     this.nextRetryTime = undefined;
-    logger.info(`✅ Circuit breaker [${this.name}] manually closed`);
+    this.logger.info(`✅ Circuit breaker [${this.name}] manually closed`);
   }
 
   /**
@@ -254,8 +275,19 @@ export class CircuitBreakerError extends Error {
 export class CircuitBreakerRegistry {
   private static instance: CircuitBreakerRegistry;
   private breakers = new Map<string, CircuitBreaker>();
+  private _logger: ReturnType<typeof createLogger> | null = null;
 
   private constructor() {}
+
+  /**
+   * Lazy logger initialization to prevent webpack bundling issues
+   */
+  private get logger(): ReturnType<typeof createLogger> {
+    if (!this._logger) {
+      this._logger = createLogger("circuit-breaker-registry");
+    }
+    return this._logger;
+  }
 
   public static getInstance(): CircuitBreakerRegistry {
     if (!CircuitBreakerRegistry.instance) {
@@ -270,7 +302,7 @@ export class CircuitBreakerRegistry {
   getBreaker(name: string, options?: Partial<CircuitBreakerOptions>): CircuitBreaker {
     if (!this.breakers.has(name)) {
       this.breakers.set(name, new CircuitBreaker(name, options));
-      logger.info(`🔧 Created circuit breaker: ${name}`);
+      this.logger.info(`🔧 Created circuit breaker: ${name}`);
     }
     return this.breakers.get(name)!;
   }
@@ -302,7 +334,7 @@ export class CircuitBreakerRegistry {
     for (const breaker of this.breakers.values()) {
       breaker.reset();
     }
-    logger.info("🔄 All circuit breakers reset");
+    this.logger.info("🔄 All circuit breakers reset");
   }
 }
 

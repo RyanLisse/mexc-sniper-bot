@@ -22,7 +22,14 @@ import type {
 } from "./agent-cache-types";
 
 export class CachePerformanceMonitor {
-  private logger = createLogger("cache-performance-monitor");
+  private _logger?: ReturnType<typeof createLogger>;
+
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("cache-performance-monitor");
+    }
+    return this._logger;
+  }
 
   private config: AgentCacheConfig;
   private performanceMetrics: Map<string, AgentCacheMetrics> = new Map();

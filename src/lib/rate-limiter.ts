@@ -44,8 +44,25 @@ const RATE_LIMITS = {
   },
 };
 
-// Security event logging
-const logger = createLogger("rate-limiter");
+// Security event logging - lazy initialization
+let _logger: ReturnType<typeof createLogger> | null = null;
+
+function getLogger(): ReturnType<typeof createLogger> {
+  if (!_logger) {
+    try {
+      _logger = createLogger("rate-limiter");
+    } catch {
+      // Fallback during build time
+      _logger = {
+        debug: console.debug.bind(console),
+        info: console.info.bind(console),
+        warn: console.warn.bind(console),
+        error: console.error.bind(console),
+      } as any;
+    }
+  }
+  return _logger;
+}
 
 export function logSecurityEvent(event: Omit<SecurityEvent, "timestamp">): void {
   const securityEvent: SecurityEvent = {
@@ -61,7 +78,7 @@ export function logSecurityEvent(event: Omit<SecurityEvent, "timestamp">): void 
   }
 
   // Log to console for monitoring (in production, send to logging service)
-  logger.info(`[SECURITY] ${event.type}: ${event.ip} -> ${event.endpoint}`, {
+  getLogger().info(`[SECURITY] ${event.type}: ${event.ip} -> ${event.endpoint}`, {
     timestamp: new Date(securityEvent.timestamp).toISOString(),
     ...event.metadata,
   });
@@ -134,7 +151,7 @@ export async function checkRateLimit(
       };
     }
   } catch (error) {
-    logger.error("[Rate Limiter] Adaptive rate limiter failed:", error);
+    getLogger().error("[Rate Limiter] Adaptive rate limiter failed:", error);
     // Continue with traditional rate limiting on adaptive failure
   }
 

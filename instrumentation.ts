@@ -1,12 +1,18 @@
 /**
- * Vercel-compatible OpenTelemetry Instrumentation
+ * Build-safe Instrumentation
  * 
- * Temporarily disabled for build compatibility
- * TODO: Re-enable with Vercel-compatible configuration
+ * OpenTelemetry completely disabled to prevent webpack bundling issues
+ * with gRPC and Node.js modules during Next.js build process
  */
 
 export async function register() {
-  // Telemetry disabled during build process due to gRPC/Node.js module bundling issues
-  console.log('[OpenTelemetry] Instrumentation temporarily disabled for Vercel compatibility');
+  // Completely disable telemetry to prevent webpack bundling issues
+  // OpenTelemetry imports gRPC modules that can't be bundled for the browser
+  
+  // Future: Re-enable with proper Vercel-compatible setup
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Instrumentation] OpenTelemetry disabled for build compatibility');
+  }
+  
   return;
 }

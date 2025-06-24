@@ -131,7 +131,24 @@ const ANALYTICS_CONFIG = {
 // ============================================================================
 
 export class TradingAnalyticsService {
-  private logger = createLogger("trading-analytics-service");
+  private _logger: ReturnType<typeof createLogger> | null = null;
+
+  private get logger(): ReturnType<typeof createLogger> {
+    if (!this._logger) {
+      try {
+        this._logger = createLogger("trading-analytics-service");
+      } catch {
+        // Fallback during build time
+        this._logger = {
+          debug: console.debug.bind(console),
+          info: console.info.bind(console),
+          warn: console.warn.bind(console),
+          error: console.error.bind(console),
+        } as any;
+      }
+    }
+    return this._logger;
+  }
 
   private static instance: TradingAnalyticsService;
   private events: TradingEvent[] = [];
@@ -150,7 +167,7 @@ export class TradingAnalyticsService {
    * Initialize the analytics service
    */
   initialize(): void {
-    logger.info("[TradingAnalytics] Initializing trading analytics service...");
+    this.logger.info("[TradingAnalytics] Initializing trading analytics service...");
 
     // Start periodic flushing of events
     this.startPeriodicFlush();
@@ -158,7 +175,7 @@ export class TradingAnalyticsService {
     // Set up default alert handlers
     this.setupDefaultAlerts();
 
-    logger.info("[TradingAnalytics] Trading analytics service initialized");
+    this.logger.info("[TradingAnalytics] Trading analytics service initialized");
   }
 
   /**
@@ -192,7 +209,7 @@ export class TradingAnalyticsService {
       // Update performance metrics
       this.updatePerformanceMetrics(validatedEvent);
     } catch (error) {
-      logger.error("[TradingAnalytics] Failed to log trading event:", error);
+      this.logger.error("[TradingAnalytics] Failed to log trading event:", error);
     }
   }
 
@@ -496,7 +513,7 @@ export class TradingAnalyticsService {
   clearAnalyticsData(): void {
     this.events.length = 0;
     this.metricsCache.clear();
-    logger.info("[TradingAnalytics] Analytics data cleared");
+    this.logger.info("[TradingAnalytics] Analytics data cleared");
   }
 
   /**
@@ -623,7 +640,7 @@ export class TradingAnalyticsService {
         try {
           callback(event);
         } catch (error) {
-          logger.error("[TradingAnalytics] Alert callback failed:", error);
+          this.logger.error("[TradingAnalytics] Alert callback failed:", error);
         }
       });
     }
@@ -644,7 +661,7 @@ export class TradingAnalyticsService {
     // For now, just log the flush operation
     const eventCount = this.events.length;
     if (eventCount > 0) {
-      logger.info(`[TradingAnalytics] Flushing ${eventCount} events to persistent storage`);
+      this.logger.info(`[TradingAnalytics] Flushing ${eventCount} events to persistent storage`);
 
       // Simulate persistent storage by keeping only recent events
       const keepRecent = ANALYTICS_CONFIG.storage.maxEvents * 0.8;
@@ -657,7 +674,7 @@ export class TradingAnalyticsService {
   private setupDefaultAlerts(): void {
     this.addAlertCallback((event: TradingEvent) => {
       if (!event.success && event.eventType.includes("TRADE")) {
-        logger.warn(
+        this.logger.warn(
           `[TradingAnalytics] ALERT: Trading operation failed for user ${event.userId}: ${event.error}`
         );
       }
@@ -818,7 +835,7 @@ ${report.recommendations.length > 0 ? report.recommendations.map((r) => `• ${r
       this.flushInterval = null;
     }
     this.alertCallbacks.length = 0;
-    logger.info("[TradingAnalytics] Trading analytics service disposed");
+    this.logger.info("[TradingAnalytics] Trading analytics service disposed");
   }
 }
 
