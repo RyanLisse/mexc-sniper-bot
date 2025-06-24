@@ -34,7 +34,13 @@ export interface TransactionResult {
 }
 
 export class TransactionLockService {
-  private logger = createLogger("transaction-lock-service");
+  private _logger?: ReturnType<typeof createLogger>;
+  private getLogger() {
+    if (!this._logger) {
+      this._logger = createLogger("transaction-lock-service");
+    }
+    return this._logger;
+  }
 
   private static instance: TransactionLockService;
   private cleanupInterval: NodeJS.Timeout | null = null;

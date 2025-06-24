@@ -19,7 +19,13 @@ import type { UnifiedMexcConfig } from "./mexc-client-types";
  * This is the main client that applications should use
  */
 export class UnifiedMexcClient extends MexcTradingApiClient {
-  private logger = createLogger("mexc-client-factory");
+  private _logger?: ReturnType<typeof createLogger>;
+  private getLogger() {
+    if (!this._logger) {
+      this._logger = createLogger("mexc-client-factory");
+    }
+    return this._logger;
+  }
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);

@@ -39,6 +39,14 @@ export interface ErrorLogFilter {
  * Error logging service for centralized error tracking
  */
 export class ErrorLoggingService {
+  private _logger?: ReturnType<typeof createLogger>;
+  private getLogger() {
+    if (!this._logger) {
+      this._logger = createLogger("error-logging-service");
+    }
+    return this._logger;
+  }
+  
   private static instance: ErrorLoggingService;
   private buffer: ErrorLogEntry[] = [];
   private flushInterval: NodeJS.Timeout | null = null;
@@ -182,7 +190,7 @@ export class ErrorLoggingService {
     } catch (error) {
       // If flush fails, add entries back to buffer
       this.buffer.unshift(...entriesToFlush);
-      logger.error("Failed to flush error logs:", error);
+      this.getLogger().error("Failed to flush error logs:", error);
     }
   }
 
@@ -194,7 +202,7 @@ export class ErrorLoggingService {
     // Example: Sentry, LogRocket, DataDog, etc.
 
     // For now, just log count
-    logger.info(`Would send ${entries.length} error logs to monitoring service`);
+    this.getLogger().info(`Would send ${entries.length} error logs to monitoring service`);
   }
 
   /**

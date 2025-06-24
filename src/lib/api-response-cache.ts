@@ -1,5 +1,4 @@
 /**
-import { createLogger } from './structured-logger';
  * API Response Caching System
  *
  * Intelligent caching layer for API responses with:
@@ -10,6 +9,7 @@ import { createLogger } from './structured-logger';
  * - Performance optimization for high-frequency trading data
  */
 
+import { createLogger } from './structured-logger';
 import { generateCacheKey, globalCacheManager } from "./cache-manager";
 
 // =======================
@@ -177,7 +177,13 @@ const ENDPOINT_CONFIGS: Record<string, APIEndpointConfig> = {
 // =======================
 
 export class APIResponseCache {
-  private logger = createLogger("api-response-cache");
+  private _logger?: ReturnType<typeof createLogger>;
+  private getLogger() {
+    if (!this._logger) {
+      this._logger = createLogger("api-response-cache");
+    }
+    return this._logger;
+  }
 
   private config: APICacheConfig;
   private pendingRequests: Map<string, Promise<any>> = new Map();
@@ -267,7 +273,7 @@ export class APIResponseCache {
       this.trackCacheHit(endpoint);
       return enhancedResponse;
     } catch (error) {
-      logger.error(`[APIResponseCache] Error getting cached response for ${endpoint}:`, error);
+      this.getLogger().error(`[APIResponseCache] Error getting cached response for ${endpoint}:`, error);
       this.trackCacheMiss(endpoint);
       return null;
     }
@@ -329,7 +335,7 @@ export class APIResponseCache {
       // Remove from revalidation queue if present
       this.revalidationQueue.delete(cacheKey);
     } catch (error) {
-      logger.error(`[APIResponseCache] Error caching response for ${endpoint}:`, error);
+      this.getLogger().error(`[APIResponseCache] Error caching response for ${endpoint}:`, error);
     }
   }
 
@@ -371,9 +377,9 @@ export class APIResponseCache {
         await this.invalidateOlderThan(criteria.olderThan);
       }
 
-      logger.info(`[APIResponseCache] Invalidated ${invalidated} API responses`);
+      this.getLogger().info(`[APIResponseCache] Invalidated ${invalidated} API responses`);
     } catch (error) {
-      logger.error("[APIResponseCache] Error invalidating API responses:", error);
+      this.getLogger().error("[APIResponseCache] Error invalidating API responses:", error);
     }
 
     return invalidated;
@@ -406,7 +412,7 @@ export class APIResponseCache {
       // Check if request is already pending
       const existingRequest = this.pendingRequests.get(deduplicationKey);
       if (existingRequest) {
-        logger.info(`[APIResponseCache] Deduplicating request for ${endpoint}`);
+        this.getLogger().info(`[APIResponseCache] Deduplicating request for ${endpoint}`);
         return await existingRequest;
       }
 
@@ -426,7 +432,7 @@ export class APIResponseCache {
 
       return result;
     } catch (error) {
-      logger.error(`[APIResponseCache] Request execution error for ${endpoint}:`, error);
+      this.getLogger().error(`[APIResponseCache] Request execution error for ${endpoint}:`, error);
       throw error;
     } finally {
       // Clean up pending request
@@ -458,7 +464,7 @@ export class APIResponseCache {
       return;
     }
 
-    logger.info(
+    this.getLogger().info(
       `[APIResponseCache] Processing ${this.revalidationQueue.size} revalidation requests`
     );
 
@@ -472,10 +478,10 @@ export class APIResponseCache {
         if (cached?.metadata) {
           // This would trigger a background refresh of the API data
           // Implementation depends on your specific API client
-          logger.info(`[APIResponseCache] Revalidating: ${cached.metadata.endpoint}`);
+          this.getLogger().info(`[APIResponseCache] Revalidating: ${cached.metadata.endpoint}`);
         }
       } catch (error) {
-        logger.error(`[APIResponseCache] Revalidation error for ${key}:`, error);
+        this.getLogger().error(`[APIResponseCache] Revalidation error for ${key}:`, error);
       }
     }
   }
@@ -521,7 +527,7 @@ export class APIResponseCache {
         recommendations,
       };
     } catch (error) {
-      logger.error("[APIResponseCache] Error generating analytics:", error);
+      this.getLogger().error("[APIResponseCache] Error generating analytics:", error);
       return {
         endpoints: {},
         performance: {
@@ -781,7 +787,7 @@ export class APIResponseCache {
       try {
         await this.processRevalidationQueue();
       } catch (error) {
-        logger.error("[APIResponseCache] Revalidation process error:", error);
+        this.getLogger().error("[APIResponseCache] Revalidation process error:", error);
       }
     }, 30000);
   }
@@ -793,7 +799,7 @@ export class APIResponseCache {
     this.pendingRequests.clear();
     this.analytics.clear();
     this.revalidationQueue.clear();
-    logger.info("[APIResponseCache] API response cache destroyed");
+    this.getLogger().info("[APIResponseCache] API response cache destroyed");
   }
 }
 
@@ -868,6 +874,7 @@ export function withAPICache<_T extends (...args: any[]) => Promise<any>>(
  * Initialize API cache for specific endpoints
  */
 export async function initializeAPICache(endpoints: string[]): Promise<void> {
+  const logger = createLogger("initialize-api-cache");
   logger.info(`[APIResponseCache] Initializing cache for ${endpoints.length} endpoints`);
 
   for (const endpoint of endpoints) {
@@ -884,6 +891,7 @@ export async function initializeAPICache(endpoints: string[]): Promise<void> {
  * Refresh cache for specific endpoints
  */
 export async function refreshEndpointCache(endpoint: string): Promise<void> {
+  const logger = createLogger("refresh-endpoint-cache");
   logger.info(`[APIResponseCache] Refreshing cache for endpoint: ${endpoint}`);
 
   // Invalidate existing cache

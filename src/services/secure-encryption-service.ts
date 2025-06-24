@@ -35,7 +35,13 @@ interface EncryptedData {
 }
 
 export class SecureEncryptionService {
-  private logger = createLogger("secure-encryption-service");
+  private _logger?: ReturnType<typeof createLogger>;
+  private getLogger() {
+    if (!this._logger) {
+      this._logger = createLogger("secure-encryption-service");
+    }
+    return this._logger;
+  }
 
   private masterKey: Buffer;
   private keyId: string;
@@ -109,7 +115,7 @@ export class SecureEncryptionService {
       // Return as base64-encoded JSON
       return Buffer.from(JSON.stringify(encryptedData)).toString("base64");
     } catch (error) {
-      logger.error("[Encryption] Encryption failed:", error);
+      this.getLogger().error("[Encryption] Encryption failed:", error);
       throw new Error("Failed to encrypt data");
     }
   }
@@ -153,7 +159,7 @@ export class SecureEncryptionService {
 
       return plaintext.toString("utf8");
     } catch (error) {
-      logger.error("[Encryption] Decryption failed:", error);
+      this.getLogger().error("[Encryption] Decryption failed:", error);
 
       // Don't leak information about why decryption failed
       throw new Error("Failed to decrypt data");
@@ -238,6 +244,7 @@ export function getEncryptionService(): SecureEncryptionService {
  */
 export function generateMasterKey(): void {
   const key = SecureEncryptionService.generateSecureKey();
+  const logger = createLogger("generate-master-key");
   logger.info("\n🔐 Generated new master encryption key:");
   logger.info(`ENCRYPTION_MASTER_KEY="${key}"`);
   logger.info("\n⚠️  Add this to your .env.local file and keep it secure!");

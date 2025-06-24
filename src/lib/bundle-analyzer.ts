@@ -455,8 +455,26 @@ export class BundleAnalyzer {
   }
 }
 
-// Export singleton instance
-export const bundleAnalyzer = BundleAnalyzer.getInstance();
+// Export lazy singleton getter to avoid build-time instantiation
+let _bundleAnalyzer: BundleAnalyzer | null = null;
+export const bundleAnalyzer = {
+  get getInstance() {
+    if (!_bundleAnalyzer) {
+      _bundleAnalyzer = BundleAnalyzer.getInstance();
+    }
+    return _bundleAnalyzer;
+  },
+  // Proxy all methods to the lazy instance
+  async generateOptimizationReport() {
+    return this.getInstance.generateOptimizationReport();
+  },
+  async analyzeBundleComposition() {
+    return this.getInstance.analyzeBundleComposition();
+  },
+  async getOptimizationProgress() {
+    return this.getInstance.getOptimizationProgress();
+  }
+};
 
 /**
  * Utility functions for bundle optimization tracking

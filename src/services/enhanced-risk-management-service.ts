@@ -95,7 +95,13 @@ export interface MarketConditions {
 }
 
 export class EnhancedRiskManagementService {
-  private logger = createLogger("enhanced-risk-management-service");
+  private _logger?: ReturnType<typeof createLogger>;
+  private getLogger() {
+    if (!this._logger) {
+      this._logger = createLogger("enhanced-risk-management-service");
+    }
+    return this._logger;
+  }
 
   private static instance: EnhancedRiskManagementService;
   private errorLogger = ErrorLoggingService.getInstance();

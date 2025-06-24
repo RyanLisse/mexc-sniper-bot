@@ -1,5 +1,4 @@
 /**
-import { createLogger } from './structured-logger';
  * Credential Caching Service
  *
  * PERFORMANCE OPTIMIZATION: Caches decrypted API credentials to reduce
@@ -11,6 +10,7 @@ import { createLogger } from './structured-logger';
  * - Access logging for security monitoring
  */
 
+import { createLogger } from './structured-logger';
 import { getEncryptionService } from "../services/secure-encryption-service";
 
 interface CachedCredentials {
@@ -32,7 +32,13 @@ interface CredentialCacheMetrics {
 }
 
 class CredentialCache {
-  private logger = createLogger("credential-cache");
+  private _logger?: ReturnType<typeof createLogger>;
+  private getLogger() {
+    if (!this._logger) {
+      this._logger = createLogger("credential-cache");
+    }
+    return this._logger;
+  }
 
   private static instance: CredentialCache;
   private cache = new Map<string, CachedCredentials>();
@@ -56,7 +62,7 @@ class CredentialCache {
       this.cleanupExpired();
     }, 60000); // Check every minute
 
-    logger.info("[CredentialCache] Service initialized with 5-minute TTL");
+    this.getLogger().info("[CredentialCache] Service initialized with 5-minute TTL");
   }
 
   static getInstance(): CredentialCache {
@@ -88,7 +94,7 @@ class CredentialCache {
       this.metrics.cacheHits++;
       this.updateMetrics();
 
-      logger.info(
+      this.getLogger().info(
         `💾 [CredentialCache] Cache HIT for user ${userId} (${cached.accessCount} accesses)`
       );
 
@@ -100,7 +106,7 @@ class CredentialCache {
     }
 
     // Cache miss - decrypt credentials
-    logger.info(`🔓 [CredentialCache] Cache MISS for user ${userId} - decrypting...`);
+    this.getLogger().info(`🔓 [CredentialCache] Cache MISS for user ${userId} - decrypting...`);
     this.metrics.cacheMisses++;
 
     const encryptionService = getEncryptionService();
@@ -130,7 +136,7 @@ class CredentialCache {
     this.updateDecryptionTime(decryptionTime);
     this.updateMetrics();
 
-    logger.info(
+    this.getLogger().info(
       `✅ [CredentialCache] Cached credentials for user ${userId} (${decryptionTime.toFixed(2)}ms)`
     );
 
@@ -150,7 +156,7 @@ class CredentialCache {
       }
     }
 
-    logger.info(`🗑️ [CredentialCache] Invalidated ${removed} entries for user ${userId}`);
+    this.getLogger().info(`🗑️ [CredentialCache] Invalidated ${removed} entries for user ${userId}`);
     this.updateMetrics();
     return removed;
   }
@@ -175,7 +181,7 @@ class CredentialCache {
     this.cache.clear();
     this.updateMetrics();
 
-    logger.info(`🧹 [CredentialCache] Cleared all ${count} cached entries`);
+    this.getLogger().info(`🧹 [CredentialCache] Cleared all ${count} cached entries`);
     return count;
   }
 
@@ -185,7 +191,7 @@ class CredentialCache {
   destroy(): void {
     clearInterval(this.cleanupInterval);
     this.clearAll();
-    logger.info("[CredentialCache] Service destroyed");
+    this.getLogger().info("[CredentialCache] Service destroyed");
   }
 
   // Private methods
@@ -219,7 +225,7 @@ class CredentialCache {
     }
 
     if (removed > 0) {
-      logger.info(`🧽 [CredentialCache] Cleaned up ${removed} expired entries`);
+      this.getLogger().info(`🧽 [CredentialCache] Cleaned up ${removed} expired entries`);
       this.updateMetrics();
     }
   }
@@ -239,7 +245,7 @@ class CredentialCache {
       const value = this.cache.get(oldestKey)!;
       this.secureDelete(value);
       this.cache.delete(oldestKey);
-      logger.info(`♻️ [CredentialCache] Evicted oldest entry: ${oldestKey}`);
+      this.getLogger().info(`♻️ [CredentialCache] Evicted oldest entry: ${oldestKey}`);
     }
   }
 

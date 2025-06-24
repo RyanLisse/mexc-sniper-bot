@@ -49,7 +49,13 @@ interface PerformanceBenchmark {
 }
 
 export class DatabaseOptimizationManager {
-  private logger = createLogger("database-optimization-manager");
+  private _logger?: ReturnType<typeof createLogger>;
+  private getLogger() {
+    if (!this._logger) {
+      this._logger = createLogger("database-optimization-manager");
+    }
+    return this._logger;
+  }
 
   private static instance: DatabaseOptimizationManager;
   private isOptimizing = false;
