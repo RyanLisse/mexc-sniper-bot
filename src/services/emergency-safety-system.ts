@@ -141,7 +141,13 @@ export interface EmergencyConfig {
  * and system integrity.
  */
 export class EmergencySafetySystem extends EventEmitter {
-  private logger = createLogger("emergency-safety-system");
+  private _logger?: ReturnType<typeof createLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("emergency-safety-system");
+    }
+    return this._logger;
+  }
 
   private config: EmergencyConfig;
   private circuitBreaker: CircuitBreaker;

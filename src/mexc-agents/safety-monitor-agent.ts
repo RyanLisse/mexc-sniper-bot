@@ -127,7 +127,13 @@ export interface SafetyMonitorConfig extends SafetyConfig {
  * mechanisms for high-risk trading decisions.
  */
 export class SafetyMonitorAgent extends SafetyBaseAgent {
-  private logger = createLogger("safety-monitor-agent");
+  private _logger?: ReturnType<typeof createLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("safety-monitor-agent");
+    }
+    return this._logger;
+  }
 
   private riskEngine?: AdvancedRiskEngine;
   private emergencySystem?: EmergencySafetySystem;

@@ -96,7 +96,13 @@ export type {
  * while providing improved architecture and maintainability.
  */
 export class AdvancedRiskEngine extends EventEmitter {
-  private logger = createLogger("index");
+  private _logger?: ReturnType<typeof createLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("index");
+    }
+    return this._logger;
+  }
 
   private config: RiskEngineConfig;
   private circuitBreaker: CircuitBreaker;

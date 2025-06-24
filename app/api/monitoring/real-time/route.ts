@@ -221,7 +221,7 @@ async function getActiveWorkflows() {
       currentStep: w.level === 'success' ? 'Completed' : `Step ${Math.floor(Math.random() * 5 + 1)}`
     }));
   } catch (error) {
-    logger.error("Error fetching active workflows:", { error: error });
+    getLogger().error("Error fetching active workflows:", { error: error });
     return [];
   }
 }
@@ -377,7 +377,7 @@ async function triggerWorkflow(data: any) {
     const { workflowType, parameters } = data;
     
     // Mock workflow trigger - replace with actual implementation
-    logger.info(`Triggering workflow: ${workflowType} with parameters:`, parameters);
+    getLogger().info(`Triggering workflow: ${workflowType} with parameters:`, parameters);
     
     return NextResponse.json({
       success: true,

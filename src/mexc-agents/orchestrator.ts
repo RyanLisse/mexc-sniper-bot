@@ -33,7 +33,13 @@ export interface MexcOrchestratorOptions {
  * Refactored to follow Single Responsibility Principle and reduce complexity
  */
 export class MexcOrchestrator {
-  private logger = createLogger("orchestrator");
+  private _logger?: ReturnType<typeof createLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createLogger("orchestrator");
+    }
+    return this._logger;
+  }
 
   private agentManager: AgentManager;
   private dataFetcher: DataFetcher;
