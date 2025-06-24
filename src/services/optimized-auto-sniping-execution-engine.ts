@@ -49,11 +49,15 @@ export class OptimizedAutoSnipingExecutionEngine {
   private mexcService: UnifiedMexcServiceV2;
   private safetySystem: EmergencySafetySystem;
   private logger = {
-      info: (message: string, context?: any) => console.info('[optimized-auto-sniping-execution]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[optimized-auto-sniping-execution]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[optimized-auto-sniping-execution]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[optimized-auto-sniping-execution]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[optimized-auto-sniping-execution]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[optimized-auto-sniping-execution]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[optimized-auto-sniping-execution]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[optimized-auto-sniping-execution]", message, context || ""),
+  };
 
   private config: AutoSnipingConfig;
   private isExecutionActive = false;
@@ -612,7 +616,8 @@ export class OptimizedAutoSnipingExecutionEngine {
         quantity: position.quantity,
         executionLatency: position.executionMetadata.executionLatency,
       },
-    });}
+    });
+  }
 
   private addAlert(alertData: Omit<ExecutionAlert, "id" | "timestamp" | "acknowledged">): void {
     const alert: ExecutionAlert = {

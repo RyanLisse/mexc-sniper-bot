@@ -41,11 +41,15 @@ export interface StatusResolutionResult {
 
 export class UnifiedStatusResolver {
   private logger = {
-      info: (message: string, context?: any) => console.info('[unified-status-resolver]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[unified-status-resolver]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[unified-status-resolver]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[unified-status-resolver]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[unified-status-resolver]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[unified-status-resolver]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[unified-status-resolver]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[unified-status-resolver]", message, context || ""),
+  };
 
   private lastKnownStatus: StatusResolutionResult | null = null;
   private isResolving = false;

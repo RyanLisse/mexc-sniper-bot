@@ -67,11 +67,15 @@ export interface AuthenticationTestResult {
 
 export class ApiCredentialsTestService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[api-credentials-test-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[api-credentials-test-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[api-credentials-test-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[api-credentials-test-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[api-credentials-test-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[api-credentials-test-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[api-credentials-test-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[api-credentials-test-service]", message, context || ""),
+  };
 
   /**
    * Test API credentials with comprehensive validation
@@ -292,7 +296,9 @@ export class ApiCredentialsTestService {
     context: CredentialTestContext
   ): Promise<ConnectivityTestResult> {
     try {
-      console.info("[CredentialTestService] Testing connectivity", { requestId: context.requestId });
+      console.info("[CredentialTestService] Testing connectivity", {
+        requestId: context.requestId,
+      });
 
       const result = await mexcService.testConnectivity();
 

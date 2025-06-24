@@ -83,11 +83,15 @@ export type ExecutionStrategy = z.infer<typeof ExecutionStrategySchema>;
 export class OptimizedExecutionEngine {
   private static instance: OptimizedExecutionEngine;
   private logger = {
-      info: (message: string, context?: any) => console.info('[optimized-execution-engine]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[optimized-execution-engine]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[optimized-execution-engine]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[optimized-execution-engine]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[optimized-execution-engine]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[optimized-execution-engine]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[optimized-execution-engine]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[optimized-execution-engine]", message, context || ""),
+  };
 
   // Execution metrics
   private totalExecutions = 0;
@@ -185,7 +189,7 @@ export class OptimizedExecutionEngine {
   ): Promise<PositionSizingResult> {
     try {
       // Validate input
-      const validatedRequest = PositionSizingRequestSchema.parse(request);// Get current market data for the symbol
+      const validatedRequest = PositionSizingRequestSchema.parse(request); // Get current market data for the symbol
       const mexcService = await getUnifiedMexcService();
       const ticker = await mexcService.getSymbolTicker(validatedRequest.symbol);
 
@@ -235,7 +239,8 @@ export class OptimizedExecutionEngine {
           riskAdjustedQuantity,
           currentPrice
         ),
-      });return result;
+      });
+      return result;
     } catch (error) {
       const safeError = toSafeError(error);
       console.error("Position sizing calculation failed", {
@@ -254,7 +259,7 @@ export class OptimizedExecutionEngine {
 
     try {
       // Validate order request
-      const validatedOrder = OptimizedOrderRequestSchema.parse(orderRequest);// Get MEXC service
+      const validatedOrder = OptimizedOrderRequestSchema.parse(orderRequest); // Get MEXC service
       const mexcService = await getUnifiedMexcService();
 
       // Pre-execution price check for slippage estimation

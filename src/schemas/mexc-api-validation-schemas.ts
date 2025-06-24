@@ -10,7 +10,24 @@ import { z } from "zod";
 // ============================================================================
 
 export const AccountBalanceQuerySchema = z.object({
-  userId: z.string().uuid().optional(),
+  userId: z
+    .string()
+    .min(1)
+    .max(100)
+    .optional()
+    .refine(
+      (userId) => {
+        if (!userId) return true; // Optional field
+        // Allow UUID format or other valid user identifiers
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const userIdRegex = /^[a-zA-Z0-9_-]+([:.][a-zA-Z0-9_-]+)*$/; // Allow formats like "user:123" or "default-user"
+        return uuidRegex.test(userId) || userIdRegex.test(userId);
+      },
+      {
+        message:
+          "userId must be a valid UUID or user identifier format (alphanumeric with optional separators)",
+      }
+    ),
 });
 
 export const BalanceItemSchema = z.object({
@@ -34,7 +51,22 @@ export const AccountBalanceResponseSchema = z.object({
 // ============================================================================
 
 export const ApiCredentialsTestRequestSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z
+    .string()
+    .min(1)
+    .max(100)
+    .refine(
+      (userId) => {
+        // Allow UUID format or other valid user identifiers
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const userIdRegex = /^[a-zA-Z0-9_-]+([:.][a-zA-Z0-9_-]+)*$/; // Allow formats like "user:123" or "default-user"
+        return uuidRegex.test(userId) || userIdRegex.test(userId);
+      },
+      {
+        message:
+          "userId must be a valid UUID or user identifier format (alphanumeric with optional separators)",
+      }
+    ),
   provider: z.enum(["mexc"]).default("mexc"),
 });
 
@@ -64,7 +96,24 @@ export const ApiCredentialsTestResponseSchema = z.object({
 // ============================================================================
 
 export const ConnectivityTestRequestSchema = z.object({
-  userId: z.string().uuid().optional(),
+  userId: z
+    .string()
+    .min(1)
+    .max(100)
+    .optional()
+    .refine(
+      (userId) => {
+        if (!userId) return true; // Optional field
+        // Allow UUID format or other valid user identifiers
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const userIdRegex = /^[a-zA-Z0-9_-]+([:.][a-zA-Z0-9_-]+)*$/; // Allow formats like "user:123" or "default-user"
+        return uuidRegex.test(userId) || userIdRegex.test(userId);
+      },
+      {
+        message:
+          "userId must be a valid UUID or user identifier format (alphanumeric with optional separators)",
+      }
+    ),
   includeCredentialTest: z.boolean().default(true),
 });
 

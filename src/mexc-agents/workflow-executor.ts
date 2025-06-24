@@ -17,11 +17,15 @@ import { TradingStrategyWorkflow } from "./trading-strategy-workflow";
 
 export class WorkflowExecutor {
   private logger = {
-      info: (message: string, context?: any) => console.info('[workflow-executor]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[workflow-executor]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[workflow-executor]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[workflow-executor]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[workflow-executor]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[workflow-executor]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[workflow-executor]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[workflow-executor]", message, context || ""),
+  };
 
   private calendarWorkflow: CalendarWorkflow;
   private symbolAnalysisWorkflow: SymbolAnalysisWorkflow;

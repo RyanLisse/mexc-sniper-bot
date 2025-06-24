@@ -72,11 +72,15 @@ export interface RealTimeMonitorConfig {
 
 export class RealTimeCredentialMonitor {
   private logger = {
-      info: (message: string, context?: any) => console.info('[real-time-credential-monitor]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[real-time-credential-monitor]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[real-time-credential-monitor]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[real-time-credential-monitor]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[real-time-credential-monitor]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[real-time-credential-monitor]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[real-time-credential-monitor]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[real-time-credential-monitor]", message, context || ""),
+  };
 
   private config: RealTimeMonitorConfig;
   private credentialValidator: EnhancedCredentialValidator;

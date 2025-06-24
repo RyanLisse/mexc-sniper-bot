@@ -1,3 +1,5 @@
+import { BaseService } from "../lib/logger-injection";
+import type { ILogger } from "../lib/structured-logger";
 import type {
   AgentRegistryStats,
   AgentStatus,
@@ -5,8 +7,6 @@ import type {
 } from "../mexc-agents/coordination/agent-registry";
 import { getGlobalAgentRegistry } from "../mexc-agents/coordination/agent-registry";
 import { ErrorLoggingService } from "./error-logging-service";
-import { BaseService } from "../lib/logger-injection";
-import type { ILogger } from "../lib/structured-logger";
 
 export interface MonitoringAlert {
   id: string;
@@ -137,7 +137,10 @@ export class AgentMonitoringService extends BaseService {
   /**
    * Get singleton instance
    */
-  public static getInstance(config?: Partial<MonitoringConfig>, logger?: ILogger): AgentMonitoringService {
+  public static getInstance(
+    config?: Partial<MonitoringConfig>,
+    logger?: ILogger
+  ): AgentMonitoringService {
     if (!AgentMonitoringService.instance) {
       AgentMonitoringService.instance = new AgentMonitoringService(config, logger);
     }
@@ -421,7 +424,9 @@ export class AgentMonitoringService extends BaseService {
     if (channels.includes("console")) {
       const prefix =
         alert.severity === "critical" ? "🚨" : alert.severity === "warning" ? "⚠️" : "ℹ️";
-      this.logger.info(`${prefix} [${alert.severity.toUpperCase()}] ${alert.title}: ${alert.message}`);
+      this.logger.info(
+        `${prefix} [${alert.severity.toUpperCase()}] ${alert.title}: ${alert.message}`
+      );
 
       if (alert.suggestedActions && alert.suggestedActions.length > 0) {
         this.logger.info("   Suggested actions:");

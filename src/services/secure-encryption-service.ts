@@ -11,6 +11,7 @@
  */
 
 import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from "node:crypto";
+
 // Constants for cryptographic operations
 const ALGORITHM = "aes-256-gcm";
 const SALT_LENGTH = 32; // 256 bits
@@ -33,15 +34,24 @@ interface EncryptedData {
 }
 
 export class SecureEncryptionService {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private getLogger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[secure-encryption-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[secure-encryption-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[secure-encryption-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[secure-encryption-service]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[secure-encryption-service]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[secure-encryption-service]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[secure-encryption-service]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[secure-encryption-service]", message, context || ""),
+      };
     }
     return this._logger;
   }

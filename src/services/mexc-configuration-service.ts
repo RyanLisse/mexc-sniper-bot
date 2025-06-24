@@ -115,11 +115,15 @@ export interface ConfigurationMetrics {
  */
 export class MexcConfigurationService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-configuration-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-configuration-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-configuration-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-configuration-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-configuration-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-configuration-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-configuration-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-configuration-service]", message, context || ""),
+  };
 
   private config: ServiceConfig;
   private metrics: ConfigurationMetrics;

@@ -6,6 +6,7 @@
  */
 
 import type { NextRequest, NextResponse } from "next/server";
+
 /**
  * Enhanced API route handler with OpenTelemetry instrumentation
  * Supports both Response and NextResponse types for compatibility

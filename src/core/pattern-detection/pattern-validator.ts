@@ -22,11 +22,15 @@ import type { IPatternValidator, PatternAnalysisRequest, PatternMatch } from "./
 export class PatternValidator implements IPatternValidator {
   private static instance: PatternValidator;
   private logger = {
-      info: (message: string, context?: any) => console.info('[pattern-validator]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-validator]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-validator]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-validator]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[pattern-validator]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[pattern-validator]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[pattern-validator]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[pattern-validator]", message, context || ""),
+  };
 
   static getInstance(): PatternValidator {
     if (!PatternValidator.instance) {

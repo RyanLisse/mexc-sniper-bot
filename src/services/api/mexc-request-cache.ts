@@ -17,11 +17,15 @@ export class MexcRequestCache {
   private hitCount = 0;
   private missCount = 0;
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-request-cache]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-request-cache]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-request-cache]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-request-cache]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-request-cache]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-request-cache]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-request-cache]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-request-cache]", message, context || ""),
+  };
 
   constructor(maxSize = 1000) {
     this.maxSize = maxSize;
@@ -53,7 +57,8 @@ export class MexcRequestCache {
       data,
       timestamp: Date.now(),
       ttl,
-    });}
+    });
+  }
 
   /**
    * Retrieve data from cache
@@ -62,7 +67,8 @@ export class MexcRequestCache {
     const entry = this.cache.get(key) as CacheEntry<T> | undefined;
 
     if (!entry) {
-      this.missCount++;return null;
+      this.missCount++;
+      return null;
     }
 
     // Check if expired
@@ -102,7 +108,8 @@ export class MexcRequestCache {
    */
   delete(key: string): boolean {
     const result = this.cache.delete(key);
-    if (result) {}
+    if (result) {
+    }
     return result;
   }
 
@@ -155,7 +162,8 @@ export class MexcRequestCache {
     const removedCount = expiredKeys.length;
     expiredKeys.forEach((key) => this.cache.delete(key));
 
-    if (removedCount > 0) {}
+    if (removedCount > 0) {
+    }
   }
 
   /**
@@ -170,7 +178,8 @@ export class MexcRequestCache {
 
     for (const [key] of toRemove) {
       this.cache.delete(key);
-    }}
+    }
+  }
 
   /**
    * Generate cache key for API requests

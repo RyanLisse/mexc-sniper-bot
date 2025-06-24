@@ -1,5 +1,5 @@
 /**
-* Enhanced rate limiter for authentication endpoints with audit logging
+ * Enhanced rate limiter for authentication endpoints with audit logging
  * Integrates with adaptive rate limiting for intelligent throttling
  * In production, consider using Redis or a distributed cache
  */
@@ -44,15 +44,24 @@ const RATE_LIMITS = {
 };
 
 // Security event logging - lazy initialization
-function getLogger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+function getLogger(): {
+  info: (message: string, context?: any) => void;
+  warn: (message: string, context?: any) => void;
+  error: (message: string, context?: any, error?: Error) => void;
+  debug: (message: string, context?: any) => void;
+} {
   if (!_logger) {
     try {
       _logger = {
-      info: (message: string, context?: any) => console.info('[rate-limiter]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[rate-limiter]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[rate-limiter]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[rate-limiter]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[rate-limiter]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[rate-limiter]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[rate-limiter]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[rate-limiter]", message, context || ""),
+      };
     } catch {
       // Fallback during build time
       _logger = {

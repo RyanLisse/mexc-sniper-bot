@@ -6,11 +6,15 @@ import type { TradingStrategy } from "./trading-strategy-manager";
  */
 export class MultiPhaseTradingBotCore {
   protected logger = {
-      info: (message: string, context?: any) => console.info('[multi-phase-trading-bot-core]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[multi-phase-trading-bot-core]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-trading-bot-core]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[multi-phase-trading-bot-core]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[multi-phase-trading-bot-core]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[multi-phase-trading-bot-core]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[multi-phase-trading-bot-core]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[multi-phase-trading-bot-core]", message, context || ""),
+  };
   protected executor: MultiPhaseExecutor;
   protected entryPrice: number;
   protected position: number;

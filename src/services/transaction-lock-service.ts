@@ -32,15 +32,24 @@ export interface TransactionResult {
 }
 
 export class TransactionLockService {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private getLogger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[transaction-lock-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[transaction-lock-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[transaction-lock-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[transaction-lock-service]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[transaction-lock-service]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[transaction-lock-service]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[transaction-lock-service]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[transaction-lock-service]", message, context || ""),
+      };
     }
     return this._logger;
   }

@@ -11,10 +11,14 @@ import type {
 export class WorkflowExecutionTracker {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[workflow-execution-tracker]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[workflow-execution-tracker]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[workflow-execution-tracker]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[workflow-execution-tracker]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[workflow-execution-tracker]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[workflow-execution-tracker]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[workflow-execution-tracker]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[workflow-execution-tracker]", message, context || ""),
   };
   private executionHistory: WorkflowExecutionResult[] = [];
   private maxHistorySize = 1000;

@@ -19,10 +19,14 @@ import { WorkflowExecutor } from "./workflow-executor";
 export class WorkflowExecutionService {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[workflow-execution-service]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[workflow-execution-service]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[workflow-execution-service]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[workflow-execution-service]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[workflow-execution-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[workflow-execution-service]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[workflow-execution-service]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[workflow-execution-service]", message, context || ""),
   };
 
   private workflowExecutor: WorkflowExecutor;
@@ -51,10 +55,7 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        this.logger.warn(
-          "Enhanced coordination failed, falling back to legacy mode:",
-          error
-        );
+        this.logger.warn("Enhanced coordination failed, falling back to legacy mode:", error);
         // Fall through to legacy execution
       }
     }
@@ -90,10 +91,7 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        this.logger.warn(
-          "Enhanced coordination failed, falling back to legacy mode:",
-          error
-        );
+        this.logger.warn("Enhanced coordination failed, falling back to legacy mode:", error);
         // Fall through to legacy execution
       }
     }
@@ -129,10 +127,7 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        this.logger.warn(
-          "Enhanced coordination failed, falling back to legacy mode:",
-          error
-        );
+        this.logger.warn("Enhanced coordination failed, falling back to legacy mode:", error);
         // Fall through to legacy execution
       }
     }
@@ -168,10 +163,7 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        this.logger.warn(
-          "Enhanced coordination failed, falling back to legacy mode:",
-          error
-        );
+        this.logger.warn("Enhanced coordination failed, falling back to legacy mode:", error);
         // Fall through to legacy execution
       }
     }

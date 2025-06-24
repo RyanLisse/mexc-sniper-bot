@@ -1,5 +1,5 @@
 /**
-* Cache Warming Manager
+ * Cache Warming Manager
  *
  * Handles intelligent cache warming strategies to improve cache hit rates
  * by pre-loading frequently used agent patterns and common queries.
@@ -17,16 +17,25 @@ import { generateCacheKey, globalCacheManager } from "../cache-manager";
 import type { AgentCacheConfig, CacheWarmupConfig, CacheWarmupPattern } from "./agent-cache-types";
 
 export class CacheWarmingManager {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
 
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[cache-warming]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[cache-warming]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[cache-warming]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[cache-warming]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[cache-warming]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[cache-warming]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[cache-warming]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[cache-warming]", message, context || ""),
+      };
     }
     return this._logger;
   }

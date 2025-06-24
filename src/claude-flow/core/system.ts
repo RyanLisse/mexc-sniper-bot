@@ -140,11 +140,12 @@ export interface CoreSystemConstructorConfig {
 
 export class CoreSystem {
   private logger = {
-      info: (message: string, context?: any) => console.info('[system]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[system]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[system]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[system]', message, context || ''),
-    };
+    info: (message: string, context?: any) => console.info("[system]", message, context || ""),
+    warn: (message: string, context?: any) => console.warn("[system]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[system]", message, context || "", error || ""),
+    debug: (message: string, context?: any) => console.debug("[system]", message, context || ""),
+  };
 
   private config: CoreSystemConstructorConfig;
 

@@ -1,5 +1,5 @@
 /**
-* Cache Warming Service for MEXC Sniper Bot
+ * Cache Warming Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Intelligent Cache Warming Strategies
  *
@@ -64,11 +64,15 @@ export interface CacheWarmupConfig {
 
 export class CacheWarmingService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[cache-warming-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[cache-warming-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[cache-warming-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[cache-warming-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[cache-warming-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[cache-warming-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[cache-warming-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[cache-warming-service]", message, context || ""),
+  };
 
   private cache: EnhancedUnifiedCacheSystem;
   private mexcService: UnifiedMexcServiceV2;

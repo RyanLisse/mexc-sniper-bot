@@ -42,18 +42,27 @@ export interface AlertingConfig {
 }
 
 export class AutomatedAlertingService {
-  private _/**
+  private _; /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+  private get logger(): {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  } {
     if (!this._logger) {
       try {
         this._logger = {
-      info: (message: string, context?: any) => console.info('[automated-alerting-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[automated-alerting-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[automated-alerting-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[automated-alerting-service]', message, context || ''),
-    };
+          info: (message: string, context?: any) =>
+            console.info("[automated-alerting-service]", message, context || ""),
+          warn: (message: string, context?: any) =>
+            console.warn("[automated-alerting-service]", message, context || ""),
+          error: (message: string, context?: any, error?: Error) =>
+            console.error("[automated-alerting-service]", message, context || "", error || ""),
+          debug: (message: string, context?: any) =>
+            console.debug("[automated-alerting-service]", message, context || ""),
+        };
       } catch (error) {
         this._logger = {
           debug: console.debug.bind(console),

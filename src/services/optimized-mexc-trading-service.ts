@@ -96,11 +96,15 @@ type TradeExecutionResult = z.infer<typeof TradeExecutionResultSchema>;
 
 export class OptimizedMexcTradingService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[optimized-mexc-trading]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[optimized-mexc-trading]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[optimized-mexc-trading]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[optimized-mexc-trading]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[optimized-mexc-trading]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[optimized-mexc-trading]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[optimized-mexc-trading]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[optimized-mexc-trading]", message, context || ""),
+  };
 
   /**
    * Execute trading order with comprehensive validation and risk management

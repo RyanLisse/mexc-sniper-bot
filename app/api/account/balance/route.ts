@@ -109,11 +109,28 @@ export const GET = publicRoute(async (request: NextRequest) => {
           totalUsdValue: portfolio.totalUsdtValue
         });
       } catch (persistError) {
-        // Log but don't fail the API request if persistence fails
-        console.error('[API] Failed to persist balance data', {
-          userId,
-          error: persistError instanceof Error ? persistError.message : String(persistError)
-        });
+        // Check if this is a database connectivity issue
+        const isDbError = persistError instanceof Error && (
+          persistError.message.includes('ECONNREFUSED') ||
+          persistError.message.includes('timeout') ||
+          persistError.message.includes('connection') ||
+          persistError.message.includes('ENOTFOUND')
+        );
+        
+        if (isDbError) {
+          console.error('[API] Database connectivity error during balance persistence', {
+            userId,
+            error: persistError.message,
+            code: 'DB_CONNECTION_ERROR'
+          });
+          // Don't fail the API request, but log as DB issue
+        } else {
+          // Log but don't fail the API request if persistence fails
+          console.error('[API] Failed to persist balance data', {
+            userId,
+            error: persistError instanceof Error ? persistError.message : String(persistError)
+          });
+        }
       }
     }
 

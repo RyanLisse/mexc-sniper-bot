@@ -183,11 +183,15 @@ export interface UseLiveTradingDataResult {
 
 class PriceAnalyticsEngine {
   private logger = {
-      info: (message: string, context?: any) => console.info('[use-live-trading-data]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[use-live-trading-data]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[use-live-trading-data]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[use-live-trading-data]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[use-live-trading-data]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[use-live-trading-data]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[use-live-trading-data]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[use-live-trading-data]", message, context || ""),
+  };
 
   private priceHistory = new Map<string, Array<{ price: number; timestamp: number }>>();
   private readonly maxHistoryPoints = 1000;

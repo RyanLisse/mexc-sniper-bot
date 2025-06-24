@@ -65,11 +65,15 @@ export interface CredentialTestResult {
 
 export class MexcConnectivityService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-connectivity-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-connectivity-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-connectivity-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-connectivity-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-connectivity-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-connectivity-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-connectivity-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-connectivity-service]", message, context || ""),
+  };
 
   /**
    * Test MEXC connectivity with comprehensive validation and monitoring

@@ -48,11 +48,15 @@ export class PatternDetectionCore {
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[pattern-detection-core]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-detection-core]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-detection-core]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-detection-core]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[pattern-detection-core]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[pattern-detection-core]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[pattern-detection-core]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[pattern-detection-core]", message, context || ""),
+      };
     }
     return this._logger;
   }

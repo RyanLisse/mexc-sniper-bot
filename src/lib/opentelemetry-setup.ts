@@ -21,10 +21,14 @@ const telemetryDisabled =
 
 // Simple console logger to avoid bundling issues
 const logger = {
-  info: (message: string, context?: any) => console.info('[opentelemetry-setup]', message, context || ''),
-  warn: (message: string, context?: any) => console.warn('[opentelemetry-setup]', message, context || ''),
-  error: (message: string, context?: any) => console.error('[opentelemetry-setup]', message, context || ''),
-  debug: (message: string, context?: any) => console.debug('[opentelemetry-setup]', message, context || ''),
+  info: (message: string, context?: any) =>
+    console.info("[opentelemetry-setup]", message, context || ""),
+  warn: (message: string, context?: any) =>
+    console.warn("[opentelemetry-setup]", message, context || ""),
+  error: (message: string, context?: any) =>
+    console.error("[opentelemetry-setup]", message, context || ""),
+  debug: (message: string, context?: any) =>
+    console.debug("[opentelemetry-setup]", message, context || ""),
 };
 
 /**

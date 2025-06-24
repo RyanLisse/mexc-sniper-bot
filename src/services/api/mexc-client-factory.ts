@@ -18,15 +18,24 @@ import { MexcTradingApiClient } from "./mexc-trading-api";
  * This is the main client that applications should use
  */
 export class UnifiedMexcClient extends MexcTradingApiClient {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private getLogger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[mexc-client-factory]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-client-factory]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-client-factory]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-client-factory]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[mexc-client-factory]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[mexc-client-factory]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[mexc-client-factory]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[mexc-client-factory]", message, context || ""),
+      };
     }
     return this._logger;
   }

@@ -78,11 +78,15 @@ interface UserLimits {
 
 export class AdaptiveRateLimiterService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[adaptive-rate-limiter]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[adaptive-rate-limiter]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[adaptive-rate-limiter]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[adaptive-rate-limiter]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[adaptive-rate-limiter]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[adaptive-rate-limiter]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[adaptive-rate-limiter]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[adaptive-rate-limiter]", message, context || ""),
+  };
 
   private static instance: AdaptiveRateLimiterService;
   private errorLogger = ErrorLoggingService.getInstance();

@@ -10,6 +10,7 @@ import type { PatternMatch } from "@/src/core/pattern-detection";
 import { ApiClient } from "@/src/lib/api-client";
 import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 import type { PatternMonitoringReport } from "@/src/services/pattern-monitoring-service";
+
 interface PatternMonitoringState {
   // Monitoring report data
   report: PatternMonitoringReport | null;

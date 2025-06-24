@@ -59,10 +59,14 @@ export interface MexcCalendarEntry {
 export class MexcApiAgent extends BaseAgent {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[mexc-api-agent]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[mexc-api-agent]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[mexc-api-agent]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[mexc-api-agent]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[mexc-api-agent]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-api-agent]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[mexc-api-agent]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-api-agent]", message, context || ""),
   };
 
   private mexcService = getRecommendedMexcService();

@@ -68,11 +68,15 @@ interface WorkflowTracker {
 
 class RealTimeDataStreamer extends EventEmitter {
   private logger = {
-      info: (message: string, context?: any) => console.info('[websocket-agent-bridge]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[websocket-agent-bridge]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[websocket-agent-bridge]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[websocket-agent-bridge]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[websocket-agent-bridge]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[websocket-agent-bridge]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[websocket-agent-bridge]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[websocket-agent-bridge]", message, context || ""),
+  };
 
   private updateInterval?: NodeJS.Timeout;
   private agentTrackers = new Map<string, AgentStatusTracker>();

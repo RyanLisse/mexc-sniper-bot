@@ -88,10 +88,14 @@ export interface TradeExecutionResult {
 export class MexcTradingService {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[mexc-trading-service]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[mexc-trading-service]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[mexc-trading-service]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[mexc-trading-service]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[mexc-trading-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-trading-service]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[mexc-trading-service]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-trading-service]", message, context || ""),
   };
 
   /**
@@ -214,7 +218,10 @@ export class MexcTradingService {
       );
 
       if (!responseValidation.success) {
-        this.logger.error("[MexcTradingService] Response validation failed:", responseValidation.error);
+        this.logger.error(
+          "[MexcTradingService] Response validation failed:",
+          responseValidation.error
+        );
         // Continue anyway but log the issue
       }
 

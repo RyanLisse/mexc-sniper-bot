@@ -64,11 +64,15 @@ export interface CredentialTestResult {
 
 export class MexcTradingService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-trading-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-trading-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-trading-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-trading-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-trading-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-trading-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-trading-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-trading-service]", message, context || ""),
+  };
 
   constructor(private apiClient: MexcApiClient) {}
 

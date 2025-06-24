@@ -98,10 +98,14 @@ export abstract class SafetyBaseAgent extends BaseAgent {
   ): Promise<void> {
     // Build-safe logger - use console logger to avoid webpack bundling issues
     const logger = {
-      info: (message: string, context?: any) => console.info('[safety-base-agent]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[safety-base-agent]', message, context || ''),
-      error: (message: string, context?: any) => console.error('[safety-base-agent]', message, context || ''),
-      debug: (message: string, context?: any) => console.debug('[safety-base-agent]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[safety-base-agent]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[safety-base-agent]", message, context || ""),
+      error: (message: string, context?: any) =>
+        console.error("[safety-base-agent]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[safety-base-agent]", message, context || ""),
     };
 
     const event: SafetyEvent = {
@@ -137,10 +141,14 @@ export abstract class SafetyBaseAgent extends BaseAgent {
   protected async notifyExternalSystems(event: SafetyEvent): Promise<void> {
     // Build-safe logger - use console logger to avoid webpack bundling issues
     const logger = {
-      info: (message: string, context?: any) => console.info('[safety-base-agent-notify]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[safety-base-agent-notify]', message, context || ''),
-      error: (message: string, context?: any) => console.error('[safety-base-agent-notify]', message, context || ''),
-      debug: (message: string, context?: any) => console.debug('[safety-base-agent-notify]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[safety-base-agent-notify]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[safety-base-agent-notify]", message, context || ""),
+      error: (message: string, context?: any) =>
+        console.error("[safety-base-agent-notify]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[safety-base-agent-notify]", message, context || ""),
     };
 
     // Override in subclasses to send to monitoring systems

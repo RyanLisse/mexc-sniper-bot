@@ -537,11 +537,15 @@ export interface ComplianceViolation {
  */
 export class ServiceRegistry {
   private logger = {
-      info: (message: string, context?: any) => console.info('[service-layer-architecture]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[service-layer-architecture]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[service-layer-architecture]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[service-layer-architecture]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[service-layer-architecture]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[service-layer-architecture]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[service-layer-architecture]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[service-layer-architecture]", message, context || ""),
+  };
 
   private services = new Map<string, BaseService>();
   private dependencies: ServiceDependencies = {};

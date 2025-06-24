@@ -38,11 +38,15 @@ interface CachedCredential {
 
 class CredentialCache {
   private logger = {
-      info: (message: string, context?: any) => console.info('[unified-mexc-service-factory]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[unified-mexc-service-factory]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[unified-mexc-service-factory]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[unified-mexc-service-factory]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[unified-mexc-service-factory]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[unified-mexc-service-factory]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[unified-mexc-service-factory]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[unified-mexc-service-factory]", message, context || ""),
+  };
 
   private cache = new Map<string, CachedCredential>();
   private readonly defaultTTL = 300000; // 5 minutes
@@ -145,11 +149,15 @@ class ServiceInstanceCache {
 
 export class UnifiedMexcServiceFactory {
   private logger = {
-      info: (message: string, context?: any) => console.info('[unified-mexc-service-factory]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[unified-mexc-service-factory]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[unified-mexc-service-factory]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[unified-mexc-service-factory]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[unified-mexc-service-factory]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[unified-mexc-service-factory]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[unified-mexc-service-factory]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[unified-mexc-service-factory]", message, context || ""),
+  };
   private config: ServiceFactoryConfig;
   private credentialCache = new CredentialCache();
   private serviceCache = new ServiceInstanceCache();

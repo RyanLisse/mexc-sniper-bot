@@ -1,5 +1,5 @@
 /**
-* Unified Error Handler for MEXC Sniper Bot
+ * Unified Error Handler for MEXC Sniper Bot
  *
  * This module consolidates all error handling approaches (error-handler.ts, error-utils.ts, errors.ts)
  * into a single comprehensive error handling system for consistent error responses across all API endpoints.
@@ -77,7 +77,7 @@ const defaultErrorLogger: ErrorLogger = {
   },
 };
 
-let errorLogger: ErrorLogger = defaultErrorLogger;
+const errorLogger: ErrorLogger = defaultErrorLogger;
 
 export function setErrorLogger(logger: any) {
   // Logger setter implementation
@@ -88,11 +88,15 @@ export function setErrorLogger(logger: any) {
 
 export class ErrorClassifier {
   private logger = {
-      info: (message: string, context?: any) => console.info('[unified-error-handler]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[unified-error-handler]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[unified-error-handler]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[unified-error-handler]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[unified-error-handler]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[unified-error-handler]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[unified-error-handler]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[unified-error-handler]", message, context || ""),
+  };
 
   /**
    * Checks if error is a timeout error

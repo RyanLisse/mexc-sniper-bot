@@ -50,11 +50,15 @@ export interface ConnectivityValidationResult {
 
 export class MexcConnectivityValidator {
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-connectivity-validator]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-connectivity-validator]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-connectivity-validator]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-connectivity-validator]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-connectivity-validator]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-connectivity-validator]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-connectivity-validator]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-connectivity-validator]", message, context || ""),
+  };
 
   private timeout = 15000; // 15 seconds
   private minPositionSize = 10; // Minimum USDT for trading

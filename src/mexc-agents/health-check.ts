@@ -20,11 +20,15 @@ interface HealthCheckResult {
 
 class AgentHealthChecker {
   private logger = {
-      info: (message: string, context?: any) => console.info('[health-check]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[health-check]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[health-check]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[health-check]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[health-check]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[health-check]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[health-check]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[health-check]", message, context || ""),
+  };
 
   private results: HealthCheckResult[] = [];
 

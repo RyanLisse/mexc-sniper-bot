@@ -13,10 +13,14 @@ import type {
 export class WorkflowStepExecutor {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[workflow-step-executor]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[workflow-step-executor]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[workflow-step-executor]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[workflow-step-executor]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[workflow-step-executor]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[workflow-step-executor]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[workflow-step-executor]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[workflow-step-executor]", message, context || ""),
   };
 
   constructor(private agentRegistry: AgentRegistry) {}

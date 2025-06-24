@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+
 /**
  * NeonDB Branch Management Utility
  *
@@ -53,11 +54,15 @@ interface NeonConnectionDetails {
 
 export class NeonBranchManager {
   private logger = {
-      info: (message: string, context?: any) => console.info('[neon-branch-manager]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[neon-branch-manager]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[neon-branch-manager]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[neon-branch-manager]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[neon-branch-manager]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[neon-branch-manager]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[neon-branch-manager]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[neon-branch-manager]", message, context || ""),
+  };
 
   private apiKey: string;
   private projectId: string;

@@ -23,10 +23,14 @@ export interface RecoveryAttempt {
  */
 export class AgentRecoveryStrategies {
   private logger = {
-    info: (message: string, context?: any) => console.info('[agent-recovery-strategies]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[agent-recovery-strategies]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[agent-recovery-strategies]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[agent-recovery-strategies]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[agent-recovery-strategies]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[agent-recovery-strategies]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[agent-recovery-strategies]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[agent-recovery-strategies]", message, context || ""),
   };
   private recoveryStrategies: Map<string, () => Promise<boolean>> = new Map();
   private recoveryHistory: RecoveryAttempt[] = [];

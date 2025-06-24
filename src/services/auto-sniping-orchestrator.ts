@@ -96,10 +96,14 @@ export interface AutoSnipingMetrics {
 export class AutoSnipingOrchestrator extends EventEmitter {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[auto-sniping-orchestrator]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[auto-sniping-orchestrator]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[auto-sniping-orchestrator]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[auto-sniping-orchestrator]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[auto-sniping-orchestrator]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[auto-sniping-orchestrator]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[auto-sniping-orchestrator]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[auto-sniping-orchestrator]", message, context || ""),
   };
 
   private static instance: AutoSnipingOrchestrator;

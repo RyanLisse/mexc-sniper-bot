@@ -61,11 +61,15 @@ export class EventHandling {
   private readonly maxConcurrentOperations: number;
   private readonly operationTimeoutMs: number;
   private logger = {
-      info: (message: string, context?: any) => console.info('[event-handling]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[event-handling]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[event-handling]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[event-handling]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[event-handling]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[event-handling]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[event-handling]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[event-handling]", message, context || ""),
+  };
 
   private stats = {
     totalExecutions: 0,
@@ -345,7 +349,8 @@ export class EventHandling {
     const runningCount = allOperations.filter((op) => op.isRunning).length;
     const availableSlots = this.maxConcurrentOperations - runningCount;
 
-    if (availableSlots <= 0) {return;
+    if (availableSlots <= 0) {
+      return;
     }
 
     // Execute ready operations in order of priority (shortest interval first)
@@ -380,7 +385,7 @@ export class EventHandling {
 
     try {
       operation.isRunning = true;
-      operation.lastExecuted = Date.now();// Create timeout promise
+      operation.lastExecuted = Date.now(); // Create timeout promise
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(
           () => reject(new Error(`Operation timeout after ${this.operationTimeoutMs}ms`)),
@@ -402,7 +407,8 @@ export class EventHandling {
       this.stats.totalExecutions++;
 
       // Clear any previous error
-      delete operation.lastError;} catch (error) {
+      delete operation.lastError;
+    } catch (error) {
       const duration = timer.end({
         operationId: operation.id,
         operationName: operation.name,

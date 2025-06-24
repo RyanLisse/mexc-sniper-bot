@@ -32,11 +32,15 @@ export interface ActivityEntry {
 
 export class WorkflowStatusService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[workflow-status-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[workflow-status-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[workflow-status-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[workflow-status-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[workflow-status-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[workflow-status-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[workflow-status-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[workflow-status-service]", message, context || ""),
+  };
 
   private userId: string;
 

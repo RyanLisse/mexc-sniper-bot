@@ -26,11 +26,15 @@ export interface CircuitBreakerOptions {
  */
 export class ErrorHandlerService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[error-handler-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[error-handler-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[error-handler-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[error-handler-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[error-handler-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[error-handler-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[error-handler-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[error-handler-service]", message, context || ""),
+  };
 
   private static instance: ErrorHandlerService;
   private errorLoggingService: ErrorLoggingService;

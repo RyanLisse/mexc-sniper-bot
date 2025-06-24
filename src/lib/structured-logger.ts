@@ -7,9 +7,9 @@
  */
 
 // Environment detection utilities
-const isServer = typeof window === 'undefined';
-const isBrowser = typeof window !== 'undefined';
-const isNode = typeof process !== 'undefined' && process.versions?.node;
+const isServer = typeof window === "undefined";
+const isBrowser = typeof window !== "undefined";
+const isNode = typeof process !== "undefined" && process.versions?.node;
 
 // Build-safe trace fallback - completely static, no dynamic imports
 const NOOP_TRACE = {
@@ -31,7 +31,8 @@ class ClientLogger implements ILogger {
 
   private formatMessage(level: string, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
-    const contextStr = context && Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : "";
+    const contextStr =
+      context && Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : "";
     return `${timestamp} [${level.toUpperCase()}] ${this.component}: ${message}${contextStr}`;
   }
 
@@ -181,7 +182,8 @@ export class StructuredLogger implements ILogger {
     this.service = service;
     this.component = component;
     // Server-side environment variable access
-    const envLogLevel = isServer && typeof process !== "undefined" && process.env ? process.env.LOG_LEVEL : undefined;
+    const envLogLevel =
+      isServer && typeof process !== "undefined" && process.env ? process.env.LOG_LEVEL : undefined;
     this.logLevel = this.parseLogLevel(envLogLevel || logLevel);
   }
 
@@ -235,9 +237,10 @@ export class StructuredLogger implements ILogger {
     if (!this.shouldLog(entry.level)) return;
 
     // Server-side environment detection
-    const isProduction = isServer && 
-      typeof process !== "undefined" && 
-      process.env && 
+    const isProduction =
+      isServer &&
+      typeof process !== "undefined" &&
+      process.env &&
       process.env.NODE_ENV === "production";
 
     // Only emit on server-side to prevent client-side bundling issues
@@ -403,41 +406,43 @@ export class StructuredLogger implements ILogger {
  * Build-safe logger factory - Always returns simple console logger
  * Eliminates webpack bundling issues completely
  */
-export function createSafeLogger(
-  component: string,
-  service: string = "mexc-trading-bot"
-): ILogger {
+export function createSafeLogger(component: string, service: string = "mexc-trading-bot"): ILogger {
   // Validate inputs
   if (typeof component !== "string" || !component) {
     component = "unknown";
   }
-  
+
   // Always return simple console logger to avoid any bundling issues
   return {
-    debug: (message: string, context?: LogContext) => 
-      console.debug(`[${component}]`, message, context || ''),
-    info: (message: string, context?: LogContext) => 
-      console.info(`[${component}]`, message, context || ''),
-    warn: (message: string, context?: LogContext) => 
-      console.warn(`[${component}]`, message, context || ''),
-    error: (message: string, context?: LogContext, error?: Error) => 
-      console.error(`[${component}]`, message, context || '', error || ''),
-    fatal: (message: string, context?: LogContext, error?: Error) => 
-      console.error(`[${component}] FATAL:`, message, context || '', error || ''),
-    trading: (operation: string, context: LogContext) => 
+    debug: (message: string, context?: LogContext) =>
+      console.debug(`[${component}]`, message, context || ""),
+    info: (message: string, context?: LogContext) =>
+      console.info(`[${component}]`, message, context || ""),
+    warn: (message: string, context?: LogContext) =>
+      console.warn(`[${component}]`, message, context || ""),
+    error: (message: string, context?: LogContext, error?: Error) =>
+      console.error(`[${component}]`, message, context || "", error || ""),
+    fatal: (message: string, context?: LogContext, error?: Error) =>
+      console.error(`[${component}] FATAL:`, message, context || "", error || ""),
+    trading: (operation: string, context: LogContext) =>
       console.info(`[${component}] Trading:`, operation, context),
-    pattern: (patternType: string, confidence: number, context?: LogContext) => 
-      console.info(`[${component}] Pattern:`, patternType, `confidence: ${confidence}`, context || ''),
-    api: (endpoint: string, method: string, responseTime: number, context?: LogContext) => 
-      console.info(`[${component}] API:`, method, endpoint, `${responseTime}ms`, context || ''),
-    agent: (agentId: string, taskType: string, context?: LogContext) => 
-      console.info(`[${component}] Agent:`, agentId, taskType, context || ''),
-    performance: (operation: string, duration: number, context?: LogContext) => 
-      console.info(`[${component}] Performance:`, operation, `${duration}ms`, context || ''),
-    cache: (operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext) => 
-      console.debug(`[${component}] Cache:`, operation, key, context || ''),
-    safety: (event: string, riskScore: number, context?: LogContext) => 
-      console.warn(`[${component}] Safety:`, event, `risk: ${riskScore}`, context || ''),
+    pattern: (patternType: string, confidence: number, context?: LogContext) =>
+      console.info(
+        `[${component}] Pattern:`,
+        patternType,
+        `confidence: ${confidence}`,
+        context || ""
+      ),
+    api: (endpoint: string, method: string, responseTime: number, context?: LogContext) =>
+      console.info(`[${component}] API:`, method, endpoint, `${responseTime}ms`, context || ""),
+    agent: (agentId: string, taskType: string, context?: LogContext) =>
+      console.info(`[${component}] Agent:`, agentId, taskType, context || ""),
+    performance: (operation: string, duration: number, context?: LogContext) =>
+      console.info(`[${component}] Performance:`, operation, `${duration}ms`, context || ""),
+    cache: (operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext) =>
+      console.debug(`[${component}] Cache:`, operation, key, context || ""),
+    safety: (event: string, riskScore: number, context?: LogContext) =>
+      console.warn(`[${component}] Safety:`, event, `risk: ${riskScore}`, context || ""),
   } as ILogger;
 }
 
@@ -507,114 +512,141 @@ export const logger = {
   // Core services
   get trading() {
     return {
-      info: (message: string, context?: any) => console.info('[trading]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[trading]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[trading]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[trading]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[trading]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[trading]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[trading]", message, context || "", error || ""),
+      debug: (message: string, context?: any) => console.debug("[trading]", message, context || ""),
     };
   },
   get pattern() {
     return {
-      info: (message: string, context?: any) => console.info('[pattern-detection]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-detection]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-detection]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-detection]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[pattern-detection]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[pattern-detection]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[pattern-detection]", message, context || "", error || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[pattern-detection]", message, context || ""),
     };
   },
   get safety() {
     return {
-      info: (message: string, context?: any) => console.info('[safety]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[safety]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[safety]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[safety]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[safety]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[safety]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[safety]", message, context || "", error || ""),
+      debug: (message: string, context?: any) => console.debug("[safety]", message, context || ""),
     };
   },
   get api() {
     return {
-      info: (message: string, context?: any) => console.info('[api]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[api]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[api]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[api]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[api]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[api]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[api]", message, context || "", error || ""),
+      debug: (message: string, context?: any) => console.debug("[api]", message, context || ""),
     };
   },
 
   // Infrastructure
   get cache() {
     return {
-      info: (message: string, context?: any) => console.info('[cache]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[cache]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[cache]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[cache]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[cache]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[cache]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[cache]", message, context || "", error || ""),
+      debug: (message: string, context?: any) => console.debug("[cache]", message, context || ""),
     };
   },
   get database() {
     return {
-      info: (message: string, context?: any) => console.info('[database]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[database]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[database]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[database]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[database]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[database]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[database]", message, context || "", error || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[database]", message, context || ""),
     };
   },
   get websocket() {
     return {
-      info: (message: string, context?: any) => console.info('[websocket]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[websocket]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[websocket]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[websocket]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[websocket]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[websocket]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[websocket]", message, context || "", error || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[websocket]", message, context || ""),
     };
   },
 
   // Agent system
   get agent() {
     return {
-      info: (message: string, context?: any) => console.info('[agent]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[agent]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[agent]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[agent]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[agent]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[agent]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[agent]", message, context || "", error || ""),
+      debug: (message: string, context?: any) => console.debug("[agent]", message, context || ""),
     };
   },
   get coordination() {
     return {
-      info: (message: string, context?: any) => console.info('[coordination]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[coordination]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[coordination]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[coordination]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[coordination]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[coordination]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[coordination]", message, context || "", error || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[coordination]", message, context || ""),
     };
   },
 
   // Monitoring
   get monitoring() {
     return {
-      info: (message: string, context?: any) => console.info('[monitoring]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[monitoring]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[monitoring]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[monitoring]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[monitoring]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[monitoring]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[monitoring]", message, context || "", error || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[monitoring]", message, context || ""),
     };
   },
   get performance() {
     return {
-      info: (message: string, context?: any) => console.info('[performance]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[performance]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[performance]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[performance]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[performance]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[performance]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[performance]", message, context || "", error || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[performance]", message, context || ""),
     };
   },
 
   // General purpose
   get system() {
     return {
-      info: (message: string, context?: any) => console.info('[system]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[system]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[system]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[system]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[system]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[system]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[system]", message, context || "", error || ""),
+      debug: (message: string, context?: any) => console.debug("[system]", message, context || ""),
     };
   },
   get default() {
     return {
-      info: (message: string, context?: any) => console.info('[default]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[default]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[default]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[default]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[default]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[default]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[default]", message, context || "", error || ""),
+      debug: (message: string, context?: any) => console.debug("[default]", message, context || ""),
     };
   },
 };

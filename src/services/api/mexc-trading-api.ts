@@ -19,11 +19,15 @@ import type {
 
 export class MexcTradingApiClient extends MexcAccountApiClient {
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-trading-api]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-trading-api]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-trading-api]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-trading-api]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-trading-api]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-trading-api]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-trading-api]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-trading-api]", message, context || ""),
+  };
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);

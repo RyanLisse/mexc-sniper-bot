@@ -55,11 +55,15 @@ export interface PositionInitResult {
  */
 export class MultiPhasePositionManager {
   private logger = {
-      info: (message: string, context?: any) => console.info('[multi-phase-position-manager]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[multi-phase-position-manager]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-position-manager]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[multi-phase-position-manager]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[multi-phase-position-manager]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[multi-phase-position-manager]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[multi-phase-position-manager]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[multi-phase-position-manager]", message, context || ""),
+  };
 
   constructor(
     private entryPrice: number,
@@ -185,9 +189,7 @@ export class MultiPhasePositionManager {
         status: "active",
       };
 
-      console.info(
-        `Position initialized: ${symbol} @ ${entryPrice} x ${amount} = ${value} USDT`
-      );
+      console.info(`Position initialized: ${symbol} @ ${entryPrice} x ${amount} = ${value} USDT`);
 
       return {
         success: true,

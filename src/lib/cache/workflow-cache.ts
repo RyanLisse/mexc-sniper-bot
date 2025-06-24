@@ -21,11 +21,15 @@ import type {
 
 export class WorkflowCache {
   private logger = {
-      info: (message: string, context?: any) => console.info('[workflow-cache]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[workflow-cache]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[workflow-cache]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[workflow-cache]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[workflow-cache]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[workflow-cache]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[workflow-cache]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[workflow-cache]", message, context || ""),
+  };
 
   private config: AgentCacheConfig;
   private workflowCache: Map<string, WorkflowCacheEntry> = new Map();

@@ -1,5 +1,5 @@
 /**
-* Incremental Data Processing Service for MEXC Sniper Bot
+ * Incremental Data Processing Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Incremental Data Processing & Delta Updates
  *
@@ -81,11 +81,15 @@ export interface ProcessingMetrics {
 
 export class IncrementalDataProcessor {
   private logger = {
-      info: (message: string, context?: any) => console.info('[incremental-data-processor]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[incremental-data-processor]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[incremental-data-processor]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[incremental-data-processor]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[incremental-data-processor]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[incremental-data-processor]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[incremental-data-processor]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[incremental-data-processor]", message, context || ""),
+  };
 
   private cache: EnhancedUnifiedCacheSystem;
   private config: IncrementalProcessorConfig;

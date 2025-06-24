@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActivityData } from "../../../schemas/mexc-schemas";
 import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
 import type { IConfidenceCalculator } from "../interfaces";
+
 describe("ConfidenceCalculator - TDD Implementation", () => {
   let confidenceCalculator: IConfidenceCalculator;
 

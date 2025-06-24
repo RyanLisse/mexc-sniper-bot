@@ -50,16 +50,25 @@ export interface PatternDetectionEventData {
  */
 export class EnhancedPatternDetectionCore extends EventEmitter {
   private static instance: EnhancedPatternDetectionCore;
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
 
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[enhanced-pattern-detection-core]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[enhanced-pattern-detection-core]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[enhanced-pattern-detection-core]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[enhanced-pattern-detection-core]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[enhanced-pattern-detection-core]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[enhanced-pattern-detection-core]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[enhanced-pattern-detection-core]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[enhanced-pattern-detection-core]", message, context || ""),
+      };
     }
     return this._logger;
   }

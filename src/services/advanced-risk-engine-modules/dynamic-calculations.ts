@@ -59,15 +59,24 @@ export interface DiversificationAssessment {
 }
 
 export class DynamicCalculations {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[dynamic-calculations]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[dynamic-calculations]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[dynamic-calculations]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[dynamic-calculations]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[dynamic-calculations]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[dynamic-calculations]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[dynamic-calculations]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[dynamic-calculations]", message, context || ""),
+      };
     }
     return this._logger;
   }

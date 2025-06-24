@@ -37,11 +37,15 @@ type PriceCallback = (priceUpdate: PriceUpdate) => void;
 // LRU Cache implementation for bounded memory usage
 class LRUCache<K, V> {
   private logger = {
-      info: (message: string, context?: any) => console.info('[websocket-price-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[websocket-price-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[websocket-price-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[websocket-price-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[websocket-price-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[websocket-price-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[websocket-price-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[websocket-price-service]", message, context || ""),
+  };
 
   private maxSize: number;
   private cache: Map<K, V>;

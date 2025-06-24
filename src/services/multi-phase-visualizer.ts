@@ -7,11 +7,15 @@ import type { TradingStrategyConfig } from "./multi-phase-trading-service";
  */
 export class MultiPhaseVisualizer {
   private logger = {
-      info: (message: string, context?: any) => console.info('[multi-phase-visualizer]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[multi-phase-visualizer]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-visualizer]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[multi-phase-visualizer]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[multi-phase-visualizer]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[multi-phase-visualizer]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[multi-phase-visualizer]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[multi-phase-visualizer]", message, context || ""),
+  };
   private analyzer = new MultiPhaseExecutionAnalyzer();
 
   /**

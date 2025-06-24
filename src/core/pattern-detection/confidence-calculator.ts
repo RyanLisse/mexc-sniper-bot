@@ -26,11 +26,15 @@ import type { IConfidenceCalculator } from "./interfaces";
 export class ConfidenceCalculator implements IConfidenceCalculator {
   private static instance: ConfidenceCalculator;
   private logger = {
-      info: (message: string, context?: any) => console.info('[confidence-calculator]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[confidence-calculator]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[confidence-calculator]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[confidence-calculator]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[confidence-calculator]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[confidence-calculator]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[confidence-calculator]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[confidence-calculator]", message, context || ""),
+  };
 
   static getInstance(): ConfidenceCalculator {
     if (!ConfidenceCalculator.instance) {

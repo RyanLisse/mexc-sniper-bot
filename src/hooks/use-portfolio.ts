@@ -86,7 +86,7 @@ export function usePortfolio(userId: string) {
     },
     staleTime: 30 * 1000, // 30 seconds - portfolio data cache
     gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
-    refetchInterval: 60 * 1000, // Refetch every minute
+    refetchInterval: false, // Disable automatic refetch to prevent storms
     refetchOnWindowFocus: false, // Don't refetch on window focus for financial data
     placeholderData: {
       activePositions: [],
@@ -106,7 +106,14 @@ export function usePortfolio(userId: string) {
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
-      return failureCount < 2;
+      // Don't retry network errors to prevent cascade failures
+      if (errorMessage.includes("timeout") || 
+          errorMessage.includes("ECONNREFUSED") ||
+          errorMessage.includes("Circuit breaker")) {
+        return false;
+      }
+      // No retries to prevent storms
+      return false;
     },
     enabled: !!userId && userId !== "anonymous" && isAuthenticated && user?.id === userId,
   });
@@ -151,7 +158,14 @@ export function useSnipeTargets(userId: string, status?: string) {
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
-      return failureCount < 2;
+      // Don't retry network errors to prevent cascade failures
+      if (errorMessage.includes("timeout") || 
+          errorMessage.includes("ECONNREFUSED") ||
+          errorMessage.includes("Circuit breaker")) {
+        return false;
+      }
+      // No retries to prevent storms
+      return false;
     },
     enabled: !!userId && userId !== "anonymous" && isAuthenticated && user?.id === userId,
   });

@@ -1,5 +1,5 @@
 /**
-* Cache Monitoring & Analytics System
+ * Cache Monitoring & Analytics System
  *
  * Comprehensive monitoring and analytics for the multi-level caching system:
  * - Real-time cache performance tracking
@@ -123,16 +123,25 @@ export interface PerformanceReport {
 // =======================
 
 export class CacheMonitoringSystem {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
 
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[cache-monitoring]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[cache-monitoring]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[cache-monitoring]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[cache-monitoring]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[cache-monitoring]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[cache-monitoring]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[cache-monitoring]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[cache-monitoring]", message, context || ""),
+      };
     }
     return this._logger;
   }

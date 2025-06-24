@@ -89,23 +89,92 @@ export async function GET(request: NextRequest) {
     }
 
     if (fromDate) {
-      const fromTimestamp = new Date(fromDate);
-      conditions.push(gte(transactions.transactionTime, fromTimestamp));
+      try {
+        const fromTimestamp = new Date(fromDate);
+        if (isNaN(fromTimestamp.getTime())) {
+          return apiResponse(
+            createValidationErrorResponse('fromDate', 'Invalid fromDate format'),
+            HTTP_STATUS.BAD_REQUEST
+          );
+        }
+        conditions.push(gte(transactions.transactionTime, fromTimestamp));
+      } catch (dateError) {
+        console.error('Error parsing fromDate:', { fromDate, error: dateError });
+        return apiResponse(
+          createValidationErrorResponse('fromDate', 'Invalid fromDate format'),
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
     }
 
     if (toDate) {
-      const toTimestamp = new Date(toDate);
-      conditions.push(lte(transactions.transactionTime, toTimestamp));
+      try {
+        const toTimestamp = new Date(toDate);
+        if (isNaN(toTimestamp.getTime())) {
+          return apiResponse(
+            createValidationErrorResponse('toDate', 'Invalid toDate format'),
+            HTTP_STATUS.BAD_REQUEST
+          );
+        }
+        conditions.push(lte(transactions.transactionTime, toTimestamp));
+      } catch (dateError) {
+        console.error('Error parsing toDate:', { toDate, error: dateError });
+        return apiResponse(
+          createValidationErrorResponse('toDate', 'Invalid toDate format'),
+          HTTP_STATUS.BAD_REQUEST
+        );
+      }
     }
 
-    // Execute query
-    const userTransactions = await db
-      .select()
-      .from(transactions)
-      .where(and(...conditions))
-      .orderBy(desc(transactions.transactionTime))
-      .limit(limit)
-      .offset(offset);
+    // Execute query with database error handling
+    let userTransactions;
+    try {
+      userTransactions = await Promise.race([
+        db
+          .select()
+          .from(transactions)
+          .where(and(...conditions))
+          .orderBy(desc(transactions.transactionTime))
+          .limit(limit)
+          .offset(offset),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Database query timeout')), 10000)
+        )
+      ]);
+    } catch (dbError) {
+      console.error('Database error in transactions query:', { 
+        userId, 
+        error: dbError,
+        conditions: conditions.length 
+      });
+      
+      // Check if this is a database connectivity issue
+      const isDbConnectivityError = dbError instanceof Error && (
+        dbError.message.includes('ECONNREFUSED') ||
+        dbError.message.includes('timeout') ||
+        dbError.message.includes('connection') ||
+        dbError.message.includes('ENOTFOUND') ||
+        dbError.message.includes('Database query timeout')
+      );
+      
+      if (isDbConnectivityError) {
+        return apiResponse(
+          createErrorResponse(
+            'Database connectivity issue - transactions temporarily unavailable',
+            { code: 'DB_CONNECTION_ERROR', retryable: true }
+          ),
+          HTTP_STATUS.SERVICE_UNAVAILABLE
+        );
+      }
+      
+      return apiResponse(
+        createErrorResponse(
+          'Failed to fetch transactions',
+          { code: 'DB_QUERY_ERROR', error: dbError instanceof Error ? dbError.message : String(dbError) }
+        ),
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
+    }
 
     // Calculate summary statistics
     const completedTrades = userTransactions.filter((t: typeof userTransactions[0]) => t.status === 'completed' && t.transactionType === 'complete_trade');
@@ -183,12 +252,34 @@ export async function POST(request: NextRequest) {
       buyPrice: transactionData.buyPrice,
       buyQuantity: transactionData.buyQuantity,
       buyTotalCost: transactionData.buyTotalCost,
-      buyTimestamp: transactionData.buyTimestamp ? new Date(transactionData.buyTimestamp) : undefined,
+      buyTimestamp: transactionData.buyTimestamp ? (() => {
+        try {
+          const date = new Date(transactionData.buyTimestamp!);
+          if (isNaN(date.getTime())) {
+            throw new Error(`Invalid buyTimestamp: ${transactionData.buyTimestamp}`);
+          }
+          return date;
+        } catch (error) {
+          console.error('Error converting buyTimestamp:', { timestamp: transactionData.buyTimestamp, error });
+          return new Date(); // Fallback to current time
+        }
+      })() : undefined,
       buyOrderId: transactionData.buyOrderId,
       sellPrice: transactionData.sellPrice,
       sellQuantity: transactionData.sellQuantity,
       sellTotalRevenue: transactionData.sellTotalRevenue,
-      sellTimestamp: transactionData.sellTimestamp ? new Date(transactionData.sellTimestamp) : undefined,
+      sellTimestamp: transactionData.sellTimestamp ? (() => {
+        try {
+          const date = new Date(transactionData.sellTimestamp!);
+          if (isNaN(date.getTime())) {
+            throw new Error(`Invalid sellTimestamp: ${transactionData.sellTimestamp}`);
+          }
+          return date;
+        } catch (error) {
+          console.error('Error converting sellTimestamp:', { timestamp: transactionData.sellTimestamp, error });
+          return new Date(); // Fallback to current time
+        }
+      })() : undefined,
       sellOrderId: transactionData.sellOrderId,
       profitLoss: transactionData.profitLoss,
       profitLossPercentage: transactionData.profitLossPercentage,
@@ -199,10 +290,52 @@ export async function POST(request: NextRequest) {
       transactionTime: new Date(),
     };
 
-    const [created] = await db
-      .insert(transactions)
-      .values(insertData)
-      .returning();
+    // Execute database insertion with error handling
+    let created;
+    try {
+      [created] = await Promise.race([
+        db
+          .insert(transactions)
+          .values(insertData)
+          .returning(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Database insert timeout')), 10000)
+        )
+      ]);
+    } catch (dbError) {
+      console.error('Database error creating transaction:', { 
+        userId: transactionData.userId,
+        transactionType: transactionData.transactionType,
+        error: dbError 
+      });
+      
+      // Check if this is a database connectivity issue
+      const isDbConnectivityError = dbError instanceof Error && (
+        dbError.message.includes('ECONNREFUSED') ||
+        dbError.message.includes('timeout') ||
+        dbError.message.includes('connection') ||
+        dbError.message.includes('ENOTFOUND') ||
+        dbError.message.includes('Database insert timeout')
+      );
+      
+      if (isDbConnectivityError) {
+        return apiResponse(
+          createErrorResponse(
+            'Database connectivity issue - transaction creation temporarily unavailable',
+            { code: 'DB_CONNECTION_ERROR', retryable: true }
+          ),
+          HTTP_STATUS.SERVICE_UNAVAILABLE
+        );
+      }
+      
+      return apiResponse(
+        createErrorResponse(
+          'Failed to create transaction',
+          { code: 'DB_INSERT_ERROR', error: dbError instanceof Error ? dbError.message : String(dbError) }
+        ),
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
+    }
 
     return apiResponse(
       createSuccessResponse(created, {
@@ -238,11 +371,52 @@ export async function PUT(request: NextRequest) {
     // Add updated timestamp
     updateData.updatedAt = Math.floor(Date.now() / 1000);
 
-    const [updated] = await db
-      .update(transactions)
-      .set(updateData)
-      .where(eq(transactions.id, id))
-      .returning();
+    // Execute database update with error handling
+    let updated;
+    try {
+      [updated] = await Promise.race([
+        db
+          .update(transactions)
+          .set(updateData)
+          .where(eq(transactions.id, id))
+          .returning(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Database update timeout')), 10000)
+        )
+      ]);
+    } catch (dbError) {
+      console.error('Database error updating transaction:', { 
+        id,
+        error: dbError 
+      });
+      
+      // Check if this is a database connectivity issue
+      const isDbConnectivityError = dbError instanceof Error && (
+        dbError.message.includes('ECONNREFUSED') ||
+        dbError.message.includes('timeout') ||
+        dbError.message.includes('connection') ||
+        dbError.message.includes('ENOTFOUND') ||
+        dbError.message.includes('Database update timeout')
+      );
+      
+      if (isDbConnectivityError) {
+        return apiResponse(
+          createErrorResponse(
+            'Database connectivity issue - transaction update temporarily unavailable',
+            { code: 'DB_CONNECTION_ERROR', retryable: true }
+          ),
+          HTTP_STATUS.SERVICE_UNAVAILABLE
+        );
+      }
+      
+      return apiResponse(
+        createErrorResponse(
+          'Failed to update transaction',
+          { code: 'DB_UPDATE_ERROR', error: dbError instanceof Error ? dbError.message : String(dbError) }
+        ),
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
+    }
 
     if (!updated) {
       return apiResponse(

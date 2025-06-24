@@ -15,11 +15,15 @@ import { RealTimeSafetyMonitoringService } from "../../../../services/real-time-
 // Lazy logger initialization to avoid build-time issues
 function getLogger() {
   return {
-      info: (message: string, context?: any) => console.info('[safety-monitoring-api]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[safety-monitoring-api]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[safety-monitoring-api]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[safety-monitoring-api]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[safety-monitoring-api]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[safety-monitoring-api]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[safety-monitoring-api]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[safety-monitoring-api]", message, context || ""),
+  };
 }
 
 interface AuthenticatedUser {

@@ -34,11 +34,15 @@ interface ErrorBoundaryState {
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   private logger = {
-      info: (message: string, context?: any) => console.info('[error-boundary]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[error-boundary]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[error-boundary]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[error-boundary]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[error-boundary]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[error-boundary]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[error-boundary]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[error-boundary]", message, context || ""),
+  };
 
   private resetTimeoutId: NodeJS.Timeout | null = null;
   private previousResetKeys: Array<string | number> = [];

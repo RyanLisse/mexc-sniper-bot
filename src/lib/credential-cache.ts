@@ -11,6 +11,7 @@
  */
 
 import { getEncryptionService } from "../services/secure-encryption-service";
+
 interface CachedCredentials {
   apiKey: string;
   secretKey: string;
@@ -30,15 +31,24 @@ interface CredentialCacheMetrics {
 }
 
 class CredentialCache {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private getLogger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[credential-cache]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[credential-cache]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[credential-cache]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[credential-cache]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[credential-cache]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[credential-cache]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[credential-cache]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[credential-cache]", message, context || ""),
+      };
     }
     return this._logger;
   }

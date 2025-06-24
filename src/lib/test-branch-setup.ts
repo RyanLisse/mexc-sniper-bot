@@ -1,5 +1,5 @@
 /**
-* Test Branch Setup Utilities
+ * Test Branch Setup Utilities
  *
  * Provides utilities for setting up and managing test database branches
  * for the MEXC Sniper Bot testing framework.
@@ -54,11 +54,15 @@ export interface TestBranchManager {
  */
 export class MockTestBranchManager implements TestBranchManager {
   private logger = {
-      info: (message: string, context?: any) => console.info('[test-branch-setup]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[test-branch-setup]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[test-branch-setup]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[test-branch-setup]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[test-branch-setup]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[test-branch-setup]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[test-branch-setup]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[test-branch-setup]", message, context || ""),
+  };
 
   private branches: Map<string, BranchInfo> = new Map();
   private currentBranch = "main";
@@ -354,7 +358,9 @@ export async function checkTestBranchHealth(
   } else {
     try {
       // Health check logic using context
-      console.info(`[TestBranch] Health check passed for branch: ${contextOrBranchName.branchName}`);
+      console.info(
+        `[TestBranch] Health check passed for branch: ${contextOrBranchName.branchName}`
+      );
       return true;
     } catch (error) {
       console.error(

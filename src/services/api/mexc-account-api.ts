@@ -17,11 +17,15 @@ import { MexcMarketDataClient } from "./mexc-market-data";
 
 export class MexcAccountApiClient extends MexcMarketDataClient {
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-account-api]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-account-api]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-account-api]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-account-api]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-account-api]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-account-api]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-account-api]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-account-api]", message, context || ""),
+  };
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);
@@ -165,7 +169,8 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
             const ticker = tickerResponse.data[0];
             const price = ticker?.lastPrice || ticker?.price;
             if (price && Number.parseFloat(price) > 0) {
-              priceMap.set(symbol, Number.parseFloat(price));}
+              priceMap.set(symbol, Number.parseFloat(price));
+            }
           }
         } catch (error) {
           console.error(`[MexcAccountApi] Failed to get price for ${symbol}:`, error);

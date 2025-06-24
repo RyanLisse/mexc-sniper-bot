@@ -23,10 +23,14 @@ import type {
 export class EnhancedMexcOrchestrator {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[enhanced-orchestrator]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[enhanced-orchestrator]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[enhanced-orchestrator]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[enhanced-orchestrator]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[enhanced-orchestrator]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[enhanced-orchestrator]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[enhanced-orchestrator]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[enhanced-orchestrator]", message, context || ""),
   };
 
   private agentRegistry: AgentRegistry;

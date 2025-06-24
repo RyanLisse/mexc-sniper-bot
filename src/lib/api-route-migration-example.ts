@@ -1,6 +1,6 @@
 /**
-* API Route Migration Example
- * 
+ * API Route Migration Example
+ *
  * This file demonstrates how to migrate existing API routes to use the
  * standardized createApiRouteHandler wrapper, showing the code reduction
  * and improved maintainability.

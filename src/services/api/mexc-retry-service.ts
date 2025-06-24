@@ -1,5 +1,5 @@
 /**
-* MEXC Retry Service
+ * MEXC Retry Service
  *
  * Handles retry logic, error classification, and backoff strategies for MEXC API requests.
  * Extracted from mexc-api-client.ts for better modularity.
@@ -14,11 +14,15 @@ import type {
 
 export class MexcRetryService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-retry-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-retry-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-retry-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-retry-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-retry-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-retry-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-retry-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-retry-service]", message, context || ""),
+  };
 
   private retryConfig: RetryConfig;
   private recentErrors: Error[] = [];

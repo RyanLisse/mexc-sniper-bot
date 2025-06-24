@@ -40,11 +40,15 @@ export interface SystemReadinessResult {
  */
 export class SystemReadinessValidator {
   private logger = {
-      info: (message: string, context?: any) => console.info('[system-readiness-validator]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[system-readiness-validator]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[system-readiness-validator]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[system-readiness-validator]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[system-readiness-validator]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[system-readiness-validator]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[system-readiness-validator]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[system-readiness-validator]", message, context || ""),
+  };
 
   private static instance: SystemReadinessValidator | null = null;
 

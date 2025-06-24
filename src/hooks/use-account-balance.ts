@@ -70,7 +70,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
     },
     // Enable the query when enabled flag is true
     enabled: enabled,
-    refetchInterval: refreshInterval,
+    refetchInterval: false, // Disable automatic refetch to prevent storms
     staleTime: 25 * 1000, // 25 seconds - balance data cache
     gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
     refetchOnWindowFocus: false, // Don't refetch on window focus for financial data
@@ -85,9 +85,16 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
-      return failureCount < 2;
+      // Don't retry network errors to prevent cascade failures
+      if (errorMessage.includes("timeout") || 
+          errorMessage.includes("ECONNREFUSED") ||
+          errorMessage.includes("Circuit breaker")) {
+        return false;
+      }
+      // No retries to prevent storms
+      return false;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: (attemptIndex) => Math.min(5000 * 2 ** attemptIndex, 60000), // Longer delays if retries were enabled
   });
 }
 

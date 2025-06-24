@@ -67,15 +67,24 @@ interface QueryResultCache {
 }
 
 export class DatabaseConnectionPool {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[database-connection-pool]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[database-connection-pool]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[database-connection-pool]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[database-connection-pool]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[database-connection-pool]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[database-connection-pool]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[database-connection-pool]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[database-connection-pool]", message, context || ""),
+      };
     }
     return this._logger;
   }
@@ -195,7 +204,10 @@ export class DatabaseConnectionPool {
         lastError = error;
         this.metrics.failedConnections++;
 
-        console.warn(`Database query failed (attempt ${attempt}/${this.config.maxRetries}):`, error);
+        console.warn(
+          `Database query failed (attempt ${attempt}/${this.config.maxRetries}):`,
+          error
+        );
 
         if (attempt < this.config.maxRetries) {
           // Exponential backoff for retries

@@ -32,11 +32,15 @@ export class MexcMarketDataClient extends MexcClientCore {
   private exchangeSymbolsCacheTime = 0;
   private readonly symbolsCacheExpiry = 300000; // 5 minutes
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-market-data]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-market-data]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-market-data]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-market-data]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-market-data]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-market-data]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-market-data]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-market-data]", message, context || ""),
+  };
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);
@@ -161,9 +165,7 @@ export class MexcMarketDataClient extends MexcClientCore {
    */
   async getSymbolsV2(vcoinId?: string): Promise<UnifiedMexcResponse<SymbolEntry[]>> {
     try {
-      console.info(
-        `[MexcMarketData] Fetching symbols data${vcoinId ? ` for ${vcoinId}` : ""}...`
-      );
+      console.info(`[MexcMarketData] Fetching symbols data${vcoinId ? ` for ${vcoinId}` : ""}...`);
 
       const response = await this.makeRequest<{ data: { symbols: unknown[] } }>(
         "/api/platform/spot/market-v2/web/symbolsV2"

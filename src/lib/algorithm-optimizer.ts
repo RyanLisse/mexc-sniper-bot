@@ -23,11 +23,15 @@
  */
 export class OptimizedLRUCache<K, V> {
   private logger = {
-      info: (message: string, context?: any) => console.info('[algorithm-optimizer]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[algorithm-optimizer]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[algorithm-optimizer]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[algorithm-optimizer]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[algorithm-optimizer]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[algorithm-optimizer]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[algorithm-optimizer]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[algorithm-optimizer]", message, context || ""),
+  };
 
   private capacity: number;
   private cache = new Map<K, { value: V; timestamp: number; expiresAt?: number }>();

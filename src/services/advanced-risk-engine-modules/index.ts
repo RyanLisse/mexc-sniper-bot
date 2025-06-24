@@ -94,15 +94,21 @@ export type {
  * while providing improved architecture and maintainability.
  */
 export class AdvancedRiskEngine extends EventEmitter {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[index]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[index]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[index]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[index]', message, context || ''),
-    };
+        info: (message: string, context?: any) => console.info("[index]", message, context || ""),
+        warn: (message: string, context?: any) => console.warn("[index]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[index]", message, context || "", error || ""),
+        debug: (message: string, context?: any) => console.debug("[index]", message, context || ""),
+      };
     }
     return this._logger;
   }

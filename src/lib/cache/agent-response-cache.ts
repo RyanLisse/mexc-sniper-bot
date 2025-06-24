@@ -16,11 +16,15 @@ import type {
 
 export class AgentResponseCache {
   private logger = {
-      info: (message: string, context?: any) => console.info('[agent-response-cache]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[agent-response-cache]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[agent-response-cache]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[agent-response-cache]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[agent-response-cache]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[agent-response-cache]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[agent-response-cache]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[agent-response-cache]", message, context || ""),
+  };
 
   private config: AgentCacheConfig;
 

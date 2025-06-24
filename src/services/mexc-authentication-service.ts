@@ -73,11 +73,15 @@ export interface AuthenticationMetrics {
  */
 export class MexcAuthenticationService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-authentication-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-authentication-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-authentication-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-authentication-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-authentication-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-authentication-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-authentication-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-authentication-service]", message, context || ""),
+  };
 
   private config: AuthenticationConfig;
   private status: AuthenticationStatus;

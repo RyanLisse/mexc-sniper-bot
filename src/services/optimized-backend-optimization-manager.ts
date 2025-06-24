@@ -67,11 +67,15 @@ export type BackendOptimizationReport = z.infer<typeof BackendOptimizationReport
 export class OptimizedBackendOptimizationManager {
   private static instance: OptimizedBackendOptimizationManager;
   private logger = {
-      info: (message: string, context?: any) => console.info('[backend-optimization-manager]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[backend-optimization-manager]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[backend-optimization-manager]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[backend-optimization-manager]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[backend-optimization-manager]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[backend-optimization-manager]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[backend-optimization-manager]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[backend-optimization-manager]", message, context || ""),
+  };
 
   // Optimized Services
   private autoSnipingEngine: OptimizedAutoSnipingExecutionEngine;

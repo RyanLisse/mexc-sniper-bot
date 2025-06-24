@@ -128,15 +128,24 @@ export interface ResourceAllocation {
 // ============================================================================
 
 export class PatternStrategyOrchestrator {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[pattern-strategy-orchestrator]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-strategy-orchestrator]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-strategy-orchestrator]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-strategy-orchestrator]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[pattern-strategy-orchestrator]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[pattern-strategy-orchestrator]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[pattern-strategy-orchestrator]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[pattern-strategy-orchestrator]", message, context || ""),
+      };
     }
     return this._logger;
   }
@@ -734,7 +743,9 @@ export class PatternStrategyOrchestrator {
       );
 
       if (actionablePatterns.length === 0) {
-        console.info("[PatternOrchestrator] No actionable patterns found for snipe target creation");
+        console.info(
+          "[PatternOrchestrator] No actionable patterns found for snipe target creation"
+        );
         return [];
       }
 

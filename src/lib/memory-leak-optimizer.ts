@@ -38,11 +38,15 @@ interface LeakDetectionConfig {
 
 export class MemoryLeakDetector {
   private logger = {
-      info: (message: string, context?: any) => console.info('[memory-leak-optimizer]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[memory-leak-optimizer]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[memory-leak-optimizer]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[memory-leak-optimizer]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[memory-leak-optimizer]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[memory-leak-optimizer]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[memory-leak-optimizer]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[memory-leak-optimizer]", message, context || ""),
+  };
 
   private static instance: MemoryLeakDetector;
   private config: LeakDetectionConfig = {

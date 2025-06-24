@@ -664,7 +664,7 @@ export class OptimizedRiskManager {
     // This would be updated with real portfolio data
     // For now, maintaining existing structure}
 
-  private getDefaultRiskLimits(): RiskLimits {
+  private getDefaultRiskLimits(): RiskLimits 
     return {
       maxDailyLoss: 1000,
       maxPositionSize: 100,
@@ -674,9 +674,8 @@ export class OptimizedRiskManager {
       maxPortfolioRisk: 70,
       emergencyStopLoss: 15,
     };
-  }
 
-  private getDefaultStopLossConfig(): StopLossConfig {
+  private getDefaultStopLossConfig(): StopLossConfig 
     return {
       type: "percentage",
       value: 5,
@@ -684,17 +683,15 @@ export class OptimizedRiskManager {
       minStopLoss: 2,
       maxStopLoss: 10,
     };
-  }
 
-  private getDefaultTakeProfitConfig(): TakeProfitConfig {
+  private getDefaultTakeProfitConfig(): TakeProfitConfig 
     return {
       type: "percentage",
       value: 10,
       dynamicMultiplier: 1.5,
     };
-  }
 
-  private getDefaultPortfolioMetrics(): PortfolioRiskMetrics {
+  private getDefaultPortfolioMetrics(): PortfolioRiskMetrics 
     return {
       totalPositionValue: 0,
       totalUnrealizedPnl: 0,
@@ -707,7 +704,6 @@ export class OptimizedRiskManager {
       activePositionCount: 0,
       riskUtilization: 0,
     };
-  }
 }
 
 // Export factory function

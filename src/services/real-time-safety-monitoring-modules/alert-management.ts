@@ -44,11 +44,15 @@ export interface AlertStatistics {
 
 export class AlertManagement {
   private logger = {
-      info: (message: string, context?: any) => console.info('[alert-management]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[alert-management]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[alert-management]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[alert-management]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[alert-management]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[alert-management]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[alert-management]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[alert-management]", message, context || ""),
+  };
   private alerts: SafetyAlert[] = [];
   private recentActions: SafetyAction[] = [];
   private stats = {
@@ -110,7 +114,8 @@ export class AlertManagement {
         alertsGenerated: this.stats.alertsGenerated,
         actionsExecuted: this.stats.actionsExecuted,
       });
-    }return validatedAlert;
+    }
+    return validatedAlert;
   }
 
   /**

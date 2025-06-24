@@ -175,15 +175,24 @@ const ENDPOINT_CONFIGS: Record<string, APIEndpointConfig> = {
 // =======================
 
 export class APIResponseCache {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private getLogger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[api-response-cache]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[api-response-cache]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[api-response-cache]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[api-response-cache]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[api-response-cache]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[api-response-cache]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[api-response-cache]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[api-response-cache]", message, context || ""),
+      };
     }
     return this._logger;
   }

@@ -46,18 +46,27 @@ export interface AlertSignature {
 }
 
 export class AlertCorrelationEngine {
-  private _/**
+  private _; /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+  private get logger(): {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  } {
     if (!this._logger) {
       try {
         this._logger = {
-      info: (message: string, context?: any) => console.info('[alert-correlation-engine]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[alert-correlation-engine]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[alert-correlation-engine]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[alert-correlation-engine]', message, context || ''),
-    };
+          info: (message: string, context?: any) =>
+            console.info("[alert-correlation-engine]", message, context || ""),
+          warn: (message: string, context?: any) =>
+            console.warn("[alert-correlation-engine]", message, context || ""),
+          error: (message: string, context?: any, error?: Error) =>
+            console.error("[alert-correlation-engine]", message, context || "", error || ""),
+          debug: (message: string, context?: any) =>
+            console.debug("[alert-correlation-engine]", message, context || ""),
+        };
       } catch (error) {
         this._logger = {
           debug: console.debug.bind(console),

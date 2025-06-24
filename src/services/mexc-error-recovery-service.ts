@@ -43,11 +43,15 @@ export interface ErrorRecoveryResult<T> {
 
 export class ErrorClassifier {
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-error-recovery-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-error-recovery-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-error-recovery-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-error-recovery-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-error-recovery-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-error-recovery-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-error-recovery-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-error-recovery-service]", message, context || ""),
+  };
 
   private readonly RETRYABLE_ERRORS = [
     "timeout",
@@ -226,7 +230,9 @@ export class MexcErrorRecoveryService {
             this.classifier.shouldUseFallback(errorMessage)
           ) {
             try {
-              console.info(`[MexcErrorRecoveryService] Attempting fallback for ${operationName}...`);
+              console.info(
+                `[MexcErrorRecoveryService] Attempting fallback for ${operationName}...`
+              );
               const fallbackResult = await fallback();
 
               const totalTime = Date.now() - startTime;
@@ -263,7 +269,9 @@ export class MexcErrorRecoveryService {
 
         // Wait before retry
         if (retryDelay > 0) {
-          console.info(`[MexcErrorRecoveryService] Retrying ${operationName} in ${retryDelay}ms...`);
+          console.info(
+            `[MexcErrorRecoveryService] Retrying ${operationName} in ${retryDelay}ms...`
+          );
           await this.delay(retryDelay);
         }
       }

@@ -109,11 +109,15 @@ const SECURITY_CONFIG = {
 
 export class SecurityMonitoringService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[security-monitoring-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[security-monitoring-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[security-monitoring-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[security-monitoring-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[security-monitoring-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[security-monitoring-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[security-monitoring-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[security-monitoring-service]", message, context || ""),
+  };
 
   private static instance: SecurityMonitoringService;
   private monitoringInterval: NodeJS.Timeout | null = null;

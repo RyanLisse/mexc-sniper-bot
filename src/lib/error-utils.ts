@@ -4,11 +4,13 @@
 
 export class ValidationError extends Error {
   private logger = {
-      info: (message: string, context?: any) => console.info('[error-utils]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[error-utils]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[error-utils]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[error-utils]', message, context || ''),
-    };
+    info: (message: string, context?: any) => console.info("[error-utils]", message, context || ""),
+    warn: (message: string, context?: any) => console.warn("[error-utils]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[error-utils]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[error-utils]", message, context || ""),
+  };
 
   constructor(
     message: string,

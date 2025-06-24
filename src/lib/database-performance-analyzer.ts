@@ -11,6 +11,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
+
 interface DatabaseStats {
   totalQueries: number;
   averageExecutionTime: number;
@@ -57,11 +58,15 @@ interface OptimizationRecommendation {
 
 export class DatabasePerformanceAnalyzer {
   private logger = {
-      info: (message: string, context?: any) => console.info('[database-performance-analyzer]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[database-performance-analyzer]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[database-performance-analyzer]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[database-performance-analyzer]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[database-performance-analyzer]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[database-performance-analyzer]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[database-performance-analyzer]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[database-performance-analyzer]", message, context || ""),
+  };
 
   private static instance: DatabasePerformanceAnalyzer;
   private analysisResults: Map<string, any> = new Map();

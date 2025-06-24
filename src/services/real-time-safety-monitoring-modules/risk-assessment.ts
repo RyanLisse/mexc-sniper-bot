@@ -76,11 +76,15 @@ export interface ComprehensiveRiskAssessment {
 
 export class RiskAssessment {
   private logger = {
-      info: (message: string, context?: any) => console.info('[risk-assessment]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[risk-assessment]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[risk-assessment]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[risk-assessment]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[risk-assessment]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[risk-assessment]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[risk-assessment]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[risk-assessment]", message, context || ""),
+  };
 
   constructor(private config: RiskAssessmentConfig) {
     console.info("Risk assessment module initialized", {
@@ -98,7 +102,8 @@ export class RiskAssessment {
   public async performComprehensiveAssessment(): Promise<ComprehensiveRiskAssessment> {
     const timer = createTimer("comprehensive_assessment", "risk-assessment");
 
-    try {// Run all assessments in parallel for better performance
+    try {
+      // Run all assessments in parallel for better performance
       const [portfolio, performance, pattern, system] = await Promise.all([
         this.assessPortfolioRisk(),
         this.assessPerformanceRisk(),

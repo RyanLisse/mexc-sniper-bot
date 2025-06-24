@@ -1,5 +1,5 @@
 /**
-* OpenTelemetry Service Layer Instrumentation
+ * OpenTelemetry Service Layer Instrumentation
  *
  * Provides comprehensive instrumentation for key services including
  * MEXC API operations, pattern detection, and auto-sniping execution.

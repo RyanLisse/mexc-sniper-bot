@@ -31,10 +31,14 @@ export interface AgentRegistryStats {
  */
 export class AgentHealthMonitor {
   private logger = {
-    info: (message: string, context?: any) => console.info('[agent-health-monitor]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[agent-health-monitor]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[agent-health-monitor]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[agent-health-monitor]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[agent-health-monitor]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[agent-health-monitor]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[agent-health-monitor]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[agent-health-monitor]", message, context || ""),
   };
   private healthCheckInterval: NodeJS.Timeout | null = null;
   private healthHistory: Map<string, HealthCheckResult[]> = new Map();

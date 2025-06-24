@@ -36,10 +36,14 @@ export class CalendarAgent extends BaseAgent {
   // Simple console logger to avoid webpack bundling issues
   protected get agentLogger() {
     return {
-      info: (message: string, context?: any) => console.info('[calendar-agent]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[calendar-agent]', message, context || ''),
-      error: (message: string, context?: any) => console.error('[calendar-agent]', message, context || ''),
-      debug: (message: string, context?: any) => console.debug('[calendar-agent]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[calendar-agent]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[calendar-agent]", message, context || ""),
+      error: (message: string, context?: any) =>
+        console.error("[calendar-agent]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[calendar-agent]", message, context || ""),
     };
   }
 

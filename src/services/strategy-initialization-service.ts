@@ -20,11 +20,15 @@ export interface StrategySystemHealth {
 
 export class StrategyInitializationService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[strategy-initialization-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[strategy-initialization-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[strategy-initialization-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[strategy-initialization-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[strategy-initialization-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[strategy-initialization-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[strategy-initialization-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[strategy-initialization-service]", message, context || ""),
+  };
 
   private static instance: StrategyInitializationService;
   private initializationPromise: Promise<void> | null = null;

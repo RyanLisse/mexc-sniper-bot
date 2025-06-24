@@ -64,7 +64,14 @@ export function useApiCredentials(userId?: string, provider = "mexc") {
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
-      return failureCount < 2;
+      // Don't retry network errors to prevent cascade failures
+      if (errorMessage.includes("timeout") || 
+          errorMessage.includes("ECONNREFUSED") ||
+          errorMessage.includes("Circuit breaker")) {
+        return false;
+      }
+      // No retries to prevent storms
+      return false;
     },
   });
 }

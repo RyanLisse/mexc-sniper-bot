@@ -47,11 +47,15 @@ export interface PatternSignal {
 
 export class PatternAnalysisWorkflow {
   private logger = {
-      info: (message: string, context?: any) => console.info('[pattern-analysis-workflow]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-analysis-workflow]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-analysis-workflow]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-analysis-workflow]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[pattern-analysis-workflow]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[pattern-analysis-workflow]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[pattern-analysis-workflow]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[pattern-analysis-workflow]", message, context || ""),
+  };
 
   /**
    * Enhanced Pattern Analysis using Centralized Detection Engine

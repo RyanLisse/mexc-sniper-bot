@@ -1,3 +1,4 @@
+import { context, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { and, count, eq, gte, inArray } from "drizzle-orm";
 import {
   alertInstances,
@@ -6,13 +7,12 @@ import {
   type SelectAlertInstance,
   type SelectNotificationChannel,
 } from "../../db/schemas/alerts";
+import { TRADING_TELEMETRY_CONFIG } from "../../lib/opentelemetry-setup";
 import { EmailProvider } from "./email-provider";
 import { SlackProvider } from "./slack-provider";
 import { SMSProvider } from "./sms-provider";
 import { TeamsProvider } from "./teams-provider";
 import { WebhookProvider } from "./webhook-provider";
-import { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
-import { TRADING_TELEMETRY_CONFIG } from '../../lib/opentelemetry-setup';
 
 export interface NotificationProvider {
   send(
@@ -59,20 +59,29 @@ export class NotificationService {
   private db: any;
   private providers: Map<string, NotificationProvider> = new Map();
   private rateLimitCache: Map<string, number[]> = new Map();
-  private tracer = trace.getTracer('notification-service');
+  private tracer = trace.getTracer("notification-service");
 
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+  private get logger(): {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  } {
     if (!this._logger) {
       try {
         this._logger = {
-      info: (message: string, context?: any) => console.info('[notification-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[notification-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[notification-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[notification-service]', message, context || ''),
-    };
+          info: (message: string, context?: any) =>
+            console.info("[notification-service]", message, context || ""),
+          warn: (message: string, context?: any) =>
+            console.warn("[notification-service]", message, context || ""),
+          error: (message: string, context?: any, error?: Error) =>
+            console.error("[notification-service]", message, context || "", error || ""),
+          debug: (message: string, context?: any) =>
+            console.debug("[notification-service]", message, context || ""),
+        };
       } catch (error) {
         // Fallback to console logging during build time
         this._logger = {
@@ -106,15 +115,15 @@ export class NotificationService {
 
   async sendAlertNotifications(alert: SelectAlertInstance): Promise<void> {
     return await this.tracer.startActiveSpan(
-      'notification.send_alert',
+      "notification.send_alert",
       {
         kind: SpanKind.INTERNAL,
         attributes: {
-          'alert.id': alert.id,
-          'alert.severity': alert.severity,
-          'alert.source': alert.source,
-          'notification.type': 'alert'
-        }
+          "alert.id": alert.id,
+          "alert.severity": alert.severity,
+          "alert.source": alert.source,
+          "notification.type": "alert",
+        },
       },
       async (span) => {
         try {
@@ -123,7 +132,7 @@ export class NotificationService {
           console.info(`Sending alert ${alert.id} to ${channels.length} channels`);
 
           span.setAttributes({
-            'notification.channels_count': channels.length
+            "notification.channels_count": channels.length,
           });
 
           // Send to each channel
@@ -132,13 +141,13 @@ export class NotificationService {
           );
 
           const results = await Promise.allSettled(notificationPromises);
-          
-          const successCount = results.filter(r => r.status === 'fulfilled').length;
-          const failureCount = results.filter(r => r.status === 'rejected').length;
+
+          const successCount = results.filter((r) => r.status === "fulfilled").length;
+          const failureCount = results.filter((r) => r.status === "rejected").length;
 
           span.setAttributes({
-            'notification.success_count': successCount,
-            'notification.failure_count': failureCount
+            "notification.success_count": successCount,
+            "notification.failure_count": failureCount,
           });
 
           // Start escalation timer if configured

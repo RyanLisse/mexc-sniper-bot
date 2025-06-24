@@ -52,16 +52,25 @@ export interface PerformanceMetrics {
 }
 
 export class BundleAnalyzer {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
 
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[bundle-analyzer]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[bundle-analyzer]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[bundle-analyzer]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[bundle-analyzer]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[bundle-analyzer]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[bundle-analyzer]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[bundle-analyzer]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[bundle-analyzer]", message, context || ""),
+      };
     }
     return this._logger;
   }

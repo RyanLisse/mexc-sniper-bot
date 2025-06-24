@@ -47,11 +47,15 @@ export interface PersistenceOperations {
  */
 export class MultiPhasePerformanceAnalytics {
   private logger = {
-      info: (message: string, context?: any) => console.info('[multi-phase-performance-analytics]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[multi-phase-performance-analytics]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-performance-analytics]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[multi-phase-performance-analytics]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[multi-phase-performance-analytics]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[multi-phase-performance-analytics]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[multi-phase-performance-analytics]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[multi-phase-performance-analytics]", message, context || ""),
+  };
 
   constructor(
     private entryPrice: number,

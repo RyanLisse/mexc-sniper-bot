@@ -1,5 +1,5 @@
 /**
-* STARTUP INITIALIZATION
+ * STARTUP INITIALIZATION
  *
  * Handles all system initialization tasks that should run when the application starts
  * Ensures critical systems are properly initialized before handling requests
@@ -21,11 +21,15 @@ interface StartupResult {
 
 export class StartupInitializer {
   private logger = {
-      info: (message: string, context?: any) => console.info('[startup-initialization]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[startup-initialization]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[startup-initialization]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[startup-initialization]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[startup-initialization]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[startup-initialization]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[startup-initialization]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[startup-initialization]", message, context || ""),
+  };
 
   private static instance: StartupInitializer;
   private isInitialized = false;

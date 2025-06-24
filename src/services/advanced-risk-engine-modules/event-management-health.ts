@@ -1,5 +1,5 @@
 /**
-* Event Management & Health Module
+ * Event Management & Health Module
  *
  * Provides event emission, alert management, and health monitoring functionality
  * for the Advanced Risk Engine. This module handles risk alerts, system health
@@ -55,15 +55,24 @@ export interface RiskThresholdEvent {
 }
 
 export class EventManagementHealth extends EventEmitter {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[event-management-health]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[event-management-health]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[event-management-health]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[event-management-health]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[event-management-health]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[event-management-health]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[event-management-health]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[event-management-health]", message, context || ""),
+      };
     }
     return this._logger;
   }
@@ -75,9 +84,7 @@ export class EventManagementHealth extends EventEmitter {
 
   constructor(private config: EventManagementConfig) {
     super();
-    console.info(
-      "[EventManagementHealth] Initialized with event management and health monitoring"
-    );
+    console.info("[EventManagementHealth] Initialized with event management and health monitoring");
   }
 
   /**

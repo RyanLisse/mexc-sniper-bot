@@ -53,10 +53,14 @@ export interface TradeRiskAssessment {
 export class RiskManagerAgent extends SafetyBaseAgent {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[risk-manager-agent]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[risk-manager-agent]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[risk-manager-agent]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[risk-manager-agent]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[risk-manager-agent]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[risk-manager-agent]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[risk-manager-agent]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[risk-manager-agent]", message, context || ""),
   };
 
   private riskMetrics: RiskMetrics;

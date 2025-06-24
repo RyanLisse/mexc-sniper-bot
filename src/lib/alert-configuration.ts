@@ -312,11 +312,15 @@ export const NOTIFICATION_CHANNEL_TEMPLATES = {
 
 export class AlertConfigurationService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[alert-configuration]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[alert-configuration]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[alert-configuration]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[alert-configuration]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[alert-configuration]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[alert-configuration]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[alert-configuration]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[alert-configuration]", message, context || ""),
+  };
 
   private db: any;
 

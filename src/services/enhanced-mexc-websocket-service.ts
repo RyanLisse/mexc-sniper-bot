@@ -83,11 +83,15 @@ export interface WebSocketConnectionHealth {
 
 export class RealTimePatternDetector {
   private logger = {
-      info: (message: string, context?: any) => console.info('[enhanced-mexc-websocket-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[enhanced-mexc-websocket-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[enhanced-mexc-websocket-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[enhanced-mexc-websocket-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[enhanced-mexc-websocket-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[enhanced-mexc-websocket-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[enhanced-mexc-websocket-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[enhanced-mexc-websocket-service]", message, context || ""),
+  };
 
   private patternCallbacks = new Map<string, Set<(pattern: RealTimePatternMatch) => void>>();
   private priceHistory = new Map<string, RealTimePriceData[]>();

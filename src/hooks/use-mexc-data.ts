@@ -25,7 +25,7 @@ export function useMexcCalendar() {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - calendar data cache
     gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
-    refetchInterval: 5 * 60 * 1000, // Auto-refetch every 5 minutes
+    refetchInterval: false, // Disable automatic refetch to prevent storms
     refetchOnWindowFocus: false, // Don't refetch on window focus
     placeholderData: [], // Prevent loading flicker
     retry: (failureCount, error) => {
@@ -34,7 +34,16 @@ export function useMexcCalendar() {
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
-      return failureCount < 2;
+      // Don't retry network errors to prevent cascade failures
+      if (
+        errorMessage.includes("timeout") ||
+        errorMessage.includes("ECONNREFUSED") ||
+        errorMessage.includes("Circuit breaker")
+      ) {
+        return false;
+      }
+      // No retries to prevent storms
+      return false;
     },
   });
 }
@@ -62,7 +71,7 @@ export function useMexcSymbols(vcoinId?: string) {
     enabled: true, // Always enabled for symbols data
     staleTime: 30 * 1000, // 30 seconds - symbols data cache
     gcTime: 2 * 60 * 1000, // 2 minutes garbage collection
-    refetchInterval: 30 * 1000, // Auto-refetch every 30 seconds
+    refetchInterval: false, // Disable automatic refetch to prevent storms
     refetchOnWindowFocus: false, // Don't refetch on window focus
     placeholderData: [], // Prevent loading flicker
     retry: (failureCount, error) => {
@@ -71,7 +80,16 @@ export function useMexcSymbols(vcoinId?: string) {
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
-      return failureCount < 2;
+      // Don't retry network errors to prevent cascade failures
+      if (
+        errorMessage.includes("timeout") ||
+        errorMessage.includes("ECONNREFUSED") ||
+        errorMessage.includes("Circuit breaker")
+      ) {
+        return false;
+      }
+      // No retries to prevent storms
+      return false;
     },
   });
 }
@@ -92,7 +110,7 @@ export function useMexcServerTime() {
     },
     staleTime: 60 * 1000, // 1 minute - server time cache
     gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
-    refetchInterval: 60 * 1000, // Auto-refetch every minute
+    refetchInterval: false, // Disable automatic refetch to prevent storms
     refetchOnWindowFocus: false, // Don't refetch on window focus
     placeholderData: Date.now(), // Prevent loading flicker with current time
     retry: (failureCount, error) => {
@@ -101,7 +119,16 @@ export function useMexcServerTime() {
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
-      return failureCount < 2;
+      // Don't retry network errors to prevent cascade failures
+      if (
+        errorMessage.includes("timeout") ||
+        errorMessage.includes("ECONNREFUSED") ||
+        errorMessage.includes("Circuit breaker")
+      ) {
+        return false;
+      }
+      // No retries to prevent storms
+      return false;
     },
   });
 }
@@ -128,59 +155,38 @@ export function useMexcConnectivity() {
   return useQuery<MexcConnectivityResult>({
     queryKey: ["mexc", "connectivity", "enhanced"],
     queryFn: async () => {
-      const maxRetries = 3;
-      const baseDelay = 1000;
-      let lastError: Error | null = null;
+      // Single attempt only to prevent storms - no custom retry loop
+      try {
+        const response = await fetch("/api/mexc/connectivity", {
+          signal: AbortSignal.timeout(10000), // Reduced timeout: 10 seconds
+          credentials: "include", // Include authentication cookies
+        });
 
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-          const response = await fetch("/api/mexc/connectivity", {
-            signal: AbortSignal.timeout(15000), // 15 second timeout
-            credentials: "include", // Include authentication cookies
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          const result = await response.json();
-
-          // Store successful result metadata for health monitoring
-          if (result && typeof result === "object") {
-            result.queryAttempt = attempt + 1;
-            result.queryTimestamp = new Date().toISOString();
-          }
-
-          return result;
-        } catch (error) {
-          lastError = error instanceof Error ? error : new Error("Unknown error");
-          console.warn(
-            `Connectivity check attempt ${attempt + 1}/${maxRetries} failed:`,
-            lastError.message
-          );
-
-          // Don't retry on auth errors or specific client errors
-          if (lastError.message.includes("401") || lastError.message.includes("403")) {
-            break;
-          }
-
-          // If not the last attempt, wait before retrying
-          if (attempt < maxRetries - 1) {
-            const delay = baseDelay * 2 ** attempt + Math.random() * 500;
-            await new Promise((resolve) => setTimeout(resolve, delay));
-          }
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-      }
 
-      // All retries failed
-      throw lastError || new Error("All connectivity checks failed");
+        const result = await response.json();
+
+        // Store successful result metadata for health monitoring
+        if (result && typeof result === "object") {
+          result.queryAttempt = 1;
+          result.queryTimestamp = new Date().toISOString();
+        }
+
+        return result;
+      } catch (error) {
+        const finalError = error instanceof Error ? error : new Error("Unknown error");
+        console.warn(`Connectivity check failed:`, finalError.message);
+        throw finalError;
+      }
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes - reduced for more responsive updates
+    staleTime: 5 * 60 * 1000, // Increased to 5 minutes for less frequent checks
     refetchInterval: false, // Disabled automatic refetch for better performance
-    refetchOnWindowFocus: true, // Refetch when user returns to tab
-    refetchOnReconnect: true, // Refetch when network reconnects
-    retry: false, // Disable built-in retry since we implement our own
-    retryOnMount: true, // Retry when component mounts
+    refetchOnWindowFocus: false, // Disabled to prevent storms on focus
+    refetchOnReconnect: false, // Disabled to prevent cascade failures
+    retry: false, // Disable all retries to prevent storms
+    retryOnMount: false, // Don't retry on mount to prevent storms
     refetchIntervalInBackground: false, // Don't refetch in background
     networkMode: "online", // Only run when online
   });
@@ -352,7 +358,7 @@ export function useMexcAccount(userId?: string) {
     },
     staleTime: 30 * 1000, // 30 seconds - account data cache
     gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
-    refetchInterval: 60 * 1000, // Auto-refetch every minute
+    refetchInterval: false, // Disable automatic refetch to prevent storms
     refetchOnWindowFocus: false, // Don't refetch on window focus for account data
     placeholderData: null, // Prevent loading flicker
     retry: (failureCount, error) => {
@@ -361,7 +367,16 @@ export function useMexcAccount(userId?: string) {
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
-      return failureCount < 2;
+      // Don't retry network errors to prevent cascade failures
+      if (
+        errorMessage.includes("timeout") ||
+        errorMessage.includes("ECONNREFUSED") ||
+        errorMessage.includes("Circuit breaker")
+      ) {
+        return false;
+      }
+      // No retries to prevent storms
+      return false;
     },
     // Only fetch if user is authenticated and accessing their own data
     enabled: !!userId && isAuthenticated && user?.id === userId,

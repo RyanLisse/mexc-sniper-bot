@@ -4,10 +4,14 @@ import type { MexcApiAgent } from "./mexc-api-agent";
 export class DataFetcher {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[data-fetcher]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[data-fetcher]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[data-fetcher]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[data-fetcher]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[data-fetcher]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[data-fetcher]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[data-fetcher]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[data-fetcher]", message, context || ""),
   };
 
   private mexcApiAgent: MexcApiAgent;

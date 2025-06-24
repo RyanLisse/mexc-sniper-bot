@@ -18,6 +18,7 @@
 
 import EventEmitter from "events";
 import { toSafeError } from "../lib/error-type-utils";
+
 export { EmergencyManager } from "./safety/emergency-management";
 
 // Export individual services for advanced usage
@@ -54,15 +55,24 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
   private config: SafetyCoordinatorConfig;
   private alertsManager: SafetyAlertsManager;
   private emergencyManager: EmergencyManager;
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[safety-coordinator]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[safety-coordinator]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[safety-coordinator]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[safety-coordinator]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[safety-coordinator]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[safety-coordinator]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[safety-coordinator]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[safety-coordinator]", message, context || ""),
+      };
     }
     return this._logger;
   }

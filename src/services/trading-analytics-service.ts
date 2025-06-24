@@ -129,15 +129,24 @@ const ANALYTICS_CONFIG = {
 // ============================================================================
 
 export class TradingAnalyticsService {
-  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+  private get logger(): {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  } {
     if (!this._logger) {
       try {
         this._logger = {
-      info: (message: string, context?: any) => console.info('[trading-analytics-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[trading-analytics-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[trading-analytics-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[trading-analytics-service]', message, context || ''),
-    };
+          info: (message: string, context?: any) =>
+            console.info("[trading-analytics-service]", message, context || ""),
+          warn: (message: string, context?: any) =>
+            console.warn("[trading-analytics-service]", message, context || ""),
+          error: (message: string, context?: any, error?: Error) =>
+            console.error("[trading-analytics-service]", message, context || "", error || ""),
+          debug: (message: string, context?: any) =>
+            console.debug("[trading-analytics-service]", message, context || ""),
+        };
       } catch {
         // Fallback during build time
         this._logger = {

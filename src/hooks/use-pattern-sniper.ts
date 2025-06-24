@@ -186,7 +186,9 @@ export const usePatternSniper = () => {
           console.info(`   Project: ${calendar.projectName}`);
           console.info(`   Pattern: sts:${symbol.sts}, st:${symbol.st}, tt:${symbol.tt}`);
           console.info(`   Launch in: ${target.hoursAdvanceNotice.toFixed(1)} hours`);
-          console.info(`   Precision: ${target.priceDecimalPlaces}/${target.quantityDecimalPlaces}`);
+          console.info(
+            `   Precision: ${target.priceDecimalPlaces}/${target.quantityDecimalPlaces}`
+          );
         }
       }
     }

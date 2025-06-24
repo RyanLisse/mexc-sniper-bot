@@ -469,7 +469,7 @@ export class OptimizedAutoSnipingOrchestrator {
     // Main orchestration cycle - simplified for this implementation
     // Would include pattern monitoring, queue management, etc.}
 
-  private startPerformanceMonitoring(): void {
+  private startPerformanceMonitoring(): void 
     this.performanceInterval = setInterval(() => {
       this.updatePerformanceMetrics();
     }, 60000); // Update every minute}
@@ -538,7 +538,7 @@ export class OptimizedAutoSnipingOrchestrator {
     return totalWaitTime / this.executionQueue.length;
   }
 
-  private getDefaultMetrics(): OrchestratorMetrics {
+  private getDefaultMetrics(): OrchestratorMetrics 
     return {
       totalOrchestrations: 0,
       successfulExecutions: 0,
@@ -550,8 +550,6 @@ export class OptimizedAutoSnipingOrchestrator {
       emergencyStopsTriggered: 0,
       performanceScore: 100,
     };
-  }
-}
 
 // Export factory function
 export function createOptimizedAutoSnipingOrchestrator(

@@ -55,11 +55,15 @@ export interface ThresholdCheckResult {
 
 export class CoreSafetyMonitoring {
   private logger = {
-      info: (message: string, context?: any) => console.info('[core-safety-monitoring]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[core-safety-monitoring]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[core-safety-monitoring]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[core-safety-monitoring]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[core-safety-monitoring]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[core-safety-monitoring]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[core-safety-monitoring]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[core-safety-monitoring]", message, context || ""),
+  };
   private riskMetrics: RiskMetrics;
   private isActive = false;
 
@@ -219,7 +223,8 @@ export class CoreSafetyMonitoring {
 
       // Validate updated metrics
       const validatedMetrics = validateRiskMetrics(this.riskMetrics);
-      this.riskMetrics = validatedMetrics;return { ...this.riskMetrics };
+      this.riskMetrics = validatedMetrics;
+      return { ...this.riskMetrics };
     } catch (error) {
       console.error(
         "Failed to update risk metrics",

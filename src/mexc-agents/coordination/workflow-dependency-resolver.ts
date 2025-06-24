@@ -7,10 +7,14 @@ import type { WorkflowContext, WorkflowStepConfig } from "./workflow-engine-type
 export class WorkflowDependencyResolver {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[workflow-dependency-resolver]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[workflow-dependency-resolver]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[workflow-dependency-resolver]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[workflow-dependency-resolver]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[workflow-dependency-resolver]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[workflow-dependency-resolver]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[workflow-dependency-resolver]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[workflow-dependency-resolver]", message, context || ""),
   };
 
   /**

@@ -17,10 +17,14 @@ import { WorkflowValidator } from "./workflow-validator";
  */
 export class WorkflowEngine {
   private logger = {
-    info: (message: string, context?: any) => console.info('[workflow-engine]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[workflow-engine]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[workflow-engine]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[workflow-engine]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[workflow-engine]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[workflow-engine]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[workflow-engine]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[workflow-engine]", message, context || ""),
   };
 
   private agentRegistry: AgentRegistry;

@@ -32,10 +32,14 @@ export type {
 export class AgentRegistry extends AgentRegistryCore {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[agent-registry]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[agent-registry]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[agent-registry]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[agent-registry]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[agent-registry]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[agent-registry]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[agent-registry]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[agent-registry]", message, context || ""),
   };
   private healthMonitor: AgentHealthMonitor;
   private recoveryStrategies: AgentRecoveryStrategies;

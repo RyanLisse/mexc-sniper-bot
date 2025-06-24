@@ -1,4 +1,5 @@
 import type { TradingStrategy } from "../db/schemas/strategies";
+
 interface PerformanceMetrics {
   memoryUsage: number;
   executionTime: number;
@@ -15,11 +16,15 @@ interface OptimizationConfig {
 
 export class StrategyPerformanceOptimizer {
   private logger = {
-      info: (message: string, context?: any) => console.info('[strategy-performance-optimizer]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[strategy-performance-optimizer]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[strategy-performance-optimizer]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[strategy-performance-optimizer]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[strategy-performance-optimizer]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[strategy-performance-optimizer]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[strategy-performance-optimizer]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[strategy-performance-optimizer]", message, context || ""),
+  };
 
   private static instance: StrategyPerformanceOptimizer;
   private activeExecutions = new Set<string>();

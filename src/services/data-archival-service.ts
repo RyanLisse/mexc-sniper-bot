@@ -8,11 +8,15 @@ import { executionHistory, workflowActivity } from "../db/schema";
  */
 export class DataArchivalService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[data-archival-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[data-archival-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[data-archival-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[data-archival-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[data-archival-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[data-archival-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[data-archival-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[data-archival-service]", message, context || ""),
+  };
 
   private static instance: DataArchivalService;
   private isArchiving = false;

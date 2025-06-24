@@ -22,10 +22,12 @@ export const validateRequest = requireApiAuth;
 function getLogger() {
   if (!_logger) {
     _logger = {
-      info: (message: string, context?: any) => console.info('[api-auth]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[api-auth]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[api-auth]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[api-auth]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[api-auth]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[api-auth]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[api-auth]", message, context || "", error || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[api-auth]", message, context || ""),
     };
   }
   return _logger;

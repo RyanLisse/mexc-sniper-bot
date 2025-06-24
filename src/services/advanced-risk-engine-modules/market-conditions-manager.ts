@@ -1,5 +1,5 @@
 /**
-* Market Conditions & Portfolio Management Module
+ * Market Conditions & Portfolio Management Module
  *
  * Manages market conditions, position tracking, and portfolio metrics
  * for the Advanced Risk Engine. This module handles data validation,
@@ -33,15 +33,24 @@ export interface PortfolioUpdate {
 }
 
 export class MarketConditionsManager {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[market-conditions-manager]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[market-conditions-manager]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[market-conditions-manager]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[market-conditions-manager]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[market-conditions-manager]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[market-conditions-manager]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[market-conditions-manager]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[market-conditions-manager]", message, context || ""),
+      };
     }
     return this._logger;
   }

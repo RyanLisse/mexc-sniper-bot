@@ -1,5 +1,5 @@
 /**
-* Centralized Error Handler for API Routes
+ * Centralized Error Handler for API Routes
  *
  * This module provides error handling middleware and utilities for
  * consistent error responses across all API endpoints.
@@ -47,7 +47,7 @@ const defaultErrorLogger: ErrorLogger = {
 /**
  * Global error logger instance
  */
-let errorLogger: ErrorLogger = defaultErrorLogger;
+const errorLogger: ErrorLogger = defaultErrorLogger;
 
 /**
  * Set custom error logger
@@ -59,15 +59,24 @@ export function setErrorLogger(logger: any) {
  * Error context builder
  */
 export class ErrorContext {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[error-handler]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[error-handler]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[error-handler]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[error-handler]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[error-handler]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[error-handler]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[error-handler]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[error-handler]", message, context || ""),
+      };
     }
     return this._logger;
   }

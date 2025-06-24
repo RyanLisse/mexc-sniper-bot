@@ -6,11 +6,15 @@ import { multiPhaseTradingService } from "./multi-phase-trading-service";
  */
 export class MultiPhasePhaseRecorder {
   private logger = {
-      info: (message: string, context?: any) => console.info('[multi-phase-phase-recorder]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[multi-phase-phase-recorder]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-phase-recorder]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[multi-phase-phase-recorder]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[multi-phase-phase-recorder]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[multi-phase-phase-recorder]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[multi-phase-phase-recorder]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[multi-phase-phase-recorder]", message, context || ""),
+  };
 
   constructor(
     private strategyId?: number,

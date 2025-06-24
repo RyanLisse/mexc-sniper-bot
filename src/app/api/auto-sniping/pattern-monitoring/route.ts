@@ -18,11 +18,15 @@ async function getPatternMonitoringService() {
 // Lazy logger initialization
 function getLogger() {
   return {
-      info: (message: string, context?: any) => console.info('[api-pattern-monitoring]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[api-pattern-monitoring]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[api-pattern-monitoring]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[api-pattern-monitoring]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[api-pattern-monitoring]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[api-pattern-monitoring]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[api-pattern-monitoring]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[api-pattern-monitoring]", message, context || ""),
+  };
 }
 
 // Request validation schemas

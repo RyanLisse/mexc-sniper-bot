@@ -89,11 +89,15 @@ export type EnhancedPatternMatch = z.infer<typeof EnhancedPatternMatchSchema>;
 export class OptimizedPatternMonitor {
   private static instance: OptimizedPatternMonitor;
   private logger = {
-      info: (message: string, context?: any) => console.info('[optimized-pattern-monitor]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[optimized-pattern-monitor]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[optimized-pattern-monitor]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[optimized-pattern-monitor]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[optimized-pattern-monitor]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[optimized-pattern-monitor]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[optimized-pattern-monitor]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[optimized-pattern-monitor]", message, context || ""),
+  };
 
   // Pattern detection engine
   private patternEngine: PatternDetectionCore;
@@ -150,7 +154,7 @@ export class OptimizedPatternMonitor {
       const filterCriteria = PatternFilterCriteriaSchema.parse({
         ...this.getDefaultCriteria(),
         ...criteria,
-      });// Get fresh patterns from detection engine
+      }); // Get fresh patterns from detection engine
       const freshPatterns = await this.fetchFreshPatterns();
 
       // Enhance patterns with scoring and metadata
@@ -166,7 +170,8 @@ export class OptimizedPatternMonitor {
 
       // Update metrics
       const processingTime = Date.now() - startTime;
-      this.updateMetrics(enhancedPatterns.length, eligiblePatterns.length, processingTime);return eligiblePatterns;
+      this.updateMetrics(enhancedPatterns.length, eligiblePatterns.length, processingTime);
+      return eligiblePatterns;
     } catch (error) {
       const safeError = toSafeError(error);
       console.error("Failed to get eligible patterns", {
@@ -520,7 +525,8 @@ export class OptimizedPatternMonitor {
       }
     }
 
-    if (cleanedCount > 0) {}
+    if (cleanedCount > 0) {
+    }
   }
 
   private updateMetrics(

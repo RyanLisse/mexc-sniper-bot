@@ -8,106 +8,120 @@ import {
   HTTP_STATUS,
   createValidationErrorResponse
 } from "../../../src/lib/api-response";
-import { handleApiError } from "../../../src/lib/error-handler";
+import { 
+  withApiErrorHandling, 
+  withDatabaseErrorHandling, 
+  validateUserId,
+  DatabaseConnectionError
+} from "../../../src/lib/central-api-error-handler";
 
 // GET /api/user-preferences?userId=xxx
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+export const GET = withApiErrorHandling(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const userId = validateUserId(searchParams.get('userId'));
 
-    if (!userId) {
-      return apiResponse(
-        createValidationErrorResponse('userId', 'userId parameter is required'),
-        HTTP_STATUS.BAD_REQUEST
-      );
-    }
-
-    const result = await db
+  const result = await withDatabaseErrorHandling(
+    () => db
       .select()
       .from(userPreferences)
       .where(eq(userPreferences.userId, userId))
-      .limit(1);
+      .limit(1),
+    'fetch user preferences'
+  );
 
-    if (result.length === 0) {
-      return apiResponse(
-        createSuccessResponse(null, {
-          message: 'No preferences found for user'
-        })
-      );
-    }
-
-    const prefs = result[0];
-    const patternParts = prefs.readyStatePattern.split(",").map(Number);
-
-    const response = {
-      userId: prefs.userId,
-      defaultBuyAmountUsdt: prefs.defaultBuyAmountUsdt,
-      maxConcurrentSnipes: prefs.maxConcurrentSnipes,
-      takeProfitLevels: {
-        level1: prefs.takeProfitLevel1,
-        level2: prefs.takeProfitLevel2,
-        level3: prefs.takeProfitLevel3,
-        level4: prefs.takeProfitLevel4,
-        custom: prefs.takeProfitCustom || undefined,
-      },
-      takeProfitSellQuantities: {
-        level1: prefs.sellQuantityLevel1 || 25.0,
-        level2: prefs.sellQuantityLevel2 || 25.0,
-        level3: prefs.sellQuantityLevel3 || 25.0,
-        level4: prefs.sellQuantityLevel4 || 25.0,
-        custom: prefs.sellQuantityCustom || 100.0,
-      },
-      takeProfitCustom: prefs.takeProfitCustom,
-      defaultTakeProfitLevel: prefs.defaultTakeProfitLevel,
-      stopLossPercent: prefs.stopLossPercent,
-      riskTolerance: prefs.riskTolerance as "low" | "medium" | "high",
-      readyStatePattern: [patternParts[0] || 2, patternParts[1] || 2, patternParts[2] || 4] as [number, number, number],
-      targetAdvanceHours: prefs.targetAdvanceHours,
-      calendarPollIntervalSeconds: prefs.calendarPollIntervalSeconds,
-      symbolsPollIntervalSeconds: prefs.symbolsPollIntervalSeconds,
-      // Enhanced Take Profit Strategy Settings
-      takeProfitStrategy: prefs.takeProfitStrategy || "balanced",
-      takeProfitLevelsConfig: prefs.takeProfitLevelsConfig ? JSON.parse(prefs.takeProfitLevelsConfig) : undefined,
-      // Legacy Exit Strategy Settings (for backward compatibility)
-      selectedExitStrategy: prefs.selectedExitStrategy || "balanced",
-      customExitStrategy: prefs.customExitStrategy ? JSON.parse(prefs.customExitStrategy) : undefined,
-      autoBuyEnabled: prefs.autoBuyEnabled ?? true,
-      autoSellEnabled: prefs.autoSellEnabled ?? true,
-      autoSnipeEnabled: prefs.autoSnipeEnabled ?? true,
-    };
-
+  if (result.length === 0) {
     return apiResponse(
-      createSuccessResponse(response)
-    );
-  } catch (error) {
-    console.error('[API] Failed to fetch user preferences:', { error });
-    return apiResponse(
-      createErrorResponse(
-        error instanceof Error ? error.message : "Unknown error occurred"
-      ),
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+      createSuccessResponse(null, {
+        message: 'No preferences found for user'
+      })
     );
   }
-}
+
+  const prefs = result[0];
+  
+  // Safe pattern parsing with fallbacks
+  let patternParts: number[] = [2, 2, 4]; // Default fallback
+  try {
+    if (prefs.readyStatePattern && typeof prefs.readyStatePattern === 'string') {
+      const parts = prefs.readyStatePattern.split(",").map(Number);
+      if (parts.length >= 3 && parts.every(p => !isNaN(p) && p > 0)) {
+        patternParts = parts;
+      }
+    }
+  } catch (error) {
+    console.warn('[API] Failed to parse readyStatePattern, using defaults:', { 
+      pattern: prefs.readyStatePattern, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+
+  // Safe JSON parsing helper
+  const safeJsonParse = (jsonString: string | null | undefined, fallback: any = undefined) => {
+    if (!jsonString || typeof jsonString !== 'string') return fallback;
+    try {
+      return JSON.parse(jsonString);
+    } catch (error) {
+      console.warn('[API] Failed to parse JSON field:', { 
+        jsonString: jsonString.substring(0, 100), 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+      return fallback;
+    }
+  };
+
+  const response = {
+    userId: prefs.userId,
+    defaultBuyAmountUsdt: prefs.defaultBuyAmountUsdt,
+    maxConcurrentSnipes: prefs.maxConcurrentSnipes,
+    takeProfitLevels: {
+      level1: prefs.takeProfitLevel1,
+      level2: prefs.takeProfitLevel2,
+      level3: prefs.takeProfitLevel3,
+      level4: prefs.takeProfitLevel4,
+      custom: prefs.takeProfitCustom || undefined,
+    },
+    takeProfitSellQuantities: {
+      level1: prefs.sellQuantityLevel1 || 25.0,
+      level2: prefs.sellQuantityLevel2 || 25.0,
+      level3: prefs.sellQuantityLevel3 || 25.0,
+      level4: prefs.sellQuantityLevel4 || 25.0,
+      custom: prefs.sellQuantityCustom || 100.0,
+    },
+    takeProfitCustom: prefs.takeProfitCustom,
+    defaultTakeProfitLevel: prefs.defaultTakeProfitLevel,
+    stopLossPercent: prefs.stopLossPercent,
+    riskTolerance: prefs.riskTolerance as "low" | "medium" | "high",
+    readyStatePattern: [patternParts[0] || 2, patternParts[1] || 2, patternParts[2] || 4] as [number, number, number],
+    targetAdvanceHours: prefs.targetAdvanceHours,
+    calendarPollIntervalSeconds: prefs.calendarPollIntervalSeconds,
+    symbolsPollIntervalSeconds: prefs.symbolsPollIntervalSeconds,
+    // Enhanced Take Profit Strategy Settings
+    takeProfitStrategy: prefs.takeProfitStrategy || "balanced",
+    takeProfitLevelsConfig: safeJsonParse(prefs.takeProfitLevelsConfig),
+    // Legacy Exit Strategy Settings (for backward compatibility)
+    selectedExitStrategy: prefs.selectedExitStrategy || "balanced",
+    customExitStrategy: safeJsonParse(prefs.customExitStrategy),
+    autoBuyEnabled: prefs.autoBuyEnabled ?? true,
+    autoSellEnabled: prefs.autoSellEnabled ?? true,
+    autoSnipeEnabled: prefs.autoSnipeEnabled ?? true,
+  };
+
+  return apiResponse(
+    createSuccessResponse(response)
+  );
+}, 'user-preferences-get');
 
 // POST /api/user-preferences
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { userId, ...data } = body;
+export const POST = withApiErrorHandling(async (request: NextRequest) => {
+  const body = await request.json();
+  const { userId, ...data } = body;
 
-    if (!userId) {
-      return apiResponse(
-        createValidationErrorResponse('userId', 'userId is required'),
-        HTTP_STATUS.BAD_REQUEST
-      );
-    }
+  const validatedUserId = validateUserId(userId);
 
-    const updateData: Partial<NewUserPreferences> = {
-      userId,
-      updatedAt: new Date(),
-    };
+  const updateData: Partial<NewUserPreferences> = {
+    userId: validatedUserId,
+    updatedAt: new Date(),
+  };
 
     // Map the structured data to database fields
     if (data.defaultBuyAmountUsdt !== undefined) {
@@ -204,12 +218,29 @@ export async function POST(request: NextRequest) {
       updateData.symbolsPollIntervalSeconds = data.symbolsPollIntervalSeconds;
     }
 
+    // Safe JSON stringification helper
+    const safeJsonStringify = (obj: any): string | null => {
+      if (obj === undefined || obj === null) return null;
+      try {
+        return JSON.stringify(obj);
+      } catch (error) {
+        console.warn('[API] Failed to stringify JSON object:', { 
+          error: error instanceof Error ? error.message : 'Unknown error',
+          objectType: typeof obj
+        });
+        return null;
+      }
+    };
+
     // Enhanced Take Profit Strategy Settings
     if (data.takeProfitStrategy !== undefined) {
       updateData.takeProfitStrategy = data.takeProfitStrategy;
     }
     if (data.takeProfitLevelsConfig !== undefined) {
-      updateData.takeProfitLevelsConfig = JSON.stringify(data.takeProfitLevelsConfig);
+      const stringified = safeJsonStringify(data.takeProfitLevelsConfig);
+      if (stringified !== null) {
+        updateData.takeProfitLevelsConfig = stringified;
+      }
     }
 
     // Legacy Exit Strategy Settings (for backward compatibility)
@@ -217,7 +248,10 @@ export async function POST(request: NextRequest) {
       updateData.selectedExitStrategy = data.selectedExitStrategy;
     }
     if (data.customExitStrategy !== undefined) {
-      updateData.customExitStrategy = JSON.stringify(data.customExitStrategy);
+      const stringified = safeJsonStringify(data.customExitStrategy);
+      if (stringified !== null) {
+        updateData.customExitStrategy = stringified;
+      }
     }
     if (data.autoBuyEnabled !== undefined) {
       updateData.autoBuyEnabled = data.autoBuyEnabled;
@@ -229,17 +263,20 @@ export async function POST(request: NextRequest) {
       updateData.autoSnipeEnabled = data.autoSnipeEnabled;
     }
 
-    // Try to update first
-    const result = await db
+  // Try to update first
+  const result = await withDatabaseErrorHandling(
+    () => db
       .update(userPreferences)
       .set(updateData)
-      .where(eq(userPreferences.userId, userId))
-      .returning();
+      .where(eq(userPreferences.userId, validatedUserId))
+      .returning(),
+    'update user preferences'
+  );
 
-    if (result.length === 0) {
-      // If no rows were updated, create a new record
-      const newPrefs: NewUserPreferences = {
-        userId,
+  if (result.length === 0) {
+    // If no rows were updated, create a new record
+    const newPrefs: NewUserPreferences = {
+      userId: validatedUserId,
         defaultBuyAmountUsdt: data.defaultBuyAmountUsdt || 100.0,
         maxConcurrentSnipes: data.maxConcurrentSnipes || 3,
         takeProfitLevel1: data.takeProfitLevel1 || data.takeProfitLevels?.level1 || 5.0,
@@ -256,28 +293,22 @@ export async function POST(request: NextRequest) {
         symbolsPollIntervalSeconds: data.symbolsPollIntervalSeconds || 30,
         // Exit Strategy Settings with defaults
         selectedExitStrategy: data.selectedExitStrategy || "balanced",
-        customExitStrategy: data.customExitStrategy ? JSON.stringify(data.customExitStrategy) : null,
+        customExitStrategy: data.customExitStrategy ? safeJsonStringify(data.customExitStrategy) : null,
         autoBuyEnabled: data.autoBuyEnabled ?? true,
         autoSellEnabled: data.autoSellEnabled ?? true,
         autoSnipeEnabled: data.autoSnipeEnabled ?? true,
         ...updateData,
       };
 
-      await db.insert(userPreferences).values(newPrefs);
-    }
-
-    return apiResponse(
-      createSuccessResponse(data, {
-        message: 'User preferences updated successfully'
-      })
-    );
-  } catch (error) {
-    console.error('[API] Failed to update user preferences:', { error });
-    return apiResponse(
-      createErrorResponse(
-        error instanceof Error ? error.message : "Unknown error occurred"
-      ),
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
+    await withDatabaseErrorHandling(
+      () => db.insert(userPreferences).values(newPrefs),
+      'insert user preferences'
     );
   }
-}
+
+  return apiResponse(
+    createSuccessResponse(data, {
+      message: 'User preferences updated successfully'
+    })
+  );
+}, 'user-preferences-post');

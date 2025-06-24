@@ -22,10 +22,14 @@ export interface CalendarWorkflowResult {
 export class CalendarWorkflow {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[calendar-workflow]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[calendar-workflow]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[calendar-workflow]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[calendar-workflow]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[calendar-workflow]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[calendar-workflow]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[calendar-workflow]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[calendar-workflow]", message, context || ""),
   };
 
   async analyzeDiscoveryResults(

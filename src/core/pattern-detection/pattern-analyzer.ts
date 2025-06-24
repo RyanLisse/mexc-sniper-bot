@@ -31,11 +31,15 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   private readonly READY_STATE_PATTERN: ReadyStatePattern = { sts: 2, st: 2, tt: 4 };
   private readonly MIN_ADVANCE_HOURS = 3.5; // Core competitive advantage
   private logger = {
-      info: (message: string, context?: any) => console.info('[pattern-analyzer]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-analyzer]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-analyzer]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-analyzer]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[pattern-analyzer]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[pattern-analyzer]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[pattern-analyzer]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[pattern-analyzer]", message, context || ""),
+  };
 
   static getInstance(): PatternAnalyzer {
     if (!PatternAnalyzer.instance) {

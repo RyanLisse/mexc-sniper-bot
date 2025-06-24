@@ -38,11 +38,15 @@ interface QueuedMessage {
 
 class MessageQueue {
   private logger = {
-      info: (message: string, context?: any) => console.info('[websocket-client]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[websocket-client]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[websocket-client]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[websocket-client]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[websocket-client]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[websocket-client]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[websocket-client]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[websocket-client]", message, context || ""),
+  };
 
   private queue: QueuedMessage[] = [];
   private readonly maxSize: number;

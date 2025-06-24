@@ -64,18 +64,27 @@ interface SeasonalModel {
 }
 
 export class AnomalyDetectionService {
-  private _/**
+  private _; /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+  private get logger(): {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  } {
     if (!this._logger) {
       try {
         this._logger = {
-      info: (message: string, context?: any) => console.info('[anomaly-detection-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[anomaly-detection-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[anomaly-detection-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[anomaly-detection-service]', message, context || ''),
-    };
+          info: (message: string, context?: any) =>
+            console.info("[anomaly-detection-service]", message, context || ""),
+          warn: (message: string, context?: any) =>
+            console.warn("[anomaly-detection-service]", message, context || ""),
+          error: (message: string, context?: any, error?: Error) =>
+            console.error("[anomaly-detection-service]", message, context || "", error || ""),
+          debug: (message: string, context?: any) =>
+            console.debug("[anomaly-detection-service]", message, context || ""),
+        };
       } catch (error) {
         this._logger = {
           debug: console.debug.bind(console),

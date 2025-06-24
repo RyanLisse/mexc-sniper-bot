@@ -37,11 +37,15 @@ export interface BridgeStatistics {
 export class PatternTargetBridgeService {
   private static instance: PatternTargetBridgeService;
   private logger = {
-      info: (message: string, context?: any) => console.info('[pattern-target-bridge]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-target-bridge]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-target-bridge]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-target-bridge]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[pattern-target-bridge]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[pattern-target-bridge]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[pattern-target-bridge]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[pattern-target-bridge]", message, context || ""),
+  };
   private isListening = false;
 
   // Statistics tracking

@@ -92,11 +92,15 @@ interface SymbolStatusData {
 
 class MarketDataManager {
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-websocket-stream]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-websocket-stream]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-websocket-stream]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-websocket-stream]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-websocket-stream]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-websocket-stream]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-websocket-stream]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-websocket-stream]", message, context || ""),
+  };
 
   private priceCache = new Map<string, TradingPriceMessage>();
   private depthCache = new Map<string, MexcDepthData>();
@@ -959,7 +963,10 @@ export class MexcWebSocketStreamService extends EventEmitter {
         }
       }
     } catch (error) {
-      console.error(`[MEXC Stream] Real-time pattern detection failed for stream ${stream}:`, error);
+      console.error(
+        `[MEXC Stream] Real-time pattern detection failed for stream ${stream}:`,
+        error
+      );
     }
   }
 

@@ -49,11 +49,15 @@ export interface PositionUpdate {
  */
 export class OptimizedAutoExitManager {
   private logger = {
-      info: (message: string, context?: any) => console.info('[optimized-auto-exit-manager]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[optimized-auto-exit-manager]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[optimized-auto-exit-manager]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[optimized-auto-exit-manager]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[optimized-auto-exit-manager]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[optimized-auto-exit-manager]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[optimized-auto-exit-manager]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[optimized-auto-exit-manager]", message, context || ""),
+  };
 
   private mexcService = getMexcService();
   private isMonitoring = false;

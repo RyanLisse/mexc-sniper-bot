@@ -123,11 +123,15 @@ export interface StrategyExecutionResult {
 // Multi-Phase Trading Strategy Service
 export class MultiPhaseTradingService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[multi-phase-trading-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[multi-phase-trading-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-trading-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[multi-phase-trading-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[multi-phase-trading-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[multi-phase-trading-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[multi-phase-trading-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[multi-phase-trading-service]", message, context || ""),
+  };
 
   // Initialize predefined strategy templates in database
   async initializePredefinedStrategies(): Promise<void> {

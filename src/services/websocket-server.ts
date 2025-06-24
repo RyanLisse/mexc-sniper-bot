@@ -42,11 +42,15 @@ import type {
 
 class ConnectionManager {
   private logger = {
-      info: (message: string, context?: any) => console.info('[websocket-server]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[websocket-server]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[websocket-server]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[websocket-server]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[websocket-server]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[websocket-server]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[websocket-server]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[websocket-server]", message, context || ""),
+  };
 
   private connections = new Map<string, WebSocketConnection & { ws: WebSocket }>();
   private userConnections = new Map<string, Set<string>>();

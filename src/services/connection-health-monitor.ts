@@ -71,11 +71,15 @@ export interface ConnectionHealthMonitorConfig {
 
 export class ConnectionHealthMonitor {
   private logger = {
-      info: (message: string, context?: any) => console.info('[connection-health-monitor]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[connection-health-monitor]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[connection-health-monitor]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[connection-health-monitor]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[connection-health-monitor]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[connection-health-monitor]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[connection-health-monitor]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[connection-health-monitor]", message, context || ""),
+  };
 
   private config: ConnectionHealthMonitorConfig;
   private healthChecks: HealthCheckResult[] = [];

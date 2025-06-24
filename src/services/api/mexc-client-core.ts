@@ -21,11 +21,15 @@ export class MexcClientCore {
   protected cache: MexcRequestCache;
   private requestCounter = 0;
   private logger = {
-      info: (message: string, context?: any) => console.info('[mexc-client-core]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[mexc-client-core]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[mexc-client-core]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[mexc-client-core]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[mexc-client-core]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-client-core]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[mexc-client-core]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-client-core]", message, context || ""),
+  };
 
   constructor(config: UnifiedMexcConfig = {}) {
     this.config = {

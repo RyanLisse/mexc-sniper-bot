@@ -43,11 +43,15 @@ export interface TargetCreationResult {
 export class PatternTargetIntegrationService {
   private static instance: PatternTargetIntegrationService;
   private logger = {
-      info: (message: string, context?: any) => console.info('[pattern-target-integration]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-target-integration]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-target-integration]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-target-integration]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[pattern-target-integration]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[pattern-target-integration]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[pattern-target-integration]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[pattern-target-integration]", message, context || ""),
+  };
 
   // Default configuration
   private config: PatternTargetConfig = {

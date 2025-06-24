@@ -64,11 +64,15 @@ export class PatternMonitoringService {
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[pattern-monitoring-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-monitoring-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-monitoring-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-monitoring-service]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[pattern-monitoring-service]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[pattern-monitoring-service]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[pattern-monitoring-service]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[pattern-monitoring-service]", message, context || ""),
+      };
     }
     return this._logger;
   }
@@ -297,9 +301,7 @@ export class PatternMonitoringService {
       const allPatterns = await this.detectPatternsManually(candidateSymbols);
 
       this.stats.consecutiveErrors = 0; // Reset error count on success
-      console.info(
-        `[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`
-      );
+      console.info(`[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`);
     } catch (error) {
       console.error("[PatternMonitoring] Monitoring cycle failed:", error);
       this.stats.consecutiveErrors++;

@@ -9,11 +9,11 @@
  * - Compliance checks
  */
 
+import { BaseService } from "../lib/logger-injection";
+import type { ILogger } from "../lib/structured-logger";
 import { getUnifiedMexcClient } from "./api/mexc-client-factory";
 import type { OrderParameters } from "./api/mexc-client-types";
 import { ErrorLoggingService } from "./error-logging-service";
-import { BaseService } from "../lib/logger-injection";
-import type { ILogger } from "../lib/structured-logger";
 
 export interface RiskProfile {
   userId: string;

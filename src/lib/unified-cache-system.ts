@@ -1,5 +1,5 @@
 /**
-* Unified Cache System for MEXC Sniper Bot
+ * Unified Cache System for MEXC Sniper Bot
  *
  * This system consolidates all caching functionality from:
  * - cache-manager.ts (multi-level cache)
@@ -130,11 +130,15 @@ interface CacheBackend<T = any> {
  */
 class MemoryCache implements CacheBackend {
   private logger = {
-      info: (message: string, context?: any) => console.info('[unified-cache-system]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[unified-cache-system]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[unified-cache-system]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[unified-cache-system]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[unified-cache-system]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[unified-cache-system]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[unified-cache-system]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[unified-cache-system]", message, context || ""),
+  };
 
   private cache = new Map<string, CacheEntry>();
   private accessOrder = new Map<string, number>();

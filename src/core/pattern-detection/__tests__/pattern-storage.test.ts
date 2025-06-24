@@ -8,6 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
 import type { IPatternStorage } from "../interfaces";
+
 // Mock database
 vi.mock("../../../db", () => ({
   db: {

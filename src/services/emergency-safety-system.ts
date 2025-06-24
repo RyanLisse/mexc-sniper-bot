@@ -140,15 +140,24 @@ export interface EmergencyConfig {
  * and system integrity.
  */
 export class EmergencySafetySystem extends EventEmitter {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[emergency-safety-system]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[emergency-safety-system]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[emergency-safety-system]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[emergency-safety-system]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[emergency-safety-system]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[emergency-safety-system]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[emergency-safety-system]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[emergency-safety-system]", message, context || ""),
+      };
     }
     return this._logger;
   }
@@ -486,7 +495,10 @@ export class EmergencySafetySystem extends EventEmitter {
       console.info(`[EmergencySafetySystem] Emergency deactivated: ${conditionId} - ${reason}`);
       return true;
     } catch (error) {
-      console.error(`[EmergencySafetySystem] Failed to deactivate emergency: ${conditionId}`, error);
+      console.error(
+        `[EmergencySafetySystem] Failed to deactivate emergency: ${conditionId}`,
+        error
+      );
       return false;
     }
   }

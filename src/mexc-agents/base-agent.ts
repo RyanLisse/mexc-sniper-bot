@@ -48,10 +48,12 @@ export type AgentStatus = "idle" | "running" | "error" | "offline";
 export class BaseAgent {
   // Simple console logger to avoid webpack bundling issues
   protected logger = {
-    info: (message: string, context?: any) => console.info('[base-agent]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[base-agent]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[base-agent]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[base-agent]', message, context || ''),
+    info: (message: string, context?: any) => console.info("[base-agent]", message, context || ""),
+    warn: (message: string, context?: any) => console.warn("[base-agent]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[base-agent]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[base-agent]", message, context || ""),
   };
 
   protected openai: OpenAI;

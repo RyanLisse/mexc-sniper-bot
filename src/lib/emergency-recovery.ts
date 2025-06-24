@@ -28,11 +28,15 @@ export interface RecoveryResult {
 
 export class EmergencyRecoveryService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[emergency-recovery]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[emergency-recovery]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[emergency-recovery]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[emergency-recovery]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[emergency-recovery]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[emergency-recovery]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[emergency-recovery]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[emergency-recovery]", message, context || ""),
+  };
 
   /**
    * Execute emergency recovery based on detected issues

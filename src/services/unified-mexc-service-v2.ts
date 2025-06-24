@@ -62,10 +62,14 @@ const DEFAULT_CONFIG: Required<UnifiedMexcConfigV2> = {
 export class UnifiedMexcServiceV2 {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[unified-mexc-service-v2]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[unified-mexc-service-v2]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[unified-mexc-service-v2]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[unified-mexc-service-v2]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[unified-mexc-service-v2]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[unified-mexc-service-v2]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[unified-mexc-service-v2]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[unified-mexc-service-v2]", message, context || ""),
   };
 
   private config: Required<UnifiedMexcConfigV2>;

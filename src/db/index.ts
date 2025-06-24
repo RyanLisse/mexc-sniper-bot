@@ -33,10 +33,12 @@ let _logger: any = null;
 function getLogger() {
   if (!_logger) {
     _logger = {
-      info: (message: string, context?: any) => console.info('[db-index]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[db-index]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[db-index]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[db-index]', message, context || ''),
+      info: (message: string, context?: any) => console.info("[db-index]", message, context || ""),
+      warn: (message: string, context?: any) => console.warn("[db-index]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[db-index]", message, context || "", error || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[db-index]", message, context || ""),
     };
   }
   return _logger;

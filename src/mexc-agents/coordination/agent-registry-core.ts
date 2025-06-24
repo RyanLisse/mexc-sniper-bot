@@ -70,10 +70,14 @@ export interface AgentRegistryOptions {
  */
 export class AgentRegistryCore {
   protected logger = {
-    info: (message: string, context?: any) => console.info('[agent-registry-core]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[agent-registry-core]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[agent-registry-core]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[agent-registry-core]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[agent-registry-core]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[agent-registry-core]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[agent-registry-core]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[agent-registry-core]", message, context || ""),
   };
   protected agents: Map<string, RegisteredAgent> = new Map();
   protected isRunning = false;

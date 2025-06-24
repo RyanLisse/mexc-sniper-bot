@@ -22,10 +22,14 @@ import type {
 export class MexcCoreClient {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[mexc-core-client]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[mexc-core-client]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[mexc-core-client]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[mexc-core-client]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[mexc-core-client]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[mexc-core-client]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[mexc-core-client]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[mexc-core-client]", message, context || ""),
   };
 
   private config: MexcApiConfig;

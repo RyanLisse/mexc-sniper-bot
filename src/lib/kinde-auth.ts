@@ -23,10 +23,14 @@ export interface KindeSession {
 function getLogger() {
   if (!_logger) {
     _logger = {
-      info: (message: string, context?: any) => console.info('[kinde-auth]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[kinde-auth]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[kinde-auth]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[kinde-auth]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[kinde-auth]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[kinde-auth]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[kinde-auth]", message, context || "", error || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[kinde-auth]", message, context || ""),
     };
   }
   return _logger;

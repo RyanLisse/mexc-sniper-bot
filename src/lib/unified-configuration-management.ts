@@ -1,5 +1,5 @@
 /**
-* Unified Configuration Management System
+ * Unified Configuration Management System
  *
  * Consolidates all configuration patterns across the application into a single,
  * type-safe, and maintainable configuration system.
@@ -326,11 +326,15 @@ export type Configuration = z.infer<typeof ConfigurationSchema>;
  */
 export class ConfigurationManager {
   private logger = {
-      info: (message: string, context?: any) => console.info('[unified-configuration-management]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[unified-configuration-management]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[unified-configuration-management]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[unified-configuration-management]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[unified-configuration-management]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[unified-configuration-management]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[unified-configuration-management]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[unified-configuration-management]", message, context || ""),
+  };
 
   private static instance: ConfigurationManager | null = null;
   private config: Configuration;

@@ -1,5 +1,5 @@
 /**
-* API Performance Optimizer
+ * API Performance Optimizer
  *
  * Phase 3: API Performance Optimization (3h)
  * TARGET: 65% efficiency improvement through parallelization and batching
@@ -63,11 +63,15 @@ interface CircuitBreakerState {
 
 export class ApiPerformanceOptimizer extends EventEmitter {
   private logger = {
-      info: (message: string, context?: any) => console.info('[api-performance-optimizer]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[api-performance-optimizer]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[api-performance-optimizer]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[api-performance-optimizer]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[api-performance-optimizer]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[api-performance-optimizer]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[api-performance-optimizer]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[api-performance-optimizer]", message, context || ""),
+  };
 
   private cache = new Map<string, CacheEntry>();
   private requestQueue: BatchableRequest[] = [];

@@ -1,5 +1,5 @@
 /**
-* Agent Health Cache Manager
+ * Agent Health Cache Manager
  *
  * Manages caching of agent health status with real-time monitoring capabilities.
  * Provides fast access to agent health metrics with automatic cache invalidation
@@ -17,16 +17,25 @@ import { generateCacheKey, globalCacheManager } from "../cache-manager";
 import type { AgentCacheConfig, AgentHealthCache } from "./agent-cache-types";
 
 export class AgentHealthCacheManager {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
 
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[agent-health-cache]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[agent-health-cache]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[agent-health-cache]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[agent-health-cache]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[agent-health-cache]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[agent-health-cache]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[agent-health-cache]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[agent-health-cache]", message, context || ""),
+      };
     }
     return this._logger;
   }

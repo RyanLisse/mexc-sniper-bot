@@ -5,11 +5,15 @@ import { type NewPatternEmbedding, patternEmbeddings, patternSimilarityCache } f
 // Vector similarity functions for PostgreSQL/NeonDB
 export class VectorUtils {
   private logger = {
-      info: (message: string, context?: any) => console.info('[vector-utils]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[vector-utils]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[vector-utils]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[vector-utils]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[vector-utils]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[vector-utils]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[vector-utils]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[vector-utils]", message, context || ""),
+  };
 
   /**
    * Calculate cosine similarity between two embeddings

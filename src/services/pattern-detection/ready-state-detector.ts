@@ -33,11 +33,15 @@ export interface PreReadyScore {
 export class ReadyStateDetector extends EventEmitter {
   private readonly MIN_ADVANCE_HOURS = PATTERN_CONSTANTS.MIN_ADVANCE_HOURS;
   private logger = {
-      info: (message: string, context?: any) => console.info('[ready-state-detector]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[ready-state-detector]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[ready-state-detector]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[ready-state-detector]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[ready-state-detector]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[ready-state-detector]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[ready-state-detector]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[ready-state-detector]", message, context || ""),
+  };
 
   constructor() {
     super();

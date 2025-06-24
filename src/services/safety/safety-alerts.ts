@@ -11,11 +11,15 @@ import type { SafetyAction, SafetyAlert, SafetyCoordinatorConfig } from "./safet
 
 export class SafetyAlertsManager extends EventEmitter {
   private logger = {
-      info: (message: string, context?: any) => console.info('[safety-alerts]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[safety-alerts]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[safety-alerts]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[safety-alerts]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[safety-alerts]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[safety-alerts]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[safety-alerts]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[safety-alerts]", message, context || ""),
+  };
 
   private activeAlerts: Map<string, SafetyAlert> = new Map();
   private alertHistory: SafetyAlert[] = [];

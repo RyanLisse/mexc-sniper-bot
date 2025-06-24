@@ -22,11 +22,15 @@ import type { TradingStrategy } from "./trading-strategy-manager";
  */
 export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
   private logger = {
-      info: (message: string, context?: any) => console.info('[multi-phase-trading-bot]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[multi-phase-trading-bot]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-trading-bot]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[multi-phase-trading-bot]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[multi-phase-trading-bot]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[multi-phase-trading-bot]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[multi-phase-trading-bot]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[multi-phase-trading-bot]", message, context || ""),
+  };
   private positionManager: MultiPhasePositionManager;
   private performanceAnalytics: MultiPhasePerformanceAnalytics;
 

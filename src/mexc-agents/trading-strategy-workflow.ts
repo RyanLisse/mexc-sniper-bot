@@ -57,10 +57,14 @@ export interface ExecutionPlan {
 export class TradingStrategyWorkflow {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[trading-strategy-workflow]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[trading-strategy-workflow]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[trading-strategy-workflow]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[trading-strategy-workflow]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[trading-strategy-workflow]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[trading-strategy-workflow]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[trading-strategy-workflow]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[trading-strategy-workflow]", message, context || ""),
   };
 
   async compileTradingStrategy(

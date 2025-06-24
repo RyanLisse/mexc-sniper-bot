@@ -1,11 +1,15 @@
 // Lazy logger initialization for global functions
 function getLogger() {
   return {
-      info: (message: string, context?: any) => console.info('[cache-manager]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[cache-manager]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[cache-manager]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[cache-manager]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[cache-manager]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[cache-manager]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[cache-manager]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[cache-manager]", message, context || ""),
+  };
 }
 
 /**
@@ -108,11 +112,15 @@ class LRUCache<T = any> {
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[cache-manager]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[cache-manager]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[cache-manager]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[cache-manager]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[cache-manager]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[cache-manager]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[cache-manager]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[cache-manager]", message, context || ""),
+      };
     }
     return this._logger;
   }

@@ -39,10 +39,14 @@ export class CoordinationSystemManager {
   // Simple console logger to avoid webpack bundling issues
   private get logger() {
     return {
-      info: (message: string, context?: any) => console.info('[coordination-manager]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[coordination-manager]', message, context || ''),
-      error: (message: string, context?: any) => console.error('[coordination-manager]', message, context || ''),
-      debug: (message: string, context?: any) => console.debug('[coordination-manager]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[coordination-manager]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[coordination-manager]", message, context || ""),
+      error: (message: string, context?: any) =>
+        console.error("[coordination-manager]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[coordination-manager]", message, context || ""),
     };
   }
 

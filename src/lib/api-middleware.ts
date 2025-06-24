@@ -601,16 +601,25 @@ function isValidEmail(email: string): boolean {
 }
 
 class ValidationError extends Error {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
 
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[api-middleware]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[api-middleware]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[api-middleware]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[api-middleware]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[api-middleware]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[api-middleware]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[api-middleware]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[api-middleware]", message, context || ""),
+      };
     }
     return this._logger;
   }

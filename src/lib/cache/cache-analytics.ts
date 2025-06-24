@@ -1,5 +1,5 @@
 /**
-* Cache Analytics Manager
+ * Cache Analytics Manager
  *
  * Provides comprehensive analytics and reporting for the agent cache system.
  * Generates insights, recommendations, and performance reports across all cache components.
@@ -27,11 +27,15 @@ import type { WorkflowCache } from "./workflow-cache";
 
 export class CacheAnalyticsManager {
   private logger = {
-      info: (message: string, context?: any) => console.info('[cache-analytics]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[cache-analytics]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[cache-analytics]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[cache-analytics]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[cache-analytics]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[cache-analytics]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[cache-analytics]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[cache-analytics]", message, context || ""),
+  };
 
   private config: AgentCacheConfig;
   private performanceMonitor: CachePerformanceMonitor;

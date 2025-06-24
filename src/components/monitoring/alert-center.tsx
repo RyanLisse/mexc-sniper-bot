@@ -62,6 +62,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateChartCellKey, generateListKey, useSkeletonItems } from "../../lib/react-utilities";
+
 interface Alert {
   id: string;
   severity: string;

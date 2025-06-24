@@ -41,15 +41,24 @@ interface TeamsAction {
 }
 
 export class TeamsProvider implements NotificationProvider {
-  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+  private get logger(): {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  } {
     if (!this._logger) {
       try {
         this._logger = {
-      info: (message: string, context?: any) => console.info('[teams-provider]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[teams-provider]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[teams-provider]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[teams-provider]', message, context || ''),
-    };
+          info: (message: string, context?: any) =>
+            console.info("[teams-provider]", message, context || ""),
+          warn: (message: string, context?: any) =>
+            console.warn("[teams-provider]", message, context || ""),
+          error: (message: string, context?: any, error?: Error) =>
+            console.error("[teams-provider]", message, context || "", error || ""),
+          debug: (message: string, context?: any) =>
+            console.debug("[teams-provider]", message, context || ""),
+        };
       } catch {
         // Fallback during build time
         this._logger = {

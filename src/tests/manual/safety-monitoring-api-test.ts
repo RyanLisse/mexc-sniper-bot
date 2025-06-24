@@ -6,6 +6,7 @@
  */
 
 import { RealTimeSafetyMonitoringService } from "../../services/real-time-safety-monitoring-modules";
+
 interface TestResult {
   endpoint: string;
   method: string;
@@ -19,11 +20,15 @@ interface TestResult {
 
 class SafetyMonitoringAPITester {
   private logger = {
-      info: (message: string, context?: any) => console.info('[safety-monitoring-api-test]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[safety-monitoring-api-test]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[safety-monitoring-api-test]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[safety-monitoring-api-test]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[safety-monitoring-api-test]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[safety-monitoring-api-test]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[safety-monitoring-api-test]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[safety-monitoring-api-test]", message, context || ""),
+  };
 
   private baseUrl = "http://localhost:3000/api/auto-sniping/safety-monitoring";
   private results: TestResult[] = [];

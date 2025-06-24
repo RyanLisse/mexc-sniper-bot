@@ -44,11 +44,15 @@ export interface ConfigurationPreset {
 
 export class ConfigurationManagement {
   private logger = {
-      info: (message: string, context?: any) => console.info('[configuration-management]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[configuration-management]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[configuration-management]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[configuration-management]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[configuration-management]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[configuration-management]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[configuration-management]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[configuration-management]", message, context || ""),
+  };
   private configuration: SafetyConfiguration;
   private updateHistory: ConfigurationUpdate[] = [];
   private readonly enableValidation: boolean;

@@ -42,10 +42,14 @@ export class ErrorLoggingService {
   // Simple console logger to avoid webpack bundling issues
   private getLogger() {
     return {
-      info: (message: string, context?: any) => console.info('[error-logging-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[error-logging-service]', message, context || ''),
-      error: (message: string, context?: any) => console.error('[error-logging-service]', message, context || ''),
-      debug: (message: string, context?: any) => console.debug('[error-logging-service]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[error-logging-service]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[error-logging-service]", message, context || ""),
+      error: (message: string, context?: any) =>
+        console.error("[error-logging-service]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[error-logging-service]", message, context || ""),
     };
   }
 

@@ -14,6 +14,7 @@ import { EnhancedPatternDetectionCore } from "../core/pattern-detection/pattern-
 import { snipeTargets, userPreferences } from "../db/schema";
 import { db } from "../lib/database-connection-pool";
 import { toSafeError } from "../lib/error-type-utils";
+
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 
 // ============================================================================
@@ -73,30 +74,30 @@ export class PatternToDatabaseBridge {
   private logger = {
     info: (message: string, context?: any, error?: any) => {
       if (error) {
-        console.info('[pattern-to-database-bridge]', message, context || '', error);
+        console.info("[pattern-to-database-bridge]", message, context || "", error);
       } else {
-        console.info('[pattern-to-database-bridge]', message, context || '');
+        console.info("[pattern-to-database-bridge]", message, context || "");
       }
     },
     warn: (message: string, context?: any, error?: any) => {
       if (error) {
-        console.warn('[pattern-to-database-bridge]', message, context || '', error);
+        console.warn("[pattern-to-database-bridge]", message, context || "", error);
       } else {
-        console.warn('[pattern-to-database-bridge]', message, context || '');
+        console.warn("[pattern-to-database-bridge]", message, context || "");
       }
     },
     error: (message: string, context?: any, error?: any) => {
       if (error) {
-        console.error('[pattern-to-database-bridge]', message, context || '', error);
+        console.error("[pattern-to-database-bridge]", message, context || "", error);
       } else {
-        console.error('[pattern-to-database-bridge]', message, context || '');
+        console.error("[pattern-to-database-bridge]", message, context || "");
       }
     },
     debug: (message: string, context?: any, error?: any) => {
       if (error) {
-        console.debug('[pattern-to-database-bridge]', message, context || '', error);
+        console.debug("[pattern-to-database-bridge]", message, context || "", error);
       } else {
-        console.debug('[pattern-to-database-bridge]', message, context || '');
+        console.debug("[pattern-to-database-bridge]", message, context || "");
       }
     },
   };

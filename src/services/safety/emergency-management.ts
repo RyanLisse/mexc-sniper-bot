@@ -45,11 +45,15 @@ export interface EmergencyState {
 
 export class EmergencyManager extends EventEmitter {
   private logger = {
-      info: (message: string, context?: any) => console.info('[emergency-management]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[emergency-management]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[emergency-management]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[emergency-management]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[emergency-management]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[emergency-management]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[emergency-management]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[emergency-management]", message, context || ""),
+  };
 
   private emergencyState: EmergencyState;
   private activeProcedures: Map<string, EmergencyProcedure> = new Map();

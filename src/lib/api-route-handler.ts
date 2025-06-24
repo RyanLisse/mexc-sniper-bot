@@ -32,7 +32,8 @@ import {
 export interface ApiRouteContext {
   request: NextRequest;
   startTime: number;
-  requestId: string;}
+  requestId: string;
+}
 
 export interface ApiRouteOptions<TQuery = any, TBody = any, TResponse = any> {
   // Validation schemas

@@ -64,10 +64,14 @@ export interface AgentWorkflowResult {
 export class MultiAgentOrchestrator {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[multi-agent-orchestrator]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[multi-agent-orchestrator]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[multi-agent-orchestrator]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[multi-agent-orchestrator]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[multi-agent-orchestrator]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[multi-agent-orchestrator]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[multi-agent-orchestrator]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[multi-agent-orchestrator]", message, context || ""),
   };
 
   private static instance: MultiAgentOrchestrator;

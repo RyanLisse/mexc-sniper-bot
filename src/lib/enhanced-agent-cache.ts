@@ -1,5 +1,5 @@
 /**
-* Enhanced Agent Cache - Refactored Entry Point
+ * Enhanced Agent Cache - Refactored Entry Point
  *
  * This file replaces the original 1228-line monolithic enhanced-agent-cache.ts
  * with a clean module-based architecture for better maintainability.
@@ -72,15 +72,24 @@ import { WorkflowCache } from "./cache/workflow-cache";
  * for backward compatibility with existing code.
  */
 export class EnhancedAgentCache {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[enhanced-agent-cache]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[enhanced-agent-cache]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[enhanced-agent-cache]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[enhanced-agent-cache]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[enhanced-agent-cache]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[enhanced-agent-cache]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[enhanced-agent-cache]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[enhanced-agent-cache]", message, context || ""),
+      };
     }
     return this._logger;
   }

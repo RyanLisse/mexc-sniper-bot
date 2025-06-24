@@ -38,15 +38,24 @@ export class CircuitBreaker {
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+  private get logger(): {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  } {
     if (!this._logger) {
       try {
         this._logger = {
-      info: (message: string, context?: any) => console.info('[circuit-breaker]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[circuit-breaker]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[circuit-breaker]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[circuit-breaker]', message, context || ''),
-    };
+          info: (message: string, context?: any) =>
+            console.info("[circuit-breaker]", message, context || ""),
+          warn: (message: string, context?: any) =>
+            console.warn("[circuit-breaker]", message, context || ""),
+          error: (message: string, context?: any, error?: Error) =>
+            console.error("[circuit-breaker]", message, context || "", error || ""),
+          debug: (message: string, context?: any) =>
+            console.debug("[circuit-breaker]", message, context || ""),
+        };
       } catch (error) {
         // Fallback to console logging during build time
         this._logger = {
@@ -132,10 +141,7 @@ export class CircuitBreaker {
         try {
           return await fallback();
         } catch (fallbackError) {
-          console.error(
-            `❌ Circuit breaker [${this.name}] fallback also failed:`,
-            fallbackError
-          );
+          console.error(`❌ Circuit breaker [${this.name}] fallback also failed:`, fallbackError);
           throw error; // Throw original error, not fallback error
         }
       }
@@ -284,14 +290,23 @@ export class CircuitBreakerRegistry {
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+  private get logger(): {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  } {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[circuit-breaker-registry]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[circuit-breaker-registry]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[circuit-breaker-registry]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[circuit-breaker-registry]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[circuit-breaker-registry]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[circuit-breaker-registry]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[circuit-breaker-registry]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[circuit-breaker-registry]", message, context || ""),
+      };
     }
     return this._logger;
   }

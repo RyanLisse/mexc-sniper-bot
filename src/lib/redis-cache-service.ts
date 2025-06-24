@@ -1,5 +1,5 @@
 /**
-* Redis/Valkey Cache Service for MEXC Sniper Bot
+ * Redis/Valkey Cache Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Redis/Valkey Caching & Performance Enhancement
  *
@@ -88,11 +88,15 @@ export interface CacheWarmupStrategy {
 
 export class RedisCacheService {
   private logger = {
-      info: (message: string, context?: any) => console.info('[redis-cache-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[redis-cache-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[redis-cache-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[redis-cache-service]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[redis-cache-service]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[redis-cache-service]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[redis-cache-service]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[redis-cache-service]", message, context || ""),
+  };
 
   private redis: Redis | null = null;
   private config: RedisCacheConfig;

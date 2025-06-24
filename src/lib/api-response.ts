@@ -36,18 +36,27 @@ export interface ApiResponse<T = unknown> {
 /**
  * Creates a successful API response
  */
-let _/**
+let _; /**
  * Lazy logger initialization to prevent webpack bundling issues
  */
-function getLogger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+function getLogger(): {
+  info: (message: string, context?: any) => void;
+  warn: (message: string, context?: any) => void;
+  error: (message: string, context?: any, error?: Error) => void;
+  debug: (message: string, context?: any) => void;
+} {
   if (!_logger) {
     try {
       _logger = {
-      info: (message: string, context?: any) => console.info('[api-response]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[api-response]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[api-response]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[api-response]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[api-response]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[api-response]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[api-response]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[api-response]", message, context || ""),
+      };
     } catch (error) {
       // Fallback to console logging during build time
       _logger = {

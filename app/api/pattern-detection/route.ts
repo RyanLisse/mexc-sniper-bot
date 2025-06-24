@@ -95,32 +95,44 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 // ============================================================================
 
 async function handlePatternAnalysis(request: z.infer<typeof PatternDetectionRequestSchema>) {
-  const result = await PatternDetectionCore.getInstance().analyzePatterns({
-    symbols: request.symbolData || [],
-    calendarEntries: request.calendarEntries || [],
-    analysisType: request.analysisType || "discovery",
-    confidenceThreshold: request.confidenceThreshold || 70,
-    includeHistorical: request.includeHistorical ?? true
-  });
+  try {
+    const result = await PatternDetectionCore.getInstance().analyzePatterns({
+      symbols: request.symbolData || [],
+      calendarEntries: request.calendarEntries || [],
+      analysisType: request.analysisType || "discovery",
+      confidenceThreshold: request.confidenceThreshold || 70,
+      includeHistorical: request.includeHistorical ?? true
+    });
 
-  return createApiResponse({
-    success: true,
-    data: {
-      analysis: result,
-      summary: {
-        totalMatches: result.matches.length,
-        readyStatePatterns: result.matches.filter(m => m.patternType === "ready_state").length,
-        advanceOpportunities: result.matches.filter(m => 
-          m.patternType === "ready_state" && m.advanceNoticeHours >= 3.5
-        ).length,
-        highConfidenceMatches: result.matches.filter(m => m.confidence >= 80).length,
-        averageConfidence: result.summary.averageConfidence
-      },
-      recommendations: result.recommendations,
-      correlations: result.correlations,
-      metadata: result.analysisMetadata
-    }
-  });
+    return createApiResponse({
+      success: true,
+      data: {
+        analysis: result,
+        summary: {
+          totalMatches: result.matches.length,
+          readyStatePatterns: result.matches.filter(m => m.patternType === "ready_state").length,
+          advanceOpportunities: result.matches.filter(m => 
+            m.patternType === "ready_state" && m.advanceNoticeHours >= 3.5
+          ).length,
+          highConfidenceMatches: result.matches.filter(m => m.confidence >= 80).length,
+          averageConfidence: result.summary.averageConfidence
+        },
+        recommendations: result.recommendations,
+        correlations: result.correlations,
+        metadata: result.analysisMetadata
+      }
+    });
+  } catch (error) {
+    console.error('[pattern-detection] Pattern analysis failed:', error);
+    return createApiResponse({
+      success: false,
+      error: error instanceof Error ? error.message : "Pattern analysis failed",
+      data: {
+        analysis: { matches: [], summary: { averageConfidence: 0 }, recommendations: [], correlations: [], analysisMetadata: {} },
+        summary: { totalMatches: 0, readyStatePatterns: 0, advanceOpportunities: 0, highConfidenceMatches: 0, averageConfidence: 0 }
+      }
+    }, 500);
+  }
 }
 
 async function handlePatternDiscovery(request: z.infer<typeof PatternDetectionRequestSchema>) {
@@ -131,30 +143,45 @@ async function handlePatternDiscovery(request: z.infer<typeof PatternDetectionRe
     }, 400);
   }
 
-  const workflowResult = await patternStrategyOrchestrator.executePatternWorkflow({
-    type: "discovery",
-    input: {
-      calendarEntries: request.calendarEntries,
-      symbols: request.symbols || []
-    },
-    options: {
-      confidenceThreshold: request.confidenceThreshold || 70,
-      includeAdvanceDetection: request.enableAdvanceDetection ?? true,
-      enableAgentAnalysis: request.enableAgentAnalysis ?? true
-    }
-  });
+  try {
+    const workflowResult = await patternStrategyOrchestrator.executePatternWorkflow({
+      type: "discovery",
+      input: {
+        calendarEntries: request.calendarEntries,
+        symbols: request.symbols || []
+      },
+      options: {
+        confidenceThreshold: request.confidenceThreshold || 70,
+        includeAdvanceDetection: request.enableAdvanceDetection ?? true,
+        enableAgentAnalysis: request.enableAgentAnalysis ?? true
+      }
+    });
 
-  return createApiResponse({
-    success: workflowResult.success,
-    data: {
-      workflow: workflowResult,
-      patternAnalysis: workflowResult.results.patternAnalysis,
-      strategicRecommendations: workflowResult.results.strategicRecommendations,
-      monitoringPlan: workflowResult.results.monitoringPlan,
-      performance: workflowResult.performance
-    },
-    error: workflowResult.error
-  });
+    return createApiResponse({
+      success: workflowResult.success,
+      data: {
+        workflow: workflowResult,
+        patternAnalysis: workflowResult.results.patternAnalysis,
+        strategicRecommendations: workflowResult.results.strategicRecommendations,
+        monitoringPlan: workflowResult.results.monitoringPlan,
+        performance: workflowResult.performance
+      },
+      error: workflowResult.error
+    });
+  } catch (error) {
+    console.error('[pattern-detection] Pattern discovery failed:', error);
+    return createApiResponse({
+      success: false,
+      error: error instanceof Error ? error.message : "Pattern discovery failed",
+      data: {
+        workflow: { success: false, error: "Discovery workflow failed" },
+        patternAnalysis: null,
+        strategicRecommendations: [],
+        monitoringPlan: null,
+        performance: { duration: 0, status: 'failed' }
+      }
+    }, 500);
+  }
 }
 
 async function handlePatternMonitoring(request: z.infer<typeof PatternDetectionRequestSchema>) {
@@ -165,34 +192,49 @@ async function handlePatternMonitoring(request: z.infer<typeof PatternDetectionR
     }, 400);
   }
 
-  const workflowResult = await patternStrategyOrchestrator.executePatternWorkflow({
-    type: "monitoring",
-    input: {
-      symbolData: request.symbolData,
-      vcoinId: request.vcoinId,
-      symbols: request.symbols || []
-    },
-    options: {
-      confidenceThreshold: request.confidenceThreshold || 80,
-      enableAgentAnalysis: request.enableAgentAnalysis ?? true
-    }
-  });
+  try {
+    const workflowResult = await patternStrategyOrchestrator.executePatternWorkflow({
+      type: "monitoring",
+      input: {
+        symbolData: request.symbolData,
+        vcoinId: request.vcoinId,
+        symbols: request.symbols || []
+      },
+      options: {
+        confidenceThreshold: request.confidenceThreshold || 80,
+        enableAgentAnalysis: request.enableAgentAnalysis ?? true
+      }
+    });
 
-  return createApiResponse({
-    success: workflowResult.success,
-    data: {
-      workflow: workflowResult,
-      readyStateDetection: workflowResult.results.patternAnalysis?.matches.filter(m => 
-        m.patternType === "ready_state"
-      ) || [],
-      preReadyPatterns: workflowResult.results.patternAnalysis?.matches.filter(m => 
-        m.patternType === "pre_ready"
-      ) || [],
-      strategicRecommendations: workflowResult.results.strategicRecommendations,
-      performance: workflowResult.performance
-    },
-    error: workflowResult.error
-  });
+    return createApiResponse({
+      success: workflowResult.success,
+      data: {
+        workflow: workflowResult,
+        readyStateDetection: workflowResult.results.patternAnalysis?.matches.filter(m => 
+          m.patternType === "ready_state"
+        ) || [],
+        preReadyPatterns: workflowResult.results.patternAnalysis?.matches.filter(m => 
+          m.patternType === "pre_ready"
+        ) || [],
+        strategicRecommendations: workflowResult.results.strategicRecommendations,
+        performance: workflowResult.performance
+      },
+      error: workflowResult.error
+    });
+  } catch (error) {
+    console.error('[pattern-detection] Pattern monitoring failed:', error);
+    return createApiResponse({
+      success: false,
+      error: error instanceof Error ? error.message : "Pattern monitoring failed",
+      data: {
+        workflow: { success: false, error: "Monitoring workflow failed" },
+        readyStateDetection: [],
+        preReadyPatterns: [],
+        strategicRecommendations: [],
+        performance: { duration: 0, status: 'failed' }
+      }
+    }, 500);
+  }
 }
 
 async function handlePatternValidation(request: z.infer<typeof PatternDetectionRequestSchema>) {
@@ -203,57 +245,93 @@ async function handlePatternValidation(request: z.infer<typeof PatternDetectionR
     }, 400);
   }
 
-  const workflowResult = await patternStrategyOrchestrator.executePatternWorkflow({
-    type: "validation",
-    input: {
-      symbolData: request.symbolData,
-      vcoinId: request.vcoinId
-    },
-    options: {
-      confidenceThreshold: 85, // Higher threshold for validation
-      enableAgentAnalysis: true
-    }
-  });
+  try {
+    const workflowResult = await patternStrategyOrchestrator.executePatternWorkflow({
+      type: "validation",
+      input: {
+        symbolData: request.symbolData,
+        vcoinId: request.vcoinId
+      },
+      options: {
+        confidenceThreshold: 85, // Higher threshold for validation
+        enableAgentAnalysis: true
+      }
+    });
 
-  return createApiResponse({
-    success: workflowResult.success,
-    data: {
-      validationResult: workflowResult,
-      readyStateValidation: workflowResult.results.patternAnalysis?.matches.filter(m => 
-        m.patternType === "ready_state" && m.confidence >= 85
-      ) || [],
-      riskAssessment: workflowResult.results.patternAnalysis?.matches.filter(m => 
-        m.riskLevel === "high"
-      ) || [],
-      recommendations: workflowResult.results.strategicRecommendations,
-      performance: workflowResult.performance
-    },
-    error: workflowResult.error
-  });
+    return createApiResponse({
+      success: workflowResult.success,
+      data: {
+        validationResult: workflowResult,
+        readyStateValidation: workflowResult.results.patternAnalysis?.matches.filter(m => 
+          m.patternType === "ready_state" && m.confidence >= 85
+        ) || [],
+        riskAssessment: workflowResult.results.patternAnalysis?.matches.filter(m => 
+          m.riskLevel === "high"
+        ) || [],
+        recommendations: workflowResult.results.strategicRecommendations,
+        performance: workflowResult.performance
+      },
+      error: workflowResult.error
+    });
+  } catch (error) {
+    console.error('[pattern-detection] Pattern validation failed:', error);
+    return createApiResponse({
+      success: false,
+      error: error instanceof Error ? error.message : "Pattern validation failed",
+      data: {
+        validationResult: { success: false, error: "Validation workflow failed" },
+        readyStateValidation: [],
+        riskAssessment: [],
+        recommendations: [],
+        performance: { duration: 0, status: 'failed' }
+      }
+    }, 500);
+  }
 }
 
 async function handlePatternTrends(request: z.infer<typeof PatternDetectionRequestSchema>) {
   const patternType = request.patternType || "ready_state";
   const timeWindows = [1, 6, 24, 168]; // 1h, 6h, 24h, 7d
 
-  const trends = await patternEmbeddingService.detectPatternTrends(patternType, timeWindows);
+  try {
+    const trends = await patternEmbeddingService.detectPatternTrends(patternType, timeWindows);
 
-  return createApiResponse({
-    success: true,
-    data: {
-      patternType,
-      trends: trends.trends,
-      insights: trends.insights,
-      alerts: trends.alerts,
-      summary: {
-        totalTrendWindows: trends.trends.length,
-        increasingTrends: trends.trends.filter(t => t.trend === "increasing").length,
-        decreasingTrends: trends.trends.filter(t => t.trend === "decreasing").length,
-        avgSuccessRate: trends.trends.reduce((sum, t) => sum + t.successRate, 0) / trends.trends.length,
-        alertCount: trends.alerts.length
+    return createApiResponse({
+      success: true,
+      data: {
+        patternType,
+        trends: trends.trends,
+        insights: trends.insights,
+        alerts: trends.alerts,
+        summary: {
+          totalTrendWindows: trends.trends.length,
+          increasingTrends: trends.trends.filter(t => t.trend === "increasing").length,
+          decreasingTrends: trends.trends.filter(t => t.trend === "decreasing").length,
+          avgSuccessRate: trends.trends.reduce((sum, t) => sum + t.successRate, 0) / trends.trends.length,
+          alertCount: trends.alerts.length
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error('[pattern-detection] Pattern trends analysis failed:', error);
+    return createApiResponse({
+      success: false,
+      error: error instanceof Error ? error.message : "Pattern trends analysis failed",
+      data: {
+        patternType,
+        trends: [],
+        insights: [],
+        alerts: [],
+        summary: {
+          totalTrendWindows: 0,
+          increasingTrends: 0,
+          decreasingTrends: 0,
+          avgSuccessRate: 0,
+          alertCount: 0
+        }
+      }
+    }, 500);
+  }
 }
 
 async function handlePatternPerformance(request: z.infer<typeof PatternDetectionRequestSchema>) {
@@ -262,31 +340,57 @@ async function handlePatternPerformance(request: z.infer<typeof PatternDetection
     end: new Date()
   };
 
-  const performance = await patternEmbeddingService.analyzeHistoricalPerformance(
-    request.patternType,
-    timeRange
-  );
+  try {
+    const performance = await patternEmbeddingService.analyzeHistoricalPerformance(
+      request.patternType,
+      timeRange
+    );
 
-  return createApiResponse({
-    success: true,
-    data: {
-      timeRange,
-      patternType: request.patternType || "all",
-      performance,
-      summary: {
-        totalPatterns: performance.summary.totalPatterns,
-        overallSuccessRate: performance.summary.successRate,
-        avgProfit: performance.summary.avgProfit,
-        patternTypeCount: performance.breakdown.length,
-        topPerformingType: performance.breakdown.reduce((best, current) => 
-          current.successRate > best.successRate ? current : best, 
-          { patternType: "none", successRate: 0 }
-        )
-      },
-      breakdown: performance.breakdown,
-      recommendations: performance.recommendations
-    }
-  });
+    return createApiResponse({
+      success: true,
+      data: {
+        timeRange,
+        patternType: request.patternType || "all",
+        performance,
+        summary: {
+          totalPatterns: performance.summary.totalPatterns,
+          overallSuccessRate: performance.summary.successRate,
+          avgProfit: performance.summary.avgProfit,
+          patternTypeCount: performance.breakdown.length,
+          topPerformingType: performance.breakdown.reduce((best, current) => 
+            current.successRate > best.successRate ? current : best, 
+            { patternType: "none", successRate: 0 }
+          )
+        },
+        breakdown: performance.breakdown,
+        recommendations: performance.recommendations
+      }
+    });
+  } catch (error) {
+    console.error('[pattern-detection] Pattern performance analysis failed:', error);
+    return createApiResponse({
+      success: false,
+      error: error instanceof Error ? error.message : "Pattern performance analysis failed",
+      data: {
+        timeRange,
+        patternType: request.patternType || "all",
+        performance: { 
+          summary: { totalPatterns: 0, successRate: 0, avgProfit: 0 }, 
+          breakdown: [], 
+          recommendations: [] 
+        },
+        summary: {
+          totalPatterns: 0,
+          overallSuccessRate: 0,
+          avgProfit: 0,
+          patternTypeCount: 0,
+          topPerformingType: { patternType: "none", successRate: 0 }
+        },
+        breakdown: [],
+        recommendations: []
+      }
+    }, 500);
+  }
 }
 
 // GET endpoint for health check and basic info

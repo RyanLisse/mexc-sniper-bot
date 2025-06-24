@@ -34,11 +34,15 @@ interface QueryPattern {
 
 export class QueryPerformanceMonitor {
   private logger = {
-      info: (message: string, context?: any) => console.info('[query-performance-monitor]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[query-performance-monitor]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[query-performance-monitor]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[query-performance-monitor]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[query-performance-monitor]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[query-performance-monitor]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[query-performance-monitor]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[query-performance-monitor]", message, context || ""),
+  };
 
   private static instance: QueryPerformanceMonitor;
   private metrics: QueryMetric[] = [];
@@ -107,7 +111,9 @@ export class QueryPerformanceMonitor {
         // Log slow queries immediately
         if (duration > this.slowQueryThreshold) {
           const level = duration > this.verySlowQueryThreshold ? "ERROR" : "WARN";
-          console.info(`[${level}] Slow query detected: ${queryName} took ${duration.toFixed(2)}ms`);
+          console.info(
+            `[${level}] Slow query detected: ${queryName} took ${duration.toFixed(2)}ms`
+          );
 
           if (options?.query) {
             console.info(`Query: ${options.query}`);

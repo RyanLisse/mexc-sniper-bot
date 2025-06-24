@@ -20,15 +20,24 @@ export interface PatternData {
 }
 
 export class PatternEmbeddingService {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[pattern-embedding-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-embedding-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-embedding-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-embedding-service]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[pattern-embedding-service]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[pattern-embedding-service]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[pattern-embedding-service]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[pattern-embedding-service]", message, context || ""),
+      };
     }
     return this._logger;
   }

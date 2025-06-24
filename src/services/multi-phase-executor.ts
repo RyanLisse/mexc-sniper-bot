@@ -18,11 +18,15 @@ import { MultiPhaseVisualizer } from "./multi-phase-visualizer";
 
 export class MultiPhaseExecutor {
   private logger = {
-      info: (message: string, context?: any) => console.info('[multi-phase-executor]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[multi-phase-executor]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[multi-phase-executor]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[multi-phase-executor]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[multi-phase-executor]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[multi-phase-executor]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[multi-phase-executor]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[multi-phase-executor]", message, context || ""),
+  };
 
   private executedPhases: Set<number> = new Set();
   private phaseHistory: PhaseExecutionHistory[] = [];

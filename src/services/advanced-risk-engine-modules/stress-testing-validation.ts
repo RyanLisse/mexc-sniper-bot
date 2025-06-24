@@ -1,5 +1,5 @@
 /**
-* Stress Testing & Validation Module
+ * Stress Testing & Validation Module
  *
  * Provides stress testing, scenario analysis, and risk validation functionality
  * for the Advanced Risk Engine. This module handles stress test scenarios,
@@ -69,15 +69,24 @@ export interface PortfolioRiskCalculation {
 }
 
 export class StressTestingValidation {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[stress-testing-validation]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[stress-testing-validation]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[stress-testing-validation]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[stress-testing-validation]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[stress-testing-validation]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[stress-testing-validation]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[stress-testing-validation]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[stress-testing-validation]", message, context || ""),
+      };
     }
     return this._logger;
   }

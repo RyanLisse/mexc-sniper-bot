@@ -31,11 +31,15 @@ export interface DIContainerOptions {
  */
 export class DIContainer {
   private logger = {
-      info: (message: string, context?: any) => console.info('[dependency-injection]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[dependency-injection]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[dependency-injection]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[dependency-injection]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[dependency-injection]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[dependency-injection]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[dependency-injection]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[dependency-injection]", message, context || ""),
+  };
 
   private services = new Map<ServiceIdentifier, ServiceRegistration>();
   private resolutionStack: ServiceIdentifier[] = [];

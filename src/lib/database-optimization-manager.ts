@@ -15,6 +15,7 @@ import { databaseConnectionPool } from "./database-connection-pool";
 import { databaseIndexOptimizer } from "./database-index-optimizer";
 import { databasePerformanceAnalyzer } from "./database-performance-analyzer";
 import { databaseQueryOptimizer } from "./database-query-optimizer";
+
 interface OptimizationPhaseResult {
   phase: string;
   success: boolean;
@@ -47,15 +48,24 @@ interface PerformanceBenchmark {
 }
 
 export class DatabaseOptimizationManager {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private getLogger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[database-optimization-manager]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[database-optimization-manager]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[database-optimization-manager]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[database-optimization-manager]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[database-optimization-manager]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[database-optimization-manager]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[database-optimization-manager]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[database-optimization-manager]", message, context || ""),
+      };
     }
     return this._logger;
   }

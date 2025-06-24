@@ -37,15 +37,24 @@ interface SlackBlock {
 }
 
 export class SlackProvider implements NotificationProvider {
-  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+  private get logger(): {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  } {
     if (!this._logger) {
       try {
         this._logger = {
-      info: (message: string, context?: any) => console.info('[slack-provider]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[slack-provider]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[slack-provider]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[slack-provider]', message, context || ''),
-    };
+          info: (message: string, context?: any) =>
+            console.info("[slack-provider]", message, context || ""),
+          warn: (message: string, context?: any) =>
+            console.warn("[slack-provider]", message, context || ""),
+          error: (message: string, context?: any, error?: Error) =>
+            console.error("[slack-provider]", message, context || "", error || ""),
+          debug: (message: string, context?: any) =>
+            console.debug("[slack-provider]", message, context || ""),
+        };
       } catch {
         // Fallback during build time
         this._logger = {

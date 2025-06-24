@@ -34,11 +34,15 @@ interface IndexOptimizationResult {
 
 export class DatabaseIndexOptimizer {
   private logger = {
-      info: (message: string, context?: any) => console.info('[database-index-optimizer]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[database-index-optimizer]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[database-index-optimizer]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[database-index-optimizer]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[database-index-optimizer]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[database-index-optimizer]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[database-index-optimizer]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[database-index-optimizer]", message, context || ""),
+  };
 
   private static instance: DatabaseIndexOptimizer;
 

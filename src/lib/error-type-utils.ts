@@ -25,10 +25,14 @@ export interface SafeError {
 function getLogger() {
   if (!_logger) {
     _logger = {
-      info: (message: string, context?: any) => console.info('[error-type-utils]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[error-type-utils]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[error-type-utils]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[error-type-utils]', message, context || ''),
+      info: (message: string, context?: any) =>
+        console.info("[error-type-utils]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[error-type-utils]", message, context || ""),
+      error: (message: string, context?: any, error?: Error) =>
+        console.error("[error-type-utils]", message, context || "", error || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[error-type-utils]", message, context || ""),
     };
   }
   return _logger;

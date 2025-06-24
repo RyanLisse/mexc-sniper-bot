@@ -40,11 +40,15 @@ export interface CalendarMonitoringStats {
 export class CalendarPatternBridgeService {
   private static instance: CalendarPatternBridgeService;
   private logger = {
-      info: (message: string, context?: any) => console.info('[calendar-pattern-bridge]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[calendar-pattern-bridge]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[calendar-pattern-bridge]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[calendar-pattern-bridge]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[calendar-pattern-bridge]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[calendar-pattern-bridge]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[calendar-pattern-bridge]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[calendar-pattern-bridge]", message, context || ""),
+  };
   private isMonitoring = false;
   private monitoringInterval: NodeJS.Timer | null = null;
   private calendarAgent: CalendarAgent;

@@ -658,7 +658,7 @@ export class OptimizedTradingStrategyEngine {
 
   private mapStrategyToRiskProfile(
     strategyId: string
-  ): "conservative" | "moderate" | "aggressive" | "adaptive" {
+  ): "conservative" | "moderate" | "aggressive" | "adaptive" 
     switch (strategyId) {
       case "conservative":
       case "scalping":
@@ -671,9 +671,8 @@ export class OptimizedTradingStrategyEngine {
       default:
         return "adaptive";
     }
-  }
 
-  private createDefaultPerformance(strategyId: string): StrategyPerformance {
+  private createDefaultPerformance(strategyId: string): StrategyPerformance 
     return StrategyPerformanceSchema.parse({
       strategyId,
       totalTrades: 0,
@@ -692,9 +691,8 @@ export class OptimizedTradingStrategyEngine {
       lastUsed: new Date().toISOString(),
       usageCount: 0,
     });
-  }
 
-  private assessRiskProfileMatch(riskProfile: string, portfolioRisk: number): number {
+  private assessRiskProfileMatch(riskProfile: string, portfolioRisk: number): number 
     // Score risk profile compatibility
     if (portfolioRisk > 70) {
       return riskProfile === "conservative" ? 20 : -10;
@@ -703,16 +701,14 @@ export class OptimizedTradingStrategyEngine {
     } else {
       return riskProfile === "aggressive" ? 10 : 0;
     }
-  }
 
   private getRecentPerformance(
     strategyId: string,
     days: number
-  ): {
+  ): 
     trades: number;
     successRate: number;
-    averageReturn: number;
-  } {
+    averageReturn: number;{
     const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const recentTrades = this.strategyUsageHistory.filter(
       (trade) => trade.strategyId === strategyId && new Date(trade.timestamp) > cutoffDate
@@ -758,9 +754,7 @@ export class OptimizedTradingStrategyEngine {
     return totalTrades > 0 ? totalHoldTime / totalTrades : 0;
   }
 
-  private calculateRecentTrends(): {
-    last30Days: { successRate: number; averageReturn: number };
-    last7Days: { successRate: number; averageReturn: number };
+  private calculateRecentTrends(): {successRate: number; averageReturn: number ;successRate: number; averageReturn: number ;
   } {
     const now = Date.now();
     const last7Days = this.strategyUsageHistory.filter(

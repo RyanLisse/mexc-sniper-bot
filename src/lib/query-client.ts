@@ -1,14 +1,31 @@
 import { QueryClient } from "@tanstack/react-query";
 // Import optimized query keys from modular MEXC service
 import { mexcQueryKeys } from "../services/modules/mexc-api-types";
+
 /**
- * Optimized TanStack Query Client Configuration
+ * React Query Configuration - Anti-Retry Storm Configuration
  *
- * Enhanced configuration for better performance and type safety:
- * - Optimized stale times for different data types
- * - Intelligent retry logic with circuit breaker awareness
- * - Comprehensive error handling
- * - Memory-efficient garbage collection
+ * CRITICAL: This configuration is specifically designed to prevent retry storms
+ * and cascade failures that can overwhelm the MEXC API and our backend services.
+ *
+ * Key Anti-Storm Measures:
+ * 1. NO DEFAULT RETRIES: All retries are disabled by default (retry: false)
+ * 2. LONGER DELAYS: When retries do occur, they use 5s+ delays
+ * 3. NO AUTO-REFETCH: Automatic refetch intervals are disabled
+ * 4. CIRCUIT BREAKER AWARE: Respects circuit breaker "open" states
+ * 5. NETWORK ERROR DETECTION: Immediately fails on timeouts/connection errors
+ *
+ * Previous Issues Fixed:
+ * - High-frequency failed requests were cascading into retry storms
+ * - Auto-refetch was amplifying failures during outages
+ * - Multiple queries retrying simultaneously overwhelmed the API
+ * - Insufficient backoff delays caused immediate re-attempts
+ *
+ * Configuration Principles:
+ * - Fail fast on permanent errors (auth, network timeouts)
+ * - Use manual refetch instead of automatic intervals
+ * - Rely on user-initiated actions rather than background polling
+ * - Prefer stale data over cascading failures
  */
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,7 +33,7 @@ export const queryClient = new QueryClient({
       staleTime: 2 * 60 * 1000, // 2 minutes - reduced for more up-to-date data
       gcTime: 10 * 60 * 1000, // 10 minutes (previously cacheTime)
       retry: (failureCount, error) => {
-        // Don't retry on 4xx errors
+        // Don't retry on 4xx errors (client errors)
         if (
           error instanceof Error &&
           "status" in error &&
@@ -27,19 +44,38 @@ export const queryClient = new QueryClient({
           return false;
         }
 
+        // Don't retry on specific server errors that indicate DB issues
+        if (error instanceof Error && error.message.includes("DB_CONNECTION_ERROR")) {
+          return false;
+        }
+
         // Don't retry if circuit breaker is open
         if (error instanceof Error && error.message.includes("Circuit breaker open")) {
           return false;
         }
 
-        return failureCount < 3;
+        // Don't retry on network timeout errors to prevent cascade failures
+        if (
+          error instanceof Error &&
+          (error.message.includes("timeout") ||
+            error.message.includes("ECONNREFUSED") ||
+            error.message.includes("ENOTFOUND") ||
+            error.message.includes("network error"))
+        ) {
+          return false;
+        }
+
+        // Extremely conservative retry to prevent storms - no retries by default
+        return false; // Completely disable retries to prevent cascade failures
       },
+      retryDelay: (attemptIndex) => Math.min(5000 * 2 ** attemptIndex, 60000), // Longer delays: 5s, 10s, 20s, max 60s
       refetchOnWindowFocus: false, // Avoid unnecessary refetches
       refetchOnMount: true,
-      retryOnMount: true,
+      retryOnMount: false, // Don't retry failed queries on component mount
     },
     mutations: {
-      retry: 1,
+      retry: 0, // Don't retry mutations to prevent duplicate operations
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       // Add error handling for mutations
       onError: (error) => {
         console.error("[QueryClient] Mutation error:", error);
@@ -109,8 +145,9 @@ export const createQueryOptions = {
     queryFn,
     staleTime: 15 * 1000, // 15 seconds
     gcTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 30 * 1000, // 30 seconds
-    retry: 2,
+    refetchInterval: false, // Disable automatic refetch to prevent storms
+    retry: 0, // No retries for real-time data to prevent cascade failures
+    refetchOnWindowFocus: false,
   }),
 
   // Semi-static data (symbols, calendar) - medium stale time
@@ -119,7 +156,8 @@ export const createQueryOptions = {
     queryFn,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes
-    retry: 3,
+    retry: 0, // No retries to prevent cascade failures
+    refetchOnWindowFocus: false,
   }),
 
   // Static data (configuration) - long stale time
@@ -128,7 +166,8 @@ export const createQueryOptions = {
     queryFn,
     staleTime: 30 * 60 * 1000, // 30 minutes
     gcTime: 60 * 60 * 1000, // 1 hour
-    retry: 3,
+    retry: 0, // No retries to prevent cascade failures
+    refetchOnWindowFocus: false,
   }),
 
   // User-specific data - medium stale time, no background refetch
@@ -137,7 +176,7 @@ export const createQueryOptions = {
     queryFn,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
-    retry: 2,
+    retry: 0, // No retries to prevent cascade failures
     refetchOnWindowFocus: false,
   }),
 } as const;

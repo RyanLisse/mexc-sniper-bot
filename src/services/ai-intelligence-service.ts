@@ -11,9 +11,9 @@
  * - Real-time cryptocurrency market intelligence
  */
 
+import { context, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
+import { TRADING_TELEMETRY_CONFIG } from "../lib/opentelemetry-setup";
 import type { PatternData } from "./pattern-embedding-service";
-import { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
-import { TRADING_TELEMETRY_CONFIG } from '../lib/opentelemetry-setup';
 
 // ======================
 // Cohere Client Configuration
@@ -105,7 +105,7 @@ export class AIIntelligenceService {
   private readonly cohereModel = "embed-english-v3.0"; // Latest Cohere model
   private readonly cohereApiUrl = "https://api.cohere.ai/v1/embed";
   private readonly perplexityApiUrl = "https://api.perplexity.ai/chat/completions";
-  private tracer = trace.getTracer('ai-intelligence-service');
+  private tracer = trace.getTracer("ai-intelligence-service");
 
   // Cache for embeddings and research to optimize API usage
   private embeddingCache = new Map<string, number[]>();
@@ -121,15 +121,24 @@ export class AIIntelligenceService {
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; } {
+  private get logger(): {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  } {
     if (!this._logger) {
       try {
         this._logger = {
-      info: (message: string, context?: any) => console.info('[ai-intelligence-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[ai-intelligence-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[ai-intelligence-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[ai-intelligence-service]', message, context || ''),
-    };
+          info: (message: string, context?: any) =>
+            console.info("[ai-intelligence-service]", message, context || ""),
+          warn: (message: string, context?: any) =>
+            console.warn("[ai-intelligence-service]", message, context || ""),
+          error: (message: string, context?: any, error?: Error) =>
+            console.error("[ai-intelligence-service]", message, context || "", error || ""),
+          debug: (message: string, context?: any) =>
+            console.debug("[ai-intelligence-service]", message, context || ""),
+        };
 
         // Log configuration warnings only once when logger is first accessed
         if (!this.cohereApiKey) {
@@ -172,20 +181,20 @@ export class AIIntelligenceService {
       | "clustering" = "classification"
   ): Promise<number[][]> {
     return await this.tracer.startActiveSpan(
-      'ai.generate_embedding',
+      "ai.generate_embedding",
       {
         kind: SpanKind.INTERNAL,
         attributes: {
-          'ai.provider': 'cohere',
-          'ai.model': this.cohereModel,
-          'ai.input_type': inputType,
-          'ai.texts_count': texts.length,
-          'ai.operation': 'embedding_generation'
-        }
+          "ai.provider": "cohere",
+          "ai.model": this.cohereModel,
+          "ai.input_type": inputType,
+          "ai.texts_count": texts.length,
+          "ai.operation": "embedding_generation",
+        },
       },
       async (span) => {
         if (!this.cohereApiKey) {
-          span.recordException(new Error('Cohere API key not configured'));
+          span.recordException(new Error("Cohere API key not configured"));
           span.setStatus({ code: SpanStatusCode.ERROR });
           throw new Error("Cohere API key not configured");
         }
@@ -195,67 +204,66 @@ export class AIIntelligenceService {
         const cached = this.embeddingCache.get(cacheKey);
         if (cached) {
           span.setAttributes({
-            'cache.hit': true,
-            'ai.embedding_dimensions': cached.length
+            "cache.hit": true,
+            "ai.embedding_dimensions": cached.length,
           });
           span.setStatus({ code: SpanStatusCode.OK });
           span.end();
           return [cached];
         }
 
-        span.setAttributes({ 'cache.hit': false });
+        span.setAttributes({ "cache.hit": false });
 
         try {
-      const request: CohereEmbedRequest = {
-        texts,
-        model: this.cohereModel,
-        input_type: inputType,
-        embedding_types: ["float"],
-        truncate: "END",
-      };
+          const request: CohereEmbedRequest = {
+            texts,
+            model: this.cohereModel,
+            input_type: inputType,
+            embedding_types: ["float"],
+            truncate: "END",
+          };
 
-      console.info(`[AI Intelligence] Generating Cohere embeddings for ${texts.length} texts`);
+          console.info(`[AI Intelligence] Generating Cohere embeddings for ${texts.length} texts`);
 
-      const response = await fetch(this.cohereApiUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.cohereApiKey}`,
-          "Content-Type": "application/json",
-          "X-Client-Name": "mexc-sniper-bot",
-        },
-        body: JSON.stringify(request),
-      });
+          const response = await fetch(this.cohereApiUrl, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${this.cohereApiKey}`,
+              "Content-Type": "application/json",
+              "X-Client-Name": "mexc-sniper-bot",
+            },
+            body: JSON.stringify(request),
+          });
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`Cohere API error: ${response.status} - ${errorData}`);
-      }
+          if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`Cohere API error: ${response.status} - ${errorData}`);
+          }
 
-      const data: CohereEmbedResponse = await response.json();
+          const data: CohereEmbedResponse = await response.json();
 
-      if (!data.embeddings?.float || data.embeddings.float.length === 0) {
-        throw new Error("No embeddings returned from Cohere API");
-      }
+          if (!data.embeddings?.float || data.embeddings.float.length === 0) {
+            throw new Error("No embeddings returned from Cohere API");
+          }
 
-        // Cache the result
-        if (data.embeddings.float.length === 1) {
-          this.embeddingCache.set(cacheKey, data.embeddings.float[0]);
-        }
+          // Cache the result
+          if (data.embeddings.float.length === 1) {
+            this.embeddingCache.set(cacheKey, data.embeddings.float[0]);
+          }
 
-        console.info(
-          `[AI Intelligence] Generated ${data.embeddings.float.length} embeddings with ${data.embeddings.float[0].length} dimensions`
-        );
+          console.info(
+            `[AI Intelligence] Generated ${data.embeddings.float.length} embeddings with ${data.embeddings.float[0].length} dimensions`
+          );
 
-        // Add successful span attributes
-        span.setAttributes({
-          'ai.embeddings_count': data.embeddings.float.length,
-          'ai.embedding_dimensions': data.embeddings.float[0].length,
-          'ai.response_time_ms': performance.now() - (span as any).startTime || 0
-        });
+          // Add successful span attributes
+          span.setAttributes({
+            "ai.embeddings_count": data.embeddings.float.length,
+            "ai.embedding_dimensions": data.embeddings.float[0].length,
+            "ai.response_time_ms": performance.now() - (span as any).startTime || 0,
+          });
 
-        span.setStatus({ code: SpanStatusCode.OK });
-        return data.embeddings.float;
-
+          span.setStatus({ code: SpanStatusCode.OK });
+          return data.embeddings.float;
         } catch (error) {
           console.error("[AI Intelligence] Cohere embedding generation failed:", error);
 
@@ -264,15 +272,16 @@ export class AIIntelligenceService {
             process.env.NODE_ENV === "test" &&
             !(
               error instanceof Error &&
-              (error.message.includes("API error") || error.message.includes("No embeddings returned"))
+              (error.message.includes("API error") ||
+                error.message.includes("No embeddings returned"))
             )
           ) {
             console.info("[AI Intelligence] Using test fallback embedding");
             span.setAttributes({
-              'ai.fallback_used': true,
-              'ai.embedding_dimensions': 1024
+              "ai.fallback_used": true,
+              "ai.embedding_dimensions": 1024,
             });
-            span.setStatus({ code: SpanStatusCode.OK, message: 'Using test fallback' });
+            span.setStatus({ code: SpanStatusCode.OK, message: "Using test fallback" });
             return [new Array(1024).fill(0).map(() => Math.random() * 0.1)];
           }
 

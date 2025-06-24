@@ -27,11 +27,15 @@ import type { IPatternStorage } from "./interfaces";
 export class PatternStorage implements IPatternStorage {
   private static instance: PatternStorage;
   private logger = {
-      info: (message: string, context?: any) => console.info('[pattern-storage]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[pattern-storage]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[pattern-storage]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[pattern-storage]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[pattern-storage]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[pattern-storage]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[pattern-storage]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[pattern-storage]", message, context || ""),
+  };
 
   // In-memory cache for performance
   private cache = new Map<string, any>();

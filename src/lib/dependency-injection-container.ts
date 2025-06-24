@@ -1,5 +1,5 @@
 /**
-* Dependency Injection Container
+ * Dependency Injection Container
  *
  * Provides a comprehensive dependency injection system that eliminates tight coupling
  * and improves testability by managing service lifecycles and dependencies.
@@ -68,11 +68,15 @@ export interface ContainerConfiguration {
  */
 export class DependencyContainer extends EventEmitter {
   private logger = {
-      info: (message: string, context?: any) => console.info('[dependency-injection-container]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[dependency-injection-container]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[dependency-injection-container]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[dependency-injection-container]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[dependency-injection-container]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[dependency-injection-container]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[dependency-injection-container]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[dependency-injection-container]", message, context || ""),
+  };
 
   private services = new Map<string, ServiceDescriptor>();
   private singletonInstances = new Map<string, any>();

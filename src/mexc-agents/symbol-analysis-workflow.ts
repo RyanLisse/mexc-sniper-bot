@@ -49,10 +49,14 @@ export interface SymbolAnalysisResult {
 export class SymbolAnalysisWorkflow {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
-    info: (message: string, context?: any) => console.info('[symbol-analysis-workflow]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[symbol-analysis-workflow]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[symbol-analysis-workflow]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[symbol-analysis-workflow]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[symbol-analysis-workflow]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[symbol-analysis-workflow]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[symbol-analysis-workflow]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[symbol-analysis-workflow]", message, context || ""),
   };
 
   async combineSymbolAnalysis(

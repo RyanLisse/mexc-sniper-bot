@@ -1,5 +1,5 @@
 /**
-* Enhanced Unified Cache System with Redis/Valkey Integration
+ * Enhanced Unified Cache System with Redis/Valkey Integration
  *
  * Phase 2 Implementation: Redis/Valkey Caching & Performance Enhancement
  *
@@ -86,11 +86,15 @@ export interface CachePerformanceMetrics {
 
 export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
   private logger = {
-      info: (message: string, context?: any) => console.info('[enhanced-unified-cache]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[enhanced-unified-cache]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[enhanced-unified-cache]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[enhanced-unified-cache]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[enhanced-unified-cache]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[enhanced-unified-cache]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[enhanced-unified-cache]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[enhanced-unified-cache]", message, context || ""),
+  };
 
   private redisCache: RedisCacheService;
   private enhancedConfig: EnhancedCacheConfig;

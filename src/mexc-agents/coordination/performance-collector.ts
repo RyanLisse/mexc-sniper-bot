@@ -102,10 +102,14 @@ export interface PerformanceReport {
  */
 export class PerformanceCollector {
   private logger = {
-    info: (message: string, context?: any) => console.info('[performance-collector]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[performance-collector]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[performance-collector]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[performance-collector]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[performance-collector]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[performance-collector]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[performance-collector]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[performance-collector]", message, context || ""),
   };
 
   private agentRegistry: AgentRegistry;

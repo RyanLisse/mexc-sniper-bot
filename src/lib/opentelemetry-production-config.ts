@@ -28,12 +28,17 @@ import {
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
+
 // Simple console logger to avoid bundling issues
 const logger = {
-  info: (message: string, context?: any) => console.info('[opentelemetry-production]', message, context || ''),
-  warn: (message: string, context?: any) => console.warn('[opentelemetry-production]', message, context || ''),
-  error: (message: string, context?: any, error?: Error) => console.error('[opentelemetry-production]', message, context || '', error || ''),
-  debug: (message: string, context?: any) => console.debug('[opentelemetry-production]', message, context || ''),
+  info: (message: string, context?: any) =>
+    console.info("[opentelemetry-production]", message, context || ""),
+  warn: (message: string, context?: any) =>
+    console.warn("[opentelemetry-production]", message, context || ""),
+  error: (message: string, context?: any, error?: Error) =>
+    console.error("[opentelemetry-production]", message, context || "", error || ""),
+  debug: (message: string, context?: any) =>
+    console.debug("[opentelemetry-production]", message, context || ""),
 };
 
 export interface ProductionTelemetryConfig {

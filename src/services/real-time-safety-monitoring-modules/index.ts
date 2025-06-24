@@ -138,17 +138,26 @@ export class RealTimeSafetyMonitoringService {
   private patternMonitoring: PatternMonitoringService;
   private mexcService: UnifiedMexcServiceV2;
 
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
   private isMonitoringActive = false;
 
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[safety-monitoring]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[safety-monitoring]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[safety-monitoring]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[safety-monitoring]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[safety-monitoring]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[safety-monitoring]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[safety-monitoring]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[safety-monitoring]", message, context || ""),
+      };
     }
     return this._logger;
   }

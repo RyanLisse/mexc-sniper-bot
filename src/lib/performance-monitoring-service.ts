@@ -1,5 +1,5 @@
 /**
-* Performance Monitoring Service for MEXC Sniper Bot
+ * Performance Monitoring Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Real-time Performance Dashboards & Monitoring
  *
@@ -113,16 +113,25 @@ export interface MonitoringConfig {
 // ============================================================================
 
 export class PerformanceMonitoringService {
-  private _logger?: { info: (message: string, context?: any) => void; warn: (message: string, context?: any) => void; error: (message: string, context?: any, error?: Error) => void; debug: (message: string, context?: any) => void; };
+  private _logger?: {
+    info: (message: string, context?: any) => void;
+    warn: (message: string, context?: any) => void;
+    error: (message: string, context?: any, error?: Error) => void;
+    debug: (message: string, context?: any) => void;
+  };
 
   private get logger() {
     if (!this._logger) {
       this._logger = {
-      info: (message: string, context?: any) => console.info('[performance-monitoring-service]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[performance-monitoring-service]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[performance-monitoring-service]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[performance-monitoring-service]', message, context || ''),
-    };
+        info: (message: string, context?: any) =>
+          console.info("[performance-monitoring-service]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[performance-monitoring-service]", message, context || ""),
+        error: (message: string, context?: any, error?: Error) =>
+          console.error("[performance-monitoring-service]", message, context || "", error || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[performance-monitoring-service]", message, context || ""),
+      };
     }
     return this._logger;
   }
