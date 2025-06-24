@@ -5,7 +5,18 @@
  * integrated with OpenTelemetry for comprehensive observability.
  */
 
-import { trace } from "@opentelemetry/api";
+// Safe OpenTelemetry import for build environments
+let trace: any;
+try {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV) {
+    trace = require("@opentelemetry/api").trace;
+  }
+} catch (error) {
+  // OpenTelemetry not available during build - create safe fallback
+  trace = {
+    getActiveSpan: () => null,
+  };
+}
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -95,8 +106,20 @@ export class StructuredLogger {
    * Create structured log entry
    */
   private createLogEntry(level: LogLevel, message: string, context: LogContext = {}): LogEntry {
-    const activeSpan = trace.getActiveSpan();
-    const spanContext = activeSpan?.spanContext();
+    let traceId: string | undefined;
+    let spanId: string | undefined;
+
+    try {
+      // Safe OpenTelemetry access
+      if (trace && trace.getActiveSpan) {
+        const activeSpan = trace.getActiveSpan();
+        const spanContext = activeSpan?.spanContext();
+        traceId = spanContext?.traceId;
+        spanId = spanContext?.spanId;
+      }
+    } catch (error) {
+      // Silently ignore OpenTelemetry errors
+    }
 
     return {
       timestamp: new Date().toISOString(),
@@ -107,8 +130,8 @@ export class StructuredLogger {
         service: context.service || this.service,
         component: context.component || this.component,
       },
-      traceId: spanContext?.traceId,
-      spanId: spanContext?.spanId,
+      traceId,
+      spanId,
       service: this.service,
       component: this.component,
     };
@@ -120,14 +143,21 @@ export class StructuredLogger {
   private emit(entry: LogEntry): void {
     if (!this.shouldLog(entry.level)) return;
 
-    // Add log entry to active span if available
-    const activeSpan = trace.getActiveSpan();
-    if (activeSpan) {
-      activeSpan.addEvent(`log.${entry.level}`, {
-        message: entry.message,
-        component: entry.component,
-        ...entry.context,
-      });
+    // Add log entry to active span if available (runtime only)
+    try {
+      // Safe OpenTelemetry access
+      if (trace && trace.getActiveSpan) {
+        const activeSpan = trace.getActiveSpan();
+        if (activeSpan && activeSpan.addEvent) {
+          activeSpan.addEvent(`log.${entry.level}`, {
+            message: entry.message,
+            component: entry.component,
+            ...entry.context,
+          });
+        }
+      }
+    } catch (error) {
+      // Silently ignore OpenTelemetry errors
     }
 
     // Format for console output (development) or structured output (production)
@@ -184,11 +214,18 @@ export class StructuredLogger {
 
     this.emit(this.createLogEntry("error", message, errorContext));
 
-    // Also record exception in OpenTelemetry span
+    // Also record exception in OpenTelemetry span (runtime only)
     if (error) {
-      const activeSpan = trace.getActiveSpan();
-      if (activeSpan) {
-        activeSpan.recordException(error);
+      try {
+        // Safe OpenTelemetry access
+        if (trace && trace.getActiveSpan) {
+          const activeSpan = trace.getActiveSpan();
+          if (activeSpan && activeSpan.recordException) {
+            activeSpan.recordException(error);
+          }
+        }
+      } catch (telemetryError) {
+        // Silently ignore OpenTelemetry errors
       }
     }
   }
