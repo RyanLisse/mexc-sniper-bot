@@ -49,7 +49,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       message: 'Pattern monitoring report retrieved successfully',
     }));
   } catch (error) {
-    logger.error('[API] Pattern monitoring GET failed:', error);
+    logger.error('[API] Pattern monitoring GET failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to get pattern monitoring report',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -212,7 +212,7 @@ const logger = createLogger('route');
         ), { status: 400 });
     }
   } catch (error) {
-    logger.error('[API] Pattern monitoring POST failed:', error);
+    logger.error('[API] Pattern monitoring POST failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Pattern monitoring operation failed',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -237,7 +237,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       { message: 'Pattern monitoring configuration updated (note: requires service restart for changes to take effect)' }
     ));
   } catch (error) {
-    logger.error('[API] Pattern monitoring PUT failed:', error);
+    logger.error('[API] Pattern monitoring PUT failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to update pattern monitoring configuration',
       { details: error instanceof Error ? error.message : 'Unknown error' }

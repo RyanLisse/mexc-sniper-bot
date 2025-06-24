@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
-    logger.error('Failed to get performance metrics:', error);
+    logger.error('Failed to get performance metrics:', { error });
     return NextResponse.json(
       { error: 'Failed to retrieve performance metrics' },
       { status: 500 }
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error('Failed to process performance metrics action:', error);
+    logger.error('Failed to process performance metrics action:', { error });
     return NextResponse.json(
       { error: 'Failed to process performance metrics action' },
       { status: 500 }

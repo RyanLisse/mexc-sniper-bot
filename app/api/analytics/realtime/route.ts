@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
             const sseData = `data: ${JSON.stringify(realtimeData)}\n\n`;
             controller.enqueue(encoder.encode(sseData));
           } catch (error) {
-            logger.error('[Realtime Analytics] Stream error:', error);
+            logger.error('[Realtime Analytics] Stream error:', { error });
             const errorData = {
               type: 'error',
               message: 'Error generating real-time data',
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[Realtime Analytics] Error:', error);
+    logger.error('[Realtime Analytics] Error:', { error });
     
     return NextResponse.json(
       { 
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[Realtime Analytics] POST Error:', error);
+    logger.error('[Realtime Analytics] POST Error:', { error });
     
     return NextResponse.json(
       { 

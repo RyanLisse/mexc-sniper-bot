@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     }, { status: responseStatus });
 
   } catch (error) {
-    logger.error('Critical error during emergency stop:', error);
+    logger.error('Critical error during emergency stop:', { error });
     
     // Even if emergency stop fails, we need to return a response
     return NextResponse.json({
@@ -190,7 +190,7 @@ export async function GET() {
     return NextResponse.json(emergencyStatus);
 
   } catch (error) {
-    logger.error('Failed to get emergency stop status:', error);
+    logger.error('Failed to get emergency stop status:', { error });
     return NextResponse.json(
       { error: 'Failed to retrieve emergency stop status' },
       { status: 500 }
@@ -221,7 +221,7 @@ async function sendEmergencyNotifications(
     logger.info('Emergency notification sent', { payload: notificationPayload });
 
   } catch (error) {
-    logger.error('Failed to send emergency notifications:', error);
+    logger.error('Failed to send emergency notifications:', { error });
     throw error;
   }
 }
@@ -249,7 +249,7 @@ async function logEmergencyEvent(
     logger.info('Emergency event logged to audit trail', { auditEntry });
 
   } catch (error) {
-    logger.error('Failed to log emergency event:', error);
+    logger.error('Failed to log emergency event:', { error });
     throw error;
   }
 }

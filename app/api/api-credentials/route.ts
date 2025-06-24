@@ -131,7 +131,7 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
       createSuccessResponse(response)
     );
   } catch (error) {
-    logger.error('[API] GET api-credentials failed:', error);
+    logger.error('[API] GET api-credentials failed:', { error });
     return apiResponse(
       createErrorResponse('Failed to retrieve credentials', {
         message: 'An unexpected error occurred while retrieving API credentials',
@@ -281,7 +281,7 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
     HTTP_STATUS.CREATED
   );
   } catch (error) {
-    logger.error('[API] POST api-credentials failed:', error);
+    logger.error('[API] POST api-credentials failed:', { error });
     return apiResponse(
       createErrorResponse('Failed to save credentials', {
         message: 'An unexpected error occurred while saving API credentials',

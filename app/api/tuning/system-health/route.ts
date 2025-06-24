@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
-    logger.error('Failed to get system health:', error);
+    logger.error('Failed to get system health:', { error });
     return NextResponse.json(
       { error: 'Failed to retrieve system health' },
       { status: 500 }
@@ -100,7 +100,7 @@ async function checkComponentHealth(): Promise<{
     results.abTesting = abTestingCheck ? 'healthy' : 'degraded';
 
   } catch (error) {
-    logger.error('Component health check failed:', error);
+    logger.error('Component health check failed:', { error });
     // Mark components as degraded if health check fails
     results.optimizationEngine = 'degraded';
   }

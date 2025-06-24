@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       const ipData = await ipResponse.json();
       outboundIP = ipData.ip;
     } catch (error) {
-      logger.error('Failed to get outbound IP:', error);
+      logger.error('Failed to get outbound IP:', { error });
     }
 
     // Alternative IP detection services
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
     }, { status: 200 });
 
   } catch (error) {
-    logger.error('IP info endpoint error:', error);
+    logger.error('IP info endpoint error:', { error });
     return NextResponse.json({
       success: false,
       error: 'Failed to get IP information',

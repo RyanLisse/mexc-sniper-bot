@@ -54,7 +54,7 @@ export async function GET(
     return NextResponse.json(response);
 
   } catch (error) {
-    logger.error('Failed to get optimization status:', error);
+    logger.error('Failed to get optimization status:', { error });
     return NextResponse.json(
       { error: 'Failed to retrieve optimization status' },
       { status: 500 }
@@ -92,7 +92,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    logger.error('Failed to stop optimization:', error);
+    logger.error('Failed to stop optimization:', { error });
     return NextResponse.json(
       { error: 'Failed to stop optimization' },
       { status: 500 }
@@ -186,7 +186,7 @@ export async function PATCH(
     }
 
   } catch (error) {
-    logger.error('Failed to update optimization:', error);
+    logger.error('Failed to update optimization:', { error });
     return NextResponse.json(
       { error: 'Failed to update optimization' },
       { status: 500 }

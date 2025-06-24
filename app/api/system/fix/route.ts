@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       fixesApplied.push('Circuit breaker reset from protective state');
       recommendations.push('Circuit breaker reset successfully - system protection restored');
     } catch (error) {
-      logger.error('[SystemFix] Failed to reset circuit breaker:', error);
+      logger.error('[SystemFix] Failed to reset circuit breaker:', { error });
       recommendations.push('Manual circuit breaker reset may be required');
     }
 
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
           recommendations.push('Pattern detection engine is operational');
         }
       } catch (error) {
-        logger.error('[SystemFix] Pattern detection test failed:', error);
+        logger.error('[SystemFix] Pattern detection test failed:', { error });
         patternStatus = 'failed';
         recommendations.push('Pattern detection engine requires manual inspection');
       }
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
           recommendations.push('Multi-phase trading strategy system requires configuration');
         }
       } catch (error) {
-        logger.error('[SystemFix] Trading system validation failed:', error);
+        logger.error('[SystemFix] Trading system validation failed:', { error });
         tradingStatus = 'failed';
         recommendations.push('Trading strategy system needs manual configuration');
       }
@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
     }));
 
   } catch (error) {
-    logger.error('[SystemFix] System repair failed:', error);
+    logger.error('[SystemFix] System repair failed:', { error });
     return NextResponse.json(createErrorResponse(
       'System repair failed',
       { 
@@ -260,7 +260,7 @@ export async function GET(request: NextRequest) {
     }));
 
   } catch (error) {
-    logger.error('[SystemFix] Health check failed:', error);
+    logger.error('[SystemFix] Health check failed:', { error });
     return NextResponse.json(createErrorResponse(
       'System health check failed',
       { details: error instanceof Error ? error.message : 'Unknown error' }

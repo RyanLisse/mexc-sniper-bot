@@ -122,7 +122,7 @@ export const GET = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache analytics error:', error);
+    logger.error('[API] Cache analytics error:', { error });
     return context.error(
       'Failed to retrieve cache analytics',
       500,
@@ -176,7 +176,7 @@ export const POST = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache analytics report generation error:', error);
+    logger.error('[API] Cache analytics report generation error:', { error });
     return context.error(
       'Failed to generate cache analytics report',
       500,

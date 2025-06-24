@@ -153,6 +153,7 @@ export function useAutoSnipingExecution(
         });
 
         const response = await ApiClient.get<{
+          success: boolean;
           data: {
             report: AutoSnipingExecutionReport;
             execution: {
@@ -164,15 +165,18 @@ export function useAutoSnipingExecution(
               dailyTrades: number;
             };
           };
-          message: string;
+          meta?: {
+            timestamp?: string;
+            message?: string;
+          };
         }>(`/api/auto-sniping/execution?${queryParams}`);
 
         // Check if response has the expected structure with safe property access
-        if (!response?.data || !response.data.success) {
+        if (!response?.success) {
           throw new Error("API request failed or returned unsuccessful response");
         }
 
-        const responseData = response.data.data;
+        const responseData = response.data;
         if (!responseData?.report || !responseData.execution) {
           throw new Error("Invalid API response structure - missing required data fields");
         }
@@ -199,13 +203,15 @@ export function useAutoSnipingExecution(
           successRate: execution.successRate || 0,
           activePositionsCount: execution.activePositionsCount || 0,
           dailyTradeCount: execution.dailyTrades || 0,
-          unacknowledgedAlertsCount: (report.activeAlerts || []).filter((a) => !a.acknowledged)
+          unacknowledgedAlertsCount: (report.activeAlerts || []).filter((a: any) => !a.acknowledged)
             .length,
           isLoading: false,
           lastUpdated: new Date().toISOString(),
         }));
       } catch (error) {
-        logger.error("[useAutoSnipingExecution] Failed to load execution report:", error);
+        logger.error("[useAutoSnipingExecution] Failed to load execution report:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         setState((prev) => ({
           ...prev,
           isLoading: false,
@@ -237,7 +243,9 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      logger.error("[useAutoSnipingExecution] Failed to start execution:", error);
+      logger.error("[useAutoSnipingExecution] Failed to start execution:", {
+        error: error instanceof Error ? error.message : String(error)
+      });
       setState((prev) => ({
         ...prev,
         isStartingExecution: false,

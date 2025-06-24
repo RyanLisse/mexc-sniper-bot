@@ -7,6 +7,7 @@ import { createLogger } from '../../../../src/lib/structured-logger';
  */
 
 import { NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { getUserCredentials } from "../../../../src/services/user-credentials-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";

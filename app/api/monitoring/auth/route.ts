@@ -243,7 +243,7 @@ auth_requests_per_minute{environment="${monitoringData.environment.name}"} ${mon
     });
     
   } catch (error) {
-    logger.error('Monitoring endpoint error:', error);
+    logger.error('Monitoring endpoint error:', { error });
     
     return NextResponse.json({
       status: 'critical',

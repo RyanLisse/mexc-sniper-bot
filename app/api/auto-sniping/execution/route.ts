@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createLogger } from '../../../../src/lib/structured-logger';
-import { OptimizedAutoSnipingExecutionEngine } from '@/src/services/optimized-auto-sniping-execution-engine';
+import { OptimizedAutoSnipingCore } from '@/src/services/optimized-auto-sniping-core';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { instrumentedTradingRoute } from '@/src/lib/opentelemetry-api-middleware';
@@ -52,7 +52,7 @@ export const GET = instrumentedTradingRoute(
       message: 'Execution report retrieved successfully',
     }));
   } catch (error) {
-    logger.error('[API] Auto-sniping execution GET failed:', error);
+    logger.error('[API] Auto-sniping execution GET failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to get execution report',
       { 
@@ -237,7 +237,7 @@ export const POST = instrumentedTradingRoute(
         ), { status: 400 });
     }
   } catch (error) {
-    logger.error('[API] Auto-sniping execution POST failed:', error);
+    logger.error('[API] Auto-sniping execution POST failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Execution operation failed',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -299,7 +299,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       ), { status: 400 });
     }
   } catch (error) {
-    logger.error('[API] Auto-sniping execution PUT failed:', error);
+    logger.error('[API] Auto-sniping execution PUT failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to update execution configuration',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -327,7 +327,7 @@ export const DELETE = instrumentedTradingRoute(
         { message: `Emergency shutdown completed: ${closedCount} positions closed` }
       ));
     } catch (error) {
-      logger.error('[API] Emergency shutdown failed:', error);
+      logger.error('[API] Emergency shutdown failed:', { error });
       return NextResponse.json(createErrorResponse(
         'Emergency shutdown failed',
         { details: error instanceof Error ? error.message : 'Unknown error' }

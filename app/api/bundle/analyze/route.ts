@@ -67,7 +67,7 @@ export const GET = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Bundle analysis error:', error);
+    logger.error('[API] Bundle analysis error:', { error });
     return context.error(
       `Failed to analyze bundle: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,
@@ -125,7 +125,7 @@ export const POST = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Bundle optimization action error:', error);
+    logger.error('[API] Bundle optimization action error:', { error });
     return context.error(
       `Failed to execute bundle action: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,
@@ -273,7 +273,7 @@ export const PUT = createApiHandler({
     return context.success(updateResult);
 
   } catch (error) {
-    logger.error('[API] Bundle config update error:', error);
+    logger.error('[API] Bundle config update error:', { error });
     return context.error(
       'Failed to update bundle configuration',
       500,

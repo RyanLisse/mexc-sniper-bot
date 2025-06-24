@@ -54,7 +54,7 @@ export const POST = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache management error:', error);
+    logger.error('[API] Cache management error:', { error });
     return context.error(
       `Failed to execute cache operation: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,
@@ -166,7 +166,7 @@ export const GET = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache management info error:', error);
+    logger.error('[API] Cache management info error:', { error });
     return context.error(
       'Failed to retrieve cache management information',
       500,
@@ -391,7 +391,7 @@ export const PUT = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache config update error:', error);
+    logger.error('[API] Cache config update error:', { error });
     return context.error(
       'Failed to update cache configuration',
       500,

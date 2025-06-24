@@ -117,7 +117,7 @@ async function triggerSingleStrategy(strategyName: string, force: boolean = fals
       triggeredAt: new Date().toISOString(),
     };
   } catch (error) {
-    logger.error(`[Cache Warming Trigger] Error executing strategy ${strategyName}:`, error);
+    logger.error(`[Cache Warming Trigger] Error executing strategy ${strategyName}:`, { error });
     return {
       strategy: strategyName,
       success: false,

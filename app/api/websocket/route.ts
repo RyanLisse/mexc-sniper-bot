@@ -78,7 +78,7 @@ export const GET = publicHandler({
     });
 
   } catch (error) {
-    logger.error('[WebSocket API] Error getting status:', error);
+    logger.error('[WebSocket API] Error getting status:', { error });
     return context.error(
       'Failed to get WebSocket status',
       500,
@@ -215,7 +215,7 @@ export const POST = authenticatedHandler({
     }
 
   } catch (error) {
-    logger.error('[WebSocket API] Error in POST action:', error);
+    logger.error('[WebSocket API] Error in POST action:', { error });
     return context.error(
       `Failed to execute action: ${context.body?.action}`,
       500,
@@ -282,7 +282,7 @@ export const PUT = authenticatedHandler({
     }
 
   } catch (error) {
-    logger.error('[WebSocket API] Error in PUT action:', error);
+    logger.error('[WebSocket API] Error in PUT action:', { error });
     return context.error(
       'Failed to manage connection',
       500,
@@ -415,7 +415,7 @@ export const PATCH = authenticatedHandler({
     }
 
   } catch (error) {
-    logger.error('[WebSocket API] Error in PATCH operation:', error);
+    logger.error('[WebSocket API] Error in PATCH operation:', { error });
     return context.error(
       'Failed to execute operation',
       500,

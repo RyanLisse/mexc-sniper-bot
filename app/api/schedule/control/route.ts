@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error('Schedule control error:', error);
+    logger.error('Schedule control error:', { error });
     return NextResponse.json(
       {
         success: false,

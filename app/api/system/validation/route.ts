@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    logger.error('[SystemValidation] System validation failed:', error);
+    logger.error('[SystemValidation] System validation failed:', { error });
     
     return apiResponse.error('System validation failed', 500, {
       overall: 'critical_failure',
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.error('Invalid action. Use "validate_component", "quick_health_check", or "get_recommendations"', 400);
     
   } catch (error) {
-    logger.error('[SystemValidation] POST request failed:', error);
+    logger.error('[SystemValidation] POST request failed:', { error });
     
     return apiResponse.error('System validation action failed', 500, {
       error: error instanceof Error ? error.message : 'Unknown error',

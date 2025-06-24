@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    logger.error('Error fetching transactions:', error);
+    logger.error('Error fetching transactions:', { error });
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"
@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    logger.error('Error creating transaction:', error);
+    logger.error('Error creating transaction:', { error });
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"
@@ -261,7 +261,7 @@ export async function PUT(request: NextRequest) {
     );
 
   } catch (error) {
-    logger.error('Error updating transaction:', error);
+    logger.error('Error updating transaction:', { error });
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"

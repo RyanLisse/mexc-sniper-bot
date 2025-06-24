@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * Health Check API Route
  * 
  * Provides health status endpoint for container orchestration platforms.
@@ -7,6 +6,7 @@ import { createLogger } from '../../../../src/lib/structured-logger';
  */
 
 import { NextRequest } from 'next/server';
+import { createLogger } from '../../../src/lib/structured-logger';
 import { apiResponse } from '@/src/lib/api-response';
 import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
 
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    logger.error('[Health Check] Health check failed:', error);
+    logger.error('[Health Check] Health check failed:', { error });
     
     return apiResponse.error('Health check failed', 503, {
       status: 'unhealthy',

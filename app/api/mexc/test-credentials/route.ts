@@ -171,7 +171,7 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
     );
 
   } catch (error) {
-    logger.error('[DEBUG] Credential test endpoint error:', error);
+    logger.error('[DEBUG] Credential test endpoint error:', { error });
     logger.error('[DEBUG] Error details:', {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

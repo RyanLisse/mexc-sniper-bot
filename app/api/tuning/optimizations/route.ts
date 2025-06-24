@@ -81,7 +81,7 @@ export async function GET() {
     return NextResponse.json(mockOptimizations);
 
   } catch (error) {
-    logger.error('Failed to get optimizations:', error);
+    logger.error('Failed to get optimizations:', { error });
     return NextResponse.json(
       { error: 'Failed to retrieve optimizations' },
       { status: 500 }
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.error('Failed to start optimization:', error);
+    logger.error('Failed to start optimization:', { error });
     return NextResponse.json(
       { error: 'Failed to start optimization' },
       { status: 500 }
@@ -247,7 +247,7 @@ export async function PUT(request: NextRequest) {
     }
 
   } catch (error) {
-    logger.error('Failed to update optimization:', error);
+    logger.error('Failed to update optimization:', { error });
     return NextResponse.json(
       { error: 'Failed to update optimization' },
       { status: 500 }

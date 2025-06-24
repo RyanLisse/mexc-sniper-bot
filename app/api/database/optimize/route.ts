@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * Database Optimization API Endpoint
  * 
  * Provides access to comprehensive database optimization system:
@@ -10,6 +9,7 @@ import { createLogger } from '../../../../src/lib/structured-logger';
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { databaseOptimizationManager } from "../../../../src/lib/database-optimization-manager";
 import { databasePerformanceAnalyzer } from "../../../../src/lib/database-performance-analyzer";
 import { databaseIndexOptimizer } from "../../../../src/lib/database-index-optimizer";

@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
       createSuccessResponse(response)
     );
   } catch (error) {
-    logger.error('[API] Failed to fetch user preferences:', error);
+    logger.error('[API] Failed to fetch user preferences:', { error });
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"
@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
       })
     );
   } catch (error) {
-    logger.error('[API] Failed to update user preferences:', error);
+    logger.error('[API] Failed to update user preferences:', { error });
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"

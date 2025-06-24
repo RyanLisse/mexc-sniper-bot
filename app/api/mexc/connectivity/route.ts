@@ -85,7 +85,7 @@ export const GET = publicRoute(async (request: NextRequest) => {
     );
 
   } catch (error) {
-    logger.error('[API] MEXC connectivity test error:', error);
+    logger.error('[API] MEXC connectivity test error:', { error });
     
     return apiResponse(
       createErrorResponse(

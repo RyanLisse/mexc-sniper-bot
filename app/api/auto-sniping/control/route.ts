@@ -158,7 +158,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         );
     }
   } catch (error) {
-    logger.error('[Auto-Sniping Control] API request failed:', error);
+    logger.error('[Auto-Sniping Control] API request failed:', { error });
     return Response.json(
       createErrorResponse('Auto-sniping control request failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -194,7 +194,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       },
     }));
   } catch (error) {
-    logger.error('[Auto-Sniping Control] Status request failed:', error);
+    logger.error('[Auto-Sniping Control] Status request failed:', { error });
     return Response.json(
       createErrorResponse('Failed to retrieve auto-sniping status', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -233,7 +233,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       );
     }
   } catch (error) {
-    logger.error('[Auto-Sniping Control] Configuration update failed:', error);
+    logger.error('[Auto-Sniping Control] Configuration update failed:', { error });
     return Response.json(
       createErrorResponse('Configuration update failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -267,7 +267,7 @@ export const DELETE = apiAuthWrapper(async (request: NextRequest) => {
       },
     }));
   } catch (error) {
-    logger.error('[Auto-Sniping Control] Emergency stop failed:', error);
+    logger.error('[Auto-Sniping Control] Emergency stop failed:', { error });
     return Response.json(
       createErrorResponse('Emergency stop failed', {
         error: error instanceof Error ? error.message : 'Unknown error',

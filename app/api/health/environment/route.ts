@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../../../../src/lib/structured-logger';
  * Environment Health Check API Route
  * 
  * Comprehensive environment variable validation and health reporting.
@@ -8,6 +7,7 @@ import { createLogger } from '../../../../src/lib/structured-logger';
  */
 
 import { NextRequest } from 'next/server';
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { apiResponse } from '@/src/lib/api-response';
 import { environmentValidation } from '@/src/services/enhanced-environment-validation';
 
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    logger.error('[Environment Health] Environment health check failed:', error);
+    logger.error('[Environment Health] Environment health check failed:', { error });
     
     return apiResponse.error('Environment health check failed', 500, {
       status: 'error',
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.error('Invalid action. Use "generate_template" or "validate_specific"', 400);
     
   } catch (error) {
-    logger.error('[Environment Health] POST request failed:', error);
+    logger.error('[Environment Health] POST request failed:', { error });
     
     return apiResponse.error('Environment health action failed', 500, {
       error: error instanceof Error ? error.message : 'Unknown error',

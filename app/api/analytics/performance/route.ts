@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[Performance Analytics] Error:', error);
+    logger.error('[Performance Analytics] Error:', { error });
     
     return NextResponse.json(
       { 
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[Performance Analytics] POST Error:', error);
+    logger.error('[Performance Analytics] POST Error:', { error });
     
     return NextResponse.json(
       { 

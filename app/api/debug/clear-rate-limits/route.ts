@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }, { status: 400 });
 
   } catch (error) {
-    logger.error('[DEBUG] Failed to clear rate limits:', error);
+    logger.error('[DEBUG] Failed to clear rate limits:', { error });
     
     return NextResponse.json({
       success: false,

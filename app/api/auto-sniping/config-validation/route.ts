@@ -27,7 +27,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       data: report,
     }));
   } catch (error) {
-    logger.error('[Config Validation] Failed to generate readiness report:', error);
+    logger.error('[Config Validation] Failed to generate readiness report:', { error });
     return Response.json(
       createErrorResponse('Failed to generate system readiness report', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -112,7 +112,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         );
     }
   } catch (error) {
-    logger.error('[Config Validation] API request failed:', error);
+    logger.error('[Config Validation] API request failed:', { error });
     return Response.json(
       createErrorResponse('Configuration validation request failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -138,7 +138,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       },
     }));
   } catch (error) {
-    logger.error('[Config Validation] Configuration update failed:', error);
+    logger.error('[Config Validation] Configuration update failed:', { error });
     return Response.json(
       createErrorResponse('Configuration update failed', {
         error: error instanceof Error ? error.message : 'Unknown error',

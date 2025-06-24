@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[Health Analytics] Error:', error);
+    logger.error('[Health Analytics] Error:', { error });
 
     const errorResponse = {
       success: false,
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[Health Analytics] POST Error:', error);
+    logger.error('[Health Analytics] POST Error:', { error });
 
     return NextResponse.json(
       {

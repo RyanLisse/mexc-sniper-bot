@@ -49,7 +49,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       }
     }));
   } catch (error: any) {
-    logger.error('[SafetyMonitoringAPI] Failed to get safety report:', error);
+    logger.error('[SafetyMonitoringAPI] Failed to get safety report:', { error });
     return NextResponse.json(createErrorResponse(
       'Failed to retrieve safety monitoring report',
       { code: 'SAFETY_REPORT_ERROR', details: error.message }
@@ -181,7 +181,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         ), { status: 400 });
     }
   } catch (error: any) {
-    logger.error('[SafetyMonitoringAPI] Action failed:', error);
+    logger.error('[SafetyMonitoringAPI] Action failed:', { error });
     return NextResponse.json(createErrorResponse(
       'Safety monitoring action failed',
       { code: 'ACTION_FAILED', details: error.message }

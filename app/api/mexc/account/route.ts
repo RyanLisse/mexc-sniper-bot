@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     try {
       userCredentials = await getUserCredentials(userId, 'mexc');
     } catch (error) {
-      logger.error(`Error retrieving credentials for user ${userId}:`, error);
+      logger.error(`Error retrieving credentials for user ${userId}:`, { error });
       // Check if it's an encryption service error
       if (error instanceof Error && error.message.includes("Encryption service unavailable")) {
         return NextResponse.json({

@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
-    logger.error('Failed to get parameters:', error);
+    logger.error('Failed to get parameters:', { error });
     return NextResponse.json(
       { error: 'Failed to retrieve parameters' },
       { status: 500 }
@@ -110,7 +110,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    logger.error('Failed to update parameters:', error);
+    logger.error('Failed to update parameters:', { error });
     return NextResponse.json(
       { error: 'Failed to update parameters' },
       { status: 500 }
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.error('Failed to execute parameter action:', error);
+    logger.error('Failed to execute parameter action:', { error });
     return NextResponse.json(
       { error: 'Failed to execute parameter action' },
       { status: 500 }

@@ -92,7 +92,7 @@ export const GET = createApiHandler({
     });
 
   } catch (error) {
-    logger.error('[API] Cache status error:', error);
+    logger.error('[API] Cache status error:', { error });
     return context.error(
       'Failed to retrieve cache status',
       500,
