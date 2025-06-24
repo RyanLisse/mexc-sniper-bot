@@ -251,7 +251,11 @@ describe('Enhanced Agent Cache', () => {
         },
       };
 
-      await agentCache.setAgentResponse(patternAgentId, input, response, {}, { priority: 'high' });
+      await agentCache.setAgentResponse(patternAgentId, input, response, undefined, { priority: 'high' });
+      
+      // Wait a moment to ensure cache entry is set
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
       const cached = await agentCache.getAgentResponse(patternAgentId, input);
 
       expect(cached).toBeTruthy();

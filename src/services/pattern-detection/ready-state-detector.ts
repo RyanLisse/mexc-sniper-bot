@@ -1,6 +1,6 @@
 /**
  * Ready State Detection Module
- * 
+ *
  * Core pattern detection for ready state, advance opportunities, and pre-ready patterns.
  * Preserves the competitive advantage with 3.5+ hour advance detection.
  */
@@ -381,7 +381,10 @@ export class ReadyStateDetector extends EventEmitter {
     return 85; // Placeholder
   }
 
-  private async calculateAdvanceOpportunityConfidence(entry: CalendarEntry, advanceHours: number): Promise<number> {
+  private async calculateAdvanceOpportunityConfidence(
+    entry: CalendarEntry,
+    advanceHours: number
+  ): Promise<number> {
     // Implementation will be moved from confidence-calculator module
     return 75; // Placeholder
   }
@@ -400,12 +403,18 @@ export class ReadyStateDetector extends EventEmitter {
     return "low";
   }
 
-  private assessAdvanceOpportunityRisk(entry: CalendarEntry, advanceHours: number): "low" | "medium" | "high" {
+  private assessAdvanceOpportunityRisk(
+    entry: CalendarEntry,
+    advanceHours: number
+  ): "low" | "medium" | "high" {
     // Implementation will be moved from risk-assessor module
     return "medium";
   }
 
-  private getAdvanceRecommendation(advanceHours: number, confidence: number): "immediate_action" | "monitor_closely" | "prepare_entry" | "wait" | "avoid" {
+  private getAdvanceRecommendation(
+    advanceHours: number,
+    confidence: number
+  ): "immediate_action" | "monitor_closely" | "prepare_entry" | "wait" | "avoid" {
     // Implementation will be moved from pattern-utilities module
     return "prepare_entry";
   }
@@ -420,7 +429,11 @@ export class ReadyStateDetector extends EventEmitter {
     return {};
   }
 
-  private async storeSuccessfulPattern(data: any, patternType: string, confidence: number): Promise<void> {
+  private async storeSuccessfulPattern(
+    data: any,
+    patternType: string,
+    confidence: number
+  ): Promise<void> {
     // Implementation will be moved from pattern-utilities module
   }
 

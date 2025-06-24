@@ -10,6 +10,7 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
+import { createLogger } from "../lib/structured-logger";
 import type { ConnectionHealthMonitor } from "./connection-health-monitor";
 import { getGlobalHealthMonitor } from "./connection-health-monitor";
 import type {
@@ -71,6 +72,8 @@ export interface RealTimeMonitorConfig {
 // ============================================================================
 
 export class RealTimeCredentialMonitor {
+  private logger = createLogger("real-time-credential-monitor");
+
   private config: RealTimeMonitorConfig;
   private credentialValidator: EnhancedCredentialValidator;
   private healthMonitor: ConnectionHealthMonitor;
@@ -133,7 +136,7 @@ export class RealTimeCredentialMonitor {
       this.checkStatus();
     }, this.config.checkInterval);
 
-    console.log("Real-time credential monitoring started");
+    logger.info("Real-time credential monitoring started");
   }
 
   /**
@@ -154,7 +157,7 @@ export class RealTimeCredentialMonitor {
       this.healthMonitor.stop();
     }
 
-    console.log("Real-time credential monitoring stopped");
+    logger.info("Real-time credential monitoring stopped");
   }
 
   /**
@@ -495,7 +498,7 @@ export class RealTimeCredentialMonitor {
       try {
         callback(event);
       } catch (error) {
-        console.error("Error in status change callback:", error);
+        logger.error("Error in status change callback:", error);
       }
     });
   }

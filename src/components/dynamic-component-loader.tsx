@@ -6,7 +6,7 @@
 
 "use client";
 
-import { Suspense, lazy } from "react";
+import { lazy, Suspense } from "react";
 import { Skeleton } from "./ui/optimized-exports";
 
 // Loading fallback components

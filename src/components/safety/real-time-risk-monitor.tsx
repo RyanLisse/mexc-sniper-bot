@@ -1,9 +1,5 @@
 "use client";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Activity, AlertTriangle, Percent, Shield, TrendingDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -22,6 +18,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { generateChartCellKey } from "../../lib/react-utilities";
 
 // Real-time Risk Monitoring Interfaces

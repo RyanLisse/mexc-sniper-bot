@@ -14,12 +14,12 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
+  calculatePotentialProfit,
+  createCustomTakeProfitLevel,
   DEFAULT_CUSTOM_CONFIG,
   TAKE_PROFIT_STRATEGIES,
   type TakeProfitLevel,
   type TakeProfitStrategy,
-  calculatePotentialProfit,
-  createCustomTakeProfitLevel,
   validateTakeProfitLevel,
   validateTakeProfitStrategy,
 } from "../types/take-profit-strategies";

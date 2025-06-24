@@ -1,3 +1,4 @@
+import { createLogger } from "../../lib/structured-logger";
 import { AgentMonitoringService } from "../../services/agent-monitoring-service";
 import type {
   AgentOrchestrationMetrics,
@@ -20,6 +21,8 @@ import type {
  * while maintaining backward compatibility with existing interfaces
  */
 export class EnhancedMexcOrchestrator {
+  private logger = createLogger("enhanced-orchestrator");
+
   private agentRegistry: AgentRegistry;
   private workflowEngine: WorkflowEngine;
   private performanceCollector: PerformanceCollector;
@@ -52,7 +55,7 @@ export class EnhancedMexcOrchestrator {
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
-      console.warn("[EnhancedMexcOrchestrator] Already initialized");
+      logger.warn("[EnhancedMexcOrchestrator] Already initialized");
       return;
     }
 
@@ -69,9 +72,9 @@ export class EnhancedMexcOrchestrator {
       this.workflowEngine.validateRegisteredWorkflows();
 
       this.isInitialized = true;
-      console.log("[EnhancedMexcOrchestrator] Initialization completed with health monitoring");
+      logger.info("[EnhancedMexcOrchestrator] Initialization completed with health monitoring");
     } catch (error) {
-      console.error("[EnhancedMexcOrchestrator] Initialization failed:", error);
+      logger.error("[EnhancedMexcOrchestrator] Initialization failed:", error);
       throw error;
     }
   }
@@ -115,7 +118,7 @@ export class EnhancedMexcOrchestrator {
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
     } catch (error) {
-      console.error("[EnhancedMexcOrchestrator] Calendar discovery workflow failed:", error);
+      logger.error("[EnhancedMexcOrchestrator] Calendar discovery workflow failed:", error);
 
       const errorResult: MexcWorkflowResult = {
         success: false,
@@ -175,7 +178,7 @@ export class EnhancedMexcOrchestrator {
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
     } catch (error) {
-      console.error(
+      logger.error(
         `[EnhancedMexcOrchestrator] Symbol analysis workflow failed for ${request.vcoinId}:`,
         error
       );
@@ -221,7 +224,7 @@ export class EnhancedMexcOrchestrator {
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
     } catch (error) {
-      console.error("[EnhancedMexcOrchestrator] Pattern analysis workflow failed:", error);
+      logger.error("[EnhancedMexcOrchestrator] Pattern analysis workflow failed:", error);
 
       const errorResult: MexcWorkflowResult = {
         success: false,
@@ -265,7 +268,7 @@ export class EnhancedMexcOrchestrator {
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
     } catch (error) {
-      console.error(
+      logger.error(
         `[EnhancedMexcOrchestrator] Trading strategy workflow failed for ${request.vcoinId}:`,
         error
       );
@@ -413,7 +416,7 @@ export class EnhancedMexcOrchestrator {
 
       return coordinationHealthy && workflowEngineHealthy && monitoringHealthy;
     } catch (error) {
-      console.error("[EnhancedMexcOrchestrator] Health check failed:", error);
+      logger.error("[EnhancedMexcOrchestrator] Health check failed:", error);
       return false;
     }
   }
@@ -536,7 +539,7 @@ export class EnhancedMexcOrchestrator {
    * Shutdown coordination systems gracefully
    */
   async shutdown(): Promise<void> {
-    console.log("[EnhancedMexcOrchestrator] Shutting down...");
+    logger.info("[EnhancedMexcOrchestrator] Shutting down...");
 
     try {
       // Stop monitoring systems
@@ -554,9 +557,9 @@ export class EnhancedMexcOrchestrator {
       this.performanceCollector.destroy();
 
       this.isInitialized = false;
-      console.log("[EnhancedMexcOrchestrator] Shutdown completed");
+      logger.info("[EnhancedMexcOrchestrator] Shutdown completed");
     } catch (error) {
-      console.error("[EnhancedMexcOrchestrator] Shutdown error:", error);
+      logger.error("[EnhancedMexcOrchestrator] Shutdown error:", error);
     }
   }
 
@@ -705,7 +708,7 @@ export class EnhancedMexcOrchestrator {
     this.workflowEngine.registerWorkflow(patternWorkflow);
     this.workflowEngine.registerWorkflow(strategyWorkflow);
 
-    console.log("[EnhancedMexcOrchestrator] Registered 4 MEXC workflows");
+    logger.info("[EnhancedMexcOrchestrator] Registered 4 MEXC workflows");
   }
 
   /**

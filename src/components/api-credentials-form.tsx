@@ -20,6 +20,7 @@ import {
   useSaveApiCredentials,
   useTestApiCredentials,
 } from "../hooks/use-api-credentials";
+import { createLogger } from "../lib/structured-logger";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -28,6 +29,8 @@ import { Input } from "./ui/input";
 interface ApiCredentialsFormProps {
   userId: string;
 }
+
+const logger = createLogger("api-credentials-form");
 
 export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
   const { data: apiCredentials, isLoading: apiCredsLoading } = useApiCredentials(userId);
@@ -65,7 +68,7 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
       // Clear any previous test results
       setTestResult(null);
 
-      console.log("[DEBUG] Client-side save request:", {
+      logger.info("[DEBUG] Client-side save request:", {
         userId,
         hasApiKey: !!apiKeyInput.trim(),
         hasSecretKey: !!secretKeyInput.trim(),
@@ -84,7 +87,7 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
       setApiKeyInput("");
       setSecretKeyInput("");
 
-      console.log("[DEBUG] Save result:", result);
+      logger.info("[DEBUG] Save result:", result);
 
       // Show success message with masked credentials for verification
       setTestResult({
@@ -125,7 +128,7 @@ export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
         success: true,
         message: result.message,
         details: result.accountType
-          ? `Account Type: ${result.accountType}, Can Trade: ${result.canTrade ? "Yes" : "No"}, Assets: ${result.totalAssets || 0}, Balance Count: ${result.balanceCount || 0}${result.hasNonZeroBalances ? ', Has Funds' : ', Empty Balances'}`
+          ? `Account Type: ${result.accountType}, Can Trade: ${result.canTrade ? "Yes" : "No"}, Assets: ${result.totalAssets || 0}, Balance Count: ${result.balanceCount || 0}${result.hasNonZeroBalances ? ", Has Funds" : ", Empty Balances"}`
           : undefined,
       });
 

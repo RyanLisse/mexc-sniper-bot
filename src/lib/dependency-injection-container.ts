@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Dependency Injection Container
  *
  * Provides a comprehensive dependency injection system that eliminates tight coupling
@@ -67,6 +68,8 @@ export interface ContainerConfiguration {
  * Manages service registration, resolution, and lifecycle
  */
 export class DependencyContainer extends EventEmitter {
+  private logger = createLogger("dependency-injection-container");
+
   private services = new Map<string, ServiceDescriptor>();
   private singletonInstances = new Map<string, any>();
   private scopes = new Map<string, ServiceScope>();
@@ -100,7 +103,7 @@ export class DependencyContainer extends EventEmitter {
     this.services.set(descriptor.name, descriptor);
 
     if (this.configuration.enableLifecycleLogging) {
-      console.log(`📝 Registered service: ${descriptor.name} (${descriptor.lifetime})`);
+      logger.info(`📝 Registered service: ${descriptor.name} (${descriptor.lifetime})`);
     }
 
     this.emit("serviceRegistered", descriptor);
@@ -203,13 +206,13 @@ export class DependencyContainer extends EventEmitter {
 
       if (this.configuration.enablePerformanceTracking) {
         const duration = Date.now() - startTime;
-        console.log(`⚡ Resolved '${name}' in ${duration}ms`);
+        logger.info(`⚡ Resolved '${name}' in ${duration}ms`);
       }
 
       return instance;
     } catch (error) {
       if (this.configuration.enableLifecycleLogging) {
-        console.error(`❌ Failed to resolve service '${name}':`, error);
+        logger.error(`❌ Failed to resolve service '${name}':`, error);
       }
       throw error;
     } finally {
@@ -303,7 +306,7 @@ export class DependencyContainer extends EventEmitter {
     this.singletonInstances.set(descriptor.name, instance);
 
     if (this.configuration.enableLifecycleLogging) {
-      console.log(`🏗️ Created singleton: ${descriptor.name}`);
+      logger.info(`🏗️ Created singleton: ${descriptor.name}`);
     }
 
     this.emit("singletonCreated", descriptor.name, instance);
@@ -317,7 +320,7 @@ export class DependencyContainer extends EventEmitter {
     const instance = this.createInstance<T>(descriptor);
 
     if (this.configuration.enableLifecycleLogging) {
-      console.log(`🔄 Created transient: ${descriptor.name}`);
+      logger.info(`🔄 Created transient: ${descriptor.name}`);
     }
 
     this.emit("transientCreated", descriptor.name, instance);
@@ -345,7 +348,7 @@ export class DependencyContainer extends EventEmitter {
     scope.services.set(descriptor.name, instance);
 
     if (this.configuration.enableLifecycleLogging) {
-      console.log(`🎯 Created scoped: ${descriptor.name} (scope: ${scopeId})`);
+      logger.info(`🎯 Created scoped: ${descriptor.name} (scope: ${scopeId})`);
     }
 
     this.emit("scopedCreated", descriptor.name, instance, scopeId);
@@ -395,7 +398,7 @@ export class DependencyContainer extends EventEmitter {
     }, this.configuration.scopeTimeout);
 
     if (this.configuration.enableLifecycleLogging) {
-      console.log(`📦 Created scope: ${scopeId}`);
+      logger.info(`📦 Created scope: ${scopeId}`);
     }
 
     this.emit("scopeCreated", scopeId);
@@ -417,7 +420,7 @@ export class DependencyContainer extends EventEmitter {
         try {
           service.cleanup();
         } catch (error) {
-          console.error(`Error disposing service '${serviceName}' in scope '${scopeId}':`, error);
+          logger.error(`Error disposing service '${serviceName}' in scope '${scopeId}':`, error);
         }
       }
     }
@@ -427,7 +430,7 @@ export class DependencyContainer extends EventEmitter {
     this.scopes.delete(scopeId);
 
     if (this.configuration.enableLifecycleLogging) {
-      console.log(`🗑️ Disposed scope: ${scopeId}`);
+      logger.info(`🗑️ Disposed scope: ${scopeId}`);
     }
 
     this.emit("scopeDisposed", scopeId);
@@ -454,10 +457,10 @@ export class DependencyContainer extends EventEmitter {
         }
 
         if (this.configuration.enableLifecycleLogging) {
-          console.log(`✅ Initialized: ${descriptor.name}`);
+          logger.info(`✅ Initialized: ${descriptor.name}`);
         }
       } catch (error) {
-        console.error(`❌ Failed to initialize '${descriptor.name}':`, error);
+        logger.error(`❌ Failed to initialize '${descriptor.name}':`, error);
         throw error;
       }
     }
@@ -509,10 +512,10 @@ export class DependencyContainer extends EventEmitter {
         try {
           await instance.cleanup();
           if (this.configuration.enableLifecycleLogging) {
-            console.log(`🧹 Cleaned up: ${name}`);
+            logger.info(`🧹 Cleaned up: ${name}`);
           }
         } catch (error) {
-          console.error(`Error cleaning up service '${name}':`, error);
+          logger.error(`Error cleaning up service '${name}':`, error);
         }
       }
     }
@@ -813,7 +816,7 @@ export class ExampleTradingService implements BaseService {
   async initialize(dependencies: ServiceDependencies): Promise<void> {
     this.mexcService = (dependencies as any).MexcIntegrationService;
     this.riskService = (dependencies as any).RiskManagementService;
-    console.log("ExampleTradingService initialized");
+    logger.info("ExampleTradingService initialized");
   }
 
   async isHealthy(): Promise<boolean> {
@@ -834,7 +837,7 @@ export class ExampleTradingService implements BaseService {
   }
 
   async cleanup(): Promise<void> {
-    console.log("ExampleTradingService cleaned up");
+    logger.info("ExampleTradingService cleaned up");
   }
 
   // Service-specific methods

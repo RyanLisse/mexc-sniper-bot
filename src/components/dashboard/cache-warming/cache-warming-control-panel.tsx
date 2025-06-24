@@ -22,8 +22,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Progress } from "../../ui/progress";
 import { Skeleton } from "../../ui/skeleton";
 import { useToast } from "../../ui/use-toast";
+import { createLogger } from "../lib/structured-logger";
 
 // Helper component for status icons
+const logger = createLogger("cache-warming-control-panel");
+
 function StrategyStatusIcon({ status }: { status: string }) {
   switch (status) {
     case "active":
@@ -275,7 +278,7 @@ export function CacheWarmingControlPanel() {
         }
       );
     } catch (error) {
-      console.error("Error triggering cache warming:", error);
+      logger.error("Error triggering cache warming:", error);
     }
   };
 
@@ -310,7 +313,7 @@ export function CacheWarmingControlPanel() {
         }
       );
     } catch (error) {
-      console.error("Error triggering multiple strategies:", error);
+      logger.error("Error triggering multiple strategies:", error);
     }
   };
 
@@ -354,7 +357,7 @@ export function CacheWarmingControlPanel() {
       <CardContent className="space-y-6">
         <PerformanceOverview metrics={data.warming?.metrics} />
         <StrategyList
-          strategies={data.warming?.strategies || []}
+          strategies={(data.warming?.strategies as Strategy[]) || []}
           selectedStrategies={selectedStrategies}
           onToggleSelection={toggleStrategySelection}
           onTriggerStrategy={handleTriggerStrategy}

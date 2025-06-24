@@ -1,9 +1,10 @@
 import { and, desc, eq } from "drizzle-orm";
 import {
+  anomalyModels,
   type InsertAnomalyModel,
   type SelectAnomalyModel,
-  anomalyModels,
 } from "../db/schemas/alerts";
+import { createLogger } from "../lib/structured-logger";
 
 export interface AnomalyDetectionResult {
   isAnomaly: boolean;
@@ -65,6 +66,8 @@ interface SeasonalModel {
 }
 
 export class AnomalyDetectionService {
+  private logger = createLogger("anomaly-detection-service");
+
   private db: any;
   private models: Map<string, any> = new Map();
   private trainingQueue: Map<string, TrainingDataPoint[]> = new Map();
@@ -76,7 +79,7 @@ export class AnomalyDetectionService {
   }
 
   async initialize(): Promise<void> {
-    console.log("Initializing Anomaly Detection Service...");
+    logger.info("Initializing Anomaly Detection Service...");
 
     // Load existing models from database
     await this.loadModelsFromDatabase();
@@ -84,7 +87,7 @@ export class AnomalyDetectionService {
     // Start background model maintenance
     this.startModelMaintenance();
 
-    console.log(`Loaded ${this.models.size} anomaly detection models`);
+    logger.info(`Loaded ${this.models.size} anomaly detection models`);
   }
 
   // ==========================================
@@ -127,7 +130,7 @@ export class AnomalyDetectionService {
 
       return result;
     } catch (error) {
-      console.error(`Error detecting anomaly for ${metricName}:`, error);
+      logger.error(`Error detecting anomaly for ${metricName}:`, error);
       return {
         isAnomaly: false,
         score: 0,
@@ -294,7 +297,7 @@ export class AnomalyDetectionService {
       .limit(1);
 
     this.models.set(metricName, newModel[0]);
-    console.log(`Created new ${modelType} model for metric: ${metricName}`);
+    logger.info(`Created new ${modelType} model for metric: ${metricName}`);
 
     return newModel[0];
   }
@@ -306,7 +309,7 @@ export class AnomalyDetectionService {
         throw new Error(`Model not found for metric: ${metricName}`);
       }
 
-      console.log(`Training model for ${metricName} with ${trainingData.length} data points`);
+      logger.info(`Training model for ${metricName} with ${trainingData.length} data points`);
 
       const trainedModel = await this.performTraining(model, trainingData);
       const performance = await this.evaluateModel(trainedModel, trainingData);
@@ -338,11 +341,11 @@ export class AnomalyDetectionService {
 
       this.models.set(metricName, updatedModel[0]);
 
-      console.log(
+      logger.info(
         `Model training completed for ${metricName}. Performance: ${performance.f1Score.toFixed(3)} F1-score`
       );
     } catch (error) {
-      console.error(`Error training model for ${metricName}:`, error);
+      logger.error(`Error training model for ${metricName}:`, error);
     }
   }
 
@@ -731,14 +734,14 @@ export class AnomalyDetectionService {
   }
 
   private async performModelMaintenance(): Promise<void> {
-    console.log("Performing model maintenance...");
+    logger.info("Performing model maintenance...");
 
     const now = Date.now();
 
     for (const [metricName, model] of this.models.entries()) {
       // Check if model needs retraining due to age
       if (now - model.lastTrainedAt.getTime() > this.maxModelAge) {
-        console.log(`Model for ${metricName} is stale, scheduling retrain`);
+        logger.info(`Model for ${metricName} is stale, scheduling retrain`);
         this.scheduleModelRetrain(metricName);
       }
     }

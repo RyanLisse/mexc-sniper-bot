@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Real-time Safety Monitoring API Route
  * 
  * Provides endpoints for controlling and monitoring the real-time safety system.
@@ -9,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { RealTimeSafetyMonitoringService, type SafetyConfiguration } from '@/src/services/real-time-safety-monitoring-modules';
+
+const logger = createLogger('route');
 
 // Global service instance
 const safetyMonitoringService = RealTimeSafetyMonitoringService.getInstance();
@@ -23,7 +26,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
     const includeRecommendations = searchParams.get('include_recommendations') === 'true';
     const includeSystemHealth = searchParams.get('include_system_health') === 'true';
 
-    console.log('[SafetyMonitoringAPI] Fetching safety monitoring report...');
+    logger.info('[SafetyMonitoringAPI] Fetching safety monitoring report...');
     
     const report = await safetyMonitoringService.getSafetyReport();
     
@@ -45,7 +48,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       }
     }));
   } catch (error: any) {
-    console.error('[SafetyMonitoringAPI] Failed to get safety report:', error);
+    logger.error('[SafetyMonitoringAPI] Failed to get safety report:', error);
     return NextResponse.json(createErrorResponse(
       'Failed to retrieve safety monitoring report',
       { code: 'SAFETY_REPORT_ERROR', details: error.message }
@@ -62,7 +65,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
     const body = await request.json();
     const { action, configuration, alertId, reason } = body;
 
-    console.log(`[SafetyMonitoringAPI] Processing action: ${action}`);
+    logger.info(`[SafetyMonitoringAPI] Processing action: ${action}`);
 
     switch (action) {
       case 'start_monitoring':
@@ -177,7 +180,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         ), { status: 400 });
     }
   } catch (error: any) {
-    console.error('[SafetyMonitoringAPI] Action failed:', error);
+    logger.error('[SafetyMonitoringAPI] Action failed:', error);
     return NextResponse.json(createErrorResponse(
       'Safety monitoring action failed',
       { code: 'ACTION_FAILED', details: error.message }

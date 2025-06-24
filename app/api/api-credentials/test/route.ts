@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
-import { getUserCredentials } from "../../../../src/services/user-credentials-service";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -9,270 +7,126 @@ import {
   HTTP_STATUS,
   createValidationErrorResponse
 } from "../../../../src/lib/api-response";
-import {
-  sensitiveDataRoute,
-  validateRequiredFields
-} from "../../../../src/lib/auth-decorators";
+import { sensitiveDataRoute } from "../../../../src/lib/auth-decorators";
+import { 
+  ApiCredentialsTestRequestSchema,
+  validateMexcApiRequest,
+  type ApiCredentialsTestRequest
+} from "../../../../src/schemas/mexc-api-validation-schemas";
+import { apiCredentialsTestService } from "../../../../src/services/api-credentials-test-service";
+
+const logger = createLogger('route');
 
 // POST /api/api-credentials/test
 export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) => {
+  const startTime = Date.now();
+  const requestId = `api_cred_test_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  
   try {
-    console.log('[DEBUG] API credentials test endpoint called', {
+    logger.info('[API] API credentials test endpoint called', {
+      requestId,
       userAuthenticated: !!user,
       userId: user?.id,
-      userObject: user ? {
-        id: user.id,
-        email: user.email,
-        name: user.name
-      } : null,
       timestamp: new Date().toISOString()
     });
 
     const body = await request.json();
-    const { userId, provider = 'mexc' } = body;
-
-    console.log('[DEBUG] Test request body received', {
-      bodyKeys: Object.keys(body),
-      providedUserId: userId,
-      authenticatedUserId: user?.id,
-      provider,
-      userIdMatch: user?.id === userId,
-      hasUserId: !!userId,
-      hasProvider: !!provider
-    });
-
-    // Validate required fields
-    const missingField = validateRequiredFields(body, ['userId']);
-    if (missingField) {
-      console.log('[DEBUG] Missing required field:', missingField);
-      return apiResponse(
-        createValidationErrorResponse('required_fields', missingField),
-        HTTP_STATUS.BAD_REQUEST
-      );
-    }
-
-    // Ensure user can only test their own credentials
-    if (user.id !== userId) {
-      return apiResponse(
-        createErrorResponse("Access denied", {
-          message: "You can only test your own API credentials",
-          code: "ACCESS_DENIED"
-        }),
-        HTTP_STATUS.FORBIDDEN
-      );
-    }
-
-    // Get user credentials
-    let userCredentials = null;
-    try {
-      console.log('[DEBUG] Attempting to retrieve credentials', {
-        userId,
-        provider,
-        timestamp: new Date().toISOString()
-      });
-      
-      userCredentials = await getUserCredentials(userId, provider);
-      
-      console.log('[DEBUG] Credentials retrieval result', {
-        found: !!userCredentials,
-        hasApiKey: !!(userCredentials?.apiKey),
-        hasSecretKey: !!(userCredentials?.secretKey),
-        provider: userCredentials?.provider,
-        isActive: userCredentials?.isActive,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('[DEBUG] Credentials retrieval failed', {
-        userId,
-        provider,
-        error: error instanceof Error ? error.message : String(error),
-        errorType: error?.constructor?.name,
-        timestamp: new Date().toISOString()
-      });
-      
-      return apiResponse(
-        createErrorResponse("No API credentials found", {
-          message: "Please configure your MEXC API credentials first",
-          code: "NO_CREDENTIALS",
-          details: {
-            userId,
-            provider,
-            error: error instanceof Error ? error.message : String(error)
-          }
-        }),
-        HTTP_STATUS.BAD_REQUEST
-      );
-    }
-
-    if (!userCredentials) {
-      return apiResponse(
-        createErrorResponse("No API credentials found", {
-          message: "Please configure your MEXC API credentials first",
-          code: "NO_CREDENTIALS"
-        }),
-        HTTP_STATUS.BAD_REQUEST
-      );
-    }
-
-    // Initialize MEXC service with user credentials
-    console.log('[DEBUG] Initializing MEXC service', {
-      hasApiKey: !!userCredentials.apiKey,
-      apiKeyLength: userCredentials.apiKey?.length,
-      hasSecretKey: !!userCredentials.secretKey,
-      secretKeyLength: userCredentials.secretKey?.length,
-      timestamp: new Date().toISOString()
-    });
     
-    const mexcService = getRecommendedMexcService({
-      apiKey: userCredentials.apiKey,
-      secretKey: userCredentials.secretKey
-    });
-
-    // Test basic connectivity first (optional)
-    console.log('[DEBUG] Testing MEXC connectivity...');
-    let connectivityTest = null;
-    try {
-      connectivityTest = await mexcService.testConnectivity();
-      
-      console.log('[DEBUG] Connectivity test result', {
-        success: !!connectivityTest?.success,
-        data: connectivityTest?.data,
-        error: connectivityTest?.error,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.log('[DEBUG] Connectivity test failed, but continuing with auth test', {
-        error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString()
+    // Validate request body with Zod schema
+    const validation = validateMexcApiRequest(ApiCredentialsTestRequestSchema, body);
+    if (!validation.success) {
+      logger.info('[API] Request validation failed', {
+        requestId,
+        error: validation.error,
+        details: validation.details
       });
       
-      // Don't fail here - continue to authentication test
-      // Connectivity issues don't necessarily mean invalid credentials
-    }
-
-    // Test authentication by getting account balance
-    try {
-      console.log('[DEBUG] Testing MEXC authentication by getting account balances...');
-      
-      // Get account balances to verify credentials work
-      const balanceResult = await mexcService.getAccountBalances();
-      
-      console.log('[DEBUG] Balance result received', {
-        success: balanceResult?.success,
-        hasData: !!balanceResult?.data,
-        dataType: typeof balanceResult?.data,
-        error: balanceResult?.error,
-        source: balanceResult?.source,
-        timestamp: new Date().toISOString()
-      });
-      
-      if (balanceResult.success) {
-        // Extract dynamic account information from MEXC API response
-        const balanceData = balanceResult.data;
-        const balanceCount = Array.isArray(balanceData) ? balanceData.length : 0;
-        
-        // Extract more dynamic information from the balance response
-        const accountType = balanceData && Array.isArray(balanceData) && balanceData.length > 0 
-          ? "spot" // Spot account confirmed by balance data
-          : "spot"; // Default for balance endpoint access
-        
-        const permissions = ["SPOT"]; // Balance access confirms spot permissions  
-        const canTrade = balanceCount >= 0; // Can trade if we can access balances
-        
-        // Add more dynamic fields to show this is not hardcoded
-        const currentTimestamp = Date.now();
-        const hasNonZeroBalances = Array.isArray(balanceData) && balanceData.some(b => 
-          (parseFloat(b.free || '0') > 0) || (parseFloat(b.locked || '0') > 0)
-        );
-        const totalAssets = Array.isArray(balanceData) ? balanceData.length : 0;
-
-        // Success - credentials are valid
-        return apiResponse(
-          createSuccessResponse({
-            connectivity: connectivityTest?.success ?? false,
-            authentication: true,
-            accountType: accountType.toLowerCase(),
-            canTrade,
-            balanceCount,
-            credentialSource: "database",
-            // Dynamic fields to prove this is not hardcoded
-            totalAssets,
-            hasNonZeroBalances,
-            testTimestamp: currentTimestamp,
-            serverTime: new Date().toISOString(),
-            // Include additional metadata
-            ...(permissions.length > 0 && { permissions }),
-            ...(balanceResult.timestamp && { lastUpdate: balanceResult.timestamp }),
-            // Connectivity status
-            connectivityNote: connectivityTest?.success 
-              ? "MEXC API connectivity verified"
-              : "MEXC API connectivity could not be verified, but credentials are valid"
-          }, {
-            message: "API credentials are valid and working correctly",
-            code: "TEST_SUCCESS"
-          }),
-          HTTP_STATUS.OK
-        );
-      } else {
-        // Authentication failed
-        return apiResponse(
-          createErrorResponse("API credentials are invalid", {
-            message: balanceResult.error || "Authentication failed with MEXC API",
-            code: "INVALID_CREDENTIALS",
-            details: {
-              connectivity: connectivityTest?.success ?? false,
-              authentication: false,
-              step: "authentication_test",
-              mexcError: balanceResult.error,
-              connectivityNote: connectivityTest?.success 
-                ? "MEXC API connectivity verified"
-                : "MEXC API connectivity could not be verified"
-            }
-          }),
-          HTTP_STATUS.UNAUTHORIZED
-        );
-      }
-    } catch (authError) {
-      // Handle specific authentication errors
-      const errorMessage = authError instanceof Error ? authError.message : "Unknown authentication error";
-      
-      // Check for specific MEXC error codes
-      let errorCode = "AUTHENTICATION_ERROR";
-      let userMessage = "Failed to authenticate with MEXC API";
-      
-      if (errorMessage.includes("700002") || errorMessage.includes("Signature for this request is not valid")) {
-        errorCode = "SIGNATURE_ERROR";
-        userMessage = "API signature validation failed. Please check your API credentials and ensure your IP is allowlisted.";
-      } else if (errorMessage.includes("10072") || errorMessage.includes("Api key info invalid")) {
-        errorCode = "INVALID_API_KEY";
-        userMessage = "API key is invalid or expired. Please check your MEXC API credentials.";
-      }
-
       return apiResponse(
-        createErrorResponse(userMessage, {
-          message: userMessage,
-          code: errorCode,
-          details: {
-            connectivity: connectivityTest?.success ?? false,
-            authentication: false,
-            step: "authentication_test",
-            originalError: errorMessage,
-            connectivityNote: connectivityTest?.success 
-              ? "MEXC API connectivity verified"
-              : "MEXC API connectivity could not be verified"
-          }
+        createErrorResponse(validation.error, {
+          code: 'VALIDATION_ERROR',
+          details: validation.details,
+          requestId
         }),
-        HTTP_STATUS.UNAUTHORIZED
+        HTTP_STATUS.BAD_REQUEST
       );
     }
+
+    const testRequest: ApiCredentialsTestRequest = validation.data;
+
+    logger.info('[API] Validated test request', {
+      requestId,
+      providedUserId: testRequest.userId,
+      authenticatedUserId: user?.id,
+      provider: testRequest.provider,
+      userIdMatch: user?.id === testRequest.userId
+    });
+
+    // Use modular service for credential testing
+    const testResult = await apiCredentialsTestService.testCredentials(
+      testRequest, 
+      user.id
+    );
+
+    if (!testResult.success) {
+      logger.info('[API] Credential test failed', {
+        requestId,
+        error: testResult.error,
+        code: testResult.code,
+        duration: Date.now() - startTime
+      });
+
+      const statusCode = testResult.code === 'ACCESS_DENIED' 
+        ? HTTP_STATUS.FORBIDDEN 
+        : testResult.code === 'NO_CREDENTIALS' 
+        ? HTTP_STATUS.BAD_REQUEST 
+        : testResult.code?.includes('AUTHENTICATION') || testResult.code?.includes('SIGNATURE') || testResult.code?.includes('INVALID_API_KEY')
+        ? HTTP_STATUS.UNAUTHORIZED
+        : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+      return apiResponse(
+        createErrorResponse(testResult.error, {
+          code: testResult.code,
+          requestId,
+          duration: Date.now() - startTime,
+          ...(testResult.details && { details: testResult.details })
+        }),
+        statusCode
+      );
+    }
+
+    logger.info('[API] Credential test completed successfully', {
+      requestId,
+      userId: testRequest.userId,
+      provider: testRequest.provider,
+      duration: Date.now() - startTime,
+      connectivity: testResult.data.connectivity,
+      authentication: testResult.data.authentication
+    });
+
+    return apiResponse(
+      createSuccessResponse(testResult.data, {
+        message: "API credentials are valid and working correctly",
+        code: "TEST_SUCCESS",
+        requestId,
+        duration: Date.now() - startTime
+      }),
+      HTTP_STATUS.OK
+    );
 
   } catch (error) {
-    console.error('[API] API credentials test failed:', error);
+    logger.error('[API] Unexpected error in credentials test:', {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      duration: Date.now() - startTime
+    });
     
     return apiResponse(
       createErrorResponse('API credentials test failed', {
         message: error instanceof Error ? error.message : 'Unknown error occurred during test',
-        code: 'TEST_ERROR'
+        code: 'TEST_ERROR',
+        requestId,
+        duration: Date.now() - startTime
       }),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );

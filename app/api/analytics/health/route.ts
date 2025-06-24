@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { z } from "zod";
 import { tradingAnalytics } from "../../../../src/services/trading-analytics-service";
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
@@ -18,6 +19,8 @@ const HealthQuerySchema = z.object({
   checkExternal: z.coerce.boolean().optional().default(true),
   format: z.enum(['json', 'prometheus']).optional().default('json'),
 });
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -63,7 +66,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Health Analytics] Error:', error);
+    logger.error('[Health Analytics] Error:', error);
 
     const errorResponse = {
       success: false,
@@ -145,7 +148,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Health Analytics] POST Error:', error);
+    logger.error('[Health Analytics] POST Error:', error);
 
     return NextResponse.json(
       {

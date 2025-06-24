@@ -1,0 +1,13 @@
+{
+  "objective": "resolve all  TypeScript errors",
+  "strategy": "development",
+  "mode": "centralized",
+  "maxAgents": 5,
+  "timeout": 60,
+  "parallel": true,
+  "monitor": true,
+  "output": "json",
+  "outputDir": "./reports",
+  "timestamp": "2025-06-23T19:23:41.977Z",
+  "id": "swarm-development-centralized-1750706621978"
+}

@@ -1,14 +1,14 @@
 /**
  * Pattern Correlation Analysis Module
- * 
+ *
  * Handles ML-enhanced pattern correlation analysis with optimized performance.
  * Identifies correlated movements and market-wide patterns using advanced algorithms.
  */
 
-import { createLogger } from "../../lib/structured-logger";
 import { toSafeError } from "../../lib/error-type-utils";
-import { patternEmbeddingService } from "../pattern-embedding-service";
+import { createLogger } from "../../lib/structured-logger";
 import type { SymbolEntry } from "../mexc-unified-exports";
+import { patternEmbeddingService } from "../pattern-embedding-service";
 import type { CorrelationAnalysis } from "./pattern-types";
 
 const logger = createLogger("correlation-analyzer");
@@ -31,7 +31,9 @@ export interface PatternPair {
  * Multi-Symbol Correlation Analysis
  * Identifies correlated movements and market-wide patterns
  */
-export async function analyzeSymbolCorrelations(symbolData: SymbolEntry[]): Promise<CorrelationAnalysis[]> {
+export async function analyzeSymbolCorrelations(
+  symbolData: SymbolEntry[]
+): Promise<CorrelationAnalysis[]> {
   const correlations: CorrelationAnalysis[] = [];
 
   // Group symbols by similar patterns
@@ -74,7 +76,9 @@ export async function analyzeSymbolCorrelations(symbolData: SymbolEntry[]): Prom
  * Reduces O(n²) complexity through parallel processing and intelligent caching
  * Performance target: <50ms execution time vs previous 60-300ms
  */
-export async function analyzeMLPatternCorrelations(symbolData: SymbolEntry[]): Promise<CorrelationAnalysis[]> {
+export async function analyzeMLPatternCorrelations(
+  symbolData: SymbolEntry[]
+): Promise<CorrelationAnalysis[]> {
   const correlations: CorrelationAnalysis[] = [];
 
   if (symbolData.length < 2) return correlations;
@@ -152,8 +156,7 @@ export async function analyzeMLPatternCorrelations(symbolData: SymbolEntry[]): P
     // Create correlation analysis from similarity matrix
     if (similarityMatrix.length > 0) {
       const avgSimilarity =
-        similarityMatrix.reduce((sum, item) => sum + item.similarity, 0) /
-        similarityMatrix.length;
+        similarityMatrix.reduce((sum, item) => sum + item.similarity, 0) / similarityMatrix.length;
 
       correlations.push({
         symbols: [...new Set(similarityMatrix.flatMap((item) => [item.symbol1, item.symbol2]))], // Deduplicate
@@ -376,10 +379,12 @@ function groupSymbolsByStatus(symbols: SymbolEntry[]): Record<string, SymbolEntr
   return {};
 }
 
-async function analyzeLaunchTimingCorrelations(symbols: SymbolEntry[]): Promise<CorrelationAnalysis> {
+async function analyzeLaunchTimingCorrelations(
+  symbols: SymbolEntry[]
+): Promise<CorrelationAnalysis> {
   // Implementation placeholder
   return {
-    symbols: symbols.map(s => s.cd || "unknown"),
+    symbols: symbols.map((s) => s.cd || "unknown"),
     correlationType: "launch_timing",
     strength: 0.3,
     insights: ["Launch timing correlation analysis"],
@@ -390,7 +395,7 @@ async function analyzeLaunchTimingCorrelations(symbols: SymbolEntry[]): Promise<
 async function analyzeSectorCorrelations(symbols: SymbolEntry[]): Promise<CorrelationAnalysis> {
   // Implementation placeholder
   return {
-    symbols: symbols.map(s => s.cd || "unknown"),
+    symbols: symbols.map((s) => s.cd || "unknown"),
     correlationType: "market_sector",
     strength: 0.2,
     insights: ["Sector correlation analysis"],

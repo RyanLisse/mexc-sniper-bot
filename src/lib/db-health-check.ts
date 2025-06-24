@@ -1,5 +1,8 @@
 import { db } from "../db";
 import { account, session, user, verification } from "../db/schema";
+import { createLogger } from "./structured-logger";
+
+const logger = createLogger("db-health-check");
 
 export async function checkDatabaseHealth() {
   try {
@@ -7,13 +10,13 @@ export async function checkDatabaseHealth() {
     const result = await db.select().from(user).limit(0);
 
     if (result) {
-      console.log("[DB Health] Database connection successful");
+      logger.info("[DB Health] Database connection successful");
       return { healthy: true, message: "Database is connected" };
     }
 
     return { healthy: false, message: "Database query returned no result" };
   } catch (error) {
-    console.error("[DB Health] Database error:", error);
+    logger.error("[DB Health] Database error:", error);
     return {
       healthy: false,
       message: "Database connection failed",

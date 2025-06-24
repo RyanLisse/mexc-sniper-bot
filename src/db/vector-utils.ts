@@ -1,9 +1,12 @@
 import { eq, sql } from "drizzle-orm";
+import { createLogger } from "../lib/structured-logger";
 import { db, executeWithRetry } from "./index";
 import { type NewPatternEmbedding, patternEmbeddings, patternSimilarityCache } from "./schema";
 
 // Vector similarity functions for PostgreSQL/NeonDB
 export class VectorUtils {
+  private logger = createLogger("vector-utils");
+
   /**
    * Calculate cosine similarity between two embeddings
    * Note: For PostgreSQL compatibility, we calculate this in JavaScript
@@ -465,7 +468,7 @@ export class VectorUtils {
             });
           }
         } catch (error) {
-          console.warn(`[VectorUtils] Failed to process pattern ${pattern.patternId}:`, error);
+          logger.warn(`[VectorUtils] Failed to process pattern ${pattern.patternId}:`, error);
         }
       }
 

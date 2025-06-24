@@ -7,6 +7,19 @@
 
 "use client";
 
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  RefreshCw,
+  Settings,
+  Shield,
+  TrendingUp,
+  XCircle,
+  Zap,
+} from "lucide-react";
+import type React from "react";
+import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/src/components/ui/alert";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -21,18 +34,6 @@ import { Progress } from "@/src/components/ui/progress";
 import { Separator } from "@/src/components/ui/separator";
 import { useConfigValidation } from "@/src/hooks/use-config-validation";
 import type { ConfigValidationResult } from "@/src/services/mexc-config-validator";
-import {
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  RefreshCw,
-  Settings,
-  Shield,
-  TrendingUp,
-  XCircle,
-  Zap,
-} from "lucide-react";
-import React, { useState } from "react";
 
 interface ConfigStatusPanelProps {
   className?: string;

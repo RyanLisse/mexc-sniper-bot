@@ -6,6 +6,7 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
+import { createLogger } from "../lib/structured-logger";
 
 // Standardized Status Types
 export interface UnifiedCredentialStatus {
@@ -41,6 +42,8 @@ export interface StatusResolutionResult {
 }
 
 export class UnifiedStatusResolver {
+  private logger = createLogger("unified-status-resolver");
+
   private lastKnownStatus: StatusResolutionResult | null = null;
   private isResolving = false;
 
@@ -55,10 +58,11 @@ export class UnifiedStatusResolver {
     }
 
     // Server environment - need to construct absolute URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-                   "http://localhost:3000";
-    
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000";
+
     return new URL(relativePath, baseUrl).toString();
   }
 
@@ -94,7 +98,7 @@ export class UnifiedStatusResolver {
       return this.createFallbackStatus("All connectivity checks failed");
     } catch (error) {
       const safeError = toSafeError(error);
-      console.error("[UnifiedStatusResolver] Resolution failed:", safeError.message);
+      logger.error("[UnifiedStatusResolver] Resolution failed:", safeError.message);
       return this.createFallbackStatus(`Status resolution error: ${safeError.message}`);
     } finally {
       this.isResolving = false;
@@ -114,19 +118,19 @@ export class UnifiedStatusResolver {
       });
 
       if (!response.ok) {
-        console.warn("[UnifiedStatusResolver] Enhanced endpoint failed:", response.status);
+        logger.warn("[UnifiedStatusResolver] Enhanced endpoint failed:", response.status);
         return null;
       }
 
       const data = await response.json();
       if (!data.success || !data.data) {
-        console.warn("[UnifiedStatusResolver] Enhanced endpoint returned invalid data");
+        logger.warn("[UnifiedStatusResolver] Enhanced endpoint returned invalid data");
         return null;
       }
 
       return this.normalizeEnhancedResponse(data.data);
     } catch (error) {
-      console.warn("[UnifiedStatusResolver] Enhanced endpoint error:", error);
+      logger.warn("[UnifiedStatusResolver] Enhanced endpoint error:", error);
       return null;
     }
   }
@@ -144,19 +148,19 @@ export class UnifiedStatusResolver {
       });
 
       if (!response.ok) {
-        console.warn("[UnifiedStatusResolver] Legacy endpoint failed:", response.status);
+        logger.warn("[UnifiedStatusResolver] Legacy endpoint failed:", response.status);
         return null;
       }
 
       const data = await response.json();
       if (!data.success) {
-        console.warn("[UnifiedStatusResolver] Legacy endpoint returned error:", data.error);
+        logger.warn("[UnifiedStatusResolver] Legacy endpoint returned error:", data.error);
         return null;
       }
 
       return this.normalizeLegacyResponse(data.data);
     } catch (error) {
-      console.warn("[UnifiedStatusResolver] Legacy endpoint error:", error);
+      logger.warn("[UnifiedStatusResolver] Legacy endpoint error:", error);
       return null;
     }
   }

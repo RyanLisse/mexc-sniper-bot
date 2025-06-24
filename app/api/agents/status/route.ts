@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getGlobalAgentRegistry } from "../../../../src/mexc-agents/coordination/agent-registry";
 import { AgentMonitoringService } from "../../../../src/services/agent-monitoring-service";
 
@@ -6,6 +7,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Quick status endpoint for all agents and monitoring
+const logger = createLogger('route');
+
 export async function GET() {
   try {
     const registry = getGlobalAgentRegistry();
@@ -59,7 +62,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error("[API] Agent status request failed:", error);
+    logger.error("[API] Agent status request failed:", { error: error });
     return NextResponse.json(
       { 
         success: false, 

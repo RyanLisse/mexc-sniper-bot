@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * System Validation API Route
  * 
  * Provides comprehensive system readiness validation for auto-sniping activation.
@@ -13,11 +14,13 @@ import { systemReadinessValidator } from '@/src/services/system-readiness-valida
  * GET /api/system/validation
  * Comprehensive system readiness validation
  */
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
   
   try {
-    console.log('[SystemValidation] Starting comprehensive system validation...');
+    logger.info('[SystemValidation] Starting comprehensive system validation...');
     
     // Run comprehensive system validation
     const validation = await systemReadinessValidator.validateSystemReadiness();
@@ -47,7 +50,7 @@ export async function GET(request: NextRequest) {
       ? `Critical system failures detected (Score: ${validation.score}%)`
       : `System has issues but is functional (Score: ${validation.score}%)`;
     
-    console.log(`[SystemValidation] Validation complete. Status: ${validation.overall}, Ready: ${validation.readyForAutoSniping}, Score: ${validation.score}%`);
+    logger.info(`[SystemValidation] Validation complete. Status: ${validation.overall}, Ready: ${validation.readyForAutoSniping}, Score: ${validation.score}%`);
     
     return statusCode === 200
       ? apiResponse.success(responseData, { message })
@@ -56,7 +59,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    console.error('[SystemValidation] System validation failed:', error);
+    logger.error('[SystemValidation] System validation failed:', error);
     
     return apiResponse.error('System validation failed', 500, {
       overall: 'critical_failure',
@@ -156,7 +159,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.error('Invalid action. Use "validate_component", "quick_health_check", or "get_recommendations"', 400);
     
   } catch (error) {
-    console.error('[SystemValidation] POST request failed:', error);
+    logger.error('[SystemValidation] POST request failed:', error);
     
     return apiResponse.error('System validation action failed', 500, {
       error: error instanceof Error ? error.message : 'Unknown error',

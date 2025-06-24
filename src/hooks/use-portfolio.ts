@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../lib/kinde-auth-client";
 import type { snipeTargets } from "../db/schema";
+import { useAuth } from "../lib/kinde-auth-client";
 
 export interface PortfolioPosition {
   id: number;
@@ -102,8 +102,8 @@ export function usePortfolio(userId: string) {
     }, // Prevent loading flicker
     retry: (failureCount, error) => {
       // Don't retry auth errors
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
       return failureCount < 2;
@@ -147,8 +147,8 @@ export function useSnipeTargets(userId: string, status?: string) {
     placeholderData: [], // Prevent loading flicker
     retry: (failureCount, error) => {
       // Don't retry auth errors
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
       return failureCount < 2;
@@ -320,8 +320,8 @@ export function useAutoExitManager() {
     placeholderData: null, // Prevent loading flicker
     retry: (failureCount, error) => {
       // Don't retry auth errors
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
       return failureCount < 2;

@@ -1,3 +1,4 @@
+import { createLogger } from "../lib/structured-logger";
 import type { AgentManager } from "./agent-manager";
 import type { CoordinationSystemManager } from "./coordination-manager";
 import type { DataFetcher } from "./data-fetcher";
@@ -16,6 +17,8 @@ import { WorkflowExecutor } from "./workflow-executor";
  * Extracted from MexcOrchestrator to follow Single Responsibility Principle
  */
 export class WorkflowExecutionService {
+  private logger = createLogger("workflow-execution-service");
+
   private workflowExecutor: WorkflowExecutor;
 
   constructor(
@@ -42,7 +45,7 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        console.warn(
+        logger.warn(
           "[WorkflowExecutionService] Enhanced coordination failed, falling back to legacy mode:",
           error
         );
@@ -81,7 +84,7 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        console.warn(
+        logger.warn(
           "[WorkflowExecutionService] Enhanced coordination failed, falling back to legacy mode:",
           error
         );
@@ -120,7 +123,7 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        console.warn(
+        logger.warn(
           "[WorkflowExecutionService] Enhanced coordination failed, falling back to legacy mode:",
           error
         );
@@ -159,7 +162,7 @@ export class WorkflowExecutionService {
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        console.warn(
+        logger.warn(
           "[WorkflowExecutionService] Enhanced coordination failed, falling back to legacy mode:",
           error
         );
@@ -191,7 +194,7 @@ export class WorkflowExecutionService {
     agentsUsed: string[],
     context: string
   ): MexcWorkflowResult {
-    console.error(`[WorkflowExecutionService] ${context}:`, error);
+    logger.error(`[WorkflowExecutionService] ${context}:`, error);
 
     return {
       success: false,

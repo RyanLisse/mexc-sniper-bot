@@ -1,3 +1,5 @@
+import { createLogger } from "../../lib/structured-logger";
+
 /**
  * Advanced Risk Engine - Modular Integration
  *
@@ -18,8 +20,6 @@
 
 import { EventEmitter } from "events";
 import type { TradeRiskAssessment } from "../../mexc-agents/risk-manager-agent";
-import { type CircuitBreaker, circuitBreakerRegistry } from "../circuit-breaker";
-
 // Import schemas and types
 import type {
   MarketConditions,
@@ -29,23 +29,17 @@ import type {
   RiskEngineConfig,
   StressTestScenario,
 } from "../../schemas/risk-engine-schemas-extracted";
+import { type CircuitBreaker, circuitBreakerRegistry } from "../circuit-breaker";
 
 // Import modular components
 import {
   CoreRiskAssessment,
   type CoreRiskAssessmentConfig,
-  type TradeRiskResult,
   createCoreRiskAssessment,
+  type TradeRiskResult,
 } from "./core-risk-assessment";
-
 import {
-  MarketConditionsManager,
-  type MarketConditionsManagerConfig,
-  type PortfolioUpdate,
-  createMarketConditionsManager,
-} from "./market-conditions-manager";
-
-import {
+  createDynamicCalculations,
   type DiversificationAssessment,
   DynamicCalculations,
   type DynamicCalculationsConfig,
@@ -54,26 +48,29 @@ import {
   type StopLossValidation,
   type TakeProfitRecommendation,
   type VolatilityAdjustment,
-  createDynamicCalculations,
 } from "./dynamic-calculations";
-
 import {
+  createEventManagementHealth,
+  type EventManagementConfig,
+  EventManagementHealth,
+  type HealthStatus,
+} from "./event-management-health";
+import {
+  createMarketConditionsManager,
+  MarketConditionsManager,
+  type MarketConditionsManagerConfig,
+  type PortfolioUpdate,
+} from "./market-conditions-manager";
+import {
+  createStressTestingValidation,
   type FlashCrashDetection,
   type LiquidityAssessment,
   type ManipulationDetection,
   type PortfolioRiskCalculation,
-  type StressTestResult,
   type StressTestingConfig,
   StressTestingValidation,
-  createStressTestingValidation,
+  type StressTestResult,
 } from "./stress-testing-validation";
-
-import {
-  type EventManagementConfig,
-  EventManagementHealth,
-  type HealthStatus,
-  createEventManagementHealth,
-} from "./event-management-health";
 
 // Re-export types for backward compatibility
 export type {
@@ -99,6 +96,8 @@ export type {
  * while providing improved architecture and maintainability.
  */
 export class AdvancedRiskEngine extends EventEmitter {
+  private logger = createLogger("index");
+
   private config: RiskEngineConfig;
   private circuitBreaker: CircuitBreaker;
 
@@ -124,7 +123,7 @@ export class AdvancedRiskEngine extends EventEmitter {
     // Initialize modules
     this.initializeModules();
 
-    console.log("[AdvancedRiskEngine] Initialized with modular architecture");
+    logger.info("[AdvancedRiskEngine] Initialized with modular architecture");
   }
 
   /**
@@ -307,7 +306,7 @@ export class AdvancedRiskEngine extends EventEmitter {
     this.marketConditionsManager.removePosition(symbol);
     this.positions.delete(symbol);
     this.updateAllModules();
-    console.log(`[AdvancedRiskEngine] Removed position tracking for ${symbol}`);
+    logger.info(`[AdvancedRiskEngine] Removed position tracking for ${symbol}`);
   }
 
   /**

@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createLogger } from "../lib/structured-logger";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -72,6 +73,8 @@ const defaultLevels: TakeProfitLevel[] = [
     actionWhenReached: "Sell final 25%",
   },
 ];
+
+const logger = createLogger("editable-take-profit-table");
 
 export function EditableTakeProfitTable({
   levels = defaultLevels,
@@ -286,7 +289,7 @@ export function EditableTakeProfitTable({
       setIsEditing(false);
       setValidationErrors([]);
     } catch (error) {
-      console.error("Failed to save take-profit levels:", error);
+      logger.error("Failed to save take-profit levels:", error);
       setSaveError(
         error instanceof Error ? error.message : "Failed to save configuration. Please try again."
       );

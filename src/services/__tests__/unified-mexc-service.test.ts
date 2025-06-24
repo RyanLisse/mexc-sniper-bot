@@ -1,13 +1,18 @@
 /**
  * Test-Driven Development for Unified MEXC Service Refactoring
- * 
+ *
  * This test file defines the expected behavior for the refactored
  * UnifiedMexcService before we implement the modular architecture.
  */
 
-import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
-import { z } from 'zod';
-import type { UnifiedMexcConfig, MexcServiceResponse, CalendarEntry, ExchangeInfo } from '../mexc-schemas';
+import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
+import { z } from "zod";
+import type {
+  CalendarEntry,
+  ExchangeInfo,
+  MexcServiceResponse,
+  UnifiedMexcConfig,
+} from "../mexc-schemas";
 
 // Test schemas using Zod for type safety
 const TestConfigSchema = z.object({
@@ -21,25 +26,27 @@ const TestConfigSchema = z.object({
 
 const CalendarListingResponseSchema = z.object({
   success: z.boolean(),
-  data: z.array(z.object({
-    symbol: z.string(),
-    baseAsset: z.string(),
-    quoteAsset: z.string(),
-    tradingStartTime: z.number(),
-    status: z.string(),
-  })),
+  data: z.array(
+    z.object({
+      symbol: z.string(),
+      baseAsset: z.string(),
+      quoteAsset: z.string(),
+      tradingStartTime: z.number(),
+      status: z.string(),
+    })
+  ),
   error: z.string().optional(),
 });
 
-describe('UnifiedMexcService - TDD Refactoring', () => {
+describe("UnifiedMexcService - TDD Refactoring", () => {
   let mexcService: any;
   let mockConfig: UnifiedMexcConfig;
 
   beforeEach(() => {
     mockConfig = {
-      apiKey: 'test-api-key',
-      secretKey: 'test-secret-key',
-      baseUrl: 'https://api.mexc.com',
+      apiKey: "test-api-key",
+      secretKey: "test-secret-key",
+      baseUrl: "https://api.mexc.com",
       timeout: 10000,
       maxRetries: 3,
       enableCaching: true,
@@ -49,40 +56,40 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
     vi.clearAllMocks();
   });
 
-  describe('Configuration Validation', () => {
-    it('should validate configuration using Zod schema', () => {
+  describe("Configuration Validation", () => {
+    it("should validate configuration using Zod schema", () => {
       expect(() => TestConfigSchema.parse(mockConfig)).not.toThrow();
     });
 
-    it('should reject invalid configuration', () => {
-      const invalidConfig = { ...mockConfig, apiKey: '' };
+    it("should reject invalid configuration", () => {
+      const invalidConfig = { ...mockConfig, apiKey: "" };
       expect(() => TestConfigSchema.parse(invalidConfig)).toThrow();
     });
 
-    it('should use default values for optional fields', () => {
+    it("should use default values for optional fields", () => {
       const minimalConfig = {
-        apiKey: 'test-key',
-        secretKey: 'test-secret',
+        apiKey: "test-key",
+        secretKey: "test-secret",
       };
-      
+
       // This should be handled by the service constructor
-      expect(minimalConfig.apiKey).toBe('test-key');
-      expect(minimalConfig.secretKey).toBe('test-secret');
+      expect(minimalConfig.apiKey).toBe("test-key");
+      expect(minimalConfig.secretKey).toBe("test-secret");
     });
   });
 
-  describe('Calendar Listings Module', () => {
-    it('should fetch calendar listings with proper type safety', async () => {
+  describe("Calendar Listings Module", () => {
+    it("should fetch calendar listings with proper type safety", async () => {
       // This test defines the expected behavior for the calendar module
       const expectedResponse = {
         success: true,
         data: [
           {
-            symbol: 'BTCUSDT',
-            baseAsset: 'BTC',
-            quoteAsset: 'USDT',
+            symbol: "BTCUSDT",
+            baseAsset: "BTC",
+            quoteAsset: "USDT",
             tradingStartTime: Date.now(),
-            status: 'TRADING',
+            status: "TRADING",
           },
         ],
       };
@@ -90,11 +97,11 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
       expect(() => CalendarListingResponseSchema.parse(expectedResponse)).not.toThrow();
     });
 
-    it('should handle calendar listings API errors gracefully', async () => {
+    it("should handle calendar listings API errors gracefully", async () => {
       const errorResponse = {
         success: false,
         data: [],
-        error: 'API rate limit exceeded',
+        error: "API rate limit exceeded",
       };
 
       expect(() => CalendarListingResponseSchema.parse(errorResponse)).not.toThrow();
@@ -102,32 +109,34 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
       expect(errorResponse.error).toBeDefined();
     });
 
-    it('should cache calendar listings when caching is enabled', async () => {
+    it("should cache calendar listings when caching is enabled", async () => {
       // Test that caching behavior works as expected
       expect(mockConfig.enableCaching).toBe(true);
     });
   });
 
-  describe('Exchange Info Module', () => {
-    it('should fetch exchange information with type validation', async () => {
+  describe("Exchange Info Module", () => {
+    it("should fetch exchange information with type validation", async () => {
       const ExchangeInfoSchema = z.object({
         success: z.boolean(),
         data: z.object({
           timezone: z.string(),
           serverTime: z.number(),
-          symbols: z.array(z.object({
-            symbol: z.string(),
-            status: z.string(),
-            baseAsset: z.string(),
-            quoteAsset: z.string(),
-          })),
+          symbols: z.array(
+            z.object({
+              symbol: z.string(),
+              status: z.string(),
+              baseAsset: z.string(),
+              quoteAsset: z.string(),
+            })
+          ),
         }),
       });
 
       const expectedResponse = {
         success: true,
         data: {
-          timezone: 'UTC',
+          timezone: "UTC",
           serverTime: Date.now(),
           symbols: [],
         },
@@ -137,8 +146,8 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
     });
   });
 
-  describe('Portfolio Management Module', () => {
-    it('should calculate portfolio metrics accurately', async () => {
+  describe("Portfolio Management Module", () => {
+    it("should calculate portfolio metrics accurately", async () => {
       const PortfolioMetricsSchema = z.object({
         totalValue: z.number().nonnegative(),
         totalPnl: z.number(),
@@ -148,27 +157,27 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
       });
 
       const mockMetrics = {
-        totalValue: 1000.50,
+        totalValue: 1000.5,
         totalPnl: 50.25,
         totalPnlPercentage: 5.25,
-        topPerformers: ['BTC', 'ETH'],
-        assetDistribution: { 'BTC': 0.6, 'ETH': 0.4 },
+        topPerformers: ["BTC", "ETH"],
+        assetDistribution: { BTC: 0.6, ETH: 0.4 },
       };
 
       expect(() => PortfolioMetricsSchema.parse(mockMetrics)).not.toThrow();
     });
   });
 
-  describe('Error Handling and Reliability', () => {
-    it('should implement circuit breaker pattern for resilience', async () => {
+  describe("Error Handling and Reliability", () => {
+    it("should implement circuit breaker pattern for resilience", async () => {
       // Test circuit breaker behavior
-      const CircuitBreakerStateSchema = z.enum(['CLOSED', 'OPEN', 'HALF_OPEN']);
-      
-      expect(() => CircuitBreakerStateSchema.parse('CLOSED')).not.toThrow();
-      expect(() => CircuitBreakerStateSchema.parse('INVALID')).toThrow();
+      const CircuitBreakerStateSchema = z.enum(["CLOSED", "OPEN", "HALF_OPEN"]);
+
+      expect(() => CircuitBreakerStateSchema.parse("CLOSED")).not.toThrow();
+      expect(() => CircuitBreakerStateSchema.parse("INVALID")).toThrow();
     });
 
-    it('should retry failed requests with exponential backoff', async () => {
+    it("should retry failed requests with exponential backoff", async () => {
       // Test retry logic
       const retryConfig = {
         maxRetries: 3,
@@ -180,7 +189,7 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
       expect(retryConfig.retryDelay).toBeGreaterThan(0);
     });
 
-    it('should validate API responses using Zod schemas', async () => {
+    it("should validate API responses using Zod schemas", async () => {
       const ApiResponseSchema = z.object({
         success: z.boolean(),
         data: z.unknown(),
@@ -190,7 +199,7 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
 
       const validResponse = {
         success: true,
-        data: { test: 'data' },
+        data: { test: "data" },
         timestamp: Date.now(),
       };
 
@@ -198,8 +207,8 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
     });
   });
 
-  describe('Performance and Caching', () => {
-    it('should implement efficient caching with TTL', async () => {
+  describe("Performance and Caching", () => {
+    it("should implement efficient caching with TTL", async () => {
       const CacheEntrySchema = z.object({
         key: z.string(),
         value: z.unknown(),
@@ -208,7 +217,7 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
       });
 
       const cacheEntry = {
-        key: 'calendar-listings',
+        key: "calendar-listings",
         value: { data: [] },
         ttl: 30000,
         createdAt: Date.now(),
@@ -217,7 +226,7 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
       expect(() => CacheEntrySchema.parse(cacheEntry)).not.toThrow();
     });
 
-    it('should monitor performance metrics', async () => {
+    it("should monitor performance metrics", async () => {
       const PerformanceMetricsSchema = z.object({
         responseTime: z.number().nonnegative(),
         requestCount: z.number().nonnegative(),
@@ -236,28 +245,31 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
     });
   });
 
-  describe('Type Safety and Validation', () => {
-    it('should use Zod for all input validation', async () => {
+  describe("Type Safety and Validation", () => {
+    it("should use Zod for all input validation", async () => {
       const OrderParametersSchema = z.object({
         symbol: z.string().min(1),
-        side: z.enum(['BUY', 'SELL']),
-        type: z.enum(['MARKET', 'LIMIT']),
+        side: z.enum(["BUY", "SELL"]),
+        type: z.enum(["MARKET", "LIMIT"]),
         quantity: z.string().regex(/^\d+(\.\d+)?$/),
-        price: z.string().regex(/^\d+(\.\d+)?$/).optional(),
+        price: z
+          .string()
+          .regex(/^\d+(\.\d+)?$/)
+          .optional(),
       });
 
       const validOrder = {
-        symbol: 'BTCUSDT',
-        side: 'BUY' as const,
-        type: 'LIMIT' as const,
-        quantity: '0.001',
-        price: '50000.00',
+        symbol: "BTCUSDT",
+        side: "BUY" as const,
+        type: "LIMIT" as const,
+        quantity: "0.001",
+        price: "50000.00",
       };
 
       expect(() => OrderParametersSchema.parse(validOrder)).not.toThrow();
     });
 
-    it('should provide strong TypeScript types for all operations', async () => {
+    it("should provide strong TypeScript types for all operations", async () => {
       // This test ensures we maintain type safety throughout refactoring
       type ExpectedMexcService = {
         getCalendarListings(): Promise<MexcServiceResponse<CalendarEntry[]>>;
@@ -268,7 +280,7 @@ describe('UnifiedMexcService - TDD Refactoring', () => {
 
       // Type assertion to ensure interface compliance
       const serviceInterface = {} as ExpectedMexcService;
-      expect(typeof serviceInterface.getCalendarListings).toBe('undefined'); // Will be 'function' after implementation
+      expect(typeof serviceInterface.getCalendarListings).toBe("undefined"); // Will be 'function' after implementation
     });
   });
 });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../src/lib/structured-logger';
 import { WorkflowStatusService } from "../../../src/services/workflow-status-service";
 import { 
   createSuccessResponse, 
@@ -7,6 +8,8 @@ import {
   HTTP_STATUS,
   createValidationErrorResponse
 } from "../../../src/lib/api-response";
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +23,7 @@ export async function GET(request: NextRequest) {
       createSuccessResponse(workflowStatus)
     );
   } catch (error) {
-    console.error("Failed to get workflow status:", error);
+    logger.error("Failed to get workflow status:", { error: error });
     
     // Return a fallback status when database is unavailable
     const fallbackStatus = {
@@ -144,7 +147,7 @@ export async function POST(request: NextRequest) {
       })
     );
   } catch (error) {
-    console.error("Failed to update workflow status:", error);
+    logger.error("Failed to update workflow status:", { error: error });
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"

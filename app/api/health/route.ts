@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Health Check API Route
  * 
  * Provides health status endpoint for container orchestration platforms.
@@ -13,6 +14,8 @@ import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
  * GET /api/health
  * Comprehensive health check for the MEXC Sniper Bot system
  */
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
   
@@ -70,7 +73,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    console.error('[Health Check] Health check failed:', error);
+    logger.error('[Health Check] Health check failed:', error);
     
     return apiResponse.error('Health check failed', 503, {
       status: 'unhealthy',

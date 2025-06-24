@@ -1,6 +1,6 @@
 /**
  * Activity Data Integration Module
- * 
+ *
  * Handles integration with coin activity data for enhanced pattern detection.
  * Provides activity-based confidence enhancements and correlation analysis.
  */
@@ -99,17 +99,20 @@ export async function hasActivityData(symbol: string, vcoinId?: string): Promise
  * @param vcoinId - Optional vcoin ID
  * @returns Activity summary with metrics
  */
-export async function getActivitySummary(symbol: string, vcoinId?: string): Promise<{
+export async function getActivitySummary(
+  symbol: string,
+  vcoinId?: string
+): Promise<{
   totalActivities: number;
   activityTypes: string[];
   hasRecentActivity: boolean;
   activities: ActivityData[];
 }> {
   const activities = await getActivityDataForSymbol(symbol, vcoinId);
-  
+
   return {
     totalActivities: activities.length,
-    activityTypes: [...new Set(activities.map(a => a.activityType))],
+    activityTypes: [...new Set(activities.map((a) => a.activityType))],
     hasRecentActivity: activities.length > 0,
     activities,
   };

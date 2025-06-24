@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getGlobalAgentRegistry } from "../../../../src/mexc-agents/coordination/agent-registry";
 import type { 
   AgentRegistryStats, 
@@ -11,6 +12,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Health status endpoint with comprehensive metrics
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
@@ -157,7 +160,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[API] Agent health check failed:", error);
+    logger.error("[API] Agent health check failed:", { error: error });
     return NextResponse.json(
       { 
         success: false, 
@@ -217,7 +220,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("[API] Agent health check trigger failed:", error);
+    logger.error("[API] Agent health check trigger failed:", { error: error });
     return NextResponse.json(
       { 
         success: false, 
@@ -274,7 +277,7 @@ export async function PATCH(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[API] Agent health configuration update failed:", error);
+    logger.error("[API] Agent health configuration update failed:", { error: error });
     return NextResponse.json(
       { 
         success: false, 

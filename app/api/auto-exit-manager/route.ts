@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../src/lib/structured-logger';
 import { exitManagerService } from "../../../src/services/optimized-auto-exit-manager";
+
+const logger = createLogger('route');
 
 export async function GET() {
   try {
@@ -10,7 +13,7 @@ export async function GET() {
       data: status,
     });
   } catch (error) {
-    console.error("❌ Error getting auto exit manager status:", error);
+    logger.error("❌ Error getting auto exit manager status:", { error: error });
     return NextResponse.json(
       {
         success: false,
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error("❌ Error controlling auto exit manager:", error);
+    logger.error("❌ Error controlling auto exit manager:", { error: error });
     return NextResponse.json(
       {
         success: false,

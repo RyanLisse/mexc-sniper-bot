@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { requireAuth } from "../../../../src/lib/kinde-auth";
 import { apiResponse } from "../../../../src/lib/api-response";
 import { SafetyMonitorAgent } from "../../../../src/mexc-agents/safety-monitor-agent";
@@ -13,6 +14,8 @@ import type { AgentBehaviorMetrics } from "../../../../src/mexc-agents/safety-mo
 
 // Initialize safety monitor
 const safetyMonitor = new SafetyMonitorAgent();
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -158,7 +161,7 @@ export async function GET(request: NextRequest) {
     return apiResponse.success(response);
 
   } catch (error) {
-    console.error("[Agent Monitoring] GET Error:", error);
+    logger.error("[Agent Monitoring] GET Error:", { error: error });
     return apiResponse.error(
       "Failed to get agent monitoring data",
       500
@@ -256,7 +259,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Mock agent restart (in production, would restart actual agent)
-        console.log(`[Agent Monitoring] Restarting agent: ${agentId}`);
+        logger.info(`[Agent Monitoring] Restarting agent: ${agentId}`);
         result = {
           success: true,
           message: `Agent ${agentId} restart initiated`,
@@ -270,7 +273,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Mock agent shutdown (in production, would shutdown actual agent)
-        console.log(`[Agent Monitoring] Shutting down agent: ${agentId}`);
+        logger.info(`[Agent Monitoring] Shutting down agent: ${agentId}`);
         result = {
           success: true,
           message: `Agent ${agentId} shutdown initiated`,
@@ -302,7 +305,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.success(result);
 
   } catch (error) {
-    console.error("[Agent Monitoring] POST Error:", error);
+    logger.error("[Agent Monitoring] POST Error:", { error: error });
     return apiResponse.error(
       "Failed to execute agent monitoring action",
       500

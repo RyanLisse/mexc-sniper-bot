@@ -1,12 +1,10 @@
 /**
  * Performance Tab Component
- * 
+ *
  * Displays trading performance metrics including P&L trends, performance indicators,
  * best/worst trades, and P&L distribution charts.
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { memo, useMemo } from "react";
 import {
   Area,
@@ -17,10 +15,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  createTooltipFormatter,
-  generateListKey,
-} from "../../lib/react-utilities";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { createTooltipFormatter, generateListKey } from "../../lib/react-utilities";
 import type { AnalyticsTabProps } from "../../types/trading-analytics-types";
 
 export const PerformanceTab = memo(function PerformanceTab({

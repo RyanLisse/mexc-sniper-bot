@@ -1,6 +1,6 @@
 /**
  * Core Pattern Detection Types
- * 
+ *
  * Defines all interfaces and types for the pattern detection system.
  * Preserves system architecture while providing type safety.
  */
@@ -109,6 +109,11 @@ export const PATTERN_CONSTANTS = {
 
 export type RiskLevel = "low" | "medium" | "high";
 export type PatternType = "ready_state" | "pre_ready" | "launch_sequence" | "risk_warning";
-export type Recommendation = "immediate_action" | "monitor_closely" | "prepare_entry" | "wait" | "avoid";
+export type Recommendation =
+  | "immediate_action"
+  | "monitor_closely"
+  | "prepare_entry"
+  | "wait"
+  | "avoid";
 export type AnalysisType = "discovery" | "monitoring" | "validation" | "correlation";
 export type CorrelationType = "launch_timing" | "market_sector" | "pattern_similarity";

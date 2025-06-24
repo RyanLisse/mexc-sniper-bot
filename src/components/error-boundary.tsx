@@ -3,6 +3,7 @@
 import { AlertCircle, ChevronDown, ChevronUp, Home, RefreshCcw } from "lucide-react";
 import type React from "react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { createLogger } from "../lib/structured-logger";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -33,6 +34,8 @@ interface ErrorBoundaryState {
  * customizable fallback UI and error recovery options.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  private logger = createLogger("error-boundary");
+
   private resetTimeoutId: NodeJS.Timeout | null = null;
   private previousResetKeys: Array<string | number> = [];
 
@@ -78,7 +81,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
     if (process.env.NODE_ENV === "development") {
-      console.error("Error Boundary caught an error:", error, errorInfo);
+      logger.error("Error Boundary caught an error:", error, errorInfo);
     }
 
     // Call custom error handler if provided
@@ -116,7 +119,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     };
 
     // For now, just log to console
-    console.error("Error logged to monitoring service:", errorData);
+    logger.error("Error logged to monitoring service:", errorData);
   };
 
   handleReset = () => {

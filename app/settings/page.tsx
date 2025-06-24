@@ -27,6 +27,9 @@ import { UnifiedTakeProfitSettings } from "../../src/components/unified-take-pro
 import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "../../src/hooks/use-user-preferences";
 import { TakeProfitStrategy, TAKE_PROFIT_STRATEGIES, getTakeProfitStrategyById } from "../../src/types/take-profit-strategies";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { createLogger } from '../../src/lib/structured-logger';
+
+const logger = createLogger('page');
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -109,7 +112,7 @@ export default function SettingsPage() {
 
   // Handle saving editable take-profit table
   const handleSaveMultiLevelTakeProfit = async (levels: any[]) => {
-    console.log('Saving multi-level take-profit levels:', levels);
+    logger.info('Saving multi-level take-profit levels:', levels);
 
     // Update the multi-level configuration
     const updatedConfig = {
@@ -132,9 +135,9 @@ export default function SettingsPage() {
         description: "Your advanced take-profit configuration has been updated successfully.",
       });
 
-      console.log('✅ Successfully saved multi-level take-profit configuration');
+      logger.info('✅ Successfully saved multi-level take-profit configuration');
     } catch (error) {
-      console.error('❌ Failed to save multi-level take-profit configuration:', error);
+      logger.error('❌ Failed to save multi-level take-profit configuration:', error);
 
       toast({
         title: "Error saving take-profit configuration",

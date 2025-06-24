@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Database Connection Pool & Caching Manager
  *
  * Phase 4: Connection Pooling & Caching (4h)
@@ -67,6 +68,8 @@ interface QueryResultCache {
 }
 
 export class DatabaseConnectionPool {
+  private logger = createLogger("database-connection-pool");
+
   private static instance: DatabaseConnectionPool;
   private config: ConnectionPoolConfig;
   private connections: any[] = [];
@@ -141,7 +144,7 @@ export class DatabaseConnectionPool {
     if (cacheKey && this.cache.enabled) {
       const cachedResult = this.getCachedResult<T>(cacheKey);
       if (cachedResult !== null) {
-        console.log(`💾 Cache hit for key: ${cacheKey}`);
+        logger.info(`💾 Cache hit for key: ${cacheKey}`);
         return cachedResult;
       }
     }
@@ -182,10 +185,7 @@ export class DatabaseConnectionPool {
         lastError = error;
         this.metrics.failedConnections++;
 
-        console.warn(
-          `Database query failed (attempt ${attempt}/${this.config.maxRetries}):`,
-          error
-        );
+        logger.warn(`Database query failed (attempt ${attempt}/${this.config.maxRetries}):`, error);
 
         if (attempt < this.config.maxRetries) {
           // Exponential backoff for retries
@@ -285,7 +285,7 @@ export class DatabaseConnectionPool {
     this.cache.entries.set(key, entry);
     this.cache.currentMemoryMB += entrySizeMB;
 
-    console.log(`💾 Cached result for key: ${key} (${entrySizeMB.toFixed(2)}MB)`);
+    logger.info(`💾 Cached result for key: ${key} (${entrySizeMB.toFixed(2)}MB)`);
   }
 
   /**
@@ -308,7 +308,7 @@ export class DatabaseConnectionPool {
       this.cache.currentMemoryMB -= entry.size;
     }
 
-    console.log(`🗑️ Evicted ${removeCount} cache entries`);
+    logger.info(`🗑️ Evicted ${removeCount} cache entries`);
   }
 
   /**
@@ -334,7 +334,7 @@ export class DatabaseConnectionPool {
     }
 
     if (invalidatedCount > 0) {
-      console.log(`🗑️ Invalidated ${invalidatedCount} cache entries with pattern: ${pattern}`);
+      logger.info(`🗑️ Invalidated ${invalidatedCount} cache entries with pattern: ${pattern}`);
     }
   }
 
@@ -344,7 +344,7 @@ export class DatabaseConnectionPool {
   clearCache(): void {
     this.cache.entries.clear();
     this.cache.currentMemoryMB = 0;
-    console.log("🗑️ All cache entries cleared");
+    logger.info("🗑️ All cache entries cleared");
   }
 
   // ======================================
@@ -395,13 +395,13 @@ export class DatabaseConnectionPool {
       }
 
       const executionTime = performance.now() - startTime;
-      console.log(
+      logger.info(
         `📦 Batch execution completed: ${operations.length} operations in ${executionTime.toFixed(2)}ms`
       );
 
       return results;
     } catch (error) {
-      console.error("❌ Batch execution failed:", error);
+      logger.error("❌ Batch execution failed:", error);
       throw error;
     }
   }
@@ -459,12 +459,12 @@ export class DatabaseConnectionPool {
         this.metrics.connectionPoolHealth = "healthy";
       }
 
-      console.log(
+      logger.info(
         `💊 Health check completed: ${responseTime.toFixed(2)}ms (${this.metrics.connectionPoolHealth})`
       );
     } catch (error) {
       this.metrics.connectionPoolHealth = "critical";
-      console.error("❌ Health check failed:", error);
+      logger.error("❌ Health check failed:", error);
     }
   }
 
@@ -493,7 +493,7 @@ export class DatabaseConnectionPool {
     }
 
     if (cleanedCount > 0) {
-      console.log(`🧹 Cleaned up ${cleanedCount} expired cache entries`);
+      logger.info(`🧹 Cleaned up ${cleanedCount} expired cache entries`);
     }
   }
 
@@ -588,7 +588,7 @@ export class DatabaseConnectionPool {
     this.cache.ttlMs = this.config.cacheTTLMs;
     this.cache.enabled = this.config.enableQueryResultCaching;
 
-    console.log("⚙️ Connection pool configuration updated");
+    logger.info("⚙️ Connection pool configuration updated");
   }
 
   /**
@@ -604,7 +604,7 @@ export class DatabaseConnectionPool {
     }
 
     this.clearCache();
-    console.log("🔌 Connection pool shutdown completed");
+    logger.info("🔌 Connection pool shutdown completed");
   }
 }
 

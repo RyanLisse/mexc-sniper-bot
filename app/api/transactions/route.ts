@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createLogger } from '../../../src/lib/structured-logger';
 import { db } from "../../../src/db";
 import { transactions, type NewTransaction } from "../../../src/db/schema";
 import { eq, desc, and, gte, lte } from 'drizzle-orm';
@@ -49,6 +50,8 @@ const querySchema = z.object({
 });
 
 // GET /api/transactions - Fetch user transactions
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -139,7 +142,7 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Error fetching transactions:', error);
+    logger.error('Error fetching transactions:', error);
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"
@@ -212,7 +215,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Error creating transaction:', error);
+    logger.error('Error creating transaction:', error);
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"
@@ -258,7 +261,7 @@ export async function PUT(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Error updating transaction:', error);
+    logger.error('Error updating transaction:', error);
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"

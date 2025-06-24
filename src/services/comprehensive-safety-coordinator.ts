@@ -1,15 +1,15 @@
 /**
  * Comprehensive Safety Coordinator - Refactored Entry Point
- * 
+ *
  * This file replaces the original 1417-line monolithic comprehensive-safety-coordinator.ts
  * with a clean module-based architecture for better maintainability.
- * 
+ *
  * ARCHITECTURE:
  * - Modular safety management with single-responsibility components
  * - Clean separation of alerts, emergency management, and core coordination
  * - Preserved all original safety functionality and real-time monitoring
  * - Enhanced type safety with dedicated type modules
- * 
+ *
  * MODULES:
  * - safety-types.ts: All type definitions and interfaces
  * - safety-alerts.ts: Alert management and notification system
@@ -20,35 +20,35 @@ import EventEmitter from "events";
 import { toSafeError } from "../lib/error-type-utils";
 import { createLogger } from "../lib/structured-logger";
 
-// Export all types for backward compatibility
-export type {
-  SafetyCoordinatorConfig,
-  ComprehensiveSafetyStatus,
-  SafetyAlert,
-  EmergencyProcedure,
-  SafetyMetrics,
-  AlertLevel,
-  SafetyCheckResult,
-  EmergencyResponse,
-  SafetyEventData,
-} from "./safety/safety-types";
+export { EmergencyManager } from "./safety/emergency-management";
 
 // Export individual services for advanced usage
 export { SafetyAlertsManager } from "./safety/safety-alerts";
-export { EmergencyManager } from "./safety/emergency-management";
-
-import type {
-  SafetyCoordinatorConfig,
+// Export all types for backward compatibility
+export type {
+  AlertLevel,
   ComprehensiveSafetyStatus,
+  EmergencyProcedure,
+  EmergencyResponse,
   SafetyAlert,
+  SafetyCheckResult,
+  SafetyCoordinatorConfig,
+  SafetyEventData,
   SafetyMetrics,
 } from "./safety/safety-types";
-import { SafetyAlertsManager } from "./safety/safety-alerts";
+
 import { EmergencyManager } from "./safety/emergency-management";
+import { SafetyAlertsManager } from "./safety/safety-alerts";
+import type {
+  ComprehensiveSafetyStatus,
+  SafetyAlert,
+  SafetyCoordinatorConfig,
+  SafetyMetrics,
+} from "./safety/safety-types";
 
 /**
  * Main Comprehensive Safety Coordinator - Refactored Implementation
- * 
+ *
  * Orchestrates all safety modules while maintaining the same public interface
  * for backward compatibility with existing code.
  */
@@ -62,7 +62,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
 
   constructor(config: Partial<SafetyCoordinatorConfig> = {}) {
     super();
-    
+
     this.config = {
       enabled: true,
       alertThresholds: {
@@ -201,7 +201,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
     this.config = { ...this.config, ...updates };
     this.alertsManager.updateConfig(this.config);
     this.emergencyManager.updateConfig(this.config);
-    
+
     this.logger.info("Safety coordinator configuration updated", { updates });
   }
 
@@ -212,12 +212,12 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
     try {
       const alertsHealthy = await this.alertsManager.performHealthCheck();
       const emergencyHealthy = await this.emergencyManager.performHealthCheck();
-      
+
       const isHealthy = alertsHealthy && emergencyHealthy;
-      
+
       this.status.overall = isHealthy ? "healthy" : "degraded";
       this.status.lastCheck = Date.now();
-      
+
       return isHealthy;
     } catch (error) {
       const safeError = toSafeError(error);
@@ -257,22 +257,22 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
 
 /**
  * MIGRATION GUIDE:
- * 
+ *
  * The refactored ComprehensiveSafetyCoordinator maintains full backward compatibility.
  * All existing code should continue to work without changes.
- * 
+ *
  * OLD (monolithic):
  * ```ts
  * import { ComprehensiveSafetyCoordinator } from './comprehensive-safety-coordinator';
  * const coordinator = new ComprehensiveSafetyCoordinator(config);
  * ```
- * 
+ *
  * NEW (modular - same interface):
  * ```ts
  * import { ComprehensiveSafetyCoordinator } from './comprehensive-safety-coordinator';
  * const coordinator = new ComprehensiveSafetyCoordinator(config);
  * ```
- * 
+ *
  * For advanced usage, you can now import individual services:
  * ```ts
  * import { SafetyAlertsManager, EmergencyManager } from './comprehensive-safety-coordinator';

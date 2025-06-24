@@ -354,7 +354,7 @@ export class AlertManagement {
           action.details = "Trading execution successfully halted";
           break;
 
-        case "emergency_close":
+        case "emergency_close": {
           const closedCount = await this.config.executionService.emergencyCloseAll();
           const activePositions = this.config.executionService.getActivePositions();
           action.executed = true;
@@ -367,6 +367,7 @@ export class AlertManagement {
               ? `Closed ${closedCount}/${activePositions.length} positions`
               : "No positions to close";
           break;
+        }
 
         case "reduce_positions":
           // This would implement position size reduction logic

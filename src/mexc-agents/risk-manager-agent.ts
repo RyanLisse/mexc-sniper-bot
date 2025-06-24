@@ -1,3 +1,4 @@
+import { createLogger } from "../lib/structured-logger";
 import type { AgentConfig, AgentResponse } from "./base-agent";
 import { SafetyBaseAgent, type SafetyConfig } from "./safety-base-agent";
 
@@ -50,6 +51,8 @@ export interface TradeRiskAssessment {
 }
 
 export class RiskManagerAgent extends SafetyBaseAgent {
+  private logger = createLogger("risk-manager-agent");
+
   private riskMetrics: RiskMetrics;
   private circuitBreakers: Map<string, CircuitBreaker> = new Map();
   private riskEvents: RiskEvent[] = [];
@@ -324,18 +327,18 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     switch (breaker.action) {
       case "warn":
         // Just emit warning - no trading restrictions
-        console.warn(`[RiskManager] Warning: ${breaker.name} threshold reached`);
+        logger.warn(`[RiskManager] Warning: ${breaker.name} threshold reached`);
         break;
 
       case "halt_new":
         // Halt new trades but allow existing ones to continue
-        console.warn(`[RiskManager] Halting new trades due to: ${breaker.name}`);
+        logger.warn(`[RiskManager] Halting new trades due to: ${breaker.name}`);
         // This would integrate with trading system to prevent new trades
         break;
 
       case "halt_all":
         // Halt all trading activity
-        console.error(`[RiskManager] Halting all trading due to: ${breaker.name}`);
+        logger.error(`[RiskManager] Halting all trading due to: ${breaker.name}`);
         // This would integrate with trading system to halt everything
         break;
 
@@ -476,7 +479,7 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     // 1. Cancel all pending orders
     // 2. Close all positions (if configured)
     // 3. Disable all trading functionality
-    console.error(`[RiskManager] EMERGENCY HALT ACTIVATED: ${reason}`);
+    logger.error(`[RiskManager] EMERGENCY HALT ACTIVATED: ${reason}`);
   }
 
   async deactivateEmergencyHalt(): Promise<void> {

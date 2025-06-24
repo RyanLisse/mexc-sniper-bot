@@ -1,8 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.0.4/schema.json",
   "linter": {
     "enabled": true,
     "rules": {
@@ -13,7 +10,6 @@
         "noExcessiveCognitiveComplexity": "warn"
       },
       "style": {
-        "noVar": "error",
         "useConst": "error",
         "useTemplate": "warn",
         "noUnusedTemplateLiteral": "off",
@@ -24,8 +20,7 @@
       "suspicious": {
         "noExplicitAny": "warn",
         "noDoubleEquals": "error",
-        "noArrayIndexKey": "warn",
-        "noConsoleLog": "off"
+        "noArrayIndexKey": "warn"
       },
       "correctness": {
         "noUnusedVariables": "warn",
@@ -68,8 +63,8 @@
     }
   },
   "files": {
-    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx", "**/*.json"],
-    "ignore": [
+    "includes": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx", "**/*.json"],
+    "experimentalScannerIgnores": [
       "**/node_modules",
       "**/.next",
       "**/dist",

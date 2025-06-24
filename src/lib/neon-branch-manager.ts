@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { createLogger } from "./structured-logger";
 
 /**
  * NeonDB Branch Management Utility
@@ -53,6 +54,8 @@ interface NeonConnectionDetails {
 }
 
 export class NeonBranchManager {
+  private logger = createLogger("neon-branch-manager");
+
   private apiKey: string;
   private projectId: string;
   private baseUrl: string;
@@ -101,7 +104,7 @@ export class NeonBranchManager {
 
       throw new Error("Project ID not found in DATABASE_URL");
     } catch (error) {
-      console.error("Failed to extract project ID:", error);
+      logger.error("Failed to extract project ID:", error);
       throw new Error(
         `Invalid DATABASE_URL format: ${error instanceof Error ? error.message : error}`
       );
@@ -159,7 +162,7 @@ export class NeonBranchManager {
         database_password: project.database_password || "",
       };
     } catch (error) {
-      console.error("Failed to get project info:", error);
+      logger.error("Failed to get project info:", error);
       throw new Error(
         `Failed to get project information: ${error instanceof Error ? error.message : error}`
       );
@@ -183,7 +186,7 @@ export class NeonBranchManager {
     } = options;
 
     try {
-      console.log(`[NeonBranch] Creating test branch: ${name}`);
+      logger.info(`[NeonBranch] Creating test branch: ${name}`);
 
       // Create the branch
       const createResponse = await this.makeRequest<CreateBranchResponse>(
@@ -199,12 +202,12 @@ export class NeonBranchManager {
       );
 
       const branch = createResponse.branch;
-      console.log(`[NeonBranch] Branch created with ID: ${branch.id}`);
+      logger.info(`[NeonBranch] Branch created with ID: ${branch.id}`);
 
       // Wait for endpoint to be ready if requested
       let endpoint = createResponse.endpoints?.[0];
       if (waitForEndpoint && !endpoint) {
-        console.log(`[NeonBranch] Waiting for endpoint to be created...`);
+        logger.info(`[NeonBranch] Waiting for endpoint to be created...`);
         endpoint = await this.waitForEndpoint(branch.id);
       }
 
@@ -229,10 +232,10 @@ export class NeonBranchManager {
       // Track the branch
       this.activeBranches.set(branch.id, neonBranch);
 
-      console.log(`[NeonBranch] Test branch ready: ${name} (${branch.id})`);
+      logger.info(`[NeonBranch] Test branch ready: ${name} (${branch.id})`);
       return neonBranch;
     } catch (error) {
-      console.error(`[NeonBranch] Failed to create test branch:`, error);
+      logger.error(`[NeonBranch] Failed to create test branch:`, error);
       throw new Error(
         `Failed to create test branch: ${error instanceof Error ? error.message : error}`
       );
@@ -268,7 +271,7 @@ export class NeonBranchManager {
 
         await new Promise((resolve) => setTimeout(resolve, checkInterval));
       } catch (error) {
-        console.warn(`[NeonBranch] Error checking endpoint status:`, error);
+        logger.warn(`[NeonBranch] Error checking endpoint status:`, error);
         await new Promise((resolve) => setTimeout(resolve, checkInterval));
       }
     }
@@ -317,7 +320,7 @@ export class NeonBranchManager {
 
       return connectionString;
     } catch (error) {
-      console.error("Failed to generate connection string:", error);
+      logger.error("Failed to generate connection string:", error);
       throw new Error(
         `Failed to generate connection string: ${error instanceof Error ? error.message : error}`
       );
@@ -337,7 +340,7 @@ export class NeonBranchManager {
       // If not in cache, generate it
       return this.generateConnectionString(branchId);
     } catch (error) {
-      console.error(`Failed to get connection string for branch ${branchId}:`, error);
+      logger.error(`Failed to get connection string for branch ${branchId}:`, error);
       throw new Error(
         `Failed to get connection string: ${error instanceof Error ? error.message : error}`
       );
@@ -349,7 +352,7 @@ export class NeonBranchManager {
    */
   async deleteTestBranch(branchId: string): Promise<void> {
     try {
-      console.log(`[NeonBranch] Deleting test branch: ${branchId}`);
+      logger.info(`[NeonBranch] Deleting test branch: ${branchId}`);
 
       await this.makeRequest(`/projects/${this.projectId}/branches/${branchId}`, {
         method: "DELETE",
@@ -358,11 +361,11 @@ export class NeonBranchManager {
       // Remove from tracking
       this.activeBranches.delete(branchId);
 
-      console.log(`[NeonBranch] Test branch deleted: ${branchId}`);
+      logger.info(`[NeonBranch] Test branch deleted: ${branchId}`);
     } catch (error) {
-      console.error(`[NeonBranch] Failed to delete test branch ${branchId}:`, error);
+      logger.error(`[NeonBranch] Failed to delete test branch ${branchId}:`, error);
       // Don't throw here - cleanup should be best effort
-      console.warn(`[NeonBranch] Branch deletion failed, but continuing...`);
+      logger.warn(`[NeonBranch] Branch deletion failed, but continuing...`);
     }
   }
 
@@ -393,7 +396,7 @@ export class NeonBranchManager {
 
       return testBranches;
     } catch (error) {
-      console.error("Failed to list test branches:", error);
+      logger.error("Failed to list test branches:", error);
       throw new Error(
         `Failed to list test branches: ${error instanceof Error ? error.message : error}`
       );
@@ -408,7 +411,7 @@ export class NeonBranchManager {
     pattern = "test-"
   ): Promise<void> {
     try {
-      console.log(
+      logger.info(
         `[NeonBranch] Cleaning up test branches older than ${maxAge / 1000 / 60} minutes`
       );
 
@@ -418,14 +421,14 @@ export class NeonBranchManager {
       for (const branch of testBranches) {
         const age = now - branch.createdAt.getTime();
         if (age > maxAge) {
-          console.log(`[NeonBranch] Cleaning up old branch: ${branch.name} (${branch.id})`);
+          logger.info(`[NeonBranch] Cleaning up old branch: ${branch.name} (${branch.id})`);
           await this.deleteTestBranch(branch.id);
         }
       }
 
-      console.log(`[NeonBranch] Cleanup completed`);
+      logger.info(`[NeonBranch] Cleanup completed`);
     } catch (error) {
-      console.error("Failed to cleanup old test branches:", error);
+      logger.error("Failed to cleanup old test branches:", error);
       // Don't throw - cleanup should be best effort
     }
   }
@@ -434,7 +437,7 @@ export class NeonBranchManager {
    * Cleanup all tracked branches (for test teardown)
    */
   async cleanupAllTrackedBranches(): Promise<void> {
-    console.log(`[NeonBranch] Cleaning up ${this.activeBranches.size} tracked branches`);
+    logger.info(`[NeonBranch] Cleaning up ${this.activeBranches.size} tracked branches`);
 
     const promises = Array.from(this.activeBranches.keys()).map((branchId) =>
       this.deleteTestBranch(branchId)
@@ -443,7 +446,7 @@ export class NeonBranchManager {
     await Promise.allSettled(promises);
     this.activeBranches.clear();
 
-    console.log(`[NeonBranch] All tracked branches cleaned up`);
+    logger.info(`[NeonBranch] All tracked branches cleaned up`);
   }
 
   /**

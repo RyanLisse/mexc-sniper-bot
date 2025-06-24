@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * API Performance Optimizer
  *
  * Phase 3: API Performance Optimization (3h)
@@ -62,6 +63,8 @@ interface CircuitBreakerState {
 }
 
 export class ApiPerformanceOptimizer extends EventEmitter {
+  private logger = createLogger("api-performance-optimizer");
+
   private cache = new Map<string, CacheEntry>();
   private requestQueue: BatchableRequest[] = [];
   private activeRequests = new Set<string>();
@@ -213,7 +216,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
           results[i] = result;
         })
         .catch((error) => {
-          console.error(`Batch request failed:`, error);
+          logger.error(`Batch request failed:`, error);
           results[i] = null as T; // Handle failed requests gracefully
         })
         .finally(() => {
@@ -290,7 +293,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
       this.metrics.circuitBreakerTrips++;
 
       this.emit("circuitBreakerTripped", { endpoint, failures: state.failures });
-      console.warn(`🔌 Circuit breaker opened for ${endpoint} after ${state.failures} failures`);
+      logger.warn(`🔌 Circuit breaker opened for ${endpoint} after ${state.failures} failures`);
     }
   }
 
@@ -477,7 +480,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
       }
 
       if (removedCount > 0) {
-        console.log(`🧹 Cleaned ${removedCount} expired cache entries`);
+        logger.info(`🧹 Cleaned ${removedCount} expired cache entries`);
       }
     }, 60000); // Clean every minute
   }
@@ -555,7 +558,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
 
   clearCache(): void {
     this.cache.clear();
-    console.log("🗑️ API cache cleared");
+    logger.info("🗑️ API cache cleared");
   }
 
   /**
@@ -563,7 +566,7 @@ export class ApiPerformanceOptimizer extends EventEmitter {
    */
   updateConfig(newConfig: Partial<typeof this.config>): void {
     Object.assign(this.config, newConfig);
-    console.log("⚙️ API performance config updated:", newConfig);
+    logger.info("⚙️ API performance config updated:", newConfig);
   }
 
   /**

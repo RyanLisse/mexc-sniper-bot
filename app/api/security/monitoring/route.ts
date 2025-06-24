@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Security Monitoring API Endpoint
  * 
  * Provides access to security monitoring metrics, automated credential rotation,
@@ -14,6 +15,8 @@ import { checkRateLimit, getClientIP } from "../../../../src/lib/rate-limiter";
 // GET /api/security/monitoring
 // Get comprehensive security metrics and status
 // ============================================================================
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   const ip = getClientIP(request);
@@ -80,7 +83,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[SecurityMonitoring API] GET failed:", error);
+    logger.error("[SecurityMonitoring API] GET failed:", { error: error });
     
     return NextResponse.json(
       {
@@ -152,22 +155,22 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case "rotate_credentials":
-        console.log(`[SecurityMonitoring API] User ${user.id} triggered credential rotation`);
+        logger.info(`[SecurityMonitoring API] User ${user.id} triggered credential rotation`);
         result = await securityMonitoring.performAutomatedCredentialRotation();
         break;
 
       case "detect_anomalies":
-        console.log(`[SecurityMonitoring API] User ${user.id} triggered anomaly detection`);
+        logger.info(`[SecurityMonitoring API] User ${user.id} triggered anomaly detection`);
         result = await securityMonitoring.detectSecurityAnomalies();
         break;
 
       case "generate_recommendations":
-        console.log(`[SecurityMonitoring API] User ${user.id} requested security recommendations`);
+        logger.info(`[SecurityMonitoring API] User ${user.id} requested security recommendations`);
         result = await securityMonitoring.generateSecurityRecommendations();
         break;
 
       case "security_assessment":
-        console.log(`[SecurityMonitoring API] User ${user.id} triggered security assessment`);
+        logger.info(`[SecurityMonitoring API] User ${user.id} triggered security assessment`);
         result = {
           metrics: await securityMonitoring.getSecurityMetrics(),
           anomalies: await securityMonitoring.detectSecurityAnomalies(),
@@ -203,7 +206,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[SecurityMonitoring API] POST failed:", error);
+    logger.error("[SecurityMonitoring API] POST failed:", { error: error });
     
     return NextResponse.json(
       {
@@ -273,7 +276,7 @@ export async function PUT(request: NextRequest) {
 
     // For now, just log the configuration update request
     // In a full implementation, this would update monitoring settings
-    console.log(`[SecurityMonitoring API] User ${user.id} updated security settings:`, settings);
+    logger.info(`[SecurityMonitoring API] User ${user.id} updated security settings:`, settings);
 
     return NextResponse.json({
       success: true,
@@ -286,7 +289,7 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[SecurityMonitoring API] PUT failed:", error);
+    logger.error("[SecurityMonitoring API] PUT failed:", { error: error });
     
     return NextResponse.json(
       {

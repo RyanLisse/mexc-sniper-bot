@@ -1,8 +1,8 @@
 import { DATA_CONSTANTS, RISK_CONSTANTS, SYSTEM_CONFIG, TIME_CONSTANTS } from "../../lib/constants";
-import type { BaseAgent } from "../base-agent";
-
 // OpenTelemetry agent instrumentation
 import { instrumentAgentMethod } from "../../lib/opentelemetry-agent-instrumentation";
+import type { BaseAgent } from "../base-agent";
+import { createLogger } from "../lib/structured-logger";
 
 export type AgentStatus = "healthy" | "degraded" | "unhealthy" | "unknown" | "recovering";
 
@@ -120,6 +120,8 @@ export interface AgentRegistryOptions {
  * Centralized registry for managing all agents with comprehensive health monitoring
  */
 export class AgentRegistry {
+  private logger = createLogger("agent-registry");
+
   private agents: Map<string, RegisteredAgent> = new Map();
   private healthCheckInterval: NodeJS.Timeout | null = null;
   private healthCheckIntervalMs = TIME_CONSTANTS.INTERVALS.THIRTY_SECONDS;
@@ -254,7 +256,7 @@ export class AgentRegistry {
     this.agents.set(id, registeredAgent);
     this.healthHistory.set(id, []);
 
-    console.log(`[AgentRegistry] Registered agent: ${id} (${options.name})`);
+    logger.info(`[AgentRegistry] Registered agent: ${id} (${options.name})`);
   }
 
   /**
@@ -274,7 +276,7 @@ export class AgentRegistry {
     this.agents.delete(id);
     this.healthHistory.delete(id);
 
-    console.log(`[AgentRegistry] Unregistered agent: ${id}`);
+    logger.info(`[AgentRegistry] Unregistered agent: ${id}`);
     return true;
   }
 
@@ -461,7 +463,7 @@ export class AgentRegistry {
 
     await Promise.allSettled(healthChecks);
 
-    console.log(`[AgentRegistry] Health check completed for ${agentIds.length} agents`);
+    logger.info(`[AgentRegistry] Health check completed for ${agentIds.length} agents`);
     return results;
   }
 
@@ -470,7 +472,7 @@ export class AgentRegistry {
    */
   startHealthMonitoring(): void {
     if (this.isRunning) {
-      console.warn("[AgentRegistry] Health monitoring is already running");
+      logger.warn("[AgentRegistry] Health monitoring is already running");
       return;
     }
 
@@ -478,7 +480,7 @@ export class AgentRegistry {
 
     // Initial health check
     this.checkAllAgentsHealth().catch((error) => {
-      console.error("[AgentRegistry] Initial health check failed:", error);
+      logger.error("[AgentRegistry] Initial health check failed:", error);
     });
 
     // Set up periodic checks
@@ -486,11 +488,11 @@ export class AgentRegistry {
       try {
         await this.checkAllAgentsHealth();
       } catch (error) {
-        console.error("[AgentRegistry] Periodic health check failed:", error);
+        logger.error("[AgentRegistry] Periodic health check failed:", error);
       }
     }, this.healthCheckIntervalMs);
 
-    console.log(
+    logger.info(
       `[AgentRegistry] Started health monitoring (interval: ${this.healthCheckIntervalMs}ms)`
     );
   }
@@ -503,7 +505,7 @@ export class AgentRegistry {
       clearInterval(this.healthCheckInterval);
       this.healthCheckInterval = null;
       this.isRunning = false;
-      console.log("[AgentRegistry] Stopped health monitoring");
+      logger.info("[AgentRegistry] Stopped health monitoring");
     }
   }
 
@@ -657,19 +659,19 @@ export class AgentRegistry {
   private setupDefaultRecoveryStrategies(): void {
     // Cache clearing strategy
     this.recoveryStrategies.set("clear_cache", async () => {
-      console.log("[AgentRegistry] Executing cache clearing recovery strategy");
+      logger.info("[AgentRegistry] Executing cache clearing recovery strategy");
       return true; // Would implement cache clearing logic
     });
 
     // Restart strategy
     this.recoveryStrategies.set("restart", async () => {
-      console.log("[AgentRegistry] Executing restart recovery strategy");
+      logger.info("[AgentRegistry] Executing restart recovery strategy");
       return true; // Would implement agent restart logic
     });
 
     // Health check retry strategy
     this.recoveryStrategies.set("health_retry", async () => {
-      console.log("[AgentRegistry] Executing health retry recovery strategy");
+      logger.info("[AgentRegistry] Executing health retry recovery strategy");
       return true; // Would implement health check retry logic
     });
   }
@@ -830,7 +832,7 @@ export class AgentRegistry {
     agent.health.recoveryAttempts++;
     agent.health.status = "recovering";
 
-    console.log(
+    logger.info(
       `[AgentRegistry] Attempting recovery for agent ${id} (attempt ${agent.health.recoveryAttempts})`
     );
 
@@ -843,7 +845,7 @@ export class AgentRegistry {
         if (strategy) {
           const success = await strategy();
           if (success) {
-            console.log(
+            logger.info(
               `[AgentRegistry] Recovery successful for agent ${id} using strategy: ${strategyName}`
             );
 
@@ -857,10 +859,10 @@ export class AgentRegistry {
         }
       }
 
-      console.log(`[AgentRegistry] Recovery failed for agent ${id} after trying all strategies`);
+      logger.info(`[AgentRegistry] Recovery failed for agent ${id} after trying all strategies`);
       return false;
     } catch (error) {
-      console.error(`[AgentRegistry] Recovery attempt failed for agent ${id}:`, error);
+      logger.error(`[AgentRegistry] Recovery attempt failed for agent ${id}:`, error);
       return false;
     }
   }
@@ -870,7 +872,7 @@ export class AgentRegistry {
    */
   addRecoveryStrategy(name: string, strategy: () => Promise<boolean>): void {
     this.recoveryStrategies.set(name, strategy);
-    console.log(`[AgentRegistry] Added recovery strategy: ${name}`);
+    logger.info(`[AgentRegistry] Added recovery strategy: ${name}`);
   }
 
   /**
@@ -987,7 +989,7 @@ export class AgentRegistry {
         try {
           agent.instance.destroy();
         } catch (error) {
-          console.warn(`[AgentRegistry] Error destroying agent ${agent.id}:`, error);
+          logger.warn(`[AgentRegistry] Error destroying agent ${agent.id}:`, error);
         }
       }
     }
@@ -1000,7 +1002,7 @@ export class AgentRegistry {
     this.isRunning = false;
     this.healthCheckInterval = null;
 
-    console.log("[AgentRegistry] Registry destroyed");
+    logger.info("[AgentRegistry] Registry destroyed");
   }
 
   /**
@@ -1035,7 +1037,7 @@ export function initializeGlobalAgentRegistry(options?: AgentRegistryOptions): A
     try {
       globalRegistry.destroy();
     } catch (error) {
-      console.warn("[AgentRegistry] Error destroying previous registry:", error);
+      logger.warn("[AgentRegistry] Error destroying previous registry:", error);
     }
   }
   globalRegistry = new AgentRegistry(options);
@@ -1050,7 +1052,7 @@ export function clearGlobalAgentRegistry(): void {
     try {
       globalRegistry.destroy();
     } catch (error) {
-      console.warn("[AgentRegistry] Error destroying global registry:", error);
+      logger.warn("[AgentRegistry] Error destroying global registry:", error);
     }
     globalRegistry = null;
   }

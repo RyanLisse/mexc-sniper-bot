@@ -5,6 +5,7 @@
  * Validates all critical components and provides clear, actionable feedback.
  */
 
+import { createLogger } from "../lib/structured-logger";
 import { environmentValidation } from "./enhanced-environment-validation";
 
 export interface SystemReadinessCheck {
@@ -39,6 +40,8 @@ export interface SystemReadinessResult {
  * System Readiness Validator Service
  */
 export class SystemReadinessValidator {
+  private logger = createLogger("system-readiness-validator");
+
   private static instance: SystemReadinessValidator | null = null;
 
   static getInstance(): SystemReadinessValidator {
@@ -55,7 +58,7 @@ export class SystemReadinessValidator {
     const timestamp = new Date().toISOString();
     const checks: SystemReadinessCheck[] = [];
 
-    console.log("[SystemValidator] Starting comprehensive system validation...");
+    logger.info("[SystemValidator] Starting comprehensive system validation...");
 
     // 1. Environment Configuration Validation
     const envChecks = await this.validateEnvironmentConfiguration();
@@ -113,7 +116,7 @@ export class SystemReadinessValidator {
     const recommendations = this.generateRecommendations(checks);
     const nextSteps = this.generateNextSteps(checks, readyForAutoSniping);
 
-    console.log(
+    logger.info(
       `[SystemValidator] Validation complete. Overall: ${overall}, Score: ${score}%, Auto-sniping ready: ${readyForAutoSniping}`
     );
 
@@ -136,7 +139,7 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log("[SystemValidator] Validating environment configuration...");
+      logger.info("[SystemValidator] Validating environment configuration...");
 
       const validation = environmentValidation.validateEnvironment();
       const healthSummary = environmentValidation.getHealthSummary();
@@ -205,7 +208,7 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log("[SystemValidator] Validating database connection...");
+      logger.info("[SystemValidator] Validating database connection...");
 
       const response = await fetch("/api/health/db");
       const data = await response.json();
@@ -241,7 +244,7 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log("[SystemValidator] Validating MEXC API connectivity...");
+      logger.info("[SystemValidator] Validating MEXC API connectivity...");
 
       const response = await fetch("/api/mexc/connectivity");
       const data = await response.json();
@@ -293,7 +296,7 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log("[SystemValidator] Validating authentication system...");
+      logger.info("[SystemValidator] Validating authentication system...");
 
       const response = await fetch("/api/health/auth");
       const data = await response.json();
@@ -329,7 +332,7 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log("[SystemValidator] Validating critical services...");
+      logger.info("[SystemValidator] Validating critical services...");
 
       const response = await fetch("/api/health/system");
       const data = await response.json();
@@ -365,7 +368,7 @@ export class SystemReadinessValidator {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.log("[SystemValidator] Validating auto-sniping configuration...");
+      logger.info("[SystemValidator] Validating auto-sniping configuration...");
 
       // Check if auto-sniping is enabled
       const autoSnipingEnabled = process.env.AUTO_SNIPING_ENABLED === "true";

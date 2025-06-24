@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { tradingAnalytics } from "../../../../src/services/trading-analytics-service";
 import { checkRateLimit, getClientIP } from "../../../../src/lib/rate-limiter";
@@ -61,6 +62,8 @@ const LogEventSchema = z.object({
 // GET /api/analytics/trading
 // Get trading analytics reports and metrics
 // ============================================================================
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   const ip = getClientIP(request);
@@ -208,7 +211,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("[TradingAnalytics API] GET failed:", error);
+    logger.error("[TradingAnalytics API] GET failed:", { error: error });
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -320,7 +323,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[TradingAnalytics API] POST failed:", error);
+    logger.error("[TradingAnalytics API] POST failed:", { error: error });
     
     return NextResponse.json(
       {
@@ -381,7 +384,7 @@ export async function DELETE(request: NextRequest) {
     // Clear analytics data
     tradingAnalytics.clearAnalyticsData();
 
-    console.log(`[TradingAnalytics API] User ${user.id} cleared analytics data`);
+    logger.info(`[TradingAnalytics API] User ${user.id} cleared analytics data`);
 
     return NextResponse.json({
       success: true,
@@ -394,7 +397,7 @@ export async function DELETE(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[TradingAnalytics API] DELETE failed:", error);
+    logger.error("[TradingAnalytics API] DELETE failed:", { error: error });
     
     return NextResponse.json(
       {

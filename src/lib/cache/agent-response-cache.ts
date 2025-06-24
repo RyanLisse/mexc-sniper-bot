@@ -1,6 +1,8 @@
+import { createLogger } from "./structured-logger";
+
 /**
  * Agent Response Cache
- * 
+ *
  * Handles caching of individual agent responses with intelligent TTL calculation,
  * performance tracking, and cache invalidation strategies.
  */
@@ -15,6 +17,8 @@ import type {
 } from "./agent-cache-types";
 
 export class AgentResponseCache {
+  private logger = createLogger("agent-response-cache");
+
   private config: AgentCacheConfig;
 
   constructor(config: AgentCacheConfig) {
@@ -62,7 +66,7 @@ export class AgentResponseCache {
 
       return cachedResponse;
     } catch (error) {
-      console.error(`[AgentResponseCache] Error getting agent response for ${agentId}:`, error);
+      logger.error(`[AgentResponseCache] Error getting agent response for ${agentId}:`, error);
       return null;
     }
   }
@@ -111,9 +115,11 @@ export class AgentResponseCache {
         },
       });
 
-      console.log(`[AgentResponseCache] Cached response for ${agentId} with TTL ${intelligentTTL}ms`);
+      logger.info(
+        `[AgentResponseCache] Cached response for ${agentId} with TTL ${intelligentTTL}ms`
+      );
     } catch (error) {
-      console.error(`[AgentResponseCache] Error caching agent response for ${agentId}:`, error);
+      logger.error(`[AgentResponseCache] Error caching agent response for ${agentId}:`, error);
     }
   }
 
@@ -124,9 +130,10 @@ export class AgentResponseCache {
     try {
       let deletedCount = 0;
 
-      // Get all keys matching the agent response pattern
-      const pattern = criteria.agentId ? `agent:${criteria.agentId}:*` : "agent:*";
-      const keys = await globalCacheManager.getKeys(pattern);
+      // Get all keys and filter for agent response pattern
+      const pattern = criteria.agentId ? `agent:${criteria.agentId}:` : "agent:";
+      const allKeys = globalCacheManager.getCacheKeys();
+      const keys = allKeys.filter((key) => key.startsWith(pattern));
 
       for (const key of keys) {
         let shouldDelete = false;
@@ -149,9 +156,7 @@ export class AgentResponseCache {
         if (criteria.tags && criteria.tags.length > 0 && !shouldDelete) {
           const cached = await globalCacheManager.get<AgentResponse>(key);
           if (cached?.metadata?.tags) {
-            const hasMatchingTag = criteria.tags.some(tag => 
-              cached.metadata.tags?.includes(tag)
-            );
+            const hasMatchingTag = criteria.tags.some((tag) => cached.metadata.tags?.includes(tag));
             shouldDelete = hasMatchingTag;
           }
         }
@@ -167,10 +172,10 @@ export class AgentResponseCache {
         }
       }
 
-      console.log(`[AgentResponseCache] Invalidated ${deletedCount} agent responses`);
+      logger.info(`[AgentResponseCache] Invalidated ${deletedCount} agent responses`);
       return deletedCount;
     } catch (error) {
-      console.error("[AgentResponseCache] Error invalidating agent responses:", error);
+      logger.error("[AgentResponseCache] Error invalidating agent responses:", error);
       return 0;
     }
   }
@@ -211,7 +216,7 @@ export class AgentResponseCache {
     try {
       const pattern = `agent:${agentId}:*`;
       const keys = await globalCacheManager.getKeys(pattern);
-      
+
       let totalSize = 0;
       let oldestEntry = Date.now();
       let newestEntry = 0;
@@ -220,11 +225,11 @@ export class AgentResponseCache {
         const cached = await globalCacheManager.get<AgentResponse>(key);
         if (cached) {
           totalSize += JSON.stringify(cached).length;
-          
-          const timestamp = cached.metadata?.timestamp 
+
+          const timestamp = cached.metadata?.timestamp
             ? new Date(cached.metadata.timestamp).getTime()
             : Date.now();
-            
+
           oldestEntry = Math.min(oldestEntry, timestamp);
           newestEntry = Math.max(newestEntry, timestamp);
         }
@@ -238,7 +243,7 @@ export class AgentResponseCache {
         newestEntry,
       };
     } catch (error) {
-      console.error(`[AgentResponseCache] Error getting cache stats for ${agentId}:`, error);
+      logger.error(`[AgentResponseCache] Error getting cache stats for ${agentId}:`, error);
       return {
         totalKeys: 0,
         hitRate: 0,
@@ -252,11 +257,7 @@ export class AgentResponseCache {
   /**
    * Generate cache key for agent response
    */
-  generateAgentCacheKey(
-    agentId: string,
-    input: string,
-    context?: Record<string, unknown>
-  ): string {
+  generateAgentCacheKey(agentId: string, input: string, context?: Record<string, unknown>): string {
     const contextHash = context ? generateCacheKey(JSON.stringify(context)) : "";
     const inputHash = generateCacheKey(input);
     return `agent:${agentId}:${inputHash}${contextHash ? `:${contextHash}` : ""}`;
@@ -309,7 +310,7 @@ export class AgentResponseCache {
 
     // Ensure minimum and maximum TTL bounds
     const finalTTL = Math.max(1000, Math.min(baseTTL * multiplier, 3600000)); // 1s to 1hr
-    
+
     return Math.round(finalTTL);
   }
 
@@ -331,10 +332,9 @@ export class AgentResponseCache {
 
     // Factor in response time (if available)
     if (response.metadata?.responseTime) {
-      const responseTime = typeof response.metadata.responseTime === 'number' 
-        ? response.metadata.responseTime 
-        : 0;
-      
+      const responseTime =
+        typeof response.metadata.responseTime === "number" ? response.metadata.responseTime : 0;
+
       if (responseTime < 1000) {
         score += 0.1; // Fast responses get bonus
       } else if (responseTime > 5000) {
@@ -352,9 +352,9 @@ export class AgentResponseCache {
   private async incrementHitCount(cacheKey: string): Promise<number> {
     try {
       const hitCountKey = `${cacheKey}:hits`;
-      const currentHits = await globalCacheManager.get<number>(hitCountKey) || 0;
+      const currentHits = (await globalCacheManager.get<number>(hitCountKey)) || 0;
       const newHits = currentHits + 1;
-      
+
       await globalCacheManager.set(hitCountKey, newHits, {
         type: "counter",
         ttl: 86400000, // 24 hours
@@ -362,7 +362,7 @@ export class AgentResponseCache {
 
       return newHits;
     } catch (error) {
-      console.error(`[AgentResponseCache] Error incrementing hit count for ${cacheKey}:`, error);
+      logger.error(`[AgentResponseCache] Error incrementing hit count for ${cacheKey}:`, error);
       return 1;
     }
   }
@@ -374,17 +374,17 @@ export class AgentResponseCache {
     try {
       const pattern = `agent:${agentId}:*`;
       const keys = await globalCacheManager.getKeys(pattern);
-      
+
       let deletedCount = 0;
       for (const key of keys) {
         await globalCacheManager.delete(key);
         deletedCount++;
       }
 
-      console.log(`[AgentResponseCache] Cleared ${deletedCount} entries for agent ${agentId}`);
+      logger.info(`[AgentResponseCache] Cleared ${deletedCount} entries for agent ${agentId}`);
       return deletedCount;
     } catch (error) {
-      console.error(`[AgentResponseCache] Error clearing cache for agent ${agentId}:`, error);
+      logger.error(`[AgentResponseCache] Error clearing cache for agent ${agentId}:`, error);
       return 0;
     }
   }

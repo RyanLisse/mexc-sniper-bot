@@ -4,8 +4,8 @@
  * Displays profit/loss information with appropriate styling
  */
 
-import type { ExecutionPosition } from "@/src/services/auto-sniping-execution-service";
 import { TrendingDown, TrendingUp } from "lucide-react";
+import type { ExecutionPosition } from "@/src/services/auto-sniping-execution-service";
 
 interface PnLIndicatorProps {
   position: ExecutionPosition;

@@ -14,6 +14,7 @@
  */
 
 import { EventEmitter } from "events";
+import { createLogger } from "../lib/structured-logger";
 import type {
   AgentErrorMessage,
   AgentHealthMessage,
@@ -67,6 +68,8 @@ interface WorkflowTracker {
 // ======================
 
 class RealTimeDataStreamer extends EventEmitter {
+  private logger = createLogger("websocket-agent-bridge");
+
   private updateInterval?: NodeJS.Timeout;
   private agentTrackers = new Map<string, AgentStatusTracker>();
   private workflowTrackers = new Map<string, WorkflowTracker>();
@@ -85,7 +88,7 @@ class RealTimeDataStreamer extends EventEmitter {
       this.broadcastWorkflowStatuses();
     }, this.updateIntervalMs);
 
-    console.log("[WebSocket Bridge] Real-time streaming started");
+    logger.info("[WebSocket Bridge] Real-time streaming started");
   }
 
   stop(): void {
@@ -97,7 +100,7 @@ class RealTimeDataStreamer extends EventEmitter {
       this.updateInterval = undefined;
     }
 
-    console.log("[WebSocket Bridge] Real-time streaming stopped");
+    logger.info("[WebSocket Bridge] Real-time streaming stopped");
   }
 
   updateAgentStatus(agentId: string, agentType: string, metrics: any): void {
@@ -526,7 +529,7 @@ export class WebSocketAgentBridge extends EventEmitter {
   ): Promise<void> {
     if (this.isInitialized) return;
 
-    console.log("[WebSocket Bridge] Initializing...");
+    logger.info("[WebSocket Bridge] Initializing...");
 
     this.orchestrator = orchestrator;
     this.agentRegistry = agentRegistry;
@@ -538,13 +541,13 @@ export class WebSocketAgentBridge extends EventEmitter {
     this.setupWebSocketHandlers();
 
     this.isInitialized = true;
-    console.log("[WebSocket Bridge] Initialization complete");
+    logger.info("[WebSocket Bridge] Initialization complete");
   }
 
   start(): void {
     if (!this.isInitialized || this._isRunning) return;
 
-    console.log("[WebSocket Bridge] Starting real-time communication...");
+    logger.info("[WebSocket Bridge] Starting real-time communication...");
 
     this.dataStreamer.start();
     this._isRunning = true;
@@ -552,19 +555,19 @@ export class WebSocketAgentBridge extends EventEmitter {
     // Start periodic agent health broadcasts
     this.startHealthBroadcasts();
 
-    console.log("[WebSocket Bridge] Real-time communication started");
+    logger.info("[WebSocket Bridge] Real-time communication started");
     this.emit("started");
   }
 
   stop(): void {
     if (!this._isRunning) return;
 
-    console.log("[WebSocket Bridge] Stopping real-time communication...");
+    logger.info("[WebSocket Bridge] Stopping real-time communication...");
 
     this.dataStreamer.stop();
     this._isRunning = false;
 
-    console.log("[WebSocket Bridge] Real-time communication stopped");
+    logger.info("[WebSocket Bridge] Real-time communication stopped");
     this.emit("stopped");
   }
 
@@ -789,7 +792,7 @@ export class WebSocketAgentBridge extends EventEmitter {
 
   private async handleWorkflowExecutionRequest(data: any): Promise<void> {
     if (!this.orchestrator) {
-      console.error("[WebSocket Bridge] Orchestrator not available for workflow execution");
+      logger.error("[WebSocket Bridge] Orchestrator not available for workflow execution");
       return;
     }
 
@@ -829,7 +832,7 @@ export class WebSocketAgentBridge extends EventEmitter {
         },
       });
     } catch (error) {
-      console.error("[WebSocket Bridge] Workflow execution failed:", error);
+      logger.error("[WebSocket Bridge] Workflow execution failed:", error);
 
       webSocketServer.broadcast({
         type: "agent:workflow",
@@ -874,7 +877,7 @@ export class WebSocketAgentBridge extends EventEmitter {
         data: healthMessage,
       });
     } catch (error) {
-      console.error("[WebSocket Bridge] Failed to broadcast health status:", error);
+      logger.error("[WebSocket Bridge] Failed to broadcast health status:", error);
     }
   }
 

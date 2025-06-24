@@ -1,3 +1,5 @@
+import { createLogger } from "./structured-logger";
+
 /**
  * Memory Leak Optimizer
  *
@@ -37,6 +39,8 @@ interface LeakDetectionConfig {
 }
 
 export class MemoryLeakDetector {
+  private logger = createLogger("memory-leak-optimizer");
+
   private static instance: MemoryLeakDetector;
   private config: LeakDetectionConfig = {
     checkInterval: 30000, // 30 seconds
@@ -69,7 +73,7 @@ export class MemoryLeakDetector {
       this.performMemoryCheck();
     }, this.config.checkInterval);
 
-    console.log("🔍 Memory leak detection started");
+    logger.info("🔍 Memory leak detection started");
   }
 
   stopMonitoring(): void {
@@ -77,7 +81,7 @@ export class MemoryLeakDetector {
       clearInterval(this.checkInterval);
       this.checkInterval = undefined;
     }
-    console.log("🔍 Memory leak detection stopped");
+    logger.info("🔍 Memory leak detection stopped");
   }
 
   private performMemoryCheck(): void {
@@ -101,7 +105,7 @@ export class MemoryLeakDetector {
 
     // Check for memory leaks
     if (stats.heapUsagePercent > this.config.alertThreshold * 100) {
-      console.warn("⚠️ High memory usage detected:", {
+      logger.warn("⚠️ High memory usage detected:", {
         usedMB: Math.round(stats.usedJSHeapSize / 1024 / 1024),
         limitMB: Math.round(stats.jsHeapSizeLimit / 1024 / 1024),
         usagePercent: Math.round(stats.heapUsagePercent),
@@ -122,7 +126,7 @@ export class MemoryLeakDetector {
 
       if (trend > 0.1) {
         // Memory growing by more than 10% over recent samples
-        console.warn("📈 Memory leak suspected - increasing usage trend detected");
+        logger.warn("📈 Memory leak suspected - increasing usage trend detected");
         this.analyzeLeakSources();
       }
     }
@@ -146,27 +150,27 @@ export class MemoryLeakDetector {
       webSockets: this.webSockets.size,
     };
 
-    console.log("🔍 Memory leak analysis:", analysis);
+    logger.info("🔍 Memory leak analysis:", analysis);
 
     // Suggest specific actions
     if (analysis.eventListeners > 50) {
-      console.warn("Too many event listeners - check for proper cleanup in useEffect");
+      logger.warn("Too many event listeners - check for proper cleanup in useEffect");
     }
     if (analysis.timers > 10) {
-      console.warn("Too many active timers - ensure setTimeout cleanup");
+      logger.warn("Too many active timers - ensure setTimeout cleanup");
     }
     if (analysis.intervals > 5) {
-      console.warn("Too many active intervals - ensure setInterval cleanup");
+      logger.warn("Too many active intervals - ensure setInterval cleanup");
     }
     if (analysis.webSockets > 3) {
-      console.warn("Too many WebSocket connections - check for proper disconnection");
+      logger.warn("Too many WebSocket connections - check for proper disconnection");
     }
   }
 
   private suggestCleanup(): void {
     // Force garbage collection if available (Chrome DevTools)
     if ((window as any).gc) {
-      console.log("🗑️ Forcing garbage collection");
+      logger.info("🗑️ Forcing garbage collection");
       (window as any).gc();
     }
 
@@ -268,7 +272,7 @@ export class MemoryLeakDetector {
 
   // Emergency cleanup
   forceCleanup(): void {
-    console.log("🚨 Performing emergency memory cleanup");
+    logger.info("🚨 Performing emergency memory cleanup");
 
     // Clear all tracked resources
     this.timers.forEach((timer) => clearTimeout(timer));
@@ -288,7 +292,7 @@ export class MemoryLeakDetector {
     // Clear memory history
     this.memoryHistory = [];
 
-    console.log("✅ Emergency cleanup completed");
+    logger.info("✅ Emergency cleanup completed");
   }
 }
 
@@ -443,7 +447,7 @@ export function createMemoryOptimizedWebSocket(
 
       readyState = ws.readyState;
     } catch (error) {
-      console.error("WebSocket connection failed:", error);
+      logger.error("WebSocket connection failed:", error);
       readyState = WebSocket.CLOSED;
     }
   };
@@ -452,7 +456,7 @@ export function createMemoryOptimizedWebSocket(
     if (webSocket?.readyState === WebSocket.OPEN) {
       webSocket.send(data);
     } else {
-      console.warn("WebSocket not connected, message not sent");
+      logger.warn("WebSocket not connected, message not sent");
     }
   };
 
@@ -601,7 +605,7 @@ export const memoryManager = {
       }
     });
 
-    console.log("⚡ Performance optimization completed");
+    logger.info("⚡ Performance optimization completed");
   },
 
   isElementVisible(element: HTMLElement): boolean {
@@ -618,7 +622,7 @@ export const memoryManager = {
   logMemoryUsage() {
     const stats = this.getStats();
     if (stats) {
-      console.log("📊 Memory Usage:", {
+      logger.info("📊 Memory Usage:", {
         used: `${Math.round(stats.usedJSHeapSize / 1024 / 1024)}MB`,
         total: `${Math.round(stats.totalJSHeapSize / 1024 / 1024)}MB`,
         limit: `${Math.round(stats.jsHeapSizeLimit / 1024 / 1024)}MB`,
@@ -637,7 +641,7 @@ export const memoryManager = {
         this.logMemoryUsage();
       }, 60000);
 
-      console.log("🔍 Development memory monitoring enabled");
+      logger.info("🔍 Development memory monitoring enabled");
     }
   },
 };

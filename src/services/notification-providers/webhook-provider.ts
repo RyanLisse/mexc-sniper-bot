@@ -1,4 +1,5 @@
 import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
+import { createLogger } from "../lib/structured-logger";
 import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface WebhookConfig {
@@ -21,6 +22,8 @@ interface WebhookConfig {
 }
 
 export class WebhookProvider implements NotificationProvider {
+  private logger = createLogger("webhook-provider");
+
   getProviderType(): string {
     return "webhook";
   }
@@ -93,7 +96,7 @@ export class WebhookProvider implements NotificationProvider {
           return result; // Return the last failed attempt
         }
       } catch (error) {
-        console.error(`Webhook attempt ${attempt} failed:`, error);
+        logger.error(`Webhook attempt ${attempt} failed:`, error);
 
         if (attempt >= maxRetries) {
           return {
@@ -126,7 +129,7 @@ export class WebhookProvider implements NotificationProvider {
       // For production, you would make an actual HTTP request
       // For now, we'll simulate the webhook call
 
-      console.log("Sending webhook:", {
+      logger.info("Sending webhook:", {
         url: config.url,
         method,
         headers,
@@ -158,7 +161,7 @@ export class WebhookProvider implements NotificationProvider {
         response: { simulated: true },
       };
     } catch (error) {
-      console.error("Webhook request failed:", error);
+      logger.error("Webhook request failed:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown webhook error",
@@ -286,7 +289,7 @@ export class WebhookProvider implements NotificationProvider {
     try {
       return JSON.parse(processedTemplate);
     } catch (error) {
-      console.error("Failed to parse custom payload template:", error);
+      logger.error("Failed to parse custom payload template:", error);
       return this.buildStandardPayload(alert, message);
     }
   }

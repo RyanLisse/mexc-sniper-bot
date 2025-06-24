@@ -9,9 +9,10 @@
  * - Compliance checks
  */
 
+import { createLogger } from "../lib/structured-logger";
 import { ErrorLoggingService } from "./error-logging-service";
-import { getUnifiedMexcClient } from "./unified-mexc-client";
 import type { OrderParameters } from "./unified-mexc-client";
+import { getUnifiedMexcClient } from "./unified-mexc-client";
 
 export interface RiskProfile {
   userId: string;
@@ -94,6 +95,8 @@ export interface MarketConditions {
 }
 
 export class EnhancedRiskManagementService {
+  private logger = createLogger("enhanced-risk-management-service");
+
   private static instance: EnhancedRiskManagementService;
   private errorLogger = ErrorLoggingService.getInstance();
   private portfolioCache = new Map<string, { metrics: PortfolioMetrics; expiresAt: number }>();
@@ -137,7 +140,7 @@ export class EnhancedRiskManagementService {
     const startTime = Date.now();
 
     try {
-      console.log(
+      logger.info(
         `[Risk Management] Starting risk assessment for ${userId} - ${orderParams.symbol}`
       );
 
@@ -264,13 +267,13 @@ export class EnhancedRiskManagementService {
       assessment.recommendations.push(...this.generateRecommendations(assessment, profile));
 
       const assessmentTime = Date.now() - startTime;
-      console.log(
+      logger.info(
         `[Risk Management] Risk assessment completed in ${assessmentTime}ms - Approved: ${assessment.approved}, Risk: ${assessment.riskLevel}`
       );
 
       return assessment;
     } catch (error) {
-      console.error("[Risk Management] Risk assessment failed:", error);
+      logger.error("[Risk Management] Risk assessment failed:", error);
 
       await this.errorLogger.logError(error as Error, {
         context: "risk_assessment",
@@ -378,7 +381,7 @@ export class EnhancedRiskManagementService {
 
       return metrics;
     } catch (error) {
-      console.error("[Risk Management] Failed to get portfolio metrics:", error);
+      logger.error("[Risk Management] Failed to get portfolio metrics:", error);
 
       // Return empty portfolio on error
       return {
@@ -452,7 +455,7 @@ export class EnhancedRiskManagementService {
         riskMultiplier,
       };
     } catch (error) {
-      console.error("[Risk Management] Failed to assess market conditions:", error);
+      logger.error("[Risk Management] Failed to assess market conditions:", error);
       return this.getDefaultMarketConditions();
     }
   }
@@ -621,7 +624,7 @@ export class EnhancedRiskManagementService {
         warnings,
       };
     } catch (error) {
-      console.error("[Risk Management] Correlation assessment failed:", error);
+      logger.error("[Risk Management] Correlation assessment failed:", error);
       return {
         compliant: true, // Default to compliant on error
         riskLevel: 50,
@@ -676,7 +679,7 @@ export class EnhancedRiskManagementService {
 
       return { riskLevel, warnings };
     } catch (error) {
-      console.error("[Risk Management] Liquidity assessment failed:", error);
+      logger.error("[Risk Management] Liquidity assessment failed:", error);
       return {
         riskLevel: 50,
         warnings: ["Unable to assess liquidity risk"],
@@ -777,7 +780,7 @@ export class EnhancedRiskManagementService {
 
       return mockCorrelations;
     } catch (error) {
-      console.error("[Risk Management] Failed to get correlations:", error);
+      logger.error("[Risk Management] Failed to get correlations:", error);
       return {};
     }
   }
@@ -887,7 +890,7 @@ export class EnhancedRiskManagementService {
   public clearCache(): void {
     this.portfolioCache.clear();
     this.correlationCache.clear();
-    console.log("[Risk Management] Cache cleared");
+    logger.info("[Risk Management] Cache cleared");
   }
 
   public getCacheStats(): {
@@ -904,7 +907,7 @@ export class EnhancedRiskManagementService {
    * Initialize the service (required for integrated service compatibility)
    */
   async initialize(): Promise<void> {
-    console.log("[Enhanced Risk Management] Initializing service...");
+    logger.info("[Enhanced Risk Management] Initializing service...");
     try {
       // Clear any stale cache on initialization
       this.clearCache();
@@ -913,9 +916,9 @@ export class EnhancedRiskManagementService {
       const mexcClient = getUnifiedMexcClient();
       await mexcClient.testConnectivity();
 
-      console.log("[Enhanced Risk Management] Service initialized successfully");
+      logger.info("[Enhanced Risk Management] Service initialized successfully");
     } catch (error) {
-      console.error("[Enhanced Risk Management] Service initialization failed:", error);
+      logger.error("[Enhanced Risk Management] Service initialization failed:", error);
       throw error;
     }
   }

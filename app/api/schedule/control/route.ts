@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { inngest } from "../../../../src/inngest/client";
+
+const logger = createLogger('route');
 
 export async function POST(request: NextRequest) {
   try {
@@ -145,7 +148,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Schedule control error:', error);
+    logger.error('Schedule control error:', error);
     return NextResponse.json(
       {
         success: false,

@@ -11,43 +11,40 @@
  * Bundle Impact: 25KB savings, 40% size reduction
  */
 
+// Date arithmetic
+export { addDays } from "date-fns/addDays";
+export { addHours } from "date-fns/addHours";
+export { addMinutes } from "date-fns/addMinutes";
+export { addMonths } from "date-fns/addMonths";
+export { addWeeks } from "date-fns/addWeeks";
+export { endOfDay } from "date-fns/endOfDay";
+export { endOfMonth } from "date-fns/endOfMonth";
+export { endOfWeek } from "date-fns/endOfWeek";
 // Core date formatting functions
 export { format } from "date-fns/format";
 export { formatDistance } from "date-fns/formatDistance";
 export { formatDistanceToNow } from "date-fns/formatDistanceToNow";
 export { formatRelative } from "date-fns/formatRelative";
-
-// Date parsing and validation
-export { parseISO } from "date-fns/parseISO";
-export { isValid } from "date-fns/isValid";
-export { parse } from "date-fns/parse";
-
-// Date arithmetic
-export { addDays } from "date-fns/addDays";
-export { addHours } from "date-fns/addHours";
-export { addMinutes } from "date-fns/addMinutes";
-export { addWeeks } from "date-fns/addWeeks";
-export { addMonths } from "date-fns/addMonths";
-export { subDays } from "date-fns/subDays";
-export { subHours } from "date-fns/subHours";
-export { subMinutes } from "date-fns/subMinutes";
-
+export { isAfter } from "date-fns/isAfter";
 // Date comparison
 export { isBefore } from "date-fns/isBefore";
-export { isAfter } from "date-fns/isAfter";
 export { isSameDay } from "date-fns/isSameDay";
 export { isSameHour } from "date-fns/isSameHour";
 export { isToday } from "date-fns/isToday";
 export { isTomorrow } from "date-fns/isTomorrow";
+export { isValid } from "date-fns/isValid";
 export { isYesterday } from "date-fns/isYesterday";
+export { parse } from "date-fns/parse";
+// Date parsing and validation
+export { parseISO } from "date-fns/parseISO";
 
 // Date manipulation
 export { startOfDay } from "date-fns/startOfDay";
-export { endOfDay } from "date-fns/endOfDay";
-export { startOfWeek } from "date-fns/startOfWeek";
-export { endOfWeek } from "date-fns/endOfWeek";
 export { startOfMonth } from "date-fns/startOfMonth";
-export { endOfMonth } from "date-fns/endOfMonth";
+export { startOfWeek } from "date-fns/startOfWeek";
+export { subDays } from "date-fns/subDays";
+export { subHours } from "date-fns/subHours";
+export { subMinutes } from "date-fns/subMinutes";
 
 // Time zone utilities (if needed) - removed for now to avoid dependencies
 

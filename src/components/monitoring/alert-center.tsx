@@ -1,34 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Activity,
   AlertCircle,
@@ -61,7 +32,37 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateChartCellKey, generateListKey, useSkeletonItems } from "../../lib/react-utilities";
+import { createLogger } from "../lib/structured-logger";
 
 interface Alert {
   id: string;
@@ -120,6 +121,8 @@ interface AlertTrends {
   }>;
   recommendations: string[];
 }
+
+const logger = createLogger("alert-center");
 
 export function AlertCenter() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -232,7 +235,7 @@ export function AlertCenter() {
           });
         }
       } catch (err) {
-        console.error("Error parsing real-time alert data:", err);
+        logger.error("Error parsing real-time alert data:", err);
       }
     };
 
@@ -302,7 +305,7 @@ export function AlertCenter() {
         );
       }
     } catch (err) {
-      console.error("Failed to acknowledge alert:", err);
+      logger.error("Failed to acknowledge alert:", err);
     }
   };
 
@@ -337,7 +340,7 @@ export function AlertCenter() {
         setSelectedAlerts(new Set());
       }
     } catch (err) {
-      console.error("Failed to bulk acknowledge alerts:", err);
+      logger.error("Failed to bulk acknowledge alerts:", err);
     }
   };
 
@@ -358,7 +361,7 @@ export function AlertCenter() {
         setAlerts((prev) => prev.filter((alert) => alert.id !== alertId));
       }
     } catch (err) {
-      console.error("Failed to dismiss alert:", err);
+      logger.error("Failed to dismiss alert:", err);
     }
   };
 

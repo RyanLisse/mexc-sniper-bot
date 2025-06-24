@@ -1,17 +1,17 @@
 import type { NextRequest } from "next/server";
 import {
-  HTTP_STATUS,
   apiResponse,
   createErrorResponse,
   createSuccessResponse,
+  HTTP_STATUS,
 } from "../../../../lib/api-response";
 import { authenticatedRoute } from "../../../../lib/auth-decorators";
 import { createLogger } from "../../../../lib/structured-logger";
-import { RealTimeSafetyMonitoringService } from "../../../../services/real-time-safety-monitoring-modules";
 import type {
   SafetyConfiguration,
   SafetyThresholds,
 } from "../../../../schemas/safety-monitoring-schemas";
+import { RealTimeSafetyMonitoringService } from "../../../../services/real-time-safety-monitoring-modules";
 
 const logger = createLogger("safety-monitoring-api");
 

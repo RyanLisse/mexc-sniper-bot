@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../lib/structured-logger';
  * Stress Testing & Validation Module
  *
  * Provides stress testing, scenario analysis, and risk validation functionality
@@ -69,6 +70,8 @@ export interface PortfolioRiskCalculation {
 }
 
 export class StressTestingValidation {
+  private logger = createLogger("stress-testing-validation");
+
   constructor(private config: StressTestingConfig) {}
 
   /**
@@ -144,7 +147,7 @@ export class StressTestingValidation {
     try {
       const position = this.config.positions.get(symbol);
       if (!position) {
-        console.warn(`[StressTestingValidation] Position ${symbol} not found for risk update`);
+        logger.warn(`[StressTestingValidation] Position ${symbol} not found for risk update`);
         return;
       }
 
@@ -158,11 +161,11 @@ export class StressTestingValidation {
       position.size = riskData.positionSize * riskData.currentPrice;
       position.maxDrawdown = Math.max(position.maxDrawdown, drawdown);
 
-      console.log(
+      logger.info(
         `[StressTestingValidation] Position risk updated for ${symbol}: ${drawdown.toFixed(2)}% drawdown`
       );
     } catch (error) {
-      console.error("[StressTestingValidation] Position risk update failed:", error);
+      logger.error("[StressTestingValidation] Position risk update failed:", error);
     }
   }
 
@@ -267,7 +270,7 @@ export class StressTestingValidation {
         emergencyActionsTriggered,
       };
     } catch (error) {
-      console.error("[StressTestingValidation] Stress test failed:", error);
+      logger.error("[StressTestingValidation] Stress test failed:", error);
       return {
         portfolioSurvival: false,
         maxDrawdown: 100,

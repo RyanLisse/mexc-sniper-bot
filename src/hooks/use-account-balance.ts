@@ -52,7 +52,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
 
       if (!data.success) {
         // For auth errors, return empty data instead of throwing
-        if (data.error?.includes('401') || data.error?.includes('403')) {
+        if (data.error?.includes("401") || data.error?.includes("403")) {
           return {
             balances: [],
             totalUsdtValue: 0,
@@ -81,8 +81,8 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
     }, // Prevent loading flicker
     retry: (failureCount, error) => {
       // Don't retry auth errors
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
       return failureCount < 2;

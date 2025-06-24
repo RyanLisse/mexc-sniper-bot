@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../../src/db";
 import { AlertConfigurationService } from "../../../../../src/lib/alert-configuration";
@@ -12,12 +13,14 @@ const notificationService = new NotificationService(db);
 // ==========================================
 // POST /api/alerts/deploy/built-in - Deploy built-in alert rules and channels
 // ==========================================
+const logger = createLogger('route');
+
 export async function POST(request: NextRequest) {
   try {
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
-    console.log("Deploying built-in alert rules and notification channels...");
+    logger.info("Deploying built-in alert rules and notification channels...");
 
     // Deploy built-in alert rules
     const deployedRules = await alertConfigService.deployBuiltInRules(user.id);
@@ -36,7 +39,7 @@ export async function POST(request: NextRequest) {
       },
     }, { status: 201 });
   } catch (error) {
-    console.error("Error deploying built-in alerting configuration:", error);
+    logger.error("Error deploying built-in alerting configuration:", { error: error });
     return handleApiError(error);
   }
 }
@@ -71,9 +74,9 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
       createdBy
     );
     deployedChannels.push(emailChannelId);
-    console.log("Deployed critical email channel");
+    logger.info("Deployed critical email channel");
   } catch (error) {
-    console.warn("Failed to deploy critical email channel:", error);
+    logger.warn("Failed to deploy critical email channel:", { error: error });
   }
 
   // Example Slack Channel for General Alerts
@@ -99,9 +102,9 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
         createdBy
       );
       deployedChannels.push(slackChannelId);
-      console.log("Deployed Slack channel");
+      logger.info("Deployed Slack channel");
     } catch (error) {
-      console.warn("Failed to deploy Slack channel:", error);
+      logger.warn("Failed to deploy Slack channel:", { error: error });
     }
   }
 
@@ -135,9 +138,9 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
         createdBy
       );
       deployedChannels.push(webhookChannelId);
-      console.log("Deployed webhook channel");
+      logger.info("Deployed webhook channel");
     } catch (error) {
-      console.warn("Failed to deploy webhook channel:", error);
+      logger.warn("Failed to deploy webhook channel:", { error: error });
     }
   }
 
@@ -166,9 +169,9 @@ async function deployExampleNotificationChannels(createdBy: string): Promise<str
         createdBy
       );
       deployedChannels.push(smsChannelId);
-      console.log("Deployed SMS channel");
+      logger.info("Deployed SMS channel");
     } catch (error) {
-      console.warn("Failed to deploy SMS channel:", error);
+      logger.warn("Failed to deploy SMS channel:", { error: error });
     }
   }
 

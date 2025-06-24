@@ -110,14 +110,14 @@ async function testMexcCredentials() {
       process.exit(1);
     }
 
-    const balances = accountResult.data || [];
-    const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
+    const balances = Array.isArray(accountResult.data?.balances) ? accountResult.data.balances : [];
+    const totalUsdtValue = balances.reduce((sum: number, balance: any) => sum + (balance.usdtValue || 0), 0);
     console.log("✅ Authentication successful!");
-    console.log(`   Found ${balances?.length || 0} assets with balances`);
-    console.log(`   Total value: ${totalUsdtValue?.toFixed(2) || '0.00'} USDT`);
+    console.log(`   Found ${balances.length || 0} assets with balances`);
+    console.log(`   Total value: ${totalUsdtValue.toFixed(2) || '0.00'} USDT`);
 
     // Test 5: Display some balance details (if any)
-    if (balances && balances.length > 0) {
+    if (Array.isArray(balances) && balances.length > 0) {
       console.log("\n💰 Account Balance Summary:");
       const topBalances = balances
         .filter(b => parseFloat(b.free) > 0 || parseFloat(b.locked) > 0)

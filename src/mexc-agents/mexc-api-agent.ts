@@ -1,5 +1,6 @@
+import { createLogger } from "../lib/structured-logger";
 import type { SymbolV2Entry } from "../schemas/mexc-schemas";
-import { type ServiceResponse, getRecommendedMexcService } from "../services/mexc-unified-exports";
+import { getRecommendedMexcService, type ServiceResponse } from "../services/mexc-unified-exports";
 import type { CalendarEntry, SymbolEntry } from "../services/unified-mexc-client";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
@@ -56,6 +57,8 @@ export interface MexcCalendarEntry {
 }
 
 export class MexcApiAgent extends BaseAgent {
+  private logger = createLogger("mexc-api-agent");
+
   private mexcService = getRecommendedMexcService();
 
   constructor() {
@@ -244,7 +247,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
 
   // Enhanced method to call unified MEXC service with built-in retry logic and monitoring
   async callMexcApi(endpoint: string, params?: MexcApiParams): Promise<unknown> {
-    console.log(`[MexcApiAgent] Calling MEXC API via service layer: ${endpoint}`, { params });
+    logger.info(`[MexcApiAgent] Calling MEXC API via service layer: ${endpoint}`, { params });
 
     try {
       let serviceResponse: ServiceResponse<unknown>;
@@ -253,29 +256,29 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
       switch (endpoint) {
         case "/api/v3/etf/calendar":
         case "/calendar":
-          console.log(`[MexcApiAgent] Fetching calendar data via service layer`);
+          logger.info(`[MexcApiAgent] Fetching calendar data via service layer`);
           serviceResponse = await this.mexcService.getCalendarListings();
           break;
 
         case "/api/v3/etf/symbols":
         case "/symbols": {
-          console.log(`[MexcApiAgent] Fetching symbols data via service layer`);
+          logger.info(`[MexcApiAgent] Fetching symbols data via service layer`);
           serviceResponse = await this.mexcService.getSymbolsData();
           break;
         }
 
         case "/market-overview":
-          console.log(`[MexcApiAgent] Fetching market overview via service layer`);
+          logger.info(`[MexcApiAgent] Fetching market overview via service layer`);
           serviceResponse = await this.mexcService.getMarketOverview();
           break;
 
         case "/account/balances":
-          console.log(`[MexcApiAgent] Fetching account balances via service layer`);
+          logger.info(`[MexcApiAgent] Fetching account balances via service layer`);
           serviceResponse = await this.mexcService.getAccountBalances();
           break;
 
         case "/health": {
-          console.log(`[MexcApiAgent] Performing health check via service layer`);
+          logger.info(`[MexcApiAgent] Performing health check via service layer`);
           const healthResult = await this.mexcService.performHealthCheck();
           serviceResponse = {
             success: healthResult.healthy,
@@ -286,7 +289,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
         }
 
         default:
-          console.warn(`[MexcApiAgent] Unknown endpoint: ${endpoint}, using fallback`);
+          logger.warn(`[MexcApiAgent] Unknown endpoint: ${endpoint}, using fallback`);
           serviceResponse = {
             success: false,
             data: null,
@@ -299,13 +302,13 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
       // Add AI analysis to the response
       const enhancedResponse = await this.enhanceServiceResponseWithAI(serviceResponse, endpoint);
 
-      console.log(
+      logger.info(
         `[MexcApiAgent] Service call successful: ${endpoint} - Success: ${serviceResponse.success}`
       );
       return enhancedResponse;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error(`[MexcApiAgent] Service call failed for endpoint: ${endpoint}:`, errorMessage);
+      logger.error(`[MexcApiAgent] Service call failed for endpoint: ${endpoint}:`, errorMessage);
 
       return {
         success: false,
@@ -339,9 +342,9 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
 
     // Check for expected structure
     return (
-      response.hasOwnProperty("success") &&
-      response.hasOwnProperty("data") &&
-      response.hasOwnProperty("timestamp")
+      Object.hasOwn(response, "success") &&
+      Object.hasOwn(response, "data") &&
+      Object.hasOwn(response, "timestamp")
     );
   }
 
@@ -404,7 +407,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
         },
       };
     } catch (error) {
-      console.warn(`[MexcApiAgent] AI analysis failed, returning raw response:`, error);
+      logger.warn(`[MexcApiAgent] AI analysis failed, returning raw response:`, error);
       return serviceResponse; // Return original response if AI analysis fails
     }
   }
@@ -442,7 +445,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
         },
       };
     } catch (error) {
-      console.warn(`[MexcApiAgent] AI analysis failed, returning raw response:`, error);
+      logger.warn(`[MexcApiAgent] AI analysis failed, returning raw response:`, error);
       return apiResponse; // Return original response if AI analysis fails
     }
   }
@@ -575,7 +578,7 @@ Provide actionable insights for service quality improvement and reliability enha
   // Enhanced pattern detection using service layer
   async detectReadyStatePatterns(_vcoinIds?: string[]): Promise<AgentResponse> {
     try {
-      console.log(`[MexcApiAgent] Detecting ready state patterns via service layer`);
+      logger.info(`[MexcApiAgent] Detecting ready state patterns via service layer`);
 
       // Use service layer for pattern detection
       const patternResponse = await this.mexcService.detectReadyStatePatterns();
@@ -659,7 +662,7 @@ Focus on actionable trading signals with performance-aware recommendations.
         },
       };
     } catch (error) {
-      console.error(`[MexcApiAgent] Enhanced pattern detection failed:`, error);
+      logger.error(`[MexcApiAgent] Enhanced pattern detection failed:`, error);
       return {
         content: `Enhanced pattern detection failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         metadata: {
@@ -687,7 +690,7 @@ Focus on actionable trading signals with performance-aware recommendations.
   // Get specific symbols by their vcoinIds using service layer
   async getSymbolsByVcoinIds(vcoinIds: string[]): Promise<AgentResponse> {
     try {
-      console.log(`[MexcApiAgent] Fetching symbols for vcoinIds via service layer:`, vcoinIds);
+      logger.info(`[MexcApiAgent] Fetching symbols for vcoinIds via service layer:`, vcoinIds);
 
       const serviceResponse = await this.mexcService.getSymbolsForVcoins(vcoinIds);
 
@@ -718,7 +721,7 @@ Focus on actionable trading signals with performance-aware recommendations.
         },
       };
     } catch (error) {
-      console.error(`[MexcApiAgent] Error fetching symbols by vcoinIds:`, error);
+      logger.error(`[MexcApiAgent] Error fetching symbols by vcoinIds:`, error);
       return {
         content: `Failed to fetch symbols: ${error instanceof Error ? error.message : "Unknown error"}`,
         metadata: {
@@ -734,7 +737,7 @@ Focus on actionable trading signals with performance-aware recommendations.
   // Get comprehensive service status and metrics
   async getServiceStatus(): Promise<AgentResponse> {
     try {
-      console.log(`[MexcApiAgent] Getting comprehensive service status`);
+      logger.info(`[MexcApiAgent] Getting comprehensive service status`);
 
       const [healthCheck, metrics, cacheStats, circuitBreakerStatus] = await Promise.allSettled([
         this.mexcService.performHealthCheck(),
@@ -802,7 +805,7 @@ Focus on actionable operational insights and performance optimization recommenda
         },
       };
     } catch (error) {
-      console.error(`[MexcApiAgent] Service status analysis failed:`, error);
+      logger.error(`[MexcApiAgent] Service status analysis failed:`, error);
       return {
         content: `Service status analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         metadata: {
@@ -819,9 +822,7 @@ Focus on actionable operational insights and performance optimization recommenda
   private async directMexcApiCall(endpoint: string, _params?: MexcApiParams): Promise<unknown> {
     try {
       // Note: This method is for fallback and should use the service layer instead
-      console.log(
-        `[MexcApiAgent] Direct API call fallback used for: ${endpoint}`
-      );
+      logger.info(`[MexcApiAgent] Direct API call fallback used for: ${endpoint}`);
 
       // Use public MEXC endpoints that don't require authentication
       let apiUrl: string;
@@ -853,7 +854,7 @@ Focus on actionable operational insights and performance optimization recommenda
         `Direct API call not supported for endpoint: ${endpoint}. Use service layer instead.`
       );
     } catch (error) {
-      console.error(`[MexcApiAgent] Direct API call failed:`, error);
+      logger.error(`[MexcApiAgent] Direct API call failed:`, error);
       throw error;
     }
   }

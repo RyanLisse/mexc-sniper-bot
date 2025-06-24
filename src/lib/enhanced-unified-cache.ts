@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Enhanced Unified Cache System with Redis/Valkey Integration
  *
  * Phase 2 Implementation: Redis/Valkey Caching & Performance Enhancement
@@ -13,9 +14,9 @@
  */
 
 import {
+  getRedisCacheService,
   type RedisCacheConfig,
   type RedisCacheService,
-  getRedisCacheService,
 } from "./redis-cache-service";
 import {
   type CacheConfig,
@@ -85,6 +86,8 @@ export interface CachePerformanceMetrics {
 // ============================================================================
 
 export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
+  private logger = createLogger("enhanced-unified-cache");
+
   private redisCache: RedisCacheService;
   private enhancedConfig: EnhancedCacheConfig;
   private performanceMetrics: CachePerformanceMetrics;
@@ -273,7 +276,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
       this.updateOverallMetrics();
       return null;
     } catch (error) {
-      console.error("[EnhancedUnifiedCache] Get operation failed:", error);
+      logger.error("[EnhancedUnifiedCache] Get operation failed:", error);
       return null;
     }
   }
@@ -306,7 +309,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
 
       this.updateEnhancedResponseTime("overall", Date.now() - startTime);
     } catch (error) {
-      console.error("[EnhancedUnifiedCache] Set operation failed:", error);
+      logger.error("[EnhancedUnifiedCache] Set operation failed:", error);
     }
   }
 
@@ -368,7 +371,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
 
       return results;
     } catch (error) {
-      console.error("[EnhancedUnifiedCache] Batch get operation failed:", error);
+      logger.error("[EnhancedUnifiedCache] Batch get operation failed:", error);
       return results;
     }
   }
@@ -427,7 +430,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
 
       this.updateEnhancedResponseTime("overall", Date.now() - startTime);
     } catch (error) {
-      console.error("[EnhancedUnifiedCache] Batch set operation failed:", error);
+      logger.error("[EnhancedUnifiedCache] Batch set operation failed:", error);
     }
   }
 
@@ -491,7 +494,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
       // Update overall metrics
       this.updateOverallMetrics();
     } catch (error) {
-      console.error("[EnhancedUnifiedCache] Performance metrics collection failed:", error);
+      logger.error("[EnhancedUnifiedCache] Performance metrics collection failed:", error);
     }
   }
 
@@ -554,12 +557,12 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
     // Add default warming strategies for MEXC data
     this.addWarmupStrategy("mexc-symbols", async () => {
       // This would be implemented to warm up frequently accessed symbol data
-      console.log("[EnhancedUnifiedCache] Warming up MEXC symbols cache");
+      logger.info("[EnhancedUnifiedCache] Warming up MEXC symbols cache");
     });
 
     this.addWarmupStrategy("pattern-data", async () => {
       // This would be implemented to warm up pattern detection data
-      console.log("[EnhancedUnifiedCache] Warming up pattern data cache");
+      logger.info("[EnhancedUnifiedCache] Warming up pattern data cache");
     });
   }
 
@@ -572,7 +575,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
       try {
         await strategy();
       } catch (error) {
-        console.warn(`[EnhancedUnifiedCache] Cache warming failed for ${name}:`, error);
+        logger.warn(`[EnhancedUnifiedCache] Cache warming failed for ${name}:`, error);
       }
     }
   }
@@ -622,7 +625,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
     await this.redisCache.destroy();
     await super.destroy();
 
-    console.log("[EnhancedUnifiedCache] Enhanced unified cache system destroyed");
+    logger.info("[EnhancedUnifiedCache] Enhanced unified cache system destroyed");
   }
 }
 

@@ -9,6 +9,7 @@ import {
   workflowActivity,
   workflowSystemStatus,
 } from "../db/schema";
+import { createLogger } from "../lib/structured-logger";
 import { databaseBreaker } from "./circuit-breaker";
 
 export interface WorkflowMetrics {
@@ -31,6 +32,8 @@ export interface ActivityEntry {
 }
 
 export class WorkflowStatusService {
+  private logger = createLogger("workflow-status-service");
+
   private userId: string;
 
   constructor(userId = "default") {
@@ -56,7 +59,7 @@ export class WorkflowStatusService {
 
             return result.length > 0 ? result[0] : null;
           } catch (error) {
-            console.error(
+            logger.error(
               `[WorkflowStatusService] Failed to get system status (attempt ${attempt}/${maxRetries}):`,
               error
             );
@@ -67,7 +70,7 @@ export class WorkflowStatusService {
 
             // Exponential backoff: wait before retrying
             const delay = baseDelay * 2 ** (attempt - 1);
-            console.log(`[WorkflowStatusService] Retrying in ${delay}ms...`);
+            logger.info(`[WorkflowStatusService] Retrying in ${delay}ms...`);
             await new Promise((resolve) => setTimeout(resolve, delay));
           }
         }
@@ -76,7 +79,7 @@ export class WorkflowStatusService {
       },
       async () => {
         // Fallback when database circuit breaker is open
-        console.warn("[WorkflowStatusService] Database circuit breaker fallback triggered");
+        logger.warn("[WorkflowStatusService] Database circuit breaker fallback triggered");
         return null;
       }
     );
@@ -108,7 +111,7 @@ export class WorkflowStatusService {
         const result = await db.insert(workflowSystemStatus).values(newStatus).returning();
         status = result[0];
       } catch (error) {
-        console.error("[WorkflowStatusService] Failed to create system status:", error);
+        logger.error("[WorkflowStatusService] Failed to create system status:", error);
 
         // Return a fallback status object to prevent total failure
         return {
@@ -252,7 +255,7 @@ export class WorkflowStatusService {
 
       return activities;
     } catch (error) {
-      console.error("[WorkflowStatusService] Failed to get activities:", error);
+      logger.error("[WorkflowStatusService] Failed to get activities:", error);
       return [];
     }
   }
@@ -290,7 +293,7 @@ export class WorkflowStatusService {
         }
       }
     } catch (error) {
-      console.error("[WorkflowStatusService] Failed to cleanup activities:", error);
+      logger.error("[WorkflowStatusService] Failed to cleanup activities:", error);
     }
   }
 

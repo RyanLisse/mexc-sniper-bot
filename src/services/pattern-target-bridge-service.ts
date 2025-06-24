@@ -6,9 +6,9 @@
  * snipe targets in the database for immediate execution by the auto-sniping system.
  */
 
-import { createLogger } from "../lib/structured-logger";
-import { PatternDetectionCore } from "../core/pattern-detection";
 import type { PatternMatch } from "../core/pattern-detection";
+import { PatternDetectionCore } from "../core/pattern-detection";
+import { createLogger } from "../lib/structured-logger";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 export interface PatternEventData {
@@ -75,9 +75,12 @@ export class PatternTargetBridgeService {
     }
 
     // Listen for pattern detection events
-    PatternDetectionCore.getInstance().on("patterns_detected", async (eventData: PatternEventData) => {
-      await this.handlePatternDetectedEvent(eventData, defaultUserId);
-    });
+    PatternDetectionCore.getInstance().on(
+      "patterns_detected",
+      async (eventData: PatternEventData) => {
+        await this.handlePatternDetectedEvent(eventData, defaultUserId);
+      }
+    );
 
     this.isListening = true;
     this.logger.info("Pattern-Target Bridge started - listening for pattern detection events", {

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { AgentMonitoringService } from "../../../../src/services/agent-monitoring-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Get monitoring status and alerts
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
@@ -67,7 +70,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("[API] Monitoring service request failed:", error);
+    logger.error("[API] Monitoring service request failed:", { error: error });
     return NextResponse.json(
       { 
         success: false, 
@@ -138,7 +141,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("[API] Monitoring service action failed:", error);
+    logger.error("[API] Monitoring service action failed:", { error: error });
     return NextResponse.json(
       { 
         success: false, 
@@ -166,7 +169,7 @@ export async function PATCH(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("[API] Monitoring configuration update failed:", error);
+    logger.error("[API] Monitoring configuration update failed:", { error: error });
     return NextResponse.json(
       { 
         success: false, 

@@ -2,6 +2,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { user } from "../db/schema";
+import { createLogger } from "./structured-logger";
 
 export interface KindeUser {
   id: string;
@@ -20,6 +21,8 @@ export interface KindeSession {
 /**
  * Get the current Kinde session
  */
+const logger = createLogger("kinde-auth");
+
 export async function getSession(): Promise<KindeSession> {
   try {
     const { getUser, isAuthenticated } = getKindeServerSession();
@@ -42,7 +45,7 @@ export async function getSession(): Promise<KindeSession> {
       isAuthenticated: true,
     };
   } catch (error) {
-    console.error("Error getting Kinde session:", error);
+    logger.error("Error getting Kinde session:", error);
     return { user: null, isAuthenticated: false };
   }
 }
@@ -71,7 +74,7 @@ export async function syncUserWithDatabase(kindeUser: KindeUser) {
         updatedAt: new Date(),
       });
 
-      console.log(`Created new user: ${kindeUser.email}`);
+      logger.info(`Created new user: ${kindeUser.email}`);
     } else {
       // Update existing user
       await db
@@ -85,12 +88,12 @@ export async function syncUserWithDatabase(kindeUser: KindeUser) {
         })
         .where(eq(user.id, kindeUser.id));
 
-      console.log(`Updated user: ${kindeUser.email}`);
+      logger.info(`Updated user: ${kindeUser.email}`);
     }
 
     return true;
   } catch (error) {
-    console.error("Error syncing user with database:", error);
+    logger.error("Error syncing user with database:", error);
     return false;
   }
 }
@@ -104,7 +107,7 @@ export async function getUserFromDatabase(kindeId: string) {
 
     return users[0] || null;
   } catch (error) {
-    console.error("Error getting user from database:", error);
+    logger.error("Error getting user from database:", error);
     return null;
   }
 }

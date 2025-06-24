@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { db } from "../../../../src/db";
 import { snipeTargets } from "../../../../src/db/schema";
 import { eq } from "drizzle-orm";
+
+const logger = createLogger('route');
 
 export async function PATCH(
   request: NextRequest,
@@ -69,7 +72,7 @@ export async function PATCH(
       message: "Snipe target updated successfully",
     });
   } catch (error) {
-    console.error("❌ Error updating snipe target:", error);
+    logger.error("❌ Error updating snipe target:", { error: error });
     return NextResponse.json(
       {
         success: false,
@@ -118,7 +121,7 @@ export async function GET(
       data: result[0],
     });
   } catch (error) {
-    console.error("❌ Error fetching snipe target:", error);
+    logger.error("❌ Error fetching snipe target:", { error: error });
     return NextResponse.json(
       {
         success: false,
@@ -166,7 +169,7 @@ export async function DELETE(
       message: "Snipe target deleted successfully",
     });
   } catch (error) {
-    console.error("❌ Error deleting snipe target:", error);
+    logger.error("❌ Error deleting snipe target:", { error: error });
     return NextResponse.json(
       {
         success: false,

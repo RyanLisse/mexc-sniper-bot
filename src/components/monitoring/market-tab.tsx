@@ -1,15 +1,15 @@
 /**
  * Market Tab Component
- * 
+ *
  * Displays market analysis including market conditions, sector performance,
  * trading opportunities, correlations, and market trends.
  */
 
+import { TrendingDown, TrendingUp } from "lucide-react";
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { TrendingDown, TrendingUp } from "lucide-react";
-import { memo } from "react";
 import { generateListKey } from "../../lib/react-utilities";
 import type { AnalyticsTabProps } from "../../types/trading-analytics-types";
 
@@ -104,9 +104,7 @@ export const MarketTab = memo(function MarketTab({
                 >
                   <div>
                     <p className="font-medium">{opportunity.symbol}</p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {opportunity.type}
-                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">{opportunity.type}</p>
                   </div>
                   <Badge variant="default">{opportunity.confidence}%</Badge>
                 </div>
@@ -124,9 +122,7 @@ export const MarketTab = memo(function MarketTab({
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>BTC Correlation</span>
-                <span>
-                  {data.marketAnalytics.correlationToMarket.btcCorrelation.toFixed(2)}
-                </span>
+                <span>{data.marketAnalytics.correlationToMarket.btcCorrelation.toFixed(2)}</span>
               </div>
               <Progress value={data.marketAnalytics.correlationToMarket.btcCorrelation * 100} />
             </div>
@@ -134,9 +130,7 @@ export const MarketTab = memo(function MarketTab({
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>ETH Correlation</span>
-                <span>
-                  {data.marketAnalytics.correlationToMarket.ethCorrelation.toFixed(2)}
-                </span>
+                <span>{data.marketAnalytics.correlationToMarket.ethCorrelation.toFixed(2)}</span>
               </div>
               <Progress value={data.marketAnalytics.correlationToMarket.ethCorrelation * 100} />
             </div>
@@ -148,9 +142,7 @@ export const MarketTab = memo(function MarketTab({
                   {data.marketAnalytics.correlationToMarket.overallCorrelation.toFixed(2)}
                 </span>
               </div>
-              <Progress
-                value={data.marketAnalytics.correlationToMarket.overallCorrelation * 100}
-              />
+              <Progress value={data.marketAnalytics.correlationToMarket.overallCorrelation * 100} />
             </div>
           </CardContent>
         </Card>

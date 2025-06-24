@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Unified Configuration Management System
  *
  * Consolidates all configuration patterns across the application into a single,
@@ -325,6 +326,8 @@ export type Configuration = z.infer<typeof ConfigurationSchema>;
  * Provides centralized, type-safe configuration management
  */
 export class ConfigurationManager {
+  private logger = createLogger("unified-configuration-management");
+
   private static instance: ConfigurationManager | null = null;
   private config: Configuration;
   private listeners: Map<string, ((config: Configuration) => void)[]> = new Map();
@@ -542,7 +545,7 @@ export class ConfigurationManager {
     try {
       return ConfigurationSchema.parse(cleanConfig);
     } catch (error) {
-      console.error("Configuration validation failed:", error);
+      logger.error("Configuration validation failed:", error);
       throw new Error("Invalid configuration");
     }
   }
@@ -577,7 +580,7 @@ export class ConfigurationManager {
         try {
           callback(this.config);
         } catch (error) {
-          console.error(`Error in configuration listener '${key}':`, error);
+          logger.error(`Error in configuration listener '${key}':`, error);
         }
       }
     }

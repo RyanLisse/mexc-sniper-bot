@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
 import { db } from "../../../../src/db";
 import { workflowActivity, transactionLocks } from "../../../../src/db/schema";
 import { desc, gte } from "drizzle-orm";
 
 // Server-Sent Events for real-time monitoring
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'all';
@@ -75,7 +78,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (error) {
-    console.error("[Real-time API] Action failed:", error);
+    logger.error("[Real-time API] Action failed:", { error: error });
     return NextResponse.json(
       { error: "Action failed", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
@@ -148,7 +151,7 @@ async function getRealTimeData(type: string) {
         return baseData;
     }
   } catch (error) {
-    console.error("Error fetching real-time data:", error);
+    logger.error("Error fetching real-time data:", { error: error });
     return {
       timestamp,
       error: "Failed to fetch real-time data",
@@ -211,7 +214,7 @@ async function getActiveWorkflows() {
       currentStep: w.level === 'success' ? 'Completed' : `Step ${Math.floor(Math.random() * 5 + 1)}`
     }));
   } catch (error) {
-    console.error("Error fetching active workflows:", error);
+    logger.error("Error fetching active workflows:", { error: error });
     return [];
   }
 }
@@ -238,7 +241,7 @@ async function getTransactionLockStatus() {
       }))
     };
   } catch (error) {
-    console.error("Error fetching transaction locks:", error);
+    logger.error("Error fetching transaction locks:", { error: error });
     return { activeLocks: 0, totalLocks: 0, locks: [] };
   }
 }
@@ -367,7 +370,7 @@ async function triggerWorkflow(data: any) {
     const { workflowType, parameters } = data;
     
     // Mock workflow trigger - replace with actual implementation
-    console.log(`Triggering workflow: ${workflowType} with parameters:`, parameters);
+    logger.info(`Triggering workflow: ${workflowType} with parameters:`, parameters);
     
     return NextResponse.json({
       success: true,
@@ -387,7 +390,7 @@ async function triggerEmergencyStop(data: any) {
     const { reason, scope } = data;
     
     // Mock emergency stop - replace with actual implementation
-    console.log(`Emergency stop triggered: ${reason}, scope: ${scope}`);
+    logger.info(`Emergency stop triggered: ${reason}, scope: ${scope}`);
     
     return NextResponse.json({
       success: true,
@@ -407,7 +410,7 @@ async function updateAgentConfig(data: any) {
     const { agentName, config } = data;
     
     // Mock config update - replace with actual implementation
-    console.log(`Updating agent config for ${agentName}:`, config);
+    logger.info(`Updating agent config for ${agentName}:`, config);
     
     return NextResponse.json({
       success: true,

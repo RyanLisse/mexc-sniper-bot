@@ -5,12 +5,13 @@
  * Provides real-time system readiness status for auto-sniping functionality.
  */
 
+import { useCallback, useEffect, useState } from "react";
 import { ApiClient } from "@/src/lib/api-client";
+import { createLogger } from "../lib/structured-logger";
 import type {
   ConfigValidationResult,
   SystemReadinessReport,
-} from "@/src/services/mexc-config-validator";
-import { useCallback, useEffect, useState } from "react";
+} from "../services/mexc-config-validator";
 
 interface ConfigValidationState {
   // System readiness
@@ -58,6 +59,8 @@ interface UseConfigValidationOptions {
   loadOnMount?: boolean;
 }
 
+const logger = createLogger("use-config-validation");
+
 export function useConfigValidation(
   options: UseConfigValidationOptions = {}
 ): ConfigValidationState & ConfigValidationActions {
@@ -103,7 +106,7 @@ export function useConfigValidation(
         lastUpdated: new Date().toISOString(),
       }));
     } catch (error) {
-      console.error("[useConfigValidation] Failed to generate readiness report:", error);
+      logger.error("[useConfigValidation] Failed to generate readiness report:", error);
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -140,7 +143,7 @@ export function useConfigValidation(
 
         return validationResult;
       } catch (error) {
-        console.error(`[useConfigValidation] Failed to validate ${component}:`, error);
+        logger.error(`[useConfigValidation] Failed to validate ${component}:`, error);
         setState((prev) => ({
           ...prev,
           isValidating: false,
@@ -175,7 +178,7 @@ export function useConfigValidation(
         lastUpdated: new Date().toISOString(),
       }));
     } catch (error) {
-      console.error("[useConfigValidation] Health check failed:", error);
+      logger.error("[useConfigValidation] Health check failed:", error);
       setState((prev) => ({
         ...prev,
         isValidating: false,

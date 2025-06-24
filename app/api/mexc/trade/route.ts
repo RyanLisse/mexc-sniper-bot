@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { type OrderParameters } from "../../../../src/services/unified-mexc-client";
 import { enhancedRiskManagementService } from "../../../../src/services/enhanced-risk-management-service";
@@ -16,6 +17,8 @@ import { eq, and } from "drizzle-orm";
 import { getEncryptionService } from "../../../../src/services/secure-encryption-service";
 import { getCachedCredentials } from "../../../../src/lib/credential-cache";
 import type { NewExecutionHistory } from "../../../../src/db/schema";
+
+const logger = createLogger('route');
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,19 +70,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`🚀 Trading API: Processing ${side} order for ${symbol}`);
+    logger.info(`🚀 Trading API: Processing ${side} order for ${symbol}`);
 
     // Create resource ID for locking
     const resourceId = `trade:${symbol}:${side}:${snipeTargetId || 'manual'}`;
     
     // Skip lock for certain operations (e.g., emergency sells)
     if (skipLock) {
-      console.log(`⚠️ Skipping lock for ${resourceId} (skipLock=true)`);
+      logger.info(`⚠️ Skipping lock for ${resourceId} (skipLock=true)`);
     } else {
       // Check if resource is already locked
       const lockStatus = await transactionLockService.getLockStatus(resourceId);
       if (lockStatus.isLocked) {
-        console.log(`🔒 Resource ${resourceId} is locked. Queue length: ${lockStatus.queueLength}`);
+        logger.info(`🔒 Resource ${resourceId} is locked. Queue length: ${lockStatus.queueLength}`);
         return apiResponse(
           createErrorResponse("Trade already in progress", {
             message: `Another trade for ${symbol} ${side} is being processed. Queue position: ${lockStatus.queueLength + 1}`,
@@ -108,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     // Enhanced Risk Assessment (if not skipped)
     if (!skipLock) {
-      console.log(`🎯 Risk Assessment: Evaluating trade risk for ${userId} - ${symbol} ${side}`);
+      logger.info(`🎯 Risk Assessment: Evaluating trade risk for ${userId} - ${symbol} ${side}`);
       
       try {
         const riskAssessment = await enhancedRiskManagementService.assessTradingRisk(
@@ -116,7 +119,7 @@ export async function POST(request: NextRequest) {
           orderParams
         );
 
-        console.log(`🎯 Risk Assessment Result:`, {
+        logger.info(`🎯 Risk Assessment Result:`, {
           approved: riskAssessment.approved,
           riskLevel: riskAssessment.riskLevel,
           riskScore: riskAssessment.riskScore,
@@ -145,7 +148,7 @@ export async function POST(request: NextRequest) {
 
         // Log warnings even for approved trades
         if (riskAssessment.warnings.length > 0) {
-          console.warn(`⚠️ Risk Management Warnings for ${symbol}:`, riskAssessment.warnings);
+          logger.warn(`⚠️ Risk Management Warnings for ${symbol}:`, riskAssessment.warnings);
         }
 
         // Add risk metadata to order for tracking
@@ -157,7 +160,7 @@ export async function POST(request: NextRequest) {
         };
 
       } catch (riskError) {
-        console.error(`❌ Risk Assessment Failed for ${symbol}:`, riskError);
+        logger.error(`❌ Risk Assessment Failed for ${symbol}:`, riskError);
         
         // On risk assessment failure, block the trade for safety
         return apiResponse(
@@ -170,7 +173,7 @@ export async function POST(request: NextRequest) {
         );
       }
     } else {
-      console.log(`⚠️ Risk Assessment: Skipped for ${symbol} (skipLock=true)`);
+      logger.info(`⚠️ Risk Assessment: Skipped for ${symbol} (skipLock=true)`);
       
       // Add minimal risk metadata for emergency trades
       (orderParams as any).riskMetadata = {
@@ -254,7 +257,7 @@ export async function POST(request: NextRequest) {
     const orderResult = result as { success: boolean; error?: string; [key: string]: unknown };
 
     if (orderResult.success) {
-      console.log(`✅ Trading order executed successfully:`, orderResult);
+      logger.info(`✅ Trading order executed successfully:`, orderResult);
       
       // Save execution history
       try {
@@ -284,9 +287,9 @@ export async function POST(request: NextRequest) {
         };
 
         await db.insert(executionHistory).values(executionRecord);
-        console.log(`📝 Execution history saved for order ${orderResult.orderId}`);
+        logger.info(`📝 Execution history saved for order ${orderResult.orderId}`);
       } catch (error) {
-        console.error("Failed to save execution history:", error);
+        logger.error("Failed to save execution history:", { error: error });
         // Don't fail the trade response if history save fails
       }
       
@@ -297,7 +300,7 @@ export async function POST(request: NextRequest) {
         HTTP_STATUS.CREATED
       );
     } else {
-      console.error(`❌ Trading order failed:`, orderResult);
+      logger.error(`❌ Trading order failed:`, orderResult);
       
       return apiResponse(
         createErrorResponse(orderResult.error || "Order placement failed", {
@@ -309,7 +312,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("Trading API Error:", error);
+    logger.error("Trading API Error:", { error: error });
     
     return apiResponse(
       createErrorResponse(

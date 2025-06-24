@@ -15,6 +15,7 @@
 
 import { useState } from "react";
 import { useStatus } from "../contexts/status-context";
+import { createLogger } from "../lib/structured-logger";
 import {
   CredentialStatusIndicator,
   NetworkStatusIndicator,
@@ -30,6 +31,8 @@ interface ConsolidatedCredentialStatusProps {
   onCredentialConfigure?: () => void;
   className?: string;
 }
+
+const logger = createLogger("enhanced-credential-status-consolidated");
 
 export function ConsolidatedCredentialStatus({
   variant = "detailed",
@@ -118,7 +121,7 @@ export function ConsolidatedCredentialStatus({
     try {
       await refreshStatus();
     } catch (error) {
-      console.error("Failed to refresh status:", error);
+      logger.error("Failed to refresh status:", error);
     } finally {
       setIsRefreshing(false);
     }
@@ -141,15 +144,14 @@ export function ConsolidatedCredentialStatus({
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
         <StatusTooltip
-          status={overallStatus}
           title="System Status"
           details={`Network: ${networkStatus.connected ? "Connected" : "Disconnected"}, Credentials: ${credentialStatus.isValid ? "Valid" : "Invalid"}`}
         >
-          <UnifiedStatusBadge status={overallStatus} size="sm" />
+          <UnifiedStatusBadge size="sm" />
         </StatusTooltip>
-        <NetworkStatusIndicator status={networkStatus} size="sm" />
-        <CredentialStatusIndicator status={credentialStatus} size="sm" />
-        <TradingStatusIndicator status={tradingStatus} size="sm" />
+        <NetworkStatusIndicator size="sm" />
+        <CredentialStatusIndicator size="sm" />
+        <TradingStatusIndicator size="sm" />
       </div>
     );
   }
@@ -163,7 +165,7 @@ export function ConsolidatedCredentialStatus({
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">System Status</h3>
           <div className="flex items-center space-x-2">
-            <UnifiedStatusBadge status={overallStatus} />
+            <UnifiedStatusBadge />
             <button
               type="button"
               onClick={handleRefresh}
@@ -189,9 +191,9 @@ export function ConsolidatedCredentialStatus({
         </div>
 
         <div className="space-y-3">
-          <NetworkStatusIndicator status={networkStatus} />
-          <CredentialStatusIndicator status={credentialStatus} />
-          <TradingStatusIndicator status={tradingStatus} />
+          <NetworkStatusIndicator />
+          <CredentialStatusIndicator />
+          <TradingStatusIndicator />
 
           {showTimestamp && lastUpdated && (
             <p className="text-sm text-gray-500 dark:text-gray-400">

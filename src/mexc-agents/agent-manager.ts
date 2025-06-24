@@ -1,4 +1,5 @@
 import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "../lib/health-checks";
+import { createLogger } from "../lib/structured-logger";
 import { CalendarAgent } from "./calendar-agent";
 import { ErrorRecoveryAgent } from "./error-recovery-agent";
 import { MexcApiAgent } from "./mexc-api-agent";
@@ -11,6 +12,8 @@ import { StrategyAgent } from "./strategy-agent";
 import { SymbolAnalysisAgent } from "./symbol-analysis-agent";
 
 export class AgentManager {
+  private logger = createLogger("agent-manager");
+
   // Core trading agents
   private mexcApiAgent: MexcApiAgent;
   private patternDiscoveryAgent: PatternDiscoveryAgent;
@@ -153,7 +156,7 @@ export class AgentManager {
         },
       };
     } catch (error) {
-      console.error("[AgentManager] Health check failed:", error);
+      logger.error("[AgentManager] Health check failed:", error);
       return {
         // Core trading agents
         mexcApi: false,
@@ -301,6 +304,6 @@ export class AgentManager {
 
     // Get current system health for monitoring
     const systemHealth = this.errorRecoveryAgent.getSystemHealth();
-    console.log(`[Emergency Mode] System health status:`, systemHealth);
+    logger.info(`[Emergency Mode] System health status:`, systemHealth);
   }
 }

@@ -1,12 +1,13 @@
+import { createLogger } from "../lib/structured-logger";
 import type { AgentManager } from "./agent-manager";
 import {
   type AgentRegistry,
-  type EnhancedMexcOrchestrator,
-  type PerformanceCollector,
-  type WorkflowEngine,
   checkCoordinationSystemHealth,
   createCoordinationSystem,
+  type EnhancedMexcOrchestrator,
+  type PerformanceCollector,
   registerCommonAgents,
+  type WorkflowEngine,
 } from "./coordination";
 import type {
   AgentOrchestrationMetrics,
@@ -35,6 +36,8 @@ export interface CoordinationSystemHealth {
  * Extracted from MexcOrchestrator to follow Single Responsibility Principle
  */
 export class CoordinationSystemManager {
+  private logger = createLogger("coordination-manager");
+
   private coordinationSystem: {
     agentRegistry: AgentRegistry;
     workflowEngine: WorkflowEngine;
@@ -56,7 +59,7 @@ export class CoordinationSystemManager {
     }
 
     try {
-      console.log("[CoordinationSystemManager] Initializing enhanced coordination system...");
+      logger.info("[CoordinationSystemManager] Initializing enhanced coordination system...");
 
       const systemConfig = {
         healthCheckInterval: config.healthCheckInterval ?? 30000, // 30 seconds
@@ -72,11 +75,11 @@ export class CoordinationSystemManager {
 
       this.isEnabled = true;
 
-      console.log(
+      logger.info(
         "[CoordinationSystemManager] Enhanced coordination system initialized successfully"
       );
     } catch (error) {
-      console.error("[CoordinationSystemManager] Failed to initialize coordination system:", error);
+      logger.error("[CoordinationSystemManager] Failed to initialize coordination system:", error);
       throw error;
     }
   }
@@ -192,7 +195,7 @@ export class CoordinationSystemManager {
    */
   async shutdown(): Promise<void> {
     if (!this.isEnabled || !this.coordinationSystem) {
-      console.warn("[CoordinationSystemManager] Enhanced coordination is not enabled");
+      logger.warn("[CoordinationSystemManager] Enhanced coordination is not enabled");
       return;
     }
 
@@ -201,9 +204,9 @@ export class CoordinationSystemManager {
       this.coordinationSystem = null;
       this.isEnabled = false;
 
-      console.log("[CoordinationSystemManager] Enhanced coordination disabled");
+      logger.info("[CoordinationSystemManager] Enhanced coordination disabled");
     } catch (error) {
-      console.error("[CoordinationSystemManager] Error during shutdown:", error);
+      logger.error("[CoordinationSystemManager] Error during shutdown:", error);
       throw error;
     }
   }

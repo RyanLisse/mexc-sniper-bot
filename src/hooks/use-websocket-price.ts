@@ -10,6 +10,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createLogger } from "../lib/structured-logger";
 import { webSocketPriceService } from "../services/websocket-price-service";
 
 interface PriceUpdate {
@@ -40,6 +41,8 @@ interface UseWebSocketPriceOptions {
 /**
  * Hook to subscribe to real-time price updates for a single symbol
  */
+const logger = createLogger("use-websocket-price");
+
 export function useWebSocketPrice(
   symbol: string,
   options: UseWebSocketPriceOptions = {}
@@ -108,12 +111,12 @@ export function useWebSocketPrice(
         setPrice(cachedPrice);
       }
 
-      console.log(`📊 Subscribed to price updates for ${symbol}`);
+      logger.info(`📊 Subscribed to price updates for ${symbol}`);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to subscribe to price updates";
       setError(errorMessage);
-      console.error(`❌ Failed to subscribe to ${symbol}:`, err);
+      logger.error(`❌ Failed to subscribe to ${symbol}:`, err);
 
       // Retry logic
       if (retryOnError && retryCount < maxRetries) {
@@ -135,7 +138,7 @@ export function useWebSocketPrice(
       unsubscribeFn();
       setUnsubscribeFn(null);
       setPrice(null);
-      console.log(`📊 Unsubscribed from price updates for ${symbol}`);
+      logger.info(`📊 Unsubscribed from price updates for ${symbol}`);
     }
   }, [unsubscribeFn, symbol]);
 
@@ -270,12 +273,12 @@ export function useWebSocketPrices(
           setPrices((prev) => new Map(prev).set(symbol, cachedPrice));
         }
 
-        console.log(`📊 Subscribed to price updates for ${symbol}`);
+        logger.info(`📊 Subscribed to price updates for ${symbol}`);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to subscribe to price updates";
         setErrors((prev) => new Map(prev).set(symbol, errorMessage));
-        console.error(`❌ Failed to subscribe to ${symbol}:`, err);
+        logger.error(`❌ Failed to subscribe to ${symbol}:`, err);
 
         // Retry logic
         const currentRetryCount = retryCounts.get(symbol) || 0;
@@ -308,7 +311,7 @@ export function useWebSocketPrices(
           newMap.delete(symbol);
           return newMap;
         });
-        console.log(`📊 Unsubscribed from price updates for ${symbol}`);
+        logger.info(`📊 Unsubscribed from price updates for ${symbol}`);
       }
     },
     [unsubscribeFns]

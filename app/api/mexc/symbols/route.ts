@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { 
   createSuccessResponse, 
@@ -6,6 +7,8 @@ import {
   apiResponse, 
   HTTP_STATUS 
 } from "../../../../src/lib/api-response";
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,7 +44,7 @@ export async function GET(request: NextRequest) {
       })
     );
   } catch (error) {
-    console.error("MEXC symbols fetch failed:", error);
+    logger.error("MEXC symbols fetch failed:", { error: error });
     
     return apiResponse(
       createErrorResponse(

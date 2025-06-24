@@ -1,3 +1,4 @@
+import { createLogger } from "../lib/structured-logger";
 import { MexcOrchestrator } from "../mexc-agents/orchestrator";
 import { inngest } from "./client";
 // Import safety functions
@@ -52,6 +53,8 @@ interface AgentWorkflowResult {
 }
 
 // Type guards for agent results
+const logger = createLogger("functions");
+
 function isAgentWorkflowResult(value: unknown): value is AgentWorkflowResult {
   return (
     typeof value === "object" &&
@@ -88,10 +91,10 @@ async function updateWorkflowStatus(action: string, data: unknown) {
     });
 
     if (!response.ok) {
-      console.warn("Failed to update workflow status:", response.statusText);
+      logger.warn("Failed to update workflow status:", response.statusText);
     }
   } catch (error) {
-    console.warn("Error updating workflow status:", error);
+    logger.warn("Error updating workflow status:", error);
   }
 }
 
@@ -137,7 +140,10 @@ export const pollMexcCalendar = inngest.createFunction(
   async ({
     event,
     step,
-  }: { event: { data: MexcCalendarPollRequestedData }; step: InngestStep }) => {
+  }: {
+    event: { data: MexcCalendarPollRequestedData };
+    step: InngestStep;
+  }) => {
     const { trigger = "manual", force = false } = event.data;
 
     // Update status: Started calendar discovery
@@ -355,7 +361,10 @@ export const analyzeMexcPatterns = inngest.createFunction(
   async ({
     event,
     step,
-  }: { event: { data: MexcPatternAnalysisRequestedData }; step: InngestStep }) => {
+  }: {
+    event: { data: MexcPatternAnalysisRequestedData };
+    step: InngestStep;
+  }) => {
     const { vcoinId, symbols, analysisType = "discovery" } = event.data;
 
     // Update status: Started pattern analysis
@@ -411,7 +420,10 @@ export const createMexcTradingStrategy = inngest.createFunction(
   async ({
     event,
     step,
-  }: { event: { data: MexcTradingStrategyRequestedData }; step: InngestStep }) => {
+  }: {
+    event: { data: MexcTradingStrategyRequestedData };
+    step: InngestStep;
+  }) => {
     const { vcoinId, symbolData, riskLevel = "medium", capital } = event.data;
 
     if (!vcoinId || !symbolData) {

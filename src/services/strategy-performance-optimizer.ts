@@ -1,4 +1,5 @@
 import type { TradingStrategy } from "../db/schemas/strategies";
+import { createLogger } from "../lib/structured-logger";
 
 interface PerformanceMetrics {
   memoryUsage: number;
@@ -15,6 +16,8 @@ interface OptimizationConfig {
 }
 
 export class StrategyPerformanceOptimizer {
+  private logger = createLogger("strategy-performance-optimizer");
+
   private static instance: StrategyPerformanceOptimizer;
   private activeExecutions = new Set<string>();
   private executionCache = new Map<string, any>();
@@ -169,7 +172,7 @@ export class StrategyPerformanceOptimizer {
         estimatedProfit: this.calculateEstimatedProfitOptimized(strategy, currentPrice, levels),
       };
     } catch (error) {
-      console.error(`Error calculating metrics for strategy ${strategy.id}:`, error);
+      logger.error(`Error calculating metrics for strategy ${strategy.id}:`, error);
       return null;
     }
   }
@@ -208,7 +211,7 @@ export class StrategyPerformanceOptimizer {
       const heapUsedMB = memoryUsage.heapUsed / 1024 / 1024;
 
       if (heapUsedMB > this.config.memoryThresholdMB) {
-        console.warn(
+        logger.warn(
           `[Performance] Memory usage high: ${heapUsedMB.toFixed(2)}MB, triggering cleanup`
         );
         await this.performGarbageCollection();
@@ -219,7 +222,7 @@ export class StrategyPerformanceOptimizer {
             10,
             this.config.maxConcurrentExecutions - 5
           );
-          console.warn(
+          logger.warn(
             `[Performance] Reduced concurrent executions to ${this.config.maxConcurrentExecutions}`
           );
         }

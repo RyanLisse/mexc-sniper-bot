@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { createLogger } from "../lib/structured-logger";
 
 interface WorkflowStatus {
   systemStatus: "running" | "stopped" | "error";
@@ -26,6 +27,8 @@ interface UseDashboardStateOptions {
   userId?: string;
 }
 
+const logger = createLogger("use-dashboard-state");
+
 export function useDashboardState(options: UseDashboardStateOptions = {}) {
   const { refreshInterval = 10000, userId: _userId } = options;
 
@@ -51,7 +54,7 @@ export function useDashboardState(options: UseDashboardStateOptions = {}) {
       setWorkflowStatus(data);
       setIsDiscoveryRunning(data.systemStatus === "running");
     } catch (error) {
-      console.error("Failed to fetch workflow status:", error);
+      logger.error("Failed to fetch workflow status:", error);
       setError(error instanceof Error ? error.message : "Unknown error");
     } finally {
       setIsLoading(false);
@@ -96,7 +99,7 @@ export function useDashboardState(options: UseDashboardStateOptions = {}) {
 
       await fetchSystemStatus();
     } catch (error) {
-      console.error("Failed to toggle pattern discovery:", error);
+      logger.error("Failed to toggle pattern discovery:", error);
       setError(error instanceof Error ? error.message : "Failed to toggle discovery");
     } finally {
       setIsLoading(false);
@@ -144,7 +147,7 @@ export function useDashboardState(options: UseDashboardStateOptions = {}) {
 
       await fetchSystemStatus();
     } catch (error) {
-      console.error("Failed to run discovery cycle:", error);
+      logger.error("Failed to run discovery cycle:", error);
       setError(error instanceof Error ? error.message : "Failed to run discovery cycle");
     } finally {
       setIsLoading(false);

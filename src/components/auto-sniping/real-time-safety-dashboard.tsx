@@ -7,6 +7,26 @@
 
 "use client";
 
+import {
+  AlertCircle,
+  AlertTriangle,
+  BarChart3,
+  Bell,
+  BellOff,
+  Gauge,
+  Heart,
+  PlayCircle,
+  RefreshCw,
+  Settings,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldX,
+  Siren,
+  StopCircle,
+  Zap,
+} from "lucide-react";
+import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/src/components/ui/alert";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -30,26 +50,6 @@ import type {
   SafetyAlert,
   SafetyConfiguration,
 } from "@/src/schemas/safety-monitoring-schemas";
-import {
-  AlertCircle,
-  AlertTriangle,
-  BarChart3,
-  Bell,
-  BellOff,
-  Gauge,
-  Heart,
-  PlayCircle,
-  RefreshCw,
-  Settings,
-  Shield,
-  ShieldAlert,
-  ShieldCheck,
-  ShieldX,
-  Siren,
-  StopCircle,
-  Zap,
-} from "lucide-react";
-import { useState } from "react";
 
 interface RealTimeSafetyDashboardProps {
   className?: string;
@@ -514,7 +514,7 @@ function SafetyActionsTab({ recentActions }: { recentActions: SafetyAction[] }) 
                 <div key={action.id} className="border rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Badge variant={getActionVariant(action.result)}>
+                      <Badge variant={getActionVariant(action.result || "pending")}>
                         {action.type.replace("_", " ").toUpperCase()}
                       </Badge>
                       <Badge variant="outline">{action.result?.toUpperCase() || "PENDING"}</Badge>

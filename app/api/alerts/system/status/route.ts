@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../../src/db";
 import { sql } from "drizzle-orm";
@@ -20,6 +21,8 @@ const configService = new AlertConfigurationService(db);
 // ==========================================
 // GET /api/alerts/system/status - Get alerting system status
 // ==========================================
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   try {
     const user = await validateRequest(request);
@@ -105,7 +108,7 @@ export async function GET(request: NextRequest) {
       data: systemStatus,
     });
   } catch (error) {
-    console.error("Error fetching alerting system status:", error);
+    logger.error("Error fetching alerting system status:", { error: error });
     return handleApiError(error);
   }
 }
@@ -161,7 +164,7 @@ async function getRecentAlertCount(hours: number): Promise<number> {
     
     return result[0]?.count || 0;
   } catch (error) {
-    console.error("Error getting recent alert count:", error);
+    logger.error("Error getting recent alert count:", { error: error });
     return 0;
   }
 }
@@ -188,7 +191,7 @@ async function getTopAlertSources(): Promise<Array<{ source: string; count: numb
       count: Number(row.count),
     }));
   } catch (error) {
-    console.error("Error getting top alert sources:", error);
+    logger.error("Error getting top alert sources:", { error: error });
     return [];
   }
 }

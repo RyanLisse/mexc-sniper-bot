@@ -4,45 +4,6 @@
 // This file maintains backward compatibility while providing
 // a modular structure internally.
 
-// Import all table definitions from modular files
-import { account, session, user, userPreferences, verification } from "./schemas/auth";
-
-import {
-  apiCredentials,
-  executionHistory,
-  snipeTargets,
-  transactionLocks,
-  transactionQueue,
-  transactions,
-} from "./schemas/trading";
-
-import {
-  errorIncidents,
-  positionSnapshots,
-  reconciliationReports,
-  riskEvents,
-  simulationSessions,
-  simulationTrades,
-  systemHealthMetrics,
-} from "./schemas/safety";
-
-import {
-  coinActivities,
-  monitoredListings,
-  patternEmbeddings,
-  patternSimilarityCache,
-} from "./schemas/patterns";
-
-import { workflowActivity, workflowSystemStatus } from "./schemas/workflows";
-
-import {
-  agentPerformanceMetrics,
-  performanceAlerts,
-  performanceBaselines,
-  systemPerformanceSnapshots,
-  workflowPerformanceMetrics,
-} from "./schemas/performance";
-
 import {
   alertAnalytics,
   alertCorrelations,
@@ -54,7 +15,30 @@ import {
   escalationPolicies,
   notificationChannels,
 } from "./schemas/alerts";
-
+// Import all table definitions from modular files
+import { account, session, user, userPreferences, verification } from "./schemas/auth";
+import {
+  coinActivities,
+  monitoredListings,
+  patternEmbeddings,
+  patternSimilarityCache,
+} from "./schemas/patterns";
+import {
+  agentPerformanceMetrics,
+  performanceAlerts,
+  performanceBaselines,
+  systemPerformanceSnapshots,
+  workflowPerformanceMetrics,
+} from "./schemas/performance";
+import {
+  errorIncidents,
+  positionSnapshots,
+  reconciliationReports,
+  riskEvents,
+  simulationSessions,
+  simulationTrades,
+  systemHealthMetrics,
+} from "./schemas/safety";
 import {
   strategyConfigBackups,
   strategyPerformanceMetrics,
@@ -62,6 +46,15 @@ import {
   strategyTemplates,
   tradingStrategies,
 } from "./schemas/strategies";
+import {
+  apiCredentials,
+  executionHistory,
+  snipeTargets,
+  transactionLocks,
+  transactionQueue,
+  transactions,
+} from "./schemas/trading";
+import { workflowActivity, workflowSystemStatus } from "./schemas/workflows";
 
 // Export all tables individually for backward compatibility
 export {
@@ -118,15 +111,15 @@ export {
   strategyConfigBackups,
 };
 
+export type * from "./schemas/alerts";
 // Export all types
 export type * from "./schemas/auth";
-export type * from "./schemas/trading";
-export type * from "./schemas/safety";
 export type * from "./schemas/patterns";
-export type * from "./schemas/workflows";
 export type * from "./schemas/performance";
-export type * from "./schemas/alerts";
+export type * from "./schemas/safety";
 export type * from "./schemas/strategies";
+export type * from "./schemas/trading";
+export type * from "./schemas/workflows";
 
 // Create a consolidated schema object for drizzle (required for proper table relationships)
 const allTables = {

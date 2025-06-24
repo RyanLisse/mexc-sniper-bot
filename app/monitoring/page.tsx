@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createLogger } from '../../src/lib/structured-logger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,9 @@ import {
 import { lazy } from "react";
 
 const PatternMonitoringDashboard = lazy(() => 
-  import("@/src/components/auto-sniping/pattern-monitoring-dashboard")
+  import("@/src/components/auto-sniping/pattern-monitoring-dashboard").then((module) => ({
+    default: module.PatternMonitoringDashboard || module.default
+  }))
 );
 import { 
   Activity, 
@@ -139,7 +142,7 @@ export default function MonitoringPage() {
 
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Failed to fetch quick metrics:', error);
+      logger.error('Failed to fetch quick metrics:', error);
       // Set default values on error to prevent undefined states
       setQuickMetrics({
         systemHealth: 0,

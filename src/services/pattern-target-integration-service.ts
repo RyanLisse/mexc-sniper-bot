@@ -275,10 +275,11 @@ export class PatternTargetIntegrationService {
         // Execute immediately for ready state
         return new Date(now.getTime() + 2 * 60 * 1000); // 2 minutes buffer
 
-      case "pre_ready":
+      case "pre_ready": {
         // Execute when pattern is expected to be ready
         const estimatedMinutes = pattern.advanceNoticeHours ? pattern.advanceNoticeHours * 60 : 120;
         return new Date(now.getTime() + estimatedMinutes * 60 * 1000);
+      }
 
       case "launch_sequence":
         // Execute at launch time

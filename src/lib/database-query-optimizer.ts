@@ -1,3 +1,5 @@
+import { createLogger } from "./structured-logger";
+
 /**
  * Database Query Optimizer
  *
@@ -11,10 +13,10 @@
 import { and, asc, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
-  type PatternEmbedding,
-  type SnipeTarget,
   executionHistory,
+  type PatternEmbedding,
   patternEmbeddings,
+  type SnipeTarget,
   snipeTargets,
   transactionLocks,
   transactions,
@@ -44,6 +46,8 @@ interface BatchQueryOperation<T> {
 }
 
 export class DatabaseQueryOptimizer {
+  private logger = createLogger("database-query-optimizer");
+
   private static instance: DatabaseQueryOptimizer;
   private config: QueryOptimizationConfig;
   private queryCache: Map<string, { data: any; timestamp: number }> = new Map();
@@ -613,7 +617,7 @@ export class DatabaseQueryOptimizer {
    */
   clearCache(): void {
     this.queryCache.clear();
-    console.log("🗑️ Query cache cleared");
+    logger.info("🗑️ Query cache cleared");
   }
 }
 

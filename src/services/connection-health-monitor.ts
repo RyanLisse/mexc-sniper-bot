@@ -10,6 +10,7 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
+import { createLogger } from "../lib/structured-logger";
 
 // ============================================================================
 // Types and Interfaces
@@ -71,6 +72,8 @@ export interface ConnectionHealthMonitorConfig {
 // ============================================================================
 
 export class ConnectionHealthMonitor {
+  private logger = createLogger("connection-health-monitor");
+
   private config: ConnectionHealthMonitorConfig;
   private healthChecks: HealthCheckResult[] = [];
   private latencies: number[] = [];
@@ -502,7 +505,7 @@ export class ConnectionHealthMonitor {
       try {
         callback(alert);
       } catch (error) {
-        console.error("Error in alert callback:", error);
+        logger.error("Error in alert callback:", error);
       }
     });
   }

@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Authentication Monitoring Dashboard API
  * 
  * Provides comprehensive monitoring data for authentication system health,
@@ -73,6 +74,8 @@ interface AuthMonitoringData {
 // In-memory storage for demonstration (in production, use Redis or database)
 const monitoringData: MonitoringMetrics[] = [];
 const alerts: AuthMonitoringData['alerts'] = [];
+
+const logger = createLogger('route');
 
 function generateMockMetrics(): AuthMonitoringData {
   const now = new Date();
@@ -240,7 +243,7 @@ auth_requests_per_minute{environment="${monitoringData.environment.name}"} ${mon
     });
     
   } catch (error) {
-    console.error('Monitoring endpoint error:', error);
+    logger.error('Monitoring endpoint error:', error);
     
     return NextResponse.json({
       status: 'critical',

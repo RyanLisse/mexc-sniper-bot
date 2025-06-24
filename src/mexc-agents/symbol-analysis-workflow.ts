@@ -1,10 +1,11 @@
+import { createLogger } from "../lib/structured-logger";
 import {
   type AnalysisResult,
-  type SymbolData,
   combineConfidenceScores,
   extractConfidencePercentage,
   extractLiquidityScore,
   extractReadinessIndicators,
+  type SymbolData,
 } from "./analysis-utils";
 import type { AgentResponse } from "./base-agent";
 
@@ -47,13 +48,15 @@ export interface SymbolAnalysisResult {
 }
 
 export class SymbolAnalysisWorkflow {
+  private logger = createLogger("symbol-analysis-workflow");
+
   async combineSymbolAnalysis(
     readinessAnalysis: AgentResponse,
     patternAnalysis: AgentResponse,
     marketAnalysis: AgentResponse,
     symbolData: SymbolData
   ): Promise<SymbolAnalysisResult> {
-    console.log(`[SymbolAnalysisWorkflow] Combining analysis for ${symbolData.symbol}`);
+    logger.info(`[SymbolAnalysisWorkflow] Combining analysis for ${symbolData.symbol}`);
 
     const readinessInsights = this.extractReadinessInsights(readinessAnalysis);
     const patternInsights = this.extractPatternValidationInsights(patternAnalysis);

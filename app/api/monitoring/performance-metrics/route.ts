@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
 import { AgentManager } from "../../../../src/mexc-agents/agent-manager";
 import { db } from "../../../../src/db";
 import { executionHistory, patternEmbeddings, workflowActivity } from "../../../../src/db/schema";
 import { desc, gte, sql } from "drizzle-orm";
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -159,7 +162,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("[Monitoring API] Performance metrics failed:", error);
+    logger.error("[Monitoring API] Performance metrics failed:", { error: error });
     return NextResponse.json(
       { 
         error: "Failed to fetch performance metrics",
@@ -189,7 +192,7 @@ async function getRecentExecutions() {
       agentUsed: (exec as any).agentId || 'unknown'
     }));
   } catch (error) {
-    console.error("Error fetching recent executions:", error);
+    logger.error("Error fetching recent executions:", { error: error });
     return [];
   }
 }
@@ -221,7 +224,7 @@ async function getPatternAnalyticsMetrics() {
       types: types.map((t: any) => ({ type: t.type, count: t.count }))
     };
   } catch (error) {
-    console.error("Error fetching pattern analytics:", error);
+    logger.error("Error fetching pattern analytics:", { error: error });
     return { total: 0, averageConfidence: 0, successful: 0, types: [] };
   }
 }
@@ -241,7 +244,7 @@ async function getWorkflowMetrics() {
       distribution: distribution.map((d: any) => ({ type: d.workflowType, count: d.count }))
     };
   } catch (error) {
-    console.error("Error fetching workflow metrics:", error);
+    logger.error("Error fetching workflow metrics:", { error: error });
     return { distribution: [] };
   }
 }

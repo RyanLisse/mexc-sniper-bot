@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * OpenTelemetry Service Layer Instrumentation
  *
  * Provides comprehensive instrumentation for key services including
@@ -25,6 +26,8 @@ export interface ServiceSpanOptions {
 /**
  * Decorator for instrumenting service methods
  */
+const logger = createLogger("opentelemetry-service-instrumentation");
+
 export function instrumentServiceMethod(options: ServiceSpanOptions) {
   return (_target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     // Safety check for undefined descriptor
@@ -34,7 +37,7 @@ export function instrumentServiceMethod(options: ServiceSpanOptions) {
         return descriptor;
       }
 
-      console.warn(
+      logger.warn(
         `@instrumentServiceMethod applied to non-method ${propertyKey}, skipping instrumentation`
       );
       return descriptor;

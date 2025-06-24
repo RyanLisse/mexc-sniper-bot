@@ -14,8 +14,9 @@
 
 import { EventEmitter } from "events";
 import WebSocket from "ws";
-import { createCoordinatedMexcWebSocketBreaker } from "./coordinated-circuit-breaker";
+import { createLogger } from "../lib/structured-logger";
 import type { CoordinatedCircuitBreaker } from "./coordinated-circuit-breaker";
+import { createCoordinatedMexcWebSocketBreaker } from "./coordinated-circuit-breaker";
 
 // ============================================================================
 // Enhanced Types for Real-time Trading Data
@@ -82,6 +83,8 @@ export interface WebSocketConnectionHealth {
 // ============================================================================
 
 export class RealTimePatternDetector {
+  private logger = createLogger("enhanced-mexc-websocket-service");
+
   private patternCallbacks = new Map<string, Set<(pattern: RealTimePatternMatch) => void>>();
   private priceHistory = new Map<string, RealTimePriceData[]>();
   private symbolStatuses = new Map<string, RealTimeSymbolStatus>();
@@ -119,7 +122,7 @@ export class RealTimePatternDetector {
 
     // Check for state transitions that indicate pattern formation
     if (previousStatus && this.hasSignificantStatusChange(previousStatus, statusData)) {
-      console.log(`🔍 Pattern formation detected for ${statusData.symbol}:`, {
+      logger.info(`🔍 Pattern formation detected for ${statusData.symbol}:`, {
         previous: { sts: previousStatus.sts, st: previousStatus.st, tt: previousStatus.tt },
         current: { sts: statusData.sts, st: statusData.st, tt: statusData.tt },
       });
@@ -248,7 +251,7 @@ export class RealTimePatternDetector {
         try {
           callback(pattern);
         } catch (error) {
-          console.error("Error in pattern callback:", error);
+          logger.error("Error in pattern callback:", error);
         }
       });
     }
@@ -351,7 +354,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
     this.isConnecting = true;
 
     try {
-      console.log("🔗 Connecting to MEXC WebSocket...");
+      logger.info("🔗 Connecting to MEXC WebSocket...");
 
       // Create WebSocket connection
       this.ws = new WebSocket(this.MEXC_WS_URL);
@@ -389,7 +392,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
    * Disconnect from WebSocket
    */
   disconnect(): void {
-    console.log("🔌 Disconnecting from MEXC WebSocket...");
+    logger.info("🔌 Disconnecting from MEXC WebSocket...");
 
     this.isConnected = false;
     this.isConnecting = false;
@@ -418,7 +421,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
   // ============================================================================
 
   private handleOpen(): void {
-    console.log("✅ Connected to MEXC WebSocket");
+    logger.info("✅ Connected to MEXC WebSocket");
 
     this.isConnected = true;
     this.isConnecting = false;
@@ -454,19 +457,19 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
 
       this.emit("message", message);
     } catch (error) {
-      console.error("❌ Error parsing WebSocket message:", error);
+      logger.error("❌ Error parsing WebSocket message:", error);
       this.connectionHealth.errorCount++;
     }
   }
 
   private handleError(error: Error): void {
-    console.error("❌ WebSocket error:", error);
+    logger.error("❌ WebSocket error:", error);
     this.connectionHealth.errorCount++;
     this.emit("error", error);
   }
 
   private handleClose(code: number, reason: string): void {
-    console.log(`🔌 WebSocket closed: ${code} - ${reason}`);
+    logger.info(`🔌 WebSocket closed: ${code} - ${reason}`);
 
     this.isConnected = false;
     this.isConnecting = false;
@@ -501,7 +504,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
         this.processDepthData(symbol, message.data);
         break;
       default:
-        console.log(`📊 Unhandled stream type: ${streamType}`);
+        logger.info(`📊 Unhandled stream type: ${streamType}`);
     }
   }
 
@@ -527,7 +530,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
     // Emit pattern events
     patterns.forEach((pattern) => {
       this.emit("pattern:detected", pattern);
-      console.log(
+      logger.info(
         `🎯 Pattern detected: ${pattern.patternType} for ${pattern.symbol} (confidence: ${pattern.confidence}%)`
       );
     });
@@ -539,7 +542,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
         try {
           callback(priceData);
         } catch (error) {
-          console.error("Error in price callback:", error);
+          logger.error("Error in price callback:", error);
         }
       });
     }
@@ -554,10 +557,10 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
 
   private handleSubscriptionResponse(message: any): void {
     if (message.error) {
-      console.error("❌ Subscription error:", message.error);
+      logger.error("❌ Subscription error:", message.error);
       this.connectionHealth.errorCount++;
     } else {
-      console.log("✅ Subscription confirmed:", message.result);
+      logger.info("✅ Subscription confirmed:", message.result);
     }
   }
 
@@ -662,7 +665,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
     };
 
     this.ws.send(JSON.stringify(subscription));
-    console.log(`📊 Subscribed to ${symbol}@${type}`);
+    logger.info(`📊 Subscribed to ${symbol}@${type}`);
   }
 
   private sendUnsubscription(symbol: string, type: string): void {
@@ -675,7 +678,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
     };
 
     this.ws.send(JSON.stringify(unsubscription));
-    console.log(`📊 Unsubscribed from ${symbol}@${type}`);
+    logger.info(`📊 Unsubscribed from ${symbol}@${type}`);
   }
 
   private resubscribeAll(): void {
@@ -726,7 +729,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
       const timeSinceLastMessage = now - this.connectionHealth.lastMessageTime;
       if (timeSinceLastMessage > 60000) {
         // No message for 1 minute
-        console.warn("⚠️ No WebSocket messages received for 1 minute");
+        logger.warn("⚠️ No WebSocket messages received for 1 minute");
       }
     }
   }
@@ -735,13 +738,13 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
     this.reconnectAttempts++;
     this.connectionHealth.reconnectCount = this.reconnectAttempts;
 
-    console.log(
+    logger.info(
       `🔄 Scheduling reconnect attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${this.reconnectDelay}ms`
     );
 
     setTimeout(() => {
       this.connect().catch((error) => {
-        console.error("Reconnect failed:", error);
+        logger.error("Reconnect failed:", error);
       });
     }, this.reconnectDelay);
 
@@ -809,7 +812,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
         try {
           callback(statusData);
         } catch (error) {
-          console.error("Error in status callback:", error);
+          logger.error("Error in status callback:", error);
         }
       });
     }
@@ -821,7 +824,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
    * Shutdown the service
    */
   async shutdown(): Promise<void> {
-    console.log("🛑 Shutting down Enhanced MEXC WebSocket Service...");
+    logger.info("🛑 Shutting down Enhanced MEXC WebSocket Service...");
 
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
@@ -830,7 +833,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
 
     this.disconnect();
 
-    console.log("✅ Enhanced MEXC WebSocket Service shutdown complete");
+    logger.info("✅ Enhanced MEXC WebSocket Service shutdown complete");
   }
 }
 

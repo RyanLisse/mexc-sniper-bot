@@ -7,12 +7,13 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StatusProvider } from "../../../contexts/status-context";
 import { SimpleAutoSnipingControl } from "../simple-auto-sniping-control";
 
 // Mock the hooks
-jest.mock("../../../hooks/use-auto-sniping-execution", () => ({
-  useAutoSnipingExecution: jest.fn(() => ({
+vi.mock("../../../hooks/use-auto-sniping-execution", () => ({
+  useAutoSnipingExecution: vi.fn(() => ({
     config: { enabled: true },
     isExecutionActive: false,
     executionStatus: "idle",
@@ -24,24 +25,24 @@ jest.mock("../../../hooks/use-auto-sniping-execution", () => ({
     isStartingExecution: false,
     isStoppingExecution: false,
     error: null,
-    startExecution: jest.fn(),
-    stopExecution: jest.fn(),
-    updateConfig: jest.fn(),
-    refreshData: jest.fn(),
-    clearError: jest.fn(),
+    startExecution: vi.fn(),
+    stopExecution: vi.fn(),
+    updateConfig: vi.fn(),
+    refreshData: vi.fn(),
+    clearError: vi.fn(),
   })),
 }));
 
-jest.mock("../../../contexts/status-context", () => ({
-  ...jest.requireActual("../../../contexts/status-context"),
-  useStatus: jest.fn(() => ({
+vi.mock("../../../contexts/status-context", () => ({
+  ...vi.importActual("../../../contexts/status-context"),
+  useStatus: vi.fn(() => ({
     status: {
       network: { connected: true, lastChecked: new Date().toISOString() },
       credentials: { hasCredentials: true, isValid: true, source: "environment" },
       trading: { canTrade: true, balanceLoaded: true },
     },
-    getOverallStatus: jest.fn(() => "healthy"),
-    refreshAll: jest.fn(),
+    getOverallStatus: vi.fn(() => "healthy"),
+    refreshAll: vi.fn(),
   })),
 }));
 
@@ -62,7 +63,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
 
 describe("SimpleAutoSnipingControl", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("renders the auto-sniping control interface", () => {
@@ -103,11 +104,11 @@ describe("SimpleAutoSnipingControl", () => {
       isStartingExecution: false,
       isStoppingExecution: false,
       error: null,
-      startExecution: jest.fn(),
-      stopExecution: jest.fn(),
-      updateConfig: jest.fn(),
-      refreshData: jest.fn(),
-      clearError: jest.fn(),
+      startExecution: vi.fn(),
+      stopExecution: vi.fn(),
+      updateConfig: vi.fn(),
+      refreshData: vi.fn(),
+      clearError: vi.fn(),
     });
 
     render(
@@ -130,8 +131,8 @@ describe("SimpleAutoSnipingControl", () => {
         credentials: { hasCredentials: false, isValid: false, source: "none" },
         trading: { canTrade: false, balanceLoaded: false },
       },
-      getOverallStatus: jest.fn(() => "warning"),
-      refreshAll: jest.fn(),
+      getOverallStatus: vi.fn(() => "warning"),
+      refreshAll: vi.fn(),
     });
 
     render(
@@ -152,8 +153,8 @@ describe("SimpleAutoSnipingControl", () => {
         credentials: { hasCredentials: true, isValid: true, source: "environment" },
         trading: { canTrade: false, balanceLoaded: false },
       },
-      getOverallStatus: jest.fn(() => "error"),
-      refreshAll: jest.fn(),
+      getOverallStatus: vi.fn(() => "error"),
+      refreshAll: vi.fn(),
     });
 
     render(
@@ -167,9 +168,9 @@ describe("SimpleAutoSnipingControl", () => {
   });
 
   it("allows toggling auto-sniping on and off", async () => {
-    const mockUpdateConfig = jest.fn();
-    const mockStartExecution = jest.fn();
-    const mockStopExecution = jest.fn();
+    const mockUpdateConfig = vi.fn();
+    const mockStartExecution = vi.fn();
+    const mockStopExecution = vi.fn();
 
     const { useAutoSnipingExecution } = require("../../../hooks/use-auto-sniping-execution");
     useAutoSnipingExecution.mockReturnValue({
@@ -187,8 +188,8 @@ describe("SimpleAutoSnipingControl", () => {
       startExecution: mockStartExecution,
       stopExecution: mockStopExecution,
       updateConfig: mockUpdateConfig,
-      refreshData: jest.fn(),
-      clearError: jest.fn(),
+      refreshData: vi.fn(),
+      clearError: vi.fn(),
     });
 
     render(
@@ -222,11 +223,11 @@ describe("SimpleAutoSnipingControl", () => {
       isStartingExecution: false,
       isStoppingExecution: false,
       error: "Failed to connect to MEXC API",
-      startExecution: jest.fn(),
-      stopExecution: jest.fn(),
-      updateConfig: jest.fn(),
-      refreshData: jest.fn(),
-      clearError: jest.fn(),
+      startExecution: vi.fn(),
+      stopExecution: vi.fn(),
+      updateConfig: vi.fn(),
+      refreshData: vi.fn(),
+      clearError: vi.fn(),
     });
 
     render(
@@ -253,11 +254,11 @@ describe("SimpleAutoSnipingControl", () => {
       isStartingExecution: false,
       isStoppingExecution: false,
       error: null,
-      startExecution: jest.fn(),
-      stopExecution: jest.fn(),
-      updateConfig: jest.fn(),
-      refreshData: jest.fn(),
-      clearError: jest.fn(),
+      startExecution: vi.fn(),
+      stopExecution: vi.fn(),
+      updateConfig: vi.fn(),
+      refreshData: vi.fn(),
+      clearError: vi.fn(),
     });
 
     render(
@@ -285,11 +286,11 @@ describe("SimpleAutoSnipingControl", () => {
       isStartingExecution: true,
       isStoppingExecution: false,
       error: null,
-      startExecution: jest.fn(),
-      stopExecution: jest.fn(),
-      updateConfig: jest.fn(),
-      refreshData: jest.fn(),
-      clearError: jest.fn(),
+      startExecution: vi.fn(),
+      stopExecution: vi.fn(),
+      updateConfig: vi.fn(),
+      refreshData: vi.fn(),
+      clearError: vi.fn(),
     });
 
     render(

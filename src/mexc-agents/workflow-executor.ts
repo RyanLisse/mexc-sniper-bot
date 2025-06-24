@@ -1,4 +1,5 @@
 import { toSafeError } from "../lib/error-type-utils";
+import { createLogger } from "../lib/structured-logger";
 import type { CalendarEntry } from "../schemas/mexc-schemas";
 import type { AgentManager } from "./agent-manager";
 import { CalendarWorkflow } from "./calendar-workflow";
@@ -16,6 +17,8 @@ import { SymbolAnalysisWorkflow } from "./symbol-analysis-workflow";
 import { TradingStrategyWorkflow } from "./trading-strategy-workflow";
 
 export class WorkflowExecutor {
+  private logger = createLogger("workflow-executor");
+
   private calendarWorkflow: CalendarWorkflow;
   private symbolAnalysisWorkflow: SymbolAnalysisWorkflow;
   private patternAnalysisWorkflow: PatternAnalysisWorkflow;
@@ -40,17 +43,17 @@ export class WorkflowExecutor {
     const context = this.createExecutionContext("calendar-discovery");
 
     try {
-      console.log(
+      logger.info(
         `[WorkflowExecutor] Starting calendar discovery workflow - trigger: ${request.trigger}`
       );
 
       // Step 1: Fetch calendar data
-      console.log("[WorkflowExecutor] Step 1: Fetching calendar data");
+      logger.info("[WorkflowExecutor] Step 1: Fetching calendar data");
       context.currentStep = "fetch-calendar-data";
       const calendarData = await this.dataFetcher.fetchCalendarData();
 
       // Step 2: AI analysis of calendar data
-      console.log("[WorkflowExecutor] Step 2: AI calendar analysis");
+      logger.info("[WorkflowExecutor] Step 2: AI calendar analysis");
       context.currentStep = "calendar-analysis";
       const calendarEntries = calendarData?.success ? calendarData.data : [];
       const calendarAnalysis = await this.agentManager
@@ -58,14 +61,14 @@ export class WorkflowExecutor {
         .scanForNewListings(calendarEntries as CalendarEntry[]);
 
       // Step 3: Pattern discovery on calendar data
-      console.log("[WorkflowExecutor] Step 3: Pattern discovery analysis");
+      logger.info("[WorkflowExecutor] Step 3: Pattern discovery analysis");
       context.currentStep = "pattern-discovery";
       const patternAnalysis = await this.agentManager
         .getPatternDiscoveryAgent()
         .discoverNewListings(calendarEntries as CalendarEntry[]);
 
       // Step 4: Combine results using calendar workflow
-      console.log("[WorkflowExecutor] Step 4: Combining analysis results");
+      logger.info("[WorkflowExecutor] Step 4: Combining analysis results");
       context.currentStep = "combine-results";
       const combinedAnalysis = await this.calendarWorkflow.analyzeDiscoveryResults(
         calendarAnalysis,
@@ -93,7 +96,7 @@ export class WorkflowExecutor {
         },
       };
     } catch (error) {
-      console.error("[WorkflowExecutor] Calendar discovery workflow failed:", error);
+      logger.error("[WorkflowExecutor] Calendar discovery workflow failed:", error);
       return this.createErrorResult(error, context.agentsUsed);
     }
   }
@@ -104,15 +107,15 @@ export class WorkflowExecutor {
     const context = this.createExecutionContext("symbol-analysis");
 
     try {
-      console.log(`[WorkflowExecutor] Starting symbol analysis workflow for: ${request.vcoinId}`);
+      logger.info(`[WorkflowExecutor] Starting symbol analysis workflow for: ${request.vcoinId}`);
 
       // Step 1: Fetch symbol data
-      console.log(`[WorkflowExecutor] Step 1: Fetching symbol data for: ${request.vcoinId}`);
+      logger.info(`[WorkflowExecutor] Step 1: Fetching symbol data for: ${request.vcoinId}`);
       context.currentStep = "fetch-symbol-data";
       const symbolData = await this.dataFetcher.fetchSymbolData(request.vcoinId);
 
       // Step 2: Multi-agent analysis
-      console.log("[WorkflowExecutor] Step 2: Multi-agent analysis");
+      logger.info("[WorkflowExecutor] Step 2: Multi-agent analysis");
       context.currentStep = "multi-agent-analysis";
       const [readinessAnalysis, patternAnalysis, marketAnalysis] = await Promise.all([
         this.agentManager
@@ -138,7 +141,7 @@ export class WorkflowExecutor {
       ]);
 
       // Step 3: Combine analysis
-      console.log("[WorkflowExecutor] Step 3: Combining symbol analysis");
+      logger.info("[WorkflowExecutor] Step 3: Combining symbol analysis");
       context.currentStep = "combine-analysis";
       const combinedAnalysis = await this.symbolAnalysisWorkflow.combineSymbolAnalysis(
         readinessAnalysis,
@@ -168,7 +171,7 @@ export class WorkflowExecutor {
         },
       };
     } catch (error) {
-      console.error(
+      logger.error(
         `[WorkflowExecutor] Symbol analysis workflow failed for ${request.vcoinId}:`,
         error
       );
@@ -182,12 +185,12 @@ export class WorkflowExecutor {
     const context = this.createExecutionContext("pattern-analysis");
 
     try {
-      console.log(
+      logger.info(
         `[WorkflowExecutor] Starting enhanced pattern analysis workflow - type: ${request.analysisType}`
       );
 
       // Step 1: Enhanced Pattern Analysis using Centralized Engine
-      console.log("[WorkflowExecutor] Step 1: Enhanced pattern analysis with centralized engine");
+      logger.info("[WorkflowExecutor] Step 1: Enhanced pattern analysis with centralized engine");
       context.currentStep = "enhanced-pattern-analysis";
 
       // Prepare input for enhanced analysis
@@ -215,9 +218,9 @@ export class WorkflowExecutor {
         );
         context.agentsUsed.push("pattern-detection-engine", "pattern-strategy-orchestrator");
 
-        console.log("[WorkflowExecutor] Enhanced pattern analysis completed successfully");
+        logger.info("[WorkflowExecutor] Enhanced pattern analysis completed successfully");
       } catch (engineError) {
-        console.warn(
+        logger.warn(
           "[WorkflowExecutor] Enhanced analysis failed, falling back to legacy:",
           engineError
         );
@@ -259,7 +262,7 @@ export class WorkflowExecutor {
         },
       };
     } catch (error) {
-      console.error(`[WorkflowExecutor] Pattern analysis workflow failed:`, error);
+      logger.error(`[WorkflowExecutor] Pattern analysis workflow failed:`, error);
       return this.createErrorResult(error, context.agentsUsed);
     }
   }
@@ -270,10 +273,10 @@ export class WorkflowExecutor {
     const context = this.createExecutionContext("trading-strategy");
 
     try {
-      console.log(`[WorkflowExecutor] Starting trading strategy workflow for: ${request.vcoinId}`);
+      logger.info(`[WorkflowExecutor] Starting trading strategy workflow for: ${request.vcoinId}`);
 
       // Step 1: Strategy analysis
-      console.log("[WorkflowExecutor] Step 1: Strategy analysis");
+      logger.info("[WorkflowExecutor] Step 1: Strategy analysis");
       context.currentStep = "strategy-analysis";
       const strategyAnalysis = await this.agentManager.getStrategyAgent().createStrategy({
         action: "create",
@@ -283,7 +286,7 @@ export class WorkflowExecutor {
       });
 
       // Step 2: Compile strategy
-      console.log("[WorkflowExecutor] Step 2: Compiling trading strategy");
+      logger.info("[WorkflowExecutor] Step 2: Compiling trading strategy");
       context.currentStep = "compile-strategy";
       const compiledStrategy = await this.tradingStrategyWorkflow.compileTradingStrategy(
         strategyAnalysis,
@@ -312,7 +315,7 @@ export class WorkflowExecutor {
         },
       };
     } catch (error) {
-      console.error(
+      logger.error(
         `[WorkflowExecutor] Trading strategy workflow failed for ${request.vcoinId}:`,
         error
       );

@@ -19,14 +19,12 @@
  * ```
  */
 
+export { ConfidenceCalculator } from "./confidence-calculator";
 // Core interfaces
 export * from "./interfaces";
-
 // Main modules
 export { PatternAnalyzer } from "./pattern-analyzer";
-export { ConfidenceCalculator } from "./confidence-calculator";
-export { PatternStorage } from "./pattern-storage";
-export { PatternValidator } from "./pattern-validator";
-
 // Main orchestrator
 export { PatternDetectionCore } from "./pattern-detection-core";
+export { PatternStorage } from "./pattern-storage";
+export { PatternValidator } from "./pattern-validator";

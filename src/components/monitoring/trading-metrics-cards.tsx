@@ -1,20 +1,14 @@
 /**
  * Trading Metrics Cards Component
- * 
+ *
  * Displays key trading metrics in a grid of cards.
  * Shows portfolio value, success rate, total trades, risk score, and pattern success.
  */
 
+import { Activity, DollarSign, Shield, Target, Zap } from "lucide-react";
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import {
-  Activity,
-  DollarSign,
-  Shield,
-  Target,
-  Zap,
-} from "lucide-react";
-import { memo } from "react";
 import type { TradingAnalyticsData } from "../../types/trading-analytics-types";
 
 interface TradingMetricsCardsProps {

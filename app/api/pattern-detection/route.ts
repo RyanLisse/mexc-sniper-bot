@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../src/lib/structured-logger';
 import { PatternDetectionCore } from "../../../src/core/pattern-detection";
 import { patternStrategyOrchestrator } from "../../../src/services/pattern-strategy-orchestrator";
 import { patternEmbeddingService } from "../../../src/services/pattern-embedding-service";
@@ -36,7 +37,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
     const body = await request.json();
     const validatedRequest = PatternDetectionRequestSchema.parse(body);
 
-    console.log(`[PatternDetection API] Processing ${validatedRequest.action} request`);
+    logger.info(`[PatternDetection API] Processing ${validatedRequest.action} request`);
 
     switch (validatedRequest.action) {
       case "analyze":
@@ -64,7 +65,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         }, 400);
     }
   } catch (error) {
-    console.error("[PatternDetection API] Request failed:", error);
+    logger.error("[PatternDetection API] Request failed:", { error: error });
     
     if (error instanceof z.ZodError) {
       return createApiResponse({
@@ -84,6 +85,8 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 // ============================================================================
 // Action Handlers
 // ============================================================================
+
+const logger = createLogger('route');
 
 async function handlePatternAnalysis(request: z.infer<typeof PatternDetectionRequestSchema>) {
   const result = await PatternDetectionCore.getInstance().analyzePatterns({
@@ -348,7 +351,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error("[PatternDetection API] GET request failed:", error);
+    logger.error("[PatternDetection API] GET request failed:", { error: error });
     
     return createApiResponse({
       success: false,

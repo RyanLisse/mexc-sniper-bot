@@ -232,9 +232,10 @@ class EnvironmentSetup {
 
     console.log('📋 Missing Variables by Category:\n');
     
-    Object.entries(missingByCategory).forEach(([category, variables]: [string, any[]]) => {
+    Object.entries(missingByCategory).forEach(([category, variables]: [string, unknown]) => {
+      const variablesList = variables as any[];
       console.log(`   ${category.toUpperCase()}:`);
-      variables.forEach(variable => {
+      variablesList.forEach(variable => {
         const required = variable.required ? '[REQUIRED]' : '[OPTIONAL]';
         console.log(`     ${required} ${variable.key} - ${variable.description}`);
         if (variable.warningIfMissing) {
@@ -368,6 +369,6 @@ Examples:
 }
 
 // Run if called directly
-if (import.meta.main) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }

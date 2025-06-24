@@ -7,6 +7,7 @@
  */
 
 import { ApplicationError } from "../lib/errors";
+import { createLogger } from "../lib/structured-logger";
 
 export interface ErrorLogEntry {
   id?: string;
@@ -181,7 +182,7 @@ export class ErrorLoggingService {
     } catch (error) {
       // If flush fails, add entries back to buffer
       this.buffer.unshift(...entriesToFlush);
-      console.error("Failed to flush error logs:", error);
+      logger.error("Failed to flush error logs:", error);
     }
   }
 
@@ -193,7 +194,7 @@ export class ErrorLoggingService {
     // Example: Sentry, LogRocket, DataDog, etc.
 
     // For now, just log count
-    console.log(`Would send ${entries.length} error logs to monitoring service`);
+    logger.info(`Would send ${entries.length} error logs to monitoring service`);
   }
 
   /**
@@ -202,7 +203,7 @@ export class ErrorLoggingService {
   private async storeInDatabase(entries: ErrorLogEntry[]): Promise<void> {
     // TODO: Create error_logs table and store entries
     // For now, just log count
-    console.log(`Would store ${entries.length} error logs in database`);
+    logger.info(`Would store ${entries.length} error logs in database`);
   }
 
   /**
@@ -211,7 +212,7 @@ export class ErrorLoggingService {
   private startFlushInterval(): void {
     this.flushInterval = setInterval(() => {
       this.flush().catch((error) => {
-        console.error("Error during automatic flush:", error);
+        logger.error("Error during automatic flush:", error);
       });
     }, this.flushIntervalMs);
   }
@@ -231,7 +232,7 @@ export class ErrorLoggingService {
    */
   async queryLogs(filter: ErrorLogFilter): Promise<ErrorLogEntry[]> {
     // TODO: Implement database query
-    console.log("Would query error logs with filter:", filter);
+    logger.info("Would query error logs with filter:", filter);
     return [];
   }
 
@@ -264,7 +265,7 @@ export class ErrorLoggingService {
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
     // TODO: Implement database cleanup
-    console.log(`Would delete error logs older than ${cutoffDate.toISOString()}`);
+    logger.info(`Would delete error logs older than ${cutoffDate.toISOString()}`);
     return 0;
   }
 }
@@ -289,7 +290,7 @@ export function errorLoggingMiddleware(error: Error, req: any, _res: any, next: 
   };
 
   errorLogger.logError(error, context).catch((logError) => {
-    console.error("Failed to log error:", logError);
+    logger.error("Failed to log error:", logError);
   });
 
   next(error);

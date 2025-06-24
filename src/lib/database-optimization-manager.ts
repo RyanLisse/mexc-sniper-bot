@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Database Optimization Manager
  *
  * Comprehensive database optimization system that orchestrates all phases:
@@ -48,6 +49,8 @@ interface PerformanceBenchmark {
 }
 
 export class DatabaseOptimizationManager {
+  private logger = createLogger("database-optimization-manager");
+
   private static instance: DatabaseOptimizationManager;
   private isOptimizing = false;
   private lastOptimization: Date | null = null;
@@ -68,8 +71,8 @@ export class DatabaseOptimizationManager {
       throw new Error("Optimization is already in progress");
     }
 
-    console.log("🚀 Starting comprehensive database optimization...");
-    console.log("📊 Target: 50%+ query performance improvement");
+    logger.info("🚀 Starting comprehensive database optimization...");
+    logger.info("📊 Target: 50%+ query performance improvement");
 
     this.isOptimizing = true;
     const startTime = new Date();
@@ -81,22 +84,22 @@ export class DatabaseOptimizationManager {
       this.baselineMetrics = beforeMetrics;
 
       // Phase 1: Query Performance Analysis (4h target)
-      console.log("\n🔍 Phase 1: Query Performance Analysis");
+      logger.info("\n🔍 Phase 1: Query Performance Analysis");
       const phase1 = await this.runPhase1();
       phases.push(phase1);
 
       // Phase 2: Index Optimization (4h target)
-      console.log("\n🗂️ Phase 2: Index Optimization");
+      logger.info("\n🗂️ Phase 2: Index Optimization");
       const phase2 = await this.runPhase2();
       phases.push(phase2);
 
       // Phase 3: Query Optimization (4h target)
-      console.log("\n⚡ Phase 3: Query Optimization");
+      logger.info("\n⚡ Phase 3: Query Optimization");
       const phase3 = await this.runPhase3();
       phases.push(phase3);
 
       // Phase 4: Connection Pooling & Caching (4h target)
-      console.log("\n🔌 Phase 4: Connection Pooling & Caching");
+      logger.info("\n🔌 Phase 4: Connection Pooling & Caching");
       const phase4 = await this.runPhase4();
       phases.push(phase4);
 
@@ -121,14 +124,14 @@ export class DatabaseOptimizationManager {
 
       this.lastOptimization = endTime;
 
-      console.log("\n✅ Database optimization completed!");
-      console.log(`📈 Overall improvement: ${report.overallImprovement}`);
-      console.log(`⏱️ Total time: ${(totalDuration / 1000).toFixed(2)}s`);
-      console.log(`✅ Successful phases: ${report.successfulPhases}/4`);
+      logger.info("\n✅ Database optimization completed!");
+      logger.info(`📈 Overall improvement: ${report.overallImprovement}`);
+      logger.info(`⏱️ Total time: ${(totalDuration / 1000).toFixed(2)}s`);
+      logger.info(`✅ Successful phases: ${report.successfulPhases}/4`);
 
       return report;
     } catch (error) {
-      console.error("❌ Database optimization failed:", error);
+      logger.error("❌ Database optimization failed:", error);
       throw error;
     } finally {
       this.isOptimizing = false;
@@ -367,7 +370,7 @@ export class DatabaseOptimizationManager {
 
     try {
       // Test batch operations
-      console.log("Testing batch operations...");
+      logger.info("Testing batch operations...");
       const batchStartTime = performance.now();
 
       // This would be actual batch operations in real implementation
@@ -377,7 +380,7 @@ export class DatabaseOptimizationManager {
       improvements.push(`Batch operations tested: ${batchTime.toFixed(2)}ms`);
 
       // Test caching effectiveness
-      console.log("Testing query caching...");
+      logger.info("Testing query caching...");
       const cacheTestStart = performance.now();
 
       // Simulate cache test
@@ -504,7 +507,7 @@ export class DatabaseOptimizationManager {
    * Run specific optimization for agent workloads
    */
   async optimizeForAgentWorkloads(): Promise<void> {
-    console.log("🤖 Optimizing database for AI agent workloads...");
+    logger.info("🤖 Optimizing database for AI agent workloads...");
 
     // Configure for high-frequency agent operations
     databaseQueryOptimizer.updateConfig({
@@ -522,7 +525,7 @@ export class DatabaseOptimizationManager {
       cacheTTLMs: 180000, // 3 minutes for agent data
     });
 
-    console.log("✅ Database optimized for AI agent workloads");
+    logger.info("✅ Database optimized for AI agent workloads");
   }
 
   /**

@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { createLogger } from "./structured-logger";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -30,25 +31,25 @@ class Logger {
 
   error(message: string, ...args: unknown[]) {
     if (this.shouldLog("ERROR")) {
-      console.error(`[ERROR] ${message}`, ...args);
+      logger.error(`[ERROR] ${message}`, ...args);
     }
   }
 
   warn(message: string, ...args: unknown[]) {
     if (this.shouldLog("WARN")) {
-      console.warn(`[WARN] ${message}`, ...args);
+      logger.warn(`[WARN] ${message}`, ...args);
     }
   }
 
   info(message: string, ...args: unknown[]) {
     if (this.shouldLog("INFO")) {
-      console.log(`[INFO] ${message}`, ...args);
+      logger.info(`[INFO] ${message}`, ...args);
     }
   }
 
   debug(message: string, ...args: unknown[]) {
     if (this.shouldLog("DEBUG")) {
-      console.log(`[DEBUG] ${message}`, ...args);
+      logger.info(`[DEBUG] ${message}`, ...args);
     }
   }
 }

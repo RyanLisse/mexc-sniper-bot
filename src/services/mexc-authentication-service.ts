@@ -15,6 +15,7 @@
 
 import * as crypto from "node:crypto";
 import { toSafeError } from "../lib/error-type-utils";
+import { createLogger } from "../lib/structured-logger";
 import type { MexcApiClient } from "./mexc-api-client";
 
 // ============================================================================
@@ -72,6 +73,8 @@ export interface AuthenticationMetrics {
  * Handles all credential validation and authentication status
  */
 export class MexcAuthenticationService {
+  private logger = createLogger("mexc-authentication-service");
+
   private config: AuthenticationConfig;
   private status: AuthenticationStatus;
   private metrics: AuthenticationMetrics;
@@ -280,7 +283,7 @@ export class MexcAuthenticationService {
         secretKey: encryptedSecretKey,
       };
     } catch (error) {
-      console.error("[MexcAuthenticationService] Failed to encrypt credentials:", error);
+      logger.error("[MexcAuthenticationService] Failed to encrypt credentials:", error);
       return null;
     }
   }
@@ -293,7 +296,7 @@ export class MexcAuthenticationService {
     secretKey: string;
   }): Promise<boolean> {
     if (!this.config.enableEncryption || !this.config.encryptionKey) {
-      console.error("[MexcAuthenticationService] Encryption not enabled or key missing");
+      logger.error("[MexcAuthenticationService] Encryption not enabled or key missing");
       return false;
     }
 
@@ -308,7 +311,7 @@ export class MexcAuthenticationService {
       await this.updateCredentials({ apiKey, secretKey });
       return true;
     } catch (error) {
-      console.error("[MexcAuthenticationService] Failed to decrypt credentials:", error);
+      logger.error("[MexcAuthenticationService] Failed to decrypt credentials:", error);
       return false;
     }
   }

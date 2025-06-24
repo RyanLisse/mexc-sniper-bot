@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, lazy } from "react";
+import { lazy, Suspense } from "react";
 import { queryClient } from "../lib/query-client";
 
 // Lazy load DevTools only in development to exclude from production bundle

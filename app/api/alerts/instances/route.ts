@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../src/db";
 import { AutomatedAlertingService } from "../../../../src/services/automated-alerting-service";
@@ -11,6 +12,8 @@ const alertingService = new AutomatedAlertingService(db);
 // ==========================================
 // GET /api/alerts/instances - List alert instances
 // ==========================================
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   try {
     const user = await validateRequest(request);
@@ -79,7 +82,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error fetching alert instances:", error);
+    logger.error("Error fetching alert instances:", { error: error });
     return handleApiError(error);
   }
 }
@@ -120,7 +123,7 @@ export async function POST(request: NextRequest) {
       data: { metric: testMetric },
     }, { status: 201 });
   } catch (error) {
-    console.error("Error creating test alert:", error);
+    logger.error("Error creating test alert:", { error: error });
     return handleApiError(error);
   }
 }

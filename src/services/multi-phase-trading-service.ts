@@ -6,11 +6,12 @@ import {
   type NewTradingStrategy,
   type StrategyPhaseExecution,
   type StrategyTemplate,
-  type TradingStrategy,
   strategyPhaseExecutions,
   strategyTemplates,
+  type TradingStrategy,
   tradingStrategies,
 } from "../db/schemas/strategies";
+import { createLogger } from "../lib/structured-logger";
 
 // ===========================================
 // MULTI-PHASE TRADING STRATEGY SERVICE
@@ -123,6 +124,8 @@ export interface StrategyExecutionResult {
 
 // Multi-Phase Trading Strategy Service
 export class MultiPhaseTradingService {
+  private logger = createLogger("multi-phase-trading-service");
+
   // Initialize predefined strategy templates in database
   async initializePredefinedStrategies(): Promise<void> {
     for (const [strategyId, config] of Object.entries(PREDEFINED_STRATEGIES)) {
@@ -428,7 +431,7 @@ export class MultiPhaseTradingService {
       TradingStrategyConfigSchema.parse(strategyConfig);
       return true;
     } catch (error) {
-      console.error("Strategy validation failed:", error);
+      logger.error("Strategy validation failed:", error);
       return false;
     }
   }

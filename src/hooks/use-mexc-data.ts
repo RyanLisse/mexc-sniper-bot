@@ -2,9 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "../lib/api-response";
 import { useAuth } from "../lib/kinde-auth-client";
 import { queryKeys } from "../lib/query-client";
+import { createLogger } from "../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 
 // MEXC Calendar Data Hook
+const logger = createLogger("use-mexc-data");
+
 export function useMexcCalendar() {
   return useQuery({
     queryKey: queryKeys.mexcCalendar(),
@@ -30,8 +33,8 @@ export function useMexcCalendar() {
     placeholderData: [], // Prevent loading flicker
     retry: (failureCount, error) => {
       // Don't retry auth errors
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
       return failureCount < 2;
@@ -61,14 +64,14 @@ export function useMexcSymbols(vcoinId?: string) {
     },
     enabled: true, // Always enabled for symbols data
     staleTime: 30 * 1000, // 30 seconds - symbols data cache
-    gcTime: 2 * 60 * 1000, // 2 minutes garbage collection 
+    gcTime: 2 * 60 * 1000, // 2 minutes garbage collection
     refetchInterval: 30 * 1000, // Auto-refetch every 30 seconds
     refetchOnWindowFocus: false, // Don't refetch on window focus
     placeholderData: [], // Prevent loading flicker
     retry: (failureCount, error) => {
       // Don't retry auth errors
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
       return failureCount < 2;
@@ -97,8 +100,8 @@ export function useMexcServerTime() {
     placeholderData: Date.now(), // Prevent loading flicker with current time
     retry: (failureCount, error) => {
       // Don't retry auth errors
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
       return failureCount < 2;
@@ -154,7 +157,7 @@ export function useMexcConnectivity() {
           return result;
         } catch (error) {
           lastError = error instanceof Error ? error : new Error("Unknown error");
-          console.warn(
+          logger.warn(
             `Connectivity check attempt ${attempt + 1}/${maxRetries} failed:`,
             lastError.message
           );
@@ -166,7 +169,7 @@ export function useMexcConnectivity() {
 
           // If not the last attempt, wait before retrying
           if (attempt < maxRetries - 1) {
-            const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 500;
+            const delay = baseDelay * 2 ** attempt + Math.random() * 500;
             await new Promise((resolve) => setTimeout(resolve, delay));
           }
         }
@@ -285,7 +288,7 @@ export function useUpcomingLaunches() {
             launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours24
           );
         } catch (_error) {
-          console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
+          logger.warn("Invalid date in calendar entry:", entry.firstOpenTime);
           return false;
         }
       })
@@ -313,7 +316,7 @@ export function useReadyTargets() {
             launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours4
           );
         } catch (_error) {
-          console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
+          logger.warn("Invalid date in calendar entry:", entry.firstOpenTime);
           return false;
         }
       })
@@ -338,7 +341,7 @@ export function useMexcAccount(userId?: string) {
       }
 
       const response = await fetch(`/api/mexc/account?userId=${userId}`, {
-        credentials: "include" // Include authentication cookies
+        credentials: "include", // Include authentication cookies
       });
       if (!response.ok) {
         // Don't throw errors for 403/401 when not authenticated
@@ -357,8 +360,8 @@ export function useMexcAccount(userId?: string) {
     placeholderData: null, // Prevent loading flicker
     retry: (failureCount, error) => {
       // Don't retry auth errors
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
       return failureCount < 2;

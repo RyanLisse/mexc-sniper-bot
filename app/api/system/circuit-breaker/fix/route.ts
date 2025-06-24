@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Circuit Breaker Fix API Route
  * 
  * Endpoint to safely fix "Circuit breaker in protective state" issues
@@ -41,6 +42,8 @@ type FixResponse = z.infer<typeof FixResponseSchema>
  * POST /api/system/circuit-breaker/fix
  * Fix circuit breaker protective state issues
  */
+const logger = createLogger('route');
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json()
@@ -119,7 +122,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     })
 
   } catch (error) {
-    console.error('Circuit breaker fix API error:', error)
+    logger.error('Circuit breaker fix API error:', error)
     
     const errorResponse: FixResponse = {
       success: false,
@@ -188,7 +191,7 @@ export async function GET(): Promise<NextResponse> {
     })
 
   } catch (error) {
-    console.error('Circuit breaker status API error:', error)
+    logger.error('Circuit breaker status API error:', error)
     
     return NextResponse.json({
       success: false,

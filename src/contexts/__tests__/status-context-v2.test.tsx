@@ -6,13 +6,13 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { 
-  ApplicationStatus, 
-  NetworkStatus, 
-  CredentialStatus, 
-  TradingStatus, 
-  SystemStatus, 
-  WorkflowStatus 
+import type {
+  ApplicationStatus,
+  CredentialStatus,
+  NetworkStatus,
+  SystemStatus,
+  TradingStatus,
+  WorkflowStatus,
 } from "../status-context-v2";
 
 describe("StatusContext V2 Types and Interfaces", () => {
@@ -113,8 +113,8 @@ describe("StatusContext V2 Types and Interfaces", () => {
 
   it("should support all status source types", () => {
     const sources: CredentialStatus["source"][] = ["database", "environment", "none"];
-    
-    sources.forEach(source => {
+
+    sources.forEach((source) => {
       const status: CredentialStatus = {
         hasCredentials: source !== "none",
         isValid: source !== "none",
@@ -123,7 +123,7 @@ describe("StatusContext V2 Types and Interfaces", () => {
         hasEnvironmentCredentials: source === "environment",
         lastValidated: new Date().toISOString(),
       };
-      
+
       expect(status.source).toBe(source);
       expect(status.hasCredentials).toBe(source !== "none");
     });
@@ -131,13 +131,13 @@ describe("StatusContext V2 Types and Interfaces", () => {
 
   it("should support all connection health levels", () => {
     const healthLevels: CredentialStatus["connectionHealth"][] = [
-      "excellent", 
-      "good", 
-      "fair", 
-      "poor"
+      "excellent",
+      "good",
+      "fair",
+      "poor",
     ];
-    
-    healthLevels.forEach(health => {
+
+    healthLevels.forEach((health) => {
       const status: CredentialStatus = {
         hasCredentials: true,
         isValid: true,
@@ -147,38 +147,29 @@ describe("StatusContext V2 Types and Interfaces", () => {
         lastValidated: new Date().toISOString(),
         connectionHealth: health,
       };
-      
+
       expect(status.connectionHealth).toBe(health);
     });
   });
 
   it("should support all system status levels", () => {
-    const statusLevels: SystemStatus["overall"][] = [
-      "healthy", 
-      "warning", 
-      "error", 
-      "unknown"
-    ];
-    
-    statusLevels.forEach(overall => {
+    const statusLevels: SystemStatus["overall"][] = ["healthy", "warning", "error", "unknown"];
+
+    statusLevels.forEach((overall) => {
       const status: SystemStatus = {
         overall,
         components: {},
         lastHealthCheck: new Date().toISOString(),
       };
-      
+
       expect(status.overall).toBe(overall);
     });
   });
 
   it("should support all workflow system status types", () => {
-    const workflowStatuses: WorkflowStatus["systemStatus"][] = [
-      "running", 
-      "stopped", 
-      "error"
-    ];
-    
-    workflowStatuses.forEach(systemStatus => {
+    const workflowStatuses: WorkflowStatus["systemStatus"][] = ["running", "stopped", "error"];
+
+    workflowStatuses.forEach((systemStatus) => {
       const status: WorkflowStatus = {
         discoveryRunning: false,
         sniperActive: false,
@@ -186,7 +177,7 @@ describe("StatusContext V2 Types and Interfaces", () => {
         systemStatus,
         lastUpdate: new Date().toISOString(),
       };
-      
+
       expect(status.systemStatus).toBe(systemStatus);
     });
   });

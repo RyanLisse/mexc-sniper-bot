@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Connectivity Health Check API
  * 
  * Provides lightweight connectivity monitoring with fast response times
@@ -38,6 +39,8 @@ interface HealthCheckResponse {
   };
 }
 
+const logger = createLogger('route');
+
 export async function GET() {
   const startTime = Date.now();
   let retryCount = 0;
@@ -76,7 +79,7 @@ export async function GET() {
           credentialSource = "database";
         }
       } catch (error) {
-        console.warn("Failed to retrieve user credentials:", error);
+        logger.warn("Failed to retrieve user credentials:", { error: error });
       }
     }
 
@@ -247,7 +250,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error("Health check failed:", error);
+    logger.error("Health check failed:", { error: error });
     
     const overallLatency = Date.now() - startTime;
     response.status = "unhealthy";

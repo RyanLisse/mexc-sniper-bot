@@ -1,3 +1,4 @@
+import { createLogger } from "./structured-logger";
 /**
  * Simple Dependency Injection Container
  * Provides loose coupling between services and improved testability
@@ -30,6 +31,8 @@ export interface DIContainerOptions {
  * Dependency Injection Container with lifecycle management
  */
 export class DIContainer {
+  private logger = createLogger("dependency-injection");
+
   private services = new Map<ServiceIdentifier, ServiceRegistration>();
   private resolutionStack: ServiceIdentifier[] = [];
   private scopes = new Map<string, Map<ServiceIdentifier, unknown>>();
@@ -231,7 +234,7 @@ export class DIContainer {
           try {
             (instance as { dispose(): void }).dispose();
           } catch (error) {
-            console.warn("Error disposing service instance:", error);
+            logger.warn("Error disposing service instance:", error);
           }
         }
       }
@@ -265,7 +268,7 @@ export class DIContainer {
         try {
           (registration.instance as { dispose(): void }).dispose();
         } catch (error) {
-          console.warn("Error disposing singleton instance:", error);
+          logger.warn("Error disposing singleton instance:", error);
         }
       }
     }

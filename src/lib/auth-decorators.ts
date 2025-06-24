@@ -6,7 +6,8 @@ import {
   withAuthOptions,
   withUserAuth,
 } from "./api-auth";
-import { HTTP_STATUS, createErrorResponse } from "./api-response";
+import { createErrorResponse, HTTP_STATUS } from "./api-response";
+import { createLogger } from "./structured-logger";
 
 /**
  * Authentication decorators for common API route patterns
@@ -17,6 +18,8 @@ import { HTTP_STATUS, createErrorResponse } from "./api-response";
  * Decorator for public API routes (no authentication required)
  * Provides consistent error handling and response formatting
  */
+const logger = createLogger("auth-decorators");
+
 export function publicRoute<T extends any[]>(
   handler: (request: NextRequest, ...args: T) => Promise<Response>
 ) {
@@ -24,7 +27,7 @@ export function publicRoute<T extends any[]>(
     try {
       return await handler(request, ...args);
     } catch (error) {
-      console.error("[Public Route] Error:", error);
+      logger.error("[Public Route] Error:", error);
       return new Response(JSON.stringify(createErrorResponse("Internal server error")), {
         status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
         headers: { "Content-Type": "application/json" },
@@ -82,7 +85,7 @@ export function userBodyRoute<T extends any[]>(
         }
 
         // Enhanced request debugging
-        console.log("[DEBUG] Request details:", {
+        logger.info("[DEBUG] Request details:", {
           method: request.method,
           contentType: request.headers.get("content-type"),
           hasBody: request.body !== null,
@@ -94,9 +97,9 @@ export function userBodyRoute<T extends any[]>(
         let body: any;
         try {
           body = await request.json();
-          console.log("[DEBUG] JSON parsing successful, body keys:", Object.keys(body || {}));
+          logger.info("[DEBUG] JSON parsing successful, body keys:", Object.keys(body || {}));
         } catch (jsonError) {
-          console.error("[DEBUG] JSON parsing failed:", {
+          logger.error("[DEBUG] JSON parsing failed:", {
             error: jsonError instanceof Error ? jsonError.message : String(jsonError),
             errorType: jsonError?.constructor?.name,
             contentType: request.headers.get("content-type"),
@@ -131,7 +134,7 @@ export function userBodyRoute<T extends any[]>(
         const userId = body.userId;
 
         if (!userId) {
-          console.log("[DEBUG] Missing userId in body:", Object.keys(body || {}));
+          logger.info("[DEBUG] Missing userId in body:", Object.keys(body || {}));
           return new Response(
             JSON.stringify(
               createErrorResponse("User ID required", {
@@ -151,7 +154,7 @@ export function userBodyRoute<T extends any[]>(
         }
 
         if (user.id !== userId) {
-          console.log("[DEBUG] User ID mismatch:", {
+          logger.info("[DEBUG] User ID mismatch:", {
             authenticatedUserId: user.id,
             bodyUserId: userId,
           });
@@ -169,14 +172,14 @@ export function userBodyRoute<T extends any[]>(
           );
         }
 
-        console.log("[DEBUG] Request validation successful, proceeding to handler");
+        logger.info("[DEBUG] Request validation successful, proceeding to handler");
         return await handler(request, user, body, ...args);
       } catch (error) {
         if (error instanceof Response) {
           return error;
         }
 
-        console.error("[DEBUG] Unexpected error in userBodyRoute:", {
+        logger.error("[DEBUG] Unexpected error in userBodyRoute:", {
           error: error instanceof Error ? error.message : String(error),
           errorType: error?.constructor?.name,
           stack: error instanceof Error ? error.stack : undefined,

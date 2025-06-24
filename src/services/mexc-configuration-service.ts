@@ -14,6 +14,7 @@
  */
 
 import { z } from "zod";
+import { createLogger } from "../lib/structured-logger";
 import type { UnifiedMexcConfig } from "./mexc-schemas";
 
 // ============================================================================
@@ -114,6 +115,8 @@ export interface ConfigurationMetrics {
  * Handles validation, updates, and health monitoring of all configuration
  */
 export class MexcConfigurationService {
+  private logger = createLogger("mexc-configuration-service");
+
   private config: ServiceConfig;
   private metrics: ConfigurationMetrics;
   private readonly requiredEnvVars = ["MEXC_API_KEY", "MEXC_SECRET_KEY"];
@@ -445,7 +448,7 @@ export class MexcConfigurationService {
 
       return defaultConfig;
     } catch (error) {
-      console.error("[MexcConfigurationService] Failed to load configuration:", error);
+      logger.error("[MexcConfigurationService] Failed to load configuration:", error);
       // Return minimal safe configuration
       return ServiceConfigSchema.parse({});
     }
@@ -545,7 +548,7 @@ export async function initializeConfiguration(initialConfig?: Partial<ServiceCon
   const isReady = health.isValid && health.hasCredentials;
 
   if (!isReady) {
-    console.warn("[Configuration] Service not ready:", {
+    logger.warn("[Configuration] Service not ready:", {
       isValid: health.isValid,
       hasCredentials: health.hasCredentials,
       errors: health.validationErrors,

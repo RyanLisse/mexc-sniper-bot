@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../lib/structured-logger';
  * MEXC Unified Exports - Single source of truth for all MEXC API functionality
  *
  * This module provides unified access to all MEXC API capabilities through a single,
@@ -17,40 +18,39 @@
  * ```
  */
 
-// Import the new unified V2 service
-import {
-  type UnifiedMexcConfig,
-  type MexcServiceResponse,
-  UnifiedMexcServiceV2,
-  getUnifiedMexcServiceV2,
-  resetUnifiedMexcServiceV2,
-} from "./unified-mexc-service-v2";
+// Import types from schemas module
+import type {
+  BalanceEntry,
+  CalendarEntry,
+  ExchangeSymbol,
+  Kline,
+  MarketStats,
+  OrderBook,
+  OrderParameters,
+  OrderResult,
+  OrderStatus,
+  PatternAnalysis,
+  Portfolio,
+  RiskAssessment,
+  SymbolEntry,
+  Ticker,
+  TradingOpportunity,
+} from "./mexc-schemas";
 
 // Import the production-ready unified client
 import {
-  UnifiedMexcClient,
   getUnifiedMexcClient as getUnifiedMexcClientFactory,
   resetUnifiedMexcClient,
+  type UnifiedMexcClient,
 } from "./unified-mexc-client";
-
-// Import types from schemas module
+// Import the new unified V2 service
 import {
-  type BalanceEntry,
-  type CalendarEntry,
-  type ExchangeSymbol,
-  type Kline,
-  type MarketStats,
-  type OrderBook,
-  type OrderParameters,
-  type OrderResult,
-  type OrderStatus,
-  type PatternAnalysis,
-  type Portfolio,
-  type RiskAssessment,
-  type SymbolEntry,
-  type Ticker,
-  type TradingOpportunity,
-} from "./mexc-schemas";
+  getUnifiedMexcServiceV2,
+  type MexcServiceResponse,
+  resetUnifiedMexcServiceV2,
+  type UnifiedMexcConfig,
+  UnifiedMexcServiceV2,
+} from "./unified-mexc-service-v2";
 
 // ============================================================================
 // Primary Exports - Use These (Updated to use UnifiedMexcServiceV2)
@@ -91,6 +91,8 @@ export type { MarketStats, PatternAnalysis, TradingOpportunity, Portfolio, RiskA
  * This is the recommended way to access MEXC functionality
  * FIXED: Now uses production-ready UnifiedMexcClient with real MEXC data
  */
+const logger = createLogger("mexc-unified-exports");
+
 export function getMexcService(config?: {
   apiKey?: string;
   secretKey?: string;
@@ -110,10 +112,7 @@ export function createMexcService(
 /**
  * Get MEXC client (alias for backward compatibility)
  */
-export function getMexcClient(config?: {
-  apiKey?: string;
-  secretKey?: string;
-}): UnifiedMexcClient {
+export function getMexcClient(config?: { apiKey?: string; secretKey?: string }): UnifiedMexcClient {
   return getUnifiedMexcClientFactory(config);
 }
 
@@ -125,7 +124,7 @@ export function getEnhancedMexcService(config?: {
   apiKey?: string;
   secretKey?: string;
 }): UnifiedMexcServiceV2 {
-  console.warn("getEnhancedMexcService is deprecated. Use getUnifiedMexcServiceV2 instead.");
+  logger.warn("getEnhancedMexcService is deprecated. Use getUnifiedMexcServiceV2 instead.");
   return getUnifiedMexcServiceV2(config);
 }
 
@@ -134,7 +133,7 @@ export function getEnhancedMexcService(config?: {
  * @deprecated Use resetUnifiedMexcServiceV2 instead
  */
 export function resetEnhancedMexcService(): void {
-  console.warn("resetEnhancedMexcService is deprecated. Use resetUnifiedMexcServiceV2 instead.");
+  logger.warn("resetEnhancedMexcService is deprecated. Use resetUnifiedMexcServiceV2 instead.");
   resetUnifiedMexcServiceV2();
 }
 

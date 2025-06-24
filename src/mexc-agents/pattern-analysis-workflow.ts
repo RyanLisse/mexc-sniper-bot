@@ -1,8 +1,9 @@
-import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 import type {
   PatternAnalysisResult as EngineResult,
   PatternMatch,
 } from "../core/pattern-detection/interfaces";
+import { createLogger } from "../lib/structured-logger";
+import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 import {
   type PatternWorkflowRequest,
   patternStrategyOrchestrator,
@@ -46,6 +47,8 @@ export interface PatternSignal {
 }
 
 export class PatternAnalysisWorkflow {
+  private logger = createLogger("pattern-analysis-workflow");
+
   /**
    * Enhanced Pattern Analysis using Centralized Detection Engine
    * This method integrates with our core competitive advantage system
@@ -64,7 +67,7 @@ export class PatternAnalysisWorkflow {
       enableAdvanceDetection?: boolean;
     }
   ): Promise<PatternAnalysisResult> {
-    console.log(`[PatternAnalysisWorkflow] Enhanced pattern analysis for ${analysisType}`);
+    logger.info(`[PatternAnalysisWorkflow] Enhanced pattern analysis for ${analysisType}`);
 
     try {
       // Use the centralized pattern strategy orchestrator
@@ -114,7 +117,7 @@ export class PatternAnalysisWorkflow {
         strategicRecommendations,
       };
     } catch (error) {
-      console.error("[PatternAnalysisWorkflow] Enhanced analysis failed:", error);
+      logger.error("[PatternAnalysisWorkflow] Enhanced analysis failed:", error);
 
       // Fallback to legacy analysis
       return await this.analyzePatternsLegacy(
@@ -145,7 +148,7 @@ export class PatternAnalysisWorkflow {
     _symbols?: string[],
     analysisType: "discovery" | "monitoring" | "execution" = "discovery"
   ): Promise<PatternAnalysisResult> {
-    console.log(`[PatternAnalysisWorkflow] Legacy pattern analysis for ${analysisType}`);
+    logger.info(`[PatternAnalysisWorkflow] Legacy pattern analysis for ${analysisType}`);
 
     const actionablePatterns = this.extractActionablePatterns(patternAnalysis, analysisType);
     const patternSignals = this.extractPatternSignals(patternAnalysis);

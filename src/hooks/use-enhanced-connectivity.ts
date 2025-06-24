@@ -8,6 +8,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
+import { createLogger } from "../lib/structured-logger";
 
 // ============================================================================
 // Types and Interfaces
@@ -130,6 +131,8 @@ export interface ConnectivityAnalysis {
 // ============================================================================
 // Enhanced Connectivity Hook
 // ============================================================================
+
+const logger = createLogger("use-enhanced-connectivity");
 
 export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
   const {
@@ -277,7 +280,7 @@ export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
       try {
         await refreshMutation.mutateAsync();
       } catch (error) {
-        console.error("Failed to refresh connectivity:", error);
+        logger.error("Failed to refresh connectivity:", error);
         throw error;
       }
     }, [refreshMutation]),
@@ -286,7 +289,7 @@ export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
       try {
         await forceRefreshMutation.mutateAsync();
       } catch (error) {
-        console.error("Failed to force refresh connectivity:", error);
+        logger.error("Failed to force refresh connectivity:", error);
         throw error;
       }
     }, [forceRefreshMutation]),
@@ -295,7 +298,7 @@ export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
       try {
         await resetCircuitBreakerMutation.mutateAsync();
       } catch (error) {
-        console.error("Failed to reset circuit breaker:", error);
+        logger.error("Failed to reset circuit breaker:", error);
         throw error;
       }
     }, [resetCircuitBreakerMutation]),
@@ -305,7 +308,7 @@ export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
         try {
           return await testCredentialsMutation.mutateAsync(credentials);
         } catch (error) {
-          console.error("Failed to test credentials:", error);
+          logger.error("Failed to test credentials:", error);
           throw error;
         }
       },

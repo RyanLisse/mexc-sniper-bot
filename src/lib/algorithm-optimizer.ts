@@ -1,3 +1,4 @@
+import { createLogger } from "./structured-logger";
 /**
  * Algorithm Optimizer
  *
@@ -22,6 +23,8 @@
  * LRU Cache with TTL support - O(1) operations
  */
 export class OptimizedLRUCache<K, V> {
+  private logger = createLogger("algorithm-optimizer");
+
   private capacity: number;
   private cache = new Map<K, { value: V; timestamp: number; expiresAt?: number }>();
   private ttl?: number;
@@ -993,13 +996,13 @@ export const algorithmOptimizer = {
     const result = fn();
     const end = performance.now();
 
-    console.log(`⚡ ${name} took ${(end - start).toFixed(2)}ms`);
+    logger.info(`⚡ ${name} took ${(end - start).toFixed(2)}ms`);
     return result;
   },
 
   // Benchmark different algorithm approaches
   benchmark(name: string, functions: { [key: string]: () => any }, iterations = 1000): void {
-    console.log(`🏁 Benchmarking ${name}:`);
+    logger.info(`🏁 Benchmarking ${name}:`);
 
     const results: { [key: string]: number } = {};
 
@@ -1020,7 +1023,7 @@ export const algorithmOptimizer = {
     sorted.forEach(([name, time], index) => {
       const improvement =
         index === 0 ? "baseline" : `${((time / sorted[0][1] - 1) * 100).toFixed(1)}% slower`;
-      console.log(`  ${index + 1}. ${name}: ${time.toFixed(4)}ms (${improvement})`);
+      logger.info(`  ${index + 1}. ${name}: ${time.toFixed(4)}ms (${improvement})`);
     });
   },
 };
@@ -1028,4 +1031,4 @@ export const algorithmOptimizer = {
 // Initialize trading optimizer
 algorithmOptimizer.trading = new TradingDataOptimizer();
 
-console.log("⚡ Algorithm optimizer initialized with 70% performance improvements");
+logger.info("⚡ Algorithm optimizer initialized with 70% performance improvements");

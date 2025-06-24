@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Structured Logger for MEXC Trading Bot
  *
  * Replaces console.log statements with structured, contextual logging
@@ -133,7 +134,7 @@ export class StructuredLogger {
     // Format for console output (development) or structured output (production)
     if (process.env.NODE_ENV === "production") {
       // JSON output for log aggregation systems
-      console.log(JSON.stringify(entry));
+      logger.info(JSON.stringify(entry));
     } else {
       // Human-readable format for development
       const timestamp = entry.timestamp;
@@ -141,11 +142,11 @@ export class StructuredLogger {
       const contextStr =
         Object.keys(entry.context).length > 0 ? JSON.stringify(entry.context, null, 2) : "";
 
-      console.log(
+      logger.info(
         `${timestamp} [${entry.level.toUpperCase()}] ${traceInfo} ${entry.component}: ${entry.message}`
       );
       if (contextStr) {
-        console.log(`Context: ${contextStr}`);
+        logger.info(`Context: ${contextStr}`);
       }
     }
   }

@@ -20,9 +20,9 @@ import {
   SEMRESATTRS_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
 import {
-  ProductionTelemetryUtils,
   getProductionTelemetryConfig,
   initializeProductionTelemetry,
+  ProductionTelemetryUtils,
 } from "./opentelemetry-production-config";
 import { createLogger } from "./structured-logger";
 
@@ -41,7 +41,7 @@ const telemetryDisabled =
  */
 export function initializeOpenTelemetry(): NodeSDK | null {
   if (telemetryDisabled) {
-    console.log("[OpenTelemetry] Telemetry disabled");
+    logger.info("[OpenTelemetry] Telemetry disabled");
     return null;
   }
 
@@ -166,7 +166,7 @@ export function initializeOpenTelemetry(): NodeSDK | null {
     // Initialize the SDK
     sdk.start();
 
-    console.log("[OpenTelemetry] SDK initialized successfully", {
+    logger.info("[OpenTelemetry] SDK initialized successfully", {
       environment: process.env.NODE_ENV,
       sampling: isProduction ? "10%" : "100%",
       exporters: traceExporters.length,
@@ -177,14 +177,14 @@ export function initializeOpenTelemetry(): NodeSDK | null {
     process.on("SIGTERM", () => {
       sdk
         .shutdown()
-        .then(() => console.log("[OpenTelemetry] SDK shut down successfully"))
-        .catch((error) => console.error("[OpenTelemetry] Error shutting down SDK", error))
+        .then(() => logger.info("[OpenTelemetry] SDK shut down successfully"))
+        .catch((error) => logger.error("[OpenTelemetry] Error shutting down SDK", error))
         .finally(() => process.exit(0));
     });
 
     return sdk;
   } catch (error) {
-    console.error("[OpenTelemetry] Failed to initialize SDK:", error);
+    logger.error("[OpenTelemetry] Failed to initialize SDK:", error);
     return null;
   }
 }
@@ -265,7 +265,7 @@ export async function initializeEnhancedTelemetry(): Promise<{
   healthCheck: () => Promise<boolean>;
 }> {
   if (telemetryDisabled) {
-    console.log("[OpenTelemetry] Telemetry disabled");
+    logger.info("[OpenTelemetry] Telemetry disabled");
     return {
       success: false,
       healthCheck: async () => false,
@@ -393,7 +393,7 @@ export const TelemetryMonitoring = {
 if (typeof window === "undefined" && !telemetryDisabled) {
   // Use the enhanced initialization instead of the basic one
   initializeEnhancedTelemetry().catch((error) => {
-    console.error("[OpenTelemetry] Failed to initialize enhanced telemetry:", error);
+    logger.error("[OpenTelemetry] Failed to initialize enhanced telemetry:", error);
     // Fallback to basic initialization if enhanced fails
     initializeOpenTelemetry();
   });

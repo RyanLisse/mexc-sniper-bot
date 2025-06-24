@@ -5,6 +5,7 @@
  * Manages agent lifecycle, communication, and workflow coordination.
  */
 
+import { createLogger } from "../lib/structured-logger";
 import { tradingAnalytics } from "../services/trading-analytics-service";
 import type { AgentResponse, AgentStatus, BaseAgent } from "./base-agent";
 import { CalendarAgent } from "./calendar-agent";
@@ -61,6 +62,8 @@ export interface AgentWorkflowResult {
 }
 
 export class MultiAgentOrchestrator {
+  private logger = createLogger("multi-agent-orchestrator");
+
   private static instance: MultiAgentOrchestrator;
   private agents: Map<string, BaseAgent> = new Map();
   private workflows: Map<string, WorkflowDefinition> = new Map();
@@ -445,7 +448,7 @@ export class MultiAgentOrchestrator {
 
   private log(message: string, ...args: any[]): void {
     if (this.config.enableLogging) {
-      console.log(`[MultiAgentOrchestrator] ${message}`, ...args);
+      logger.info(`[MultiAgentOrchestrator] ${message}`, ...args);
     }
   }
 }

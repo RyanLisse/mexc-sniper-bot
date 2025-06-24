@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * OpenTelemetry API Middleware
  *
  * Provides automatic instrumentation for all API routes with consistent
@@ -20,7 +21,7 @@ if (process.env.DISABLE_TELEMETRY !== "true" && process.env.NODE_ENV !== "test")
     ({ TRADING_TELEMETRY_CONFIG } = require("./opentelemetry-setup"));
     tracer = trace.getTracer("mexc-trading-bot-api");
   } catch (error) {
-    console.warn("OpenTelemetry not available:", error.message);
+    logger.warn("OpenTelemetry not available:", error.message);
   }
 }
 
@@ -28,6 +29,8 @@ if (process.env.DISABLE_TELEMETRY !== "true" && process.env.NODE_ENV !== "test")
  * Enhanced API route handler with OpenTelemetry instrumentation
  * Supports both Response and NextResponse types for compatibility
  */
+const logger = createLogger("opentelemetry-api-middleware");
+
 export function instrumentedTradingRoute<T = any>(
   handler: (request: NextRequest) => Promise<NextResponse<T> | Response>,
   operationType: string

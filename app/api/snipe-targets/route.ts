@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../src/lib/structured-logger';
 import { db } from "../../../src/db";
 import { snipeTargets } from "../../../src/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -10,6 +11,8 @@ import {
   createValidationErrorResponse
 } from "../../../src/lib/api-response";
 import { handleApiError } from "../../../src/lib/error-handler";
+
+const logger = createLogger('route');
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,7 +71,7 @@ export async function POST(request: NextRequest) {
       HTTP_STATUS.CREATED
     );
   } catch (error) {
-    console.error("❌ Error creating snipe target:", error);
+    logger.error("❌ Error creating snipe target:", { error: error });
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"
@@ -111,7 +114,7 @@ export async function GET(request: NextRequest) {
       })
     );
   } catch (error) {
-    console.error("❌ Error fetching snipe targets:", error);
+    logger.error("❌ Error fetching snipe targets:", { error: error });
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"

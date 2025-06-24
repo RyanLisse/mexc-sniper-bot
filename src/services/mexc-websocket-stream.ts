@@ -16,13 +16,14 @@
 
 import { EventEmitter } from "events";
 import WebSocket from "ws";
+import { PatternDetectionCore } from "../core/pattern-detection";
+import { createLogger } from "../lib/structured-logger";
 import type {
   NotificationMessage,
   TradingPriceMessage,
   TradingSignalMessage,
 } from "../lib/websocket-types";
 import { webSocketAgentBridge } from "../mexc-agents/websocket-agent-bridge";
-import { PatternDetectionCore } from "../core/pattern-detection";
 import { webSocketServer } from "./websocket-server";
 
 // ======================
@@ -91,6 +92,8 @@ interface SymbolStatusData {
 // ======================
 
 class MarketDataManager {
+  private logger = createLogger("mexc-websocket-stream");
+
   private priceCache = new Map<string, TradingPriceMessage>();
   private depthCache = new Map<string, MexcDepthData>();
   private statusCache = new Map<string, SymbolStatusData>();
@@ -235,7 +238,7 @@ class MarketDataManager {
         enhancedConfidence = Math.max(enhancedConfidence, patternResult.confidence / 100);
       }
     } catch (error) {
-      console.warn(`[MEXC Stream] Pattern detection enhancement failed for ${status.s}:`, error);
+      logger.warn(`[MEXC Stream] Pattern detection enhancement failed for ${status.s}:`, error);
     }
 
     const readyStateData = {
@@ -327,12 +330,12 @@ class MarketDataManager {
       });
 
       if (result?.enhancedAnalysis) {
-        console.log(
+        logger.info(
           `[MEXC Stream] Enhanced AI analysis completed for ${status.s} with confidence: ${result.confidence}`
         );
       }
     } catch (error) {
-      console.warn(`[MEXC Stream] Enhanced analysis failed for ${status.s}:`, error);
+      logger.warn(`[MEXC Stream] Enhanced analysis failed for ${status.s}:`, error);
     }
   }
 }
@@ -365,7 +368,7 @@ class MexcConnectionManager {
     this.isConnecting = true;
 
     try {
-      console.log("[MEXC WebSocket] Connecting to MEXC WebSocket...");
+      logger.info("[MEXC WebSocket] Connecting to MEXC WebSocket...");
 
       this.ws = new WebSocket(this.url);
 
@@ -417,13 +420,13 @@ class MexcConnectionManager {
       this.ws.send(JSON.stringify(message));
       return true;
     } catch (error) {
-      console.error("[MEXC WebSocket] Failed to send message:", error);
+      logger.error("[MEXC WebSocket] Failed to send message:", error);
       return false;
     }
   }
 
   private handleOpen(): void {
-    console.log("[MEXC WebSocket] Connected to MEXC");
+    logger.info("[MEXC WebSocket] Connected to MEXC");
 
     this.isConnected = true;
     this.isConnecting = false;
@@ -438,12 +441,12 @@ class MexcConnectionManager {
       const message = JSON.parse(data.toString());
       this.onMessage(message);
     } catch (error) {
-      console.error("[MEXC WebSocket] Failed to parse message:", error);
+      logger.error("[MEXC WebSocket] Failed to parse message:", error);
     }
   }
 
   private handleClose(code: number, reason: Buffer): void {
-    console.log(`[MEXC WebSocket] Connection closed: ${code} - ${reason.toString()}`);
+    logger.info(`[MEXC WebSocket] Connection closed: ${code} - ${reason.toString()}`);
 
     this.stopHeartbeat();
     this.isConnected = false;
@@ -457,7 +460,7 @@ class MexcConnectionManager {
   }
 
   private handleError(error: Error): void {
-    console.error("[MEXC WebSocket] Connection error:", error);
+    logger.error("[MEXC WebSocket] Connection error:", error);
     this.onError(error);
   }
 
@@ -465,13 +468,13 @@ class MexcConnectionManager {
     this.reconnectAttempts++;
     const delay = Math.min(this.reconnectDelay, this.maxReconnectDelay);
 
-    console.log(
+    logger.info(
       `[MEXC WebSocket] Scheduling reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
     );
 
     setTimeout(() => {
       this.connect().catch((error) => {
-        console.error("[MEXC WebSocket] Reconnection failed:", error);
+        logger.error("[MEXC WebSocket] Reconnection failed:", error);
       });
     }, delay);
 
@@ -539,7 +542,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
   async start(): Promise<void> {
     if (this.isRunning) return;
 
-    console.log("[MEXC Stream] Starting MEXC WebSocket stream service...");
+    logger.info("[MEXC Stream] Starting MEXC WebSocket stream service...");
 
     try {
       await this.connectionManager.connect();
@@ -548,10 +551,10 @@ export class MexcWebSocketStreamService extends EventEmitter {
       // Subscribe to all symbol tickers for market overview
       this.subscribeToAllTickers();
 
-      console.log("[MEXC Stream] MEXC WebSocket stream service started");
+      logger.info("[MEXC Stream] MEXC WebSocket stream service started");
       this.emit("started");
     } catch (error) {
-      console.error("[MEXC Stream] Failed to start MEXC WebSocket stream:", error);
+      logger.error("[MEXC Stream] Failed to start MEXC WebSocket stream:", error);
       throw error;
     }
   }
@@ -559,13 +562,13 @@ export class MexcWebSocketStreamService extends EventEmitter {
   stop(): void {
     if (!this.isRunning) return;
 
-    console.log("[MEXC Stream] Stopping MEXC WebSocket stream service...");
+    logger.info("[MEXC Stream] Stopping MEXC WebSocket stream service...");
 
     this.connectionManager.disconnect();
     this.subscriptions.clear();
     this.isRunning = false;
 
-    console.log("[MEXC Stream] MEXC WebSocket stream service stopped");
+    logger.info("[MEXC Stream] MEXC WebSocket stream service stopped");
     this.emit("stopped");
   }
 
@@ -608,9 +611,9 @@ export class MexcWebSocketStreamService extends EventEmitter {
 
     if (this.connectionManager.send(subscribeMessage)) {
       this.subscriptions.add(stream);
-      console.log(`[MEXC Stream] Subscribed to ${stream}`);
+      logger.info(`[MEXC Stream] Subscribed to ${stream}`);
     } else {
-      console.error(`[MEXC Stream] Failed to subscribe to ${stream}`);
+      logger.error(`[MEXC Stream] Failed to subscribe to ${stream}`);
     }
   }
 
@@ -625,7 +628,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
 
     if (this.connectionManager.send(unsubscribeMessage)) {
       this.subscriptions.delete(stream);
-      console.log(`[MEXC Stream] Unsubscribed from ${stream}`);
+      logger.info(`[MEXC Stream] Unsubscribed from ${stream}`);
     }
   }
 
@@ -692,7 +695,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
     try {
       // Handle subscription confirmations
       if (message.result === null && message.id) {
-        console.log(`[MEXC Stream] Subscription confirmed: ${message.id}`);
+        logger.info(`[MEXC Stream] Subscription confirmed: ${message.id}`);
         return;
       }
 
@@ -722,7 +725,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
         this.connectionManager.send({ pong: message.ping });
       }
     } catch (error) {
-      console.error("[MEXC Stream] Error handling message:", error);
+      logger.error("[MEXC Stream] Error handling message:", error);
     }
   }
 
@@ -742,7 +745,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
 
       this.emit("data", { stream, data });
     } catch (error) {
-      console.error(`[MEXC Stream] Error routing stream data for ${stream}:`, error);
+      logger.error(`[MEXC Stream] Error routing stream data for ${stream}:`, error);
     }
   }
 
@@ -785,7 +788,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
   }
 
   private handleMexcError(error: Error): void {
-    console.error("[MEXC Stream] MEXC WebSocket error:", error);
+    logger.error("[MEXC Stream] MEXC WebSocket error:", error);
 
     // Broadcast error notification
     const notification: NotificationMessage = {
@@ -833,10 +836,10 @@ export class MexcWebSocketStreamService extends EventEmitter {
           this.subscribeToSymbolTicker(symbol);
           this.subscribeToSymbolDepth(symbol);
 
-          console.log(`[MEXC Stream] Started monitoring new listing: ${symbol}`);
+          logger.info(`[MEXC Stream] Started monitoring new listing: ${symbol}`);
         }
       } catch (error) {
-        console.error("[MEXC Stream] Error monitoring new listings:", error);
+        logger.error("[MEXC Stream] Error monitoring new listings:", error);
       }
     }, 60000); // Check every minute
   }
@@ -916,7 +919,8 @@ export class MexcWebSocketStreamService extends EventEmitter {
       };
 
       // Perform pattern analysis with enhanced confidence
-      const patternResult = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(symbolData);
+      const patternResult =
+        await PatternDetectionCore.getInstance().analyzeSymbolReadiness(symbolData);
 
       if (patternResult && patternResult.confidence > 70) {
         // Broadcast high-confidence patterns to WebSocket clients
@@ -951,10 +955,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
         }
       }
     } catch (error) {
-      console.error(
-        `[MEXC Stream] Real-time pattern detection failed for stream ${stream}:`,
-        error
-      );
+      logger.error(`[MEXC Stream] Real-time pattern detection failed for stream ${stream}:`, error);
     }
   }
 
@@ -981,7 +982,8 @@ export class MexcWebSocketStreamService extends EventEmitter {
           vcoinId: symbol,
         };
 
-        const patternResult = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(symbolData);
+        const patternResult =
+          await PatternDetectionCore.getInstance().analyzeSymbolReadiness(symbolData);
 
         if (patternResult && patternResult.confidence > 75) {
           // Broadcast pattern correlation with price movement
@@ -1022,7 +1024,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
         }
       }
     } catch (error) {
-      console.error(`[MEXC Stream] Ticker pattern analysis failed for ${ticker.s}:`, error);
+      logger.error(`[MEXC Stream] Ticker pattern analysis failed for ${ticker.s}:`, error);
     }
   }
 
@@ -1044,7 +1046,8 @@ export class MexcWebSocketStreamService extends EventEmitter {
       };
 
       // Get enhanced pattern analysis
-      const patternResult = await PatternDetectionCore.getInstance().analyzeSymbolReadiness(symbolData);
+      const patternResult =
+        await PatternDetectionCore.getInstance().analyzeSymbolReadiness(symbolData);
 
       if (patternResult) {
         // Broadcast enhanced ready state analysis
@@ -1116,7 +1119,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
         }
       }
     } catch (error) {
-      console.error(`[MEXC Stream] Enhanced ready state analysis failed for ${status.s}:`, error);
+      logger.error(`[MEXC Stream] Enhanced ready state analysis failed for ${status.s}:`, error);
     }
   }
 }

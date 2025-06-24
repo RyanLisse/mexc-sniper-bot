@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Unified Error Handler for MEXC Sniper Bot
  *
  * This module consolidates all error handling approaches (error-handler.ts, error-utils.ts, errors.ts)
@@ -13,7 +14,7 @@
  */
 
 import type { NextResponse } from "next/server";
-import { HTTP_STATUS, apiResponse, createErrorResponse } from "./api-response";
+import { apiResponse, createErrorResponse, HTTP_STATUS } from "./api-response";
 import {
   ApiError,
   ApplicationError,
@@ -23,12 +24,6 @@ import {
   ConfigurationError,
   ConflictError,
   DatabaseError,
-  NetworkError,
-  NotFoundError,
-  RateLimitError,
-  TimeoutError,
-  TradingError,
-  ValidationError,
   isApiError,
   isApplicationError,
   isAuthenticationError,
@@ -40,6 +35,12 @@ import {
   isRateLimitError,
   isTradingError,
   isValidationError,
+  NetworkError,
+  NotFoundError,
+  RateLimitError,
+  TimeoutError,
+  TradingError,
+  ValidationError,
 } from "./errors";
 
 // ============================================================================
@@ -54,7 +55,7 @@ interface ErrorLogger {
 
 const defaultErrorLogger: ErrorLogger = {
   error: (message, error, context) => {
-    console.error(`[ERROR] ${message}`, {
+    logger.error(`[ERROR] ${message}`, {
       error: error.message,
       stack: error.stack,
       context,
@@ -62,14 +63,14 @@ const defaultErrorLogger: ErrorLogger = {
     });
   },
   warn: (message, error, context) => {
-    console.warn(`[WARN] ${message}`, {
+    logger.warn(`[WARN] ${message}`, {
       error: error.message,
       context,
       timestamp: new Date().toISOString(),
     });
   },
   info: (message, error, context) => {
-    console.info(`[INFO] ${message}`, {
+    logger.info(`[INFO] ${message}`, {
       error: error.message,
       context,
       timestamp: new Date().toISOString(),
@@ -88,6 +89,8 @@ export function setErrorLogger(logger: ErrorLogger) {
 // ============================================================================
 
 export class ErrorClassifier {
+  private logger = createLogger("unified-error-handler");
+
   /**
    * Checks if error is a timeout error
    */
@@ -182,7 +185,7 @@ export class RetryHandler {
 
         if (attempt < maxRetries) {
           const delay = ErrorClassifier.getRetryDelay(attempt, baseDelay);
-          console.log(
+          logger.info(
             `Retry attempt ${attempt}/${maxRetries} failed, retrying in ${Math.round(delay)}ms:`,
             error instanceof Error ? error.message : error
           );

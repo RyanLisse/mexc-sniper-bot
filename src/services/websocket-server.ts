@@ -17,6 +17,12 @@ import crypto from "node:crypto";
 import { EventEmitter } from "node:events";
 import type { IncomingMessage } from "node:http";
 import { WebSocket, WebSocketServer } from "ws";
+// OpenTelemetry WebSocket instrumentation
+import {
+  instrumentChannelOperation,
+  instrumentWebSocketSend,
+} from "../lib/opentelemetry-websocket-instrumentation";
+import { createLogger } from "../lib/structured-logger";
 import type {
   AgentStatusMessage,
   ConnectionMetrics,
@@ -31,17 +37,13 @@ import type {
   WebSocketServerConfig,
 } from "../lib/websocket-types";
 
-// OpenTelemetry WebSocket instrumentation
-import {
-  instrumentChannelOperation,
-  instrumentWebSocketSend,
-} from "../lib/opentelemetry-websocket-instrumentation";
-
 // ======================
 // Connection Management
 // ======================
 
 class ConnectionManager {
+  private logger = createLogger("websocket-server");
+
   private connections = new Map<string, WebSocketConnection & { ws: WebSocket }>();
   private userConnections = new Map<string, Set<string>>();
   private channelSubscriptions = new Map<string, Set<string>>();
@@ -88,7 +90,7 @@ class ConnectionManager {
       subscriptions: [],
     });
 
-    console.log(`[WebSocket] Connection added: ${connectionId} (user: ${userId || "anonymous"})`);
+    logger.info(`[WebSocket] Connection added: ${connectionId} (user: ${userId || "anonymous"})`);
   }
 
   removeConnection(connectionId: string): void {
@@ -120,7 +122,7 @@ class ConnectionManager {
     this.connections.delete(connectionId);
     this.connectionMetrics.delete(connectionId);
 
-    console.log(`[WebSocket] Connection removed: ${connectionId}`);
+    logger.info(`[WebSocket] Connection removed: ${connectionId}`);
   }
 
   getConnection(connectionId: string): (WebSocketConnection & { ws: WebSocket }) | undefined {
@@ -158,7 +160,7 @@ class ConnectionManager {
       metrics.subscriptions = Array.from(connection.subscriptions);
     }
 
-    console.log(`[WebSocket] Subscription added: ${connectionId} -> ${channel}`);
+    logger.info(`[WebSocket] Subscription added: ${connectionId} -> ${channel}`);
     return true;
   }
 
@@ -182,7 +184,7 @@ class ConnectionManager {
       metrics.subscriptions = Array.from(connection.subscriptions);
     }
 
-    console.log(`[WebSocket] Subscription removed: ${connectionId} -> ${channel}`);
+    logger.info(`[WebSocket] Subscription removed: ${connectionId} -> ${channel}`);
     return true;
   }
 
@@ -360,7 +362,7 @@ class MessageRouter {
         await handler(message);
       }
     } catch (error) {
-      console.error(`[WebSocket] Error routing message:`, error);
+      logger.error(`[WebSocket] Error routing message:`, error);
       throw error;
     }
   }
@@ -439,7 +441,7 @@ export class WebSocketServerService extends EventEmitter {
 
   async start(): Promise<void> {
     if (this.isRunning) {
-      console.warn("[WebSocket] Server is already running");
+      logger.warn("[WebSocket] Server is already running");
       return;
     }
 
@@ -453,7 +455,7 @@ export class WebSocketServerService extends EventEmitter {
 
       this.wss.on("connection", this.handleConnection.bind(this));
       this.wss.on("error", (error) => {
-        console.error("[WebSocket] Server error:", error);
+        logger.error("[WebSocket] Server error:", error);
         this.emit("error", error);
       });
 
@@ -461,12 +463,12 @@ export class WebSocketServerService extends EventEmitter {
       this.startMetricsCollection();
 
       this.isRunning = true;
-      console.log(
+      logger.info(
         `[WebSocket] Server started on ${this.config.host}:${this.config.port}${this.config.path}`
       );
       this.emit("server:started");
     } catch (error) {
-      console.error("[WebSocket] Failed to start server:", error);
+      logger.error("[WebSocket] Failed to start server:", error);
       throw error;
     }
   }
@@ -474,7 +476,7 @@ export class WebSocketServerService extends EventEmitter {
   async stop(): Promise<void> {
     if (!this.isRunning) return;
 
-    console.log("[WebSocket] Stopping server...");
+    logger.info("[WebSocket] Stopping server...");
 
     // Stop intervals
     if (this.heartbeatInterval) {
@@ -497,7 +499,7 @@ export class WebSocketServerService extends EventEmitter {
     }
 
     this.isRunning = false;
-    console.log("[WebSocket] Server stopped");
+    logger.info("[WebSocket] Server stopped");
     this.emit("server:stopped");
   }
 
@@ -522,7 +524,7 @@ export class WebSocketServerService extends EventEmitter {
       },
       { messageType: message.type }
     ).catch((error) => {
-      console.error("[WebSocket] Broadcast instrumentation error:", error);
+      logger.error("[WebSocket] Broadcast instrumentation error:", error);
     });
   }
 
@@ -533,7 +535,7 @@ export class WebSocketServerService extends EventEmitter {
       this.sendMessage(connection.id, message);
     }
 
-    console.log(`[WebSocket] Broadcasted to ${channel}: ${subscribers.length} subscribers`);
+    logger.info(`[WebSocket] Broadcasted to ${channel}: ${subscribers.length} subscribers`);
   }
 
   broadcastToUser<T>(userId: string, message: WebSocketMessage<T>): void {
@@ -543,7 +545,7 @@ export class WebSocketServerService extends EventEmitter {
       this.sendMessage(connection.id, message);
     }
 
-    console.log(`[WebSocket] Broadcasted to user ${userId}: ${connections.length} connections`);
+    logger.info(`[WebSocket] Broadcasted to user ${userId}: ${connections.length} connections`);
   }
 
   sendMessage<T>(connectionId: string, message: WebSocketMessage<T>): boolean {
@@ -567,7 +569,7 @@ export class WebSocketServerService extends EventEmitter {
         clientType: connection.clientType,
       }
     ).catch((error) => {
-      console.error("[WebSocket] Send message instrumentation error:", error);
+      logger.error("[WebSocket] Send message instrumentation error:", error);
     });
 
     try {
@@ -579,7 +581,7 @@ export class WebSocketServerService extends EventEmitter {
 
       return true;
     } catch (error) {
-      console.error(`[WebSocket] Failed to send message to ${connectionId}:`, error);
+      logger.error(`[WebSocket] Failed to send message to ${connectionId}:`, error);
       return false;
     }
   }
@@ -695,7 +697,7 @@ export class WebSocketServerService extends EventEmitter {
       });
 
       ws.on("error", (error) => {
-        console.error(`[WebSocket] Connection error for ${connectionId}:`, error);
+        logger.error(`[WebSocket] Connection error for ${connectionId}:`, error);
         this.handleDisconnection(connectionId, clientIP, 1006, Buffer.from(error.message));
       });
 
@@ -712,10 +714,10 @@ export class WebSocketServerService extends EventEmitter {
         timestamp: Date.now(),
       });
 
-      console.log(`[WebSocket] New connection: ${connectionId} (user: ${userId || "anonymous"})`);
+      logger.info(`[WebSocket] New connection: ${connectionId} (user: ${userId || "anonymous"})`);
       this.emit("connection:open", { connectionId, userId });
     } catch (error) {
-      console.error(`[WebSocket] Failed to handle connection:`, error);
+      logger.error(`[WebSocket] Failed to handle connection:`, error);
       ws.close(1011, "Internal server error");
     }
   }
@@ -759,7 +761,7 @@ export class WebSocketServerService extends EventEmitter {
 
       this.emit("message:received", { message, connectionId });
     } catch (error) {
-      console.error(`[WebSocket] Error handling message from ${connectionId}:`, error);
+      logger.error(`[WebSocket] Error handling message from ${connectionId}:`, error);
       this.sendError(connectionId, "SERVER_ERROR", "Failed to process message");
     }
   }
@@ -773,7 +775,7 @@ export class WebSocketServerService extends EventEmitter {
     this.connectionManager.removeConnection(connectionId);
     this.rateLimiter.removeConnection(clientIP, connectionId);
 
-    console.log(
+    logger.info(
       `[WebSocket] Connection closed: ${connectionId} (code: ${code}, reason: ${reason.toString()})`
     );
     this.emit("connection:close", { connectionId, reason: reason.toString() });
@@ -869,7 +871,7 @@ export class WebSocketServerService extends EventEmitter {
       // and extract user information
       return { valid: true, userId: "test-user" };
     } catch (error) {
-      console.error("[WebSocket] Token validation error:", error);
+      logger.error("[WebSocket] Token validation error:", error);
       return { valid: false };
     }
   }
@@ -888,7 +890,7 @@ export class WebSocketServerService extends EventEmitter {
 
       return await this.config.authentication.tokenValidation(token);
     } catch (error) {
-      console.error("[WebSocket] Authentication error:", error);
+      logger.error("[WebSocket] Authentication error:", error);
       return { valid: false };
     }
   }
@@ -912,7 +914,7 @@ export class WebSocketServerService extends EventEmitter {
     // Add global message logging handler
     this.messageRouter.addGlobalHandler(async (message) => {
       if (this.config.monitoring.loggingLevel === "debug") {
-        console.log(`[WebSocket] Message routed:`, {
+        logger.info(`[WebSocket] Message routed:`, {
           type: message.type,
           channel: message.channel,
           timestamp: message.timestamp,
@@ -941,7 +943,7 @@ export class WebSocketServerService extends EventEmitter {
 
           // Check if connection is stale
           if (now - connection.lastActivity > timeout * 2) {
-            console.log(`[WebSocket] Closing stale connection: ${connection.id}`);
+            logger.info(`[WebSocket] Closing stale connection: ${connection.id}`);
             connection.ws.close(1001, "Connection timeout");
           }
         }

@@ -164,7 +164,7 @@ class MexcConnectivityTester {
       console.log(`   ❌ Account access failed: ${error}`);
       report.errors.push(`Cannot access account: ${error}`);
       
-      if (error.toString().includes("signature")) {
+      if (error instanceof Error && error.message.includes("signature")) {
         report.recommendations.push("Check if API key signature is correct and server time is synchronized");
       }
     }
@@ -448,7 +448,7 @@ async function main() {
 }
 
 // Execute if called directly
-if (import.meta.main) {
+if (require.main === module) {
   main();
 }
 

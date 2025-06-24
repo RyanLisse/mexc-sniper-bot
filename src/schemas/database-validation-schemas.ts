@@ -114,7 +114,7 @@ export const PositionSnapshotSchema = z.object({
 });
 
 // ============================================================================
-// System and Monitoring Schemas  
+// System and Monitoring Schemas
 // ============================================================================
 
 export const SystemHealthSchema = z.object({

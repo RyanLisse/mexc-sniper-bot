@@ -1,3 +1,4 @@
+import { createLogger } from "../lib/structured-logger";
 import {
   type AnalysisResult,
   type CalendarEntry,
@@ -20,12 +21,14 @@ export interface CalendarWorkflowResult {
 }
 
 export class CalendarWorkflow {
+  private logger = createLogger("calendar-workflow");
+
   async analyzeDiscoveryResults(
     calendarAnalysis: AgentResponse,
     patternAnalysis: AgentResponse,
     calendarData: any
   ): Promise<CalendarWorkflowResult> {
-    console.log("[CalendarWorkflow] Analyzing discovery results");
+    logger.info("[CalendarWorkflow] Analyzing discovery results");
 
     const calendarInsights = this.extractCalendarInsights(calendarAnalysis);
     const patternInsights = this.extractPatternInsights(patternAnalysis);
@@ -113,10 +116,10 @@ export class CalendarWorkflow {
     calendarInsights: AnalysisResult,
     patternInsights: AnalysisResult
   ): Promise<CalendarEntry[]> {
-    console.log("[CalendarWorkflow] Processing listings with AI insights");
+    logger.info("[CalendarWorkflow] Processing listings with AI insights");
 
     if (!Array.isArray(calendarEntries)) {
-      console.warn("[CalendarWorkflow] Invalid calendar entries, using empty array");
+      logger.warn("[CalendarWorkflow] Invalid calendar entries, using empty array");
       return [];
     }
 
@@ -151,7 +154,7 @@ export class CalendarWorkflow {
     highPotential: CalendarEntry[];
     monitoring: CalendarEntry[];
   } {
-    console.log("[CalendarWorkflow] Categorizing opportunities");
+    logger.info("[CalendarWorkflow] Categorizing opportunities");
 
     const newListings: CalendarEntry[] = [];
     const readyTargets: CalendarEntry[] = [];
@@ -197,7 +200,7 @@ export class CalendarWorkflow {
     watchlist: string[];
     total: number;
   } {
-    console.log("[CalendarWorkflow] Generating actionable recommendations");
+    logger.info("[CalendarWorkflow] Generating actionable recommendations");
 
     const immediate: string[] = [];
     const planned: string[] = [];
@@ -246,7 +249,7 @@ export class CalendarWorkflow {
     recommendation: string;
     summary: string;
   } {
-    console.log("[CalendarWorkflow] Calculating overall assessment");
+    logger.info("[CalendarWorkflow] Calculating overall assessment");
 
     const immediateCount = recommendations.immediate.length;
     const plannedCount = recommendations.planned.length;

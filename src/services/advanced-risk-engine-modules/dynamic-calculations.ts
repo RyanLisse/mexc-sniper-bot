@@ -1,3 +1,5 @@
+import { createLogger } from "../../lib/structured-logger";
+
 /**
  * Dynamic Calculations Module
  *
@@ -59,6 +61,8 @@ export interface DiversificationAssessment {
 }
 
 export class DynamicCalculations {
+  private logger = createLogger("dynamic-calculations");
+
   constructor(private config: DynamicCalculationsConfig) {}
 
   /**
@@ -233,7 +237,7 @@ export class DynamicCalculations {
         adjustedSize = 0;
       }
 
-      console.log(
+      logger.info(
         `[DynamicCalculations] Position validation: ${positionRequest.symbol} - Requested: ${positionRequest.requestedPositionSize}, Adjusted: ${adjustedSize}, Approved: ${approved}`
       );
 
@@ -246,7 +250,7 @@ export class DynamicCalculations {
         warnings,
       };
     } catch (error) {
-      console.error("[DynamicCalculations] Position size validation failed:", error);
+      logger.error("[DynamicCalculations] Position size validation failed:", error);
       return {
         approved: false,
         adjustedPositionSize: 0,

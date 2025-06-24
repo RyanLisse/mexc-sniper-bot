@@ -1,11 +1,12 @@
 import { and, count, eq, gte, inArray } from "drizzle-orm";
 import {
-  type SelectAlertInstance,
-  type SelectNotificationChannel,
   alertInstances,
   alertNotifications,
   notificationChannels,
+  type SelectAlertInstance,
+  type SelectNotificationChannel,
 } from "../../db/schemas/alerts";
+import { createLogger } from "../lib/structured-logger";
 import { EmailProvider } from "./email-provider";
 import { SlackProvider } from "./slack-provider";
 import { SMSProvider } from "./sms-provider";
@@ -54,6 +55,8 @@ export interface EscalationStep {
 }
 
 export class NotificationService {
+  private logger = createLogger("index");
+
   private db: any;
   private providers: Map<string, NotificationProvider> = new Map();
   private rateLimitCache: Map<string, number[]> = new Map();
@@ -79,7 +82,7 @@ export class NotificationService {
     try {
       // Get applicable notification channels
       const channels = await this.getChannelsForAlert(alert);
-      console.log(`Sending alert ${alert.id} to ${channels.length} channels`);
+      logger.info(`Sending alert ${alert.id} to ${channels.length} channels`);
 
       // Send to each channel
       const notificationPromises = channels.map((channel) =>
@@ -91,7 +94,7 @@ export class NotificationService {
       // Start escalation timer if configured
       await this.scheduleEscalation(alert);
     } catch (error) {
-      console.error("Error sending alert notifications:", error);
+      logger.error("Error sending alert notifications:", error);
     }
   }
 
@@ -115,7 +118,7 @@ export class NotificationService {
 
       await Promise.allSettled(notificationPromises);
     } catch (error) {
-      console.error("Error sending resolution notifications:", error);
+      logger.error("Error sending resolution notifications:", error);
     }
   }
 
@@ -127,7 +130,7 @@ export class NotificationService {
     try {
       // Check rate limiting
       if (await this.isChannelRateLimited(channel)) {
-        console.warn(`Channel ${channel.id} is rate limited`);
+        logger.warn(`Channel ${channel.id} is rate limited`);
         await this.recordNotificationAttempt(alert.id, channel.id, "rate_limited");
         return;
       }
@@ -135,7 +138,7 @@ export class NotificationService {
       // Get the appropriate provider
       const provider = this.providers.get(channel.type);
       if (!provider) {
-        console.error(`No provider found for channel type: ${channel.type}`);
+        logger.error(`No provider found for channel type: ${channel.type}`);
         return;
       }
 
@@ -154,9 +157,9 @@ export class NotificationService {
       // Update rate limiting cache
       this.updateRateLimit(channel);
 
-      console.log(`Notification sent to ${channel.name}: ${result.success ? "success" : "failed"}`);
+      logger.info(`Notification sent to ${channel.name}: ${result.success ? "success" : "failed"}`);
     } catch (error) {
-      console.error(`Error sending to channel ${channel.name}:`, error);
+      logger.error(`Error sending to channel ${channel.name}:`, error);
     }
   }
 
@@ -194,7 +197,7 @@ export class NotificationService {
         .limit(1);
 
       if (currentAlert.length === 0 || currentAlert[0].status !== "firing") {
-        console.log(`Alert ${alert.id} is no longer active, skipping escalation`);
+        logger.info(`Alert ${alert.id} is no longer active, skipping escalation`);
         return;
       }
 
@@ -228,9 +231,9 @@ export class NotificationService {
         })
         .where(eq(alertInstances.id, alert.id));
 
-      console.log(`Escalated alert ${alert.id} to level ${level}`);
+      logger.info(`Escalated alert ${alert.id} to level ${level}`);
     } catch (error) {
-      console.error(`Error executing escalation step:`, error);
+      logger.error(`Error executing escalation step:`, error);
     }
   }
 
@@ -541,7 +544,7 @@ export class NotificationService {
       createdBy,
     });
 
-    console.log(`Created notification channel: ${channelId}`);
+    logger.info(`Created notification channel: ${channelId}`);
     return channelId;
   }
 

@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Pattern Monitoring API Endpoints
  * 
  * Provides real-time pattern detection monitoring and statistics.
@@ -46,7 +47,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       message: 'Pattern monitoring report retrieved successfully',
     }));
   } catch (error) {
-    console.error('[API] Pattern monitoring GET failed:', error);
+    logger.error('[API] Pattern monitoring GET failed:', error);
     return NextResponse.json(createErrorResponse(
       'Failed to get pattern monitoring report',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -110,6 +111,8 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         const { patternStrategyOrchestrator } = await import('@/src/services/pattern-strategy-orchestrator');
         const { patternTargetIntegrationService } = await import('@/src/services/pattern-target-integration-service');
         const { UnifiedMexcServiceV2 } = await import('@/src/services/unified-mexc-service-v2');
+
+const logger = createLogger('route');
 
         const mexcService = new UnifiedMexcServiceV2();
         const userId = body.userId || "system";
@@ -207,7 +210,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         ), { status: 400 });
     }
   } catch (error) {
-    console.error('[API] Pattern monitoring POST failed:', error);
+    logger.error('[API] Pattern monitoring POST failed:', error);
     return NextResponse.json(createErrorResponse(
       'Pattern monitoring operation failed',
       { details: error instanceof Error ? error.message : 'Unknown error' }
@@ -232,7 +235,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       { message: 'Pattern monitoring configuration updated (note: requires service restart for changes to take effect)' }
     ));
   } catch (error) {
-    console.error('[API] Pattern monitoring PUT failed:', error);
+    logger.error('[API] Pattern monitoring PUT failed:', error);
     return NextResponse.json(createErrorResponse(
       'Failed to update pattern monitoring configuration',
       { details: error instanceof Error ? error.message : 'Unknown error' }

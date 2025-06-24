@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Centralized Error Handler for API Routes
  *
  * This module provides error handling middleware and utilities for
@@ -6,7 +7,7 @@
  */
 
 import type { NextResponse } from "next/server";
-import { HTTP_STATUS, apiResponse, createErrorResponse } from "./api-response";
+import { apiResponse, createErrorResponse, HTTP_STATUS } from "./api-response";
 import { ensureError } from "./error-type-utils";
 import {
   isApplicationError,
@@ -28,7 +29,7 @@ interface ErrorLogger {
  */
 const defaultErrorLogger: ErrorLogger = {
   error: (message, error, context) => {
-    console.error(`[ERROR] ${message}`, {
+    logger.error(`[ERROR] ${message}`, {
       error: error.message,
       stack: error.stack,
       context,
@@ -36,7 +37,7 @@ const defaultErrorLogger: ErrorLogger = {
     });
   },
   warn: (message, error, context) => {
-    console.warn(`[WARN] ${message}`, {
+    logger.warn(`[WARN] ${message}`, {
       error: error.message,
       context,
       timestamp: new Date().toISOString(),
@@ -60,6 +61,8 @@ export function setErrorLogger(logger: ErrorLogger) {
  * Error context builder
  */
 export class ErrorContext {
+  private logger = createLogger("error-handler");
+
   private context: Record<string, unknown> = {};
 
   add(key: string, value: unknown): ErrorContext {

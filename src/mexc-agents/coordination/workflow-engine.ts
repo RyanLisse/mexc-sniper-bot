@@ -1,4 +1,5 @@
 import type { AgentResponse } from "../base-agent";
+import { createLogger } from "../lib/structured-logger";
 import type { AgentRegistry } from "./agent-registry";
 
 export type WorkflowExecutionMode = "sequential" | "parallel" | "mixed";
@@ -87,6 +88,8 @@ export interface WorkflowContext {
  * parallel/sequential execution, and comprehensive failure handling
  */
 export class WorkflowEngine {
+  private logger = createLogger("workflow-engine");
+
   private agentRegistry: AgentRegistry;
   private runningWorkflows: Map<string, WorkflowContext> = new Map();
   private workflowDefinitions: Map<string, WorkflowDefinition> = new Map();
@@ -106,7 +109,7 @@ export class WorkflowEngine {
     this.validateWorkflowDefinition(definition);
 
     this.workflowDefinitions.set(definition.id, definition);
-    console.log(`[WorkflowEngine] Registered workflow: ${definition.id} (${definition.name})`);
+    logger.info(`[WorkflowEngine] Registered workflow: ${definition.id} (${definition.name})`);
   }
 
   /**
@@ -157,7 +160,7 @@ export class WorkflowEngine {
     this.runningWorkflows.set(executionId, context);
 
     try {
-      console.log(`[WorkflowEngine] Starting workflow ${workflowId} (execution: ${executionId})`);
+      logger.info(`[WorkflowEngine] Starting workflow ${workflowId} (execution: ${executionId})`);
 
       const result = await this.executeWorkflowSteps(definition, context);
 
@@ -195,7 +198,7 @@ export class WorkflowEngine {
     }
 
     context.cancelled = true;
-    console.log(`[WorkflowEngine] Cancelled workflow execution: ${executionId}`);
+    logger.info(`[WorkflowEngine] Cancelled workflow execution: ${executionId}`);
     return true;
   }
 
@@ -245,17 +248,17 @@ export class WorkflowEngine {
 
     // Log resolved warnings for debugging
     if (resolvedWarnings.length > 0) {
-      console.debug(
+      logger.debug(
         `[WorkflowEngine] Resolved ${resolvedWarnings.length} agent registration warnings`
       );
     }
 
     // Log remaining warnings if any
     if (remainingWarnings.length > 0) {
-      console.warn(
+      logger.warn(
         `[WorkflowEngine] ${remainingWarnings.length} agent registration warnings remain:`
       );
-      remainingWarnings.forEach((warning) => console.warn(`  - ${warning}`));
+      remainingWarnings.forEach((warning) => logger.warn(`  - ${warning}`));
     }
 
     return { resolvedWarnings, remainingWarnings };

@@ -1,6 +1,6 @@
 /**
  * Agent Cache Types and Interfaces
- * 
+ *
  * Centralized type definitions for the enhanced agent caching system.
  * Extracted from enhanced-agent-cache.ts for better modularity.
  */

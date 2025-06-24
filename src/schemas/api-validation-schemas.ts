@@ -25,10 +25,7 @@ export const ApiErrorResponseSchema = z.object({
   timestamp: z.string().datetime().optional(),
 });
 
-export const ApiResponseSchema = z.union([
-  ApiSuccessResponseSchema,
-  ApiErrorResponseSchema,
-]);
+export const ApiResponseSchema = z.union([ApiSuccessResponseSchema, ApiErrorResponseSchema]);
 
 // ============================================================================
 // Transaction Locks API Schemas
@@ -74,13 +71,15 @@ export const TransactionLockQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(50).optional(),
 });
 
-export const ReleaseLockRequestSchema = z.object({
-  lockId: z.string().optional(),
-  ownerId: z.string().optional(),
-  force: z.coerce.boolean().default(false).optional(),
-}).refine((data) => data.lockId || data.ownerId, {
-  message: "Either lockId or ownerId is required",
-});
+export const ReleaseLockRequestSchema = z
+  .object({
+    lockId: z.string().optional(),
+    ownerId: z.string().optional(),
+    force: z.coerce.boolean().default(false).optional(),
+  })
+  .refine((data) => data.lockId || data.ownerId, {
+    message: "Either lockId or ownerId is required",
+  });
 
 export const CheckLockRequestSchema = z.object({
   action: z.literal("check"),

@@ -4,18 +4,12 @@
  * Displays and manages active trading positions
  */
 
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/src/components/ui/card";
-import { ScrollArea } from "@/src/components/ui/scroll-area";
-import type { ExecutionPosition } from "@/src/services/auto-sniping-execution-service";
 import { Target, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { ExecutionPosition } from "@/src/services/auto-sniping-execution-service";
 import { PnLIndicator } from "./pnl-indicator";
 
 interface PositionsTabProps {

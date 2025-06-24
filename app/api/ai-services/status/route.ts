@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { aiIntelligenceService } from "../../../../src/services/ai-intelligence-service";
 import { createApiResponse } from "../../../../src/lib/api-response";
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +32,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[AI Services Status] Error:", error);
+    logger.error("[AI Services Status] Error:", { error: error });
     return createApiResponse(
       {
         success: false,

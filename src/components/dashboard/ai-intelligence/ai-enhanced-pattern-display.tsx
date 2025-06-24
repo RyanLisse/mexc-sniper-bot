@@ -138,7 +138,10 @@ const getConfidenceColor = (confidence: number) => {
 function PatternHeader({
   pattern,
   hasAIEnhancement,
-}: { pattern: AIEnhancedPattern; hasAIEnhancement: boolean }) {
+}: {
+  pattern: AIEnhancedPattern;
+  hasAIEnhancement: boolean;
+}) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
@@ -195,7 +198,10 @@ function ConfidenceScores({ pattern }: { pattern: AIEnhancedPattern }) {
 function AdvanceDetection({
   pattern,
   showAdvanceDetection,
-}: { pattern: AIEnhancedPattern; showAdvanceDetection: boolean }) {
+}: {
+  pattern: AIEnhancedPattern;
+  showAdvanceDetection: boolean;
+}) {
   if (!showAdvanceDetection || !pattern.advanceHours) return null;
 
   return (

@@ -12,9 +12,12 @@
  */
 
 import { NextRequest } from 'next/server';
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
 import { AutoSnipingOrchestrator } from '@/src/services/auto-sniping-orchestrator';
+
+const logger = createLogger('route');
 
 /**
  * POST /api/auto-sniping/control
@@ -38,7 +41,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 
     switch (action) {
       case 'start': {
-        console.log('[Auto-Sniping Control] Starting auto-sniping...');
+        logger.info('[Auto-Sniping Control] Starting auto-sniping...');
         const result = await orchestrator.startAutoSniping();
         
         if (result.success) {
@@ -62,7 +65,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       }
 
       case 'stop': {
-        console.log('[Auto-Sniping Control] Stopping auto-sniping...');
+        logger.info('[Auto-Sniping Control] Stopping auto-sniping...');
         const result = await orchestrator.stopAutoSniping();
         
         if (result.success) {
@@ -101,7 +104,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 
       case 'emergency_stop': {
         const stopReason = reason || 'Manual emergency stop requested';
-        console.warn(`[Auto-Sniping Control] Emergency stop requested: ${stopReason}`);
+        logger.warn(`[Auto-Sniping Control] Emergency stop requested: ${stopReason}`);
         
         await orchestrator.emergencyStop(stopReason);
         
@@ -155,7 +158,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         );
     }
   } catch (error) {
-    console.error('[Auto-Sniping Control] API request failed:', error);
+    logger.error('[Auto-Sniping Control] API request failed:', error);
     return Response.json(
       createErrorResponse('Auto-sniping control request failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -191,7 +194,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       },
     }));
   } catch (error) {
-    console.error('[Auto-Sniping Control] Status request failed:', error);
+    logger.error('[Auto-Sniping Control] Status request failed:', error);
     return Response.json(
       createErrorResponse('Failed to retrieve auto-sniping status', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -230,7 +233,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       );
     }
   } catch (error) {
-    console.error('[Auto-Sniping Control] Configuration update failed:', error);
+    logger.error('[Auto-Sniping Control] Configuration update failed:', error);
     return Response.json(
       createErrorResponse('Configuration update failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -250,7 +253,7 @@ export const DELETE = apiAuthWrapper(async (request: NextRequest) => {
     const { reason } = body;
     
     const stopReason = reason || 'Emergency stop via DELETE endpoint';
-    console.warn(`[Auto-Sniping Control] Emergency stop via DELETE: ${stopReason}`);
+    logger.warn(`[Auto-Sniping Control] Emergency stop via DELETE: ${stopReason}`);
     
     const orchestrator = AutoSnipingOrchestrator.getInstance();
     await orchestrator.emergencyStop(stopReason);
@@ -264,7 +267,7 @@ export const DELETE = apiAuthWrapper(async (request: NextRequest) => {
       },
     }));
   } catch (error) {
-    console.error('[Auto-Sniping Control] Emergency stop failed:', error);
+    logger.error('[Auto-Sniping Control] Emergency stop failed:', error);
     return Response.json(
       createErrorResponse('Emergency stop failed', {
         error: error instanceof Error ? error.message : 'Unknown error',

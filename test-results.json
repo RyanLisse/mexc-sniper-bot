@@ -1,1 +1,1258 @@
-{"numTotalTestSuites":71,"numPassedTestSuites":53,"numFailedTestSuites":18,"numPendingTestSuites":0,"numTotalTests":110,"numPassedTests":110,"numFailedTests":0,"numPendingTests":0,"numTodoTests":0,"snapshot":{"added":0,"failure":false,"filesAdded":0,"filesRemoved":0,"filesRemovedList":[],"filesUnmatched":0,"filesUpdated":0,"matched":0,"total":0,"unchecked":0,"uncheckedKeysByFile":[],"unmatched":0,"updated":0,"didUpdate":false},"startTime":1750283174737,"success":false,"testResults":[{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/services/advanced-trading-strategy' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/advanced-trading-strategy.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/advanced-trading-strategy.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/mexc-agents/coordination/agent-registry' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/agent-health-monitoring.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/agent-health-monitoring.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/components/api-credentials-form' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/api-credentials-flow.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/api-credentials-flow.test.ts"},{"assertionResults":[{"ancestorTitles":["API Credentials Request Body Validation"],"fullName":"API Credentials Request Body Validation should identify malformed JSON as the cause of \"Invalid request body\"","status":"passed","title":"should identify malformed JSON as the cause of \"Invalid request body\"","duration":4.697124999999971,"failureMessages":[],"meta":{}},{"ancestorTitles":["API Credentials Request Body Validation"],"fullName":"API Credentials Request Body Validation should validate proper JSON structure for API credentials","status":"passed","title":"should validate proper JSON structure for API credentials","duration":0.4544159999999806,"failureMessages":[],"meta":{}},{"ancestorTitles":["API Credentials Request Body Validation"],"fullName":"API Credentials Request Body Validation should identify content-type issues","status":"passed","title":"should identify content-type issues","duration":0.3622920000000249,"failureMessages":[],"meta":{}},{"ancestorTitles":["API Credentials Request Body Validation"],"fullName":"API Credentials Request Body Validation should validate required fields","status":"passed","title":"should validate required fields","duration":0.18137500000000273,"failureMessages":[],"meta":{}},{"ancestorTitles":["API Credentials Request Body Validation"],"fullName":"API Credentials Request Body Validation should validate API key format requirements","status":"passed","title":"should validate API key format requirements","duration":0.13512499999995953,"failureMessages":[],"meta":{}},{"ancestorTitles":["API Credentials Request Body Validation"],"fullName":"API Credentials Request Body Validation should simulate request body parsing scenarios","status":"passed","title":"should simulate request body parsing scenarios","duration":0.18916600000000017,"failureMessages":[],"meta":{}},{"ancestorTitles":["API Credentials Request Body Validation"],"fullName":"API Credentials Request Body Validation should test user ID validation scenarios","status":"passed","title":"should test user ID validation scenarios","duration":0.10775000000001,"failureMessages":[],"meta":{}},{"ancestorTitles":["API Credentials Request Flow Integration"],"fullName":"API Credentials Request Flow Integration should identify common failure patterns","status":"passed","title":"should identify common failure patterns","duration":0.13191700000004403,"failureMessages":[],"meta":{}}],"startTime":1750283176597,"endTime":1750283176603.1318,"status":"passed","message":"","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/api-credentials-validation.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/lib/api-auth' imported from '/Users/neo/Developer/mexc-sniper-bot/src/lib/auth-decorators.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/auth-consolidation.test.ts"},{"assertionResults":[{"ancestorTitles":["Authentication Environment Management","Environment Switching"],"fullName":"Authentication Environment Management Environment Switching should switch to different environments correctly","status":"passed","title":"should switch to different environments correctly","duration":2.2670000000000528,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Environment Switching"],"fullName":"Authentication Environment Management Environment Switching should maintain environment history for rollback","status":"passed","title":"should maintain environment history for rollback","duration":0.43812500000001364,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Environment Switching"],"fullName":"Authentication Environment Management Environment Switching should throw error for unknown environment","status":"passed","title":"should throw error for unknown environment","duration":0.5427080000000046,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Environment Switching"],"fullName":"Authentication Environment Management Environment Switching should set all required environment variables","status":"passed","title":"should set all required environment variables","duration":0.2601659999999697,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Test User Management"],"fullName":"Authentication Environment Management Test User Management should create test users with correct data","status":"passed","title":"should create test users with correct data","duration":1.2479170000000295,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Test User Management"],"fullName":"Authentication Environment Management Test User Management should create users with custom data overrides","status":"passed","title":"should create users with custom data overrides","duration":0.3317920000000072,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Test User Management"],"fullName":"Authentication Environment Management Test User Management should track created users by environment","status":"passed","title":"should track created users by environment","duration":0.375583000000006,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Test User Management"],"fullName":"Authentication Environment Management Test User Management should cleanup users for specific environment","status":"passed","title":"should cleanup users for specific environment","duration":0.23495900000000347,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Test User Management"],"fullName":"Authentication Environment Management Test User Management should cleanup all users across environments","status":"passed","title":"should cleanup all users across environments","duration":0.84212500000001,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","User Scenarios"],"fullName":"Authentication Environment Management User Scenarios should create basic flow scenario","status":"passed","title":"should create basic flow scenario","duration":0.2743330000000128,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","User Scenarios"],"fullName":"Authentication Environment Management User Scenarios should create permission testing scenario","status":"passed","title":"should create permission testing scenario","duration":0.531915999999967,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","User Scenarios"],"fullName":"Authentication Environment Management User Scenarios should create onboarding flow scenario","status":"passed","title":"should create onboarding flow scenario","duration":0.1890409999999747,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","User Scenarios"],"fullName":"Authentication Environment Management User Scenarios should create multi-org testing scenario","status":"passed","title":"should create multi-org testing scenario","duration":0.29549999999994725,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","User Scenarios"],"fullName":"Authentication Environment Management User Scenarios should create security testing scenario","status":"passed","title":"should create security testing scenario","duration":0.23824999999999363,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","User Scenarios"],"fullName":"Authentication Environment Management User Scenarios should throw error for unknown scenario","status":"passed","title":"should throw error for unknown scenario","duration":0.41758299999997917,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Environment Validation"],"fullName":"Authentication Environment Management Environment Validation should validate complete environment configuration","status":"passed","title":"should validate complete environment configuration","duration":0.20933299999995825,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Environment Validation"],"fullName":"Authentication Environment Management Environment Validation should detect missing environment variables","status":"passed","title":"should detect missing environment variables","duration":6.983749999999986,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Environment Validation"],"fullName":"Authentication Environment Management Environment Validation should detect invalid URL formats","status":"passed","title":"should detect invalid URL formats","duration":4.894083000000023,"failureMessages":[],"meta":{}},{"ancestorTitles":["Authentication Environment Management","Manager Reset"],"fullName":"Authentication Environment Management Manager Reset should reset to initial state","status":"passed","title":"should reset to initial state","duration":0.3167909999999665,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Shared Instance"],"fullName":"Global Auth Environment Manager Shared Instance should provide global instance","status":"passed","title":"should provide global instance","duration":0.17133400000000165,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Shared Instance"],"fullName":"Global Auth Environment Manager Shared Instance should maintain state across different imports","status":"passed","title":"should maintain state across different imports","duration":0.15162499999996726,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Environment Setup Hooks"],"fullName":"Global Auth Environment Manager Environment Setup Hooks should setup test environment with beforeEach","status":"passed","title":"should setup test environment with beforeEach","duration":0.16174999999998363,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Environment Setup Hooks"],"fullName":"Global Auth Environment Manager Environment Setup Hooks should cleanup after each test","status":"passed","title":"should cleanup after each test","duration":0.18108399999999847,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Auth Scenarios Helpers"],"fullName":"Global Auth Environment Manager Auth Scenarios Helpers should setup permission test scenario","status":"passed","title":"should setup permission test scenario","duration":0.5053330000000074,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Auth Scenarios Helpers"],"fullName":"Global Auth Environment Manager Auth Scenarios Helpers should setup onboarding test scenario","status":"passed","title":"should setup onboarding test scenario","duration":0.21808300000003555,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Auth Scenarios Helpers"],"fullName":"Global Auth Environment Manager Auth Scenarios Helpers should setup basic auth test scenario","status":"passed","title":"should setup basic auth test scenario","duration":13.742124999999987,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Auth Scenarios Helpers"],"fullName":"Global Auth Environment Manager Auth Scenarios Helpers should setup multi-org test scenario","status":"passed","title":"should setup multi-org test scenario","duration":0.28600000000000136,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Auth Scenarios Helpers"],"fullName":"Global Auth Environment Manager Auth Scenarios Helpers should setup security test scenario","status":"passed","title":"should setup security test scenario","duration":0.6564169999999763,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Environment-Aware Utilities"],"fullName":"Global Auth Environment Manager Environment-Aware Utilities should check current environment correctly","status":"passed","title":"should check current environment correctly","duration":1.283375000000035,"failureMessages":[],"meta":{}},{"ancestorTitles":["Global Auth Environment Manager","Environment-Aware Utilities"],"fullName":"Global Auth Environment Manager Environment-Aware Utilities should run test in specific environment temporarily","status":"passed","title":"should run test in specific environment temporarily","duration":0.24750000000000227,"failureMessages":[],"meta":{}}],"startTime":1750283176352,"endTime":1750283176391.2834,"status":"passed","message":"","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/auth-environment-management.test.ts"},{"assertionResults":[{"ancestorTitles":["/api/health/auth","GET /api/health/auth"],"fullName":"/api/health/auth GET /api/health/auth should return healthy status with all environment variables configured","status":"passed","title":"should return healthy status with all environment variables configured","duration":16.054125,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/health/auth","GET /api/health/auth"],"fullName":"/api/health/auth GET /api/health/auth should return error status when required environment variables are missing","status":"passed","title":"should return error status when required environment variables are missing","duration":1.0529999999999973,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/health/auth","GET /api/health/auth"],"fullName":"/api/health/auth GET /api/health/auth should return unhealthy status when Kinde SDK throws error","status":"passed","title":"should return unhealthy status when Kinde SDK throws error","duration":14.028124999999989,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/health/auth","GET /api/health/auth"],"fullName":"/api/health/auth GET /api/health/auth should validate configuration format correctly","status":"passed","title":"should validate configuration format correctly","duration":9.761167,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/health/auth","GET /api/health/auth"],"fullName":"/api/health/auth GET /api/health/auth should include deployment information","status":"passed","title":"should include deployment information","duration":5.988917000000015,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/health/auth","GET /api/health/auth"],"fullName":"/api/health/auth GET /api/health/auth should handle unexpected errors gracefully","status":"passed","title":"should handle unexpected errors gracefully","duration":2.8035410000000525,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/health/auth","OPTIONS /api/health/auth"],"fullName":"/api/health/auth OPTIONS /api/health/auth should handle CORS preflight requests","status":"passed","title":"should handle CORS preflight requests","duration":0.8837080000000128,"failureMessages":[],"meta":{}}],"startTime":1750283176226,"endTime":1750283176275.8838,"status":"passed","message":"","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/auth-health-check.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/lib/constants' imported from '/Users/neo/Developer/mexc-sniper-bot/src/mexc-agents/base-agent.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/base-agent-caching.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/lib/cache-manager' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/cache-system.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/cache-system.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/lib/constants' imported from '/Users/neo/Developer/mexc-sniper-bot/src/mexc-agents/coordination/performance-collector.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/coordination-system.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/lib/database-optimization-manager' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/database-optimization.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/database-optimization.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/services/adaptive-rate-limiter' imported from '/Users/neo/Developer/mexc-sniper-bot/src/lib/rate-limiter.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/enhanced-rate-limiter.test.ts"},{"assertionResults":[{"ancestorTitles":["MEXC API Client Utilities","Signature generation logic"],"fullName":"MEXC API Client Utilities Signature generation logic should create proper query string for signature","status":"passed","title":"should create proper query string for signature","duration":84.24995800000005,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","Signature generation logic"],"fullName":"MEXC API Client Utilities Signature generation logic should filter out undefined and null values","status":"passed","title":"should filter out undefined and null values","duration":0.24929200000002538,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","Signature generation logic"],"fullName":"MEXC API Client Utilities Signature generation logic should sort parameters alphabetically","status":"passed","title":"should sort parameters alphabetically","duration":0.132583000000011,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","Rate limiting logic"],"fullName":"MEXC API Client Utilities Rate limiting logic should calculate correct delay when request is too soon","status":"passed","title":"should calculate correct delay when request is too soon","duration":0.09625000000005457,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","Rate limiting logic"],"fullName":"MEXC API Client Utilities Rate limiting logic should not delay when enough time has passed","status":"passed","title":"should not delay when enough time has passed","duration":0.05416700000000674,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","URL construction logic"],"fullName":"MEXC API Client Utilities URL construction logic should build correct endpoint URLs","status":"passed","title":"should build correct endpoint URLs","duration":0.059833000000026004,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","URL construction logic"],"fullName":"MEXC API Client Utilities URL construction logic should handle endpoint with leading slash","status":"passed","title":"should handle endpoint with leading slash","duration":0.046582999999998265,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","URL construction logic"],"fullName":"MEXC API Client Utilities URL construction logic should handle endpoint without leading slash","status":"passed","title":"should handle endpoint without leading slash","duration":0.04566599999998289,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","Configuration validation"],"fullName":"MEXC API Client Utilities Configuration validation should use default values when not provided","status":"passed","title":"should use default values when not provided","duration":0.088374999999985,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","Configuration validation"],"fullName":"MEXC API Client Utilities Configuration validation should use provided values over defaults","status":"passed","title":"should use provided values over defaults","duration":0.07549999999997681,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","Error handling scenarios"],"fullName":"MEXC API Client Utilities Error handling scenarios should identify missing credentials error","status":"passed","title":"should identify missing credentials error","duration":0.08562499999999318,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC API Client Utilities","Error handling scenarios"],"fullName":"MEXC API Client Utilities Error handling scenarios should validate request parameters","status":"passed","title":"should validate request parameters","duration":0.5252920000000358,"failureMessages":[],"meta":{}}],"startTime":1750283176274,"endTime":1750283176367.5254,"status":"passed","message":"","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/mexc-api-client.test.ts"},{"assertionResults":[{"ancestorTitles":["MEXC Schemas","CalendarEntrySchema"],"fullName":"MEXC Schemas CalendarEntrySchema should validate a correct calendar entry","status":"passed","title":"should validate a correct calendar entry","duration":5.08379199999996,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","CalendarEntrySchema"],"fullName":"MEXC Schemas CalendarEntrySchema should reject calendar entry with missing fields","status":"passed","title":"should reject calendar entry with missing fields","duration":0.5301660000000084,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","CalendarEntrySchema"],"fullName":"MEXC Schemas CalendarEntrySchema should reject calendar entry with wrong types","status":"passed","title":"should reject calendar entry with wrong types","duration":0.18062500000002046,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","SymbolV2EntrySchema"],"fullName":"MEXC Schemas SymbolV2EntrySchema should validate a correct symbol entry","status":"passed","title":"should validate a correct symbol entry","duration":0.2775829999999928,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","SymbolV2EntrySchema"],"fullName":"MEXC Schemas SymbolV2EntrySchema should validate minimal symbol entry","status":"passed","title":"should validate minimal symbol entry","duration":0.1295409999999606,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","SymbolV2EntrySchema"],"fullName":"MEXC Schemas SymbolV2EntrySchema should reject symbol entry with missing required fields","status":"passed","title":"should reject symbol entry with missing required fields","duration":0.15512499999999818,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","ReadyStatePatternSchema"],"fullName":"MEXC Schemas ReadyStatePatternSchema should validate correct ready state pattern","status":"passed","title":"should validate correct ready state pattern","duration":0.17958299999997962,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","ReadyStatePatternSchema"],"fullName":"MEXC Schemas ReadyStatePatternSchema should validate READY_STATE_PATTERN constant","status":"passed","title":"should validate READY_STATE_PATTERN constant","duration":0.18787500000001955,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Validation helpers"],"fullName":"MEXC Schemas Validation helpers should validate calendar entry with helper function","status":"passed","title":"should validate calendar entry with helper function","duration":0.12091700000001993,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Validation helpers"],"fullName":"MEXC Schemas Validation helpers should throw error for invalid calendar entry","status":"passed","title":"should throw error for invalid calendar entry","duration":0.21204099999999926,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Validation helpers"],"fullName":"MEXC Schemas Validation helpers should validate symbol entry with helper function","status":"passed","title":"should validate symbol entry with helper function","duration":0.11425000000002683,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Pattern matching utilities","matchesReadyPattern"],"fullName":"MEXC Schemas Pattern matching utilities matchesReadyPattern should return true for symbol matching ready pattern","status":"passed","title":"should return true for symbol matching ready pattern","duration":0.12137500000000045,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Pattern matching utilities","matchesReadyPattern"],"fullName":"MEXC Schemas Pattern matching utilities matchesReadyPattern should return false for symbol not matching ready pattern","status":"passed","title":"should return false for symbol not matching ready pattern","duration":0.0690829999999778,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Pattern matching utilities","matchesReadyPattern"],"fullName":"MEXC Schemas Pattern matching utilities matchesReadyPattern should return true for incomplete symbol with correct pattern","status":"passed","title":"should return true for incomplete symbol with correct pattern","duration":0.039917000000002645,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Pattern matching utilities","hasCompleteData"],"fullName":"MEXC Schemas Pattern matching utilities hasCompleteData should return true for symbol with complete data","status":"passed","title":"should return true for symbol with complete data","duration":0.06520799999998417,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Pattern matching utilities","hasCompleteData"],"fullName":"MEXC Schemas Pattern matching utilities hasCompleteData should return false for symbol missing data","status":"passed","title":"should return false for symbol missing data","duration":0.05225000000001501,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Pattern matching utilities","isValidForSnipe"],"fullName":"MEXC Schemas Pattern matching utilities isValidForSnipe should return true only for ready symbols with complete data","status":"passed","title":"should return true only for ready symbols with complete data","duration":0.062374999999974534,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Pattern matching utilities","isValidForSnipe"],"fullName":"MEXC Schemas Pattern matching utilities isValidForSnipe should return false for not ready symbols","status":"passed","title":"should return false for not ready symbols","duration":0.038291999999955806,"failureMessages":[],"meta":{}},{"ancestorTitles":["MEXC Schemas","Pattern matching utilities","isValidForSnipe"],"fullName":"MEXC Schemas Pattern matching utilities isValidForSnipe should return false for ready symbols without complete data","status":"passed","title":"should return false for ready symbols without complete data","duration":0.05349999999998545,"failureMessages":[],"meta":{}}],"startTime":1750283176472,"endTime":1750283176480.0535,"status":"passed","message":"","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/mexc-schemas.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/services/multi-phase-executor' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-executor.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-executor.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/services/multi-phase-strategy-builder' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-strategy-builder.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-strategy-builder.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/services/multi-phase-trading-bot' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-trading-bot.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-trading-bot.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/lib/test-branch-setup' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/neon-branch-integration.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/neon-branch-integration.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/services/optimized-auto-exit-manager' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/optimized-auto-exit-manager.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/optimized-auto-exit-manager.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/services/secure-encryption-service' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/secure-encryption-service.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/secure-encryption-service.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/services/trading-strategy-manager' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/trading-strategy-manager.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/trading-strategy-manager.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/services/transaction-lock-service' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/transaction-lock-service.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/transaction-lock-service.test.ts"},{"assertionResults":[],"startTime":1750283174737,"endTime":1750283174737,"status":"failed","message":"Cannot find package '@/src/db/schema' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/transactions.test.ts'","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/transactions.test.ts"},{"assertionResults":[{"ancestorTitles":["/api/user-preferences","User preferences data structure"],"fullName":"/api/user-preferences User preferences data structure should validate default user preferences structure","status":"passed","title":"should validate default user preferences structure","duration":1.2984169999999722,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/user-preferences","User preferences data structure"],"fullName":"/api/user-preferences User preferences data structure should validate take profit levels structure","status":"passed","title":"should validate take profit levels structure","duration":0.22420799999997598,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/user-preferences","User preferences data structure"],"fullName":"/api/user-preferences User preferences data structure should validate ready state pattern format","status":"passed","title":"should validate ready state pattern format","duration":0.36333300000001145,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/user-preferences","User preferences data structure"],"fullName":"/api/user-preferences User preferences data structure should validate risk tolerance options","status":"passed","title":"should validate risk tolerance options","duration":0.2696250000000191,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/user-preferences","User preferences data structure"],"fullName":"/api/user-preferences User preferences data structure should validate interval configuration","status":"passed","title":"should validate interval configuration","duration":0.11516699999998536,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/user-preferences","Request validation logic"],"fullName":"/api/user-preferences Request validation logic should validate required fields for user preferences","status":"passed","title":"should validate required fields for user preferences","duration":0.5407079999999951,"failureMessages":[],"meta":{}}],"startTime":1750283176622,"endTime":1750283176625.5408,"status":"passed","message":"","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/user-preferences.test.ts"},{"assertionResults":[{"ancestorTitles":["Utils","cn function"],"fullName":"Utils cn function should merge class names correctly","status":"passed","title":"should merge class names correctly","duration":6.056749999999965,"failureMessages":[],"meta":{}},{"ancestorTitles":["Utils","cn function"],"fullName":"Utils cn function should handle conditional classes","status":"passed","title":"should handle conditional classes","duration":0.1574579999999628,"failureMessages":[],"meta":{}},{"ancestorTitles":["Utils","cn function"],"fullName":"Utils cn function should handle overlapping Tailwind classes","status":"passed","title":"should handle overlapping Tailwind classes","duration":0.11820900000003576,"failureMessages":[],"meta":{}},{"ancestorTitles":["Utils","cn function"],"fullName":"Utils cn function should handle empty inputs","status":"passed","title":"should handle empty inputs","duration":0.07495799999998098,"failureMessages":[],"meta":{}},{"ancestorTitles":["Utils","cn function"],"fullName":"Utils cn function should handle null and undefined inputs","status":"passed","title":"should handle null and undefined inputs","duration":0.06983400000001438,"failureMessages":[],"meta":{}},{"ancestorTitles":["Utils","cn function"],"fullName":"Utils cn function should handle object notation","status":"passed","title":"should handle object notation","duration":0.08150000000000546,"failureMessages":[],"meta":{}}],"startTime":1750283176399,"endTime":1750283176406.0815,"status":"passed","message":"","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/utils.test.ts"},{"assertionResults":[{"ancestorTitles":["Project Verification Tests","Python Cleanup Verification"],"fullName":"Project Verification Tests Python Cleanup Verification should have no Python source files in src directory","status":"passed","title":"should have no Python source files in src directory","duration":4.872374999999977,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Python Cleanup Verification"],"fullName":"Project Verification Tests Python Cleanup Verification should not have Python configuration files","status":"passed","title":"should not have Python configuration files","duration":0.4061669999999822,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Python Cleanup Verification"],"fullName":"Project Verification Tests Python Cleanup Verification should not have Python API directory","status":"passed","title":"should not have Python API directory","duration":0.328708000000006,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","TypeScript Implementation Verification"],"fullName":"Project Verification Tests TypeScript Implementation Verification should have all required TypeScript agent files","status":"passed","title":"should have all required TypeScript agent files","duration":0.5840410000000134,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","TypeScript Implementation Verification"],"fullName":"Project Verification Tests TypeScript Implementation Verification should have all API trigger routes","status":"passed","title":"should have all API trigger routes","duration":0.550707999999986,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","TypeScript Implementation Verification"],"fullName":"Project Verification Tests TypeScript Implementation Verification should have database layer implemented","status":"passed","title":"should have database layer implemented","duration":0.23887499999995043,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","TypeScript Implementation Verification"],"fullName":"Project Verification Tests TypeScript Implementation Verification should have testing infrastructure","status":"passed","title":"should have testing infrastructure","duration":0.150874999999985,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Configuration Verification"],"fullName":"Project Verification Tests Configuration Verification should have clean package.json without Python dependencies","status":"passed","title":"should have clean package.json without Python dependencies","duration":0.5190000000000055,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Configuration Verification"],"fullName":"Project Verification Tests Configuration Verification should have clean Next.js configuration","status":"passed","title":"should have clean Next.js configuration","duration":0.18266600000004019,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Configuration Verification"],"fullName":"Project Verification Tests Configuration Verification should have proper TypeScript configuration","status":"passed","title":"should have proper TypeScript configuration","duration":0.1482920000000263,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Documentation Verification"],"fullName":"Project Verification Tests Documentation Verification should have comprehensive documentation","status":"passed","title":"should have comprehensive documentation","duration":0.6068750000000023,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Documentation Verification"],"fullName":"Project Verification Tests Documentation Verification should have implementation summary (optional)","status":"passed","title":"should have implementation summary (optional)","duration":0.12349999999997863,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Documentation Verification"],"fullName":"Project Verification Tests Documentation Verification should have testing report (optional)","status":"passed","title":"should have testing report (optional)","duration":0.09749999999996817,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","System Integration Verification"],"fullName":"Project Verification Tests System Integration Verification should have proper environment variable structure","status":"passed","title":"should have proper environment variable structure","duration":0.046291999999994005,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","System Integration Verification"],"fullName":"Project Verification Tests System Integration Verification should have Vercel deployment configuration","status":"passed","title":"should have Vercel deployment configuration","duration":0.11004200000002129,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","System Integration Verification"],"fullName":"Project Verification Tests System Integration Verification should have Inngest integration","status":"passed","title":"should have Inngest integration","duration":0.08087499999999181,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Code Quality Verification"],"fullName":"Project Verification Tests Code Quality Verification should have linting configuration","status":"passed","title":"should have linting configuration","duration":0.03766699999999901,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Code Quality Verification"],"fullName":"Project Verification Tests Code Quality Verification should have formatting and linting scripts","status":"passed","title":"should have formatting and linting scripts","duration":0.11183299999999008,"failureMessages":[],"meta":{}},{"ancestorTitles":["Project Verification Tests","Code Quality Verification"],"fullName":"Project Verification Tests Code Quality Verification should have proper project structure","status":"passed","title":"should have proper project structure","duration":0.15733300000005102,"failureMessages":[],"meta":{}}],"startTime":1750283176345,"endTime":1750283176356.1572,"status":"passed","message":"","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/verification.test.ts"},{"assertionResults":[{"ancestorTitles":["/api/workflow-status"],"fullName":"/api/workflow-status should test workflow status service logic","status":"passed","title":"should test workflow status service logic","duration":1.0347500000000025,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/workflow-status"],"fullName":"/api/workflow-status should validate workflow metrics structure","status":"passed","title":"should validate workflow metrics structure","duration":0.19504200000000083,"failureMessages":[],"meta":{}},{"ancestorTitles":["/api/workflow-status"],"fullName":"/api/workflow-status should validate activity entry structure","status":"passed","title":"should validate activity entry structure","duration":0.5145419999999774,"failureMessages":[],"meta":{}}],"startTime":1750283176623,"endTime":1750283176624.5146,"status":"passed","message":"","name":"/Users/neo/Developer/mexc-sniper-bot/tests/unit/workflow-status.test.ts"}]}
+{
+  "numTotalTestSuites": 71,
+  "numPassedTestSuites": 53,
+  "numFailedTestSuites": 18,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 110,
+  "numPassedTests": 110,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1750283174737,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/services/advanced-trading-strategy' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/advanced-trading-strategy.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/advanced-trading-strategy.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/mexc-agents/coordination/agent-registry' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/agent-health-monitoring.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/agent-health-monitoring.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/components/api-credentials-form' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/api-credentials-flow.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/api-credentials-flow.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["API Credentials Request Body Validation"],
+          "fullName": "API Credentials Request Body Validation should identify malformed JSON as the cause of \"Invalid request body\"",
+          "status": "passed",
+          "title": "should identify malformed JSON as the cause of \"Invalid request body\"",
+          "duration": 4.697124999999971,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["API Credentials Request Body Validation"],
+          "fullName": "API Credentials Request Body Validation should validate proper JSON structure for API credentials",
+          "status": "passed",
+          "title": "should validate proper JSON structure for API credentials",
+          "duration": 0.4544159999999806,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["API Credentials Request Body Validation"],
+          "fullName": "API Credentials Request Body Validation should identify content-type issues",
+          "status": "passed",
+          "title": "should identify content-type issues",
+          "duration": 0.3622920000000249,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["API Credentials Request Body Validation"],
+          "fullName": "API Credentials Request Body Validation should validate required fields",
+          "status": "passed",
+          "title": "should validate required fields",
+          "duration": 0.18137500000000273,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["API Credentials Request Body Validation"],
+          "fullName": "API Credentials Request Body Validation should validate API key format requirements",
+          "status": "passed",
+          "title": "should validate API key format requirements",
+          "duration": 0.13512499999995953,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["API Credentials Request Body Validation"],
+          "fullName": "API Credentials Request Body Validation should simulate request body parsing scenarios",
+          "status": "passed",
+          "title": "should simulate request body parsing scenarios",
+          "duration": 0.18916600000000017,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["API Credentials Request Body Validation"],
+          "fullName": "API Credentials Request Body Validation should test user ID validation scenarios",
+          "status": "passed",
+          "title": "should test user ID validation scenarios",
+          "duration": 0.10775000000001,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["API Credentials Request Flow Integration"],
+          "fullName": "API Credentials Request Flow Integration should identify common failure patterns",
+          "status": "passed",
+          "title": "should identify common failure patterns",
+          "duration": 0.13191700000004403,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1750283176597,
+      "endTime": 1750283176603.1318,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/api-credentials-validation.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/lib/api-auth' imported from '/Users/neo/Developer/mexc-sniper-bot/src/lib/auth-decorators.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/auth-consolidation.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Environment Switching"],
+          "fullName": "Authentication Environment Management Environment Switching should switch to different environments correctly",
+          "status": "passed",
+          "title": "should switch to different environments correctly",
+          "duration": 2.2670000000000528,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Environment Switching"],
+          "fullName": "Authentication Environment Management Environment Switching should maintain environment history for rollback",
+          "status": "passed",
+          "title": "should maintain environment history for rollback",
+          "duration": 0.43812500000001364,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Environment Switching"],
+          "fullName": "Authentication Environment Management Environment Switching should throw error for unknown environment",
+          "status": "passed",
+          "title": "should throw error for unknown environment",
+          "duration": 0.5427080000000046,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Environment Switching"],
+          "fullName": "Authentication Environment Management Environment Switching should set all required environment variables",
+          "status": "passed",
+          "title": "should set all required environment variables",
+          "duration": 0.2601659999999697,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Test User Management"],
+          "fullName": "Authentication Environment Management Test User Management should create test users with correct data",
+          "status": "passed",
+          "title": "should create test users with correct data",
+          "duration": 1.2479170000000295,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Test User Management"],
+          "fullName": "Authentication Environment Management Test User Management should create users with custom data overrides",
+          "status": "passed",
+          "title": "should create users with custom data overrides",
+          "duration": 0.3317920000000072,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Test User Management"],
+          "fullName": "Authentication Environment Management Test User Management should track created users by environment",
+          "status": "passed",
+          "title": "should track created users by environment",
+          "duration": 0.375583000000006,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Test User Management"],
+          "fullName": "Authentication Environment Management Test User Management should cleanup users for specific environment",
+          "status": "passed",
+          "title": "should cleanup users for specific environment",
+          "duration": 0.23495900000000347,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Test User Management"],
+          "fullName": "Authentication Environment Management Test User Management should cleanup all users across environments",
+          "status": "passed",
+          "title": "should cleanup all users across environments",
+          "duration": 0.84212500000001,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "User Scenarios"],
+          "fullName": "Authentication Environment Management User Scenarios should create basic flow scenario",
+          "status": "passed",
+          "title": "should create basic flow scenario",
+          "duration": 0.2743330000000128,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "User Scenarios"],
+          "fullName": "Authentication Environment Management User Scenarios should create permission testing scenario",
+          "status": "passed",
+          "title": "should create permission testing scenario",
+          "duration": 0.531915999999967,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "User Scenarios"],
+          "fullName": "Authentication Environment Management User Scenarios should create onboarding flow scenario",
+          "status": "passed",
+          "title": "should create onboarding flow scenario",
+          "duration": 0.1890409999999747,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "User Scenarios"],
+          "fullName": "Authentication Environment Management User Scenarios should create multi-org testing scenario",
+          "status": "passed",
+          "title": "should create multi-org testing scenario",
+          "duration": 0.29549999999994725,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "User Scenarios"],
+          "fullName": "Authentication Environment Management User Scenarios should create security testing scenario",
+          "status": "passed",
+          "title": "should create security testing scenario",
+          "duration": 0.23824999999999363,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "User Scenarios"],
+          "fullName": "Authentication Environment Management User Scenarios should throw error for unknown scenario",
+          "status": "passed",
+          "title": "should throw error for unknown scenario",
+          "duration": 0.41758299999997917,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Environment Validation"],
+          "fullName": "Authentication Environment Management Environment Validation should validate complete environment configuration",
+          "status": "passed",
+          "title": "should validate complete environment configuration",
+          "duration": 0.20933299999995825,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Environment Validation"],
+          "fullName": "Authentication Environment Management Environment Validation should detect missing environment variables",
+          "status": "passed",
+          "title": "should detect missing environment variables",
+          "duration": 6.983749999999986,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Environment Validation"],
+          "fullName": "Authentication Environment Management Environment Validation should detect invalid URL formats",
+          "status": "passed",
+          "title": "should detect invalid URL formats",
+          "duration": 4.894083000000023,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Authentication Environment Management", "Manager Reset"],
+          "fullName": "Authentication Environment Management Manager Reset should reset to initial state",
+          "status": "passed",
+          "title": "should reset to initial state",
+          "duration": 0.3167909999999665,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Shared Instance"],
+          "fullName": "Global Auth Environment Manager Shared Instance should provide global instance",
+          "status": "passed",
+          "title": "should provide global instance",
+          "duration": 0.17133400000000165,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Shared Instance"],
+          "fullName": "Global Auth Environment Manager Shared Instance should maintain state across different imports",
+          "status": "passed",
+          "title": "should maintain state across different imports",
+          "duration": 0.15162499999996726,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Environment Setup Hooks"],
+          "fullName": "Global Auth Environment Manager Environment Setup Hooks should setup test environment with beforeEach",
+          "status": "passed",
+          "title": "should setup test environment with beforeEach",
+          "duration": 0.16174999999998363,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Environment Setup Hooks"],
+          "fullName": "Global Auth Environment Manager Environment Setup Hooks should cleanup after each test",
+          "status": "passed",
+          "title": "should cleanup after each test",
+          "duration": 0.18108399999999847,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Auth Scenarios Helpers"],
+          "fullName": "Global Auth Environment Manager Auth Scenarios Helpers should setup permission test scenario",
+          "status": "passed",
+          "title": "should setup permission test scenario",
+          "duration": 0.5053330000000074,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Auth Scenarios Helpers"],
+          "fullName": "Global Auth Environment Manager Auth Scenarios Helpers should setup onboarding test scenario",
+          "status": "passed",
+          "title": "should setup onboarding test scenario",
+          "duration": 0.21808300000003555,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Auth Scenarios Helpers"],
+          "fullName": "Global Auth Environment Manager Auth Scenarios Helpers should setup basic auth test scenario",
+          "status": "passed",
+          "title": "should setup basic auth test scenario",
+          "duration": 13.742124999999987,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Auth Scenarios Helpers"],
+          "fullName": "Global Auth Environment Manager Auth Scenarios Helpers should setup multi-org test scenario",
+          "status": "passed",
+          "title": "should setup multi-org test scenario",
+          "duration": 0.28600000000000136,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Auth Scenarios Helpers"],
+          "fullName": "Global Auth Environment Manager Auth Scenarios Helpers should setup security test scenario",
+          "status": "passed",
+          "title": "should setup security test scenario",
+          "duration": 0.6564169999999763,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Environment-Aware Utilities"],
+          "fullName": "Global Auth Environment Manager Environment-Aware Utilities should check current environment correctly",
+          "status": "passed",
+          "title": "should check current environment correctly",
+          "duration": 1.283375000000035,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Global Auth Environment Manager", "Environment-Aware Utilities"],
+          "fullName": "Global Auth Environment Manager Environment-Aware Utilities should run test in specific environment temporarily",
+          "status": "passed",
+          "title": "should run test in specific environment temporarily",
+          "duration": 0.24750000000000227,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1750283176352,
+      "endTime": 1750283176391.2834,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/auth-environment-management.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["/api/health/auth", "GET /api/health/auth"],
+          "fullName": "/api/health/auth GET /api/health/auth should return healthy status with all environment variables configured",
+          "status": "passed",
+          "title": "should return healthy status with all environment variables configured",
+          "duration": 16.054125,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/health/auth", "GET /api/health/auth"],
+          "fullName": "/api/health/auth GET /api/health/auth should return error status when required environment variables are missing",
+          "status": "passed",
+          "title": "should return error status when required environment variables are missing",
+          "duration": 1.0529999999999973,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/health/auth", "GET /api/health/auth"],
+          "fullName": "/api/health/auth GET /api/health/auth should return unhealthy status when Kinde SDK throws error",
+          "status": "passed",
+          "title": "should return unhealthy status when Kinde SDK throws error",
+          "duration": 14.028124999999989,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/health/auth", "GET /api/health/auth"],
+          "fullName": "/api/health/auth GET /api/health/auth should validate configuration format correctly",
+          "status": "passed",
+          "title": "should validate configuration format correctly",
+          "duration": 9.761167,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/health/auth", "GET /api/health/auth"],
+          "fullName": "/api/health/auth GET /api/health/auth should include deployment information",
+          "status": "passed",
+          "title": "should include deployment information",
+          "duration": 5.988917000000015,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/health/auth", "GET /api/health/auth"],
+          "fullName": "/api/health/auth GET /api/health/auth should handle unexpected errors gracefully",
+          "status": "passed",
+          "title": "should handle unexpected errors gracefully",
+          "duration": 2.8035410000000525,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/health/auth", "OPTIONS /api/health/auth"],
+          "fullName": "/api/health/auth OPTIONS /api/health/auth should handle CORS preflight requests",
+          "status": "passed",
+          "title": "should handle CORS preflight requests",
+          "duration": 0.8837080000000128,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1750283176226,
+      "endTime": 1750283176275.8838,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/auth-health-check.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/lib/constants' imported from '/Users/neo/Developer/mexc-sniper-bot/src/mexc-agents/base-agent.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/base-agent-caching.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/lib/cache-manager' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/cache-system.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/cache-system.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/lib/constants' imported from '/Users/neo/Developer/mexc-sniper-bot/src/mexc-agents/coordination/performance-collector.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/coordination-system.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/lib/database-optimization-manager' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/database-optimization.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/database-optimization.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/services/adaptive-rate-limiter' imported from '/Users/neo/Developer/mexc-sniper-bot/src/lib/rate-limiter.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/enhanced-rate-limiter.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "Signature generation logic"],
+          "fullName": "MEXC API Client Utilities Signature generation logic should create proper query string for signature",
+          "status": "passed",
+          "title": "should create proper query string for signature",
+          "duration": 84.24995800000005,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "Signature generation logic"],
+          "fullName": "MEXC API Client Utilities Signature generation logic should filter out undefined and null values",
+          "status": "passed",
+          "title": "should filter out undefined and null values",
+          "duration": 0.24929200000002538,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "Signature generation logic"],
+          "fullName": "MEXC API Client Utilities Signature generation logic should sort parameters alphabetically",
+          "status": "passed",
+          "title": "should sort parameters alphabetically",
+          "duration": 0.132583000000011,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "Rate limiting logic"],
+          "fullName": "MEXC API Client Utilities Rate limiting logic should calculate correct delay when request is too soon",
+          "status": "passed",
+          "title": "should calculate correct delay when request is too soon",
+          "duration": 0.09625000000005457,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "Rate limiting logic"],
+          "fullName": "MEXC API Client Utilities Rate limiting logic should not delay when enough time has passed",
+          "status": "passed",
+          "title": "should not delay when enough time has passed",
+          "duration": 0.05416700000000674,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "URL construction logic"],
+          "fullName": "MEXC API Client Utilities URL construction logic should build correct endpoint URLs",
+          "status": "passed",
+          "title": "should build correct endpoint URLs",
+          "duration": 0.059833000000026004,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "URL construction logic"],
+          "fullName": "MEXC API Client Utilities URL construction logic should handle endpoint with leading slash",
+          "status": "passed",
+          "title": "should handle endpoint with leading slash",
+          "duration": 0.046582999999998265,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "URL construction logic"],
+          "fullName": "MEXC API Client Utilities URL construction logic should handle endpoint without leading slash",
+          "status": "passed",
+          "title": "should handle endpoint without leading slash",
+          "duration": 0.04566599999998289,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "Configuration validation"],
+          "fullName": "MEXC API Client Utilities Configuration validation should use default values when not provided",
+          "status": "passed",
+          "title": "should use default values when not provided",
+          "duration": 0.088374999999985,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "Configuration validation"],
+          "fullName": "MEXC API Client Utilities Configuration validation should use provided values over defaults",
+          "status": "passed",
+          "title": "should use provided values over defaults",
+          "duration": 0.07549999999997681,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "Error handling scenarios"],
+          "fullName": "MEXC API Client Utilities Error handling scenarios should identify missing credentials error",
+          "status": "passed",
+          "title": "should identify missing credentials error",
+          "duration": 0.08562499999999318,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC API Client Utilities", "Error handling scenarios"],
+          "fullName": "MEXC API Client Utilities Error handling scenarios should validate request parameters",
+          "status": "passed",
+          "title": "should validate request parameters",
+          "duration": 0.5252920000000358,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1750283176274,
+      "endTime": 1750283176367.5254,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/mexc-api-client.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["MEXC Schemas", "CalendarEntrySchema"],
+          "fullName": "MEXC Schemas CalendarEntrySchema should validate a correct calendar entry",
+          "status": "passed",
+          "title": "should validate a correct calendar entry",
+          "duration": 5.08379199999996,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "CalendarEntrySchema"],
+          "fullName": "MEXC Schemas CalendarEntrySchema should reject calendar entry with missing fields",
+          "status": "passed",
+          "title": "should reject calendar entry with missing fields",
+          "duration": 0.5301660000000084,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "CalendarEntrySchema"],
+          "fullName": "MEXC Schemas CalendarEntrySchema should reject calendar entry with wrong types",
+          "status": "passed",
+          "title": "should reject calendar entry with wrong types",
+          "duration": 0.18062500000002046,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "SymbolV2EntrySchema"],
+          "fullName": "MEXC Schemas SymbolV2EntrySchema should validate a correct symbol entry",
+          "status": "passed",
+          "title": "should validate a correct symbol entry",
+          "duration": 0.2775829999999928,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "SymbolV2EntrySchema"],
+          "fullName": "MEXC Schemas SymbolV2EntrySchema should validate minimal symbol entry",
+          "status": "passed",
+          "title": "should validate minimal symbol entry",
+          "duration": 0.1295409999999606,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "SymbolV2EntrySchema"],
+          "fullName": "MEXC Schemas SymbolV2EntrySchema should reject symbol entry with missing required fields",
+          "status": "passed",
+          "title": "should reject symbol entry with missing required fields",
+          "duration": 0.15512499999999818,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "ReadyStatePatternSchema"],
+          "fullName": "MEXC Schemas ReadyStatePatternSchema should validate correct ready state pattern",
+          "status": "passed",
+          "title": "should validate correct ready state pattern",
+          "duration": 0.17958299999997962,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "ReadyStatePatternSchema"],
+          "fullName": "MEXC Schemas ReadyStatePatternSchema should validate READY_STATE_PATTERN constant",
+          "status": "passed",
+          "title": "should validate READY_STATE_PATTERN constant",
+          "duration": 0.18787500000001955,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Validation helpers"],
+          "fullName": "MEXC Schemas Validation helpers should validate calendar entry with helper function",
+          "status": "passed",
+          "title": "should validate calendar entry with helper function",
+          "duration": 0.12091700000001993,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Validation helpers"],
+          "fullName": "MEXC Schemas Validation helpers should throw error for invalid calendar entry",
+          "status": "passed",
+          "title": "should throw error for invalid calendar entry",
+          "duration": 0.21204099999999926,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Validation helpers"],
+          "fullName": "MEXC Schemas Validation helpers should validate symbol entry with helper function",
+          "status": "passed",
+          "title": "should validate symbol entry with helper function",
+          "duration": 0.11425000000002683,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Pattern matching utilities", "matchesReadyPattern"],
+          "fullName": "MEXC Schemas Pattern matching utilities matchesReadyPattern should return true for symbol matching ready pattern",
+          "status": "passed",
+          "title": "should return true for symbol matching ready pattern",
+          "duration": 0.12137500000000045,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Pattern matching utilities", "matchesReadyPattern"],
+          "fullName": "MEXC Schemas Pattern matching utilities matchesReadyPattern should return false for symbol not matching ready pattern",
+          "status": "passed",
+          "title": "should return false for symbol not matching ready pattern",
+          "duration": 0.0690829999999778,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Pattern matching utilities", "matchesReadyPattern"],
+          "fullName": "MEXC Schemas Pattern matching utilities matchesReadyPattern should return true for incomplete symbol with correct pattern",
+          "status": "passed",
+          "title": "should return true for incomplete symbol with correct pattern",
+          "duration": 0.039917000000002645,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Pattern matching utilities", "hasCompleteData"],
+          "fullName": "MEXC Schemas Pattern matching utilities hasCompleteData should return true for symbol with complete data",
+          "status": "passed",
+          "title": "should return true for symbol with complete data",
+          "duration": 0.06520799999998417,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Pattern matching utilities", "hasCompleteData"],
+          "fullName": "MEXC Schemas Pattern matching utilities hasCompleteData should return false for symbol missing data",
+          "status": "passed",
+          "title": "should return false for symbol missing data",
+          "duration": 0.05225000000001501,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Pattern matching utilities", "isValidForSnipe"],
+          "fullName": "MEXC Schemas Pattern matching utilities isValidForSnipe should return true only for ready symbols with complete data",
+          "status": "passed",
+          "title": "should return true only for ready symbols with complete data",
+          "duration": 0.062374999999974534,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Pattern matching utilities", "isValidForSnipe"],
+          "fullName": "MEXC Schemas Pattern matching utilities isValidForSnipe should return false for not ready symbols",
+          "status": "passed",
+          "title": "should return false for not ready symbols",
+          "duration": 0.038291999999955806,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MEXC Schemas", "Pattern matching utilities", "isValidForSnipe"],
+          "fullName": "MEXC Schemas Pattern matching utilities isValidForSnipe should return false for ready symbols without complete data",
+          "status": "passed",
+          "title": "should return false for ready symbols without complete data",
+          "duration": 0.05349999999998545,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1750283176472,
+      "endTime": 1750283176480.0535,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/mexc-schemas.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/services/multi-phase-executor' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-executor.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-executor.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/services/multi-phase-strategy-builder' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-strategy-builder.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-strategy-builder.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/services/multi-phase-trading-bot' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-trading-bot.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/multi-phase-trading-bot.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/lib/test-branch-setup' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/neon-branch-integration.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/neon-branch-integration.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/services/optimized-auto-exit-manager' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/optimized-auto-exit-manager.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/optimized-auto-exit-manager.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/services/secure-encryption-service' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/secure-encryption-service.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/secure-encryption-service.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/services/trading-strategy-manager' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/trading-strategy-manager.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/trading-strategy-manager.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/services/transaction-lock-service' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/transaction-lock-service.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/transaction-lock-service.test.ts"
+    },
+    {
+      "assertionResults": [],
+      "startTime": 1750283174737,
+      "endTime": 1750283174737,
+      "status": "failed",
+      "message": "Cannot find package '@/src/db/schema' imported from '/Users/neo/Developer/mexc-sniper-bot/tests/unit/transactions.test.ts'",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/transactions.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["/api/user-preferences", "User preferences data structure"],
+          "fullName": "/api/user-preferences User preferences data structure should validate default user preferences structure",
+          "status": "passed",
+          "title": "should validate default user preferences structure",
+          "duration": 1.2984169999999722,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/user-preferences", "User preferences data structure"],
+          "fullName": "/api/user-preferences User preferences data structure should validate take profit levels structure",
+          "status": "passed",
+          "title": "should validate take profit levels structure",
+          "duration": 0.22420799999997598,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/user-preferences", "User preferences data structure"],
+          "fullName": "/api/user-preferences User preferences data structure should validate ready state pattern format",
+          "status": "passed",
+          "title": "should validate ready state pattern format",
+          "duration": 0.36333300000001145,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/user-preferences", "User preferences data structure"],
+          "fullName": "/api/user-preferences User preferences data structure should validate risk tolerance options",
+          "status": "passed",
+          "title": "should validate risk tolerance options",
+          "duration": 0.2696250000000191,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/user-preferences", "User preferences data structure"],
+          "fullName": "/api/user-preferences User preferences data structure should validate interval configuration",
+          "status": "passed",
+          "title": "should validate interval configuration",
+          "duration": 0.11516699999998536,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/user-preferences", "Request validation logic"],
+          "fullName": "/api/user-preferences Request validation logic should validate required fields for user preferences",
+          "status": "passed",
+          "title": "should validate required fields for user preferences",
+          "duration": 0.5407079999999951,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1750283176622,
+      "endTime": 1750283176625.5408,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/user-preferences.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Utils", "cn function"],
+          "fullName": "Utils cn function should merge class names correctly",
+          "status": "passed",
+          "title": "should merge class names correctly",
+          "duration": 6.056749999999965,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Utils", "cn function"],
+          "fullName": "Utils cn function should handle conditional classes",
+          "status": "passed",
+          "title": "should handle conditional classes",
+          "duration": 0.1574579999999628,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Utils", "cn function"],
+          "fullName": "Utils cn function should handle overlapping Tailwind classes",
+          "status": "passed",
+          "title": "should handle overlapping Tailwind classes",
+          "duration": 0.11820900000003576,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Utils", "cn function"],
+          "fullName": "Utils cn function should handle empty inputs",
+          "status": "passed",
+          "title": "should handle empty inputs",
+          "duration": 0.07495799999998098,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Utils", "cn function"],
+          "fullName": "Utils cn function should handle null and undefined inputs",
+          "status": "passed",
+          "title": "should handle null and undefined inputs",
+          "duration": 0.06983400000001438,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Utils", "cn function"],
+          "fullName": "Utils cn function should handle object notation",
+          "status": "passed",
+          "title": "should handle object notation",
+          "duration": 0.08150000000000546,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1750283176399,
+      "endTime": 1750283176406.0815,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/utils.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Project Verification Tests", "Python Cleanup Verification"],
+          "fullName": "Project Verification Tests Python Cleanup Verification should have no Python source files in src directory",
+          "status": "passed",
+          "title": "should have no Python source files in src directory",
+          "duration": 4.872374999999977,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Python Cleanup Verification"],
+          "fullName": "Project Verification Tests Python Cleanup Verification should not have Python configuration files",
+          "status": "passed",
+          "title": "should not have Python configuration files",
+          "duration": 0.4061669999999822,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Python Cleanup Verification"],
+          "fullName": "Project Verification Tests Python Cleanup Verification should not have Python API directory",
+          "status": "passed",
+          "title": "should not have Python API directory",
+          "duration": 0.328708000000006,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "Project Verification Tests",
+            "TypeScript Implementation Verification"
+          ],
+          "fullName": "Project Verification Tests TypeScript Implementation Verification should have all required TypeScript agent files",
+          "status": "passed",
+          "title": "should have all required TypeScript agent files",
+          "duration": 0.5840410000000134,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "Project Verification Tests",
+            "TypeScript Implementation Verification"
+          ],
+          "fullName": "Project Verification Tests TypeScript Implementation Verification should have all API trigger routes",
+          "status": "passed",
+          "title": "should have all API trigger routes",
+          "duration": 0.550707999999986,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "Project Verification Tests",
+            "TypeScript Implementation Verification"
+          ],
+          "fullName": "Project Verification Tests TypeScript Implementation Verification should have database layer implemented",
+          "status": "passed",
+          "title": "should have database layer implemented",
+          "duration": 0.23887499999995043,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "Project Verification Tests",
+            "TypeScript Implementation Verification"
+          ],
+          "fullName": "Project Verification Tests TypeScript Implementation Verification should have testing infrastructure",
+          "status": "passed",
+          "title": "should have testing infrastructure",
+          "duration": 0.150874999999985,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Configuration Verification"],
+          "fullName": "Project Verification Tests Configuration Verification should have clean package.json without Python dependencies",
+          "status": "passed",
+          "title": "should have clean package.json without Python dependencies",
+          "duration": 0.5190000000000055,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Configuration Verification"],
+          "fullName": "Project Verification Tests Configuration Verification should have clean Next.js configuration",
+          "status": "passed",
+          "title": "should have clean Next.js configuration",
+          "duration": 0.18266600000004019,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Configuration Verification"],
+          "fullName": "Project Verification Tests Configuration Verification should have proper TypeScript configuration",
+          "status": "passed",
+          "title": "should have proper TypeScript configuration",
+          "duration": 0.1482920000000263,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Documentation Verification"],
+          "fullName": "Project Verification Tests Documentation Verification should have comprehensive documentation",
+          "status": "passed",
+          "title": "should have comprehensive documentation",
+          "duration": 0.6068750000000023,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Documentation Verification"],
+          "fullName": "Project Verification Tests Documentation Verification should have implementation summary (optional)",
+          "status": "passed",
+          "title": "should have implementation summary (optional)",
+          "duration": 0.12349999999997863,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Documentation Verification"],
+          "fullName": "Project Verification Tests Documentation Verification should have testing report (optional)",
+          "status": "passed",
+          "title": "should have testing report (optional)",
+          "duration": 0.09749999999996817,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "System Integration Verification"],
+          "fullName": "Project Verification Tests System Integration Verification should have proper environment variable structure",
+          "status": "passed",
+          "title": "should have proper environment variable structure",
+          "duration": 0.046291999999994005,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "System Integration Verification"],
+          "fullName": "Project Verification Tests System Integration Verification should have Vercel deployment configuration",
+          "status": "passed",
+          "title": "should have Vercel deployment configuration",
+          "duration": 0.11004200000002129,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "System Integration Verification"],
+          "fullName": "Project Verification Tests System Integration Verification should have Inngest integration",
+          "status": "passed",
+          "title": "should have Inngest integration",
+          "duration": 0.08087499999999181,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Code Quality Verification"],
+          "fullName": "Project Verification Tests Code Quality Verification should have linting configuration",
+          "status": "passed",
+          "title": "should have linting configuration",
+          "duration": 0.03766699999999901,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Code Quality Verification"],
+          "fullName": "Project Verification Tests Code Quality Verification should have formatting and linting scripts",
+          "status": "passed",
+          "title": "should have formatting and linting scripts",
+          "duration": 0.11183299999999008,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Project Verification Tests", "Code Quality Verification"],
+          "fullName": "Project Verification Tests Code Quality Verification should have proper project structure",
+          "status": "passed",
+          "title": "should have proper project structure",
+          "duration": 0.15733300000005102,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1750283176345,
+      "endTime": 1750283176356.1572,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/verification.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["/api/workflow-status"],
+          "fullName": "/api/workflow-status should test workflow status service logic",
+          "status": "passed",
+          "title": "should test workflow status service logic",
+          "duration": 1.0347500000000025,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/workflow-status"],
+          "fullName": "/api/workflow-status should validate workflow metrics structure",
+          "status": "passed",
+          "title": "should validate workflow metrics structure",
+          "duration": 0.19504200000000083,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["/api/workflow-status"],
+          "fullName": "/api/workflow-status should validate activity entry structure",
+          "status": "passed",
+          "title": "should validate activity entry structure",
+          "duration": 0.5145419999999774,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1750283176623,
+      "endTime": 1750283176624.5146,
+      "status": "passed",
+      "message": "",
+      "name": "/Users/neo/Developer/mexc-sniper-bot/tests/unit/workflow-status.test.ts"
+    }
+  ]
+}

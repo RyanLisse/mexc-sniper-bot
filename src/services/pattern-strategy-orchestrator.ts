@@ -11,19 +11,20 @@
  * - Strategy Agent creates trading plans
  */
 
+import {
+  type PatternAnalysisResult,
+  PatternDetectionCore,
+  type PatternMatch,
+} from "../core/pattern-detection";
 import { db } from "../db";
 import { monitoredListings } from "../db/schemas/patterns";
+import { createLogger } from "../lib/structured-logger";
 import type { AgentResponse } from "../mexc-agents/base-agent";
 import { CalendarAgent } from "../mexc-agents/calendar-agent";
 import { PatternDiscoveryAgent } from "../mexc-agents/pattern-discovery-agent";
 import { StrategyAgent } from "../mexc-agents/strategy-agent";
 import { SymbolAnalysisAgent } from "../mexc-agents/symbol-analysis-agent";
 import type { CalendarEntry, SymbolEntry } from "./mexc-unified-exports";
-import {
-  type PatternAnalysisResult,
-  type PatternMatch,
-  PatternDetectionCore,
-} from "../core/pattern-detection";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 // ============================================================================
@@ -128,6 +129,8 @@ export interface ResourceAllocation {
 // ============================================================================
 
 export class PatternStrategyOrchestrator {
+  private logger = createLogger("pattern-strategy-orchestrator");
+
   private static instance: PatternStrategyOrchestrator;
 
   // Agent instances for coordinated analysis
@@ -163,7 +166,7 @@ export class PatternStrategyOrchestrator {
     const agentsUsed: string[] = [];
 
     try {
-      console.log(`[PatternOrchestrator] Starting ${request.type} workflow`);
+      logger.info(`[PatternOrchestrator] Starting ${request.type} workflow`);
 
       switch (request.type) {
         case "discovery":
@@ -183,7 +186,7 @@ export class PatternStrategyOrchestrator {
       }
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      console.error(`[PatternOrchestrator] Workflow failed:`, error);
+      logger.error(`[PatternOrchestrator] Workflow failed:`, error);
 
       return {
         success: false,
@@ -213,7 +216,7 @@ export class PatternStrategyOrchestrator {
 
     // Step 1: Calendar Discovery (if no calendar data provided)
     if (!calendarEntries || calendarEntries.length === 0) {
-      console.log("[PatternOrchestrator] Fetching calendar data via Calendar Agent");
+      logger.info("[PatternOrchestrator] Fetching calendar data via Calendar Agent");
       agentsUsed.push("calendar-agent");
 
       const calendarData = await this.calendarAgent.fetchLatestCalendarData();
@@ -226,7 +229,7 @@ export class PatternStrategyOrchestrator {
     }
 
     // Step 2: Core Pattern Detection Engine Analysis
-    console.log("[PatternOrchestrator] Running pattern detection engine");
+    logger.info("[PatternOrchestrator] Running pattern detection engine");
     const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
       calendarEntries,
       analysisType: "discovery",
@@ -238,7 +241,7 @@ export class PatternStrategyOrchestrator {
 
     // Step 3: AI Agent Enhanced Analysis (if enabled)
     if (request.options?.enableAgentAnalysis && calendarEntries.length > 0) {
-      console.log("[PatternOrchestrator] Running AI agent pattern analysis");
+      logger.info("[PatternOrchestrator] Running AI agent pattern analysis");
       agentsUsed.push("pattern-discovery-agent");
 
       const agentAnalysis = await this.patternAgent.discoverNewListings(calendarEntries);
@@ -270,12 +273,12 @@ export class PatternStrategyOrchestrator {
     );
 
     const successfulTargets = targetCreationResults.filter((r) => r.success).length;
-    console.log(
+    logger.info(
       `[PatternOrchestrator] Created ${successfulTargets} snipe targets from ${patternAnalysis.matches.length} patterns`
     );
 
     const executionTime = Date.now() - startTime;
-    console.log(`[PatternOrchestrator] Discovery workflow completed in ${executionTime}ms`);
+    logger.info(`[PatternOrchestrator] Discovery workflow completed in ${executionTime}ms`);
 
     return {
       success: true,
@@ -303,7 +306,7 @@ export class PatternStrategyOrchestrator {
 
     // Step 1: Symbol Status Analysis
     if (symbolData.length > 0) {
-      console.log("[PatternOrchestrator] Analyzing symbol readiness");
+      logger.info("[PatternOrchestrator] Analyzing symbol readiness");
 
       const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
         symbols: symbolData,
@@ -721,11 +724,11 @@ export class PatternStrategyOrchestrator {
       );
 
       if (actionablePatterns.length === 0) {
-        console.log("[PatternOrchestrator] No actionable patterns found for snipe target creation");
+        logger.info("[PatternOrchestrator] No actionable patterns found for snipe target creation");
         return [];
       }
 
-      console.log(
+      logger.info(
         `[PatternOrchestrator] Creating snipe targets for ${actionablePatterns.length} actionable patterns`
       );
 
@@ -746,13 +749,13 @@ export class PatternStrategyOrchestrator {
       const failed = results.filter((r) => !r.success);
 
       if (successful.length > 0) {
-        console.log(
+        logger.info(
           `[PatternOrchestrator] Successfully created ${successful.length} snipe targets`
         );
       }
 
       if (failed.length > 0) {
-        console.log(
+        logger.info(
           `[PatternOrchestrator] Failed to create ${failed.length} snipe targets:`,
           failed.map((f) => f.reason || f.error)
         );
@@ -760,7 +763,7 @@ export class PatternStrategyOrchestrator {
 
       return results;
     } catch (error) {
-      console.error("[PatternOrchestrator] Failed to create snipe targets from patterns:", error);
+      logger.error("[PatternOrchestrator] Failed to create snipe targets from patterns:", error);
       return [];
     }
   }
@@ -804,9 +807,9 @@ export class PatternStrategyOrchestrator {
         }
       }
 
-      console.log(`[PatternOrchestrator] Stored ${patterns.length} patterns in database`);
+      logger.info(`[PatternOrchestrator] Stored ${patterns.length} patterns in database`);
     } catch (error) {
-      console.warn("[PatternOrchestrator] Failed to store patterns:", error);
+      logger.warn("[PatternOrchestrator] Failed to store patterns:", error);
     }
   }
 

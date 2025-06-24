@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getUnifiedMexcClient } from "../../../../src/services/mexc-unified-exports";
+
+const logger = createLogger('route');
 
 export async function GET() {
   try {
@@ -13,7 +16,7 @@ export async function GET() {
       localTime: Date.now()
     });
   } catch (error) {
-    console.error("MEXC server time fetch failed:", error);
+    logger.error("MEXC server time fetch failed:", { error: error });
     
     return NextResponse.json(
       {

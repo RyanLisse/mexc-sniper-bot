@@ -1,16 +1,17 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import {
-  type NewExecutionHistory,
   executionHistory,
+  type NewExecutionHistory,
   snipeTargets,
   userPreferences,
 } from "../db/schema";
+import { createLogger } from "../lib/structured-logger";
 import type { ExitLevel, ExitStrategy } from "../types/exit-strategies";
 import { EXIT_STRATEGIES } from "../types/exit-strategies";
 import {
-  type TakeProfitStrategy,
   getTakeProfitStrategyById,
+  type TakeProfitStrategy,
 } from "../types/take-profit-strategies";
 import { getMexcService } from "./mexc-unified-exports";
 
@@ -48,6 +49,8 @@ export interface PositionUpdate {
  * Fixes N+1 queries, implements batching, and improves performance
  */
 export class OptimizedAutoExitManager {
+  private logger = createLogger("optimized-auto-exit-manager");
+
   private mexcService = getMexcService();
   private isMonitoring = false;
   private monitoringInterval?: NodeJS.Timeout;
@@ -61,18 +64,18 @@ export class OptimizedAutoExitManager {
    */
   async startMonitoring(): Promise<void> {
     if (this.isMonitoring) {
-      console.log("🔄 OptimizedAutoExitManager already monitoring positions");
+      logger.info("🔄 OptimizedAutoExitManager already monitoring positions");
       return;
     }
 
-    console.log("🚀 Starting OptimizedAutoExitManager with batch processing...");
+    logger.info("🚀 Starting OptimizedAutoExitManager with batch processing...");
     this.isMonitoring = true;
 
     this.monitoringInterval = setInterval(async () => {
       try {
         await this.monitorAllPositionsBatch();
       } catch (error) {
-        console.error("❌ Error in optimized position monitoring cycle:", error);
+        logger.error("❌ Error in optimized position monitoring cycle:", error);
       }
     }, this.MONITORING_INTERVAL_MS);
 
@@ -103,7 +106,7 @@ export class OptimizedAutoExitManager {
     }
     this.isMonitoring = false;
     this.priceCache.clear();
-    console.log("⏹️ OptimizedAutoExitManager stopped monitoring");
+    logger.info("⏹️ OptimizedAutoExitManager stopped monitoring");
   }
 
   /**
@@ -118,7 +121,7 @@ export class OptimizedAutoExitManager {
         return;
       }
 
-      console.log(`📊 Batch monitoring ${activePositions.length} active positions`);
+      logger.info(`📊 Batch monitoring ${activePositions.length} active positions`);
 
       // Process in batches to avoid overwhelming the system
       const batches = this.chunkArray(activePositions, this.BATCH_SIZE);
@@ -127,7 +130,7 @@ export class OptimizedAutoExitManager {
         await this.processBatch(batch);
       }
     } catch (error) {
-      console.error("❌ Error in batch monitoring:", error);
+      logger.error("❌ Error in batch monitoring:", error);
     }
   }
 
@@ -198,7 +201,7 @@ export class OptimizedAutoExitManager {
 
       return positions;
     } catch (error) {
-      console.error("❌ Error getting optimized active positions:", error);
+      logger.error("❌ Error getting optimized active positions:", error);
       return [];
     }
   }
@@ -215,7 +218,7 @@ export class OptimizedAutoExitManager {
       const priceData = await this.getBatchPrices(symbols);
 
       if (priceData.length === 0) {
-        console.log("⚠️ No price data received for batch");
+        logger.info("⚠️ No price data received for batch");
         return;
       }
 
@@ -227,7 +230,7 @@ export class OptimizedAutoExitManager {
         const currentPrice = priceData.find((p) => p.symbol === position.symbol)?.price;
 
         if (!currentPrice) {
-          console.log(`⚠️ No price data for ${position.symbol}`);
+          logger.info(`⚠️ No price data for ${position.symbol}`);
           continue;
         }
 
@@ -271,7 +274,7 @@ export class OptimizedAutoExitManager {
         await this.executeBatchUpdates(updates, executions);
       }
     } catch (error) {
-      console.error("❌ Error processing batch:", error);
+      logger.error("❌ Error processing batch:", error);
     }
   }
 
@@ -330,7 +333,7 @@ export class OptimizedAutoExitManager {
           }
         }
       } catch (error) {
-        console.error("❌ Error fetching batch prices:", error);
+        logger.error("❌ Error fetching batch prices:", error);
       }
     }
 
@@ -352,7 +355,7 @@ export class OptimizedAutoExitManager {
     const priceMultiplier = currentPrice / position.entryPrice;
     const profitPercent = (priceMultiplier - 1) * 100;
 
-    console.log(
+    logger.info(
       `📈 ${position.symbol}: Entry: $${position.entryPrice.toFixed(6)}, Current: $${currentPrice.toFixed(6)}, P&L: ${profitPercent.toFixed(2)}%`
     );
 
@@ -427,7 +430,7 @@ export class OptimizedAutoExitManager {
         try {
           strategy = JSON.parse(prefs.takeProfitLevelsConfig);
         } catch (error) {
-          console.error("❌ Error parsing custom take profit strategy:", error);
+          logger.error("❌ Error parsing custom take profit strategy:", error);
           return { shouldExit: false };
         }
       } else {
@@ -451,7 +454,7 @@ export class OptimizedAutoExitManager {
       if (triggeredLevel) {
         const quantityToSell = (position.quantity * triggeredLevel.sellQuantity) / 100;
 
-        console.log(
+        logger.info(
           `🎯 Enhanced take profit triggered for ${position.symbol}: Level ${triggeredLevel.profitPercentage}%, selling ${triggeredLevel.sellQuantity}% (${quantityToSell} units)`
         );
 
@@ -465,7 +468,7 @@ export class OptimizedAutoExitManager {
 
       return { shouldExit: false };
     } catch (error) {
-      console.error("❌ Error evaluating enhanced take profit strategy:", error);
+      logger.error("❌ Error evaluating enhanced take profit strategy:", error);
       return { shouldExit: false };
     }
   }
@@ -497,11 +500,11 @@ export class OptimizedAutoExitManager {
         await db.insert(executionHistory).values(executions);
       }
 
-      console.log(
+      logger.info(
         `✅ Batch updated ${updates.length} positions and recorded ${executions.length} executions`
       );
     } catch (error) {
-      console.error("❌ Error in batch database updates:", error);
+      logger.error("❌ Error in batch database updates:", error);
     }
   }
 

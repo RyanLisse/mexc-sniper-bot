@@ -14,6 +14,7 @@
 import { toSafeError } from "../../lib/error-type-utils";
 import { createLogger } from "../../lib/structured-logger";
 import type { SymbolEntry } from "../../services/mexc-unified-exports";
+import { ConfidenceCalculator } from "./confidence-calculator";
 import type {
   CorrelationAnalysis,
   IConfidenceCalculator,
@@ -26,8 +27,6 @@ import type {
   PatternDetectionMetrics,
   PatternMatch,
 } from "./interfaces";
-
-import { ConfidenceCalculator } from "./confidence-calculator";
 import { PatternAnalyzer } from "./pattern-analyzer";
 import { PatternStorage } from "./pattern-storage";
 import { PatternValidator } from "./pattern-validator";
@@ -377,7 +376,7 @@ export class PatternDetectionCore {
 
   /**
    * Get activity data for a symbol (for test compatibility)
-   * 
+   *
    * This method provides backward compatibility with existing tests
    * while delegating to the modular architecture.
    */
@@ -386,12 +385,12 @@ export class PatternDetectionCore {
       // In the refactored architecture, activity data would be fetched
       // through the activity integration module. For now, return empty
       // array to maintain test compatibility.
-      
+
       // This could be enhanced to:
       // 1. Fetch from a dedicated activity service
       // 2. Use caching for performance
       // 3. Integrate with MEXC activity APIs
-      
+
       return [];
     } catch (error) {
       this.logger.warn("Failed to fetch activity data", { symbol, error });

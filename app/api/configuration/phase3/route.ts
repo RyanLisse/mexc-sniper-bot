@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { createApiResponse } from "../../../../src/lib/api-response";
 import { apiAuthWrapper } from "../../../../src/lib/api-auth";
 
@@ -90,6 +91,8 @@ const defaultConfiguration: Phase3Configuration = {
 // GET - Retrieve Configuration
 // ======================
 
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   try {
     // In a real implementation, this would fetch from database
@@ -106,7 +109,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[Phase3 Config] Error getting configuration:", error);
+    logger.error("[Phase3 Config] Error getting configuration:", { error: error });
     return createApiResponse(
       {
         success: false,
@@ -163,7 +166,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       },
     });
   } catch (error) {
-    console.error("[Phase3 Config] Error updating configuration:", error);
+    logger.error("[Phase3 Config] Error updating configuration:", { error: error });
     return createApiResponse(
       {
         success: false,
@@ -196,7 +199,7 @@ async function getPhase3Configuration(): Promise<Phase3Configuration> {
 async function savePhase3Configuration(configuration: Phase3Configuration): Promise<Phase3Configuration> {
   // In a real implementation, this would save to database
   // For now, just return the configuration as if it was saved
-  console.log("[Phase3 Config] Configuration would be saved:", configuration);
+  logger.info("[Phase3 Config] Configuration would be saved:", { context: configuration });
   return configuration;
 }
 

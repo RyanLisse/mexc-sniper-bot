@@ -1,6 +1,9 @@
+import { createLogger } from "../lib/structured-logger";
 import type { MexcApiAgent } from "./mexc-api-agent";
 
 export class DataFetcher {
+  private logger = createLogger("data-fetcher");
+
   private mexcApiAgent: MexcApiAgent;
 
   constructor(mexcApiAgent: MexcApiAgent) {
@@ -15,7 +18,7 @@ export class DataFetcher {
     source: string;
   }> {
     try {
-      console.log("[DataFetcher] Fetching calendar data from MEXC API");
+      logger.info("[DataFetcher] Fetching calendar data from MEXC API");
       const result = await this.mexcApiAgent.callMexcApi("/calendar");
 
       if (result && typeof result === "object" && "success" in result) {
@@ -36,7 +39,7 @@ export class DataFetcher {
         source: "mexc-api",
       };
     } catch (error) {
-      console.error("[DataFetcher] Calendar API call failed:", error);
+      logger.error("[DataFetcher] Calendar API call failed:", error);
       return {
         success: false,
         data: [],
@@ -55,7 +58,7 @@ export class DataFetcher {
     data?: unknown;
   }> {
     try {
-      console.log(`[DataFetcher] Fetching symbol data for: ${vcoinId}`);
+      logger.info(`[DataFetcher] Fetching symbol data for: ${vcoinId}`);
       const result = await this.mexcApiAgent.callMexcApi("/symbols", { vcoinId });
 
       if (result && typeof result === "object") {
@@ -76,7 +79,7 @@ export class DataFetcher {
         data: result,
       };
     } catch (error) {
-      console.error(`[DataFetcher] Symbol API call failed for ${vcoinId}:`, error);
+      logger.error(`[DataFetcher] Symbol API call failed for ${vcoinId}:`, error);
       return {
         vcoinId,
         symbol: "UNKNOWN",
@@ -95,7 +98,7 @@ export class DataFetcher {
     timestamp: string;
   }> {
     try {
-      console.log(`[DataFetcher] Fetching market data for: ${symbol}`);
+      logger.info(`[DataFetcher] Fetching market data for: ${symbol}`);
       const result = await this.mexcApiAgent.callMexcApi("/market", { symbol });
 
       if (result && typeof result === "object") {
@@ -119,7 +122,7 @@ export class DataFetcher {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      console.error(`[DataFetcher] Market data fetch failed for ${symbol}:`, error);
+      logger.error(`[DataFetcher] Market data fetch failed for ${symbol}:`, error);
       return {
         symbol,
         price: 0,
@@ -139,7 +142,7 @@ export class DataFetcher {
       data?: unknown;
     }>
   > {
-    console.log(`[DataFetcher] Fetching data for ${vcoinIds.length} symbols`);
+    logger.info(`[DataFetcher] Fetching data for ${vcoinIds.length} symbols`);
 
     const promises = vcoinIds.map((vcoinId) => this.fetchSymbolData(vcoinId));
     const results = await Promise.allSettled(promises);
@@ -148,7 +151,7 @@ export class DataFetcher {
       if (result.status === "fulfilled") {
         return result.value;
       }
-      console.error(`[DataFetcher] Failed to fetch symbol ${vcoinIds[index]}:`, result.reason);
+      logger.error(`[DataFetcher] Failed to fetch symbol ${vcoinIds[index]}:`, result.reason);
       return {
         vcoinId: vcoinIds[index],
         symbol: "UNKNOWN",
@@ -163,7 +166,7 @@ export class DataFetcher {
       const testResult = await this.mexcApiAgent.callMexcApi("/health");
       return testResult !== null;
     } catch (error) {
-      console.error("[DataFetcher] Health check failed:", error);
+      logger.error("[DataFetcher] Health check failed:", error);
       return false;
     }
   }

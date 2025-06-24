@@ -20,7 +20,7 @@
  */
 
 import { CircuitBreakerSafetyService } from '../src/services/circuit-breaker-safety-service'
-import { UnifiedMexcService } from '../src/services/unified-mexc-service'
+import { UnifiedMexcServiceV2 } from '../src/services/unified-mexc-service-v2'
 import { getGlobalReliabilityManager, resetGlobalReliabilityManager } from '../src/services/mexc-circuit-breaker'
 import { config } from 'dotenv'
 import chalk from 'chalk'
@@ -58,7 +58,7 @@ async function main() {
 
   try {
     // Initialize services
-    const mexcService = new UnifiedMexcService()
+    const mexcService = new UnifiedMexcServiceV2()
     const safetyService = new CircuitBreakerSafetyService(mexcService)
     const reliabilityManager = getGlobalReliabilityManager()
 

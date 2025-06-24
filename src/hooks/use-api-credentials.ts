@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../lib/kinde-auth-client";
+import { createLogger } from "../lib/structured-logger";
 
 export interface ApiCredentials {
   id?: number;
@@ -26,6 +27,8 @@ export interface SaveApiCredentialsRequest {
 }
 
 // Fetch API credentials for a user and provider
+const logger = createLogger("use-api-credentials");
+
 export function useApiCredentials(userId?: string, provider = "mexc") {
   const { user, isAuthenticated } = useAuth();
 
@@ -39,7 +42,7 @@ export function useApiCredentials(userId?: string, provider = "mexc") {
       const response = await fetch(
         `/api/api-credentials?userId=${encodeURIComponent(userId)}&provider=${encodeURIComponent(provider)}`,
         {
-          credentials: "include" // Include authentication cookies
+          credentials: "include", // Include authentication cookies
         }
       );
 
@@ -56,17 +59,17 @@ export function useApiCredentials(userId?: string, provider = "mexc") {
     // Only fetch credentials if user is authenticated and it's their own data
     enabled: !!userId && isAuthenticated && user?.id === userId,
     staleTime: 5 * 60 * 1000, // 5 minutes - user data cache
-    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection  
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
     refetchOnWindowFocus: false,
     placeholderData: null, // Prevent loading flicker
     retry: (failureCount, error) => {
       // Don't retry auth errors
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('401') || errorMessage.includes('403')) {
+      const errorMessage = error?.message || "";
+      if (errorMessage.includes("401") || errorMessage.includes("403")) {
         return false;
       }
       return failureCount < 2;
-    }
+    },
   });
 }
 
@@ -90,7 +93,7 @@ export function useSaveApiCredentials() {
       // Enhanced debugging for request (development only)
       const requestPayload = JSON.stringify(data);
       if (process.env.NODE_ENV === "development") {
-        console.log("[DEBUG] Sending API credentials request:", {
+        logger.info("[DEBUG] Sending API credentials request:", {
           url: "/api/api-credentials",
           method: "POST",
           contentType: "application/json",
@@ -113,7 +116,7 @@ export function useSaveApiCredentials() {
       });
 
       if (process.env.NODE_ENV === "development") {
-        console.log("[DEBUG] API credentials response:", {
+        logger.info("[DEBUG] API credentials response:", {
           status: response.status,
           statusText: response.statusText,
           ok: response.ok,
@@ -125,9 +128,9 @@ export function useSaveApiCredentials() {
         let errorDetails: any;
         try {
           errorDetails = await response.json();
-          console.error("[DEBUG] API credentials error response:", errorDetails);
+          logger.error("[DEBUG] API credentials error response:", errorDetails);
         } catch (parseError) {
-          console.error("[DEBUG] Failed to parse error response:", parseError);
+          logger.error("[DEBUG] Failed to parse error response:", parseError);
           errorDetails = {
             error: `HTTP ${response.status}: ${response.statusText}`,
             details: "Failed to parse error response",
@@ -213,7 +216,7 @@ export function useTestApiCredentials() {
       }
 
       if (process.env.NODE_ENV === "development") {
-        console.log("[DEBUG] Testing API credentials:", {
+        logger.info("[DEBUG] Testing API credentials:", {
           userId,
           provider,
           timestamp: new Date().toISOString(),
@@ -229,7 +232,7 @@ export function useTestApiCredentials() {
         body: JSON.stringify({ userId, provider }),
       });
 
-      console.log("[DEBUG] API credentials test response:", {
+      logger.info("[DEBUG] API credentials test response:", {
         status: response.status,
         statusText: response.statusText,
         ok: response.ok,
@@ -239,9 +242,9 @@ export function useTestApiCredentials() {
         let errorDetails: any;
         try {
           errorDetails = await response.json();
-          console.error("[DEBUG] API credentials test error:", errorDetails);
+          logger.error("[DEBUG] API credentials test error:", errorDetails);
         } catch (parseError) {
-          console.error("[DEBUG] Failed to parse test error response:", parseError);
+          logger.error("[DEBUG] Failed to parse test error response:", parseError);
           errorDetails = {
             error: `HTTP ${response.status}: ${response.statusText}`,
             message: "Failed to parse error response",
@@ -254,7 +257,7 @@ export function useTestApiCredentials() {
       }
 
       const result = await response.json();
-      console.log("[DEBUG] API credentials test success:", result);
+      logger.info("[DEBUG] API credentials test success:", result);
 
       return {
         success: true,
@@ -263,37 +266,37 @@ export function useTestApiCredentials() {
       };
     },
     onSuccess: (data, variables) => {
-      console.log("[DEBUG] API credentials test succeeded, invalidating status caches");
-      
+      logger.info("[DEBUG] API credentials test succeeded, invalidating status caches");
+
       // Invalidate all related caches when credentials test succeeds
       // This fixes the status synchronization issue identified by the swarm
-      
+
       // 1. Invalidate status queries - fixes system status not updating
       queryClient.invalidateQueries({
-        queryKey: ["status"]
+        queryKey: ["status"],
       });
-      
+
       // 2. Invalidate connectivity status - refreshes connection state
       queryClient.invalidateQueries({
-        queryKey: ["mexc", "connectivity"]
+        queryKey: ["mexc", "connectivity"],
       });
-      
+
       // 3. Invalidate unified status - refreshes enhanced status displays
       queryClient.invalidateQueries({
-        queryKey: ["mexc", "unified-status"]
+        queryKey: ["mexc", "unified-status"],
       });
-      
+
       // 4. Invalidate account balance - may now be accessible with valid credentials
       queryClient.invalidateQueries({
-        queryKey: ["account-balance"]
+        queryKey: ["account-balance"],
       });
-      
+
       // 5. Invalidate API credentials cache for the tested user
       queryClient.invalidateQueries({
-        queryKey: ["api-credentials", variables.userId, variables.provider || "mexc"]
+        queryKey: ["api-credentials", variables.userId, variables.provider || "mexc"],
       });
-      
-      console.log("[DEBUG] Cache invalidation completed - status should update immediately");
+
+      logger.info("[DEBUG] Cache invalidation completed - status should update immediately");
     },
   });
 }

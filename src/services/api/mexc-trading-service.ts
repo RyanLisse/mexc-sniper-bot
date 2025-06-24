@@ -1,12 +1,13 @@
 /**
  * MEXC Trading Service
- * 
+ *
  * Handles all trading operations including orders, account info, and market data.
  * Extracted from mexc-api-client.ts for better modularity.
  */
 
-import type { MexcServiceResponse } from "../mexc-schemas";
 import { toSafeError } from "../../lib/error-type-utils";
+import { createLogger } from "../lib/structured-logger";
+import type { MexcServiceResponse } from "../mexc-schemas";
 import type { MexcApiClient } from "./mexc-api-client-refactored";
 
 export interface OrderParams {
@@ -63,6 +64,8 @@ export interface CredentialTestResult {
 }
 
 export class MexcTradingService {
+  private logger = createLogger("mexc-trading-service");
+
   constructor(private apiClient: MexcApiClient) {}
 
   /**
@@ -153,7 +156,10 @@ export class MexcTradingService {
       throw new Error(response.error || "Failed to get order book");
     } catch (error) {
       const safeError = toSafeError(error);
-      console.error(`[MexcTradingService] Failed to get order book for ${symbol}:`, safeError.message);
+      logger.error(
+        `[MexcTradingService] Failed to get order book for ${symbol}:`,
+        safeError.message
+      );
       return {
         symbol,
         bids: [],
@@ -259,9 +265,11 @@ export class MexcTradingService {
   /**
    * Get account balances
    */
-  async getBalances(): Promise<MexcServiceResponse<Array<{ asset: string; free: string; locked: string }>>> {
+  async getBalances(): Promise<
+    MexcServiceResponse<Array<{ asset: string; free: string; locked: string }>>
+  > {
     const accountResponse = await this.getAccountInfo();
-    
+
     if (accountResponse.success && accountResponse.data) {
       return {
         success: true,

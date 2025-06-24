@@ -1,4 +1,7 @@
+import { createLogger } from "../lib/structured-logger";
 import { type AgentConfig, BaseAgent } from "./base-agent";
+
+const logger = createLogger("safety-base-agent");
 
 export interface SafetyConfig {
   simulation: {
@@ -114,11 +117,11 @@ export abstract class SafetyBaseAgent extends BaseAgent {
 
     // Log critical events
     if (severity === "critical") {
-      console.error(`[${this.config.name}] CRITICAL SAFETY EVENT:`, message, data);
+      logger.error(`[${this.config.name}] CRITICAL SAFETY EVENT:`, message, data);
     } else if (severity === "high") {
-      console.warn(`[${this.config.name}] HIGH SEVERITY EVENT:`, message, data);
+      logger.warn(`[${this.config.name}] HIGH SEVERITY EVENT:`, message, data);
     } else {
-      console.info(`[${this.config.name}] Safety event:`, message);
+      logger.info(`[${this.config.name}] Safety event:`, message);
     }
 
     // Optionally send to external monitoring systems
@@ -132,10 +135,10 @@ export abstract class SafetyBaseAgent extends BaseAgent {
       // Could implement webhook notifications, Slack alerts, etc.
       if (event.severity === "critical") {
         // In a real system, you'd send alerts here
-        console.log("Would send critical alert to monitoring systems:", event);
+        logger.info("Would send critical alert to monitoring systems:", event);
       }
     } catch (error) {
-      console.error("Failed to notify external systems:", error);
+      logger.error("Failed to notify external systems:", error);
     }
   }
 

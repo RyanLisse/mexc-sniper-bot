@@ -1,10 +1,9 @@
 "use client";
 
+import React, { useCallback, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import React, { useCallback, useMemo } from "react";
-import { useState } from "react";
 import { useMexcCalendar } from "../hooks/use-mexc-data";
 
 interface CoinListing {
@@ -19,27 +18,21 @@ interface CoinCalendarProps {
 }
 
 // Calendar listing item component
-const ListingItem = React.memo(
-  ({
-    listing,
-  }: {
-    listing: CoinListing;
-  }) => (
-    <div className="flex items-center justify-between p-3 border rounded-lg">
-      <div className="flex flex-col">
-        <Badge variant="outline" className="text-sm font-mono w-fit">
-          {listing.symbol}
-        </Badge>
-        {listing.projectName && (
-          <span className="text-xs text-muted-foreground mt-1">{listing.projectName}</span>
-        )}
-      </div>
-      <div className="text-sm text-muted-foreground">
-        {new Date(listing.listingTime).toLocaleTimeString()}
-      </div>
+const ListingItem = React.memo(({ listing }: { listing: CoinListing }) => (
+  <div className="flex items-center justify-between p-3 border rounded-lg">
+    <div className="flex flex-col">
+      <Badge variant="outline" className="text-sm font-mono w-fit">
+        {listing.symbol}
+      </Badge>
+      {listing.projectName && (
+        <span className="text-xs text-muted-foreground mt-1">{listing.projectName}</span>
+      )}
     </div>
-  )
-);
+    <div className="text-sm text-muted-foreground">
+      {new Date(listing.listingTime).toLocaleTimeString()}
+    </div>
+  </div>
+));
 ListingItem.displayName = "ListingItem";
 
 // Loading state component
@@ -52,29 +45,17 @@ const LoadingState = React.memo(() => (
 LoadingState.displayName = "LoadingState";
 
 // Error state component
-const ErrorState = React.memo(
-  ({
-    error,
-  }: {
-    error: Error;
-  }) => (
-    <div className="text-center text-red-400 p-8">
-      <p>Error loading calendar data:</p>
-      <p className="text-sm">{error.message}</p>
-    </div>
-  )
-);
+const ErrorState = React.memo(({ error }: { error: Error }) => (
+  <div className="text-center text-red-400 p-8">
+    <p>Error loading calendar data:</p>
+    <p className="text-sm">{error.message}</p>
+  </div>
+));
 ErrorState.displayName = "ErrorState";
 
 // Empty state component
 const EmptyState = React.memo(
-  ({
-    date,
-    totalListings,
-  }: {
-    date: string;
-    totalListings: number;
-  }) => (
+  ({ date, totalListings }: { date: string; totalListings: number }) => (
     <div className="text-center text-muted-foreground p-8">
       <p>No listings for {date}</p>
       <p className="text-xs mt-1">Total listings available: {totalListings}</p>

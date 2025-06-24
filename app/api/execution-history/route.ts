@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../src/lib/structured-logger';
 import { db } from "../../../src/db";
 import { executionHistory, snipeTargets } from "../../../src/db/schema";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -136,7 +139,7 @@ export async function GET(request: NextRequest) {
       data: response,
     });
   } catch (error) {
-    console.error("❌ Error fetching execution history:", error);
+    logger.error("❌ Error fetching execution history:", { error: error });
     return NextResponse.json(
       {
         success: false,

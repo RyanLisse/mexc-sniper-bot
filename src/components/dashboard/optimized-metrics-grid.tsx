@@ -108,13 +108,7 @@ LoadingSkeleton.displayName = "LoadingSkeleton";
 
 // Section component for better organization
 const MetricsSection = React.memo(
-  ({
-    title,
-    children,
-  }: {
-    title: string;
-    children: React.ReactNode;
-  }) => (
+  ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div>
       <h3 className="text-sm font-medium text-gray-700 mb-3">{title}</h3>
       {children}

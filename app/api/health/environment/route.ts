@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Environment Health Check API Route
  * 
  * Comprehensive environment variable validation and health reporting.
@@ -14,6 +15,8 @@ import { environmentValidation } from '@/src/services/enhanced-environment-valid
  * GET /api/health/environment
  * Comprehensive environment variable health check
  */
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
   
@@ -26,7 +29,7 @@ export async function GET(request: NextRequest) {
       healthSummary = environmentValidation.getHealthSummary();
       missingByCategory = environmentValidation.getMissingByCategory();
     } catch (validationError) {
-      console.warn('[Environment Health] Validation service failed, using fallback:', validationError);
+      logger.warn('[Environment Health] Validation service failed, using fallback:', validationError);
       
       // Fallback validation response
       validation = {
@@ -128,7 +131,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    console.error('[Environment Health] Environment health check failed:', error);
+    logger.error('[Environment Health] Environment health check failed:', error);
     
     return apiResponse.error('Environment health check failed', 500, {
       status: 'error',
@@ -194,7 +197,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.error('Invalid action. Use "generate_template" or "validate_specific"', 400);
     
   } catch (error) {
-    console.error('[Environment Health] POST request failed:', error);
+    logger.error('[Environment Health] POST request failed:', error);
     
     return apiResponse.error('Environment health action failed', 500, {
       error: error instanceof Error ? error.message : 'Unknown error',

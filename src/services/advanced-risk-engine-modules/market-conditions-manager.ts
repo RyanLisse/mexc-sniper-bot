@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../lib/structured-logger';
  * Market Conditions & Portfolio Management Module
  *
  * Manages market conditions, position tracking, and portfolio metrics
@@ -33,6 +34,8 @@ export interface PortfolioUpdate {
 }
 
 export class MarketConditionsManager {
+  private logger = createLogger("market-conditions-manager");
+
   private marketConditions: MarketConditions;
   private positions: Map<string, PositionRiskProfile> = new Map();
   private historicalMetrics: PortfolioRiskMetrics[] = [];
@@ -53,7 +56,7 @@ export class MarketConditionsManager {
       ...config.initialMarketConditions,
     };
 
-    console.log("[MarketConditionsManager] Initialized with market conditions");
+    logger.info("[MarketConditionsManager] Initialized with market conditions");
   }
 
   /**
@@ -69,9 +72,9 @@ export class MarketConditionsManager {
     try {
       // Validate the updated market conditions
       this.marketConditions = validateMarketConditions(updatedConditions);
-      console.log("[MarketConditionsManager] Market conditions updated and validated");
+      logger.info("[MarketConditionsManager] Market conditions updated and validated");
     } catch (validationError) {
-      console.error("[MarketConditionsManager] Invalid market conditions:", validationError);
+      logger.error("[MarketConditionsManager] Invalid market conditions:", validationError);
       throw new Error(`Invalid market conditions: ${validationError}`);
     }
 
@@ -93,11 +96,11 @@ export class MarketConditionsManager {
       // Validate the position before storing
       const validatedPosition = validatePositionRiskProfile(position);
       this.positions.set(validatedPosition.symbol, validatedPosition);
-      console.log(
+      logger.info(
         `[MarketConditionsManager] Position updated and validated for ${validatedPosition.symbol}`
       );
     } catch (validationError) {
-      console.error("[MarketConditionsManager] Invalid position profile:", validationError);
+      logger.error("[MarketConditionsManager] Invalid position profile:", validationError);
       throw new Error(`Invalid position profile: ${validationError}`);
     }
 
@@ -116,7 +119,7 @@ export class MarketConditionsManager {
    */
   removePosition(symbol: string): void {
     this.positions.delete(symbol);
-    console.log(`[MarketConditionsManager] Removed position tracking for ${symbol}`);
+    logger.info(`[MarketConditionsManager] Removed position tracking for ${symbol}`);
   }
 
   /**
@@ -196,7 +199,7 @@ export class MarketConditionsManager {
           position.size *= scaleFactor;
         }
 
-        console.log(
+        logger.info(
           `[MarketConditionsManager] Portfolio value updated: ${oldValue} -> ${newValue}`
         );
       }
@@ -210,7 +213,7 @@ export class MarketConditionsManager {
         });
         this.historicalMetrics.push(validatedMetrics);
       } catch (validationError) {
-        console.warn(
+        logger.warn(
           "[MarketConditionsManager] Invalid portfolio metrics, using base metrics:",
           validationError
         );
@@ -224,7 +227,7 @@ export class MarketConditionsManager {
 
       this.lastRiskUpdate = Date.now();
     } catch (error) {
-      console.error("[MarketConditionsManager] Portfolio metrics update failed:", error);
+      logger.error("[MarketConditionsManager] Portfolio metrics update failed:", error);
     }
   }
 
@@ -273,11 +276,11 @@ export class MarketConditionsManager {
       // Recalculate portfolio metrics
       await this.calculatePortfolioRiskMetrics();
 
-      console.log(
+      logger.info(
         `[MarketConditionsManager] Updated ${portfolioPositions.length} portfolio positions`
       );
     } catch (error) {
-      console.error("[MarketConditionsManager] Portfolio positions update failed:", error);
+      logger.error("[MarketConditionsManager] Portfolio positions update failed:", error);
     }
   }
 
@@ -383,11 +386,11 @@ export class MarketConditionsManager {
         }
       }
 
-      console.log(
+      logger.info(
         `[MarketConditionsManager] Correlation matrix updated for stress event: ${marketStressEvent.marketDirection}`
       );
     } catch (error) {
-      console.error("[MarketConditionsManager] Correlation matrix update failed:", error);
+      logger.error("[MarketConditionsManager] Correlation matrix update failed:", error);
     }
   }
 

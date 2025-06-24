@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Enhanced rate limiter for authentication endpoints with audit logging
  * Integrates with adaptive rate limiting for intelligent throttling
  * In production, consider using Redis or a distributed cache
@@ -44,6 +45,8 @@ const RATE_LIMITS = {
 };
 
 // Security event logging
+const logger = createLogger("rate-limiter");
+
 export function logSecurityEvent(event: Omit<SecurityEvent, "timestamp">): void {
   const securityEvent: SecurityEvent = {
     ...event,
@@ -58,7 +61,7 @@ export function logSecurityEvent(event: Omit<SecurityEvent, "timestamp">): void 
   }
 
   // Log to console for monitoring (in production, send to logging service)
-  console.log(`[SECURITY] ${event.type}: ${event.ip} -> ${event.endpoint}`, {
+  logger.info(`[SECURITY] ${event.type}: ${event.ip} -> ${event.endpoint}`, {
     timestamp: new Date(securityEvent.timestamp).toISOString(),
     ...event.metadata,
   });
@@ -131,7 +134,7 @@ export async function checkRateLimit(
       };
     }
   } catch (error) {
-    console.error("[Rate Limiter] Adaptive rate limiter failed:", error);
+    logger.error("[Rate Limiter] Adaptive rate limiter failed:", error);
     // Continue with traditional rate limiting on adaptive failure
   }
 

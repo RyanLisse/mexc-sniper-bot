@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { and, eq, gte, lte, or } from "drizzle-orm";
 import { db } from "../db";
 import { transactionLocks, transactionQueue } from "../db/schema";
+import { createLogger } from "../lib/structured-logger";
 
 export interface TransactionLockConfig {
   resourceId: string;
@@ -33,6 +34,8 @@ export interface TransactionResult {
 }
 
 export class TransactionLockService {
+  private logger = createLogger("transaction-lock-service");
+
   private static instance: TransactionLockService;
   private cleanupInterval: NodeJS.Timeout | null = null;
 
@@ -210,7 +213,7 @@ export class TransactionLockService {
         }
       }
 
-      console.error("Failed to acquire lock:", error);
+      logger.error("Failed to acquire lock:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to acquire lock",
@@ -248,7 +251,7 @@ export class TransactionLockService {
 
       return true;
     } catch (err) {
-      console.error("Failed to release lock:", err);
+      logger.error("Failed to release lock:", err);
       return false;
     }
   }
@@ -551,7 +554,7 @@ export class TransactionLockService {
           )
         );
     } catch (error) {
-      console.error("Cleanup process error:", error);
+      logger.error("Cleanup process error:", error);
     }
   }
 
@@ -692,7 +695,7 @@ export class TransactionLockService {
 
       return updatedLocks.length > 0;
     } catch (error) {
-      console.error("Error releasing lock by resource:", error);
+      logger.error("Error releasing lock by resource:", error);
       return false;
     }
   }

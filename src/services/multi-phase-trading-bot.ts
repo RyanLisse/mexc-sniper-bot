@@ -10,6 +10,8 @@ import type { TradingStrategy } from "./trading-strategy-manager";
 
 // Real-time Multi-Phase Example - EXACT implementation from docs
 export class MultiPhaseTradingBot {
+  private logger = createLogger('multi-phase-trading-bot');
+
   protected executor: MultiPhaseExecutor;
   protected entryPrice: number;
   protected position: number;
@@ -112,7 +114,7 @@ export class MultiPhaseTradingBot {
     this.executor
       .recordPhaseExecution(phaseNumber, executionPrice, amount, options)
       .catch((error) => {
-        console.error("Failed to persist phase execution to database:", error);
+        logger.error("Failed to persist phase execution to database:", error);
       });
   }
 
@@ -230,11 +232,8 @@ export class MultiPhaseTradingBot {
   }
 
   // Import bot state from persistence
-  importState(state: {
-    entryPrice: number;
-    position: number;
-    executorState: any;
-  }): void {
+  importState(state: { entryPrice: number; position: number; executorState: any }): void {
+import { createLogger } from '../lib/structured-logger';
     this.entryPrice = state.entryPrice;
     this.position = state.position;
     this.executor.importState(state.executorState);
@@ -427,7 +426,7 @@ export class MultiPhaseTradingBot {
         status: "active",
       };
 
-      console.log(
+      logger.info(
         `[MultiPhaseTradingBot] Position initialized: ${symbol} @ ${entryPrice} x ${amount} = ${value} USDT`
       );
 
@@ -437,7 +436,7 @@ export class MultiPhaseTradingBot {
         details,
       };
     } catch (error) {
-      console.error("[MultiPhaseTradingBot] Position initialization failed:", error);
+      logger.error("[MultiPhaseTradingBot] Position initialization failed:", error);
       return {
         success: false,
         positionId: "",
@@ -498,7 +497,7 @@ export class MultiPhaseTradingBot {
       adjustments.timeoutAdjustment = 2.0; // Double the timeout
     }
 
-    console.log(
+    logger.info(
       `[MultiPhaseTradingBot] Partial fill handled: ${fillPercentage.toFixed(1)}% filled, ${nextAction} recommended`
     );
 
@@ -670,7 +669,7 @@ export class MultiPhaseTradingBot {
       operations.push("Verified position state integrity");
       operations.push("Optimized executor state");
 
-      console.log(
+      logger.info(
         `[MultiPhaseTradingBot] Maintenance completed: ${operations.length} operations, ${memoryFreed.toFixed(1)}KB freed`
       );
 
@@ -686,7 +685,7 @@ export class MultiPhaseTradingBot {
       };
     } catch (error) {
       errors.push(`Maintenance error: ${error}`);
-      console.error("[MultiPhaseTradingBot] Maintenance cleanup failed:", error);
+      logger.error("[MultiPhaseTradingBot] Maintenance cleanup failed:", error);
 
       return {
         success: false,
@@ -708,7 +707,7 @@ export class MultiPhaseTradingBot {
     try {
       // Simulate database persistence
       // In a real implementation, this would save to database
-      console.log(
+      logger.info(
         "[MultiPhaseTradingBot] Persisting trade data:",
         JSON.stringify(data).slice(0, 100) + "..."
       );
@@ -727,7 +726,7 @@ export class MultiPhaseTradingBot {
         }
       }
     } catch (error) {
-      console.error("[MultiPhaseTradingBot] Failed to persist trade data:", error);
+      logger.error("[MultiPhaseTradingBot] Failed to persist trade data:", error);
       throw error;
     }
   }
@@ -797,7 +796,7 @@ export class MultiPhaseTradingBot {
 
 // Example: Real-world multi-phase execution - EXACT implementation from docs
 export function demonstrateMultiPhaseStrategy(): void {
-  console.log("=== Multi-Phase Trading Strategy Demo ===\n");
+  logger.info("=== Multi-Phase Trading Strategy Demo ===\n");
 
   // Import required strategies
   const { TRADING_STRATEGIES } = require("./trading-strategy-manager");
@@ -819,26 +818,26 @@ export function demonstrateMultiPhaseStrategy(): void {
   ];
 
   priceMovements.forEach(({ price, description }) => {
-    console.log(`\n📊 Price Update: ${price} - ${description}`);
+    logger.info(`\n📊 Price Update: ${price} - ${description}`);
     const result = bot.onPriceUpdate(price);
 
     // Show actions
     if (result.actions.length > 0) {
-      console.log("\n🚨 ACTIONS:");
-      result.actions.forEach((action) => console.log(action));
+      logger.info("\n🚨 ACTIONS:");
+      result.actions.forEach((action) => logger.info(action));
     }
 
     // Show status
-    console.log("\n📈 Portfolio Status:");
-    console.log(`- Price increase: ${result.status.priceIncrease}`);
-    console.log(`- Completed phases: ${result.status.summary.completedPhases}`);
-    console.log(`- Remaining position: ${result.status.summary.totalRemaining} tokens`);
-    console.log(`- Realized profit: ${result.status.summary.realizedProfit.toFixed(2)}`);
-    console.log(`- Unrealized profit: ${result.status.summary.unrealizedProfit.toFixed(2)}`);
-    console.log(`- Next target: ${result.status.nextTarget}`);
+    logger.info("\n📈 Portfolio Status:");
+    logger.info(`- Price increase: ${result.status.priceIncrease}`);
+    logger.info(`- Completed phases: ${result.status.summary.completedPhases}`);
+    logger.info(`- Remaining position: ${result.status.summary.totalRemaining} tokens`);
+    logger.info(`- Realized profit: ${result.status.summary.realizedProfit.toFixed(2)}`);
+    logger.info(`- Unrealized profit: ${result.status.summary.unrealizedProfit.toFixed(2)}`);
+    logger.info(`- Next target: ${result.status.nextTarget}`);
 
-    console.log("\n📋 Phase Overview:");
-    console.log(result.status.visualization);
+    logger.info("\n📋 Phase Overview:");
+    logger.info(result.status.visualization);
   });
 }
 

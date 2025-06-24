@@ -1,9 +1,10 @@
-import { getGlobalAgentRegistry } from "../mexc-agents/coordination/agent-registry";
+import { createLogger } from "../lib/structured-logger";
 import type {
   AgentRegistryStats,
   AgentStatus,
   RegisteredAgent,
 } from "../mexc-agents/coordination/agent-registry";
+import { getGlobalAgentRegistry } from "../mexc-agents/coordination/agent-registry";
 import { ErrorLoggingService } from "./error-logging-service";
 
 export interface MonitoringAlert {
@@ -90,6 +91,8 @@ export interface MonitoringConfig {
  * Centralized monitoring service for all agent health and performance metrics
  */
 export class AgentMonitoringService {
+  private logger = createLogger("agent-monitoring-service");
+
   private static instance: AgentMonitoringService | null = null;
   private config: MonitoringConfig;
   private alerts: Map<string, MonitoringAlert> = new Map();
@@ -146,12 +149,12 @@ export class AgentMonitoringService {
    */
   public start(): void {
     if (this.isRunning) {
-      console.warn("[AgentMonitoringService] Service is already running");
+      logger.warn("[AgentMonitoringService] Service is already running");
       return;
     }
 
     if (!this.config.enabled) {
-      console.log("[AgentMonitoringService] Service is disabled");
+      logger.info("[AgentMonitoringService] Service is disabled");
       return;
     }
 
@@ -162,7 +165,7 @@ export class AgentMonitoringService {
       try {
         await this.performHealthCheck();
       } catch (error) {
-        console.error("[AgentMonitoringService] Health check failed:", error);
+        logger.error("[AgentMonitoringService] Health check failed:", error);
         await this.errorLoggingService.logError(error as Error, {
           service: "AgentMonitoringService",
           operation: "performHealthCheck",
@@ -176,7 +179,7 @@ export class AgentMonitoringService {
         try {
           await this.generateReport();
         } catch (error) {
-          console.error("[AgentMonitoringService] Report generation failed:", error);
+          logger.error("[AgentMonitoringService] Report generation failed:", error);
           await this.errorLoggingService.logError(error as Error, {
             service: "AgentMonitoringService",
             operation: "generateReport",
@@ -185,7 +188,7 @@ export class AgentMonitoringService {
       }, this.config.reporting.interval);
     }
 
-    console.log("[AgentMonitoringService] Monitoring service started");
+    logger.info("[AgentMonitoringService] Monitoring service started");
   }
 
   /**
@@ -203,7 +206,7 @@ export class AgentMonitoringService {
     }
 
     this.isRunning = false;
-    console.log("[AgentMonitoringService] Monitoring service stopped");
+    logger.info("[AgentMonitoringService] Monitoring service stopped");
   }
 
   /**
@@ -399,7 +402,7 @@ export class AgentMonitoringService {
     await this.sendNotification(alert);
 
     // Log alert
-    console.log(
+    logger.info(
       `[AgentMonitoringService] Alert generated: ${alert.severity.toUpperCase()} - ${alert.title}`
     );
 
@@ -418,11 +421,11 @@ export class AgentMonitoringService {
     if (channels.includes("console")) {
       const prefix =
         alert.severity === "critical" ? "🚨" : alert.severity === "warning" ? "⚠️" : "ℹ️";
-      console.log(`${prefix} [${alert.severity.toUpperCase()}] ${alert.title}: ${alert.message}`);
+      logger.info(`${prefix} [${alert.severity.toUpperCase()}] ${alert.title}: ${alert.message}`);
 
       if (alert.suggestedActions && alert.suggestedActions.length > 0) {
-        console.log("   Suggested actions:");
-        alert.suggestedActions.forEach((action) => console.log(`   - ${action}`));
+        logger.info("   Suggested actions:");
+        alert.suggestedActions.forEach((action) => logger.info(`   - ${action}`));
       }
     }
 
@@ -439,7 +442,7 @@ export class AgentMonitoringService {
           }),
         });
       } catch (error) {
-        console.error("[AgentMonitoringService] Webhook notification failed:", error);
+        logger.error("[AgentMonitoringService] Webhook notification failed:", error);
       }
     }
 
@@ -519,7 +522,7 @@ export class AgentMonitoringService {
     // Clean up old reports
     this.cleanupOldReports();
 
-    console.log(`[AgentMonitoringService] Generated monitoring report: ${reportId}`);
+    logger.info(`[AgentMonitoringService] Generated monitoring report: ${reportId}`);
     return report;
   }
 
@@ -546,7 +549,7 @@ export class AgentMonitoringService {
     if (alert && !alert.resolved) {
       alert.resolved = true;
       alert.resolvedAt = new Date();
-      console.log(`[AgentMonitoringService] Alert resolved: ${alertId}`);
+      logger.info(`[AgentMonitoringService] Alert resolved: ${alertId}`);
       return true;
     }
     return false;
@@ -557,7 +560,7 @@ export class AgentMonitoringService {
    */
   public updateConfig(newConfig: Partial<MonitoringConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log("[AgentMonitoringService] Configuration updated");
+    logger.info("[AgentMonitoringService] Configuration updated");
   }
 
   /**
@@ -718,7 +721,7 @@ export class AgentMonitoringService {
     this.alertIdCounter = 0;
     this.reportIdCounter = 0;
     AgentMonitoringService.instance = null;
-    console.log("[AgentMonitoringService] Service destroyed");
+    logger.info("[AgentMonitoringService] Service destroyed");
   }
 
   /**

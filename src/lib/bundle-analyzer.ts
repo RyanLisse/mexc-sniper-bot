@@ -1,3 +1,4 @@
+import { createLogger } from "./structured-logger";
 /**
  * Bundle Size Analyzer and Optimizer
  * Provides detailed analysis and recommendations for bundle optimization
@@ -52,6 +53,8 @@ export interface PerformanceMetrics {
 }
 
 export class BundleAnalyzer {
+  private logger = createLogger("bundle-analyzer");
+
   private static instance: BundleAnalyzer;
 
   private constructor() {}
@@ -102,7 +105,7 @@ export class BundleAnalyzer {
 
       return analysis;
     } catch (error) {
-      console.error("[BundleAnalyzer] Error analyzing bundle:", error);
+      logger.error("[BundleAnalyzer] Error analyzing bundle:", error);
       throw error;
     }
   }

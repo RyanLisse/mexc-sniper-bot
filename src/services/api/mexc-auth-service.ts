@@ -1,6 +1,6 @@
 /**
  * MEXC Authentication Service
- * 
+ *
  * Handles MEXC API authentication including signature generation and credential validation.
  * Extracted from mexc-api-client.ts for better modularity.
  */
@@ -22,9 +22,9 @@ export class MexcAuthService {
   hasCredentials(): boolean {
     return Boolean(
       this.config.apiKey &&
-      this.config.apiSecret &&
-      this.config.apiKey.trim().length > 0 &&
-      this.config.apiSecret.trim().length > 0
+        this.config.apiSecret &&
+        this.config.apiKey.trim().length > 0 &&
+        this.config.apiSecret.trim().length > 0
     );
   }
 
@@ -36,10 +36,7 @@ export class MexcAuthService {
       throw new Error("API credentials not configured");
     }
 
-    return crypto
-      .createHmac("sha256", this.config.apiSecret)
-      .update(queryString)
-      .digest("hex");
+    return crypto.createHmac("sha256", this.config.apiSecret).update(queryString).digest("hex");
   }
 
   /**
@@ -51,7 +48,7 @@ export class MexcAuthService {
     }
 
     const timestamp = Date.now();
-    
+
     // Build query string with timestamp
     const authParams = {
       ...params,
@@ -61,7 +58,7 @@ export class MexcAuthService {
 
     // Create query string
     const queryString = this.buildQueryString(authParams);
-    
+
     // Generate signature
     const signature = this.createSignature(queryString);
 
@@ -76,10 +73,13 @@ export class MexcAuthService {
   /**
    * Add authentication headers to request
    */
-  addAuthHeaders(headers: Record<string, string>, authContext: AuthenticationContext): Record<string, string> {
+  addAuthHeaders(
+    headers: Record<string, string>,
+    authContext: AuthenticationContext
+  ): Record<string, string> {
     return {
       ...headers,
-      'X-MEXC-APIKEY': authContext.apiKey,
+      "X-MEXC-APIKEY": authContext.apiKey,
     };
   }
 
@@ -100,11 +100,11 @@ export class MexcAuthService {
    */
   private buildQueryString(params: ApiParams): string {
     const cleanParams: Record<string, string> = {};
-    
+
     for (const [key, value] of Object.entries(params)) {
       if (value !== null && value !== undefined) {
         if (Array.isArray(value)) {
-          cleanParams[key] = value.map(v => String(v)).join(',');
+          cleanParams[key] = value.map((v) => String(v)).join(",");
         } else {
           cleanParams[key] = String(value);
         }
@@ -118,14 +118,14 @@ export class MexcAuthService {
    * Validate API key format
    */
   validateApiKey(apiKey: string): boolean {
-    return Boolean(apiKey && typeof apiKey === 'string' && apiKey.length >= 32);
+    return Boolean(apiKey && typeof apiKey === "string" && apiKey.length >= 32);
   }
 
   /**
    * Validate API secret format
    */
   validateApiSecret(apiSecret: string): boolean {
-    return Boolean(apiSecret && typeof apiSecret === 'string' && apiSecret.length >= 32);
+    return Boolean(apiSecret && typeof apiSecret === "string" && apiSecret.length >= 32);
   }
 
   /**
@@ -172,9 +172,9 @@ export class MexcAuthService {
 
       return { valid: true };
     } catch (error) {
-      return { 
-        valid: false, 
-        error: error instanceof Error ? error.message : "Unknown authentication error" 
+      return {
+        valid: false,
+        error: error instanceof Error ? error.message : "Unknown authentication error",
       };
     }
   }

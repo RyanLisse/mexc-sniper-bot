@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createLogger } from "../lib/structured-logger";
 
 // ======================
 // Types
@@ -81,6 +82,8 @@ const enhancedPatternsQueryKeys = {
 /**
  * Hook to get AI-enhanced pattern detection data
  */
+const logger = createLogger("use-enhanced-patterns");
+
 export function useEnhancedPatterns(options?: {
   enableAI?: boolean;
   confidenceThreshold?: number;
@@ -224,7 +227,7 @@ export function usePatternAnalysisTrigger() {
 
       return result.data;
     } catch (error) {
-      console.error("[Pattern Analysis Trigger] Error:", error);
+      logger.error("[Pattern Analysis Trigger] Error:", error);
       throw error;
     }
   };

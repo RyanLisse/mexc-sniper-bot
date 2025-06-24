@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Unified Cache System for MEXC Sniper Bot
  *
  * This system consolidates all caching functionality from:
@@ -129,6 +130,8 @@ interface CacheBackend<T = any> {
  * L1 Cache: In-Memory LRU Cache
  */
 class MemoryCache implements CacheBackend {
+  private logger = createLogger("unified-cache-system");
+
   private cache = new Map<string, CacheEntry>();
   private accessOrder = new Map<string, number>();
   private currentTime = 0;
@@ -433,7 +436,7 @@ export class UnifiedCacheSystem {
       return null;
     } catch (error) {
       this.metrics.errors++;
-      console.error("[UnifiedCache] Get error:", error);
+      logger.error("[UnifiedCache] Get error:", error);
       return null;
     }
   }
@@ -478,7 +481,7 @@ export class UnifiedCacheSystem {
       this.updateMemoryUsage();
     } catch (error) {
       this.metrics.errors++;
-      console.error("[UnifiedCache] Set error:", error);
+      logger.error("[UnifiedCache] Set error:", error);
     }
   }
 
@@ -496,7 +499,7 @@ export class UnifiedCacheSystem {
       return false;
     } catch (error) {
       this.metrics.errors++;
-      console.error("[UnifiedCache] Delete error:", error);
+      logger.error("[UnifiedCache] Delete error:", error);
       return false;
     }
   }
@@ -509,7 +512,7 @@ export class UnifiedCacheSystem {
       this.resetMetrics();
     } catch (error) {
       this.metrics.errors++;
-      console.error("[UnifiedCache] Clear error:", error);
+      logger.error("[UnifiedCache] Clear error:", error);
     }
   }
 
@@ -760,7 +763,7 @@ export class UnifiedCacheSystem {
       this.metrics.lastCleanup = now;
       this.updateMemoryUsage();
     } catch (error) {
-      console.error("[UnifiedCache] Cleanup error:", error);
+      logger.error("[UnifiedCache] Cleanup error:", error);
       this.metrics.errors++;
     }
   }

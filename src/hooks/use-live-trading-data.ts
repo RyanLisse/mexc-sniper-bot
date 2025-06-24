@@ -14,6 +14,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createLogger } from "../lib/structured-logger";
 import type {
   TradingBalanceMessage,
   TradingExecutionMessage,
@@ -182,6 +183,8 @@ export interface UseLiveTradingDataResult {
 // ======================
 
 class PriceAnalyticsEngine {
+  private logger = createLogger("use-live-trading-data");
+
   private priceHistory = new Map<string, Array<{ price: number; timestamp: number }>>();
   private readonly maxHistoryPoints = 1000;
 
@@ -864,7 +867,7 @@ export function useLiveTradingData(
       // Clear metrics calculator
       metricsRef.current = new TradingMetricsCalculator();
 
-      console.log("[useLiveTradingData] Memory cleanup completed");
+      logger.info("[useLiveTradingData] Memory cleanup completed");
     };
   }, []);
 

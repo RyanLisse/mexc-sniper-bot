@@ -1,3 +1,4 @@
+import { createLogger } from "./structured-logger";
 /**
  * Service Layer Architecture - Improved Separation of Concerns
  *
@@ -536,6 +537,8 @@ export interface ComplianceViolation {
  * Provides centralized service access and lifecycle management
  */
 export class ServiceRegistry {
+  private logger = createLogger("service-layer-architecture");
+
   private services = new Map<string, BaseService>();
   private dependencies: ServiceDependencies = {};
   private configuration: ServiceConfiguration;
@@ -560,9 +563,9 @@ export class ServiceRegistry {
     for (const [name, service] of this.services) {
       try {
         await service.initialize(this.dependencies);
-        console.log(`✅ Service '${name}' initialized successfully`);
+        logger.info(`✅ Service '${name}' initialized successfully`);
       } catch (error) {
-        console.error(`❌ Failed to initialize service '${name}':`, error);
+        logger.error(`❌ Failed to initialize service '${name}':`, error);
         throw error;
       }
     }
@@ -576,7 +579,7 @@ export class ServiceRegistry {
         const isHealthy = await service.isHealthy();
         healthStatus.set(name, isHealthy);
       } catch (error) {
-        console.error(`Health check failed for service '${name}':`, error);
+        logger.error(`Health check failed for service '${name}':`, error);
         healthStatus.set(name, false);
       }
     }
@@ -588,9 +591,9 @@ export class ServiceRegistry {
     for (const [name, service] of this.services) {
       try {
         await service.cleanup();
-        console.log(`✅ Service '${name}' cleaned up successfully`);
+        logger.info(`✅ Service '${name}' cleaned up successfully`);
       } catch (error) {
-        console.error(`❌ Failed to cleanup service '${name}':`, error);
+        logger.error(`❌ Failed to cleanup service '${name}':`, error);
       }
     }
   }

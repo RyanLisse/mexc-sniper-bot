@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "../lib/api-response";
 import { useAuth } from "../lib/kinde-auth-client";
 import { queryKeys } from "../lib/query-client";
+import { createLogger } from "../lib/structured-logger";
 import type { ExitStrategy } from "../types/exit-strategies";
 
 export interface TakeProfitLevels {
@@ -64,6 +65,8 @@ export interface UserTradingPreferences {
 }
 
 // Hook to get user preferences
+const logger = createLogger("use-user-preferences");
+
 export function useUserPreferences(userId?: string) {
   const { user, isAuthenticated } = useAuth();
 
@@ -89,7 +92,7 @@ export function useUserPreferences(userId?: string) {
 
         return apiResponse.data || null;
       } catch (error) {
-        console.error("[useUserPreferences] Failed to fetch preferences:", error);
+        logger.error("[useUserPreferences] Failed to fetch preferences:", error);
         throw error;
       }
     },
@@ -126,7 +129,7 @@ export function useUpdateUserPreferences() {
 
         return apiResponse.data || data;
       } catch (error) {
-        console.error("[useUpdateUserPreferences] Failed to update preferences:", error);
+        logger.error("[useUpdateUserPreferences] Failed to update preferences:", error);
         throw error;
       }
     },
@@ -343,10 +346,7 @@ export function useUpdateMultiLevelTakeProfit() {
   const updatePreferences = useUpdateUserPreferences();
 
   return useMutation({
-    mutationFn: async (data: {
-      userId: string;
-      config: MultiLevelTakeProfitConfig;
-    }) => {
+    mutationFn: async (data: { userId: string; config: MultiLevelTakeProfitConfig }) => {
       return updatePreferences.mutateAsync({
         userId: data.userId,
         multiLevelTakeProfit: data.config,

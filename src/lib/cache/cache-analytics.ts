@@ -1,9 +1,10 @@
 /**
+import { createLogger } from './structured-logger';
  * Cache Analytics Manager
- * 
+ *
  * Provides comprehensive analytics and reporting for the agent cache system.
  * Generates insights, recommendations, and performance reports across all cache components.
- * 
+ *
  * FEATURES:
  * - Comprehensive cache analytics aggregation
  * - Agent performance analysis
@@ -15,17 +16,19 @@
 
 import { globalCacheManager } from "../cache-manager";
 import type {
+  AgentCacheAnalytics,
   AgentCacheConfig,
   AgentCacheMetrics,
-  AgentCacheAnalytics,
-  WorkflowCacheEntry,
   AgentHealthCache,
+  WorkflowCacheEntry,
 } from "./agent-cache-types";
+import type { AgentHealthCacheManager } from "./agent-health-cache";
 import type { CachePerformanceMonitor } from "./cache-performance-monitor";
 import type { WorkflowCache } from "./workflow-cache";
-import type { AgentHealthCacheManager } from "./agent-health-cache";
 
 export class CacheAnalyticsManager {
+  private logger = createLogger("cache-analytics");
+
   private config: AgentCacheConfig;
   private performanceMonitor: CachePerformanceMonitor;
   private workflowCache: WorkflowCache;
@@ -53,7 +56,7 @@ export class CacheAnalyticsManager {
       // Agent performance analytics
       const agentPerformance: Record<string, any> = {};
       const allMetrics = this.performanceMonitor.getAllMetrics();
-      
+
       for (const [agentId, metrics] of allMetrics.entries()) {
         const totalRequests = metrics.totalExecutions;
         const cacheHits = metrics.cacheHits;
@@ -84,22 +87,16 @@ export class CacheAnalyticsManager {
       return {
         agentPerformance,
         workflowEfficiency: workflowStats,
-        cacheUtilization: {
-          totalKeys: globalAnalytics?.totalKeys || 0,
-          totalSize: globalAnalytics?.totalSize || 0,
-          memoryUsage: this.calculateMemoryUsage(),
-          hitRate: globalAnalytics?.hitRate || 0,
-          evictionRate: globalAnalytics?.evictionRate || 0,
-        },
-        agentHealthStats: {
+        healthMonitoring: {
           healthyAgents: healthStats.healthyAgents,
           degradedAgents: healthStats.degradedAgents,
           unhealthyAgents: healthStats.unhealthyAgents,
           averageResponseTime: healthStats.averageResponseTime,
         },
+        recommendations: recommendations,
       };
     } catch (error) {
-      console.error("[CacheAnalytics] Error generating analytics:", error);
+      logger.error("[CacheAnalytics] Error generating analytics:", error);
       return {
         agentPerformance: {},
         workflowEfficiency: {
@@ -109,19 +106,13 @@ export class CacheAnalyticsManager {
           averageExecutionTime: 0,
           timesSaved: 0,
         },
-        cacheUtilization: {
-          totalKeys: 0,
-          totalSize: 0,
-          memoryUsage: 0,
-          hitRate: 0,
-          evictionRate: 0,
-        },
-        agentHealthStats: {
+        healthMonitoring: {
           healthyAgents: 0,
           degradedAgents: 0,
           unhealthyAgents: 0,
           averageResponseTime: 0,
         },
+        recommendations: ["Error retrieving analytics - please check system health"],
       };
     }
   }
@@ -150,7 +141,8 @@ export class CacheAnalyticsManager {
     }
 
     // Generate insights
-    const hitRate = metrics.totalExecutions > 0 ? (metrics.cacheHits / metrics.totalExecutions) * 100 : 0;
+    const hitRate =
+      metrics.totalExecutions > 0 ? (metrics.cacheHits / metrics.totalExecutions) * 100 : 0;
     insights.push(`Cache hit rate: ${hitRate.toFixed(1)}%`);
     insights.push(`Average response time: ${metrics.avgResponseTime.toFixed(0)}ms`);
     insights.push(`Error rate: ${metrics.errorRate.toFixed(1)}%`);
@@ -204,11 +196,17 @@ export class CacheAnalyticsManager {
 
     // Calculate overall hit rate
     const hitRates = Object.values(analytics.agentPerformance).map((perf: any) => perf.hitRate);
-    const overallHitRate = hitRates.length > 0 ? hitRates.reduce((sum, rate) => sum + rate, 0) / hitRates.length : 0;
+    const overallHitRate =
+      hitRates.length > 0 ? hitRates.reduce((sum, rate) => sum + rate, 0) / hitRates.length : 0;
 
     // Calculate average response time
-    const responseTimes = Object.values(analytics.agentPerformance).map((perf: any) => perf.averageResponseTime);
-    const averageResponseTime = responseTimes.length > 0 ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length : 0;
+    const responseTimes = Object.values(analytics.agentPerformance).map(
+      (perf: any) => perf.averageResponseTime
+    );
+    const averageResponseTime =
+      responseTimes.length > 0
+        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        : 0;
 
     // Determine system health
     const unhealthyAgents = analytics.agentHealthStats.unhealthyAgents;
@@ -300,7 +298,7 @@ export class CacheAnalyticsManager {
     const agentMetrics = this.performanceMonitor.getAllMetrics().size * 500;
     const workflowCacheSize = this.workflowCache.getWorkflowCacheSize() * 1000;
     const healthCacheSize = this.healthCache.getHealthCacheSize() * 300;
-    
+
     return agentMetrics + workflowCacheSize + healthCacheSize;
   }
 
@@ -347,10 +345,14 @@ export class CacheAnalyticsManager {
     }
 
     // Check for low overall hit rates
-    const avgHitRate = totalAgents > 0
-      ? Object.values(agentPerformance).reduce((sum: number, perf: any) => sum + perf.hitRate, 0) / totalAgents
-      : 0;
-    
+    const avgHitRate =
+      totalAgents > 0
+        ? Object.values(agentPerformance).reduce(
+            (sum: number, perf: any) => sum + perf.hitRate,
+            0
+          ) / totalAgents
+        : 0;
+
     if (avgHitRate < 50 && totalAgents > 0) {
       recommendations.push(
         "Overall agent cache hit rate is low - consider implementing cache warming or reviewing cache invalidation strategies"

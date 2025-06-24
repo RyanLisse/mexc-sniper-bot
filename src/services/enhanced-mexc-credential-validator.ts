@@ -11,6 +11,7 @@
 
 import * as crypto from "node:crypto";
 import { toSafeError } from "../lib/error-type-utils";
+import { createLogger } from "../lib/structured-logger";
 
 // ============================================================================
 // Types and Interfaces
@@ -73,6 +74,8 @@ export interface EnhancedCredentialValidatorConfig {
 // ============================================================================
 
 export class EnhancedCredentialValidator {
+  private logger = createLogger("enhanced-mexc-credential-validator");
+
   private config: EnhancedCredentialValidatorConfig;
   private circuitBreaker: CircuitBreakerState;
   private healthMetrics: ConnectionHealthMetrics;
@@ -162,7 +165,7 @@ export class EnhancedCredentialValidator {
 
       // Check for test credentials
       if (isTestCredentials) {
-        console.warn(
+        logger.warn(
           "🔍 Test credentials detected - system will flag as invalid for proper validation"
         );
         return {
@@ -644,7 +647,7 @@ export class EnhancedCredentialValidator {
       try {
         callback(status);
       } catch (error) {
-        console.error("Error in status change callback:", error);
+        logger.error("Error in status change callback:", error);
       }
     });
   }

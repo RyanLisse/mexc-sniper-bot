@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../src/db";
 import { NotificationService } from "../../../../src/services/notification-providers";
@@ -13,6 +14,8 @@ const alertConfigService = new AlertConfigurationService(db);
 // ==========================================
 // GET /api/alerts/channels - List notification channels
 // ==========================================
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   try {
     const user = await validateRequest(request);
@@ -44,7 +47,7 @@ export async function GET(request: NextRequest) {
       count: formattedChannels.length,
     });
   } catch (error) {
-    console.error("Error fetching notification channels:", error);
+    logger.error("Error fetching notification channels:", { error: error });
     return handleApiError(error);
   }
 }
@@ -67,7 +70,7 @@ export async function POST(request: NextRequest) {
       message: "Notification channel created successfully",
     }, { status: 201 });
   } catch (error) {
-    console.error("Error creating notification channel:", error);
+    logger.error("Error creating notification channel:", { error: error });
     return handleApiError(error);
   }
 }

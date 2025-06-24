@@ -4,24 +4,18 @@
 
 // Authentication Schema
 export * from "./auth";
-
-// Trading Schema
-export * from "./trading";
-
-// Safety System Schema
-export * from "./safety";
-
 // Pattern Analysis Schema
 export * from "./patterns";
-
-// Workflow Orchestration Schema
-export * from "./workflows";
-
 // Performance Metrics Schema
 export * from "./performance";
-
+// Safety System Schema
+export * from "./safety";
 // Trading Strategies Schema
 export * from "./strategies";
+// Trading Schema
+export * from "./trading";
+// Workflow Orchestration Schema
+export * from "./workflows";
 
 // Re-export all table definitions for easy access
 import * as authTables from "./auth";
@@ -93,95 +87,89 @@ export const allTables = {
 
 // All types for easy importing
 export type {
-  // Auth types
-  User,
-  NewUser,
-  Session,
-  NewSession,
   Account,
   NewAccount,
-  Verification,
-  NewVerification,
-  UserPreferences,
+  NewSession,
+  NewUser,
   NewUserPreferences,
+  NewVerification,
+  Session,
+  // Auth types
+  User,
+  UserPreferences,
+  Verification,
 } from "./auth";
-
-export type {
-  // Trading types
-  ApiCredentials,
-  NewApiCredentials,
-  SnipeTarget,
-  NewSnipeTarget,
-  ExecutionHistory,
-  NewExecutionHistory,
-  Transaction,
-  NewTransaction,
-  TransactionLock,
-  NewTransactionLock,
-  TransactionQueue,
-  NewTransactionQueue,
-} from "./trading";
-
-export type {
-  // Safety types
-  SimulationSession,
-  NewSimulationSession,
-  SimulationTrade,
-  NewSimulationTrade,
-  RiskEvent,
-  NewRiskEvent,
-  PositionSnapshot,
-  NewPositionSnapshot,
-  ReconciliationReport,
-  NewReconciliationReport,
-  ErrorIncident,
-  NewErrorIncident,
-  SystemHealthMetric,
-  NewSystemHealthMetric,
-} from "./safety";
-
 export type {
   // Pattern types
   MonitoredListing,
   NewMonitoredListing,
-  PatternEmbedding,
   NewPatternEmbedding,
-  PatternSimilarityCache,
   NewPatternSimilarityCache,
+  PatternEmbedding,
+  PatternSimilarityCache,
 } from "./patterns";
-
-export type {
-  // Workflow types
-  WorkflowSystemStatus,
-  NewWorkflowSystemStatus,
-  WorkflowActivity,
-  NewWorkflowActivity,
-} from "./workflows";
-
 export type {
   // Performance types
   AgentPerformanceMetric,
   NewAgentPerformanceMetric,
-  WorkflowPerformanceMetric,
-  NewWorkflowPerformanceMetric,
-  SystemPerformanceSnapshot,
-  NewSystemPerformanceSnapshot,
-  PerformanceAlert,
   NewPerformanceAlert,
-  PerformanceBaseline,
   NewPerformanceBaseline,
+  NewSystemPerformanceSnapshot,
+  NewWorkflowPerformanceMetric,
+  PerformanceAlert,
+  PerformanceBaseline,
+  SystemPerformanceSnapshot,
+  WorkflowPerformanceMetric,
 } from "./performance";
-
 export type {
+  ErrorIncident,
+  NewErrorIncident,
+  NewPositionSnapshot,
+  NewReconciliationReport,
+  NewRiskEvent,
+  NewSimulationSession,
+  NewSimulationTrade,
+  NewSystemHealthMetric,
+  PositionSnapshot,
+  ReconciliationReport,
+  RiskEvent,
+  // Safety types
+  SimulationSession,
+  SimulationTrade,
+  SystemHealthMetric,
+} from "./safety";
+export type {
+  NewStrategyConfigBackup,
+  NewStrategyPerformanceMetrics,
+  NewStrategyPhaseExecution,
+  NewStrategyTemplate,
+  NewTradingStrategy,
+  StrategyConfigBackup,
+  StrategyPerformanceMetrics,
+  StrategyPhaseExecution,
   // Strategy types
   StrategyTemplate,
-  NewStrategyTemplate,
   TradingStrategy,
-  NewTradingStrategy,
-  StrategyPhaseExecution,
-  NewStrategyPhaseExecution,
-  StrategyPerformanceMetrics,
-  NewStrategyPerformanceMetrics,
-  StrategyConfigBackup,
-  NewStrategyConfigBackup,
 } from "./strategies";
+export type {
+  // Trading types
+  ApiCredentials,
+  ExecutionHistory,
+  NewApiCredentials,
+  NewExecutionHistory,
+  NewSnipeTarget,
+  NewTransaction,
+  NewTransactionLock,
+  NewTransactionQueue,
+  SnipeTarget,
+  Transaction,
+  TransactionLock,
+  TransactionQueue,
+} from "./trading";
+export type {
+  NewWorkflowActivity,
+  NewWorkflowSystemStatus,
+  WorkflowActivity,
+  // Workflow types
+  WorkflowSystemStatus,
+} from "./workflows";

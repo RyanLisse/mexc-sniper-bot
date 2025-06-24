@@ -1,15 +1,15 @@
 /**
  * MEXC API Client - Refactored Entry Point
- * 
+ *
  * This file replaces the original 1235-line monolithic mexc-api-client.ts
  * with a clean module-based architecture for better maintainability.
- * 
+ *
  * ARCHITECTURE:
  * - Service-oriented architecture with single-responsibility modules
  * - Clean separation of concerns (auth, retry, requests, trading)
  * - Preserved all original functionality and interfaces
  * - Enhanced type safety with dedicated type modules
- * 
+ *
  * MODULES:
  * - mexc-api-types.ts: All type definitions and interfaces
  * - mexc-auth-service.ts: Authentication and signature generation
@@ -18,48 +18,47 @@
  * - mexc-trading-service.ts: Trading operations and market data
  */
 
-import type { UnifiedMexcConfig } from "./mexc-schemas";
-import type { MexcResponseCache } from "./mexc-cache-manager";
-import type { MexcReliabilityManager } from "./mexc-circuit-breaker";
 import type { EnhancedUnifiedCacheSystem } from "../lib/enhanced-unified-cache";
 import type { PerformanceMonitoringService } from "../lib/performance-monitoring-service";
+import type { MexcResponseCache } from "./mexc-cache-manager";
+import type { MexcReliabilityManager } from "./mexc-circuit-breaker";
+import type { UnifiedMexcConfig } from "./mexc-schemas";
 
 // Export all types for backward compatibility
 export type {
-  ApiParamValue,
-  ApiParams,
-  ApiRequestConfig,
   ApiClientStats,
-  RetryConfig,
-  TimeoutConfig,
-  RequestContext,
-  ErrorClassification,
-  HttpResponse,
-  RateLimitInfo,
-  PerformanceMetrics,
+  ApiParams,
+  ApiParamValue,
+  ApiRequestConfig,
   AuthenticationContext,
   CacheEntry,
+  ErrorClassification,
+  HttpResponse,
+  PerformanceMetrics,
+  RateLimitInfo,
+  RequestContext,
   RequestOptions,
+  RetryConfig,
+  TimeoutConfig,
 } from "./api/mexc-api-types";
 
 // Export individual services for advanced usage
 export { MexcAuthService } from "./api/mexc-auth-service";
-export { MexcRetryService } from "./api/mexc-retry-service";
 export { MexcRequestService } from "./api/mexc-request-service";
-export { MexcTradingService } from "./api/mexc-trading-service";
-
+export { MexcRetryService } from "./api/mexc-retry-service";
 // Export trading-specific types
 export type {
-  OrderParams,
-  OrderResult,
-  OrderBook,
   AccountInfo,
   CredentialTestResult,
+  OrderBook,
+  OrderParams,
+  OrderResult,
 } from "./api/mexc-trading-service";
+export { MexcTradingService } from "./api/mexc-trading-service";
 
 /**
  * Main MEXC API Client - Refactored Implementation
- * 
+ *
  * Composed of specialized service modules for better maintainability.
  * Maintains backward compatibility with the original monolithic implementation.
  */
@@ -136,7 +135,7 @@ export class MexcApiClient {
   }
 
   // ============================================================================
-  // Authentication Methods - Delegated to AuthService  
+  // Authentication Methods - Delegated to AuthService
   // ============================================================================
 
   hasCredentials(): boolean {
@@ -190,22 +189,22 @@ export class MexcApiClient {
 
 /**
  * MIGRATION GUIDE:
- * 
+ *
  * The refactored MexcApiClient maintains full backward compatibility.
  * All existing code should continue to work without changes.
- * 
+ *
  * OLD (monolithic):
  * ```ts
  * import { MexcApiClient } from './mexc-api-client';
  * const client = new MexcApiClient(config, cache, reliability);
  * ```
- * 
+ *
  * NEW (modular - same interface):
  * ```ts
  * import { MexcApiClient } from './mexc-api-client';
  * const client = new MexcApiClient(config, cache, reliability);
  * ```
- * 
+ *
  * For advanced usage, you can now import individual services:
  * ```ts
  * import { MexcAuthService, MexcTradingService } from './mexc-api-client';

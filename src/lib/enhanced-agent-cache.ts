@@ -1,15 +1,16 @@
 /**
+import { createLogger } from './structured-logger';
  * Enhanced Agent Cache - Refactored Entry Point
- * 
+ *
  * This file replaces the original 1228-line monolithic enhanced-agent-cache.ts
  * with a clean module-based architecture for better maintainability.
- * 
+ *
  * ARCHITECTURE:
  * - Modular cache system with single-responsibility components
  * - Clean separation of concerns (response, workflow, health, analytics, warming)
  * - Preserved all original functionality and interfaces
  * - Enhanced type safety with dedicated type modules
- * 
+ *
  * MODULES:
  * - agent-cache-types.ts: All type definitions and interfaces
  * - agent-response-cache.ts: Individual agent response caching
@@ -23,56 +24,57 @@
 
 // Export all types for backward compatibility
 export type {
+  AgentCacheAnalytics,
   AgentCacheConfig,
   AgentCacheMetrics,
-  CachedAgentResponse,
-  WorkflowCacheEntry,
   AgentHealthCache,
-  AgentCacheAnalytics,
-  CacheOperationResult,
-  CacheWarmupPattern,
-  CacheInvalidationRule,
-  CachePerformanceMetrics,
+  CachedAgentResponse,
   CacheEventData,
   CacheEventHandler,
+  CacheInvalidationRule,
   CacheMiddleware,
+  CacheOperationResult,
+  CachePerformanceMetrics,
   CacheStrategy,
+  CacheWarmupPattern,
+  WorkflowCacheEntry,
 } from "./cache/agent-cache-types";
-
+export { AgentHealthCacheManager } from "./cache/agent-health-cache";
 // Export individual services for advanced usage
 export { AgentResponseCache } from "./cache/agent-response-cache";
-export { WorkflowCache } from "./cache/workflow-cache";
-export { AgentHealthCacheManager } from "./cache/agent-health-cache";
-export { CachePerformanceMonitor } from "./cache/cache-performance-monitor";
 export { CacheAnalyticsManager } from "./cache/cache-analytics";
-export { CacheWarmingManager } from "./cache/cache-warming";
 export { CacheHelpers } from "./cache/cache-helpers";
+export { CachePerformanceMonitor } from "./cache/cache-performance-monitor";
+export { CacheWarmingManager } from "./cache/cache-warming";
+export { WorkflowCache } from "./cache/workflow-cache";
 
 import type {
+  AgentCacheAnalytics,
   AgentCacheConfig,
   AgentCacheMetrics,
-  CachedAgentResponse,
-  WorkflowCacheEntry,
   AgentHealthCache,
-  AgentCacheAnalytics,
+  CachedAgentResponse,
   CacheInvalidationCriteria,
+  WorkflowCacheEntry,
   WorkflowInvalidationCriteria,
 } from "./cache/agent-cache-types";
-import { AgentResponseCache } from "./cache/agent-response-cache";
-import { WorkflowCache } from "./cache/workflow-cache";
 import { AgentHealthCacheManager } from "./cache/agent-health-cache";
-import { CachePerformanceMonitor } from "./cache/cache-performance-monitor";
+import { AgentResponseCache } from "./cache/agent-response-cache";
 import { CacheAnalyticsManager } from "./cache/cache-analytics";
-import { CacheWarmingManager } from "./cache/cache-warming";
 import { CacheHelpers } from "./cache/cache-helpers";
+import { CachePerformanceMonitor } from "./cache/cache-performance-monitor";
+import { CacheWarmingManager } from "./cache/cache-warming";
+import { WorkflowCache } from "./cache/workflow-cache";
 
 /**
  * Main Enhanced Agent Cache - Refactored Implementation
- * 
+ *
  * Orchestrates all cache modules while maintaining the same public interface
  * for backward compatibility with existing code.
  */
 export class EnhancedAgentCache {
+  private logger = createLogger("enhanced-agent-cache");
+
   private config: AgentCacheConfig;
   private responseCache: AgentResponseCache;
   private workflowCache: WorkflowCache;
@@ -319,7 +321,7 @@ export class EnhancedAgentCache {
    */
   updateConfig(newConfig: Partial<AgentCacheConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
+
     // Update all child modules
     this.responseCache.updateConfig(newConfig);
     this.workflowCache.updateConfig(newConfig);
@@ -338,7 +340,7 @@ export class EnhancedAgentCache {
       return;
     }
 
-    console.log("[EnhancedAgentCache] Initializing enhanced agent cache system...");
+    logger.info("[EnhancedAgentCache] Initializing enhanced agent cache system...");
 
     // Initialize performance monitoring
     this.performanceMonitor.startTracking();
@@ -349,23 +351,23 @@ export class EnhancedAgentCache {
     }
 
     this.isInitialized = true;
-    console.log("[EnhancedAgentCache] Enhanced agent cache system initialized");
+    logger.info("[EnhancedAgentCache] Enhanced agent cache system initialized");
   }
 
   /**
    * Cleanup and destroy the enhanced agent cache
    */
   async destroy(): Promise<void> {
-    console.log("[EnhancedAgentCache] Destroying enhanced agent cache system...");
-    
+    logger.info("[EnhancedAgentCache] Destroying enhanced agent cache system...");
+
     // Stop cache warming
     this.warmingManager.stopWarmup();
-    
+
     // Stop performance monitoring
     this.performanceMonitor.stopTracking();
-    
+
     this.isInitialized = false;
-    console.log("[EnhancedAgentCache] Enhanced agent cache destroyed");
+    logger.info("[EnhancedAgentCache] Enhanced agent cache destroyed");
   }
 }
 
@@ -427,7 +429,7 @@ export function withAgentCache<T extends (...args: any[]) => Promise<AgentRespon
  * Initialize agent cache for a specific agent
  */
 export async function initializeAgentCache(agentId: string): Promise<void> {
-  console.log(`[EnhancedAgentCache] Initializing cache for agent: ${agentId}`);
+  logger.info(`[EnhancedAgentCache] Initializing cache for agent: ${agentId}`);
 
   // Initialize the global cache if not already done
   await globalEnhancedAgentCache.initialize();

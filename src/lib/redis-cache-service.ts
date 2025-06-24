@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Redis/Valkey Cache Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Redis/Valkey Caching & Performance Enhancement
@@ -87,6 +88,8 @@ export interface CacheWarmupStrategy {
 // ============================================================================
 
 export class RedisCacheService {
+  private logger = createLogger("redis-cache-service");
+
   private redis: Redis | null = null;
   private config: RedisCacheConfig;
   private metrics: CacheMetrics;
@@ -189,7 +192,7 @@ export class RedisCacheService {
     try {
       // Skip Redis connection during build time or static generation
       if (this.shouldSkipRedisConnection()) {
-        console.log(
+        logger.info(
           "[RedisCacheService] Skipping Redis connection - build/static generation environment"
         );
         return;
@@ -209,7 +212,7 @@ export class RedisCacheService {
           process.env.VERCEL === "1" ||
           process.env.CI === "true")
       ) {
-        console.log(
+        logger.info(
           "[RedisCacheService] Skipping Redis connection - localhost detected in production/CI environment"
         );
         return;
@@ -227,7 +230,7 @@ export class RedisCacheService {
       this.redis.on("connect", () => {
         this.isConnected = true;
         this.metrics.connectionStatus = "connected";
-        console.log("[RedisCacheService] Connected to Redis/Valkey");
+        logger.info("[RedisCacheService] Connected to Redis/Valkey");
 
         if (this.config.enableCacheWarming) {
           this.startCacheWarming();
@@ -241,19 +244,19 @@ export class RedisCacheService {
         this.metrics.errors++;
 
         if (this.config.enableGracefulDegradation) {
-          console.warn(
+          logger.warn(
             "[RedisCacheService] Redis error (graceful degradation enabled):",
             error.message
           );
         } else {
-          console.error("[RedisCacheService] Redis error:", error);
+          logger.error("[RedisCacheService] Redis error:", error);
         }
       });
 
       this.redis.on("close", () => {
         this.isConnected = false;
         this.metrics.connectionStatus = "disconnected";
-        console.log("[RedisCacheService] Disconnected from Redis/Valkey");
+        logger.info("[RedisCacheService] Disconnected from Redis/Valkey");
 
         // Attempt reconnection after delay
         if (this.config.enableGracefulDegradation) {
@@ -275,13 +278,13 @@ export class RedisCacheService {
     this.metrics.errors++;
 
     if (this.config.enableGracefulDegradation) {
-      console.warn(
+      logger.warn(
         "[RedisCacheService] Failed to connect to Redis/Valkey (graceful degradation enabled):",
         error.message
       );
       this.scheduleReconnection();
     } else {
-      console.error("[RedisCacheService] Failed to connect to Redis/Valkey:", error);
+      logger.error("[RedisCacheService] Failed to connect to Redis/Valkey:", error);
       throw error;
     }
   }
@@ -292,7 +295,7 @@ export class RedisCacheService {
     }
 
     this.connectionRetryTimeout = setTimeout(() => {
-      console.log("[RedisCacheService] Attempting to reconnect...");
+      logger.info("[RedisCacheService] Attempting to reconnect...");
       this.initializeRedisConnection();
     }, 5000); // Retry after 5 seconds
   }
@@ -454,12 +457,12 @@ export class RedisCacheService {
 
     if (this.config.enableGracefulDegradation) {
       // Silently fail for graceful degradation
-      console.warn(
+      logger.warn(
         `[RedisCacheService] ${operation} operation failed (graceful degradation):`,
         error.message
       );
     } else {
-      console.error(`[RedisCacheService] ${operation} operation failed:`, error);
+      logger.error(`[RedisCacheService] ${operation} operation failed:`, error);
     }
   }
 
@@ -499,7 +502,7 @@ export class RedisCacheService {
           metadata: { source: "cache-warming", pattern },
         });
       } catch (error) {
-        console.warn(`[RedisCacheService] Cache warming failed for pattern ${pattern}:`, error);
+        logger.warn(`[RedisCacheService] Cache warming failed for pattern ${pattern}:`, error);
       }
     }
   }
@@ -750,7 +753,7 @@ export class RedisCacheService {
 
     this.isConnected = false;
     this.metrics.connectionStatus = "disconnected";
-    console.log("[RedisCacheService] Service destroyed");
+    logger.info("[RedisCacheService] Service destroyed");
   }
 }
 

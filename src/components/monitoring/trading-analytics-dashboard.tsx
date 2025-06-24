@@ -1,21 +1,21 @@
 "use client";
 
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import { memo, useCallback, useEffect, useState } from "react";
 import { useSkeletonItems } from "../../lib/react-utilities";
 
 import type { TradingAnalyticsData } from "../../types/trading-analytics-types";
-import TradingMetricsCards from "./trading-metrics-cards";
-import PerformanceTab from "./performance-tab";
-import PortfolioTab from "./portfolio-tab";
-import PatternsTab from "./patterns-tab";
-import RiskTab from "./risk-tab";
 import ExecutionTab from "./execution-tab";
 import MarketTab from "./market-tab";
+import PatternsTab from "./patterns-tab";
+import PerformanceTab from "./performance-tab";
+import PortfolioTab from "./portfolio-tab";
+import RiskTab from "./risk-tab";
+import TradingMetricsCards from "./trading-metrics-cards";
 
 export const TradingAnalyticsDashboard = memo(function TradingAnalyticsDashboard() {
   const [data, setData] = useState<TradingAnalyticsData | null>(null);
@@ -61,7 +61,6 @@ export const TradingAnalyticsDashboard = memo(function TradingAnalyticsDashboard
     const interval = setInterval(fetchTradingAnalytics, 60000); // Update every minute
     return () => clearInterval(interval);
   }, [fetchTradingAnalytics]);
-
 
   if (loading) {
     return (

@@ -1,26 +1,15 @@
 /**
  * Patterns Tab Component
- * 
+ *
  * Displays pattern detection analytics including performance, advance detection metrics,
  * and pattern type distribution. Shows the core competitive advantage metrics.
  */
 
+import { memo, useMemo } from "react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { memo, useMemo } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
-  createTooltipFormatter,
-  generateListKey,
-} from "../../lib/react-utilities";
+import { createTooltipFormatter, generateListKey } from "../../lib/react-utilities";
 import type { AnalyticsTabProps } from "../../types/trading-analytics-types";
 
 export const PatternsTab = memo(function PatternsTab({
@@ -99,9 +88,7 @@ export const PatternsTab = memo(function PatternsTab({
                     {data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy.toFixed(1)}%
                   </span>
                 </div>
-                <Progress
-                  value={data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy}
-                />
+                <Progress value={data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy} />
               </div>
 
               <div>

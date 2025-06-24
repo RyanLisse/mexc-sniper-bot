@@ -1,4 +1,5 @@
 import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
+import { createLogger } from "../lib/structured-logger";
 import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface TeamsConfig {
@@ -41,6 +42,8 @@ interface TeamsAction {
 }
 
 export class TeamsProvider implements NotificationProvider {
+  private logger = createLogger("teams-provider");
+
   getProviderType(): string {
     return "teams";
   }
@@ -75,7 +78,7 @@ export class TeamsProvider implements NotificationProvider {
       // For production, you would make an actual HTTP request to Teams
       // For now, we'll simulate the Teams webhook call
 
-      console.log("Sending Teams notification:", card);
+      logger.info("Sending Teams notification:", card);
 
       // In production, you would:
       // const response = await fetch(config.webhookUrl, {
@@ -94,7 +97,7 @@ export class TeamsProvider implements NotificationProvider {
         response: { simulated: true },
       };
     } catch (error) {
-      console.error("Teams notification failed:", error);
+      logger.error("Teams notification failed:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown Teams error",

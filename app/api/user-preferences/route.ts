@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createLogger } from '../../../src/lib/structured-logger';
 import { db, userPreferences, type NewUserPreferences } from "../../../src/db";
 import { eq } from 'drizzle-orm';
 import {
@@ -11,6 +12,8 @@ import {
 import { handleApiError } from "../../../src/lib/error-handler";
 
 // GET /api/user-preferences?userId=xxx
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -81,7 +84,7 @@ export async function GET(request: NextRequest) {
       createSuccessResponse(response)
     );
   } catch (error) {
-    console.error('[API] Failed to fetch user preferences:', error);
+    logger.error('[API] Failed to fetch user preferences:', error);
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"
@@ -272,7 +275,7 @@ export async function POST(request: NextRequest) {
       })
     );
   } catch (error) {
-    console.error('[API] Failed to update user preferences:', error);
+    logger.error('[API] Failed to update user preferences:', error);
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"

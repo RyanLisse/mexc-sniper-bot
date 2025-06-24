@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { createApiHandler } from "../../../../src/lib/api-middleware";
 import { globalCacheManager } from "../../../../src/lib/cache-manager";
 import { globalEnhancedAgentCache } from "../../../../src/lib/enhanced-agent-cache";
@@ -121,7 +122,7 @@ export const GET = createApiHandler({
     });
 
   } catch (error) {
-    console.error('[API] Cache analytics error:', error);
+    logger.error('[API] Cache analytics error:', error);
     return context.error(
       'Failed to retrieve cache analytics',
       500,
@@ -175,7 +176,7 @@ export const POST = createApiHandler({
     });
 
   } catch (error) {
-    console.error('[API] Cache analytics report generation error:', error);
+    logger.error('[API] Cache analytics report generation error:', error);
     return context.error(
       'Failed to generate cache analytics report',
       500,
@@ -188,6 +189,8 @@ export const POST = createApiHandler({
 });
 
 // Helper functions
+
+const logger = createLogger('route');
 
 function parseTimeRange(timeRange: string): number {
   const units = {

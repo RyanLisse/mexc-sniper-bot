@@ -18,8 +18,10 @@ import {
   validateRiskMetrics,
   validateSafetyThresholds,
 } from "../../schemas/safety-monitoring-schemas";
-import type { AutoSnipingExecutionService } from "../auto-sniping-execution-service";
-import type { ExecutionPosition } from "../auto-sniping-execution-service";
+import type {
+  AutoSnipingExecutionService,
+  ExecutionPosition,
+} from "../auto-sniping-execution-service";
 import type { PatternMonitoringService } from "../pattern-monitoring-service";
 
 export interface CoreSafetyMonitoringConfig {

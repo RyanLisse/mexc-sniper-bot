@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
 import { AgentManager } from "../../../../src/mexc-agents/agent-manager";
 import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "../../../../src/lib/health-checks";
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -120,7 +123,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("[Monitoring API] System overview failed:", error);
+    logger.error("[Monitoring API] System overview failed:", { error: error });
     return NextResponse.json(
       { 
         error: "Failed to fetch system overview",

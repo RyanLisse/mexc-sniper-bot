@@ -49,6 +49,8 @@ export interface PhaseToExecute {
 }
 
 export class MultiPhaseExecutor {
+  private logger = createLogger('multi-phase-executor');
+
   private executedPhases: Set<number> = new Set();
   private phaseHistory: PhaseExecutionHistory[] = [];
   private strategy: TradingStrategyConfig;
@@ -224,7 +226,7 @@ export class MultiPhaseExecutor {
           exchangeResponse: options?.exchangeResponse,
         });
       } catch (error) {
-        console.error("Failed to record phase execution:", error);
+        logger.error("Failed to record phase execution:", error);
         // Continue execution even if database recording fails
       }
     }
@@ -481,10 +483,8 @@ export class MultiPhaseExecutor {
    * Import state from persistence
    * @param state Previously exported state
    */
-  importState(state: {
-    executedPhases: number[];
-    phaseHistory: PhaseExecutionHistory[];
-  }): void {
+  importState(state: { executedPhases: number[]; phaseHistory: PhaseExecutionHistory[] }): void {
+import { createLogger } from '../lib/structured-logger';
     this.executedPhases = new Set(state.executedPhases);
     this.phaseHistory = state.phaseHistory;
   }

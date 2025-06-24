@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { z } from "zod";
 import { tradingAnalytics } from "../../../../src/services/trading-analytics-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
@@ -25,6 +26,8 @@ const timeframeToMs = {
   '7d': 604800000,
   '30d': 2592000000,
 };
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -117,7 +120,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Performance Analytics] Error:', error);
+    logger.error('[Performance Analytics] Error:', error);
     
     return NextResponse.json(
       { 
@@ -184,7 +187,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[Performance Analytics] POST Error:', error);
+    logger.error('[Performance Analytics] POST Error:', error);
     
     return NextResponse.json(
       { 

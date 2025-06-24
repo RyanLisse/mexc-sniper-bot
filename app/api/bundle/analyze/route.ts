@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Bundle Analysis API Endpoint
  * Provides real-time bundle size and optimization insights
  * Part of Task 5.1: Bundle Size Optimization
@@ -65,7 +66,7 @@ export const GET = createApiHandler({
     });
 
   } catch (error) {
-    console.error('[API] Bundle analysis error:', error);
+    logger.error('[API] Bundle analysis error:', error);
     return context.error(
       `Failed to analyze bundle: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,
@@ -123,7 +124,7 @@ export const POST = createApiHandler({
     });
 
   } catch (error) {
-    console.error('[API] Bundle optimization action error:', error);
+    logger.error('[API] Bundle optimization action error:', error);
     return context.error(
       `Failed to execute bundle action: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,
@@ -137,6 +138,8 @@ export const POST = createApiHandler({
 });
 
 // Action handlers
+
+const logger = createLogger('route');
 
 async function handleOptimizeAction(options: any) {
   const analysis = await getBundleAnalysis();
@@ -269,7 +272,7 @@ export const PUT = createApiHandler({
     return context.success(updateResult);
 
   } catch (error) {
-    console.error('[API] Bundle config update error:', error);
+    logger.error('[API] Bundle config update error:', error);
     return context.error(
       'Failed to update bundle configuration',
       500,

@@ -4,8 +4,8 @@
  * Control buttons for starting, stopping, and managing execution
  */
 
-import { Button } from "@/src/components/ui/button";
 import { Pause, Play, RefreshCw, Shield, Square } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ExecutionControlsProps {
   isExecutionActive: boolean;

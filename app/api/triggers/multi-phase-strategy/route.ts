@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { z } from "zod";
 import { inngest } from "../../../../src/inngest/client";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
@@ -41,6 +42,8 @@ const TriggerSchema = z.object({
 });
 
 // POST /api/triggers/multi-phase-strategy - Trigger multi-phase strategy workflows
+const logger = createLogger('route');
+
 export async function POST(request: NextRequest) {
   try {
     // Ensure startup initialization is complete
@@ -103,7 +106,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.success(result, { message: `Strategy ${data.action} completed successfully` });
 
   } catch (error) {
-    console.error("Error in multi-phase strategy trigger:", error);
+    logger.error("Error in multi-phase strategy trigger:", { error: error });
     
     if (error instanceof z.ZodError) {
       return apiResponse.error("Invalid request data", 400, { validationErrors: error.errors });
@@ -386,7 +389,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Error getting strategy system status:", error);
+    logger.error("Error getting strategy system status:", { error: error });
     return apiResponse.error("Failed to get system status", 500);
   }
 }

@@ -1,9 +1,9 @@
 /**
  * Cache Helper Utilities
- * 
+ *
  * Common utility functions and helpers used across the cache system.
  * Provides key generation, TTL calculation, validation, and other shared functionality.
- * 
+ *
  * FEATURES:
  * - Cache key generation utilities
  * - TTL calculation algorithms
@@ -12,12 +12,12 @@
  * - Error handling helpers
  */
 
-import { generateCacheKey } from "../cache-manager";
 import type { AgentResponse } from "../../mexc-agents/base-agent";
+import { generateCacheKey } from "../cache-manager";
 import type {
   AgentCacheConfig,
-  WorkflowCacheEntry,
   CacheInvalidationCriteria,
+  WorkflowCacheEntry,
 } from "./agent-cache-types";
 
 export class CacheHelpers {
@@ -30,21 +30,14 @@ export class CacheHelpers {
   /**
    * Generate cache key for agent responses
    */
-  generateAgentCacheKey(
-    agentId: string,
-    input: string,
-    context?: Record<string, unknown>
-  ): string {
+  generateAgentCacheKey(agentId: string, input: string, context?: Record<string, unknown>): string {
     return generateCacheKey("agent", agentId, input, context || {});
   }
 
   /**
    * Generate cache key for workflow results
    */
-  generateWorkflowCacheKey(
-    workflowType: string,
-    parameters: Record<string, unknown>
-  ): string {
+  generateWorkflowCacheKey(workflowType: string, parameters: Record<string, unknown>): string {
     return generateCacheKey("workflow", workflowType, parameters);
   }
 
@@ -126,7 +119,7 @@ export class CacheHelpers {
 
     // Adjust based on error count
     if (result.metadata.errorCount > 0) {
-      baseTTL *= Math.max(0.3, 1 - (result.metadata.errorCount * 0.1));
+      baseTTL *= Math.max(0.3, 1 - result.metadata.errorCount * 0.1);
     }
 
     // Adjust based on handoff count (more handoffs = more complex = longer cache)
@@ -135,7 +128,8 @@ export class CacheHelpers {
     }
 
     // Adjust based on execution time (longer executions = longer cache)
-    if (result.executionTime > 10000) { // 10 seconds
+    if (result.executionTime > 10000) {
+      // 10 seconds
       baseTTL *= 1.8;
     }
 
@@ -204,18 +198,20 @@ export class CacheHelpers {
    */
   validateInvalidationCriteria(criteria: CacheInvalidationCriteria): boolean {
     // Must have at least one criterion
-    return !!(criteria.agentId || criteria.agentType || criteria.olderThan || 
-             criteria.pattern || criteria.tags || criteria.maxAge);
+    return !!(
+      criteria.agentId ||
+      criteria.agentType ||
+      criteria.olderThan ||
+      criteria.pattern ||
+      criteria.tags ||
+      criteria.maxAge
+    );
   }
 
   /**
    * Generate cache tags from context
    */
-  generateCacheTags(
-    agentId: string,
-    input: string,
-    context?: Record<string, unknown>
-  ): string[] {
+  generateCacheTags(agentId: string, input: string, context?: Record<string, unknown>): string[] {
     const tags: string[] = [agentId];
 
     // Add context-based tags
@@ -280,7 +276,7 @@ export class CacheHelpers {
     hash?: string;
   } {
     const parts = cacheKey.split(":");
-    
+
     return {
       type: parts[0] || "unknown",
       agentId: parts[1],
@@ -302,11 +298,7 @@ export class CacheHelpers {
   /**
    * Check if cache entry should be preloaded
    */
-  shouldPreload(
-    agentId: string,
-    input: string,
-    context?: Record<string, unknown>
-  ): boolean {
+  shouldPreload(agentId: string, input: string, context?: Record<string, unknown>): boolean {
     // Preload high-priority or frequently used patterns
     if (context?.priority === "high") {
       return true;

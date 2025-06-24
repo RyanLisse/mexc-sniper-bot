@@ -1,25 +1,29 @@
 /**
  * Integration Tests for Real-time Safety Monitoring Service - Modular Implementation
- * 
+ *
  * Tests the main RealTimeSafetyMonitoringService class to ensure all modules
  * work together correctly and maintain backward compatibility.
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { RealTimeSafetyMonitoringService, createRealTimeSafetyMonitoringService } from '../index';
-import type { SafetyConfiguration, RiskMetrics, SafetyAlert } from '../../../schemas/safety-monitoring-schemas';
-import { AutoSnipingExecutionService } from '../../auto-sniping-execution-service';
-import { PatternMonitoringService } from '../../pattern-monitoring-service';
-import { EmergencySafetySystem } from '../../emergency-safety-system';
-import { UnifiedMexcServiceV2V2 } from '../../unified-mexc-service-v2';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type {
+  RiskMetrics,
+  SafetyAlert,
+  SafetyConfiguration,
+} from "../../../schemas/safety-monitoring-schemas";
+import { AutoSnipingExecutionService } from "../../auto-sniping-execution-service";
+import type { EmergencySafetySystem } from "../../emergency-safety-system";
+import { PatternMonitoringService } from "../../pattern-monitoring-service";
+import { UnifiedMexcServiceV2V2 } from "../../unified-mexc-service-v2";
+import { createRealTimeSafetyMonitoringService, RealTimeSafetyMonitoringService } from "../index";
 
 // Mock all dependencies
-vi.mock('../../auto-sniping-execution-service');
-vi.mock('../../pattern-monitoring-service');
-vi.mock('../../emergency-safety-system');
-vi.mock('../../unified-mexc-service');
+vi.mock("../../auto-sniping-execution-service");
+vi.mock("../../pattern-monitoring-service");
+vi.mock("../../emergency-safety-system");
+vi.mock("../../unified-mexc-service");
 
-describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
+describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
   let safetyService: RealTimeSafetyMonitoringService;
   let mockExecutionService: vi.Mocked<AutoSnipingExecutionService>;
   let mockPatternMonitoring: vi.Mocked<PatternMonitoringService>;
@@ -78,7 +82,7 @@ describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
 
     // Create service instance
     safetyService = createRealTimeSafetyMonitoringService();
-    
+
     // Inject mocked dependencies
     safetyService.injectDependencies({
       executionService: mockExecutionService,
@@ -97,17 +101,17 @@ describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
     }
   });
 
-  describe('Initialization and Configuration', () => {
-    it('should initialize with default configuration', () => {
+  describe("Initialization and Configuration", () => {
+    it("should initialize with default configuration", () => {
       expect(safetyService).toBeInstanceOf(RealTimeSafetyMonitoringService);
       expect(safetyService.getMonitoringStatus()).toBe(false);
     });
 
-    it('should get and update configuration', () => {
+    it("should get and update configuration", () => {
       const currentConfig = safetyService.getConfiguration();
-      expect(currentConfig).toHaveProperty('enabled');
-      expect(currentConfig).toHaveProperty('monitoringIntervalMs');
-      expect(currentConfig).toHaveProperty('thresholds');
+      expect(currentConfig).toHaveProperty("enabled");
+      expect(currentConfig).toHaveProperty("monitoringIntervalMs");
+      expect(currentConfig).toHaveProperty("thresholds");
 
       const newConfig: Partial<SafetyConfiguration> = {
         monitoringIntervalMs: 15000,
@@ -116,20 +120,20 @@ describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
 
       safetyService.updateConfiguration(newConfig);
       const updatedConfig = safetyService.getConfiguration();
-      
+
       expect(updatedConfig.monitoringIntervalMs).toBe(15000);
       expect(updatedConfig.autoActionEnabled).toBe(true);
     });
 
-    it('should maintain singleton pattern', () => {
+    it("should maintain singleton pattern", () => {
       const instance1 = RealTimeSafetyMonitoringService.getInstance();
       const instance2 = RealTimeSafetyMonitoringService.getInstance();
       expect(instance1).toBe(instance2);
     });
   });
 
-  describe('Monitoring Lifecycle', () => {
-    it('should start and stop monitoring successfully', async () => {
+  describe("Monitoring Lifecycle", () => {
+    it("should start and stop monitoring successfully", async () => {
       expect(safetyService.getMonitoringStatus()).toBe(false);
 
       await safetyService.startMonitoring();
@@ -139,90 +143,90 @@ describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
       expect(safetyService.getMonitoringStatus()).toBe(false);
     });
 
-    it('should not allow starting monitoring twice', async () => {
+    it("should not allow starting monitoring twice", async () => {
       await safetyService.startMonitoring();
-      
+
       await expect(safetyService.startMonitoring()).rejects.toThrow(
-        'Safety monitoring is already active'
+        "Safety monitoring is already active"
       );
     });
 
-    it('should perform initial health check on startup', async () => {
+    it("should perform initial health check on startup", async () => {
       await safetyService.startMonitoring();
-      
+
       expect(mockEmergencySystem.performSystemHealthCheck).toHaveBeenCalled();
     });
   });
 
-  describe('Risk Metrics and Calculations', () => {
-    it('should get current risk metrics', async () => {
+  describe("Risk Metrics and Calculations", () => {
+    it("should get current risk metrics", async () => {
       const riskMetrics = safetyService.getRiskMetrics();
-      
-      expect(riskMetrics).toHaveProperty('currentDrawdown');
-      expect(riskMetrics).toHaveProperty('successRate');
-      expect(riskMetrics).toHaveProperty('concentrationRisk');
-      expect(riskMetrics).toHaveProperty('apiLatency');
-      expect(riskMetrics).toHaveProperty('patternAccuracy');
-      
-      expect(typeof riskMetrics.currentDrawdown).toBe('number');
-      expect(typeof riskMetrics.successRate).toBe('number');
+
+      expect(riskMetrics).toHaveProperty("currentDrawdown");
+      expect(riskMetrics).toHaveProperty("successRate");
+      expect(riskMetrics).toHaveProperty("concentrationRisk");
+      expect(riskMetrics).toHaveProperty("apiLatency");
+      expect(riskMetrics).toHaveProperty("patternAccuracy");
+
+      expect(typeof riskMetrics.currentDrawdown).toBe("number");
+      expect(typeof riskMetrics.successRate).toBe("number");
     });
 
-    it('should calculate overall risk score', () => {
+    it("should calculate overall risk score", () => {
       const riskScore = safetyService.calculateOverallRiskScore();
-      
-      expect(typeof riskScore).toBe('number');
+
+      expect(typeof riskScore).toBe("number");
       expect(riskScore).toBeGreaterThanOrEqual(0);
       expect(riskScore).toBeLessThanOrEqual(100);
     });
 
-    it('should perform comprehensive risk assessment', async () => {
+    it("should perform comprehensive risk assessment", async () => {
       const assessment = await safetyService.performRiskAssessment();
-      
-      expect(assessment).toHaveProperty('portfolio');
-      expect(assessment).toHaveProperty('performance');
-      expect(assessment).toHaveProperty('pattern');
-      expect(assessment).toHaveProperty('system');
-      expect(assessment).toHaveProperty('overallRiskScore');
-      expect(assessment).toHaveProperty('riskStatus');
-      expect(assessment).toHaveProperty('priorityRecommendations');
-      
+
+      expect(assessment).toHaveProperty("portfolio");
+      expect(assessment).toHaveProperty("performance");
+      expect(assessment).toHaveProperty("pattern");
+      expect(assessment).toHaveProperty("system");
+      expect(assessment).toHaveProperty("overallRiskScore");
+      expect(assessment).toHaveProperty("riskStatus");
+      expect(assessment).toHaveProperty("priorityRecommendations");
+
       expect(Array.isArray(assessment.priorityRecommendations)).toBe(true);
     });
   });
 
-  describe('Safety Report Generation', () => {
-    it('should generate comprehensive safety report', async () => {
+  describe("Safety Report Generation", () => {
+    it("should generate comprehensive safety report", async () => {
       const report = await safetyService.getSafetyReport();
-      
-      expect(report).toHaveProperty('status');
-      expect(report).toHaveProperty('overallRiskScore');
-      expect(report).toHaveProperty('riskMetrics');
-      expect(report).toHaveProperty('thresholds');
-      expect(report).toHaveProperty('activeAlerts');
-      expect(report).toHaveProperty('recentActions');
-      expect(report).toHaveProperty('systemHealth');
-      expect(report).toHaveProperty('recommendations');
-      expect(report).toHaveProperty('monitoringStats');
-      expect(report).toHaveProperty('lastUpdated');
-      
-      expect(['safe', 'warning', 'critical', 'emergency']).toContain(report.status);
+
+      expect(report).toHaveProperty("status");
+      expect(report).toHaveProperty("overallRiskScore");
+      expect(report).toHaveProperty("riskMetrics");
+      expect(report).toHaveProperty("thresholds");
+      expect(report).toHaveProperty("activeAlerts");
+      expect(report).toHaveProperty("recentActions");
+      expect(report).toHaveProperty("systemHealth");
+      expect(report).toHaveProperty("recommendations");
+      expect(report).toHaveProperty("monitoringStats");
+      expect(report).toHaveProperty("lastUpdated");
+
+      expect(["safe", "warning", "critical", "emergency"]).toContain(report.status);
       expect(Array.isArray(report.activeAlerts)).toBe(true);
       expect(Array.isArray(report.recentActions)).toBe(true);
       expect(Array.isArray(report.recommendations)).toBe(true);
     });
 
-    it('should generate safety report without updates', async () => {
+    it("should generate safety report without updates", async () => {
       const report = await safetyService.getSafetyReportWithoutUpdate();
-      
-      expect(report).toHaveProperty('status');
-      expect(report).toHaveProperty('overallRiskScore');
-      expect(report).toHaveProperty('riskMetrics');
+
+      expect(report).toHaveProperty("status");
+      expect(report).toHaveProperty("overallRiskScore");
+      expect(report).toHaveProperty("riskMetrics");
     });
   });
 
-  describe('Alert Management', () => {
-    it('should handle alert acknowledgment', () => {
+  describe("Alert Management", () => {
+    it("should handle alert acknowledgment", () => {
       // First trigger an alert by updating configuration to trigger threshold checks
       safetyService.updateConfiguration({
         thresholds: {
@@ -239,67 +243,67 @@ describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
       });
 
       // Test acknowledgment of non-existent alert
-      const acknowledged = safetyService.acknowledgeAlert('nonexistent-alert-id');
+      const acknowledged = safetyService.acknowledgeAlert("nonexistent-alert-id");
       expect(acknowledged).toBe(false);
     });
 
-    it('should clear acknowledged alerts', () => {
+    it("should clear acknowledged alerts", () => {
       const clearedCount = safetyService.clearAcknowledgedAlerts();
-      expect(typeof clearedCount).toBe('number');
+      expect(typeof clearedCount).toBe("number");
       expect(clearedCount).toBeGreaterThanOrEqual(0);
     });
 
-    it('should clear all alerts for testing', () => {
+    it("should clear all alerts for testing", () => {
       safetyService.clearAllAlerts();
       // This should complete without throwing
       expect(true).toBe(true);
     });
   });
 
-  describe('Emergency Response', () => {
-    it('should trigger emergency response', async () => {
+  describe("Emergency Response", () => {
+    it("should trigger emergency response", async () => {
       const reason = "Test emergency response";
       const actions = await safetyService.triggerEmergencyResponse(reason);
-      
+
       expect(Array.isArray(actions)).toBe(true);
       expect(actions.length).toBeGreaterThan(0);
-      
+
       // Check that emergency actions were executed
       expect(mockExecutionService.stopExecution).toHaveBeenCalled();
       expect(mockExecutionService.emergencyCloseAll).toHaveBeenCalled();
-      
+
       // Verify action properties
-      actions.forEach(action => {
-        expect(action).toHaveProperty('id');
-        expect(action).toHaveProperty('type');
-        expect(action).toHaveProperty('description');
-        expect(action).toHaveProperty('executed');
-        expect(typeof action.executed).toBe('boolean');
+      actions.forEach((action) => {
+        expect(action).toHaveProperty("id");
+        expect(action).toHaveProperty("type");
+        expect(action).toHaveProperty("description");
+        expect(action).toHaveProperty("executed");
+        expect(typeof action.executed).toBe("boolean");
       });
     });
 
-    it('should handle emergency response failures gracefully', async () => {
+    it("should handle emergency response failures gracefully", async () => {
       // Mock service failure
-      mockExecutionService.stopExecution.mockRejectedValue(new Error('Service unavailable'));
-      mockExecutionService.emergencyCloseAll.mockRejectedValue(new Error('Service unavailable'));
-      
+      mockExecutionService.stopExecution.mockRejectedValue(new Error("Service unavailable"));
+      mockExecutionService.emergencyCloseAll.mockRejectedValue(new Error("Service unavailable"));
+
       const actions = await safetyService.triggerEmergencyResponse("Test failure handling");
-      
+
       expect(actions.length).toBeGreaterThan(0);
-      
+
       // Check that failed actions are marked appropriately
-      const failedActions = actions.filter(action => action.result === 'failed');
+      const failedActions = actions.filter((action) => action.result === "failed");
       expect(failedActions.length).toBeGreaterThan(0);
     });
   });
 
-  describe('System Safety Status', () => {
-    it('should check if system is safe', async () => {
+  describe("System Safety Status", () => {
+    it("should check if system is safe", async () => {
       const isSafe = await safetyService.isSystemSafe();
-      expect(typeof isSafe).toBe('boolean');
+      expect(typeof isSafe).toBe("boolean");
     });
 
-    it('should return false for high risk scenarios', async () => {
+    it("should return false for high risk scenarios", async () => {
       // Mock high-risk execution report
       mockExecutionService.getExecutionReport.mockResolvedValue({
         stats: {
@@ -321,75 +325,75 @@ describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
     });
   });
 
-  describe('Timer and Event Management', () => {
-    it('should get timer status', async () => {
+  describe("Timer and Event Management", () => {
+    it("should get timer status", async () => {
       await safetyService.startMonitoring();
-      
+
       const timerStatus = safetyService.getTimerStatus();
       expect(Array.isArray(timerStatus)).toBe(true);
-      
-      timerStatus.forEach(status => {
-        expect(status).toHaveProperty('id');
-        expect(status).toHaveProperty('name');
-        expect(status).toHaveProperty('intervalMs');
-        expect(status).toHaveProperty('lastExecuted');
-        expect(status).toHaveProperty('isRunning');
-        expect(status).toHaveProperty('nextExecution');
-        
-        expect(typeof status.intervalMs).toBe('number');
-        expect(typeof status.isRunning).toBe('boolean');
+
+      timerStatus.forEach((status) => {
+        expect(status).toHaveProperty("id");
+        expect(status).toHaveProperty("name");
+        expect(status).toHaveProperty("intervalMs");
+        expect(status).toHaveProperty("lastExecuted");
+        expect(status).toHaveProperty("isRunning");
+        expect(status).toHaveProperty("nextExecution");
+
+        expect(typeof status.intervalMs).toBe("number");
+        expect(typeof status.isRunning).toBe("boolean");
       });
     });
 
-    it('should coordinate multiple monitoring operations', async () => {
+    it("should coordinate multiple monitoring operations", async () => {
       await safetyService.startMonitoring();
-      
+
       // Wait a bit to let operations start
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const timerStatus = safetyService.getTimerStatus();
-      
+
       // Should have registered monitoring operations
-      const monitoringOp = timerStatus.find(op => op.id === 'monitoring_cycle');
-      const riskAssessmentOp = timerStatus.find(op => op.id === 'risk_assessment');
-      const alertCleanupOp = timerStatus.find(op => op.id === 'alert_cleanup');
-      
+      const monitoringOp = timerStatus.find((op) => op.id === "monitoring_cycle");
+      const riskAssessmentOp = timerStatus.find((op) => op.id === "risk_assessment");
+      const alertCleanupOp = timerStatus.find((op) => op.id === "alert_cleanup");
+
       expect(monitoringOp).toBeDefined();
       expect(riskAssessmentOp).toBeDefined();
       expect(alertCleanupOp).toBeDefined();
     });
   });
 
-  describe('Backward Compatibility', () => {
-    it('should maintain all original public methods', () => {
+  describe("Backward Compatibility", () => {
+    it("should maintain all original public methods", () => {
       // Verify all original methods exist
-      expect(typeof safetyService.startMonitoring).toBe('function');
-      expect(typeof safetyService.stopMonitoring).toBe('function');
-      expect(typeof safetyService.getSafetyReport).toBe('function');
-      expect(typeof safetyService.updateConfiguration).toBe('function');
-      expect(typeof safetyService.triggerEmergencyResponse).toBe('function');
-      expect(typeof safetyService.acknowledgeAlert).toBe('function');
-      expect(typeof safetyService.clearAcknowledgedAlerts).toBe('function');
-      expect(typeof safetyService.getRiskMetrics).toBe('function');
-      expect(typeof safetyService.getMonitoringStatus).toBe('function');
-      expect(typeof safetyService.getConfiguration).toBe('function');
-      expect(typeof safetyService.isSystemSafe).toBe('function');
-      expect(typeof safetyService.calculateOverallRiskScore).toBe('function');
-      expect(typeof safetyService.performRiskAssessment).toBe('function');
-      expect(typeof safetyService.getTimerStatus).toBe('function');
-      
+      expect(typeof safetyService.startMonitoring).toBe("function");
+      expect(typeof safetyService.stopMonitoring).toBe("function");
+      expect(typeof safetyService.getSafetyReport).toBe("function");
+      expect(typeof safetyService.updateConfiguration).toBe("function");
+      expect(typeof safetyService.triggerEmergencyResponse).toBe("function");
+      expect(typeof safetyService.acknowledgeAlert).toBe("function");
+      expect(typeof safetyService.clearAcknowledgedAlerts).toBe("function");
+      expect(typeof safetyService.getRiskMetrics).toBe("function");
+      expect(typeof safetyService.getMonitoringStatus).toBe("function");
+      expect(typeof safetyService.getConfiguration).toBe("function");
+      expect(typeof safetyService.isSystemSafe).toBe("function");
+      expect(typeof safetyService.calculateOverallRiskScore).toBe("function");
+      expect(typeof safetyService.performRiskAssessment).toBe("function");
+      expect(typeof safetyService.getTimerStatus).toBe("function");
+
       // Testing methods
-      expect(typeof safetyService.injectDependencies).toBe('function');
-      expect(typeof safetyService.clearAllAlerts).toBe('function');
-      expect(typeof safetyService.resetToDefaults).toBe('function');
-      expect(typeof safetyService.getSafetyReportWithoutUpdate).toBe('function');
+      expect(typeof safetyService.injectDependencies).toBe("function");
+      expect(typeof safetyService.clearAllAlerts).toBe("function");
+      expect(typeof safetyService.resetToDefaults).toBe("function");
+      expect(typeof safetyService.getSafetyReportWithoutUpdate).toBe("function");
     });
 
-    it('should return data structures compatible with original interface', async () => {
+    it("should return data structures compatible with original interface", async () => {
       const report = await safetyService.getSafetyReport();
       const riskMetrics = safetyService.getRiskMetrics();
       const config = safetyService.getConfiguration();
-      
+
       // Verify structure matches original SafetyMonitoringReport
       expect(report).toMatchObject({
         status: expect.stringMatching(/^(safe|warning|critical|emergency)$/),
@@ -435,22 +439,26 @@ describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
     });
   });
 
-  describe('Error Handling and Resilience', () => {
-    it('should handle service failures gracefully', async () => {
+  describe("Error Handling and Resilience", () => {
+    it("should handle service failures gracefully", async () => {
       // Mock service failures
-      mockExecutionService.getExecutionReport.mockRejectedValue(new Error('Service unavailable'));
-      mockPatternMonitoring.getMonitoringReport.mockRejectedValue(new Error('Pattern service down'));
-      mockEmergencySystem.performSystemHealthCheck.mockRejectedValue(new Error('Emergency system failure'));
-      
+      mockExecutionService.getExecutionReport.mockRejectedValue(new Error("Service unavailable"));
+      mockPatternMonitoring.getMonitoringReport.mockRejectedValue(
+        new Error("Pattern service down")
+      );
+      mockEmergencySystem.performSystemHealthCheck.mockRejectedValue(
+        new Error("Emergency system failure")
+      );
+
       // These should not throw, but handle errors gracefully
       const riskMetrics = safetyService.getRiskMetrics();
       expect(riskMetrics).toBeDefined();
-      
+
       // Risk assessment should handle errors gracefully
       await expect(safetyService.performRiskAssessment()).rejects.toThrow();
     });
 
-    it('should validate configuration updates', () => {
+    it("should validate configuration updates", () => {
       // Test invalid configuration
       expect(() => {
         safetyService.updateConfiguration({
@@ -468,7 +476,7 @@ describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
       }).toThrow();
     });
 
-    it('should reset to clean state', () => {
+    it("should reset to clean state", () => {
       // Modify some state
       safetyService.updateConfiguration({
         autoActionEnabled: true,
@@ -477,7 +485,7 @@ describe('RealTimeSafetyMonitoringService - Modular Integration', () => {
 
       // Reset to defaults
       safetyService.resetToDefaults();
-      
+
       const config = safetyService.getConfiguration();
       expect(config.autoActionEnabled).toBe(false);
       expect(config.emergencyMode).toBe(false);

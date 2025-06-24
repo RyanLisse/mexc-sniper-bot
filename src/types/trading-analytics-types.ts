@@ -1,6 +1,6 @@
 /**
  * Trading Analytics Types
- * 
+ *
  * Comprehensive type definitions for trading analytics data structures.
  * Used across all trading analytics components for type safety.
  */
@@ -293,7 +293,7 @@ export const CHART_COLORS = {
   PRIMARY: ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#00ff00", "#ff00ff"],
   PERFORMANCE: {
     POSITIVE: "#10b981",
-    NEGATIVE: "#ef4444", 
+    NEGATIVE: "#ef4444",
     NEUTRAL: "#6b7280",
   },
   RISK: {

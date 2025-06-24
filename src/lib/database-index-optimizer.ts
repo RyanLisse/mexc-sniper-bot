@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Database Index Optimizer
  *
  * Phase 2: Index Optimization (4h)
@@ -33,6 +34,8 @@ interface IndexOptimizationResult {
 }
 
 export class DatabaseIndexOptimizer {
+  private logger = createLogger("database-index-optimizer");
+
   private static instance: DatabaseIndexOptimizer;
 
   static getInstance(): DatabaseIndexOptimizer {
@@ -233,7 +236,7 @@ export class DatabaseIndexOptimizer {
    * TARGET: 60% query performance improvement
    */
   async createStrategicIndexes(): Promise<IndexOptimizationResult> {
-    console.log("🗂️ Creating strategic database indexes...");
+    logger.info("🗂️ Creating strategic database indexes...");
 
     const startTime = performance.now();
     const result: IndexOptimizationResult = {
@@ -258,25 +261,25 @@ export class DatabaseIndexOptimizer {
         try {
           await this.createIndex(index);
           result.created.push(index.name);
-          console.log(`✅ Created ${index.priority} priority index: ${index.name}`);
+          logger.info(`✅ Created ${index.priority} priority index: ${index.name}`);
 
           // Verify index effectiveness
           await this.analyzeIndexEffectiveness(index);
           result.analyzed.push(index.name);
         } catch (error) {
           result.failed.push(index.name);
-          console.error(`❌ Failed to create index ${index.name}:`, error);
+          logger.error(`❌ Failed to create index ${index.name}:`, error);
         }
       }
     }
 
     result.totalTime = performance.now() - startTime;
 
-    console.log(`🎯 Index optimization completed:`);
-    console.log(`   ✅ Created: ${result.created.length} indexes`);
-    console.log(`   ❌ Failed: ${result.failed.length} indexes`);
-    console.log(`   📊 Analyzed: ${result.analyzed.length} indexes`);
-    console.log(`   ⏱️ Time: ${result.totalTime.toFixed(2)}ms`);
+    logger.info(`🎯 Index optimization completed:`);
+    logger.info(`   ✅ Created: ${result.created.length} indexes`);
+    logger.info(`   ❌ Failed: ${result.failed.length} indexes`);
+    logger.info(`   📊 Analyzed: ${result.analyzed.length} indexes`);
+    logger.info(`   ⏱️ Time: ${result.totalTime.toFixed(2)}ms`);
 
     return result;
   }
@@ -337,7 +340,7 @@ export class DatabaseIndexOptimizer {
    * Drop unnecessary or ineffective indexes
    */
   async dropUnusedIndexes(): Promise<string[]> {
-    console.log("🗑️ Analyzing and dropping unused indexes...");
+    logger.info("🗑️ Analyzing and dropping unused indexes...");
 
     const droppedIndexes: string[] = [];
 
@@ -385,15 +388,15 @@ export class DatabaseIndexOptimizer {
               try {
                 await db.execute(sql.raw(`DROP INDEX IF EXISTS ${index.indexname}`));
                 droppedIndexes.push(index.indexname);
-                console.log(`🗑️ Dropped ineffective index: ${index.indexname}`);
+                logger.info(`🗑️ Dropped ineffective index: ${index.indexname}`);
               } catch (error) {
-                console.warn(`Failed to drop index ${index.indexname}:`, error);
+                logger.warn(`Failed to drop index ${index.indexname}:`, error);
               }
             }
           }
         }
       } catch (error) {
-        console.warn(`Failed to analyze indexes for table ${tableName}:`, error);
+        logger.warn(`Failed to analyze indexes for table ${tableName}:`, error);
       }
     }
 
@@ -467,13 +470,13 @@ export class DatabaseIndexOptimizer {
         );
 
         if (usesIndex) {
-          console.log(`📈 Index ${index.name} is being used effectively`);
+          logger.info(`📈 Index ${index.name} is being used effectively`);
         } else {
-          console.warn(`⚠️ Index ${index.name} may not be used for query: ${query}`);
+          logger.warn(`⚠️ Index ${index.name} may not be used for query: ${query}`);
         }
       }
     } catch (error) {
-      console.warn(`Failed to analyze effectiveness of index ${index.name}:`, error);
+      logger.warn(`Failed to analyze effectiveness of index ${index.name}:`, error);
     }
   }
 
@@ -507,18 +510,18 @@ export class DatabaseIndexOptimizer {
    * Rebuild and optimize existing indexes
    */
   async rebuildIndexes(): Promise<void> {
-    console.log("🔄 Rebuilding and optimizing existing indexes...");
+    logger.info("🔄 Rebuilding and optimizing existing indexes...");
 
     try {
       // PostgreSQL: Update table statistics
       await db.execute(sql.raw("ANALYZE"));
-      console.log("✅ Table statistics updated");
+      logger.info("✅ Table statistics updated");
 
       // PostgreSQL: VACUUM to optimize the database
       await db.execute(sql.raw("VACUUM ANALYZE"));
-      console.log("✅ Database optimization completed");
+      logger.info("✅ Database optimization completed");
     } catch (error) {
-      console.error("❌ Failed to rebuild indexes:", error);
+      logger.error("❌ Failed to rebuild indexes:", error);
       throw error;
     }
   }
@@ -527,7 +530,7 @@ export class DatabaseIndexOptimizer {
    * Validate all indexes are working correctly
    */
   async validateIndexes(): Promise<{ valid: number; invalid: number; details: any[] }> {
-    console.log("🔍 Validating index integrity...");
+    logger.info("🔍 Validating index integrity...");
 
     const results = { valid: 0, invalid: 0, details: [] };
     const strategicIndexes = this.getStrategicIndexes();
@@ -579,7 +582,7 @@ export class DatabaseIndexOptimizer {
       }
     }
 
-    console.log(`📊 Index validation results: ${results.valid} valid, ${results.invalid} invalid`);
+    logger.info(`📊 Index validation results: ${results.valid} valid, ${results.invalid} invalid`);
     return results;
   }
 

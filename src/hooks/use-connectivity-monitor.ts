@@ -7,6 +7,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createLogger } from "../lib/structured-logger";
 import { type MexcConnectivityResult, useMexcConnectivity } from "./use-mexc-data";
 
 interface ConnectivityHealthMetrics {
@@ -34,6 +35,8 @@ const DEFAULT_OPTIONS: Required<ConnectivityMonitorOptions> = {
   autoRetryOnFailure: true,
   notifyOnHealthChange: true,
 };
+
+const logger = createLogger("use-connectivity-monitor");
 
 export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {}) {
   const opts = { ...DEFAULT_OPTIONS, ...options };
@@ -134,7 +137,7 @@ export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {})
         updateHealthMetrics(result.data);
       }
     } catch (error) {
-      console.warn("Health check failed:", error);
+      logger.warn("Health check failed:", error);
       setHealthMetrics((prev) => ({
         ...prev,
         consecutiveFailures: prev.consecutiveFailures + 1,
@@ -149,7 +152,7 @@ export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {})
 
     isMonitoringRef.current = true;
     intervalRef.current = setInterval(performHealthCheck, opts.pingInterval);
-    console.log("Connectivity monitoring started");
+    logger.info("Connectivity monitoring started");
   }, [performHealthCheck, opts.enableContinuousMonitoring, opts.pingInterval]);
 
   // Stop continuous monitoring
@@ -159,7 +162,7 @@ export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {})
       intervalRef.current = null;
     }
     isMonitoringRef.current = false;
-    console.log("Connectivity monitoring stopped");
+    logger.info("Connectivity monitoring stopped");
   }, []);
 
   // Manual refresh with health update

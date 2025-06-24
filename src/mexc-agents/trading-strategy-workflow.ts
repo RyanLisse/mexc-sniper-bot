@@ -1,3 +1,4 @@
+import { createLogger } from "../lib/structured-logger";
 import { extractConfidencePercentage, sanitizeSymbolName } from "./analysis-utils";
 import type { AgentResponse } from "./base-agent";
 
@@ -55,6 +56,8 @@ export interface ExecutionPlan {
 }
 
 export class TradingStrategyWorkflow {
+  private logger = createLogger("trading-strategy-workflow");
+
   async compileTradingStrategy(
     strategyAnalysis: AgentResponse,
     vcoinId: string,
@@ -62,7 +65,7 @@ export class TradingStrategyWorkflow {
     riskLevel: "low" | "medium" | "high" = "medium",
     capital = 1000
   ): Promise<TradingStrategyResult> {
-    console.log(`[TradingStrategyWorkflow] Compiling strategy for ${vcoinId}`);
+    logger.info(`[TradingStrategyWorkflow] Compiling strategy for ${vcoinId}`);
 
     const baseStrategy = this.extractBaseStrategy(strategyAnalysis, symbolData);
     const riskManagement = this.createRiskManagementPlan(strategyAnalysis, riskLevel, capital);

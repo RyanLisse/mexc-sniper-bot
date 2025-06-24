@@ -1,6 +1,6 @@
 /**
  * MEXC API Types and Interfaces
- * 
+ *
  * Centralized type definitions for the MEXC API client system.
  * Extracted from mexc-api-client.ts for better modularity and reusability.
  */

@@ -1,5 +1,6 @@
 import { ErrorLoggingService } from "../services/error-logging-service";
 import { AppError, ErrorCode, ErrorSeverity, isAppError, toAppError } from "./error-types";
+import { createLogger } from "./structured-logger";
 
 export interface ErrorHandlerConfig {
   enableLogging?: boolean;
@@ -26,6 +27,8 @@ export interface CircuitBreakerOptions {
  * Centralized error handling service with retry logic and circuit breaker pattern
  */
 export class ErrorHandlerService {
+  private logger = createLogger("error-handler-service");
+
   private static instance: ErrorHandlerService;
   private errorLoggingService: ErrorLoggingService;
   private config: Required<ErrorHandlerConfig>;
@@ -274,7 +277,7 @@ export class ErrorHandlerService {
       await this.errorLoggingService.logError(error, error.context);
     } catch (loggingError) {
       // Don't throw on logging errors, just console.error
-      console.error("Failed to log error:", loggingError);
+      logger.error("Failed to log error:", loggingError);
     }
   }
 

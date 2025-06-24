@@ -1,5 +1,17 @@
 "use client";
 
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  DollarSign,
+  Plus,
+  Shield,
+  Target,
+  Trash2,
+  TrendingUp,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,23 +29,11 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  AlertCircle,
-  AlertTriangle,
-  CheckCircle,
-  DollarSign,
-  Plus,
-  Shield,
-  Target,
-  Trash2,
-  TrendingUp,
-} from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import {
+  createCustomTakeProfitLevel,
   DEFAULT_CUSTOM_CONFIG,
   TAKE_PROFIT_STRATEGIES,
   type TakeProfitLevel,
   type TakeProfitStrategy,
-  createCustomTakeProfitLevel,
   validateTakeProfitLevel,
   validateTakeProfitStrategy,
 } from "../types/take-profit-strategies";

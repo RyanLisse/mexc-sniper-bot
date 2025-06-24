@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { requireAuth } from "../../../../src/lib/kinde-auth";
 import { apiResponse } from "../../../../src/lib/api-response";
 import { AdvancedRiskEngine } from "../../../../src/services/advanced-risk-engine";
@@ -14,6 +15,8 @@ import { SafetyMonitorAgent } from "../../../../src/mexc-agents/safety-monitor-a
 // Initialize risk systems
 const riskEngine = new AdvancedRiskEngine();
 const safetyMonitor = new SafetyMonitorAgent();
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -75,7 +78,7 @@ export async function GET(request: NextRequest) {
     return apiResponse.success(response);
 
   } catch (error) {
-    console.error("[Risk Assessment] GET Error:", error);
+    logger.error("[Risk Assessment] GET Error:", { error: error });
     return apiResponse.error(
       "Failed to get risk assessment",
       500
@@ -220,7 +223,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.success(result);
 
   } catch (error) {
-    console.error("[Risk Assessment] POST Error:", error);
+    logger.error("[Risk Assessment] POST Error:", { error: error });
     return apiResponse.error(
       "Failed to perform risk assessment",
       500

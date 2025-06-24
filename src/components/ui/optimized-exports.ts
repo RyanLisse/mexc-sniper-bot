@@ -7,12 +7,18 @@
 
 // Core UI components - frequently used, keep as regular imports
 export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+export { Badge } from "./badge";
 export { Button } from "./button";
 export { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
-export { Input } from "./input";
-export { Label } from "./label";
-export { Badge } from "./badge";
-
+// Dialog components
+export {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./dialog";
 // Dropdown components
 export {
   DropdownMenu,
@@ -22,7 +28,31 @@ export {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./dropdown-menu";
-
+export { Input } from "./input";
+export { Label } from "./label";
+// Progress components
+export { Progress } from "./progress";
+// ScrollArea component
+export { ScrollArea } from "./scroll-area";
+// Select components
+export {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./select";
+// Separator component
+export { Separator } from "./separator";
+// Sheet components (for mobile)
+export {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "./sheet";
 // Sidebar components - used in layout
 export {
   Sidebar,
@@ -38,17 +68,10 @@ export {
   SidebarProvider,
   SidebarTrigger,
 } from "./sidebar";
-
-// Dialog components
-export {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./dialog";
-
+// Skeleton component
+export { Skeleton } from "./skeleton";
+// Switch component
+export { Switch } from "./switch";
 // Table components
 export {
   Table,
@@ -59,22 +82,6 @@ export {
   TableHeader,
   TableRow,
 } from "./table";
-
-// Toast components
-export { toast } from "./use-toast";
-
-// Select components
-export {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./select";
-
-// Progress components
-export { Progress } from "./progress";
-
 // Tabs components
 export {
   Tabs,
@@ -82,17 +89,6 @@ export {
   TabsList,
   TabsTrigger,
 } from "./tabs";
-
-// Sheet components (for mobile)
-export {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "./sheet";
-
 // Tooltip components
 export {
   Tooltip,
@@ -100,15 +96,5 @@ export {
   TooltipProvider,
   TooltipTrigger,
 } from "./tooltip";
-
-// Switch component
-export { Switch } from "./switch";
-
-// Separator component
-export { Separator } from "./separator";
-
-// ScrollArea component
-export { ScrollArea } from "./scroll-area";
-
-// Skeleton component
-export { Skeleton } from "./skeleton";
+// Toast components
+export { toast } from "./use-toast";

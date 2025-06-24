@@ -18,6 +18,7 @@ import {
   XCircle,
 } from "lucide-react";
 import React, { useState } from "react";
+import { createLogger } from "../lib/structured-logger";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -258,7 +259,7 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
       // Just force refresh instead
       await handleForceRefresh();
     } catch (error) {
-      console.error("Failed to reset circuit breaker:", error);
+      logger.error("Failed to reset circuit breaker:", error);
     }
   };
 
@@ -371,6 +372,8 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
 // ============================================================================
 // Supporting Components
 // ============================================================================
+
+const logger = createLogger("enhanced-credential-status-v3");
 
 function StatusBadge({ connectivity }: { connectivity: EnhancedConnectivityData }) {
   const getStatusConfig = () => {

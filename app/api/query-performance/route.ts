@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
+import { createLogger } from '../../../src/lib/structured-logger';
 import { queryPerformanceMonitor } from "../../../src/services/query-performance-monitor";
 import { apiResponse, createOperationResponse, handleApiError } from "../../../src/lib/api-response";
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,7 +34,7 @@ export async function GET(request: NextRequest) {
         return apiResponse.success(status, { operation: 'get-status' });
     }
   } catch (error) {
-    console.error("❌ Error getting query performance data:", error);
+    logger.error("❌ Error getting query performance data:", { error: error });
     return handleApiError(error, "Failed to get query performance data");
   }
 }
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
         return apiResponse.badRequest("Invalid action. Use 'start', 'stop', or 'clear'");
     }
   } catch (error) {
-    console.error("❌ Error controlling query performance monitor:", error);
+    logger.error("❌ Error controlling query performance monitor:", { error: error });
     return handleApiError(error, "Failed to control query performance monitor");
   }
 }

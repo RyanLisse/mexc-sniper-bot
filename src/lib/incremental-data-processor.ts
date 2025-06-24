@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Incremental Data Processing Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Incremental Data Processing & Delta Updates
@@ -80,6 +81,8 @@ export interface ProcessingMetrics {
 // ============================================================================
 
 export class IncrementalDataProcessor {
+  private logger = createLogger("incremental-data-processor");
+
   private cache: EnhancedUnifiedCacheSystem;
   private config: IncrementalProcessorConfig;
   private metrics: ProcessingMetrics;
@@ -143,7 +146,7 @@ export class IncrementalDataProcessor {
         existingSnapshot.checksum === newChecksum &&
         !options.forceFullUpdate
       ) {
-        console.log(`[IncrementalProcessor] No changes detected for ${id}`);
+        logger.info(`[IncrementalProcessor] No changes detected for ${id}`);
         return null;
       }
 
@@ -185,12 +188,12 @@ export class IncrementalDataProcessor {
         await this.cache.set(`snapshot:${id}`, newSnapshot, "generic", 300000); // 5 minute TTL
       }
 
-      console.log(
+      logger.info(
         `[IncrementalProcessor] Processed ${deltaUpdate.operation} for ${id} in ${Date.now() - startTime}ms`
       );
       return deltaUpdate;
     } catch (error) {
-      console.error(`[IncrementalProcessor] Processing failed for ${id}:`, error);
+      logger.error(`[IncrementalProcessor] Processing failed for ${id}:`, error);
       throw error;
     }
   }
@@ -225,7 +228,7 @@ export class IncrementalDataProcessor {
     const priority = options.priority || "medium";
     const maxConcurrency = options.maxConcurrency || 5;
 
-    console.log(`[IncrementalProcessor] Processing batch ${batchId} with ${items.length} items`);
+    logger.info(`[IncrementalProcessor] Processing batch ${batchId} with ${items.length} items`);
 
     try {
       // Create processing batch
@@ -261,10 +264,10 @@ export class IncrementalDataProcessor {
       const processingTime = Date.now() - startTime;
       this.updateBatchMetrics(batch, processingTime);
 
-      console.log(`[IncrementalProcessor] Batch ${batchId} completed in ${processingTime}ms`);
+      logger.info(`[IncrementalProcessor] Batch ${batchId} completed in ${processingTime}ms`);
       return results;
     } catch (error) {
-      console.error(`[IncrementalProcessor] Batch processing failed for ${batchId}:`, error);
+      logger.error(`[IncrementalProcessor] Batch processing failed for ${batchId}:`, error);
       throw error;
     } finally {
       this.pendingBatches.delete(batchId);
@@ -339,18 +342,18 @@ export class IncrementalDataProcessor {
       return localUpdate;
     }
 
-    console.log(`[IncrementalProcessor] Resolving conflict for ${id}`);
+    logger.info(`[IncrementalProcessor] Resolving conflict for ${id}`);
 
     // Timestamp-based resolution (last write wins)
     if (remoteUpdate.timestamp > localUpdate.timestamp) {
-      console.log(`[IncrementalProcessor] Remote update is newer, using remote`);
+      logger.info(`[IncrementalProcessor] Remote update is newer, using remote`);
       this.metrics.conflictsResolved++;
       return remoteUpdate;
     }
 
     // If timestamps are equal, try to merge changes
     if (remoteUpdate.timestamp === localUpdate.timestamp) {
-      console.log(`[IncrementalProcessor] Attempting to merge concurrent updates`);
+      logger.info(`[IncrementalProcessor] Attempting to merge concurrent updates`);
 
       const mergedChanges = {
         ...localUpdate.changes,
@@ -369,7 +372,7 @@ export class IncrementalDataProcessor {
     }
 
     // Local update is newer
-    console.log(`[IncrementalProcessor] Local update is newer, keeping local`);
+    logger.info(`[IncrementalProcessor] Local update is newer, keeping local`);
     return localUpdate;
   }
 
@@ -393,7 +396,7 @@ export class IncrementalDataProcessor {
       const snapshot = this.snapshots.get(id) as DataSnapshot<T> | undefined;
       return snapshot || null;
     } catch (error) {
-      console.error(`[IncrementalProcessor] Failed to get snapshot for ${id}:`, error);
+      logger.error(`[IncrementalProcessor] Failed to get snapshot for ${id}:`, error);
       return null;
     }
   }
@@ -408,7 +411,7 @@ export class IncrementalDataProcessor {
         await this.cache.set(`snapshot:${snapshot.id}`, snapshot, "generic", 300000); // 5 minute TTL
       }
     } catch (error) {
-      console.error(`[IncrementalProcessor] Failed to store snapshot for ${snapshot.id}:`, error);
+      logger.error(`[IncrementalProcessor] Failed to store snapshot for ${snapshot.id}:`, error);
       throw error;
     }
   }
@@ -510,7 +513,7 @@ export class IncrementalDataProcessor {
       await this.cache.clear();
     }
 
-    console.log("[IncrementalProcessor] All snapshots cleared");
+    logger.info("[IncrementalProcessor] All snapshots cleared");
   }
 
   // ============================================================================
@@ -526,7 +529,7 @@ export class IncrementalDataProcessor {
     this.snapshots.clear();
     this.pendingBatches.clear();
 
-    console.log("[IncrementalProcessor] Service destroyed");
+    logger.info("[IncrementalProcessor] Service destroyed");
   }
 }
 

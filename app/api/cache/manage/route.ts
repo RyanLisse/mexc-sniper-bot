@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { createApiHandler } from "../../../../src/lib/api-middleware";
 import { globalCacheManager } from "../../../../src/lib/cache-manager";
 import { globalEnhancedAgentCache } from "../../../../src/lib/enhanced-agent-cache";
@@ -53,7 +54,7 @@ export const POST = createApiHandler({
     });
 
   } catch (error) {
-    console.error('[API] Cache management error:', error);
+    logger.error('[API] Cache management error:', error);
     return context.error(
       `Failed to execute cache operation: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,
@@ -165,7 +166,7 @@ export const GET = createApiHandler({
     });
 
   } catch (error) {
-    console.error('[API] Cache management info error:', error);
+    logger.error('[API] Cache management info error:', error);
     return context.error(
       'Failed to retrieve cache management information',
       500,
@@ -178,6 +179,8 @@ export const GET = createApiHandler({
 });
 
 // Operation handlers
+
+const logger = createLogger('route');
 
 async function handleClearOperation(parameters: any) {
   const { level, pattern } = parameters;
@@ -261,7 +264,7 @@ async function handleWarmupOperation(parameters: any) {
   if (apis.length > 0) {
     for (const endpoint of apis) {
       // This would trigger API cache warming - implementation depends on specific API client
-      console.log(`[CacheManage] Warming up API cache for endpoint: ${endpoint}`);
+      logger.info(`[CacheManage] Warming up API cache for endpoint: ${endpoint}`);
     }
     apiWarmupResults = { endpoints: apis.length };
   }
@@ -326,7 +329,7 @@ async function handleCleanupOperation(parameters: any) {
   let patternCleanup = null;
   if (aggressive) {
     // This would require implementing cleanup in pattern embedding service
-    console.log('[CacheManage] Aggressive cleanup: cleaning pattern embeddings');
+    logger.info('[CacheManage] Aggressive cleanup: cleaning pattern embeddings');
     patternCleanup = { cleaned: 0 }; // Placeholder
   }
 
@@ -388,7 +391,7 @@ export const PUT = createApiHandler({
     });
 
   } catch (error) {
-    console.error('[API] Cache config update error:', error);
+    logger.error('[API] Cache config update error:', error);
     return context.error(
       'Failed to update cache configuration',
       500,

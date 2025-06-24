@@ -1,33 +1,33 @@
 /**
  * Test-Driven Development for Advanced Risk Engine Refactoring
- * 
+ *
  * This test file defines the expected behavior for the refactored
  * AdvancedRiskEngine modules before we implement the modular architecture.
- * 
+ *
  * Target modules:
  * - Core Risk Assessment (< 500 lines)
- * - Market Conditions & Portfolio Management (< 500 lines) 
+ * - Market Conditions & Portfolio Management (< 500 lines)
  * - Dynamic Calculations (< 500 lines)
  * - Stress Testing & Validation (< 500 lines)
  * - Event Management & Health (< 500 lines)
  */
 
-import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
-import { z } from 'zod';
-import type { 
-  MarketConditions, 
-  PositionRiskProfile, 
-  PortfolioRiskMetrics, 
-  RiskEngineConfig,
+import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
+import { z } from "zod";
+import type { TradeRiskAssessment } from "../../mexc-agents/risk-manager-agent";
+import type {
+  MarketConditions,
+  PortfolioRiskMetrics,
+  PositionRiskProfile,
   RiskAlert,
-  StressTestScenario 
-} from '../../schemas/risk-engine-schemas-extracted';
-import type { TradeRiskAssessment } from '../../mexc-agents/risk-manager-agent';
+  RiskEngineConfig,
+  StressTestScenario,
+} from "../../schemas/risk-engine-schemas-extracted";
 
 // Test schemas for validation
 const TestTradeRequestSchema = z.object({
   symbol: z.string().min(1),
-  side: z.enum(['buy', 'sell']),
+  side: z.enum(["buy", "sell"]),
   quantity: z.number().positive(),
   price: z.number().positive(),
   marketData: z.record(z.unknown()).optional(),
@@ -47,7 +47,7 @@ const TestRiskAssessmentResponseSchema = z.object({
   advancedMetrics: z.record(z.number()),
 });
 
-describe('Advanced Risk Engine - TDD Module Refactoring', () => {
+describe("Advanced Risk Engine - TDD Module Refactoring", () => {
   let mockConfig: RiskEngineConfig;
   let mockMarketConditions: MarketConditions;
   let mockPosition: PositionRiskProfile;
@@ -79,12 +79,12 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       tradingVolume24h: 1000000,
       priceChange24h: 0,
       correlationRisk: 0.3,
-      marketSentiment: 'neutral',
+      marketSentiment: "neutral",
       timestamp: new Date().toISOString(),
     };
 
     mockPosition = {
-      symbol: 'BTCUSDT',
+      symbol: "BTCUSDT",
       size: 5000,
       exposure: 50,
       leverage: 1,
@@ -100,11 +100,11 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
     vi.clearAllMocks();
   });
 
-  describe('Core Risk Assessment Module', () => {
-    it('should assess trade risk with comprehensive metrics', async () => {
+  describe("Core Risk Assessment Module", () => {
+    it("should assess trade risk with comprehensive metrics", async () => {
       const tradeRequest = {
-        symbol: 'BTCUSDT',
-        side: 'buy' as const,
+        symbol: "BTCUSDT",
+        side: "buy" as const,
         quantity: 0.1,
         price: 45000,
         marketData: { lastPrice: 45000, volume: 1000 },
@@ -137,19 +137,19 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       };
 
       // Risk score should be between 0-100
-      expect(typeof expectedBehavior.riskScore).toBe('object'); // expect.any(Number) returns object
-      
+      expect(typeof expectedBehavior.riskScore).toBe("object"); // expect.any(Number) returns object
+
       // Should have expected structure (schema validation will be done in actual implementation)
-      expect(expectedBehavior).toHaveProperty('approved');
-      expect(expectedBehavior).toHaveProperty('riskScore');
-      expect(expectedBehavior).toHaveProperty('reasons');
-      expect(expectedBehavior).toHaveProperty('warnings');
+      expect(expectedBehavior).toHaveProperty("approved");
+      expect(expectedBehavior).toHaveProperty("riskScore");
+      expect(expectedBehavior).toHaveProperty("reasons");
+      expect(expectedBehavior).toHaveProperty("warnings");
     });
 
-    it('should reject high-risk trades', async () => {
+    it("should reject high-risk trades", async () => {
       const highRiskTrade = {
-        symbol: 'ALTCOIN',
-        side: 'buy' as const,
+        symbol: "ALTCOIN",
+        side: "buy" as const,
         quantity: 1000000, // Extremely large quantity
         price: 1,
         marketData: { volatility: 0.8 },
@@ -164,37 +164,37 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       };
 
       expect(expectedRejection.approved).toBe(false);
-      expect(expectedRejection).toHaveProperty('reasons');
-      expect(expectedRejection).toHaveProperty('warnings');
+      expect(expectedRejection).toHaveProperty("reasons");
+      expect(expectedRejection).toHaveProperty("warnings");
     });
 
-    it('should calculate position size risk accurately', () => {
+    it("should calculate position size risk accurately", () => {
       const tradeValue = 15000; // Exceeds maxSinglePositionSize of 10000
       const expectedRisk = Math.min((tradeValue / mockConfig.maxSinglePositionSize) * 100, 100);
-      
+
       expect(expectedRisk).toBeGreaterThanOrEqual(100); // Should be capped at 100
       expect(Math.min(expectedRisk, 100)).toBe(100);
     });
 
-    it('should apply dynamic risk adjustments', () => {
+    it("should apply dynamic risk adjustments", () => {
       const baseRiskScore = 50;
       const highVolatilityConditions = { ...mockMarketConditions, volatilityIndex: 80 };
-      
+
       // High volatility should increase risk score
       const volatilityAdjustment = 1 + (0.8 * mockConfig.volatilityMultiplier - 1);
       const adjustedScore = baseRiskScore * volatilityAdjustment;
-      
+
       expect(adjustedScore).toBeGreaterThan(baseRiskScore);
       expect(adjustedScore).toBeLessThanOrEqual(100);
     });
   });
 
-  describe('Market Conditions & Portfolio Management Module', () => {
-    it('should update market conditions with validation', () => {
+  describe("Market Conditions & Portfolio Management Module", () => {
+    it("should update market conditions with validation", () => {
       const validUpdate = {
         volatilityIndex: 75,
         liquidityIndex: 60,
-        marketSentiment: 'bearish' as const,
+        marketSentiment: "bearish" as const,
       };
 
       const expectedUpdatedConditions = {
@@ -204,29 +204,29 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       };
 
       expect(expectedUpdatedConditions.volatilityIndex).toBe(75);
-      expect(expectedUpdatedConditions.marketSentiment).toBe('bearish');
-      expect(typeof expectedUpdatedConditions.timestamp).toBe('object'); // expect.any(String) returns object
+      expect(expectedUpdatedConditions.marketSentiment).toBe("bearish");
+      expect(typeof expectedUpdatedConditions.timestamp).toBe("object"); // expect.any(String) returns object
     });
 
-    it('should manage position tracking', () => {
+    it("should manage position tracking", () => {
       const position = mockPosition;
       const positionMap = new Map<string, PositionRiskProfile>();
-      
+
       // Add position
       positionMap.set(position.symbol, position);
-      expect(positionMap.has('BTCUSDT')).toBe(true);
-      expect(positionMap.get('BTCUSDT')).toEqual(position);
-      
+      expect(positionMap.has("BTCUSDT")).toBe(true);
+      expect(positionMap.get("BTCUSDT")).toEqual(position);
+
       // Remove position
-      positionMap.delete('BTCUSDT');
-      expect(positionMap.has('BTCUSDT')).toBe(false);
+      positionMap.delete("BTCUSDT");
+      expect(positionMap.has("BTCUSDT")).toBe(false);
     });
 
-    it('should calculate portfolio metrics', () => {
+    it("should calculate portfolio metrics", () => {
       const positions = [mockPosition];
       const totalValue = positions.reduce((sum, pos) => sum + pos.size, 0);
       const totalExposure = positions.reduce((sum, pos) => sum + pos.exposure, 0);
-      
+
       const expectedMetrics = {
         totalValue,
         totalExposure,
@@ -244,14 +244,14 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       expect(expectedMetrics.totalExposure).toBe(50);
     });
 
-    it('should handle emergency market conditions', () => {
+    it("should handle emergency market conditions", () => {
       const emergencyConditions = {
         ...mockMarketConditions,
         volatilityIndex: 85, // Above emergencyVolatilityThreshold
-        liquidityIndex: 15,  // Below emergencyLiquidityThreshold
+        liquidityIndex: 15, // Below emergencyLiquidityThreshold
       };
 
-      const shouldTriggerEmergency = 
+      const shouldTriggerEmergency =
         emergencyConditions.volatilityIndex > mockConfig.emergencyVolatilityThreshold ||
         emergencyConditions.liquidityIndex < mockConfig.emergencyLiquidityThreshold;
 
@@ -259,8 +259,8 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
     });
   });
 
-  describe('Dynamic Calculations Module', () => {
-    it('should calculate dynamic stop-loss recommendations', () => {
+  describe("Dynamic Calculations Module", () => {
+    it("should calculate dynamic stop-loss recommendations", () => {
       const entryPrice = 45000;
       const currentPrice = 46000;
       const volatility = mockMarketConditions.volatilityIndex / 100;
@@ -269,7 +269,7 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       let stopLossPercent = 0.02; // 2% base
       stopLossPercent += volatility * 0.03; // Volatility adjustment
       stopLossPercent += (1 - liquidity) * 0.02; // Liquidity adjustment
-      
+
       // Ensure bounds
       stopLossPercent = Math.max(0.01, Math.min(0.08, stopLossPercent));
       const expectedStopLoss = currentPrice * (1 - stopLossPercent);
@@ -279,7 +279,7 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       expect(expectedStopLoss).toBeLessThan(currentPrice);
     });
 
-    it('should calculate dynamic take-profit recommendations', () => {
+    it("should calculate dynamic take-profit recommendations", () => {
       const entryPrice = 45000;
       const currentPrice = 46000;
       const volatility = mockMarketConditions.volatilityIndex / 100;
@@ -288,7 +288,7 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       takeProfitPercent += volatility * 0.04; // Volatility adjustment
 
       // Market sentiment adjustment
-      if (mockMarketConditions.marketSentiment === 'bullish') {
+      if (mockMarketConditions.marketSentiment === "bullish") {
         takeProfitPercent += 0.02;
       }
 
@@ -301,16 +301,17 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       expect(expectedTakeProfit).toBeGreaterThan(currentPrice);
     });
 
-    it('should validate position size with portfolio constraints', () => {
+    it("should validate position size with portfolio constraints", () => {
       const positionRequest = {
-        symbol: 'BTCUSDT',
+        symbol: "BTCUSDT",
         entryPrice: 45000,
         requestedPositionSize: 8000,
         portfolioValue: 50000,
         estimatedRisk: 5,
       };
 
-      const positionSizeRatio = positionRequest.requestedPositionSize / positionRequest.portfolioValue;
+      const positionSizeRatio =
+        positionRequest.requestedPositionSize / positionRequest.portfolioValue;
       const maxPortfolioPercentage = 0.05; // 5%
 
       const expectedValidation = {
@@ -324,9 +325,9 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       expect(expectedValidation.approved).toBe(true);
     });
 
-    it('should calculate volatility-adjusted position sizes', () => {
+    it("should calculate volatility-adjusted position sizes", () => {
       const positionRequest = {
-        symbol: 'BTCUSDT',
+        symbol: "BTCUSDT",
         entryPrice: 45000,
         requestedPositionSize: 5000,
         portfolioValue: 50000,
@@ -338,7 +339,7 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
 
       if (volatility > 0.6) {
         volatilityReduction = 0.25;
-        adjustedSize *= (1 - volatilityReduction);
+        adjustedSize *= 1 - volatilityReduction;
       }
 
       expect(adjustedSize).toBeLessThanOrEqual(positionRequest.requestedPositionSize);
@@ -346,11 +347,11 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
     });
   });
 
-  describe('Stress Testing & Validation Module', () => {
-    it('should perform comprehensive stress testing', () => {
+  describe("Stress Testing & Validation Module", () => {
+    it("should perform comprehensive stress testing", () => {
       const scenario: StressTestScenario = {
-        name: 'Market Crash',
-        description: '20% market decline with high volatility',
+        name: "Market Crash",
+        description: "20% market decline with high volatility",
         marketShock: {
           priceChange: -20,
           volatilityIncrease: 3,
@@ -362,42 +363,42 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
 
       const positions = [mockPosition];
       const portfolioValue = positions.reduce((sum, pos) => sum + pos.size, 0);
-      
+
       let totalLoss = 0;
       for (const position of positions) {
         const positionLoss = position.size * (scenario.marketShock.priceChange / 100);
-        const volatilityImpact = position.valueAtRisk * (scenario.marketShock.volatilityIncrease - 1);
+        const volatilityImpact =
+          position.valueAtRisk * (scenario.marketShock.volatilityIncrease - 1);
         totalLoss += Math.abs(positionLoss) + volatilityImpact;
       }
 
       const portfolioImpact = (totalLoss / portfolioValue) * 100;
-      
+
       expect(totalLoss).toBeGreaterThan(0);
       expect(portfolioImpact).toBeGreaterThan(0);
       expect(portfolioImpact).toBeLessThan(100);
     });
 
-    it('should validate stop-loss placement', () => {
+    it("should validate stop-loss placement", () => {
       const options = {
-        symbol: 'BTCUSDT',
+        symbol: "BTCUSDT",
         entryPrice: 45000,
         stopLoss: 40500, // 10% below entry
         positionSize: 5000,
       };
 
       const stopLossPercent = ((options.entryPrice - options.stopLoss) / options.entryPrice) * 100;
-      const isValid = options.stopLoss < options.entryPrice && 
-                     stopLossPercent >= 2 && 
-                     stopLossPercent <= 50;
+      const isValid =
+        options.stopLoss < options.entryPrice && stopLossPercent >= 2 && stopLossPercent <= 50;
 
       expect(isValid).toBe(true);
       expect(stopLossPercent).toBeGreaterThanOrEqual(2);
       expect(stopLossPercent).toBeLessThanOrEqual(50);
     });
 
-    it('should assess diversification risk', () => {
+    it("should assess diversification risk", () => {
       const newPosition = {
-        symbol: 'ETHUSDT',
+        symbol: "ETHUSDT",
         entryPrice: 3000,
         requestedPositionSize: 8000,
         correlationWithPortfolio: 0.6,
@@ -405,19 +406,19 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
 
       const portfolioValue = 50000;
       const positionRatio = newPosition.requestedPositionSize / portfolioValue;
-      
-      let concentrationRisk: 'low' | 'medium' | 'high' = 'low';
+
+      let concentrationRisk: "low" | "medium" | "high" = "low";
       if (positionRatio > 0.15) {
-        concentrationRisk = 'high';
+        concentrationRisk = "high";
       } else if (positionRatio > 0.08) {
-        concentrationRisk = 'medium';
+        concentrationRisk = "medium";
       }
 
-      expect(['low', 'medium', 'high']).toContain(concentrationRisk);
+      expect(["low", "medium", "high"]).toContain(concentrationRisk);
       expect(positionRatio).toBeGreaterThan(0);
     });
 
-    it('should detect flash crash patterns', () => {
+    it("should detect flash crash patterns", () => {
       const priceSequence = [
         { price: 45000, volume: 1000, timestamp: Date.now() - 180000 },
         { price: 44000, volume: 2000, timestamp: Date.now() - 120000 },
@@ -426,12 +427,13 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       ];
 
       const startPrice = priceSequence[0].price;
-      const minPrice = Math.min(...priceSequence.map(p => p.price));
+      const minPrice = Math.min(...priceSequence.map((p) => p.price));
       const maxDropPercent = ((startPrice - minPrice) / startPrice) * 100;
 
-      const avgVolume = priceSequence.slice(0, -1).reduce((sum, p) => sum + p.volume, 0) / 
-                       (priceSequence.length - 1);
-      const maxVolume = Math.max(...priceSequence.map(p => p.volume));
+      const avgVolume =
+        priceSequence.slice(0, -1).reduce((sum, p) => sum + p.volume, 0) /
+        (priceSequence.length - 1);
+      const maxVolume = Math.max(...priceSequence.map((p) => p.volume));
       const volumeSpike = maxVolume / avgVolume;
 
       const isFlashCrash = maxDropPercent > 10 && volumeSpike > 3;
@@ -442,36 +444,37 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
     });
   });
 
-  describe('Event Management & Health Module', () => {
-    it('should manage risk alerts effectively', () => {
+  describe("Event Management & Health Module", () => {
+    it("should manage risk alerts effectively", () => {
       const alert: RiskAlert = {
         id: `alert-${Date.now()}`,
-        type: 'portfolio',
-        severity: 'high',
-        message: 'Portfolio concentration risk detected',
+        type: "portfolio",
+        severity: "high",
+        message: "Portfolio concentration risk detected",
         details: { concentrationRisk: 60 },
-        recommendations: ['Diversify positions', 'Reduce largest position'],
+        recommendations: ["Diversify positions", "Reduce largest position"],
         timestamp: new Date().toISOString(),
         resolved: false,
       };
 
       const alerts: RiskAlert[] = [alert];
-      const activeAlerts = alerts.filter(a => !a.resolved);
-      const criticalAlerts = activeAlerts.filter(a => a.severity === 'critical');
+      const activeAlerts = alerts.filter((a) => !a.resolved);
+      const criticalAlerts = activeAlerts.filter((a) => a.severity === "critical");
 
       expect(activeAlerts.length).toBe(1);
       expect(criticalAlerts.length).toBe(0);
-      expect(alert.type).toBe('portfolio');
+      expect(alert.type).toBe("portfolio");
     });
 
-    it('should monitor health status', () => {
+    it("should monitor health status", () => {
       const currentTime = Date.now();
       const lastUpdate = currentTime - 60000; // 1 minute ago
       const issues: string[] = [];
 
       // Check for stale data
-      if (currentTime - lastUpdate > 300000) { // 5 minutes
-        issues.push('Risk data is stale (>5 minutes old)');
+      if (currentTime - lastUpdate > 300000) {
+        // 5 minutes
+        issues.push("Risk data is stale (>5 minutes old)");
       }
 
       const healthStatus = {
@@ -491,7 +494,7 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       expect(healthStatus.metrics.riskScore).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle emergency stop conditions', () => {
+    it("should handle emergency stop conditions", () => {
       const riskLevel = 18; // Above 15% threshold
       const emergencyThreshold = 15;
       const shouldActivateEmergency = riskLevel > emergencyThreshold;
@@ -507,10 +510,10 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
       expect(emergencyState.riskLevel).toBeGreaterThan(emergencyThreshold);
     });
 
-    it('should emit risk events with proper data', () => {
+    it("should emit risk events with proper data", () => {
       const riskEvent = {
-        type: 'portfolio_risk_exceeded',
-        severity: 'critical',
+        type: "portfolio_risk_exceeded",
+        severity: "critical",
         riskLevel: 20,
         threshold: 15,
         timestamp: new Date().toISOString(),
@@ -518,62 +521,62 @@ describe('Advanced Risk Engine - TDD Module Refactoring', () => {
 
       const eventListeners = new Map<string, Function[]>();
       const mockListener = vi.fn();
-      
+
       // Simulate event registration
-      if (!eventListeners.has('emergency_stop')) {
-        eventListeners.set('emergency_stop', []);
+      if (!eventListeners.has("emergency_stop")) {
+        eventListeners.set("emergency_stop", []);
       }
-      eventListeners.get('emergency_stop')?.push(mockListener);
+      eventListeners.get("emergency_stop")?.push(mockListener);
 
       // Simulate event emission
-      const listeners = eventListeners.get('emergency_stop') || [];
-      listeners.forEach(listener => listener(riskEvent));
+      const listeners = eventListeners.get("emergency_stop") || [];
+      listeners.forEach((listener) => listener(riskEvent));
 
       expect(mockListener).toHaveBeenCalledWith(riskEvent);
-      expect(riskEvent.type).toBe('portfolio_risk_exceeded');
-      expect(riskEvent.severity).toBe('critical');
+      expect(riskEvent.type).toBe("portfolio_risk_exceeded");
+      expect(riskEvent.severity).toBe("critical");
     });
   });
 
-  describe('Integration & Backward Compatibility', () => {
-    it('should maintain backward compatibility with existing interfaces', () => {
+  describe("Integration & Backward Compatibility", () => {
+    it("should maintain backward compatibility with existing interfaces", () => {
       // Test that all expected methods and properties exist
       const expectedMethods = [
-        'assessTradeRisk',
-        'updateMarketConditions',
-        'updatePosition',
-        'removePosition',
-        'getPortfolioRiskMetrics',
-        'performStressTest',
-        'calculateDynamicStopLoss',
-        'calculateDynamicTakeProfit',
-        'getActiveAlerts',
-        'getHealthStatus',
+        "assessTradeRisk",
+        "updateMarketConditions",
+        "updatePosition",
+        "removePosition",
+        "getPortfolioRiskMetrics",
+        "performStressTest",
+        "calculateDynamicStopLoss",
+        "calculateDynamicTakeProfit",
+        "getActiveAlerts",
+        "getHealthStatus",
       ];
 
-      expectedMethods.forEach(method => {
-        expect(typeof method).toBe('string');
+      expectedMethods.forEach((method) => {
+        expect(typeof method).toBe("string");
         expect(method.length).toBeGreaterThan(0);
       });
     });
 
-    it('should export all required types and interfaces', () => {
+    it("should export all required types and interfaces", () => {
       const requiredTypes = [
-        'MarketConditions',
-        'PositionRiskProfile', 
-        'PortfolioRiskMetrics',
-        'RiskEngineConfig',
-        'RiskAlert',
-        'StressTestScenario',
+        "MarketConditions",
+        "PositionRiskProfile",
+        "PortfolioRiskMetrics",
+        "RiskEngineConfig",
+        "RiskAlert",
+        "StressTestScenario",
       ];
 
       // These should be available from the schemas
       expect(requiredTypes.length).toBe(6);
-      expect(requiredTypes).toContain('MarketConditions');
-      expect(requiredTypes).toContain('RiskAlert');
+      expect(requiredTypes).toContain("MarketConditions");
+      expect(requiredTypes).toContain("RiskAlert");
     });
 
-    it('should handle module initialization properly', () => {
+    it("should handle module initialization properly", () => {
       const moduleConfig = {
         circuitBreakerConfig: {
           failureThreshold: 3,

@@ -7,15 +7,6 @@
 
 "use client";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { usePatternMonitoring } from "@/src/hooks/use-pattern-monitoring";
-import type { PatternMatch } from "@/src/core/pattern-detection";
-import type { PatternAlert } from "@/src/services/pattern-monitoring-service";
 import {
   Activity,
   AlertCircle,
@@ -35,6 +26,15 @@ import {
   Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { PatternMatch } from "@/src/core/pattern-detection";
+import { usePatternMonitoring } from "@/src/hooks/use-pattern-monitoring";
+import type { PatternAlert } from "@/src/services/pattern-monitoring-service";
 
 interface PatternMonitoringDashboardProps {
   className?: string;

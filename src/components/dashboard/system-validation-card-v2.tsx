@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { queryKeys } from "../../lib/query-client";
+import { createLogger } from "../lib/structured-logger";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -59,6 +60,8 @@ interface SystemValidationCardProps {
   autoRefresh?: boolean;
   refreshInterval?: number;
 }
+
+const logger = createLogger("system-validation-card-v2");
 
 export function SystemValidationCardV2({
   className = "",
@@ -135,7 +138,7 @@ export function SystemValidationCardV2({
       queryClient.invalidateQueries({ queryKey: queryKeys.status.system() });
     },
     onError: (error) => {
-      console.error("Failed to refresh system validation:", error);
+      logger.error("Failed to refresh system validation:", error);
     },
   });
 

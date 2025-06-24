@@ -1,20 +1,14 @@
 /**
  * Portfolio Tab Component
- * 
+ *
  * Displays portfolio allocation, performance metrics, and asset breakdown.
  * Shows portfolio allocation pie chart and key performance indicators.
  */
 
+import { memo, useMemo } from "react";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { memo, useMemo } from "react";
-import {
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
 import {
   createTooltipFormatter,
   generateChartCellKey,
@@ -105,9 +99,7 @@ export const PortfolioTab = memo(function PortfolioTab({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Volatility</p>
-                <p className="text-2xl font-bold">
-                  {data.portfolioMetrics.volatility.toFixed(2)}%
-                </p>
+                <p className="text-2xl font-bold">{data.portfolioMetrics.volatility.toFixed(2)}%</p>
               </div>
             </div>
 
@@ -119,10 +111,7 @@ export const PortfolioTab = memo(function PortfolioTab({
                     {formatPercentage(data.portfolioMetrics.dayChange)}
                   </span>
                 </div>
-                <Progress
-                  value={Math.abs(data.portfolioMetrics.dayChange) * 10}
-                  className="h-2"
-                />
+                <Progress value={Math.abs(data.portfolioMetrics.dayChange) * 10} className="h-2" />
               </div>
 
               <div>
@@ -132,10 +121,7 @@ export const PortfolioTab = memo(function PortfolioTab({
                     {formatPercentage(data.portfolioMetrics.weekChange)}
                   </span>
                 </div>
-                <Progress
-                  value={Math.abs(data.portfolioMetrics.weekChange) * 5}
-                  className="h-2"
-                />
+                <Progress value={Math.abs(data.portfolioMetrics.weekChange) * 5} className="h-2" />
               </div>
 
               <div>
@@ -145,10 +131,7 @@ export const PortfolioTab = memo(function PortfolioTab({
                     {formatPercentage(data.portfolioMetrics.monthChange)}
                   </span>
                 </div>
-                <Progress
-                  value={Math.abs(data.portfolioMetrics.monthChange) * 2}
-                  className="h-2"
-                />
+                <Progress value={Math.abs(data.portfolioMetrics.monthChange) * 2} className="h-2" />
               </div>
             </div>
           </CardContent>

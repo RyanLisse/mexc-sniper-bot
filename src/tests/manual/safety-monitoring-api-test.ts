@@ -6,6 +6,7 @@
  */
 
 import { RealTimeSafetyMonitoringService } from "../../services/real-time-safety-monitoring-modules";
+import { createLogger } from "../lib/structured-logger";
 
 interface TestResult {
   endpoint: string;
@@ -19,6 +20,8 @@ interface TestResult {
 }
 
 class SafetyMonitoringAPITester {
+  private logger = createLogger("safety-monitoring-api-test");
+
   private baseUrl = "http://localhost:3000/api/auto-sniping/safety-monitoring";
   private results: TestResult[] = [];
   private safetyService: RealTimeSafetyMonitoringService;
@@ -28,7 +31,7 @@ class SafetyMonitoringAPITester {
   }
 
   async runAllTests(): Promise<TestResult[]> {
-    console.log("🧪 Starting Safety Monitoring API Tests\n");
+    logger.info("🧪 Starting Safety Monitoring API Tests\n");
 
     // Test GET endpoints
     await this.testGetEndpoints();
@@ -47,7 +50,7 @@ class SafetyMonitoringAPITester {
   }
 
   private async testGetEndpoints(): Promise<void> {
-    console.log("📥 Testing GET endpoints...");
+    logger.info("📥 Testing GET endpoints...");
 
     const getTests = [
       { action: "status", description: "Get monitoring status" },
@@ -69,7 +72,7 @@ class SafetyMonitoringAPITester {
     const startTime = Date.now();
 
     try {
-      console.log(`  Testing: ${description} (${action})`);
+      logger.info(`  Testing: ${description} (${action})`);
 
       // Simulate authenticated request (in real test, would include auth headers)
       const url = `${this.baseUrl}?action=${action}`;
@@ -90,7 +93,7 @@ class SafetyMonitoringAPITester {
         details: result.data || result.error,
       });
 
-      console.log(`  ✅ ${description}: ${responseTime}ms`);
+      logger.info(`  ✅ ${description}: ${responseTime}ms`);
     } catch (error) {
       const responseTime = Date.now() - startTime;
       this.results.push({
@@ -102,7 +105,7 @@ class SafetyMonitoringAPITester {
         error: error instanceof Error ? error.message : String(error),
       });
 
-      console.log(
+      logger.info(
         `  ❌ ${description}: Failed - ${error instanceof Error ? error.message : String(error)}`
       );
     }
@@ -219,7 +222,7 @@ class SafetyMonitoringAPITester {
   }
 
   private async testPostEndpoints(): Promise<void> {
-    console.log("\n📤 Testing POST endpoints...");
+    logger.info("\n📤 Testing POST endpoints...");
 
     const postTests = [
       {
@@ -295,7 +298,7 @@ class SafetyMonitoringAPITester {
     const startTime = Date.now();
 
     try {
-      console.log(`  Testing: ${description} (${action})`);
+      logger.info(`  Testing: ${description} (${action})`);
 
       const result = await this.simulatePostRequest(body);
       const responseTime = Date.now() - startTime;
@@ -310,7 +313,7 @@ class SafetyMonitoringAPITester {
         details: result.data || result.error,
       });
 
-      console.log(`  ✅ ${description}: ${responseTime}ms`);
+      logger.info(`  ✅ ${description}: ${responseTime}ms`);
     } catch (error) {
       const responseTime = Date.now() - startTime;
       this.results.push({
@@ -322,7 +325,7 @@ class SafetyMonitoringAPITester {
         error: error instanceof Error ? error.message : String(error),
       });
 
-      console.log(
+      logger.info(
         `  ❌ ${description}: Failed - ${error instanceof Error ? error.message : String(error)}`
       );
     }
@@ -457,7 +460,7 @@ class SafetyMonitoringAPITester {
   }
 
   private async testErrorScenarios(): Promise<void> {
-    console.log("\n🚨 Testing error scenarios...");
+    logger.info("\n🚨 Testing error scenarios...");
 
     const errorTests = [
       {
@@ -485,7 +488,7 @@ class SafetyMonitoringAPITester {
     for (const errorTest of errorTests) {
       const startTime = Date.now();
       try {
-        console.log(`  Testing: ${errorTest.description}`);
+        logger.info(`  Testing: ${errorTest.description}`);
 
         const result = await errorTest.test();
         const responseTime = Date.now() - startTime;
@@ -501,7 +504,7 @@ class SafetyMonitoringAPITester {
           details: result,
         });
 
-        console.log(
+        logger.info(
           `  ${status === "PASS" ? "✅" : "❌"} ${errorTest.description}: ${responseTime}ms`
         );
       } catch (error) {
@@ -514,7 +517,7 @@ class SafetyMonitoringAPITester {
           error: error instanceof Error ? error.message : String(error),
         });
 
-        console.log(
+        logger.info(
           `  ❌ ${errorTest.description}: Unexpected error - ${error instanceof Error ? error.message : String(error)}`
         );
       }
@@ -522,7 +525,7 @@ class SafetyMonitoringAPITester {
   }
 
   private async testEdgeCases(): Promise<void> {
-    console.log("\n🎯 Testing edge cases...");
+    logger.info("\n🎯 Testing edge cases...");
 
     const edgeTests = [
       {
@@ -556,7 +559,7 @@ class SafetyMonitoringAPITester {
     for (const edgeTest of edgeTests) {
       const startTime = Date.now();
       try {
-        console.log(`  Testing: ${edgeTest.description}`);
+        logger.info(`  Testing: ${edgeTest.description}`);
 
         const result = await edgeTest.test();
         const responseTime = Date.now() - startTime;
@@ -569,7 +572,7 @@ class SafetyMonitoringAPITester {
           details: result,
         });
 
-        console.log(`  ✅ ${edgeTest.description}: ${responseTime}ms`);
+        logger.info(`  ✅ ${edgeTest.description}: ${responseTime}ms`);
       } catch (error) {
         this.results.push({
           endpoint: this.baseUrl,
@@ -579,7 +582,7 @@ class SafetyMonitoringAPITester {
           error: error instanceof Error ? error.message : String(error),
         });
 
-        console.log(
+        logger.info(
           `  ❌ ${edgeTest.description}: Failed - ${error instanceof Error ? error.message : String(error)}`
         );
       }
@@ -587,25 +590,25 @@ class SafetyMonitoringAPITester {
   }
 
   private printSummary(): void {
-    console.log("\n📊 Test Summary:");
-    console.log("================");
+    logger.info("\n📊 Test Summary:");
+    logger.info("================");
 
     const totalTests = this.results.length;
     const passedTests = this.results.filter((r) => r.status === "PASS").length;
     const failedTests = this.results.filter((r) => r.status === "FAIL").length;
     const avgResponseTime = this.results.reduce((sum, r) => sum + r.responseTime, 0) / totalTests;
 
-    console.log(`Total Tests: ${totalTests}`);
-    console.log(`Passed: ${passedTests} (${Math.round((passedTests / totalTests) * 100)}%)`);
-    console.log(`Failed: ${failedTests} (${Math.round((failedTests / totalTests) * 100)}%)`);
-    console.log(`Average Response Time: ${Math.round(avgResponseTime)}ms`);
+    logger.info(`Total Tests: ${totalTests}`);
+    logger.info(`Passed: ${passedTests} (${Math.round((passedTests / totalTests) * 100)}%)`);
+    logger.info(`Failed: ${failedTests} (${Math.round((failedTests / totalTests) * 100)}%)`);
+    logger.info(`Average Response Time: ${Math.round(avgResponseTime)}ms`);
 
     // Performance analysis
     const slowTests = this.results.filter((r) => r.responseTime > 1000);
     if (slowTests.length > 0) {
-      console.log(`\n⚠️  Slow Tests (>1000ms): ${slowTests.length}`);
+      logger.info(`\n⚠️  Slow Tests (>1000ms): ${slowTests.length}`);
       slowTests.forEach((test) => {
-        console.log(
+        logger.info(
           `  - ${test.method} ${test.endpoint} (${test.action || "N/A"}): ${test.responseTime}ms`
         );
       });
@@ -614,15 +617,15 @@ class SafetyMonitoringAPITester {
     // Failed tests details
     const failed = this.results.filter((r) => r.status === "FAIL");
     if (failed.length > 0) {
-      console.log(`\n❌ Failed Tests:`);
+      logger.info(`\n❌ Failed Tests:`);
       failed.forEach((test) => {
-        console.log(
+        logger.info(
           `  - ${test.method} ${test.endpoint} (${test.action || "N/A"}): ${test.error || "No error details"}`
         );
       });
     }
 
-    console.log("\n🎉 Testing completed!");
+    logger.info("\n🎉 Testing completed!");
   }
 }
 
@@ -638,7 +641,7 @@ if (require.main === module) {
       process.exit(0);
     })
     .catch((error) => {
-      console.error("Test execution failed:", error);
+      logger.error("Test execution failed:", error);
       process.exit(1);
     });
 }

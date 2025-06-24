@@ -1,20 +1,20 @@
 /**
  * MEXC Request Service
- * 
+ *
  * Handles core HTTP request execution, timeout management, and response processing.
  * Extracted from mexc-api-client.ts for better modularity.
  */
 
 import * as crypto from "node:crypto";
-import type { 
-  ApiRequestConfig, 
-  RequestContext, 
-  TimeoutConfig,
-  HttpResponse,
-  PerformanceMetrics 
-} from "./mexc-api-types";
-import type { MexcServiceResponse, UnifiedMexcConfig } from "../mexc-schemas";
 import { toSafeError } from "../../lib/error-type-utils";
+import type { MexcServiceResponse, UnifiedMexcConfig } from "../mexc-schemas";
+import type {
+  ApiRequestConfig,
+  HttpResponse,
+  PerformanceMetrics,
+  RequestContext,
+  TimeoutConfig,
+} from "./mexc-api-types";
 
 export class MexcRequestService {
   private config: Required<UnifiedMexcConfig>;
@@ -100,14 +100,14 @@ export class MexcRequestService {
     const fetchOptions: RequestInit = {
       method: requestConfig.method,
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': `mexc-sniper-bot/1.0`,
+        "Content-Type": "application/json",
+        "User-Agent": `mexc-sniper-bot/1.0`,
       },
       signal: AbortSignal.timeout(timeout),
     };
 
     // Add body for POST/PUT requests
-    if (requestConfig.method !== 'GET' && requestConfig.params) {
+    if (requestConfig.method !== "GET" && requestConfig.params) {
       fetchOptions.body = JSON.stringify(requestConfig.params);
     }
 
@@ -116,7 +116,9 @@ export class MexcRequestService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${JSON.stringify(data)}`);
+        throw new Error(
+          `HTTP ${response.status}: ${response.statusText} - ${JSON.stringify(data)}`
+        );
       }
 
       return {
@@ -128,7 +130,7 @@ export class MexcRequestService {
       };
     } catch (error) {
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
+        if (error.name === "AbortError") {
           throw new Error(`Request timeout after ${timeout}ms for ${requestConfig.endpoint}`);
         }
         throw error;
@@ -141,21 +143,21 @@ export class MexcRequestService {
    * Build complete URL from config and endpoint
    */
   private buildUrl(requestConfig: ApiRequestConfig): string {
-    const baseUrl = this.config.baseUrl.replace(/\/$/, ''); // Remove trailing slash
-    const endpoint = requestConfig.endpoint.startsWith('/') 
-      ? requestConfig.endpoint 
+    const baseUrl = this.config.baseUrl.replace(/\/$/, ""); // Remove trailing slash
+    const endpoint = requestConfig.endpoint.startsWith("/")
+      ? requestConfig.endpoint
       : `/${requestConfig.endpoint}`;
 
     let url = `${baseUrl}${endpoint}`;
 
     // Add query parameters for GET requests
-    if (requestConfig.method === 'GET' && requestConfig.params) {
+    if (requestConfig.method === "GET" && requestConfig.params) {
       const searchParams = new URLSearchParams();
-      
+
       for (const [key, value] of Object.entries(requestConfig.params)) {
         if (value !== null && value !== undefined) {
           if (Array.isArray(value)) {
-            searchParams.append(key, value.map(v => String(v)).join(','));
+            searchParams.append(key, value.map((v) => String(v)).join(","));
           } else {
             searchParams.append(key, String(value));
           }
@@ -187,19 +189,25 @@ export class MexcRequestService {
    */
   determinePriority(endpoint: string): "low" | "medium" | "high" | "critical" {
     // Critical: Account operations, orders
-    if (endpoint.includes('/account') || endpoint.includes('/order')) {
+    if (endpoint.includes("/account") || endpoint.includes("/order")) {
       return "critical";
     }
 
     // High: Real-time data, balances
-    if (endpoint.includes('/depth') || endpoint.includes('/ticker') || 
-        endpoint.includes('/balance')) {
+    if (
+      endpoint.includes("/depth") ||
+      endpoint.includes("/ticker") ||
+      endpoint.includes("/balance")
+    ) {
       return "high";
     }
 
     // Medium: Market data, symbols
-    if (endpoint.includes('/exchangeInfo') || endpoint.includes('/klines') ||
-        endpoint.includes('/trades')) {
+    if (
+      endpoint.includes("/exchangeInfo") ||
+      endpoint.includes("/klines") ||
+      endpoint.includes("/trades")
+    ) {
       return "medium";
     }
 
@@ -224,9 +232,9 @@ export class MexcRequestService {
 
     // Use method-specific timeout
     switch (requestConfig.method) {
-      case 'POST':
-      case 'PUT':
-      case 'DELETE':
+      case "POST":
+      case "PUT":
+      case "DELETE":
         return this.timeoutConfig.defaultTimeout * 1.5; // Longer for write operations
       default:
         return this.timeoutConfig.defaultTimeout;
@@ -238,7 +246,7 @@ export class MexcRequestService {
    */
   private extractErrorCode(error: Error): string | undefined {
     const message = error.message;
-    
+
     // Try to extract HTTP status code
     const httpMatch = message.match(/HTTP (\d{3})/);
     if (httpMatch) {
@@ -252,10 +260,10 @@ export class MexcRequestService {
     }
 
     // Common error patterns
-    if (message.includes('timeout')) return 'TIMEOUT';
-    if (message.includes('network')) return 'NETWORK_ERROR';
-    if (message.includes('unauthorized')) return 'UNAUTHORIZED';
-    if (message.includes('rate limit')) return 'RATE_LIMIT';
+    if (message.includes("timeout")) return "TIMEOUT";
+    if (message.includes("network")) return "NETWORK_ERROR";
+    if (message.includes("unauthorized")) return "UNAUTHORIZED";
+    if (message.includes("rate limit")) return "RATE_LIMIT";
 
     return undefined;
   }
@@ -270,7 +278,7 @@ export class MexcRequestService {
     cacheHit: boolean = false
   ): PerformanceMetrics {
     const responseTime = Date.now() - context.startTime;
-    
+
     return {
       responseTime,
       requestSize: this.estimateRequestSize(requestConfig),
@@ -288,10 +296,10 @@ export class MexcRequestService {
    */
   private estimateRequestSize(requestConfig: ApiRequestConfig): number {
     const url = this.buildUrl(requestConfig);
-    const headers = JSON.stringify({ 'Content-Type': 'application/json' });
-    const body = requestConfig.params ? JSON.stringify(requestConfig.params) : '';
-    
-    return Buffer.byteLength(url + headers + body, 'utf8');
+    const headers = JSON.stringify({ "Content-Type": "application/json" });
+    const body = requestConfig.params ? JSON.stringify(requestConfig.params) : "";
+
+    return Buffer.byteLength(url + headers + body, "utf8");
   }
 
   /**
@@ -300,8 +308,8 @@ export class MexcRequestService {
   private estimateResponseSize(response: HttpResponse): number {
     const data = JSON.stringify(response.data);
     const headers = JSON.stringify(response.headers);
-    
-    return Buffer.byteLength(data + headers, 'utf8');
+
+    return Buffer.byteLength(data + headers, "utf8");
   }
 
   /**

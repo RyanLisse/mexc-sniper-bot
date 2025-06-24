@@ -1,13 +1,14 @@
 // Re-export types for backward compatibility
 export type {
-  CalendarDiscoveryWorkflowRequest,
-  SymbolAnalysisWorkflowRequest,
-  PatternAnalysisWorkflowRequest,
-  TradingStrategyWorkflowRequest,
-  MexcWorkflowResult,
   AgentOrchestrationMetrics,
+  CalendarDiscoveryWorkflowRequest,
+  MexcWorkflowResult,
+  PatternAnalysisWorkflowRequest,
+  SymbolAnalysisWorkflowRequest,
+  TradingStrategyWorkflowRequest,
 } from "./orchestrator-types";
 
+import { createLogger } from "../lib/structured-logger";
 import { AgentManager } from "./agent-manager";
 import { type CoordinationSystemConfig, CoordinationSystemManager } from "./coordination-manager";
 import { DataFetcher } from "./data-fetcher";
@@ -32,6 +33,8 @@ export interface MexcOrchestratorOptions {
  * Refactored to follow Single Responsibility Principle and reduce complexity
  */
 export class MexcOrchestrator {
+  private logger = createLogger("orchestrator");
+
   private agentManager: AgentManager;
   private dataFetcher: DataFetcher;
   private coordinationManager: CoordinationSystemManager;
@@ -56,7 +59,7 @@ export class MexcOrchestrator {
     // Optionally enable enhanced coordination
     if (options.useEnhancedCoordination) {
       this.initializeEnhancedCoordination(options.coordinationConfig).catch((error) => {
-        console.warn(
+        logger.warn(
           "[MexcOrchestrator] Failed to initialize coordination system, using legacy mode:",
           error
         );
@@ -122,7 +125,7 @@ export class MexcOrchestrator {
       try {
         return await this.coordinationManager.getAgentHealth();
       } catch (error) {
-        console.warn(
+        logger.warn(
           "[MexcOrchestrator] Enhanced health check failed, falling back to legacy mode:",
           error
         );
@@ -142,7 +145,7 @@ export class MexcOrchestrator {
       try {
         return this.coordinationManager.getOrchestrationMetrics();
       } catch (error) {
-        console.warn(
+        logger.warn(
           "[MexcOrchestrator] Enhanced metrics failed, falling back to legacy mode:",
           error
         );
@@ -165,7 +168,7 @@ export class MexcOrchestrator {
       try {
         return this.coordinationManager.getAgentSummary();
       } catch (error) {
-        console.warn(
+        logger.warn(
           "[MexcOrchestrator] Enhanced summary failed, falling back to legacy mode:",
           error
         );
@@ -184,7 +187,7 @@ export class MexcOrchestrator {
       try {
         return await this.coordinationManager.healthCheck();
       } catch (error) {
-        console.warn(
+        logger.warn(
           "[MexcOrchestrator] Enhanced health check failed, falling back to legacy mode:",
           error
         );
@@ -198,7 +201,7 @@ export class MexcOrchestrator {
 
       return Object.values(agentHealth).some((healthy) => healthy) && dataFetcherHealth;
     } catch (error) {
-      console.error("[MexcOrchestrator] Health check failed:", error);
+      logger.error("[MexcOrchestrator] Health check failed:", error);
       return false;
     }
   }
@@ -208,7 +211,7 @@ export class MexcOrchestrator {
    */
   async enableEnhancedCoordination(config?: CoordinationSystemConfig): Promise<void> {
     if (this.coordinationManager.isCoordinationEnabled()) {
-      console.warn("[MexcOrchestrator] Enhanced coordination is already enabled");
+      logger.warn("[MexcOrchestrator] Enhanced coordination is already enabled");
       return;
     }
 

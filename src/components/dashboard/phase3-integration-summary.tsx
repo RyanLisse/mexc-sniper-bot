@@ -319,9 +319,12 @@ export function Phase3IntegrationSummary() {
       </CardHeader>
       <CardContent className="space-y-6">
         <AIIntelligenceStatus aiServices={aiServices} />
-        <PatternDetectionStatus featureStatus={featureStatus} enhancedPatterns={enhancedPatterns} />
+        <PatternDetectionStatus
+          featureStatus={featureStatus || undefined}
+          enhancedPatterns={enhancedPatterns}
+        />
         <CacheWarmingStatus cacheMetrics={cacheMetrics} />
-        <ConfigurationStatus featureStatus={featureStatus} />
+        <ConfigurationStatus featureStatus={featureStatus || undefined} />
 
         {/* Quick Actions */}
         <div className="border-t pt-3">

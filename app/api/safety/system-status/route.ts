@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { requireAuth } from "../../../../src/lib/kinde-auth";
 import { apiResponse } from "../../../../src/lib/api-response";
 import { AdvancedRiskEngine } from "../../../../src/services/advanced-risk-engine";
@@ -20,6 +21,8 @@ const safetyMonitor = new SafetyMonitorAgent();
 // Set up integrations
 emergencySystem.setRiskEngine(riskEngine);
 safetyMonitor.setIntegrations(riskEngine, emergencySystem);
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -107,7 +110,7 @@ export async function GET(request: NextRequest) {
     return apiResponse.success(response);
 
   } catch (error) {
-    console.error("[Safety System Status] Error:", error);
+    logger.error("[Safety System Status] Error:", { error: error });
     return apiResponse.error(
       "Failed to get safety system status",
       500
@@ -184,7 +187,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.success(result);
 
   } catch (error) {
-    console.error("[Safety System Status] POST Error:", error);
+    logger.error("[Safety System Status] POST Error:", { error: error });
     return apiResponse.error(
       "Failed to execute safety system action",
       500

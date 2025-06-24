@@ -17,11 +17,6 @@
  */
 
 import { createLogger } from "../../lib/structured-logger";
-import { AutoSnipingExecutionService } from "../auto-sniping-execution-service";
-import { EmergencySafetySystem } from "../emergency-safety-system";
-import { PatternMonitoringService } from "../pattern-monitoring-service";
-import { UnifiedMexcServiceV2 } from "../unified-mexc-service-v2";
-
 // Import types from schemas
 import type {
   MonitoringStats,
@@ -33,16 +28,10 @@ import type {
   SafetyThresholds,
   SystemHealth,
 } from "../../schemas/safety-monitoring-schemas";
-
-// Import modular components
-import {
-  CoreSafetyMonitoring,
-  type CoreSafetyMonitoringConfig,
-  type RiskAssessmentUpdate,
-  type ThresholdCheckResult,
-  createCoreSafetyMonitoring,
-} from "./core-safety-monitoring";
-
+import { AutoSnipingExecutionService } from "../auto-sniping-execution-service";
+import { EmergencySafetySystem } from "../emergency-safety-system";
+import { PatternMonitoringService } from "../pattern-monitoring-service";
+import { UnifiedMexcServiceV2 } from "../unified-mexc-service-v2";
 import {
   type AlertGenerationData,
   AlertManagement,
@@ -50,27 +39,6 @@ import {
   type AlertStatistics,
   createAlertManagement,
 } from "./alert-management";
-
-import {
-  EventHandling,
-  type EventHandlingConfig,
-  type OperationRegistration,
-  type OperationStatus,
-  type TimerCoordinatorStats,
-  createEventHandling,
-} from "./event-handling";
-
-import {
-  type ComprehensiveRiskAssessment,
-  type PatternRiskAssessment,
-  type PerformanceRiskAssessment,
-  type PortfolioRiskAssessment,
-  RiskAssessment,
-  type RiskAssessmentConfig,
-  type SystemRiskAssessment,
-  createRiskAssessment,
-} from "./risk-assessment";
-
 import {
   ConfigurationManagement,
   type ConfigurationManagementConfig,
@@ -79,6 +47,32 @@ import {
   type ConfigurationValidationResult,
   createConfigurationManagement,
 } from "./configuration-management";
+// Import modular components
+import {
+  CoreSafetyMonitoring,
+  type CoreSafetyMonitoringConfig,
+  createCoreSafetyMonitoring,
+  type RiskAssessmentUpdate,
+  type ThresholdCheckResult,
+} from "./core-safety-monitoring";
+import {
+  createEventHandling,
+  EventHandling,
+  type EventHandlingConfig,
+  type OperationRegistration,
+  type OperationStatus,
+  type TimerCoordinatorStats,
+} from "./event-handling";
+import {
+  type ComprehensiveRiskAssessment,
+  createRiskAssessment,
+  type PatternRiskAssessment,
+  type PerformanceRiskAssessment,
+  type PortfolioRiskAssessment,
+  RiskAssessment,
+  type RiskAssessmentConfig,
+  type SystemRiskAssessment,
+} from "./risk-assessment";
 
 // Re-export types for backward compatibility
 export type {

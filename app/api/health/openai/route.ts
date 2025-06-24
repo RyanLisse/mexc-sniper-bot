@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
+
+const logger = createLogger('route');
 
 export async function GET() {
   try {
@@ -38,7 +41,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("[OpenAI Health Check] Error:", error);
+    logger.error("[OpenAI Health Check] Error:", { error: error });
     const errorObj = error as Error | { message?: string };
     return NextResponse.json({
       status: 'error',

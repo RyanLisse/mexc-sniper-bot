@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Unified MEXC Status API Endpoint
  * 
  * Single source of truth for MEXC API status that consolidates all status 
@@ -41,6 +42,8 @@ interface UnifiedStatusResponse {
   recommendations: string[];
   nextSteps: string[];
 }
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const requestId = `unified_status_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -104,7 +107,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
 
   } catch (error) {
-    console.error("[Unified Status] Error:", error);
+    logger.error("[Unified Status] Error:", { error: error });
     const safeError = toSafeError(error);
     
     return apiResponse.error(
@@ -179,7 +182,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
   } catch (error) {
-    console.error("[Unified Status POST] Error:", error);
+    logger.error("[Unified Status POST] Error:", { error: error });
     return apiResponse.error(
       error instanceof Error ? error.message : "Unified status refresh failed",
       500,

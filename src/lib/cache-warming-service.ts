@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Cache Warming Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Intelligent Cache Warming Strategies
@@ -12,9 +13,9 @@
  */
 
 import { and, desc, eq, gte } from "drizzle-orm";
+import { PatternDetectionCore } from "../core/pattern-detection";
 import { db } from "../db";
 import { coinActivities, monitoredListings } from "../db/schemas/patterns";
-import { PatternDetectionCore } from "../core/pattern-detection";
 import { UnifiedMexcServiceV2 } from "../services/unified-mexc-service-v2";
 import { type EnhancedUnifiedCacheSystem, getEnhancedUnifiedCache } from "./enhanced-unified-cache";
 
@@ -63,6 +64,8 @@ export interface CacheWarmupConfig {
 // ============================================================================
 
 export class CacheWarmingService {
+  private logger = createLogger("cache-warming-service");
+
   private cache: EnhancedUnifiedCacheSystem;
   private mexcService: UnifiedMexcServiceV2;
   private patternEngine: PatternDetectionCore;
@@ -75,7 +78,7 @@ export class CacheWarmingService {
   constructor(config: Partial<CacheWarmupConfig> = {}) {
     // Skip initialization during build time
     if (this.isBuildEnvironment()) {
-      console.log("[CacheWarmingService] Skipping initialization - build environment detected");
+      logger.info("[CacheWarmingService] Skipping initialization - build environment detected");
       this.cache = this.createMockCache();
       this.mexcService = this.createMockMexcService();
       this.patternEngine = this.createMockPatternEngine();
@@ -278,7 +281,7 @@ export class CacheWarmingService {
   private startAutoWarming(): void {
     // Skip auto warming in build environments
     if (this.isBuildEnvironment()) {
-      console.log("[CacheWarmingService] Skipping auto warming - build environment detected");
+      logger.info("[CacheWarmingService] Skipping auto warming - build environment detected");
       return;
     }
 
@@ -290,7 +293,7 @@ export class CacheWarmingService {
       await this.performScheduledWarmup();
     }, this.config.warmupInterval);
 
-    console.log("[CacheWarmingService] Auto warming started");
+    logger.info("[CacheWarmingService] Auto warming started");
   }
 
   private async performScheduledWarmup(): Promise<void> {
@@ -344,7 +347,7 @@ export class CacheWarmingService {
     const startTime = Date.now();
 
     try {
-      console.log(`[CacheWarmingService] Executing strategy: ${strategy.name}`);
+      logger.info(`[CacheWarmingService] Executing strategy: ${strategy.name}`);
 
       switch (strategyName) {
         case "mexc-symbols":
@@ -386,7 +389,7 @@ export class CacheWarmingService {
         this.metrics.totalRuns
       );
 
-      console.log(
+      logger.info(
         `[CacheWarmingService] Strategy ${strategy.name} completed in ${executionTime}ms`
       );
       return true;
@@ -395,7 +398,7 @@ export class CacheWarmingService {
       this.metrics.totalRuns++;
       this.metrics.failedRuns++;
 
-      console.error(`[CacheWarmingService] Strategy ${strategy.name} failed:`, error);
+      logger.error(`[CacheWarmingService] Strategy ${strategy.name} failed:`, error);
       return false;
     } finally {
       this.runningWarmups.delete(strategyName);
@@ -433,14 +436,14 @@ export class CacheWarmingService {
           const symbolData = await this.mexcService.getSymbolInfoBasic(listing.symbolName);
           await this.cache.set(cacheKey, symbolData, "api_response", 5000); // 5 second TTL
         } catch (error) {
-          console.warn(
+          logger.warn(
             `[CacheWarmingService] Failed to warm up symbol ${listing.symbolName}:`,
             error
           );
         }
       }
     } catch (error) {
-      console.error("[CacheWarmingService] MEXC symbols warmup failed:", error);
+      logger.error("[CacheWarmingService] MEXC symbols warmup failed:", error);
       throw error;
     }
   }
@@ -484,14 +487,14 @@ export class CacheWarmingService {
           const patternData = await this.patternEngine.analyzeSymbolReadiness(symbolEntry);
           await this.cache.set(cacheKey, patternData, "pattern_analysis", 30000); // 30 second TTL
         } catch (error) {
-          console.warn(
+          logger.warn(
             `[CacheWarmingService] Failed to warm up pattern for ${symbol.symbolName}:`,
             error
           );
         }
       }
     } catch (error) {
-      console.error("[CacheWarmingService] Pattern data warmup failed:", error);
+      logger.error("[CacheWarmingService] Pattern data warmup failed:", error);
       throw error;
     }
   }
@@ -526,11 +529,11 @@ export class CacheWarmingService {
           const activityData = await this.mexcService.getActivityData(currency);
           await this.cache.set(cacheKey, activityData, "api_response", 5000); // 5 second TTL
         } catch (error) {
-          console.warn(`[CacheWarmingService] Failed to warm up activity for ${currency}:`, error);
+          logger.warn(`[CacheWarmingService] Failed to warm up activity for ${currency}:`, error);
         }
       }
     } catch (error) {
-      console.error("[CacheWarmingService] Activity data warmup failed:", error);
+      logger.error("[CacheWarmingService] Activity data warmup failed:", error);
       throw error;
     }
   }
@@ -555,7 +558,7 @@ export class CacheWarmingService {
         await this.cache.set(key, marketData, "market_data", 30000); // 30 second TTL
       }
     } catch (error) {
-      console.error("[CacheWarmingService] Market data warmup failed:", error);
+      logger.error("[CacheWarmingService] Market data warmup failed:", error);
       throw error;
     }
   }
@@ -584,7 +587,7 @@ export class CacheWarmingService {
         await this.cache.set(key, configData, "config", 300000); // 5 minute TTL
       }
     } catch (error) {
-      console.error("[CacheWarmingService] User configs warmup failed:", error);
+      logger.error("[CacheWarmingService] User configs warmup failed:", error);
       throw error;
     }
   }
@@ -651,7 +654,7 @@ export class CacheWarmingService {
     this.runningWarmups.clear();
     this.strategies.clear();
 
-    console.log("[CacheWarmingService] Service destroyed");
+    logger.info("[CacheWarmingService] Service destroyed");
   }
 }
 

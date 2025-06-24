@@ -10,8 +10,10 @@
 import { createLogger, createTimer } from "../../lib/structured-logger";
 import type { SafetyConfiguration, SystemHealth } from "../../schemas/safety-monitoring-schemas";
 import { validateSystemHealth } from "../../schemas/safety-monitoring-schemas";
-import type { AutoSnipingExecutionService } from "../auto-sniping-execution-service";
-import type { ExecutionPosition } from "../auto-sniping-execution-service";
+import type {
+  AutoSnipingExecutionService,
+  ExecutionPosition,
+} from "../auto-sniping-execution-service";
 import type { EmergencySafetySystem } from "../emergency-safety-system";
 import type { PatternMonitoringService } from "../pattern-monitoring-service";
 import type { UnifiedMexcServiceV2 } from "../unified-mexc-service-v2";

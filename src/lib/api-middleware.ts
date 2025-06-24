@@ -1,3 +1,5 @@
+import { createLogger } from "./structured-logger";
+
 /**
  * Standardized API Middleware System
  *
@@ -25,12 +27,12 @@ import {
 } from "./api-auth";
 import {
   type ApiResponse,
-  HTTP_STATUS,
   apiResponse,
   createAuthErrorResponse,
   createErrorResponse,
   createSuccessResponse,
   createValidationErrorResponse,
+  HTTP_STATUS,
 } from "./api-response";
 import { globalAPIResponseCache } from "./api-response-cache";
 import { generateCacheKey } from "./cache-manager";
@@ -315,7 +317,7 @@ async function applyCacheMiddleware(
 
     return null;
   } catch (error) {
-    console.error("[API Middleware] Cache retrieval error:", error);
+    logger.error("[API Middleware] Cache retrieval error:", error);
     return null;
   }
 }
@@ -356,7 +358,7 @@ async function cacheResponse(
         : undefined,
     });
   } catch (error) {
-    console.error("[API Middleware] Cache storage error:", error);
+    logger.error("[API Middleware] Cache storage error:", error);
   }
 }
 
@@ -601,6 +603,8 @@ function isValidEmail(email: string): boolean {
 }
 
 class ValidationError extends Error {
+  private logger = createLogger("api-middleware");
+
   constructor(
     message: string,
     public field?: string
@@ -632,11 +636,11 @@ function logRequest(
     logData.headers = Object.fromEntries(request.headers.entries());
   }
 
-  console.log("[API Request]", logData);
+  logger.info("[API Request]", logData);
 }
 
 function logResponse(context: ApiContext, response: Response, duration: number): void {
-  console.log("[API Response]", {
+  logger.info("[API Response]", {
     endpoint: context.endpoint,
     status: response.status,
     duration: `${duration}ms`,
@@ -649,7 +653,7 @@ function handleMiddlewareError(
   context: Partial<ApiContext>,
   duration: number
 ): Response {
-  console.error("[API Middleware Error]", {
+  logger.error("[API Middleware Error]", {
     endpoint: context.endpoint,
     duration: `${duration}ms`,
     error: error instanceof Error ? error.message : "Unknown error",

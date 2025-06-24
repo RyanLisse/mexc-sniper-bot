@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Cache Monitoring & Analytics System
  *
  * Comprehensive monitoring and analytics for the multi-level caching system:
@@ -123,6 +124,8 @@ export interface PerformanceReport {
 // =======================
 
 export class CacheMonitoringSystem {
+  private logger = createLogger("cache-monitoring");
+
   private config: CacheMonitoringConfig;
   private metricsHistory: SystemCacheMetrics[] = [];
   private activeAlerts: Map<string, CacheAlert> = new Map();
@@ -162,7 +165,7 @@ export class CacheMonitoringSystem {
    * Start real-time cache monitoring
    */
   private startRealTimeMonitoring(): void {
-    console.log("[CacheMonitoring] Starting real-time cache monitoring");
+    logger.info("[CacheMonitoring] Starting real-time cache monitoring");
 
     this.monitoringInterval = setInterval(async () => {
       try {
@@ -171,7 +174,7 @@ export class CacheMonitoringSystem {
         await this.checkThresholds();
         await this.cleanupOldMetrics();
       } catch (error) {
-        console.error("[CacheMonitoring] Monitoring cycle error:", error);
+        logger.error("[CacheMonitoring] Monitoring cycle error:", error);
       }
     }, this.config.monitoringInterval);
   }
@@ -230,7 +233,7 @@ export class CacheMonitoringSystem {
 
       return metrics;
     } catch (error) {
-      console.error("[CacheMonitoring] Error collecting metrics:", error);
+      logger.error("[CacheMonitoring] Error collecting metrics:", error);
       throw error;
     }
   }
@@ -259,7 +262,7 @@ export class CacheMonitoringSystem {
       // Generate optimization recommendations
       this.generateRecommendations(current);
     } catch (error) {
-      console.error("[CacheMonitoring] Performance analysis error:", error);
+      logger.error("[CacheMonitoring] Performance analysis error:", error);
     }
   }
 
@@ -325,7 +328,7 @@ export class CacheMonitoringSystem {
         });
       }
     } catch (error) {
-      console.error("[CacheMonitoring] Threshold checking error:", error);
+      logger.error("[CacheMonitoring] Threshold checking error:", error);
     }
   }
 
@@ -435,7 +438,7 @@ export class CacheMonitoringSystem {
     alert.resolved = true;
     alert.resolvedAt = Date.now();
 
-    console.log(`[CacheMonitoring] Alert resolved: ${alert.title}`);
+    logger.info(`[CacheMonitoring] Alert resolved: ${alert.title}`);
     return true;
   }
 
@@ -481,13 +484,13 @@ export class CacheMonitoringSystem {
         improvements.memoryReduction = current.performance.totalMemoryUsage * 0.2; // Estimate
       }
 
-      console.log(
+      logger.info(
         `[CacheMonitoring] Cache optimization completed: ${actions.length} actions taken`
       );
 
       return { actions, improvements };
     } catch (error) {
-      console.error("[CacheMonitoring] Cache optimization error:", error);
+      logger.error("[CacheMonitoring] Cache optimization error:", error);
       throw error;
     }
   }
@@ -770,23 +773,23 @@ export class CacheMonitoringSystem {
       try {
         switch (channel) {
           case "console":
-            console.warn(
+            logger.warn(
               `[CacheAlert] ${alert.severity.toUpperCase()}: ${alert.title} - ${alert.description}`
             );
             break;
           case "webhook":
             if (this.config.alerting.webhookUrl) {
               // Implementation would send HTTP request to webhook
-              console.log(`[CacheAlert] Webhook alert sent: ${alert.title}`);
+              logger.info(`[CacheAlert] Webhook alert sent: ${alert.title}`);
             }
             break;
           case "email":
             // Implementation would send email
-            console.log(`[CacheAlert] Email alert sent: ${alert.title}`);
+            logger.info(`[CacheAlert] Email alert sent: ${alert.title}`);
             break;
         }
       } catch (error) {
-        console.error(`[CacheMonitoring] Error sending alert via ${channel}:`, error);
+        logger.error(`[CacheMonitoring] Error sending alert via ${channel}:`, error);
       }
     }
   }
@@ -896,7 +899,7 @@ export class CacheMonitoringSystem {
     this.activeAlerts.clear();
     this.recommendations.clear();
 
-    console.log("[CacheMonitoring] Cache monitoring system destroyed");
+    logger.info("[CacheMonitoring] Cache monitoring system destroyed");
   }
 }
 

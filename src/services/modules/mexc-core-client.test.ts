@@ -1,13 +1,13 @@
 /**
  * MEXC Core Client Tests
- * 
+ *
  * Comprehensive test suite for the modular MEXC core client.
  * Tests are focused on specific functionality without complexity.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { MexcCoreClient, createMexcCoreClient } from "./mexc-core-client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { MexcApiConfig } from "./mexc-api-types";
+import { createMexcCoreClient, MexcCoreClient } from "./mexc-core-client";
 
 // ============================================================================
 // Test Configuration
@@ -71,7 +71,7 @@ describe("MexcCoreClient", () => {
   });
 
   // ============================================================================
-  // Calendar API Tests  
+  // Calendar API Tests
   // ============================================================================
 
   describe("Calendar API", () => {

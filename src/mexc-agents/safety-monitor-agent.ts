@@ -9,6 +9,7 @@
  * - Real-time safety protocol enforcement
  */
 
+import { createLogger } from "../lib/structured-logger";
 import type { AdvancedRiskEngine } from "../services/advanced-risk-engine";
 import type { EmergencySafetySystem } from "../services/emergency-safety-system";
 import type { AgentConfig } from "./base-agent";
@@ -126,6 +127,8 @@ export interface SafetyMonitorConfig extends SafetyConfig {
  * mechanisms for high-risk trading decisions.
  */
 export class SafetyMonitorAgent extends SafetyBaseAgent {
+  private logger = createLogger("safety-monitor-agent");
+
   private riskEngine?: AdvancedRiskEngine;
   private emergencySystem?: EmergencySafetySystem;
   private agentBehaviorHistory: Map<string, AgentBehaviorMetrics[]> = new Map();
@@ -175,7 +178,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     };
 
     super(config, safetyConfig);
-    console.log("[SafetyMonitorAgent] Initialized with comprehensive AI safety monitoring");
+    logger.info("[SafetyMonitorAgent] Initialized with comprehensive AI safety monitoring");
   }
 
   /**
@@ -184,7 +187,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
   setIntegrations(riskEngine: AdvancedRiskEngine, emergencySystem: EmergencySafetySystem): void {
     this.riskEngine = riskEngine;
     this.emergencySystem = emergencySystem;
-    console.log("[SafetyMonitorAgent] Integrated with risk engine and emergency system");
+    logger.info("[SafetyMonitorAgent] Integrated with risk engine and emergency system");
   }
 
   /**
@@ -919,7 +922,7 @@ Provide analysis in JSON format.`,
   }
 
   private async handleSafetyViolation(violation: SafetyProtocolViolation): Promise<void> {
-    console.log(
+    logger.info(
       `[SafetyMonitorAgent] Handling violation: ${violation.id} - ${violation.description}`
     );
 
@@ -936,16 +939,16 @@ Provide analysis in JSON format.`,
         break;
 
       case "restrict":
-        console.warn(`[SafetyMonitorAgent] Restricting agent: ${violation.agentId}`);
+        logger.warn(`[SafetyMonitorAgent] Restricting agent: ${violation.agentId}`);
         // Would implement agent restriction logic
         break;
 
       case "warn":
-        console.warn(`[SafetyMonitorAgent] Warning for agent: ${violation.agentId}`);
+        logger.warn(`[SafetyMonitorAgent] Warning for agent: ${violation.agentId}`);
         break;
 
       case "monitor":
-        console.info(`[SafetyMonitorAgent] Monitoring agent: ${violation.agentId}`);
+        logger.info(`[SafetyMonitorAgent] Monitoring agent: ${violation.agentId}`);
         break;
     }
 

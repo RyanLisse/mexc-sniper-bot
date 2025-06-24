@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../lib/structured-logger';
  * MEXC Core API Client
  *
  * Lightweight, focused HTTP client for MEXC API communication.
@@ -19,6 +20,8 @@ import type {
 // ============================================================================
 
 export class MexcCoreClient {
+  private logger = createLogger("mexc-core-client");
+
   private config: MexcApiConfig;
   private baseHeaders: Record<string, string>;
 
@@ -295,13 +298,17 @@ export class MexcCoreClient {
     const startTime = Date.now();
 
     try {
-      const url = `https://www.mexc.com/api/operation/new_coin_calendar?currency=${currency}`;
-      const response = await this.makeRequest(url);
+      const url = `https://www.mexc.com/api/operateactivity/activity/list/by/currencies?currencies=${encodeURIComponent(currency)}`;
+      const response = await this.makeRequest(url, {
+        method: "GET",
+        timeout: 10000,
+      });
 
       return {
         success: true,
         data: response.data,
         timestamp: Date.now(),
+        executionTimeMs: Date.now() - startTime,
         source: "mexc-core-client",
       };
     } catch (error) {
@@ -314,11 +321,11 @@ export class MexcCoreClient {
    */
   async placeOrder(orderData: {
     symbol: string;
-    side: 'BUY' | 'SELL';
-    type: 'LIMIT' | 'MARKET';
+    side: "BUY" | "SELL";
+    type: "LIMIT" | "MARKET";
     quantity: string;
     price?: string;
-    timeInForce?: 'GTC' | 'IOC' | 'FOK';
+    timeInForce?: "GTC" | "IOC" | "FOK";
   }): Promise<MexcServiceResponse<any>> {
     const startTime = Date.now();
 
@@ -333,11 +340,11 @@ export class MexcCoreClient {
       });
 
       if (orderData.price) {
-        params.append('price', orderData.price);
+        params.append("price", orderData.price);
       }
 
       if (orderData.timeInForce) {
-        params.append('timeInForce', orderData.timeInForce);
+        params.append("timeInForce", orderData.timeInForce);
       }
 
       // Build authenticated request URL
@@ -406,14 +413,14 @@ export class MexcCoreClient {
   private generateAuthHeaders(url: string, options: RequestInit = {}): Record<string, string> {
     // Parse URL to get query string (timestamp should already be included)
     const urlObj = new URL(url);
-    const queryString = urlObj.search ? urlObj.search.substring(1) : '';
-    
+    const queryString = urlObj.search ? urlObj.search.substring(1) : "";
+
     // MEXC signature is based on the query string for GET requests
     const stringToSign = queryString;
-    
+
     // Generate HMAC-SHA256 signature
     const signature = this.createSignature(stringToSign);
-    
+
     return {
       "X-MEXC-APIKEY": this.config.apiKey,
       "X-MEXC-SIGNATURE": signature,
@@ -422,21 +429,18 @@ export class MexcCoreClient {
   }
 
   private createSignature(data: string): string {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Browser environment - return a placeholder
-      console.warn('MEXC API signatures cannot be generated in browser environment');
-      return 'browser-placeholder';
+      logger.warn("MEXC API signatures cannot be generated in browser environment");
+      return "browser-placeholder";
     }
-    
+
     try {
-      const crypto = require('crypto');
-      return crypto
-        .createHmac('sha256', this.config.secretKey)
-        .update(data)
-        .digest('hex');
+      const crypto = require("crypto");
+      return crypto.createHmac("sha256", this.config.secretKey).update(data).digest("hex");
     } catch (error) {
-      console.error('Failed to create MEXC signature:', error);
-      return 'signature-error';
+      logger.error("Failed to create MEXC signature:", error);
+      return "signature-error";
     }
   }
 
@@ -453,7 +457,7 @@ export class MexcCoreClient {
     startTime: number
   ): MexcServiceResponse<never> {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error(`[MexcCoreClient.${methodName}] Error:`, errorMessage);
+    logger.error(`[MexcCoreClient.${methodName}] Error:`, errorMessage);
 
     return {
       success: false,

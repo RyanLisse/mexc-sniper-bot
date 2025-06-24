@@ -29,12 +29,8 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
         timestamp: Date.now(),
       };
 
-      // Mock the makeRequest method
-      vi.spyOn(mexcService as any, 'makeRequest').mockResolvedValue({
-        success: true,
-        data: mockResponse,
-        timestamp: new Date().toISOString(),
-      });
+      // Mock the core client's makeRequest method
+      vi.spyOn((mexcService as any).coreClient, 'makeRequest').mockResolvedValue(mockResponse);
 
       const result = await mexcService.getActivityData('FCAT');
 
@@ -50,11 +46,7 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
 
     it('should handle API errors gracefully', async () => {
       // Mock API error response
-      vi.spyOn(mexcService as any, 'makeRequest').mockResolvedValue({
-        success: false,
-        error: 'API Error',
-        timestamp: new Date().toISOString(),
-      });
+      vi.spyOn((mexcService as any).coreClient, 'makeRequest').mockRejectedValue(new Error('API Error'));
 
       const result = await mexcService.getActivityData('INVALID');
 
@@ -65,7 +57,7 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
 
     it('should handle network errors', async () => {
       // Mock network error
-      vi.spyOn(mexcService as any, 'makeRequest').mockRejectedValue(new Error('Network error'));
+      vi.spyOn((mexcService as any).coreClient, 'makeRequest').mockRejectedValue(new Error('Network error'));
 
       const result = await mexcService.getActivityData('FCAT');
 
@@ -75,19 +67,20 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
     });
 
     it('should use correct endpoint and parameters', async () => {
-      const makeRequestSpy = vi.spyOn(mexcService as any, 'makeRequest').mockResolvedValue({
-        success: true,
-        data: { data: [], code: 0, msg: 'success', timestamp: Date.now() },
-        timestamp: new Date().toISOString(),
+      const makeRequestSpy = vi.spyOn((mexcService as any).coreClient, 'makeRequest').mockResolvedValue({
+        data: [], 
+        code: 0, 
+        msg: 'success', 
+        timestamp: Date.now()
       });
 
       await mexcService.getActivityData('FCAT');
 
       expect(makeRequestSpy).toHaveBeenCalledWith(
-        'GET',
-        '/api/operateactivity/activity/list/by/currencies',
-        { currencies: 'FCAT' },
-        false // Public endpoint
+        expect.stringContaining('/api/operateactivity/activity/list/by/currencies'),
+        expect.objectContaining({
+          method: 'GET'
+        })
       );
     });
   });
@@ -220,7 +213,7 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
 
   describe('Activity API Integration with Caching', () => {
     beforeEach(() => {
-      mexcService = new UnifiedMexcService({
+      mexcService = new UnifiedMexcServiceV2({
         enableCaching: true,
         cacheTTL: 5000, // 5 seconds as specified in user preferences
       });
@@ -241,42 +234,33 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
         timestamp: Date.now(),
       };
 
-      const makeRequestSpy = vi.spyOn(mexcService as any, 'makeRequest')
-        .mockResolvedValueOnce({
-          success: true,
-          data: mockResponse,
-          timestamp: new Date().toISOString(),
-          cached: false,
-        })
-        .mockResolvedValueOnce({
-          success: true,
-          data: mockResponse,
-          timestamp: new Date().toISOString(),
-          cached: true,
-        });
+      const makeRequestSpy = vi.spyOn((mexcService as any).coreClient, 'makeRequest')
+        .mockResolvedValue(mockResponse);
 
       // First call should hit the API
       const result1 = await mexcService.getActivityData('FCAT');
       expect(result1.success).toBe(true);
-      expect(result1.cached).toBe(false);
 
-      // Second call should use cache
+      // Second call should use cache (makeRequest should only be called once)
       const result2 = await mexcService.getActivityData('FCAT');
       expect(result2.success).toBe(true);
-      expect(result2.cached).toBe(true);
+      
+      // API should only be called once due to caching
+      expect(makeRequestSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should respect cache TTL', async () => {
-      const mexcServiceShortTTL = new UnifiedMexcService({
+      const mexcServiceShortTTL = new UnifiedMexcServiceV2({
         enableCaching: true,
         cacheTTL: 100, // 100ms for quick test
       });
 
-      const makeRequestSpy = vi.spyOn(mexcServiceShortTTL as any, 'makeRequest')
+      const makeRequestSpy = vi.spyOn((mexcServiceShortTTL as any).coreClient, 'makeRequest')
         .mockResolvedValue({
-          success: true,
-          data: { data: [], code: 0, msg: 'success', timestamp: Date.now() },
-          timestamp: new Date().toISOString(),
+          data: [], 
+          code: 0, 
+          msg: 'success', 
+          timestamp: Date.now()
         });
 
       // First call
@@ -320,10 +304,10 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
     });
 
     it('should handle malformed API responses', async () => {
-      vi.spyOn(mexcService as any, 'makeRequest').mockResolvedValue({
-        success: true,
-        data: { code: 1, msg: 'error', data: null }, // Error response
-        timestamp: new Date().toISOString(),
+      vi.spyOn((mexcService as any).coreClient, 'makeRequest').mockResolvedValue({
+        code: 1, 
+        msg: 'error', 
+        data: null, // Error response
       });
 
       const result = await mexcService.getActivityData('FCAT');

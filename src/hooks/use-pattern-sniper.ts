@@ -1,12 +1,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
+import { createLogger } from "../lib/structured-logger";
 import {
   type CalendarEntry,
-  type OrderParameters as SchemaOrderParameters,
-  type SnipeTarget,
-  type SniperStats,
-  type SymbolV2Entry,
   isValidForSnipe,
+  type OrderParameters as SchemaOrderParameters,
+  type SniperStats,
+  type SnipeTarget,
+  type SymbolV2Entry,
 } from "../schemas/mexc-schemas";
 import type { UserTradingPreferences } from "./use-user-preferences";
 
@@ -50,6 +51,8 @@ const apiClient = {
     return result.connected;
   },
 };
+
+const logger = createLogger("use-pattern-sniper");
 
 async function fetchUserPreferences(userId: string): Promise<UserTradingPreferences | null> {
   try {
@@ -142,7 +145,7 @@ export const usePatternSniper = () => {
 
       // Only track future launches that we haven't seen before
       if (launchTime > now && !newTargets.has(entry.vcoinId)) {
-        console.log(
+        logger.info(
           `📅 New listing detected: ${entry.symbol} (${entry.projectName}) at ${launchTime.toLocaleString()}`
         );
         newTargets.set(entry.vcoinId, entry);
@@ -152,7 +155,7 @@ export const usePatternSniper = () => {
     }
 
     if (newListingsCount > 0) {
-      console.log(`✨ Added ${newListingsCount} new targets for monitoring`);
+      logger.info(`✨ Added ${newListingsCount} new targets for monitoring`);
     }
 
     setCalendarTargets(newTargets);
@@ -181,18 +184,18 @@ export const usePatternSniper = () => {
           newPending.delete(vcoinId);
           newReadyCount++;
 
-          console.log(`🎯 READY STATE DETECTED:`);
-          console.log(`   Symbol: ${symbol.ca}`);
-          console.log(`   Project: ${calendar.projectName}`);
-          console.log(`   Pattern: sts:${symbol.sts}, st:${symbol.st}, tt:${symbol.tt}`);
-          console.log(`   Launch in: ${target.hoursAdvanceNotice.toFixed(1)} hours`);
-          console.log(`   Precision: ${target.priceDecimalPlaces}/${target.quantityDecimalPlaces}`);
+          logger.info(`🎯 READY STATE DETECTED:`);
+          logger.info(`   Symbol: ${symbol.ca}`);
+          logger.info(`   Project: ${calendar.projectName}`);
+          logger.info(`   Pattern: sts:${symbol.sts}, st:${symbol.st}, tt:${symbol.tt}`);
+          logger.info(`   Launch in: ${target.hoursAdvanceNotice.toFixed(1)} hours`);
+          logger.info(`   Precision: ${target.priceDecimalPlaces}/${target.quantityDecimalPlaces}`);
         }
       }
     }
 
     if (newReadyCount > 0) {
-      console.log(`🚀 ${newReadyCount} new targets ready for sniping!`);
+      logger.info(`🚀 ${newReadyCount} new targets ready for sniping!`);
     }
 
     setPendingDetection(newPending);
@@ -262,10 +265,10 @@ export const usePatternSniper = () => {
   // Execute snipe order with auto exit manager integration
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex snipe execution logic with multiple error handling and state management
   const executeSnipe = useCallback(async (target: SnipeTarget, userId?: string) => {
-    console.log(`🚀 EXECUTING SNIPE: ${target.symbol}`);
-    console.log(`   Project: ${target.projectName}`);
-    console.log(`   Launch Time: ${target.launchTime.toLocaleString()}`);
-    console.log(`   Order Parameters:`, target.orderParameters);
+    logger.info(`🚀 EXECUTING SNIPE: ${target.symbol}`);
+    logger.info(`   Project: ${target.projectName}`);
+    logger.info(`   Launch Time: ${target.launchTime.toLocaleString()}`);
+    logger.info(`   Order Parameters:`, target.orderParameters);
 
     const actualUserId = userId || "anonymous";
 
@@ -306,8 +309,8 @@ export const usePatternSniper = () => {
         snipeTargetId, // Link to snipe target for tracking
       };
 
-      console.log(`🚀 Executing real trading order via API...`);
-      console.log(`📊 Trading Parameters:`, tradingParams);
+      logger.info(`🚀 Executing real trading order via API...`);
+      logger.info(`📊 Trading Parameters:`, tradingParams);
 
       // 3. Execute trading via server-side API
       const response = await fetch("/api/mexc/trade", {
@@ -321,9 +324,9 @@ export const usePatternSniper = () => {
       const result = await response.json();
 
       if (result.success && result.order) {
-        console.log(`✅ Snipe executed successfully for ${target.symbol}`);
-        console.log(`📊 Order ID: ${result.order.orderId}`);
-        console.log(`📊 Status: ${result.order.status}`);
+        logger.info(`✅ Snipe executed successfully for ${target.symbol}`);
+        logger.info(`📊 Order ID: ${result.order.orderId}`);
+        logger.info(`📊 Status: ${result.order.status}`);
 
         // 4. Update snipe target status to ready for exit monitoring
         if (snipeTargetId) {
@@ -351,21 +354,21 @@ export const usePatternSniper = () => {
             },
             body: JSON.stringify({ action: "start" }),
           });
-          console.log("🎯 Auto exit manager started for position monitoring");
+          logger.info("🎯 Auto exit manager started for position monitoring");
         } catch (autoExitError) {
-          console.warn("⚠️ Could not start auto exit manager:", autoExitError);
+          logger.warn("⚠️ Could not start auto exit manager:", autoExitError);
         }
 
         // Log execution details
-        console.log(`📊 Execution Summary:`);
-        console.log(`   - Symbol: ${result.order.symbol}`);
-        console.log(`   - Side: ${result.order.side}`);
-        console.log(`   - Quantity: ${result.order.quantity}`);
-        console.log(`   - Price: ${result.order.price || "MARKET"}`);
-        console.log(`   - Advance Notice: ${target.hoursAdvanceNotice.toFixed(1)} hours`);
-        console.log(`   - Discovery Time: ${target.discoveredAt.toLocaleString()}`);
-        console.log(`   - Execution Time: ${new Date().toLocaleString()}`);
-        console.log(`   - Snipe Target ID: ${snipeTargetId}`);
+        logger.info(`📊 Execution Summary:`);
+        logger.info(`   - Symbol: ${result.order.symbol}`);
+        logger.info(`   - Side: ${result.order.side}`);
+        logger.info(`   - Quantity: ${result.order.quantity}`);
+        logger.info(`   - Price: ${result.order.price || "MARKET"}`);
+        logger.info(`   - Advance Notice: ${target.hoursAdvanceNotice.toFixed(1)} hours`);
+        logger.info(`   - Discovery Time: ${target.discoveredAt.toLocaleString()}`);
+        logger.info(`   - Execution Time: ${new Date().toLocaleString()}`);
+        logger.info(`   - Snipe Target ID: ${snipeTargetId}`);
 
         // Mark target as executed in local state
         setExecutedTargets((prev) => new Set([...prev, target.vcoinId]));
@@ -395,11 +398,11 @@ export const usePatternSniper = () => {
           });
         }
 
-        console.error(`❌ Snipe failed for ${target.symbol}:`, result.error || result.message);
+        logger.error(`❌ Snipe failed for ${target.symbol}:`, result.error || result.message);
         alert(`Trading failed: ${result.error || result.message}`);
       }
     } catch (error) {
-      console.error(`❌ Snipe execution error for ${target.symbol}:`, error);
+      logger.error(`❌ Snipe execution error for ${target.symbol}:`, error);
       alert(`Trading execution error: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }, []);
@@ -414,7 +417,7 @@ export const usePatternSniper = () => {
       localStorage.setItem("pattern-sniper-monitoring", "true");
     }
 
-    console.log("🚀 Pattern Sniper started (Auto-Snipe Active)");
+    logger.info("🚀 Pattern Sniper started (Auto-Snipe Active)");
 
     // Force refresh data when starting
     refetchCalendar();
@@ -428,7 +431,7 @@ export const usePatternSniper = () => {
       localStorage.setItem("pattern-sniper-monitoring", "false");
     }
 
-    console.log("⏹️ Pattern Sniper stopped (Auto-Snipe Disabled)");
+    logger.info("⏹️ Pattern Sniper stopped (Auto-Snipe Disabled)");
   }, []);
 
   const clearAllTargets = useCallback(() => {
@@ -437,11 +440,11 @@ export const usePatternSniper = () => {
     setReadyTargets(new Map());
     setExecutedTargets(new Set());
     setStartTime(null);
-    console.log("🧹 All targets cleared");
+    logger.info("🧹 All targets cleared");
   }, []);
 
   const forceRefresh = useCallback(() => {
-    console.log("🔄 Force refreshing all data...");
+    logger.info("🔄 Force refreshing all data...");
     queryClient.invalidateQueries({ queryKey: queryKeys.calendar });
     queryClient.invalidateQueries({ queryKey: queryKeys.symbolsV2 });
     queryClient.invalidateQueries({ queryKey: queryKeys.connectivity });

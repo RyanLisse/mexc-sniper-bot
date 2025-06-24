@@ -5,8 +5,9 @@
  * Provides comprehensive tracking of pattern matches, confidence trends, and system performance.
  */
 
-import type { CalendarEntry, SymbolEntry } from "./mexc-unified-exports";
 import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
+import { createLogger } from "../lib/structured-logger";
+import type { CalendarEntry, SymbolEntry } from "./mexc-unified-exports";
 import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
 
 export interface PatternMonitoringStats {
@@ -61,6 +62,8 @@ export interface PatternMonitoringReport {
 }
 
 export class PatternMonitoringService {
+  private logger = createLogger("pattern-monitoring-service");
+
   private static instance: PatternMonitoringService;
   private patternEngine: PatternDetectionCore;
   private mexcService: UnifiedMexcServiceV2;
@@ -112,11 +115,11 @@ export class PatternMonitoringService {
    */
   async startMonitoring(): Promise<void> {
     if (this.isMonitoring) {
-      console.log("[PatternMonitoring] Already monitoring");
+      logger.info("[PatternMonitoring] Already monitoring");
       return;
     }
 
-    console.log("[PatternMonitoring] Starting real-time pattern monitoring...");
+    logger.info("[PatternMonitoring] Starting real-time pattern monitoring...");
     this.isMonitoring = true;
     this.stats.engineStatus = "active";
 
@@ -137,7 +140,7 @@ export class PatternMonitoringService {
       return;
     }
 
-    console.log("[PatternMonitoring] Stopping pattern monitoring...");
+    logger.info("[PatternMonitoring] Stopping pattern monitoring...");
     this.isMonitoring = false;
     this.stats.engineStatus = "idle";
 
@@ -188,7 +191,7 @@ export class PatternMonitoringService {
     const allPatterns: PatternMatch[] = [];
 
     try {
-      console.log(`[PatternMonitoring] Manual pattern detection on ${symbols.length} symbols`);
+      logger.info(`[PatternMonitoring] Manual pattern detection on ${symbols.length} symbols`);
 
       // Detect ready state patterns
       const readyPatterns = await this.patternEngine.detectReadyStatePattern(symbols);
@@ -224,7 +227,7 @@ export class PatternMonitoringService {
 
       return allPatterns;
     } catch (error) {
-      console.error("[PatternMonitoring] Manual detection failed:", error);
+      logger.error("[PatternMonitoring] Manual detection failed:", error);
       this.stats.consecutiveErrors++;
       throw error;
     }
@@ -258,7 +261,7 @@ export class PatternMonitoringService {
     const _startTime = Date.now();
 
     try {
-      console.log("[PatternMonitoring] Performing monitoring cycle...");
+      logger.info("[PatternMonitoring] Performing monitoring cycle...");
 
       // Get latest symbol data from MEXC
       const symbolsResponse = await this.mexcService.getAllSymbols();
@@ -270,7 +273,7 @@ export class PatternMonitoringService {
       const candidateSymbols = this.filterCandidateSymbols(symbolsResponse.data);
 
       if (candidateSymbols.length === 0) {
-        console.log("[PatternMonitoring] No candidate symbols found");
+        logger.info("[PatternMonitoring] No candidate symbols found");
         return;
       }
 
@@ -278,9 +281,9 @@ export class PatternMonitoringService {
       const allPatterns = await this.detectPatternsManually(candidateSymbols);
 
       this.stats.consecutiveErrors = 0; // Reset error count on success
-      console.log(`[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`);
+      logger.info(`[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`);
     } catch (error) {
-      console.error("[PatternMonitoring] Monitoring cycle failed:", error);
+      logger.error("[PatternMonitoring] Monitoring cycle failed:", error);
       this.stats.consecutiveErrors++;
       this.stats.engineStatus = this.stats.consecutiveErrors > 3 ? "error" : "active";
     } finally {

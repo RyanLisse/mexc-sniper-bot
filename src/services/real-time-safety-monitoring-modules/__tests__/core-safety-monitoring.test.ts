@@ -1,21 +1,25 @@
 /**
  * Unit Tests for Core Safety Monitoring Module
- * 
+ *
  * Tests the CoreSafetyMonitoring class in isolation to ensure proper
  * monitoring functionality, risk metric updates, and threshold checking.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CoreSafetyMonitoring, createCoreSafetyMonitoring, type CoreSafetyMonitoringConfig } from '../core-safety-monitoring';
-import type { SafetyConfiguration, SafetyAlert } from '../../../schemas/safety-monitoring-schemas';
-import { AutoSnipingExecutionService } from '../../auto-sniping-execution-service';
-import { PatternMonitoringService } from '../../pattern-monitoring-service';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { SafetyAlert, SafetyConfiguration } from "../../../schemas/safety-monitoring-schemas";
+import type { AutoSnipingExecutionService } from "../../auto-sniping-execution-service";
+import type { PatternMonitoringService } from "../../pattern-monitoring-service";
+import {
+  CoreSafetyMonitoring,
+  type CoreSafetyMonitoringConfig,
+  createCoreSafetyMonitoring,
+} from "../core-safety-monitoring";
 
 // Mock dependencies
-vi.mock('../../auto-sniping-execution-service');
-vi.mock('../../pattern-monitoring-service');
+vi.mock("../../auto-sniping-execution-service");
+vi.mock("../../pattern-monitoring-service");
 
-describe('CoreSafetyMonitoring', () => {
+describe("CoreSafetyMonitoring", () => {
   let coreMonitoring: CoreSafetyMonitoring;
   let mockExecutionService: vi.Mocked<AutoSnipingExecutionService>;
   let mockPatternMonitoring: vi.Mocked<PatternMonitoringService>;
@@ -61,30 +65,30 @@ describe('CoreSafetyMonitoring', () => {
         },
         activePositions: [
           {
-            symbol: 'BTCUSDT',
-            quantity: '0.1',
-            currentPrice: '45000',
-            unrealizedPnl: '50',
+            symbol: "BTCUSDT",
+            quantity: "0.1",
+            currentPrice: "45000",
+            unrealizedPnl: "50",
           },
           {
-            symbol: 'ETHUSDT',
-            quantity: '2',
-            currentPrice: '3000',
-            unrealizedPnl: '100',
+            symbol: "ETHUSDT",
+            quantity: "2",
+            currentPrice: "3000",
+            unrealizedPnl: "100",
           },
         ],
         recentExecutions: [
           {
-            symbol: 'BTCUSDT',
-            quantity: '0.05',
-            currentPrice: '44000',
-            unrealizedPnl: '25',
+            symbol: "BTCUSDT",
+            quantity: "0.05",
+            currentPrice: "44000",
+            unrealizedPnl: "25",
           },
           {
-            symbol: 'ETHUSDT',
-            quantity: '1',
-            currentPrice: '2900',
-            unrealizedPnl: '-50', // Loss
+            symbol: "ETHUSDT",
+            quantity: "1",
+            currentPrice: "2900",
+            unrealizedPnl: "-50", // Loss
           },
         ],
         systemHealth: {
@@ -116,23 +120,23 @@ describe('CoreSafetyMonitoring', () => {
     coreMonitoring = createCoreSafetyMonitoring(mockConfig);
   });
 
-  describe('Initialization', () => {
-    it('should initialize with provided configuration', () => {
+  describe("Initialization", () => {
+    it("should initialize with provided configuration", () => {
       expect(coreMonitoring).toBeInstanceOf(CoreSafetyMonitoring);
-      
+
       const status = coreMonitoring.getStatus();
       expect(status.isActive).toBe(false);
       expect(status.lastUpdate).toBeDefined();
     });
 
-    it('should create instance using factory function', () => {
+    it("should create instance using factory function", () => {
       const instance = createCoreSafetyMonitoring(mockConfig);
       expect(instance).toBeInstanceOf(CoreSafetyMonitoring);
     });
 
-    it('should start with default risk metrics', () => {
+    it("should start with default risk metrics", () => {
       const riskMetrics = coreMonitoring.getRiskMetrics();
-      
+
       expect(riskMetrics.currentDrawdown).toBe(0);
       expect(riskMetrics.successRate).toBe(0);
       expect(riskMetrics.concentrationRisk).toBe(0);
@@ -140,53 +144,53 @@ describe('CoreSafetyMonitoring', () => {
     });
   });
 
-  describe('Monitoring Lifecycle', () => {
-    it('should start and stop monitoring', () => {
+  describe("Monitoring Lifecycle", () => {
+    it("should start and stop monitoring", () => {
       expect(coreMonitoring.getStatus().isActive).toBe(false);
-      
+
       coreMonitoring.start();
       expect(coreMonitoring.getStatus().isActive).toBe(true);
-      
+
       coreMonitoring.stop();
       expect(coreMonitoring.getStatus().isActive).toBe(false);
     });
 
-    it('should not start monitoring twice', () => {
+    it("should not start monitoring twice", () => {
       coreMonitoring.start();
-      
+
       // Should not throw, but should log warning
       coreMonitoring.start();
       expect(coreMonitoring.getStatus().isActive).toBe(true);
     });
 
-    it('should throw error when performing monitoring cycle while inactive', async () => {
+    it("should throw error when performing monitoring cycle while inactive", async () => {
       await expect(coreMonitoring.performMonitoringCycle()).rejects.toThrow(
-        'Monitoring not active'
+        "Monitoring not active"
       );
     });
   });
 
-  describe('Risk Metrics Updates', () => {
+  describe("Risk Metrics Updates", () => {
     beforeEach(() => {
       coreMonitoring.start();
     });
 
-    it('should update risk metrics from execution service', async () => {
+    it("should update risk metrics from execution service", async () => {
       const riskMetrics = await coreMonitoring.updateRiskMetrics();
-      
+
       expect(mockExecutionService.getExecutionReport).toHaveBeenCalled();
       expect(mockPatternMonitoring.getMonitoringReport).toHaveBeenCalled();
-      
+
       expect(riskMetrics.currentDrawdown).toBe(5);
       expect(riskMetrics.successRate).toBe(75);
       expect(riskMetrics.patternAccuracy).toBe(80);
       expect(riskMetrics.portfolioValue).toBe(10500); // 500 + 10000 base
     });
 
-    it('should calculate concentration risk from positions', async () => {
+    it("should calculate concentration risk from positions", async () => {
       await coreMonitoring.updateRiskMetrics();
       const riskMetrics = coreMonitoring.getRiskMetrics();
-      
+
       // BTC: 0.1 * 45000 = 4500
       // ETH: 2 * 3000 = 6000
       // Total: 10500
@@ -194,7 +198,7 @@ describe('CoreSafetyMonitoring', () => {
       expect(riskMetrics.concentrationRisk).toBeCloseTo(57.14, 1);
     });
 
-    it('should calculate consecutive losses correctly', async () => {
+    it("should calculate consecutive losses correctly", async () => {
       // Mock execution report with consecutive losses
       mockExecutionService.getExecutionReport.mockResolvedValue({
         stats: {
@@ -206,33 +210,33 @@ describe('CoreSafetyMonitoring', () => {
         },
         activePositions: [],
         recentExecutions: [
-          { symbol: 'BTC', quantity: '0.1', currentPrice: '45000', unrealizedPnl: '-100' },
-          { symbol: 'ETH', quantity: '1', currentPrice: '3000', unrealizedPnl: '-50' },
-          { symbol: 'ADA', quantity: '100', currentPrice: '1', unrealizedPnl: '-25' },
-          { symbol: 'DOT', quantity: '10', currentPrice: '30', unrealizedPnl: '15' }, // Profit breaks streak
+          { symbol: "BTC", quantity: "0.1", currentPrice: "45000", unrealizedPnl: "-100" },
+          { symbol: "ETH", quantity: "1", currentPrice: "3000", unrealizedPnl: "-50" },
+          { symbol: "ADA", quantity: "100", currentPrice: "1", unrealizedPnl: "-25" },
+          { symbol: "DOT", quantity: "10", currentPrice: "30", unrealizedPnl: "15" }, // Profit breaks streak
         ],
         systemHealth: { apiConnection: true },
       });
 
       await coreMonitoring.updateRiskMetrics();
       const riskMetrics = coreMonitoring.getRiskMetrics();
-      
+
       expect(riskMetrics.consecutiveLosses).toBe(3);
     });
 
-    it('should handle service failures gracefully', async () => {
-      mockExecutionService.getExecutionReport.mockRejectedValue(new Error('Service unavailable'));
-      
-      await expect(coreMonitoring.updateRiskMetrics()).rejects.toThrow('Service unavailable');
+    it("should handle service failures gracefully", async () => {
+      mockExecutionService.getExecutionReport.mockRejectedValue(new Error("Service unavailable"));
+
+      await expect(coreMonitoring.updateRiskMetrics()).rejects.toThrow("Service unavailable");
     });
   });
 
-  describe('Threshold Checking', () => {
+  describe("Threshold Checking", () => {
     beforeEach(() => {
       coreMonitoring.start();
     });
 
-    it('should detect drawdown threshold violations', async () => {
+    it("should detect drawdown threshold violations", async () => {
       // Set current drawdown above threshold
       mockExecutionService.getExecutionReport.mockResolvedValue({
         stats: {
@@ -249,20 +253,20 @@ describe('CoreSafetyMonitoring', () => {
 
       await coreMonitoring.updateRiskMetrics();
       const result = await coreMonitoring.checkSafetyThresholds();
-      
+
       expect(result.violations).toHaveLength(1);
-      expect(result.violations[0].type).toBe('max_drawdown_exceeded');
-      expect(result.violations[0].severity).toBe('critical');
+      expect(result.violations[0].type).toBe("max_drawdown_exceeded");
+      expect(result.violations[0].severity).toBe("critical");
       expect(result.violations[0].currentValue).toBe(20);
       expect(result.violations[0].thresholdValue).toBe(15);
-      
+
       // Should have triggered an alert
       expect(alertsReceived).toHaveLength(1);
-      expect(alertsReceived[0].type).toBe('risk_threshold');
-      expect(alertsReceived[0].title).toBe('Maximum Drawdown Exceeded');
+      expect(alertsReceived[0].type).toBe("risk_threshold");
+      expect(alertsReceived[0].title).toBe("Maximum Drawdown Exceeded");
     });
 
-    it('should detect success rate threshold violations', async () => {
+    it("should detect success rate threshold violations", async () => {
       mockExecutionService.getExecutionReport.mockResolvedValue({
         stats: {
           currentDrawdown: 5,
@@ -278,16 +282,16 @@ describe('CoreSafetyMonitoring', () => {
 
       await coreMonitoring.updateRiskMetrics();
       const result = await coreMonitoring.checkSafetyThresholds();
-      
-      const successRateViolation = result.violations.find(v => v.type === 'low_success_rate');
+
+      const successRateViolation = result.violations.find((v) => v.type === "low_success_rate");
       expect(successRateViolation).toBeDefined();
-      expect(successRateViolation?.severity).toBe('high');
-      
-      const successRateAlert = alertsReceived.find(a => a.title === 'Low Success Rate');
+      expect(successRateViolation?.severity).toBe("high");
+
+      const successRateAlert = alertsReceived.find((a) => a.title === "Low Success Rate");
       expect(successRateAlert).toBeDefined();
     });
 
-    it('should detect consecutive losses threshold violations', async () => {
+    it("should detect consecutive losses threshold violations", async () => {
       mockExecutionService.getExecutionReport.mockResolvedValue({
         stats: {
           currentDrawdown: 5,
@@ -298,57 +302,59 @@ describe('CoreSafetyMonitoring', () => {
         },
         activePositions: [],
         recentExecutions: [
-          { symbol: 'BTC', quantity: '0.1', currentPrice: '45000', unrealizedPnl: '-100' },
-          { symbol: 'ETH', quantity: '1', currentPrice: '3000', unrealizedPnl: '-50' },
-          { symbol: 'ADA', quantity: '100', currentPrice: '1', unrealizedPnl: '-25' },
-          { symbol: 'DOT', quantity: '10', currentPrice: '30', unrealizedPnl: '-15' },
-          { symbol: 'LINK', quantity: '5', currentPrice: '25', unrealizedPnl: '-10' },
-          { symbol: 'UNI', quantity: '20', currentPrice: '15', unrealizedPnl: '-5' }, // 6 consecutive losses
+          { symbol: "BTC", quantity: "0.1", currentPrice: "45000", unrealizedPnl: "-100" },
+          { symbol: "ETH", quantity: "1", currentPrice: "3000", unrealizedPnl: "-50" },
+          { symbol: "ADA", quantity: "100", currentPrice: "1", unrealizedPnl: "-25" },
+          { symbol: "DOT", quantity: "10", currentPrice: "30", unrealizedPnl: "-15" },
+          { symbol: "LINK", quantity: "5", currentPrice: "25", unrealizedPnl: "-10" },
+          { symbol: "UNI", quantity: "20", currentPrice: "15", unrealizedPnl: "-5" }, // 6 consecutive losses
         ],
         systemHealth: { apiConnection: true },
       });
 
       await coreMonitoring.updateRiskMetrics();
       const result = await coreMonitoring.checkSafetyThresholds();
-      
-      const consecutiveLossesViolation = result.violations.find(v => v.type === 'excessive_consecutive_losses');
+
+      const consecutiveLossesViolation = result.violations.find(
+        (v) => v.type === "excessive_consecutive_losses"
+      );
       expect(consecutiveLossesViolation).toBeDefined();
       expect(consecutiveLossesViolation?.currentValue).toBe(6);
       expect(consecutiveLossesViolation?.thresholdValue).toBe(5);
     });
 
-    it('should detect API latency threshold violations', async () => {
+    it("should detect API latency threshold violations", async () => {
       // Update risk metrics with high API latency
       const riskMetrics = coreMonitoring.getRiskMetrics();
       riskMetrics.apiLatency = 1500; // Above 1000ms threshold
-      
+
       // Manually set the risk metrics for testing
       coreMonitoring.resetRiskMetrics();
       Object.assign(coreMonitoring.getRiskMetrics(), riskMetrics);
-      
+
       const result = await coreMonitoring.checkSafetyThresholds();
-      
-      const latencyViolation = result.violations.find(v => v.type === 'high_api_latency');
+
+      const latencyViolation = result.violations.find((v) => v.type === "high_api_latency");
       expect(latencyViolation).toBeDefined();
-      expect(latencyViolation?.severity).toBe('medium');
+      expect(latencyViolation?.severity).toBe("medium");
     });
 
-    it('should return no violations when all thresholds are met', async () => {
+    it("should return no violations when all thresholds are met", async () => {
       await coreMonitoring.updateRiskMetrics();
       const result = await coreMonitoring.checkSafetyThresholds();
-      
+
       expect(result.violations).toHaveLength(0);
       expect(alertsReceived).toHaveLength(0);
     });
   });
 
-  describe('Risk Score Calculation', () => {
-    it('should return 0 for default metrics', () => {
+  describe("Risk Score Calculation", () => {
+    it("should return 0 for default metrics", () => {
       const score = coreMonitoring.calculateOverallRiskScore();
       expect(score).toBe(0);
     });
 
-    it('should calculate weighted risk score correctly', async () => {
+    it("should calculate weighted risk score correctly", async () => {
       // Set some risk metrics
       mockExecutionService.getExecutionReport.mockResolvedValue({
         stats: {
@@ -360,24 +366,24 @@ describe('CoreSafetyMonitoring', () => {
         },
         activePositions: [],
         recentExecutions: [
-          { symbol: 'BTC', quantity: '0.1', currentPrice: '45000', unrealizedPnl: '-100' },
-          { symbol: 'ETH', quantity: '1', currentPrice: '3000', unrealizedPnl: '-50' },
-          { symbol: 'ADA', quantity: '100', currentPrice: '1', unrealizedPnl: '-25' }, // 3 consecutive losses = 3/5 * 15 = 9 points
+          { symbol: "BTC", quantity: "0.1", currentPrice: "45000", unrealizedPnl: "-100" },
+          { symbol: "ETH", quantity: "1", currentPrice: "3000", unrealizedPnl: "-50" },
+          { symbol: "ADA", quantity: "100", currentPrice: "1", unrealizedPnl: "-25" }, // 3 consecutive losses = 3/5 * 15 = 9 points
         ],
         systemHealth: { apiConnection: true },
       });
 
       coreMonitoring.start();
       await coreMonitoring.updateRiskMetrics();
-      
+
       const score = coreMonitoring.calculateOverallRiskScore();
-      
+
       // Should be > 0 but specific calculation depends on weights
       expect(score).toBeGreaterThan(0);
       expect(score).toBeLessThanOrEqual(100);
     });
 
-    it('should cap risk score at 100', async () => {
+    it("should cap risk score at 100", async () => {
       // Set extremely high risk metrics
       mockExecutionService.getExecutionReport.mockResolvedValue({
         stats: {
@@ -388,56 +394,58 @@ describe('CoreSafetyMonitoring', () => {
           totalPnl: "-5000",
         },
         activePositions: [],
-        recentExecutions: Array(20).fill(0).map((_, i) => ({
-          symbol: `COIN${i}`,
-          quantity: '1',
-          currentPrice: '100',
-          unrealizedPnl: '-50', // All losses
-        })),
+        recentExecutions: Array(20)
+          .fill(0)
+          .map((_, i) => ({
+            symbol: `COIN${i}`,
+            quantity: "1",
+            currentPrice: "100",
+            unrealizedPnl: "-50", // All losses
+          })),
         systemHealth: { apiConnection: false },
       });
 
       coreMonitoring.start();
       await coreMonitoring.updateRiskMetrics();
-      
+
       const score = coreMonitoring.calculateOverallRiskScore();
       expect(score).toBeLessThanOrEqual(100);
     });
   });
 
-  describe('Monitoring Cycle', () => {
+  describe("Monitoring Cycle", () => {
     beforeEach(() => {
       coreMonitoring.start();
     });
 
-    it('should perform complete monitoring cycle', async () => {
+    it("should perform complete monitoring cycle", async () => {
       const result = await coreMonitoring.performMonitoringCycle();
-      
-      expect(result).toHaveProperty('riskMetrics');
-      expect(result).toHaveProperty('thresholdViolations');
-      expect(result).toHaveProperty('overallRiskScore');
-      
+
+      expect(result).toHaveProperty("riskMetrics");
+      expect(result).toHaveProperty("thresholdViolations");
+      expect(result).toHaveProperty("overallRiskScore");
+
       expect(Array.isArray(result.thresholdViolations)).toBe(true);
-      expect(typeof result.overallRiskScore).toBe('number');
-      
+      expect(typeof result.overallRiskScore).toBe("number");
+
       // Should have called service methods
       expect(mockExecutionService.getExecutionReport).toHaveBeenCalled();
       expect(mockPatternMonitoring.getMonitoringReport).toHaveBeenCalled();
     });
 
-    it('should handle monitoring cycle errors', async () => {
-      mockExecutionService.getExecutionReport.mockRejectedValue(new Error('Service error'));
-      
-      await expect(coreMonitoring.performMonitoringCycle()).rejects.toThrow('Service error');
+    it("should handle monitoring cycle errors", async () => {
+      mockExecutionService.getExecutionReport.mockRejectedValue(new Error("Service error"));
+
+      await expect(coreMonitoring.performMonitoringCycle()).rejects.toThrow("Service error");
     });
   });
 
-  describe('Alert Generation', () => {
+  describe("Alert Generation", () => {
     beforeEach(() => {
       coreMonitoring.start();
     });
 
-    it('should trigger alerts through callback', async () => {
+    it("should trigger alerts through callback", async () => {
       // Create condition that will trigger alert
       mockExecutionService.getExecutionReport.mockResolvedValue({
         stats: {
@@ -454,30 +462,30 @@ describe('CoreSafetyMonitoring', () => {
 
       await coreMonitoring.updateRiskMetrics();
       await coreMonitoring.checkSafetyThresholds();
-      
+
       expect(alertsReceived.length).toBeGreaterThan(0);
-      
-      alertsReceived.forEach(alert => {
-        expect(alert).toHaveProperty('type');
-        expect(alert).toHaveProperty('severity');
-        expect(alert).toHaveProperty('category');
-        expect(alert).toHaveProperty('title');
-        expect(alert).toHaveProperty('message');
-        expect(alert).toHaveProperty('riskLevel');
-        expect(alert).toHaveProperty('source');
-        expect(alert.source).toBe('core_monitoring');
+
+      alertsReceived.forEach((alert) => {
+        expect(alert).toHaveProperty("type");
+        expect(alert).toHaveProperty("severity");
+        expect(alert).toHaveProperty("category");
+        expect(alert).toHaveProperty("title");
+        expect(alert).toHaveProperty("message");
+        expect(alert).toHaveProperty("riskLevel");
+        expect(alert).toHaveProperty("source");
+        expect(alert.source).toBe("core_monitoring");
       });
     });
 
-    it('should not trigger alerts when callback is not provided', () => {
+    it("should not trigger alerts when callback is not provided", () => {
       const configWithoutCallback = {
         ...mockConfig,
         onAlert: undefined,
       };
-      
+
       const coreMonitoringNoCallback = createCoreSafetyMonitoring(configWithoutCallback);
       coreMonitoringNoCallback.start();
-      
+
       // Should not throw even without callback
       expect(async () => {
         await coreMonitoringNoCallback.checkSafetyThresholds();
@@ -485,16 +493,16 @@ describe('CoreSafetyMonitoring', () => {
     });
   });
 
-  describe('Reset and Cleanup', () => {
-    it('should reset risk metrics to defaults', () => {
+  describe("Reset and Cleanup", () => {
+    it("should reset risk metrics to defaults", () => {
       coreMonitoring.start();
-      
+
       // Modify some metrics first
       const originalMetrics = coreMonitoring.getRiskMetrics();
       expect(originalMetrics.currentDrawdown).toBe(0);
-      
+
       coreMonitoring.resetRiskMetrics();
-      
+
       const resetMetrics = coreMonitoring.getRiskMetrics();
       expect(resetMetrics.currentDrawdown).toBe(0);
       expect(resetMetrics.successRate).toBe(0);
@@ -503,8 +511,8 @@ describe('CoreSafetyMonitoring', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should validate configuration during updates', async () => {
+  describe("Error Handling", () => {
+    it("should validate configuration during updates", async () => {
       // This would be handled by the configuration management module
       // But core monitoring should handle invalid data gracefully
       mockExecutionService.getExecutionReport.mockResolvedValue({
@@ -521,18 +529,20 @@ describe('CoreSafetyMonitoring', () => {
       });
 
       coreMonitoring.start();
-      
+
       // Should handle invalid data gracefully
       await expect(coreMonitoring.updateRiskMetrics()).rejects.toThrow();
     });
 
-    it('should handle partial service failures', async () => {
+    it("should handle partial service failures", async () => {
       // Pattern monitoring fails but execution service works
-      mockPatternMonitoring.getMonitoringReport.mockRejectedValue(new Error('Pattern service down'));
-      
+      mockPatternMonitoring.getMonitoringReport.mockRejectedValue(
+        new Error("Pattern service down")
+      );
+
       coreMonitoring.start();
-      
-      await expect(coreMonitoring.updateRiskMetrics()).rejects.toThrow('Pattern service down');
+
+      await expect(coreMonitoring.updateRiskMetrics()).rejects.toThrow("Pattern service down");
     });
   });
 });

@@ -1,3 +1,4 @@
+import { createLogger } from "./structured-logger";
 /**
  * Error Type Utilities
  *
@@ -21,6 +22,8 @@ export interface SafeError {
 /**
  * Safely converts unknown error to Error object with proper typing
  */
+const logger = createLogger("error-type-utils");
+
 export function toSafeError(error: unknown): SafeError {
   if (error instanceof Error) {
     return {
@@ -186,7 +189,7 @@ export function withErrorLogging<T extends (...args: any[]) => Promise<any>>(
           args: args.length,
         });
       } else {
-        console.error(`[${context}] Error:`, safeError.message, {
+        logger.error(`[${context}] Error:`, safeError.message, {
           stack: safeError.stack,
           timestamp: new Date().toISOString(),
         });
@@ -205,7 +208,7 @@ export function standardCatch(context: string, operation?: string) {
     const safeError = toSafeError(error);
     const fullContext = operation ? `${context}.${operation}` : context;
 
-    console.error(`[${fullContext}] Error:`, {
+    logger.error(`[${fullContext}] Error:`, {
       message: safeError.message,
       name: safeError.name,
       stack: safeError.stack,

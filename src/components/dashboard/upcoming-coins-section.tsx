@@ -3,6 +3,7 @@
 import { Calendar, Clock, RefreshCw, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 import { useMexcCalendar, useRefreshMexcCalendar } from "../../hooks/use-mexc-data";
+import { createLogger } from "../lib/structured-logger";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -18,6 +19,8 @@ interface GroupedLaunches {
   today: UpcomingCalendarEntry[];
   tomorrow: UpcomingCalendarEntry[];
 }
+
+const logger = createLogger("upcoming-coins-section");
 
 export function UpcomingCoinsSection() {
   // Use the main calendar hook to get all data instead of filtered data
@@ -49,7 +52,7 @@ export function UpcomingCoinsSection() {
           tomorrow.push(entry);
         }
       } catch (_error) {
-        console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
+        logger.warn("Invalid date in calendar entry:", entry.firstOpenTime);
       }
     });
 
@@ -169,7 +172,7 @@ export function UpcomingCoinsSection() {
           ) : (
             <div className="space-y-3">
               {groupedLaunches.today.map((entry, index) => {
-                const { time, hoursUntil } = formatLaunchTime(entry.firstOpenTime);
+                const { time, hoursUntil } = formatLaunchTime(entry.firstOpenTime || "");
                 return (
                   <div
                     key={`${entry.vcoinId}-${index}`}
@@ -237,7 +240,7 @@ export function UpcomingCoinsSection() {
           ) : (
             <div className="space-y-3">
               {groupedLaunches.tomorrow.map((entry, index) => {
-                const { time, hoursUntil } = formatLaunchTime(entry.firstOpenTime);
+                const { time, hoursUntil } = formatLaunchTime(entry.firstOpenTime || "");
                 return (
                   <div
                     key={`${entry.vcoinId}-${index}`}

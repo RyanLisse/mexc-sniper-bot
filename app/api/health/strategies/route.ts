@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { createHealthResponse, apiResponse, handleApiError } from "../../../../src/lib/api-response";
 import { strategyInitializationService } from "../../../../src/services/strategy-initialization-service";
 import { multiPhaseTradingService } from "../../../../src/services/multi-phase-trading-service";
+
+const logger = createLogger('route');
 
 export async function GET() {
   try {
@@ -68,7 +71,7 @@ export async function GET() {
     return apiResponse(response, 200);
     
   } catch (error) {
-    console.error("[Strategies Health Check] Error:", error);
+    logger.error("[Strategies Health Check] Error:", { error: error });
     return handleApiError(error, "Trading strategies health check failed");
   }
 }
@@ -110,7 +113,7 @@ async function checkTradingStrategies(): Promise<{
       performance
     };
   } catch (error) {
-    console.error("Strategy health check failed:", error);
+    logger.error("Strategy health check failed:", { error: error });
     return {
       healthy: false,
       warnings: true,
@@ -152,7 +155,7 @@ async function checkPatternDetection(): Promise<{
       lastPattern: 'volume-breakout'
     };
   } catch (error) {
-    console.error("Pattern detection health check failed:", error);
+    logger.error("Pattern detection health check failed:", { error: error });
     return {
       healthy: false,
       warnings: true,
@@ -196,7 +199,7 @@ async function checkRiskManagement(): Promise<{
       positionSizeOptimal
     };
   } catch (error) {
-    console.error("Risk management health check failed:", error);
+    logger.error("Risk management health check failed:", { error: error });
     return {
       healthy: false,
       warnings: true,
@@ -224,7 +227,7 @@ async function checkStrategyTemplates(): Promise<{
     // Check if templates need initialization
     if (!health.templatesInitialized && health.databaseConnected) {
       try {
-        console.log("[Health Check] Strategy templates not initialized, attempting initialization...");
+        logger.info("[Health Check] Strategy templates not initialized, attempting initialization...");
         await strategyInitializationService.initializeOnStartup();
         // Get updated health status
         const updatedHealth = await strategyInitializationService.getHealthStatus();
@@ -238,7 +241,7 @@ async function checkStrategyTemplates(): Promise<{
           errors: updatedHealth.errors
         };
       } catch (initError) {
-        console.error("[Health Check] Strategy template initialization failed:", initError);
+        logger.error("[Health Check] Strategy template initialization failed:", { error: initError });
         return {
           healthy: false,
           warnings: true,
@@ -261,7 +264,7 @@ async function checkStrategyTemplates(): Promise<{
       errors: health.errors
     };
   } catch (error) {
-    console.error("[Health Check] Strategy template check failed:", error);
+    logger.error("[Health Check] Strategy template check failed:", { error: error });
     return {
       healthy: false,
       warnings: true,

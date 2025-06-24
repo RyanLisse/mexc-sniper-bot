@@ -13,6 +13,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { useStatus } from "../../contexts/status-context";
 import { useAutoSnipingExecution } from "../../hooks/use-auto-sniping-execution";
+import { createLogger } from "../lib/structured-logger";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -52,6 +53,8 @@ interface StatusType {
 }
 
 // Extract connection status logic to reduce complexity
+const logger = createLogger("simple-auto-sniping-control");
+
 function getConnectionStatus(status: StatusType): ConnectionStatus {
   const { network, credentials, trading } = status;
 
@@ -215,7 +218,7 @@ export function SimpleAutoSnipingControl({
         try {
           await startExecution();
         } catch (error) {
-          console.log("Auto-start execution skipped:", error);
+          logger.info("Auto-start execution skipped:", error);
         }
       }
     };

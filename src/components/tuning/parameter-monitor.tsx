@@ -1,4 +1,5 @@
 "use client";
+import { createLogger } from "../lib/structured-logger";
 
 /**
  * Parameter Monitor Component
@@ -63,6 +64,8 @@ interface ParameterChange {
   reason?: string;
 }
 
+const logger = createLogger("parameter-monitor");
+
 export function ParameterMonitor() {
   const [parameters, setParameters] = useState<Parameter[]>([]);
   const [filteredParameters, setFilteredParameters] = useState<Parameter[]>([]);
@@ -117,7 +120,7 @@ export function ParameterMonitor() {
         setParameters(parameterList);
         setChangeHistory(paramsData.changeHistory || []);
       } catch (error) {
-        console.error("Failed to fetch parameters:", error);
+        logger.error("Failed to fetch parameters:", error);
       } finally {
         setIsLoading(false);
       }
@@ -205,7 +208,7 @@ export function ParameterMonitor() {
         alert(`Failed to update parameter: ${error.error}`);
       }
     } catch (error) {
-      console.error("Failed to save parameter:", error);
+      logger.error("Failed to save parameter:", error);
       alert("Failed to save parameter");
     }
   };
@@ -229,7 +232,7 @@ export function ParameterMonitor() {
         alert(`Failed to reset parameter: ${error.error}`);
       }
     } catch (error) {
-      console.error("Failed to reset parameter:", error);
+      logger.error("Failed to reset parameter:", error);
       alert("Failed to reset parameter");
     }
   };

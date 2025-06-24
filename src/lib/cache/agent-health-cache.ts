@@ -1,10 +1,11 @@
 /**
+import { createLogger } from './structured-logger';
  * Agent Health Cache Manager
- * 
+ *
  * Manages caching of agent health status with real-time monitoring capabilities.
  * Provides fast access to agent health metrics with automatic cache invalidation
  * for stale health data.
- * 
+ *
  * FEATURES:
  * - Real-time agent health status caching
  * - Automatic stale data invalidation (30 seconds max age)
@@ -14,12 +15,11 @@
  */
 
 import { generateCacheKey, globalCacheManager } from "../cache-manager";
-import type {
-  AgentCacheConfig,
-  AgentHealthCache,
-} from "./agent-cache-types";
+import type { AgentCacheConfig, AgentHealthCache } from "./agent-cache-types";
 
 export class AgentHealthCacheManager {
+  private logger = createLogger("agent-health-cache");
+
   private config: AgentCacheConfig;
   private healthCache: Map<string, AgentHealthCache> = new Map();
   private readonly HEALTH_CACHE_TTL = 15000; // 15 seconds TTL for health data
@@ -54,7 +54,7 @@ export class AgentHealthCacheManager {
       this.healthCache.delete(agentId);
       return null;
     } catch (error) {
-      console.error(`[AgentHealthCache] Error getting agent health for ${agentId}:`, error);
+      logger.error(`[AgentHealthCache] Error getting agent health for ${agentId}:`, error);
       return null;
     }
   }
@@ -82,7 +82,7 @@ export class AgentHealthCacheManager {
       // Update local health cache
       this.healthCache.set(agentId, health);
     } catch (error) {
-      console.error(`[AgentHealthCache] Error caching agent health for ${agentId}:`, error);
+      logger.error(`[AgentHealthCache] Error caching agent health for ${agentId}:`, error);
     }
   }
 
@@ -112,7 +112,8 @@ export class AgentHealthCacheManager {
       metadata: {
         uptime: existing?.metadata.uptime ?? now,
         totalRequests: metrics.totalRequests ?? existing?.metadata.totalRequests ?? 0,
-        successfulRequests: metrics.successfulRequests ?? existing?.metadata.successfulRequests ?? 0,
+        successfulRequests:
+          metrics.successfulRequests ?? existing?.metadata.successfulRequests ?? 0,
         averageResponseTime: this.calculateAverageResponseTime(
           existing?.metadata.averageResponseTime ?? 0,
           metrics.responseTime ?? 0,
@@ -159,18 +160,15 @@ export class AgentHealthCacheManager {
     const degradedAgents = agents.filter((h) => h.status === "degraded").length;
     const unhealthyAgents = agents.filter((h) => h.status === "unhealthy").length;
 
-    const averageResponseTime = agents.length > 0
-      ? agents.reduce((sum, h) => sum + h.responseTime, 0) / agents.length
-      : 0;
+    const averageResponseTime =
+      agents.length > 0 ? agents.reduce((sum, h) => sum + h.responseTime, 0) / agents.length : 0;
 
-    const overallErrorRate = agents.length > 0
-      ? agents.reduce((sum, h) => sum + h.errorRate, 0) / agents.length
-      : 0;
+    const overallErrorRate =
+      agents.length > 0 ? agents.reduce((sum, h) => sum + h.errorRate, 0) / agents.length : 0;
 
     // Calculate system load based on unhealthy agents ratio
-    const systemLoad = agents.length > 0
-      ? ((degradedAgents * 0.5 + unhealthyAgents) / agents.length) * 100
-      : 0;
+    const systemLoad =
+      agents.length > 0 ? ((degradedAgents * 0.5 + unhealthyAgents) / agents.length) * 100 : 0;
 
     return {
       totalAgents: agents.length,
@@ -188,12 +186,12 @@ export class AgentHealthCacheManager {
    */
   async removeAgentHealth(agentId: string): Promise<void> {
     const cacheKey = this.generateHealthCacheKey(agentId);
-    
+
     try {
       await globalCacheManager.delete(cacheKey);
       this.healthCache.delete(agentId);
     } catch (error) {
-      console.error(`[AgentHealthCache] Error removing agent health for ${agentId}:`, error);
+      logger.error(`[AgentHealthCache] Error removing agent health for ${agentId}:`, error);
     }
   }
 
@@ -205,9 +203,9 @@ export class AgentHealthCacheManager {
       const pattern = /^health:/;
       await globalCacheManager.invalidatePattern(pattern);
       this.healthCache.clear();
-      console.log("[AgentHealthCache] Cleared all health cache entries");
+      logger.info("[AgentHealthCache] Cleared all health cache entries");
     } catch (error) {
-      console.error("[AgentHealthCache] Error clearing health cache:", error);
+      logger.error("[AgentHealthCache] Error clearing health cache:", error);
     }
   }
 
@@ -265,7 +263,7 @@ export class AgentHealthCacheManager {
       return newResponseTime;
     }
 
-    return ((currentAverage * totalRequests) + newResponseTime) / (totalRequests + 1);
+    return (currentAverage * totalRequests + newResponseTime) / (totalRequests + 1);
   }
 
   /**

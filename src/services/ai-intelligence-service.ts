@@ -11,6 +11,7 @@
  * - Real-time cryptocurrency market intelligence
  */
 
+import { createLogger } from "../lib/structured-logger";
 import type { PatternData } from "./pattern-embedding-service";
 
 // ======================
@@ -98,6 +99,8 @@ interface PerplexityResearchResult {
 // ======================
 
 export class AIIntelligenceService {
+  private logger = createLogger("ai-intelligence-service");
+
   private cohereApiKey: string;
   private perplexityApiKey: string;
   private readonly cohereModel = "embed-english-v3.0"; // Latest Cohere model
@@ -114,10 +117,10 @@ export class AIIntelligenceService {
     this.perplexityApiKey = process.env.PERPLEXITY_API_KEY || "";
 
     if (!this.cohereApiKey) {
-      console.warn("[AI Intelligence] Cohere API key not found - embedding features disabled");
+      logger.warn("[AI Intelligence] Cohere API key not found - embedding features disabled");
     }
     if (!this.perplexityApiKey) {
-      console.warn("[AI Intelligence] Perplexity API key not found - research features disabled");
+      logger.warn("[AI Intelligence] Perplexity API key not found - research features disabled");
     }
   }
 
@@ -156,7 +159,7 @@ export class AIIntelligenceService {
         truncate: "END",
       };
 
-      console.log(`[AI Intelligence] Generating Cohere embeddings for ${texts.length} texts`);
+      logger.info(`[AI Intelligence] Generating Cohere embeddings for ${texts.length} texts`);
 
       const response = await fetch(this.cohereApiUrl, {
         method: "POST",
@@ -184,13 +187,13 @@ export class AIIntelligenceService {
         this.embeddingCache.set(cacheKey, data.embeddings.float[0]);
       }
 
-      console.log(
+      logger.info(
         `[AI Intelligence] Generated ${data.embeddings.float.length} embeddings with ${data.embeddings.float[0].length} dimensions`
       );
 
       return data.embeddings.float;
     } catch (error) {
-      console.error("[AI Intelligence] Cohere embedding generation failed:", error);
+      logger.error("[AI Intelligence] Cohere embedding generation failed:", error);
 
       // In test environment, provide a fallback only for non-error-testing scenarios
       if (
@@ -200,7 +203,7 @@ export class AIIntelligenceService {
           (error.message.includes("API error") || error.message.includes("No embeddings returned"))
         )
       ) {
-        console.log("[AI Intelligence] Using test fallback embedding");
+        logger.info("[AI Intelligence] Using test fallback embedding");
         return [new Array(1024).fill(0).map(() => Math.random() * 0.1)];
       }
 
@@ -299,7 +302,7 @@ export class AIIntelligenceService {
     try {
       const prompt = this.buildResearchPrompt(symbol, focus);
 
-      console.log(`[AI Intelligence] Conducting ${focus} research for ${symbol}`);
+      logger.info(`[AI Intelligence] Conducting ${focus} research for ${symbol}`);
 
       const response = await fetch(this.perplexityApiUrl, {
         method: "POST",
@@ -348,13 +351,13 @@ export class AIIntelligenceService {
       // Cache the result
       this.researchCache.set(cacheKey, researchResult);
 
-      console.log(
+      logger.info(
         `[AI Intelligence] Research completed for ${symbol} with ${researchResult.keyFindings.length} key findings`
       );
 
       return researchResult;
     } catch (error) {
-      console.error(`[AI Intelligence] Market research failed for ${symbol}:`, error);
+      logger.error(`[AI Intelligence] Market research failed for ${symbol}:`, error);
 
       // Return fallback result
       return {
@@ -460,7 +463,7 @@ Focus on actionable insights and recent developments. Use current market data an
         confidence: this.calculateResearchConfidence(content, citations),
       };
     } catch (error) {
-      console.error("[AI Intelligence] Failed to parse research response:", error);
+      logger.error("[AI Intelligence] Failed to parse research response:", error);
 
       // Return basic result with raw content
       return {
@@ -497,7 +500,7 @@ Focus on actionable insights and recent developments. Use current market data an
    * Enhance pattern with AI intelligence (Cohere + Perplexity)
    */
   async enhancePatternWithAI(pattern: PatternData): Promise<EnhancedPatternData> {
-    console.log(
+    logger.info(
       `[AI Intelligence] Enhancing pattern for ${pattern.symbolName} with AI intelligence`
     );
 
@@ -519,13 +522,13 @@ Focus on actionable insights and recent developments. Use current market data an
         ),
       };
 
-      console.log(
+      logger.info(
         `[AI Intelligence] Enhanced pattern with ${enhanced.cohereEmbedding ? "embeddings" : "no embeddings"} and ${enhanced.perplexityInsights ? "research insights" : "no research"}`
       );
 
       return enhanced;
     } catch (error) {
-      console.error(
+      logger.error(
         `[AI Intelligence] Pattern enhancement failed for ${pattern.symbolName}:`,
         error
       );
@@ -632,7 +635,7 @@ Focus on actionable insights and recent developments. Use current market data an
         recommendations,
       };
     } catch (error) {
-      console.error("[AI Intelligence] Enhanced confidence calculation failed:", error);
+      logger.error("[AI Intelligence] Enhanced confidence calculation failed:", error);
 
       return {
         enhancedConfidence: pattern.confidence,
@@ -667,7 +670,7 @@ Focus on actionable insights and recent developments. Use current market data an
       this.embeddingCache.clear();
     }
 
-    console.log(
+    logger.info(
       `[AI Intelligence] Cache cleanup completed - Research: ${this.researchCache.size}, Embeddings: ${this.embeddingCache.size}`
     );
   }

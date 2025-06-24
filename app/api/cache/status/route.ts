@@ -1,7 +1,10 @@
 import { NextRequest } from 'next/server';
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { createApiHandler } from "../../../../src/lib/api-middleware";
 import { getCacheHealthStatus, getCacheDashboardData } from "../../../../src/lib/cache-monitoring";
 import { globalCacheMonitoring } from "../../../../src/lib/cache-monitoring";
+
+const logger = createLogger('route');
 
 /**
  * GET /api/cache/status
@@ -89,7 +92,7 @@ export const GET = createApiHandler({
     });
 
   } catch (error) {
-    console.error('[API] Cache status error:', error);
+    logger.error('[API] Cache status error:', error);
     return context.error(
       'Failed to retrieve cache status',
       500,

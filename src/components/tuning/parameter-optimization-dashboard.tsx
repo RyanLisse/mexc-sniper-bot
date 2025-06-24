@@ -1,4 +1,5 @@
 "use client";
+import { createLogger } from "../lib/structured-logger";
 
 /**
  * Parameter Optimization Dashboard
@@ -143,6 +144,8 @@ const mockOptimizationRuns = [
   },
 ];
 
+const logger = createLogger("parameter-optimization-dashboard");
+
 export function ParameterOptimizationDashboard() {
   const [activeOptimizations, setActiveOptimizations] = useState<OptimizationStatus[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
@@ -172,7 +175,7 @@ export function ParameterOptimizationDashboard() {
         const health = await healthResponse.json();
         setSystemHealth(health);
       } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
+        logger.error("Failed to fetch dashboard data:", error);
       } finally {
         setIsLoading(false);
       }
@@ -239,7 +242,7 @@ export function ParameterOptimizationDashboard() {
           break;
       }
     } catch (error) {
-      console.error("Failed to perform optimization action:", error);
+      logger.error("Failed to perform optimization action:", error);
     }
   };
 

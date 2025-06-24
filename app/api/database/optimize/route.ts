@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * Database Optimization API Endpoint
  * 
  * Provides access to comprehensive database optimization system:
@@ -17,6 +18,8 @@ import { databaseConnectionPool } from "../../../../src/lib/database-connection-
 import { queryPerformanceMonitor } from "../../../../src/services/query-performance-monitor";
 
 // GET - Get current optimization status and metrics
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -80,7 +83,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("[Database Optimization API] GET error:", error);
+    logger.error("[Database Optimization API] GET error:", { error: error });
     return NextResponse.json({
       success: false,
       error: "Failed to retrieve optimization data",
@@ -97,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case "optimize":
-        console.log("🚀 Starting comprehensive database optimization...");
+        logger.info("🚀 Starting comprehensive database optimization...");
         
         // Run the complete 4-phase optimization
         const optimizationResult = await databaseOptimizationManager.runCompleteOptimization();
@@ -117,7 +120,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "analyze":
-        console.log("🔍 Running database performance analysis...");
+        logger.info("🔍 Running database performance analysis...");
         
         // Start monitoring
         queryPerformanceMonitor.startMonitoring();
@@ -140,7 +143,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "createIndexes":
-        console.log("🗂️ Creating strategic database indexes...");
+        logger.info("🗂️ Creating strategic database indexes...");
         
         const indexResult = await databaseIndexOptimizer.createStrategicIndexes();
         
@@ -159,7 +162,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "optimizeForAgents":
-        console.log("🤖 Optimizing database for AI agent workloads...");
+        logger.info("🤖 Optimizing database for AI agent workloads...");
         
         await databaseOptimizationManager.optimizeForAgentWorkloads();
         
@@ -177,7 +180,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "clearCache":
-        console.log("🗑️ Clearing database caches...");
+        logger.info("🗑️ Clearing database caches...");
         
         databaseQueryOptimizer.clearCache();
         databaseConnectionPool.clearCache();
@@ -192,7 +195,7 @@ export async function POST(request: NextRequest) {
         });
 
       case "validateIndexes":
-        console.log("🔍 Validating database indexes...");
+        logger.info("🔍 Validating database indexes...");
         
         const validation = await databaseIndexOptimizer.validateIndexes();
         
@@ -225,7 +228,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("[Database Optimization API] POST error:", error);
+    logger.error("[Database Optimization API] POST error:", { error: error });
     return NextResponse.json({
       success: false,
       error: "Database optimization failed",
@@ -278,7 +281,7 @@ export async function PUT(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("[Database Optimization API] PUT error:", error);
+    logger.error("[Database Optimization API] PUT error:", { error: error });
     return NextResponse.json({
       success: false,
       error: "Failed to update configuration",
@@ -336,7 +339,7 @@ export async function DELETE(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error("[Database Optimization API] DELETE error:", error);
+    logger.error("[Database Optimization API] DELETE error:", { error: error });
     return NextResponse.json({
       success: false,
       error: "Failed to reset optimization settings",

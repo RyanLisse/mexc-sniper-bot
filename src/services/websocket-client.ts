@@ -14,6 +14,7 @@
  */
 
 import { EventEmitter } from "events";
+import { createLogger } from "../lib/structured-logger";
 import type {
   AgentStatusMessage,
   MessageHandler,
@@ -37,6 +38,8 @@ interface QueuedMessage {
 }
 
 class MessageQueue {
+  private logger = createLogger("websocket-client");
+
   private queue: QueuedMessage[] = [];
   private readonly maxSize: number;
   private readonly maxRetries: number;
@@ -176,7 +179,7 @@ class ConnectionManager {
     }
 
     const delay = this.getReconnectDelay();
-    console.log(
+    logger.info(
       `[WebSocket Client] Scheduling reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`
     );
 
@@ -313,7 +316,7 @@ export class WebSocketClientService extends EventEmitter {
       const url = this.buildWebSocketUrl();
 
       if (this.config.debug) {
-        console.log("[WebSocket Client] Connecting to:", url);
+        logger.info("[WebSocket Client] Connecting to:", url);
       }
 
       this.ws = new WebSocket(url);
@@ -336,7 +339,7 @@ export class WebSocketClientService extends EventEmitter {
         };
       });
     } catch (error) {
-      console.error("[WebSocket Client] Connection failed:", error);
+      logger.error("[WebSocket Client] Connection failed:", error);
       this.setState("error");
       this.handleConnectionError(error);
       throw error;
@@ -388,12 +391,12 @@ export class WebSocketClientService extends EventEmitter {
         this.updateActivity();
 
         if (this.config.debug) {
-          console.log("[WebSocket Client] Message sent:", fullMessage);
+          logger.info("[WebSocket Client] Message sent:", fullMessage);
         }
 
         return true;
       } catch (error) {
-        console.error("[WebSocket Client] Failed to send message:", error);
+        logger.error("[WebSocket Client] Failed to send message:", error);
         this.messageQueue.enqueue(fullMessage);
         this.metrics.queuedMessages = this.messageQueue.size();
         return false;
@@ -510,7 +513,7 @@ export class WebSocketClientService extends EventEmitter {
   }
 
   private handleOpen(): void {
-    console.log("[WebSocket Client] Connected to server");
+    logger.info("[WebSocket Client] Connected to server");
 
     this.setState("connected");
     this.connectionManager.resetReconnect();
@@ -532,7 +535,7 @@ export class WebSocketClientService extends EventEmitter {
       this.updateActivity();
 
       if (this.config.debug) {
-        console.log("[WebSocket Client] Message received:", message);
+        logger.info("[WebSocket Client] Message received:", message);
       }
 
       // Handle system messages
@@ -546,12 +549,12 @@ export class WebSocketClientService extends EventEmitter {
 
       this.emit("message", message);
     } catch (error) {
-      console.error("[WebSocket Client] Failed to handle message:", error);
+      logger.error("[WebSocket Client] Failed to handle message:", error);
     }
   }
 
   private handleClose(event: CloseEvent): void {
-    console.log(`[WebSocket Client] Connection closed: ${event.code} - ${event.reason}`);
+    logger.info(`[WebSocket Client] Connection closed: ${event.code} - ${event.reason}`);
 
     this.stopHeartbeat();
     this.setState("disconnected");
@@ -574,7 +577,7 @@ export class WebSocketClientService extends EventEmitter {
   }
 
   private handleError(event: Event): void {
-    console.error("[WebSocket Client] Connection error:", event);
+    logger.error("[WebSocket Client] Connection error:", event);
     this.emit("error", event);
   }
 
@@ -594,7 +597,7 @@ export class WebSocketClientService extends EventEmitter {
       try {
         handler(message);
       } catch (error) {
-        console.error("[WebSocket Client] Handler error:", error);
+        logger.error("[WebSocket Client] Handler error:", error);
       }
     }
   }

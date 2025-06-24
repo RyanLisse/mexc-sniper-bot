@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { HTTP_STATUS, createErrorResponse } from "./api-response";
+import { createErrorResponse, HTTP_STATUS } from "./api-response";
 import { shouldBypassRateLimit } from "./bypass-rate-limit";
 import { getSession, requireAuth } from "./kinde-auth";
 import {
@@ -9,6 +9,7 @@ import {
   isIPSuspicious,
   logSecurityEvent,
 } from "./rate-limiter";
+import { createLogger } from "./structured-logger";
 
 /**
  * Alias for requireApiAuth to maintain compatibility
@@ -19,6 +20,8 @@ export const validateRequest = requireApiAuth;
  * Middleware to require authentication for API routes with rate limiting
  * Returns the authenticated user or throws an error response
  */
+const logger = createLogger("api-auth");
+
 export async function requireApiAuth(
   request: NextRequest,
   options?: {
@@ -413,7 +416,7 @@ export function apiAuthWrapper<T extends any[]>(
       // Execute the handler
       return await handler(request, ...args);
     } catch (error) {
-      console.error("[API Auth] Request failed:", error);
+      logger.error("[API Auth] Request failed:", error);
 
       if (error instanceof Response) {
         return error;

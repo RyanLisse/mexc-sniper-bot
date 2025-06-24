@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../../../../src/lib/structured-logger';
  * WebSocket API Route
  * 
  * Next.js API route to manage WebSocket server lifecycle and integration.
@@ -77,7 +78,7 @@ export const GET = publicHandler({
     });
 
   } catch (error) {
-    console.error('[WebSocket API] Error getting status:', error);
+    logger.error('[WebSocket API] Error getting status:', error);
     return context.error(
       'Failed to get WebSocket status',
       500,
@@ -214,7 +215,7 @@ export const POST = authenticatedHandler({
     }
 
   } catch (error) {
-    console.error('[WebSocket API] Error in POST action:', error);
+    logger.error('[WebSocket API] Error in POST action:', error);
     return context.error(
       `Failed to execute action: ${context.body?.action}`,
       500,
@@ -281,7 +282,7 @@ export const PUT = authenticatedHandler({
     }
 
   } catch (error) {
-    console.error('[WebSocket API] Error in PUT action:', error);
+    logger.error('[WebSocket API] Error in PUT action:', error);
     return context.error(
       'Failed to manage connection',
       500,
@@ -342,7 +343,7 @@ export const PATCH = authenticatedHandler({
 
       case 'restart_all':
         // Restart all WebSocket services
-        console.log('[WebSocket API] Restarting all WebSocket services...');
+        logger.info('[WebSocket API] Restarting all WebSocket services...');
 
         // Stop services
         if (webSocketAgentBridge.isRunning()) {
@@ -414,7 +415,7 @@ export const PATCH = authenticatedHandler({
     }
 
   } catch (error) {
-    console.error('[WebSocket API] Error in PATCH operation:', error);
+    logger.error('[WebSocket API] Error in PATCH operation:', error);
     return context.error(
       'Failed to execute operation',
       500,
@@ -426,6 +427,8 @@ export const PATCH = authenticatedHandler({
 // ======================
 // Helper Functions
 // ======================
+
+const logger = createLogger('route');
 
 function generatePerformanceRecommendations(serverMetrics: any, connectionMetrics: any[]): string[] {
   const recommendations: string[] = [];

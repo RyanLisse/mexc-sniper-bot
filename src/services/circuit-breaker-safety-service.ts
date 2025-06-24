@@ -1,4 +1,5 @@
 /**
+import { createLogger } from '../lib/structured-logger';
  * Circuit Breaker Safety Service
  *
  * Comprehensive service to fix "Circuit breaker in protective state" issues
@@ -88,6 +89,8 @@ export interface AutoSnipingSafetyGate {
 // ============================================================================
 
 export class CircuitBreakerSafetyService {
+  private logger = createLogger("circuit-breaker-safety-service");
+
   private errorHandler: UnifiedErrorHandler;
   private mexcService: any;
   private coordinatedRegistry: CoordinatedCircuitBreakerRegistry;
@@ -323,7 +326,7 @@ export class CircuitBreakerSafetyService {
 
       // FIXED: Auto-sniping is ALWAYS enabled by system design
       // Removed dependency on AUTO_SNIPING_ENABLED environment variable
-      console.log("ℹ️ Auto-sniping is permanently enabled by system configuration");
+      logger.info("ℹ️ Auto-sniping is permanently enabled by system configuration");
 
       // Risk management configuration
       const maxPositionSize = process.env.MAX_POSITION_SIZE;
@@ -610,7 +613,7 @@ export class CircuitBreakerSafetyService {
       // Reset all circuit breakers with emergency authority
       await this.coordinatedRegistry.resetAll(`${this.serviceId}-emergency`);
     } catch (error) {
-      console.error("Emergency coordination reset failed:", error);
+      logger.error("Emergency coordination reset failed:", error);
       throw error;
     }
   }

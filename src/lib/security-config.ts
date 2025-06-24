@@ -216,7 +216,7 @@ export function getSecurityHeaders(): Record<string, string> {
  */
 export function getCookieConfig() {
   const isDevelopment = process.env.NODE_ENV === "development";
-  
+
   if (isDevelopment) {
     // Development-friendly cookie settings
     return {
@@ -227,7 +227,7 @@ export function getCookieConfig() {
       domain: undefined,
     };
   }
-  
+
   return SECURITY_CONFIG.SESSION_SECURITY.COOKIE;
 }
 

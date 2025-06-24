@@ -5,15 +5,16 @@
  * Provides comprehensive control over trade execution and position management.
  */
 
+import { useCallback, useEffect, useState } from "react";
 import { ApiClient } from "@/src/lib/api-client";
+import { createLogger } from "../lib/structured-logger";
 import type {
   AutoSnipingConfig,
   AutoSnipingExecutionReport,
   ExecutionAlert,
   ExecutionPosition,
   ExecutionStats,
-} from "@/src/services/auto-sniping-execution-service";
-import { useCallback, useEffect, useState } from "react";
+} from "../services/auto-sniping-execution-service";
 
 interface AutoSnipingExecutionState {
   // Execution report data
@@ -91,6 +92,8 @@ interface UseAutoSnipingExecutionOptions {
   includeHistory?: boolean;
   includeAlerts?: boolean;
 }
+
+const logger = createLogger("use-auto-sniping-execution");
 
 export function useAutoSnipingExecution(
   options: UseAutoSnipingExecutionOptions = {}
@@ -202,7 +205,7 @@ export function useAutoSnipingExecution(
           lastUpdated: new Date().toISOString(),
         }));
       } catch (error) {
-        console.error("[useAutoSnipingExecution] Failed to load execution report:", error);
+        logger.error("[useAutoSnipingExecution] Failed to load execution report:", error);
         setState((prev) => ({
           ...prev,
           isLoading: false,
@@ -234,7 +237,7 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to start execution:", error);
+      logger.error("[useAutoSnipingExecution] Failed to start execution:", error);
       setState((prev) => ({
         ...prev,
         isStartingExecution: false,
@@ -262,7 +265,7 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to stop execution:", error);
+      logger.error("[useAutoSnipingExecution] Failed to stop execution:", error);
       setState((prev) => ({
         ...prev,
         isStoppingExecution: false,
@@ -289,7 +292,7 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to pause execution:", error);
+      logger.error("[useAutoSnipingExecution] Failed to pause execution:", error);
       setState((prev) => ({
         ...prev,
         isPausingExecution: false,
@@ -316,7 +319,7 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to resume execution:", error);
+      logger.error("[useAutoSnipingExecution] Failed to resume execution:", error);
       setState((prev) => ({
         ...prev,
         isResumingExecution: false,
@@ -345,7 +348,7 @@ export function useAutoSnipingExecution(
 
         return true;
       } catch (error) {
-        console.error("[useAutoSnipingExecution] Failed to close position:", error);
+        logger.error("[useAutoSnipingExecution] Failed to close position:", error);
         setState((prev) => ({
           ...prev,
           isClosingPosition: false,
@@ -374,7 +377,7 @@ export function useAutoSnipingExecution(
 
       return response.data.closedCount;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Emergency close failed:", error);
+      logger.error("[useAutoSnipingExecution] Emergency close failed:", error);
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Emergency close failed",
@@ -404,7 +407,7 @@ export function useAutoSnipingExecution(
 
         return true;
       } catch (error) {
-        console.error("[useAutoSnipingExecution] Failed to update config:", error);
+        logger.error("[useAutoSnipingExecution] Failed to update config:", error);
         setState((prev) => ({
           ...prev,
           isUpdatingConfig: false,
@@ -435,7 +438,7 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to acknowledge alert:", error);
+      logger.error("[useAutoSnipingExecution] Failed to acknowledge alert:", error);
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Failed to acknowledge alert",
@@ -459,7 +462,7 @@ export function useAutoSnipingExecution(
 
       return response.data.clearedCount;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to clear alerts:", error);
+      logger.error("[useAutoSnipingExecution] Failed to clear alerts:", error);
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Failed to clear alerts",

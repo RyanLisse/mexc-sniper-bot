@@ -6,11 +6,11 @@
  * Enhanced with structured logging and OpenTelemetry instrumentation.
  */
 
+import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
 import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
 import { createLogger, createTimer } from "../lib/structured-logger";
 import { EmergencySafetySystem } from "./emergency-safety-system";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
-import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
 import { PatternMonitoringService } from "./pattern-monitoring-service";
 import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
 

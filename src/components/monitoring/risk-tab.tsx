@@ -1,15 +1,15 @@
 /**
  * Risk Tab Component
- * 
+ *
  * Displays risk management metrics including risk limits, stress test results,
  * exposure metrics, circuit breaker status, and correlation analysis.
  */
 
+import { AlertTriangle, CheckCircle } from "lucide-react";
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { AlertTriangle, CheckCircle } from "lucide-react";
-import { memo } from "react";
 import { generateListKey } from "../../lib/react-utilities";
 import type { AnalyticsTabProps } from "../../types/trading-analytics-types";
 

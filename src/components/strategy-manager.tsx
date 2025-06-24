@@ -1,5 +1,18 @@
 "use client";
 
+import {
+  Activity,
+  AlertTriangle,
+  DollarSign,
+  Download,
+  Pause,
+  Play,
+  Settings,
+  Target,
+  TrendingUp,
+  Upload,
+} from "lucide-react";
+import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,19 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Activity,
-  AlertTriangle,
-  DollarSign,
-  Download,
-  Pause,
-  Play,
-  Settings,
-  Target,
-  TrendingUp,
-  Upload,
-} from "lucide-react";
-import { useState } from "react";
+import { createLogger } from "../lib/structured-logger";
 
 // Import the trading strategy types and manager
 import {
@@ -56,6 +57,8 @@ interface ActivePosition {
   triggeredLevels: number;
   nextTarget: number;
 }
+
+const logger = createLogger("strategy-manager");
 
 export function StrategyManager() {
   const [strategyManager] = useState(() => new TradingStrategyManager());
@@ -129,7 +132,7 @@ export function StrategyManager() {
         setSelectedStrategyId(strategyId);
       }
     } catch (error) {
-      console.error("Failed to switch strategy:", error);
+      logger.error("Failed to switch strategy:", error);
     } finally {
       setLoading(false);
     }

@@ -1,9 +1,11 @@
+import { createLogger } from "./structured-logger";
+
 /**
  * Cache Performance Monitor
- * 
+ *
  * Tracks and analyzes cache performance metrics for agents with detailed
  * statistics on hit rates, response times, and efficiency calculations.
- * 
+ *
  * FEATURES:
  * - Real-time performance metrics tracking
  * - Cache hit/miss/set event monitoring
@@ -20,6 +22,8 @@ import type {
 } from "./agent-cache-types";
 
 export class CachePerformanceMonitor {
+  private logger = createLogger("cache-performance-monitor");
+
   private config: AgentCacheConfig;
   private performanceMetrics: Map<string, AgentCacheMetrics> = new Map();
   private responseTimeHistory: Map<string, number[]> = new Map();
@@ -56,14 +60,19 @@ export class CachePerformanceMonitor {
 
       this.performanceMetrics.set(agentId, metrics);
     } catch (error) {
-      console.error(`[CachePerformanceMonitor] Error tracking cache hit for ${agentId}:`, error);
+      logger.error(`[CachePerformanceMonitor] Error tracking cache hit for ${agentId}:`, error);
     }
   }
 
   /**
    * Track cache set for performance metrics
    */
-  async trackCacheSet(agentId: string, cacheKey: string, ttl: number, responseTime?: number): Promise<void> {
+  async trackCacheSet(
+    agentId: string,
+    cacheKey: string,
+    ttl: number,
+    responseTime?: number
+  ): Promise<void> {
     if (!this.config.enablePerformanceTracking) {
       return;
     }
@@ -87,7 +96,7 @@ export class CachePerformanceMonitor {
 
       this.performanceMetrics.set(agentId, metrics);
     } catch (error) {
-      console.error(`[CachePerformanceMonitor] Error tracking cache set for ${agentId}:`, error);
+      logger.error(`[CachePerformanceMonitor] Error tracking cache set for ${agentId}:`, error);
     }
   }
 
@@ -116,7 +125,7 @@ export class CachePerformanceMonitor {
 
       this.performanceMetrics.set(agentId, metrics);
     } catch (error) {
-      console.error(`[CachePerformanceMonitor] Error tracking cache miss for ${agentId}:`, error);
+      logger.error(`[CachePerformanceMonitor] Error tracking cache miss for ${agentId}:`, error);
     }
   }
 
@@ -146,7 +155,10 @@ export class CachePerformanceMonitor {
 
       this.performanceMetrics.set(agentId, metrics);
     } catch (trackingError) {
-      console.error(`[CachePerformanceMonitor] Error tracking cache error for ${agentId}:`, trackingError);
+      logger.error(
+        `[CachePerformanceMonitor] Error tracking cache error for ${agentId}:`,
+        trackingError
+      );
     }
   }
 
@@ -169,7 +181,7 @@ export class CachePerformanceMonitor {
    */
   getPerformanceMetrics(): CachePerformanceMetrics {
     const allMetrics = Array.from(this.performanceMetrics.values());
-    
+
     if (allMetrics.length === 0) {
       return {
         hitRate: 0,
@@ -186,7 +198,8 @@ export class CachePerformanceMonitor {
     const totalExecutions = allMetrics.reduce((sum, m) => sum + m.totalExecutions, 0);
     const totalHits = allMetrics.reduce((sum, m) => sum + m.cacheHits, 0);
     const totalErrors = allMetrics.reduce((sum, m) => sum + m.failedExecutions, 0);
-    const avgResponseTime = allMetrics.reduce((sum, m) => sum + m.avgResponseTime, 0) / allMetrics.length;
+    const avgResponseTime =
+      allMetrics.reduce((sum, m) => sum + m.avgResponseTime, 0) / allMetrics.length;
     const avgThroughput = allMetrics.reduce((sum, m) => sum + m.throughput, 0) / allMetrics.length;
 
     return {
@@ -221,7 +234,9 @@ export class CachePerformanceMonitor {
   /**
    * Get top performing agents
    */
-  getTopPerformingAgents(limit = 10): Array<{ agentId: string; efficiency: number; metrics: AgentCacheMetrics }> {
+  getTopPerformingAgents(
+    limit = 10
+  ): Array<{ agentId: string; efficiency: number; metrics: AgentCacheMetrics }> {
     return Array.from(this.performanceMetrics.entries())
       .map(([agentId, metrics]) => ({
         agentId,
@@ -321,12 +336,12 @@ export class CachePerformanceMonitor {
   private updateResponseTime(agentId: string, responseTime: number): void {
     const history = this.responseTimeHistory.get(agentId) || [];
     history.push(responseTime);
-    
+
     // Keep only the last N response times
     if (history.length > this.HISTORY_SIZE) {
       history.shift();
     }
-    
+
     this.responseTimeHistory.set(agentId, history);
   }
 
@@ -336,7 +351,7 @@ export class CachePerformanceMonitor {
   private calculateAverageResponseTime(agentId: string): number {
     const history = this.responseTimeHistory.get(agentId) || [];
     if (history.length === 0) return 0;
-    
+
     return history.reduce((sum, time) => sum + time, 0) / history.length;
   }
 
@@ -346,10 +361,10 @@ export class CachePerformanceMonitor {
   private calculateThroughput(agentId: string): number {
     const metrics = this.performanceMetrics.get(agentId);
     if (!metrics) return 0;
-    
+
     const timeElapsed = Date.now() - metrics.lastActivity;
     const minutesElapsed = Math.max(1, timeElapsed / (1000 * 60));
-    
+
     return metrics.totalExecutions / minutesElapsed;
   }
 
@@ -359,10 +374,29 @@ export class CachePerformanceMonitor {
   private calculateMemoryUsage(): number {
     // Rough estimation based on metrics objects
     const metricsSize = this.performanceMetrics.size * 500; // ~500 bytes per metrics object
-    const historySize = Array.from(this.responseTimeHistory.values())
-      .reduce((sum, history) => sum + history.length, 0) * 8; // 8 bytes per number
-    
+    const historySize =
+      Array.from(this.responseTimeHistory.values()).reduce(
+        (sum, history) => sum + history.length,
+        0
+      ) * 8; // 8 bytes per number
+
     return metricsSize + historySize;
+  }
+
+  /**
+   * Start performance tracking
+   */
+  startTracking(): void {
+    // Reset any existing metrics to start fresh
+    logger.info("[CachePerformanceMonitor] Starting performance tracking");
+  }
+
+  /**
+   * Stop performance tracking
+   */
+  stopTracking(): void {
+    logger.info("[CachePerformanceMonitor] Stopping performance tracking");
+    // Keep metrics for analysis but stop active tracking
   }
 
   /**

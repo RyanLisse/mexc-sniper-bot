@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getSession } from "../../../../src/lib/kinde-auth";
 import { db } from "../../../../src/db";
 import { AutomatedAlertingService } from "../../../../src/services/automated-alerting-service";
@@ -14,6 +15,8 @@ const correlationEngine = new AlertCorrelationEngine(db);
 // ==========================================
 // GET /api/alerts/analytics - Get alerting analytics
 // ==========================================
+const logger = createLogger('route');
+
 export async function GET(request: NextRequest) {
   try {
     const user = await validateRequest(request);
@@ -103,7 +106,7 @@ export async function GET(request: NextRequest) {
       data: analyticsData,
     });
   } catch (error) {
-    console.error("Error fetching alert analytics:", error);
+    logger.error("Error fetching alert analytics:", { error: error });
     return handleApiError(error);
   }
 }

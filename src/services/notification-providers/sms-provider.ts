@@ -1,4 +1,5 @@
 import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
+import { createLogger } from "../lib/structured-logger";
 import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface SMSConfig {
@@ -16,6 +17,8 @@ interface SMSConfig {
 }
 
 export class SMSProvider implements NotificationProvider {
+  private logger = createLogger("sms-provider");
+
   getProviderType(): string {
     return "sms";
   }
@@ -91,7 +94,7 @@ export class SMSProvider implements NotificationProvider {
           throw new Error(`Unsupported SMS provider: ${config.provider}`);
       }
     } catch (error) {
-      console.error("SMS sending failed:", error);
+      logger.error("SMS sending failed:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown SMS error",
@@ -141,7 +144,7 @@ export class SMSProvider implements NotificationProvider {
     // In production, you would use the Twilio SDK
     // For now, we'll simulate the Twilio API call
 
-    console.log("Sending via Twilio:", {
+    logger.info("Sending via Twilio:", {
       from: config.fromPhoneNumber,
       to: config.toPhoneNumbers,
       body: message,
@@ -175,7 +178,7 @@ export class SMSProvider implements NotificationProvider {
     // In production, you would use the AWS SDK
     // For now, we'll simulate the AWS SNS API call
 
-    console.log("Sending via AWS SNS:", {
+    logger.info("Sending via AWS SNS:", {
       from: config.fromPhoneNumber,
       to: config.toPhoneNumbers,
       message,
@@ -212,7 +215,7 @@ export class SMSProvider implements NotificationProvider {
     // In production, you would use the Vonage/Nexmo SDK
     // For now, we'll simulate the Nexmo API call
 
-    console.log("Sending via Nexmo:", {
+    logger.info("Sending via Nexmo:", {
       from: config.fromPhoneNumber,
       to: config.toPhoneNumbers,
       text: message,
@@ -253,7 +256,7 @@ export class SMSProvider implements NotificationProvider {
     // In production, you would use the MessageBird SDK
     // For now, we'll simulate the MessageBird API call
 
-    console.log("Sending via MessageBird:", {
+    logger.info("Sending via MessageBird:", {
       originator: config.fromPhoneNumber,
       recipients: config.toPhoneNumbers,
       body: message,

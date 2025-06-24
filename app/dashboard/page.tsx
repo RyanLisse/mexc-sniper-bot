@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createLogger } from '../../src/lib/structured-logger';
 import { DashboardLayout } from "../../src/components/dashboard-layout";
 import { 
   MetricCard,
@@ -32,6 +33,8 @@ import { Phase3ConfigurationPanel } from "../../src/components/dashboard/phase3-
 import PerformanceMonitoringDashboard from "../../src/components/dashboard/performance-monitoring-dashboard";
 import { useEnhancedPatterns } from "../../src/hooks/use-enhanced-patterns";
 import { Phase3IntegrationSummary } from "../../src/components/dashboard/phase3-integration-summary";
+
+const logger = createLogger('page');
 
 export default function DashboardPage() {
   const { user, isLoading: userLoading } = useAuth();
@@ -86,12 +89,12 @@ export default function DashboardPage() {
 
   // Handler functions for trading targets
   const handleExecuteSnipe = (target: any) => {
-    console.log("Executing snipe for target:", target);
+    logger.info("Executing snipe for target:", target);
     // TODO: Implement snipe execution logic
   };
 
   const handleRemoveTarget = (vcoinId: string) => {
-    console.log("Removing target:", vcoinId);
+    logger.info("Removing target:", vcoinId);
     // TODO: Implement target removal logic
   };
 

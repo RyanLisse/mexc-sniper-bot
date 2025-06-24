@@ -1,18 +1,21 @@
 /**
+import { createLogger } from '../lib/structured-logger';
  * MEXC Retry Service
- * 
+ *
  * Handles retry logic, error classification, and backoff strategies for MEXC API requests.
  * Extracted from mexc-api-client.ts for better modularity.
  */
 
-import type { 
-  RetryConfig, 
-  ErrorClassification, 
+import type {
+  ErrorClassification,
+  RateLimitInfo,
   RequestContext,
-  RateLimitInfo 
+  RetryConfig,
 } from "./mexc-api-types";
 
 export class MexcRetryService {
+  private logger = createLogger("mexc-retry-service");
+
   private retryConfig: RetryConfig;
   private recentErrors: Error[] = [];
   private successRate = 1.0;
@@ -47,10 +50,14 @@ export class MexcRetryService {
    */
   classifyError(error: Error): ErrorClassification {
     const message = error.message.toLowerCase();
-    
+
     // Network errors - always retryable
-    if (message.includes('timeout') || message.includes('econnreset') || 
-        message.includes('socket hang up') || message.includes('network')) {
+    if (
+      message.includes("timeout") ||
+      message.includes("econnreset") ||
+      message.includes("socket hang up") ||
+      message.includes("network")
+    ) {
       return {
         isRetryable: true,
         category: "network",
@@ -60,10 +67,10 @@ export class MexcRetryService {
     }
 
     // Rate limiting - retryable with longer delay
-    if (message.includes('rate limit') || message.includes('429')) {
+    if (message.includes("rate limit") || message.includes("429")) {
       return {
         isRetryable: true,
-        category: "rate_limit", 
+        category: "rate_limit",
         severity: "low",
         suggestedDelay: this.retryConfig.baseDelay * 4,
         suggestedBackoff: 2.5,
@@ -71,8 +78,12 @@ export class MexcRetryService {
     }
 
     // Server errors - retryable
-    if (message.includes('500') || message.includes('502') || 
-        message.includes('503') || message.includes('504')) {
+    if (
+      message.includes("500") ||
+      message.includes("502") ||
+      message.includes("503") ||
+      message.includes("504")
+    ) {
       return {
         isRetryable: true,
         category: "server",
@@ -82,8 +93,12 @@ export class MexcRetryService {
     }
 
     // Authentication errors - not retryable
-    if (message.includes('unauthorized') || message.includes('401') || 
-        message.includes('403') || message.includes('signature')) {
+    if (
+      message.includes("unauthorized") ||
+      message.includes("401") ||
+      message.includes("403") ||
+      message.includes("signature")
+    ) {
       return {
         isRetryable: false,
         category: "authentication",
@@ -92,8 +107,12 @@ export class MexcRetryService {
     }
 
     // Client errors - generally not retryable
-    if (message.includes('400') || message.includes('404') || 
-        message.includes('invalid') || message.includes('bad request')) {
+    if (
+      message.includes("400") ||
+      message.includes("404") ||
+      message.includes("invalid") ||
+      message.includes("bad request")
+    ) {
       return {
         isRetryable: false,
         category: "client",
@@ -102,7 +121,7 @@ export class MexcRetryService {
     }
 
     // Timeout errors - retryable
-    if (message.includes('timeout')) {
+    if (message.includes("timeout")) {
       return {
         isRetryable: true,
         category: "timeout",
@@ -129,7 +148,7 @@ export class MexcRetryService {
     const jitterFactor = this.retryConfig.jitterFactor;
 
     // Exponential backoff: baseDelay * (multiplier ^ attempt)
-    let delay = baseDelay * Math.pow(multiplier, attempt - 1);
+    let delay = baseDelay * multiplier ** (attempt - 1);
 
     // Cap at max delay
     delay = Math.min(delay, this.retryConfig.maxDelay);
@@ -160,7 +179,7 @@ export class MexcRetryService {
 
       // Apply suggested backoff if available
       if (classification.suggestedBackoff && attempt > 1) {
-        delay *= Math.pow(classification.suggestedBackoff, attempt - 1);
+        delay *= classification.suggestedBackoff ** (attempt - 1);
       }
 
       // Cap at max delay
@@ -179,18 +198,19 @@ export class MexcRetryService {
   /**
    * Handle rate limiting response
    */
-  async recordRateLimitingResponse(
-    response: { status: number; headers: Record<string, string> }
-  ): Promise<RateLimitInfo | null> {
+  async recordRateLimitingResponse(response: {
+    status: number;
+    headers: Record<string, string>;
+  }): Promise<RateLimitInfo | null> {
     if (response.status !== 429) {
       return null;
     }
 
     const headers = response.headers;
-    const remaining = parseInt(headers['x-ratelimit-remaining'] || '0', 10);
-    const limit = parseInt(headers['x-ratelimit-limit'] || '1000', 10);
-    const resetTime = parseInt(headers['x-ratelimit-reset'] || '0', 10);
-    const retryAfter = parseInt(headers['retry-after'] || '60', 10);
+    const remaining = parseInt(headers["x-ratelimit-remaining"] || "0", 10);
+    const limit = parseInt(headers["x-ratelimit-limit"] || "1000", 10);
+    const resetTime = parseInt(headers["x-ratelimit-reset"] || "0", 10);
+    const retryAfter = parseInt(headers["retry-after"] || "60", 10);
 
     this.lastRateLimitReset = resetTime * 1000; // Convert to milliseconds
 
@@ -207,7 +227,7 @@ export class MexcRetryService {
    */
   async handleRateLimitError(rateLimitInfo: RateLimitInfo): Promise<void> {
     const now = Date.now();
-    
+
     // Calculate delay based on rate limit info
     let delay = rateLimitInfo.retryAfter || this.retryConfig.baseDelay * 4;
 
@@ -220,8 +240,10 @@ export class MexcRetryService {
     // Cap delay at max
     delay = Math.min(delay, this.retryConfig.maxDelay);
 
-    console.warn(`Rate limited. Waiting ${delay}ms before retry. Remaining: ${rateLimitInfo.remaining}/${rateLimitInfo.limit}`);
-    
+    logger.warn(
+      `Rate limited. Waiting ${delay}ms before retry. Remaining: ${rateLimitInfo.remaining}/${rateLimitInfo.limit}`
+    );
+
     await this.sleep(delay);
   }
 
@@ -236,7 +258,7 @@ export class MexcRetryService {
     // Track recent errors for adaptive retry
     if (!success) {
       this.recentErrors.push(new Error("Request failed"));
-      
+
       // Keep only last 100 errors
       if (this.recentErrors.length > 100) {
         this.recentErrors = this.recentErrors.slice(-100);
@@ -245,11 +267,11 @@ export class MexcRetryService {
 
     // Calculate success rate over recent requests
     const recentFailures = this.recentErrors.filter(
-      error => Date.now() - error.name.length < 300000 // Last 5 minutes
+      (error) => Date.now() - error.name.length < 300000 // Last 5 minutes
     ).length;
 
     // Approximate success rate based on recent failures
-    this.successRate = Math.max(0.1, 1 - (recentFailures / 100));
+    this.successRate = Math.max(0.1, 1 - recentFailures / 100);
   }
 
   /**
@@ -300,11 +322,14 @@ export class MexcRetryService {
         const adaptiveMultiplier = this.getAdaptiveRetryMultiplier();
         const delay = baseDelay * adaptiveMultiplier;
 
-        console.warn(`Request failed (attempt ${attempt}/${retries + 1}). Retrying in ${delay}ms...`, {
-          error: lastError.message,
-          endpoint: context.endpoint,
-          requestId: context.requestId,
-        });
+        logger.warn(
+          `Request failed (attempt ${attempt}/${retries + 1}). Retrying in ${delay}ms...`,
+          {
+            error: lastError.message,
+            endpoint: context.endpoint,
+            requestId: context.requestId,
+          }
+        );
 
         await this.sleep(delay);
       }
@@ -317,7 +342,7 @@ export class MexcRetryService {
    * Sleep for specified milliseconds
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**

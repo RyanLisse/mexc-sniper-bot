@@ -8,6 +8,7 @@
  * - Optimized bundle size through tree-shaking
  */
 
+import { createLogger } from "../lib/structured-logger";
 import type {
   BalanceEntry,
   CalendarEntry,
@@ -17,7 +18,6 @@ import type {
   MexcServiceResponse,
   SymbolEntry,
 } from "./modules/mexc-api-types";
-
 import { MexcCacheLayer } from "./modules/mexc-cache-layer";
 import { MexcCoreClient } from "./modules/mexc-core-client";
 
@@ -60,6 +60,8 @@ const DEFAULT_CONFIG: Required<UnifiedMexcConfigV2> = {
 // ============================================================================
 
 export class UnifiedMexcServiceV2 {
+  private logger = createLogger("unified-mexc-service-v2");
+
   private config: Required<UnifiedMexcConfigV2>;
   private coreClient: MexcCoreClient;
   private cacheLayer: MexcCacheLayer;
@@ -156,10 +158,19 @@ export class UnifiedMexcServiceV2 {
   /**
    * Get account balances as Portfolio object
    */
-  async getAccountBalances(): Promise<MexcServiceResponse<{ balances: BalanceEntry[]; totalUsdtValue: number; totalValue: number; totalValueBTC: number; allocation: Record<string, number>; performance24h: { change: number; changePercent: number } }>> {
+  async getAccountBalances(): Promise<
+    MexcServiceResponse<{
+      balances: BalanceEntry[];
+      totalUsdtValue: number;
+      totalValue: number;
+      totalValueBTC: number;
+      allocation: Record<string, number>;
+      performance24h: { change: number; changePercent: number };
+    }>
+  > {
     // Get the basic balance data
     const balanceResponse = await this.coreClient.getAccountBalance();
-    
+
     if (!balanceResponse.success) {
       // Return error in Portfolio format
       return {
@@ -171,21 +182,21 @@ export class UnifiedMexcServiceV2 {
     }
 
     const rawBalances = balanceResponse.data || [];
-    
+
     // Transform raw balances to include calculated fields
     const balances = rawBalances.map((balance: any) => {
-      const free = parseFloat(balance.free || '0');
-      const locked = parseFloat(balance.locked || '0');
+      const free = parseFloat(balance.free || "0");
+      const locked = parseFloat(balance.locked || "0");
       const total = free + locked;
-      
+
       // For now, use simplified USDT value calculation
       // In production, this should fetch real-time prices from MEXC price API
       let usdtValue = 0;
-      if (balance.asset === 'USDT') {
+      if (balance.asset === "USDT") {
         usdtValue = total;
-      } else if (balance.asset === 'BTC') {
+      } else if (balance.asset === "BTC") {
         usdtValue = total * 40000; // Placeholder BTC price
-      } else if (balance.asset === 'ETH') {
+      } else if (balance.asset === "ETH") {
         usdtValue = total * 2500; // Placeholder ETH price
       } else {
         usdtValue = total * 1; // Placeholder for other assets
@@ -199,7 +210,7 @@ export class UnifiedMexcServiceV2 {
         usdtValue,
       };
     });
-    
+
     // Calculate portfolio metrics
     const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
     const totalValue = totalUsdtValue; // For now, treat as same as USDT value
@@ -208,7 +219,7 @@ export class UnifiedMexcServiceV2 {
     // Calculate allocation percentages
     const allocation: Record<string, number> = {};
     if (totalUsdtValue > 0) {
-      balances.forEach(balance => {
+      balances.forEach((balance) => {
         if (balance.usdtValue && balance.usdtValue > 0) {
           allocation[balance.asset] = (balance.usdtValue / totalUsdtValue) * 100;
         }
@@ -274,9 +285,9 @@ export class UnifiedMexcServiceV2 {
    */
   async getSymbolsForVcoins(vcoinIds: string[]): Promise<MexcServiceResponse<SymbolEntry[]>> {
     // For multiple vcoins, we'll fetch each one and combine results
-    const promises = vcoinIds.map(vcoinId => this.getSymbolsByVcoinId(vcoinId));
+    const promises = vcoinIds.map((vcoinId) => this.getSymbolsByVcoinId(vcoinId));
     const responses = await Promise.all(promises);
-    
+
     const allSymbols: SymbolEntry[] = [];
     let hasError = false;
     let errorMessage = "";
@@ -318,9 +329,9 @@ export class UnifiedMexcServiceV2 {
    * Get bulk activity data for multiple currencies
    */
   async getBulkActivityData(currencies: string[]): Promise<MexcServiceResponse<any[]>> {
-    const promises = currencies.map(currency => this.getActivityData(currency));
+    const promises = currencies.map((currency) => this.getActivityData(currency));
     const responses = await Promise.all(promises);
-    
+
     const allData: any[] = [];
     let hasError = false;
     let errorMessage = "";
@@ -354,7 +365,10 @@ export class UnifiedMexcServiceV2 {
   /**
    * Check if currency has recent activity
    */
-  async hasRecentActivity(currency: string, timeframeMs: number = 24 * 60 * 60 * 1000): Promise<boolean> {
+  async hasRecentActivity(
+    currency: string,
+    timeframeMs: number = 24 * 60 * 60 * 1000
+  ): Promise<boolean> {
     try {
       const activityResponse = await this.getActivityData(currency);
       if (!activityResponse.success || !activityResponse.data) {
@@ -364,14 +378,14 @@ export class UnifiedMexcServiceV2 {
       // Check if the activity data indicates recent activity within timeframe
       const currentTime = Date.now();
       const cutoffTime = currentTime - timeframeMs;
-      
+
       // For now, assume activity data has a timestamp field
       // In practice, you'd check the actual structure of the activity data
       const hasRecent = activityResponse.timestamp > cutoffTime;
-      
+
       return hasRecent;
     } catch (error) {
-      console.warn(`Failed to check recent activity for ${currency}:`, error);
+      logger.warn(`Failed to check recent activity for ${currency}:`, error);
       return false;
     }
   }
@@ -385,11 +399,11 @@ export class UnifiedMexcServiceV2 {
    */
   async placeOrder(orderData: {
     symbol: string;
-    side: 'BUY' | 'SELL';
-    type: 'LIMIT' | 'MARKET';
+    side: "BUY" | "SELL";
+    type: "LIMIT" | "MARKET";
     quantity: string;
     price?: string;
-    timeInForce?: 'GTC' | 'IOC' | 'FOK';
+    timeInForce?: "GTC" | "IOC" | "FOK";
   }): Promise<MexcServiceResponse<any>> {
     try {
       // Delegate to core client for order placement
@@ -445,10 +459,10 @@ export class UnifiedMexcServiceV2 {
    */
   hasValidCredentials(): boolean {
     return Boolean(
-      this.config.apiKey && 
-      this.config.secretKey && 
-      this.config.apiKey.length > 0 && 
-      this.config.secretKey.length > 0
+      this.config.apiKey &&
+        this.config.secretKey &&
+        this.config.apiKey.length > 0 &&
+        this.config.secretKey.length > 0
     );
   }
 

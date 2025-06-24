@@ -1,6 +1,6 @@
 /**
  * Safety System Types and Interfaces
- * 
+ *
  * Comprehensive type definitions for the safety coordination system.
  * Provides type safety for all safety-related operations and configurations.
  */
@@ -161,8 +161,18 @@ export type SystemStatus = "operational" | "degraded" | "critical" | "emergency"
 export type RiskTrend = "improving" | "stable" | "deteriorating";
 export type EmergencyLevel = "none" | "low" | "medium" | "high" | "critical";
 export type AlertSeverity = "low" | "medium" | "high" | "critical";
-export type AlertType = "agent_anomaly" | "risk_breach" | "emergency_condition" | "consensus_failure" | "system_degradation";
-export type ActionType = "alert" | "restrict" | "shutdown" | "emergency_halt" | "consensus_override";
+export type AlertType =
+  | "agent_anomaly"
+  | "risk_breach"
+  | "emergency_condition"
+  | "consensus_failure"
+  | "system_degradation";
+export type ActionType =
+  | "alert"
+  | "restrict"
+  | "shutdown"
+  | "emergency_halt"
+  | "consensus_override";
 
 // ======================
 // Safety Constants

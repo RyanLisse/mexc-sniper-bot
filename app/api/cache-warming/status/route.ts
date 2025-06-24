@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { createApiResponse } from "../../../../src/lib/api-response";
 
 // Lazy import cache services to prevent build-time initialization
@@ -8,7 +9,7 @@ const getCacheWarmingService = () => {
     const { getCacheWarmingService: _getCacheWarmingService } = require("../../../../src/lib/cache-warming-service");
     return _getCacheWarmingService();
   } catch (error) {
-    console.warn("[Cache Warming Status] Failed to load cache warming service:", error);
+    logger.warn("[Cache Warming Status] Failed to load cache warming service:", { error: error });
     return null;
   }
 };
@@ -19,10 +20,12 @@ const getGlobalCacheMonitoring = () => {
     const { globalCacheMonitoring } = require("../../../../src/lib/cache-monitoring");
     return globalCacheMonitoring;
   } catch (error) {
-    console.warn("[Cache Warming Status] Failed to load cache monitoring:", error);
+    logger.warn("[Cache Warming Status] Failed to load cache monitoring:", { error: error });
     return null;
   }
 };
+
+const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,7 +48,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[Cache Warming Status] Error:", error);
+    logger.error("[Cache Warming Status] Error:", { error: error });
     return createApiResponse(
       {
         success: false,
@@ -102,7 +105,7 @@ async function getCacheWarmingStatus() {
       },
     };
   } catch (error) {
-    console.error("[Cache Warming Status] Error getting warming status:", error);
+    logger.error("[Cache Warming Status] Error getting warming status:", { error: error });
     return {
       isActive: false,
       strategies: [],
@@ -156,7 +159,7 @@ async function getCachePerformanceMetrics() {
       },
     };
   } catch (error) {
-    console.error("[Cache Performance] Error getting metrics:", error);
+    logger.error("[Cache Performance] Error getting metrics:", { error: error });
     return {
       hitRate: 0,
       missRate: 100,
@@ -203,7 +206,7 @@ async function getCacheConnectionStatus() {
       },
     };
   } catch (error) {
-    console.error("[Cache Connection] Error checking connection:", error);
+    logger.error("[Cache Connection] Error checking connection:", { error: error });
     return {
       redis: {
         connected: false,

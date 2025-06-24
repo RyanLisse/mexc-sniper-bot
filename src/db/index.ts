@@ -1,14 +1,13 @@
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "./schema";
-
 // OpenTelemetry database instrumentation
 import {
   instrumentConnectionHealth,
   instrumentDatabase,
   instrumentDatabaseQuery,
 } from "../lib/opentelemetry-database-instrumentation";
+import * as schema from "./schema";
 
 // Retry configuration
 const RETRY_DELAYS = [100, 500, 1000, 2000, 5000]; // Exponential backoff
@@ -28,6 +27,8 @@ let postgresClient: ReturnType<typeof postgres> | null = null;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Retry logic wrapper
+const logger = createLogger("index");
+
 async function withRetry<T>(
   operation: () => Promise<T>,
   operationName: string,
@@ -41,7 +42,7 @@ async function withRetry<T>(
     } catch (error) {
       lastError = error;
       const delay = RETRY_DELAYS[Math.min(i, RETRY_DELAYS.length - 1)];
-      console.warn(
+      logger.warn(
         `[Database] ${operationName} failed (attempt ${i + 1}/${retries}), retrying in ${delay}ms...`,
         error
       );
@@ -53,7 +54,7 @@ async function withRetry<T>(
     }
   }
 
-  console.error(`[Database] ${operationName} failed after ${retries} attempts`, lastError);
+  logger.error(`[Database] ${operationName} failed after ${retries} attempts`, lastError);
   throw lastError;
 }
 
@@ -109,11 +110,11 @@ function createPostgresClient() {
 
   try {
     postgresClient = postgres(process.env.DATABASE_URL, connectionConfig);
-    console.log(`[Database] PostgreSQL connection established with NeonDB`);
+    logger.info(`[Database] PostgreSQL connection established with NeonDB`);
     return postgresClient;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[Database] Failed to create PostgreSQL client:`, errorMessage);
+    logger.error(`[Database] Failed to create PostgreSQL client:`, errorMessage);
     throw new Error(`Failed to create PostgreSQL client: ${errorMessage}`);
   }
 }
@@ -132,7 +133,7 @@ function createDatabase() {
 
   // Debug logging (remove in production)
   if (process.env.NODE_ENV !== "production") {
-    console.log("[Database] Using NeonDB PostgreSQL database");
+    logger.info("[Database] Using NeonDB PostgreSQL database");
   }
 
   try {
@@ -144,7 +145,7 @@ function createDatabase() {
 
     // Test connection immediately to catch auth issues early
     if (isProduction || isRailway) {
-      console.log("[Database] Testing NeonDB connection in production...");
+      logger.info("[Database] Testing NeonDB connection in production...");
     }
 
     // Initialize PostgreSQL extensions if needed
@@ -153,21 +154,21 @@ function createDatabase() {
         try {
           // Test basic connectivity
           await db.execute(sql`SELECT 1 as test`);
-          console.log("[Database] NeonDB connection verified successfully");
+          logger.info("[Database] NeonDB connection verified successfully");
         } catch (error) {
-          console.error("[Database] NeonDB connection test failed:", error);
+          logger.error("[Database] NeonDB connection test failed:", error);
         }
       }, 1000);
     }
 
     return db;
   } catch (error) {
-    console.error("[Database] NeonDB initialization error:", error);
+    logger.error("[Database] NeonDB initialization error:", error);
 
     // Enhanced error handling for production
     if (isProduction || isRailway) {
-      console.error("[Database] NeonDB failed in production environment");
-      console.error("[Database] Error details:", {
+      logger.error("[Database] NeonDB failed in production environment");
+      logger.error("[Database] Error details:", {
         message: error instanceof Error ? error.message : String(error),
         code: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
         env: {
@@ -217,41 +218,42 @@ export * from "./schema";
 import { databaseConnectionPool } from "../lib/database-connection-pool";
 // Import optimization tools
 import { databaseOptimizationManager } from "../lib/database-optimization-manager";
+import { createLogger } from "../lib/structured-logger";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
 
 // Database utilities with retry logic
 export async function initializeDatabase() {
   return withRetry(
     async () => {
-      console.log("[Database] Initializing NeonDB database...");
+      logger.info("[Database] Initializing NeonDB database...");
 
       // Test connection with a simple query
       const result = await db.execute(sql`SELECT 1`);
       if (result) {
-        console.log("[Database] NeonDB connection successful");
+        logger.info("[Database] NeonDB connection successful");
       }
 
       // Check available PostgreSQL extensions
       try {
         // Check for vector extension (pgvector)
         await db.execute(sql`SELECT 1 FROM pg_available_extensions WHERE name = 'vector'`);
-        console.log("[Database] Vector extension (pgvector) available for embeddings");
+        logger.info("[Database] Vector extension (pgvector) available for embeddings");
       } catch (_error) {
-        console.log("[Database] Vector extension not available, AI features may be limited");
+        logger.info("[Database] Vector extension not available, AI features may be limited");
       }
 
       // Initialize performance monitoring
       if (process.env.NODE_ENV !== "test") {
         queryPerformanceMonitor.startMonitoring();
-        console.log("[Database] Performance monitoring started");
+        logger.info("[Database] Performance monitoring started");
 
         // Auto-optimize for agent workloads in production
         if (process.env.NODE_ENV === "production") {
           try {
             await databaseOptimizationManager.optimizeForAgentWorkloads();
-            console.log("[Database] Optimized for AI agent workloads");
+            logger.info("[Database] Optimized for AI agent workloads");
           } catch (error) {
-            console.warn("[Database] Failed to auto-optimize for agents:", error);
+            logger.warn("[Database] Failed to auto-optimize for agents:", error);
           }
         }
       }
@@ -351,7 +353,7 @@ export async function monitoredQuery<T>(
 
 export async function closeDatabase() {
   try {
-    console.log("[Database] Database connection closed");
+    logger.info("[Database] Database connection closed");
 
     // Stop performance monitoring
     queryPerformanceMonitor.stopMonitoring();
@@ -366,14 +368,14 @@ export async function closeDatabase() {
           postgresClient.end({ timeout: 5 }),
           new Promise((resolve) =>
             setTimeout(() => {
-              console.warn("[Database] PostgreSQL close timed out, forcing shutdown");
+              logger.warn("[Database] PostgreSQL close timed out, forcing shutdown");
               resolve(undefined);
             }, 5000)
           ),
         ]);
-        console.log("[Database] NeonDB PostgreSQL connection closed");
+        logger.info("[Database] NeonDB PostgreSQL connection closed");
       } catch (error) {
-        console.warn("[Database] Error closing PostgreSQL connection:", error);
+        logger.warn("[Database] Error closing PostgreSQL connection:", error);
       }
     }
 
@@ -381,6 +383,6 @@ export async function closeDatabase() {
     dbInstance = null;
     postgresClient = null;
   } catch (error) {
-    console.error("[Database] Error closing database:", error);
+    logger.error("[Database] Error closing database:", error);
   }
 }

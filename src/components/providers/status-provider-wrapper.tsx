@@ -10,7 +10,7 @@ import { StatusProvider } from "../../contexts/status-context-v2";
  * This component wraps the application with the React Query-based StatusProvider (v2)
  * to ensure all components have access to synchronized status information with better
  * caching, error handling, and automatic refresh capabilities.
- * 
+ *
  * FIXED: Migrated from reducer-based v1 to React Query-based v2 for better performance
  * and status synchronization.
  */

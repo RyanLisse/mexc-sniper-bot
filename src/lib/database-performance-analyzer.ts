@@ -1,4 +1,5 @@
 /**
+import { createLogger } from './structured-logger';
  * Database Performance Analyzer
  *
  * Phase 1: Query Performance Analysis (4h)
@@ -57,6 +58,8 @@ interface OptimizationRecommendation {
 }
 
 export class DatabasePerformanceAnalyzer {
+  private logger = createLogger("database-performance-analyzer");
+
   private static instance: DatabasePerformanceAnalyzer;
   private analysisResults: Map<string, any> = new Map();
 
@@ -71,7 +74,7 @@ export class DatabasePerformanceAnalyzer {
    * Analyze database query plans for performance issues
    */
   async analyzeQueryPlans(): Promise<ExpensiveQuery[]> {
-    console.log("🔍 Analyzing database query plans...");
+    logger.info("🔍 Analyzing database query plans...");
 
     const expensiveQueries: ExpensiveQuery[] = [];
 
@@ -140,9 +143,9 @@ export class DatabasePerformanceAnalyzer {
           suggestedIndexes: this.analyzeMissingIndexes(explanation, queryInfo.query),
         });
 
-        console.log(`📊 ${queryInfo.name}: ${executionTime.toFixed(2)}ms`);
+        logger.info(`📊 ${queryInfo.name}: ${executionTime.toFixed(2)}ms`);
       } catch (error) {
-        console.error(`❌ Failed to analyze query ${queryInfo.name}:`, error);
+        logger.error(`❌ Failed to analyze query ${queryInfo.name}:`, error);
       }
     }
 
@@ -183,7 +186,7 @@ export class DatabasePerformanceAnalyzer {
       const result = await db.execute(sql.raw(analyzedQuery));
       return Array.isArray(result) ? result : (result as any).rows || [];
     } catch (error) {
-      console.warn(`Query execution failed during analysis: ${error}`);
+      logger.warn(`Query execution failed during analysis: ${error}`);
       return [];
     }
   }
@@ -276,7 +279,7 @@ export class DatabasePerformanceAnalyzer {
    * Analyze table statistics
    */
   async analyzeTableStats(): Promise<TableScanStats[]> {
-    console.log("📈 Analyzing table statistics...");
+    logger.info("📈 Analyzing table statistics...");
 
     const stats: TableScanStats[] = [];
 
@@ -328,9 +331,9 @@ export class DatabasePerformanceAnalyzer {
           rowsScanned: rowCount,
         });
 
-        console.log(`📊 ${tableName}: ${rowCount} rows, ${indexList.length} indexes`);
+        logger.info(`📊 ${tableName}: ${rowCount} rows, ${indexList.length} indexes`);
       } catch (error) {
-        console.warn(`Failed to analyze table ${tableName}:`, error);
+        logger.warn(`Failed to analyze table ${tableName}:`, error);
       }
     }
 
@@ -354,7 +357,7 @@ export class DatabasePerformanceAnalyzer {
    * Analyze index usage effectiveness
    */
   async analyzeIndexUsage(): Promise<IndexUsageStats[]> {
-    console.log("🗂️ Analyzing index usage...");
+    logger.info("🗂️ Analyzing index usage...");
 
     const indexStats: IndexUsageStats[] = [];
 
@@ -406,7 +409,7 @@ export class DatabasePerformanceAnalyzer {
           });
         }
       } catch (error) {
-        console.warn(`Failed to analyze indexes for ${tableName}:`, error);
+        logger.warn(`Failed to analyze indexes for ${tableName}:`, error);
       }
     }
 
@@ -514,7 +517,7 @@ export class DatabasePerformanceAnalyzer {
    * Run comprehensive performance analysis
    */
   async runComprehensiveAnalysis(): Promise<DatabaseStats> {
-    console.log("🚀 Starting comprehensive database performance analysis...");
+    logger.info("🚀 Starting comprehensive database performance analysis...");
 
     const startTime = performance.now();
 
@@ -532,7 +535,7 @@ export class DatabasePerformanceAnalyzer {
     const recommendations = this.generateRecommendations(expensiveQueries, tableStats, indexStats);
 
     const analysisTime = performance.now() - startTime;
-    console.log(`✅ Analysis completed in ${analysisTime.toFixed(2)}ms`);
+    logger.info(`✅ Analysis completed in ${analysisTime.toFixed(2)}ms`);
 
     const results: DatabaseStats = {
       totalQueries: monitoringStats.totalQueries,

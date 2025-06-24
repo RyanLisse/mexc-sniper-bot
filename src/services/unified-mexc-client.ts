@@ -1,4 +1,5 @@
 import * as crypto from "node:crypto";
+import { createLogger } from "../lib/structured-logger";
 import {
   type BalanceEntry,
   BalanceEntrySchema,
@@ -14,6 +15,7 @@ import {
   TickerSchema,
 } from "../schemas/mexc-schemas-extracted";
 import { mexcApiBreaker } from "./circuit-breaker";
+import { getGlobalErrorRecoveryService } from "./mexc-error-recovery-service";
 
 // ============================================================================
 // Core Configuration and Types
@@ -71,6 +73,8 @@ interface CacheEntry<T> {
 }
 
 class RequestCache {
+  private logger = createLogger("unified-mexc-client");
+
   private cache = new Map<string, CacheEntry<unknown>>();
   private maxSize = 1000;
 
@@ -170,7 +174,7 @@ export class UnifiedMexcClient {
       cacheTTL: config.cacheTTL || 60000, // 1 minute default
     };
 
-    console.log(`[UnifiedMexcClient] Initialized with config:`, {
+    logger.info(`[UnifiedMexcClient] Initialized with config:`, {
       hasApiKey: Boolean(this.config.apiKey),
       hasSecretKey: Boolean(this.config.secretKey),
       baseUrl: this.config.baseUrl,
@@ -246,7 +250,7 @@ export class UnifiedMexcClient {
     if (this.config.enableCaching && !skipCache && !authenticated) {
       const cached = this.cache.get<T>(cacheKey);
       if (cached) {
-        console.log(`[UnifiedMexcClient] Cache hit for ${endpoint} (${requestId})`);
+        logger.info(`[UnifiedMexcClient] Cache hit for ${endpoint} (${requestId})`);
         return {
           success: true,
           data: cached,
@@ -288,7 +292,7 @@ export class UnifiedMexcClient {
               params.signature = signature;
               headers["X-MEXC-APIKEY"] = this.config.apiKey;
 
-              console.log(`[UnifiedMexcClient] Authenticated request: ${endpoint} (${requestId})`);
+              logger.info(`[UnifiedMexcClient] Authenticated request: ${endpoint} (${requestId})`);
             }
 
             // Build URL with query parameters
@@ -305,7 +309,7 @@ export class UnifiedMexcClient {
               }
             });
 
-            console.log(
+            logger.info(
               `[UnifiedMexcClient] ${authenticated ? "Auth" : "Public"} request: ${endpoint} (attempt ${attempt}/${maxRetries}) (${requestId})`
             );
 
@@ -357,7 +361,7 @@ export class UnifiedMexcClient {
               this.cache.set(cacheKey, data, this.config.cacheTTL);
             }
 
-            console.log(
+            logger.info(
               `[UnifiedMexcClient] Success: ${endpoint} (attempt ${attempt}) (${requestId})`
             );
 
@@ -381,7 +385,7 @@ export class UnifiedMexcClient {
                 error.message.includes("ECONNRESET") ||
                 error.message.includes("ENOTFOUND"));
 
-            console.error(
+            logger.error(
               `[UnifiedMexcClient] Request failed (attempt ${attempt}/${maxRetries}) (${requestId}):`,
               error instanceof Error ? error.message : error
             );
@@ -420,7 +424,7 @@ export class UnifiedMexcClient {
 
             // Exponential backoff with jitter for retryable errors
             const delay = baseDelay * 2 ** (attempt - 1) + Math.random() * 1000;
-            console.log(`[UnifiedMexcClient] Retrying in ${Math.round(delay)}ms... (${requestId})`);
+            logger.info(`[UnifiedMexcClient] Retrying in ${Math.round(delay)}ms... (${requestId})`);
             await new Promise((resolve) => setTimeout(resolve, delay));
           }
         }
@@ -429,7 +433,7 @@ export class UnifiedMexcClient {
       },
       async () => {
         // Fallback mechanism - return a minimal error response
-        console.warn(`[UnifiedMexcClient] Circuit breaker fallback triggered (${requestId})`);
+        logger.warn(`[UnifiedMexcClient] Circuit breaker fallback triggered (${requestId})`);
         return {
           success: false,
           data: null as T,
@@ -447,7 +451,7 @@ export class UnifiedMexcClient {
 
   async getCalendarListings(): Promise<UnifiedMexcResponse<CalendarEntry[]>> {
     try {
-      console.log("[UnifiedMexcClient] Fetching calendar listings...");
+      logger.info("[UnifiedMexcClient] Fetching calendar listings...");
 
       const timestamp = Date.now();
       const response = await this.makeRequest<{ data: unknown[] }>(
@@ -492,7 +496,7 @@ export class UnifiedMexcClient {
                 firstOpenTime: Number(entry.firstOpenTime),
               });
             } catch (_error) {
-              console.warn("[UnifiedMexcClient] Invalid calendar entry:", entry);
+              logger.warn("[UnifiedMexcClient] Invalid calendar entry:", entry);
               return undefined;
             }
           })
@@ -521,14 +525,14 @@ export class UnifiedMexcClient {
                 firstOpenTime: Number(entry.firstOpenTime),
               });
             } catch (_error) {
-              console.warn("[UnifiedMexcClient] Invalid calendar entry:", entry);
+              logger.warn("[UnifiedMexcClient] Invalid calendar entry:", entry);
               return undefined;
             }
           })
           .filter((entry): entry is CalendarEntry => entry !== undefined);
       }
 
-      console.log(`[UnifiedMexcClient] Retrieved ${calendarData.length} calendar entries`);
+      logger.info(`[UnifiedMexcClient] Retrieved ${calendarData.length} calendar entries`);
 
       return {
         success: true, // API call successful regardless of data count
@@ -538,7 +542,7 @@ export class UnifiedMexcClient {
         requestId: response.requestId,
       };
     } catch (error) {
-      console.error("[UnifiedMexcClient] Calendar listings failed:", error);
+      logger.error("[UnifiedMexcClient] Calendar listings failed:", error);
       return {
         success: false,
         data: [],
@@ -550,7 +554,7 @@ export class UnifiedMexcClient {
 
   async getSymbolsV2(vcoinId?: string): Promise<UnifiedMexcResponse<SymbolEntry[]>> {
     try {
-      console.log(
+      logger.info(
         `[UnifiedMexcClient] Fetching symbols data${vcoinId ? ` for ${vcoinId}` : ""}...`
       );
 
@@ -605,14 +609,14 @@ export class UnifiedMexcClient {
                 ot: entry.ot as Record<string, unknown>,
               });
             } catch (_error) {
-              console.warn("[UnifiedMexcClient] Invalid symbol entry:", entry);
+              logger.warn("[UnifiedMexcClient] Invalid symbol entry:", entry);
               return null;
             }
           })
           .filter((entry): entry is SymbolEntry => entry !== null);
       }
 
-      console.log(`[UnifiedMexcClient] Retrieved ${symbolData.length} symbol entries`);
+      logger.info(`[UnifiedMexcClient] Retrieved ${symbolData.length} symbol entries`);
 
       return {
         success: symbolData.length > 0,
@@ -622,7 +626,7 @@ export class UnifiedMexcClient {
         requestId: response.requestId,
       };
     } catch (error) {
-      console.error("[UnifiedMexcClient] Symbols data failed:", error);
+      logger.error("[UnifiedMexcClient] Symbols data failed:", error);
       return {
         success: false,
         data: [],
@@ -648,7 +652,7 @@ export class UnifiedMexcClient {
         };
       }
 
-      console.log("[UnifiedMexcClient] Fetching exchange info...");
+      logger.info("[UnifiedMexcClient] Fetching exchange info...");
       const response = await this.makeRequest<{
         symbols: Array<{
           symbol: string;
@@ -686,7 +690,7 @@ export class UnifiedMexcClient {
           try {
             return ExchangeSymbolSchema.parse(symbol);
           } catch (_error) {
-            console.warn("[UnifiedMexcClient] Invalid exchange symbol:", symbol);
+            logger.warn("[UnifiedMexcClient] Invalid exchange symbol:", symbol);
             return null;
           }
         })
@@ -695,7 +699,7 @@ export class UnifiedMexcClient {
       this.exchangeSymbolsCache = validSymbols;
       this.exchangeSymbolsCacheTime = now;
 
-      console.log(`[UnifiedMexcClient] Retrieved ${validSymbols.length} USDT trading pairs`);
+      logger.info(`[UnifiedMexcClient] Retrieved ${validSymbols.length} USDT trading pairs`);
 
       return {
         success: true,
@@ -705,7 +709,7 @@ export class UnifiedMexcClient {
         requestId: response.requestId,
       };
     } catch (error) {
-      console.error("[UnifiedMexcClient] Exchange info failed:", error);
+      logger.error("[UnifiedMexcClient] Exchange info failed:", error);
       return {
         success: false,
         data: [],
@@ -737,7 +741,7 @@ export class UnifiedMexcClient {
           try {
             return TickerSchema.parse(ticker);
           } catch (_error) {
-            console.warn("[UnifiedMexcClient] Invalid ticker data:", ticker);
+            logger.warn("[UnifiedMexcClient] Invalid ticker data:", ticker);
             return null;
           }
         })
@@ -751,7 +755,7 @@ export class UnifiedMexcClient {
         requestId: response.requestId,
       };
     } catch (error) {
-      console.error("[UnifiedMexcClient] 24hr ticker failed:", error);
+      logger.error("[UnifiedMexcClient] 24hr ticker failed:", error);
       return {
         success: false,
         data: [],
@@ -762,13 +766,22 @@ export class UnifiedMexcClient {
   }
 
   async testConnectivity(): Promise<boolean> {
+    const recoveryService = getGlobalErrorRecoveryService();
+
     try {
-      console.log("[UnifiedMexcClient] Testing connectivity...");
-      const response = await this.makeRequest("/api/v3/ping");
-      console.log("[UnifiedMexcClient] Connectivity test successful");
-      return response.success;
+      logger.info("[UnifiedMexcClient] Testing connectivity with error recovery...");
+
+      const result = await recoveryService.executeWithRecovery(
+        () => this.makeRequest("/api/v3/ping"),
+        undefined, // No fallback for connectivity test
+        "Connectivity Test"
+      );
+
+      const success = result.success && result.data?.success;
+      logger.info("[UnifiedMexcClient] Connectivity test result:", success);
+      return success;
     } catch (error) {
-      console.error("[UnifiedMexcClient] Connectivity test failed:", error);
+      logger.error("[UnifiedMexcClient] Connectivity test failed:", error);
       return false;
     }
   }
@@ -778,7 +791,7 @@ export class UnifiedMexcClient {
       const response = await this.makeRequest<{ serverTime: number }>("/api/v3/time");
       return response.success ? response.data.serverTime : Date.now();
     } catch (error) {
-      console.error("[UnifiedMexcClient] Failed to get server time:", error);
+      logger.error("[UnifiedMexcClient] Failed to get server time:", error);
       return Date.now();
     }
   }
@@ -801,7 +814,7 @@ export class UnifiedMexcClient {
       const response = await this.makeRequest("/api/v3/account", {}, true, true); // Skip cache for account info
       return response as UnifiedMexcResponse<Record<string, unknown>>;
     } catch (error) {
-      console.error("[UnifiedMexcClient] Account info failed:", error);
+      logger.error("[UnifiedMexcClient] Account info failed:", error);
       return {
         success: false,
         data: {},
@@ -815,7 +828,7 @@ export class UnifiedMexcClient {
     UnifiedMexcResponse<{ balances: BalanceEntry[]; totalUsdtValue: number; lastUpdated: string }>
   > {
     if (!this.config.apiKey || !this.config.secretKey) {
-      console.error("[UnifiedMexcClient] MEXC API credentials not configured");
+      logger.error("[UnifiedMexcClient] MEXC API credentials not configured");
       return {
         success: false,
         data: {
@@ -829,17 +842,44 @@ export class UnifiedMexcClient {
       };
     }
 
-    try {
-      console.log("[UnifiedMexcClient] Fetching account balances...");
+    // Use error recovery service for this critical operation
+    const recoveryService = getGlobalErrorRecoveryService();
 
-      // Get account info with balances
-      const accountResponse = await this.makeRequest<{
-        balances: Array<{
-          asset: string;
-          free: string;
-          locked: string;
-        }>;
-      }>("/api/v3/account", {}, true, true); // Skip cache for account info
+    try {
+      logger.info("[UnifiedMexcClient] Fetching account balances with error recovery...");
+
+      // Get account info with balances using error recovery
+      const accountResponse = await recoveryService.handleMexcApiCall(
+        () =>
+          this.makeRequest<{
+            balances: Array<{
+              asset: string;
+              free: string;
+              locked: string;
+            }>;
+          }>("/api/v3/account", {}, true, true), // Skip cache for account info
+        // Fallback: Try with environment credentials if available
+        this.config.apiKey !== process.env.MEXC_API_KEY &&
+          process.env.MEXC_API_KEY &&
+          process.env.MEXC_SECRET_KEY
+          ? () => {
+              const fallbackClient = new UnifiedMexcClient({
+                apiKey: process.env.MEXC_API_KEY!,
+                secretKey: process.env.MEXC_SECRET_KEY!,
+                baseUrl: this.config.baseUrl,
+                timeout: this.config.timeout,
+              });
+              return fallbackClient.makeRequest<{
+                balances: Array<{
+                  asset: string;
+                  free: string;
+                  locked: string;
+                }>;
+              }>("/api/v3/account", {}, true, true);
+            }
+          : undefined,
+        "Account Balances"
+      );
 
       if (!accountResponse.success || !accountResponse.data?.balances) {
         return {
@@ -872,7 +912,7 @@ export class UnifiedMexcClient {
         .map((balance) => `${balance.asset}USDT`)
         .filter((symbol) => validTradingPairs.has(symbol));
 
-      console.log(`[UnifiedMexcClient] Need prices for ${symbolsNeeded.length} symbols`);
+      logger.info(`[UnifiedMexcClient] Need prices for ${symbolsNeeded.length} symbols`);
 
       // Fetch prices for specific symbols
       const priceMap = new Map<string, number>();
@@ -885,11 +925,11 @@ export class UnifiedMexcClient {
             const price = ticker?.lastPrice || ticker?.price;
             if (price && Number.parseFloat(price) > 0) {
               priceMap.set(symbol, Number.parseFloat(price));
-              console.log(`[UnifiedMexcClient] Got price for ${symbol}: ${price}`);
+              logger.info(`[UnifiedMexcClient] Got price for ${symbol}: ${price}`);
             }
           }
         } catch (error) {
-          console.error(`[UnifiedMexcClient] Failed to get price for ${symbol}:`, error);
+          logger.error(`[UnifiedMexcClient] Failed to get price for ${symbol}:`, error);
         }
       }
 
@@ -907,7 +947,7 @@ export class UnifiedMexcClient {
 
             if (price && price > 0) {
               usdtValue = total * price;
-              console.log(
+              logger.info(
                 `[UnifiedMexcClient] USDT conversion: ${balance.asset} (${total}) @ ${price} = ${usdtValue.toFixed(6)} USDT`
               );
             }
@@ -922,7 +962,7 @@ export class UnifiedMexcClient {
               usdtValue,
             });
           } catch (_error) {
-            console.warn("[UnifiedMexcClient] Invalid balance entry:", balance);
+            logger.warn("[UnifiedMexcClient] Invalid balance entry:", balance);
             return null;
           }
         })
@@ -932,7 +972,7 @@ export class UnifiedMexcClient {
       const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
       const balancesWithValue = balances.filter((b) => (b.usdtValue || 0) > 0);
 
-      console.log(
+      logger.info(
         `[UnifiedMexcClient] Retrieved ${balances.length} non-zero balances (${balancesWithValue.length} with USDT value), total value: ${totalUsdtValue.toFixed(2)} USDT`
       );
 
@@ -947,7 +987,7 @@ export class UnifiedMexcClient {
         requestId: accountResponse.requestId,
       };
     } catch (error) {
-      console.error("[UnifiedMexcClient] Account balances failed:", error);
+      logger.error("[UnifiedMexcClient] Account balances failed:", error);
 
       // Provide more helpful error messages for common MEXC API issues
       let errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -1019,7 +1059,7 @@ export class UnifiedMexcClient {
     }
 
     try {
-      console.log(
+      logger.info(
         `[UnifiedMexcClient] Placing ${params.side} order: ${params.symbol}, quantity: ${params.quantity}`
       );
 
@@ -1053,7 +1093,7 @@ export class UnifiedMexcClient {
         };
       }
 
-      console.log("[UnifiedMexcClient] Order placed successfully:", response.data);
+      logger.info("[UnifiedMexcClient] Order placed successfully:", response.data);
 
       const orderData = response.data as any; // MEXC order response
       const orderResult: OrderResult = {
@@ -1074,7 +1114,7 @@ export class UnifiedMexcClient {
         requestId: response.requestId,
       };
     } catch (error) {
-      console.error("[UnifiedMexcClient] Order placement failed:", error);
+      logger.error("[UnifiedMexcClient] Order placement failed:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown trading error";
 
       return {
@@ -1112,7 +1152,7 @@ export class UnifiedMexcClient {
           }
         : null;
     } catch (error) {
-      console.error("[UnifiedMexcClient] Failed to get asset balance:", error);
+      logger.error("[UnifiedMexcClient] Failed to get asset balance:", error);
       return null;
     }
   }
@@ -1144,7 +1184,7 @@ export class UnifiedMexcClient {
     this.cache.clear();
     this.exchangeSymbolsCache = null;
     this.exchangeSymbolsCacheTime = 0;
-    console.log("[UnifiedMexcClient] Cache cleared");
+    logger.info("[UnifiedMexcClient] Cache cleared");
   }
 
   getCacheStats(): { size: number; maxSize: number } {
@@ -1161,7 +1201,7 @@ export class UnifiedMexcClient {
 
   updateConfig(config: Partial<UnifiedMexcConfig>): void {
     this.config = { ...this.config, ...config };
-    console.log("[UnifiedMexcClient] Configuration updated");
+    logger.info("[UnifiedMexcClient] Configuration updated");
   }
 }
 

@@ -1,13 +1,14 @@
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import {
-  type InsertAlertRule,
-  type SelectAlertRule,
-  type SelectNotificationChannel,
   alertRules,
   escalationPolicies,
+  type InsertAlertRule,
   notificationChannels,
+  type SelectAlertRule,
+  type SelectNotificationChannel,
 } from "../db/schemas/alerts";
+import { createLogger } from "./structured-logger";
 
 // ==========================================
 // VALIDATION SCHEMAS
@@ -312,6 +313,8 @@ export const NOTIFICATION_CHANNEL_TEMPLATES = {
 // ==========================================
 
 export class AlertConfigurationService {
+  private logger = createLogger("alert-configuration");
+
   private db: any;
 
   constructor(database: any) {
@@ -357,7 +360,7 @@ export class AlertConfigurationService {
     };
 
     await this.db.insert(alertRules).values(ruleData);
-    console.log(`Created alert rule: ${ruleId} - ${validated.name}`);
+    logger.info(`Created alert rule: ${ruleId} - ${validated.name}`);
     return ruleId;
   }
 
@@ -392,7 +395,7 @@ export class AlertConfigurationService {
 
     await this.db.update(alertRules).set(updateData).where(eq(alertRules.id, ruleId));
 
-    console.log(`Updated alert rule: ${ruleId}`);
+    logger.info(`Updated alert rule: ${ruleId}`);
   }
 
   async deleteAlertRule(ruleId: string): Promise<void> {
@@ -401,7 +404,7 @@ export class AlertConfigurationService {
       .set({ isEnabled: false, updatedAt: new Date() })
       .where(eq(alertRules.id, ruleId));
 
-    console.log(`Disabled alert rule: ${ruleId}`);
+    logger.info(`Disabled alert rule: ${ruleId}`);
   }
 
   async getAlertRule(ruleId: string): Promise<SelectAlertRule | null> {
@@ -453,12 +456,12 @@ export class AlertConfigurationService {
         if (existing.length === 0) {
           const ruleId = await this.createAlertRule(template, createdBy);
           deployedRules.push(ruleId);
-          console.log(`Deployed built-in rule: ${template.name}`);
+          logger.info(`Deployed built-in rule: ${template.name}`);
         } else {
-          console.log(`Built-in rule already exists: ${template.name}`);
+          logger.info(`Built-in rule already exists: ${template.name}`);
         }
       } catch (error) {
-        console.error(`Failed to deploy built-in rule ${templateKey}:`, error);
+        logger.error(`Failed to deploy built-in rule ${templateKey}:`, error);
       }
     }
 
@@ -575,7 +578,7 @@ export class AlertConfigurationService {
     };
 
     await this.db.insert(notificationChannels).values(channelData);
-    console.log(`Created notification channel: ${channelId} - ${validated.name}`);
+    logger.info(`Created notification channel: ${channelId} - ${validated.name}`);
     return channelId;
   }
 

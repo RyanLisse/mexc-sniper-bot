@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { createApiResponse } from "../../../../src/lib/api-response";
 import { apiAuthWrapper } from "../../../../src/lib/api-auth";
 
@@ -9,7 +10,7 @@ const getCacheWarmingService = () => {
     const { getCacheWarmingService: _getCacheWarmingService } = require("../../../../src/lib/cache-warming-service");
     return _getCacheWarmingService();
   } catch (error) {
-    console.warn("[Cache Warming Trigger] Failed to load cache warming service:", error);
+    logger.warn("[Cache Warming Trigger] Failed to load cache warming service:", { error: error });
     return null;
   }
 };
@@ -55,7 +56,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       },
     });
   } catch (error) {
-    console.error("[Cache Warming Trigger] Error:", error);
+    logger.error("[Cache Warming Trigger] Error:", { error: error });
     return createApiResponse(
       {
         success: false,
@@ -67,9 +68,11 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
   }
 });
 
+const logger = createLogger('route');
+
 async function triggerSingleStrategy(strategyName: string, force: boolean = false) {
   try {
-    console.log(`[Cache Warming Trigger] Triggering strategy: ${strategyName}`);
+    logger.info(`[Cache Warming Trigger] Triggering strategy: ${strategyName}`);
 
     // Check if strategy exists
     const cacheWarmingService = getCacheWarmingService();
@@ -114,7 +117,7 @@ async function triggerSingleStrategy(strategyName: string, force: boolean = fals
       triggeredAt: new Date().toISOString(),
     };
   } catch (error) {
-    console.error(`[Cache Warming Trigger] Error executing strategy ${strategyName}:`, error);
+    logger.error(`[Cache Warming Trigger] Error executing strategy ${strategyName}:`, error);
     return {
       strategy: strategyName,
       success: false,
@@ -171,7 +174,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[Cache Warming Trigger] Error getting strategies:", error);
+    logger.error("[Cache Warming Trigger] Error getting strategies:", { error: error });
     return createApiResponse(
       {
         success: false,

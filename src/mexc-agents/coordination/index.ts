@@ -1,3 +1,5 @@
+import { createLogger } from "../lib/structured-logger";
+
 /**
  * Agent Coordination System
  *
@@ -8,43 +10,43 @@
  * - Enhanced orchestration with backward compatibility
  */
 
+export type {
+  AgentHealth,
+  AgentRegistryStats,
+  AgentStatus,
+  HealthCheckResult,
+  RegisteredAgent,
+} from "./agent-registry";
 // Core coordination components
 export {
   AgentRegistry,
   getGlobalAgentRegistry,
   initializeGlobalAgentRegistry,
 } from "./agent-registry";
+export { EnhancedMexcOrchestrator } from "./enhanced-orchestrator";
 export type {
-  AgentStatus,
-  AgentHealth,
-  RegisteredAgent,
-  HealthCheckResult,
-  AgentRegistryStats,
-} from "./agent-registry";
-
-export { WorkflowEngine } from "./workflow-engine";
-export type {
-  WorkflowExecutionMode,
-  WorkflowStepStatus,
-  FailureStrategy,
-  WorkflowStepConfig,
-  WorkflowDefinition,
-  WorkflowStepResult,
-  WorkflowExecutionResult,
-  WorkflowContext,
-} from "./workflow-engine";
+  AgentPerformanceMetrics,
+  PerformanceReport,
+  SystemPerformanceSnapshot,
+  WorkflowPerformanceMetrics,
+} from "./performance-collector";
 
 export { PerformanceCollector } from "./performance-collector";
 export type {
-  AgentPerformanceMetrics,
-  WorkflowPerformanceMetrics,
-  SystemPerformanceSnapshot,
-  PerformanceReport,
-} from "./performance-collector";
-
-export { EnhancedMexcOrchestrator } from "./enhanced-orchestrator";
+  FailureStrategy,
+  WorkflowContext,
+  WorkflowDefinition,
+  WorkflowExecutionMode,
+  WorkflowExecutionResult,
+  WorkflowStepConfig,
+  WorkflowStepResult,
+  WorkflowStepStatus,
+} from "./workflow-engine";
+export { WorkflowEngine } from "./workflow-engine";
 
 // Utility function to create a fully configured coordination system
+const logger = createLogger("index");
+
 export async function createCoordinationSystem(options?: {
   healthCheckInterval?: number;
   performanceCollectionInterval?: number;
@@ -191,9 +193,9 @@ export function registerCommonAgents(
       capabilities: ["error_detection", "system_recovery", "health_monitoring"],
     });
 
-    console.log("[Coordination] Registered 9 agents successfully");
+    logger.info("[Coordination] Registered 9 agents successfully");
   } catch (error) {
-    console.error("[Coordination] Failed to register agents:", error);
+    logger.error("[Coordination] Failed to register agents:", error);
     throw error;
   }
 }
@@ -228,7 +230,7 @@ export async function shutdownCoordinationSystem(components: {
   performanceCollector: import("./performance-collector").PerformanceCollector;
   orchestrator: import("./enhanced-orchestrator").EnhancedMexcOrchestrator;
 }): Promise<void> {
-  console.log("[Coordination] Initiating graceful shutdown...");
+  logger.info("[Coordination] Initiating graceful shutdown...");
 
   try {
     // Shutdown orchestrator first (stops workflows)
@@ -238,9 +240,9 @@ export async function shutdownCoordinationSystem(components: {
     components.performanceCollector.destroy();
     components.agentRegistry.destroy();
 
-    console.log("[Coordination] Graceful shutdown completed");
+    logger.info("[Coordination] Graceful shutdown completed");
   } catch (error) {
-    console.error("[Coordination] Shutdown error:", error);
+    logger.error("[Coordination] Shutdown error:", error);
     throw error;
   }
 }
@@ -310,7 +312,7 @@ export async function checkCoordinationSystemHealth(components: {
       orchestrator: orchestratorHealth,
     };
   } catch (error) {
-    console.error("[Coordination] Health check failed:", error);
+    logger.error("[Coordination] Health check failed:", error);
     return {
       overall: "unhealthy",
       agents: { total: 0, healthy: 0, degraded: 0, unhealthy: 0 },

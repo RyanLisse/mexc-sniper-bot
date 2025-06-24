@@ -9,7 +9,11 @@ export interface ChartConfig {
 export function ChartContainer({
   className,
   children,
-}: { className?: string; config?: ChartConfig; children: React.ReactNode }): React.ReactElement {
+}: {
+  className?: string;
+  config?: ChartConfig;
+  children: React.ReactNode;
+}): React.ReactElement {
   return (
     <ResponsiveContainer className={className}>
       {children as React.ReactElement}

@@ -1,8 +1,11 @@
+import { createLogger } from "./structured-logger";
 /**
  * Utility classes for error classification and handling
  */
 
 export class ValidationError extends Error {
+  private logger = createLogger("error-utils");
+
   constructor(
     message: string,
     public field?: string
@@ -170,7 +173,7 @@ export class RetryHandler {
 
         if (attempt < maxRetries) {
           const delay = ErrorClassifier.getRetryDelay(attempt, baseDelay);
-          console.log(
+          logger.info(
             `Retry attempt ${attempt}/${maxRetries} failed, retrying in ${Math.round(delay)}ms:`,
             error instanceof Error ? error.message : error
           );

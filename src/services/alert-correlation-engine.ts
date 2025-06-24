@@ -1,13 +1,14 @@
 import { and, count, desc, eq, gte, isNull } from "drizzle-orm";
 import {
+  alertCorrelations,
+  alertInstances,
+  alertRules,
   type InsertAlertCorrelation,
   type InsertAlertInstance,
   type SelectAlertCorrelation,
   type SelectAlertInstance,
-  alertCorrelations,
-  alertInstances,
-  alertRules,
 } from "../db/schemas/alerts";
+import { createLogger } from "../lib/structured-logger";
 
 export interface CorrelationPattern {
   id: string;
@@ -47,6 +48,8 @@ export interface AlertSignature {
 }
 
 export class AlertCorrelationEngine {
+  private logger = createLogger("alert-correlation-engine");
+
   private db: any;
   private patterns: Map<string, CorrelationPattern> = new Map();
   private recentAlerts: Map<string, SelectAlertInstance[]> = new Map();
@@ -85,7 +88,7 @@ export class AlertCorrelationEngine {
 
       return null;
     } catch (error) {
-      console.error("Error finding correlation:", error);
+      logger.error("Error finding correlation:", error);
       return null;
     }
   }
@@ -114,7 +117,7 @@ export class AlertCorrelationEngine {
 
       return results;
     } catch (error) {
-      console.error("Error analyzing recent alerts:", error);
+      logger.error("Error analyzing recent alerts:", error);
       return [];
     }
   }
@@ -370,7 +373,7 @@ export class AlertCorrelationEngine {
         .where(eq(alertInstances.id, alert.id));
     }
 
-    console.log(
+    logger.info(
       `Created correlation: ${correlationKey} with ${correlationResult.alerts.length} alerts`
     );
     return correlationKey;
@@ -751,7 +754,7 @@ export class AlertCorrelationEngine {
 
   async addCustomPattern(pattern: CorrelationPattern): Promise<void> {
     this.patterns.set(pattern.id, pattern);
-    console.log(`Added custom correlation pattern: ${pattern.id}`);
+    logger.info(`Added custom correlation pattern: ${pattern.id}`);
   }
 
   getHealthStatus() {

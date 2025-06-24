@@ -1,4 +1,5 @@
 import { getSecurityEvents, isIPSuspicious, logSecurityEvent } from "../lib/rate-limiter";
+import { createLogger } from "../lib/structured-logger";
 import { mexcApiBreaker } from "./circuit-breaker";
 
 // ============================================================================
@@ -108,6 +109,8 @@ const SECURITY_CONFIG = {
 // ============================================================================
 
 export class SecurityMonitoringService {
+  private logger = createLogger("security-monitoring-service");
+
   private static instance: SecurityMonitoringService;
   private monitoringInterval: NodeJS.Timeout | null = null;
   private anomalies: SecurityAnomaly[] = [];
@@ -124,7 +127,7 @@ export class SecurityMonitoringService {
    * Initialize security monitoring with automated checks
    */
   async initialize(): Promise<void> {
-    console.log("[SecurityMonitoring] Initializing security monitoring service...");
+    logger.info("[SecurityMonitoring] Initializing security monitoring service...");
 
     // Start continuous monitoring
     this.startContinuousMonitoring();
@@ -132,7 +135,7 @@ export class SecurityMonitoringService {
     // Perform initial security assessment
     await this.performSecurityAssessment();
 
-    console.log("[SecurityMonitoring] Security monitoring service initialized");
+    logger.info("[SecurityMonitoring] Security monitoring service initialized");
   }
 
   /**
@@ -162,7 +165,7 @@ export class SecurityMonitoringService {
    * Perform automated credential rotation for eligible users
    */
   async performAutomatedCredentialRotation(): Promise<CredentialRotationResult> {
-    console.log("[SecurityMonitoring] Starting automated credential rotation...");
+    logger.info("[SecurityMonitoring] Starting automated credential rotation...");
 
     const rotatedCredentials: string[] = [];
     const failedRotations: CredentialRotationResult["failedRotations"] = [];
@@ -172,7 +175,7 @@ export class SecurityMonitoringService {
       // Get credentials due for rotation
       const credentialsDue = await this.getCredentialsDueForRotation();
 
-      console.log(
+      logger.info(
         `[SecurityMonitoring] Found ${credentialsDue.length} credentials due for rotation`
       );
 
@@ -230,7 +233,7 @@ export class SecurityMonitoringService {
 
       const nextRotationDue = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-      console.log(
+      logger.info(
         `[SecurityMonitoring] Credential rotation completed: ${rotatedCredentials.length} successful, ${failedRotations.length} failed`
       );
 
@@ -242,7 +245,7 @@ export class SecurityMonitoringService {
         nextRotationDue,
       };
     } catch (error) {
-      console.error("[SecurityMonitoring] Automated credential rotation failed:", error);
+      logger.error("[SecurityMonitoring] Automated credential rotation failed:", error);
 
       return {
         success: false,
@@ -378,7 +381,7 @@ export class SecurityMonitoringService {
 
       return anomalies;
     } catch (error) {
-      console.error("[SecurityMonitoring] Anomaly detection failed:", error);
+      logger.error("[SecurityMonitoring] Anomaly detection failed:", error);
       return [];
     }
   }
@@ -477,7 +480,7 @@ export class SecurityMonitoringService {
 
       return recommendations;
     } catch (error) {
-      console.error("[SecurityMonitoring] Failed to generate recommendations:", error);
+      logger.error("[SecurityMonitoring] Failed to generate recommendations:", error);
       return [];
     }
   }
@@ -542,7 +545,7 @@ export class SecurityMonitoringService {
         requiresManualIntervention,
       };
     } catch (error) {
-      console.error("[SecurityMonitoring] Incident response failed:", error);
+      logger.error("[SecurityMonitoring] Incident response failed:", error);
       return {
         success: false,
         actionsPerformed,
@@ -574,7 +577,7 @@ export class SecurityMonitoringService {
         },
       };
     } catch (error) {
-      console.error("[SecurityMonitoring] Failed to get credential health metrics:", error);
+      logger.error("[SecurityMonitoring] Failed to get credential health metrics:", error);
       return {
         totalCredentials: 0,
         healthyCredentials: 0,
@@ -663,7 +666,7 @@ export class SecurityMonitoringService {
       // 3. Validate the new credentials work
       // 4. Notify the user of the rotation
 
-      console.log(`[SecurityMonitoring] Rotating credentials for user ${userId}`);
+      logger.info(`[SecurityMonitoring] Rotating credentials for user ${userId}`);
 
       // For now, simulate credential rotation
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -686,11 +689,11 @@ export class SecurityMonitoringService {
       try {
         await this.performSecurityAssessment();
       } catch (error) {
-        console.error("[SecurityMonitoring] Continuous monitoring error:", error);
+        logger.error("[SecurityMonitoring] Continuous monitoring error:", error);
       }
     }, SECURITY_CONFIG.monitoring.healthCheckInterval);
 
-    console.log("[SecurityMonitoring] Continuous monitoring started");
+    logger.info("[SecurityMonitoring] Continuous monitoring started");
   }
 
   private async performSecurityAssessment(): Promise<void> {
@@ -726,7 +729,7 @@ export class SecurityMonitoringService {
         (incident) => new Date(incident.occurredAt).getTime() > sevenDaysAgo
       );
     } catch (error) {
-      console.error("[SecurityMonitoring] Security assessment failed:", error);
+      logger.error("[SecurityMonitoring] Security assessment failed:", error);
     }
   }
 
@@ -738,7 +741,7 @@ export class SecurityMonitoringService {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
     }
-    console.log("[SecurityMonitoring] Security monitoring service disposed");
+    logger.info("[SecurityMonitoring] Security monitoring service disposed");
   }
 }
 
@@ -751,7 +754,7 @@ export const securityMonitoring = SecurityMonitoringService.getInstance();
 // Auto-initialize in production environments
 if (process.env.NODE_ENV === "production") {
   securityMonitoring.initialize().catch((error) => {
-    console.error("[SecurityMonitoring] Failed to initialize:", error);
+    logger.error("[SecurityMonitoring] Failed to initialize:", error);
   });
 }
 

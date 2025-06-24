@@ -1,13 +1,14 @@
 import { and, count, desc, eq, gte, isNull, lte } from "drizzle-orm";
 import {
-  type InsertAlertInstance,
-  type SelectAlertInstance,
-  type SelectAlertRule,
   alertAnalytics,
   alertInstances,
   alertRules,
   alertSuppressions,
+  type InsertAlertInstance,
+  type SelectAlertInstance,
+  type SelectAlertRule,
 } from "../db/schemas/alerts";
+import { createLogger } from "../lib/structured-logger";
 import { AlertCorrelationEngine } from "./alert-correlation-engine";
 import { AnomalyDetectionService } from "./anomaly-detection-service";
 import { NotificationService } from "./notification-providers";
@@ -42,6 +43,8 @@ export interface AlertingConfig {
 }
 
 export class AutomatedAlertingService {
+  private logger = createLogger("automated-alerting-service");
+
   private db: any;
   private notificationService: NotificationService;
   private anomalyDetectionService: AnomalyDetectionService;
@@ -74,11 +77,11 @@ export class AutomatedAlertingService {
 
   async start(): Promise<void> {
     if (this.isRunning) {
-      console.warn("AutomatedAlertingService is already running");
+      logger.warn("AutomatedAlertingService is already running");
       return;
     }
 
-    console.log("Starting Automated Alerting Service...");
+    logger.info("Starting Automated Alerting Service...");
     this.isRunning = true;
 
     // Initialize ML models if anomaly detection is enabled
@@ -92,7 +95,7 @@ export class AutomatedAlertingService {
       this.config.evaluationIntervalMs
     );
 
-    console.log(
+    logger.info(
       `Alerting service started with ${this.config.evaluationIntervalMs}ms evaluation interval`
     );
   }
@@ -102,7 +105,7 @@ export class AutomatedAlertingService {
       return;
     }
 
-    console.log("Stopping Automated Alerting Service...");
+    logger.info("Stopping Automated Alerting Service...");
     this.isRunning = false;
 
     if (this.evaluationTimer) {
@@ -110,7 +113,7 @@ export class AutomatedAlertingService {
       this.evaluationTimer = null;
     }
 
-    console.log("Alerting service stopped");
+    logger.info("Alerting service stopped");
   }
 
   // ==========================================
@@ -167,12 +170,12 @@ export class AutomatedAlertingService {
     if (!this.isRunning) return;
 
     try {
-      console.log("Starting alert evaluation cycle...");
+      logger.info("Starting alert evaluation cycle...");
 
       // Get all enabled alert rules
       const rules = await this.db.select().from(alertRules).where(eq(alertRules.isEnabled, true));
 
-      console.log(`Evaluating ${rules.length} alert rules`);
+      logger.info(`Evaluating ${rules.length} alert rules`);
 
       // Process rules in batches
       for (let i = 0; i < rules.length; i += this.config.batchSize) {
@@ -188,9 +191,9 @@ export class AutomatedAlertingService {
       // Update analytics
       await this.updateAnalytics();
 
-      console.log("Alert evaluation cycle completed");
+      logger.info("Alert evaluation cycle completed");
     } catch (error) {
-      console.error("Error during alert evaluation:", error);
+      logger.error("Error during alert evaluation:", error);
     }
   }
 
@@ -239,7 +242,7 @@ export class AutomatedAlertingService {
         }
       }
     } catch (error) {
-      console.error(`Error evaluating rule ${rule.id}:`, error);
+      logger.error(`Error evaluating rule ${rule.id}:`, error);
     }
   }
 
@@ -385,7 +388,7 @@ export class AutomatedAlertingService {
     }
 
     // Log alert creation
-    console.log(`Created alert: ${alertId} - ${evaluation.message}`);
+    logger.info(`Created alert: ${alertId} - ${evaluation.message}`);
 
     return alertId;
   }
@@ -452,7 +455,7 @@ export class AutomatedAlertingService {
       await this.notificationService.sendResolutionNotifications(alert[0]);
     }
 
-    console.log(`Resolved alert: ${alertId}`);
+    logger.info(`Resolved alert: ${alertId}`);
   }
 
   // ==========================================
@@ -534,7 +537,7 @@ export class AutomatedAlertingService {
       createdBy,
     });
 
-    console.log(`Created alert suppression: ${suppressionId}`);
+    logger.info(`Created alert suppression: ${suppressionId}`);
     return suppressionId;
   }
 

@@ -7,6 +7,7 @@
 
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   RiskMetrics,
   SafetyAction,
@@ -14,7 +15,7 @@ import type {
   SafetyConfiguration,
   SafetyMonitoringReport,
 } from "@/src/schemas/safety-monitoring-schemas";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createLogger } from "../lib/structured-logger";
 
 export interface UseRealTimeSafetyMonitoringOptions {
   autoRefresh?: boolean;
@@ -74,6 +75,8 @@ export interface RealTimeSafetyMonitoringActions {
   // Utility
   clearError: () => void;
 }
+
+const logger = createLogger("use-real-time-safety-monitoring");
 
 export function useRealTimeSafetyMonitoring(
   options: UseRealTimeSafetyMonitoringOptions = {}
@@ -146,7 +149,7 @@ export function useRealTimeSafetyMonitoring(
         setLastUpdated(new Date().toISOString());
       }
     } catch (err: any) {
-      console.error("[RealTimeSafetyMonitoring] Failed to load report:", err);
+      logger.error("[RealTimeSafetyMonitoring] Failed to load report:", err);
       if (mountedRef.current) {
         setError(err.message || "Failed to load safety monitoring report");
       }
@@ -183,7 +186,7 @@ export function useRealTimeSafetyMonitoring(
       await loadSafetyReport();
       return true;
     } catch (err: any) {
-      console.error("[RealTimeSafetyMonitoring] Failed to start monitoring:", err);
+      logger.error("[RealTimeSafetyMonitoring] Failed to start monitoring:", err);
       setError(err.message || "Failed to start safety monitoring");
       return false;
     } finally {
@@ -217,7 +220,7 @@ export function useRealTimeSafetyMonitoring(
       await loadSafetyReport();
       return true;
     } catch (err: any) {
-      console.error("[RealTimeSafetyMonitoring] Failed to stop monitoring:", err);
+      logger.error("[RealTimeSafetyMonitoring] Failed to stop monitoring:", err);
       setError(err.message || "Failed to stop safety monitoring");
       return false;
     } finally {
@@ -255,7 +258,7 @@ export function useRealTimeSafetyMonitoring(
         await loadSafetyReport();
         return true;
       } catch (err: any) {
-        console.error("[RealTimeSafetyMonitoring] Failed to update config:", err);
+        logger.error("[RealTimeSafetyMonitoring] Failed to update config:", err);
         setError(err.message || "Failed to update safety configuration");
         return false;
       } finally {
@@ -295,7 +298,7 @@ export function useRealTimeSafetyMonitoring(
         await loadSafetyReport();
         return result.data.actions || [];
       } catch (err: any) {
-        console.error("[RealTimeSafetyMonitoring] Failed to trigger emergency:", err);
+        logger.error("[RealTimeSafetyMonitoring] Failed to trigger emergency:", err);
         setError(err.message || "Failed to trigger emergency response");
         return [];
       } finally {
@@ -335,7 +338,7 @@ export function useRealTimeSafetyMonitoring(
         await loadSafetyReport();
         return true;
       } catch (err: any) {
-        console.error("[RealTimeSafetyMonitoring] Failed to acknowledge alert:", err);
+        logger.error("[RealTimeSafetyMonitoring] Failed to acknowledge alert:", err);
         setError(err.message || "Failed to acknowledge alert");
         return false;
       } finally {
@@ -371,7 +374,7 @@ export function useRealTimeSafetyMonitoring(
       await loadSafetyReport();
       return result.data.clearedCount || 0;
     } catch (err: any) {
-      console.error("[RealTimeSafetyMonitoring] Failed to clear alerts:", err);
+      logger.error("[RealTimeSafetyMonitoring] Failed to clear alerts:", err);
       setError(err.message || "Failed to clear acknowledged alerts");
       return 0;
     } finally {
@@ -401,7 +404,7 @@ export function useRealTimeSafetyMonitoring(
       setRiskMetrics(result.data);
       return result.data;
     } catch (err: any) {
-      console.error("[RealTimeSafetyMonitoring] Failed to get risk metrics:", err);
+      logger.error("[RealTimeSafetyMonitoring] Failed to get risk metrics:", err);
       setError(err.message || "Failed to get risk metrics");
       return null;
     }
@@ -428,7 +431,7 @@ export function useRealTimeSafetyMonitoring(
 
       return result.data.isSystemSafe || false;
     } catch (err: any) {
-      console.error("[RealTimeSafetyMonitoring] Failed to check system safety:", err);
+      logger.error("[RealTimeSafetyMonitoring] Failed to check system safety:", err);
       setError(err.message || "Failed to check system safety");
       return false;
     }

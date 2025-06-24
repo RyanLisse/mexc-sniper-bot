@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { enhancedApiValidationService } from "../../../../src/services/enhanced-api-validation-service";
 import {
@@ -9,16 +10,18 @@ import {
 } from "../../../../src/lib/api-response";
 import { authenticatedRoute } from "../../../../src/lib/auth-decorators";
 
+const logger = createLogger('route');
+
 // POST /api/mexc/test-credentials
 export const POST = authenticatedRoute(async (request: NextRequest, user: any) => {
   try {
-    console.log('[DEBUG] Test credentials endpoint called by user:', user?.id);
+    logger.info('[DEBUG] Test credentials endpoint called by user:', user?.id);
 
     let body;
     try {
       body = await request.json();
     } catch (jsonError) {
-      console.error('[DEBUG] JSON parsing failed:', jsonError);
+      logger.error('[DEBUG] JSON parsing failed:', jsonError);
       return apiResponse(
         createErrorResponse('Invalid request body', {
           message: 'Request body must be valid JSON',
@@ -63,7 +66,7 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
       );
     }
 
-    console.log('[DEBUG] Testing credentials with enhanced validation service...');
+    logger.info('[DEBUG] Testing credentials with enhanced validation service...');
 
     // Use enhanced validation service for comprehensive testing
     const validationConfig = {
@@ -78,7 +81,7 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
 
     const validationResult = await enhancedApiValidationService.validateApiCredentials(validationConfig);
     
-    console.log('[DEBUG] Enhanced validation result:', {
+    logger.info('[DEBUG] Enhanced validation result:', {
       valid: validationResult.valid,
       stage: validationResult.stage,
       error: validationResult.error,
@@ -140,7 +143,7 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
     const balances = accountResult.data?.balances || [];
     const totalUsdtValue = balances.reduce((sum: number, balance: any) => sum + (balance.usdtValue || 0), 0);
     
-    console.log('[DEBUG] Enhanced credential validation successful - balances found:', balances?.length || 0);
+    logger.info('[DEBUG] Enhanced credential validation successful - balances found:', balances?.length || 0);
 
     return apiResponse(
       createSuccessResponse({
@@ -168,8 +171,8 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
     );
 
   } catch (error) {
-    console.error('[DEBUG] Credential test endpoint error:', error);
-    console.error('[DEBUG] Error details:', {
+    logger.error('[DEBUG] Credential test endpoint error:', error);
+    logger.error('[DEBUG] Error details:', {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       type: error?.constructor?.name

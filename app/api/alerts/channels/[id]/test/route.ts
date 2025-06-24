@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from '../../../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../../../src/db";
 import { NotificationService } from "../../../../../../src/services/notification-providers";
@@ -10,6 +11,8 @@ const notificationService = new NotificationService(db);
 // ==========================================
 // POST /api/alerts/channels/[id]/test - Test notification channel
 // ==========================================
+const logger = createLogger('route');
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -38,7 +41,7 @@ export async function POST(
       }, { status: 400 });
     }
   } catch (error) {
-    console.error("Error testing notification channel:", error);
+    logger.error("Error testing notification channel:", { error: error });
     return handleApiError(error);
   }
 }

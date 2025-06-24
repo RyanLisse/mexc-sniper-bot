@@ -1,10 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Activity,
   AlertTriangle,
@@ -32,14 +27,22 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   type CpuUsageData,
-  type PerformanceMetrics,
   createTooltipFormatter,
   generateChartCellKey,
   generateListKey,
+  type PerformanceMetrics,
   useSkeletonItems,
 } from "../../lib/react-utilities";
+import { createLogger } from "../lib/structured-logger";
+
+const logger = createLogger("real-time-performance");
 
 interface PerformanceData {
   timestamp: string;
@@ -206,7 +209,7 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
           });
         }
       } catch (err) {
-        console.error("Error parsing real-time data:", err);
+        logger.error("Error parsing real-time data:", err);
       }
     };
 

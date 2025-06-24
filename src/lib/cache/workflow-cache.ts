@@ -1,9 +1,11 @@
+import { createLogger } from "./structured-logger";
+
 /**
  * Workflow Cache Manager
- * 
+ *
  * Handles caching of multi-agent workflow execution results with dependency management
  * and intelligent cache invalidation based on workflow success and confidence metrics.
- * 
+ *
  * FEATURES:
  * - Workflow result caching with metadata
  * - Dependency-based cache invalidation
@@ -20,6 +22,8 @@ import type {
 } from "./agent-cache-types";
 
 export class WorkflowCache {
+  private logger = createLogger("workflow-cache");
+
   private config: AgentCacheConfig;
   private workflowCache: Map<string, WorkflowCacheEntry> = new Map();
 
@@ -54,10 +58,7 @@ export class WorkflowCache {
       await globalCacheManager.delete(cacheKey);
       return null;
     } catch (error) {
-      console.error(
-        `[WorkflowCache] Error getting workflow result for ${workflowType}:`,
-        error
-      );
+      logger.error(`[WorkflowCache] Error getting workflow result for ${workflowType}:`, error);
       return null;
     }
   }
@@ -94,10 +95,7 @@ export class WorkflowCache {
       // Update workflow cache map for quick access
       this.workflowCache.set(cacheKey, result);
     } catch (error) {
-      console.error(
-        `[WorkflowCache] Error caching workflow result for ${workflowType}:`,
-        error
-      );
+      logger.error(`[WorkflowCache] Error caching workflow result for ${workflowType}:`, error);
     }
   }
 
@@ -135,9 +133,9 @@ export class WorkflowCache {
         }
       }
 
-      console.log(`[WorkflowCache] Invalidated ${invalidated} workflow results`);
+      logger.info(`[WorkflowCache] Invalidated ${invalidated} workflow results`);
     } catch (error) {
-      console.error("[WorkflowCache] Error invalidating workflow results:", error);
+      logger.error("[WorkflowCache] Error invalidating workflow results:", error);
     }
 
     return invalidated;
@@ -157,7 +155,7 @@ export class WorkflowCache {
 
     const timesSaved = workflows.reduce((total, workflow) => {
       // Estimate time saved by caching (assuming 50% time savings on cache hits)
-      return total + (workflow.executionTime * 0.5);
+      return total + workflow.executionTime * 0.5;
     }, 0);
 
     return {
@@ -177,9 +175,9 @@ export class WorkflowCache {
       const pattern = /^workflow:/;
       await globalCacheManager.invalidatePattern(pattern);
       this.workflowCache.clear();
-      console.log("[WorkflowCache] Cleared all workflow cache entries");
+      logger.info("[WorkflowCache] Cleared all workflow cache entries");
     } catch (error) {
-      console.error("[WorkflowCache] Error clearing workflow cache:", error);
+      logger.error("[WorkflowCache] Error clearing workflow cache:", error);
     }
   }
 
@@ -222,7 +220,7 @@ export class WorkflowCache {
 
     // Adjust based on error count
     if (result.metadata.errorCount > 0) {
-      baseTTL *= Math.max(0.5, 1 - (result.metadata.errorCount * 0.1));
+      baseTTL *= Math.max(0.5, 1 - result.metadata.errorCount * 0.1);
     }
 
     // Adjust based on handoff count (more handoffs = more complex = longer cache)

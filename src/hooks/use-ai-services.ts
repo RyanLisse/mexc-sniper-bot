@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createLogger } from "../lib/structured-logger";
 
 // ======================
 // Types
@@ -55,6 +56,8 @@ const aiServicesQueryKeys = {
 /**
  * Hook to get AI services status and health
  */
+const logger = createLogger("use-ai-services");
+
 export function useAIServices() {
   return useQuery({
     queryKey: aiServicesQueryKeys.status(),
@@ -152,7 +155,7 @@ export function useAIServiceHealthCheck() {
       }
       return { success: true };
     } catch (error) {
-      console.error("[AI Services] Health check failed:", error);
+      logger.error("[AI Services] Health check failed:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",

@@ -35,7 +35,7 @@ export class ProductionSafeguardsSystem {
     setInterval(() => {
       const conditions = this.checkEmergencyConditions();
       if (conditions.shouldStop) {
-        this.triggerEmergencyStop(conditions.reason);
+        this.triggerEmergencyStop(conditions.reason || 'Unknown emergency condition');
       }
     }, 10000); // Check every 10 seconds
   }

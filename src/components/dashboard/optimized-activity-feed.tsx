@@ -47,39 +47,33 @@ const ACTIVITY_CONFIG = {
 } as const;
 
 // Memoized activity item component
-const ActivityListItem = React.memo(
-  ({
-    activity,
-  }: {
-    activity: ActivityItem;
-  }) => {
-    const { formatTimeAgo } = useTimeFormatting();
-    const config = ACTIVITY_CONFIG[activity.type] || ACTIVITY_CONFIG.analysis;
-    const Icon = config.icon;
+const ActivityListItem = React.memo(({ activity }: { activity: ActivityItem }) => {
+  const { formatTimeAgo } = useTimeFormatting();
+  const config = ACTIVITY_CONFIG[activity.type] || ACTIVITY_CONFIG.analysis;
+  const Icon = config.icon;
 
-    return (
-      <div className="flex items-center space-x-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 animate-fade-in">
-        <div
-          className={`w-2 h-2 ${config.dotColor} rounded-full ${
-            activity.type === "pattern" ? "animate-pulse" : ""
-          }`}
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2 mb-1">
-            <p className="text-sm font-medium text-gray-900 truncate">{activity.message}</p>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.badgeColor}`}>
-              {activity.type}
-            </span>
-          </div>
-          <p className="text-xs text-gray-500">{formatTimeAgo(activity.timestamp)}</p>
+  return (
+    <div className="flex items-center space-x-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 animate-fade-in">
+      <div
+        className={`w-2 h-2 ${config.dotColor} rounded-full ${
+          activity.type === "pattern" ? "animate-pulse" : ""
+        }`}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center space-x-2 mb-1">
+          <p className="text-sm font-medium text-gray-900 truncate">{activity.message}</p>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.badgeColor}`}>
+            {activity.type}
+          </span>
         </div>
-        <div className="flex-shrink-0">
-          <Icon className={`h-4 w-4 ${config.iconColor}`} />
-        </div>
+        <p className="text-xs text-gray-500">{formatTimeAgo(activity.timestamp)}</p>
       </div>
-    );
-  }
-);
+      <div className="flex-shrink-0">
+        <Icon className={`h-4 w-4 ${config.iconColor}`} />
+      </div>
+    </div>
+  );
+});
 ActivityListItem.displayName = "ActivityListItem";
 
 // Loading skeleton component
@@ -112,25 +106,19 @@ const EmptyState = React.memo(() => (
 EmptyState.displayName = "EmptyState";
 
 // Header component
-const FeedHeader = React.memo(
-  ({
-    activityCount,
-  }: {
-    activityCount: number;
-  }) => (
-    <CardTitle className="flex items-center justify-between">
-      <div className="flex items-center space-x-2">
-        <Clock className="h-5 w-5 text-blue-500" />
-        <span>Recent Activity</span>
-      </div>
-      {activityCount > 0 && (
-        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-          {activityCount} events
-        </span>
-      )}
-    </CardTitle>
-  )
-);
+const FeedHeader = React.memo(({ activityCount }: { activityCount: number }) => (
+  <CardTitle className="flex items-center justify-between">
+    <div className="flex items-center space-x-2">
+      <Clock className="h-5 w-5 text-blue-500" />
+      <span>Recent Activity</span>
+    </div>
+    {activityCount > 0 && (
+      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+        {activityCount} events
+      </span>
+    )}
+  </CardTitle>
+));
 FeedHeader.displayName = "FeedHeader";
 
 // Main component with optimizations
