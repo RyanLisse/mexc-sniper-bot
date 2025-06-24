@@ -109,11 +109,15 @@ export type StrategySelectionCriteria = z.infer<typeof StrategySelectionCriteria
 export class OptimizedTradingStrategyEngine {
   private static instance: OptimizedTradingStrategyEngine;
   private logger = {
-      info: (message: string, context?: any) => console.info('[optimized-trading-strategy-engine]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[optimized-trading-strategy-engine]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[optimized-trading-strategy-engine]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[optimized-trading-strategy-engine]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[optimized-trading-strategy-engine]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[optimized-trading-strategy-engine]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[optimized-trading-strategy-engine]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[optimized-trading-strategy-engine]", message, context || ""),
+  };
 
   // Enhanced strategies with performance tracking
   private enhancedStrategies = new Map<string, EnhancedTradingStrategy>();
@@ -171,7 +175,7 @@ export class OptimizedTradingStrategyEngine {
     try {
       this.performanceMetrics.totalStrategySelections++;
 
-      const validatedCriteria = StrategySelectionCriteriaSchema.parse(criteria);// Score all strategies based on criteria
+      const validatedCriteria = StrategySelectionCriteriaSchema.parse(criteria); // Score all strategies based on criteria
       const strategyScores = await this.scoreStrategies(validatedCriteria);
 
       // Select best strategy
@@ -241,7 +245,8 @@ export class OptimizedTradingStrategyEngine {
       momentum: number;
     }
   ): Promise<DynamicExitLevel[]> {
-    try {const exitLevels: DynamicExitLevel[] = [];
+    try {
+      const exitLevels: DynamicExitLevel[] = [];
 
       // Base exit levels from strategy
       for (const level of strategy.levels) {
@@ -360,7 +365,8 @@ export class OptimizedTradingStrategyEngine {
       // Keep only last 1000 records
       if (this.strategyUsageHistory.length > 1000) {
         this.strategyUsageHistory = this.strategyUsageHistory.slice(-1000);
-      }} catch (error) {
+      }
+    } catch (error) {
       const safeError = toSafeError(error);
       console.error("Failed to update strategy performance", {
         error: safeError.message,
@@ -654,11 +660,12 @@ export class OptimizedTradingStrategyEngine {
   }
 
   private startPerformanceTracking(): void {
-    // Performance tracking logic would be implemented here}
+    // Performance tracking logic would be implemented here
+  }
 
   private mapStrategyToRiskProfile(
     strategyId: string
-  ): "conservative" | "moderate" | "aggressive" | "adaptive" 
+  ): "conservative" | "moderate" | "aggressive" | "adaptive" {
     switch (strategyId) {
       case "conservative":
       case "scalping":
@@ -671,8 +678,9 @@ export class OptimizedTradingStrategyEngine {
       default:
         return "adaptive";
     }
+  }
 
-  private createDefaultPerformance(strategyId: string): StrategyPerformance 
+  private createDefaultPerformance(strategyId: string): StrategyPerformance {
     return StrategyPerformanceSchema.parse({
       strategyId,
       totalTrades: 0,
@@ -691,8 +699,9 @@ export class OptimizedTradingStrategyEngine {
       lastUsed: new Date().toISOString(),
       usageCount: 0,
     });
+  }
 
-  private assessRiskProfileMatch(riskProfile: string, portfolioRisk: number): number 
+  private assessRiskProfileMatch(riskProfile: string, portfolioRisk: number): number {
     // Score risk profile compatibility
     if (portfolioRisk > 70) {
       return riskProfile === "conservative" ? 20 : -10;
@@ -701,14 +710,12 @@ export class OptimizedTradingStrategyEngine {
     } else {
       return riskProfile === "aggressive" ? 10 : 0;
     }
+  }
 
   private getRecentPerformance(
     strategyId: string,
     days: number
-  ): 
-    trades: number;
-    successRate: number;
-    averageReturn: number;{
+  ): { trades: number; successRate: number; averageReturn: number } {
     const cutoffDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const recentTrades = this.strategyUsageHistory.filter(
       (trade) => trade.strategyId === strategyId && new Date(trade.timestamp) > cutoffDate
@@ -754,7 +761,9 @@ export class OptimizedTradingStrategyEngine {
     return totalTrades > 0 ? totalHoldTime / totalTrades : 0;
   }
 
-  private calculateRecentTrends(): {successRate: number; averageReturn: number ;successRate: number; averageReturn: number ;
+  private calculateRecentTrends(): {
+    last7Days: { successRate: number; averageReturn: number };
+    last30Days: { successRate: number; averageReturn: number };
   } {
     const now = Date.now();
     const last7Days = this.strategyUsageHistory.filter(

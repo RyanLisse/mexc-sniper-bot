@@ -120,10 +120,10 @@ export class UnifiedStatusResolver {
     try {
       // Get unified MEXC service instance
       const mexcService = await getUnifiedMexcService();
-      
+
       // Test connectivity directly
       const connectivityTest = await mexcService.testConnectivity();
-      
+
       // Create status from direct service result
       const credentials: UnifiedCredentialStatus = {
         hasCredentials: Boolean(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY),
@@ -146,7 +146,9 @@ export class UnifiedStatusResolver {
         network,
         overall: {
           status: connectivityTest ? "healthy" : "error",
-          message: connectivityTest ? "Direct service connectivity successful" : "Direct service connectivity failed",
+          message: connectivityTest
+            ? "Direct service connectivity successful"
+            : "Direct service connectivity failed",
           canTrade: connectivityTest && credentials.hasCredentials,
         },
         source: "enhanced" as const,
@@ -170,7 +172,10 @@ export class UnifiedStatusResolver {
           return directResult;
         }
       } catch (directError) {
-        console.debug("[UnifiedStatusResolver] Direct service call failed, trying HTTP:", directError);
+        console.debug(
+          "[UnifiedStatusResolver] Direct service call failed, trying HTTP:",
+          directError
+        );
       }
 
       // Fallback to HTTP request only if direct call fails
@@ -197,7 +202,7 @@ export class UnifiedStatusResolver {
       return this.normalizeEnhancedResponse(data.data);
     } catch (error) {
       // Don't log connection refused as error - it's expected during startup
-      if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
+      if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
         console.debug("[UnifiedStatusResolver] Enhanced endpoint not available (startup)");
       } else {
         console.warn("[UnifiedStatusResolver] Enhanced endpoint error:", error);
@@ -234,7 +239,7 @@ export class UnifiedStatusResolver {
       return this.normalizeLegacyResponse(data.data);
     } catch (error) {
       // Don't log connection refused as error - it's expected during startup
-      if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
+      if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
         console.debug("[UnifiedStatusResolver] Legacy endpoint not available (startup)");
       } else {
         console.warn("[UnifiedStatusResolver] Legacy endpoint error:", error);

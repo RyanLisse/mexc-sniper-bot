@@ -132,11 +132,62 @@ function createPostgresClient() {
   }
 }
 
+// Create mock database for testing
+function createMockDatabase() {
+  // Create a thenable mock that resolves to empty array
+  const createThenable = (result = []) => {
+    const thenable = {
+      then: (resolve: any) => resolve(result),
+      catch: (reject: any) => reject,
+      finally: (fn: any) => fn(),
+      // Add common query methods that return themselves
+      where: () => thenable,
+      orderBy: () => thenable,
+      limit: () => thenable,
+      select: () => thenable,
+      from: () => thenable,
+      set: () => thenable,
+      values: () => thenable,
+      returning: () => thenable,
+    };
+    return thenable;
+  };
+
+  return {
+    execute: async () => [{ test_value: 1, count: "1" }],
+    query: async () => [],
+    insert: () => ({
+      values: () => ({
+        returning: () => createThenable([{ id: "mock-id" }]),
+      }),
+    }),
+    select: () => ({
+      from: () => createThenable([]),
+    }),
+    update: () => ({
+      set: () => createThenable([]),
+    }),
+    delete: () => createThenable([]),
+    transaction: async (cb: any) => {
+      return cb(createMockDatabase());
+    },
+  };
+}
+
 // PostgreSQL-only database configuration for NeonDB
 function createDatabase() {
   const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
   const isRailway = process.env.RAILWAY_ENVIRONMENT === "production";
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
+
+  // In test environment with mock flags, return a mock database
+  if (
+    isTest &&
+    (process.env.FORCE_MOCK_DB === "true" || process.env.USE_MOCK_DATABASE === "true")
+  ) {
+    getLogger().info("[Database] Using mocked database for tests");
+    return createMockDatabase();
+  }
 
   if (!hasNeonConfig()) {
     throw new Error(

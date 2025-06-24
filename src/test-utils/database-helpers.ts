@@ -5,8 +5,8 @@
  */
 
 import { eq } from "drizzle-orm";
+import { db } from "../db";
 import { snipeTargets, user, userPreferences } from "../db/schema";
-import { db } from "../lib/database-connection-pool";
 
 /**
  * Creates a test user in the database

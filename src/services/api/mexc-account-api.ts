@@ -171,9 +171,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
             const price = ticker?.lastPrice || ticker?.price;
             if (price && Number.parseFloat(price) > 0) {
               priceMap.set(symbol, Number.parseFloat(price));
-              this.logger.debug(
-                `[MexcAccountApi] Price found for ${symbol}: ${price}`
-              );
+              this.logger.debug(`[MexcAccountApi] Price found for ${symbol}: ${price}`);
             }
           }
         } catch (error) {

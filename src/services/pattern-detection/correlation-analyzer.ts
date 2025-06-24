@@ -12,11 +12,17 @@ import type { CorrelationAnalysis } from "./pattern-types";
 
 // Factory function to create logger when needed
 const getLogger = () => {
-      info: (message: string, context?: any) => console.info('[correlation-analyzer]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[correlation-analyzer]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[correlation-analyzer]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[correlation-analyzer]', message, context || ''),
-    };
+  return {
+    info: (message: string, context?: any) =>
+      console.info("[correlation-analyzer]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[correlation-analyzer]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[correlation-analyzer]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[correlation-analyzer]", message, context || ""),
+  };
+};
 
 export interface SimilarityResult {
   symbol1: string;

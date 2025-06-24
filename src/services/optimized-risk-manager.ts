@@ -105,11 +105,15 @@ export type RiskAction = z.infer<typeof RiskActionSchema>;
 export class OptimizedRiskManager {
   private static instance: OptimizedRiskManager;
   private logger = {
-      info: (message: string, context?: any) => console.info('[optimized-risk-manager]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[optimized-risk-manager]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[optimized-risk-manager]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[optimized-risk-manager]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[optimized-risk-manager]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[optimized-risk-manager]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[optimized-risk-manager]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[optimized-risk-manager]", message, context || ""),
+  };
 
   // Risk configuration
   private riskLimits: RiskLimits;
@@ -160,7 +164,7 @@ export class OptimizedRiskManager {
     activePositions: ExecutionPosition[]
   ): Promise<RiskAssessment> {
     try {
-      this.riskMetrics.totalAssessments++;// Calculate various risk components
+      this.riskMetrics.totalAssessments++; // Calculate various risk components
       const positionRisk = this.calculatePositionRisk(pattern, positionSize);
       const portfolioRisk = this.calculatePortfolioRisk(activePositions, positionSize);
       const drawdownRisk = this.calculateDrawdownRisk(activePositions);
@@ -228,7 +232,8 @@ export class OptimizedRiskManager {
       // Track blocked trades
       if (recommendedAction === "block" || recommendedAction === "emergency_stop") {
         this.riskMetrics.blockedTrades++;
-      }return assessment;
+      }
+      return assessment;
     } catch (error) {
       const safeError = toSafeError(error);
       console.error("Risk assessment failed", {
@@ -662,9 +667,10 @@ export class OptimizedRiskManager {
 
   private updatePortfolioMetrics(): void {
     // This would be updated with real portfolio data
-    // For now, maintaining existing structure}
+    // For now, maintaining existing structure
+  }
 
-  private getDefaultRiskLimits(): RiskLimits 
+  private getDefaultRiskLimits(): RiskLimits {
     return {
       maxDailyLoss: 1000,
       maxPositionSize: 100,
@@ -674,8 +680,9 @@ export class OptimizedRiskManager {
       maxPortfolioRisk: 70,
       emergencyStopLoss: 15,
     };
+  }
 
-  private getDefaultStopLossConfig(): StopLossConfig 
+  private getDefaultStopLossConfig(): StopLossConfig {
     return {
       type: "percentage",
       value: 5,
@@ -683,15 +690,17 @@ export class OptimizedRiskManager {
       minStopLoss: 2,
       maxStopLoss: 10,
     };
+  }
 
-  private getDefaultTakeProfitConfig(): TakeProfitConfig 
+  private getDefaultTakeProfitConfig(): TakeProfitConfig {
     return {
       type: "percentage",
       value: 10,
       dynamicMultiplier: 1.5,
     };
+  }
 
-  private getDefaultPortfolioMetrics(): PortfolioRiskMetrics 
+  private getDefaultPortfolioMetrics(): PortfolioRiskMetrics {
     return {
       totalPositionValue: 0,
       totalUnrealizedPnl: 0,
@@ -704,6 +713,7 @@ export class OptimizedRiskManager {
       activePositionCount: 0,
       riskUtilization: 0,
     };
+  }
 }
 
 // Export factory function

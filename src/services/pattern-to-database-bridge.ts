@@ -11,8 +11,8 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import type { PatternDetectionEventData, PatternMatch } from "../core/pattern-detection/interfaces";
 import { EnhancedPatternDetectionCore } from "../core/pattern-detection/pattern-detection-core-enhanced";
+import { db } from "../db";
 import { snipeTargets, userPreferences } from "../db/schema";
-import { db } from "../lib/database-connection-pool";
 import { toSafeError } from "../lib/error-type-utils";
 
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues

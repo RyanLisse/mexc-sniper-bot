@@ -170,8 +170,9 @@ export class MexcClientCore {
               }
 
               // Determine if this is an account endpoint
-              const isAccountEndpoint = endpoint.includes('/account') || endpoint.includes('/balance');
-              
+              const isAccountEndpoint =
+                endpoint.includes("/account") || endpoint.includes("/balance");
+
               // Only set Content-Type for non-account endpoints (trading endpoints need form data)
               if (!isAccountEndpoint) {
                 headers["Content-Type"] = "application/x-www-form-urlencoded";
@@ -185,7 +186,7 @@ export class MexcClientCore {
               headers["X-MEXC-APIKEY"] = this.config.apiKey;
 
               this.logger.debug(
-                `[MexcClientCore] Authenticated ${isAccountEndpoint ? 'GET' : 'POST'} request: ${endpoint} (${requestId})`
+                `[MexcClientCore] Authenticated ${isAccountEndpoint ? "GET" : "POST"} request: ${endpoint} (${requestId})`
               );
             }
 
@@ -216,8 +217,9 @@ export class MexcClientCore {
               // Determine request method based on endpoint
               // Account endpoints like /api/v3/account use GET with query parameters
               // Trading endpoints use POST with form data
-              const isAccountEndpoint = endpoint.includes('/account') || endpoint.includes('/balance');
-              
+              const isAccountEndpoint =
+                endpoint.includes("/account") || endpoint.includes("/balance");
+
               if (isAccountEndpoint) {
                 // Account endpoints: GET with query parameters and signature
                 Object.entries(params).forEach(([key, value]) => {

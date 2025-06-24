@@ -98,13 +98,14 @@ describe('Account Balance Flow Integration Tests', () => {
         }
       };
 
-      // Mock getMexcService to return service with balance method
+      // Mock getUnifiedMexcService to return service with balance method
       const mockMexcService = {
-        getAccountBalances: vi.fn().mockResolvedValue(mockBalanceResponse)
+        getAccountBalances: vi.fn().mockResolvedValue(mockBalanceResponse),
+        hasCredentials: vi.fn().mockReturnValue(true)
       };
 
-      vi.doMock('../../src/services/mexc-unified-exports', () => ({
-        getMexcService: vi.fn(() => mockMexcService)
+      vi.doMock('../../src/services/unified-mexc-service-factory', () => ({
+        getUnifiedMexcService: vi.fn().mockResolvedValue(mockMexcService)
       }));
 
       // Act: Call balance endpoint
@@ -139,11 +140,12 @@ describe('Account Balance Flow Integration Tests', () => {
       };
 
       const mockMexcService = {
-        getAccountBalances: vi.fn().mockResolvedValue(mockBalanceResponse)
+        getAccountBalances: vi.fn().mockResolvedValue(mockBalanceResponse),
+        hasCredentials: vi.fn().mockReturnValue(true)
       };
 
-      vi.doMock('../../src/services/mexc-unified-exports', () => ({
-        getMexcService: vi.fn(() => mockMexcService)
+      vi.doMock('../../src/services/unified-mexc-service-factory', () => ({
+        getUnifiedMexcService: vi.fn().mockResolvedValue(mockMexcService)
       }));
 
       // Act: Call balance endpoint without user credentials
@@ -186,11 +188,12 @@ describe('Account Balance Flow Integration Tests', () => {
         getAccountBalances: vi.fn().mockResolvedValue({
           success: true,
           data: { balances: [], totalUsdtValue: 0 }
-        })
+        }),
+        hasCredentials: vi.fn().mockReturnValue(true)
       };
 
-      vi.doMock('../../src/services/mexc-unified-exports', () => ({
-        getMexcService: vi.fn(() => mockMexcService)
+      vi.doMock('../../src/services/unified-mexc-service-factory', () => ({
+        getUnifiedMexcService: vi.fn().mockResolvedValue(mockMexcService)
       }));
 
       // Act
@@ -224,11 +227,12 @@ describe('Account Balance Flow Integration Tests', () => {
         getAccountBalances: vi.fn().mockResolvedValue({
           success: false,
           error: 'API signature validation failed'
-        })
+        }),
+        hasCredentials: vi.fn().mockReturnValue(true)
       };
 
-      vi.doMock('../../src/services/mexc-unified-exports', () => ({
-        getMexcService: vi.fn(() => mockMexcService)
+      vi.doMock('../../src/services/unified-mexc-service-factory', () => ({
+        getUnifiedMexcService: vi.fn().mockResolvedValue(mockMexcService)
       }));
 
       // Act
@@ -250,11 +254,12 @@ describe('Account Balance Flow Integration Tests', () => {
       const mockMexcService = {
         getAccountBalances: vi.fn().mockImplementation(() => {
           throw new Error('Network error: ECONNREFUSED');
-        })
+        }),
+        hasCredentials: vi.fn().mockReturnValue(true)
       };
 
-      vi.doMock('../../src/services/mexc-unified-exports', () => ({
-        getMexcService: vi.fn(() => mockMexcService)
+      vi.doMock('../../src/services/unified-mexc-service-factory', () => ({
+        getUnifiedMexcService: vi.fn().mockResolvedValue(mockMexcService)
       }));
 
       // Act
@@ -447,6 +452,7 @@ describe('Account Balance Flow Integration Tests', () => {
       // Mock consistent service behavior
       const mockMexcService = {
         testConnectivity: vi.fn().mockResolvedValue(true),
+        hasCredentials: vi.fn().mockReturnValue(true),
         getAccountInfo: vi.fn().mockResolvedValue({
           success: true,
           data: {
@@ -472,11 +478,10 @@ describe('Account Balance Flow Integration Tests', () => {
       };
 
       // Mock service factory to return same service instance
-      const serviceFactory = vi.fn(() => mockMexcService);
+      const serviceFactory = vi.fn().mockResolvedValue(mockMexcService);
 
-      vi.doMock('../../src/services/mexc-unified-exports', () => ({
-        getMexcService: serviceFactory,
-        getRecommendedMexcService: serviceFactory
+      vi.doMock('../../src/services/unified-mexc-service-factory', () => ({
+        getUnifiedMexcService: serviceFactory
       }));
 
       // Test balance endpoint

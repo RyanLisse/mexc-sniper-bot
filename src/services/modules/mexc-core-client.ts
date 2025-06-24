@@ -387,21 +387,29 @@ export class MexcCoreClient {
   ): Promise<MexcApiResponse> {
     const { timeout = this.config.timeout, ...fetchOptions } = options;
 
-    const response = await fetch(url, {
-      ...fetchOptions,
-      headers: {
-        ...this.baseHeaders,
-        ...fetchOptions.headers,
-      },
-      signal: AbortSignal.timeout(timeout),
-    });
+    // Use AbortController for broader compatibility with Node.js versions and test environments
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        headers: {
+          ...this.baseHeaders,
+          ...fetchOptions.headers,
+        },
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      return await response.json();
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    return await response.json();
   }
 
   private async makeAuthenticatedRequest(

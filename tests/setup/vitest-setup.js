@@ -25,6 +25,11 @@ if (process.env.ENABLE_TIMEOUT_MONITORING === 'true') {
 // Mock external dependencies
 beforeAll(async () => {
   console.log('🧪 Setting up Vitest global environment...')
+  
+  // Force test environment to use mocked database only
+  process.env.FORCE_MOCK_DB = 'true'
+  process.env.SKIP_DB_CONNECTION = 'true'
+  process.env.USE_MOCK_DATABASE = 'true'
 
   // Mock OpenAI API for testing
   vi.mock('openai', () => ({
@@ -283,74 +288,92 @@ beforeAll(async () => {
   })
 
   // Mock database functions for isolated testing
-  vi.mock('@/src/db', () => {
-    const mockDb = {
-      execute: vi.fn().mockResolvedValue([{ test_value: 1, count: '1' }]),
-      query: vi.fn().mockResolvedValue([]),
-      insert: vi.fn().mockReturnValue({
-        values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([{ id: 'mock-id' }])
-        })
-      }),
-      select: vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([]),
-            limit: vi.fn().mockResolvedValue([])
-          }),
-          limit: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([])
-          }),
+  const createMockDb = () => ({
+    execute: vi.fn().mockResolvedValue([{ test_value: 1, count: '1' }]),
+    query: vi.fn().mockResolvedValue([]),
+    insert: vi.fn().mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([{ id: 'mock-id' }])
+      })
+    }),
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          orderBy: vi.fn().mockResolvedValue([]),
+          limit: vi.fn().mockResolvedValue([])
+        }),
+        limit: vi.fn().mockReturnValue({
           orderBy: vi.fn().mockResolvedValue([])
-        })
-      }),
-      update: vi.fn().mockReturnValue({
-        set: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([])
-        })
-      }),
-      delete: vi.fn().mockReturnValue({
+        }),
+        orderBy: vi.fn().mockResolvedValue([])
+      })
+    }),
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
         where: vi.fn().mockResolvedValue([])
-      }),
-      transaction: vi.fn().mockImplementation(async (cb) => {
-        return cb(mockDb)
       })
-    }
-
-    return {
-      db: mockDb,
-      getDb: vi.fn().mockReturnValue(mockDb),
-      clearDbCache: vi.fn().mockImplementation(() => {
-        // Mock implementation - no actual cache to clear
-      }),
-      initializeDatabase: vi.fn().mockResolvedValue(true),
-      healthCheck: vi.fn().mockResolvedValue({
-        status: 'healthy',
-        responseTime: 50,
-        database: 'mock-neondb',
-        timestamp: new Date().toISOString()
-      }),
-      executeWithRetry: vi.fn().mockImplementation(async (queryFn) => {
-        return queryFn()
-      }),
-      closeDatabase: vi.fn().mockImplementation(() => {
-        // Mock implementation - no actual database to close
-      }),
-      // Database optimization functions
-      executeOptimizedSelect: vi.fn().mockImplementation(async (queryFn, cacheKey, cacheTTL) => {
-        return queryFn()
-      }),
-      executeOptimizedWrite: vi.fn().mockImplementation(async (queryFn, invalidatePatterns) => {
-        return queryFn()
-      }),
-      executeBatchOperations: vi.fn().mockImplementation(async (operations, invalidatePatterns) => {
-        return Promise.all(operations.map(op => op()))
-      }),
-      monitoredQuery: vi.fn().mockImplementation(async (queryName, queryFn, options) => {
-        return queryFn()
-      })
-    }
+    }),
+    delete: vi.fn().mockReturnValue({
+      where: vi.fn().mockResolvedValue([])
+    }),
+    transaction: vi.fn().mockImplementation(async (cb) => {
+      return cb(createMockDb())
+    })
   })
+
+  const mockDb = createMockDb()
+
+  vi.mock('@/src/db', () => ({
+    db: mockDb,
+    getDb: vi.fn().mockReturnValue(mockDb),
+    clearDbCache: vi.fn().mockImplementation(() => {
+      // Mock implementation - no actual cache to clear
+    }),
+    initializeDatabase: vi.fn().mockResolvedValue(true),
+    healthCheck: vi.fn().mockResolvedValue({
+      status: 'healthy',
+      responseTime: 50,
+      database: 'mock-neondb',
+      timestamp: new Date().toISOString()
+    }),
+    executeWithRetry: vi.fn().mockImplementation(async (queryFn) => {
+      return queryFn()
+    }),
+    closeDatabase: vi.fn().mockImplementation(() => {
+      // Mock implementation - no actual database to close
+    }),
+    // Database optimization functions
+    executeOptimizedSelect: vi.fn().mockImplementation(async (queryFn, cacheKey, cacheTTL) => {
+      return queryFn()
+    }),
+    executeOptimizedWrite: vi.fn().mockImplementation(async (queryFn, invalidatePatterns) => {
+      return queryFn()
+    }),
+    executeBatchOperations: vi.fn().mockImplementation(async (operations, invalidatePatterns) => {
+      return Promise.all(operations.map(op => op()))
+    }),
+    monitoredQuery: vi.fn().mockImplementation(async (queryName, queryFn, options) => {
+      return queryFn()
+    })
+  }))
+
+  // Mock database-connection-pool to re-export the same mocked db
+  vi.mock('@/src/lib/database-connection-pool', () => ({
+    db: mockDb,
+    databaseConnectionPool: {
+      executeSelect: vi.fn().mockImplementation(async (queryFn) => queryFn()),
+      executeWrite: vi.fn().mockImplementation(async (queryFn) => queryFn()),
+      executeBatch: vi.fn().mockImplementation(async (operations) => 
+        Promise.all(operations.map(op => op()))
+      ),
+      shutdown: vi.fn(),
+      getMetrics: vi.fn().mockReturnValue({
+        totalConnections: 1,
+        activeConnections: 1,
+        connectionPoolHealth: 'healthy'
+      })
+    }
+  }))
 
   // Mock AI Intelligence Service for fast, deterministic test results
   vi.mock('@/src/services/ai-intelligence-service', () => ({

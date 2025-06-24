@@ -103,11 +103,15 @@ export interface RiskAssessment {
 export class OptimizedAutoSnipingOrchestrator {
   private static instance: OptimizedAutoSnipingOrchestrator;
   private logger = {
-      info: (message: string, context?: any) => console.info('[optimized-auto-sniping-orchestrator]', message, context || ''),
-      warn: (message: string, context?: any) => console.warn('[optimized-auto-sniping-orchestrator]', message, context || ''),
-      error: (message: string, context?: any, error?: Error) => console.error('[optimized-auto-sniping-orchestrator]', message, context || '', error || ''),
-      debug: (message: string, context?: any) => console.debug('[optimized-auto-sniping-orchestrator]', message, context || ''),
-    };
+    info: (message: string, context?: any) =>
+      console.info("[optimized-auto-sniping-orchestrator]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[optimized-auto-sniping-orchestrator]", message, context || ""),
+    error: (message: string, context?: any, error?: Error) =>
+      console.error("[optimized-auto-sniping-orchestrator]", message, context || "", error || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[optimized-auto-sniping-orchestrator]", message, context || ""),
+  };
 
   // Module instances
   private core: OptimizedAutoSnipingCore;
@@ -467,12 +471,14 @@ export class OptimizedAutoSnipingOrchestrator {
 
   private startOrchestrationCycle(): void {
     // Main orchestration cycle - simplified for this implementation
-    // Would include pattern monitoring, queue management, etc.}
+    // Would include pattern monitoring, queue management, etc.
+  }
 
-  private startPerformanceMonitoring(): void 
+  private startPerformanceMonitoring(): void {
     this.performanceInterval = setInterval(() => {
       this.updatePerformanceMetrics();
-    }, 60000); // Update every minute}
+    }, 60000); // Update every minute
+  }
 
   private updatePerformanceMetrics(): void {
     // Calculate performance score based on various factors
@@ -500,7 +506,8 @@ export class OptimizedAutoSnipingOrchestrator {
       performanceScore -= 15;
     }
 
-    this.metrics.performanceScore = Math.max(0, Math.min(100, performanceScore));}
+    this.metrics.performanceScore = Math.max(0, Math.min(100, performanceScore));
+  }
 
   private updateOrchestrationMetrics(
     riskAssessment: RiskAssessment,
@@ -538,7 +545,7 @@ export class OptimizedAutoSnipingOrchestrator {
     return totalWaitTime / this.executionQueue.length;
   }
 
-  private getDefaultMetrics(): OrchestratorMetrics 
+  private getDefaultMetrics(): OrchestratorMetrics {
     return {
       totalOrchestrations: 0,
       successfulExecutions: 0,
@@ -550,6 +557,8 @@ export class OptimizedAutoSnipingOrchestrator {
       emergencyStopsTriggered: 0,
       performanceScore: 100,
     };
+  }
+}
 
 // Export factory function
 export function createOptimizedAutoSnipingOrchestrator(

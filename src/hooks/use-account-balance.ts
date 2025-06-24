@@ -86,9 +86,11 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
         return false;
       }
       // Don't retry network errors to prevent cascade failures
-      if (errorMessage.includes("timeout") || 
-          errorMessage.includes("ECONNREFUSED") ||
-          errorMessage.includes("Circuit breaker")) {
+      if (
+        errorMessage.includes("timeout") ||
+        errorMessage.includes("ECONNREFUSED") ||
+        errorMessage.includes("Circuit breaker")
+      ) {
         return false;
       }
       // No retries to prevent storms

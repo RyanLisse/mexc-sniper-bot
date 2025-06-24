@@ -12,8 +12,8 @@ import type {
   PatternMatch,
 } from "../../core/pattern-detection/interfaces";
 import { EnhancedPatternDetectionCore } from "../../core/pattern-detection/pattern-detection-core-enhanced";
+import { db } from "../../db";
 import { snipeTargets, userPreferences } from "../../db/schema";
-import { db } from "../../lib/database-connection-pool";
 // Test utilities
 import {
   cleanupTestData,

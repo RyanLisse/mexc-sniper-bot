@@ -37,10 +37,7 @@
     "data": {
       "currentMode": "login",
       "hasRegistrationOption": true,
-      "formFields": [
-        "Sign In",
-        "Don't have an account? Sign Up"
-      ]
+      "formFields": ["Sign In", "Don't have an account? Sign Up"]
     },
     "timestamp": 1750793628200,
     "requestId": "m6pc57wgjh"
@@ -157,9 +154,7 @@
           "elementId": "0-55",
           "description": "The 'Create Account' heading indicating the section for account creation.",
           "method": "fill",
-          "arguments": [
-            "Dashboard Test User"
-          ]
+          "arguments": ["Dashboard Test User"]
         }
       ]
     },
@@ -292,11 +287,7 @@
     "data": {
       "isCorrectHomepage": true,
       "title": "MEXC Sniper Bot - AI Trading Platform",
-      "availableActions": [
-        "Sign In",
-        "Get Started",
-        "Sign Up Now"
-      ],
+      "availableActions": ["Sign In", "Get Started", "Sign Up Now"],
       "hasLoadingState": false
     },
     "timestamp": 1750793780190,
@@ -363,9 +354,7 @@
           "elementId": "0-635",
           "description": "The name field where users can input their name during account creation.",
           "method": "fill",
-          "arguments": [
-            "Stagehand Test User"
-          ]
+          "arguments": ["Stagehand Test User"]
         }
       ]
     },
@@ -493,10 +482,7 @@
     "data": {
       "currentMode": "login",
       "hasRegistrationOption": true,
-      "formFields": [
-        "Sign In",
-        "Don't have an account? Sign Up"
-      ]
+      "formFields": ["Sign In", "Don't have an account? Sign Up"]
     },
     "timestamp": 1750793865105,
     "requestId": "0kqyb9kcgxx"
@@ -505,11 +491,7 @@
     "data": {
       "isCorrectHomepage": true,
       "title": "MEXC Sniper Bot - AI Trading Platform",
-      "availableActions": [
-        "Sign In",
-        "Get Started",
-        "Sign Up Now"
-      ],
+      "availableActions": ["Sign In", "Get Started", "Sign Up Now"],
       "hasLoadingState": false
     },
     "timestamp": 1750793866659,
@@ -667,10 +649,7 @@
     "data": {
       "isDashboard": false,
       "mainTitle": "Register",
-      "navigationSections": [
-        "Sign up",
-        "ryanlisse"
-      ],
+      "navigationSections": ["Sign up", "ryanlisse"],
       "contentAreas": [
         "Get started today!",
         "Email",
@@ -680,9 +659,7 @@
       "hasCalendarSection": false,
       "hasMetricsCards": false,
       "hasControlPanels": false,
-      "errorMessages": [
-        "null"
-      ]
+      "errorMessages": ["null"]
     },
     "timestamp": 1750793884195,
     "requestId": "i07po3ye3io"
@@ -694,9 +671,7 @@
           "elementId": "0-634",
           "description": "The name field for creating an account where the user can input their name.",
           "method": "fill",
-          "arguments": [
-            "Stagehand Test User"
-          ]
+          "arguments": ["Stagehand Test User"]
         }
       ]
     },
@@ -752,9 +727,7 @@
           "elementId": "0-1",
           "description": "Email input field for entering the user's email address during registration",
           "method": "fill",
-          "arguments": [
-            "test@example.com"
-          ]
+          "arguments": ["test@example.com"]
         }
       ]
     },
@@ -767,9 +740,7 @@
       "hasVisualChart": false,
       "chartBars": 0,
       "riskLevel": "null",
-      "profitLevels": [
-        "null"
-      ],
+      "profitLevels": ["null"],
       "summaryData": {
         "strategyType": "Conservative",
         "profitLevels": "null",
@@ -794,9 +765,7 @@
           "elementId": "0-1",
           "description": "Email input field for registration form",
           "method": "fill",
-          "arguments": [
-            "dashboard-test-1750793887218@example.com"
-          ]
+          "arguments": ["dashboard-test-1750793887218@example.com"]
         }
       ]
     },
@@ -824,9 +793,7 @@
           "elementId": "0-1",
           "description": "textbox for Email input where the user can enter their email address",
           "method": "fill",
-          "arguments": [
-            "journey-test-1750793896186@example.com"
-          ]
+          "arguments": ["journey-test-1750793896186@example.com"]
         }
       ]
     },
@@ -857,9 +824,7 @@
   },
   "38bd0782e7b54f23fcc0883206c771a5fe03eac16f0425469491e3f3b14856ff": {
     "data": {
-      "tasksCompleted": [
-        "Signed in with email journey-test-1750793896186@example.com"
-      ],
+      "tasksCompleted": ["Signed in with email journey-test-1750793896186@example.com"],
       "timeSpent": "null",
       "engagementLevel": "high",
       "exitPoint": "null",
