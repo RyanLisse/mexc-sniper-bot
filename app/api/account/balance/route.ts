@@ -51,10 +51,33 @@ export const GET = publicRoute(withApiErrorHandling(async (request: NextRequest)
   }
 
     // Use unified service factory for consistent credential resolution
-    const mexcService = await getUnifiedMexcService({
-      userId: userId || undefined,
-      skipCache: false // Use cache for better performance
-    });
+    let mexcService;
+    try {
+      mexcService = await getUnifiedMexcService({
+        userId: userId || undefined,
+        skipCache: false // Use cache for better performance
+      });
+    } catch (serviceError) {
+      console.error('[API] Failed to initialize MEXC service:', serviceError);
+      return apiResponse(
+        createErrorResponse(
+          'Failed to initialize MEXC service - please check API credentials configuration',
+          {
+            code: 'SERVICE_INITIALIZATION_ERROR',
+            fallbackData: {
+              balances: [],
+              totalUsdtValue: 0,
+              lastUpdated: new Date().toISOString(),
+              hasUserCredentials: false,
+              credentialsType: 'environment-fallback',
+            },
+            requestDuration: `${Date.now() - startTime}ms`,
+            userId: userId || 'none'
+          }
+        ),
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
+    }
 
     // Determine if we're using user-specific credentials
     const hasUserCredentials = Boolean(userId);

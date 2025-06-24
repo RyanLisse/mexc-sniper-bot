@@ -209,11 +209,21 @@ export class UnifiedMexcServiceFactory {
       });
 
       if (!credentials) {
-        console.warn("[UnifiedMexcServiceFactory] No valid credentials found");
-        // Return service with environment fallback
+        console.warn("[UnifiedMexcServiceFactory] No valid credentials found, falling back to environment");
+        
+        // Check if environment credentials exist
+        const envApiKey = process.env.MEXC_API_KEY;
+        const envSecretKey = process.env.MEXC_SECRET_KEY;
+        
+        if (!envApiKey || !envSecretKey) {
+          console.error("[UnifiedMexcServiceFactory] No environment credentials available");
+          throw new Error("No MEXC API credentials configured - please set MEXC_API_KEY and MEXC_SECRET_KEY environment variables");
+        }
+        
+        console.info("[UnifiedMexcServiceFactory] Using environment credentials as fallback");
         return this.createServiceInstance({
-          apiKey: process.env.MEXC_API_KEY || "",
-          secretKey: process.env.MEXC_SECRET_KEY || "",
+          apiKey: envApiKey,
+          secretKey: envSecretKey,
           source: "environment",
         });
       }
@@ -332,47 +342,71 @@ export class UnifiedMexcServiceFactory {
         }
       }
 
-      // Query database
-      const credentials = await db
-        .select()
-        .from(apiCredentials)
-        .where(
-          and(
-            eq(apiCredentials.userId, userId),
-            eq(apiCredentials.provider, "mexc"),
-            eq(apiCredentials.isActive, true)
-          )
-        )
-        .limit(1);
-
-      if (!credentials[0]) {
+      // Validate userId before database query
+      if (!userId || userId.trim() === "" || userId === "undefined" || userId === "null") {
+        console.warn("[UnifiedMexcServiceFactory] Invalid userId provided:", userId);
         return null;
       }
 
-      // Decrypt credentials
-      const apiKey = this.encryptionService.decrypt(credentials[0].encryptedApiKey);
-      const secretKey = this.encryptionService.decrypt(credentials[0].encryptedSecretKey);
+      // Query database with timeout and error handling
+      const credentials = await Promise.race([
+        db
+          .select()
+          .from(apiCredentials)
+          .where(
+            and(
+              eq(apiCredentials.userId, userId),
+              eq(apiCredentials.provider, "mexc"),
+              eq(apiCredentials.isActive, true)
+            )
+          )
+          .limit(1),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Database query timeout")), 5000)
+        ),
+      ]);
 
-      // Cache credentials
-      if (this.config.enableGlobalCache && !skipCache) {
-        this.credentialCache.set(userId, {
+      if (!credentials || !credentials[0]) {
+        console.info(`[UnifiedMexcServiceFactory] No credentials found for user: ${userId}`);
+        return null;
+      }
+
+      // Decrypt credentials with error handling
+      try {
+        const apiKey = this.encryptionService.decrypt(credentials[0].encryptedApiKey);
+        const secretKey = this.encryptionService.decrypt(credentials[0].encryptedSecretKey);
+
+        // Validate decrypted credentials
+        if (!apiKey || !secretKey) {
+          console.warn("[UnifiedMexcServiceFactory] Failed to decrypt credentials - empty result");
+          return null;
+        }
+
+        // Cache credentials
+        if (this.config.enableGlobalCache && !skipCache) {
+          this.credentialCache.set(userId, {
+            apiKey,
+            secretKey,
+            source: "database",
+            timestamp: Date.now(),
+            ttl: this.config.credentialCacheTTL,
+          });
+        }
+
+        console.info("[UnifiedMexcServiceFactory] Retrieved user credentials from database");
+
+        return {
           apiKey,
           secretKey,
           source: "database",
-          timestamp: Date.now(),
-          ttl: this.config.credentialCacheTTL,
-        });
+        };
+      } catch (decryptError) {
+        console.error("[UnifiedMexcServiceFactory] Failed to decrypt credentials:", decryptError);
+        return null;
       }
-
-      console.info("[UnifiedMexcServiceFactory] Retrieved user credentials from database");
-
-      return {
-        apiKey,
-        secretKey,
-        source: "database",
-      };
     } catch (error) {
       console.error("[UnifiedMexcServiceFactory] Failed to get user credentials:", error);
+      // Don't throw - gracefully fallback to environment credentials
       return null;
     }
   }

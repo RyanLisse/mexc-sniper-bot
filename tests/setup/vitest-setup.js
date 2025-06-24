@@ -302,9 +302,7 @@ beforeAll(async () => {
           orderBy: vi.fn().mockResolvedValue([]),
           limit: vi.fn().mockResolvedValue([])
         }),
-        limit: vi.fn().mockReturnValue({
-          orderBy: vi.fn().mockResolvedValue([])
-        }),
+        limit: vi.fn().mockResolvedValue([]),
         orderBy: vi.fn().mockResolvedValue([])
       })
     }),
