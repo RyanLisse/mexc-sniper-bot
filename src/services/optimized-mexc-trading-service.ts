@@ -1,29 +1,29 @@
 /**
  * Optimized MEXC Trading Service
- * 
+ *
  * Streamlined trading service with comprehensive validation and error handling.
  * Replaces the 615-line mexc-trading-service.ts with optimized, focused implementation.
  * Under 500 lines with proper Zod validation and TypeScript safety.
  */
 
-import { z } from "zod";
 import { and, eq } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "../db";
 import type { NewExecutionHistory } from "../db/schema";
 import { apiCredentials, executionHistory } from "../db/schema";
 import { getCachedCredentials } from "../lib/credential-cache";
-import { createLogger } from "../lib/structured-logger";
 import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
+import { createLogger } from "../lib/structured-logger";
 import { enhancedRiskManagementService } from "./enhanced-risk-management-service";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
-import { transactionLockService } from "./transaction-lock-service";
-import type { OrderParameters } from "./unified-mexc-client";
 import {
   type TradingOrderRequest,
   type TradingOrderResponse,
   validateTradingOrderRequest,
-  validateTradingOrderResponse
+  validateTradingOrderResponse,
 } from "./optimized-auto-sniping-schemas";
+import { transactionLockService } from "./transaction-lock-service";
+import type { OrderParameters } from "./unified-mexc-client";
 
 // ============================================================================
 // Schemas and Types
@@ -34,13 +34,13 @@ const TradingContextSchema = z.object({
   startTime: z.number(),
   userId: z.string(),
   skipLock: z.boolean().default(false),
-  skipRisk: z.boolean().default(false)
+  skipRisk: z.boolean().default(false),
 });
 
 const TradingCredentialsSchema = z.object({
   apiKey: z.string().min(1),
   secretKey: z.string().min(1),
-  source: z.enum(["database", "cache"])
+  source: z.enum(["database", "cache"]),
 });
 
 const RiskAssessmentResultSchema = z.object({
@@ -53,8 +53,8 @@ const RiskAssessmentResultSchema = z.object({
   limits: z.any().optional(),
   compliance: z.any().optional(),
   metadata: z.object({
-    assessmentTime: z.string()
-  })
+    assessmentTime: z.string(),
+  }),
 });
 
 const TradeExecutionResultSchema = z.object({
@@ -68,18 +68,22 @@ const TradeExecutionResultSchema = z.object({
   executedQty: z.string().optional(),
   error: z.string().optional(),
   timestamp: z.string(),
-  serviceMetrics: z.object({
-    executionTimeMs: z.number().optional(),
-    cached: z.boolean().optional(),
-    requestId: z.string().optional()
-  }).optional(),
-  riskMetadata: z.object({
-    riskLevel: z.string(),
-    riskScore: z.number(),
-    assessmentTime: z.string(),
-    portfolioImpact: z.number(),
-    emergencyTrade: z.boolean().optional()
-  }).optional()
+  serviceMetrics: z
+    .object({
+      executionTimeMs: z.number().optional(),
+      cached: z.boolean().optional(),
+      requestId: z.string().optional(),
+    })
+    .optional(),
+  riskMetadata: z
+    .object({
+      riskLevel: z.string(),
+      riskScore: z.number(),
+      assessmentTime: z.string(),
+      portfolioImpact: z.number(),
+      emergencyTrade: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 type TradingContext = z.infer<typeof TradingContextSchema>;
@@ -105,13 +109,13 @@ export class OptimizedMexcTradingService {
   > {
     // Validate request
     const validatedRequest = validateTradingOrderRequest(request);
-    
+
     const context = TradingContextSchema.parse({
       requestId: `trade_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       startTime: Date.now(),
       userId: validatedRequest.userId,
       skipLock: false,
-      skipRisk: false
+      skipRisk: false,
     });
 
     this.logger.info("Starting optimized trade execution", {
@@ -119,7 +123,7 @@ export class OptimizedMexcTradingService {
       symbol: validatedRequest.symbol,
       side: validatedRequest.side,
       type: validatedRequest.type,
-      userId: context.userId
+      userId: context.userId,
     });
 
     try {
@@ -128,7 +132,7 @@ export class OptimizedMexcTradingService {
       if (!credentials) {
         return this.createErrorResponse("NO_CREDENTIALS", "No active MEXC API credentials found", {
           message: "Please configure your MEXC API credentials in settings",
-          userId: context.userId
+          userId: context.userId,
         });
       }
 
@@ -140,17 +144,25 @@ export class OptimizedMexcTradingService {
       // Check locks and assess risk
       const lockCheck = await this.checkResourceLock(resourceId, context);
       if (!lockCheck.success) {
-        return this.createErrorResponse("RESOURCE_LOCKED", lockCheck.error || "Trade already in progress", lockCheck.details);
+        return this.createErrorResponse(
+          "RESOURCE_LOCKED",
+          lockCheck.error || "Trade already in progress",
+          lockCheck.details
+        );
       }
 
       const riskAssessment = await this.performRiskAssessment(context.userId, orderParams, context);
       if (!riskAssessment.approved && !context.skipRisk) {
-        return this.createErrorResponse("RISK_MANAGEMENT_BLOCK", "Trade blocked by risk management", {
-          riskLevel: riskAssessment.riskLevel,
-          riskScore: riskAssessment.riskScore,
-          errors: riskAssessment.errors,
-          warnings: riskAssessment.warnings
-        });
+        return this.createErrorResponse(
+          "RISK_MANAGEMENT_BLOCK",
+          "Trade blocked by risk management",
+          {
+            riskLevel: riskAssessment.riskLevel,
+            riskScore: riskAssessment.riskScore,
+            errors: riskAssessment.errors,
+            warnings: riskAssessment.warnings,
+          }
+        );
       }
 
       // Execute trade
@@ -163,33 +175,41 @@ export class OptimizedMexcTradingService {
       );
 
       if (!executionResult.success) {
-        return this.createErrorResponse("EXECUTION_FAILED", executionResult.error || "Trade execution failed", executionResult);
+        return this.createErrorResponse(
+          "EXECUTION_FAILED",
+          executionResult.error || "Trade execution failed",
+          executionResult
+        );
       }
 
       // Save history and build response
       await this.saveExecutionHistory(executionResult, validatedRequest, context);
       const response = this.buildTradingResponse(executionResult);
-      
+
       this.logger.info("Trade execution completed successfully", {
         requestId: context.requestId,
         orderId: response.orderId,
         symbol: response.symbol,
-        duration: `${Date.now() - context.startTime}ms`
+        duration: `${Date.now() - context.startTime}ms`,
       });
 
       return { success: true, data: response };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Unexpected trade execution error", {
-        requestId: context.requestId,
-        error: safeError.message,
-        duration: `${Date.now() - context.startTime}ms`
-      }, error);
+      this.logger.error(
+        "Unexpected trade execution error",
+        {
+          requestId: context.requestId,
+          error: safeError.message,
+          duration: `${Date.now() - context.startTime}ms`,
+        },
+        error
+      );
 
       return this.createErrorResponse("TRADING_ERROR", "Trade execution failed", {
         requestId: context.requestId,
         message: safeError.message,
-        duration: `${Date.now() - context.startTime}ms`
+        duration: `${Date.now() - context.startTime}ms`,
       });
     }
   }
@@ -205,7 +225,7 @@ export class OptimizedMexcTradingService {
     try {
       this.logger.info("Retrieving credentials", {
         requestId: context.requestId,
-        userId
+        userId,
       });
 
       const credentials = await db
@@ -232,21 +252,21 @@ export class OptimizedMexcTradingService {
       const result = TradingCredentialsSchema.parse({
         apiKey,
         secretKey,
-        source: "cache"
+        source: "cache",
       });
 
       this.logger.info("Credentials retrieved successfully", {
         requestId: context.requestId,
         hasApiKey: !!result.apiKey,
         hasSecretKey: !!result.secretKey,
-        source: result.source
+        source: result.source,
       });
 
       return result;
     } catch (error) {
       this.logger.error("Failed to retrieve credentials", {
         requestId: context.requestId,
-        error: getErrorMessage(error)
+        error: getErrorMessage(error),
       });
       return null;
     }
@@ -255,12 +275,12 @@ export class OptimizedMexcTradingService {
   private initializeMexcService(credentials: TradingCredentials, context: TradingContext) {
     this.logger.info("Initializing MEXC service", {
       requestId: context.requestId,
-      credentialSource: credentials.source
+      credentialSource: credentials.source,
     });
 
     return getRecommendedMexcService({
       apiKey: credentials.apiKey,
-      secretKey: credentials.secretKey
+      secretKey: credentials.secretKey,
     });
   }
 
@@ -275,7 +295,7 @@ export class OptimizedMexcTradingService {
       quantity: request.quantity || undefined,
       quoteOrderQty: request.quoteOrderQty || undefined,
       price: request.price || undefined,
-      timeInForce: request.timeInForce || "IOC" // Immediate or Cancel for safety
+      timeInForce: request.timeInForce || "IOC", // Immediate or Cancel for safety
     };
 
     this.logger.info("Order parameters prepared", {
@@ -284,7 +304,7 @@ export class OptimizedMexcTradingService {
       side: orderParams.side,
       type: orderParams.type,
       hasQuantity: !!orderParams.quantity,
-      hasPrice: !!orderParams.price
+      hasPrice: !!orderParams.price,
     });
 
     return orderParams;
@@ -307,20 +327,20 @@ export class OptimizedMexcTradingService {
           details: {
             message: `Another trade is being processed. Queue position: ${lockStatus.queueLength + 1}`,
             lockStatus,
-            resourceId
-          }
+            resourceId,
+          },
         };
       }
       return { success: true };
     } catch (error) {
       this.logger.error("Lock check failed", {
         requestId: context.requestId,
-        error: getErrorMessage(error)
+        error: getErrorMessage(error),
       });
       return {
         success: false,
         error: "Lock check failed",
-        details: { error: getErrorMessage(error) }
+        details: { error: getErrorMessage(error) },
       };
     }
   }
@@ -338,8 +358,8 @@ export class OptimizedMexcTradingService {
         errors: [],
         warnings: ["Risk assessment skipped"],
         metadata: {
-          assessmentTime: new Date().toISOString()
-        }
+          assessmentTime: new Date().toISOString(),
+        },
       });
     }
 
@@ -347,7 +367,7 @@ export class OptimizedMexcTradingService {
       this.logger.info("Performing risk assessment", {
         requestId: context.requestId,
         userId,
-        symbol: orderParams.symbol
+        symbol: orderParams.symbol,
       });
 
       const riskAssessment = await enhancedRiskManagementService.assessTradingRisk(
@@ -363,14 +383,14 @@ export class OptimizedMexcTradingService {
         riskLevel: result.riskLevel,
         riskScore: result.riskScore,
         errorCount: result.errors.length,
-        warningCount: result.warnings.length
+        warningCount: result.warnings.length,
       });
 
       return result;
     } catch (error) {
       this.logger.error("Risk assessment failed", {
         requestId: context.requestId,
-        error: getErrorMessage(error)
+        error: getErrorMessage(error),
       });
 
       // On risk assessment failure, block the trade for safety
@@ -381,8 +401,8 @@ export class OptimizedMexcTradingService {
         errors: ["Risk assessment system error"],
         warnings: [],
         metadata: {
-          assessmentTime: new Date().toISOString()
-        }
+          assessmentTime: new Date().toISOString(),
+        },
       });
     }
   }
@@ -398,7 +418,7 @@ export class OptimizedMexcTradingService {
       try {
         this.logger.info("Executing trade", {
           requestId: context.requestId,
-          symbol: orderParams.symbol
+          symbol: orderParams.symbol,
         });
 
         const orderResponse = await mexcService.placeOrder(orderParams);
@@ -424,19 +444,19 @@ export class OptimizedMexcTradingService {
           serviceMetrics: {
             executionTimeMs: orderResponse.executionTimeMs,
             cached: orderResponse.cached,
-            requestId: orderResponse.requestId
+            requestId: orderResponse.requestId,
           },
           riskMetadata: {
             riskLevel: riskAssessment.riskLevel,
             riskScore: riskAssessment.riskScore,
             assessmentTime: riskAssessment.metadata.assessmentTime,
-            portfolioImpact: riskAssessment.limits?.portfolioImpact || 0
-          }
+            portfolioImpact: riskAssessment.limits?.portfolioImpact || 0,
+          },
         });
       } catch (error) {
         this.logger.error("Trade execution failed", {
           requestId: context.requestId,
-          error: getErrorMessage(error)
+          error: getErrorMessage(error),
         });
 
         return TradeExecutionResultSchema.parse({
@@ -445,7 +465,7 @@ export class OptimizedMexcTradingService {
           side: orderParams.side,
           quantity: orderParams.quantity?.toString() || orderParams.quoteOrderQty?.toString() || "",
           timestamp: new Date().toISOString(),
-          error: getErrorMessage(error)
+          error: getErrorMessage(error),
         });
       }
     };
@@ -464,10 +484,10 @@ export class OptimizedMexcTradingService {
         transactionData: {
           symbol: orderParams.symbol,
           side: orderParams.side,
-          type: orderParams.type
+          type: orderParams.type,
         },
         timeoutMs: 30000,
-        priority: orderParams.side === "SELL" ? 1 : 5
+        priority: orderParams.side === "SELL" ? 1 : 5,
       },
       executeTrade
     );
@@ -479,7 +499,7 @@ export class OptimizedMexcTradingService {
         side: orderParams.side,
         quantity: orderParams.quantity?.toString() || orderParams.quoteOrderQty?.toString() || "",
         timestamp: new Date().toISOString(),
-        error: lockResult.error || "Trade execution failed"
+        error: lockResult.error || "Trade execution failed",
       });
     }
 
@@ -496,7 +516,7 @@ export class OptimizedMexcTradingService {
     try {
       this.logger.info("Saving execution history", {
         requestId: context.requestId,
-        orderId: result.orderId
+        orderId: result.orderId,
       });
 
       const executionRecord: NewExecutionHistory = {
@@ -522,19 +542,19 @@ export class OptimizedMexcTradingService {
         slippagePercent: null,
         status: "success",
         requestedAt: new Date(context.startTime),
-        executedAt: new Date()
+        executedAt: new Date(),
       };
 
       await db.insert(executionHistory).values(executionRecord);
 
       this.logger.info("Execution history saved", {
         requestId: context.requestId,
-        orderId: result.orderId
+        orderId: result.orderId,
       });
     } catch (error) {
       this.logger.error("Failed to save execution history", {
         requestId: context.requestId,
-        error: getErrorMessage(error)
+        error: getErrorMessage(error),
       });
     }
   }
@@ -549,7 +569,7 @@ export class OptimizedMexcTradingService {
       price: result.price,
       status: result.status,
       executedQty: result.executedQty,
-      timestamp: result.timestamp
+      timestamp: result.timestamp,
     };
 
     return validateTradingOrderResponse(response);
@@ -564,7 +584,7 @@ export class OptimizedMexcTradingService {
       success: false,
       error,
       code,
-      details
+      details,
     };
   }
 }

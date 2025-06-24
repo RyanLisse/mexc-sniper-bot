@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createLogger } from '../../../../src/lib/structured-logger';
-import { AutoSnipingExecutionService } from "../../../../src/services/auto-sniping-execution-service";
+import { OptimizedAutoSnipingCore } from "../../../../src/services/optimized-auto-sniping-core";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
@@ -9,7 +9,7 @@ import {
 } from "../../../../src/lib/api-response";
 import { handleApiError } from "../../../../src/lib/error-handler";
 
-const autoSnipingService = AutoSnipingExecutionService.getInstance();
+const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
 
 const logger = createLogger('route');
 

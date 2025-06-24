@@ -1,6 +1,6 @@
+import { createLogger } from "../lib/structured-logger";
 import { MultiPhaseExecutor } from "./multi-phase-executor";
 import type { TradingStrategy } from "./trading-strategy-manager";
-import { createLogger } from "../lib/structured-logger";
 
 /**
  * MULTI-PHASE TRADING BOT
@@ -11,7 +11,7 @@ import { createLogger } from "../lib/structured-logger";
 
 // Real-time Multi-Phase Example - EXACT implementation from docs
 export class MultiPhaseTradingBot {
-  private logger = createLogger('multi-phase-trading-bot');
+  private logger = createLogger("multi-phase-trading-bot");
 
   protected executor: MultiPhaseExecutor;
   protected entryPrice: number;

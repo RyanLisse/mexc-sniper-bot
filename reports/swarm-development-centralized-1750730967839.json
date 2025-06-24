@@ -1,0 +1,13 @@
+{
+  "objective": "resolve all remaining issues Module not found: Can't resolve '../lib/structured-logger'\nhttps://nextjs.org/docs/messages/module-not-found\nImport trace for requested module:\n./src/services/notification-providers/index.ts\n./app/api/alerts/channels/route.ts\n./src/services/notification-providers/index.ts\nModule not found: Can't resolve '../lib/structured-logger'\nhttps://nextjs.org/docs/messages/module-not-found\nImport trace for requested module:\n./app/api/alerts/channels/route.ts\n> Build failed because of webpack errors\nError: Command npm",
+  "strategy": "development",
+  "mode": "centralized",
+  "maxAgents": 5,
+  "timeout": 60,
+  "parallel": true,
+  "monitor": true,
+  "output": "json",
+  "outputDir": "./reports",
+  "timestamp": "2025-06-24T02:09:27.838Z",
+  "id": "swarm-development-centralized-1750730967839"
+}

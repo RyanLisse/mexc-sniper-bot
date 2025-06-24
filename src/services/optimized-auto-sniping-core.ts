@@ -76,7 +76,14 @@ export const ExecutionPositionSchema = z.object({
   takeProfitPrice: z.string().optional(),
   status: PositionStatusSchema,
   entryTime: z.string().datetime(),
-  patternMatch: z.any(), // PatternMatch interface
+  patternMatch: z.object({
+    symbol: z.string(),
+    patternType: z.string(),
+    confidence: z.number(),
+    timestamp: z.string().datetime(),
+    riskLevel: z.string().optional(),
+    advanceNoticeHours: z.number().optional(),
+  }), // PatternMatch interface
   executionMetadata: ExecutionMetadataSchema,
 });
 
@@ -107,7 +114,7 @@ export const ExecutionAlertSchema = z.object({
   timestamp: z.string().datetime(),
   positionId: z.string().optional(),
   symbol: z.string().optional(),
-  details: z.record(z.any()),
+  details: z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])),
   acknowledged: z.boolean().default(false),
 });
 

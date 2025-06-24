@@ -28,7 +28,7 @@ import type {
   SafetyThresholds,
   SystemHealth,
 } from "../../schemas/safety-monitoring-schemas";
-import { AutoSnipingExecutionService } from "../auto-sniping-execution-service";
+import { OptimizedAutoSnipingCore } from "../optimized-auto-sniping-core";
 import { EmergencySafetySystem } from "../emergency-safety-system";
 import { PatternMonitoringService } from "../pattern-monitoring-service";
 import { UnifiedMexcServiceV2 } from "../unified-mexc-service-v2";
@@ -135,7 +135,7 @@ export class RealTimeSafetyMonitoringService {
 
   // Service dependencies (for compatibility)
   private emergencySystem: EmergencySafetySystem;
-  private executionService: AutoSnipingExecutionService;
+  private executionService: OptimizedAutoSnipingCore;
   private patternMonitoring: PatternMonitoringService;
   private mexcService: UnifiedMexcServiceV2;
 
@@ -145,7 +145,7 @@ export class RealTimeSafetyMonitoringService {
   private constructor() {
     // Initialize services
     this.emergencySystem = new EmergencySafetySystem();
-    this.executionService = AutoSnipingExecutionService.getInstance();
+    this.executionService = OptimizedAutoSnipingCore.getInstance();
     this.patternMonitoring = PatternMonitoringService.getInstance();
     this.mexcService = new UnifiedMexcServiceV2();
 
@@ -597,7 +597,7 @@ export class RealTimeSafetyMonitoringService {
    */
   public injectDependencies(dependencies: {
     emergencySystem?: EmergencySafetySystem;
-    executionService?: AutoSnipingExecutionService;
+    executionService?: OptimizedAutoSnipingCore;
     patternMonitoring?: PatternMonitoringService;
     mexcService?: UnifiedMexcServiceV2;
   }): void {

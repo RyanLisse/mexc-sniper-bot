@@ -5,7 +5,7 @@
  */
 
 import { TrendingDown, TrendingUp } from "lucide-react";
-import type { ExecutionPosition } from "@/src/services/auto-sniping-execution-service";
+import type { ExecutionPosition } from "@/src/services/optimized-auto-sniping-core";
 
 interface PnLIndicatorProps {
   position: ExecutionPosition;

@@ -6,9 +6,9 @@ import { createLogger } from './structured-logger';
  * Ensures critical systems are properly initialized before handling requests
  */
 
-import { AutoSnipingExecutionService } from "../services/auto-sniping-execution-service";
 import { calendarPatternBridgeService } from "../services/calendar-pattern-bridge-service";
 import { environmentValidation } from "../services/enhanced-environment-validation";
+import { OptimizedAutoSnipingCore } from "../services/optimized-auto-sniping-core";
 import { patternTargetBridgeService } from "../services/pattern-target-bridge-service";
 import { strategyInitializationService } from "../services/strategy-initialization-service";
 
@@ -114,7 +114,7 @@ export class StartupInitializer {
     // Initialize auto-sniping system if enabled
     try {
       logger.info("[Startup] Initializing auto-sniping system...");
-      const autoSnipingService = AutoSnipingExecutionService.getInstance();
+      const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
 
       // Check if auto-sniping should be auto-started
       const autoSnipingConfig = await autoSnipingService.getConfig();

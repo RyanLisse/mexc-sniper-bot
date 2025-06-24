@@ -15,6 +15,7 @@ import {
   useCacheMetrics,
   useCacheWarmingTrigger,
 } from "../../../hooks/use-cache-metrics";
+import { createLogger } from "../../../lib/structured-logger";
 import { Alert, AlertDescription, AlertTitle } from "../../ui/alert";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
@@ -22,7 +23,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Progress } from "../../ui/progress";
 import { Skeleton } from "../../ui/skeleton";
 import { useToast } from "../../ui/use-toast";
-import { createLogger } from "../../../lib/structured-logger";
 
 // Helper component for status icons
 const logger = createLogger("cache-warming-control-panel");

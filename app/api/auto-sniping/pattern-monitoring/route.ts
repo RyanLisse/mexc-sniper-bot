@@ -11,6 +11,7 @@ import { PatternMonitoringService } from '@/src/services/pattern-monitoring-serv
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 
+const logger = createLogger('pattern-monitoring-api');
 const patternMonitoringService = PatternMonitoringService.getInstance();
 
 /**

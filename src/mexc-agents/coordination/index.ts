@@ -12,7 +12,6 @@ import { createLogger } from "../../lib/structured-logger";
 
 export type {
   AgentHealth,
-  AgentRegistryStats,
   AgentStatus,
   HealthCheckResult,
   RegisteredAgent,

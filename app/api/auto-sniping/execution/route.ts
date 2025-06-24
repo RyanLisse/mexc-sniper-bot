@@ -7,14 +7,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createLogger } from '../../../../src/lib/structured-logger';
-import { AutoSnipingExecutionService } from '@/src/services/auto-sniping-execution-service';
+import { OptimizedAutoSnipingExecutionEngine } from '@/src/services/optimized-auto-sniping-execution-engine';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { instrumentedTradingRoute } from '@/src/lib/opentelemetry-api-middleware';
 
 const logger = createLogger('route');
 
-const executionService = AutoSnipingExecutionService.getInstance();
+const executionService = OptimizedAutoSnipingCore.getInstance();
 
 /**
  * GET /api/auto-sniping/execution

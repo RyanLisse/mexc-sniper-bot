@@ -8,7 +8,7 @@ import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { ExecutionPosition } from "../../../services/auto-sniping-execution-service";
+import type { ExecutionPosition } from "../../../services/optimized-auto-sniping-core";
 import { PnLIndicator } from "./pnl-indicator";
 
 interface RecentExecutionsProps {

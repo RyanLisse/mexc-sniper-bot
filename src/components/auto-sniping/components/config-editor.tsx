@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import type { AutoSnipingConfig } from "@/src/services/auto-sniping-execution-service";
+import type { AutoSnipingConfig } from "@/src/services/optimized-auto-sniping-core";
 import { type AutoSnipingConfigForm, configFormSchema } from "../schemas/validation-schemas";
 
 interface ConfigEditorProps {

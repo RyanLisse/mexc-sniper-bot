@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { ExecutionPosition } from "@/src/services/auto-sniping-execution-service";
+import type { ExecutionPosition } from "@/src/services/optimized-auto-sniping-core";
 import { PnLIndicator } from "./pnl-indicator";
 
 interface PositionsTabProps {

@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAutoSnipingExecution } from "@/src/hooks/use-auto-sniping-execution";
-import type { AutoSnipingConfig } from "@/src/services/auto-sniping-execution-service";
+import type { AutoSnipingConfig } from "@/src/services/optimized-auto-sniping-core";
 import { AlertsList } from "./components/alerts-list";
 import { ConfigEditor } from "./components/config-editor";
 import { ExecutionControls } from "./components/execution-controls";

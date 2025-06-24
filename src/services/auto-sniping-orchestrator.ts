@@ -13,7 +13,7 @@ import { snipeTargets } from "../db/schemas/trading";
 import { createLogger } from "../lib/structured-logger";
 import { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
 import { MexcConfigValidator } from "./mexc-config-validator";
-import { MultiPhaseTradingBot } from "./multi-phase-trading-bot";
+import { MultiPhaseTradingService } from "./multi-phase-trading-service";
 import { TRADING_STRATEGIES } from "./trading-strategy-manager";
 import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
 
@@ -99,7 +99,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
   // Core services
   private patternEngine: PatternDetectionCore;
-  private tradingBot: MultiPhaseTradingBot | null = null;
+  private tradingBot: MultiPhaseTradingService | null = null;
   private safetyCoordinator: ComprehensiveSafetyCoordinator;
   private mexcService: UnifiedMexcServiceV2;
   private configValidator: MexcConfigValidator;
@@ -147,7 +147,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
     this.status = this.initializeStatus();
     this.metrics = this.initializeMetrics();
 
-    logger.info("[AutoSnipingOrchestrator] Initialized with configuration:", this.config);
+    this.logger.info("[AutoSnipingOrchestrator] Initialized with configuration:", this.config);
   }
 
   public static getInstance(config?: Partial<AutoSnipingConfig>): AutoSnipingOrchestrator {
@@ -173,7 +173,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
       };
     }
 
-    logger.info("[AutoSnipingOrchestrator] Starting auto-sniping operations...");
+    this.logger.info("[AutoSnipingOrchestrator] Starting auto-sniping operations...");
 
     try {
       // Step 1: Validate system readiness
@@ -190,7 +190,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
       // Step 3: Initialize trading bot with strategy
       const strategy = TRADING_STRATEGIES[this.config.strategy];
-      this.tradingBot = new MultiPhaseTradingBot(strategy, 0, 0); // Will be set when position is created
+      this.tradingBot = new MultiPhaseTradingService(strategy, 0, 0); // Will be set when position is created
 
       // Step 4: Start monitoring intervals
       this.startMonitoringTimers();
@@ -209,7 +209,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         status: this.status,
       });
 
-      logger.info("[AutoSnipingOrchestrator] Auto-sniping started successfully");
+      this.logger.info("[AutoSnipingOrchestrator] Auto-sniping started successfully");
 
       return {
         success: true,
@@ -217,7 +217,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         status: this.status,
       };
     } catch (error) {
-      logger.error("[AutoSnipingOrchestrator] Failed to start auto-sniping:", error);
+      this.logger.error("[AutoSnipingOrchestrator] Failed to start auto-sniping:", error);
 
       // Cleanup on failure
       await this.cleanup();
@@ -244,7 +244,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
       };
     }
 
-    logger.info("[AutoSnipingOrchestrator] Stopping auto-sniping operations...");
+    this.logger.info("[AutoSnipingOrchestrator] Stopping auto-sniping operations...");
 
     try {
       // Stop monitoring timers
@@ -270,7 +270,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         metrics: this.metrics,
       });
 
-      logger.info("[AutoSnipingOrchestrator] Auto-sniping stopped successfully");
+      this.logger.info("[AutoSnipingOrchestrator] Auto-sniping stopped successfully");
 
       return {
         success: true,
@@ -278,7 +278,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         finalStatus: this.status,
       };
     } catch (error) {
-      logger.error("[AutoSnipingOrchestrator] Error stopping auto-sniping:", error);
+      this.logger.error("[AutoSnipingOrchestrator] Error stopping auto-sniping:", error);
 
       return {
         success: false,
@@ -334,7 +334,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         this.startMonitoringTimers();
       }
 
-      logger.info("[AutoSnipingOrchestrator] Configuration updated:", newConfig);
+      this.logger.info("[AutoSnipingOrchestrator] Configuration updated:", newConfig);
 
       return { success: true, message: "Configuration updated successfully" };
     } catch (error) {
@@ -433,17 +433,19 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
   private async performPatternDetection(): Promise<void> {
     try {
-      logger.info("[AutoSnipingOrchestrator] Checking database for ready snipe targets...");
+      this.logger.info("[AutoSnipingOrchestrator] Checking database for ready snipe targets...");
 
       // Get ready snipe targets from database instead of running pattern detection
       const readyTargets = await this.getReadySnipeTargets();
 
       if (readyTargets.length === 0) {
-        logger.info("[AutoSnipingOrchestrator] No ready snipe targets found in database");
+        this.logger.info("[AutoSnipingOrchestrator] No ready snipe targets found in database");
         return;
       }
 
-      logger.info(`[AutoSnipingOrchestrator] Found ${readyTargets.length} ready snipe targets`);
+      this.logger.info(
+        `[AutoSnipingOrchestrator] Found ${readyTargets.length} ready snipe targets`
+      );
       this.status.detectedOpportunities += readyTargets.length;
 
       // Process each ready target
@@ -459,7 +461,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
           ? readyTargets.reduce((sum, t) => sum + t.confidenceScore, 0) / readyTargets.length
           : 0;
     } catch (error) {
-      logger.error("[AutoSnipingOrchestrator] Database target check failed:", error);
+      this.logger.error("[AutoSnipingOrchestrator] Database target check failed:", error);
       this.status.systemHealth.patternDetection = "degraded";
     }
   }
@@ -490,7 +492,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
       return targets;
     } catch (error) {
-      logger.error("[AutoSnipingOrchestrator] Failed to fetch ready targets:", error);
+      this.logger.error("[AutoSnipingOrchestrator] Failed to fetch ready targets:", error);
       return [];
     }
   }
@@ -501,13 +503,15 @@ export class AutoSnipingOrchestrator extends EventEmitter {
    */
   private async processSnipeTarget(target: any): Promise<void> {
     try {
-      logger.info(
+      this.logger.info(
         `[AutoSnipingOrchestrator] Processing snipe target: ${target.symbolName} (confidence: ${target.confidenceScore}%)`
       );
 
       // Check if we can take new positions
       if (this.activePositions.size >= this.config.maxConcurrentPositions) {
-        logger.info("[AutoSnipingOrchestrator] Max concurrent positions reached, skipping target");
+        this.logger.info(
+          "[AutoSnipingOrchestrator] Max concurrent positions reached, skipping target"
+        );
         return;
       }
 
@@ -528,7 +532,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         result: "success",
       };
     } catch (error) {
-      logger.error("[AutoSnipingOrchestrator] Failed to process snipe target:", error);
+      this.logger.error("[AutoSnipingOrchestrator] Failed to process snipe target:", error);
 
       // Update target status to failed
       await this.updateTargetStatus(
@@ -548,7 +552,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
   private async performSafetyCheck(): Promise<void> {
     try {
-      logger.info("[AutoSnipingOrchestrator] Performing safety check...");
+      this.logger.info("[AutoSnipingOrchestrator] Performing safety check...");
 
       const safetyStatus = this.safetyCoordinator.getCurrentStatus();
       this.status.safeToOperate = safetyStatus.overall.safetyLevel === "safe";
@@ -559,27 +563,27 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
       // Emergency stop if safety compromised
       if (safetyStatus.overall.safetyLevel === "emergency") {
-        logger.warn(
+        this.logger.warn(
           "[AutoSnipingOrchestrator] Emergency safety condition detected, stopping auto-sniping"
         );
         await this.stopAutoSniping();
         this.metrics.safety.emergencyStops++;
       }
     } catch (error) {
-      logger.error("[AutoSnipingOrchestrator] Safety check failed:", error);
+      this.logger.error("[AutoSnipingOrchestrator] Safety check failed:", error);
       this.status.systemHealth.safetyCoordinator = "degraded";
     }
   }
 
   private async processOpportunity(pattern: any): Promise<void> {
     try {
-      logger.info(
+      this.logger.info(
         `[AutoSnipingOrchestrator] Processing opportunity: ${pattern.symbol} (confidence: ${pattern.confidence}%)`
       );
 
       // Check if we can take new positions
       if (this.activePositions.size >= this.config.maxConcurrentPositions) {
-        logger.info(
+        this.logger.info(
           "[AutoSnipingOrchestrator] Max concurrent positions reached, skipping opportunity"
         );
         return;
@@ -599,7 +603,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         result: "success",
       };
     } catch (error) {
-      logger.error("[AutoSnipingOrchestrator] Failed to process opportunity:", error);
+      this.logger.error("[AutoSnipingOrchestrator] Failed to process opportunity:", error);
 
       this.status.lastOperation = {
         timestamp: new Date().toISOString(),
@@ -634,7 +638,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
       await db.update(snipeTargets).set(updateData).where(eq(snipeTargets.id, targetId));
     } catch (error) {
-      logger.error("[AutoSnipingOrchestrator] Failed to update target status:", error);
+      this.logger.error("[AutoSnipingOrchestrator] Failed to update target status:", error);
     }
   }
 
@@ -642,7 +646,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
    * Simulate trade from snipe target (paper trading)
    */
   private async simulateTradeFromTarget(target: any): Promise<void> {
-    logger.info(`[AutoSnipingOrchestrator] Simulating trade for target ${target.symbolName}`);
+    this.logger.info(`[AutoSnipingOrchestrator] Simulating trade for target ${target.symbolName}`);
 
     // Create simulated position
     const position = {
@@ -678,7 +682,9 @@ export class AutoSnipingOrchestrator extends EventEmitter {
    */
   private async executeTradeFromTarget(target: any): Promise<void> {
     // Real trading implementation would go here
-    logger.info(`[AutoSnipingOrchestrator] Executing real trade for target ${target.symbolName}`);
+    this.logger.info(
+      `[AutoSnipingOrchestrator] Executing real trade for target ${target.symbolName}`
+    );
 
     // For now, delegate to simulated trade
     // TODO: Implement real trading logic with MEXC API
@@ -686,7 +692,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
   }
 
   private async simulateTrade(pattern: any): Promise<void> {
-    logger.info(`[AutoSnipingOrchestrator] Simulating trade for ${pattern.symbol}`);
+    this.logger.info(`[AutoSnipingOrchestrator] Simulating trade for ${pattern.symbol}`);
 
     // Create simulated position
     const position = {
@@ -712,7 +718,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
   private async executeTrade(pattern: any): Promise<void> {
     // Real trading implementation would go here
-    logger.info(`[AutoSnipingOrchestrator] Executing real trade for ${pattern.symbol}`);
+    this.logger.info(`[AutoSnipingOrchestrator] Executing real trade for ${pattern.symbol}`);
     // For now, delegate to simulated trade
     await this.simulateTrade(pattern);
   }
@@ -720,7 +726,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
   private closeSimulatedPosition(positionId: string): void {
     const position = this.activePositions.get(positionId);
     if (position) {
-      logger.info(`[AutoSnipingOrchestrator] Closing simulated position: ${position.symbol}`);
+      this.logger.info(`[AutoSnipingOrchestrator] Closing simulated position: ${position.symbol}`);
 
       // Simulate profit/loss
       const profit = Math.random() * 200 - 100; // Random P&L between -100 and +100
@@ -736,7 +742,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
   }
 
   private async closeAllPositions(reason: string): Promise<void> {
-    logger.info(`[AutoSnipingOrchestrator] Closing all positions: ${reason}`);
+    this.logger.info(`[AutoSnipingOrchestrator] Closing all positions: ${reason}`);
 
     for (const [positionId] of this.activePositions) {
       this.closeSimulatedPosition(positionId);
@@ -795,7 +801,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
    * Emergency stop - immediately halt all operations
    */
   async emergencyStop(reason: string): Promise<void> {
-    logger.warn(`[AutoSnipingOrchestrator] EMERGENCY STOP: ${reason}`);
+    this.logger.warn(`[AutoSnipingOrchestrator] EMERGENCY STOP: ${reason}`);
 
     // Immediately stop all operations
     this.clearMonitoringTimers();

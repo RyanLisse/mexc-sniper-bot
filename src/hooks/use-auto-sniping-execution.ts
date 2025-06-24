@@ -14,7 +14,7 @@ import type {
   ExecutionAlert,
   ExecutionPosition,
   ExecutionStats,
-} from "../services/auto-sniping-execution-service";
+} from "../services/optimized-auto-sniping-core";
 
 interface AutoSnipingExecutionState {
   // Execution report data
