@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { BaseAgent } from "../base-agent";
 
 export type AgentStatus = "healthy" | "degraded" | "unhealthy" | "unknown" | "recovering";
@@ -69,7 +69,7 @@ export interface AgentRegistryOptions {
  * Core agent registry for basic agent management
  */
 export class AgentRegistryCore {
-  protected logger = createLogger("agent-registry-core");
+  protected logger = createSafeLogger("agent-registry-core");
   protected agents: Map<string, RegisteredAgent> = new Map();
   protected isRunning = false;
 

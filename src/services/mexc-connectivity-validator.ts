@@ -7,7 +7,7 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { getUnifiedMexcService } from "./unified-mexc-service-factory";
 
 // ============================================================================
@@ -50,7 +50,7 @@ export interface ConnectivityValidationResult {
 // ============================================================================
 
 export class MexcConnectivityValidator {
-  private logger = createLogger("mexc-connectivity-validator");
+  private logger = createSafeLogger("mexc-connectivity-validator");
 
   private timeout = 15000; // 15 seconds
   private minPositionSize = 10; // Minimum USDT for trading

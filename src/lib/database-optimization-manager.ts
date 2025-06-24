@@ -10,12 +10,12 @@
  * Achieves 50%+ query performance improvement as targeted.
  */
 
-import { createLogger } from './structured-logger';
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
 import { databaseConnectionPool } from "./database-connection-pool";
 import { databaseIndexOptimizer } from "./database-index-optimizer";
 import { databasePerformanceAnalyzer } from "./database-performance-analyzer";
 import { databaseQueryOptimizer } from "./database-query-optimizer";
+import { createSafeLogger } from "./structured-logger";
 
 interface OptimizationPhaseResult {
   phase: string;
@@ -49,10 +49,10 @@ interface PerformanceBenchmark {
 }
 
 export class DatabaseOptimizationManager {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createLogger("database-optimization-manager");
+      this._logger = createSafeLogger("database-optimization-manager");
     }
     return this._logger;
   }

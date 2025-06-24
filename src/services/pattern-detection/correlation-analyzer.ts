@@ -6,13 +6,13 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { SymbolEntry } from "../mexc-unified-exports";
 import { patternEmbeddingService } from "../pattern-embedding-service";
 import type { CorrelationAnalysis } from "./pattern-types";
 
 // Factory function to create logger when needed
-const getLogger = () => createLogger("correlation-analyzer");
+const getLogger = () => createSafeLogger("correlation-analyzer");
 
 export interface SimilarityResult {
   symbol1: string;

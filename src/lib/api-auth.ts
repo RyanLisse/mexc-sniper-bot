@@ -9,7 +9,7 @@ import {
   isIPSuspicious,
   logSecurityEvent,
 } from "./rate-limiter";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 /**
  * Alias for requireApiAuth to maintain compatibility
@@ -20,7 +20,14 @@ export const validateRequest = requireApiAuth;
  * Middleware to require authentication for API routes with rate limiting
  * Returns the authenticated user or throws an error response
  */
-const logger = createLogger("api-auth");
+// Lazy logger initialization to prevent build-time errors
+let _logger: ReturnType<typeof createSafeLogger> | undefined;
+function getLogger() {
+  if (!_logger) {
+    _logger = createSafeLogger("api-auth");
+  }
+  return _logger;
+}
 
 export async function requireApiAuth(
   request: NextRequest,
@@ -416,7 +423,7 @@ export function apiAuthWrapper<T extends any[]>(
       // Execute the handler
       return await handler(request, ...args);
     } catch (error) {
-      logger.error("[API Auth] Request failed:", error);
+      getLogger().error("[API Auth] Request failed:", error);
 
       if (error instanceof Response) {
         return error;

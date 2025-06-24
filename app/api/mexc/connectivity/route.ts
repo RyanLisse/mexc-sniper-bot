@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { mexcConnectivityService } from "../../../../src/services/mexc-connectivity-service";
 import { 
   createSuccessResponse,
@@ -14,7 +14,7 @@ import {
 } from "../../../../src/schemas/mexc-api-validation-schemas";
 import { publicRoute } from "../../../../src/lib/auth-decorators";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export const GET = publicRoute(async (request: NextRequest) => {
   const startTime = Date.now();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { createApiResponse } from "../../../../src/lib/api-response";
 
 // Lazy import cache services to prevent build-time initialization
@@ -25,7 +25,7 @@ const getGlobalCacheMonitoring = () => {
   }
 };
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

@@ -6,13 +6,13 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
 import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
 // Function defined at bottom of file
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 // Configuration validation function
 async function validateAutoSnipingConfig(config: any): Promise<{

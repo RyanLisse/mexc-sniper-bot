@@ -10,7 +10,7 @@
  */
 
 import { EventEmitter } from "events";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { AdvancedRiskEngine } from "./advanced-risk-engine";
 import { type CircuitBreaker, circuitBreakerRegistry } from "./circuit-breaker";
 
@@ -141,10 +141,10 @@ export interface EmergencyConfig {
  * and system integrity.
  */
 export class EmergencySafetySystem extends EventEmitter {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("emergency-safety-system");
+      this._logger = createSafeLogger("emergency-safety-system");
     }
     return this._logger;
   }

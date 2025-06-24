@@ -1,4 +1,4 @@
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 /**
  * Algorithm Optimizer
  *
@@ -23,7 +23,7 @@ import { createLogger } from "./structured-logger";
  * LRU Cache with TTL support - O(1) operations
  */
 export class OptimizedLRUCache<K, V> {
-  private logger = createLogger("algorithm-optimizer");
+  private logger = createSafeLogger("algorithm-optimizer");
 
   private capacity: number;
   private cache = new Map<K, { value: V; timestamp: number; expiresAt?: number }>();

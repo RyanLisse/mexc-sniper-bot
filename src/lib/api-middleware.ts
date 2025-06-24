@@ -1,4 +1,4 @@
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 /**
  * Standardized API Middleware System
@@ -603,11 +603,11 @@ function isValidEmail(email: string): boolean {
 }
 
 class ValidationError extends Error {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("api-middleware");
+      this._logger = createSafeLogger("api-middleware");
     }
     return this._logger;
   }

@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 
 /**
  * Dynamic Calculations Module
@@ -61,7 +61,13 @@ export interface DiversificationAssessment {
 }
 
 export class DynamicCalculations {
-  private logger = createLogger("dynamic-calculations");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("dynamic-calculations");
+    }
+    return this._logger;
+  }
 
   constructor(private config: DynamicCalculationsConfig) {}
 
@@ -237,7 +243,7 @@ export class DynamicCalculations {
         adjustedSize = 0;
       }
 
-      logger.info(
+      this.logger.info(
         `[DynamicCalculations] Position validation: ${positionRequest.symbol} - Requested: ${positionRequest.requestedPositionSize}, Adjusted: ${adjustedSize}, Approved: ${approved}`
       );
 
@@ -250,7 +256,7 @@ export class DynamicCalculations {
         warnings,
       };
     } catch (error) {
-      logger.error("[DynamicCalculations] Position size validation failed:", error);
+      this.logger.error("[DynamicCalculations] Position size validation failed:", error);
       return {
         approved: false,
         adjustedPositionSize: 0,

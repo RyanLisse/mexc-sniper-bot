@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Cache Analytics Manager
  *
  * Provides comprehensive analytics and reporting for the agent cache system.
@@ -27,7 +27,7 @@ import type { CachePerformanceMonitor } from "./cache-performance-monitor";
 import type { WorkflowCache } from "./workflow-cache";
 
 export class CacheAnalyticsManager {
-  private logger = createLogger("cache-analytics");
+  private logger = createSafeLogger("cache-analytics");
 
   private config: AgentCacheConfig;
   private performanceMonitor: CachePerformanceMonitor;

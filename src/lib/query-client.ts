@@ -1,9 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
 // Import optimized query keys from modular MEXC service
 import { mexcQueryKeys } from "../services/modules/mexc-api-types";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
-const logger = createLogger("query-client");
+const logger = createSafeLogger("query-client");
 
 /**
  * Optimized TanStack Query Client Configuration
@@ -91,6 +91,15 @@ export const queryKeys = {
     credentials: () => ["status", "credentials"] as const,
     network: () => ["status", "network"] as const,
     trading: () => ["status", "trading"] as const,
+  },
+
+  // Auto-sniping queries
+  autoSniping: {
+    status: () => ["autoSniping", "status"] as const,
+    config: () => ["autoSniping", "config"] as const,
+    targets: () => ["autoSniping", "targets"] as const,
+    execution: (id: string) => ["autoSniping", "execution", id] as const,
+    performance: () => ["autoSniping", "performance"] as const,
   },
 } as const;
 

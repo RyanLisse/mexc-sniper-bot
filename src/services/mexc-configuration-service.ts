@@ -14,7 +14,7 @@
  */
 
 import { z } from "zod";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { UnifiedMexcConfig } from "./mexc-schemas";
 
 // ============================================================================
@@ -115,7 +115,7 @@ export interface ConfigurationMetrics {
  * Handles validation, updates, and health monitoring of all configuration
  */
 export class MexcConfigurationService {
-  private logger = createLogger("mexc-configuration-service");
+  private logger = createSafeLogger("mexc-configuration-service");
 
   private config: ServiceConfig;
   private metrics: ConfigurationMetrics;

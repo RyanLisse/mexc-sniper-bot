@@ -1,5 +1,5 @@
 import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface SlackConfig {
@@ -38,12 +38,12 @@ interface SlackBlock {
 }
 
 export class SlackProvider implements NotificationProvider {
-  private _logger: ReturnType<typeof createLogger> | null = null;
+  private _logger: ReturnType<typeof createSafeLogger> | null = null;
 
-  private get logger(): ReturnType<typeof createLogger> {
+  private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createLogger("slack-provider");
+        this._logger = createSafeLogger("slack-provider");
       } catch {
         // Fallback during build time
         this._logger = {

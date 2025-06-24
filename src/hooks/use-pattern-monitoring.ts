@@ -10,7 +10,7 @@ import type { PatternMatch } from "@/src/core/pattern-detection";
 import { ApiClient } from "@/src/lib/api-client";
 import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 import type { PatternMonitoringReport } from "@/src/services/pattern-monitoring-service";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 interface PatternMonitoringState {
   // Monitoring report data
@@ -70,7 +70,7 @@ interface UsePatternMonitoringOptions {
   patternLimit?: number;
 }
 
-const logger = createLogger("use-pattern-monitoring");
+const logger = createSafeLogger("use-pattern-monitoring");
 
 export function usePatternMonitoring(
   options: UsePatternMonitoringOptions = {}

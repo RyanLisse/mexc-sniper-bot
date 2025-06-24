@@ -62,7 +62,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateChartCellKey, generateListKey, useSkeletonItems } from "../../lib/react-utilities";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 
 interface Alert {
   id: string;
@@ -122,7 +122,7 @@ interface AlertTrends {
   recommendations: string[];
 }
 
-const logger = createLogger("alert-center");
+const logger = createSafeLogger("alert-center");
 
 export function AlertCenter() {
   const [alerts, setAlerts] = useState<Alert[]>([]);

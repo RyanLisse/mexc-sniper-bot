@@ -7,7 +7,7 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createLogger, createTimer } from "../../lib/structured-logger";
+import { createSafeLogger, createTimer } from "../../lib/structured-logger";
 import type { SafetyConfiguration, SystemHealth } from "../../schemas/safety-monitoring-schemas";
 import { validateSystemHealth } from "../../schemas/safety-monitoring-schemas";
 import type {
@@ -76,7 +76,7 @@ export interface ComprehensiveRiskAssessment {
 }
 
 export class RiskAssessment {
-  private logger = createLogger("risk-assessment");
+  private logger = createSafeLogger("risk-assessment");
 
   constructor(private config: RiskAssessmentConfig) {
     this.logger.info("Risk assessment module initialized", {

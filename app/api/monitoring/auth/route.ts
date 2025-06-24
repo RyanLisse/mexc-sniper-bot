@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 
 interface MonitoringMetrics {
   timestamp: string;
@@ -75,7 +75,7 @@ interface AuthMonitoringData {
 const monitoringData: MonitoringMetrics[] = [];
 const alerts: AuthMonitoringData['alerts'] = [];
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 function generateMockMetrics(): AuthMonitoringData {
   const now = new Date();

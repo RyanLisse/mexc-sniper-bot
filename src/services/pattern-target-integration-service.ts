@@ -10,7 +10,7 @@ import { and, eq } from "drizzle-orm";
 import type { PatternMatch } from "../core/pattern-detection/interfaces";
 import { db } from "../db";
 import { snipeTargets } from "../db/schemas/trading";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 export interface PatternTargetConfig {
   // User configuration
@@ -44,7 +44,7 @@ export interface TargetCreationResult {
 
 export class PatternTargetIntegrationService {
   private static instance: PatternTargetIntegrationService;
-  private logger = createLogger("pattern-target-integration");
+  private logger = createSafeLogger("pattern-target-integration");
 
   // Default configuration
   private config: PatternTargetConfig = {

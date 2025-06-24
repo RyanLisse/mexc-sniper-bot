@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
 import type { IPatternAnalyzer } from "../interfaces";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // Mock the dependencies
 vi.mock("../../../db", () => ({
@@ -31,7 +31,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     try {
       const { PatternAnalyzer } = await import("../pattern-analyzer");
 
-      const logger = createLogger("pattern-analyzer.test");
+      const logger = createSafeLogger("pattern-analyzer.test");
       patternAnalyzer = new PatternAnalyzer();
     } catch {
       // Skip tests if implementation doesn't exist yet

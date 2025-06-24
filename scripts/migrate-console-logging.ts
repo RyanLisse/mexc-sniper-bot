@@ -3,7 +3,7 @@
  * Console Logging Migration Script
  * 
  * This script automatically migrates console.log/warn/error statements
- * to structured logging using the createLogger system.
+ * to structured logging using the createSafeLogger system.
  * 
  * Identified Issues:
  * - 1,540 console statements in src/
@@ -11,7 +11,7 @@
  * - Total: 1,845 statements across 235+ files
  * 
  * Migration Strategy:
- * 1. Add createLogger import if missing
+ * 1. Add createSafeLogger import if missing
  * 2. Replace console.log with logger.info
  * 3. Replace console.warn with logger.warn  
  * 4. Replace console.error with logger.error
@@ -32,7 +32,7 @@ interface MigrationStats {
 interface FileAnalysis {
   filePath: string;
   consoleStatements: number;
-  hasCreateLoggerImport: boolean;
+  hasCreateSafeLoggerImport: boolean;
   hasLoggerDeclaration: boolean;
   suggestedLoggerName: string;
 }
@@ -91,8 +91,8 @@ async function analyzeFile(filePath: string): Promise<FileAnalysis | null> {
       return null;
     }
     
-    // Check for existing createLogger import
-    const hasCreateLoggerImport = /import.*createLogger.*from.*structured-logger/.test(content);
+    // Check for existing createSafeLogger import
+    const hasCreateSafeLoggerImport = /import.*createSafeLogger.*from.*structured-logger/.test(content);
     
     // Check for existing logger declaration
     const hasLoggerDeclaration = /(?:const|let)\s+\w*[Ll]ogger\s*=/.test(content);
@@ -107,7 +107,7 @@ async function analyzeFile(filePath: string): Promise<FileAnalysis | null> {
     return {
       filePath,
       consoleStatements,
-      hasCreateLoggerImport,
+      hasCreateSafeLoggerImport,
       hasLoggerDeclaration,
       suggestedLoggerName
     };
@@ -127,15 +127,15 @@ async function migrateFile(analysis: FileAnalysis): Promise<void> {
     let content = await readFile(analysis.filePath, 'utf-8');
     let modified = false;
     
-    // Add createLogger import if missing
-    if (!analysis.hasCreateLoggerImport) {
+    // Add createSafeLogger import if missing
+    if (!analysis.hasCreateSafeLoggerImport) {
       // Find the best place to add the import
       const importLines = content.split('\n').filter(line => line.trim().startsWith('import'));
       const lastImportIndex = content.lastIndexOf(importLines[importLines.length - 1] || '');
       
       if (lastImportIndex !== -1) {
         const insertPoint = content.indexOf('\n', lastImportIndex) + 1;
-        const loggerImport = `import { createLogger } from '../lib/structured-logger';\n`;
+        const loggerImport = `import { createSafeLogger } from '../lib/structured-logger';\n`;
         content = content.slice(0, insertPoint) + loggerImport + content.slice(insertPoint);
         modified = true;
         stats.filesWithLoggerAdded++;
@@ -157,19 +157,19 @@ async function migrateFile(analysis: FileAnalysis): Promise<void> {
         const classStart = content.indexOf(classMatch[0]);
         const classBodyStart = content.indexOf('{', classStart) + 1;
         insertPoint = classBodyStart;
-        loggerDeclaration = `\n  private logger = createLogger('${analysis.suggestedLoggerName}');\n`;
+        loggerDeclaration = `\n  private logger = createSafeLogger('${analysis.suggestedLoggerName}');\n`;
       } else if (functionMatch) {
         // Add as module-level constant
         const functionStart = content.indexOf(functionMatch[0]);
         insertPoint = functionStart;
-        loggerDeclaration = `const logger = createLogger('${analysis.suggestedLoggerName}');\n\n`;
+        loggerDeclaration = `const logger = createSafeLogger('${analysis.suggestedLoggerName}');\n\n`;
       } else {
         // Add at the top after imports
         const lastImport = content.lastIndexOf('import');
         if (lastImport !== -1) {
           const nextLine = content.indexOf('\n', lastImport);
           insertPoint = nextLine + 1;
-          loggerDeclaration = `\nconst logger = createLogger('${analysis.suggestedLoggerName}');\n`;
+          loggerDeclaration = `\nconst logger = createSafeLogger('${analysis.suggestedLoggerName}');\n`;
         }
       }
       

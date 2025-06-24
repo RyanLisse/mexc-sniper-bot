@@ -8,7 +8,7 @@ import {
   type SelectAlertCorrelation,
   type SelectAlertInstance,
 } from "../db/schemas/alerts";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 export interface CorrelationPattern {
   id: string;
@@ -48,15 +48,15 @@ export interface AlertSignature {
 }
 
 export class AlertCorrelationEngine {
-  private _logger: ReturnType<typeof createLogger> | null = null;
+  private _logger: ReturnType<typeof createSafeLogger> | null = null;
 
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): ReturnType<typeof createLogger> {
+  private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createLogger("alert-correlation-engine");
+        this._logger = createSafeLogger("alert-correlation-engine");
       } catch (error) {
         this._logger = {
           debug: console.debug.bind(console),

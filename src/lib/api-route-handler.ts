@@ -25,7 +25,7 @@ import {
   createSuccessResponse,
   HTTP_STATUS,
 } from "./api-response";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 // ============================================================================
 // Types and Interfaces
@@ -35,7 +35,7 @@ export interface ApiRouteContext {
   request: NextRequest;
   startTime: number;
   requestId: string;
-  logger: ReturnType<typeof createLogger>;
+  logger: ReturnType<typeof createSafeLogger>;
 }
 
 export interface ApiRouteOptions<TQuery = any, TBody = any, TResponse = any> {
@@ -100,7 +100,7 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
     const startTime = Date.now();
     const requestId = `api_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     const routeName = options.routeName || "unknown-route";
-    const logger = createLogger(`api-${routeName}`);
+    const logger = createSafeLogger(`api-${routeName}`);
 
     const context: ApiRouteContext = {
       request,

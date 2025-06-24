@@ -1,5 +1,5 @@
 import { PERFORMANCE_CONSTANTS, TIME_CONSTANTS } from "../../lib/constants";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { AgentRegistry } from "./agent-registry";
 import type { WorkflowExecutionResult } from "./workflow-engine";
 
@@ -101,7 +101,13 @@ export interface PerformanceReport {
  * Comprehensive performance metrics collection and analysis system
  */
 export class PerformanceCollector {
-  private logger = createLogger("performance-collector");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("performance-collector");
+    }
+    return this._logger;
+  }
 
   private agentRegistry: AgentRegistry;
   private collectionInterval: NodeJS.Timeout | null = null;
@@ -134,7 +140,7 @@ export class PerformanceCollector {
    */
   startCollection(): void {
     if (this.isCollecting) {
-      logger.warn("[PerformanceCollector] Collection is already running");
+      this.logger.warn("[PerformanceCollector] Collection is already running");
       return;
     }
 
@@ -142,7 +148,7 @@ export class PerformanceCollector {
 
     // Initial collection
     this.collectAllMetrics().catch((error) => {
-      logger.error("[PerformanceCollector] Initial metrics collection failed:", error);
+      this.logger.error("[PerformanceCollector] Initial metrics collection failed:", error);
     });
 
     // Set up periodic collection
@@ -150,7 +156,7 @@ export class PerformanceCollector {
       try {
         await this.collectAllMetrics();
       } catch (error) {
-        logger.error("[PerformanceCollector] Periodic metrics collection failed:", error);
+        this.logger.error("[PerformanceCollector] Periodic metrics collection failed:", error);
       }
     }, this.collectionIntervalMs);
 
@@ -167,7 +173,7 @@ export class PerformanceCollector {
       clearInterval(this.collectionInterval);
       this.collectionInterval = null;
       this.isCollecting = false;
-      logger.info("[PerformanceCollector] Stopped metrics collection");
+      this.logger.info("[PerformanceCollector] Stopped metrics collection");
     }
   }
 
@@ -187,7 +193,7 @@ export class PerformanceCollector {
       // Persist to database
       await this.persistMetrics();
     } catch (error) {
-      logger.error("[PerformanceCollector] Failed to collect metrics:", error);
+      this.logger.error("[PerformanceCollector] Failed to collect metrics:", error);
     }
   }
 
@@ -212,7 +218,7 @@ export class PerformanceCollector {
 
         this.agentMetricsHistory.set(agent.id, agentHistory);
       } catch (error) {
-        logger.error(
+        this.logger.error(
           `[PerformanceCollector] Failed to collect metrics for agent ${agent.id}:`,
           error
         );
@@ -369,7 +375,7 @@ export class PerformanceCollector {
         this.systemSnapshotHistory = this.systemSnapshotHistory.slice(-this.maxHistorySize);
       }
     } catch (error) {
-      logger.error("[PerformanceCollector] Failed to collect system snapshot:", error);
+      this.logger.error("[PerformanceCollector] Failed to collect system snapshot:", error);
     }
   }
 
@@ -425,9 +431,9 @@ export class PerformanceCollector {
         this.workflowMetricsHistory = this.workflowMetricsHistory.slice(-this.maxHistorySize);
       }
 
-      logger.info(`[PerformanceCollector] Recorded workflow metrics for ${result.workflowId}`);
+      this.logger.info(`[PerformanceCollector] Recorded workflow metrics for ${result.workflowId}`);
     } catch (error) {
-      logger.error("[PerformanceCollector] Failed to record workflow metrics:", error);
+      this.logger.error("[PerformanceCollector] Failed to record workflow metrics:", error);
     }
   }
 
@@ -595,14 +601,14 @@ export class PerformanceCollector {
     try {
       // This would require adding the performance tables to the schema
       // For now, we'll just log the metrics
-      logger.info("[PerformanceCollector] Metrics collected successfully");
+      this.logger.info("[PerformanceCollector] Metrics collected successfully");
 
       // TODO: Implement database persistence when schema is ready
       // await db.insert(agentPerformanceMetrics).values(...)
       // await db.insert(workflowPerformanceMetrics).values(...)
       // await db.insert(systemPerformanceSnapshots).values(...)
     } catch (error) {
-      logger.error("[PerformanceCollector] Failed to persist metrics:", error);
+      this.logger.error("[PerformanceCollector] Failed to persist metrics:", error);
     }
   }
 

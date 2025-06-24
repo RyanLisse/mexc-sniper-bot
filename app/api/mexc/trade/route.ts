@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { type OrderParameters } from "../../../../src/services/api/mexc-client-types";
 import { enhancedRiskManagementService } from "../../../../src/services/enhanced-risk-management-service";
@@ -19,10 +19,10 @@ import { getCachedCredentials } from "../../../../src/lib/credential-cache";
 import type { NewExecutionHistory } from "../../../../src/db/schema";
 
 // Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createLogger> | undefined;
+let _logger: ReturnType<typeof createSafeLogger> | undefined;
 function getLogger() {
   if (!_logger) {
-    _logger = createLogger('route');
+    _logger = createSafeLogger('route');
   }
   return _logger;
 }

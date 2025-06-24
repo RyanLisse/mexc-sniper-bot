@@ -7,7 +7,7 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type {
   SafetyConfiguration,
   SafetyThresholds,
@@ -44,7 +44,7 @@ export interface ConfigurationPreset {
 }
 
 export class ConfigurationManagement {
-  private logger = createLogger("configuration-management");
+  private logger = createSafeLogger("configuration-management");
   private configuration: SafetyConfiguration;
   private updateHistory: ConfigurationUpdate[] = [];
   private readonly enableValidation: boolean;

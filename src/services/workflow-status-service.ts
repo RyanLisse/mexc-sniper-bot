@@ -9,7 +9,7 @@ import {
   workflowActivity,
   workflowSystemStatus,
 } from "../db/schema";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { databaseBreaker } from "./circuit-breaker";
 
 export interface WorkflowMetrics {
@@ -32,7 +32,7 @@ export interface ActivityEntry {
 }
 
 export class WorkflowStatusService {
-  private logger = createLogger("workflow-status-service");
+  private logger = createSafeLogger("workflow-status-service");
 
   private userId: string;
 

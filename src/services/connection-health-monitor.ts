@@ -10,7 +10,7 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // ============================================================================
 // Types and Interfaces
@@ -72,7 +72,7 @@ export interface ConnectionHealthMonitorConfig {
 // ============================================================================
 
 export class ConnectionHealthMonitor {
-  private logger = createLogger("connection-health-monitor");
+  private logger = createSafeLogger("connection-health-monitor");
 
   private config: ConnectionHealthMonitorConfig;
   private healthChecks: HealthCheckResult[] = [];

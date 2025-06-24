@@ -12,7 +12,7 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { SymbolEntry } from "../../services/mexc-unified-exports";
 import { ConfidenceCalculator } from "./confidence-calculator";
 import type {
@@ -39,11 +39,11 @@ import { PatternValidator } from "./pattern-validator";
  */
 export class PatternDetectionCore {
   private static instance: PatternDetectionCore;
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("pattern-detection-core");
+      this._logger = createSafeLogger("pattern-detection-core");
     }
     return this._logger;
   }

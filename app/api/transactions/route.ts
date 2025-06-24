@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { db } from "../../../src/db";
 import { transactions, type NewTransaction } from "../../../src/db/schema";
 import { eq, desc, and, gte, lte } from 'drizzle-orm';
@@ -50,7 +50,7 @@ const querySchema = z.object({
 });
 
 // GET /api/transactions - Fetch user transactions
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

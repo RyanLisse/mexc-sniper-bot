@@ -1,5 +1,5 @@
 "use client";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 /**
  * Unified System Check Component
@@ -58,7 +58,7 @@ interface UnifiedSystemCheckProps {
   className?: string;
 }
 
-const logger = createLogger("unified-system-check");
+const logger = createSafeLogger("unified-system-check");
 
 export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) {
   const { status: centralizedStatus, refreshAll, clearErrors } = useStatus();

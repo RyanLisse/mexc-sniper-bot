@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActivityData } from "../../../schemas/mexc-schemas";
 import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
 import type { IConfidenceCalculator } from "../interfaces";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 describe("ConfidenceCalculator - TDD Implementation", () => {
   let confidenceCalculator: IConfidenceCalculator;
@@ -19,7 +19,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     try {
       const { ConfidenceCalculator } = await import("../confidence-calculator");
 
-      const logger = createLogger("confidence-calculator.test");
+      const logger = createSafeLogger("confidence-calculator.test");
       confidenceCalculator = new ConfidenceCalculator();
     } catch {
       // Skip tests if implementation doesn't exist yet

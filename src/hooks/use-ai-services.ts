@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // ======================
 // Types
@@ -56,7 +56,7 @@ const aiServicesQueryKeys = {
 /**
  * Hook to get AI services status and health
  */
-const logger = createLogger("use-ai-services");
+const logger = createSafeLogger("use-ai-services");
 
 export function useAIServices() {
   return useQuery({

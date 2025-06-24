@@ -7,7 +7,7 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type {
   SafetyAction,
   SafetyAlert,
@@ -44,7 +44,7 @@ export interface AlertStatistics {
 }
 
 export class AlertManagement {
-  private logger = createLogger("alert-management");
+  private logger = createSafeLogger("alert-management");
   private alerts: SafetyAlert[] = [];
   private recentActions: SafetyAction[] = [];
   private stats = {

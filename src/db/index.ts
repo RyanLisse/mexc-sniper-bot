@@ -27,10 +27,10 @@ let postgresClient: ReturnType<typeof postgres> | null = null;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Retry logic wrapper - Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createLogger> | undefined;
+let _logger: ReturnType<typeof createSafeLogger> | undefined;
 function getLogger() {
   if (!_logger) {
-    _logger = createLogger("index");
+    _logger = createSafeLogger("index");
   }
   return _logger;
 }
@@ -224,7 +224,7 @@ export * from "./schema";
 import { databaseConnectionPool } from "../lib/database-connection-pool";
 // Import optimization tools
 import { databaseOptimizationManager } from "../lib/database-optimization-manager";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
 
 // Database utilities with retry logic

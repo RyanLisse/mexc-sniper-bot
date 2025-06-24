@@ -8,7 +8,7 @@ import {
   type SelectAlertInstance,
   type SelectAlertRule,
 } from "../db/schemas/alerts";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { AlertCorrelationEngine } from "./alert-correlation-engine";
 import { AnomalyDetectionService } from "./anomaly-detection-service";
 import { NotificationService } from "./notification-providers";
@@ -43,15 +43,15 @@ export interface AlertingConfig {
 }
 
 export class AutomatedAlertingService {
-  private _logger: ReturnType<typeof createLogger> | null = null;
+  private _logger: ReturnType<typeof createSafeLogger> | null = null;
 
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): ReturnType<typeof createLogger> {
+  private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createLogger("automated-alerting-service");
+        this._logger = createSafeLogger("automated-alerting-service");
       } catch (error) {
         this._logger = {
           debug: console.debug.bind(console),

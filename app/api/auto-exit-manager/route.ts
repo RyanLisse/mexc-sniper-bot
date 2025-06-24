@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { exitManagerService } from "../../../src/services/optimized-auto-exit-manager";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET() {
   try {

@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 /**
  * Circuit Breaker Pattern Implementation
@@ -31,7 +31,7 @@ enum CircuitBreakerState {
 }
 
 export class CircuitBreaker {
-  private _logger: ReturnType<typeof createLogger> | null = null;
+  private _logger: ReturnType<typeof createSafeLogger> | null = null;
 
   private state: CircuitBreakerState = CircuitBreakerState.CLOSED;
   private failureCount = 0;
@@ -42,10 +42,10 @@ export class CircuitBreaker {
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): ReturnType<typeof createLogger> {
+  private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createLogger("circuit-breaker");
+        this._logger = createSafeLogger("circuit-breaker");
       } catch (error) {
         // Fallback to console logging during build time
         this._logger = {
@@ -131,7 +131,10 @@ export class CircuitBreaker {
         try {
           return await fallback();
         } catch (fallbackError) {
-          this.logger.error(`❌ Circuit breaker [${this.name}] fallback also failed:`, fallbackError);
+          this.logger.error(
+            `❌ Circuit breaker [${this.name}] fallback also failed:`,
+            fallbackError
+          );
           throw error; // Throw original error, not fallback error
         }
       }
@@ -275,16 +278,16 @@ export class CircuitBreakerError extends Error {
 export class CircuitBreakerRegistry {
   private static instance: CircuitBreakerRegistry;
   private breakers = new Map<string, CircuitBreaker>();
-  private _logger: ReturnType<typeof createLogger> | null = null;
+  private _logger: ReturnType<typeof createSafeLogger> | null = null;
 
   private constructor() {}
 
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): ReturnType<typeof createLogger> {
+  private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
-      this._logger = createLogger("circuit-breaker-registry");
+      this._logger = createSafeLogger("circuit-breaker-registry");
     }
     return this._logger;
   }

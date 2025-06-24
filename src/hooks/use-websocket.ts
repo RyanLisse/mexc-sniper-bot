@@ -15,7 +15,7 @@
 
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   ConnectionMetrics,
   MessageHandler,
@@ -79,7 +79,7 @@ export interface UseWebSocketResult {
 // Main WebSocket Hook
 // ======================
 
-const logger = createLogger("use-websocket");
+const logger = createSafeLogger("use-websocket");
 
 export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResult {
   const {

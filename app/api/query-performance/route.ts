@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { queryPerformanceMonitor } from "../../../src/services/query-performance-monitor";
 import { apiResponse, createOperationResponse, handleApiError } from "../../../src/lib/api-response";
 
 export async function GET(request: NextRequest) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const logger = createSafeLogger('query-performance');
   try {
     const body = await request.json();
     const { action } = body;

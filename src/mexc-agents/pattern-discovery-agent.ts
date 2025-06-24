@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
@@ -33,7 +33,7 @@ export interface PatternMatch {
 }
 
 export class PatternDiscoveryAgent extends BaseAgent {
-  private logger = createLogger("pattern-discovery-agent");
+  private logger = createSafeLogger("pattern-discovery-agent");
 
   constructor() {
     const config: AgentConfig = {

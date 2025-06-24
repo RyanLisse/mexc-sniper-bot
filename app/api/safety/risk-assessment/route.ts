@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { requireAuth } from "../../../../src/lib/kinde-auth";
 import { apiResponse } from "../../../../src/lib/api-response";
 import { AdvancedRiskEngine } from "../../../../src/services/advanced-risk-engine";
@@ -16,7 +16,7 @@ import { SafetyMonitorAgent } from "../../../../src/mexc-agents/safety-monitor-a
 const riskEngine = new AdvancedRiskEngine();
 const safetyMonitor = new SafetyMonitorAgent();
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

@@ -3,7 +3,7 @@
 import { Calendar, Clock, RefreshCw, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 import { useMexcCalendar, useRefreshMexcCalendar } from "../../hooks/use-mexc-data";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -20,7 +20,7 @@ interface GroupedLaunches {
   tomorrow: UpcomingCalendarEntry[];
 }
 
-const logger = createLogger("upcoming-coins-section");
+const logger = createSafeLogger("upcoming-coins-section");
 
 export function UpcomingCoinsSection() {
   // Use the main calendar hook to get all data instead of filtered data

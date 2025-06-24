@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { apiCredentials, db } from "../db";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { getEncryptionService } from "./secure-encryption-service";
 
 export interface DecryptedCredentials {
@@ -19,7 +19,7 @@ export async function getUserCredentials(
   userId: string,
   provider = "mexc"
 ): Promise<DecryptedCredentials | null> {
-  const logger = createLogger("user-credentials-service");
+  const logger = createSafeLogger("user-credentials-service");
   try {
     // Query the database for user credentials
     const result = await db

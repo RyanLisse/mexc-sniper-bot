@@ -6,7 +6,7 @@
  */
 
 import { RealTimeSafetyMonitoringService } from "../../services/real-time-safety-monitoring-modules";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 interface TestResult {
   endpoint: string;
@@ -20,7 +20,7 @@ interface TestResult {
 }
 
 class SafetyMonitoringAPITester {
-  private logger = createLogger("safety-monitoring-api-test");
+  private logger = createSafeLogger("safety-monitoring-api-test");
 
   private baseUrl = "http://localhost:3000/api/auto-sniping/safety-monitoring";
   private results: TestResult[] = [];

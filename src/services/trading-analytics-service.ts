@@ -14,7 +14,7 @@
  */
 
 import { z } from "zod";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // ============================================================================
 // Types and Schemas
@@ -131,12 +131,12 @@ const ANALYTICS_CONFIG = {
 // ============================================================================
 
 export class TradingAnalyticsService {
-  private _logger: ReturnType<typeof createLogger> | null = null;
+  private _logger: ReturnType<typeof createSafeLogger> | null = null;
 
-  private get logger(): ReturnType<typeof createLogger> {
+  private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createLogger("trading-analytics-service");
+        this._logger = createSafeLogger("trading-analytics-service");
       } catch {
         // Fallback during build time
         this._logger = {

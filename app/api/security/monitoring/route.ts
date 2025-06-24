@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { securityMonitoring } from "../../../../src/services/security-monitoring-service";
 import { checkRateLimit, getClientIP } from "../../../../src/lib/rate-limiter";
 
@@ -16,9 +16,8 @@ import { checkRateLimit, getClientIP } from "../../../../src/lib/rate-limiter";
 // Get comprehensive security metrics and status
 // ============================================================================
 
-const logger = createLogger('route');
-
 export async function GET(request: NextRequest) {
+  const logger = createSafeLogger('security-monitoring');
   const ip = getClientIP(request);
   const userAgent = request.headers.get("user-agent") || "unknown";
 
@@ -103,6 +102,7 @@ export async function GET(request: NextRequest) {
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  const logger = createSafeLogger('security-monitoring');
   const ip = getClientIP(request);
   const userAgent = request.headers.get("user-agent") || "unknown";
 
@@ -226,6 +226,7 @@ export async function POST(request: NextRequest) {
 // ============================================================================
 
 export async function PUT(request: NextRequest) {
+  const logger = createSafeLogger('security-monitoring');
   const ip = getClientIP(request);
   const userAgent = request.headers.get("user-agent") || "unknown";
 

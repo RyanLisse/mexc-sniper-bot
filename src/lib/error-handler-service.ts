@@ -1,6 +1,6 @@
 import { ErrorLoggingService } from "../services/error-logging-service";
 import { AppError, ErrorCode, ErrorSeverity, isAppError, toAppError } from "./error-types";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 export interface ErrorHandlerConfig {
   enableLogging?: boolean;
@@ -27,7 +27,7 @@ export interface CircuitBreakerOptions {
  * Centralized error handling service with retry logic and circuit breaker pattern
  */
 export class ErrorHandlerService {
-  private logger = createLogger("error-handler-service");
+  private logger = createSafeLogger("error-handler-service");
 
   private static instance: ErrorHandlerService;
   private errorLoggingService: ErrorLoggingService;

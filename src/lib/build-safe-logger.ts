@@ -1,6 +1,6 @@
 /**
  * Build-Safe Logger
- * 
+ *
  * A completely standalone logger that doesn't rely on any imports
  * and can be safely bundled by webpack without circular dependencies
  */
@@ -19,26 +19,27 @@ export class BuildSafeLogger {
   private service: string;
 
   constructor(component: string, service: string = "mexc-trading-bot") {
-    this.component = component || 'unknown';
-    this.service = service || 'mexc-trading-bot';
+    this.component = component || "unknown";
+    this.service = service || "mexc-trading-bot";
   }
 
   private formatMessage(level: string, message: string, context?: BuildSafeLogContext): string {
     const timestamp = new Date().toISOString();
-    const contextStr = context && Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : '';
+    const contextStr =
+      context && Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : "";
     return `${timestamp} [${level.toUpperCase()}] ${this.component}: ${message}${contextStr}`;
   }
 
   debug(message: string, context?: BuildSafeLogContext): void {
-    console.debug(this.formatMessage('debug', message, context));
+    console.debug(this.formatMessage("debug", message, context));
   }
 
   info(message: string, context?: BuildSafeLogContext): void {
-    console.info(this.formatMessage('info', message, context));
+    console.info(this.formatMessage("info", message, context));
   }
 
   warn(message: string, context?: BuildSafeLogContext): void {
-    console.warn(this.formatMessage('warn', message, context));
+    console.warn(this.formatMessage("warn", message, context));
   }
 
   error(message: string, context?: BuildSafeLogContext, error?: Error): void {
@@ -47,7 +48,7 @@ export class BuildSafeLogger {
       error: error?.message,
       stack: error?.stack,
     };
-    console.error(this.formatMessage('error', message, errorContext));
+    console.error(this.formatMessage("error", message, errorContext));
   }
 
   fatal(message: string, context?: BuildSafeLogContext, error?: Error): void {
@@ -72,16 +73,24 @@ export class BuildSafeLogger {
   }
 
   performance(operation: string, duration: number, context?: BuildSafeLogContext): void {
-    const level = duration > 1000 ? 'warn' : 'info';
+    const level = duration > 1000 ? "warn" : "info";
     this[level](`Performance: ${operation} completed in ${duration}ms`, { ...context, duration });
   }
 
-  cache(operation: "hit" | "miss" | "set" | "delete", key: string, context?: BuildSafeLogContext): void {
-    this.debug(`Cache ${operation}: ${key}`, { ...context, cacheOperation: operation, cacheKey: key });
+  cache(
+    operation: "hit" | "miss" | "set" | "delete",
+    key: string,
+    context?: BuildSafeLogContext
+  ): void {
+    this.debug(`Cache ${operation}: ${key}`, {
+      ...context,
+      cacheOperation: operation,
+      cacheKey: key,
+    });
   }
 
   safety(event: string, riskScore: number, context?: BuildSafeLogContext): void {
-    const level = riskScore > 70 ? 'warn' : 'info';
+    const level = riskScore > 70 ? "warn" : "info";
     this[level](`Safety: ${event}`, { ...context, riskScore, safetyEvent: event });
   }
 }

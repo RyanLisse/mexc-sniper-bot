@@ -11,7 +11,7 @@
 
 import * as crypto from "node:crypto";
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // ============================================================================
 // Types and Interfaces
@@ -74,7 +74,7 @@ export interface EnhancedCredentialValidatorConfig {
 // ============================================================================
 
 export class EnhancedCredentialValidator {
-  private logger = createLogger("enhanced-mexc-credential-validator");
+  private logger = createSafeLogger("enhanced-mexc-credential-validator");
 
   private config: EnhancedCredentialValidatorConfig;
   private circuitBreaker: CircuitBreakerState;

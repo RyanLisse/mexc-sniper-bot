@@ -12,7 +12,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useState } from "react";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -265,7 +265,7 @@ const SystemHealthCards = ({ systemStatus }: SystemHealthCardsProps) => {
 };
 
 // Extracted tab components to reduce cognitive complexity
-const logger = createLogger("alerts-dashboard");
+const logger = createSafeLogger("alerts-dashboard");
 
 function OverviewTab({ analytics }: { analytics: AnalyticsData | undefined }) {
   return (
@@ -570,7 +570,9 @@ export function AlertsDashboard() {
         refetchStatus();
       }
     } catch (error) {
-      logger.error("Failed to resolve alert:", { error: error instanceof Error ? error.message : String(error) });
+      logger.error("Failed to resolve alert:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   };
 

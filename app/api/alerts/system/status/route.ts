@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../../src/db";
 import { sql } from "drizzle-orm";
@@ -21,7 +21,7 @@ const configService = new AlertConfigurationService(db);
 // ==========================================
 // GET /api/alerts/system/status - Get alerting system status
 // ==========================================
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

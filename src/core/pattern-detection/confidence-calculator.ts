@@ -12,7 +12,7 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { ActivityData } from "../../schemas/mexc-schemas";
 import { calculateActivityBoost, hasHighPriorityActivity } from "../../schemas/mexc-schemas";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
@@ -26,7 +26,7 @@ import type { IConfidenceCalculator } from "./interfaces";
  */
 export class ConfidenceCalculator implements IConfidenceCalculator {
   private static instance: ConfidenceCalculator;
-  private logger = createLogger("confidence-calculator");
+  private logger = createSafeLogger("confidence-calculator");
 
   static getInstance(): ConfidenceCalculator {
     if (!ConfidenceCalculator.instance) {
@@ -366,21 +366,29 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
   ): Promise<ActivityData[]> {
     try {
       // Real implementation: fetch activity data from database or cache
-      const symbol = typeof symbolOrEntry === 'string' ? symbolOrEntry : 
-                     'symbol' in symbolOrEntry ? symbolOrEntry.symbol : symbolOrEntry.cd;
-      
+      const symbol =
+        typeof symbolOrEntry === "string"
+          ? symbolOrEntry
+          : "symbol" in symbolOrEntry
+            ? symbolOrEntry.symbol
+            : symbolOrEntry.cd;
+
       if (!symbol) return [];
-      
+
       // Import activity service dynamically to avoid circular dependencies
-      const { activityService } = await import('../../services/modules/mexc-cache-layer');
+      const { activityService } = await import("../../services/modules/mexc-cache-layer");
       const activities = await activityService.getRecentActivity(symbol);
-      
+
       return activities || [];
     } catch (error) {
-      this.logger.warn('Failed to fetch activity data', { 
-        symbol: typeof symbolOrEntry === 'string' ? symbolOrEntry : 
-                'symbol' in symbolOrEntry ? symbolOrEntry.symbol : symbolOrEntry.cd,
-        error: toSafeError(error).message 
+      this.logger.warn("Failed to fetch activity data", {
+        symbol:
+          typeof symbolOrEntry === "string"
+            ? symbolOrEntry
+            : "symbol" in symbolOrEntry
+              ? symbolOrEntry.symbol
+              : symbolOrEntry.cd,
+        error: toSafeError(error).message,
       });
       return [];
     }
@@ -389,23 +397,23 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
   private async getAIEnhancement(symbol: SymbolEntry, currentConfidence: number): Promise<number> {
     try {
       // Real implementation: integrate with AI intelligence service
-      const { aiIntelligenceService } = await import('../../services/ai-intelligence-service');
-      
+      const { aiIntelligenceService } = await import("../../services/ai-intelligence-service");
+
       const enhancement = await aiIntelligenceService.enhanceConfidence({
         symbol: symbol.symbol || symbol.cd,
         currentConfidence,
         symbolData: symbol,
-        enhancementType: 'confidence_boost'
+        enhancementType: "confidence_boost",
       });
-      
+
       // Cap enhancement between -10 and +15 points
       return Math.max(-10, Math.min(15, enhancement.confidenceAdjustment || 0));
     } catch (error) {
-      this.logger.warn('AI enhancement failed, using fallback', { 
+      this.logger.warn("AI enhancement failed, using fallback", {
         symbol: symbol.symbol || symbol.cd,
-        error: toSafeError(error).message 
+        error: toSafeError(error).message,
       });
-      
+
       // Fallback: small boost for symbols with good technical indicators
       if (symbol.ps && symbol.ps > 80) return 3;
       if (symbol.qs && symbol.qs > 70) return 2;
@@ -416,25 +424,27 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
   private async getHistoricalSuccessBoost(): Promise<number> {
     try {
       // Real implementation: query historical success rates from database
-      const { multiPhaseTradingService } = await import('../../services/multi-phase-trading-service');
-      
+      const { multiPhaseTradingService } = await import(
+        "../../services/multi-phase-trading-service"
+      );
+
       const historicalData = await multiPhaseTradingService.getHistoricalSuccessRates({
         timeframeDays: 30,
-        minConfidence: 70
+        minConfidence: 70,
       });
-      
+
       if (historicalData.totalExecutions > 10) {
         // Use actual historical success rate
         return historicalData.successRate;
       }
-      
+
       // Fallback for insufficient data
       return 75;
     } catch (error) {
-      this.logger.warn('Failed to fetch historical success data', { 
-        error: toSafeError(error).message 
+      this.logger.warn("Failed to fetch historical success data", {
+        error: toSafeError(error).message,
       });
-      
+
       // Conservative fallback when data unavailable
       return 70;
     }

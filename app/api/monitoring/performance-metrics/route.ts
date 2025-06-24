@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+// Build-safe imports
 import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
 import { AgentManager } from "../../../../src/mexc-agents/agent-manager";
 import { db } from "../../../../src/db";
 import { executionHistory, patternEmbeddings, workflowActivity } from "../../../../src/db/schema";
 import { desc, gte, sql } from "drizzle-orm";
 
-// Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createLogger> | undefined;
-function getLogger() {
-  if (!_logger) {
-    _logger = createLogger('route');
-  }
-  return _logger;
-}
+// Simple console logger to avoid webpack bundling issues
+const logger = {
+  info: (message: string, context?: any) => console.info('[performance-metrics]', message, context || ''),
+  warn: (message: string, context?: any) => console.warn('[performance-metrics]', message, context || ''),
+  error: (message: string, context?: any) => console.error('[performance-metrics]', message, context || ''),
+  debug: (message: string, context?: any) => console.debug('[performance-metrics]', message, context || ''),
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -169,7 +168,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    getLogger().error("[Monitoring API] Performance metrics failed:", { error: error });
+    logger.error("[Monitoring API] Performance metrics failed:", { error });
     return NextResponse.json(
       { 
         error: "Failed to fetch performance metrics",
@@ -199,7 +198,7 @@ async function getRecentExecutions() {
       agentUsed: (exec as any).agentId || 'unknown'
     }));
   } catch (error) {
-    getLogger().error("Error fetching recent executions:", { error: error });
+    logger.error("Error fetching recent executions:", { error });
     return [];
   }
 }
@@ -231,7 +230,7 @@ async function getPatternAnalyticsMetrics() {
       types: types.map((t: any) => ({ type: t.type, count: t.count }))
     };
   } catch (error) {
-    getLogger().error("Error fetching pattern analytics:", { error: error });
+    logger.error("Error fetching pattern analytics:", { error });
     return { total: 0, averageConfidence: 0, successful: 0, types: [] };
   }
 }
@@ -251,7 +250,7 @@ async function getWorkflowMetrics() {
       distribution: distribution.map((d: any) => ({ type: d.workflowType, count: d.count }))
     };
   } catch (error) {
-    getLogger().error("Error fetching workflow metrics:", { error: error });
+    logger.error("Error fetching workflow metrics:", { error });
     return { distribution: [] };
   }
 }

@@ -3,8 +3,9 @@
  *
  * This interface ensures consistent response format across all API routes
  */
-import { createLogger } from './structured-logger';
+
 import { toSafeError } from "./error-type-utils";
+import { createSafeLogger } from "./structured-logger";
 
 export interface ApiResponse<T = unknown> {
   /** Indicates if the request was successful */
@@ -37,15 +38,15 @@ export interface ApiResponse<T = unknown> {
 /**
  * Creates a successful API response
  */
-let _logger: ReturnType<typeof createLogger> | null = null;
+let _logger: ReturnType<typeof createSafeLogger> | null = null;
 
 /**
  * Lazy logger initialization to prevent webpack bundling issues
  */
-function getLogger(): ReturnType<typeof createLogger> {
+function getLogger(): ReturnType<typeof createSafeLogger> {
   if (!_logger) {
     try {
-      _logger = createLogger("api-response");
+      _logger = createSafeLogger("api-response");
     } catch (error) {
       // Fallback to console logging during build time
       _logger = {

@@ -1,11 +1,11 @@
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { NextResponse } from "next/server";
 
 /**
  * Validates URL format and protocol
  */
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 function validateUrlFormat(url: string | undefined, allowedProtocols: string[]): boolean {
   if (!url) {

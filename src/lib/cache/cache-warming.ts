@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Cache Warming Manager
  *
  * Handles intelligent cache warming strategies to improve cache hit rates
@@ -18,11 +18,11 @@ import { generateCacheKey, globalCacheManager } from "../cache-manager";
 import type { AgentCacheConfig, CacheWarmupConfig, CacheWarmupPattern } from "./agent-cache-types";
 
 export class CacheWarmingManager {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("cache-warming");
+      this._logger = createSafeLogger("cache-warming");
     }
     return this._logger;
   }

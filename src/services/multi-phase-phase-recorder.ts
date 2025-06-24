@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { PhaseExecutionHistory, RecordingOptions } from "./multi-phase-executor-types";
 import { multiPhaseTradingService } from "./multi-phase-trading-service";
 
@@ -6,7 +6,7 @@ import { multiPhaseTradingService } from "./multi-phase-trading-service";
  * Handles phase execution recording and database persistence
  */
 export class MultiPhasePhaseRecorder {
-  private logger = createLogger("multi-phase-phase-recorder");
+  private logger = createSafeLogger("multi-phase-phase-recorder");
 
   constructor(
     private strategyId?: number,

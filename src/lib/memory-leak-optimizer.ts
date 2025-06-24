@@ -1,4 +1,4 @@
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 /**
  * Memory Leak Optimizer
@@ -39,7 +39,7 @@ interface LeakDetectionConfig {
 }
 
 export class MemoryLeakDetector {
-  private logger = createLogger("memory-leak-optimizer");
+  private logger = createSafeLogger("memory-leak-optimizer");
 
   private static instance: MemoryLeakDetector;
   private config: LeakDetectionConfig = {

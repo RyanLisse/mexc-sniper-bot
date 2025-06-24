@@ -27,9 +27,9 @@ import { UnifiedTakeProfitSettings } from "../../src/components/unified-take-pro
 import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "../../src/hooks/use-user-preferences";
 import { TakeProfitStrategy, TAKE_PROFIT_STRATEGIES, getTakeProfitStrategyById } from "../../src/types/take-profit-strategies";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { createLogger } from '../../src/lib/structured-logger';
+import { createSafeLogger } from '../../src/lib/structured-logger';
 
-const logger = createLogger('page');
+const logger = createSafeLogger('page');
 
 export default function SettingsPage() {
   const { toast } = useToast();

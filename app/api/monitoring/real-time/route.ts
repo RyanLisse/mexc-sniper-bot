@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
 import { db } from "../../../../src/db";
 import { workflowActivity, transactionLocks } from "../../../../src/db/schema";
@@ -7,10 +7,10 @@ import { desc, gte } from "drizzle-orm";
 
 // Server-Sent Events for real-time monitoring
 // Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createLogger> | undefined;
+let _logger: ReturnType<typeof createSafeLogger> | undefined;
 function getLogger() {
   if (!_logger) {
-    _logger = createLogger('route');
+    _logger = createSafeLogger('route');
   }
   return _logger;
 }

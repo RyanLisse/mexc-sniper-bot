@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import {
   type AnalysisResult,
   type CalendarEntry,
@@ -21,14 +21,20 @@ export interface CalendarWorkflowResult {
 }
 
 export class CalendarWorkflow {
-  private logger = createLogger("calendar-workflow");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("calendar-workflow");
+    }
+    return this._logger;
+  }
 
   async analyzeDiscoveryResults(
     calendarAnalysis: AgentResponse,
     patternAnalysis: AgentResponse,
     calendarData: any
   ): Promise<CalendarWorkflowResult> {
-    logger.info("[CalendarWorkflow] Analyzing discovery results");
+    this.logger.info("[CalendarWorkflow] Analyzing discovery results");
 
     const calendarInsights = this.extractCalendarInsights(calendarAnalysis);
     const patternInsights = this.extractPatternInsights(patternAnalysis);
@@ -116,10 +122,10 @@ export class CalendarWorkflow {
     calendarInsights: AnalysisResult,
     patternInsights: AnalysisResult
   ): Promise<CalendarEntry[]> {
-    logger.info("[CalendarWorkflow] Processing listings with AI insights");
+    this.logger.info("[CalendarWorkflow] Processing listings with AI insights");
 
     if (!Array.isArray(calendarEntries)) {
-      logger.warn("[CalendarWorkflow] Invalid calendar entries, using empty array");
+      this.logger.warn("[CalendarWorkflow] Invalid calendar entries, using empty array");
       return [];
     }
 
@@ -154,7 +160,7 @@ export class CalendarWorkflow {
     highPotential: CalendarEntry[];
     monitoring: CalendarEntry[];
   } {
-    logger.info("[CalendarWorkflow] Categorizing opportunities");
+    this.logger.info("[CalendarWorkflow] Categorizing opportunities");
 
     const newListings: CalendarEntry[] = [];
     const readyTargets: CalendarEntry[] = [];
@@ -200,7 +206,7 @@ export class CalendarWorkflow {
     watchlist: string[];
     total: number;
   } {
-    logger.info("[CalendarWorkflow] Generating actionable recommendations");
+    this.logger.info("[CalendarWorkflow] Generating actionable recommendations");
 
     const immediate: string[] = [];
     const planned: string[] = [];
@@ -249,7 +255,7 @@ export class CalendarWorkflow {
     recommendation: string;
     summary: string;
   } {
-    logger.info("[CalendarWorkflow] Calculating overall assessment");
+    this.logger.info("[CalendarWorkflow] Calculating overall assessment");
 
     const immediateCount = recommendations.immediate.length;
     const plannedCount = recommendations.planned.length;

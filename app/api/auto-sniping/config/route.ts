@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { OptimizedAutoSnipingCore } from "../../../../src/services/optimized-auto-sniping-core";
 import { 
   createSuccessResponse, 
@@ -11,7 +11,7 @@ import { handleApiError } from "../../../../src/lib/error-handler";
 
 const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET() {
   try {

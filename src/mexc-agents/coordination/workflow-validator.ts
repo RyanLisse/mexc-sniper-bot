@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { AgentRegistry } from "./agent-registry";
 import { WorkflowDependencyResolver } from "./workflow-dependency-resolver";
 import type { WorkflowDefinition } from "./workflow-engine-types";
@@ -7,7 +7,7 @@ import type { WorkflowDefinition } from "./workflow-engine-types";
  * Workflow definition validation and agent registration checking
  */
 export class WorkflowValidator {
-  private logger = createLogger("workflow-validator");
+  private logger = createSafeLogger("workflow-validator");
   private deferredWarnings: string[] = [];
   private dependencyResolver = new WorkflowDependencyResolver();
 

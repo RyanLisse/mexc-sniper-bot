@@ -17,7 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useState } from "react";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -60,7 +60,7 @@ const agentDescriptions: Record<string, string> = {
   orchestrator: "Multi-agent workflow coordination",
 };
 
-const logger = createLogger("agent-dashboard");
+const logger = createSafeLogger("agent-dashboard");
 
 export function AgentDashboard() {
   const { toast } = useToast();

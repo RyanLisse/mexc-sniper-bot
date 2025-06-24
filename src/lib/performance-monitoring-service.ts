@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Performance Monitoring Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Real-time Performance Dashboards & Monitoring
@@ -114,11 +114,11 @@ export interface MonitoringConfig {
 // ============================================================================
 
 export class PerformanceMonitoringService {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("performance-monitoring-service");
+      this._logger = createSafeLogger("performance-monitoring-service");
     }
     return this._logger;
   }

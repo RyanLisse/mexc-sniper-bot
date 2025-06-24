@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../lib/kinde-auth-client";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 export interface ApiCredentials {
   id?: number;
@@ -27,7 +27,7 @@ export interface SaveApiCredentialsRequest {
 }
 
 // Fetch API credentials for a user and provider
-const logger = createLogger("use-api-credentials");
+const logger = createSafeLogger("use-api-credentials");
 
 export function useApiCredentials(userId?: string, provider = "mexc") {
   const { user, isAuthenticated } = useAuth();

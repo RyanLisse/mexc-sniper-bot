@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Test Branch Setup Utilities
  *
  * Provides utilities for setting up and managing test database branches
@@ -54,7 +54,7 @@ export interface TestBranchManager {
  * In a real implementation, this would integrate with Neon or similar service
  */
 export class MockTestBranchManager implements TestBranchManager {
-  private logger = createLogger("test-branch-setup");
+  private logger = createSafeLogger("test-branch-setup");
 
   private branches: Map<string, BranchInfo> = new Map();
   private currentBranch = "main";

@@ -11,7 +11,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -57,7 +57,7 @@ interface SystemValidationCardProps {
   className?: string;
 }
 
-const logger = createLogger("system-validation-card");
+const logger = createSafeLogger("system-validation-card");
 
 export function SystemValidationCard({ className = "" }: SystemValidationCardProps) {
   const [validationData, setValidationData] = useState<SystemValidationData | null>(null);
@@ -96,7 +96,9 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
         });
       }
     } catch (error) {
-      logger.error("Failed to fetch validation:", { error: error instanceof Error ? error.message : String(error) });
+      logger.error("Failed to fetch validation:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       setValidationData({
         overall: "critical_failure",
         readyForAutoSniping: false,

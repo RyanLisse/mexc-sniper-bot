@@ -1,23 +1,23 @@
 /**
  * MEXC Client Types and Configuration
- * 
+ *
  * Core types, interfaces, and configuration for the MEXC API client.
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
 export {
-  CalendarEntrySchema,
-  SymbolEntrySchema,
-  BalanceEntrySchema,
-  ExchangeSymbolSchema,
-  TickerSchema,
-  OrderResultSchema,
-  type CalendarEntry,
-  type SymbolEntry,
   type BalanceEntry,
+  BalanceEntrySchema,
+  type CalendarEntry,
+  CalendarEntrySchema,
   type ExchangeSymbol,
-  type Ticker,
+  ExchangeSymbolSchema,
   type OrderResult,
+  OrderResultSchema,
+  type SymbolEntry,
+  SymbolEntrySchema,
+  type Ticker,
+  TickerSchema,
 } from "../../schemas/mexc-schemas-extracted";
 
 // ============================================================================
@@ -64,13 +64,13 @@ export interface OrderParameters {
 // ============================================================================
 
 export interface MexcApiHeaders {
-  'X-MEXC-APIKEY'?: string;
-  'Content-Type': string;
-  'User-Agent': string;
+  "X-MEXC-APIKEY"?: string;
+  "Content-Type": string;
+  "User-Agent": string;
 }
 
 export interface MexcApiRequestOptions {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method: "GET" | "POST" | "PUT" | "DELETE";
   url: string;
   params?: Record<string, unknown>;
   data?: Record<string, unknown>;
@@ -113,10 +113,10 @@ export interface MexcApiError {
 export class MexcClientError extends Error {
   public readonly code?: number;
   public readonly requestId?: string;
-  
+
   constructor(message: string, code?: number, requestId?: string) {
     super(message);
-    this.name = 'MexcClientError';
+    this.name = "MexcClientError";
     this.code = code;
     this.requestId = requestId;
   }
@@ -213,53 +213,53 @@ export const DEFAULT_CONFIG: Required<UnifiedMexcConfig> = {
 
 export const API_ENDPOINTS = {
   // Public Market Data
-  PING: '/api/v3/ping',
-  SERVER_TIME: '/api/v3/time',
-  EXCHANGE_INFO: '/api/v3/exchangeInfo',
-  TICKER_24HR: '/api/v3/ticker/24hr',
-  TICKER_PRICE: '/api/v3/ticker/price',
-  DEPTH: '/api/v3/depth',
-  KLINES: '/api/v3/klines',
-  
+  PING: "/api/v3/ping",
+  SERVER_TIME: "/api/v3/time",
+  EXCHANGE_INFO: "/api/v3/exchangeInfo",
+  TICKER_24HR: "/api/v3/ticker/24hr",
+  TICKER_PRICE: "/api/v3/ticker/price",
+  DEPTH: "/api/v3/depth",
+  KLINES: "/api/v3/klines",
+
   // Account Endpoints
-  ACCOUNT: '/api/v3/account',
-  BALANCE: '/api/v3/account',
-  
+  ACCOUNT: "/api/v3/account",
+  BALANCE: "/api/v3/account",
+
   // Trading Endpoints
-  ORDER: '/api/v3/order',
-  ORDER_TEST: '/api/v3/order/test',
-  OPEN_ORDERS: '/api/v3/openOrders',
-  ALL_ORDERS: '/api/v3/allOrders',
-  
+  ORDER: "/api/v3/order",
+  ORDER_TEST: "/api/v3/order/test",
+  OPEN_ORDERS: "/api/v3/openOrders",
+  ALL_ORDERS: "/api/v3/allOrders",
+
   // Capital Endpoints
-  CAPITAL_CONFIG: '/sapi/v1/capital/config/getall',
-  DEPOSIT_HISTORY: '/sapi/v1/capital/deposit/hisrec',
-  WITHDRAW_HISTORY: '/sapi/v1/capital/withdraw/history',
+  CAPITAL_CONFIG: "/sapi/v1/capital/config/getall",
+  DEPOSIT_HISTORY: "/sapi/v1/capital/deposit/hisrec",
+  WITHDRAW_HISTORY: "/sapi/v1/capital/withdraw/history",
 } as const;
 
 export const HTTP_METHODS = {
-  GET: 'GET',
-  POST: 'POST',
-  PUT: 'PUT',
-  DELETE: 'DELETE',
+  GET: "GET",
+  POST: "POST",
+  PUT: "PUT",
+  DELETE: "DELETE",
 } as const;
 
 export const ORDER_SIDES = {
-  BUY: 'BUY',
-  SELL: 'SELL',
+  BUY: "BUY",
+  SELL: "SELL",
 } as const;
 
 export const ORDER_TYPES = {
-  LIMIT: 'LIMIT',
-  MARKET: 'MARKET',
-  STOP: 'STOP',
-  STOP_LOSS: 'STOP_LOSS',
-  TAKE_PROFIT: 'TAKE_PROFIT',
-  LIMIT_MAKER: 'LIMIT_MAKER',
+  LIMIT: "LIMIT",
+  MARKET: "MARKET",
+  STOP: "STOP",
+  STOP_LOSS: "STOP_LOSS",
+  TAKE_PROFIT: "TAKE_PROFIT",
+  LIMIT_MAKER: "LIMIT_MAKER",
 } as const;
 
 export const TIME_IN_FORCE = {
-  GTC: 'GTC', // Good Till Cancel
-  IOC: 'IOC', // Immediate or Cancel
-  FOK: 'FOK', // Fill or Kill
+  GTC: "GTC", // Good Till Cancel
+  IOC: "IOC", // Immediate or Cancel
+  FOK: "FOK", // Fill or Kill
 } as const;

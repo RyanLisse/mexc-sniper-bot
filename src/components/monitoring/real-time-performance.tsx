@@ -40,9 +40,9 @@ import {
   type PerformanceMetrics,
   useSkeletonItems,
 } from "../../lib/react-utilities";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 
-const logger = createLogger("real-time-performance");
+const logger = createSafeLogger("real-time-performance");
 
 interface PerformanceData {
   timestamp: string;

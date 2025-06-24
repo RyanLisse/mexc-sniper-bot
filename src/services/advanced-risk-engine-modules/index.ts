@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 
 /**
  * Advanced Risk Engine - Modular Integration
@@ -96,10 +96,10 @@ export type {
  * while providing improved architecture and maintainability.
  */
 export class AdvancedRiskEngine extends EventEmitter {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("index");
+      this._logger = createSafeLogger("index");
     }
     return this._logger;
   }
@@ -129,7 +129,7 @@ export class AdvancedRiskEngine extends EventEmitter {
     // Initialize modules
     this.initializeModules();
 
-    logger.info("[AdvancedRiskEngine] Initialized with modular architecture");
+    this.logger.info("[AdvancedRiskEngine] Initialized with modular architecture");
   }
 
   /**
@@ -312,7 +312,7 @@ export class AdvancedRiskEngine extends EventEmitter {
     this.marketConditionsManager.removePosition(symbol);
     this.positions.delete(symbol);
     this.updateAllModules();
-    logger.info(`[AdvancedRiskEngine] Removed position tracking for ${symbol}`);
+    this.logger.info(`[AdvancedRiskEngine] Removed position tracking for ${symbol}`);
   }
 
   /**

@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ApiClient } from "@/src/lib/api-client";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   ConfigValidationResult,
   SystemReadinessReport,
@@ -59,7 +59,7 @@ interface UseConfigValidationOptions {
   loadOnMount?: boolean;
 }
 
-const logger = createLogger("use-config-validation");
+const logger = createSafeLogger("use-config-validation");
 
 export function useConfigValidation(
   options: UseConfigValidationOptions = {}

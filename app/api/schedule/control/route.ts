@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { inngest } from "../../../../src/inngest/client";
 
-// MOVED: const logger = createLogger('route');
+// MOVED: const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest) {
+  const logger = createSafeLogger('schedule-control');
   try {
     const body = await request.json();
     const { action, scheduleType, data } = body;

@@ -8,7 +8,7 @@
 
 import { z } from "zod";
 import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { OptimizedAutoSnipingExecutionEngine } from "./optimized-auto-sniping-execution-engine";
 import {
   type AutoSnipingConfig,
@@ -67,7 +67,7 @@ export type BackendOptimizationReport = z.infer<typeof BackendOptimizationReport
  */
 export class OptimizedBackendOptimizationManager {
   private static instance: OptimizedBackendOptimizationManager;
-  private logger = createLogger("backend-optimization-manager");
+  private logger = createSafeLogger("backend-optimization-manager");
 
   // Optimized Services
   private autoSnipingEngine: OptimizedAutoSnipingExecutionEngine;

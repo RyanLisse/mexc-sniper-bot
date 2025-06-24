@@ -1,5 +1,5 @@
 import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "../lib/health-checks";
-import { createLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { CalendarAgent } from "./calendar-agent";
 import { ErrorRecoveryAgent } from "./error-recovery-agent";
 import { MexcApiAgent } from "./mexc-api-agent";
@@ -12,13 +12,13 @@ import { StrategyAgent } from "./strategy-agent";
 import { SymbolAnalysisAgent } from "./symbol-analysis-agent";
 
 export class AgentManager {
-  private _logger?: ReturnType<typeof createLogger>;
-  private get logger() {
-    if (!this._logger) {
-      this._logger = createLogger("agent-manager");
-    }
-    return this._logger;
-  }
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[agent-manager]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[agent-manager]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[agent-manager]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[agent-manager]', message, context || ''),
+  };
 
   // Core trading agents
   private mexcApiAgent: MexcApiAgent;

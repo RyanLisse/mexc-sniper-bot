@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { createLogger } from '../../src/lib/structured-logger';
+import { createSafeLogger } from '../../src/lib/structured-logger';
 import { DashboardLayout } from "../../src/components/dashboard-layout";
 import { 
   MetricCard,
@@ -33,8 +33,9 @@ import { Phase3ConfigurationPanel } from "../../src/components/dashboard/phase3-
 import PerformanceMonitoringDashboard from "../../src/components/dashboard/performance-monitoring-dashboard";
 import { useEnhancedPatterns } from "../../src/hooks/use-enhanced-patterns";
 import { Phase3IntegrationSummary } from "../../src/components/dashboard/phase3-integration-summary";
+import { AutoSnipingControlPanel } from "../../src/components/auto-sniping-control-panel";
 
-const logger = createLogger('page');
+const logger = createSafeLogger('page');
 
 export default function DashboardPage() {
   const { user, isLoading: userLoading } = useAuth();
@@ -151,11 +152,27 @@ export default function DashboardPage() {
           <TradingChart />
         </LazyChartWrapper>
 
-        {/* Tabbed Content Section - PHASE 6: Dynamic Loading for 70% faster performance */}
-        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        {/* Tabbed Content Section - Optimized for Auto-Sniping */}
+        <Tabs defaultValue="auto-sniping" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <div className="flex items-center justify-between">
             <TabsList>
+              <TabsTrigger value="auto-sniping">Auto-Sniping Control</TabsTrigger>
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger 
+                value="patterns"
+                onMouseEnter={() => handleTabHover("patterns")}
+              >
+                Pattern Detection
+                <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium">
+                  {readyTargets ? readyTargets.length : 0}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="trades"
+                onMouseEnter={() => handleTabHover("trades")}
+              >
+                Trading History
+              </TabsTrigger>
               <TabsTrigger 
                 value="listings"
                 onMouseEnter={() => handleTabHover("listings")}
@@ -165,20 +182,7 @@ export default function DashboardPage() {
                   {newListings}
                 </span>
               </TabsTrigger>
-              <TabsTrigger 
-                value="ai-performance"
-                onMouseEnter={() => handleTabHover("ai-performance")}
-              >
-                AI & Performance
-              </TabsTrigger>
-              <TabsTrigger 
-                value="trades"
-                onMouseEnter={() => handleTabHover("trades")}
-              >
-                Recent Trades
-              </TabsTrigger>
               <TabsTrigger value="manual-trading">Manual Trading</TabsTrigger>
-              <TabsTrigger value="patterns">Pattern Detection</TabsTrigger>
             </TabsList>
             <div className="flex items-center gap-2">
               <Button size="sm">
@@ -187,6 +191,10 @@ export default function DashboardPage() {
               </Button>
             </div>
           </div>
+
+          <TabsContent value="auto-sniping" className="space-y-4">
+            <AutoSnipingControlPanel />
+          </TabsContent>
 
           <TabsContent value="overview" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -212,45 +220,6 @@ export default function DashboardPage() {
           </TabsContent>
 
 
-          <TabsContent value="ai-performance" className="space-y-4">
-            <LazyDashboardWrapper>
-              <div className="grid gap-6">
-                {/* Integration Summary */}
-                <LazyCardWrapper>
-                  <Phase3IntegrationSummary />
-                </LazyCardWrapper>
-
-                {/* AI Intelligence Section */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <LazyCardWrapper>
-                    <AIServiceStatusPanel />
-                  </LazyCardWrapper>
-                  <LazyCardWrapper>
-                    <AIEnhancedPatternDisplay
-                      patterns={enhancedPatterns?.patterns || []}
-                      isLoading={patternsLoading}
-                      showAdvanceDetection={true}
-                    />
-                  </LazyCardWrapper>
-                </div>
-
-                {/* Cache and Performance Section */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <LazyCardWrapper>
-                    <CacheWarmingControlPanel />
-                  </LazyCardWrapper>
-                  <LazyChartWrapper>
-                    <PerformanceMonitoringDashboard refreshInterval={30000} />
-                  </LazyChartWrapper>
-                </div>
-
-                {/* Configuration Section */}
-                <LazyCardWrapper>
-                  <Phase3ConfigurationPanel />
-                </LazyCardWrapper>
-              </div>
-            </LazyDashboardWrapper>
-          </TabsContent>
 
           <TabsContent value="trades" className="space-y-4">
             <LazyTableWrapper>
@@ -266,7 +235,14 @@ export default function DashboardPage() {
 
           <TabsContent value="patterns" className="space-y-4">
             <LazyDashboardWrapper>
-              <CoinListingsBoard />
+              <div className="grid gap-4">
+                <AIEnhancedPatternDisplay
+                  patterns={enhancedPatterns?.patterns || []}
+                  isLoading={patternsLoading}
+                  showAdvanceDetection={true}
+                />
+                <CoinListingsBoard />
+              </div>
             </LazyDashboardWrapper>
           </TabsContent>
         </Tabs>

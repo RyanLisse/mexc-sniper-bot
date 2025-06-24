@@ -1,19 +1,16 @@
 /**
  * MEXC Client Core Infrastructure
- * 
+ *
  * Core client class with request infrastructure, authentication, and error handling.
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
 import * as crypto from "node:crypto";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import { mexcApiBreaker } from "../circuit-breaker";
-import { MexcRequestCache } from "./mexc-request-cache";
-import type { 
-  UnifiedMexcConfig, 
-  UnifiedMexcResponse
-} from "./mexc-client-types";
+import type { UnifiedMexcConfig, UnifiedMexcResponse } from "./mexc-client-types";
 import { MexcClientError } from "./mexc-client-types";
+import { MexcRequestCache } from "./mexc-request-cache";
 
 // ============================================================================
 // Core MEXC Client Infrastructure
@@ -24,7 +21,7 @@ export class MexcClientCore {
   private lastRequestTime = 0;
   protected cache: MexcRequestCache;
   private requestCounter = 0;
-  private logger = createLogger("mexc-client-core");
+  private logger = createSafeLogger("mexc-client-core");
 
   constructor(config: UnifiedMexcConfig = {}) {
     this.config = {
@@ -174,7 +171,9 @@ export class MexcClientCore {
               params.signature = signature;
               headers["X-MEXC-APIKEY"] = this.config.apiKey;
 
-              this.logger.debug(`[MexcClientCore] Authenticated request: ${endpoint} (${requestId})`);
+              this.logger.debug(
+                `[MexcClientCore] Authenticated request: ${endpoint} (${requestId})`
+              );
             }
 
             // Build URL with query parameters
@@ -232,14 +231,15 @@ export class MexcClientCore {
             if (!response.ok) {
               const errorText = await response.text();
               let errorData: { code?: number; msg?: string } | null = null;
-              
+
               try {
                 errorData = JSON.parse(errorText);
               } catch {
                 // Error text is not JSON, use as-is
               }
 
-              const errorMsg = errorData?.msg || errorText || `${response.status} ${response.statusText}`;
+              const errorMsg =
+                errorData?.msg || errorText || `${response.status} ${response.statusText}`;
               throw new MexcClientError(
                 `MEXC API error: ${errorMsg}`,
                 errorData?.code || response.status,
@@ -319,7 +319,9 @@ export class MexcClientCore {
 
             // Exponential backoff with jitter for retryable errors
             const delay = baseDelay * 2 ** (attempt - 1) + Math.random() * 1000;
-            this.logger.debug(`[MexcClientCore] Retrying in ${Math.round(delay)}ms... (${requestId})`);
+            this.logger.debug(
+              `[MexcClientCore] Retrying in ${Math.round(delay)}ms... (${requestId})`
+            );
             await new Promise((resolve) => setTimeout(resolve, delay));
           }
         }
@@ -354,7 +356,7 @@ export class MexcClientCore {
   /**
    * Get client configuration (without sensitive data)
    */
-  getConfig(): Omit<Required<UnifiedMexcConfig>, 'apiKey' | 'secretKey'> {
+  getConfig(): Omit<Required<UnifiedMexcConfig>, "apiKey" | "secretKey"> {
     const { apiKey, secretKey, ...safeConfig } = this.config;
     return safeConfig;
   }
@@ -378,21 +380,21 @@ export class MexcClientCore {
    */
   async testConnectivity(): Promise<UnifiedMexcResponse<{ status: string }>> {
     try {
-      const response = await this.makeRequest<{ status: string }>('/api/v3/ping');
-      
+      const response = await this.makeRequest<{ status: string }>("/api/v3/ping");
+
       if (response.success) {
         return {
           ...response,
-          data: { status: 'connected' }
+          data: { status: "connected" },
         };
       }
-      
+
       return response;
     } catch (error) {
       return {
         success: false,
-        data: { status: 'failed' },
-        error: error instanceof Error ? error.message : 'Unknown error',
+        data: { status: "failed" },
+        error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       };
     }
@@ -402,6 +404,6 @@ export class MexcClientCore {
    * Get server time from MEXC
    */
   async getServerTime(): Promise<UnifiedMexcResponse<{ serverTime: number }>> {
-    return this.makeRequest<{ serverTime: number }>('/api/v3/time');
+    return this.makeRequest<{ serverTime: number }>("/api/v3/time");
   }
 }

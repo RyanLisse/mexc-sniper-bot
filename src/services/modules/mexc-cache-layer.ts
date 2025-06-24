@@ -5,7 +5,7 @@
  * Provides different TTL strategies for different data types.
  */
 
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { MexcCacheConfig, MexcServiceResponse } from "./mexc-api-types";
 
 // ============================================================================
@@ -51,7 +51,7 @@ const CACHE_TTL_PROFILES = {
 // ============================================================================
 
 export class MexcCacheLayer {
-  private logger = createLogger("mexc-cache-layer");
+  private logger = createSafeLogger("mexc-cache-layer");
 
   private cache = new Map<string, CacheEntry<any>>();
   private config: MexcCacheConfig;

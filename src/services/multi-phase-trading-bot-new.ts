@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import {
   type MaintenanceResult,
   MultiPhasePerformanceAnalytics,
@@ -22,7 +22,7 @@ import type { TradingStrategy } from "./trading-strategy-manager";
  * Enhanced trading bot with modular architecture for scalability and maintainability
  */
 export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
-  private logger = createLogger("multi-phase-trading-bot");
+  private logger = createSafeLogger("multi-phase-trading-bot");
   private positionManager: MultiPhasePositionManager;
   private performanceAnalytics: MultiPhasePerformanceAnalytics;
 
@@ -216,7 +216,7 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
 
 // Export function to demonstrate multi-phase strategy
 export function demonstrateMultiPhaseStrategy(): void {
-  const logger = createLogger("multi-phase-demo");
+  const logger = createSafeLogger("multi-phase-demo");
   logger.info("=== Multi-Phase Trading Strategy Demo ===\n");
 
   // Import required strategies

@@ -361,22 +361,22 @@ export const balanceSnapshots = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    
+
     // Balance Details
     asset: text("asset").notNull(), // e.g., "USDT", "BTC", "ETH"
     freeAmount: real("free_amount").notNull().default(0),
     lockedAmount: real("locked_amount").notNull().default(0),
     totalAmount: real("total_amount").notNull().default(0),
-    
+
     // USD Value
     usdValue: real("usd_value").notNull().default(0),
     priceSource: text("price_source").notNull().default("mexc"), // "mexc", "coingecko", "manual"
     exchangeRate: real("exchange_rate"), // Rate used for USD conversion
-    
+
     // Snapshot Metadata
     snapshotType: text("snapshot_type").notNull().default("periodic"), // "periodic", "manual", "triggered"
     dataSource: text("data_source").notNull().default("api"), // "api", "manual", "calculated"
-    
+
     // Timestamps
     timestamp: timestamp("timestamp").notNull().default(sql`CURRENT_TIMESTAMP`),
     createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -386,16 +386,16 @@ export const balanceSnapshots = pgTable(
     userIdx: index("balance_snapshots_user_idx").on(table.userId),
     assetIdx: index("balance_snapshots_asset_idx").on(table.asset),
     timestampIdx: index("balance_snapshots_timestamp_idx").on(table.timestamp),
-    
+
     // Compound indexes for common queries
     userTimeIdx: index("balance_snapshots_user_time_idx").on(table.userId, table.timestamp),
     userAssetTimeIdx: index("balance_snapshots_user_asset_time_idx").on(
-      table.userId, 
-      table.asset, 
+      table.userId,
+      table.asset,
       table.timestamp
     ),
     assetTimeIdx: index("balance_snapshots_asset_time_idx").on(table.asset, table.timestamp),
-    
+
     // Performance indexes
     snapshotTypeIdx: index("balance_snapshots_snapshot_type_idx").on(table.snapshotType),
     dataSourceIdx: index("balance_snapshots_data_source_idx").on(table.dataSource),
@@ -410,21 +410,21 @@ export const portfolioSummary = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    
+
     // Portfolio Metrics
     totalUsdValue: real("total_usd_value").notNull().default(0),
     assetCount: integer("asset_count").notNull().default(0),
     performance24h: real("performance_24h").default(0), // % change in 24h
     performance7d: real("performance_7d").default(0), // % change in 7 days
     performance30d: real("performance_30d").default(0), // % change in 30 days
-    
+
     // Top Assets (JSON for flexibility)
     topAssets: text("top_assets"), // JSON array of top 5 assets by value
-    
+
     // Update tracking
     lastBalanceUpdate: timestamp("last_balance_update").notNull(),
     lastCalculated: timestamp("last_calculated").notNull().default(sql`CURRENT_TIMESTAMP`),
-    
+
     // Timestamps
     createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),

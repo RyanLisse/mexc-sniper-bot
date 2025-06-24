@@ -1,4 +1,4 @@
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 /**
  * Database Index Optimizer
@@ -35,7 +35,7 @@ interface IndexOptimizationResult {
 }
 
 export class DatabaseIndexOptimizer {
-  private logger = createLogger("database-index-optimizer");
+  private logger = createSafeLogger("database-index-optimizer");
 
   private static instance: DatabaseIndexOptimizer;
 

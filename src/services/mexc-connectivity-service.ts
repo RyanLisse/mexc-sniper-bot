@@ -7,7 +7,7 @@
 
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { ErrorFactory } from "../lib/error-types";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import {
   type ConnectivityMetrics,
   type ConnectivityTestRequest,
@@ -65,7 +65,7 @@ export interface CredentialTestResult {
 // ============================================================================
 
 export class MexcConnectivityService {
-  private logger = createLogger("mexc-connectivity-service");
+  private logger = createSafeLogger("mexc-connectivity-service");
 
   /**
    * Test MEXC connectivity with comprehensive validation and monitoring

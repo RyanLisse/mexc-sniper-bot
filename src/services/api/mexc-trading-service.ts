@@ -6,7 +6,7 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { MexcServiceResponse } from "../mexc-schemas";
 import type { MexcApiClient } from "./mexc-api-client-refactored";
 
@@ -64,7 +64,7 @@ export interface CredentialTestResult {
 }
 
 export class MexcTradingService {
-  private logger = createLogger("mexc-trading-service");
+  private logger = createSafeLogger("mexc-trading-service");
 
   constructor(private apiClient: MexcApiClient) {}
 

@@ -1,11 +1,11 @@
 import { eq, sql } from "drizzle-orm";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { db, executeWithRetry } from "./index";
 import { type NewPatternEmbedding, patternEmbeddings, patternSimilarityCache } from "./schema";
 
 // Vector similarity functions for PostgreSQL/NeonDB
 export class VectorUtils {
-  private logger = createLogger("vector-utils");
+  private logger = createSafeLogger("vector-utils");
 
   /**
    * Calculate cosine similarity between two embeddings

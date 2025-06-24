@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { enhancedApiValidationService } from "../../../../src/services/enhanced-api-validation-service";
 import {
@@ -10,7 +10,7 @@ import {
 } from "../../../../src/lib/api-response";
 import { authenticatedRoute } from "../../../../src/lib/auth-decorators";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 // POST /api/mexc/test-credentials
 export const POST = authenticatedRoute(async (request: NextRequest, user: any) => {

@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { AgentResponse } from "../base-agent";
 import type { AgentRegistry } from "./agent-registry";
 
@@ -88,7 +88,7 @@ export interface WorkflowContext {
  * parallel/sequential execution, and comprehensive failure handling
  */
 export class WorkflowEngine {
-  private logger = createLogger("workflow-engine");
+  private logger = createSafeLogger("workflow-engine");
 
   private agentRegistry: AgentRegistry;
   private runningWorkflows: Map<string, WorkflowContext> = new Map();

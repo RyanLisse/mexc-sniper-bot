@@ -3,7 +3,7 @@
  * Properly typed system interfaces for Claude-Flow architecture
  */
 
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 
 // Core type definitions for system configuration
 export interface CoreSystemConfig {
@@ -141,7 +141,7 @@ export interface CoreSystemConstructorConfig {
 }
 
 export class CoreSystem {
-  private logger = createLogger("system");
+  private logger = createSafeLogger("system");
 
   private config: CoreSystemConstructorConfig;
 

@@ -2,11 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "../lib/api-response";
 import { useAuth } from "../lib/kinde-auth-client";
 import { queryKeys } from "../lib/query-client";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 
 // MEXC Calendar Data Hook
-const logger = createLogger("use-mexc-data");
+const logger = createSafeLogger("use-mexc-data");
 
 export function useMexcCalendar() {
   return useQuery({

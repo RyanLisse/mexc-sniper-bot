@@ -1,8 +1,8 @@
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from "./structured-logger";
 
 // Lazy logger initialization for global functions
 function getLogger() {
-  return createLogger("cache-manager");
+  return createSafeLogger("cache-manager");
 }
 
 /**
@@ -102,11 +102,11 @@ export interface TTLConfig {
 // =======================
 
 class LRUCache<T = any> {
-  private _logger: ReturnType<typeof createLogger> | null = null;
-  
+  private _logger: ReturnType<typeof createSafeLogger> | null = null;
+
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("cache-manager");
+      this._logger = createSafeLogger("cache-manager");
     }
     return this._logger;
   }
@@ -750,7 +750,9 @@ export class CacheManager {
       }
 
       if (evicted > 0 || promoted > 0) {
-        getLogger().info(`[CacheManager] Optimized cache: evicted ${evicted}, promoted ${promoted}`);
+        getLogger().info(
+          `[CacheManager] Optimized cache: evicted ${evicted}, promoted ${promoted}`
+        );
       }
     } catch (error) {
       getLogger().error("[CacheManager] Optimization error:", error);

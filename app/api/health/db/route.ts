@@ -1,8 +1,8 @@
 import { checkDatabaseHealth, checkAuthTables } from "../../../../src/lib/db-health-check";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { createHealthResponse, apiResponse, handleApiError } from "../../../../src/lib/api-response";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET() {
   try {

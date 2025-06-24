@@ -1,7 +1,7 @@
 import { lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { executionHistory, workflowActivity } from "../db/schema";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 /**
  * Data Archival Service
@@ -9,7 +9,7 @@ import { createLogger } from "../lib/structured-logger";
  * to maintain database performance and manage storage growth
  */
 export class DataArchivalService {
-  private logger = createLogger("data-archival-service");
+  private logger = createSafeLogger("data-archival-service");
 
   private static instance: DataArchivalService;
   private isArchiving = false;

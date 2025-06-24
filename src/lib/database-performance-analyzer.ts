@@ -11,7 +11,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from "./structured-logger";
 
 interface DatabaseStats {
   totalQueries: number;
@@ -58,7 +58,7 @@ interface OptimizationRecommendation {
 }
 
 export class DatabasePerformanceAnalyzer {
-  private logger = createLogger("database-performance-analyzer");
+  private logger = createSafeLogger("database-performance-analyzer");
 
   private static instance: DatabasePerformanceAnalyzer;
   private analysisResults: Map<string, any> = new Map();

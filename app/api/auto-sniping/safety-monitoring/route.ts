@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { RealTimeSafetyMonitoringService, type SafetyConfiguration } from '@/src/services/real-time-safety-monitoring-modules';
@@ -21,7 +21,7 @@ function getSafetyMonitoringService() {
  * Get comprehensive safety monitoring report
  */
 export const GET = apiAuthWrapper(async (request: NextRequest) => {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const includeRecommendations = searchParams.get('include_recommendations') === 'true';
@@ -62,7 +62,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
  * Handle safety monitoring actions
  */
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const body = await request.json();
     const { action, configuration, alertId, reason } = body;

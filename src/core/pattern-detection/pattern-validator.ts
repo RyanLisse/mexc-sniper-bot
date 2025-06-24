@@ -11,7 +11,7 @@
  * - Extensible validation rules
  */
 
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type { IPatternValidator, PatternAnalysisRequest, PatternMatch } from "./interfaces";
 
@@ -22,7 +22,7 @@ import type { IPatternValidator, PatternAnalysisRequest, PatternMatch } from "./
  */
 export class PatternValidator implements IPatternValidator {
   private static instance: PatternValidator;
-  private logger = createLogger("pattern-validator");
+  private logger = createSafeLogger("pattern-validator");
 
   static getInstance(): PatternValidator {
     if (!PatternValidator.instance) {

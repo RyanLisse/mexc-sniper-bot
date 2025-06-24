@@ -6,7 +6,7 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // Standardized Status Types
 export interface UnifiedCredentialStatus {
@@ -42,7 +42,7 @@ export interface StatusResolutionResult {
 }
 
 export class UnifiedStatusResolver {
-  private logger = createLogger("unified-status-resolver");
+  private logger = createSafeLogger("unified-status-resolver");
 
   private lastKnownStatus: StatusResolutionResult | null = null;
   private isResolving = false;

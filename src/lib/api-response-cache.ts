@@ -9,8 +9,8 @@
  * - Performance optimization for high-frequency trading data
  */
 
-import { createLogger } from './structured-logger';
 import { generateCacheKey, globalCacheManager } from "./cache-manager";
+import { createSafeLogger } from "./structured-logger";
 
 // =======================
 // API Cache Types
@@ -177,10 +177,10 @@ const ENDPOINT_CONFIGS: Record<string, APIEndpointConfig> = {
 // =======================
 
 export class APIResponseCache {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createLogger("api-response-cache");
+      this._logger = createSafeLogger("api-response-cache");
     }
     return this._logger;
   }
@@ -273,7 +273,10 @@ export class APIResponseCache {
       this.trackCacheHit(endpoint);
       return enhancedResponse;
     } catch (error) {
-      this.getLogger().error(`[APIResponseCache] Error getting cached response for ${endpoint}:`, error);
+      this.getLogger().error(
+        `[APIResponseCache] Error getting cached response for ${endpoint}:`,
+        error
+      );
       this.trackCacheMiss(endpoint);
       return null;
     }
@@ -874,7 +877,7 @@ export function withAPICache<_T extends (...args: any[]) => Promise<any>>(
  * Initialize API cache for specific endpoints
  */
 export async function initializeAPICache(endpoints: string[]): Promise<void> {
-  const logger = createLogger("initialize-api-cache");
+  const logger = createSafeLogger("initialize-api-cache");
   logger.info(`[APIResponseCache] Initializing cache for ${endpoints.length} endpoints`);
 
   for (const endpoint of endpoints) {
@@ -891,7 +894,7 @@ export async function initializeAPICache(endpoints: string[]): Promise<void> {
  * Refresh cache for specific endpoints
  */
 export async function refreshEndpointCache(endpoint: string): Promise<void> {
-  const logger = createLogger("refresh-endpoint-cache");
+  const logger = createSafeLogger("refresh-endpoint-cache");
   logger.info(`[APIResponseCache] Refreshing cache for endpoint: ${endpoint}`);
 
   // Invalidate existing cache

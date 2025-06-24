@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Cache Monitoring & Analytics System
  *
  * Comprehensive monitoring and analytics for the multi-level caching system:
@@ -124,11 +124,11 @@ export interface PerformanceReport {
 // =======================
 
 export class CacheMonitoringSystem {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("cache-monitoring");
+      this._logger = createSafeLogger("cache-monitoring");
     }
     return this._logger;
   }

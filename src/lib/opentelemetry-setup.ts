@@ -3,11 +3,11 @@
  *
  * Comprehensive OpenTelemetry setup for the MEXC Trading Bot.
  * Provides distributed tracing, metrics collection, and structured logging.
- * 
+ *
  * Build-safe implementation with dynamic imports to prevent bundling issues.
  */
 
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 // Environment configuration
 const isProduction = process.env.NODE_ENV === "production";
@@ -19,8 +19,14 @@ const telemetryDisabled =
   process.env.DISABLE_TELEMETRY === "true" ||
   (isTesting && process.env.ENABLE_TELEMETRY_IN_TESTS !== "true");
 
-// Initialize logger
-const logger = createLogger("opentelemetry-setup");
+// Lazy logger initialization to prevent build-time errors
+let _logger: ReturnType<typeof createSafeLogger> | undefined;
+function getLogger() {
+  if (!_logger) {
+    _logger = createSafeLogger("opentelemetry-setup");
+  }
+  return _logger;
+}
 
 /**
  * OpenTelemetry SDK Configuration
@@ -28,7 +34,7 @@ const logger = createLogger("opentelemetry-setup");
  */
 export async function initializeOpenTelemetry(): Promise<any | null> {
   if (telemetryDisabled) {
-    logger.info("[OpenTelemetry] Telemetry disabled");
+    getLogger().info("[OpenTelemetry] Telemetry disabled");
     return null;
   }
 
@@ -43,7 +49,7 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
       { NodeSDK },
       { BatchSpanProcessor, TraceIdRatioBasedSampler },
       semanticConventions,
-      productionConfig
+      productionConfig,
     ] = await Promise.all([
       import("@opentelemetry/auto-instrumentations-node"),
       import("@opentelemetry/exporter-jaeger"),
@@ -53,7 +59,7 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
       import("@opentelemetry/sdk-node"),
       import("@opentelemetry/sdk-trace-node"),
       import("@opentelemetry/semantic-conventions"),
-      import("./opentelemetry-production-config")
+      import("./opentelemetry-production-config"),
     ]);
 
     const {
@@ -184,7 +190,7 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
     // Initialize the SDK
     sdk.start();
 
-    logger.info("[OpenTelemetry] SDK initialized successfully", {
+    getLogger().info("[OpenTelemetry] SDK initialized successfully", {
       environment: process.env.NODE_ENV,
       sampling: isProduction ? "10%" : "100%",
       exporters: traceExporters.length,
@@ -283,14 +289,14 @@ export async function initializeEnhancedTelemetry(): Promise<{
   healthCheck: () => Promise<boolean>;
 }> {
   if (telemetryDisabled) {
-    logger.info("[OpenTelemetry] Telemetry disabled");
+    getLogger().info("[OpenTelemetry] Telemetry disabled");
     return {
       success: false,
       healthCheck: async () => false,
     };
   }
 
-  const logger = createLogger("opentelemetry-setup");
+  const logger = getLogger();
 
   try {
     // Use production-optimized configuration
@@ -407,7 +413,7 @@ export const TelemetryMonitoring = {
 /**
  * OpenTelemetry initialization is now handled by instrumentation.ts (Vercel pattern)
  * This ensures proper compatibility with Vercel's deployment environment
- * 
+ *
  * The functions above are kept for backward compatibility and advanced configurations
  */
 

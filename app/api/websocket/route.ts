@@ -20,7 +20,7 @@ import {
   publicHandler,
   authenticatedHandler,
 } from "../../../src/lib/api-middleware";
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 
 // ======================
 // WebSocket Server Status
@@ -32,6 +32,7 @@ export const GET = publicHandler({
     ttl: 5000, // 5 seconds
   },
 })(async (request, context) => {
+  const logger = createSafeLogger('websocket-api');
   try {
     // Get WebSocket server status
     const serverMetrics = webSocketServer.getServerMetrics();
@@ -97,6 +98,7 @@ export const POST = authenticatedHandler({
     action: 'required',
   },
 })(async (request, context) => {
+  const logger = createSafeLogger('websocket-api');
   try {
     const { action, ...params } = context.body;
 
@@ -231,6 +233,7 @@ export const POST = authenticatedHandler({
 export const PUT = authenticatedHandler({
   parseBody: true,
 })(async (request, context) => {
+  const logger = createSafeLogger('websocket-api');
   try {
     const { connectionId, action, ...params } = context.body;
 
@@ -299,6 +302,7 @@ export const PATCH = authenticatedHandler({
   parseBody: true,
   // Admin only operations - auth is handled by authenticatedHandler
 })(async (request, context) => {
+  const logger = createSafeLogger('websocket-api');
   try {
     const { operation, ...params } = context.body;
 
@@ -428,7 +432,7 @@ export const PATCH = authenticatedHandler({
 // Helper Functions
 // ======================
 
-// MOVED: const logger = createLogger('route');
+// MOVED: const logger = createSafeLogger('route');
 
 function generatePerformanceRecommendations(serverMetrics: any, connectionMetrics: any[]): string[] {
   const recommendations: string[] = [];

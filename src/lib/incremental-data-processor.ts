@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Incremental Data Processing Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Incremental Data Processing & Delta Updates
@@ -81,7 +81,7 @@ export interface ProcessingMetrics {
 // ============================================================================
 
 export class IncrementalDataProcessor {
-  private logger = createLogger("incremental-data-processor");
+  private logger = createSafeLogger("incremental-data-processor");
 
   private cache: EnhancedUnifiedCacheSystem;
   private config: IncrementalProcessorConfig;

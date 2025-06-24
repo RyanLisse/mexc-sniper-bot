@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { NewPatternEmbedding } from "../db/schema";
 import { vectorUtils } from "../db/vector-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { getAiIntelligenceService } from "./ai-intelligence-service";
 
 export interface PatternData {
@@ -21,10 +21,10 @@ export interface PatternData {
 }
 
 export class PatternEmbeddingService {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("pattern-embedding-service");
+      this._logger = createSafeLogger("pattern-embedding-service");
     }
     return this._logger;
   }

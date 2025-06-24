@@ -5,7 +5,7 @@
  * and error handling. Extracted from API route for better maintainability.
  */
 
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import {
   type ApiCredentialsTestRequest,
   ApiCredentialsTestRequestSchema,
@@ -67,7 +67,7 @@ export interface AuthenticationTestResult {
 // ============================================================================
 
 export class ApiCredentialsTestService {
-  private logger = createLogger("api-credentials-test-service");
+  private logger = createSafeLogger("api-credentials-test-service");
 
   /**
    * Test API credentials with comprehensive validation

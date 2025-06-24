@@ -2,7 +2,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { user } from "../db/schema";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 export interface KindeUser {
   id: string;
@@ -21,7 +21,14 @@ export interface KindeSession {
 /**
  * Get the current Kinde session
  */
-const logger = createLogger("kinde-auth");
+// Lazy logger initialization to prevent build-time errors
+let _logger: ReturnType<typeof createSafeLogger> | undefined;
+function getLogger() {
+  if (!_logger) {
+    _logger = createSafeLogger("kinde-auth");
+  }
+  return _logger;
+}
 
 export async function getSession(): Promise<KindeSession> {
   try {
@@ -45,7 +52,7 @@ export async function getSession(): Promise<KindeSession> {
       isAuthenticated: true,
     };
   } catch (error) {
-    logger.error("Error getting Kinde session:", error);
+    getLogger().error("Error getting Kinde session:", error);
     return { user: null, isAuthenticated: false };
   }
 }
@@ -74,7 +81,7 @@ export async function syncUserWithDatabase(kindeUser: KindeUser) {
         updatedAt: new Date(),
       });
 
-      logger.info(`Created new user: ${kindeUser.email}`);
+      getLogger().info(`Created new user: ${kindeUser.email}`);
     } else {
       // Update existing user
       await db
@@ -88,12 +95,12 @@ export async function syncUserWithDatabase(kindeUser: KindeUser) {
         })
         .where(eq(user.id, kindeUser.id));
 
-      logger.info(`Updated user: ${kindeUser.email}`);
+      getLogger().info(`Updated user: ${kindeUser.email}`);
     }
 
     return true;
   } catch (error) {
-    logger.error("Error syncing user with database:", error);
+    getLogger().error("Error syncing user with database:", error);
     return false;
   }
 }
@@ -107,7 +114,7 @@ export async function getUserFromDatabase(kindeId: string) {
 
     return users[0] || null;
   } catch (error) {
-    logger.error("Error getting user from database:", error);
+    getLogger().error("Error getting user from database:", error);
     return null;
   }
 }

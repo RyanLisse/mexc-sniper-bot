@@ -17,7 +17,7 @@
 import { EventEmitter } from "events";
 import WebSocket from "ws";
 import { PatternDetectionCore } from "../core/pattern-detection";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   NotificationMessage,
   TradingPriceMessage,
@@ -92,7 +92,7 @@ interface SymbolStatusData {
 // ======================
 
 class MarketDataManager {
-  private logger = createLogger("mexc-websocket-stream");
+  private logger = createSafeLogger("mexc-websocket-stream");
 
   private priceCache = new Map<string, TradingPriceMessage>();
   private depthCache = new Map<string, MexcDepthData>();

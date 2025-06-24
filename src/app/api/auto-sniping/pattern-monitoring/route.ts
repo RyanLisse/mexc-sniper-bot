@@ -1,13 +1,13 @@
 /**
  * Pattern Monitoring API Route
- * 
+ *
  * Handles pattern monitoring operations including monitoring control,
  * status reporting, manual detection, and alert management.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createLogger } from "@/src/lib/structured-logger";
+import { createSafeLogger } from "@/src/lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 
 // Lazy import to avoid build-time initialization issues
@@ -18,7 +18,7 @@ async function getPatternMonitoringService() {
 
 // Lazy logger initialization
 function getLogger() {
-  return createLogger("api-pattern-monitoring");
+  return createSafeLogger("api-pattern-monitoring");
 }
 
 // Request validation schemas
@@ -69,12 +69,12 @@ export async function GET(request: NextRequest) {
     });
 
     const monitoringService = await getPatternMonitoringService();
-    
+
     // Get monitoring report
     const report = await monitoringService.getMonitoringReport();
-    
+
     // Get recent patterns if requested
-    let recentPatterns = undefined;
+    let recentPatterns: any[] | undefined;
     if (includePatterns) {
       recentPatterns = monitoringService.getRecentPatterns(patternLimit);
     }
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
       isActive: monitoringService.isMonitoringActive,
       lastUpdate: report.lastUpdated,
       totalAlerts: report.activeAlerts.length,
-      unacknowledgedAlerts: report.activeAlerts.filter(alert => !alert.acknowledged).length,
+      unacknowledgedAlerts: report.activeAlerts.filter((alert) => !alert.acknowledged).length,
     };
 
     return NextResponse.json({
@@ -96,11 +96,10 @@ export async function GET(request: NextRequest) {
       },
       message: "Pattern monitoring report retrieved successfully",
     });
-
   } catch (error) {
     const logger = getLogger();
-    logger.error("[GET] Failed to get pattern monitoring report:", error);
-    
+    logger.error("[GET] Failed to get pattern monitoring report:", { error });
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
@@ -141,7 +140,7 @@ export async function POST(request: NextRequest) {
     switch (validatedBody.action) {
       case "start_monitoring": {
         await monitoringService.startMonitoring();
-        
+
         return NextResponse.json({
           success: true,
           data: { status: "monitoring_started" },
@@ -151,7 +150,7 @@ export async function POST(request: NextRequest) {
 
       case "stop_monitoring": {
         monitoringService.stopMonitoring();
-        
+
         return NextResponse.json({
           success: true,
           data: { status: "monitoring_stopped" },
@@ -161,7 +160,7 @@ export async function POST(request: NextRequest) {
 
       case "manual_detection": {
         const { symbols, calendarEntries } = validatedBody;
-        
+
         logger.info("[POST] Running manual pattern detection", {
           symbolCount: symbols.length,
           calendarEntriesCount: calendarEntries?.length || 0,
@@ -175,12 +174,13 @@ export async function POST(request: NextRequest) {
         // Generate summary statistics
         const summary = {
           totalPatterns: patterns.length,
-          readyStatePatterns: patterns.filter(p => p.type === "ready_state").length,
-          preReadyPatterns: patterns.filter(p => p.type === "pre_ready").length,
-          advanceOpportunities: patterns.filter(p => p.type === "advance_opportunity").length,
-          averageConfidence: patterns.length > 0 
-            ? patterns.reduce((sum, p) => sum + p.confidence, 0) / patterns.length 
-            : 0,
+          readyStatePatterns: patterns.filter((p) => p.patternType === "ready_state").length,
+          preReadyPatterns: patterns.filter((p) => p.patternType === "pre_ready").length,
+          advanceOpportunities: patterns.filter((p) => p.patternType === "launch_sequence").length,
+          averageConfidence:
+            patterns.length > 0
+              ? patterns.reduce((sum, p) => sum + p.confidence, 0) / patterns.length
+              : 0,
         };
 
         return NextResponse.json({
@@ -195,9 +195,9 @@ export async function POST(request: NextRequest) {
 
       case "acknowledge_alert": {
         const { alertId } = validatedBody;
-        
+
         const acknowledged = monitoringService.acknowledgeAlert(alertId);
-        
+
         if (!acknowledged) {
           return NextResponse.json(
             {
@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
 
       case "clear_acknowledged_alerts": {
         const clearedCount = monitoringService.clearAcknowledgedAlerts();
-        
+
         return NextResponse.json({
           success: true,
           data: { clearedCount },
@@ -237,11 +237,10 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-
   } catch (error) {
     const logger = getLogger();
-    logger.error("[POST] Pattern monitoring action failed:", error);
-    
+    logger.error("[POST] Pattern monitoring action failed:", { error });
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {

@@ -1,27 +1,23 @@
 /**
  * MEXC Account API Methods
- * 
+ *
  * Authenticated account methods including account info and balance retrieval.
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import { getGlobalErrorRecoveryService } from "../mexc-error-recovery-service";
 import { MexcClientCore } from "./mexc-client-core";
-import { MexcMarketDataClient } from "./mexc-market-data";
-import type { 
-  UnifiedMexcResponse, 
-  BalanceEntry,
-  UnifiedMexcConfig
-} from "./mexc-client-types";
+import type { BalanceEntry, UnifiedMexcConfig, UnifiedMexcResponse } from "./mexc-client-types";
 import { BalanceEntrySchema } from "./mexc-client-types";
+import { MexcMarketDataClient } from "./mexc-market-data";
 
 // ============================================================================
 // Account API Client
 // ============================================================================
 
 export class MexcAccountApiClient extends MexcMarketDataClient {
-  private logger = createLogger("mexc-account-api");
+  private logger = createSafeLogger("mexc-account-api");
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);
@@ -349,9 +345,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
         return [];
       }
 
-      return balances.data.balances
-        .filter(b => (b.usdtValue || 0) > 0)
-        .slice(0, limit);
+      return balances.data.balances.filter((b) => (b.usdtValue || 0) > 0).slice(0, limit);
     } catch (error) {
       this.logger.error("[MexcAccountApi] Failed to get top assets:", error);
       return [];

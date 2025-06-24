@@ -1,4 +1,4 @@
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 /**
  * Simple Dependency Injection Container
  * Provides loose coupling between services and improved testability
@@ -31,7 +31,7 @@ export interface DIContainerOptions {
  * Dependency Injection Container with lifecycle management
  */
 export class DIContainer {
-  private logger = createLogger("dependency-injection");
+  private logger = createSafeLogger("dependency-injection");
 
   private services = new Map<ServiceIdentifier, ServiceRegistration>();
   private resolutionStack: ServiceIdentifier[] = [];

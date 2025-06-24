@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { webSocketPriceService } from "../services/websocket-price-service";
 
 interface PriceUpdate {
@@ -41,7 +41,7 @@ interface UseWebSocketPriceOptions {
 /**
  * Hook to subscribe to real-time price updates for a single symbol
  */
-const logger = createLogger("use-websocket-price");
+const logger = createSafeLogger("use-websocket-price");
 
 export function useWebSocketPrice(
   symbol: string,

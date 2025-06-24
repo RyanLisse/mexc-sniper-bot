@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import {
   type CalendarEntry,
   isValidForSnipe,
@@ -52,7 +52,7 @@ const apiClient = {
   },
 };
 
-const logger = createLogger("use-pattern-sniper");
+const logger = createSafeLogger("use-pattern-sniper");
 
 async function fetchUserPreferences(userId: string): Promise<UserTradingPreferences | null> {
   try {

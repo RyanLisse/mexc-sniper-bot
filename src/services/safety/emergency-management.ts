@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from "events";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type {
   AgentConsensusRequest,
   SafetyMonitorAgent,
@@ -45,7 +45,7 @@ export interface EmergencyState {
 }
 
 export class EmergencyManager extends EventEmitter {
-  private logger = createLogger("emergency-management");
+  private logger = createSafeLogger("emergency-management");
 
   private emergencyState: EmergencyState;
   private activeProcedures: Map<string, EmergencyProcedure> = new Map();

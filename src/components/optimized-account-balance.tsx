@@ -2,17 +2,17 @@
 
 import React, { useCallback, useMemo, useState } from "react";
 import { useAccountBalance } from "../hooks/use-account-balance";
+import {
+  BalanceHeader,
+  type BalanceItem,
+  BalanceItemComponent,
+  EmptyState,
+  LoadingSkeleton,
+  PortfolioSummary,
+} from "./account-balance/balance-components";
 import { HydrationBoundary } from "./hydration-boundary";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
-import {
-  BalanceHeader,
-  BalanceItemComponent,
-  PortfolioSummary,
-  EmptyState,
-  LoadingSkeleton,
-  type BalanceItem,
-} from "./account-balance/balance-components";
 
 interface AccountBalanceProps {
   userId?: string;
@@ -71,19 +71,23 @@ const OptimizedAccountBalanceInternal = React.memo(({ userId, className }: Accou
             <p className="text-muted-foreground text-xs mt-1">
               {error instanceof Error ? error.message : "Unknown error"}
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              className="mt-4"
-            >
+            <Button variant="outline" size="sm" onClick={handleRefresh} className="mt-4">
               Try Again
             </Button>
           </div>
         </CardContent>
       </Card>
     ),
-    [className, isFetching, autoRefresh, showBalances, toggleAutoRefresh, toggleVisibility, handleRefresh, error]
+    [
+      className,
+      isFetching,
+      autoRefresh,
+      showBalances,
+      toggleAutoRefresh,
+      toggleVisibility,
+      handleRefresh,
+      error,
+    ]
   );
 
   const renderPortfolioValue = useCallback(() => {
@@ -108,9 +112,7 @@ const OptimizedAccountBalanceInternal = React.memo(({ userId, className }: Accou
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-medium text-foreground">Asset Breakdown</h4>
           {balanceCount > 5 && (
-            <span className="text-xs text-muted-foreground">
-              Showing top holdings
-            </span>
+            <span className="text-xs text-muted-foreground">Showing top holdings</span>
           )}
         </div>
 

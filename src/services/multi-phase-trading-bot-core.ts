@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { MultiPhaseExecutor } from "./multi-phase-executor";
 import type { TradingStrategy } from "./trading-strategy-manager";
 
@@ -6,7 +6,7 @@ import type { TradingStrategy } from "./trading-strategy-manager";
  * Core multi-phase trading bot functionality
  */
 export class MultiPhaseTradingBotCore {
-  protected logger = createLogger("multi-phase-trading-bot-core");
+  protected logger = createSafeLogger("multi-phase-trading-bot-core");
   protected executor: MultiPhaseExecutor;
   protected entryPrice: number;
   protected position: number;

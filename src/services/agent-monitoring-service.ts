@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   AgentRegistryStats,
   AgentStatus,
@@ -91,7 +91,7 @@ export interface MonitoringConfig {
  * Centralized monitoring service for all agent health and performance metrics
  */
 export class AgentMonitoringService {
-  private logger = createLogger("agent-monitoring-service");
+  private logger = createSafeLogger("agent-monitoring-service");
 
   private static instance: AgentMonitoringService | null = null;
   private config: MonitoringConfig;

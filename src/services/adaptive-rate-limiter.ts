@@ -9,7 +9,7 @@
  * - Real-time performance monitoring
  */
 
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { circuitBreakerRegistry } from "./circuit-breaker";
 import { ErrorLoggingService } from "./error-logging-service";
 
@@ -78,7 +78,7 @@ interface UserLimits {
 }
 
 export class AdaptiveRateLimiterService {
-  private logger = createLogger("adaptive-rate-limiter");
+  private logger = createSafeLogger("adaptive-rate-limiter");
 
   private static instance: AdaptiveRateLimiterService;
   private errorLogger = ErrorLoggingService.getInstance();
@@ -725,7 +725,10 @@ export class AdaptiveRateLimiterService {
         orderCount1m: orderCount1mHeaderKey ? headers[orderCount1mHeaderKey] : "none",
       });
     } catch (error) {
-      this.logger.error(`[Adaptive Rate Limiter] Error processing MEXC headers for ${endpoint}:`, error);
+      this.logger.error(
+        `[Adaptive Rate Limiter] Error processing MEXC headers for ${endpoint}:`,
+        error
+      );
     }
   }
 
@@ -879,7 +882,9 @@ export class AdaptiveRateLimiterService {
       // Reset limits after some time (double the retry-after period)
       setTimeout(() => {
         this.endpointConfigs[endpoint] = currentConfig;
-        this.logger.info(`[Adaptive Rate Limiter] Reset limits for ${endpoint} after rate limit period`);
+        this.logger.info(
+          `[Adaptive Rate Limiter] Reset limits for ${endpoint} after rate limit period`
+        );
       }, retryAfterSeconds * 2000);
 
       this.logger.info(`[Adaptive Rate Limiter] Temporarily reduced limits for ${endpoint}`, {

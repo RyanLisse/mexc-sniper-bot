@@ -1,5 +1,5 @@
 /**
-import { createLogger } from '../../lib/structured-logger';
+import { createSafeLogger } from '../../lib/structured-logger';
  * Event Management & Health Module
  *
  * Provides event emission, alert management, and health monitoring functionality
@@ -56,7 +56,13 @@ export interface RiskThresholdEvent {
 }
 
 export class EventManagementHealth extends EventEmitter {
-  private logger = createLogger("event-management-health");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("event-management-health");
+    }
+    return this._logger;
+  }
 
   private alerts: RiskAlert[] = [];
   private lastRiskUpdate = 0;
@@ -65,7 +71,9 @@ export class EventManagementHealth extends EventEmitter {
 
   constructor(private config: EventManagementConfig) {
     super();
-    logger.info("[EventManagementHealth] Initialized with event management and health monitoring");
+    this.logger.info(
+      "[EventManagementHealth] Initialized with event management and health monitoring"
+    );
   }
 
   /**
@@ -328,9 +336,9 @@ export class EventManagementHealth extends EventEmitter {
         });
       }
 
-      logger.info(`[EventManagementHealth] Portfolio risk updated: ${riskLevel.toFixed(2)}%`);
+      this.logger.info(`[EventManagementHealth] Portfolio risk updated: ${riskLevel.toFixed(2)}%`);
     } catch (error) {
-      logger.error("[EventManagementHealth] Portfolio risk update failed:", error);
+      this.logger.error("[EventManagementHealth] Portfolio risk update failed:", error);
     }
   }
 
@@ -441,7 +449,7 @@ export class EventManagementHealth extends EventEmitter {
     });
 
     if (this.alerts.length < oldAlertsCount) {
-      logger.info(
+      this.logger.info(
         `[EventManagementHealth] Cleaned up ${oldAlertsCount - this.alerts.length} old alerts`
       );
     }

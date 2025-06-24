@@ -10,7 +10,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { apiResponse, handleApiError } from "../../../../src/lib/api-response";
 import { getUnifiedStatus } from "../../../../src/services/unified-status-resolver";
 import { toSafeError } from "../../../../src/lib/error-type-utils";
-import { createLogger } from "../../../../src/lib/structured-logger";
+import { createSafeLogger } from "../../../../src/lib/structured-logger";
 
 interface UnifiedStatusResponse {
   // Core Status
@@ -43,7 +43,7 @@ interface UnifiedStatusResponse {
   nextSteps: string[];
 }
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const requestId = `unified_status_${Date.now()}_${Math.random().toString(36).substring(7)}`;

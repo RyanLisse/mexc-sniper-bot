@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
 import type { IPatternStorage } from "../interfaces";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // Mock database
 vi.mock("../../../db", () => ({
@@ -211,7 +211,7 @@ describe("PatternStorage - TDD Implementation", () => {
       // Mock database error
       const originalDb = vi.mocked(await import("../../../db")).db;
 
-      const logger = createLogger("pattern-storage.test");
+      const logger = createSafeLogger("pattern-storage.test");
       vi.mocked(originalDb.select).mockImplementationOnce(() => {
         throw new Error("Database query failed");
       });

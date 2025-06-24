@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { MultiPhaseExecutor } from "./multi-phase-executor";
 
 export interface PositionInfo {
@@ -55,7 +55,7 @@ export interface PositionInitResult {
  * Position management for multi-phase trading
  */
 export class MultiPhasePositionManager {
-  private logger = createLogger("multi-phase-position-manager");
+  private logger = createSafeLogger("multi-phase-position-manager");
 
   constructor(
     private entryPrice: number,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTakeProfitLevels, useUpdateTakeProfitLevels } from "../hooks/use-user-preferences";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -12,7 +12,7 @@ interface TakeProfitLevelsProps {
   userId: string;
 }
 
-const logger = createLogger("take-profit-levels");
+const logger = createSafeLogger("take-profit-levels");
 
 export function TakeProfitLevels({ userId }: TakeProfitLevelsProps) {
   const { levels, defaultLevel, customLevel } = useTakeProfitLevels(userId);

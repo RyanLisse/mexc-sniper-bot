@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET() {
   try {

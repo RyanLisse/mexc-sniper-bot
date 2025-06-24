@@ -7,14 +7,14 @@
 
 import { NextRequest } from 'next/server';
 import { apiResponse } from '@/src/lib/api-response';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { systemReadinessValidator } from '@/src/services/system-readiness-validator';
 
 /**
  * GET /api/system/validation
  * Comprehensive system readiness validation
  */
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();

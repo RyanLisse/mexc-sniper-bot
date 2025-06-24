@@ -11,7 +11,7 @@
  */
 
 import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from "node:crypto";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // Constants for cryptographic operations
 const ALGORITHM = "aes-256-gcm";
@@ -35,10 +35,10 @@ interface EncryptedData {
 }
 
 export class SecureEncryptionService {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createLogger("secure-encryption-service");
+      this._logger = createSafeLogger("secure-encryption-service");
     }
     return this._logger;
   }
@@ -244,7 +244,7 @@ export function getEncryptionService(): SecureEncryptionService {
  */
 export function generateMasterKey(): void {
   const key = SecureEncryptionService.generateSecureKey();
-  const logger = createLogger("generate-master-key");
+  const logger = createSafeLogger("generate-master-key");
   logger.info("\n🔐 Generated new master encryption key:");
   logger.info(`ENCRYPTION_MASTER_KEY="${key}"`);
   logger.info("\n⚠️  Add this to your .env.local file and keep it secure!");

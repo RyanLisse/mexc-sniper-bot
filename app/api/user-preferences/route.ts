@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { db, userPreferences, type NewUserPreferences } from "../../../src/db";
 import { eq } from 'drizzle-orm';
 import {
@@ -12,7 +12,7 @@ import {
 import { handleApiError } from "../../../src/lib/error-handler";
 
 // GET /api/user-preferences?userId=xxx
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

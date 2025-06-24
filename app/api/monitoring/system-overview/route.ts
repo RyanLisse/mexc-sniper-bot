@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
 import { AgentManager } from "../../../../src/mexc-agents/agent-manager";
 import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "../../../../src/lib/health-checks";
 
 // Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createLogger> | undefined;
+let _logger: ReturnType<typeof createSafeLogger> | undefined;
 function getLogger() {
   if (!_logger) {
-    _logger = createLogger('route');
+    _logger = createSafeLogger('route');
   }
   return _logger;
 }

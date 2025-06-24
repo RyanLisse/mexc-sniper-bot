@@ -1,5 +1,5 @@
 /**
-import { createLogger } from '../lib/structured-logger';
+import { createSafeLogger } from '../lib/structured-logger';
  * Circuit Breaker Safety Service
  *
  * Comprehensive service to fix "Circuit breaker in protective state" issues
@@ -89,7 +89,7 @@ export interface AutoSnipingSafetyGate {
 // ============================================================================
 
 export class CircuitBreakerSafetyService {
-  private _logger: ReturnType<typeof createLogger> | null = null;
+  private _logger: ReturnType<typeof createSafeLogger> | null = null;
 
   private errorHandler: UnifiedErrorHandler;
   private mexcService: any;
@@ -100,10 +100,10 @@ export class CircuitBreakerSafetyService {
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): ReturnType<typeof createLogger> {
+  private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createLogger("circuit-breaker-safety-service");
+        this._logger = createSafeLogger("circuit-breaker-safety-service");
       } catch (error) {
         // Fallback to console logging during build time
         this._logger = {

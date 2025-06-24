@@ -5,7 +5,7 @@
  * Verifies all 5 TypeScript agents are operational
  */
 
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { CalendarAgent } from "./calendar-agent.js";
 import { MexcApiAgent } from "./mexc-api-agent.js";
 import { MexcOrchestrator } from "./orchestrator.js";
@@ -20,7 +20,7 @@ interface HealthCheckResult {
 }
 
 class AgentHealthChecker {
-  private logger = createLogger("health-check");
+  private logger = createSafeLogger("health-check");
 
   private results: HealthCheckResult[] = [];
 

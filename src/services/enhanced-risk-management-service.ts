@@ -9,10 +9,10 @@
  * - Compliance checks
  */
 
-import { createLogger } from "../lib/structured-logger";
-import { ErrorLoggingService } from "./error-logging-service";
-import type { OrderParameters } from "./api/mexc-client-types";
+import { createSafeLogger } from "../lib/structured-logger";
 import { getUnifiedMexcClient } from "./api/mexc-client-factory";
+import type { OrderParameters } from "./api/mexc-client-types";
+import { ErrorLoggingService } from "./error-logging-service";
 
 export interface RiskProfile {
   userId: string;
@@ -95,10 +95,10 @@ export interface MarketConditions {
 }
 
 export class EnhancedRiskManagementService {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createLogger("enhanced-risk-management-service");
+      this._logger = createSafeLogger("enhanced-risk-management-service");
     }
     return this._logger;
   }

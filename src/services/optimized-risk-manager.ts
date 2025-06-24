@@ -14,7 +14,7 @@
 import { z } from "zod";
 import type { PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { AutoSnipingConfig, ExecutionPosition } from "./optimized-auto-sniping-core";
 
 // ============================================================================
@@ -105,7 +105,7 @@ export type RiskAction = z.infer<typeof RiskActionSchema>;
 
 export class OptimizedRiskManager {
   private static instance: OptimizedRiskManager;
-  private logger = createLogger("optimized-risk-manager");
+  private logger = createSafeLogger("optimized-risk-manager");
 
   // Risk configuration
   private riskLimits: RiskLimits;

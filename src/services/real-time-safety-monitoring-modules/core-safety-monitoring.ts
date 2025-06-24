@@ -8,7 +8,7 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createLogger, createTimer } from "../../lib/structured-logger";
+import { createSafeLogger, createTimer } from "../../lib/structured-logger";
 import type {
   RiskMetrics,
   SafetyAlert,
@@ -55,7 +55,7 @@ export interface ThresholdCheckResult {
 }
 
 export class CoreSafetyMonitoring {
-  private logger = createLogger("core-safety-monitoring");
+  private logger = createSafeLogger("core-safety-monitoring");
   private riskMetrics: RiskMetrics;
   private isActive = false;
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { z } from "zod";
 import { inngest } from "../../../../src/inngest/client";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
@@ -42,7 +42,7 @@ const TriggerSchema = z.object({
 });
 
 // POST /api/triggers/multi-phase-strategy - Trigger multi-phase strategy workflows
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest) {
   try {

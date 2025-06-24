@@ -7,7 +7,7 @@ import {
   withUserAuth,
 } from "./api-auth";
 import { createErrorResponse, HTTP_STATUS } from "./api-response";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 /**
  * Authentication decorators for common API route patterns
@@ -18,7 +18,7 @@ import { createLogger } from "./structured-logger";
  * Decorator for public API routes (no authentication required)
  * Provides consistent error handling and response formatting
  */
-const logger = createLogger("auth-decorators");
+const logger = createSafeLogger("auth-decorators");
 
 export function publicRoute<T extends any[]>(
   handler: (request: NextRequest, ...args: T) => Promise<Response>

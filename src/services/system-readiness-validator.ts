@@ -5,7 +5,7 @@
  * Validates all critical components and provides clear, actionable feedback.
  */
 
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { environmentValidation } from "./enhanced-environment-validation";
 
 export interface SystemReadinessCheck {
@@ -40,7 +40,7 @@ export interface SystemReadinessResult {
  * System Readiness Validator Service
  */
 export class SystemReadinessValidator {
-  private logger = createLogger("system-readiness-validator");
+  private logger = createSafeLogger("system-readiness-validator");
 
   private static instance: SystemReadinessValidator | null = null;
 

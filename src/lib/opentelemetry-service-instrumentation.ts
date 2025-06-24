@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * OpenTelemetry Service Layer Instrumentation
  *
  * Provides comprehensive instrumentation for key services including
@@ -26,7 +26,7 @@ export interface ServiceSpanOptions {
 /**
  * Decorator for instrumenting service methods
  */
-const logger = createLogger("opentelemetry-service-instrumentation");
+const logger = createSafeLogger("opentelemetry-service-instrumentation");
 
 export function instrumentServiceMethod(options: ServiceSpanOptions) {
   return (_target: any, propertyKey: string, descriptor: PropertyDescriptor) => {

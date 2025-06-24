@@ -1,5 +1,5 @@
 /**
-import { createLogger } from '../lib/structured-logger';
+import { createSafeLogger } from '../lib/structured-logger';
  * MEXC Core API Client
  *
  * Lightweight, focused HTTP client for MEXC API communication.
@@ -20,7 +20,7 @@ import type {
 // ============================================================================
 
 export class MexcCoreClient {
-  private logger = createLogger("mexc-core-client");
+  private logger = createSafeLogger("mexc-core-client");
 
   private config: MexcApiConfig;
   private baseHeaders: Record<string, string>;

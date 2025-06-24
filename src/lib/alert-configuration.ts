@@ -8,7 +8,7 @@ import {
   type SelectAlertRule,
   type SelectNotificationChannel,
 } from "../db/schemas/alerts";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 // ==========================================
 // VALIDATION SCHEMAS
@@ -313,7 +313,7 @@ export const NOTIFICATION_CHANNEL_TEMPLATES = {
 // ==========================================
 
 export class AlertConfigurationService {
-  private logger = createLogger("alert-configuration");
+  private logger = createSafeLogger("alert-configuration");
 
   private db: any;
 

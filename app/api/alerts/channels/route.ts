@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../src/db";
 import { NotificationService } from "../../../../src/services/notification-providers";
@@ -13,7 +13,7 @@ import { z } from "zod";
 // ==========================================
 
 export async function GET(request: NextRequest) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 // POST /api/alerts/channels - Create notification channel
 // ==========================================
 export async function POST(request: NextRequest) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated

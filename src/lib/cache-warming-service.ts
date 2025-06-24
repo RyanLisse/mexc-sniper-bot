@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Cache Warming Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Intelligent Cache Warming Strategies
@@ -64,7 +64,7 @@ export interface CacheWarmupConfig {
 // ============================================================================
 
 export class CacheWarmingService {
-  private logger = createLogger("cache-warming-service");
+  private logger = createSafeLogger("cache-warming-service");
 
   private cache: EnhancedUnifiedCacheSystem;
   private mexcService: UnifiedMexcServiceV2;

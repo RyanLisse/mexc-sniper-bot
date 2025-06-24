@@ -10,8 +10,8 @@
  * - Access logging for security monitoring
  */
 
-import { createLogger } from './structured-logger';
 import { getEncryptionService } from "../services/secure-encryption-service";
+import { createSafeLogger } from "./structured-logger";
 
 interface CachedCredentials {
   apiKey: string;
@@ -32,10 +32,10 @@ interface CredentialCacheMetrics {
 }
 
 class CredentialCache {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createLogger("credential-cache");
+      this._logger = createSafeLogger("credential-cache");
     }
     return this._logger;
   }

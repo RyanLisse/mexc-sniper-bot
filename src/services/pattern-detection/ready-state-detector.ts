@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from "events";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import {
   calculateActivityBoost,
   getUniqueActivityTypes,
@@ -33,7 +33,7 @@ export interface PreReadyScore {
  */
 export class ReadyStateDetector extends EventEmitter {
   private readonly MIN_ADVANCE_HOURS = PATTERN_CONSTANTS.MIN_ADVANCE_HOURS;
-  private logger = createLogger("ready-state-detector");
+  private logger = createSafeLogger("ready-state-detector");
 
   constructor() {
     super();

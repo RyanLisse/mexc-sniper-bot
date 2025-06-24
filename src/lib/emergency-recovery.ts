@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { executionHistory } from "../db/schema";
 import { getConnectivityStatus, performSystemHealthCheck } from "./health-checks";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 export interface EmergencyRecoveryPlan {
   emergencyType: string;
@@ -29,7 +29,7 @@ export interface RecoveryResult {
 }
 
 export class EmergencyRecoveryService {
-  private logger = createLogger("emergency-recovery");
+  private logger = createSafeLogger("emergency-recovery");
 
   /**
    * Execute emergency recovery based on detected issues

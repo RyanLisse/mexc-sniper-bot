@@ -15,7 +15,7 @@
 
 import * as crypto from "node:crypto";
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { MexcApiClient } from "./mexc-api-client";
 
 // ============================================================================
@@ -73,7 +73,7 @@ export interface AuthenticationMetrics {
  * Handles all credential validation and authentication status
  */
 export class MexcAuthenticationService {
-  private logger = createLogger("mexc-authentication-service");
+  private logger = createSafeLogger("mexc-authentication-service");
 
   private config: AuthenticationConfig;
   private status: AuthenticationStatus;

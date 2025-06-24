@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { db } from "../../../src/db";
 import { executionHistory, snipeTargets } from "../../../src/db/schema";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 
-// MOVED: const logger = createLogger('route');
+// MOVED: const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
+  const logger = createSafeLogger('execution-history');
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");

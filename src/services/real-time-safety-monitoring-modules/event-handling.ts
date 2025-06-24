@@ -7,7 +7,7 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createLogger, createTimer } from "../../lib/structured-logger";
+import { createSafeLogger, createTimer } from "../../lib/structured-logger";
 import type { ScheduledOperation } from "../../schemas/safety-monitoring-schemas";
 import { validateScheduledOperation } from "../../schemas/safety-monitoring-schemas";
 
@@ -61,7 +61,7 @@ export class EventHandling {
   private readonly baseTickMs: number;
   private readonly maxConcurrentOperations: number;
   private readonly operationTimeoutMs: number;
-  private logger = createLogger("event-handling");
+  private logger = createSafeLogger("event-handling");
 
   private stats = {
     totalExecutions: 0,

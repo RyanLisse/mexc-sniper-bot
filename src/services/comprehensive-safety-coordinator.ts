@@ -18,7 +18,7 @@
 
 import EventEmitter from "events";
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 export { EmergencyManager } from "./safety/emergency-management";
 
@@ -56,7 +56,13 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
   private config: SafetyCoordinatorConfig;
   private alertsManager: SafetyAlertsManager;
   private emergencyManager: EmergencyManager;
-  private logger = createLogger("safety-coordinator");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("safety-coordinator");
+    }
+    return this._logger;
+  }
   private status: ComprehensiveSafetyStatus;
   private isActive = false;
 

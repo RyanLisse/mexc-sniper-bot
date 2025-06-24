@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

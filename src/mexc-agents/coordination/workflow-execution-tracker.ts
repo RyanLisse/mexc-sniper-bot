@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type {
   WorkflowContext,
   WorkflowExecutionResult,
@@ -9,7 +9,7 @@ import type {
  * Workflow execution tracking, metadata generation, and history management
  */
 export class WorkflowExecutionTracker {
-  private logger = createLogger("workflow-execution-tracker");
+  private logger = createSafeLogger("workflow-execution-tracker");
   private executionHistory: WorkflowExecutionResult[] = [];
   private maxHistorySize = 1000;
 

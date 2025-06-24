@@ -15,7 +15,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { patternEmbeddings } from "../../db/schemas/patterns";
 import { toSafeError } from "../../lib/error-type-utils";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type { IPatternStorage } from "./interfaces";
 
@@ -27,7 +27,7 @@ import type { IPatternStorage } from "./interfaces";
  */
 export class PatternStorage implements IPatternStorage {
   private static instance: PatternStorage;
-  private logger = createLogger("pattern-storage");
+  private logger = createSafeLogger("pattern-storage");
 
   // In-memory cache for performance
   private cache = new Map<string, any>();

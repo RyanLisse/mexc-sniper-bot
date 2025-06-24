@@ -5,13 +5,92 @@
  * Webpack-optimized with static exports for proper bundling
  */
 
-// Import build-safe logger as fallback
-import { createBuildSafeLogger, type BuildSafeLogger } from './build-safe-logger';
+// Build-safe logger implementation inline to avoid import issues during webpack bundling
 
 // Build-safe trace fallback - completely static, no dynamic imports
 const NOOP_TRACE = {
   getActiveSpan: () => null,
 } as const;
+
+/**
+ * Build-safe logger that always works during webpack bundling
+ */
+class BuildSafeLogger {
+  private component: string;
+  private service: string;
+
+  constructor(component: string, service: string = "mexc-trading-bot") {
+    this.component = component || "unknown";
+    this.service = service || "mexc-trading-bot";
+  }
+
+  private formatMessage(level: string, message: string, context?: LogContext): string {
+    const timestamp = new Date().toISOString();
+    const contextStr =
+      context && Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : "";
+    return `${timestamp} [${level.toUpperCase()}] ${this.component}: ${message}${contextStr}`;
+  }
+
+  debug(message: string, context?: LogContext): void {
+    console.debug(this.formatMessage("debug", message, context));
+  }
+
+  info(message: string, context?: LogContext): void {
+    console.info(this.formatMessage("info", message, context));
+  }
+
+  warn(message: string, context?: LogContext): void {
+    console.warn(this.formatMessage("warn", message, context));
+  }
+
+  error(message: string, context?: LogContext, error?: Error): void {
+    const errorContext = {
+      ...context,
+      error: error?.message,
+      stack: error?.stack,
+    };
+    console.error(this.formatMessage("error", message, errorContext));
+  }
+
+  fatal(message: string, context?: LogContext, error?: Error): void {
+    this.error(`FATAL: ${message}`, context, error);
+  }
+
+  // Compatibility methods for existing code
+  trading(operation: string, context: LogContext): void {
+    this.info(`Trading: ${operation}`, context);
+  }
+
+  pattern(patternType: string, confidence: number, context?: LogContext): void {
+    this.info(`Pattern detected: ${patternType}`, { ...context, confidence });
+  }
+
+  api(endpoint: string, method: string, responseTime: number, context?: LogContext): void {
+    this.info(`API call: ${method} ${endpoint}`, { ...context, responseTime });
+  }
+
+  agent(agentId: string, taskType: string, context?: LogContext): void {
+    this.info(`Agent: ${agentId} - ${taskType}`, { ...context, agentId, taskType });
+  }
+
+  performance(operation: string, duration: number, context?: LogContext): void {
+    const level = duration > 1000 ? "warn" : "info";
+    this[level](`Performance: ${operation} completed in ${duration}ms`, { ...context, duration });
+  }
+
+  cache(operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext): void {
+    this.debug(`Cache ${operation}: ${key}`, {
+      ...context,
+      cacheOperation: operation,
+      cacheKey: key,
+    });
+  }
+
+  safety(event: string, riskScore: number, context?: LogContext): void {
+    const level = riskScore > 70 ? "warn" : "info";
+    this[level](`Safety: ${event}`, { ...context, riskScore, safetyEvent: event });
+  }
+}
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -72,7 +151,8 @@ export class StructuredLogger {
     this.service = service;
     this.component = component;
     // Ensure we safely access process.env during build time
-    const envLogLevel = typeof process !== 'undefined' && process.env ? process.env.LOG_LEVEL : undefined;
+    const envLogLevel =
+      typeof process !== "undefined" && process.env ? process.env.LOG_LEVEL : undefined;
     this.logLevel = this.parseLogLevel(envLogLevel || logLevel);
   }
 
@@ -126,7 +206,8 @@ export class StructuredLogger {
     if (!this.shouldLog(entry.level)) return;
 
     // Safely check environment during build time
-    const isProduction = typeof process !== 'undefined' && process.env && process.env.NODE_ENV === "production";
+    const isProduction =
+      typeof process !== "undefined" && process.env && process.env.NODE_ENV === "production";
 
     // Format for console output (development) or structured output (production)
     if (isProduction) {
@@ -288,40 +369,20 @@ export class StructuredLogger {
  * Create logger instance for a specific component
  * Build-safe factory function that handles webpack bundling gracefully
  */
-export function createLogger(component: string, service: string = "mexc-trading-bot"): StructuredLogger {
+export function createSafeLogger(
+  component: string,
+  service: string = "mexc-trading-bot"
+): StructuredLogger {
   // Validate inputs to ensure build-time safety
-  if (typeof component !== 'string' || !component) {
-    component = 'unknown';
+  if (typeof component !== "string" || !component) {
+    component = "unknown";
   }
-  if (typeof service !== 'string' || !service) {
-    service = 'mexc-trading-bot';
+  if (typeof service !== "string" || !service) {
+    service = "mexc-trading-bot";
   }
-  
-  // During webpack build process, environment checks might fail
-  // Use build-safe logger as fallback for maximum compatibility
-  if (typeof process === 'undefined' || typeof window !== 'undefined') {
-    return createBuildSafeLogger(component, service) as unknown as StructuredLogger;
-  }
-  
-  try {
-    return new StructuredLogger(service, component);
-  } catch (error) {
-    // If StructuredLogger construction fails, use build-safe fallback
-    return createBuildSafeLogger(component, service) as unknown as StructuredLogger;
-  }
-}
 
-/**
- * Build-safe logger factory with error handling
- */
-export function createSafeLogger(component: string, service: string = "mexc-trading-bot"): StructuredLogger {
-  try {
-    return createLogger(component, service);
-  } catch (error) {
-    // Fallback to console logging if structured logger fails
-    console.warn('Failed to create structured logger, falling back to console:', error);
-    return createFallbackLogger(component, service);
-  }
+  // Always use the main StructuredLogger for consistency
+  return new StructuredLogger(service, component);
 }
 
 /**
@@ -331,20 +392,32 @@ export function createSafeLogger(component: string, service: string = "mexc-trad
 function createFallbackLogger(component: string, service: string): StructuredLogger {
   // Create a minimal logger-like object that mimics StructuredLogger interface
   const fallbackLogger = {
-    debug: (message: string, context?: LogContext) => console.debug(`[${component}] ${message}`, context || {}),
-    info: (message: string, context?: LogContext) => console.info(`[${component}] ${message}`, context || {}),
-    warn: (message: string, context?: LogContext) => console.warn(`[${component}] ${message}`, context || {}),
-    error: (message: string, context?: LogContext, error?: Error) => console.error(`[${component}] ${message}`, context || {}, error || ''),
-    fatal: (message: string, context?: LogContext, error?: Error) => console.error(`[${component}] FATAL: ${message}`, context || {}, error || ''),
-    trading: (operation: string, context: LogContext) => console.info(`[${component}] Trading: ${operation}`, context),
-    pattern: (patternType: string, confidence: number, context?: LogContext) => console.info(`[${component}] Pattern: ${patternType} (${confidence})`, context || {}),
-    api: (endpoint: string, method: string, responseTime: number, context?: LogContext) => console.info(`[${component}] API: ${method} ${endpoint} (${responseTime}ms)`, context || {}),
-    agent: (agentId: string, taskType: string, context?: LogContext) => console.info(`[${component}] Agent: ${agentId} - ${taskType}`, context || {}),
-    performance: (operation: string, duration: number, context?: LogContext) => console.info(`[${component}] Performance: ${operation} (${duration}ms)`, context || {}),
-    cache: (operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext) => console.debug(`[${component}] Cache ${operation}: ${key}`, context || {}),
-    safety: (event: string, riskScore: number, context?: LogContext) => console.warn(`[${component}] Safety: ${event} (risk: ${riskScore})`, context || {}),
+    debug: (message: string, context?: LogContext) =>
+      console.debug(`[${component}] ${message}`, context || {}),
+    info: (message: string, context?: LogContext) =>
+      console.info(`[${component}] ${message}`, context || {}),
+    warn: (message: string, context?: LogContext) =>
+      console.warn(`[${component}] ${message}`, context || {}),
+    error: (message: string, context?: LogContext, error?: Error) =>
+      console.error(`[${component}] ${message}`, context || {}, error || ""),
+    fatal: (message: string, context?: LogContext, error?: Error) =>
+      console.error(`[${component}] FATAL: ${message}`, context || {}, error || ""),
+    trading: (operation: string, context: LogContext) =>
+      console.info(`[${component}] Trading: ${operation}`, context),
+    pattern: (patternType: string, confidence: number, context?: LogContext) =>
+      console.info(`[${component}] Pattern: ${patternType} (${confidence})`, context || {}),
+    api: (endpoint: string, method: string, responseTime: number, context?: LogContext) =>
+      console.info(`[${component}] API: ${method} ${endpoint} (${responseTime}ms)`, context || {}),
+    agent: (agentId: string, taskType: string, context?: LogContext) =>
+      console.info(`[${component}] Agent: ${agentId} - ${taskType}`, context || {}),
+    performance: (operation: string, duration: number, context?: LogContext) =>
+      console.info(`[${component}] Performance: ${operation} (${duration}ms)`, context || {}),
+    cache: (operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext) =>
+      console.debug(`[${component}] Cache ${operation}: ${key}`, context || {}),
+    safety: (event: string, riskScore: number, context?: LogContext) =>
+      console.warn(`[${component}] Safety: ${event} (risk: ${riskScore})`, context || {}),
   };
-  
+
   return fallbackLogger as StructuredLogger;
 }
 
@@ -354,34 +427,60 @@ function createFallbackLogger(component: string, service: string): StructuredLog
  */
 export const logger = {
   // Core services
-  get trading() { return createLogger("trading"); },
-  get pattern() { return createLogger("pattern-detection"); },
-  get safety() { return createLogger("safety"); },
-  get api() { return createLogger("api"); },
+  get trading() {
+    return createSafeLogger("trading");
+  },
+  get pattern() {
+    return createSafeLogger("pattern-detection");
+  },
+  get safety() {
+    return createSafeLogger("safety");
+  },
+  get api() {
+    return createSafeLogger("api");
+  },
 
   // Infrastructure
-  get cache() { return createLogger("cache"); },
-  get database() { return createLogger("database"); },
-  get websocket() { return createLogger("websocket"); },
+  get cache() {
+    return createSafeLogger("cache");
+  },
+  get database() {
+    return createSafeLogger("database");
+  },
+  get websocket() {
+    return createSafeLogger("websocket");
+  },
 
   // Agent system
-  get agent() { return createLogger("agent"); },
-  get coordination() { return createLogger("coordination"); },
+  get agent() {
+    return createSafeLogger("agent");
+  },
+  get coordination() {
+    return createSafeLogger("coordination");
+  },
 
   // Monitoring
-  get monitoring() { return createLogger("monitoring"); },
-  get performance() { return createLogger("performance"); },
+  get monitoring() {
+    return createSafeLogger("monitoring");
+  },
+  get performance() {
+    return createSafeLogger("performance");
+  },
 
   // General purpose
-  get system() { return createLogger("system"); },
-  get default() { return createLogger("default"); },
+  get system() {
+    return createSafeLogger("system");
+  },
+  get default() {
+    return createSafeLogger("default");
+  },
 };
 
 /**
  * Migration helper for console.log replacement
  */
 export function replaceConsoleLog(component: string) {
-  const componentLogger = createLogger(component);
+  const componentLogger = createSafeLogger(component);
 
   return {
     log: (message: string, context?: LogContext) => componentLogger.info(message, context),
@@ -418,7 +517,7 @@ export class PerformanceTimer {
  * Create performance timer
  */
 export function createTimer(operation: string, component: string): PerformanceTimer {
-  const logger = createLogger(component);
+  const logger = createSafeLogger(component);
   return new PerformanceTimer(operation, logger);
 }
 

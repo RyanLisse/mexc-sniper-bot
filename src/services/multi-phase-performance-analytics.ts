@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { MultiPhaseExecutor } from "./multi-phase-executor";
 
 export interface PerformanceSummary {
@@ -47,7 +47,7 @@ export interface PersistenceOperations {
  * Performance analytics and maintenance for multi-phase trading
  */
 export class MultiPhasePerformanceAnalytics {
-  private logger = createLogger("multi-phase-performance-analytics");
+  private logger = createSafeLogger("multi-phase-performance-analytics");
 
   constructor(
     private entryPrice: number,

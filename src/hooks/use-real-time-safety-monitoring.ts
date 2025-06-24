@@ -15,7 +15,7 @@ import type {
   SafetyConfiguration,
   SafetyMonitoringReport,
 } from "@/src/schemas/safety-monitoring-schemas";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 export interface UseRealTimeSafetyMonitoringOptions {
   autoRefresh?: boolean;
@@ -76,7 +76,7 @@ export interface RealTimeSafetyMonitoringActions {
   clearError: () => void;
 }
 
-const logger = createLogger("use-real-time-safety-monitoring");
+const logger = createSafeLogger("use-real-time-safety-monitoring");
 
 export function useRealTimeSafetyMonitoring(
   options: UseRealTimeSafetyMonitoringOptions = {}

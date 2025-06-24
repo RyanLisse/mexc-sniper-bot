@@ -14,7 +14,7 @@
 import { z } from "zod";
 import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { PatternType } from "./optimized-auto-sniping-core";
 
 // ============================================================================
@@ -89,7 +89,7 @@ export type EnhancedPatternMatch = z.infer<typeof EnhancedPatternMatchSchema>;
 
 export class OptimizedPatternMonitor {
   private static instance: OptimizedPatternMonitor;
-  private logger = createLogger("optimized-pattern-monitor");
+  private logger = createSafeLogger("optimized-pattern-monitor");
 
   // Pattern detection engine
   private patternEngine: PatternDetectionCore;

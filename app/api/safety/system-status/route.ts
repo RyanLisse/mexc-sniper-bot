@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { requireAuth } from "../../../../src/lib/kinde-auth";
 import { apiResponse } from "../../../../src/lib/api-response";
 import { AdvancedRiskEngine } from "../../../../src/services/advanced-risk-engine";
@@ -23,10 +23,10 @@ emergencySystem.setRiskEngine(riskEngine);
 safetyMonitor.setIntegrations(riskEngine, emergencySystem);
 
 // Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createLogger> | undefined;
+let _logger: ReturnType<typeof createSafeLogger> | undefined;
 function getLogger() {
   if (!_logger) {
-    _logger = createLogger('route');
+    _logger = createSafeLogger('route');
   }
   return _logger;
 }

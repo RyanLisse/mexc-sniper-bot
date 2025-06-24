@@ -1,4 +1,4 @@
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 /**
  * Database Query Optimizer
@@ -46,7 +46,7 @@ interface BatchQueryOperation<T> {
 }
 
 export class DatabaseQueryOptimizer {
-  private logger = createLogger("database-query-optimizer");
+  private logger = createSafeLogger("database-query-optimizer");
 
   private static instance: DatabaseQueryOptimizer;
   private config: QueryOptimizationConfig;

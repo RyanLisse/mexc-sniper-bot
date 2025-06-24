@@ -8,7 +8,7 @@
 
 import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
 import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
-import { createLogger, createTimer } from "../lib/structured-logger";
+import { createSafeLogger, createTimer } from "../lib/structured-logger";
 import { EmergencySafetySystem } from "./emergency-safety-system";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
 import {
@@ -49,7 +49,7 @@ export class OptimizedAutoSnipingExecutionEngine {
   private patternMonitoring: PatternMonitoringService;
   private mexcService: UnifiedMexcServiceV2;
   private safetySystem: EmergencySafetySystem;
-  private logger = createLogger("optimized-auto-sniping-execution");
+  private logger = createSafeLogger("optimized-auto-sniping-execution");
 
   private config: AutoSnipingConfig;
   private isExecutionActive = false;

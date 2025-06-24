@@ -14,7 +14,7 @@
  */
 
 import { EventEmitter } from "events";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   AgentStatusMessage,
   MessageHandler,
@@ -38,7 +38,7 @@ interface QueuedMessage {
 }
 
 class MessageQueue {
-  private logger = createLogger("websocket-client");
+  private logger = createSafeLogger("websocket-client");
 
   private queue: QueuedMessage[] = [];
   private readonly maxSize: number;

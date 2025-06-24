@@ -8,7 +8,7 @@
 
 import type { PatternMatch } from "../core/pattern-detection";
 import { PatternDetectionCore } from "../core/pattern-detection";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 export interface PatternEventData {
@@ -37,7 +37,7 @@ export interface BridgeStatistics {
 
 export class PatternTargetBridgeService {
   private static instance: PatternTargetBridgeService;
-  private logger = createLogger("pattern-target-bridge");
+  private logger = createSafeLogger("pattern-target-bridge");
   private isListening = false;
 
   // Statistics tracking

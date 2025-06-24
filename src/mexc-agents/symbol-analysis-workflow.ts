@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import {
   type AnalysisResult,
   combineConfidenceScores,
@@ -48,7 +48,7 @@ export interface SymbolAnalysisResult {
 }
 
 export class SymbolAnalysisWorkflow {
-  private logger = createLogger("symbol-analysis-workflow");
+  private logger = createSafeLogger("symbol-analysis-workflow");
 
   async combineSymbolAnalysis(
     readinessAnalysis: AgentResponse,

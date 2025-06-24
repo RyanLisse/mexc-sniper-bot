@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { AgentResponse } from "../base-agent";
 import type { AgentRegistry } from "./agent-registry";
 import type {
@@ -11,7 +11,7 @@ import type {
  * Workflow step execution with comprehensive error handling
  */
 export class WorkflowStepExecutor {
-  private logger = createLogger("workflow-step-executor");
+  private logger = createSafeLogger("workflow-step-executor");
 
   constructor(private agentRegistry: AgentRegistry) {}
 

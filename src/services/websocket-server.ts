@@ -22,7 +22,7 @@ import {
   instrumentChannelOperation,
   instrumentWebSocketSend,
 } from "../lib/opentelemetry-websocket-instrumentation";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   AgentStatusMessage,
   ConnectionMetrics,
@@ -42,7 +42,7 @@ import type {
 // ======================
 
 class ConnectionManager {
-  private logger = createLogger("websocket-server");
+  private logger = createSafeLogger("websocket-server");
 
   private connections = new Map<string, WebSocketConnection & { ws: WebSocket }>();
   private userConnections = new Map<string, Set<string>>();

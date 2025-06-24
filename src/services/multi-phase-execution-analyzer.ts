@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   ExecutionAnalytics,
   ExecutionSummary,
@@ -11,7 +11,7 @@ import type { TradingStrategyConfig } from "./multi-phase-trading-service";
  * Analyzes multi-phase execution performance and provides detailed metrics
  */
 export class MultiPhaseExecutionAnalyzer {
-  private logger = createLogger("multi-phase-execution-analyzer");
+  private logger = createSafeLogger("multi-phase-execution-analyzer");
 
   /**
    * Calculate comprehensive execution summary

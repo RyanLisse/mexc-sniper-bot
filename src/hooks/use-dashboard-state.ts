@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 interface WorkflowStatus {
   systemStatus: "running" | "stopped" | "error";
@@ -27,7 +27,7 @@ interface UseDashboardStateOptions {
   userId?: string;
 }
 
-const logger = createLogger("use-dashboard-state");
+const logger = createSafeLogger("use-dashboard-state");
 
 export function useDashboardState(options: UseDashboardStateOptions = {}) {
   const { refreshInterval = 10000, userId: _userId } = options;

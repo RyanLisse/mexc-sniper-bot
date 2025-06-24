@@ -6,12 +6,12 @@
  */
 
 import { EventEmitter } from "events";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { WebSocketServerService } from "../websocket-server";
 import type { SafetyAction, SafetyAlert, SafetyCoordinatorConfig } from "./safety-types";
 
 export class SafetyAlertsManager extends EventEmitter {
-  private logger = createLogger("safety-alerts");
+  private logger = createSafeLogger("safety-alerts");
 
   private activeAlerts: Map<string, SafetyAlert> = new Map();
   private alertHistory: SafetyAlert[] = [];

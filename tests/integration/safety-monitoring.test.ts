@@ -22,7 +22,7 @@ vi.mock('../../src/lib/auth-decorators', () => ({
 
 // Mock logger to avoid logging noise during tests
 vi.mock('../../src/lib/structured-logger', () => ({
-  createLogger: () => ({
+  createSafeLogger: () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),

@@ -8,7 +8,7 @@
 import { count } from "drizzle-orm";
 import { db } from "../db";
 import { strategyTemplates } from "../db/schemas/strategies";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { multiPhaseTradingService } from "./multi-phase-trading-service";
 
 export interface StrategySystemHealth {
@@ -20,7 +20,7 @@ export interface StrategySystemHealth {
 }
 
 export class StrategyInitializationService {
-  private logger = createLogger("strategy-initialization-service");
+  private logger = createSafeLogger("strategy-initialization-service");
 
   private static instance: StrategyInitializationService;
   private initializationPromise: Promise<void> | null = null;

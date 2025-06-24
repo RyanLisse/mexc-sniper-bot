@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { AgentRegistry } from "./agent-registry";
 import { WorkflowDependencyResolver } from "./workflow-dependency-resolver";
 import type {
@@ -16,7 +16,13 @@ import { WorkflowValidator } from "./workflow-validator";
  * parallel/sequential execution, and comprehensive failure handling
  */
 export class WorkflowEngine {
-  private logger = createLogger("workflow-engine");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("workflow-engine");
+    }
+    return this._logger;
+  }
 
   private agentRegistry: AgentRegistry;
   private runningWorkflows: Map<string, WorkflowContext> = new Map();

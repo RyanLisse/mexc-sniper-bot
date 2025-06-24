@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * STARTUP INITIALIZATION
  *
  * Handles all system initialization tasks that should run when the application starts
@@ -21,7 +21,7 @@ interface StartupResult {
 }
 
 export class StartupInitializer {
-  private logger = createLogger("startup-initialization");
+  private logger = createSafeLogger("startup-initialization");
 
   private static instance: StartupInitializer;
   private isInitialized = false;

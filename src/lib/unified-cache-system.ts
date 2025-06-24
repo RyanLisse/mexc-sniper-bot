@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Unified Cache System for MEXC Sniper Bot
  *
  * This system consolidates all caching functionality from:
@@ -130,7 +130,7 @@ interface CacheBackend<T = any> {
  * L1 Cache: In-Memory LRU Cache
  */
 class MemoryCache implements CacheBackend {
-  private logger = createLogger("unified-cache-system");
+  private logger = createSafeLogger("unified-cache-system");
 
   private cache = new Map<string, CacheEntry>();
   private accessOrder = new Map<string, number>();

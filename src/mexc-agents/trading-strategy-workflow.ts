@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { extractConfidencePercentage, sanitizeSymbolName } from "./analysis-utils";
 import type { AgentResponse } from "./base-agent";
 
@@ -56,7 +56,7 @@ export interface ExecutionPlan {
 }
 
 export class TradingStrategyWorkflow {
-  private logger = createLogger("trading-strategy-workflow");
+  private logger = createSafeLogger("trading-strategy-workflow");
 
   async compileTradingStrategy(
     strategyAnalysis: AgentResponse,

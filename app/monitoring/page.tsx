@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { createLogger } from '../../src/lib/structured-logger';
+import { createSafeLogger } from '../../src/lib/structured-logger';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,7 +62,7 @@ interface QuickMetrics {
   criticalAlerts: number;
 }
 
-const logger = createLogger('page');
+const logger = createSafeLogger('page');
 
 export default function MonitoringPage() {
   const [quickMetrics, setQuickMetrics] = useState<QuickMetrics | null>(null);

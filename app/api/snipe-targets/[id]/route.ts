@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { db } from "../../../../src/db";
 import { snipeTargets } from "../../../../src/db/schema";
 import { eq } from "drizzle-orm";
 
-// MOVED: const logger = createLogger('route');
+// MOVED: const logger = createSafeLogger('route');
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const resolvedParams = await params;
     const body = await request.json();
@@ -88,7 +88,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const resolvedParams = await params;
     const targetId = parseInt(resolvedParams.id);
@@ -138,7 +138,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const resolvedParams = await params;
     const targetId = parseInt(resolvedParams.id);

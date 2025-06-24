@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../src/db";
 import { AutomatedAlertingService } from "../../../../src/services/automated-alerting-service";
@@ -12,7 +12,7 @@ const alertingService = new AutomatedAlertingService(db);
 // ==========================================
 // GET /api/alerts/instances - List alert instances
 // ==========================================
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

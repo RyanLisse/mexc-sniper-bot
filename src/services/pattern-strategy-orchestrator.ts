@@ -18,7 +18,7 @@ import {
 } from "../core/pattern-detection";
 import { db } from "../db";
 import { monitoredListings } from "../db/schemas/patterns";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { AgentResponse } from "../mexc-agents/base-agent";
 import { CalendarAgent } from "../mexc-agents/calendar-agent";
 import { PatternDiscoveryAgent } from "../mexc-agents/pattern-discovery-agent";
@@ -129,10 +129,10 @@ export interface ResourceAllocation {
 // ============================================================================
 
 export class PatternStrategyOrchestrator {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("pattern-strategy-orchestrator");
+      this._logger = createSafeLogger("pattern-strategy-orchestrator");
     }
     return this._logger;
   }

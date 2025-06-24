@@ -15,7 +15,7 @@
 import { z } from "zod";
 import type { PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { ExecutionPosition } from "./optimized-auto-sniping-core";
 import {
   TRADING_STRATEGIES,
@@ -109,7 +109,7 @@ export type StrategySelectionCriteria = z.infer<typeof StrategySelectionCriteria
 
 export class OptimizedTradingStrategyEngine {
   private static instance: OptimizedTradingStrategyEngine;
-  private logger = createLogger("optimized-trading-strategy-engine");
+  private logger = createSafeLogger("optimized-trading-strategy-engine");
 
   // Enhanced strategies with performance tracking
   private enhancedStrategies = new Map<string, EnhancedTradingStrategy>();

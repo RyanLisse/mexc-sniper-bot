@@ -15,7 +15,7 @@
 
 import { useState } from "react";
 import { useStatus } from "../contexts/status-context";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import {
   CredentialStatusIndicator,
   NetworkStatusIndicator,
@@ -32,7 +32,7 @@ interface ConsolidatedCredentialStatusProps {
   className?: string;
 }
 
-const logger = createLogger("enhanced-credential-status-consolidated");
+const logger = createSafeLogger("enhanced-credential-status-consolidated");
 
 export function ConsolidatedCredentialStatus({
   variant = "detailed",
@@ -121,7 +121,9 @@ export function ConsolidatedCredentialStatus({
     try {
       await refreshStatus();
     } catch (error) {
-      logger.error("Failed to refresh status:", { error: error instanceof Error ? error.message : String(error) });
+      logger.error("Failed to refresh status:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       setIsRefreshing(false);
     }

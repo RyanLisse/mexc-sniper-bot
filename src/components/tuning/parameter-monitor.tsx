@@ -1,5 +1,5 @@
 "use client";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 
 /**
  * Parameter Monitor Component
@@ -64,7 +64,7 @@ interface ParameterChange {
   reason?: string;
 }
 
-const logger = createLogger("parameter-monitor");
+const logger = createSafeLogger("parameter-monitor");
 
 export function ParameterMonitor() {
   const [parameters, setParameters] = useState<Parameter[]>([]);

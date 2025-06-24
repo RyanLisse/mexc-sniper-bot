@@ -1,5 +1,5 @@
 "use client";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 /**
  * Parameter Optimization Dashboard
@@ -144,7 +144,7 @@ const mockOptimizationRuns = [
   },
 ];
 
-const logger = createLogger("parameter-optimization-dashboard");
+const logger = createSafeLogger("parameter-optimization-dashboard");
 
 export function ParameterOptimizationDashboard() {
   const [activeOptimizations, setActiveOptimizations] = useState<OptimizationStatus[]>([]);

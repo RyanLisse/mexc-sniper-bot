@@ -1,4 +1,4 @@
-import { createLogger } from "../structured-logger";
+import { createSafeLogger } from "../structured-logger";
 
 /**
  * Workflow Cache Manager
@@ -22,7 +22,7 @@ import type {
 } from "./agent-cache-types";
 
 export class WorkflowCache {
-  private logger = createLogger("workflow-cache");
+  private logger = createSafeLogger("workflow-cache");
 
   private config: AgentCacheConfig;
   private workflowCache: Map<string, WorkflowCacheEntry> = new Map();

@@ -1,10 +1,10 @@
 import { emergencyRecoveryService } from "../lib/emergency-recovery";
 import { getConnectivityStatus, performSystemHealthCheck } from "../lib/health-checks";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { inngest } from "./client";
 
 // Helper function to update workflow status
-const logger = createLogger("scheduled-functions");
+const logger = createSafeLogger("scheduled-functions");
 
 async function updateWorkflowStatus(action: string, data: unknown) {
   try {

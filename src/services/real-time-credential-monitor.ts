@@ -10,7 +10,7 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { ConnectionHealthMonitor } from "./connection-health-monitor";
 import { getGlobalHealthMonitor } from "./connection-health-monitor";
 import type {
@@ -72,7 +72,7 @@ export interface RealTimeMonitorConfig {
 // ============================================================================
 
 export class RealTimeCredentialMonitor {
-  private logger = createLogger("real-time-credential-monitor");
+  private logger = createSafeLogger("real-time-credential-monitor");
 
   private config: RealTimeMonitorConfig;
   private credentialValidator: EnhancedCredentialValidator;

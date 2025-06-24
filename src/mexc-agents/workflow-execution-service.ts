@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { AgentManager } from "./agent-manager";
 import type { CoordinationSystemManager } from "./coordination-manager";
 import type { DataFetcher } from "./data-fetcher";
@@ -17,7 +17,7 @@ import { WorkflowExecutor } from "./workflow-executor";
  * Extracted from MexcOrchestrator to follow Single Responsibility Principle
  */
 export class WorkflowExecutionService {
-  private logger = createLogger("workflow-execution-service");
+  private logger = createSafeLogger("workflow-execution-service");
 
   private workflowExecutor: WorkflowExecutor;
 

@@ -1,5 +1,5 @@
 /**
-import { createLogger } from '../../lib/structured-logger';
+import { createSafeLogger } from '../../lib/structured-logger';
  * Stress Testing & Validation Module
  *
  * Provides stress testing, scenario analysis, and risk validation functionality
@@ -70,7 +70,13 @@ export interface PortfolioRiskCalculation {
 }
 
 export class StressTestingValidation {
-  private logger = createLogger("stress-testing-validation");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("stress-testing-validation");
+    }
+    return this._logger;
+  }
 
   constructor(private config: StressTestingConfig) {}
 
@@ -147,7 +153,7 @@ export class StressTestingValidation {
     try {
       const position = this.config.positions.get(symbol);
       if (!position) {
-        logger.warn(`[StressTestingValidation] Position ${symbol} not found for risk update`);
+        this.logger.warn(`[StressTestingValidation] Position ${symbol} not found for risk update`);
         return;
       }
 
@@ -161,11 +167,11 @@ export class StressTestingValidation {
       position.size = riskData.positionSize * riskData.currentPrice;
       position.maxDrawdown = Math.max(position.maxDrawdown, drawdown);
 
-      logger.info(
+      this.logger.info(
         `[StressTestingValidation] Position risk updated for ${symbol}: ${drawdown.toFixed(2)}% drawdown`
       );
     } catch (error) {
-      logger.error("[StressTestingValidation] Position risk update failed:", error);
+      this.logger.error("[StressTestingValidation] Position risk update failed:", error);
     }
   }
 
@@ -270,7 +276,7 @@ export class StressTestingValidation {
         emergencyActionsTriggered,
       };
     } catch (error) {
-      logger.error("[StressTestingValidation] Stress test failed:", error);
+      this.logger.error("[StressTestingValidation] Stress test failed:", error);
       return {
         portfolioSurvival: false,
         maxDrawdown: 100,

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { createHealthResponse, apiResponse, handleApiError } from "../../../../src/lib/api-response";
 import { strategyInitializationService } from "../../../../src/services/strategy-initialization-service";
 import { multiPhaseTradingService } from "../../../../src/services/multi-phase-trading-service";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET() {
   try {

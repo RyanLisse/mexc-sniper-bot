@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Unified Configuration Management System
  *
  * Consolidates all configuration patterns across the application into a single,
@@ -326,7 +326,7 @@ export type Configuration = z.infer<typeof ConfigurationSchema>;
  * Provides centralized, type-safe configuration management
  */
 export class ConfigurationManager {
-  private logger = createLogger("unified-configuration-management");
+  private logger = createSafeLogger("unified-configuration-management");
 
   private static instance: ConfigurationManager | null = null;
   private config: Configuration;

@@ -14,7 +14,7 @@ import { getGlobalHealthMonitor } from "../../../../src/services/connection-heal
 import { getGlobalRealTimeMonitor } from "../../../../src/services/real-time-credential-monitor";
 import { getUserCredentials } from "../../../../src/services/user-credentials-service";
 import { toSafeError } from "../../../../src/lib/error-type-utils";
-import { createLogger } from "../../../../src/lib/structured-logger";
+import { createSafeLogger } from "../../../../src/lib/structured-logger";
 
 interface EnhancedConnectivityResponse {
   // Core Status
@@ -97,7 +97,7 @@ interface EnhancedConnectivityResponse {
   };
 }
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const requestId = `enhanced_conn_${Date.now()}_${Math.random().toString(36).substring(7)}`;

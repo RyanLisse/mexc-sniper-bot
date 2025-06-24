@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Agent Health Cache Manager
  *
  * Manages caching of agent health status with real-time monitoring capabilities.
@@ -18,11 +18,11 @@ import { generateCacheKey, globalCacheManager } from "../cache-manager";
 import type { AgentCacheConfig, AgentHealthCache } from "./agent-cache-types";
 
 export class AgentHealthCacheManager {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("agent-health-cache");
+      this._logger = createSafeLogger("agent-health-cache");
     }
     return this._logger;
   }

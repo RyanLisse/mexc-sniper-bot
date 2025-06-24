@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { PatternMonitoringService } from '@/src/services/pattern-monitoring-service';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
@@ -20,7 +20,7 @@ function getPatternMonitoringService() {
  * Get pattern monitoring report and statistics
  */
 export const GET = apiAuthWrapper(async (request: NextRequest) => {
-  const logger = createLogger('pattern-monitoring-api');
+  const logger = createSafeLogger('pattern-monitoring-api');
   try {
     const { searchParams } = new URL(request.url);
     const includeActivity = searchParams.get('include_activity') === 'true';
@@ -64,7 +64,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
  * Control pattern monitoring and trigger manual detection
  */
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
-  const logger = createLogger('pattern-monitoring-api');
+  const logger = createSafeLogger('pattern-monitoring-api');
   try {
     const body = await request.json();
     const { action, symbols, calendarEntries, alertId } = body;
@@ -226,7 +226,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
  * Update monitoring configuration
  */
 export const PUT = apiAuthWrapper(async (request: NextRequest) => {
-  const logger = createLogger('pattern-monitoring-api');
+  const logger = createSafeLogger('pattern-monitoring-api');
   try {
     const body = await request.json();
     const { config } = body;

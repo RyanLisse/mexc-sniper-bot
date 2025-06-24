@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { db, apiCredentials, type NewApiCredentials } from "../../../src/db";
 import { eq, and } from 'drizzle-orm';
 import { getEncryptionService, SecureEncryptionService } from "../../../src/services/secure-encryption-service";
@@ -18,7 +18,7 @@ import {
   validateRequiredFields
 } from "../../../src/lib/auth-decorators";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 // GET /api/api-credentials?userId=xxx&provider=mexc
 export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) => {

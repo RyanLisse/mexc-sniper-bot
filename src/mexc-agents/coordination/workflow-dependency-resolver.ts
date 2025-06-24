@@ -1,11 +1,11 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { WorkflowContext, WorkflowStepConfig } from "./workflow-engine-types";
 
 /**
  * Workflow dependency resolution and execution ordering
  */
 export class WorkflowDependencyResolver {
-  private logger = createLogger("workflow-dependency-resolver");
+  private logger = createSafeLogger("workflow-dependency-resolver");
 
   /**
    * Resolve step dependencies and return execution order

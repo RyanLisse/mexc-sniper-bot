@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 
 /**
  * Agent Coordination System
@@ -44,7 +44,7 @@ export type {
 export { WorkflowEngine } from "./workflow-engine";
 
 // Utility function to create a fully configured coordination system
-const logger = createLogger("index");
+const logger = createSafeLogger("index");
 
 export async function createCoordinationSystem(options?: {
   healthCheckInterval?: number;

@@ -8,7 +8,7 @@ export type {
   TradingStrategyWorkflowRequest,
 } from "./orchestrator-types";
 
-import { createLogger } from "../lib/structured-logger";
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { AgentManager } from "./agent-manager";
 import { type CoordinationSystemConfig, CoordinationSystemManager } from "./coordination-manager";
 import { DataFetcher } from "./data-fetcher";
@@ -33,13 +33,13 @@ export interface MexcOrchestratorOptions {
  * Refactored to follow Single Responsibility Principle and reduce complexity
  */
 export class MexcOrchestrator {
-  private _logger?: ReturnType<typeof createLogger>;
-  private get logger() {
-    if (!this._logger) {
-      this._logger = createLogger("orchestrator");
-    }
-    return this._logger;
-  }
+  // Simple console logger to avoid webpack bundling issues
+  private logger = {
+    info: (message: string, context?: any) => console.info('[orchestrator]', message, context || ''),
+    warn: (message: string, context?: any) => console.warn('[orchestrator]', message, context || ''),
+    error: (message: string, context?: any) => console.error('[orchestrator]', message, context || ''),
+    debug: (message: string, context?: any) => console.debug('[orchestrator]', message, context || ''),
+  };
 
   private agentManager: AgentManager;
   private dataFetcher: DataFetcher;

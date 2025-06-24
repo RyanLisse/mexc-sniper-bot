@@ -1,4 +1,4 @@
-import { createLogger } from "../structured-logger";
+import { createSafeLogger } from "../structured-logger";
 
 /**
  * Agent Response Cache
@@ -17,7 +17,7 @@ import type {
 } from "./agent-cache-types";
 
 export class AgentResponseCache {
-  private logger = createLogger("agent-response-cache");
+  private logger = createSafeLogger("agent-response-cache");
 
   private config: AgentCacheConfig;
 

@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Enhanced Unified Cache System with Redis/Valkey Integration
  *
  * Phase 2 Implementation: Redis/Valkey Caching & Performance Enhancement
@@ -86,7 +86,7 @@ export interface CachePerformanceMetrics {
 // ============================================================================
 
 export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
-  private logger = createLogger("enhanced-unified-cache");
+  private logger = createSafeLogger("enhanced-unified-cache");
 
   private redisCache: RedisCacheService;
   private enhancedConfig: EnhancedCacheConfig;

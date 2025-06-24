@@ -1,10 +1,10 @@
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 /**
  * Utility classes for error classification and handling
  */
 
 export class ValidationError extends Error {
-  private logger = createLogger("error-utils");
+  private logger = createSafeLogger("error-utils");
 
   constructor(
     message: string,

@@ -9,7 +9,7 @@
  */
 
 import { type PatternAnalysisRequest, PatternDetectionCore } from "../core/pattern-detection";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { CalendarAgent } from "../mexc-agents/calendar-agent";
 import { CalendarWorkflow } from "../mexc-agents/calendar-workflow";
 import type { CalendarEntry } from "../services/mexc-unified-exports";
@@ -40,7 +40,7 @@ export interface CalendarMonitoringStats {
 
 export class CalendarPatternBridgeService {
   private static instance: CalendarPatternBridgeService;
-  private logger = createLogger("calendar-pattern-bridge");
+  private logger = createSafeLogger("calendar-pattern-bridge");
   private isMonitoring = false;
   private monitoringInterval: NodeJS.Timer | null = null;
   private calendarAgent: CalendarAgent;

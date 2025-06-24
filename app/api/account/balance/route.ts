@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getUnifiedMexcService } from "../../../../src/services/unified-mexc-service-factory";
 import { 
   createSuccessResponse, 
@@ -18,7 +18,7 @@ import { balancePersistenceService } from "../../../../src/services/balance-pers
 import { publicRoute } from "../../../../src/lib/auth-decorators";
 
 export const GET = publicRoute(async (request: NextRequest) => {
-  const logger = createLogger('account-balance-api');
+  const logger = createSafeLogger('account-balance-api');
   const startTime = Date.now();
   
   try {

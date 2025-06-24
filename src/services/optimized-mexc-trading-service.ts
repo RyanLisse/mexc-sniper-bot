@@ -13,7 +13,8 @@ import type { NewExecutionHistory } from "../db/schema";
 import { apiCredentials, executionHistory } from "../db/schema";
 import { getCachedCredentials } from "../lib/credential-cache";
 import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
+import type { OrderParameters } from "./api/mexc-client-types";
 import { enhancedRiskManagementService } from "./enhanced-risk-management-service";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
 import {
@@ -23,7 +24,6 @@ import {
   validateTradingOrderResponse,
 } from "./optimized-auto-sniping-schemas";
 import { transactionLockService } from "./transaction-lock-service";
-import type { OrderParameters } from "./api/mexc-client-types";
 
 // ============================================================================
 // Schemas and Types
@@ -96,7 +96,7 @@ type TradeExecutionResult = z.infer<typeof TradeExecutionResultSchema>;
 // ============================================================================
 
 export class OptimizedMexcTradingService {
-  private logger = createLogger("optimized-mexc-trading");
+  private logger = createSafeLogger("optimized-mexc-trading");
 
   /**
    * Execute trading order with comprehensive validation and risk management

@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { OptimizedAutoSnipingCore } from '@/src/services/optimized-auto-sniping-core';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
@@ -17,7 +17,7 @@ function getExecutionService() {
 }
 
 function getLogger() {
-  return createLogger('route');
+  return createSafeLogger('route');
 }
 
 /**

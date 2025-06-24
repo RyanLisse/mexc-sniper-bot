@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { createApiResponse } from "../../../../src/lib/api-response";
 import { apiAuthWrapper } from "../../../../src/lib/api-auth";
 
@@ -91,9 +91,10 @@ const defaultConfiguration: Phase3Configuration = {
 // GET - Retrieve Configuration
 // ======================
 
-// MOVED: const logger = createLogger('route');
+// MOVED: const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
+  const logger = createSafeLogger('phase3-config');
   try {
     // In a real implementation, this would fetch from database
     // For now, return default configuration with environment-based overrides
@@ -126,6 +127,7 @@ export async function GET(request: NextRequest) {
 // ======================
 
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
+  const logger = createSafeLogger('phase3-config');
   try {
     const body = await request.json();
     const { configuration } = body;
@@ -197,6 +199,7 @@ async function getPhase3Configuration(): Promise<Phase3Configuration> {
 }
 
 async function savePhase3Configuration(configuration: Phase3Configuration): Promise<Phase3Configuration> {
+  const logger = createSafeLogger('phase3-config');
   // In a real implementation, this would save to database
   // For now, just return the configuration as if it was saved
   logger.info("[Phase3 Config] Configuration would be saved:", { context: configuration });

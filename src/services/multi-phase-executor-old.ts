@@ -1,5 +1,5 @@
 import type { TradingStrategy } from "../db/schemas/strategies";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { PriceMultiplier, TradingStrategyConfig } from "./multi-phase-trading-service";
 import { multiPhaseTradingService } from "./multi-phase-trading-service";
 
@@ -50,7 +50,7 @@ export interface PhaseToExecute {
 }
 
 export class MultiPhaseExecutor {
-  private logger = createLogger("multi-phase-executor");
+  private logger = createSafeLogger("multi-phase-executor");
 
   private executedPhases: Set<number> = new Set();
   private phaseHistory: PhaseExecutionHistory[] = [];

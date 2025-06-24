@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -11,9 +11,10 @@ import {
   HTTP_STATUS 
 } from "../../../../src/lib/api-response";
 
-// MOVED: const logger = createLogger('route');
+// MOVED: const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest) {
+  const logger = createSafeLogger('database-migrate');
   try {
     // Security check - only allow in production with proper headers
     const authHeader = request.headers.get('authorization');

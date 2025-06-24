@@ -16,7 +16,7 @@
  * improved modularity, testability, and maintainability.
  */
 
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 // Import types from schemas
 import type {
   MonitoringStats,
@@ -139,12 +139,12 @@ export class RealTimeSafetyMonitoringService {
   private patternMonitoring: PatternMonitoringService;
   private mexcService: UnifiedMexcServiceV2;
 
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private isMonitoringActive = false;
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("safety-monitoring");
+      this._logger = createSafeLogger("safety-monitoring");
     }
     return this._logger;
   }

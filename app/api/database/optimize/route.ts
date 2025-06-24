@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { databaseOptimizationManager } from "../../../../src/lib/database-optimization-manager";
 import { databasePerformanceAnalyzer } from "../../../../src/lib/database-performance-analyzer";
 import { databaseIndexOptimizer } from "../../../../src/lib/database-index-optimizer";
@@ -18,10 +18,10 @@ import { databaseConnectionPool } from "../../../../src/lib/database-connection-
 import { queryPerformanceMonitor } from "../../../../src/services/query-performance-monitor";
 
 // GET - Get current optimization status and metrics
-// MOVED: const logger = createLogger('route');
+// MOVED: const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get("action") || "status";
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
 
 // POST - Trigger database optimization
 export async function POST(request: NextRequest) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const body = await request.json().catch(() => ({}));
     const action = body.action || "optimize";
@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update optimization configuration
 export async function PUT(request: NextRequest) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const body = await request.json();
     const { target, config } = body;
@@ -295,7 +295,7 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Reset optimization settings
 export async function DELETE(request: NextRequest) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const target = searchParams.get("target") || "all";

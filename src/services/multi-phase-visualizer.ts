@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { MultiPhaseExecutionAnalyzer } from "./multi-phase-execution-analyzer";
 import type { PhaseExecutionHistory } from "./multi-phase-executor-types";
 import type { TradingStrategyConfig } from "./multi-phase-trading-service";
@@ -7,7 +7,7 @@ import type { TradingStrategyConfig } from "./multi-phase-trading-service";
  * Provides visual representations and status displays for multi-phase execution
  */
 export class MultiPhaseVisualizer {
-  private logger = createLogger("multi-phase-visualizer");
+  private logger = createSafeLogger("multi-phase-visualizer");
   private analyzer = new MultiPhaseExecutionAnalyzer();
 
   /**

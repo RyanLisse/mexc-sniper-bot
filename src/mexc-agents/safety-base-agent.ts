@@ -1,7 +1,7 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { type AgentConfig, BaseAgent } from "./base-agent";
 
-const logger = createLogger("safety-base-agent");
+const logger = createSafeLogger("safety-base-agent");
 
 export interface SafetyConfig {
   simulation: {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { createApiResponse } from "../../../../src/lib/api-response";
 import { apiAuthWrapper } from "../../../../src/lib/api-auth";
 
@@ -68,7 +68,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
   }
 });
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 async function triggerSingleStrategy(strategyName: string, force: boolean = false) {
   try {

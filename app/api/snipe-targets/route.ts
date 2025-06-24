@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { db } from "../../../src/db";
 import { snipeTargets } from "../../../src/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -13,7 +13,7 @@ import {
 import { handleApiError } from "../../../src/lib/error-handler";
 
 export async function POST(request: NextRequest) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const body = await request.json();
     const {
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");

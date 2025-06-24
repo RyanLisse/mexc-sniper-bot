@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { tradingStrategies } from "../db/schemas/strategies";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { CalendarAgent } from "../mexc-agents/calendar-agent";
 import { RiskManagerAgent } from "../mexc-agents/risk-manager-agent";
 import { StrategyAgent } from "../mexc-agents/strategy-agent";
@@ -17,7 +17,7 @@ import {
 } from "../services/multi-phase-trading-service";
 import { inngest } from "./client";
 
-const logger = createLogger("multi-phase-strategy-functions");
+const logger = createSafeLogger("multi-phase-strategy-functions");
 
 // ===========================================
 // MULTI-PHASE STRATEGY INNGEST WORKFLOWS

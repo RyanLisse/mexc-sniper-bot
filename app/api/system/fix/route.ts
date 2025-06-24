@@ -10,7 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
@@ -32,7 +32,7 @@ interface SystemFixReport {
   recommendations: string[];
 }
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest) {
   try {

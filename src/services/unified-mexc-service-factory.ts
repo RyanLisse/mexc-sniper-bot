@@ -8,10 +8,10 @@
 
 import { and, eq } from "drizzle-orm";
 import { apiCredentials, db } from "../db";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
+import { getUnifiedMexcClient, type UnifiedMexcClient } from "./api/mexc-client-factory";
+import type { UnifiedMexcConfig } from "./api/mexc-client-types";
 import { getEncryptionService } from "./secure-encryption-service";
-import { type UnifiedMexcClient, getUnifiedMexcClient } from "./api/mexc-client-factory";
-import { type UnifiedMexcConfig } from "./api/mexc-client-types";
 
 // ============================================================================
 // Service Factory Configuration
@@ -38,7 +38,7 @@ interface CachedCredential {
 }
 
 class CredentialCache {
-  private logger = createLogger("unified-mexc-service-factory");
+  private logger = createSafeLogger("unified-mexc-service-factory");
 
   private cache = new Map<string, CachedCredential>();
   private readonly defaultTTL = 300000; // 5 minutes
@@ -140,7 +140,7 @@ class ServiceInstanceCache {
 // ============================================================================
 
 export class UnifiedMexcServiceFactory {
-  private logger = createLogger("unified-mexc-service-factory");
+  private logger = createSafeLogger("unified-mexc-service-factory");
   private config: ServiceFactoryConfig;
   private credentialCache = new CredentialCache();
   private serviceCache = new ServiceInstanceCache();

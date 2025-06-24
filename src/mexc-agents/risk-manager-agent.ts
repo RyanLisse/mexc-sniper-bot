@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { AgentConfig, AgentResponse } from "./base-agent";
 import { SafetyBaseAgent, type SafetyConfig } from "./safety-base-agent";
 
@@ -51,7 +51,7 @@ export interface TradeRiskAssessment {
 }
 
 export class RiskManagerAgent extends SafetyBaseAgent {
-  private logger = createLogger("risk-manager-agent");
+  private logger = createSafeLogger("risk-manager-agent");
 
   private riskMetrics: RiskMetrics;
   private circuitBreakers: Map<string, CircuitBreaker> = new Map();

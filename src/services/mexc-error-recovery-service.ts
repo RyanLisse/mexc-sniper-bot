@@ -6,7 +6,7 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // ============================================================================
 // Types and Interfaces
@@ -44,7 +44,7 @@ export interface ErrorRecoveryResult<T> {
 // ============================================================================
 
 export class ErrorClassifier {
-  private logger = createLogger("mexc-error-recovery-service");
+  private logger = createSafeLogger("mexc-error-recovery-service");
 
   private readonly RETRYABLE_ERRORS = [
     "timeout",

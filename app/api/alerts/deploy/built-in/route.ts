@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../../src/db";
 import { AlertConfigurationService } from "../../../../../src/lib/alert-configuration";
@@ -12,7 +12,7 @@ import { handleApiError } from "../../../../../src/lib/api-response";
 // ==========================================
 
 export async function POST(request: NextRequest) {
-  const logger = createLogger('route');
+  const logger = createSafeLogger('route');
   try {
     const user = await validateRequest(request);
 
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const deployedRules = await alertConfigService.deployBuiltInRules(user.id);
 
     // Deploy example notification channels
-    const deployedChannels = await deployExampleNotificationChannels(user.id);
+    const deployedChannels = await deployExampleNotificationChannels(user.id, alertConfigService);
 
     return NextResponse.json({
       success: true,
@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function deployExampleNotificationChannels(createdBy: string): Promise<string[]> {
+async function deployExampleNotificationChannels(createdBy: string, alertConfigService: AlertConfigurationService): Promise<string[]> {
+  const logger = createSafeLogger('deploy-channels');
   const deployedChannels: string[] = [];
 
   // Example Email Channel for Critical Alerts

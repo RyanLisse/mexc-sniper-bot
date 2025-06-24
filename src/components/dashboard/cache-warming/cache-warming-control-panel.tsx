@@ -15,7 +15,7 @@ import {
   useCacheMetrics,
   useCacheWarmingTrigger,
 } from "../../../hooks/use-cache-metrics";
-import { createLogger } from "../../../lib/structured-logger";
+import { createSafeLogger } from "../../../lib/structured-logger";
 import { Alert, AlertDescription, AlertTitle } from "../../ui/alert";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
@@ -25,7 +25,7 @@ import { Skeleton } from "../../ui/skeleton";
 import { useToast } from "../../ui/use-toast";
 
 // Helper component for status icons
-const logger = createLogger("cache-warming-control-panel");
+const logger = createSafeLogger("cache-warming-control-panel");
 
 function StrategyStatusIcon({ status }: { status: string }) {
   switch (status) {
@@ -278,7 +278,9 @@ export function CacheWarmingControlPanel() {
         }
       );
     } catch (error) {
-      logger.error("Error triggering cache warming:", { error: error instanceof Error ? error.message : String(error) });
+      logger.error("Error triggering cache warming:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   };
 
@@ -313,7 +315,9 @@ export function CacheWarmingControlPanel() {
         }
       );
     } catch (error) {
-      logger.error("Error triggering multiple strategies:", { error: error instanceof Error ? error.message : String(error) });
+      logger.error("Error triggering multiple strategies:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   };
 

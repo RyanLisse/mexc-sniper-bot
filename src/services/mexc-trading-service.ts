@@ -10,7 +10,7 @@ import { db } from "../db";
 import type { NewExecutionHistory } from "../db/schema";
 import { apiCredentials, executionHistory } from "../db/schema";
 import { getCachedCredentials } from "../lib/credential-cache";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import {
   type TradingOrderRequest,
   TradingOrderRequestSchema,
@@ -86,7 +86,7 @@ export interface TradeExecutionResult {
 // ============================================================================
 
 export class MexcTradingService {
-  private logger = createLogger("mexc-trading-service");
+  private logger = createSafeLogger("mexc-trading-service");
 
   /**
    * Execute a trading order with comprehensive validation and risk management

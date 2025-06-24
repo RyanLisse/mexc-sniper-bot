@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getGlobalAgentRegistry } from "../../../../src/mexc-agents/coordination/agent-registry";
 import type { 
   AgentRegistryStats, 
@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Health status endpoint with comprehensive metrics
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

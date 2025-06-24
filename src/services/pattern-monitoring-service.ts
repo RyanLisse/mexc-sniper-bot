@@ -6,7 +6,7 @@
  */
 
 import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "./mexc-unified-exports";
 import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
 
@@ -62,11 +62,11 @@ export interface PatternMonitoringReport {
 }
 
 export class PatternMonitoringService {
-  private _logger: ReturnType<typeof createLogger> | null = null;
-  
+  private _logger: ReturnType<typeof createSafeLogger> | null = null;
+
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("pattern-monitoring-service");
+      this._logger = createSafeLogger("pattern-monitoring-service");
     }
     return this._logger;
   }
@@ -295,7 +295,9 @@ export class PatternMonitoringService {
       const allPatterns = await this.detectPatternsManually(candidateSymbols);
 
       this.stats.consecutiveErrors = 0; // Reset error count on success
-      this.logger.info(`[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`);
+      this.logger.info(
+        `[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`
+      );
     } catch (error) {
       this.logger.error("[PatternMonitoring] Monitoring cycle failed:", error);
       this.stats.consecutiveErrors++;

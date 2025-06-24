@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Redis/Valkey Cache Service for MEXC Sniper Bot
  *
  * Phase 2 Implementation: Redis/Valkey Caching & Performance Enhancement
@@ -88,7 +88,7 @@ export interface CacheWarmupStrategy {
 // ============================================================================
 
 export class RedisCacheService {
-  private logger = createLogger("redis-cache-service");
+  private logger = createSafeLogger("redis-cache-service");
 
   private redis: Redis | null = null;
   private config: RedisCacheConfig;

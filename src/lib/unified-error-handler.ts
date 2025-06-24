@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Unified Error Handler for MEXC Sniper Bot
  *
  * This module consolidates all error handling approaches (error-handler.ts, error-utils.ts, errors.ts)
@@ -89,7 +89,7 @@ export function setErrorLogger(logger: ErrorLogger) {
 // ============================================================================
 
 export class ErrorClassifier {
-  private logger = createLogger("unified-error-handler");
+  private logger = createSafeLogger("unified-error-handler");
 
   /**
    * Checks if error is a timeout error

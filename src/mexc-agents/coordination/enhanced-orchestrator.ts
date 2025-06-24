@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import { AgentMonitoringService } from "../../services/agent-monitoring-service";
 import type {
   AgentOrchestrationMetrics,
@@ -21,7 +21,7 @@ import type {
  * while maintaining backward compatibility with existing interfaces
  */
 export class EnhancedMexcOrchestrator {
-  private logger = createLogger("enhanced-orchestrator");
+  private logger = createSafeLogger("enhanced-orchestrator");
 
   private agentRegistry: AgentRegistry;
   private workflowEngine: WorkflowEngine;

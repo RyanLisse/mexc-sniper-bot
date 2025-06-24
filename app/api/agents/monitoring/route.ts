@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { AgentMonitoringService } from "../../../../src/services/agent-monitoring-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Get monitoring status and alerts
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

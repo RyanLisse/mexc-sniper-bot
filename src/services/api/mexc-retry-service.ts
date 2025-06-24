@@ -1,5 +1,5 @@
 /**
-import { createLogger } from '../lib/structured-logger';
+import { createSafeLogger } from '../lib/structured-logger';
  * MEXC Retry Service
  *
  * Handles retry logic, error classification, and backoff strategies for MEXC API requests.
@@ -14,7 +14,7 @@ import type {
 } from "./mexc-api-types";
 
 export class MexcRetryService {
-  private logger = createLogger("mexc-retry-service");
+  private logger = createSafeLogger("mexc-retry-service");
 
   private retryConfig: RetryConfig;
   private recentErrors: Error[] = [];

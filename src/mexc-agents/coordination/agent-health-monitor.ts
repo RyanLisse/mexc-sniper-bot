@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { AgentResponse } from "../base-agent";
 import type { AgentHealth, AgentStatus, RegisteredAgent } from "./agent-registry-core";
 
@@ -30,7 +30,13 @@ export interface AgentRegistryStats {
  * Agent health monitoring system
  */
 export class AgentHealthMonitor {
-  private logger = createLogger("agent-health-monitor");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("agent-health-monitor");
+    }
+    return this._logger;
+  }
   private healthCheckInterval: NodeJS.Timeout | null = null;
   private healthHistory: Map<string, HealthCheckResult[]> = new Map();
   private maxHealthHistorySize = 100;

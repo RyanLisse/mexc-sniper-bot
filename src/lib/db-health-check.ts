@@ -1,8 +1,8 @@
 import { db } from "../db";
 import { account, session, user, verification } from "../db/schema";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
-const logger = createLogger("db-health-check");
+const logger = createSafeLogger("db-health-check");
 
 export async function checkDatabaseHealth() {
   try {

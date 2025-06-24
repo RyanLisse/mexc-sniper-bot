@@ -1,4 +1,4 @@
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { RegisteredAgent } from "./agent-registry-core";
 
 export interface RecoveryStrategy {
@@ -22,7 +22,7 @@ export interface RecoveryAttempt {
  * Agent recovery strategies manager
  */
 export class AgentRecoveryStrategies {
-  private logger = createLogger("agent-recovery-strategies");
+  private logger = createSafeLogger("agent-recovery-strategies");
   private recoveryStrategies: Map<string, () => Promise<boolean>> = new Map();
   private recoveryHistory: RecoveryAttempt[] = new Map();
 

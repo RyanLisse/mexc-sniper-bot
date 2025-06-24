@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -15,7 +15,7 @@ import {
 } from "../../../../src/schemas/mexc-api-validation-schemas";
 import { apiCredentialsTestService } from "../../../../src/services/api-credentials-test-service";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 // POST /api/api-credentials/test
 export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) => {

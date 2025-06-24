@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * API Route Migration Example
  * 
  * This file demonstrates how to migrate existing API routes to use the
@@ -15,7 +15,7 @@ import {
 import { mexcConnectivityService } from "../services/mexc-connectivity-service";
 import { createPublicApiRoute } from "./api-route-handler";
 
-const logger = createLogger("api-route-migration-example");
+const logger = createSafeLogger("api-route-migration-example");
 
 // ============================================================================
 // BEFORE: Traditional API Route (98 lines)

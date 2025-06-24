@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ApiClient } from "@/src/lib/api-client";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   AutoSnipingConfig,
   AutoSnipingExecutionReport,
@@ -93,7 +93,7 @@ interface UseAutoSnipingExecutionOptions {
   includeAlerts?: boolean;
 }
 
-const logger = createLogger("use-auto-sniping-execution");
+const logger = createSafeLogger("use-auto-sniping-execution");
 
 export function useAutoSnipingExecution(
   options: UseAutoSnipingExecutionOptions = {}

@@ -1,17 +1,17 @@
 /**
  * MEXC Trading API Methods
- * 
+ *
  * Trading methods including order placement and validation.
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import { MexcAccountApiClient } from "./mexc-account-api";
-import type { 
-  UnifiedMexcResponse, 
+import type {
   OrderParameters,
   OrderResult,
-  UnifiedMexcConfig
+  UnifiedMexcConfig,
+  UnifiedMexcResponse,
 } from "./mexc-client-types";
 
 // ============================================================================
@@ -19,7 +19,7 @@ import type {
 // ============================================================================
 
 export class MexcTradingApiClient extends MexcAccountApiClient {
-  private logger = createLogger("mexc-trading-api");
+  private logger = createSafeLogger("mexc-trading-api");
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);
@@ -284,7 +284,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
       if (symbol) params.symbol = symbol;
 
       const response = await this.makeRequest("/api/v3/openOrders", params, true, true);
-      
+
       return {
         success: response.success,
         data: response.success ? response.data : [],
@@ -323,7 +323,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
       };
 
       const response = await this.makeRequest("/api/v3/allOrders", params, true, true);
-      
+
       return {
         success: response.success,
         data: response.success ? response.data : [],
@@ -362,7 +362,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
       };
 
       const response = await this.makeRequest("/api/v3/order", params, true, true);
-      
+
       return {
         success: response.success,
         data: response.data,
@@ -432,7 +432,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         return null;
       }
 
-      const symbolInfo = exchangeInfo.data.find(s => s.symbol === symbol);
+      const symbolInfo = exchangeInfo.data.find((s) => s.symbol === symbol);
       if (!symbolInfo) {
         return null;
       }
@@ -466,10 +466,11 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
     try {
       if (params.side === "BUY") {
         // For buy orders, check USDT balance
-        const requiredAmount = params.type === "MARKET" 
-          ? Number.parseFloat(params.quoteOrderQty || "0")
-          : this.calculateOrderValue(params.quantity, params.price || "0");
-        
+        const requiredAmount =
+          params.type === "MARKET"
+            ? Number.parseFloat(params.quoteOrderQty || "0")
+            : this.calculateOrderValue(params.quantity, params.price || "0");
+
         return await this.hasSufficientBalance("USDT", requiredAmount);
       } else {
         // For sell orders, check base asset balance

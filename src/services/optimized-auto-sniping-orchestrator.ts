@@ -21,7 +21,7 @@
 import { z } from "zod";
 import type { PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger, createTimer } from "../lib/structured-logger";
+import { createSafeLogger, createTimer } from "../lib/structured-logger";
 import {
   type AutoSnipingConfig,
   type AutoSnipingExecutionReport,
@@ -103,7 +103,7 @@ export interface RiskAssessment {
 
 export class OptimizedAutoSnipingOrchestrator {
   private static instance: OptimizedAutoSnipingOrchestrator;
-  private logger = createLogger("optimized-auto-sniping-orchestrator");
+  private logger = createSafeLogger("optimized-auto-sniping-orchestrator");
 
   // Module instances
   private core: OptimizedAutoSnipingCore;

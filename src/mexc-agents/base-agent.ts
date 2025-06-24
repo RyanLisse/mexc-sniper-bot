@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { CACHE_CONSTANTS, TIME_CONSTANTS } from "../lib/constants";
 import { globalEnhancedAgentCache, initializeAgentCache } from "../lib/enhanced-agent-cache";
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { ErrorLoggingService } from "../services/error-logging-service";
 
 export interface AgentConfig {
@@ -46,7 +46,13 @@ export interface AgentResponse {
 export type AgentStatus = "idle" | "running" | "error" | "offline";
 
 export class BaseAgent {
-  private logger = createLogger("base-agent");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  protected get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("base-agent");
+    }
+    return this._logger;
+  }
 
   protected openai: OpenAI;
   protected config: AgentConfig;

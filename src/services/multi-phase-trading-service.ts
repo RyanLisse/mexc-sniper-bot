@@ -11,7 +11,7 @@ import {
   type TradingStrategy,
   tradingStrategies,
 } from "../db/schemas/strategies";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // ===========================================
 // MULTI-PHASE TRADING STRATEGY SERVICE
@@ -124,7 +124,7 @@ export interface StrategyExecutionResult {
 
 // Multi-Phase Trading Strategy Service
 export class MultiPhaseTradingService {
-  private logger = createLogger("multi-phase-trading-service");
+  private logger = createSafeLogger("multi-phase-trading-service");
 
   // Initialize predefined strategy templates in database
   async initializePredefinedStrategies(): Promise<void> {

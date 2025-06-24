@@ -20,7 +20,7 @@ vi.mock("../../lib/auth-decorators", () => ({
 
 // Mock logger
 vi.mock("../../lib/structured-logger", () => ({
-  createLogger: () => ({
+  createSafeLogger: () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),

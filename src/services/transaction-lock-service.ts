@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { and, eq, gte, lte, or } from "drizzle-orm";
 import { db } from "../db";
 import { transactionLocks, transactionQueue } from "../db/schema";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 export interface TransactionLockConfig {
   resourceId: string;
@@ -34,10 +34,10 @@ export interface TransactionResult {
 }
 
 export class TransactionLockService {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createLogger("transaction-lock-service");
+      this._logger = createSafeLogger("transaction-lock-service");
     }
     return this._logger;
   }

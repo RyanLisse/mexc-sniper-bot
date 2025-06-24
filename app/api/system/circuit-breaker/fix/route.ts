@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { CircuitBreakerSafetyService } from '@/src/services/circuit-breaker-safety-service'
-import { createLogger } from '../../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../../src/lib/structured-logger';
 import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2'
 import { getGlobalReliabilityManager } from '@/src/services/mexc-circuit-breaker'
 import { z } from 'zod'
@@ -42,7 +42,7 @@ type FixResponse = z.infer<typeof FixResponseSchema>
  * POST /api/system/circuit-breaker/fix
  * Fix circuit breaker protective state issues
  */
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {

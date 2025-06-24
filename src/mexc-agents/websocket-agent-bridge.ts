@@ -14,7 +14,7 @@
  */
 
 import { EventEmitter } from "events";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   AgentErrorMessage,
   AgentHealthMessage,
@@ -68,7 +68,7 @@ interface WorkflowTracker {
 // ======================
 
 class RealTimeDataStreamer extends EventEmitter {
-  private logger = createLogger("websocket-agent-bridge");
+  private logger = createSafeLogger("websocket-agent-bridge");
 
   private updateInterval?: NodeJS.Timeout;
   private agentTrackers = new Map<string, AgentStatusTracker>();

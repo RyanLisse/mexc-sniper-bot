@@ -8,7 +8,7 @@
  */
 
 import { Command } from "commander";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { CoreSystem, type CoreSystemConstructorConfig } from "./core/system";
 
 const program = new Command();
@@ -16,7 +16,7 @@ const program = new Command();
 // Global system instance
 let coreSystem: CoreSystem;
 
-const logger = createLogger("cli");
+const logger = createSafeLogger("cli");
 
 async function initializeSystem(): Promise<CoreSystem> {
   if (!coreSystem) {
@@ -108,7 +108,7 @@ configCmd
 configCmd
   .command("get <key>")
   .description("Get configuration value")
-  .action(async (key) => {
+  .action(async (key: string) => {
     const system = await initializeSystem();
     const value = await system.getConfig(key);
     logger.info(value);
@@ -222,7 +222,7 @@ memoryCmd
 memoryCmd
   .command("get <key>")
   .description("Retrieve stored information")
-  .action(async (key) => {
+  .action(async (key: string) => {
     const system = await initializeSystem();
     const data = await system.memoryBank.get(key);
     logger.info(data);
@@ -234,7 +234,7 @@ memoryCmd
   .action(async () => {
     const system = await initializeSystem();
     const keys = await system.memoryBank.list();
-    logger.info(keys);
+    logger.info(JSON.stringify(keys, null, 2));
   });
 
 memoryCmd
@@ -359,7 +359,7 @@ program
 program.exitOverride();
 
 process.on("unhandledRejection", (reason, promise) => {
-  logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+  logger.error("Unhandled Rejection", { promise, reason });
   process.exit(1);
 });
 

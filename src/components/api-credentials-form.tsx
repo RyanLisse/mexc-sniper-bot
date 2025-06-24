@@ -20,7 +20,7 @@ import {
   useSaveApiCredentials,
   useTestApiCredentials,
 } from "../hooks/use-api-credentials";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -30,7 +30,7 @@ interface ApiCredentialsFormProps {
   userId: string;
 }
 
-const logger = createLogger("api-credentials-form");
+const logger = createSafeLogger("api-credentials-form");
 
 export function ApiCredentialsForm({ userId }: ApiCredentialsFormProps) {
   const { data: apiCredentials, isLoading: apiCredsLoading } = useApiCredentials(userId);

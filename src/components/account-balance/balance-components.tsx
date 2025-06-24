@@ -81,22 +81,14 @@ BalanceHeader.displayName = "BalanceHeader";
 
 // Balance Item Component
 export const BalanceItemComponent = React.memo(
-  ({
-    balance,
-    showBalances,
-  }: {
-    balance: BalanceItem;
-    showBalances: boolean;
-  }) => {
+  ({ balance, showBalances }: { balance: BalanceItem; showBalances: boolean }) => {
     const { formatTokenAmount, formatCurrency } = useCurrencyFormatting();
-    
+
     return (
       <div className="flex items-center justify-between p-3 bg-muted/30 border border-border rounded-lg hover:bg-muted/50 transition-colors">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-            <span className="text-xs font-bold text-primary">
-              {balance.asset.slice(0, 2)}
-            </span>
+            <span className="text-xs font-bold text-primary">{balance.asset.slice(0, 2)}</span>
           </div>
           <div>
             <p className="font-medium text-sm text-foreground">{balance.asset}</p>
@@ -152,8 +144,8 @@ export const PortfolioSummary = React.memo(
             <p className="text-2xl font-bold text-foreground">
               {showBalances ? (
                 <span className="flex items-center">
-                  <TrendingUp className="h-5 w-5 text-primary mr-2" />$
-                  {formatCurrency(totalValue)} USDT
+                  <TrendingUp className="h-5 w-5 text-primary mr-2" />${formatCurrency(totalValue)}{" "}
+                  USDT
                 </span>
               ) : (
                 <span className="text-muted-foreground">••••••</span>

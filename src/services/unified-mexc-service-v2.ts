@@ -8,7 +8,7 @@
  * - Optimized bundle size through tree-shaking
  */
 
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   BalanceEntry,
   CalendarEntry,
@@ -60,7 +60,7 @@ const DEFAULT_CONFIG: Required<UnifiedMexcConfigV2> = {
 // ============================================================================
 
 export class UnifiedMexcServiceV2 {
-  private logger = createLogger("unified-mexc-service-v2");
+  private logger = createSafeLogger("unified-mexc-service-v2");
 
   private config: Required<UnifiedMexcConfigV2>;
   private coreClient: MexcCoreClient;

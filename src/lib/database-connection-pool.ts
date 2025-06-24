@@ -1,4 +1,4 @@
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 /**
  * Database Connection Pool & Caching Manager
@@ -69,7 +69,13 @@ interface QueryResultCache {
 }
 
 export class DatabaseConnectionPool {
-  private logger = createLogger("database-connection-pool");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("database-connection-pool");
+    }
+    return this._logger;
+  }
 
   private static instance: DatabaseConnectionPool;
   private config: ConnectionPoolConfig;

@@ -1,14 +1,14 @@
 /**
  * MEXC Client Factory and Unified Interface
- * 
+ *
  * Factory for creating MEXC client instances and providing a unified interface
  * that combines all the modular components.
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
-import { createLogger } from "../../lib/structured-logger";
-import { MexcTradingApiClient } from "./mexc-trading-api";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { UnifiedMexcConfig } from "./mexc-client-types";
+import { MexcTradingApiClient } from "./mexc-trading-api";
 
 // ============================================================================
 // Unified MEXC Client (Main Export)
@@ -19,10 +19,10 @@ import type { UnifiedMexcConfig } from "./mexc-client-types";
  * This is the main client that applications should use
  */
 export class UnifiedMexcClient extends MexcTradingApiClient {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private getLogger() {
     if (!this._logger) {
-      this._logger = createLogger("mexc-client-factory");
+      this._logger = createSafeLogger("mexc-client-factory");
     }
     return this._logger;
   }
@@ -48,7 +48,7 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
   /**
    * Get cache statistics
    */
-  getCacheStats(): { 
+  getCacheStats(): {
     requestCache: { size: number; maxSize: number; hitRate?: number; missRate?: number };
     exchangeSymbolsCount: number;
     exchangeCacheValid: boolean;
@@ -63,7 +63,7 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
   /**
    * Get configuration (without sensitive data)
    */
-  getConfig(): Omit<Required<UnifiedMexcConfig>, 'apiKey' | 'secretKey'> {
+  getConfig(): Omit<Required<UnifiedMexcConfig>, "apiKey" | "secretKey"> {
     const { apiKey, secretKey, ...safeConfig } = this.config;
     return safeConfig;
   }
@@ -91,7 +91,7 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
   }> {
     try {
       const connectivity = await this.testConnectivity();
-      
+
       let authentication = false;
       let canTrade = false;
       let accountType = "UNKNOWN";
@@ -100,7 +100,7 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
         try {
           const accountInfo = await this.getAccountInfo();
           authentication = accountInfo.success;
-          
+
           if (authentication) {
             canTrade = await this.canTrade();
             accountType = await this.getAccountType();
@@ -111,7 +111,7 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
       }
 
       const cacheStats = this.getCacheStats();
-      
+
       return {
         connectivity,
         authentication,
@@ -276,9 +276,9 @@ export function createTradingClient(apiKey: string, secretKey: string): UnifiedM
     apiKey,
     secretKey,
     enableCaching: false, // Disable caching for trading
-    rateLimitDelay: 50,   // Lower rate limit for faster trading
-    maxRetries: 1,        // Fewer retries for trading
-    timeout: 5000,        // Shorter timeout for trading
+    rateLimitDelay: 50, // Lower rate limit for faster trading
+    maxRetries: 1, // Fewer retries for trading
+    timeout: 5000, // Shorter timeout for trading
   });
 }
 
@@ -288,10 +288,10 @@ export function createTradingClient(apiKey: string, secretKey: string): UnifiedM
 export function createDataClient(): UnifiedMexcClient {
   return new UnifiedMexcClient({
     enableCaching: true,
-    cacheTTL: 300000,     // 5 minute cache for data
-    rateLimitDelay: 200,  // Higher rate limit delay
-    maxRetries: 3,        // More retries for data
-    timeout: 15000,       // Longer timeout for data
+    cacheTTL: 300000, // 5 minute cache for data
+    rateLimitDelay: 200, // Higher rate limit delay
+    maxRetries: 3, // More retries for data
+    timeout: 15000, // Longer timeout for data
   });
 }
 
@@ -301,7 +301,7 @@ export function createDataClient(): UnifiedMexcClient {
 export function createMonitoringClient(): UnifiedMexcClient {
   return new UnifiedMexcClient({
     enableCaching: true,
-    cacheTTL: 60000,      // 1 minute cache
+    cacheTTL: 60000, // 1 minute cache
     rateLimitDelay: 100,
     maxRetries: 2,
     timeout: 10000,
@@ -312,12 +312,12 @@ export function createMonitoringClient(): UnifiedMexcClient {
 // Exports
 // ============================================================================
 
+export * from "./mexc-account-api";
+export * from "./mexc-client-core";
 // Re-export all types and components for convenience
 export * from "./mexc-client-types";
-export * from "./mexc-request-cache";
-export * from "./mexc-client-core";
 export * from "./mexc-market-data";
-export * from "./mexc-account-api";
+export * from "./mexc-request-cache";
 export * from "./mexc-trading-api";
 
 // Default export for backward compatibility

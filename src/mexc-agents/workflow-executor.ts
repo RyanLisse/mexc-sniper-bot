@@ -1,5 +1,5 @@
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { CalendarEntry } from "../schemas/mexc-schemas";
 import type { AgentManager } from "./agent-manager";
 import { CalendarWorkflow } from "./calendar-workflow";
@@ -17,7 +17,7 @@ import { SymbolAnalysisWorkflow } from "./symbol-analysis-workflow";
 import { TradingStrategyWorkflow } from "./trading-strategy-workflow";
 
 export class WorkflowExecutor {
-  private logger = createLogger("workflow-executor");
+  private logger = createSafeLogger("workflow-executor");
 
   private calendarWorkflow: CalendarWorkflow;
   private symbolAnalysisWorkflow: SymbolAnalysisWorkflow;

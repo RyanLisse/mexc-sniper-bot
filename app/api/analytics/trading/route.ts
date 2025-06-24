@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { tradingAnalytics } from "../../../../src/services/trading-analytics-service";
 import { checkRateLimit, getClientIP } from "../../../../src/lib/rate-limiter";
@@ -63,7 +63,7 @@ const LogEventSchema = z.object({
 // Get trading analytics reports and metrics
 // ============================================================================
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   const ip = getClientIP(request);

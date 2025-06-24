@@ -6,7 +6,7 @@ import {
   HTTP_STATUS,
 } from "../../../../lib/api-response";
 import { authenticatedRoute } from "../../../../lib/auth-decorators";
-import { createLogger } from "../../../../lib/structured-logger";
+import { createSafeLogger } from "../../../../lib/structured-logger";
 import type {
   SafetyConfiguration,
   SafetyThresholds,
@@ -15,7 +15,7 @@ import { RealTimeSafetyMonitoringService } from "../../../../services/real-time-
 
 // Lazy logger initialization to avoid build-time issues
 function getLogger() {
-  return createLogger("safety-monitoring-api");
+  return createSafeLogger("safety-monitoring-api");
 }
 
 interface AuthenticatedUser {
@@ -323,7 +323,7 @@ const actionHandlers: Record<string, ActionHandler> = {
 
     safetyService.stopMonitoring();
 
-    logger.info("Safety monitoring stopped via API", {
+    getLogger().info("Safety monitoring stopped via API", {
       operation: "stop_monitoring",
       userId: user.id,
       timestamp: new Date().toISOString(),
@@ -355,7 +355,7 @@ const actionHandlers: Record<string, ActionHandler> = {
       const configUpdate = validateConfigurationUpdate(configuration);
       safetyService.updateConfiguration(configUpdate);
 
-      logger.info("Safety configuration updated via API", {
+      getLogger().info("Safety configuration updated via API", {
         operation: "update_configuration",
         userId: user.id,
         updatedFields: Object.keys(configUpdate),
@@ -399,7 +399,7 @@ const actionHandlers: Record<string, ActionHandler> = {
         thresholds: { ...safetyService.getConfiguration().thresholds, ...thresholdUpdate },
       });
 
-      logger.info("Safety thresholds updated via API", {
+      getLogger().info("Safety thresholds updated via API", {
         operation: "update_thresholds",
         userId: user.id,
         updatedThresholds: Object.keys(thresholdUpdate),
@@ -439,7 +439,7 @@ const actionHandlers: Record<string, ActionHandler> = {
 
     const actions = await safetyService.triggerEmergencyResponse(reason as string);
 
-    logger.warn("Emergency response triggered via API", {
+    getLogger().warn("Emergency response triggered via API", {
       operation: "emergency_response",
       userId: user.id,
       reason,
@@ -482,7 +482,7 @@ const actionHandlers: Record<string, ActionHandler> = {
       );
     }
 
-    logger.info("Alert acknowledged via API", {
+    getLogger().info("Alert acknowledged via API", {
       operation: "acknowledge_alert",
       userId: user.id,
       alertId,
@@ -522,7 +522,7 @@ const actionHandlers: Record<string, ActionHandler> = {
     await safetyService.performRiskAssessment();
     const riskMetrics = safetyService.getRiskMetrics();
 
-    logger.info("Risk assessment forced via API", {
+    getLogger().info("Risk assessment forced via API", {
       operation: "force_risk_assessment",
       userId: user.id,
       overallRiskScore: safetyService.calculateOverallRiskScore(),
@@ -585,7 +585,7 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: Authen
 
     return await handler(body, user, safetyService);
   } catch (error) {
-    logger.error(
+    getLogger().error(
       "Safety monitoring API POST request failed",
       {
         operation: "api_post_request",

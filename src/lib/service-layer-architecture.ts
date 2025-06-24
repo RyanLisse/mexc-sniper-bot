@@ -1,4 +1,4 @@
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 /**
  * Service Layer Architecture - Improved Separation of Concerns
  *
@@ -537,7 +537,7 @@ export interface ComplianceViolation {
  * Provides centralized service access and lifecycle management
  */
 export class ServiceRegistry {
-  private logger = createLogger("service-layer-architecture");
+  private logger = createSafeLogger("service-layer-architecture");
 
   private services = new Map<string, BaseService>();
   private dependencies: ServiceDependencies = {};

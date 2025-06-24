@@ -6,13 +6,13 @@
  */
 
 import type { NextRequest, NextResponse } from "next/server";
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from "./structured-logger";
 
 /**
  * Enhanced API route handler with OpenTelemetry instrumentation
  * Supports both Response and NextResponse types for compatibility
  */
-const logger = createLogger("opentelemetry-api-middleware");
+const logger = createSafeLogger("opentelemetry-api-middleware");
 
 // Conditional imports to prevent build-time issues
 let SpanKind: any;
@@ -27,7 +27,10 @@ if (process.env.DISABLE_TELEMETRY !== "true" && process.env.NODE_ENV !== "test")
     ({ TRADING_TELEMETRY_CONFIG } = require("./opentelemetry-setup"));
     tracer = trace.getTracer("mexc-trading-bot-api");
   } catch (error) {
-    logger.warn("OpenTelemetry not available:", error instanceof Error ? error.message : String(error));
+    logger.warn(
+      "OpenTelemetry not available:",
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
 

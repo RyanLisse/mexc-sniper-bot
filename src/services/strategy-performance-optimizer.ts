@@ -1,5 +1,5 @@
 import type { TradingStrategy } from "../db/schemas/strategies";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 interface PerformanceMetrics {
   memoryUsage: number;
@@ -16,7 +16,7 @@ interface OptimizationConfig {
 }
 
 export class StrategyPerformanceOptimizer {
-  private logger = createLogger("strategy-performance-optimizer");
+  private logger = createSafeLogger("strategy-performance-optimizer");
 
   private static instance: StrategyPerformanceOptimizer;
   private activeExecutions = new Set<string>();

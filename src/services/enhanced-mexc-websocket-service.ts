@@ -14,7 +14,7 @@
 
 import { EventEmitter } from "events";
 import WebSocket from "ws";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { CoordinatedCircuitBreaker } from "./coordinated-circuit-breaker";
 import { createCoordinatedMexcWebSocketBreaker } from "./coordinated-circuit-breaker";
 
@@ -83,7 +83,7 @@ export interface WebSocketConnectionHealth {
 // ============================================================================
 
 export class RealTimePatternDetector {
-  private logger = createLogger("enhanced-mexc-websocket-service");
+  private logger = createSafeLogger("enhanced-mexc-websocket-service");
 
   private patternCallbacks = new Map<string, Set<(pattern: RealTimePatternMatch) => void>>();
   private priceHistory = new Map<string, RealTimePriceData[]>();

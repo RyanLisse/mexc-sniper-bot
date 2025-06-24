@@ -9,10 +9,10 @@
  * - Security compliance checks
  */
 
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
+import { getUnifiedMexcClient } from "./api/mexc-client-factory";
 import { circuitBreakerRegistry } from "./circuit-breaker";
 import { ErrorLoggingService } from "./error-logging-service";
-import { getUnifiedMexcClient } from "./api/mexc-client-factory";
 
 export interface ApiValidationConfig {
   apiKey: string;
@@ -51,7 +51,7 @@ export interface ValidationResult {
 }
 
 export class EnhancedApiValidationService {
-  private logger = createLogger("enhanced-api-validation-service");
+  private logger = createSafeLogger("enhanced-api-validation-service");
 
   private static instance: EnhancedApiValidationService;
   private errorLogger = ErrorLoggingService.getInstance();

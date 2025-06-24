@@ -6,7 +6,7 @@ import {
   type SelectAlertInstance,
   type SelectNotificationChannel,
 } from "../../db/schemas/alerts";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import { EmailProvider } from "./email-provider";
 import { SlackProvider } from "./slack-provider";
 import { SMSProvider } from "./sms-provider";
@@ -55,7 +55,7 @@ export interface EscalationStep {
 }
 
 export class NotificationService {
-  private _logger: ReturnType<typeof createLogger> | null = null;
+  private _logger: ReturnType<typeof createSafeLogger> | null = null;
 
   private db: any;
   private providers: Map<string, NotificationProvider> = new Map();
@@ -64,10 +64,10 @@ export class NotificationService {
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
-  private get logger(): ReturnType<typeof createLogger> {
+  private get logger(): ReturnType<typeof createSafeLogger> {
     if (!this._logger) {
       try {
-        this._logger = createLogger("notification-service");
+        this._logger = createSafeLogger("notification-service");
       } catch (error) {
         // Fallback to console logging during build time
         this._logger = {
@@ -178,7 +178,9 @@ export class NotificationService {
       // Update rate limiting cache
       this.updateRateLimit(channel);
 
-      this.logger.info(`Notification sent to ${channel.name}: ${result.success ? "success" : "failed"}`);
+      this.logger.info(
+        `Notification sent to ${channel.name}: ${result.success ? "success" : "failed"}`
+      );
     } catch (error) {
       this.logger.error(`Error sending to channel ${channel.name}:`, error);
     }

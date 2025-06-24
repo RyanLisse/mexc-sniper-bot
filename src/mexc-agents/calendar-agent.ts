@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { validateCalendarEntry } from "../schemas/mexc-schemas";
 import type { CalendarEntry } from "../services/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
@@ -33,7 +33,13 @@ export interface ProcessedCalendarEntry extends CalendarEntry {
 }
 
 export class CalendarAgent extends BaseAgent {
-  private logger = createLogger("calendar-agent");
+  private _agentLogger?: ReturnType<typeof createSafeLogger>;
+  protected get agentLogger() {
+    if (!this._agentLogger) {
+      this._agentLogger = createSafeLogger("calendar-agent");
+    }
+    return this._agentLogger;
+  }
 
   constructor() {
     const config: AgentConfig = {
@@ -156,7 +162,7 @@ Focus on opportunities providing ${request.minimumAdvanceHours || 3.5}+ hours ad
 
   async scanForNewListings(calendarData: CalendarEntry[]): Promise<AgentResponse> {
     try {
-      logger.info(
+      this.agentLogger.info(
         `[CalendarAgent] Scanning ${calendarData.length} calendar entries for new listings`
       );
 
@@ -237,13 +243,15 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
       const summaryData = this.generateAnalysisSummary(processedListings);
       const enhancedContent = `${aiResponse.content}\n\n**Analysis Summary:**\n${summaryData}`;
 
-      logger.info(`[CalendarAgent] Successfully analyzed ${processedListings.length} listings`);
+      this.agentLogger.info(
+        `[CalendarAgent] Successfully analyzed ${processedListings.length} listings`
+      );
       return {
         content: enhancedContent,
         metadata: aiResponse.metadata,
       };
     } catch (error) {
-      logger.error(`[CalendarAgent] Error scanning new listings:`, error);
+      this.agentLogger.error(`[CalendarAgent] Error scanning new listings:`, error);
       return {
         content: `Calendar analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         metadata: {
@@ -376,7 +384,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
   // Fetch fresh calendar data using MexcApiAgent
   async fetchLatestCalendarData(): Promise<CalendarEntry[]> {
     try {
-      logger.info(`[CalendarAgent] Fetching latest calendar data via MexcApiAgent`);
+      this.agentLogger.info(`[CalendarAgent] Fetching latest calendar data via MexcApiAgent`);
 
       const mexcApiAgent = new MexcApiAgent();
       const response = await mexcApiAgent.callMexcApi("/calendar");
@@ -395,16 +403,18 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
           try {
             return validateCalendarEntry(entry);
           } catch (_error) {
-            logger.warn(`[CalendarAgent] Invalid calendar entry:`, entry);
+            this.agentLogger.warn(`[CalendarAgent] Invalid calendar entry:`, entry);
             return null;
           }
         })
         .filter((entry: CalendarEntry | null): entry is CalendarEntry => entry !== null);
 
-      logger.info(`[CalendarAgent] Retrieved ${validatedEntries.length} valid calendar entries`);
+      this.agentLogger.info(
+        `[CalendarAgent] Retrieved ${validatedEntries.length} valid calendar entries`
+      );
       return validatedEntries;
     } catch (error) {
-      logger.error(`[CalendarAgent] Failed to fetch calendar data:`, error);
+      this.agentLogger.error(`[CalendarAgent] Failed to fetch calendar data:`, error);
       return [];
     }
   }
@@ -412,7 +422,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
   // Comprehensive calendar monitoring workflow
   async performCalendarMonitoring(_request?: CalendarMonitoringRequest): Promise<AgentResponse> {
     try {
-      logger.info(`[CalendarAgent] Starting comprehensive calendar monitoring`);
+      this.agentLogger.info(`[CalendarAgent] Starting comprehensive calendar monitoring`);
 
       // Fetch latest calendar data
       const calendarData = await this.fetchLatestCalendarData();
@@ -450,7 +460,7 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
 
       return scanResults;
     } catch (error) {
-      logger.error(`[CalendarAgent] Calendar monitoring workflow failed:`, error);
+      this.agentLogger.error(`[CalendarAgent] Calendar monitoring workflow failed:`, error);
       return {
         content: `Calendar monitoring failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         metadata: {

@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { MexcOrchestrator } from "../mexc-agents/orchestrator";
 import { inngest } from "./client";
 // Import safety functions
@@ -53,7 +53,7 @@ interface AgentWorkflowResult {
 }
 
 // Type guards for agent results
-const logger = createLogger("functions");
+const logger = createSafeLogger("functions");
 
 function isAgentWorkflowResult(value: unknown): value is AgentWorkflowResult {
   return (

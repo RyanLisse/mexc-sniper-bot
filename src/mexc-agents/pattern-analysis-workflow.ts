@@ -2,7 +2,7 @@ import type {
   PatternAnalysisResult as EngineResult,
   PatternMatch,
 } from "../core/pattern-detection/interfaces";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
 import {
   type PatternWorkflowRequest,
@@ -47,7 +47,7 @@ export interface PatternSignal {
 }
 
 export class PatternAnalysisWorkflow {
-  private logger = createLogger("pattern-analysis-workflow");
+  private logger = createSafeLogger("pattern-analysis-workflow");
 
   /**
    * Enhanced Pattern Analysis using Centralized Detection Engine

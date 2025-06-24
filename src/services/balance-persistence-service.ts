@@ -1,16 +1,16 @@
 /**
  * Balance Persistence Service
- * 
- * Critical service to address the database persistence gap identified by the 
+ *
+ * Critical service to address the database persistence gap identified by the
  * database engineer agent. Saves balance data from MEXC API to the database
  * for historical tracking and audit purposes.
  */
 
-import { createLogger } from '../lib/structured-logger';
-import { db } from '../db';
-import { balanceSnapshots, portfolioSummary } from '../db/schema';
-import { eq, desc, and, gte } from 'drizzle-orm';
-import { z } from 'zod';
+import { and, desc, eq, gte } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "../db";
+import { balanceSnapshots, portfolioSummary } from "../db/schema";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // Zod schemas for type-safe balance data validation
 export const BalanceItemSchema = z.object({
@@ -30,9 +30,9 @@ export type BalanceItem = z.infer<typeof BalanceItemSchema>;
 export type BalanceData = z.infer<typeof BalanceDataSchema>;
 
 export interface BalancePersistenceOptions {
-  snapshotType?: 'periodic' | 'manual' | 'triggered';
-  dataSource?: 'api' | 'manual' | 'calculated';
-  priceSource?: 'mexc' | 'coingecko' | 'manual' | 'binance' | 'coinbase';
+  snapshotType?: "periodic" | "manual" | "triggered";
+  dataSource?: "api" | "manual" | "calculated";
+  priceSource?: "mexc" | "coingecko" | "manual" | "binance" | "coinbase";
 }
 
 export class BalancePersistenceService {
@@ -53,27 +53,23 @@ export class BalancePersistenceService {
     balanceData: BalanceData,
     options: BalancePersistenceOptions = {}
   ): Promise<void> {
-    const logger = createLogger('balance-persistence');
+    const logger = createSafeLogger("balance-persistence");
     try {
       // Validate input data
       const validatedData = BalanceDataSchema.parse(balanceData);
-      
-      const {
-        snapshotType = 'periodic',
-        dataSource = 'api',
-        priceSource = 'mexc'
-      } = options;
 
-      logger.info('Saving balance snapshot', {
+      const { snapshotType = "periodic", dataSource = "api", priceSource = "mexc" } = options;
+
+      logger.info("Saving balance snapshot", {
         userId,
         assetCount: validatedData.balances.length,
         totalUsdValue: validatedData.totalUsdtValue,
         snapshotType,
-        dataSource
+        dataSource,
       });
 
       // Prepare balance snapshots for batch insert
-      const balanceRecords = validatedData.balances.map(balance => ({
+      const balanceRecords = validatedData.balances.map((balance) => ({
         userId,
         asset: balance.asset,
         freeAmount: parseFloat(balance.free),
@@ -81,7 +77,8 @@ export class BalancePersistenceService {
         totalAmount: balance.total,
         usdValue: balance.usdtValue || 0,
         priceSource,
-        exchangeRate: balance.usdtValue && balance.total > 0 ? balance.usdtValue / balance.total : null,
+        exchangeRate:
+          balance.usdtValue && balance.total > 0 ? balance.usdtValue / balance.total : null,
         snapshotType,
         dataSource,
         timestamp: new Date(),
@@ -90,25 +87,24 @@ export class BalancePersistenceService {
       // Insert balance snapshots in batch
       if (balanceRecords.length > 0) {
         await db.insert(balanceSnapshots).values(balanceRecords);
-        logger.info('Balance snapshots saved successfully', {
+        logger.info("Balance snapshots saved successfully", {
           userId,
-          recordCount: balanceRecords.length
+          recordCount: balanceRecords.length,
         });
       }
 
       // Update portfolio summary
       await this.updatePortfolioSummary(userId, validatedData);
 
-      logger.info('Balance persistence completed successfully', {
+      logger.info("Balance persistence completed successfully", {
         userId,
         totalUsdValue: validatedData.totalUsdtValue,
-        assetCount: validatedData.balances.length
+        assetCount: validatedData.balances.length,
       });
-
     } catch (error) {
-      logger.error('Failed to save balance snapshot', {
+      logger.error("Failed to save balance snapshot", {
         userId,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
@@ -117,23 +113,21 @@ export class BalancePersistenceService {
   /**
    * Update portfolio summary with latest balance data
    */
-  private async updatePortfolioSummary(
-    userId: string,
-    balanceData: BalanceData
-  ): Promise<void> {
-    const logger = createLogger('balance-persistence');
+  private async updatePortfolioSummary(userId: string, balanceData: BalanceData): Promise<void> {
+    const logger = createSafeLogger("balance-persistence");
     try {
       // Calculate top assets (top 5 by USD value)
       const sortedAssets = balanceData.balances
-        .filter(b => (b.usdtValue || 0) > 0)
+        .filter((b) => (b.usdtValue || 0) > 0)
         .sort((a, b) => (b.usdtValue || 0) - (a.usdtValue || 0))
         .slice(0, 5)
-        .map(b => ({
+        .map((b) => ({
           asset: b.asset,
           usdValue: b.usdtValue || 0,
-          percentage: balanceData.totalUsdtValue > 0 
-            ? ((b.usdtValue || 0) / balanceData.totalUsdtValue) * 100 
-            : 0
+          percentage:
+            balanceData.totalUsdtValue > 0
+              ? ((b.usdtValue || 0) / balanceData.totalUsdtValue) * 100
+              : 0,
         }));
 
       // Get existing portfolio summary
@@ -146,7 +140,7 @@ export class BalancePersistenceService {
       const portfolioData = {
         userId,
         totalUsdValue: balanceData.totalUsdtValue,
-        assetCount: balanceData.balances.filter(b => b.total > 0).length,
+        assetCount: balanceData.balances.filter((b) => b.total > 0).length,
         topAssets: JSON.stringify(sortedAssets),
         lastBalanceUpdate: new Date(),
         lastCalculated: new Date(),
@@ -171,11 +165,11 @@ export class BalancePersistenceService {
           })
           .where(eq(portfolioSummary.userId, userId));
 
-        logger.info('Portfolio summary updated', {
+        logger.info("Portfolio summary updated", {
           userId,
           previousValue: previous.totalUsdValue,
           newValue: balanceData.totalUsdtValue,
-          performance24h
+          performance24h,
         });
       } else {
         // Create new portfolio summary
@@ -187,16 +181,16 @@ export class BalancePersistenceService {
           createdAt: new Date(),
         });
 
-        logger.info('Portfolio summary created', {
+        logger.info("Portfolio summary created", {
           userId,
           totalValue: balanceData.totalUsdtValue,
-          assetCount: portfolioData.assetCount
+          assetCount: portfolioData.assetCount,
         });
       }
     } catch (error) {
-      logger.error('Failed to update portfolio summary', {
+      logger.error("Failed to update portfolio summary", {
         userId,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       // Don't throw here - portfolio summary update failure shouldn't fail the entire operation
     }
@@ -224,9 +218,9 @@ export class BalancePersistenceService {
 
       return latestSnapshots;
     } catch (error) {
-      logger.error('Failed to get latest balance snapshot', {
+      logger.error("Failed to get latest balance snapshot", {
         userId,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       return [];
     }
@@ -258,10 +252,10 @@ export class BalancePersistenceService {
 
       return history;
     } catch (error) {
-      logger.error('Failed to get asset balance history', {
+      logger.error("Failed to get asset balance history", {
         userId,
         asset,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       return [];
     }
@@ -280,9 +274,9 @@ export class BalancePersistenceService {
 
       return summary.length > 0 ? summary[0] : null;
     } catch (error) {
-      logger.error('Failed to get portfolio summary', {
+      logger.error("Failed to get portfolio summary", {
         userId,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       return null;
     }
@@ -298,18 +292,20 @@ export class BalancePersistenceService {
 
       const result = await db
         .delete(balanceSnapshots)
-        .where(and(
-          eq(balanceSnapshots.snapshotType, 'periodic'),
-          gte(balanceSnapshots.timestamp, cutoffDate)
-        ));
+        .where(
+          and(
+            eq(balanceSnapshots.snapshotType, "periodic"),
+            gte(balanceSnapshots.timestamp, cutoffDate)
+          )
+        );
 
-      logger.info('Old balance snapshots cleaned up', {
+      logger.info("Old balance snapshots cleaned up", {
         cutoffDate: cutoffDate.toISOString(),
-        deletedCount: 'unknown' // Drizzle doesn't return affected rows count
+        deletedCount: "unknown", // Drizzle doesn't return affected rows count
       });
     } catch (error) {
-      logger.error('Failed to cleanup old snapshots', {
-        error: error instanceof Error ? error.message : String(error)
+      logger.error("Failed to cleanup old snapshots", {
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }

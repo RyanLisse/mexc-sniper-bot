@@ -15,7 +15,7 @@
 import { z } from "zod";
 import type { PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // ============================================================================
 // Zod Schemas for Type Safety
@@ -160,7 +160,7 @@ export interface AutoSnipingExecutionReport {
  */
 export class OptimizedAutoSnipingCore {
   private static instance: OptimizedAutoSnipingCore;
-  private logger: ReturnType<typeof createLogger>;
+  private logger: ReturnType<typeof createSafeLogger>;
 
   // Configuration with validation
   private config: AutoSnipingConfig;
@@ -177,7 +177,7 @@ export class OptimizedAutoSnipingCore {
   private monitoringInterval: NodeJS.Timeout | null = null;
 
   private constructor(config?: Partial<AutoSnipingConfig>) {
-    this.logger = createLogger("optimized-auto-sniping-core");
+    this.logger = createSafeLogger("optimized-auto-sniping-core");
     // Validate and set configuration
     this.config = AutoSnipingConfigSchema.parse({
       ...this.getDefaultConfig(),
@@ -660,14 +660,14 @@ export class OptimizedAutoSnipingCore {
   private async validateApiConnection(): Promise<boolean> {
     try {
       // Use existing MEXC API client to test connectivity
-      const mexcClient = await import('../services/mexc-api-client');
+      const mexcClient = await import("../services/mexc-api-client");
       const client = mexcClient.mexcApiClient;
-      
+
       // Test basic API connectivity by checking server time
       const serverTime = await client.getServerTime();
-      return typeof serverTime === 'number' && serverTime > 0;
+      return typeof serverTime === "number" && serverTime > 0;
     } catch (error) {
-      this.logger.error('API connectivity check failed', { error: toSafeError(error).message });
+      this.logger.error("API connectivity check failed", { error: toSafeError(error).message });
       return false;
     }
   }
@@ -675,13 +675,13 @@ export class OptimizedAutoSnipingCore {
   private async validatePatternEngine(): Promise<boolean> {
     try {
       // Test pattern engine with a minimal symbol
-      const testSymbol = { cd: 'BTCUSDT', sts: 2, st: 2, tt: 4 };
-      const { PatternDetectionEngine } = await import('../services/pattern-detection-engine');
+      const testSymbol = { cd: "BTCUSDT", sts: 2, st: 2, tt: 4 };
+      const { PatternDetectionEngine } = await import("../services/pattern-detection-engine");
       const engine = PatternDetectionEngine.getInstance();
       const patterns = await engine.detectReadyStatePattern(testSymbol);
       return Array.isArray(patterns);
     } catch (error) {
-      this.logger.error('Pattern engine validation failed', { error: toSafeError(error).message });
+      this.logger.error("Pattern engine validation failed", { error: toSafeError(error).message });
       return false;
     }
   }
@@ -689,9 +689,10 @@ export class OptimizedAutoSnipingCore {
   private validateSafetySystem(): boolean {
     // Check critical safety parameters
     const hasValidConfig = this.config.maxPositions > 0 && this.config.maxDailyTrades > 0;
-    const hasValidRiskLimits = this.config.stopLossPercentage > 0 && this.config.maxDrawdownPercentage > 0;
+    const hasValidRiskLimits =
+      this.config.stopLossPercentage > 0 && this.config.maxDrawdownPercentage > 0;
     const withinRiskLimits = this.stats.currentDrawdown < this.config.maxDrawdownPercentage;
-    
+
     return hasValidConfig && hasValidRiskLimits && withinRiskLimits;
   }
 

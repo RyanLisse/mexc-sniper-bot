@@ -14,7 +14,7 @@
 import { z } from "zod";
 import type { PatternMatch } from "../core/pattern-detection";
 import { toSafeError } from "../lib/error-type-utils";
-import { createLogger, createTimer } from "../lib/structured-logger";
+import { createSafeLogger, createTimer } from "../lib/structured-logger";
 import type { AutoSnipingConfig, ExecutionPosition } from "./optimized-auto-sniping-core";
 import { getUnifiedMexcService } from "./unified-mexc-service-factory";
 
@@ -83,7 +83,7 @@ export type ExecutionStrategy = z.infer<typeof ExecutionStrategySchema>;
 
 export class OptimizedExecutionEngine {
   private static instance: OptimizedExecutionEngine;
-  private logger = createLogger("optimized-execution-engine");
+  private logger = createSafeLogger("optimized-execution-engine");
 
   // Execution metrics
   private totalExecutions = 0;

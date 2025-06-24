@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
 import { getUserCredentials } from "../../../../src/services/user-credentials-service";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

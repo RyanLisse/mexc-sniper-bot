@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { PatternDetectionCore } from "../../../src/core/pattern-detection";
 import { patternStrategyOrchestrator } from "../../../src/services/pattern-strategy-orchestrator";
 import { patternEmbeddingService } from "../../../src/services/pattern-embedding-service";
@@ -33,10 +33,10 @@ const PatternDetectionRequestSchema = z.object({
 });
 
 // Lazy logger initialization to prevent build-time errors
-let _logger: ReturnType<typeof createLogger> | undefined;
+let _logger: ReturnType<typeof createSafeLogger> | undefined;
 function getLogger() {
   if (!_logger) {
-    _logger = createLogger('route');
+    _logger = createSafeLogger('route');
   }
   return _logger;
 }

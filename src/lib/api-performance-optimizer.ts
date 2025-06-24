@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * API Performance Optimizer
  *
  * Phase 3: API Performance Optimization (3h)
@@ -63,7 +63,7 @@ interface CircuitBreakerState {
 }
 
 export class ApiPerformanceOptimizer extends EventEmitter {
-  private logger = createLogger("api-performance-optimizer");
+  private logger = createSafeLogger("api-performance-optimizer");
 
   private cache = new Map<string, CacheEntry>();
   private requestQueue: BatchableRequest[] = [];

@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Enhanced rate limiter for authentication endpoints with audit logging
  * Integrates with adaptive rate limiting for intelligent throttling
  * In production, consider using Redis or a distributed cache
@@ -45,12 +45,12 @@ const RATE_LIMITS = {
 };
 
 // Security event logging - lazy initialization
-let _logger: ReturnType<typeof createLogger> | null = null;
+let _logger: ReturnType<typeof createSafeLogger> | null = null;
 
-function getLogger(): ReturnType<typeof createLogger> {
+function getLogger(): ReturnType<typeof createSafeLogger> {
   if (!_logger) {
     try {
-      _logger = createLogger("rate-limiter");
+      _logger = createSafeLogger("rate-limiter");
     } catch {
       // Fallback during build time
       _logger = {

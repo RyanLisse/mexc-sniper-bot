@@ -9,7 +9,7 @@ import { and, eq, or } from "drizzle-orm";
 import { db } from "../../db";
 import { coinActivities } from "../../db/schemas/patterns";
 import { toSafeError } from "../../lib/error-type-utils";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { ActivityData } from "../../schemas/mexc-schemas";
 
 /**
@@ -20,7 +20,7 @@ export async function getActivityDataForSymbol(
   symbol: string,
   vcoinId?: string
 ): Promise<ActivityData[]> {
-  const logger = createLogger("activity-integration");
+  const logger = createSafeLogger("activity-integration");
   try {
     // Extract base currency from symbol (e.g., 'FCATUSDT' -> 'FCAT')
     const baseCurrency = symbol.replace(/USDT$|BTC$|ETH$|BNB$/, "");

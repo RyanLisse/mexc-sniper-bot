@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { z } from "zod";
 import { tradingAnalytics } from "../../../../src/services/trading-analytics-service";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
@@ -19,7 +19,7 @@ const RealtimeQuerySchema = z.object({
   includeEvents: z.coerce.boolean().optional().default(false),
 });
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

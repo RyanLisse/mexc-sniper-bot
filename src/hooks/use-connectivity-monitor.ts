@@ -7,7 +7,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { type MexcConnectivityResult, useMexcConnectivity } from "./use-mexc-data";
 
 interface ConnectivityHealthMetrics {
@@ -36,7 +36,7 @@ const DEFAULT_OPTIONS: Required<ConnectivityMonitorOptions> = {
   notifyOnHealthChange: true,
 };
 
-const logger = createLogger("use-connectivity-monitor");
+const logger = createSafeLogger("use-connectivity-monitor");
 
 export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {}) {
   const opts = { ...DEFAULT_OPTIONS, ...options };

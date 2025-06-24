@@ -6,7 +6,7 @@ import {
   snipeTargets,
   userPreferences,
 } from "../db/schema";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { ExitLevel, ExitStrategy } from "../types/exit-strategies";
 import { EXIT_STRATEGIES } from "../types/exit-strategies";
 import {
@@ -49,7 +49,7 @@ export interface PositionUpdate {
  * Fixes N+1 queries, implements batching, and improves performance
  */
 export class OptimizedAutoExitManager {
-  private logger = createLogger("optimized-auto-exit-manager");
+  private logger = createSafeLogger("optimized-auto-exit-manager");
 
   private mexcService = getMexcService();
   private isMonitoring = false;

@@ -12,13 +12,13 @@
 
 import { config } from 'dotenv';
 import { join } from 'path';
-import { createLogger } from '../src/lib/structured-logger';
+import { createSafeLogger } from '../src/lib/structured-logger';
 
 // Load environment variables from both .env and .env.local
 config({ path: join(process.cwd(), '.env') });
 config({ path: join(process.cwd(), '.env.local') });
 
-const logger = createLogger('SystemFix');
+const logger = createSafeLogger('SystemFix');
 
 interface SystemFixResult {
   component: string;

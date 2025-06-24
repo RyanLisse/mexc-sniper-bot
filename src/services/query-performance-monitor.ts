@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 /**
  * Query Performance Monitor
@@ -35,7 +35,7 @@ interface QueryPattern {
 }
 
 export class QueryPerformanceMonitor {
-  private logger = createLogger("query-performance-monitor");
+  private logger = createSafeLogger("query-performance-monitor");
 
   private static instance: QueryPerformanceMonitor;
   private metrics: QueryMetric[] = [];

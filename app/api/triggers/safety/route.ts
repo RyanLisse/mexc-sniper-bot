@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { inngest } from "../../../../src/inngest/client";
 import { 
   createSuccessResponse, 
@@ -9,7 +9,7 @@ import {
   HTTP_STATUS 
 } from "../../../../src/lib/api-response";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function POST(request: NextRequest) {
   try {

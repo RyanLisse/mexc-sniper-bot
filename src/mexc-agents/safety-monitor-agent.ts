@@ -9,7 +9,7 @@
  * - Real-time safety protocol enforcement
  */
 
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type { AdvancedRiskEngine } from "../services/advanced-risk-engine";
 import type { EmergencySafetySystem } from "../services/emergency-safety-system";
 import type { AgentConfig } from "./base-agent";
@@ -127,10 +127,10 @@ export interface SafetyMonitorConfig extends SafetyConfig {
  * mechanisms for high-risk trading decisions.
  */
 export class SafetyMonitorAgent extends SafetyBaseAgent {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("safety-monitor-agent");
+      this._logger = createSafeLogger("safety-monitor-agent");
     }
     return this._logger;
   }

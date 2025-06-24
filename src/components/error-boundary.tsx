@@ -3,7 +3,7 @@
 import { AlertCircle, ChevronDown, ChevronUp, Home, RefreshCcw } from "lucide-react";
 import type React from "react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -34,7 +34,7 @@ interface ErrorBoundaryState {
  * customizable fallback UI and error recovery options.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private logger = createLogger("error-boundary");
+  private logger = createSafeLogger("error-boundary");
 
   private resetTimeoutId: NodeJS.Timeout | null = null;
   private previousResetKeys: Array<string | number> = [];

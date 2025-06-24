@@ -1,4 +1,4 @@
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 /**
  * WebSocket Price Service
@@ -38,7 +38,7 @@ type PriceCallback = (priceUpdate: PriceUpdate) => void;
 
 // LRU Cache implementation for bounded memory usage
 class LRUCache<K, V> {
-  private logger = createLogger("websocket-price-service");
+  private logger = createSafeLogger("websocket-price-service");
 
   private maxSize: number;
   private cache: Map<K, V>;

@@ -12,7 +12,7 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type {
   CorrelationAnalysis,
@@ -31,7 +31,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   private static instance: PatternAnalyzer;
   private readonly READY_STATE_PATTERN: ReadyStatePattern = { sts: 2, st: 2, tt: 4 };
   private readonly MIN_ADVANCE_HOURS = 3.5; // Core competitive advantage
-  private logger = createLogger("pattern-analyzer");
+  private logger = createSafeLogger("pattern-analyzer");
 
   static getInstance(): PatternAnalyzer {
     if (!PatternAnalyzer.instance) {

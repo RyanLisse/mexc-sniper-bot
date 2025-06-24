@@ -8,7 +8,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // ============================================================================
 // Types and Interfaces
@@ -132,7 +132,7 @@ export interface ConnectivityAnalysis {
 // Enhanced Connectivity Hook
 // ============================================================================
 
-const logger = createLogger("use-enhanced-connectivity");
+const logger = createSafeLogger("use-enhanced-connectivity");
 
 export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
   const {

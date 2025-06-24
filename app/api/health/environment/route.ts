@@ -7,7 +7,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { apiResponse } from '@/src/lib/api-response';
 import { environmentValidation } from '@/src/services/enhanced-environment-validation';
 
@@ -15,7 +15,7 @@ import { environmentValidation } from '@/src/services/enhanced-environment-valid
  * GET /api/health/environment
  * Comprehensive environment variable health check
  */
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();

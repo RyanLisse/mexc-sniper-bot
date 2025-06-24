@@ -11,7 +11,7 @@ import {
   useOrientation,
 } from "../hooks/use-mobile-clean";
 import { RESPONSIVE_CONFIG, ResponsiveClassNames } from "../lib/responsive-utils-clean";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { cn } from "../lib/utils";
 
 /**
@@ -19,7 +19,7 @@ import { cn } from "../lib/utils";
  * Demonstrates mobile detection hooks and responsive system functionality
  * Used for testing and validation of mobile-first responsive infrastructure
  */
-const logger = createLogger("mobile-test-dashboard");
+const logger = createSafeLogger("mobile-test-dashboard");
 
 export function MobileTestDashboard() {
   const isMobile = useIsMobile();

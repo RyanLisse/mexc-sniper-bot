@@ -12,12 +12,12 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
 import { AutoSnipingOrchestrator } from '@/src/services/auto-sniping-orchestrator';
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 /**
  * POST /api/auto-sniping/control

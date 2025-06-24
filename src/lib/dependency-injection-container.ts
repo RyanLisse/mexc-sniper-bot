@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Dependency Injection Container
  *
  * Provides a comprehensive dependency injection system that eliminates tight coupling
@@ -68,7 +68,7 @@ export interface ContainerConfiguration {
  * Manages service registration, resolution, and lifecycle
  */
 export class DependencyContainer extends EventEmitter {
-  private logger = createLogger("dependency-injection-container");
+  private logger = createSafeLogger("dependency-injection-container");
 
   private services = new Map<string, ServiceDescriptor>();
   private singletonInstances = new Map<string, any>();

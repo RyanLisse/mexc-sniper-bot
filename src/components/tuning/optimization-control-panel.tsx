@@ -1,5 +1,5 @@
 "use client";
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 
 /**
  * Optimization Control Panel
@@ -67,7 +67,7 @@ interface OptimizationControlPanelProps {
   systemHealth: SystemHealth | null;
 }
 
-const logger = createLogger("optimization-control-panel");
+const logger = createSafeLogger("optimization-control-panel");
 
 export function OptimizationControlPanel({
   onStartOptimization,

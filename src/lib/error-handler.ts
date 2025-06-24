@@ -1,5 +1,5 @@
 /**
-import { createLogger } from './structured-logger';
+import { createSafeLogger } from './structured-logger';
  * Centralized Error Handler for API Routes
  *
  * This module provides error handling middleware and utilities for
@@ -61,7 +61,13 @@ export function setErrorLogger(logger: ErrorLogger) {
  * Error context builder
  */
 export class ErrorContext {
-  private logger = createLogger("error-handler");
+  private _logger?: ReturnType<typeof createSafeLogger>;
+  private get logger() {
+    if (!this._logger) {
+      this._logger = createSafeLogger("error-handler");
+    }
+    return this._logger;
+  }
 
   private context: Record<string, unknown> = {};
 

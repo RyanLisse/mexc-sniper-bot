@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { WorkflowStatusService } from "../../../src/services/workflow-status-service";
 import { 
   createSuccessResponse, 
@@ -9,7 +9,7 @@ import {
   createValidationErrorResponse
 } from "../../../src/lib/api-response";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

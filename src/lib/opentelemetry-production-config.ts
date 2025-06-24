@@ -28,9 +28,9 @@ import {
   SEMRESATTRS_SERVICE_NAME,
   SEMRESATTRS_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
-const logger = createLogger("opentelemetry-production");
+const logger = createSafeLogger("opentelemetry-production");
 
 export interface ProductionTelemetryConfig {
   serviceName: string;

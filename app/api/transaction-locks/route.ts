@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { transactionLockService } from "../../../src/services/transaction-lock-service";
 import { db } from "../../../src/db";
 import { transactionLocks, transactionQueue } from "../../../src/db/schema";
@@ -14,7 +14,7 @@ import {
   createValidatedApiResponse,
 } from "../../../src/schemas/api-validation-schemas";
 
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

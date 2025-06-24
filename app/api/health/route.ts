@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createLogger } from '../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../src/lib/structured-logger';
 import { apiResponse } from '@/src/lib/api-response';
 import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
 
@@ -14,7 +14,7 @@ import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
  * GET /api/health
  * Comprehensive health check for the MEXC Sniper Bot system
  */
-const logger = createLogger('route');
+const logger = createSafeLogger('route');
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();

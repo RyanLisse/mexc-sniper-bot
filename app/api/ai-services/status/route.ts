@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../src/lib/structured-logger';
 import { getAiIntelligenceService } from "../../../../src/services/ai-intelligence-service";
 import { createApiResponse } from "../../../../src/lib/api-response";
 
 export async function GET(request: NextRequest) {
   // Create logger lazily to prevent build-time issues
-  let logger: ReturnType<typeof createLogger>;
+  let logger: ReturnType<typeof createSafeLogger>;
   try {
-    logger = createLogger('route');
+    logger = createSafeLogger('route');
   } catch {
     // Fallback to console during build
     logger = { 

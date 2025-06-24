@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 /**
  * NeonDB Branch Management Utility
@@ -54,7 +54,7 @@ interface NeonConnectionDetails {
 }
 
 export class NeonBranchManager {
-  private logger = createLogger("neon-branch-manager");
+  private logger = createSafeLogger("neon-branch-manager");
 
   private apiKey: string;
   private projectId: string;

@@ -1,25 +1,25 @@
 /**
  * MEXC Market Data API Methods
- * 
+ *
  * Public market data methods including calendar listings, symbols, exchange info, and tickers.
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
-import { createLogger } from "../../lib/structured-logger";
+import { createSafeLogger } from "../../lib/structured-logger";
 import { getGlobalErrorRecoveryService } from "../mexc-error-recovery-service";
 import { MexcClientCore } from "./mexc-client-core";
-import type { 
-  UnifiedMexcResponse, 
+import type {
   CalendarEntry,
-  SymbolEntry,
   ExchangeSymbol,
+  SymbolEntry,
   Ticker,
-  UnifiedMexcConfig
+  UnifiedMexcConfig,
+  UnifiedMexcResponse,
 } from "./mexc-client-types";
 import {
   CalendarEntrySchema,
-  SymbolEntrySchema,
   ExchangeSymbolSchema,
+  SymbolEntrySchema,
   TickerSchema,
 } from "./mexc-client-types";
 
@@ -32,7 +32,7 @@ export class MexcMarketDataClient extends MexcClientCore {
   private exchangeSymbolsCache: ExchangeSymbol[] | null = null;
   private exchangeSymbolsCacheTime = 0;
   private readonly symbolsCacheExpiry = 300000; // 5 minutes
-  private logger = createLogger("mexc-market-data");
+  private logger = createSafeLogger("mexc-market-data");
 
   constructor(config: UnifiedMexcConfig = {}) {
     super(config);
@@ -381,10 +381,14 @@ export class MexcMarketDataClient extends MexcClientCore {
   /**
    * Get current price for a symbol or all symbols
    */
-  async getPrice(symbol?: string): Promise<UnifiedMexcResponse<{ symbol: string; price: string }[]>> {
+  async getPrice(
+    symbol?: string
+  ): Promise<UnifiedMexcResponse<{ symbol: string; price: string }[]>> {
     try {
       const endpoint = symbol ? `/api/v3/ticker/price?symbol=${symbol}` : "/api/v3/ticker/price";
-      const response = await this.makeRequest<{ symbol: string; price: string } | { symbol: string; price: string }[]>(endpoint);
+      const response = await this.makeRequest<
+        { symbol: string; price: string } | { symbol: string; price: string }[]
+      >(endpoint);
 
       if (!response.success) {
         return {
@@ -483,8 +487,7 @@ export class MexcMarketDataClient extends MexcClientCore {
   isExchangeCacheValid(): boolean {
     const now = Date.now();
     return Boolean(
-      this.exchangeSymbolsCache &&
-      now - this.exchangeSymbolsCacheTime < this.symbolsCacheExpiry
+      this.exchangeSymbolsCache && now - this.exchangeSymbolsCacheTime < this.symbolsCacheExpiry
     );
   }
 }

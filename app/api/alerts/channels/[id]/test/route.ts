@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createLogger } from '../../../../../../src/lib/structured-logger';
+import { createSafeLogger } from '../../../../../../src/lib/structured-logger';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { db } from "../../../../../../src/db";
 import { NotificationService } from "../../../../../../src/services/notification-providers";
@@ -15,9 +15,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   // Create logger lazily to prevent build-time issues
-  let logger: ReturnType<typeof createLogger>;
+  let logger: ReturnType<typeof createSafeLogger>;
   try {
-    logger = createLogger('route');
+    logger = createSafeLogger('route');
   } catch {
     // Fallback to console during build
     logger = { 

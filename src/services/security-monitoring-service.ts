@@ -1,5 +1,5 @@
 import { getSecurityEvents, isIPSuspicious, logSecurityEvent } from "../lib/rate-limiter";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import { mexcApiBreaker } from "./circuit-breaker";
 
 // ============================================================================
@@ -109,7 +109,7 @@ const SECURITY_CONFIG = {
 // ============================================================================
 
 export class SecurityMonitoringService {
-  private logger = createLogger("security-monitoring-service");
+  private logger = createSafeLogger("security-monitoring-service");
 
   private static instance: SecurityMonitoringService;
   private monitoringInterval: NodeJS.Timeout | null = null;

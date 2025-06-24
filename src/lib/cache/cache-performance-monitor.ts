@@ -1,4 +1,4 @@
-import { createLogger } from "../structured-logger";
+import { createSafeLogger } from "../structured-logger";
 
 /**
  * Cache Performance Monitor
@@ -22,11 +22,11 @@ import type {
 } from "./agent-cache-types";
 
 export class CachePerformanceMonitor {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("cache-performance-monitor");
+      this._logger = createSafeLogger("cache-performance-monitor");
     }
     return this._logger;
   }

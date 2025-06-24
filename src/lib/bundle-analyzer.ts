@@ -1,4 +1,4 @@
-import { createLogger } from "./structured-logger";
+import { createSafeLogger } from "./structured-logger";
 
 /**
  * Bundle Size Analyzer and Optimizer
@@ -54,11 +54,11 @@ export interface PerformanceMetrics {
 }
 
 export class BundleAnalyzer {
-  private _logger?: ReturnType<typeof createLogger>;
+  private _logger?: ReturnType<typeof createSafeLogger>;
 
   private get logger() {
     if (!this._logger) {
-      this._logger = createLogger("bundle-analyzer");
+      this._logger = createSafeLogger("bundle-analyzer");
     }
     return this._logger;
   }
@@ -473,7 +473,7 @@ export const bundleAnalyzer = {
   },
   async getOptimizationProgress() {
     return this.getInstance.getOptimizationProgress();
-  }
+  },
 };
 
 /**

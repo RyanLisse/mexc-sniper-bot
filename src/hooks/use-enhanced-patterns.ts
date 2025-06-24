@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // ======================
 // Types
@@ -82,7 +82,7 @@ const enhancedPatternsQueryKeys = {
 /**
  * Hook to get AI-enhanced pattern detection data
  */
-const logger = createLogger("use-enhanced-patterns");
+const logger = createSafeLogger("use-enhanced-patterns");
 
 export function useEnhancedPatterns(options?: {
   enableAI?: boolean;

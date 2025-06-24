@@ -28,7 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 
 // Import the trading strategy types and manager
 import {
@@ -58,7 +58,7 @@ interface ActivePosition {
   nextTarget: number;
 }
 
-const logger = createLogger("strategy-manager");
+const logger = createSafeLogger("strategy-manager");
 
 export function StrategyManager() {
   const [strategyManager] = useState(() => new TradingStrategyManager());

@@ -14,7 +14,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createLogger } from "../lib/structured-logger";
+import { createSafeLogger } from "../lib/structured-logger";
 import type {
   TradingBalanceMessage,
   TradingExecutionMessage,
@@ -183,7 +183,7 @@ export interface UseLiveTradingDataResult {
 // ======================
 
 class PriceAnalyticsEngine {
-  private logger = createLogger("use-live-trading-data");
+  private logger = createSafeLogger("use-live-trading-data");
 
   private priceHistory = new Map<string, Array<{ price: number; timestamp: number }>>();
   private readonly maxHistoryPoints = 1000;
