@@ -54,24 +54,41 @@ export class MexcConfigValidator {
     const timestamp = new Date().toISOString();
 
     try {
-      // Check if credentials are configured
+      // Enhanced credential validation with better error details
+      const envApiKey = process.env.MEXC_API_KEY?.trim();
+      const envSecretKey = process.env.MEXC_SECRET_KEY?.trim();
+      
+      const credentialDetails = {
+        hasApiKey: !!envApiKey,
+        hasSecretKey: !!envSecretKey,
+        apiKeyLength: envApiKey?.length || 0,
+        secretKeyLength: envSecretKey?.length || 0,
+        hasValidLength: (envApiKey?.length || 0) >= 10 && (envSecretKey?.length || 0) >= 10,
+      };
+
       if (!this.mexcService.hasValidCredentials()) {
         return {
           isValid: false,
           component,
           status: "invalid",
-          message: "MEXC API credentials not configured",
-          details: {
-            hasApiKey: !!process.env.MEXC_API_KEY,
-            hasSecretKey: !!process.env.MEXC_SECRET_KEY,
-            hasPassphrase: !!process.env.MEXC_PASSPHRASE,
-          },
+          message: "MEXC API credentials validation failed",
+          details: credentialDetails,
           timestamp,
         };
       }
 
-      // Test API connectivity
-      const connectivityTest = await this.mexcService.testConnectivityWithResponse();
+      // Test API connectivity with timeout
+      const connectivityTest = await Promise.race([
+        this.mexcService.testConnectivityWithResponse(),
+        new Promise<{ success: false; error: string; responseTime: number }>((resolve) =>
+          setTimeout(() => resolve({ 
+            success: false, 
+            error: "Connectivity test timeout after 10 seconds", 
+            responseTime: 10000 
+          }), 10000)
+        ),
+      ]);
+
       if (!connectivityTest.success) {
         return {
           isValid: false,
@@ -81,13 +98,22 @@ export class MexcConfigValidator {
           details: {
             error: connectivityTest.error,
             responseTime: connectivityTest.responseTime,
+            credentialDetails,
           },
           timestamp,
         };
       }
 
-      // Test server time synchronization
-      const serverTimeResponse = await this.mexcService.getServerTime();
+      // Test server time synchronization with timeout
+      const serverTimeResponse = await Promise.race([
+        this.mexcService.getServerTime(),
+        new Promise<{ success: false; error: string }>((resolve) =>
+          setTimeout(() => resolve({ 
+            success: false, 
+            error: "Server time check timeout after 8 seconds" 
+          }), 8000)
+        ),
+      ]);
       if (!serverTimeResponse.success) {
         return {
           isValid: false,

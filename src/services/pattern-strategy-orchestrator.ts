@@ -16,6 +16,7 @@ import {
   PatternDetectionCore,
   type PatternMatch,
 } from "../core/pattern-detection";
+import { and, desc, eq, gte } from "drizzle-orm";
 import { db } from "../db";
 import { monitoredListings } from "../db/schemas/patterns";
 import type { AgentResponse } from "../mexc-agents/base-agent";
@@ -321,7 +322,21 @@ export class PatternStrategyOrchestrator {
     agentsUsed: string[]
   ): Promise<PatternWorkflowResult> {
     const results: PatternWorkflowResult["results"] = { agentResponses: {} };
-    const symbolData = request.input.symbolData || [];
+    let symbolData = request.input.symbolData || [];
+
+    // CRITICAL FIX: Fetch monitored symbols from database if empty array provided
+    // This fixes the scheduled pattern analysis that was completely non-functional
+    if (symbolData.length === 0) {
+      console.info("[PatternOrchestrator] Fetching monitored symbols from database");
+      try {
+        const monitoredSymbols = await this.getMonitoredSymbolsFromDatabase();
+        symbolData = monitoredSymbols;
+        console.info(`[PatternOrchestrator] Found ${symbolData.length} monitored symbols in database`);
+      } catch (error) {
+        console.error("[PatternOrchestrator] Failed to fetch monitored symbols:", error);
+        // Continue with empty array - will skip analysis but won't crash
+      }
+    }
 
     // Step 1: Symbol Status Analysis
     if (symbolData.length > 0) {
@@ -831,6 +846,55 @@ export class PatternStrategyOrchestrator {
       console.info(`[PatternOrchestrator] Stored ${patterns.length} patterns in database`);
     } catch (error) {
       console.warn("[PatternOrchestrator] Failed to store patterns:", error);
+    }
+  }
+
+  /**
+   * CRITICAL FIX: Fetch monitored symbols from database for scheduled analysis
+   * This method fixes the scheduled pattern analysis pipeline that was completely broken
+   */
+  private async getMonitoredSymbolsFromDatabase(): Promise<SymbolEntry[]> {
+    try {
+      const monitoredSymbols = await db
+        .select({
+          vcoinId: monitoredListings.vcoinId,
+          symbolName: monitoredListings.symbolName,
+          projectName: monitoredListings.projectName,
+          firstOpenTime: monitoredListings.firstOpenTime,
+          confidence: monitoredListings.confidence,
+          patternSts: monitoredListings.patternSts,
+          patternSt: monitoredListings.patternSt,
+          patternTt: monitoredListings.patternTt,
+          status: monitoredListings.status,
+        })
+        .from(monitoredListings)
+        .where(
+          and(
+            eq(monitoredListings.status, "monitoring"),
+            gte(monitoredListings.confidence, 60) // Only fetch symbols with reasonable confidence
+          )
+        )
+        .orderBy(desc(monitoredListings.confidence))
+        .limit(50); // Limit to prevent excessive API calls
+
+      // Transform database records to SymbolEntry format for pattern analysis
+      const symbolEntries: SymbolEntry[] = monitoredSymbols.map(symbol => ({
+        cd: symbol.symbolName,
+        symbol: symbol.symbolName,
+        sts: symbol.patternSts || 0,
+        st: symbol.patternSt || 0,
+        tt: symbol.patternTt || 0,
+        // Optional fields with defaults
+        ca: 1000, // Default market cap indicator
+        ps: Math.round(symbol.confidence || 0), // Use confidence as price score
+        qs: 75, // Default quality score
+        vcoinId: symbol.vcoinId,
+      }));
+
+      return symbolEntries;
+    } catch (error) {
+      console.error("[PatternOrchestrator] Failed to fetch monitored symbols from database:", error);
+      return [];
     }
   }
 

@@ -52,26 +52,37 @@ export const GET = publicRoute(withApiErrorHandling(async (request: NextRequest)
     }
   }
 
-    // Use unified service factory for consistent credential resolution
+    // Use unified service factory with improved error handling
     let mexcService;
     try {
-      mexcService = await getUnifiedMexcService({
-        userId: userId || undefined,
-        skipCache: false // Use cache for better performance
-      });
+      mexcService = await Promise.race([
+        getUnifiedMexcService({
+          userId: userId || undefined,
+          skipCache: false // Use cache for better performance
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Service initialization timeout after 10 seconds")), 10000)
+        ),
+      ]);
     } catch (serviceError) {
-      console.error('[API] Failed to initialize MEXC service:', serviceError);
+      console.error('[API] Failed to initialize MEXC service:', {
+        error: serviceError instanceof Error ? serviceError.message : String(serviceError),
+        userId: userId || 'none',
+        duration: `${Date.now() - startTime}ms`
+      });
+      
       return apiResponse(
         createErrorResponse(
-          'Failed to initialize MEXC service - please check API credentials configuration',
+          'Service initialization failed - please verify API credentials and try again',
           {
             code: 'SERVICE_INITIALIZATION_ERROR',
             fallbackData: {
               balances: [],
               totalUsdtValue: 0,
               lastUpdated: new Date().toISOString(),
-              hasUserCredentials: false,
-              credentialsType: 'environment-fallback',
+              hasUserCredentials: !!userId,
+              credentialsType: userId ? 'user-database-failed' : 'environment-fallback',
+              error: serviceError instanceof Error ? serviceError.message : 'Unknown initialization error'
             },
             requestDuration: `${Date.now() - startTime}ms`,
             userId: userId || 'none'
@@ -91,8 +102,16 @@ export const GET = publicRoute(withApiErrorHandling(async (request: NextRequest)
       requestDuration: `${Date.now() - startTime}ms`
     });
     
-    // Fetch account balances with USDT conversion
-    const balanceResponse = await mexcService.getAccountBalances();
+    // Fetch account balances with timeout protection
+    const balanceResponse = await Promise.race([
+      mexcService.getAccountBalances(),
+      new Promise<{ success: false; error: string }>((resolve) =>
+        setTimeout(() => resolve({ 
+          success: false, 
+          error: "Balance fetch timeout after 15 seconds" 
+        }), 15000)
+      ),
+    ]);
     
     if (!balanceResponse.success) {
       console.error('[API] Account balance fetch failed:', { error: balanceResponse.error });

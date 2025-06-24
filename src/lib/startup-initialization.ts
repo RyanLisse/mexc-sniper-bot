@@ -8,7 +8,7 @@
 import { calendarPatternBridgeService } from "../services/calendar-pattern-bridge-service";
 import { environmentValidation } from "../services/enhanced-environment-validation";
 import { OptimizedAutoSnipingCore } from "../services/optimized-auto-sniping-core";
-import { patternTargetBridgeService } from "../services/pattern-target-bridge-service";
+import { patternToDatabaseBridge } from "../services/pattern-to-database-bridge";
 import { strategyInitializationService } from "../services/strategy-initialization-service";
 
 interface StartupResult {
@@ -142,25 +142,25 @@ export class StartupInitializer {
       console.error("[Startup] ❌ Auto-sniping system initialization failed:", errorMessage);
     }
 
-    // Initialize Pattern-Target Bridge Service for automatic target creation
+    // Initialize Pattern-To-Database Bridge Service for automatic target creation
     try {
-      console.info("[Startup] Initializing Pattern-Target Bridge Service...");
+      console.info("[Startup] Initializing Pattern-To-Database Bridge Service...");
 
-      // Start listening for pattern detection events with system user
-      patternTargetBridgeService.startListening("system");
+      // Start listening for pattern detection events from EnhancedPatternDetectionCore
+      await patternToDatabaseBridge.startListening();
 
-      initialized.push("pattern-target-bridge");
+      initialized.push("pattern-to-database-bridge");
       console.info(
-        "[Startup] ✅ Pattern-Target Bridge Service initialized and listening for events"
+        "[Startup] ✅ Pattern-To-Database Bridge Service initialized and listening for events"
       );
       console.info(
-        "[Startup] 🔗 Auto-target creation enabled: Pattern Detection → Snipe Targets → Auto-Execution"
+        "[Startup] 🔗 Auto-target creation enabled: Enhanced Pattern Detection → Database → Auto-Execution"
       );
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      failed.push("pattern-target-bridge");
-      errors["pattern-target-bridge"] = errorMessage;
-      console.error("[Startup] ❌ Pattern-Target Bridge initialization failed:", errorMessage);
+      failed.push("pattern-to-database-bridge");
+      errors["pattern-to-database-bridge"] = errorMessage;
+      console.error("[Startup] ❌ Pattern-To-Database Bridge initialization failed:", errorMessage);
     }
 
     // Initialize Calendar-Pattern Bridge Service for automated calendar monitoring
