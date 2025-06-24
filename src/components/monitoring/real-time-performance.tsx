@@ -40,7 +40,7 @@ import {
   type PerformanceMetrics,
   useSkeletonItems,
 } from "../../lib/react-utilities";
-import { createLogger } from "../../../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 
 const logger = createLogger("real-time-performance");
 

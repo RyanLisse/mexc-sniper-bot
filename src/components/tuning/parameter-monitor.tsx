@@ -1,5 +1,5 @@
 "use client";
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 
 /**
  * Parameter Monitor Component

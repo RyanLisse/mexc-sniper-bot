@@ -62,7 +62,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateChartCellKey, generateListKey, useSkeletonItems } from "../../lib/react-utilities";
-import { createLogger } from "../../../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 
 interface Alert {
   id: string;

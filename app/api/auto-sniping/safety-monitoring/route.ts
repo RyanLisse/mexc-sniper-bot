@@ -1,5 +1,6 @@
-/**
 import { createLogger } from '../../../../src/lib/structured-logger';
+
+/**
  * Real-time Safety Monitoring API Route
  * 
  * Provides endpoints for controlling and monitoring the real-time safety system.

@@ -1,5 +1,6 @@
-/**
 import { createLogger } from '../../../../src/lib/structured-logger';
+
+/**
  * Pattern Monitoring API Endpoints
  * 
  * Provides real-time pattern detection monitoring and statistics.
