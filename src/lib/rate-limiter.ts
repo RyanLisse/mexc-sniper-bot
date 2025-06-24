@@ -44,6 +44,8 @@ const RATE_LIMITS = {
 };
 
 // Security event logging - lazy initialization
+let _logger: any = null;
+
 function getLogger(): {
   info: (message: string, context?: any) => void;
   warn: (message: string, context?: any) => void;
