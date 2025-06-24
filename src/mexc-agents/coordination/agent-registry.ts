@@ -1,7 +1,11 @@
 import { instrumentAgentMethod } from "../../lib/opentelemetry-agent-instrumentation";
 import { createLogger } from "../../lib/structured-logger";
 import type { BaseAgent } from "../base-agent";
-import { AgentHealthMonitor, type HealthCheckResult, type AgentRegistryStats } from "./agent-health-monitor";
+import {
+  AgentHealthMonitor,
+  type AgentRegistryStats,
+  type HealthCheckResult,
+} from "./agent-health-monitor";
 import { AgentRecoveryStrategies } from "./agent-recovery-strategies";
 import {
   type AgentHealth,

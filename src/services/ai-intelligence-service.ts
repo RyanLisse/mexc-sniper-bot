@@ -1088,5 +1088,11 @@ Focus on actionable insights and recent developments. Use current market data an
   }
 }
 
-// Export singleton instance
-export const aiIntelligenceService = new AIIntelligenceService();
+// Export factory function to prevent build-time instantiation
+let aiIntelligenceServiceInstance: AIIntelligenceService | null = null;
+export function getAiIntelligenceService(): AIIntelligenceService {
+  if (!aiIntelligenceServiceInstance) {
+    aiIntelligenceServiceInstance = new AIIntelligenceService();
+  }
+  return aiIntelligenceServiceInstance;
+}

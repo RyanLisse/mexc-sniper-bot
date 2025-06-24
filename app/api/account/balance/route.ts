@@ -16,9 +16,8 @@ import {
 } from "../../../../src/schemas/mexc-api-validation-schemas";
 import { publicRoute } from "../../../../src/lib/auth-decorators";
 
-const logger = createLogger('account-balance-api');
-
 export const GET = publicRoute(async (request: NextRequest) => {
+  const logger = createLogger('account-balance-api');
   const startTime = Date.now();
   
   try {

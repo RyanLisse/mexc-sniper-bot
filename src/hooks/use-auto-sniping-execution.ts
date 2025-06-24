@@ -210,7 +210,7 @@ export function useAutoSnipingExecution(
         }));
       } catch (error) {
         logger.error("[useAutoSnipingExecution] Failed to load execution report:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
         setState((prev) => ({
           ...prev,
@@ -244,7 +244,7 @@ export function useAutoSnipingExecution(
       return true;
     } catch (error) {
       logger.error("[useAutoSnipingExecution] Failed to start execution:", {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       setState((prev) => ({
         ...prev,

@@ -139,6 +139,7 @@ class ServiceInstanceCache {
 // ============================================================================
 
 export class UnifiedMexcServiceFactory {
+  private logger = createLogger("unified-mexc-service-factory");
   private config: ServiceFactoryConfig;
   private credentialCache = new CredentialCache();
   private serviceCache = new ServiceInstanceCache();
@@ -154,7 +155,7 @@ export class UnifiedMexcServiceFactory {
       ...config,
     };
 
-    logger.info("[UnifiedMexcServiceFactory] Initialized with config:", {
+    this.logger.info("[UnifiedMexcServiceFactory] Initialized with config:", {
       enableGlobalCache: this.config.enableGlobalCache,
       credentialCacheTTL: this.config.credentialCacheTTL,
       serviceInstanceCacheTTL: this.config.serviceInstanceCacheTTL,

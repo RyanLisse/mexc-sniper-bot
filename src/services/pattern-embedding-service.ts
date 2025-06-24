@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import type { NewPatternEmbedding } from "../db/schema";
 import { vectorUtils } from "../db/vector-utils";
 import { createLogger } from "../lib/structured-logger";
-import { aiIntelligenceService } from "./ai-intelligence-service";
+import { getAiIntelligenceService } from "./ai-intelligence-service";
 
 export interface PatternData {
   symbolName: string;
@@ -115,7 +115,7 @@ export class PatternEmbeddingService {
     if (this.useCohere) {
       try {
         // Use Cohere Embed v4.0 via AI Intelligence Service
-        const embedding = await aiIntelligenceService.generatePatternEmbedding(pattern);
+        const embedding = await getAiIntelligenceService().generatePatternEmbedding(pattern);
         return embedding;
       } catch (error) {
         logger.warn("[PatternEmbedding] Cohere embedding failed, falling back to OpenAI:", error);

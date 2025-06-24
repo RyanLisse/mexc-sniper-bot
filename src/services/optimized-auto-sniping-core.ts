@@ -374,18 +374,18 @@ export class OptimizedAutoSnipingCore {
    */
   pauseExecution(): void {
     if (!this.isActive) return;
-    
-    this.logger.info('Pausing auto-sniping execution');
-    
+
+    this.logger.info("Pausing auto-sniping execution");
+
     if (this.executionInterval) {
       clearInterval(this.executionInterval);
       this.executionInterval = null;
     }
-    
+
     this.addValidatedAlert({
-      type: 'position_opened',
-      severity: 'info',
-      message: 'Auto-sniping execution paused',
+      type: "position_opened",
+      severity: "info",
+      message: "Auto-sniping execution paused",
       details: { activePositions: this.activePositions.size },
     });
   }
@@ -395,30 +395,30 @@ export class OptimizedAutoSnipingCore {
    */
   async resumeExecution(): Promise<void> {
     if (!this.isActive || this.executionInterval) return;
-    
-    this.logger.info('Resuming auto-sniping execution');
-    
+
+    this.logger.info("Resuming auto-sniping execution");
+
     // Restart execution cycle
     this.executionInterval = setInterval(() => {
       this.executeOptimizedCycle().catch((error) => {
         const safeError = toSafeError(error);
-        this.logger.error('Optimized execution cycle failed', {
+        this.logger.error("Optimized execution cycle failed", {
           error: safeError.message,
           activePositions: this.activePositions.size,
         });
         this.addValidatedAlert({
-          type: 'execution_error',
-          severity: 'error',
+          type: "execution_error",
+          severity: "error",
           message: `Execution cycle failed: ${safeError.message}`,
           details: { error: safeError.message },
         });
       });
     }, 3000);
-    
+
     this.addValidatedAlert({
-      type: 'position_opened',
-      severity: 'info',
-      message: 'Auto-sniping execution resumed',
+      type: "position_opened",
+      severity: "info",
+      message: "Auto-sniping execution resumed",
       details: { activePositions: this.activePositions.size },
     });
   }
@@ -426,38 +426,38 @@ export class OptimizedAutoSnipingCore {
   /**
    * Close specific position
    */
-  async closePosition(positionId: string, reason = 'manual'): Promise<boolean> {
+  async closePosition(positionId: string, reason = "manual"): Promise<boolean> {
     const position = this.activePositions.get(positionId);
     if (!position) {
-      this.logger.warn('Position not found for closing', { positionId });
+      this.logger.warn("Position not found for closing", { positionId });
       return false;
     }
 
     try {
-      this.logger.info('Closing position', { positionId, reason, symbol: position.symbol });
-      
+      this.logger.info("Closing position", { positionId, reason, symbol: position.symbol });
+
       // Mark position as closed
-      position.status = 'CLOSED';
+      position.status = "CLOSED";
       this.activePositions.delete(positionId);
-      
+
       // Add to execution history
       this.executionHistory.push(position);
-      
+
       // Update stats
       this.stats.activePositions = this.activePositions.size;
-      
+
       this.addValidatedAlert({
-        type: 'position_closed',
-        severity: 'info',
+        type: "position_closed",
+        severity: "info",
         message: `Position ${positionId} closed: ${reason}`,
         details: { positionId, reason, symbol: position.symbol },
         positionId,
       });
-      
+
       return true;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to close position', { positionId, error: safeError.message });
+      this.logger.error("Failed to close position", { positionId, error: safeError.message });
       return false;
     }
   }
@@ -468,23 +468,23 @@ export class OptimizedAutoSnipingCore {
   async emergencyCloseAll(): Promise<number> {
     const positionIds = Array.from(this.activePositions.keys());
     let closedCount = 0;
-    
-    this.logger.warn('Emergency close all positions initiated', { 
-      positionCount: positionIds.length 
+
+    this.logger.warn("Emergency close all positions initiated", {
+      positionCount: positionIds.length,
     });
-    
+
     for (const positionId of positionIds) {
-      const success = await this.closePosition(positionId, 'emergency');
+      const success = await this.closePosition(positionId, "emergency");
       if (success) closedCount++;
     }
-    
+
     this.addValidatedAlert({
-      type: 'position_closed',
-      severity: 'warning',
+      type: "position_closed",
+      severity: "warning",
       message: `Emergency close completed: ${closedCount} positions closed`,
       details: { closedCount, totalPositions: positionIds.length },
     });
-    
+
     return closedCount;
   }
 
@@ -492,12 +492,12 @@ export class OptimizedAutoSnipingCore {
    * Acknowledge alert
    */
   acknowledgeAlert(alertId: string): boolean {
-    const alert = this.alerts.find(a => a.id === alertId);
+    const alert = this.alerts.find((a) => a.id === alertId);
     if (!alert) return false;
-    
+
     alert.acknowledged = true;
-    this.logger.info('Alert acknowledged', { alertId, alertType: alert.type });
-    
+    this.logger.info("Alert acknowledged", { alertId, alertType: alert.type });
+
     return true;
   }
 
@@ -505,13 +505,13 @@ export class OptimizedAutoSnipingCore {
    * Clear acknowledged alerts
    */
   clearAcknowledgedAlerts(): number {
-    const acknowledgedAlerts = this.alerts.filter(a => a.acknowledged);
+    const acknowledgedAlerts = this.alerts.filter((a) => a.acknowledged);
     const clearedCount = acknowledgedAlerts.length;
-    
-    this.alerts = this.alerts.filter(a => !a.acknowledged);
-    
-    this.logger.info('Acknowledged alerts cleared', { clearedCount });
-    
+
+    this.alerts = this.alerts.filter((a) => !a.acknowledged);
+
+    this.logger.info("Acknowledged alerts cleared", { clearedCount });
+
     return clearedCount;
   }
 

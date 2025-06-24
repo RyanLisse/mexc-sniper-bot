@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createLogger } from '../../../../src/lib/structured-logger';
-import { aiIntelligenceService } from "../../../../src/services/ai-intelligence-service";
+import { getAiIntelligenceService } from "../../../../src/services/ai-intelligence-service";
 import { createApiResponse } from "../../../../src/lib/api-response";
 
-const logger = createLogger('route');
-
 export async function GET(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     // Check AI service health and configuration
     const cohereStatus = await checkCohereStatus();
@@ -60,7 +59,7 @@ async function checkCohereStatus() {
     }
 
     // Test Cohere API with a simple embedding request
-    const testResult = await aiIntelligenceService.generatePatternEmbedding({
+    const testResult = await getAiIntelligenceService().generatePatternEmbedding({
       symbolName: "TEST",
       vcoinId: "test",
       type: "ready_state",
@@ -108,7 +107,7 @@ async function checkPerplexityStatus() {
     }
 
     // Test Perplexity API with a simple research request
-    const testResult = await aiIntelligenceService.conductMarketResearch("BTC", "sentiment");
+    const testResult = await getAiIntelligenceService().conductMarketResearch("BTC", "sentiment");
 
     return {
       name: "Perplexity",
