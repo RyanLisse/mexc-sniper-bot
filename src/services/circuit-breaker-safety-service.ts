@@ -13,6 +13,8 @@ import {
   CircuitBreakerCoordinator,
   CoordinatedCircuitBreakerRegistry,
 } from "./coordinated-circuit-breaker";
+import { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
+import { TRADING_TELEMETRY_CONFIG } from '../lib/opentelemetry-setup';
 
 // ============================================================================
 // Types and Interfaces
@@ -93,6 +95,7 @@ export class CircuitBreakerSafetyService {
   private coordinatedRegistry: CoordinatedCircuitBreakerRegistry;
   private coordinator: CircuitBreakerCoordinator;
   private serviceId: string;
+  private tracer = trace.getTracer('circuit-breaker-safety-service');
 
   /**
    * Lazy logger initialization to prevent webpack bundling issues
@@ -132,72 +135,113 @@ export class CircuitBreakerSafetyService {
    * Diagnose circuit breaker protective state issue
    */
   async diagnoseCircuitBreakerIssue(): Promise<CircuitBreakerDiagnosis> {
-    try {
-      const statusResponse = await this.mexcService.getCircuitBreakerStatus();
+    return await this.tracer.startActiveSpan(
+      TRADING_TELEMETRY_CONFIG.spans.safety_check,
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {
+          [TRADING_TELEMETRY_CONFIG.attributes.agent_type]: 'circuit-breaker-safety',
+          'operation.type': 'diagnosis'
+        }
+      },
+      async (span) => {
+        try {
+          const statusResponse = await this.mexcService.getCircuitBreakerStatus();
 
-      if (!statusResponse.success) {
-        return {
-          isInProtectiveState: true,
-          issue: "Cannot determine circuit breaker status",
-          canAutoRecover: false,
-          failureCount: 999,
-          recommendedAction: "Manual system check required",
-          severity: "CRITICAL",
-        };
+        if (!statusResponse.success) {
+          span.recordException(new Error('Circuit breaker status check failed'));
+          span.setStatus({ code: SpanStatusCode.ERROR });
+          const result = {
+            isInProtectiveState: true,
+            issue: "Cannot determine circuit breaker status",
+            canAutoRecover: false,
+            failureCount: 999,
+            recommendedAction: "Manual system check required",
+            severity: "CRITICAL" as const,
+          };
+          span.setAttributes({
+            'diagnosis.result': 'error',
+            'diagnosis.severity': result.severity
+          });
+          return result;
+        }
+
+        const status = statusResponse.data;
+        const isOpen = status.state === "OPEN";
+        const failureCount = status.failures || 0;
+
+        let timeSinceLastFailure: number | undefined;
+        if (status.lastFailureTime) {
+          timeSinceLastFailure = Date.now() - new Date(status.lastFailureTime).getTime();
+        }
+
+        let result: CircuitBreakerDiagnosis;
+
+        if (isOpen) {
+          result = {
+            isInProtectiveState: true,
+            issue: "Circuit breaker is OPEN",
+            canAutoRecover: true,
+            timeSinceLastFailure,
+            failureCount,
+            recommendedAction: "Reset circuit breaker after safety validation",
+            severity: failureCount > 10 ? "CRITICAL" : "HIGH",
+          };
+        } else if (status.state === "HALF_OPEN") {
+          result = {
+            isInProtectiveState: true,
+            issue: "Circuit breaker is HALF_OPEN (testing recovery)",
+            canAutoRecover: true,
+            timeSinceLastFailure,
+            failureCount,
+            recommendedAction: "Monitor recovery progress",
+            severity: "MEDIUM",
+          };
+        } else {
+          result = {
+            isInProtectiveState: false,
+            issue: "Circuit breaker is healthy",
+            canAutoRecover: false,
+            timeSinceLastFailure,
+            failureCount,
+            recommendedAction: "No action required",
+            severity: "LOW",
+          };
+        }
+
+        // Add span attributes
+        span.setAttributes({
+          'diagnosis.protective_state': result.isInProtectiveState,
+          'diagnosis.severity': result.severity,
+          'diagnosis.failure_count': result.failureCount,
+          'diagnosis.can_auto_recover': result.canAutoRecover,
+          'circuit_breaker.state': status.state
+        });
+
+        span.setStatus({ code: SpanStatusCode.OK });
+        return result;
+
+        } catch (error) {
+          span.recordException(error instanceof Error ? error : new Error(String(error)));
+          span.setStatus({ code: SpanStatusCode.ERROR });
+          const result = {
+            isInProtectiveState: true,
+            issue: `Circuit breaker diagnosis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+            canAutoRecover: false,
+            failureCount: 999,
+            recommendedAction: "Manual system check required",
+            severity: "CRITICAL" as const,
+          };
+          span.setAttributes({
+            'diagnosis.result': 'error',
+            'diagnosis.severity': result.severity
+          });
+          return result;
+        } finally {
+          span.end();
+        }
       }
-
-      const status = statusResponse.data;
-      const isOpen = status.state === "OPEN";
-      const failureCount = status.failures || 0;
-
-      let timeSinceLastFailure: number | undefined;
-      if (status.lastFailureTime) {
-        timeSinceLastFailure = Date.now() - new Date(status.lastFailureTime).getTime();
-      }
-
-      if (isOpen) {
-        return {
-          isInProtectiveState: true,
-          issue: "Circuit breaker is OPEN",
-          canAutoRecover: true,
-          timeSinceLastFailure,
-          failureCount,
-          recommendedAction: "Reset circuit breaker after safety validation",
-          severity: failureCount > 10 ? "CRITICAL" : "HIGH",
-        };
-      }
-
-      if (status.state === "HALF_OPEN") {
-        return {
-          isInProtectiveState: true,
-          issue: "Circuit breaker is HALF_OPEN (testing recovery)",
-          canAutoRecover: true,
-          timeSinceLastFailure,
-          failureCount,
-          recommendedAction: "Monitor recovery progress",
-          severity: "MEDIUM",
-        };
-      }
-
-      return {
-        isInProtectiveState: false,
-        issue: "Circuit breaker is healthy",
-        canAutoRecover: false,
-        timeSinceLastFailure,
-        failureCount,
-        recommendedAction: "No action required",
-        severity: "LOW",
-      };
-    } catch (error) {
-      return {
-        isInProtectiveState: true,
-        issue: `Circuit breaker diagnosis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        canAutoRecover: false,
-        failureCount: 999,
-        recommendedAction: "Manual system check required",
-        severity: "CRITICAL",
-      };
-    }
+    );
   }
 
   /**
@@ -205,11 +249,21 @@ export class CircuitBreakerSafetyService {
    * FIXED: Now uses coordinated circuit breaker to prevent race conditions
    */
   async executeCircuitBreakerRecovery(reliabilityManager: any): Promise<RecoveryResult> {
-    const startTime = Date.now();
-    const steps: string[] = [];
-    const timestamp = new Date().toISOString();
+    return await this.tracer.startActiveSpan(
+      'trading.circuit_breaker_recovery',
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {
+          [TRADING_TELEMETRY_CONFIG.attributes.agent_type]: 'circuit-breaker-safety',
+          'operation.type': 'recovery'
+        }
+      },
+      async (span) => {
+        const startTime = Date.now();
+        const steps: string[] = [];
+        const timestamp = new Date().toISOString();
 
-    try {
+        try {
       // Step 1: Validate safety conditions with coordination
       steps.push("Starting coordinated safety validation");
 
@@ -288,27 +342,59 @@ export class CircuitBreakerSafetyService {
         };
       };
 
-      // Execute recovery with coordination to prevent race conditions
-      return await this.coordinator.executeWithCoordination(
-        "mexc-api",
-        "recovery",
-        this.serviceId,
-        recoveryOperation,
-        "critical"
-      );
-    } catch (error) {
-      steps.push(
-        `Coordinated recovery failed: ${error instanceof Error ? error.message : "Unknown error"}`
-      );
+        // Execute recovery with coordination to prevent race conditions
+        const result = await this.coordinator.executeWithCoordination(
+          "mexc-api",
+          "recovery",
+          this.serviceId,
+          recoveryOperation,
+          "critical"
+        );
 
-      return {
-        success: false,
-        steps,
-        reason: `Coordinated recovery process failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        duration: Date.now() - startTime,
-        timestamp,
-      };
-    }
+        // Add span attributes based on result
+        span.setAttributes({
+          'recovery.success': result.success,
+          'recovery.duration_ms': result.duration,
+          'recovery.steps_count': result.steps.length,
+          'recovery.new_state': result.newState || 'unknown'
+        });
+
+        if (result.success) {
+          span.setStatus({ code: SpanStatusCode.OK });
+        } else {
+          span.recordException(new Error(result.reason || 'Recovery failed'));
+          span.setStatus({ code: SpanStatusCode.ERROR, message: result.reason });
+        }
+
+        return result;
+
+        } catch (error) {
+          steps.push(
+            `Coordinated recovery failed: ${error instanceof Error ? error.message : "Unknown error"}`
+          );
+
+          const result = {
+            success: false,
+            steps,
+            reason: `Coordinated recovery process failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+            duration: Date.now() - startTime,
+            timestamp,
+          };
+
+          span.recordException(error instanceof Error ? error : new Error(String(error)));
+          span.setStatus({ code: SpanStatusCode.ERROR });
+          span.setAttributes({
+            'recovery.success': false,
+            'recovery.duration_ms': result.duration,
+            'recovery.error': result.reason
+          });
+
+          return result;
+        } finally {
+          span.end();
+        }
+      }
+    );
   }
 
   /**
@@ -393,8 +479,18 @@ export class CircuitBreakerSafetyService {
    * Perform comprehensive safety check
    */
   async performComprehensiveSafetyCheck(): Promise<ComprehensiveSafetyCheck> {
-    const timestamp = new Date().toISOString();
-    const recommendations: string[] = [];
+    return await this.tracer.startActiveSpan(
+      TRADING_TELEMETRY_CONFIG.spans.safety_check,
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {
+          [TRADING_TELEMETRY_CONFIG.attributes.agent_type]: 'circuit-breaker-safety',
+          'operation.type': 'comprehensive_safety_check'
+        }
+      },
+      async (span) => {
+        const timestamp = new Date().toISOString();
+        const recommendations: string[] = [];
 
     // Circuit breaker check
     const cbDiagnosis = await this.diagnoseCircuitBreakerIssue();
@@ -474,16 +570,39 @@ export class CircuitBreakerSafetyService {
       overall = "CRITICAL";
     }
 
-    if (overall === "HEALTHY") {
-      recommendations.push("All safety checks passed - system ready");
-    }
+      if (overall === "HEALTHY") {
+        recommendations.push("All safety checks passed - system ready");
+      }
 
-    return {
-      overall,
-      checks,
-      recommendations,
-      nextCheckTime: new Date(Date.now() + 5 * 60000).toISOString(), // 5 minutes from now
-    };
+      const result = {
+        overall,
+        checks,
+        recommendations,
+        nextCheckTime: new Date(Date.now() + 5 * 60000).toISOString(), // 5 minutes from now
+      };
+
+      // Add span attributes
+      span.setAttributes({
+        'safety_check.overall_status': overall,
+        'safety_check.circuit_breaker_status': checks.circuitBreaker.status,
+        'safety_check.connectivity_status': checks.connectivity.status,
+        'safety_check.system_health_status': checks.systemHealth.status,
+        'safety_check.risk_management_status': checks.riskManagement.status,
+        'safety_check.recommendations_count': recommendations.length
+      });
+
+      if (overall === 'HEALTHY') {
+        span.setStatus({ code: SpanStatusCode.OK });
+      } else if (overall === 'CRITICAL') {
+        span.setStatus({ code: SpanStatusCode.ERROR, message: 'Critical safety issues detected' });
+      } else {
+        span.setStatus({ code: SpanStatusCode.OK, message: 'Safety issues require attention' });
+      }
+
+      span.end();
+      return result;
+      }
+    );
   }
 
   /**

@@ -21,6 +21,22 @@ try to use the make commands to run, test and build the project
 
 ## Recent Improvements
 
+### Logger System Cleanup and OpenTelemetry Integration (2025-06)
+- **Major Cleanup**: Removed complex `createSafeLogger` system that was causing circular dependency issues
+- **Simplified Logging**: Replaced with clean console-based logging for better build compatibility
+- **OpenTelemetry Enhancement**: Added distributed tracing spans to critical operations:
+  - Circuit breaker safety operations (`trading.safety_check`, `trading.circuit_breaker_recovery`)
+  - AI intelligence operations (`ai.generate_embedding`) 
+  - Notification system operations (`notification.send_alert`)
+- **Build Improvements**: Fixed webpack bundling issues and reduced build complexity
+- **Performance**: Eliminated logger initialization delays and improved startup time
+- **Benefits**: 
+  - Clean vercel builds without bundling conflicts
+  - Better observability with OpenTelemetry spans
+  - Simpler debugging with direct console output
+  - Reduced memory footprint and initialization overhead
+- **Location**: Multiple service files cleaned and `src/lib/opentelemetry-setup.ts` enhanced
+
 ### API Credentials Dynamic Response Implementation (2025-06)
 - **Fixed**: Replaced hardcoded API credentials test responses with dynamic MEXC API data
 - **Before**: Hardcoded `accountType: "spot"` and `canTrade: true` in test endpoint

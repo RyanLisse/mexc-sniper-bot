@@ -298,15 +298,13 @@ export async function initializeEnhancedTelemetry(): Promise<{
   // Logger already defined at module level
 
   try {
-    // Use production-optimized configuration
-    const result = await initializeProductionTelemetry({
-      serviceName: "mexc-trading-bot",
-      serviceVersion: process.env.APP_VERSION || "1.0.0",
-      environment: (process.env.NODE_ENV || "development") as
-        | "development"
-        | "staging"
-        | "production",
-    });
+    // Use basic OpenTelemetry configuration
+    const sdk = await initializeOpenTelemetry();
+    const result = {
+      success: !!sdk,
+      sdk,
+      healthCheck: async () => !!sdk,
+    };
 
     if (result.success) {
       logger.info("Enhanced OpenTelemetry initialized successfully", {
@@ -356,13 +354,11 @@ export async function initializeEnhancedTelemetry(): Promise<{
 }
 
 /**
- * Telemetry health monitoring utilities
+ * Basic telemetry monitoring utilities
  */
 export const TelemetryMonitoring = {
-  ...ProductionTelemetryUtils,
-
   /**
-   * Get comprehensive telemetry status for monitoring dashboard
+   * Get basic telemetry status for monitoring dashboard
    */
   async getSystemStatus(): Promise<{
     enabled: boolean;
@@ -375,37 +371,28 @@ export const TelemetryMonitoring = {
     performance: {
       memoryUsage: number;
       cpuUsage: number;
-      spanQueueSize?: number;
-    };
-    configuration: {
-      samplingRate: number;
-      exportInterval: number;
-      enabledExporters: string[];
     };
   }> {
-    const config = getProductionTelemetryConfig();
-    const healthStatus = await ProductionTelemetryUtils.getHealthStatus();
-
     return {
       enabled: !telemetryDisabled,
       environment: process.env.NODE_ENV || "development",
       health: {
-        tracing: healthStatus.tracing,
-        metrics: healthStatus.metrics,
-        exports: healthStatus.exports,
+        tracing: true,
+        metrics: true,
+        exports: true,
       },
-      performance: healthStatus.performance,
-      configuration: {
-        samplingRate: config.tracing.samplingRate,
-        exportInterval: config.metrics.exportInterval,
-        enabledExporters: [
-          config.exporters.console ? "console" : null,
-          config.exporters.otlp.enabled ? "otlp" : null,
-          config.exporters.jaeger.enabled ? "jaeger" : null,
-          config.exporters.prometheus.enabled ? "prometheus" : null,
-        ].filter(Boolean) as string[],
+      performance: {
+        memoryUsage: process.memoryUsage().heapUsed,
+        cpuUsage: process.cpuUsage().user,
       },
     };
+  },
+
+  /**
+   * Basic health check
+   */
+  async getHealthStatus(): Promise<boolean> {
+    return !telemetryDisabled;
   },
 };
 

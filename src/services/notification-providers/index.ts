@@ -11,6 +11,8 @@ import { SlackProvider } from "./slack-provider";
 import { SMSProvider } from "./sms-provider";
 import { TeamsProvider } from "./teams-provider";
 import { WebhookProvider } from "./webhook-provider";
+import { trace, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
+import { TRADING_TELEMETRY_CONFIG } from '../../lib/opentelemetry-setup';
 
 export interface NotificationProvider {
   send(
@@ -57,6 +59,7 @@ export class NotificationService {
   private db: any;
   private providers: Map<string, NotificationProvider> = new Map();
   private rateLimitCache: Map<string, number[]> = new Map();
+  private tracer = trace.getTracer('notification-service');
 
   /**
    * Lazy logger initialization to prevent webpack bundling issues
@@ -102,23 +105,55 @@ export class NotificationService {
   // ==========================================
 
   async sendAlertNotifications(alert: SelectAlertInstance): Promise<void> {
-    try {
-      // Get applicable notification channels
-      const channels = await this.getChannelsForAlert(alert);
-      console.info(`Sending alert ${alert.id} to ${channels.length} channels`);
+    return await this.tracer.startActiveSpan(
+      'notification.send_alert',
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {
+          'alert.id': alert.id,
+          'alert.severity': alert.severity,
+          'alert.source': alert.source,
+          'notification.type': 'alert'
+        }
+      },
+      async (span) => {
+        try {
+          // Get applicable notification channels
+          const channels = await this.getChannelsForAlert(alert);
+          console.info(`Sending alert ${alert.id} to ${channels.length} channels`);
 
-      // Send to each channel
-      const notificationPromises = channels.map((channel) =>
-        this.sendToChannel(channel, alert, "alert")
-      );
+          span.setAttributes({
+            'notification.channels_count': channels.length
+          });
 
-      await Promise.allSettled(notificationPromises);
+          // Send to each channel
+          const notificationPromises = channels.map((channel) =>
+            this.sendToChannel(channel, alert, "alert")
+          );
 
-      // Start escalation timer if configured
-      await this.scheduleEscalation(alert);
-    } catch (error) {
-      console.error("Error sending alert notifications:", error);
-    }
+          const results = await Promise.allSettled(notificationPromises);
+          
+          const successCount = results.filter(r => r.status === 'fulfilled').length;
+          const failureCount = results.filter(r => r.status === 'rejected').length;
+
+          span.setAttributes({
+            'notification.success_count': successCount,
+            'notification.failure_count': failureCount
+          });
+
+          // Start escalation timer if configured
+          await this.scheduleEscalation(alert);
+
+          span.setStatus({ code: SpanStatusCode.OK });
+        } catch (error) {
+          console.error("Error sending alert notifications:", error);
+          span.recordException(error instanceof Error ? error : new Error(String(error)));
+          span.setStatus({ code: SpanStatusCode.ERROR });
+        } finally {
+          span.end();
+        }
+      }
+    );
   }
 
   async sendResolutionNotifications(alert: SelectAlertInstance): Promise<void> {

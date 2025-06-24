@@ -74,6 +74,8 @@ Revolutionary TypeScript-based system with specialized AI agents:
 - **Workflows**: Inngest for reliable background task orchestration
 - **Database**: Drizzle ORM with NeonDB (serverless PostgreSQL) for global edge performance
 - **Data Management**: TanStack Query v5.80.6 for real-time data fetching and caching
+- **Observability**: OpenTelemetry with distributed tracing for critical operations
+- **Logging**: Simplified console-based logging (recently cleaned up from complex structured logging)
 - **Testing**: Vitest (unit), Playwright (E2E), Stagehand v2.3.0 (AI-powered E2E)
 - **Code Quality**: Biome.js for formatting and linting, TypeScript for type safety
 - **Deployment**: Vercel with automatic scaling and edge optimization
