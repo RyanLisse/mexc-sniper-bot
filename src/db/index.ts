@@ -26,6 +26,9 @@ let postgresClient: ReturnType<typeof postgres> | null = null;
 // Sleep utility for retry logic
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Logger instance - declared before getLogger function
+let _logger: any = null;
+
 // Retry logic wrapper - Lazy logger initialization to prevent build-time errors
 function getLogger() {
   if (!_logger) {
