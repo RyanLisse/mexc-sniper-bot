@@ -59,28 +59,16 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
         liquidityScore: 0.75,
       },
     });
-    vi.spyOn(aiIntelligenceService, 'calculateAIEnhancedConfidence').mockResolvedValue({
-      enhancedConfidence: 85,
-      components: { basePattern: 75, aiResearch: 5, marketSentiment: 3, technicalAlignment: 2, riskAdjustment: 0 },
-      aiInsights: ['Test AI insight'],
-      recommendations: ['Test recommendation'],
-    });
+    
+    // Note: calculateAIEnhancedConfidence doesn't exist - removed this mock
 
-    // Clean up test data (handle case where table doesn't exist yet)
-    try {
-      await db.delete(coinActivities).execute();
-    } catch (error) {
-      console.log('Table coin_activities does not exist yet, skipping cleanup');
-    }
+    // Clean up test data - works with mocked database
+    await db.delete(coinActivities).execute();
   }, 60000); // Increase timeout to 60 seconds
 
   afterAll(async () => {
-    // Clean up test data (handle case where table doesn't exist yet)
-    try {
-      await db.delete(coinActivities).execute();
-    } catch (error) {
-      console.log('Table coin_activities does not exist, skipping cleanup');
-    }
+    // Clean up test data - works with mocked database
+    await db.delete(coinActivities).execute();
   });
 
   beforeEach(async () => {
@@ -127,12 +115,8 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
         liquidityScore: 0.75,
       },
     });
-    vi.spyOn(aiIntelligenceService, 'calculateAIEnhancedConfidence').mockResolvedValue({
-      enhancedConfidence: 85,
-      components: { basePattern: 75, aiResearch: 5, marketSentiment: 3, technicalAlignment: 2, riskAdjustment: 0 },
-      aiInsights: ['Test AI insight'],
-      recommendations: ['Test recommendation'],
-    });
+    
+    // Note: calculateAIEnhancedConfidence doesn't exist - removed this mock
   });
 
   describe('End-to-End Pattern Detection with Activity Data', () => {
@@ -160,35 +144,29 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
       // Mock the UnifiedMexcService activity API call
       vi.spyOn(mexcService, 'getActivityData').mockResolvedValue(mockActivityResponse);
 
-      // Insert test activity data into database (skip if table doesn't exist)
-      try {
-        await db.insert(coinActivities).values([
-          {
-            vcoinId: 'test-vcoin-fcat',
-            currency: 'FCAT',
-            activityId: 'integration-test-activity-1',
-            currencyId: 'fcat-currency-id',
-            activityType: 'SUN_SHINE',
-            isActive: true,
-            confidenceBoost: 15,
-            priorityScore: 8.5,
-          },
-          {
-            vcoinId: 'test-vcoin-fcat',
-            currency: 'FCAT',
-            activityId: 'integration-test-activity-2',
-            currencyId: 'fcat-currency-id',
-            activityType: 'PROMOTION',
-            isActive: true,
-            confidenceBoost: 10,
-            priorityScore: 6.0,
-          },
-        ]);
-      } catch (error) {
-        console.log('Skipping database insert - table may not exist');
-        // Skip this test if database table doesn't exist
-        return;
-      }
+      // Insert test activity data into mocked database
+      await db.insert(coinActivities).values([
+        {
+          vcoinId: 'test-vcoin-fcat',
+          currency: 'FCAT',
+          activityId: 'integration-test-activity-1',
+          currencyId: 'fcat-currency-id',
+          activityType: 'SUN_SHINE',
+          isActive: true,
+          confidenceBoost: 15,
+          priorityScore: 8.5,
+        },
+        {
+          vcoinId: 'test-vcoin-fcat',
+          currency: 'FCAT',
+          activityId: 'integration-test-activity-2',
+          currencyId: 'fcat-currency-id',
+          activityType: 'PROMOTION',
+          isActive: true,
+          confidenceBoost: 10,
+          priorityScore: 6.0,
+        },
+      ]);
 
       // Test symbol with ready state pattern
       const testSymbol: SymbolEntry = {
@@ -254,34 +232,29 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
         },
       ];
 
-      // Insert activity data for some symbols (with error handling)
-      try {
-        await db.insert(coinActivities).values([
-          {
-            vcoinId: 'test-vcoin-bulk1',
-            currency: 'BULK1',
-            activityId: 'bulk-test-activity-1',
-            currencyId: 'bulk1-currency-id',
-            activityType: 'SUN_SHINE',
-            isActive: true,
-            confidenceBoost: 12,
-            priorityScore: 7.5,
-          },
-          {
-            vcoinId: 'test-vcoin-bulk3',
-            currency: 'BULK3',
-            activityId: 'bulk-test-activity-3',
-            currencyId: 'bulk3-currency-id',
-            activityType: 'PROMOTION',
-            isActive: true,
-            confidenceBoost: 8,
-            priorityScore: 5.0,
-          },
-        ]);
-      } catch (error) {
-        console.log('Skipping database insert for bulk test - table may not exist');
-        // Continue with test even if database insert fails
-      }
+      // Insert activity data for some symbols in mocked database
+      await db.insert(coinActivities).values([
+        {
+          vcoinId: 'test-vcoin-bulk1',
+          currency: 'BULK1',
+          activityId: 'bulk-test-activity-1',
+          currencyId: 'bulk1-currency-id',
+          activityType: 'SUN_SHINE',
+          isActive: true,
+          confidenceBoost: 12,
+          priorityScore: 7.5,
+        },
+        {
+          vcoinId: 'test-vcoin-bulk3',
+          currency: 'BULK3',
+          activityId: 'bulk-test-activity-3',
+          currencyId: 'bulk3-currency-id',
+          activityType: 'PROMOTION',
+          isActive: true,
+          confidenceBoost: 8,
+          priorityScore: 5.0,
+        },
+      ]);
 
       console.log('Starting bulk pattern detection test...');
       const startTime = Date.now();
