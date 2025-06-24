@@ -4,7 +4,14 @@ import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
 import { AgentManager } from "../../../../src/mexc-agents/agent-manager";
 import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "../../../../src/lib/health-checks";
 
-const logger = createLogger('route');
+// Lazy logger initialization to prevent build-time errors
+let _logger: ReturnType<typeof createLogger> | undefined;
+function getLogger() {
+  if (!_logger) {
+    _logger = createLogger('route');
+  }
+  return _logger;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -123,7 +130,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    logger.error("[Monitoring API] System overview failed:", { error: error });
+    getLogger().error("[Monitoring API] System overview failed:", { error: error });
     return NextResponse.json(
       { 
         error: "Failed to fetch system overview",
