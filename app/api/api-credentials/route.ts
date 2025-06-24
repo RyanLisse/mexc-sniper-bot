@@ -104,7 +104,7 @@ export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) =>
         passphrase = encryptionService.decrypt(creds.encryptedPassphrase);
       }
     } catch (decryptError) {
-      logger.error('[API] Failed to decrypt credentials:', decryptError);
+      logger.error('[API] Failed to decrypt credentials:', { error: decryptError instanceof Error ? decryptError.message : String(decryptError) });
       // Return error but don't leak encryption details
       return apiResponse(
         createErrorResponse('Failed to retrieve credentials', {
@@ -171,7 +171,7 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
   // Validate required fields
   const missingField = validateRequiredFields(body, ['userId', 'apiKey', 'secretKey']);
   if (missingField) {
-    logger.info('[DEBUG] Missing required field:', missingField, 'Body:', body);
+    logger.info('[DEBUG] Missing required field:', { field: missingField, body: body });
     return apiResponse(
       createValidationErrorResponse('required_fields', missingField),
       HTTP_STATUS.BAD_REQUEST
@@ -230,7 +230,7 @@ export const POST = userBodyRoute(async (request: NextRequest, user: any, body: 
       encryptedPassphrase = encryptionService.encrypt(passphrase);
     }
   } catch (encryptError) {
-    logger.error('[API] Failed to encrypt credentials:', encryptError);
+    logger.error('[API] Failed to encrypt credentials:', { error: encryptError instanceof Error ? encryptError.message : String(encryptError) });
     return apiResponse(
       createErrorResponse('Failed to secure credentials', {
         code: 'ENCRYPT_ERROR'

@@ -36,9 +36,9 @@ export class PatternEmbeddingService {
     this.useCohere = !!process.env.COHERE_API_KEY;
 
     if (this.useCohere) {
-      logger.info("[PatternEmbedding] Using Cohere Embed v4.0 as primary embedding model");
+      this.logger.info("[PatternEmbedding] Using Cohere Embed v4.0 as primary embedding model");
     } else {
-      logger.info("[PatternEmbedding] Falling back to OpenAI text-embedding-ada-002");
+      this.logger.info("[PatternEmbedding] Falling back to OpenAI text-embedding-ada-002");
     }
   }
 

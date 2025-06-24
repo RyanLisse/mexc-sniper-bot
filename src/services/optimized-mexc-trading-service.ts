@@ -23,7 +23,7 @@ import {
   validateTradingOrderResponse,
 } from "./optimized-auto-sniping-schemas";
 import { transactionLockService } from "./transaction-lock-service";
-import type { OrderParameters } from "./unified-mexc-client";
+import type { OrderParameters } from "./api/mexc-client-types";
 
 // ============================================================================
 // Schemas and Types

@@ -10,8 +10,88 @@ import { createLogger } from '../../../../src/lib/structured-logger';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
 import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
+// Function defined at bottom of file
 
 const logger = createLogger('route');
+
+// Configuration validation function
+async function validateAutoSnipingConfig(config: any): Promise<{
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}> {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
+  // Validate required fields
+  if (config.maxPositions !== undefined) {
+    if (typeof config.maxPositions !== 'number' || config.maxPositions < 1 || config.maxPositions > 50) {
+      errors.push('maxPositions must be a number between 1 and 50');
+    }
+  }
+  
+  if (config.maxDailyTrades !== undefined) {
+    if (typeof config.maxDailyTrades !== 'number' || config.maxDailyTrades < 1 || config.maxDailyTrades > 1000) {
+      errors.push('maxDailyTrades must be a number between 1 and 1000');
+    }
+  }
+  
+  if (config.positionSizeUSDT !== undefined) {
+    if (typeof config.positionSizeUSDT !== 'number' || config.positionSizeUSDT <= 0 || config.positionSizeUSDT > 10000) {
+      errors.push('positionSizeUSDT must be a number between 0 and 10000');
+    }
+  }
+  
+  if (config.minConfidence !== undefined) {
+    if (typeof config.minConfidence !== 'number' || config.minConfidence < 0 || config.minConfidence > 100) {
+      errors.push('minConfidence must be a number between 0 and 100');
+    }
+  }
+  
+  if (config.stopLossPercentage !== undefined) {
+    if (typeof config.stopLossPercentage !== 'number' || config.stopLossPercentage < 0 || config.stopLossPercentage > 50) {
+      errors.push('stopLossPercentage must be a number between 0 and 50');
+    }
+  }
+  
+  if (config.maxDrawdownPercentage !== undefined) {
+    if (typeof config.maxDrawdownPercentage !== 'number' || config.maxDrawdownPercentage < 0 || config.maxDrawdownPercentage > 100) {
+      errors.push('maxDrawdownPercentage must be a number between 0 and 100');
+    }
+  }
+  
+  // Validate pattern types
+  if (config.allowedPatternTypes !== undefined) {
+    if (!Array.isArray(config.allowedPatternTypes)) {
+      errors.push('allowedPatternTypes must be an array');
+    } else {
+      const validTypes = ['ready_state', 'pre_ready', 'launch_sequence', 'risk_warning'];
+      const invalidTypes = config.allowedPatternTypes.filter((type: any) => !validTypes.includes(type));
+      if (invalidTypes.length > 0) {
+        errors.push(`Invalid pattern types: ${invalidTypes.join(', ')}. Valid types: ${validTypes.join(', ')}`);
+      }
+    }
+  }
+  
+  // Add warnings for potentially risky configurations
+  if (config.maxPositions > 20) {
+    warnings.push('High maxPositions value may increase risk exposure');
+  }
+  
+  if (config.stopLossPercentage < 2) {
+    warnings.push('Low stop loss percentage may result in frequent small losses');
+  }
+  
+  if (config.minConfidence < 60) {
+    warnings.push('Low minimum confidence may result in lower quality trades');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+}
 
 /**
  * GET /api/auto-sniping/config-validation
@@ -187,86 +267,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       ), { status: 500 });
     }
   } catch (error) {
-    logger.error('[Config Validation] Configuration update failed:', { error });
-    
-    // Add the missing validation function
-    async function validateAutoSnipingConfig(config: any): Promise<{
-      isValid: boolean;
-      errors: string[];
-      warnings: string[];
-    }> {
-      const errors: string[] = [];
-      const warnings: string[] = [];
-      
-      // Validate required fields
-      if (config.maxPositions !== undefined) {
-        if (typeof config.maxPositions !== 'number' || config.maxPositions < 1 || config.maxPositions > 50) {
-          errors.push('maxPositions must be a number between 1 and 50');
-        }
-      }
-      
-      if (config.maxDailyTrades !== undefined) {
-        if (typeof config.maxDailyTrades !== 'number' || config.maxDailyTrades < 1 || config.maxDailyTrades > 1000) {
-          errors.push('maxDailyTrades must be a number between 1 and 1000');
-        }
-      }
-      
-      if (config.positionSizeUSDT !== undefined) {
-        if (typeof config.positionSizeUSDT !== 'number' || config.positionSizeUSDT <= 0 || config.positionSizeUSDT > 10000) {
-          errors.push('positionSizeUSDT must be a number between 0 and 10000');
-        }
-      }
-      
-      if (config.minConfidence !== undefined) {
-        if (typeof config.minConfidence !== 'number' || config.minConfidence < 0 || config.minConfidence > 100) {
-          errors.push('minConfidence must be a number between 0 and 100');
-        }
-      }
-      
-      if (config.stopLossPercentage !== undefined) {
-        if (typeof config.stopLossPercentage !== 'number' || config.stopLossPercentage < 0 || config.stopLossPercentage > 50) {
-          errors.push('stopLossPercentage must be a number between 0 and 50');
-        }
-      }
-      
-      if (config.maxDrawdownPercentage !== undefined) {
-        if (typeof config.maxDrawdownPercentage !== 'number' || config.maxDrawdownPercentage < 0 || config.maxDrawdownPercentage > 100) {
-          errors.push('maxDrawdownPercentage must be a number between 0 and 100');
-        }
-      }
-      
-      // Validate pattern types
-      if (config.allowedPatternTypes !== undefined) {
-        if (!Array.isArray(config.allowedPatternTypes)) {
-          errors.push('allowedPatternTypes must be an array');
-        } else {
-          const validTypes = ['ready_state', 'pre_ready', 'launch_sequence', 'risk_warning'];
-          const invalidTypes = config.allowedPatternTypes.filter((type: any) => !validTypes.includes(type));
-          if (invalidTypes.length > 0) {
-            errors.push(`Invalid pattern types: ${invalidTypes.join(', ')}. Valid types: ${validTypes.join(', ')}`);
-          }
-        }
-      }
-      
-      // Add warnings for potentially risky configurations
-      if (config.maxPositions > 20) {
-        warnings.push('High maxPositions value may increase risk exposure');
-      }
-      
-      if (config.stopLossPercentage < 2) {
-        warnings.push('Low stop loss percentage may result in frequent small losses');
-      }
-      
-      if (config.minConfidence < 60) {
-        warnings.push('Low minimum confidence may result in lower quality trades');
-      }
-      
-      return {
-        isValid: errors.length === 0,
-        errors,
-        warnings
-      };
-    }
+    logger.error('[Config Validation] Configuration update failed:', { error: error instanceof Error ? error.message : String(error) });
     return Response.json(
       createErrorResponse('Configuration update failed', {
         error: error instanceof Error ? error.message : 'Unknown error',

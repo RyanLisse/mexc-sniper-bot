@@ -1,7 +1,7 @@
 import { createLogger } from "../lib/structured-logger";
 import type { SymbolV2Entry } from "../schemas/mexc-schemas";
 import { getRecommendedMexcService, type ServiceResponse } from "../services/mexc-unified-exports";
-import type { CalendarEntry, SymbolEntry } from "../services/unified-mexc-client";
+import type { CalendarEntry, SymbolEntry } from "../services/api/mexc-client-types";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 export interface MexcApiParams {

@@ -12,8 +12,6 @@ import { balanceSnapshots, portfolioSummary } from '../db/schema';
 import { eq, desc, and, gte } from 'drizzle-orm';
 import { z } from 'zod';
 
-const logger = createLogger('balance-persistence');
-
 // Zod schemas for type-safe balance data validation
 export const BalanceItemSchema = z.object({
   asset: z.string().min(1).max(20),
@@ -55,6 +53,7 @@ export class BalancePersistenceService {
     balanceData: BalanceData,
     options: BalancePersistenceOptions = {}
   ): Promise<void> {
+    const logger = createLogger('balance-persistence');
     try {
       // Validate input data
       const validatedData = BalanceDataSchema.parse(balanceData);
@@ -122,6 +121,7 @@ export class BalancePersistenceService {
     userId: string,
     balanceData: BalanceData
   ): Promise<void> {
+    const logger = createLogger('balance-persistence');
     try {
       // Calculate top assets (top 5 by USD value)
       const sortedAssets = balanceData.balances

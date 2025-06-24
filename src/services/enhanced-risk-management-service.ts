@@ -11,8 +11,8 @@
 
 import { createLogger } from "../lib/structured-logger";
 import { ErrorLoggingService } from "./error-logging-service";
-import type { OrderParameters } from "./unified-mexc-client";
-import { getUnifiedMexcClient } from "./unified-mexc-client";
+import type { OrderParameters } from "./api/mexc-client-types";
+import { getUnifiedMexcClient } from "./api/mexc-client-factory";
 
 export interface RiskProfile {
   userId: string;

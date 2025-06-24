@@ -1,5 +1,4 @@
 /**
-import { createLogger } from '../lib/structured-logger';
  * MEXC Unified Exports - Single source of truth for all MEXC API functionality
  *
  * This module provides unified access to all MEXC API capabilities through a single,
@@ -37,12 +36,12 @@ import type {
   TradingOpportunity,
 } from "./mexc-schemas";
 
-// Import the production-ready unified client
+// Import the production-ready unified client (modular)
 import {
   getUnifiedMexcClient as getUnifiedMexcClientFactory,
   resetUnifiedMexcClient,
   type UnifiedMexcClient,
-} from "./unified-mexc-client";
+} from "./api/mexc-client-factory";
 // Import the new unified V2 service
 import {
   getUnifiedMexcServiceV2,
@@ -91,8 +90,6 @@ export type { MarketStats, PatternAnalysis, TradingOpportunity, Portfolio, RiskA
  * This is the recommended way to access MEXC functionality
  * FIXED: Now uses production-ready UnifiedMexcClient with real MEXC data
  */
-const logger = createLogger("mexc-unified-exports");
-
 export function getMexcService(config?: {
   apiKey?: string;
   secretKey?: string;
@@ -124,6 +121,8 @@ export function getEnhancedMexcService(config?: {
   apiKey?: string;
   secretKey?: string;
 }): UnifiedMexcServiceV2 {
+  const { createLogger } = require('../lib/structured-logger');
+  const logger = createLogger("mexc-unified-exports");
   logger.warn("getEnhancedMexcService is deprecated. Use getUnifiedMexcServiceV2 instead.");
   return getUnifiedMexcServiceV2(config);
 }
@@ -133,6 +132,8 @@ export function getEnhancedMexcService(config?: {
  * @deprecated Use resetUnifiedMexcServiceV2 instead
  */
 export function resetEnhancedMexcService(): void {
+  const { createLogger } = require('../lib/structured-logger');
+  const logger = createLogger("mexc-unified-exports");
   logger.warn("resetEnhancedMexcService is deprecated. Use resetUnifiedMexcServiceV2 instead.");
   resetUnifiedMexcServiceV2();
 }

@@ -10,7 +10,8 @@ import { and, eq } from "drizzle-orm";
 import { apiCredentials, db } from "../db";
 import { createLogger } from "../lib/structured-logger";
 import { getEncryptionService } from "./secure-encryption-service";
-import { UnifiedMexcClient, type UnifiedMexcConfig } from "./unified-mexc-client";
+import { type UnifiedMexcClient, getUnifiedMexcClient } from "./api/mexc-client-factory";
+import { type UnifiedMexcConfig } from "./api/mexc-client-types";
 
 // ============================================================================
 // Service Factory Configuration

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createLogger } from '../../../../src/lib/structured-logger';
 import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
-import { type OrderParameters } from "../../../../src/services/unified-mexc-client";
+import { type OrderParameters } from "../../../../src/services/api/mexc-client-types";
 import { enhancedRiskManagementService } from "../../../../src/services/enhanced-risk-management-service";
 import { transactionLockService } from "../../../../src/services/transaction-lock-service";
 import { 

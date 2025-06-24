@@ -11,7 +11,8 @@ import type { SymbolEntry } from "../mexc-unified-exports";
 import { patternEmbeddingService } from "../pattern-embedding-service";
 import type { CorrelationAnalysis } from "./pattern-types";
 
-const logger = createLogger("correlation-analyzer");
+// Factory function to create logger when needed
+const getLogger = () => createLogger("correlation-analyzer");
 
 export interface SimilarityResult {
   symbol1: string;
@@ -57,7 +58,7 @@ export async function analyzeSymbolCorrelations(
     correlations.push(...mlCorrelations);
   } catch (error) {
     const safeError = toSafeError(error);
-    logger.warn(
+    getLogger().warn(
       "ML correlation analysis failed",
       {
         operation: "ml_correlation_analysis",
@@ -130,7 +131,7 @@ export async function analyzeMLPatternCorrelations(
           try {
             return await calculatePatternSimilarityOptimized(pattern1, pattern2, cache);
           } catch (error) {
-            logger.warn(
+            getLogger().warn(
               "Pattern similarity calculation failed",
               {
                 operation: "pattern_similarity_calculation",
@@ -172,7 +173,7 @@ export async function analyzeMLPatternCorrelations(
       });
     }
 
-    logger.info("ML correlation analysis completed", {
+    getLogger().info("ML correlation analysis completed", {
       operation: "ml_correlation_analysis",
       symbolsAnalyzed: symbolData.length,
       correlationsFound: correlations.length,
@@ -182,7 +183,7 @@ export async function analyzeMLPatternCorrelations(
       executionTime: Date.now() - startTime,
     });
   } catch (error) {
-    logger.error(
+    getLogger().error(
       "ML correlation analysis failed",
       {
         operation: "ml_correlation_analysis",

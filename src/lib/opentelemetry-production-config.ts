@@ -7,9 +7,10 @@
 
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { JaegerExporter } from "@opentelemetry/exporter-jaeger";
-import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
+// Temporarily disable problematic OTLP exporters due to version compatibility issues
+// import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+// import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { Resource } from "@opentelemetry/resources";
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 import { NodeSDK } from "@opentelemetry/sdk-node";
@@ -293,22 +294,22 @@ function createSpanProcessors(config: ProductionTelemetryConfig) {
     );
   }
 
-  // OTLP exporter for production monitoring
-  if (config.exporters.otlp.enabled && config.exporters.otlp.endpoint) {
-    const otlpExporter = new OTLPTraceExporter({
-      url: config.exporters.otlp.endpoint,
-      headers: config.exporters.otlp.headers,
-      // compression: config.performance.enableCompression ? "gzip" : "none",
-    });
+  // OTLP exporter for production monitoring - temporarily disabled due to version compatibility
+  // if (config.exporters.otlp.enabled && config.exporters.otlp.endpoint) {
+  //   const otlpExporter = new OTLPTraceExporter({
+  //     url: config.exporters.otlp.endpoint,
+  //     headers: config.exporters.otlp.headers,
+  //     // compression: config.performance.enableCompression ? "gzip" : "none",
+  //   });
 
-    processors.push(
-      new BatchSpanProcessor(otlpExporter, {
-        scheduledDelayMillis: config.performance.batchTimeout,
-        maxExportBatchSize: config.performance.maxBatchSize,
-        maxQueueSize: config.performance.maxQueueSize,
-      })
-    );
-  }
+  //   processors.push(
+  //     new BatchSpanProcessor(otlpExporter, {
+  //       scheduledDelayMillis: config.performance.batchTimeout,
+  //       maxExportBatchSize: config.performance.maxBatchSize,
+  //       maxQueueSize: config.performance.maxQueueSize,
+  //     })
+  //   );
+  // }
 
   // Jaeger exporter for development and staging
   if (config.exporters.jaeger.enabled && config.exporters.jaeger.endpoint) {
@@ -337,21 +338,21 @@ function createMetricReaders(config: ProductionTelemetryConfig) {
     return readers;
   }
 
-  // OTLP metrics exporter
-  if (config.exporters.otlp.enabled && config.exporters.otlp.endpoint) {
-    const otlpMetricExporter = new OTLPMetricExporter({
-      url: config.exporters.otlp.endpoint.replace("/traces", "/metrics"),
-      headers: config.exporters.otlp.headers,
-      // compression: config.performance.enableCompression ? "gzip" : "none",
-    });
+  // OTLP metrics exporter - temporarily disabled due to version compatibility
+  // if (config.exporters.otlp.enabled && config.exporters.otlp.endpoint) {
+  //   const otlpMetricExporter = new OTLPMetricExporter({
+  //     url: config.exporters.otlp.endpoint.replace("/traces", "/metrics"),
+  //     headers: config.exporters.otlp.headers,
+  //     // compression: config.performance.enableCompression ? "gzip" : "none",
+  //   });
 
-    readers.push(
-      new PeriodicExportingMetricReader({
-        exporter: otlpMetricExporter,
-        exportIntervalMillis: config.metrics.exportInterval,
-      })
-    );
-  }
+  //   readers.push(
+  //     new PeriodicExportingMetricReader({
+  //       exporter: otlpMetricExporter,
+  //       exportIntervalMillis: config.metrics.exportInterval,
+  //     })
+  //   );
+  // }
 
   // Prometheus metrics exporter
   if (config.exporters.prometheus.enabled) {

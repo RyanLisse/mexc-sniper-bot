@@ -12,8 +12,6 @@ import { toSafeError } from "../../lib/error-type-utils";
 import { createLogger } from "../../lib/structured-logger";
 import type { ActivityData } from "../../schemas/mexc-schemas";
 
-const logger = createLogger("activity-integration");
-
 /**
  * Activity Data Integration - Query activity data for confidence enhancement
  * Retrieves recent activity data for a given currency/symbol
@@ -22,6 +20,7 @@ export async function getActivityDataForSymbol(
   symbol: string,
   vcoinId?: string
 ): Promise<ActivityData[]> {
+  const logger = createLogger("activity-integration");
   try {
     // Extract base currency from symbol (e.g., 'FCATUSDT' -> 'FCAT')
     const baseCurrency = symbol.replace(/USDT$|BTC$|ETH$|BNB$/, "");

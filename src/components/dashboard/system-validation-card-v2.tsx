@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { queryKeys } from "../../lib/query-client";
-import { createLogger } from "../lib/structured-logger";
+import { createLogger } from "../../lib/structured-logger";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";

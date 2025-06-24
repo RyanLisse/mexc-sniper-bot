@@ -15,12 +15,11 @@ export interface DecryptedCredentials {
 /**
  * Get decrypted API credentials for a specific user and provider
  */
-const logger = createLogger("user-credentials-service");
-
 export async function getUserCredentials(
   userId: string,
   provider = "mexc"
 ): Promise<DecryptedCredentials | null> {
+  const logger = createLogger("user-credentials-service");
   try {
     // Query the database for user credentials
     const result = await db

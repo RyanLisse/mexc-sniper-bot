@@ -12,7 +12,7 @@
 import { createLogger } from "../lib/structured-logger";
 import { circuitBreakerRegistry } from "./circuit-breaker";
 import { ErrorLoggingService } from "./error-logging-service";
-import { getUnifiedMexcClient } from "./unified-mexc-client";
+import { getUnifiedMexcClient } from "./api/mexc-client-factory";
 
 export interface ApiValidationConfig {
   apiKey: string;

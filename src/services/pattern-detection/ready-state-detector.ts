@@ -17,8 +17,6 @@ import { getActivityDataForSymbol } from "./activity-integration";
 import type { PatternMatch } from "./pattern-types";
 import { PATTERN_CONSTANTS } from "./pattern-types";
 
-const logger = createLogger("ready-state-detector");
-
 export interface ReadyStateDetectorOptions {
   forceEmitEvents?: boolean;
 }
@@ -35,6 +33,7 @@ export interface PreReadyScore {
  */
 export class ReadyStateDetector extends EventEmitter {
   private readonly MIN_ADVANCE_HOURS = PATTERN_CONSTANTS.MIN_ADVANCE_HOURS;
+  private logger = createLogger("ready-state-detector");
 
   constructor() {
     super();
@@ -113,7 +112,7 @@ export class ReadyStateDetector extends EventEmitter {
     }
 
     const duration = Date.now() - startTime;
-    logger.info("Ready state detection completed", {
+    this.logger.info("Ready state detection completed", {
       operation: "ready_state_detection",
       symbolsAnalyzed: symbols.length,
       patternsFound: matches.length,
@@ -138,7 +137,7 @@ export class ReadyStateDetector extends EventEmitter {
         },
       });
 
-      logger.info("Pattern detection events emitted for auto-target creation", {
+      this.logger.info("Pattern detection events emitted for auto-target creation", {
         readyStateMatches: matches.length,
         highConfidenceMatches: matches.filter((m) => m.confidence >= 90).length,
         testMode: isTestEnv,
@@ -223,7 +222,7 @@ export class ReadyStateDetector extends EventEmitter {
     }
 
     const duration = Date.now() - startTime;
-    logger.info("Advance opportunities detection completed", {
+    this.logger.info("Advance opportunities detection completed", {
       operation: "advance_detection",
       calendarEntriesAnalyzed: calendarEntries.length,
       opportunitiesFound: matches.length,
@@ -261,7 +260,7 @@ export class ReadyStateDetector extends EventEmitter {
         },
       });
 
-      logger.info("Advance opportunity events emitted for auto-target creation", {
+      this.logger.info("Advance opportunity events emitted for auto-target creation", {
         advanceOpportunityMatches: matches.length,
         highConfidenceMatches: matches.filter((m) => m.confidence >= 80).length,
         averageAdvanceHours:
@@ -312,7 +311,7 @@ export class ReadyStateDetector extends EventEmitter {
     }
 
     const duration = Date.now() - startTime;
-    logger.info("Pre-ready patterns detection completed", {
+    this.logger.info("Pre-ready patterns detection completed", {
       operation: "pre_ready_detection",
       symbolsAnalyzed: symbolData.length,
       preReadyFound: matches.length,
@@ -343,7 +342,7 @@ export class ReadyStateDetector extends EventEmitter {
         },
       });
 
-      logger.info("Pre-ready pattern events emitted for auto-target creation", {
+      this.logger.info("Pre-ready pattern events emitted for auto-target creation", {
         preReadyMatches: matches.length,
         averageConfidence:
           matches.length > 0

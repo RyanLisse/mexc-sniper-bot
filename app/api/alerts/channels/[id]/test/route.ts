@@ -11,12 +11,12 @@ const notificationService = new NotificationService(db);
 // ==========================================
 // POST /api/alerts/channels/[id]/test - Test notification channel
 // ==========================================
-const logger = createLogger('route');
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const logger = createLogger('route');
   try {
     const { id } = await params;
     const user = await validateRequest(request);
