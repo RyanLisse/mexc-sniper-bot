@@ -428,7 +428,7 @@ export const PATCH = authenticatedHandler({
 // Helper Functions
 // ======================
 
-const logger = createLogger('route');
+// MOVED: const logger = createLogger('route');
 
 function generatePerformanceRecommendations(serverMetrics: any, connectionMetrics: any[]): string[] {
   const recommendations: string[] = [];

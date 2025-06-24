@@ -121,7 +121,7 @@ export function ConsolidatedCredentialStatus({
     try {
       await refreshStatus();
     } catch (error) {
-      logger.error("Failed to refresh status:", error);
+      logger.error("Failed to refresh status:", { error: error instanceof Error ? error.message : String(error) });
     } finally {
       setIsRefreshing(false);
     }

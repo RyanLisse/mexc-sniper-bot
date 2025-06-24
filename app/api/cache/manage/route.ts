@@ -180,7 +180,7 @@ export const GET = createApiHandler({
 
 // Operation handlers
 
-const logger = createLogger('route');
+// MOVED: const logger = createLogger('route');
 
 async function handleClearOperation(parameters: any) {
   const { level, pattern } = parameters;

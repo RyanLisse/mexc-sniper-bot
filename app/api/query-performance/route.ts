@@ -3,9 +3,8 @@ import { createLogger } from '../../../src/lib/structured-logger';
 import { queryPerformanceMonitor } from "../../../src/services/query-performance-monitor";
 import { apiResponse, createOperationResponse, handleApiError } from "../../../src/lib/api-response";
 
-const logger = createLogger('route');
-
 export async function GET(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');

@@ -96,7 +96,7 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
         });
       }
     } catch (error) {
-      logger.error("Failed to fetch validation:", error);
+      logger.error("Failed to fetch validation:", { error: error instanceof Error ? error.message : String(error) });
       setValidationData({
         overall: "critical_failure",
         readyForAutoSniping: false,

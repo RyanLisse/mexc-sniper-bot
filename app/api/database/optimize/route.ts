@@ -18,9 +18,10 @@ import { databaseConnectionPool } from "../../../../src/lib/database-connection-
 import { queryPerformanceMonitor } from "../../../../src/services/query-performance-monitor";
 
 // GET - Get current optimization status and metrics
-const logger = createLogger('route');
+// MOVED: const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get("action") || "status";
@@ -94,6 +95,7 @@ export async function GET(request: NextRequest) {
 
 // POST - Trigger database optimization
 export async function POST(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const body = await request.json().catch(() => ({}));
     const action = body.action || "optimize";
@@ -239,6 +241,7 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update optimization configuration
 export async function PUT(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const body = await request.json();
     const { target, config } = body;
@@ -292,6 +295,7 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Reset optimization settings
 export async function DELETE(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const target = searchParams.get("target") || "all";

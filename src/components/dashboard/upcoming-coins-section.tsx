@@ -52,7 +52,7 @@ export function UpcomingCoinsSection() {
           tomorrow.push(entry);
         }
       } catch (_error) {
-        logger.warn("Invalid date in calendar entry:", entry.firstOpenTime);
+        logger.warn("Invalid date in calendar entry:", { firstOpenTime: entry.firstOpenTime });
       }
     });
 

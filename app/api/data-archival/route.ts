@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createLogger } from '../../../src/lib/structured-logger';
 import { dataArchivalService } from "../../../src/services/data-archival-service";
 
-const logger = createLogger('route');
+// MOVED: const logger = createLogger('route');
 
 export async function GET() {
   try {

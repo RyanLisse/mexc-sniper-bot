@@ -1,5 +1,4 @@
 /**
-import { createLogger } from './structured-logger';
  * Database Performance Analyzer
  *
  * Phase 1: Query Performance Analysis (4h)
@@ -12,6 +11,7 @@ import { createLogger } from './structured-logger';
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
+import { createLogger } from './structured-logger';
 
 interface DatabaseStats {
   totalQueries: number;

@@ -4,12 +4,13 @@ import { db } from "../../../../src/db";
 import { snipeTargets } from "../../../../src/db/schema";
 import { eq } from "drizzle-orm";
 
-const logger = createLogger('route');
+// MOVED: const logger = createLogger('route');
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const logger = createLogger('route');
   try {
     const resolvedParams = await params;
     const body = await request.json();
@@ -87,6 +88,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const logger = createLogger('route');
   try {
     const resolvedParams = await params;
     const targetId = parseInt(resolvedParams.id);
@@ -136,6 +138,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const logger = createLogger('route');
   try {
     const resolvedParams = await params;
     const targetId = parseInt(resolvedParams.id);

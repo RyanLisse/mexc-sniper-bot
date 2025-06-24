@@ -12,9 +12,8 @@ import {
 } from "../../../src/lib/api-response";
 import { handleApiError } from "../../../src/lib/error-handler";
 
-const logger = createLogger('route');
-
 export async function POST(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const body = await request.json();
     const {
@@ -82,6 +81,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");

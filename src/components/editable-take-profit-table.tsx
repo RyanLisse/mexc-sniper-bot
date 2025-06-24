@@ -289,7 +289,7 @@ export function EditableTakeProfitTable({
       setIsEditing(false);
       setValidationErrors([]);
     } catch (error) {
-      logger.error("Failed to save take-profit levels:", error);
+      logger.error("Failed to save take-profit levels:", { error: error instanceof Error ? error.message : String(error) });
       setSaveError(
         error instanceof Error ? error.message : "Failed to save configuration. Please try again."
       );

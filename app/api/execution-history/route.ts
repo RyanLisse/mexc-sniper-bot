@@ -4,7 +4,7 @@ import { db } from "../../../src/db";
 import { executionHistory, snipeTargets } from "../../../src/db/schema";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 
-const logger = createLogger('route');
+// MOVED: const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

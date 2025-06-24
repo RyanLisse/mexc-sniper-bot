@@ -11,7 +11,7 @@ import {
   HTTP_STATUS 
 } from "../../../../src/lib/api-response";
 
-const logger = createLogger('route');
+// MOVED: const logger = createLogger('route');
 
 export async function POST(request: NextRequest) {
   try {

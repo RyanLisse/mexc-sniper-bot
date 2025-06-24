@@ -259,7 +259,7 @@ export const EnhancedCredentialStatusV3 = React.memo(function EnhancedCredential
       // Just force refresh instead
       await handleForceRefresh();
     } catch (error) {
-      logger.error("Failed to reset circuit breaker:", error);
+      logger.error("Failed to reset circuit breaker:", { error: error instanceof Error ? error.message : String(error) });
     }
   };
 

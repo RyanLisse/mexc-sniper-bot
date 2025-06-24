@@ -91,7 +91,7 @@ const defaultConfiguration: Phase3Configuration = {
 // GET - Retrieve Configuration
 // ======================
 
-const logger = createLogger('route');
+// MOVED: const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
   try {

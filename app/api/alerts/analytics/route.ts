@@ -15,9 +15,9 @@ const correlationEngine = new AlertCorrelationEngine(db);
 // ==========================================
 // GET /api/alerts/analytics - Get alerting analytics
 // ==========================================
-const logger = createLogger('route');
 
 export async function GET(request: NextRequest) {
+  const logger = createLogger('route');
   try {
     const user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated

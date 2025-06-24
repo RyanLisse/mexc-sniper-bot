@@ -4,7 +4,7 @@ import { createApiHandler } from "../../../../src/lib/api-middleware";
 import { getCacheHealthStatus, getCacheDashboardData } from "../../../../src/lib/cache-monitoring";
 import { globalCacheMonitoring } from "../../../../src/lib/cache-monitoring";
 
-const logger = createLogger('route');
+// MOVED: const logger = createLogger('route');
 
 /**
  * GET /api/cache/status
