@@ -287,39 +287,199 @@ beforeAll(async () => {
     }
   })
 
-  // Mock database functions for isolated testing
+  // In-memory data store for database mocks
+  const mockDataStore = {
+    snipeTargets: [],
+    user: [],
+    apiCredentials: [],
+    userPreferences: [],
+    patternEmbeddings: [],
+    coinActivities: [],
+    reset() {
+      this.snipeTargets = [];
+      this.user = [];
+      this.apiCredentials = [];
+      this.userPreferences = [];
+      this.patternEmbeddings = [];
+      this.coinActivities = [];
+    }
+  };
+
+  // Mock database functions with persistent in-memory storage
   const createMockDb = () => ({
     execute: vi.fn().mockResolvedValue([{ test_value: 1, count: '1' }]),
     query: vi.fn().mockResolvedValue([]),
-    insert: vi.fn().mockReturnValue({
-      values: vi.fn().mockReturnValue({
-        returning: vi.fn().mockResolvedValue([{ id: 'mock-id' }])
-      })
-    }),
-    select: vi.fn().mockReturnValue({
-      from: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          orderBy: vi.fn().mockResolvedValue([]),
-          limit: vi.fn().mockResolvedValue([])
+    insert: vi.fn().mockImplementation((table) => ({
+      values: vi.fn().mockImplementation((data) => ({
+        returning: vi.fn().mockImplementation(async () => {
+          // Determine which table we're inserting into using Drizzle table schema
+          const tableName = table?._?.name || table?.name || 'unknown';
+          
+          if (tableName === 'snipe_targets') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-snipe-${Date.now()}-${index}`,
+              ...item
+            }));
+            mockDataStore.snipeTargets.push(...results);
+            return results;
+          } else if (tableName === 'user') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-user-${Date.now()}-${index}`,
+              ...item
+            }));
+            mockDataStore.user.push(...results);
+            return results;
+          } else if (tableName === 'coin_activities') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-activity-${Date.now()}-${index}`,
+              ...item
+            }));
+            mockDataStore.coinActivities.push(...results);
+            return results;
+          } else if (tableName === 'user_preferences') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-pref-${Date.now()}-${index}`,
+              ...item
+            }));
+            mockDataStore.userPreferences.push(...results);
+            return results;
+          }
+          
+          // Default fallback
+          return Array.isArray(data) ? data.map((item, index) => ({ id: `mock-id-${index}`, ...item })) : [{ id: 'mock-id', ...data }];
+        })
+      }))
+    })),
+    select: vi.fn().mockImplementation(() => ({
+      from: vi.fn().mockImplementation((table) => ({
+        where: vi.fn().mockImplementation((condition) => ({
+          orderBy: vi.fn().mockImplementation(() => {
+            // Determine which table we're selecting from using Drizzle table schema
+            const tableName = table?._?.name || table?.name || 'unknown';
+            
+            if (tableName === 'snipe_targets') {
+              return Promise.resolve(mockDataStore.snipeTargets);
+            } else if (tableName === 'user') {
+              return Promise.resolve(mockDataStore.user);
+            } else if (tableName === 'coin_activities') {
+              return Promise.resolve(mockDataStore.coinActivities);
+            } else if (tableName === 'user_preferences') {
+              return Promise.resolve(mockDataStore.userPreferences);
+            }
+            
+            return Promise.resolve([]);
+          }),
+          limit: vi.fn().mockImplementation(() => {
+            // Determine which table we're selecting from using Drizzle table schema
+            const tableName = table?._?.name || table?.name || 'unknown';
+            
+            if (tableName === 'snipe_targets') {
+              return Promise.resolve(mockDataStore.snipeTargets);
+            } else if (tableName === 'user') {
+              return Promise.resolve(mockDataStore.user);
+            } else if (tableName === 'coin_activities') {
+              return Promise.resolve(mockDataStore.coinActivities);
+            } else if (tableName === 'user_preferences') {
+              return Promise.resolve(mockDataStore.userPreferences);
+            }
+            
+            return Promise.resolve([]);
+          })
+        })),
+        limit: vi.fn().mockImplementation(() => {
+          // Determine which table we're selecting from using Drizzle table schema
+          const tableName = table?._?.name || table?.name || 'unknown';
+          
+          if (tableName === 'snipe_targets') {
+            return Promise.resolve(mockDataStore.snipeTargets);
+          } else if (tableName === 'users') {
+            return Promise.resolve(mockDataStore.users);
+          } else if (tableName === 'coin_activities') {
+            return Promise.resolve(mockDataStore.coinActivities);
+          } else if (tableName === 'user_preferences') {
+            return Promise.resolve(mockDataStore.userPreferences);
+          }
+          
+          return Promise.resolve([]);
         }),
-        limit: vi.fn().mockResolvedValue([]),
-        orderBy: vi.fn().mockResolvedValue([])
-      })
-    }),
+        orderBy: vi.fn().mockImplementation(() => {
+          // Determine which table we're selecting from using Drizzle table schema
+          const tableName = table?._?.name || table?.name || 'unknown';
+          
+          if (tableName === 'snipe_targets') {
+            return Promise.resolve(mockDataStore.snipeTargets);
+          } else if (tableName === 'users') {
+            return Promise.resolve(mockDataStore.users);
+          } else if (tableName === 'coin_activities') {
+            return Promise.resolve(mockDataStore.coinActivities);
+          } else if (tableName === 'user_preferences') {
+            return Promise.resolve(mockDataStore.userPreferences);
+          }
+          
+          return Promise.resolve([]);
+        })
+      }))
+    })),
     update: vi.fn().mockReturnValue({
       set: vi.fn().mockReturnValue({
         where: vi.fn().mockResolvedValue([])
       })
     }),
-    delete: vi.fn().mockReturnValue({
-      where: vi.fn().mockResolvedValue([])
-    }),
+    delete: vi.fn().mockImplementation(() => ({
+      where: vi.fn().mockImplementation(async (condition) => {
+        // Clear all data for delete operations in tests
+        mockDataStore.reset();
+        return [];
+      })
+    })),
     transaction: vi.fn().mockImplementation(async (cb) => {
       return cb(createMockDb())
     })
   })
 
   const mockDb = createMockDb()
+  
+  // Make mockDataStore globally accessible for test cleanup
+  global.mockDataStore = mockDataStore
+
+  // Mock Drizzle table schemas
+  const mockTableSchemas = {
+    snipeTargets: { 
+      _: { name: 'snipe_targets' },
+      name: 'snipe_targets',
+      userId: { name: 'user_id' },
+      symbolName: { name: 'symbol_name' },
+      vcoinId: { name: 'vcoin_id' }
+    },
+    user: { 
+      _: { name: 'user' },
+      name: 'user',
+      id: { name: 'id' },
+      email: { name: 'email' }
+    },
+    userPreferences: { 
+      _: { name: 'user_preferences' },
+      name: 'user_preferences',
+      userId: { name: 'user_id' }
+    },
+    coinActivities: { 
+      _: { name: 'coin_activities' },
+      name: 'coin_activities',
+      vcoinId: { name: 'vcoin_id' },
+      currency: { name: 'currency' }
+    }
+  };
+
+  vi.mock('@/src/db/schema', () => ({
+    snipeTargets: mockTableSchemas.snipeTargets,
+    user: mockTableSchemas.user,
+    userPreferences: mockTableSchemas.userPreferences,
+    coinActivities: mockTableSchemas.coinActivities
+  }))
 
   vi.mock('@/src/db', () => ({
     db: mockDb,
@@ -639,6 +799,11 @@ beforeEach(async () => {
 afterEach(async () => {
   // Clear all mocks
   vi.clearAllMocks()
+
+  // Reset in-memory database store
+  if (global.mockDataStore && global.mockDataStore.reset) {
+    global.mockDataStore.reset()
+  }
 
   // Cleanup timeout monitors to prevent memory leaks
   globalTimeoutMonitor.cleanup()
