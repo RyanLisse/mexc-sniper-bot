@@ -6,6 +6,7 @@
  */
 
 import { toSafeError } from "../lib/error-type-utils";
+import { getUnifiedMexcService } from "./unified-mexc-service-factory";
 // Standardized Status Types
 export interface UnifiedCredentialStatus {
   hasCredentials: boolean;
@@ -113,15 +114,73 @@ export class UnifiedStatusResolver {
   }
 
   /**
+   * Try direct service call to avoid HTTP overhead and connection issues during startup
+   */
+  private async tryDirectServiceCall(): Promise<StatusResolutionResult | null> {
+    try {
+      // Get unified MEXC service instance
+      const mexcService = await getUnifiedMexcService();
+      
+      // Test connectivity directly
+      const connectivityTest = await mexcService.testConnectivity();
+      
+      // Create status from direct service result
+      const credentials: UnifiedCredentialStatus = {
+        hasCredentials: Boolean(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY),
+        isValid: connectivityTest,
+        source: "environment" as const,
+        hasUserCredentials: false, // Would need database check for this
+        hasEnvironmentCredentials: Boolean(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY),
+        lastValidated: new Date().toISOString(),
+        canAuthenticate: connectivityTest,
+        connectionHealth: connectivityTest ? "good" : "poor",
+      };
+
+      const network: UnifiedNetworkStatus = {
+        connected: connectivityTest,
+        lastChecked: new Date().toISOString(),
+      };
+
+      return {
+        credentials,
+        network,
+        overall: {
+          status: connectivityTest ? "healthy" : "error",
+          message: connectivityTest ? "Direct service connectivity successful" : "Direct service connectivity failed",
+          canTrade: connectivityTest && credentials.hasCredentials,
+        },
+        source: "enhanced" as const,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.debug("[UnifiedStatusResolver] Direct service call failed:", error);
+      return null;
+    }
+  }
+
+  /**
    * Attempt to get status from enhanced connectivity endpoint
    */
   private async tryEnhancedEndpoint(): Promise<StatusResolutionResult | null> {
     try {
+      // First try direct service call (avoids HTTP overhead and connection issues)
+      try {
+        const directResult = await this.tryDirectServiceCall();
+        if (directResult) {
+          return directResult;
+        }
+      } catch (directError) {
+        console.debug("[UnifiedStatusResolver] Direct service call failed, trying HTTP:", directError);
+      }
+
+      // Fallback to HTTP request only if direct call fails
       const url = this.resolveApiUrl("/api/mexc/enhanced-connectivity");
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // Include authentication cookies
+        credentials: "include",
+        // Add timeout to prevent hanging during startup
+        signal: AbortSignal.timeout(2000), // 2 second timeout
       });
 
       if (!response.ok) {
@@ -137,7 +196,12 @@ export class UnifiedStatusResolver {
 
       return this.normalizeEnhancedResponse(data.data);
     } catch (error) {
-      console.warn("[UnifiedStatusResolver] Enhanced endpoint error:", error);
+      // Don't log connection refused as error - it's expected during startup
+      if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
+        console.debug("[UnifiedStatusResolver] Enhanced endpoint not available (startup)");
+      } else {
+        console.warn("[UnifiedStatusResolver] Enhanced endpoint error:", error);
+      }
       return null;
     }
   }
@@ -151,7 +215,9 @@ export class UnifiedStatusResolver {
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // Include authentication cookies
+        credentials: "include",
+        // Add timeout to prevent hanging during startup
+        signal: AbortSignal.timeout(2000), // 2 second timeout
       });
 
       if (!response.ok) {
@@ -167,7 +233,12 @@ export class UnifiedStatusResolver {
 
       return this.normalizeLegacyResponse(data.data);
     } catch (error) {
-      console.warn("[UnifiedStatusResolver] Legacy endpoint error:", error);
+      // Don't log connection refused as error - it's expected during startup
+      if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
+        console.debug("[UnifiedStatusResolver] Legacy endpoint not available (startup)");
+      } else {
+        console.warn("[UnifiedStatusResolver] Legacy endpoint error:", error);
+      }
       return null;
     }
   }

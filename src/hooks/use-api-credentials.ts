@@ -279,12 +279,22 @@ export function useTestApiCredentials() {
         queryKey: ["status"],
       });
 
-      // 2. Invalidate connectivity status - refreshes connection state
+      // 2. Invalidate unified status context - matches status-context-v2 query keys
+      queryClient.invalidateQueries({
+        queryKey: ["status", "unified"],
+      });
+
+      // 3. Invalidate system status - refreshes system status displays
+      queryClient.invalidateQueries({
+        queryKey: ["status", "system"],
+      });
+
+      // 4. Invalidate connectivity status - refreshes connection state
       queryClient.invalidateQueries({
         queryKey: ["mexc", "connectivity"],
       });
 
-      // 3. Invalidate unified status - refreshes enhanced status displays
+      // 5. Invalidate enhanced status displays
       queryClient.invalidateQueries({
         queryKey: ["mexc", "unified-status"],
       });
