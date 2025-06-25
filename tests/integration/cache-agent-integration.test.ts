@@ -10,39 +10,24 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// Import everything before mocking
 import { BaseAgent, type AgentConfig, type AgentResponse } from '../../src/mexc-agents/base-agent';
 import { globalEnhancedAgentCache } from '../../src/lib/enhanced-agent-cache';
 import { globalCacheManager } from '../../src/lib/cache-manager';
 import { globalCacheMonitoring } from '../../src/lib/cache-monitoring';
 
-// Mock OpenAI
-vi.mock('openai', () => {
-  return {
-    default: vi.fn().mockImplementation(() => ({
-      chat: {
-        completions: {
-          create: vi.fn().mockResolvedValue({
-            choices: [{ message: { content: 'Mocked AI response' } }],
-            usage: { total_tokens: 100 },
-            model: 'gpt-4o',
-          }),
-        },
-      },
-    })),
-  };
-});
+// Mock console output to reduce test noise
+vi.spyOn(console, 'log').mockImplementation(() => {});
+vi.spyOn(console, 'info').mockImplementation(() => {});
+vi.spyOn(console, 'warn').mockImplementation(() => {});
+vi.spyOn(console, 'error').mockImplementation(() => {});
+vi.spyOn(console, 'debug').mockImplementation(() => {});
 
-// Mock error logging
-vi.mock('@/src/services/error-logging-service', () => ({
-  ErrorLoggingService: {
-    getInstance: () => ({
-      logError: vi.fn(),
-    }),
-  },
-}));
-
-// Test agent implementation
+// Test agent implementation with mocked OpenAI
 class TestAgent extends BaseAgent {
+  public mockOpenAI: any;
+
   constructor(name: string, systemPrompt: string = 'You are a test agent') {
     super({
       name,
@@ -50,6 +35,22 @@ class TestAgent extends BaseAgent {
       cacheEnabled: true,
       cacheTTL: 60000,
     } as AgentConfig);
+    
+    // Mock OpenAI client
+    this.mockOpenAI = {
+      chat: {
+        completions: {
+          create: vi.fn().mockResolvedValue({
+            choices: [{ message: { content: 'Mocked AI response', role: 'assistant', refusal: null } }],
+            usage: { total_tokens: 100, completion_tokens: 50, prompt_tokens: 50 },
+            model: 'gpt-4o',
+          }),
+        },
+      },
+    };
+    
+    // Replace the OpenAI client
+    (this as any).openai = this.mockOpenAI;
   }
 
   async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
@@ -58,6 +59,21 @@ class TestAgent extends BaseAgent {
     ]);
   }
 }
+
+// Mock setup in beforeEach to avoid hoisting issues
+beforeEach(async () => {
+  // Mock error logging service
+  try {
+    const errorLoggingModule = await import('../../src/services/error-logging-service');
+    vi.spyOn(errorLoggingModule, 'ErrorLoggingService' as any).mockImplementation(() => ({
+      getInstance: () => ({
+        logError: vi.fn(),
+      }),
+    }));
+  } catch (error) {
+    // If module doesn't exist, that's fine for tests
+  }
+});
 
 describe('Cache-Agent Integration', () => {
   let testAgent: TestAgent;
@@ -76,9 +92,13 @@ describe('Cache-Agent Integration', () => {
   });
 
   afterEach(() => {
-    testAgent.destroy();
-    patternAgent.destroy();
-    strategyAgent.destroy();
+    // Clean up agents
+    if (testAgent) testAgent.destroy();
+    if (patternAgent) patternAgent.destroy();
+    if (strategyAgent) strategyAgent.destroy();
+    
+    // Clear all mocks
+    vi.clearAllMocks();
   });
 
   describe('Agent Response Caching', () => {
@@ -358,7 +378,7 @@ describe('Cache-Agent Integration', () => {
     test('should handle agent errors without breaking cache', async () => {
       // Mock an error from OpenAI
       const errorAgent = new TestAgent('error-agent');
-      vi.mocked(errorAgent['openai'].chat.completions.create).mockRejectedValueOnce(
+      errorAgent.mockOpenAI.chat.completions.create.mockRejectedValueOnce(
         new Error('API Error')
       );
       
@@ -377,18 +397,18 @@ describe('Cache-Agent Integration', () => {
       
       // Mock an error
       const errorAgent = new TestAgent('error-agent');
-      vi.mocked(errorAgent['openai'].chat.completions.create).mockRejectedValueOnce(
+      errorAgent.mockOpenAI.chat.completions.create.mockRejectedValueOnce(
         new Error('API Error')
       );
       
       await expect(errorAgent.process(input)).rejects.toThrow();
       
       // Fix the mock and try again
-      vi.mocked(errorAgent['openai'].chat.completions.create).mockResolvedValueOnce({
+      errorAgent.mockOpenAI.chat.completions.create.mockResolvedValueOnce({
         choices: [{ message: { content: 'Success response', role: 'assistant', refusal: null } }],
         usage: { total_tokens: 50, completion_tokens: 30, prompt_tokens: 20 },
         model: 'gpt-4o',
-      } as any);
+      });
       
       const response = await errorAgent.process(input);
       expect(response.content).toBe('Success response');

@@ -9,42 +9,44 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EnhancedUnifiedCacheSystem, getEnhancedUnifiedCache, resetEnhancedUnifiedCache } from '../../src/lib/enhanced-unified-cache';
 
-// Mock the dependencies
-vi.mock('../../src/lib/unified-cache-system', () => ({
-  UnifiedCacheSystem: class MockUnifiedCacheSystem {
-    async get(key: string) { return null; }
-    async set(key: string, value: any) { return; }
-    async destroy() { return; }
-  },
-}));
+// Mock dependencies in setup instead of using vi.mock at top level
+beforeEach(async () => {
+  // Mock the unified cache system
+  const { UnifiedCacheSystem } = await import('../../src/lib/unified-cache-system');
+  vi.spyOn(UnifiedCacheSystem.prototype, 'get').mockResolvedValue(null);
+  vi.spyOn(UnifiedCacheSystem.prototype, 'set').mockResolvedValue(undefined);
+  vi.spyOn(UnifiedCacheSystem.prototype, 'destroy').mockResolvedValue(undefined);
 
-vi.mock('../../src/lib/redis-cache-service', () => ({
-  getRedisCacheService: vi.fn(() => ({
-    get: vi.fn().mockResolvedValue(null),
-    set: vi.fn().mockResolvedValue(true),
-    mget: vi.fn().mockResolvedValue([]),
-    mset: vi.fn().mockResolvedValue(true),
-    delete: vi.fn().mockResolvedValue(true),
-    clear: vi.fn().mockResolvedValue(0),
-    isHealthy: vi.fn().mockReturnValue(true),
-    getMetrics: vi.fn().mockReturnValue({
-      hits: 0,
-      misses: 0,
-      sets: 0,
-      deletes: 0,
-      errors: 0,
-      connectionStatus: 'connected',
-      avgResponseTime: 0,
-      totalOperations: 0,
-      cacheSize: 0,
-      memoryUsage: 0,
-    }),
-    getInfo: vi.fn().mockResolvedValue({ status: 'connected' }),
-    getCacheSize: vi.fn().mockResolvedValue(0),
-    getMemoryUsage: vi.fn().mockResolvedValue(0),
-    destroy: vi.fn().mockResolvedValue(undefined),
-  })),
-}));
+  // Mock the redis cache service  
+  const cacheModule = await import('../../src/lib/redis-cache-service');
+  if (cacheModule.getRedisCacheService) {
+    vi.spyOn(cacheModule, 'getRedisCacheService').mockReturnValue({
+      get: vi.fn().mockResolvedValue(null),
+      set: vi.fn().mockResolvedValue(true),
+      mget: vi.fn().mockResolvedValue([]),
+      mset: vi.fn().mockResolvedValue(true),
+      delete: vi.fn().mockResolvedValue(true),
+      clear: vi.fn().mockResolvedValue(0),
+      isHealthy: vi.fn().mockReturnValue(true),
+      getMetrics: vi.fn().mockReturnValue({
+        hits: 0,
+        misses: 0,
+        sets: 0,
+        deletes: 0,
+        errors: 0,
+        connectionStatus: 'connected',
+        avgResponseTime: 0,
+        totalOperations: 0,
+        cacheSize: 0,
+        memoryUsage: 0,
+      }),
+      getInfo: vi.fn().mockResolvedValue({ status: 'connected' }),
+      getCacheSize: vi.fn().mockResolvedValue(0),
+      getMemoryUsage: vi.fn().mockResolvedValue(0),
+      destroy: vi.fn().mockResolvedValue(undefined),
+    } as any);
+  }
+});
 
 describe('EnhancedUnifiedCacheSystem', () => {
   let cacheSystem: EnhancedUnifiedCacheSystem;

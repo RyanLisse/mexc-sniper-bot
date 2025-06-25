@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// Import everything before mocking
 import {
   checkRateLimit,
   logSecurityEvent,
@@ -11,28 +13,35 @@ import {
   clearSecurityEvents,
 } from '../../src/lib/rate-limiter';
 
-// Mock console.log to reduce test output noise
+// Mock console output to reduce test noise
 vi.spyOn(console, 'log').mockImplementation(() => {});
+vi.spyOn(console, 'info').mockImplementation(() => {});
+vi.spyOn(console, 'warn').mockImplementation(() => {});
+vi.spyOn(console, 'error').mockImplementation(() => {});
+vi.spyOn(console, 'debug').mockImplementation(() => {});
 
-// Mock the adaptive rate limiter to always allow requests (for testing traditional rate limiter)
-vi.mock('../../src/services/adaptive-rate-limiter', () => ({
-  adaptiveRateLimiter: {
-    checkRateLimit: vi.fn().mockResolvedValue({
-      allowed: true,
-      remainingRequests: 100,
-      resetTime: Date.now() + 60000,
-      metadata: {
-        algorithm: 'mock',
-        currentWindowRequests: 1,
-        averageResponseTime: 100,
-        successRate: 1.0,
-        adaptationFactor: 1.0,
-        burstTokens: 100,
-      },
-    }),
-    recordResponse: vi.fn().mockResolvedValue(undefined),
-  },
-}));
+// Mock the adaptive rate limiter in setup
+beforeEach(async () => {
+  // Mock the adaptive rate limiter service to avoid dependency issues
+  const { adaptiveRateLimiter } = await import('../../src/services/adaptive-rate-limiter');
+  
+  // Replace methods with mocks that always allow requests (for testing traditional rate limiter)
+  vi.spyOn(adaptiveRateLimiter, 'checkRateLimit').mockResolvedValue({
+    allowed: true,
+    remainingRequests: 100,
+    resetTime: Date.now() + 60000,
+    metadata: {
+      algorithm: 'mock',
+      currentWindowRequests: 1,
+      averageResponseTime: 100,
+      successRate: 1.0,
+      adaptationFactor: 1.0,
+      burstTokens: 100,
+    },
+  });
+  
+  vi.spyOn(adaptiveRateLimiter, 'recordResponse').mockResolvedValue(undefined);
+});
 
 describe('Enhanced Rate Limiter', () => {
   beforeEach(() => {

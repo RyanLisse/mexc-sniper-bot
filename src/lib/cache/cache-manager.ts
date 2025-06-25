@@ -259,6 +259,102 @@ export class CacheManager {
   }
 
   /**
+   * Get comprehensive cache analytics
+   */
+  getAnalytics(): CacheAnalytics {
+    const metrics = this.getMetrics();
+    
+    return {
+      performance: metrics,
+      topKeys: this.getTopKeys(),
+      typeBreakdown: this.getTypeBreakdown(),
+      recommendations: this.generateRecommendations(metrics),
+    };
+  }
+
+  /**
+   * Get top accessed cache keys
+   */
+  private getTopKeys(): Array<{ key: string; hits: number; lastAccessed: number }> {
+    // Collect from all cache levels
+    const allEntries: Array<{ key: string; hits: number; lastAccessed: number }> = [];
+    
+    // L2 cache entries
+    for (const [key, entry] of this.l2Cache) {
+      allEntries.push({
+        key,
+        hits: entry.accessCount,
+        lastAccessed: entry.lastAccessed,
+      });
+    }
+    
+    // L3 cache entries
+    for (const [key, entry] of this.l3Cache) {
+      allEntries.push({
+        key,
+        hits: entry.accessCount,
+        lastAccessed: entry.lastAccessed,
+      });
+    }
+    
+    return allEntries
+      .sort((a, b) => b.hits - a.hits)
+      .slice(0, 10);
+  }
+
+  /**
+   * Get cache breakdown by data type
+   */
+  private getTypeBreakdown(): Record<CacheDataType, { count: number; size: number; hitRate: number }> {
+    const breakdown: Record<string, { count: number; size: number; hitRate: number }> = {};
+    
+    // Initialize all types
+    const types: CacheDataType[] = [
+      "agent_response", "api_response", "pattern_detection", "query_result",
+      "session_data", "user_preferences", "workflow_result", "performance_metrics", "health_status"
+    ];
+    
+    for (const type of types) {
+      breakdown[type] = { count: 0, size: 0, hitRate: 0 };
+    }
+    
+    // Count from all cache levels
+    const allEntries = [...this.l2Cache.values(), ...this.l3Cache.values()];
+    
+    for (const entry of allEntries) {
+      const type = entry.metadata?.type || "api_response";
+      if (breakdown[type]) {
+        breakdown[type].count++;
+        breakdown[type].size += entry.metadata?.size || 0;
+        breakdown[type].hitRate = entry.accessCount > 0 ? (entry.accessCount / (entry.accessCount + 1)) * 100 : 0;
+      }
+    }
+    
+    return breakdown as Record<CacheDataType, { count: number; size: number; hitRate: number }>;
+  }
+
+  /**
+   * Generate cache optimization recommendations
+   */
+  private generateRecommendations(metrics: CacheMetrics): string[] {
+    const recommendations: string[] = [];
+    
+    if (metrics.hitRate < 50) {
+      recommendations.push("Consider increasing cache TTL or reviewing cache invalidation strategy");
+    }
+    
+    if (metrics.memoryUsage > this.config.maxSize * 0.8) {
+      recommendations.push("Consider increasing cache size or implementing more aggressive cleanup");
+    }
+    
+    if (metrics.averageAccessTime > 10) {
+      recommendations.push("Cache access time is high, consider optimizing cache structure");
+    }
+    
+    return recommendations;
+  }
+
+  /**
    * Clean up expired entries from all cache levels
    */
   cleanup(): { L1: number; L2: number; L3: number; total: number } {
@@ -281,6 +377,38 @@ export class CacheManager {
     }
 
     return results;
+  }
+
+  /**
+   * Optimize cache performance
+   */
+  optimize(): { actions: string[]; improvements: Record<string, number> } {
+    const actions: string[] = [];
+    const improvements: Record<string, number> = {};
+
+    // Clean up expired entries
+    const cleanupResult = this.cleanup();
+    if (cleanupResult.total > 0) {
+      actions.push(`Cleaned up ${cleanupResult.total} expired entries`);
+      improvements.entriesRemoved = cleanupResult.total;
+    }
+
+    // Optimize L1 cache if it's near capacity
+    const l1Usage = this.l1Cache.size() / this.l1Cache.maxSize;
+    if (l1Usage > 0.8) {
+      actions.push("L1 cache is near capacity, consider increasing size");
+      improvements.l1UtilizationReduction = l1Usage - 0.6;
+    }
+
+    // Check memory usage
+    const totalMemory = this.globalMetrics.memoryUsage;
+    const maxMemory = this.config.maxSize * 1024; // Rough estimate
+    if (totalMemory > maxMemory * 0.8) {
+      actions.push("High memory usage detected, consider cache size optimization");
+      improvements.memoryOptimization = (totalMemory - maxMemory * 0.6) / 1024;
+    }
+
+    return { actions, improvements };
   }
 
   /**
