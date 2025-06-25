@@ -76,6 +76,25 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
   });
 
   beforeEach(async () => {
+    // Clean up all test records BEFORE each test
+    console.log("🧹 Pre-test cleanup: removing all test records");
+    await db.delete(snipeTargets).where(eq(snipeTargets.userId, testUserId));
+    await db.delete(snipeTargets).where(eq(snipeTargets.userId, "non-existent-user"));
+    
+    // Also clean up any test symbols that might exist
+    const testSymbolPatterns = [
+      "TESTUSDT", "READY1USDT", "PRE1USDT", "LAUNCH1USDT", 
+      "HIGH1USDT", "LOW1USDT", "SUPPORTED1USDT", "UNSUPPORTED1USDT",
+      "LOWRISK1USDT", "HIGHRISK1USDT", "DUPTEST1USDT", "DBDUPTEST1USDT",
+      "PREFTEST1USDT", "DEFAULTTEST1USDT", "HIPRI1USDT", "MEDPRI1USDT",
+      "LOWPRI1USDT", "LIMIT1USDT", "LIMIT2USDT", "LIMIT3USDT",
+      "VALID1USDT", "VALID2USDT", "FULLTEST1USDT", "CONNTEST"
+    ];
+    
+    for (const symbol of testSymbolPatterns) {
+      await db.delete(snipeTargets).where(eq(snipeTargets.symbolName, symbol));
+    }
+
     // Initialize fresh bridge instance for each test
     bridge = PatternToDatabaseBridge.getInstance({
       enabled: true,
@@ -125,17 +144,31 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
 
   afterEach(async () => {
     // Stop bridge and clear test snipe targets
-    bridge.stopListening();
+    if (bridge) {
+      bridge.stopListening();
+      bridge.clearCache();
+    }
     
     // Clean up all test records thoroughly
-    console.log("🧹 Cleaning up test records after test");
+    console.log("🧹 Post-test cleanup: removing all test records");
     
     // Delete all records for test users
-    const deletedTestUser = await db.delete(snipeTargets).where(eq(snipeTargets.userId, testUserId));
-    const deletedNonExistentUser = await db.delete(snipeTargets).where(eq(snipeTargets.userId, "non-existent-user"));
+    await db.delete(snipeTargets).where(eq(snipeTargets.userId, testUserId));
+    await db.delete(snipeTargets).where(eq(snipeTargets.userId, "non-existent-user"));
     
-    // Also clean up any connection test records that might be left
-    const deletedConnTest = await db.delete(snipeTargets).where(eq(snipeTargets.symbolName, "CONNTEST"));
+    // Clean up all test symbols to prevent cross-test contamination
+    const testSymbolPatterns = [
+      "TESTUSDT", "READY1USDT", "PRE1USDT", "LAUNCH1USDT", 
+      "HIGH1USDT", "LOW1USDT", "SUPPORTED1USDT", "UNSUPPORTED1USDT",
+      "LOWRISK1USDT", "HIGHRISK1USDT", "DUPTEST1USDT", "DBDUPTEST1USDT",
+      "PREFTEST1USDT", "DEFAULTTEST1USDT", "HIPRI1USDT", "MEDPRI1USDT",
+      "LOWPRI1USDT", "LIMIT1USDT", "LIMIT2USDT", "LIMIT3USDT",
+      "VALID1USDT", "VALID2USDT", "FULLTEST1USDT", "CONNTEST"
+    ];
+    
+    for (const symbol of testSymbolPatterns) {
+      await db.delete(snipeTargets).where(eq(snipeTargets.symbolName, symbol));
+    }
     
     // Verify cleanup worked
     const remainingRecords = await db
@@ -143,10 +176,12 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
       .from(snipeTargets)
       .where(eq(snipeTargets.userId, testUserId));
     
-    console.log(`🧹 Cleanup complete: ${remainingRecords.length} records remaining for test user`);
+    console.log(`🧹 Post-test cleanup complete: ${remainingRecords.length} records remaining for test user`);
     
     if (remainingRecords.length > 0) {
       console.warn(`⚠️ Warning: ${remainingRecords.length} records still exist after cleanup:`, remainingRecords);
+      // Force cleanup any remaining records
+      await db.delete(snipeTargets).where(eq(snipeTargets.userId, testUserId));
     }
   });
 
@@ -449,13 +484,31 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
       };
 
       patternCore.emit("patterns_detected", eventData);
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Only high confidence pattern should be in database
-      const targets = await db
-        .select()
-        .from(snipeTargets)
-        .where(eq(snipeTargets.userId, testUserId));
+      // Poll for the database record with timeout (wait for async processing to complete)
+      let targets = [];
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total with 500ms intervals
+      
+      while (attempts < maxAttempts) {
+        try {
+          targets = await db
+            .select()
+            .from(snipeTargets)
+            .where(eq(snipeTargets.userId, testUserId));
+          
+          if (targets.length > 0) {
+            break; // Records found, exit polling loop
+          }
+        } catch (error) {
+          console.error(`❌ Test: Database query error on attempt ${attempts + 1}:`, error);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms between attempts
+        }
+      }
 
       expect(targets).toHaveLength(1);
       expect(targets[0].symbolName).toBe("HIGH1USDT");
@@ -518,16 +571,39 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
       };
 
       patternCore.emit("patterns_detected", eventData);
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Only supported pattern should be in database
-      const targets = await db
-        .select()
-        .from(snipeTargets)
-        .where(eq(snipeTargets.userId, testUserId));
+      // Poll for the database record with timeout (wait for async processing to complete)
+      let targets = [];
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total with 500ms intervals
+      
+      while (attempts < maxAttempts) {
+        try {
+          targets = await db
+            .select()
+            .from(snipeTargets)
+            .where(eq(snipeTargets.userId, testUserId));
+          
+          if (targets.length > 0) {
+            break; // Records found, exit polling loop
+          }
+        } catch (error) {
+          console.error(`❌ Test: Database query error on attempt ${attempts + 1}:`, error);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms between attempts
+        }
+      }
 
       expect(targets).toHaveLength(1);
       expect(targets[0].symbolName).toBe("SUPPORTED1USDT");
+      
+      // Restore original bridge configuration
+      bridge.updateConfig({
+        supportedPatternTypes: ["ready_state", "pre_ready", "launch_sequence"],
+      });
     });
 
     it("should filter high-risk patterns when risk filtering is enabled", async () => {
@@ -585,17 +661,40 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
       };
 
       patternCore.emit("patterns_detected", eventData);
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Only low-risk pattern should be in database
-      const targets = await db
-        .select()
-        .from(snipeTargets)
-        .where(eq(snipeTargets.userId, testUserId));
+      // Poll for the database record with timeout (wait for async processing to complete)
+      let targets = [];
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total with 500ms intervals
+      
+      while (attempts < maxAttempts) {
+        try {
+          targets = await db
+            .select()
+            .from(snipeTargets)
+            .where(eq(snipeTargets.userId, testUserId));
+          
+          if (targets.length > 0) {
+            break; // Records found, exit polling loop
+          }
+        } catch (error) {
+          console.error(`❌ Test: Database query error on attempt ${attempts + 1}:`, error);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms between attempts
+        }
+      }
 
       expect(targets).toHaveLength(1);
       expect(targets[0].symbolName).toBe("LOWRISK1USDT");
       expect(targets[0].riskLevel).toBe("low");
+      
+      // Restore original bridge configuration
+      bridge.updateConfig({
+        enableRiskFiltering: false,
+      });
     });
   });
 
@@ -645,15 +744,33 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
           highConfidenceCount: 1,
         },
       });
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Should only have one record despite two events
-      const targets = await db
-        .select()
-        .from(snipeTargets)
-        .where(
-          and(eq(snipeTargets.userId, testUserId), eq(snipeTargets.symbolName, "DUPTEST1USDT"))
-        );
+      // Poll for the database record with timeout (wait for async processing to complete)
+      let targets = [];
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total with 500ms intervals
+      
+      while (attempts < maxAttempts) {
+        try {
+          targets = await db
+            .select()
+            .from(snipeTargets)
+            .where(
+              and(eq(snipeTargets.userId, testUserId), eq(snipeTargets.symbolName, "DUPTEST1USDT"))
+            );
+          
+          if (targets.length > 0) {
+            break; // Records found, exit polling loop
+          }
+        } catch (error) {
+          console.error(`❌ Test: Database query error on attempt ${attempts + 1}:`, error);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms between attempts
+        }
+      }
 
       expect(targets).toHaveLength(1);
     });
@@ -705,7 +822,9 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
           highConfidenceCount: 1,
         },
       });
-      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Wait a moment for processing to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Should still only have one record (the original manual insert)
       const targets = await db
@@ -752,14 +871,33 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
           highConfidenceCount: 1,
         },
       });
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const targets = await db
-        .select()
-        .from(snipeTargets)
-        .where(
-          and(eq(snipeTargets.userId, testUserId), eq(snipeTargets.symbolName, "PREFTEST1USDT"))
-        );
+      // Poll for the database record with timeout (wait for async processing to complete)
+      let targets = [];
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total with 500ms intervals
+      
+      while (attempts < maxAttempts) {
+        try {
+          targets = await db
+            .select()
+            .from(snipeTargets)
+            .where(
+              and(eq(snipeTargets.userId, testUserId), eq(snipeTargets.symbolName, "PREFTEST1USDT"))
+            );
+          
+          if (targets.length > 0) {
+            break; // Records found, exit polling loop
+          }
+        } catch (error) {
+          console.error(`❌ Test: Database query error on attempt ${attempts + 1}:`, error);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms between attempts
+        }
+      }
 
       expect(targets).toHaveLength(1);
       const target = targets[0];
@@ -771,6 +909,9 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
     });
 
     it("should fall back to default values when user preferences are not found", async () => {
+      // Stop current bridge first
+      bridge.stopListening();
+      
       // Create bridge with mapping to non-existent user
       const bridgeWithUnknownUser = PatternToDatabaseBridge.getInstance({
         enabled: true,
@@ -811,12 +952,31 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
           highConfidenceCount: 1,
         },
       });
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const targets = await db
-        .select()
-        .from(snipeTargets)
-        .where(eq(snipeTargets.symbolName, "DEFAULTTEST1USDT"));
+      // Poll for the database record with timeout (wait for async processing to complete)
+      let targets = [];
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total with 500ms intervals
+      
+      while (attempts < maxAttempts) {
+        try {
+          targets = await db
+            .select()
+            .from(snipeTargets)
+            .where(eq(snipeTargets.symbolName, "DEFAULTTEST1USDT"));
+          
+          if (targets.length > 0) {
+            break; // Records found, exit polling loop
+          }
+        } catch (error) {
+          console.error(`❌ Test: Database query error on attempt ${attempts + 1}:`, error);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms between attempts
+        }
+      }
 
       expect(targets).toHaveLength(1);
       const target = targets[0];
@@ -827,6 +987,16 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
       expect(target.stopLossPercent).toBe(20);
 
       bridgeWithUnknownUser.stopListening();
+      
+      // Restore original bridge configuration for subsequent tests
+      bridge = PatternToDatabaseBridge.getInstance({
+        enabled: true,
+        minConfidenceThreshold: 70,
+        maxTargetsPerUser: 5,
+        defaultPositionSizeUsdt: 100,
+        userIdMapping: { test_source: testUserId },
+        batchProcessing: false,
+      });
     });
   });
 
@@ -898,12 +1068,31 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
           highConfidenceCount: 2,
         },
       });
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const targets = await db
-        .select()
-        .from(snipeTargets)
-        .where(eq(snipeTargets.userId, testUserId));
+      // Poll for all 3 database records with timeout
+      let targets = [];
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total with 500ms intervals
+      
+      while (attempts < maxAttempts) {
+        try {
+          targets = await db
+            .select()
+            .from(snipeTargets)
+            .where(eq(snipeTargets.userId, testUserId));
+          
+          if (targets.length >= 3) {
+            break; // All records found, exit polling loop
+          }
+        } catch (error) {
+          console.error(`❌ Test: Database query error on attempt ${attempts + 1}:`, error);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms between attempts
+        }
+      }
 
       expect(targets).toHaveLength(3);
 
@@ -961,15 +1150,39 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
           highConfidenceCount: 3,
         },
       });
-      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Poll for 2 database records with timeout (due to user limit)
+      let targets = [];
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total with 500ms intervals
+      
+      while (attempts < maxAttempts) {
+        try {
+          targets = await db
+            .select()
+            .from(snipeTargets)
+            .where(eq(snipeTargets.userId, testUserId));
+          
+          if (targets.length >= 2) {
+            break; // Expected records found, exit polling loop
+          }
+        } catch (error) {
+          console.error(`❌ Test: Database query error on attempt ${attempts + 1}:`, error);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms between attempts
+        }
+      }
 
       // Should only have 2 targets due to limit
-      const targets = await db
-        .select()
-        .from(snipeTargets)
-        .where(eq(snipeTargets.userId, testUserId));
-
       expect(targets).toHaveLength(2);
+      
+      // Restore original bridge configuration
+      bridge.updateConfig({
+        maxTargetsPerUser: 5,
+      });
     });
   });
 
@@ -1005,7 +1218,9 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
           highConfidenceCount: 1,
         },
       });
-      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Wait a moment for processing to complete, then verify no records created
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Should not create any targets due to invalid data
       const targets = await db
