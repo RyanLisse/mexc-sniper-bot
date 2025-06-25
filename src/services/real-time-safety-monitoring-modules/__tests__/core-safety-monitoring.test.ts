@@ -210,10 +210,10 @@ describe("CoreSafetyMonitoring", () => {
         },
         activePositions: [],
         recentExecutions: [
+          { symbol: "DOT", quantity: "10", currentPrice: "30", unrealizedPnl: "15" }, // Profit before losses
           { symbol: "BTC", quantity: "0.1", currentPrice: "45000", unrealizedPnl: "-100" },
           { symbol: "ETH", quantity: "1", currentPrice: "3000", unrealizedPnl: "-50" },
-          { symbol: "ADA", quantity: "100", currentPrice: "1", unrealizedPnl: "-25" },
-          { symbol: "DOT", quantity: "10", currentPrice: "30", unrealizedPnl: "15" }, // Profit breaks streak
+          { symbol: "ADA", quantity: "100", currentPrice: "1", unrealizedPnl: "-25" }, // Last 3 are consecutive losses
         ],
         systemHealth: { apiConnection: true },
       });
@@ -324,13 +324,11 @@ describe("CoreSafetyMonitoring", () => {
     });
 
     it("should detect API latency threshold violations", async () => {
-      // Update risk metrics with high API latency
-      const riskMetrics = coreMonitoring.getRiskMetrics();
-      riskMetrics.apiLatency = 1500; // Above 1000ms threshold
-
-      // Manually set the risk metrics for testing
+      // Reset risk metrics first to ensure clean state
       coreMonitoring.resetRiskMetrics();
-      Object.assign(coreMonitoring.getRiskMetrics(), riskMetrics);
+      
+      // Set high API latency using the direct setter method
+      coreMonitoring.setRiskMetrics({ apiLatency: 1500 }); // Above 1000ms threshold
 
       const result = await coreMonitoring.checkSafetyThresholds();
 

@@ -1,10 +1,17 @@
 "use client";
 import type * as React from "react";
-import { ResponsiveContainer } from "recharts";
+import { Suspense, lazy } from "react";
 
 export interface ChartConfig {
   [key: string]: { label?: string; color?: string };
 }
+
+// Lazy load Recharts ResponsiveContainer to reduce initial bundle size
+const ResponsiveContainer = lazy(() =>
+  import("recharts").then((module) => ({
+    default: module.ResponsiveContainer,
+  }))
+);
 
 export function ChartContainer({
   className,
@@ -15,9 +22,11 @@ export function ChartContainer({
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <ResponsiveContainer className={className}>
-      {children as React.ReactElement}
-    </ResponsiveContainer>
+    <Suspense fallback={<div className="w-full h-96 animate-pulse bg-gray-100 rounded" />}>
+      <ResponsiveContainer className={className}>
+        {children as React.ReactElement}
+      </ResponsiveContainer>
+    </Suspense>
   );
 }
 

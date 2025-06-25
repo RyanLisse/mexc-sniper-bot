@@ -12,21 +12,27 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Cell,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
+
+// Lazy load Recharts components to reduce initial bundle size
+const LazyRecharts = lazy(() =>
+  import("recharts").then((module) => ({
+    default: {
+      Area: module.Area,
+      AreaChart: module.AreaChart,
+      CartesianGrid: module.CartesianGrid,
+      Cell: module.Cell,
+      Line: module.Line,
+      LineChart: module.LineChart,
+      Pie: module.Pie,
+      PieChart: module.PieChart,
+      ResponsiveContainer: module.ResponsiveContainer,
+      Tooltip: module.Tooltip,
+      XAxis: module.XAxis,
+      YAxis: module.YAxis,
+    },
+  }))
+);
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

@@ -3,31 +3,11 @@
  *
  * Optimized configuration for production environments with performance,
  * resource usage, and monitoring considerations.
+ * 
+ * Build-safe implementation with dynamic imports to prevent bundling issues.
  */
 
-import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
-import { JaegerExporter } from "@opentelemetry/exporter-jaeger";
-// Temporarily disable problematic OTLP exporters due to version compatibility issues
-// import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
-import { PrometheusExporter } from "@opentelemetry/exporter-prometheus";
-// import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { Resource } from "@opentelemetry/resources";
-import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import {
-  AlwaysOffSampler,
-  AlwaysOnSampler,
-  ParentBasedSampler,
-  TraceIdRatioBasedSampler,
-} from "@opentelemetry/sdk-trace-base";
-import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-node";
-import {
-  SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
-  SEMRESATTRS_HOST_NAME,
-  SEMRESATTRS_PROCESS_PID,
-  SEMRESATTRS_SERVICE_NAME,
-  SEMRESATTRS_SERVICE_VERSION,
-} from "@opentelemetry/semantic-conventions";
+// No static imports to prevent bundle bloat - all imports are dynamic
 
 // Simple console logger to avoid bundling issues
 const logger = {
@@ -174,11 +154,11 @@ export function getProductionTelemetryConfig(): ProductionTelemetryConfig {
 }
 
 /**
- * Create production-optimized OpenTelemetry SDK
+ * Create production-optimized OpenTelemetry SDK with dynamic imports
  */
-export function createProductionTelemetrySDK(
+export async function createProductionTelemetrySDK(
   config?: Partial<ProductionTelemetryConfig>
-): NodeSDK | null {
+): Promise<any | null> {
   try {
     const telemetryConfig = { ...getProductionTelemetryConfig(), ...config };
 
@@ -191,20 +171,31 @@ export function createProductionTelemetrySDK(
       samplingRate: telemetryConfig.tracing.samplingRate,
     });
 
+    // Dynamic imports to prevent bundle bloat
+    const [
+      { NodeSDK },
+      { Resource },
+      semanticConventions,
+    ] = await Promise.all([
+      import("@opentelemetry/sdk-node"),
+      import("@opentelemetry/resources"),
+      import("@opentelemetry/semantic-conventions"),
+    ]);
+
     // Create resource with comprehensive service information
-    const resource = createServiceResource(telemetryConfig);
+    const resource = await createServiceResource(telemetryConfig, semanticConventions);
 
     // Configure sampling strategy
-    const sampler = createOptimizedSampler(telemetryConfig);
+    const sampler = await createOptimizedSampler(telemetryConfig);
 
     // Configure span processors with performance optimization
-    const spanProcessors = createSpanProcessors(telemetryConfig);
+    const spanProcessors = await createSpanProcessors(telemetryConfig);
 
     // Configure metric readers
-    const metricReaders = createMetricReaders(telemetryConfig);
+    const metricReaders = await createMetricReaders(telemetryConfig);
 
     // Configure instrumentations with filtering
-    const instrumentations = createInstrumentations(telemetryConfig);
+    const instrumentations = await createInstrumentations(telemetryConfig);
 
     const sdk = new NodeSDK({
       resource,
@@ -237,9 +228,19 @@ export function createProductionTelemetrySDK(
 }
 
 /**
- * Create comprehensive service resource
+ * Create comprehensive service resource with dynamic imports
  */
-function createServiceResource(config: ProductionTelemetryConfig): Resource {
+async function createServiceResource(config: ProductionTelemetryConfig, semanticConventions: any): Promise<any> {
+  const { Resource } = await import("@opentelemetry/resources");
+  
+  const {
+    SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
+    SEMRESATTRS_HOST_NAME,
+    SEMRESATTRS_PROCESS_PID,
+    SEMRESATTRS_SERVICE_NAME,
+    SEMRESATTRS_SERVICE_VERSION,
+  } = semanticConventions;
+
   const resourceAttributes: Record<string, string | number> = {
     [SEMRESATTRS_SERVICE_NAME]: config.serviceName,
     [SEMRESATTRS_SERVICE_VERSION]: config.serviceVersion,
@@ -264,9 +265,16 @@ function createServiceResource(config: ProductionTelemetryConfig): Resource {
 }
 
 /**
- * Create optimized sampler based on environment and performance requirements
+ * Create optimized sampler based on environment and performance requirements with dynamic imports
  */
-function createOptimizedSampler(config: ProductionTelemetryConfig) {
+async function createOptimizedSampler(config: ProductionTelemetryConfig) {
+  const {
+    AlwaysOffSampler,
+    AlwaysOnSampler,
+    ParentBasedSampler,
+    TraceIdRatioBasedSampler,
+  } = await import("@opentelemetry/sdk-trace-base");
+
   if (!config.tracing.enabled) {
     return new AlwaysOffSampler();
   }
@@ -288,13 +296,15 @@ function createOptimizedSampler(config: ProductionTelemetryConfig) {
 }
 
 /**
- * Create span processors with performance optimization
+ * Create span processors with performance optimization and dynamic imports
  */
-function createSpanProcessors(config: ProductionTelemetryConfig) {
+async function createSpanProcessors(config: ProductionTelemetryConfig) {
   const processors: any[] = [];
 
   // Console exporter for development
   if (config.exporters.console) {
+    const { BatchSpanProcessor, ConsoleSpanExporter } = await import("@opentelemetry/sdk-trace-node");
+    
     processors.push(
       new BatchSpanProcessor(new ConsoleSpanExporter(), {
         scheduledDelayMillis: config.performance.batchTimeout,
@@ -305,6 +315,9 @@ function createSpanProcessors(config: ProductionTelemetryConfig) {
 
   // OTLP exporter for production monitoring - temporarily disabled due to version compatibility
   // if (config.exporters.otlp.enabled && config.exporters.otlp.endpoint) {
+  //   const { OTLPTraceExporter } = await import("@opentelemetry/exporter-trace-otlp-http");
+  //   const { BatchSpanProcessor } = await import("@opentelemetry/sdk-trace-node");
+  //   
   //   const otlpExporter = new OTLPTraceExporter({
   //     url: config.exporters.otlp.endpoint,
   //     headers: config.exporters.otlp.headers,
@@ -322,6 +335,9 @@ function createSpanProcessors(config: ProductionTelemetryConfig) {
 
   // Jaeger exporter for development and staging
   if (config.exporters.jaeger.enabled && config.exporters.jaeger.endpoint) {
+    const { JaegerExporter } = await import("@opentelemetry/exporter-jaeger");
+    const { BatchSpanProcessor } = await import("@opentelemetry/sdk-trace-node");
+    
     const jaegerExporter = new JaegerExporter({
       endpoint: config.exporters.jaeger.endpoint,
     });
@@ -338,9 +354,9 @@ function createSpanProcessors(config: ProductionTelemetryConfig) {
 }
 
 /**
- * Create metric readers with performance optimization
+ * Create metric readers with performance optimization and dynamic imports
  */
-function createMetricReaders(config: ProductionTelemetryConfig) {
+async function createMetricReaders(config: ProductionTelemetryConfig) {
   const readers: any[] = [];
 
   if (!config.metrics.enabled) {
@@ -349,6 +365,9 @@ function createMetricReaders(config: ProductionTelemetryConfig) {
 
   // OTLP metrics exporter - temporarily disabled due to version compatibility
   // if (config.exporters.otlp.enabled && config.exporters.otlp.endpoint) {
+  //   const { OTLPMetricExporter } = await import("@opentelemetry/exporter-metrics-otlp-http");
+  //   const { PeriodicExportingMetricReader } = await import("@opentelemetry/sdk-metrics");
+  //   
   //   const otlpMetricExporter = new OTLPMetricExporter({
   //     url: config.exporters.otlp.endpoint.replace("/traces", "/metrics"),
   //     headers: config.exporters.otlp.headers,
@@ -365,6 +384,8 @@ function createMetricReaders(config: ProductionTelemetryConfig) {
 
   // Prometheus metrics exporter
   if (config.exporters.prometheus.enabled) {
+    const { PrometheusExporter } = await import("@opentelemetry/exporter-prometheus");
+    
     readers.push(
       new PrometheusExporter({
         port: config.exporters.prometheus.port,
@@ -377,9 +398,11 @@ function createMetricReaders(config: ProductionTelemetryConfig) {
 }
 
 /**
- * Create filtered instrumentations for optimal performance
+ * Create filtered instrumentations for optimal performance with dynamic imports
  */
-function createInstrumentations(config: ProductionTelemetryConfig) {
+async function createInstrumentations(config: ProductionTelemetryConfig) {
+  const { getNodeAutoInstrumentations } = await import("@opentelemetry/auto-instrumentations-node");
+  
   const instrumentations = getNodeAutoInstrumentations({
     // Disable instrumentations that may cause performance issues in production
     "@opentelemetry/instrumentation-fs": {
@@ -432,11 +455,11 @@ export async function initializeProductionTelemetry(
   config?: Partial<ProductionTelemetryConfig>
 ): Promise<{
   success: boolean;
-  sdk?: NodeSDK;
+  sdk?: any;
   healthCheck: () => Promise<boolean>;
 }> {
   try {
-    const sdk = createProductionTelemetrySDK(config);
+    const sdk = await createProductionTelemetrySDK(config);
 
     if (!sdk) {
       return {
@@ -454,11 +477,12 @@ export async function initializeProductionTelemetry(
       processId: process.pid,
     });
 
-    // Create health check function
+    // Create health check function with dynamic import
     const healthCheck = async (): Promise<boolean> => {
       try {
         // Simple health check - verify tracing is working
-        const tracer = require("@opentelemetry/api").trace.getTracer("health-check");
+        const { trace } = await import("@opentelemetry/api");
+        const tracer = trace.getTracer("health-check");
         return new Promise((resolve) => {
           tracer.startActiveSpan("health-check", (span: any) => {
             span.end();
@@ -495,7 +519,7 @@ export async function initializeProductionTelemetry(
 /**
  * Graceful telemetry shutdown
  */
-export async function shutdownProductionTelemetry(sdk: NodeSDK): Promise<void> {
+export async function shutdownProductionTelemetry(sdk: any): Promise<void> {
   try {
     logger.info("Shutting down production OpenTelemetry", {
       operation: "telemetry_shutdown",

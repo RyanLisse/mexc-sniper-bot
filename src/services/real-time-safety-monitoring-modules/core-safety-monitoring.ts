@@ -22,6 +22,7 @@ import type {
   ExecutionPosition,
 } from "../auto-sniping-execution-service";
 import type { PatternMonitoringService } from "../pattern-monitoring-service";
+import { createTimer } from "../../lib/structured-logger";
 
 export interface CoreSafetyMonitoringConfig {
   configuration: SafetyConfiguration;
@@ -380,6 +381,13 @@ export class CoreSafetyMonitoring {
    */
   public getRiskMetrics(): RiskMetrics {
     return { ...this.riskMetrics };
+  }
+
+  /**
+   * Set risk metrics directly (for testing purposes)
+   */
+  public setRiskMetrics(riskMetrics: Partial<RiskMetrics>): void {
+    Object.assign(this.riskMetrics, riskMetrics);
   }
 
   /**
