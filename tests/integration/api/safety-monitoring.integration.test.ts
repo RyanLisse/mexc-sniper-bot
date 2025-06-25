@@ -40,13 +40,13 @@ describe('Safety Monitoring API Integration Tests', () => {
     test('should be able to import API route handlers', () => {
       // Test that we can import the API route handlers without errors
       expect(() => {
-        require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+        require('../../../app/api/auto-sniping/safety-monitoring/route');
       }).not.toThrow();
     });
 
     test('should handle API request structure validation', async () => {
       // Test basic request validation without full authentication
-      const { GET, POST } = require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+      const { GET, POST } = require('../../../app/api/auto-sniping/safety-monitoring/route');
       
       // Test invalid request structure
       const invalidRequest = new NextRequest('http://localhost:3000/api/auto-sniping/safety-monitoring?action=invalid');
@@ -67,7 +67,7 @@ describe('Safety Monitoring API Integration Tests', () => {
     });
 
     test('should validate POST request JSON structure', async () => {
-      const { POST } = require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+      const { POST } = require('../../../app/api/auto-sniping/safety-monitoring/route');
       
       // Test POST with invalid JSON
       const invalidJsonRequest = new NextRequest('http://localhost:3000/api/auto-sniping/safety-monitoring', {
@@ -92,7 +92,7 @@ describe('Safety Monitoring API Integration Tests', () => {
     });
 
     test('should validate required action parameter in POST requests', async () => {
-      const { POST } = require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+      const { POST } = require('../../../app/api/auto-sniping/safety-monitoring/route');
       
       // Test POST with missing action
       const missingActionRequest = new NextRequest('http://localhost:3000/api/auto-sniping/safety-monitoring', {
@@ -235,7 +235,7 @@ describe('Safety Monitoring API Integration Tests', () => {
 
   describe('Error Handling', () => {
     test('should handle invalid GET action parameters gracefully', async () => {
-      const { GET } = require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+      const { GET } = require('../../../app/api/auto-sniping/safety-monitoring/route');
       
       const invalidRequest = new NextRequest('http://localhost:3000/api/auto-sniping/safety-monitoring?action=nonexistent');
       
@@ -254,7 +254,7 @@ describe('Safety Monitoring API Integration Tests', () => {
     });
 
     test('should handle invalid POST action parameters gracefully', async () => {
-      const { POST } = require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+      const { POST } = require('../../../app/api/auto-sniping/safety-monitoring/route');
       
       const invalidRequest = new NextRequest('http://localhost:3000/api/auto-sniping/safety-monitoring', {
         method: 'POST',
@@ -277,7 +277,7 @@ describe('Safety Monitoring API Integration Tests', () => {
     });
 
     test('should handle malformed request bodies gracefully', async () => {
-      const { POST } = require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+      const { POST } = require('../../../app/api/auto-sniping/safety-monitoring/route');
       
       const malformedRequest = new NextRequest('http://localhost:3000/api/auto-sniping/safety-monitoring', {
         method: 'POST',
@@ -302,7 +302,7 @@ describe('Safety Monitoring API Integration Tests', () => {
 
   describe('Request Validation', () => {
     test('should validate configuration update requirements', async () => {
-      const { POST } = require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+      const { POST } = require('../../../app/api/auto-sniping/safety-monitoring/route');
       
       const missingConfigRequest = new NextRequest('http://localhost:3000/api/auto-sniping/safety-monitoring', {
         method: 'POST',
@@ -325,7 +325,7 @@ describe('Safety Monitoring API Integration Tests', () => {
     });
 
     test('should validate threshold update requirements', async () => {
-      const { POST } = require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+      const { POST } = require('../../../app/api/auto-sniping/safety-monitoring/route');
       
       const missingThresholdsRequest = new NextRequest('http://localhost:3000/api/auto-sniping/safety-monitoring', {
         method: 'POST',
@@ -348,7 +348,7 @@ describe('Safety Monitoring API Integration Tests', () => {
     });
 
     test('should validate emergency response requirements', async () => {
-      const { POST } = require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+      const { POST } = require('../../../app/api/auto-sniping/safety-monitoring/route');
       
       const missingReasonRequest = new NextRequest('http://localhost:3000/api/auto-sniping/safety-monitoring', {
         method: 'POST',
@@ -371,7 +371,7 @@ describe('Safety Monitoring API Integration Tests', () => {
     });
 
     test('should validate alert acknowledgment requirements', async () => {
-      const { POST } = require('../../../src/app/api/auto-sniping/safety-monitoring/route');
+      const { POST } = require('../../../app/api/auto-sniping/safety-monitoring/route');
       
       const missingAlertIdRequest = new NextRequest('http://localhost:3000/api/auto-sniping/safety-monitoring', {
         method: 'POST',

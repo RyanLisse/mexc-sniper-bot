@@ -88,6 +88,9 @@ export const ApiCredentialsTestResponseSchema = z.object({
     cacheInvalidated: z.boolean(),
     timestamp: z.string().datetime(),
     triggeredBy: z.string(),
+    success: z.boolean().optional(),
+    servicesNotified: z.array(z.string()).optional(),
+    statusRefreshed: z.boolean().optional(),
   }),
 });
 

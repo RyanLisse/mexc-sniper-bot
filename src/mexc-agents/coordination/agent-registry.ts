@@ -286,7 +286,12 @@ export class AgentRegistry extends AgentRegistryCore {
 
       // Attempt auto-recovery if enabled and threshold reached
       if (agent.autoRecovery && health.consecutiveErrors >= 3) {
-        this.attemptRecovery(agent);
+        // Run recovery asynchronously to avoid blocking health updates
+        setImmediate(() => {
+          this.attemptRecovery(agent).catch((error) => {
+            this.logger.error(`Auto-recovery failed for agent ${agent.id}:`, error);
+          });
+        });
       }
     }
 

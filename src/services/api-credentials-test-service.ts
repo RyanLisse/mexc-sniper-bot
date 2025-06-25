@@ -18,6 +18,7 @@ import {
   invalidateUserCredentialsCache,
 } from "./unified-mexc-service-factory";
 import { getUserCredentials } from "./user-credentials-service";
+import { syncAfterCredentialTest } from "./status-synchronization-service";
 
 // ============================================================================
 // Types & Interfaces
@@ -160,6 +161,21 @@ export class ApiCredentialsTestService {
       // Invalidate cache for status consistency
       invalidateUserCredentialsCache(context.userId);
 
+      // Synchronize all status systems after successful credential test
+      const statusSyncResult = await syncAfterCredentialTest(
+        context.userId,
+        context.provider,
+        context.requestId
+      );
+
+      console.info('[CredentialTestService] Status synchronization completed', {
+        requestId: context.requestId,
+        syncSuccess: statusSyncResult.success,
+        servicesNotified: statusSyncResult.servicesNotified,
+        cacheInvalidated: statusSyncResult.cacheInvalidated,
+        statusRefreshed: statusSyncResult.statusRefreshed
+      });
+
       // Build successful response
       const response: ApiCredentialsTestResponse = {
         connectivity: connectivityResult.success,
@@ -177,9 +193,12 @@ export class ApiCredentialsTestService {
           ? "MEXC API connectivity verified"
           : "MEXC API connectivity could not be verified, but credentials are valid",
         statusSync: {
-          cacheInvalidated: true,
-          timestamp: new Date().toISOString(),
-          triggeredBy: "credential-test-success",
+          cacheInvalidated: statusSyncResult.cacheInvalidated,
+          timestamp: statusSyncResult.timestamp,
+          triggeredBy: statusSyncResult.triggeredBy,
+          success: statusSyncResult.success,
+          servicesNotified: statusSyncResult.servicesNotified,
+          statusRefreshed: statusSyncResult.statusRefreshed,
         },
       };
 

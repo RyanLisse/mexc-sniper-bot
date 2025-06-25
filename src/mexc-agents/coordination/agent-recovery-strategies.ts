@@ -46,19 +46,26 @@ export class AgentRecoveryStrategies {
     agent: RegisteredAgent,
     getUpdatedAgent: (id: string) => RegisteredAgent | null
   ): Promise<boolean> {
-    agent.health.lastRecoveryAttempt = new Date();
-    agent.health.recoveryAttempts++;
-    agent.health.status = "recovering";
+    // Verify agent still exists before attempting recovery
+    const currentAgent = getUpdatedAgent(agent.id);
+    if (!currentAgent) {
+      this.logger.warn(`Cannot attempt recovery for agent ${agent.id}: agent not found in registry`);
+      return false;
+    }
+
+    currentAgent.health.lastRecoveryAttempt = new Date();
+    currentAgent.health.recoveryAttempts++;
+    currentAgent.health.status = "recovering";
 
     this.logger.info(
-      `Attempting recovery for agent ${agent.id} (attempt ${agent.health.recoveryAttempts})`
+      `Attempting recovery for agent ${agent.id} (attempt ${currentAgent.health.recoveryAttempts})`
     );
 
     const startTime = Date.now();
 
     try {
       // Try different recovery strategies based on agent type and error pattern
-      const strategies = this.selectRecoveryStrategies(agent);
+      const strategies = this.selectRecoveryStrategies(currentAgent);
 
       for (const strategyName of strategies) {
         const strategy = this.recoveryStrategies.get(strategyName);
@@ -86,10 +93,17 @@ export class AgentRecoveryStrategies {
                 0,
                 updatedAgent.health.consecutiveErrors - 2
               );
+              updatedAgent.health.status = "degraded"; // Set to degraded after recovery
             }
             return true;
           }
         }
+      }
+
+      // Recovery failed, but keep agent in registry with unhealthy status
+      const finalAgent = getUpdatedAgent(agent.id);
+      if (finalAgent) {
+        finalAgent.health.status = "unhealthy";
       }
 
       this.logger.info(`Recovery failed for agent ${agent.id} after trying all strategies`);
@@ -105,6 +119,12 @@ export class AgentRecoveryStrategies {
         error: error instanceof Error ? error.message : "Unknown error",
         duration,
       });
+
+      // Ensure agent remains in registry even after recovery failure
+      const finalAgent = getUpdatedAgent(agent.id);
+      if (finalAgent) {
+        finalAgent.health.status = "unhealthy";
+      }
 
       this.logger.error(`Recovery attempt failed for agent ${agent.id}:`, error);
       return false;

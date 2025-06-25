@@ -291,6 +291,17 @@ export class UnifiedMexcServiceV2 {
   }
 
   /**
+   * Get ticker data for a specific symbol
+   */
+  async getTicker(symbol: string): Promise<MexcServiceResponse<any>> {
+    return this.cacheLayer.getOrSet(
+      `ticker:${symbol}`,
+      () => this.coreClient.getTicker(symbol),
+      "realTime" // Short cache for ticker data
+    );
+  }
+
+  /**
    * Get symbols for multiple vcoins
    */
   async getSymbolsForVcoins(vcoinIds: string[]): Promise<MexcServiceResponse<SymbolEntry[]>> {

@@ -44,6 +44,30 @@ describe('Pattern Monitoring Integration', () => {
       }))
     });
 
+    // Mock UnifiedMexcServiceV2 methods at the prototype level
+    vi.spyOn(UnifiedMexcServiceV2.prototype, 'getAllSymbols').mockResolvedValue({
+      success: true,
+      data: [
+        {
+          symbol: 'BTCUSDT',
+          baseAsset: 'BTC',
+          quoteAsset: 'USDT',
+          status: 'TRADING',
+          quoteOrderQtyMarketAllowed: true,
+          baseAssetPrecision: 8,
+          quotePrecision: 8,
+          orderTypes: ['LIMIT', 'MARKET'],
+          icebergAllowed: false,
+          ocoAllowed: false,
+          isSpotTradingAllowed: true,
+          isMarginTradingAllowed: false,
+          filters: []
+        }
+      ],
+      timestamp: Date.now(),
+      source: 'test-mock'
+    });
+
     // Initialize services
     monitoringService = PatternMonitoringService.getInstance();
     patternEngine = PatternDetectionCore.getInstance();
@@ -51,13 +75,6 @@ describe('Pattern Monitoring Integration', () => {
 
     // Ensure monitoring is stopped before each test
     monitoringService.stopMonitoring();
-    
-    // Setup mocks for dependencies within test context
-    vi.spyOn(mexcService, 'getAllSymbols').mockResolvedValue({
-      success: true,
-      data: [],
-      timestamp: new Date().toISOString()
-    });
   });
 
   afterEach(() => {

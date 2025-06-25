@@ -375,6 +375,30 @@ export class MexcCoreClient {
     }
   }
 
+  /**
+   * Get ticker data for a specific symbol
+   */
+  async getTicker(symbol: string): Promise<MexcServiceResponse<any>> {
+    const startTime = Date.now();
+
+    try {
+      const url = `${this.config.baseUrl}/api/v3/ticker/24hr?symbol=${symbol}`;
+      const response = await this.makeRequest(url, {
+        method: "GET",
+      });
+
+      return {
+        success: true,
+        data: response.data,
+        timestamp: Date.now(),
+        executionTimeMs: Date.now() - startTime,
+        source: "mexc-core-client",
+      };
+    } catch (error) {
+      return this.handleError(error, "getTicker", startTime);
+    }
+  }
+
   // ============================================================================
   // Private Helper Methods
   // ============================================================================
