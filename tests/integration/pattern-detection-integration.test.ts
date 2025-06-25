@@ -59,8 +59,54 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
         liquidityScore: 0.75,
       },
     });
+
+    // Note: enhanceConfidence method doesn't exist on aiIntelligenceService
+    // Global mock will handle this method call
     
-    // Note: calculateAIEnhancedConfidence doesn't exist - removed this mock
+    // Setup global mock services to prevent API failures
+    if (typeof global !== 'undefined') {
+      // Mock Activity Service
+      (global as any).activityService = {
+        getRecentActivity: vi.fn().mockResolvedValue([
+          {
+            activityId: 'mock-activity-1',
+            currency: 'TEST',
+            currencyId: 'test-currency-id',
+            activityType: 'SUN_SHINE'
+          }
+        ])
+      };
+
+      // Mock Multi-Phase Trading Service
+      (global as any).multiPhaseTradingService = {
+        getHistoricalSuccessRates: vi.fn().mockResolvedValue({
+          timeframeDays: 30,
+          totalTrades: 120,
+          successRate: 0.82,
+          averageReturn: 0.148
+        })
+      };
+
+      // Mock AI Intelligence Service globally
+      (global as any).aiIntelligenceService = {
+        enhanceConfidence: vi.fn().mockResolvedValue({
+          enhancedConfidence: 90,
+          boost: 5,
+          reasoning: 'Mock AI confidence enhancement'
+        }),
+        enhancePatternWithAI: vi.fn().mockResolvedValue({
+          symbolName: 'TESTUSDT',
+          type: 'ready_state' as const,
+          confidence: 85,
+          aiContext: {
+            marketSentiment: 'neutral',
+            opportunityScore: 85,
+            researchInsights: ['Mock AI insight'],
+            timeframe: 'immediate'
+          }
+        })
+      };
+    }
 
     // Clean up test data - works with mocked database
     await db.delete(coinActivities);
@@ -69,6 +115,13 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
   afterAll(async () => {
     // Clean up test data - works with mocked database
     await db.delete(coinActivities);
+    
+    // Clean up global mock services
+    if (typeof global !== 'undefined') {
+      delete (global as any).activityService;
+      delete (global as any).multiPhaseTradingService;
+      delete (global as any).aiIntelligenceService;
+    }
   });
 
   beforeEach(async () => {
@@ -115,8 +168,54 @@ describe('Pattern Detection Engine - Integration Tests (Phase 1 Week 2)', () => 
         liquidityScore: 0.75,
       },
     });
+
+    // Note: enhanceConfidence method doesn't exist on aiIntelligenceService
+    // Global mock will handle this method call
     
-    // Note: calculateAIEnhancedConfidence doesn't exist - removed this mock
+    // Re-establish global mock services to prevent API failures
+    if (typeof global !== 'undefined') {
+      // Re-mock Activity Service
+      (global as any).activityService = {
+        getRecentActivity: vi.fn().mockResolvedValue([
+          {
+            activityId: 'mock-activity-1',
+            currency: 'TEST',
+            currencyId: 'test-currency-id',
+            activityType: 'SUN_SHINE'
+          }
+        ])
+      };
+
+      // Re-mock Multi-Phase Trading Service
+      (global as any).multiPhaseTradingService = {
+        getHistoricalSuccessRates: vi.fn().mockResolvedValue({
+          timeframeDays: 30,
+          totalTrades: 120,
+          successRate: 0.82,
+          averageReturn: 0.148
+        })
+      };
+
+      // Re-mock AI Intelligence Service globally
+      (global as any).aiIntelligenceService = {
+        enhanceConfidence: vi.fn().mockResolvedValue({
+          enhancedConfidence: 90,
+          boost: 5,
+          reasoning: 'Mock AI confidence enhancement'
+        }),
+        enhancePatternWithAI: vi.fn().mockResolvedValue({
+          symbolName: 'TESTUSDT',
+          type: 'ready_state' as const,
+          confidence: 85,
+          aiContext: {
+            marketSentiment: 'neutral',
+            opportunityScore: 85,
+            researchInsights: ['Mock AI insight'],
+            timeframe: 'immediate'
+          }
+        })
+      };
+    }
   });
 
   describe('End-to-End Pattern Detection with Activity Data', () => {
