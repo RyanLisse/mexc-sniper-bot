@@ -96,7 +96,11 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
         "X-MEXC-APIKEY": process.env.MEXC_API_KEY,
         "Content-Type": "application/json",
       },
-      signal: AbortSignal.timeout(5000), // 5 second timeout
+      signal: (() => {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 5000);
+        return controller.signal;
+      })()
     });
 
     const latency = Date.now() - startTime;
@@ -198,7 +202,11 @@ export async function checkOpenAiHealth(): Promise<HealthStatus> {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
-      signal: AbortSignal.timeout(5000),
+      signal: (() => {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 5000);
+        return controller.signal;
+      })()
     });
 
     const latency = Date.now() - startTime;

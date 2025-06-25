@@ -97,13 +97,17 @@ export class MexcRequestService {
     const timeout = this.calculateTimeout(requestConfig);
     const url = this.buildUrl(requestConfig);
 
+    // Create AbortController for timeout handling
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), timeout);
+
     const fetchOptions: RequestInit = {
       method: requestConfig.method,
       headers: {
         "Content-Type": "application/json",
         "User-Agent": `mexc-sniper-bot/1.0`,
       },
-      signal: AbortSignal.timeout(timeout),
+      signal: abortController.signal,
     };
 
     // Add body for POST/PUT requests
@@ -113,6 +117,7 @@ export class MexcRequestService {
 
     try {
       const response = await fetch(url, fetchOptions);
+      clearTimeout(timeoutId); // Clear timeout on successful fetch
       const data = await response.json();
 
       if (!response.ok) {
@@ -129,6 +134,7 @@ export class MexcRequestService {
         config: requestConfig,
       };
     } catch (error) {
+      clearTimeout(timeoutId); // Clear timeout on error
       if (error instanceof Error) {
         if (error.name === "AbortError") {
           throw new Error(`Request timeout after ${timeout}ms for ${requestConfig.endpoint}`);

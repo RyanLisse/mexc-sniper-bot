@@ -13,24 +13,37 @@ import { snipeTargets, user, userPreferences } from "../db/schema";
  */
 export async function createTestUser(userId: string): Promise<void> {
   try {
+    console.log(`🔧 Attempting to create test user: ${userId}`);
+    
     // Check if user already exists
     const existingUser = await db.select().from(user).where(eq(user.id, userId)).limit(1);
 
     if (existingUser.length === 0) {
-      await db.insert(user).values({
+      console.log(`🔧 Creating new user: ${userId}`);
+      const newUser = await db.insert(user).values({
         id: userId,
         email: `${userId}@test.example.com`,
         name: `Test User ${userId}`,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      }).returning();
+      
+      console.log(`✅ Successfully created test user: ${userId}`, newUser[0]);
+    } else {
+      console.log(`👤 User ${userId} already exists`);
     }
+    
+    // Verify user was created/exists
+    const verifyUser = await db.select().from(user).where(eq(user.id, userId)).limit(1);
+    if (verifyUser.length === 0) {
+      throw new Error(`Failed to verify user creation for ${userId}`);
+    }
+    console.log(`✅ Verified user exists in database: ${userId}`);
+    
   } catch (error) {
-    // If table doesn't exist or user creation fails, continue silently
-    // This allows tests to run even if user management isn't fully implemented
-    console.warn(
-      `Test user creation warning: ${error instanceof Error ? error.message : "Unknown error"}`
-    );
+    console.error(`❌ Test user creation failed for ${userId}:`, error);
+    // Re-throw the error instead of silently failing so we can see what's wrong
+    throw error;
   }
 }
 
@@ -47,11 +60,13 @@ export async function createTestUserPreferences(
   }
 ): Promise<void> {
   try {
+    console.log(`🔧 Creating user preferences for: ${userId}`, preferences);
+    
     // Delete existing preferences first
     await db.delete(userPreferences).where(eq(userPreferences.userId, userId));
 
     // Insert new preferences
-    await db.insert(userPreferences).values({
+    const newPrefs = await db.insert(userPreferences).values({
       userId,
       defaultBuyAmountUsdt: preferences.defaultBuyAmountUsdt ?? 100,
       defaultTakeProfitLevel: preferences.defaultTakeProfitLevel ?? 2,
@@ -59,11 +74,12 @@ export async function createTestUserPreferences(
       takeProfitCustom: preferences.takeProfitCustom,
       createdAt: new Date(),
       updatedAt: new Date(),
-    });
+    }).returning();
+    
+    console.log(`✅ Successfully created user preferences for: ${userId}`, newPrefs[0]);
   } catch (error) {
-    console.warn(
-      `Test user preferences creation warning: ${error instanceof Error ? error.message : "Unknown error"}`
-    );
+    console.error(`❌ Test user preferences creation failed for ${userId}:`, error);
+    throw error;
   }
 }
 

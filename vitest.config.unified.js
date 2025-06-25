@@ -170,8 +170,8 @@ export default defineConfig({
       ENABLE_PERFORMANCE_MONITORING: 'true',
       SKIP_AUTH_IN_TESTS: 'true',
       
-      // Database test settings
-      FORCE_MOCK_DB: 'false', // Allow real database connections
+      // Database test settings - conditional based on test type
+      FORCE_MOCK_DB: process.env.FORCE_MOCK_DB || 'false', // Allow real database connections by default
       TEST_DB_TIMEOUT: '20000', // 20 second timeout for database operations
       
       // Test timeout configuration - environment variables for runtime timeout control

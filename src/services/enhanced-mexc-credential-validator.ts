@@ -472,7 +472,11 @@ export class EnhancedCredentialValidator {
           "X-MEXC-APIKEY": credentials.apiKey,
           "Content-Type": "application/json",
         },
-        signal: AbortSignal.timeout(this.config.requestTimeout),
+        signal: (() => {
+          const controller = new AbortController();
+          setTimeout(() => controller.abort(), this.config.requestTimeout);
+          return controller.signal;
+        })()
       });
 
       if (!response.ok) {

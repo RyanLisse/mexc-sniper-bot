@@ -26,10 +26,46 @@ if (process.env.ENABLE_TIMEOUT_MONITORING === 'true') {
 beforeAll(async () => {
   console.log('🧪 Setting up Vitest global environment...')
   
-  // Force test environment to use mocked database only
-  process.env.FORCE_MOCK_DB = 'true'
-  process.env.SKIP_DB_CONNECTION = 'true'
-  process.env.USE_MOCK_DATABASE = 'true'
+  // Determine if this is an integration test that needs real database
+  // Check various sources for integration test detection
+  const testFilePath = global.process?.env?.VITEST_FILE_PATH || '';
+  const testCommand = process.argv.join(' ');
+  const vitest_file = process.env.VITEST_POOL_ID || '';
+  const pool_worker = process.env.VITEST_WORKER_ID || '';
+  
+  // Simple fallback: use environment variable for explicit control
+  const isIntegrationTest = process.env.USE_REAL_DATABASE === 'true' ||
+                           testFilePath.includes('integration') || 
+                           testFilePath.includes('pattern-to-database-bridge') ||
+                           testCommand.includes('integration') ||
+                           testCommand.includes('pattern-to-database-bridge') ||
+                           vitest_file.includes('integration') ||
+                           vitest_file.includes('pattern-to-database-bridge') ||
+                           process.env.VITEST_MODE === 'integration' || 
+                           process.env.npm_command === 'test:integration';
+  
+  console.log('🔍 Test detection:', {
+    testFilePath,
+    testCommand: testCommand.slice(0, 100),
+    vitest_file,
+    pool_worker,
+    USE_REAL_DATABASE: process.env.USE_REAL_DATABASE,
+    isIntegrationTest
+  });
+  
+  if (!isIntegrationTest) {
+    // Unit tests use mocked database
+    process.env.FORCE_MOCK_DB = 'true'
+    process.env.SKIP_DB_CONNECTION = 'true'
+    process.env.USE_MOCK_DATABASE = 'true'
+    console.log('🧪 Unit test mode: Using mocked database')
+  } else {
+    // Integration tests use real database
+    process.env.FORCE_MOCK_DB = 'false'
+    process.env.SKIP_DB_CONNECTION = 'false'
+    process.env.USE_MOCK_DATABASE = 'false'
+    console.log('🔗 Integration test mode: Using real database connections')
+  }
 
   // Mock OpenAI API for testing
   vi.mock('openai', () => ({
@@ -703,71 +739,84 @@ beforeAll(async () => {
     }
   };
 
-  vi.mock('@/src/db/schema', () => ({
-    snipeTargets: mockTableSchemas.snipeTargets,
-    user: mockTableSchemas.user,
-    userPreferences: mockTableSchemas.userPreferences,
-    coinActivities: mockTableSchemas.coinActivities,
-    patternEmbeddings: mockTableSchemas.patternEmbeddings,
-    executionHistory: mockTableSchemas.executionHistory,
-    transactionLocks: mockTableSchemas.transactionLocks,
-    workflowActivity: mockTableSchemas.workflowActivity,
-    monitoredListings: mockTableSchemas.monitoredListings,
-    tradingStrategies: mockTableSchemas.tradingStrategies,
-    transactions: mockTableSchemas.transactions
-  }))
+  // Only mock database for unit tests, not integration tests
+  if (!isIntegrationTest) {
+    vi.mock('@/src/db/schema', () => ({
+      snipeTargets: mockTableSchemas.snipeTargets,
+      user: mockTableSchemas.user,
+      userPreferences: mockTableSchemas.userPreferences,
+      coinActivities: mockTableSchemas.coinActivities,
+      patternEmbeddings: mockTableSchemas.patternEmbeddings,
+      executionHistory: mockTableSchemas.executionHistory,
+      transactionLocks: mockTableSchemas.transactionLocks,
+      workflowActivity: mockTableSchemas.workflowActivity,
+      monitoredListings: mockTableSchemas.monitoredListings,
+      tradingStrategies: mockTableSchemas.tradingStrategies,
+      transactions: mockTableSchemas.transactions
+    }))
 
-  vi.mock('@/src/db', () => ({
-    db: mockDb,
-    getDb: vi.fn().mockReturnValue(mockDb),
-    clearDbCache: vi.fn().mockImplementation(() => {
-      // Mock implementation - no actual cache to clear
-    }),
-    initializeDatabase: vi.fn().mockResolvedValue(true),
-    healthCheck: vi.fn().mockResolvedValue({
-      status: 'healthy',
-      responseTime: 50,
-      database: 'mock-neondb',
-      timestamp: new Date().toISOString()
-    }),
-    executeWithRetry: vi.fn().mockImplementation(async (queryFn) => {
-      return queryFn()
-    }),
-    closeDatabase: vi.fn().mockImplementation(() => {
-      // Mock implementation - no actual database to close
-    }),
-    // Database optimization functions
-    executeOptimizedSelect: vi.fn().mockImplementation(async (queryFn, cacheKey, cacheTTL) => {
-      return queryFn()
-    }),
-    executeOptimizedWrite: vi.fn().mockImplementation(async (queryFn, invalidatePatterns) => {
-      return queryFn()
-    }),
-    executeBatchOperations: vi.fn().mockImplementation(async (operations, invalidatePatterns) => {
-      return Promise.all(operations.map(op => op()))
-    }),
-    monitoredQuery: vi.fn().mockImplementation(async (queryName, queryFn, options) => {
-      return queryFn()
-    })
-  }))
-
-  // Mock database-connection-pool to re-export the same mocked db
-  vi.mock('@/src/lib/database-connection-pool', () => ({
-    db: mockDb,
-    databaseConnectionPool: {
-      executeSelect: vi.fn().mockImplementation(async (queryFn) => queryFn()),
-      executeWrite: vi.fn().mockImplementation(async (queryFn) => queryFn()),
-      executeBatch: vi.fn().mockImplementation(async (operations) => 
-        Promise.all(operations.map(op => op()))
-      ),
-      shutdown: vi.fn(),
-      getMetrics: vi.fn().mockReturnValue({
-        totalConnections: 1,
-        activeConnections: 1,
-        connectionPoolHealth: 'healthy'
+    vi.mock('@/src/db', () => ({
+      db: mockDb,
+      getDb: vi.fn().mockReturnValue(mockDb),
+      clearDbCache: vi.fn().mockImplementation(() => {
+        // Mock implementation - no actual cache to clear
+      }),
+      initializeDatabase: vi.fn().mockResolvedValue(true),
+      healthCheck: vi.fn().mockResolvedValue({
+        status: 'healthy',
+        responseTime: 50,
+        database: 'mock-neondb',
+        timestamp: new Date().toISOString()
+      }),
+      executeWithRetry: vi.fn().mockImplementation(async (queryFn) => {
+        return queryFn()
+      }),
+      closeDatabase: vi.fn().mockImplementation(() => {
+        // Mock implementation - no actual database to close
+      }),
+      // Database optimization functions
+      executeOptimizedSelect: vi.fn().mockImplementation(async (queryFn, cacheKey, cacheTTL) => {
+        return queryFn()
+      }),
+      executeOptimizedWrite: vi.fn().mockImplementation(async (queryFn, invalidatePatterns) => {
+        return queryFn()
+      }),
+      executeBatchOperations: vi.fn().mockImplementation(async (operations, invalidatePatterns) => {
+        return Promise.all(operations.map(op => op()))
+      }),
+      monitoredQuery: vi.fn().mockImplementation(async (queryName, queryFn, options) => {
+        return queryFn()
       })
-    }
-  }))
+    }))
+  } else {
+    console.log('🔗 Skipping database mocks for integration tests')
+    // Ensure any existing mocks are cleared for integration tests
+    vi.unmock('@/src/db')
+    vi.unmock('@/src/db/schema')
+  }
+
+  // Mock database-connection-pool to re-export the same mocked db (only for unit tests)
+  if (!isIntegrationTest) {
+    vi.mock('@/src/lib/database-connection-pool', () => ({
+      db: mockDb,
+      databaseConnectionPool: {
+        executeSelect: vi.fn().mockImplementation(async (queryFn) => queryFn()),
+        executeWrite: vi.fn().mockImplementation(async (queryFn) => queryFn()),
+        executeBatch: vi.fn().mockImplementation(async (operations) => 
+          Promise.all(operations.map(op => op()))
+        ),
+        shutdown: vi.fn(),
+        getMetrics: vi.fn().mockReturnValue({
+          totalConnections: 1,
+          activeConnections: 1,
+          connectionPoolHealth: 'healthy'
+        })
+      }
+    }))
+  } else {
+    // Ensure database-connection-pool is not mocked for integration tests
+    vi.unmock('@/src/lib/database-connection-pool')
+  }
 
   // Mock AI Intelligence Service for fast, deterministic test results
   vi.mock('@/src/services/ai-intelligence-service', () => ({

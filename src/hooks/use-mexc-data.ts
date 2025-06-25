@@ -158,7 +158,11 @@ export function useMexcConnectivity() {
       // Single attempt only to prevent storms - no custom retry loop
       try {
         const response = await fetch("/api/mexc/connectivity", {
-          signal: AbortSignal.timeout(10000), // Reduced timeout: 10 seconds
+          signal: (() => {
+            const controller = new AbortController();
+            setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
+            return controller.signal;
+          })(),
           credentials: "include", // Include authentication cookies
         });
 

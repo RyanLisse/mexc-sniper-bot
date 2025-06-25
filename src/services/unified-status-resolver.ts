@@ -185,7 +185,11 @@ export class UnifiedStatusResolver {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         // Add timeout to prevent hanging during startup
-        signal: AbortSignal.timeout(2000), // 2 second timeout
+        signal: (() => {
+          const controller = new AbortController();
+          setTimeout(() => controller.abort(), 2000);
+          return controller.signal;
+        })()
       });
 
       if (!response.ok) {
@@ -222,7 +226,11 @@ export class UnifiedStatusResolver {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         // Add timeout to prevent hanging during startup
-        signal: AbortSignal.timeout(2000), // 2 second timeout
+        signal: (() => {
+          const controller = new AbortController();
+          setTimeout(() => controller.abort(), 2000);
+          return controller.signal;
+        })()
       });
 
       if (!response.ok) {

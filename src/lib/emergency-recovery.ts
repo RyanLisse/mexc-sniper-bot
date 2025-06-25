@@ -372,7 +372,11 @@ export class EmergencyRecoveryService {
     try {
       const response = await fetch("https://api.mexc.com/api/v3/ping", {
         method: "GET",
-        signal: AbortSignal.timeout(5000),
+        signal: (() => {
+          const controller = new AbortController();
+          setTimeout(() => controller.abort(), 5000);
+          return controller.signal;
+        })()
       });
 
       if (response.ok) {
@@ -411,7 +415,11 @@ export class EmergencyRecoveryService {
         headers: {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         },
-        signal: AbortSignal.timeout(5000),
+        signal: (() => {
+          const controller = new AbortController();
+          setTimeout(() => controller.abort(), 5000);
+          return controller.signal;
+        })()
       });
 
       if (response.ok) {
