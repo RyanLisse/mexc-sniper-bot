@@ -120,9 +120,11 @@ export class EnhancedAgentCache {
     this.workflowCache = new WorkflowCache(this.config);
     this.healthCache = new AgentHealthCacheManager(this.config);
     this.performanceMonitor = new CachePerformanceMonitor(this.config);
+    
+    // Use the performance monitor from response cache for analytics
     this.analyticsManager = new CacheAnalyticsManager(
       this.config,
-      this.performanceMonitor,
+      this.responseCache.getPerformanceMonitor(),
       this.workflowCache,
       this.healthCache
     );
@@ -242,14 +244,16 @@ export class EnhancedAgentCache {
    * Get performance metrics for specific agent
    */
   getAgentMetrics(agentId: string): AgentCacheMetrics | null {
-    return this.performanceMonitor.getAgentMetrics(agentId);
+    // Use the performance monitor from the response cache which actually tracks hits/misses
+    return this.responseCache.getPerformanceMonitor().getAgentMetrics(agentId);
   }
 
   /**
    * Get all performance metrics
    */
   getAllMetrics(): Map<string, AgentCacheMetrics> {
-    return this.performanceMonitor.getAllMetrics();
+    // Use the performance monitor from the response cache which actually tracks hits/misses
+    return this.responseCache.getPerformanceMonitor().getAllMetrics();
   }
 
   /**

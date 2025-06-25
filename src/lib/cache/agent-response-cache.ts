@@ -13,6 +13,7 @@ import type {
   CacheInvalidationCriteria,
   CacheKeyOptions,
 } from "./agent-cache-types";
+import { CachePerformanceMonitor } from "./cache-performance-monitor";
 
 export class AgentResponseCache {
   private logger = {
@@ -27,9 +28,11 @@ export class AgentResponseCache {
   };
 
   private config: AgentCacheConfig;
+  private performanceMonitor: CachePerformanceMonitor;
 
   constructor(config: AgentCacheConfig) {
     this.config = config;
+    this.performanceMonitor = new CachePerformanceMonitor(config);
   }
 
   /**
@@ -45,11 +48,16 @@ export class AgentResponseCache {
     try {
       const cached = await globalCacheManager.get<AgentResponse>(cacheKey);
       if (!cached) {
+        // Track cache miss for performance analytics
+        await this.performanceMonitor.trackCacheMiss(agentId);
         return null;
       }
 
       // Update hit count for this cache entry
       const hitCount = await this.incrementHitCount(cacheKey);
+
+      // Track cache hit for performance analytics
+      await this.performanceMonitor.trackCacheHit(agentId, cacheKey, 1); // Cached responses are very fast
 
       // Create enhanced response with cache metadata
       const cachedResponse: CachedAgentResponse = {
@@ -171,6 +179,17 @@ export class AgentResponseCache {
         // Check agent type criteria
         if (criteria.agentType && !shouldDelete) {
           shouldDelete = key.includes(`agent:${criteria.agentType}:`);
+        }
+
+        // Check dependencies criteria
+        if (criteria.dependencies && criteria.dependencies.length > 0 && !shouldDelete) {
+          const cached = await globalCacheManager.get<AgentResponse>(key);
+          if (cached?.metadata?.dependencies) {
+            const hasMatchingDependency = criteria.dependencies.some((dep) => 
+              cached.metadata.dependencies?.includes(dep)
+            );
+            shouldDelete = hasMatchingDependency;
+          }
         }
 
         if (shouldDelete) {
@@ -408,5 +427,13 @@ export class AgentResponseCache {
    */
   updateConfig(updates: Partial<AgentCacheConfig>): void {
     this.config = { ...this.config, ...updates };
+    this.performanceMonitor.updateConfig(updates);
+  }
+
+  /**
+   * Get performance monitor instance
+   */
+  getPerformanceMonitor(): CachePerformanceMonitor {
+    return this.performanceMonitor;
   }
 }

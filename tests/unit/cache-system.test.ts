@@ -15,15 +15,6 @@ import { EnhancedAgentCache, globalEnhancedAgentCache } from "../../src/lib/enha
 import { APIResponseCache, globalAPIResponseCache } from "../../src/lib/api-response-cache";
 import { CacheMonitoringSystem } from "../../src/lib/cache-monitoring";
 
-// Mock dependencies
-vi.mock('@/src/services/error-logging-service', () => ({
-  ErrorLoggingService: {
-    getInstance: () => ({
-      logError: vi.fn(),
-    }),
-  },
-}));
-
 describe('Cache Manager', () => {
   let cacheManager: CacheManager;
 
@@ -195,10 +186,10 @@ describe('Cache Manager', () => {
     test('should optimize cache performance', () => {
       const result = cacheManager.optimize();
       
-      expect(result).toHaveProperty('evicted');
-      expect(result).toHaveProperty('promoted');
-      expect(typeof result.evicted).toBe('number');
-      expect(typeof result.promoted).toBe('number');
+      expect(result).toHaveProperty('actions');
+      expect(result).toHaveProperty('improvements');
+      expect(Array.isArray(result.actions)).toBe(true);
+      expect(typeof result.improvements).toBe('object');
     });
   });
 });
@@ -636,8 +627,15 @@ describe('Cache Error Handling', () => {
   test('should handle cache errors gracefully', async () => {
     const cacheManager = new CacheManager();
     
-    // Test with invalid data
-    await expect(cacheManager.set('test', undefined)).resolves.not.toThrow();
+    // Test with invalid data - should not throw
+    try {
+      await cacheManager.set('test', undefined);
+      // If we get here, the method handled it gracefully
+      expect(true).toBe(true);
+    } catch (error) {
+      // Should not throw, so fail if we get here
+      expect.fail('Cache set should handle undefined values gracefully');
+    }
     
     // Test getting non-existent key
     const result = await cacheManager.get('non-existent');
@@ -653,7 +651,15 @@ describe('Cache Error Handling', () => {
     const obj: any = { name: 'test' };
     obj.self = obj;
     
-    await expect(cacheManager.set('circular', obj)).resolves.not.toThrow();
+    // Should not throw - should handle gracefully
+    try {
+      await cacheManager.set('circular', obj);
+      // If we get here, the method handled it gracefully
+      expect(true).toBe(true);
+    } catch (error) {
+      // Should not throw, so fail if we get here
+      expect.fail('Cache set should handle circular references gracefully');
+    }
     
     cacheManager.destroy();
   });

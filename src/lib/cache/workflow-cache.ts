@@ -140,6 +140,20 @@ export class WorkflowCache {
         }
       }
 
+      if (criteria.dependencies && criteria.dependencies.length > 0) {
+        // Invalidate workflows that have specific dependencies
+        for (const dependency of criteria.dependencies) {
+          invalidated += await globalCacheManager.invalidateByDependency(dependency);
+          
+          // Also check local workflow cache
+          for (const [key, entry] of this.workflowCache.entries()) {
+            if (entry.dependencies && entry.dependencies.includes(dependency)) {
+              this.workflowCache.delete(key);
+            }
+          }
+        }
+      }
+
       console.info(`[WorkflowCache] Invalidated ${invalidated} workflow results`);
     } catch (error) {
       console.error("[WorkflowCache] Error invalidating workflow results:", error);

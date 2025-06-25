@@ -132,9 +132,26 @@ export class CacheManager {
    * Set value in appropriate cache level based on data type
    */
   async set<T = any>(key: string, value: T, options: CacheSetOptions<T> = {}): Promise<void> {
+    // Handle invalid values gracefully
+    if (value === undefined || value === null) {
+      logger.warn("Attempting to cache undefined or null value", { key });
+      return;
+    }
+
     const { type = "api_response", level = "all" } = options;
     const ttl = options.ttl || this.ttlConfig[type] || this.config.defaultTTL;
     const now = Date.now();
+
+    try {
+      // Test serialization to catch circular references
+      JSON.stringify(value);
+    } catch (serializationError) {
+      logger.warn("Value cannot be serialized, skipping cache", { 
+        key, 
+        error: serializationError instanceof Error ? serializationError.message : String(serializationError) 
+      });
+      return;
+    }
 
     const metadata = {
       type,
@@ -473,5 +490,139 @@ export class CacheManager {
     if (listeners) {
       listeners.delete(listener);
     }
+  }
+
+  /**
+   * Get all cache keys from all levels
+   */
+  getCacheKeys(): string[] {
+    const keys = new Set<string>();
+    
+    // Get keys from L1 cache
+    const l1Keys = this.l1Cache.getKeys();
+    l1Keys.forEach(key => keys.add(key));
+    
+    // Get keys from L2 cache
+    for (const key of this.l2Cache.keys()) {
+      keys.add(key);
+    }
+    
+    // Get keys from L3 cache
+    for (const key of this.l3Cache.keys()) {
+      keys.add(key);
+    }
+    
+    return Array.from(keys);
+  }
+
+  /**
+   * Get keys matching a pattern (supports wildcards with *)
+   */
+  async getKeys(pattern: string): Promise<string[]> {
+    const allKeys = this.getCacheKeys();
+    
+    // Convert pattern to regex (replace * with .*)
+    const regexPattern = pattern.replace(/\*/g, '.*');
+    const regex = new RegExp(regexPattern);
+    
+    return allKeys.filter(key => regex.test(key));
+  }
+
+  /**
+   * Invalidate cache entries by regex pattern
+   */
+  async invalidatePattern(pattern: RegExp): Promise<number> {
+    let invalidated = 0;
+    
+    try {
+      const allKeys = this.getCacheKeys();
+      
+      for (const key of allKeys) {
+        if (pattern.test(key)) {
+          await this.delete(key);
+          invalidated++;
+        }
+      }
+      
+      logger.info(`Invalidated ${invalidated} entries matching pattern ${pattern}`);
+    } catch (error) {
+      logger.error(
+        "Pattern invalidation error:",
+        { pattern: pattern.toString() },
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+    
+    return invalidated;
+  }
+
+  /**
+   * Invalidate cache entries by metadata type
+   */
+  async invalidateByType(type: CacheDataType): Promise<number> {
+    let invalidated = 0;
+    
+    try {
+      // Check L2 cache entries
+      for (const [key, entry] of this.l2Cache) {
+        if (entry.metadata?.type === type) {
+          await this.delete(key);
+          invalidated++;
+        }
+      }
+      
+      // Check L3 cache entries
+      for (const [key, entry] of this.l3Cache) {
+        if (entry.metadata?.type === type) {
+          await this.delete(key);
+          invalidated++;
+        }
+      }
+      
+      logger.info(`Invalidated ${invalidated} entries of type ${type}`);
+    } catch (error) {
+      logger.error(
+        "Type invalidation error:",
+        { type },
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+    
+    return invalidated;
+  }
+
+  /**
+   * Invalidate cache entries by dependency
+   */
+  async invalidateByDependency(dependency: string): Promise<number> {
+    let invalidated = 0;
+    
+    try {
+      // Check L2 cache entries
+      for (const [key, entry] of this.l2Cache) {
+        if (entry.metadata?.dependencies?.includes(dependency)) {
+          await this.delete(key);
+          invalidated++;
+        }
+      }
+      
+      // Check L3 cache entries
+      for (const [key, entry] of this.l3Cache) {
+        if (entry.metadata?.dependencies?.includes(dependency)) {
+          await this.delete(key);
+          invalidated++;
+        }
+      }
+      
+      logger.info(`Invalidated ${invalidated} entries with dependency ${dependency}`);
+    } catch (error) {
+      logger.error(
+        "Dependency invalidation error:",
+        { dependency },
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+    
+    return invalidated;
   }
 }
