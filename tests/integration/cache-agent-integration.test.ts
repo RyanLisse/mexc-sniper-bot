@@ -62,14 +62,12 @@ class TestAgent extends BaseAgent {
 
 // Mock setup in beforeEach to avoid hoisting issues
 beforeEach(async () => {
-  // Mock error logging service
+  // Mock error logging service by directly mocking the static getInstance method
   try {
-    const errorLoggingModule = await import('../../src/services/error-logging-service');
-    vi.spyOn(errorLoggingModule, 'ErrorLoggingService' as any).mockImplementation(() => ({
-      getInstance: () => ({
-        logError: vi.fn(),
-      }),
-    }));
+    const { ErrorLoggingService } = await import('../../src/services/error-logging-service');
+    vi.spyOn(ErrorLoggingService, 'getInstance').mockReturnValue({
+      logError: vi.fn().mockResolvedValue(undefined),
+    } as any);
   } catch (error) {
     // If module doesn't exist, that's fine for tests
   }

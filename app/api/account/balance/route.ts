@@ -170,7 +170,7 @@ export const GET = publicRoute(withApiErrorHandling(async (request: NextRequest)
         console.error('[API] Failed to persist balance data', {
           userId,
           error: persistError instanceof Error ? persistError.message : String(persistError),
-          isDbError: persistError.constructor.name === 'DatabaseConnectionError'
+          isDbError: persistError instanceof Error && persistError.constructor.name === 'DatabaseConnectionError'
         });
         // Continue with the API response even if persistence fails
       }

@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AgentMonitoringService } from "../../../../src/services/agent-monitoring-service";
-import { LoggerContainer } from "../../../../src/lib/logger-injection";
+import { createLogger } from "../../../../src/lib/unified-logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Get monitoring status and alerts
 export async function GET(request: NextRequest) {
-  // Get logger from injection container
-  const logger = LoggerContainer.getOrCreate('agents-monitoring');
+  // Get logger from unified logger system
+  const logger = createLogger("agents-monitoring", {
+    enableStructuredLogging: process.env.NODE_ENV === "production",
+    enablePerformanceLogging: true,
+  });
   
   try {
     const url = new URL(request.url);
@@ -16,8 +19,8 @@ export async function GET(request: NextRequest) {
     const includeResolved = url.searchParams.get("includeResolved") === "true";
     const limit = parseInt(url.searchParams.get("limit") || "10");
 
-    // Inject logger into service instance
-    const monitoringService = AgentMonitoringService.getInstance(undefined, logger);
+    // Get monitoring service instance
+    const monitoringService = AgentMonitoringService.getInstance();
 
     switch (action) {
       case "alerts":
@@ -86,8 +89,11 @@ export async function GET(request: NextRequest) {
 
 // Control monitoring service and resolve alerts
 export async function POST(request: NextRequest) {
-  // Get logger from injection container
-  const logger = LoggerContainer.getOrCreate('agents-monitoring-post');
+  // Get logger from unified logger system
+  const logger = createLogger("agents-monitoring-post", {
+    enableStructuredLogging: process.env.NODE_ENV === "production",
+    enablePerformanceLogging: true,
+  });
   
   try {
     const body = await request.json();

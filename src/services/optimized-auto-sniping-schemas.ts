@@ -53,6 +53,11 @@ export const AutoSnipingConfigSchema = z.object({
   advanceHoursThreshold: z.number().positive().default(3.5),
   enableMultiPhaseStrategy: z.boolean().default(false),
   slippageTolerancePercentage: z.number().min(0).max(10).default(1),
+  
+  // Additional configuration properties for API compatibility
+  maxConcurrentTargets: z.number().int().min(1).max(50).default(5),
+  retryAttempts: z.number().int().min(1).max(10).default(3),
+  executionDelay: z.number().nonnegative().default(1000),
 });
 
 // ============================================================================
@@ -131,6 +136,20 @@ export const AutoSnipingExecutionReportSchema = z.object({
   systemHealth: SystemHealthSchema,
   recommendations: z.array(z.string()),
   lastUpdated: z.string(),
+  
+  // Additional properties for API compatibility
+  activeTargets: z.number().nonnegative().default(0),
+  readyTargets: z.number().nonnegative().default(0),
+  executedToday: z.number().nonnegative().default(0),
+  successRate: z.number().min(0).max(100).default(0),
+  totalProfit: z.number().default(0),
+  lastExecution: z.string().optional(),
+  safetyStatus: z.enum(["safe", "warning", "danger"]).default("safe"),
+  patternDetectionActive: z.boolean().default(true),
+  executionCount: z.number().nonnegative().default(0),
+  successCount: z.number().nonnegative().default(0),
+  errorCount: z.number().nonnegative().default(0),
+  uptime: z.number().nonnegative().default(0),
 });
 
 // ============================================================================

@@ -2,8 +2,8 @@ import { checkDatabaseHealth, checkAuthTables } from "../../../../src/lib/db-hea
 import { createHealthResponse, apiResponse, handleApiError } from "../../../../src/lib/api-response";
 
 export async function GET() {
-  let dbHealth = { healthy: false, message: 'Database check not performed', error: 'Unknown error' };
-  let authTables = { healthy: false, message: 'Auth tables check not performed', error: 'Unknown error' };
+  let dbHealth: { healthy: boolean; message: string; error: string | null } = { healthy: false, message: 'Database check not performed', error: 'Unknown error' };
+  let authTables: { healthy: boolean; message: string; error: string | null; tables?: Record<string, any> } = { healthy: false, message: 'Auth tables check not performed', error: 'Unknown error' };
   
   try {
     // Check basic database connectivity with timeout
