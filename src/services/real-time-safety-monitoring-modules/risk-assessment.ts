@@ -138,17 +138,8 @@ export class RiskAssessment {
         timestamp: new Date().toISOString(),
       };
 
-      const duration = timer.end({
-        overallRiskScore,
-        riskStatus,
-        portfolioScore: portfolio.riskScore,
-        recommendationsCount: priorityRecommendations.length,
-        status: "success",
-      });
-
       console.info("Comprehensive risk assessment completed", {
         operation: "comprehensive_assessment",
-        duration,
         overallRiskScore,
         riskStatus,
         recommendationsCount: priorityRecommendations.length,
@@ -156,13 +147,10 @@ export class RiskAssessment {
 
       return assessment;
     } catch (error) {
-      const duration = timer.end({ status: "failed" });
-
       console.error(
         "Comprehensive risk assessment failed",
         {
           operation: "comprehensive_assessment",
-          duration,
         },
         error
       );
