@@ -87,7 +87,7 @@ export class IntelligenceOrchestrator {
       {
         kind: SpanKind.INTERNAL,
         attributes: {
-          "pattern.symbol": pattern.symbol,
+          "pattern.symbol": pattern.symbolName,
           "pattern.confidence": pattern.confidence,
           "ai.include_research": includeResearch,
           "ai.include_embedding": includeEmbedding,
@@ -110,7 +110,7 @@ export class IntelligenceOrchestrator {
           if (includeResearch) {
             promises.push(
               researchService
-                .conductMarketResearch(pattern.symbol, researchFocus)
+                .conductMarketResearch(pattern.symbolName, researchFocus)
                 .then((research) => {
                   enhancedPattern.researchInsights = research;
                   enhancedPattern.aiConfidenceBoost = research.confidenceBoost;
@@ -119,7 +119,7 @@ export class IntelligenceOrchestrator {
                 })
                 .catch((error) => {
                   this.logger.warn("Research enhancement failed", {
-                    symbol: pattern.symbol,
+                    symbol: pattern.symbolName,
                     error: error instanceof Error ? error.message : String(error),
                   });
                   return null;
@@ -138,7 +138,7 @@ export class IntelligenceOrchestrator {
                 })
                 .catch((error) => {
                   this.logger.warn("Embedding enhancement failed", {
-                    symbol: pattern.symbol,
+                    symbol: pattern.symbolName,
                     error: error instanceof Error ? error.message : String(error),
                   });
                   return null;
@@ -168,7 +168,7 @@ export class IntelligenceOrchestrator {
           span.setStatus({ code: SpanStatusCode.OK });
 
           this.logger.info("Pattern enhanced with AI", {
-            symbol: pattern.symbol,
+            symbol: pattern.symbolName,
             originalConfidence: pattern.confidence,
             enhancedConfidence: enhancedPattern.confidence,
             confidenceBoost: enhancedPattern.aiConfidenceBoost,
@@ -187,7 +187,7 @@ export class IntelligenceOrchestrator {
           span.recordException(error instanceof Error ? error : new Error(String(error)));
 
           this.logger.error("Failed to enhance pattern with AI", {
-            symbol: pattern.symbol,
+            symbol: pattern.symbolName,
             error: errorMessage,
           });
 

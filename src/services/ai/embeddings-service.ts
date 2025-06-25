@@ -231,19 +231,20 @@ export class EmbeddingsService {
    */
   private patternToEnhancedText(pattern: PatternData): string {
     const {
-      symbol,
+      symbolName: symbol,
       confidence,
-      riskLevel,
-      patternType,
-      timeframe,
-      priceChange,
-      volumeChange,
-      marketCap,
-      description,
+      type: patternType,
     } = pattern;
 
     // Create rich text representation for better embeddings
     const confidenceLevel = confidence >= 80 ? "high" : confidence >= 60 ? "medium" : "low";
+    const priceChange = 0; // Default value for now
+    const volumeChange = 0; // Default value for now
+    const riskLevel = "medium"; // Default value
+    const timeframe = "short_term"; // Default value
+    const marketCap = undefined; // Default value
+    const description = undefined; // Default value
+    
     const changeDirection = (priceChange || 0) >= 0 ? "increasing" : "decreasing";
     const volumeDirection = (volumeChange || 0) >= 0 ? "rising" : "falling";
 

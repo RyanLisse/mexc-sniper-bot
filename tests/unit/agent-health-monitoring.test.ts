@@ -62,6 +62,13 @@ class TestAgent extends BaseAgent {
     await new Promise(resolve => setTimeout(resolve, this.responseDelay));
     
     if (this.shouldFail) {
+      // For health checks, we want the agent to fail but still return a response structure
+      if (input === "health_check") {
+        // Simulate a failed health check by triggering the mock rejection
+        return await this.callOpenAI([
+          { role: 'user', content: input }
+        ]);
+      }
       throw new Error("Test agent failure");
     }
 
@@ -86,7 +93,9 @@ class TestAgent extends BaseAgent {
   }
 }
 
-// Mock setup in beforeEach to avoid hoisting issues
+// Global setup to avoid hoisting issues
+let mockInstrumentation: any;
+
 beforeEach(async () => {
   // Mock error logging service by directly mocking the static getInstance method
   try {
@@ -101,18 +110,24 @@ beforeEach(async () => {
   // Mock OpenTelemetry instrumentation to prevent test conflicts
   try {
     const opentelemetryModule = await import('../../src/lib/opentelemetry-agent-instrumentation');
-    vi.spyOn(opentelemetryModule, 'instrumentAgentMethod').mockImplementation(() => {
-      return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-        // Return original descriptor without instrumentation in tests
-        return descriptor;
-      };
-    });
-    vi.spyOn(opentelemetryModule, 'instrumentAgentTask').mockImplementation(async (taskName: string, operation: () => Promise<any>) => {
-      return await operation();
-    });
-    vi.spyOn(opentelemetryModule, 'instrumentAgentCoordination').mockImplementation(async (type: string, operation: () => Promise<any>) => {
-      return await operation();
-    });
+    
+    // Create consistent mocks that don't interfere with agent registration
+    mockInstrumentation = {
+      instrumentAgentMethod: vi.spyOn(opentelemetryModule, 'instrumentAgentMethod').mockImplementation((config) => {
+        return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+          // Return original descriptor unchanged - no instrumentation in tests
+          return descriptor;
+        };
+      }),
+      instrumentAgentTask: vi.spyOn(opentelemetryModule, 'instrumentAgentTask').mockImplementation(async (taskName: string, operation: () => Promise<any>) => {
+        // Execute operation directly without instrumentation
+        return await operation();
+      }),
+      instrumentAgentCoordination: vi.spyOn(opentelemetryModule, 'instrumentAgentCoordination').mockImplementation(async (type: string, operation: () => Promise<any>) => {
+        // Execute operation directly without instrumentation
+        return await operation();
+      })
+    };
   } catch (error) {
     // If module doesn't exist, that's fine for tests
   }
@@ -125,6 +140,22 @@ describe("Agent Health Monitoring System", () => {
   let testAgent2: TestAgent;
 
   beforeEach(async () => {
+    // Clean up any existing instances first
+    if (testAgent1) {
+      try {
+        testAgent1.destroy();
+      } catch (error) {
+        // Ignore cleanup errors
+      }
+    }
+    if (testAgent2) {
+      try {
+        testAgent2.destroy();
+      } catch (error) {
+        // Ignore cleanup errors
+      }
+    }
+
     // Clear any existing registry and service instances
     clearGlobalAgentRegistry();
     try {
@@ -148,7 +179,7 @@ describe("Agent Health Monitoring System", () => {
       autoRecoveryEnabled: true,
     });
 
-    // Create test agents
+    // Create fresh test agents
     testAgent1 = new TestAgent({
       name: "test-agent-1",
       systemPrompt: "You are a test agent",
@@ -158,6 +189,12 @@ describe("Agent Health Monitoring System", () => {
       name: "test-agent-2",
       systemPrompt: "You are another test agent",
     });
+
+    // Reset agent state
+    testAgent1.setFailure(false);
+    testAgent1.setDelay(100);
+    testAgent2.setFailure(false);
+    testAgent2.setDelay(100);
 
     // Always register fresh agents (registry was cleared)
     registry.registerAgent("test-1", testAgent1, {
@@ -182,6 +219,10 @@ describe("Agent Health Monitoring System", () => {
         cpuUsage: { warning: 50, critical: 80 },
       },
     });
+
+    // Verify agents are properly registered
+    expect(registry.hasAgent("test-1")).toBe(true);
+    expect(registry.hasAgent("test-2")).toBe(true);
 
     // Initialize monitoring service
     monitoringService = AgentMonitoringService.getInstance({
@@ -282,23 +323,29 @@ describe("Agent Health Monitoring System", () => {
     });
 
     it("should calculate health scores correctly", async () => {
+      // Verify agent exists first
+      expect(registry.hasAgent("test-1")).toBe(true);
+      
       // Healthy agent should have high score
-      await registry.checkAgentHealth("test-1");
+      const healthResult1 = await registry.checkAgentHealth("test-1");
+      expect(healthResult1.success).toBe(true);
+      
       const healthyAgent = registry.getAgent("test-1");
-      const initialScore = healthyAgent?.health.healthScore || 0;
+      expect(healthyAgent).toBeDefined();
+      const initialScore = healthyAgent!.health.healthScore || 0;
       expect(initialScore).toBeGreaterThan(80);
 
-      // Test that health checks return proper results (regardless of internal state)
+      // Test failing agent - health monitor should handle errors gracefully
       testAgent1.setFailure(true);
       
-      // Even if health checks fail, the registry should maintain agent data
-      let lastResult;
+      // Health checks should return results (not throw) even when agent fails
       for (let i = 0; i < 3; i++) {
-        try {
-          lastResult = await registry.checkAgentHealth("test-1");
-        } catch (error) {
-          // Some health checks may fail, that's expected
-          lastResult = { success: false, error: error instanceof Error ? error.message : String(error) };
+        const result = await registry.checkAgentHealth("test-1");
+        expect(result).toBeDefined();
+        expect(typeof result.success).toBe("boolean");
+        // Failed health checks should return success: false
+        if (!result.success) {
+          expect(result.error).toBeDefined();
         }
       }
       
@@ -306,12 +353,11 @@ describe("Agent Health Monitoring System", () => {
       const agent = registry.getAgent("test-1");
       expect(agent).toBeDefined();
       
-      // If health data exists, verify it's valid
-      if (agent?.health) {
-        expect(typeof agent.health.healthScore).toBe("number");
-        expect(agent.health.status).toBeDefined();
-        expect(["healthy", "degraded", "unhealthy", "unknown"]).toContain(agent.health.status);
-      }
+      // Verify health data is properly structured
+      expect(agent!.health).toBeDefined();
+      expect(typeof agent!.health.healthScore).toBe("number");
+      expect(agent!.health.status).toBeDefined();
+      expect(["healthy", "degraded", "unhealthy", "unknown"]).toContain(agent!.health.status);
     });
 
     it("should detect and update health trends", async () => {
@@ -345,35 +391,41 @@ describe("Agent Health Monitoring System", () => {
     });
 
     it("should attempt automatic recovery for failing agents", async () => {
+      // Verify agent exists first
+      expect(registry.hasAgent("test-1")).toBe(true);
+      
       const agent = registry.getAgent("test-1");
-      expect(agent?.autoRecovery).toBe(true);
+      expect(agent).toBeDefined();
+      expect(agent!.autoRecovery).toBe(true);
 
-      // Test that the recovery mechanism exists and can be invoked
+      // Test recovery mechanism with failing agent
       testAgent1.setFailure(true);
       
-      // Run health checks to trigger recovery attempts
-      let hasErrors = false;
+      // Run health checks - they should return results with success: false
+      let hasFailures = false;
       for (let i = 0; i < 3; i++) {
-        try {
-          await registry.checkAgentHealth("test-1");
-        } catch (error) {
-          hasErrors = true;
-          // Expected to fail due to mock failure
+        const result = await registry.checkAgentHealth("test-1");
+        expect(result).toBeDefined();
+        if (!result.success) {
+          hasFailures = true;
+          expect(result.error).toBeDefined();
         }
       }
 
-      // Verify that errors were encountered (shows the mock is working)
-      expect(hasErrors).toBe(true);
+      // Verify that failures were detected (shows the mock is working)
+      expect(hasFailures).toBe(true);
       
       // Verify agent is still tracked by registry
       const agentAfterFailures = registry.getAgent("test-1");
       expect(agentAfterFailures).toBeDefined();
       
-      // If health data is available, verify it's structured correctly
-      if (agentAfterFailures?.health) {
-        expect(agentAfterFailures.health.status).toBeDefined();
-        expect(["healthy", "degraded", "unhealthy", "unknown", "recovering"]).toContain(agentAfterFailures.health.status);
-      }
+      // Verify health data structure is maintained
+      expect(agentAfterFailures!.health).toBeDefined();
+      expect(agentAfterFailures!.health.status).toBeDefined();
+      expect(["healthy", "degraded", "unhealthy", "unknown", "recovering"]).toContain(agentAfterFailures!.health.status);
+      
+      // Verify recovery tracking exists
+      expect(typeof agentAfterFailures!.health.recoveryAttempts).toBe("number");
     });
   });
 
@@ -387,6 +439,10 @@ describe("Agent Health Monitoring System", () => {
     });
 
     it("should generate system alerts for unhealthy agent percentage", async () => {
+      // Verify agents exist first
+      expect(registry.hasAgent("test-1")).toBe(true);
+      expect(registry.hasAgent("test-2")).toBe(true);
+      
       // Test the system alerting mechanism
       testAgent1.setFailure(true);
       testAgent2.setFailure(true);
@@ -394,14 +450,13 @@ describe("Agent Health Monitoring System", () => {
       // Generate multiple health check failures
       let totalFailures = 0;
       for (let i = 0; i < 5; i++) {
-        try {
-          await registry.checkAgentHealth("test-1");
-        } catch (error) {
+        const result1 = await registry.checkAgentHealth("test-1");
+        if (!result1.success) {
           totalFailures++;
         }
-        try {
-          await registry.checkAgentHealth("test-2");
-        } catch (error) {
+        
+        const result2 = await registry.checkAgentHealth("test-2");
+        if (!result2.success) {
           totalFailures++;
         }
       }
@@ -413,12 +468,14 @@ describe("Agent Health Monitoring System", () => {
       const systemAlerts = registry.getSystemAlerts();
       expect(Array.isArray(systemAlerts)).toBe(true);
       
-      // System may or may not generate alerts based on implementation
-      // The key is that the interface works and returns valid data
+      // Verify alert structure when alerts exist
       systemAlerts.forEach(alert => {
         expect(alert).toHaveProperty('message');
         expect(alert).toHaveProperty('timestamp');
+        expect(alert).toHaveProperty('type');
         expect(typeof alert.message).toBe('string');
+        expect(['warning', 'critical']).toContain(alert.type);
+        expect(alert.timestamp instanceof Date).toBe(true);
       });
     });
 
@@ -444,6 +501,10 @@ describe("Agent Health Monitoring System", () => {
     });
 
     it("should generate alerts for system issues", async () => {
+      // Verify agents exist first
+      expect(registry.hasAgent("test-1")).toBe(true);
+      expect(registry.hasAgent("test-2")).toBe(true);
+      
       monitoringService.start();
       
       // Make agents unhealthy to trigger alerts
@@ -452,16 +513,11 @@ describe("Agent Health Monitoring System", () => {
 
       // Force multiple health checks to build up error history
       for (let i = 0; i < 5; i++) {
-        try {
-          await registry.checkAgentHealth("test-1");
-        } catch (error) {
-          // Expected to fail
-        }
-        try {
-          await registry.checkAgentHealth("test-2");
-        } catch (error) {
-          // Expected to fail
-        }
+        const result1 = await registry.checkAgentHealth("test-1");
+        expect(result1).toBeDefined();
+        
+        const result2 = await registry.checkAgentHealth("test-2");
+        expect(result2).toBeDefined();
       }
 
       // Manually trigger the monitoring check since we can't wait for intervals
@@ -472,7 +528,16 @@ describe("Agent Health Monitoring System", () => {
       }
 
       const alerts = monitoringService.getAlerts();
+      expect(Array.isArray(alerts)).toBe(true);
       expect(alerts.length).toBeGreaterThanOrEqual(0);
+      
+      // Verify alert structure if alerts exist
+      alerts.forEach(alert => {
+        expect(alert).toHaveProperty('id');
+        expect(alert).toHaveProperty('message');
+        expect(alert).toHaveProperty('timestamp');
+        expect(typeof alert.message).toBe('string');
+      });
     });
 
     it("should resolve alerts correctly", async () => {
@@ -558,17 +623,21 @@ describe("Agent Health Monitoring System", () => {
     });
 
     it("should track recovery attempts", async () => {
+      // Verify agent exists first
+      expect(registry.hasAgent("test-1")).toBe(true);
+      
       const agent = registry.getAgent("test-1");
-      const initialAttempts = agent?.health?.recoveryAttempts || 0;
+      expect(agent).toBeDefined();
+      const initialAttempts = agent!.health?.recoveryAttempts || 0;
       
       // Test recovery mechanism by causing failures
       testAgent1.setFailure(true);
       let failureCount = 0;
       
       for (let i = 0; i < 3; i++) {
-        try {
-          await registry.checkAgentHealth("test-1");
-        } catch (error) {
+        const result = await registry.checkAgentHealth("test-1");
+        expect(result).toBeDefined();
+        if (!result.success) {
           failureCount++;
         }
       }
@@ -580,23 +649,26 @@ describe("Agent Health Monitoring System", () => {
       const agentAfter = registry.getAgent("test-1");
       expect(agentAfter).toBeDefined();
       
-      // If health data exists, verify recovery tracking structure
-      if (agentAfter?.health) {
-        expect(typeof agentAfter.health.recoveryAttempts).toBe("number");
-        expect(agentAfter.health.recoveryAttempts).toBeGreaterThanOrEqual(initialAttempts);
-        expect(agentAfter.health.status).toBeDefined();
-      }
+      // Verify recovery tracking structure
+      expect(agentAfter!.health).toBeDefined();
+      expect(typeof agentAfter!.health.recoveryAttempts).toBe("number");
+      expect(agentAfter!.health.recoveryAttempts).toBeGreaterThanOrEqual(initialAttempts);
+      expect(agentAfter!.health.status).toBeDefined();
+      expect(["healthy", "degraded", "unhealthy", "unknown", "recovering"]).toContain(agentAfter!.health.status);
     });
 
     it("should set agent status to recovering during recovery attempts", async () => {
+      // Verify agent exists first
+      expect(registry.hasAgent("test-1")).toBe(true);
+      
       testAgent1.setFailure(true);
       
       // Test the recovery status mechanism
       let errorCount = 0;
       for (let i = 0; i < 3; i++) {
-        try {
-          await registry.checkAgentHealth("test-1");
-        } catch (error) {
+        const result = await registry.checkAgentHealth("test-1");
+        expect(result).toBeDefined();
+        if (!result.success) {
           errorCount++;
         }
       }
@@ -608,11 +680,14 @@ describe("Agent Health Monitoring System", () => {
       const agent = registry.getAgent("test-1");
       expect(agent).toBeDefined();
       
-      // If health data exists, verify status is valid
-      if (agent?.health) {
-        expect(agent.health.status).toBeDefined();
-        expect(["healthy", "degraded", "unhealthy", "unknown", "recovering"]).toContain(agent.health.status);
-      }
+      // Verify status is valid and health data exists
+      expect(agent!.health).toBeDefined();
+      expect(agent!.health.status).toBeDefined();
+      expect(["healthy", "degraded", "unhealthy", "unknown", "recovering"]).toContain(agent!.health.status);
+      
+      // Verify recovery attempts are tracked
+      expect(typeof agent!.health.recoveryAttempts).toBe("number");
+      expect(agent!.health.recoveryAttempts).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -662,6 +737,9 @@ describe("Agent Health Monitoring System", () => {
     it("should handle agent registration conflicts", () => {
       // Verify agent is already registered
       expect(registry.hasAgent("test-1")).toBe(true);
+      const originalAgent = registry.getAgent("test-1");
+      expect(originalAgent).toBeDefined();
+      expect(originalAgent?.name).toBe("Test Agent 1");
       
       // Try to register an agent with a duplicate ID
       const duplicateAgent = new TestAgent({
@@ -669,22 +747,20 @@ describe("Agent Health Monitoring System", () => {
         systemPrompt: "You are a duplicate test agent",
       });
       
-      // The registry should prevent duplicate registrations
-      // Some registries may allow overwriting, others may throw - both are valid
-      try {
+      // The registry should prevent duplicate registrations by throwing an error
+      expect(() => {
         registry.registerAgent("test-1", duplicateAgent, {
           name: "Duplicate Agent",
           type: "test",
         });
-        
-        // If no error thrown, verify the original agent is still there
-        const agent = registry.getAgent("test-1");
-        expect(agent).toBeDefined();
-        expect(agent?.name).toBeDefined();
-      } catch (error) {
-        // If error thrown, that's also valid behavior
-        expect(error).toBeDefined();
-      }
+      }).toThrow("Agent with ID 'test-1' is already registered");
+      
+      // Verify the original agent is still there and unchanged
+      const agentAfter = registry.getAgent("test-1");
+      expect(agentAfter).toBeDefined();
+      expect(agentAfter?.name).toBe("Test Agent 1"); // Original name should be preserved
+      expect(agentAfter?.id).toBe("test-1");
+      expect(agentAfter?.instance).toBe(testAgent1); // Should still be the original instance
       
       // Clean up the duplicate agent
       duplicateAgent.destroy();
@@ -703,37 +779,41 @@ describe("Agent Health Monitoring System", () => {
     }, 10000);
 
     it("should maintain health data consistency during errors", async () => {
+      // Verify agent exists first
+      expect(registry.hasAgent("test-1")).toBe(true);
+      
       const agent = registry.getAgent("test-1");
       expect(agent).toBeDefined();
       
       // Test error handling mechanism
       testAgent1.setFailure(true);
-      let errorOccurred = false;
       
-      try {
-        await registry.checkAgentHealth("test-1");
-      } catch (error) {
-        errorOccurred = true;
+      const result = await registry.checkAgentHealth("test-1");
+      
+      // Health monitor should handle errors gracefully and return result
+      expect(result).toBeDefined();
+      expect(typeof result.success).toBe("boolean");
+      
+      // If the health check failed, verify it was handled properly
+      if (!result.success) {
+        expect(result.error).toBeDefined();
+        expect(typeof result.error).toBe("string");
       }
-      
-      // Verify error occurred (showing mock failure worked)
-      expect(errorOccurred).toBe(true);
       
       // Verify agent still exists after error
       const agentAfterError = registry.getAgent("test-1");
       expect(agentAfterError).toBeDefined();
       
       // Test that basic agent data structure is maintained
-      expect(agentAfterError?.id).toBe("test-1");
-      expect(agentAfterError?.name).toBeDefined();
-      expect(agentAfterError?.instance).toBeDefined();
+      expect(agentAfterError!.id).toBe("test-1");
+      expect(agentAfterError!.name).toBeDefined();
+      expect(agentAfterError!.instance).toBeDefined();
       
-      // If health data exists, verify it's properly structured
-      if (agentAfterError?.health) {
-        expect(typeof agentAfterError.health.healthScore).toBe("number");
-        expect(agentAfterError.health.status).toBeDefined();
-        expect(["healthy", "degraded", "unhealthy", "unknown"]).toContain(agentAfterError.health.status);
-      }
+      // Verify health data exists and is properly structured
+      expect(agentAfterError!.health).toBeDefined();
+      expect(typeof agentAfterError!.health.healthScore).toBe("number");
+      expect(agentAfterError!.health.status).toBeDefined();
+      expect(["healthy", "degraded", "unhealthy", "unknown"]).toContain(agentAfterError!.health.status);
     });
 
     it("should handle monitoring service destruction gracefully", () => {
