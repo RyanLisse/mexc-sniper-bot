@@ -100,8 +100,6 @@ export class RiskAssessment {
    * Perform comprehensive risk assessment across all categories
    */
   public async performComprehensiveAssessment(): Promise<ComprehensiveRiskAssessment> {
-    const timer = createTimer("comprehensive_assessment", "risk-assessment");
-
     try {
       // Run all assessments in parallel for better performance
       const [portfolio, performance, pattern, system] = await Promise.all([

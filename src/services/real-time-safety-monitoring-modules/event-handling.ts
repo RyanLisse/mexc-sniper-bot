@@ -9,6 +9,7 @@
 
 import type { ScheduledOperation } from "../../schemas/safety-monitoring-schemas";
 import { validateScheduledOperation } from "../../schemas/safety-monitoring-schemas";
+import { createTimer } from "../../lib/structured-logger";
 
 export interface EventHandlingConfig {
   baseTickMs?: number;
