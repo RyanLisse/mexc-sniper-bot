@@ -1,6 +1,6 @@
 /**
  * WebSocket Connection Manager
- * 
+ *
  * Handles WebSocket connection lifecycle, reconnection logic, and heartbeat
  * Extracted from mexc-websocket-stream.ts for modularity
  */
@@ -23,7 +23,7 @@ export class MexcConnectionManager {
   private heartbeatInterval?: NodeJS.Timeout;
   private isConnecting = false;
   private isConnected = false;
-  
+
   private readonly url: string;
   private readonly maxReconnectAttempts: number;
   private readonly maxReconnectDelay: number;
@@ -232,7 +232,7 @@ export class MexcConnectionManager {
    */
   private scheduleReconnect(): void {
     this.reconnectAttempts++;
-    
+
     this.logger.info("Scheduling WebSocket reconnection", {
       attempt: this.reconnectAttempts,
       maxAttempts: this.maxReconnectAttempts,

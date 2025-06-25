@@ -209,22 +209,26 @@ export class UnifiedMexcServiceFactory {
       });
 
       if (!credentials) {
-        console.warn("[UnifiedMexcServiceFactory] No valid credentials found, falling back to environment");
-        
+        console.warn(
+          "[UnifiedMexcServiceFactory] No valid credentials found, falling back to environment"
+        );
+
         // Check if environment credentials exist with improved validation
         const envApiKey = process.env.MEXC_API_KEY?.trim();
         const envSecretKey = process.env.MEXC_SECRET_KEY?.trim();
-        
+
         if (!envApiKey || !envSecretKey || envApiKey.length < 10 || envSecretKey.length < 10) {
           console.error("[UnifiedMexcServiceFactory] Invalid or missing environment credentials", {
             hasApiKey: !!envApiKey,
             hasSecretKey: !!envSecretKey,
             apiKeyLength: envApiKey?.length || 0,
-            secretKeyLength: envSecretKey?.length || 0
+            secretKeyLength: envSecretKey?.length || 0,
           });
-          throw new Error("No valid MEXC API credentials configured - please verify MEXC_API_KEY and MEXC_SECRET_KEY environment variables");
+          throw new Error(
+            "No valid MEXC API credentials configured - please verify MEXC_API_KEY and MEXC_SECRET_KEY environment variables"
+          );
         }
-        
+
         console.info("[UnifiedMexcServiceFactory] Using environment credentials as fallback");
         return this.createServiceInstance({
           apiKey: envApiKey,
@@ -268,16 +272,20 @@ export class UnifiedMexcServiceFactory {
 
       // Improved fallback to environment credentials
       if (this.config.fallbackToEnvironment) {
-        console.info("[UnifiedMexcServiceFactory] Falling back to environment credentials due to error");
-        
+        console.info(
+          "[UnifiedMexcServiceFactory] Falling back to environment credentials due to error"
+        );
+
         const envApiKey = process.env.MEXC_API_KEY?.trim();
         const envSecretKey = process.env.MEXC_SECRET_KEY?.trim();
-        
+
         if (!envApiKey || !envSecretKey) {
-          console.error("[UnifiedMexcServiceFactory] Environment fallback failed - no credentials available");
+          console.error(
+            "[UnifiedMexcServiceFactory] Environment fallback failed - no credentials available"
+          );
           throw new Error("All credential sources failed - no valid MEXC API credentials found");
         }
-        
+
         return this.createServiceInstance({
           apiKey: envApiKey,
           secretKey: envSecretKey,

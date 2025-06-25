@@ -1,6 +1,6 @@
 /**
  * Stream Processor
- * 
+ *
  * Main WebSocket service coordination and message processing
  * Extracted from mexc-websocket-stream.ts for modularity
  */
@@ -12,7 +12,7 @@ import type {
   TradingSignalMessage,
 } from "../../lib/websocket-types";
 import { webSocketServer } from "../websocket-server";
-import { MexcConnectionManager, type ConnectionManagerOptions } from "./connection-manager";
+import { type ConnectionManagerOptions, MexcConnectionManager } from "./connection-manager";
 import { MarketDataManager } from "./market-data-manager";
 
 // ======================
@@ -32,7 +32,7 @@ interface StreamConfig {
 
 export class MexcWebSocketStreamService extends EventEmitter {
   private static instance: MexcWebSocketStreamService;
-  
+
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[stream-processor]", message, context || ""),
@@ -47,7 +47,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
   // Service components
   private connectionManager?: MexcConnectionManager;
   private marketDataManager: MarketDataManager;
-  
+
   // Configuration
   private config: StreamConfig = {
     mexcWsUrl: process.env.MEXC_WS_URL || "wss://wbs.mexc.com/ws",
@@ -139,7 +139,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
 
     try {
       await this.connectionManager.connect();
-      
+
       // Subscribe to configured data streams
       if (this.config.subscriptions) {
         await this.subscribeToStreams(this.config.subscriptions);
@@ -184,7 +184,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
         const subscriptionMessage = this.createSubscriptionMessage(stream);
         this.connectionManager.send(subscriptionMessage);
         this.activeSubscriptions.add(stream);
-        
+
         this.logger.debug("Subscribed to stream", { stream });
       } catch (error) {
         this.logger.error("Failed to subscribe to stream", {
@@ -358,7 +358,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
   private createSubscriptionMessage(stream: string): any {
     // Create MEXC-specific subscription format
     const subscriptionId = Date.now();
-    
+
     return {
       id: subscriptionId,
       method: "SUBSCRIPTION",

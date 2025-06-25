@@ -1,6 +1,6 @@
 /**
  * Environment Variable Configuration Types
- * 
+ *
  * Extracted from enhanced-environment-validation.ts for modularity
  */
 
@@ -41,12 +41,15 @@ export interface EnvironmentValidationResult {
     category: string;
     required: boolean;
   }>;
-  categories: Record<string, {
-    total: number;
-    configured: number;
-    missing: number;
-    status: "complete" | "issues" | "critical";
-  }>;
+  categories: Record<
+    string,
+    {
+      total: number;
+      configured: number;
+      missing: number;
+      status: "complete" | "issues" | "critical";
+    }
+  >;
   recommendations: string[];
   documentation: string;
 }

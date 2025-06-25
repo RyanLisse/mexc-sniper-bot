@@ -8,7 +8,7 @@
  * Pipeline: Calendar Monitoring → Pattern Detection → Target Creation → Auto-Execution
  */
 
-import { type PatternAnalysisRequest } from "../core/pattern-detection";
+import type { PatternAnalysisRequest } from "../core/pattern-detection";
 import { EnhancedPatternDetectionCore } from "../core/pattern-detection/pattern-detection-core-enhanced";
 import { CalendarAgent } from "../mexc-agents/calendar-agent";
 import { CalendarWorkflow } from "../mexc-agents/calendar-workflow";
@@ -283,9 +283,8 @@ export class CalendarPatternBridgeService {
       };
 
       // Trigger pattern detection using calendar data
-      const patternResults = await EnhancedPatternDetectionCore.getInstance().analyzePatterns(
-        analysisRequest
-      );
+      const patternResults =
+        await EnhancedPatternDetectionCore.getInstance().analyzePatterns(analysisRequest);
 
       this.stats.totalPatternAnalysisTriggered++;
       this.stats.lastPatternAnalysis = new Date();

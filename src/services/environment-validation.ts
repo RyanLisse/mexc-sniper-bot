@@ -1,16 +1,20 @@
 /**
  * Environment Validation Service
- * 
+ *
  * Simplified and modular environment variable validation
  * Refactored from enhanced-environment-validation.ts for maintainability
  */
 
-import type { EnvironmentVariable, EnvironmentValidationResult } from "../config/environment/types";
-import { ENVIRONMENT_VARIABLES, getRequiredVariables, getCriticalMissing } from "../config/environment/variables";
+import type { EnvironmentValidationResult, EnvironmentVariable } from "../config/environment/types";
+import {
+  ENVIRONMENT_VARIABLES,
+  getCriticalMissing,
+  getRequiredVariables,
+} from "../config/environment/variables";
 
 export class EnvironmentValidation {
   private static instance: EnvironmentValidation;
-  
+
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[environment-validation]", message, context || ""),
@@ -47,10 +51,15 @@ export class EnvironmentValidation {
 
       // Track category stats
       if (!categories[envVar.category]) {
-        categories[envVar.category] = { total: 0, configured: 0, missing: 0, status: "complete" as const };
+        categories[envVar.category] = {
+          total: 0,
+          configured: 0,
+          missing: 0,
+          status: "complete" as const,
+        };
       }
       categories[envVar.category].total++;
-      
+
       if (result.status === "configured" || result.status === "default") {
         categories[envVar.category].configured++;
       } else if (result.status === "missing") {
@@ -64,7 +73,7 @@ export class EnvironmentValidation {
     }
 
     // Calculate category statuses
-    Object.keys(categories).forEach(category => {
+    Object.keys(categories).forEach((category) => {
       const cat = categories[category];
       if (cat.missing > 0) {
         cat.status = cat.missing === cat.total ? "critical" : "issues";
@@ -74,16 +83,16 @@ export class EnvironmentValidation {
     // Generate summary
     const summary = {
       total: results.length,
-      configured: results.filter(r => r.status === "configured").length,
-      missing: results.filter(r => r.status === "missing").length,
-      invalid: results.filter(r => r.status === "invalid").length,
+      configured: results.filter((r) => r.status === "configured").length,
+      missing: results.filter((r) => r.status === "missing").length,
+      invalid: results.filter((r) => r.status === "invalid").length,
       warnings: warnings.length,
     };
 
     // Determine overall status
     const criticalMissing = getCriticalMissing(results);
     let status: "complete" | "issues" | "critical";
-    
+
     if (criticalMissing.length > 0) {
       status = "critical";
     } else if (summary.missing > 0 || summary.invalid > 0) {
@@ -96,7 +105,7 @@ export class EnvironmentValidation {
     if (criticalMissing.length > 0) {
       recommendations.push(`Critical: Configure required variables: ${criticalMissing.join(", ")}`);
     }
-    
+
     if (warnings.length > 0) {
       recommendations.push("Configure optional API keys for enhanced features");
     }
@@ -118,9 +127,11 @@ export class EnvironmentValidation {
   /**
    * Validate a single environment variable
    */
-  private validateSingleVariable(envVar: EnvironmentVariable): EnvironmentValidationResult["results"][0] {
+  private validateSingleVariable(
+    envVar: EnvironmentVariable
+  ): EnvironmentValidationResult["results"][0] {
     const value = process.env[envVar.key];
-    
+
     // Check if variable exists
     if (!value || value.trim() === "") {
       if (envVar.defaultValue) {
@@ -174,14 +185,14 @@ export class EnvironmentValidation {
    */
   private sanitizeValue(key: string, value: string): string {
     const sensitivePatterns = ["key", "secret", "token", "password", "url"];
-    const isSensitive = sensitivePatterns.some(pattern => 
-      key.toLowerCase().includes(pattern)
-    );
-    
+    const isSensitive = sensitivePatterns.some((pattern) => key.toLowerCase().includes(pattern));
+
     if (isSensitive) {
-      return value.length > 8 ? `${value.substring(0, 4)}...${value.substring(value.length - 4)}` : "***";
+      return value.length > 8
+        ? `${value.substring(0, 4)}...${value.substring(value.length - 4)}`
+        : "***";
     }
-    
+
     return value;
   }
 
@@ -192,7 +203,7 @@ export class EnvironmentValidation {
     const sections = {
       core: "Core Application Settings",
       api: "API Keys and External Services",
-      database: "Database Configuration", 
+      database: "Database Configuration",
       cache: "Cache and Redis Settings",
       security: "Authentication and Security",
       monitoring: "Monitoring and Observability",
@@ -201,13 +212,13 @@ export class EnvironmentValidation {
     };
 
     let documentation = "# Environment Variables Documentation\n\n";
-    
+
     Object.entries(sections).forEach(([category, title]) => {
-      const vars = ENVIRONMENT_VARIABLES.filter(v => v.category === category);
+      const vars = ENVIRONMENT_VARIABLES.filter((v) => v.category === category);
       if (vars.length === 0) return;
-      
+
       documentation += `## ${title}\n\n`;
-      vars.forEach(envVar => {
+      vars.forEach((envVar) => {
         documentation += `### ${envVar.key}\n`;
         documentation += `- **Description**: ${envVar.description}\n`;
         documentation += `- **Required**: ${envVar.required ? "Yes" : "No"}\n`;
@@ -238,7 +249,9 @@ export class EnvironmentValidation {
 
     if (result.status === "critical") {
       this.logger.error("Critical environment variables missing", {
-        missing: result.results.filter(r => r.required && r.status === "missing").map(r => r.key),
+        missing: result.results
+          .filter((r) => r.required && r.status === "missing")
+          .map((r) => r.key),
       });
     }
 
@@ -258,7 +271,7 @@ export class EnvironmentValidation {
       if (fallback !== undefined) {
         return fallback;
       }
-      const envVar = ENVIRONMENT_VARIABLES.find(v => v.key === key);
+      const envVar = ENVIRONMENT_VARIABLES.find((v) => v.key === key);
       if (envVar?.defaultValue) {
         return envVar.defaultValue;
       }
@@ -273,12 +286,12 @@ export class EnvironmentValidation {
   isProductionReady(): { ready: boolean; issues: string[] } {
     const result = this.validateEnvironment();
     const issues: string[] = [];
-    
+
     // Check for critical missing variables
     const criticalMissing = result.results
-      .filter(r => r.required && r.status === "missing")
-      .map(r => r.key);
-    
+      .filter((r) => r.required && r.status === "missing")
+      .map((r) => r.key);
+
     if (criticalMissing.length > 0) {
       issues.push(`Missing required variables: ${criticalMissing.join(", ")}`);
     }
@@ -286,9 +299,9 @@ export class EnvironmentValidation {
     // Check for default values in production
     if (process.env.NODE_ENV === "production") {
       const usingDefaults = result.results
-        .filter(r => r.status === "default" && r.key !== "NODE_ENV")
-        .map(r => r.key);
-      
+        .filter((r) => r.status === "default" && r.key !== "NODE_ENV")
+        .map((r) => r.key);
+
       if (usingDefaults.length > 0) {
         issues.push(`Using default values in production: ${usingDefaults.join(", ")}`);
       }

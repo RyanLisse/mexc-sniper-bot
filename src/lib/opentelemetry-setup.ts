@@ -43,26 +43,25 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
 
   try {
     // Dynamic imports to prevent build-time bundling issues
+    // Use HTTP exporters instead of GRPC to avoid Node.js module bundling issues
     const [
       { getNodeAutoInstrumentations },
-      { JaegerExporter },
+      { OTLPTraceExporter },
       { PrometheusExporter },
       { Resource },
       { PeriodicExportingMetricReader },
       { NodeSDK },
       { BatchSpanProcessor, TraceIdRatioBasedSampler },
       semanticConventions,
-      productionConfig,
     ] = await Promise.all([
       import("@opentelemetry/auto-instrumentations-node"),
-      import("@opentelemetry/exporter-jaeger"),
+      import("@opentelemetry/exporter-trace-otlp-http"), // HTTP instead of GRPC
       import("@opentelemetry/exporter-prometheus"),
       import("@opentelemetry/resources"),
       import("@opentelemetry/sdk-metrics"),
       import("@opentelemetry/sdk-node"),
       import("@opentelemetry/sdk-trace-node"),
       import("@opentelemetry/semantic-conventions"),
-      import("./opentelemetry-production-config"),
     ]);
 
     const {
@@ -82,13 +81,16 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
       [SEMRESATTRS_SERVICE_INSTANCE_ID]: process.env.HOSTNAME || "localhost",
     });
 
-    // Trace exporters
+    // Trace exporters - using HTTP-based OTLP exporter for build compatibility
     const traceExporters = [];
 
-    if (process.env.JAEGER_ENDPOINT) {
+    // Use OTLP HTTP exporter (compatible with Jaeger and other OTLP receivers)
+    if (process.env.JAEGER_ENDPOINT || process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
       traceExporters.push(
-        new JaegerExporter({
-          endpoint: process.env.JAEGER_ENDPOINT,
+        new OTLPTraceExporter({
+          url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 
+               process.env.JAEGER_ENDPOINT || 
+               "http://localhost:4318/v1/traces", // Default OTLP HTTP endpoint
         })
       );
     }

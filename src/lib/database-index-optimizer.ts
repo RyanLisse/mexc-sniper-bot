@@ -391,10 +391,10 @@ export class DatabaseIndexOptimizer {
 
         for (const index of indexes) {
           // Skip invalid indexes or those without proper indexname
-          if (!index || !index.indexname || typeof index.indexname !== 'string') {
+          if (!index || !index.indexname || typeof index.indexname !== "string") {
             continue;
           }
-          
+
           // Skip auto-generated primary key and foreign key indexes
           if (index.indexname.includes("_pkey") || index.indexname.includes("_fkey")) {
             continue;

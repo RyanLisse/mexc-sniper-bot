@@ -1,6 +1,6 @@
 /**
  * Environment Variables Configuration
- * 
+ *
  * Centralized environment variable definitions for validation and documentation
  * Extracted from enhanced-environment-validation.ts for modularity
  */
@@ -236,15 +236,17 @@ export const ENVIRONMENT_VARIABLES: EnvironmentVariable[] = [
 
 // Validation utilities
 export const getVariablesByCategory = (category: string): EnvironmentVariable[] => {
-  return ENVIRONMENT_VARIABLES.filter(env => env.category === category);
+  return ENVIRONMENT_VARIABLES.filter((env) => env.category === category);
 };
 
 export const getRequiredVariables = (): EnvironmentVariable[] => {
-  return ENVIRONMENT_VARIABLES.filter(env => env.required);
+  return ENVIRONMENT_VARIABLES.filter((env) => env.required);
 };
 
-export const getCriticalMissing = (results: Array<{key: string; status: string; required: boolean}>): string[] => {
+export const getCriticalMissing = (
+  results: Array<{ key: string; status: string; required: boolean }>
+): string[] => {
   return results
-    .filter(result => result.required && result.status === 'missing')
-    .map(result => result.key);
+    .filter((result) => result.required && result.status === "missing")
+    .map((result) => result.key);
 };

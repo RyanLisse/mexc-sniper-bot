@@ -57,7 +57,7 @@ export class MexcConfigValidator {
       // Enhanced credential validation with better error details
       const envApiKey = process.env.MEXC_API_KEY?.trim();
       const envSecretKey = process.env.MEXC_SECRET_KEY?.trim();
-      
+
       const credentialDetails = {
         hasApiKey: !!envApiKey,
         hasSecretKey: !!envSecretKey,
@@ -81,11 +81,15 @@ export class MexcConfigValidator {
       const connectivityTest = await Promise.race([
         this.mexcService.testConnectivityWithResponse(),
         new Promise<{ success: false; error: string; responseTime: number }>((resolve) =>
-          setTimeout(() => resolve({ 
-            success: false, 
-            error: "Connectivity test timeout after 10 seconds", 
-            responseTime: 10000 
-          }), 10000)
+          setTimeout(
+            () =>
+              resolve({
+                success: false,
+                error: "Connectivity test timeout after 10 seconds",
+                responseTime: 10000,
+              }),
+            10000
+          )
         ),
       ]);
 
@@ -108,10 +112,14 @@ export class MexcConfigValidator {
       const serverTimeResponse = await Promise.race([
         this.mexcService.getServerTime(),
         new Promise<{ success: false; error: string }>((resolve) =>
-          setTimeout(() => resolve({ 
-            success: false, 
-            error: "Server time check timeout after 8 seconds" 
-          }), 8000)
+          setTimeout(
+            () =>
+              resolve({
+                success: false,
+                error: "Server time check timeout after 8 seconds",
+              }),
+            8000
+          )
         ),
       ]);
       if (!serverTimeResponse.success) {

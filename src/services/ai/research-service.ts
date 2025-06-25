@@ -1,6 +1,6 @@
 /**
  * AI Research Service
- * 
+ *
  * Handles Perplexity API integration for real-time market research
  * Extracted from ai-intelligence-service.ts for modularity
  */
@@ -77,7 +77,7 @@ export class ResearchService {
   private perplexityApiKey: string;
   private readonly perplexityApiUrl = "https://api.perplexity.ai/chat/completions";
   private tracer = trace.getTracer("research-service");
-  
+
   // Cache for research results optimization
   private researchCache = new Map<string, PerplexityResearchResult>();
   private cacheTimeout = 30 * 60 * 1000; // 30 minutes
@@ -156,13 +156,14 @@ export class ResearchService {
           }
 
           const prompt = this.buildResearchPrompt(symbol, focus);
-          
+
           const requestPayload: PerplexityRequest = {
             model: "llama-3.1-sonar-small-128k-online",
             messages: [
               {
                 role: "system",
-                content: "You are a professional cryptocurrency market analyst with expertise in technical analysis, fundamental analysis, and market sentiment. Provide concise, actionable insights.",
+                content:
+                  "You are a professional cryptocurrency market analyst with expertise in technical analysis, fundamental analysis, and market sentiment. Provide concise, actionable insights.",
               },
               {
                 role: "user",
@@ -243,7 +244,7 @@ export class ResearchService {
             message: errorMessage,
           });
           span.recordException(error instanceof Error ? error : new Error(String(error)));
-          
+
           this.logger.error("Failed to conduct market research", { symbol, error: errorMessage });
           throw error;
         } finally {
@@ -307,7 +308,16 @@ Provide a comprehensive analysis covering technical, fundamental, and news aspec
     // Extract sentiment using keyword analysis
     const sentimentKeywords = {
       bullish: ["bullish", "positive", "upward", "growth", "strong", "buy", "optimistic", "rally"],
-      bearish: ["bearish", "negative", "downward", "decline", "weak", "sell", "pessimistic", "crash"],
+      bearish: [
+        "bearish",
+        "negative",
+        "downward",
+        "decline",
+        "weak",
+        "sell",
+        "pessimistic",
+        "crash",
+      ],
       neutral: ["neutral", "sideways", "uncertain", "mixed", "stable", "consolidation"],
     };
 
@@ -330,7 +340,7 @@ Provide a comprehensive analysis covering technical, fundamental, and news aspec
     let confidenceBoost = 0;
     const confidenceMatches = analysis.match(/confidence[:\s]+(\d+)/gi);
     if (confidenceMatches) {
-      const numbers = confidenceMatches.map(match => {
+      const numbers = confidenceMatches.map((match) => {
         const num = match.match(/\d+/);
         return num ? parseInt(num[0]) : 0;
       });
@@ -346,7 +356,7 @@ Provide a comprehensive analysis covering technical, fundamental, and news aspec
     const risks: string[] = [];
     const opportunities: string[] = [];
 
-    sections.forEach(section => {
+    sections.forEach((section) => {
       const lowerSection = section.toLowerCase();
       if (lowerSection.includes("finding") || lowerSection.includes("key")) {
         keyFindings.push(section.trim());
@@ -360,7 +370,7 @@ Provide a comprehensive analysis covering technical, fundamental, and news aspec
     // If no specific sections found, extract bullet points
     if (keyFindings.length === 0) {
       const bulletPoints = analysis.match(/^[-•*]\s+.+$/gm) || [];
-      keyFindings.push(...bulletPoints.slice(0, 3).map(point => point.replace(/^[-•*]\s+/, "")));
+      keyFindings.push(...bulletPoints.slice(0, 3).map((point) => point.replace(/^[-•*]\s+/, "")));
     }
 
     return {

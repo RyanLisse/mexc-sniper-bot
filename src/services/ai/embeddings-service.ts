@@ -1,6 +1,6 @@
 /**
  * AI Embeddings Service
- * 
+ *
  * Handles Cohere Embed v4.0 integration for advanced pattern embeddings
  * Extracted from ai-intelligence-service.ts for modularity
  */
@@ -10,7 +10,7 @@ import { TRADING_TELEMETRY_CONFIG } from "../../lib/opentelemetry-setup";
 import type { PatternData } from "../pattern-embedding-service";
 
 // ======================
-// Cohere Client Configuration  
+// Cohere Client Configuration
 // ======================
 
 interface CohereEmbedRequest {
@@ -51,7 +51,7 @@ export class EmbeddingsService {
   private readonly cohereModel = "embed-english-v3.0";
   private readonly cohereApiUrl = "https://api.cohere.ai/v1/embed";
   private tracer = trace.getTracer("embeddings-service");
-  
+
   // Cache for embeddings optimization
   private embeddingCache = new Map<string, number[]>();
   private cacheTimeout = 30 * 60 * 1000; // 30 minutes
@@ -101,7 +101,11 @@ export class EmbeddingsService {
    */
   async generateCohereEmbedding(
     texts: string[],
-    inputType: "search_document" | "search_query" | "classification" | "clustering" = "search_document"
+    inputType:
+      | "search_document"
+      | "search_query"
+      | "classification"
+      | "clustering" = "search_document"
   ): Promise<number[][]> {
     return await this.tracer.startActiveSpan(
       "cohere.generate_embedding",
@@ -174,7 +178,7 @@ export class EmbeddingsService {
           // Cache the first embedding
           if (cohereResponse.embeddings.float[0]) {
             this.embeddingCache.set(cacheKey, cohereResponse.embeddings.float[0]);
-            
+
             // Clean up cache after timeout
             setTimeout(() => {
               this.embeddingCache.delete(cacheKey);
@@ -203,7 +207,7 @@ export class EmbeddingsService {
             message: errorMessage,
           });
           span.recordException(error instanceof Error ? error : new Error(String(error)));
-          
+
           this.logger.error("Failed to generate Cohere embedding", { error: errorMessage });
           throw error;
         } finally {

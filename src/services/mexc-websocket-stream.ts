@@ -1,24 +1,24 @@
 /**
  * MEXC WebSocket Stream Service (Facade)
- * 
+ *
  * Lightweight facade providing backward compatibility
  * while using the new modular WebSocket services architecture
  */
 
 import { EventEmitter } from "events";
-import { mexcWebSocketStream as streamProcessor } from "./websocket/stream-processor";
 import type {
   NotificationMessage,
   TradingPriceMessage,
   TradingSignalMessage,
 } from "../lib/websocket-types";
+import { mexcWebSocketStream as streamProcessor } from "./websocket/stream-processor";
 
 // Re-export types for backward compatibility
 export type { NotificationMessage, TradingPriceMessage, TradingSignalMessage };
 
 /**
  * MEXC WebSocket Stream Service - Facade Pattern
- * 
+ *
  * Provides a unified interface to the modular WebSocket services
  * while maintaining backward compatibility with existing code
  */
@@ -131,7 +131,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
    * @deprecated Use subscribeToStreams instead
    */
   async subscribeToSymbolList(symbols: string[]): Promise<void> {
-    const streams = symbols.map(symbol => `${symbol}@ticker`);
+    const streams = symbols.map((symbol) => `${symbol}@ticker`);
     return this.subscribeToStreams(streams);
   }
 
@@ -142,11 +142,17 @@ export class MexcWebSocketStreamService extends EventEmitter {
     // Forward all events from stream processor
     streamProcessor.on("stream_started", () => this.emit("stream_started"));
     streamProcessor.on("stream_stopped", () => this.emit("stream_stopped"));
-    streamProcessor.on("price_update", (price: TradingPriceMessage) => this.emit("price_update", price));
+    streamProcessor.on("price_update", (price: TradingPriceMessage) =>
+      this.emit("price_update", price)
+    );
     streamProcessor.on("depth_update", (depth: any) => this.emit("depth_update", depth));
     streamProcessor.on("status_update", (status: any) => this.emit("status_update", status));
-    streamProcessor.on("trading_signal", (signal: TradingSignalMessage) => this.emit("trading_signal", signal));
-    streamProcessor.on("notification", (notification: NotificationMessage) => this.emit("notification", notification));
+    streamProcessor.on("trading_signal", (signal: TradingSignalMessage) =>
+      this.emit("trading_signal", signal)
+    );
+    streamProcessor.on("notification", (notification: NotificationMessage) =>
+      this.emit("notification", notification)
+    );
     streamProcessor.on("trade", (trade: any) => this.emit("trade", trade));
     streamProcessor.on("error", (error: Error) => this.emit("error", error));
   }

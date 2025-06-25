@@ -7,6 +7,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ApiClient } from "@/src/lib/api-client";
+import { createLogger, type LogContext } from "@/src/lib/unified-logger";
+import type { ApiErrorResponse, ApiResponse } from "@/src/types/common-interfaces";
 import type {
   AutoSnipingConfig,
   AutoSnipingExecutionReport,
@@ -14,6 +16,12 @@ import type {
   ExecutionPosition,
   ExecutionStats,
 } from "../services/optimized-auto-sniping-core";
+
+// Create logger instance for hook
+const logger = createLogger("use-auto-sniping-execution", {
+  enableStructuredLogging: process.env.NODE_ENV === "production",
+  enablePerformanceLogging: false, // Avoid performance logging in React hooks
+});
 
 interface AutoSnipingExecutionState {
   // Execution report data
@@ -149,9 +157,8 @@ export function useAutoSnipingExecution(
           include_alerts: includeAlerts.toString(),
         });
 
-        const response = await ApiClient.get<{
-          success: boolean;
-          data: {
+        const response = await ApiClient.get<
+          ApiResponse<{
             report: AutoSnipingExecutionReport;
             execution: {
               isActive: boolean;
@@ -161,25 +168,18 @@ export function useAutoSnipingExecution(
               successRate: number;
               dailyTrades: number;
             };
-          };
-          meta?: {
-            timestamp?: string;
-            message?: string;
-          };
-        }>(`/api/auto-sniping/execution?${queryParams}`);
+          }>
+        >(`/api/auto-sniping/execution?${queryParams}`);
 
         // Check if response has the expected structure with safe property access
-        if (!response?.success) {
+        if (!response?.success || !response.data) {
           throw new Error("API request failed or returned unsuccessful response");
         }
 
-        const responseData = response.data;
-        if (!responseData?.report || !responseData.execution) {
+        const { report, execution } = response.data;
+        if (!report || !execution) {
           throw new Error("Invalid API response structure - missing required data fields");
         }
-
-        const report = responseData.report;
-        const execution = responseData.execution;
 
         setState((prev) => ({
           ...prev,
@@ -206,9 +206,16 @@ export function useAutoSnipingExecution(
           lastUpdated: new Date().toISOString(),
         }));
       } catch (error) {
-        console.error("[useAutoSnipingExecution] Failed to load execution report:", {
-          error: error instanceof Error ? error.message : String(error),
-        });
+        logger.error(
+          "Failed to load execution report",
+          {
+            operation: "load_execution_report",
+            includePositions,
+            includeHistory,
+            includeAlerts,
+          },
+          error instanceof Error ? error : new Error(String(error))
+        );
         setState((prev) => ({
           ...prev,
           isLoading: false,
@@ -224,7 +231,7 @@ export function useAutoSnipingExecution(
     setState((prev) => ({ ...prev, isStartingExecution: true, error: null }));
 
     try {
-      await ApiClient.post<{ message: string }>("/api/auto-sniping/execution", {
+      await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
         action: "start_execution",
       });
 
@@ -240,9 +247,13 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to start execution:", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      logger.error(
+        "Failed to start execution",
+        {
+          operation: "start_execution",
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
       setState((prev) => ({
         ...prev,
         isStartingExecution: false,
@@ -257,7 +268,7 @@ export function useAutoSnipingExecution(
     setState((prev) => ({ ...prev, isStoppingExecution: true, error: null }));
 
     try {
-      await ApiClient.post<{ message: string }>("/api/auto-sniping/execution", {
+      await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
         action: "stop_execution",
       });
 
@@ -270,7 +281,13 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to stop execution:", error);
+      logger.error(
+        "Failed to stop execution",
+        {
+          operation: "stop_execution",
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
       setState((prev) => ({
         ...prev,
         isStoppingExecution: false,
@@ -285,7 +302,7 @@ export function useAutoSnipingExecution(
     setState((prev) => ({ ...prev, isPausingExecution: true, error: null }));
 
     try {
-      await ApiClient.post<{ message: string }>("/api/auto-sniping/execution", {
+      await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
         action: "pause_execution",
       });
 
@@ -297,7 +314,13 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to pause execution:", error);
+      logger.error(
+        "Failed to pause execution",
+        {
+          operation: "pause_execution",
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
       setState((prev) => ({
         ...prev,
         isPausingExecution: false,
@@ -312,7 +335,7 @@ export function useAutoSnipingExecution(
     setState((prev) => ({ ...prev, isResumingExecution: true, error: null }));
 
     try {
-      await ApiClient.post<{ message: string }>("/api/auto-sniping/execution", {
+      await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
         action: "resume_execution",
       });
 
@@ -324,7 +347,13 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to resume execution:", error);
+      logger.error(
+        "Failed to resume execution",
+        {
+          operation: "resume_execution",
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
       setState((prev) => ({
         ...prev,
         isResumingExecution: false,
@@ -340,7 +369,7 @@ export function useAutoSnipingExecution(
       setState((prev) => ({ ...prev, isClosingPosition: true, error: null }));
 
       try {
-        await ApiClient.post<{ message: string }>("/api/auto-sniping/execution", {
+        await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
           action: "close_position",
           positionId,
           reason,
@@ -353,7 +382,15 @@ export function useAutoSnipingExecution(
 
         return true;
       } catch (error) {
-        console.error("[useAutoSnipingExecution] Failed to close position:", error);
+        logger.error(
+          "Failed to close position",
+          {
+            operation: "close_position",
+            positionId,
+            reason,
+          },
+          error instanceof Error ? error : new Error(String(error))
+        );
         setState((prev) => ({
           ...prev,
           isClosingPosition: false,
@@ -370,19 +407,25 @@ export function useAutoSnipingExecution(
     setState((prev) => ({ ...prev, error: null }));
 
     try {
-      const response = await ApiClient.post<{
-        data: { closedCount: number };
-        message: string;
-      }>("/api/auto-sniping/execution", {
-        action: "emergency_close_all",
-      });
+      const response = await ApiClient.post<ApiResponse<{ closedCount: number }>>(
+        "/api/auto-sniping/execution",
+        {
+          action: "emergency_close_all",
+        }
+      );
 
       // Refresh data after emergency close
       await loadExecutionReport(includePositions, includeHistory, includeAlerts);
 
-      return response.data.closedCount;
+      return response.data?.closedCount || 0;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Emergency close failed:", error);
+      logger.error(
+        "Emergency close failed",
+        {
+          operation: "emergency_close_all",
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Emergency close failed",
@@ -397,7 +440,7 @@ export function useAutoSnipingExecution(
       setState((prev) => ({ ...prev, isUpdatingConfig: true, error: null }));
 
       try {
-        await ApiClient.put<{ message: string }>("/api/auto-sniping/execution", {
+        await ApiClient.put<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
           config,
         });
 
@@ -412,7 +455,14 @@ export function useAutoSnipingExecution(
 
         return true;
       } catch (error) {
-        console.error("[useAutoSnipingExecution] Failed to update config:", error);
+        logger.error(
+          "Failed to update config",
+          {
+            operation: "update_config",
+            configKeys: Object.keys(config),
+          },
+          error instanceof Error ? error : new Error(String(error))
+        );
         setState((prev) => ({
           ...prev,
           isUpdatingConfig: false,
@@ -427,7 +477,7 @@ export function useAutoSnipingExecution(
   // Acknowledge alert
   const acknowledgeAlert = useCallback(async (alertId: string): Promise<boolean> => {
     try {
-      await ApiClient.post<{ message: string }>("/api/auto-sniping/execution", {
+      await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
         action: "acknowledge_alert",
         alertId,
       });
@@ -443,7 +493,14 @@ export function useAutoSnipingExecution(
 
       return true;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to acknowledge alert:", error);
+      logger.error(
+        "Failed to acknowledge alert",
+        {
+          operation: "acknowledge_alert",
+          alertId,
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Failed to acknowledge alert",
@@ -455,19 +512,25 @@ export function useAutoSnipingExecution(
   // Clear acknowledged alerts
   const clearAcknowledgedAlerts = useCallback(async (): Promise<number> => {
     try {
-      const response = await ApiClient.post<{
-        data: { clearedCount: number };
-        message: string;
-      }>("/api/auto-sniping/execution", {
-        action: "clear_acknowledged_alerts",
-      });
+      const response = await ApiClient.post<ApiResponse<{ clearedCount: number }>>(
+        "/api/auto-sniping/execution",
+        {
+          action: "clear_acknowledged_alerts",
+        }
+      );
 
       // Refresh data after clearing
       await loadExecutionReport(includePositions, includeHistory, includeAlerts);
 
-      return response.data.clearedCount;
+      return response.data?.clearedCount || 0;
     } catch (error) {
-      console.error("[useAutoSnipingExecution] Failed to clear alerts:", error);
+      logger.error(
+        "Failed to clear alerts",
+        {
+          operation: "clear_acknowledged_alerts",
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
       setState((prev) => ({
         ...prev,
         error: error instanceof Error ? error.message : "Failed to clear alerts",

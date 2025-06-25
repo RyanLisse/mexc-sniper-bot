@@ -68,6 +68,7 @@ export class OptimizedAutoSnipingExecutionEngine {
 
   private executionInterval: NodeJS.Timeout | null = null;
   private monitoringInterval: NodeJS.Timeout | null = null;
+  private memoryCleanupInterval: NodeJS.Timeout | null = null;
 
   private constructor() {
     this.patternEngine = PatternDetectionCore.getInstance();
@@ -304,6 +305,26 @@ export class OptimizedAutoSnipingExecutionEngine {
         );
       });
     }, 10000);
+
+    // Memory cleanup cycle - every 5 minutes to prevent memory leaks
+    this.memoryCleanupInterval = setInterval(
+      () => {
+        try {
+          this.performMemoryCleanup();
+        } catch (error) {
+          console.error(
+            "Memory cleanup failed",
+            {
+              executionHistorySize: this.executionHistory.length,
+              alertsSize: this.alerts.length,
+              activePositionsSize: this.activePositions.size,
+            },
+            error
+          );
+        }
+      },
+      5 * 60 * 1000
+    ); // 5 minutes
   }
 
   private clearIntervals(): void {
@@ -314,6 +335,10 @@ export class OptimizedAutoSnipingExecutionEngine {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
+    }
+    if (this.memoryCleanupInterval) {
+      clearInterval(this.memoryCleanupInterval);
+      this.memoryCleanupInterval = null;
     }
   }
 
@@ -542,6 +567,12 @@ export class OptimizedAutoSnipingExecutionEngine {
   private finalizePositionClose(position: ExecutionPosition, reason: string): void {
     position.status = "CLOSED";
     this.executionHistory.push(position);
+
+    // Memory management: Keep only last 500 execution history records to prevent memory leaks
+    if (this.executionHistory.length > 500) {
+      this.executionHistory = this.executionHistory.slice(-500);
+    }
+
     this.activePositions.delete(position.id);
     this.updateStatsAfterClose(position);
 
@@ -628,8 +659,82 @@ export class OptimizedAutoSnipingExecutionEngine {
     };
 
     this.alerts.push(alert);
+
+    // Memory management: Keep only last 100 alerts to prevent memory leaks
     if (this.alerts.length > 100) {
       this.alerts = this.alerts.slice(-100);
+    }
+  }
+
+  /**
+   * Comprehensive memory cleanup to prevent memory leaks during long-running operations
+   * Called periodically during monitoring cycles
+   */
+  private performMemoryCleanup(): void {
+    const beforeMemory = {
+      executionHistory: this.executionHistory.length,
+      alerts: this.alerts.length,
+      activePositions: this.activePositions.size,
+    };
+
+    // Clean execution history - keep last 500 records (about 1-2 days of trading)
+    if (this.executionHistory.length > 500) {
+      this.executionHistory = this.executionHistory.slice(-500);
+    }
+
+    // Clean alerts - keep last 100 alerts (about 1-2 hours of activity)
+    if (this.alerts.length > 100) {
+      this.alerts = this.alerts.slice(-100);
+    }
+
+    // Clean old acknowledged alerts (older than 1 hour)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const initialAlertCount = this.alerts.length;
+    this.alerts = this.alerts.filter(
+      (alert) => !alert.acknowledged || alert.timestamp > oneHourAgo
+    );
+
+    // Clean stale active positions (positions without recent updates)
+    const stalePositionThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    let removedStalePositions = 0;
+
+    for (const [positionId, position] of this.activePositions.entries()) {
+      if (position.openTime < stalePositionThreshold && position.status === "OPEN") {
+        console.warn("Removing stale position", {
+          positionId,
+          symbol: position.symbol,
+          openTime: position.openTime,
+          operation: "memory_cleanup",
+        });
+
+        // Move to history before removing from active
+        position.status = "CLOSED";
+        this.executionHistory.push(position);
+        this.activePositions.delete(positionId);
+        removedStalePositions++;
+      }
+    }
+
+    const afterMemory = {
+      executionHistory: this.executionHistory.length,
+      alerts: this.alerts.length,
+      activePositions: this.activePositions.size,
+    };
+
+    // Log cleanup results if significant cleanup occurred
+    const cleanupOccurred =
+      beforeMemory.executionHistory > afterMemory.executionHistory ||
+      beforeMemory.alerts > afterMemory.alerts ||
+      removedStalePositions > 0;
+
+    if (cleanupOccurred) {
+      console.info("Memory cleanup completed", {
+        operation: "memory_cleanup",
+        before: beforeMemory,
+        after: afterMemory,
+        removedStalePositions,
+        cleanupEffective: true,
+      });
     }
   }
 

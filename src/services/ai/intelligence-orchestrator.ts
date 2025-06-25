@@ -1,6 +1,6 @@
 /**
  * AI Intelligence Orchestrator
- * 
+ *
  * Coordinates AI services for enhanced pattern analysis
  * Extracted from ai-intelligence-service.ts for modularity
  */
@@ -9,7 +9,7 @@ import { context, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { TRADING_TELEMETRY_CONFIG } from "../../lib/opentelemetry-setup";
 import type { PatternData } from "../pattern-embedding-service";
 import { embeddingsService } from "./embeddings-service";
-import { researchService, type PerplexityResearchResult } from "./research-service";
+import { type PerplexityResearchResult, researchService } from "./research-service";
 
 // ======================
 // Enhanced Pattern Types
@@ -111,13 +111,13 @@ export class IntelligenceOrchestrator {
             promises.push(
               researchService
                 .conductMarketResearch(pattern.symbol, researchFocus)
-                .then(research => {
+                .then((research) => {
                   enhancedPattern.researchInsights = research;
                   enhancedPattern.aiConfidenceBoost = research.confidenceBoost;
                   enhancedPattern.marketSentiment = research.sentiment;
                   return research;
                 })
-                .catch(error => {
+                .catch((error) => {
                   this.logger.warn("Research enhancement failed", {
                     symbol: pattern.symbol,
                     error: error instanceof Error ? error.message : String(error),
@@ -132,11 +132,11 @@ export class IntelligenceOrchestrator {
             promises.push(
               embeddingsService
                 .generatePatternEmbedding(pattern)
-                .then(embedding => {
+                .then((embedding) => {
                   enhancedPattern.embedding = embedding;
                   return embedding;
                 })
-                .catch(error => {
+                .catch((error) => {
                   this.logger.warn("Embedding enhancement failed", {
                     symbol: pattern.symbol,
                     error: error instanceof Error ? error.message : String(error),
@@ -185,7 +185,7 @@ export class IntelligenceOrchestrator {
             message: errorMessage,
           });
           span.recordException(error instanceof Error ? error : new Error(String(error)));
-          
+
           this.logger.error("Failed to enhance pattern with AI", {
             symbol: pattern.symbol,
             error: errorMessage,
@@ -229,10 +229,8 @@ export class IntelligenceOrchestrator {
     const results: EnhancedPatternData[] = [];
     for (let i = 0; i < patterns.length; i += maxConcurrency) {
       const batch = patterns.slice(i, i + maxConcurrency);
-      const batchPromises = batch.map(pattern =>
-        this.enhancePatternWithAI(pattern, options)
-      );
-      
+      const batchPromises = batch.map((pattern) => this.enhancePatternWithAI(pattern, options));
+
       const batchResults = await Promise.allSettled(batchPromises);
       results.push(
         ...batchResults.map((result, index) =>
@@ -250,7 +248,7 @@ export class IntelligenceOrchestrator {
 
     this.logger.info("Batch enhancement completed", {
       totalPatterns: patterns.length,
-      successfulEnhancements: results.filter(p => p.aiConfidenceBoost > 0).length,
+      successfulEnhancements: results.filter((p) => p.aiConfidenceBoost > 0).length,
     });
 
     return results;
@@ -277,11 +275,11 @@ export class IntelligenceOrchestrator {
 
     // Apply research quality bonus
     if (enhancedPattern.researchInsights) {
-      const researchQuality = 
+      const researchQuality =
         enhancedPattern.researchInsights.keyFindings.length * 2 +
         enhancedPattern.researchInsights.opportunities.length * 3 -
         enhancedPattern.researchInsights.risks.length * 2;
-      
+
       adjustedConfidence += Math.min(Math.max(researchQuality, -5), 10);
     }
 

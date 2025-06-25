@@ -1,21 +1,21 @@
 /**
  * AI Intelligence Service (Facade)
- * 
+ *
  * Lightweight facade providing backward compatibility
  * while using the new modular AI services architecture
  */
 
-import type { PatternData } from "./pattern-embedding-service";
-import { intelligenceOrchestrator, type EnhancedPatternData } from "./ai/intelligence-orchestrator";
 import { embeddingsService } from "./ai/embeddings-service";
-import { researchService, type PerplexityResearchResult } from "./ai/research-service";
+import { type EnhancedPatternData, intelligenceOrchestrator } from "./ai/intelligence-orchestrator";
+import { type PerplexityResearchResult, researchService } from "./ai/research-service";
+import type { PatternData } from "./pattern-embedding-service";
 
 // Re-export types for backward compatibility
 export type { EnhancedPatternData, PerplexityResearchResult };
 
 /**
  * AI Intelligence Service - Facade Pattern
- * 
+ *
  * Provides a unified interface to the modular AI services
  * while maintaining backward compatibility with existing code
  */
@@ -37,7 +37,11 @@ export class AIIntelligenceService {
    */
   async generateCohereEmbedding(
     texts: string[],
-    inputType: "search_document" | "search_query" | "classification" | "clustering" = "search_document"
+    inputType:
+      | "search_document"
+      | "search_query"
+      | "classification"
+      | "clustering" = "search_document"
   ): Promise<number[][]> {
     return embeddingsService.generateCohereEmbedding(texts, inputType);
   }

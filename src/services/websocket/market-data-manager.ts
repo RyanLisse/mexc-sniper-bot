@@ -1,6 +1,6 @@
 /**
  * Market Data Manager
- * 
+ *
  * Handles market data caching, processing, and pattern detection integration
  * Extracted from mexc-websocket-stream.ts for modularity
  */
@@ -55,7 +55,7 @@ interface SymbolStatusData {
 
 export class MarketDataManager {
   private static instance: MarketDataManager;
-  
+
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[market-data-manager]", message, context || ""),
@@ -319,7 +319,7 @@ export class MarketDataManager {
 
       // Get current price context
       const priceData = this.priceCache.get(status.symbol);
-      
+
       // Analyze pattern with context
       const analysisResult = await this.patternDetection.analyzePattern({
         symbol: status.symbol,
@@ -392,10 +392,7 @@ export class MarketDataManager {
    * Get all cached symbols
    */
   getAllSymbols(): string[] {
-    return Array.from(new Set([
-      ...this.priceCache.keys(),
-      ...this.statusCache.keys(),
-    ]));
+    return Array.from(new Set([...this.priceCache.keys(), ...this.statusCache.keys()]));
   }
 
   /**

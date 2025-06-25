@@ -7,7 +7,7 @@
  * Data Flow: PatternDetectionCore → PatternToDatabaseBridge → Database snipe_targets → AutoSnipingOrchestrator
  */
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import type { PatternDetectionEventData, PatternMatch } from "../core/pattern-detection/interfaces";
 import { EnhancedPatternDetectionCore } from "../core/pattern-detection/pattern-detection-core-enhanced";
@@ -15,7 +15,7 @@ import { db } from "../db";
 import { snipeTargets, userPreferences } from "../db/schema";
 import { toSafeError } from "../lib/error-type-utils";
 
-// Build-safe imports - avoid structured logger to prevent webpack bundling issues
+import { createLogger, type LogContext } from "../lib/unified-logger";
 
 // ============================================================================
 // Configuration Schema
@@ -70,37 +70,10 @@ type SnipeTargetRecord = z.infer<typeof SnipeTargetRecordSchema>;
 
 export class PatternToDatabaseBridge {
   private static instance: PatternToDatabaseBridge;
-  // Simple console logger to avoid webpack bundling issues
-  private logger = {
-    info: (message: string, context?: any, error?: any) => {
-      if (error) {
-        console.info("[pattern-to-database-bridge]", message, context || "", error);
-      } else {
-        console.info("[pattern-to-database-bridge]", message, context || "");
-      }
-    },
-    warn: (message: string, context?: any, error?: any) => {
-      if (error) {
-        console.warn("[pattern-to-database-bridge]", message, context || "", error);
-      } else {
-        console.warn("[pattern-to-database-bridge]", message, context || "");
-      }
-    },
-    error: (message: string, context?: any, error?: any) => {
-      if (error) {
-        console.error("[pattern-to-database-bridge]", message, context || "", error);
-      } else {
-        console.error("[pattern-to-database-bridge]", message, context || "");
-      }
-    },
-    debug: (message: string, context?: any, error?: any) => {
-      if (error) {
-        console.debug("[pattern-to-database-bridge]", message, context || "", error);
-      } else {
-        console.debug("[pattern-to-database-bridge]", message, context || "");
-      }
-    },
-  };
+  private logger = createLogger("pattern-to-database-bridge", {
+    enableStructuredLogging: process.env.NODE_ENV === "production",
+    enablePerformanceLogging: true,
+  });
   private isListening = false;
   private config: BridgeConfig;
   private patternDetectionCore: EnhancedPatternDetectionCore;
@@ -428,16 +401,18 @@ export class PatternToDatabaseBridge {
   }
 
   /**
-   * Insert snipe target records into database with deduplication
+   * Insert snipe target records into database with deduplication (OPTIMIZED - Fixed N+1 Query)
    */
   private async insertSnipeTargets(records: SnipeTargetRecord[]): Promise<number> {
     if (records.length === 0) return 0;
 
     try {
-      // Check for existing targets to avoid duplicates
+      // PERFORMANCE FIX: Batch check for existing targets to avoid N+1 queries
       const deduplicatedRecords: SnipeTargetRecord[] = [];
 
-      for (const record of records) {
+      if (records.length === 1) {
+        // Single record - use simple query
+        const record = records[0];
         const existing = await db
           .select()
           .from(snipeTargets)
@@ -453,10 +428,44 @@ export class PatternToDatabaseBridge {
         if (existing.length === 0) {
           deduplicatedRecords.push(record);
         }
+      } else {
+        // Multiple records - use batch query with IN clauses
+        const userIds = [...new Set(records.map((r) => r.userId))];
+        const symbols = [...new Set(records.map((r) => r.symbolName))];
+
+        // Single query to get all existing targets for all users and symbols
+        const existingTargets = await db
+          .select()
+          .from(snipeTargets)
+          .where(
+            and(
+              inArray(snipeTargets.userId, userIds),
+              inArray(snipeTargets.symbolName, symbols),
+              eq(snipeTargets.status, "pending")
+            )
+          );
+
+        // Create lookup set for O(1) duplicate checking
+        const existingCombinations = new Set(
+          existingTargets.map((target) => `${target.userId}:${target.symbolName}`)
+        );
+
+        // Filter out duplicates in O(n) time
+        for (const record of records) {
+          const combination = `${record.userId}:${record.symbolName}`;
+          if (!existingCombinations.has(combination)) {
+            deduplicatedRecords.push(record);
+          }
+        }
       }
 
       if (deduplicatedRecords.length === 0) {
-        this.logger.info("All records were duplicates, skipping insert");
+        this.logger.info("All records were duplicates, skipping insert", {
+          operation: "batch_deduplication",
+          originalCount: records.length,
+          deduplicatedCount: 0,
+          performance: "optimized_batch_query",
+        });
         return 0;
       }
 
@@ -491,19 +500,39 @@ export class PatternToDatabaseBridge {
   }
 
   /**
-   * Enforce per-user target limits
+   * Enforce per-user target limits (OPTIMIZED - Fixed N+1 Query)
    */
   private async enforceUserLimits(records: SnipeTargetRecord[]): Promise<SnipeTargetRecord[]> {
     const userCounts = new Map<string, number>();
+    const uniqueUserIds = [...new Set(records.map((r) => r.userId))];
 
-    // Count existing targets per user
-    for (const record of records) {
-      const existingCount = await db
+    // PERFORMANCE FIX: Batch count existing targets per user to avoid N+1 queries
+    if (uniqueUserIds.length === 1) {
+      // Single user - use simple query
+      const userId = uniqueUserIds[0];
+      const existingTargets = await db
         .select()
         .from(snipeTargets)
-        .where(and(eq(snipeTargets.userId, record.userId), eq(snipeTargets.status, "pending")));
+        .where(and(eq(snipeTargets.userId, userId), eq(snipeTargets.status, "pending")));
 
-      userCounts.set(record.userId, existingCount.length);
+      userCounts.set(userId, existingTargets.length);
+    } else {
+      // Multiple users - use batch query with IN clause
+      const existingTargets = await db
+        .select({
+          userId: snipeTargets.userId,
+          id: snipeTargets.id, // We'll count these in memory
+        })
+        .from(snipeTargets)
+        .where(
+          and(inArray(snipeTargets.userId, uniqueUserIds), eq(snipeTargets.status, "pending"))
+        );
+
+      // Count targets per user in memory (O(n) complexity)
+      for (const userId of uniqueUserIds) {
+        const userTargetCount = existingTargets.filter((target) => target.userId === userId).length;
+        userCounts.set(userId, userTargetCount);
+      }
     }
 
     // Filter records that would exceed limits

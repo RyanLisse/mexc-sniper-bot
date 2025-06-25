@@ -98,14 +98,48 @@ describe('Account Balance Flow Integration Tests', () => {
         }
       };
 
-      // Mock getUnifiedMexcService to return service with balance method
-      const mockMexcService = {
-        getAccountBalances: vi.fn().mockResolvedValue(mockBalanceResponse),
-        hasCredentials: vi.fn().mockReturnValue(true)
+      // Mock the MEXC Account API makeRequest method to return proper account response
+      const mockAccountResponse = {
+        success: true,
+        data: {
+          balances: [
+            { asset: 'BTC', free: '1.5', locked: '0.0' },
+            { asset: 'ETH', free: '10.0', locked: '2.0' },
+            { asset: 'USDT', free: '1000.0', locked: '0.0' }
+          ]
+        },
+        timestamp: new Date().toISOString()
       };
 
-      vi.doMock('../../src/services/unified-mexc-service-factory', () => ({
-        getUnifiedMexcService: vi.fn().mockResolvedValue(mockMexcService)
+      // Mock the core API client's makeRequest method
+      vi.doMock('../../src/services/api/mexc-client-core', () => ({
+        MexcClientCore: class MockMexcClientCore {
+          async makeRequest() {
+            return mockAccountResponse;
+          }
+        }
+      }));
+
+      // Mock exchange info to return valid trading pairs
+      vi.doMock('../../src/services/api/mexc-market-data', () => ({
+        MexcMarketDataClient: class MockMexcMarketDataClient {
+          async getExchangeInfo() {
+            return {
+              success: true,
+              data: [
+                { symbol: 'BTCUSDT' },
+                { symbol: 'ETHUSDT' }
+              ]
+            };
+          }
+          async get24hrTicker(symbol: string) {
+            const prices = { 'BTCUSDT': '45000', 'ETHUSDT': '2400' };
+            return {
+              success: true,
+              data: [{ lastPrice: prices[symbol as keyof typeof prices] || '1' }]
+            };
+          }
+        }
       }));
 
       // Act: Call balance endpoint
@@ -139,13 +173,40 @@ describe('Account Balance Flow Integration Tests', () => {
         }
       };
 
-      const mockMexcService = {
-        getAccountBalances: vi.fn().mockResolvedValue(mockBalanceResponse),
-        hasCredentials: vi.fn().mockReturnValue(true)
+      // Mock the MEXC Account API makeRequest method for environment credentials
+      const mockAccountResponse = {
+        success: true,
+        data: {
+          balances: [
+            { asset: 'BTC', free: '0.1', locked: '0.0' }
+          ]
+        },
+        timestamp: new Date().toISOString()
       };
 
-      vi.doMock('../../src/services/unified-mexc-service-factory', () => ({
-        getUnifiedMexcService: vi.fn().mockResolvedValue(mockMexcService)
+      vi.doMock('../../src/services/api/mexc-client-core', () => ({
+        MexcClientCore: class MockMexcClientCore {
+          async makeRequest() {
+            return mockAccountResponse;
+          }
+        }
+      }));
+
+      vi.doMock('../../src/services/api/mexc-market-data', () => ({
+        MexcMarketDataClient: class MockMexcMarketDataClient {
+          async getExchangeInfo() {
+            return {
+              success: true,
+              data: [{ symbol: 'BTCUSDT' }]
+            };
+          }
+          async get24hrTicker() {
+            return {
+              success: true,
+              data: [{ lastPrice: '45000' }]
+            };
+          }
+        }
       }));
 
       // Act: Call balance endpoint without user credentials

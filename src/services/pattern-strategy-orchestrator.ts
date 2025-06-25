@@ -11,12 +11,12 @@
  * - Strategy Agent creates trading plans
  */
 
+import { and, desc, eq, gte } from "drizzle-orm";
 import {
   type PatternAnalysisResult,
   PatternDetectionCore,
   type PatternMatch,
 } from "../core/pattern-detection";
-import { and, desc, eq, gte } from "drizzle-orm";
 import { db } from "../db";
 import { monitoredListings } from "../db/schemas/patterns";
 import type { AgentResponse } from "../mexc-agents/base-agent";
@@ -331,7 +331,9 @@ export class PatternStrategyOrchestrator {
       try {
         const monitoredSymbols = await this.getMonitoredSymbolsFromDatabase();
         symbolData = monitoredSymbols;
-        console.info(`[PatternOrchestrator] Found ${symbolData.length} monitored symbols in database`);
+        console.info(
+          `[PatternOrchestrator] Found ${symbolData.length} monitored symbols in database`
+        );
       } catch (error) {
         console.error("[PatternOrchestrator] Failed to fetch monitored symbols:", error);
         // Continue with empty array - will skip analysis but won't crash
@@ -878,7 +880,7 @@ export class PatternStrategyOrchestrator {
         .limit(50); // Limit to prevent excessive API calls
 
       // Transform database records to SymbolEntry format for pattern analysis
-      const symbolEntries: SymbolEntry[] = monitoredSymbols.map(symbol => ({
+      const symbolEntries: SymbolEntry[] = monitoredSymbols.map((symbol) => ({
         cd: symbol.symbolName,
         symbol: symbol.symbolName,
         sts: symbol.patternSts || 0,
@@ -893,7 +895,10 @@ export class PatternStrategyOrchestrator {
 
       return symbolEntries;
     } catch (error) {
-      console.error("[PatternOrchestrator] Failed to fetch monitored symbols from database:", error);
+      console.error(
+        "[PatternOrchestrator] Failed to fetch monitored symbols from database:",
+        error
+      );
       return [];
     }
   }

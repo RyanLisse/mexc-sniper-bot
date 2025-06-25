@@ -25,6 +25,17 @@ import {
   createSuccessResponse,
   HTTP_STATUS,
 } from "./api-response";
+
+// ============================================================================
+// Unified Logger Implementation - Type Safe and Structured
+// ============================================================================
+
+import { createLogger, type LogContext } from "./unified-logger";
+
+const logger = createLogger("api-route-handler", {
+  enableStructuredLogging: process.env.NODE_ENV === "production",
+  enablePerformanceLogging: true,
+});
 // ============================================================================
 // Types and Interfaces
 // ============================================================================
@@ -101,16 +112,15 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
       request,
       startTime,
       requestId,
-      logger,
     };
 
     try {
-      // Log request start
-      console.info(`[${routeName.toUpperCase()}] API request received`, {
+      // Log request start with type-safe context
+      logger.api(request.method, new URL(request.url).pathname, undefined, {
         requestId,
-        method: request.method,
-        url: request.url,
+        operation: "request_start",
         userAgent: request.headers.get("user-agent"),
+        routeName,
       });
 
       // Validate HTTP method
@@ -134,10 +144,12 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 
         const queryValidation = validateMexcApiRequest(options.querySchema, queryParams);
         if (!queryValidation.success) {
-          console.warn(`[${routeName.toUpperCase()}] Query validation failed`, {
+          logger.warn("Query validation failed", {
             requestId,
-            error: queryValidation.error,
-            details: queryValidation.details,
+            operation: "query_validation",
+            routeName,
+            validationError: queryValidation.error,
+            validationDetails: queryValidation.details,
           });
 
           return apiResponse(
@@ -233,10 +245,12 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 
       const requestDuration = Date.now() - startTime;
 
-      console.info(`[${routeName.toUpperCase()}] Request completed successfully`, {
+      logger.performance("api_request_complete", startTime, {
         requestId,
-        requestDuration: `${requestDuration}ms`,
+        routeName,
+        operation: "request_complete",
         responseSize: JSON.stringify(result).length,
+        success: true,
       });
 
       // Return successful response
