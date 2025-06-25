@@ -35,9 +35,7 @@ vi.mock("../../../db", () => ({
       }),
     }),
     insert: vi.fn().mockReturnValue({
-      into: vi.fn().mockReturnValue({
-        values: vi.fn().mockResolvedValue({ insertId: 1 }),
-      }),
+      values: vi.fn().mockResolvedValue({ insertId: 1 }),
     }),
   },
 }));

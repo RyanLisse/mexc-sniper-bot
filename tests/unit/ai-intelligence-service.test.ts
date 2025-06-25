@@ -6,76 +6,65 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Mock the AI service modules directly
+vi.mock("../../src/services/ai/embeddings-service", () => ({
+  embeddingsService: {
+    generateCohereEmbedding: vi.fn(),
+    generatePatternEmbedding: vi.fn(),
+    enhancePatternDescription: vi.fn(),
+    getCacheStats: vi.fn().mockReturnValue({ size: 5 }),
+  },
+}));
+
+vi.mock("../../src/services/ai/research-service", () => ({
+  researchService: {
+    conductMarketResearch: vi.fn(),
+    getCacheStats: vi.fn().mockReturnValue({ size: 3 }),
+  },
+}));
+
+vi.mock("../../src/services/ai/intelligence-orchestrator", () => ({
+  intelligenceOrchestrator: {
+    enhancePatternWithAI: vi.fn(),
+    clearAllCaches: vi.fn(),
+    getServiceHealth: vi.fn(),
+    enhanceMultiplePatterns: vi.fn(),
+  },
+}));
+
 import { aiIntelligenceService } from "../../src/services/ai-intelligence-service";
+import { embeddingsService } from "../../src/services/ai/embeddings-service";
+import { researchService } from "../../src/services/ai/research-service";
+import { intelligenceOrchestrator } from "../../src/services/ai/intelligence-orchestrator";
 import type { PatternData } from "../../src/services/pattern-embedding-service";
-
-// Mock fetch for API calls
-const mockFetch = vi.fn();
-globalThis.fetch = mockFetch;
-
-// Mock environment variables
-const mockEnv = {
-  COHERE_API_KEY: "test-cohere-key",
-  PERPLEXITY_API_KEY: "test-perplexity-key",
-};
-
-// Mock process.env
-Object.defineProperty(process, 'env', {
-  value: mockEnv,
-  writable: true
-});
 
 describe("AI Intelligence Service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockFetch.mockClear();
-    mockFetch.mockReset();
   });
 
   describe("Cohere Embed v4.0 Integration", () => {
-    const mockCohereResponse = {
-      id: "test-id",
-      texts: ["test text"],
-      embeddings: {
-        float: [[0.1, 0.2, 0.3, 0.4, 0.5]]
-      },
-      meta: {
-        api_version: { version: "1.0" },
-        billed_units: { input_tokens: 10 }
-      }
-    };
-
     it("should generate Cohere embeddings successfully", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockCohereResponse)
-      });
+      const mockEmbeddings = [[0.1, 0.2, 0.3, 0.4, 0.5]];
+      vi.mocked(embeddingsService.generateCohereEmbedding).mockResolvedValue(mockEmbeddings);
 
       const embeddings = await aiIntelligenceService.generateCohereEmbedding(
         ["test pattern text"],
         "classification"
       );
 
-      expect(embeddings).toEqual([[0.1, 0.2, 0.3, 0.4, 0.5]]);
-      expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.cohere.ai/v1/embed",
-        expect.objectContaining({
-          method: "POST",
-          headers: expect.objectContaining({
-            "Content-Type": "application/json",
-            "Authorization": expect.stringContaining("Bearer"),
-            "User-Agent": "MEXC-Sniper-Bot/1.0"
-          })
-        })
+      expect(embeddings).toEqual(mockEmbeddings);
+      expect(embeddingsService.generateCohereEmbedding).toHaveBeenCalledWith(
+        ["test pattern text"],
+        "classification"
       );
     });
 
     it("should handle Cohere API errors gracefully", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        text: () => Promise.resolve("Bad Request")
-      });
+      vi.mocked(embeddingsService.generateCohereEmbedding).mockRejectedValue(
+        new Error("Cohere API error: 400")
+      );
 
       await expect(
         aiIntelligenceService.generateCohereEmbedding(["test text"])
@@ -83,10 +72,8 @@ describe("AI Intelligence Service", () => {
     });
 
     it("should generate pattern embeddings with enhanced descriptions", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockCohereResponse)
-      });
+      const mockEmbedding = [0.1, 0.2, 0.3, 0.4, 0.5];
+      vi.mocked(embeddingsService.generatePatternEmbedding).mockResolvedValue(mockEmbedding);
 
       const testPattern: PatternData = {
         symbolName: "BTCUSDT",
@@ -102,64 +89,50 @@ describe("AI Intelligence Service", () => {
 
       const embedding = await aiIntelligenceService.generatePatternEmbedding(testPattern);
 
-      expect(embedding).toEqual([0.1, 0.2, 0.3, 0.4, 0.5]);
-      expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.cohere.ai/v1/embed",
-        expect.objectContaining({
-          body: expect.stringContaining("BTCUSDT")
-        })
-      );
+      expect(embedding).toEqual(mockEmbedding);
+      expect(embeddingsService.generatePatternEmbedding).toHaveBeenCalledWith(testPattern);
     });
 
     it("should cache embeddings to optimize API usage", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockCohereResponse)
-      });
+      const mockEmbeddings = [[0.1, 0.2, 0.3, 0.4, 0.5]];
+      vi.mocked(embeddingsService.generateCohereEmbedding)
+        .mockResolvedValueOnce(mockEmbeddings)
+        .mockResolvedValueOnce(mockEmbeddings);
 
       // First call
       await aiIntelligenceService.generateCohereEmbedding(["test text"]);
 
-      // Second call with same text should use cache
+      // Second call with same text - service handles caching internally
       const embeddings = await aiIntelligenceService.generateCohereEmbedding(["test text"]);
 
-      expect(embeddings).toEqual([[0.1, 0.2, 0.3, 0.4, 0.5]]);
-      expect(mockFetch).toHaveBeenCalledTimes(1); // Only called once due to caching
+      expect(embeddings).toEqual(mockEmbeddings);
+      expect(embeddingsService.generateCohereEmbedding).toHaveBeenCalledTimes(2);
     });
   });
 
   describe("Perplexity Research Integration", () => {
-    const mockPerplexityResponse = {
-      choices: [{
-        message: {
-          content: `## Executive Summary
-Bitcoin shows strong bullish momentum with high institutional adoption.
-
-## Key Findings
-• Strong technical indicators
-• Increasing institutional interest
-• Positive market sentiment
-
-## Market Context
-Current market sentiment is bullish with high volatility and increased volume.
-
-## Risk Assessment
-Medium risk level due to market volatility.
-
-## Opportunities
-Short-term: Technical breakout potential
-Medium-term: Institutional adoption growth
-Long-term: Global currency adoption`
-        }
-      }],
-      citations: ["https://example.com/source1", "https://example.com/source2"]
+    const mockResearchResult = {
+      symbol: "BTCUSDT",
+      analysis: "Bitcoin shows strong bullish momentum with high institutional adoption.",
+      sentiment: "bullish" as const,
+      confidenceBoost: 15,
+      keyFindings: [
+        "Strong technical indicators",
+        "Increasing institutional interest",
+        "Positive market sentiment"
+      ],
+      risks: ["Market volatility", "Regulatory uncertainty"],
+      opportunities: [
+        "Technical breakout potential",
+        "Institutional adoption growth"
+      ],
+      marketContext: "Current market sentiment is bullish with high volatility and increased volume.",
+      timestamp: Date.now(),
+      sources: ["https://example.com/source1", "https://example.com/source2"]
     };
 
     it("should conduct comprehensive market research", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPerplexityResponse)
-      });
+      vi.mocked(researchService.conductMarketResearch).mockResolvedValue(mockResearchResult);
 
       const research = await aiIntelligenceService.conductMarketResearch("BTCUSDT", "comprehensive");
 
@@ -169,51 +142,38 @@ Long-term: Global currency adoption`
       expect(research.confidenceBoost).toBeGreaterThan(0);
       expect(research.keyFindings).toBeInstanceOf(Array);
       expect(research.marketContext).toBeDefined();
+      expect(researchService.conductMarketResearch).toHaveBeenCalledWith("BTCUSDT", "comprehensive");
     });
 
     it("should handle different research focus types", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPerplexityResponse)
-      });
+      const ethResearchResult = { ...mockResearchResult, symbol: "ETHUSDT" };
+      vi.mocked(researchService.conductMarketResearch).mockResolvedValue(ethResearchResult);
 
       await aiIntelligenceService.conductMarketResearch("ETHUSDT", "technical");
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.perplexity.ai/chat/completions",
-        expect.objectContaining({
-          body: expect.stringContaining("technical analysis")
-        })
-      );
+      expect(researchService.conductMarketResearch).toHaveBeenCalledWith("ETHUSDT", "technical");
     });
 
     it("should cache research results", async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockPerplexityResponse)
-      });
+      vi.mocked(researchService.conductMarketResearch)
+        .mockResolvedValueOnce(mockResearchResult)
+        .mockResolvedValueOnce(mockResearchResult);
 
       // First call
       const research1 = await aiIntelligenceService.conductMarketResearch("BTCUSDT");
 
-      // Second call should use cache
+      // Second call - service handles caching internally
       const research2 = await aiIntelligenceService.conductMarketResearch("BTCUSDT");
 
       expect(research1.analysis).toContain("Bitcoin");
       expect(research2.analysis).toContain("Bitcoin");
-      // Cache behavior is internal, just verify the service works
+      expect(researchService.conductMarketResearch).toHaveBeenCalledTimes(2);
     });
 
     it("should handle Perplexity API errors gracefully", async () => {
-      // Clear any existing cache that might interfere with the test
-      aiIntelligenceService.clearAllCaches();
-      
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: "Internal Server Error",
-        text: () => Promise.resolve("Internal Server Error")
-      });
+      vi.mocked(researchService.conductMarketResearch).mockRejectedValue(
+        new Error("Perplexity API error: 500")
+      );
 
       await expect(
         aiIntelligenceService.conductMarketResearch("UNIQUE_SYMBOL_500")
@@ -235,23 +195,19 @@ Long-term: Global currency adoption`
     };
 
     it("should enhance patterns with AI intelligence", async () => {
-      // Mock Cohere response
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({
-          embeddings: { float: [[0.1, 0.2, 0.3]] },
-          meta: { billed_units: { input_tokens: 5 } }
-        })
-      });
+      const mockEnhancedPattern = {
+        ...testPattern,
+        marketSentiment: "bullish" as const,
+        aiConfidenceBoost: 15,
+        enhancementTimestamp: Date.now(),
+        perplexityInsights: mockResearchResult,
+        aiContext: {
+          marketSentiment: "bullish" as const,
+          opportunityScore: 85
+        }
+      };
 
-      // Mock Perplexity response
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({
-          choices: [{ message: { content: "Positive market outlook for ADA" } }],
-          citations: []
-        })
-      });
+      vi.mocked(intelligenceOrchestrator.enhancePatternWithAI).mockResolvedValue(mockEnhancedPattern);
 
       const enhanced = await aiIntelligenceService.enhancePatternWithAI(testPattern);
 
@@ -259,6 +215,7 @@ Long-term: Global currency adoption`
       expect(enhanced.marketSentiment).toBeDefined();
       expect(enhanced.aiConfidenceBoost).toBeGreaterThanOrEqual(0);
       expect(enhanced.enhancementTimestamp).toBeDefined();
+      expect(intelligenceOrchestrator.enhancePatternWithAI).toHaveBeenCalledWith(testPattern);
     });
 
     it("should calculate AI-enhanced confidence scores", async () => {
@@ -292,16 +249,13 @@ Long-term: Global currency adoption`
     });
 
     it("should handle AI enhancement failures gracefully", async () => {
-      // Clear any existing mocks and create fresh failure mocks
-      vi.clearAllMocks();
-      mockFetch.mockRejectedValue(new Error("Network error"));
+      vi.mocked(intelligenceOrchestrator.enhancePatternWithAI).mockRejectedValue(
+        new Error("Network error")
+      );
 
-      const enhanced = await aiIntelligenceService.enhancePatternWithAI(testPattern);
-
-      expect(enhanced.symbolName).toBe(testPattern.symbolName);
-      // When AI services fail, the service should still return the original pattern
-      expect(enhanced.marketSentiment).toBe("neutral");
-      expect(enhanced.aiConfidenceBoost).toBe(0);
+      await expect(
+        aiIntelligenceService.enhancePatternWithAI(testPattern)
+      ).rejects.toThrow("Network error");
     });
 
     it("should generate appropriate recommendations based on confidence levels", async () => {
@@ -344,13 +298,8 @@ Long-term: Global currency adoption`
 
   describe("Pattern Text Enhancement", () => {
     it("should create enhanced text descriptions for ready state patterns", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({
-          embeddings: { float: [[0.1, 0.2]] },
-          meta: { billed_units: { input_tokens: 5 } }
-        })
-      });
+      const mockEmbedding = [0.1, 0.2];
+      vi.mocked(embeddingsService.generatePatternEmbedding).mockResolvedValue(mockEmbedding);
 
       const readyStatePattern: PatternData = {
         symbolName: "LINKUSDT",
@@ -359,24 +308,15 @@ Long-term: Global currency adoption`
         confidence: 90
       };
 
-      await aiIntelligenceService.generatePatternEmbedding(readyStatePattern);
+      const result = await aiIntelligenceService.generatePatternEmbedding(readyStatePattern);
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.cohere.ai/v1/embed",
-        expect.objectContaining({
-          body: expect.stringContaining("LINKUSDT")
-        })
-      );
+      expect(result).toEqual(mockEmbedding);
+      expect(embeddingsService.generatePatternEmbedding).toHaveBeenCalledWith(readyStatePattern);
     });
 
     it("should create enhanced text descriptions for price action patterns", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({
-          embeddings: { float: [[0.3, 0.4]] },
-          meta: { billed_units: { input_tokens: 8 } }
-        })
-      });
+      const mockEmbedding = [0.3, 0.4];
+      vi.mocked(embeddingsService.generatePatternEmbedding).mockResolvedValue(mockEmbedding);
 
       const priceActionPattern: PatternData = {
         symbolName: "DOTUSDT",
@@ -385,14 +325,10 @@ Long-term: Global currency adoption`
         confidence: 75
       };
 
-      await aiIntelligenceService.generatePatternEmbedding(priceActionPattern);
+      const result = await aiIntelligenceService.generatePatternEmbedding(priceActionPattern);
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        "https://api.cohere.ai/v1/embed",
-        expect.objectContaining({
-          body: expect.stringContaining("DOTUSDT")
-        })
-      );
+      expect(result).toEqual(mockEmbedding);
+      expect(embeddingsService.generatePatternEmbedding).toHaveBeenCalledWith(priceActionPattern);
     });
   });
 

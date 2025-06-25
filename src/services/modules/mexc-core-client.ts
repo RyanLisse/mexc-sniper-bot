@@ -100,14 +100,13 @@ export class MexcCoreClient {
     const startTime = Date.now();
 
     try {
-      const timestamp = Date.now();
-      const url = `${this.config.baseUrl}/api/v3/exchangeInfo?timestamp=${timestamp}`;
-      const response = await this.makeAuthenticatedRequest(url, {
+      const url = `${this.config.baseUrl}/api/v3/exchangeInfo`;
+      const response = await this.makeRequest(url, {
         method: "GET",
       });
 
-      if (response.data?.symbols && Array.isArray(response.data.symbols)) {
-        const matchingSymbols = response.data.symbols
+      if (response.symbols && Array.isArray(response.symbols)) {
+        const matchingSymbols = response.symbols
           .filter(
             (symbol: any) =>
               symbol.symbol?.includes(vcoinId.toUpperCase()) ||
@@ -155,14 +154,13 @@ export class MexcCoreClient {
     const startTime = Date.now();
 
     try {
-      const timestamp = Date.now();
-      const url = `${this.config.baseUrl}/api/v3/exchangeInfo?timestamp=${timestamp}`;
-      const response = await this.makeAuthenticatedRequest(url, {
+      const url = `${this.config.baseUrl}/api/v3/exchangeInfo`;
+      const response = await this.makeRequest(url, {
         method: "GET",
       });
 
-      if (response.data?.symbols && Array.isArray(response.data.symbols)) {
-        const allSymbols = response.data.symbols.map((symbol: any) => ({
+      if (response.symbols && Array.isArray(response.symbols)) {
+        const allSymbols = response.symbols.map((symbol: any) => ({
           symbol: symbol.symbol,
           baseAsset: symbol.baseAsset,
           quoteAsset: symbol.quoteAsset,

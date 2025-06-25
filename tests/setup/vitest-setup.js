@@ -295,6 +295,12 @@ beforeAll(async () => {
     userPreferences: [],
     patternEmbeddings: [],
     coinActivities: [],
+    executionHistory: [],
+    transactionLocks: [],
+    workflowActivity: [],
+    monitoredListings: [],
+    tradingStrategies: [],
+    transactions: [],
     reset() {
       this.snipeTargets = [];
       this.user = [];
@@ -302,6 +308,12 @@ beforeAll(async () => {
       this.userPreferences = [];
       this.patternEmbeddings = [];
       this.coinActivities = [];
+      this.executionHistory = [];
+      this.transactionLocks = [];
+      this.workflowActivity = [];
+      this.monitoredListings = [];
+      this.tradingStrategies = [];
+      this.transactions = [];
     }
   };
 
@@ -319,6 +331,12 @@ beforeAll(async () => {
             const insertedData = Array.isArray(data) ? data : [data];
             const results = insertedData.map((item, index) => ({
               id: `mock-snipe-${Date.now()}-${index}`,
+              userId: 'test-user-id',
+              symbolName: 'TESTUSDT',
+              status: 'pending',
+              priority: 1,
+              createdAt: new Date(),
+              updatedAt: new Date(),
               ...item
             }));
             mockDataStore.snipeTargets.push(...results);
@@ -327,6 +345,9 @@ beforeAll(async () => {
             const insertedData = Array.isArray(data) ? data : [data];
             const results = insertedData.map((item, index) => ({
               id: `mock-user-${Date.now()}-${index}`,
+              email: 'test@example.com',
+              createdAt: new Date(),
+              updatedAt: new Date(),
               ...item
             }));
             mockDataStore.user.push(...results);
@@ -335,6 +356,9 @@ beforeAll(async () => {
             const insertedData = Array.isArray(data) ? data : [data];
             const results = insertedData.map((item, index) => ({
               id: `mock-activity-${Date.now()}-${index}`,
+              vcoinId: 'test-coin',
+              currency: 'TEST',
+              createdAt: new Date(),
               ...item
             }));
             mockDataStore.coinActivities.push(...results);
@@ -343,13 +367,99 @@ beforeAll(async () => {
             const insertedData = Array.isArray(data) ? data : [data];
             const results = insertedData.map((item, index) => ({
               id: `mock-pref-${Date.now()}-${index}`,
+              userId: 'test-user-id',
+              updatedAt: new Date(),
+              createdAt: new Date(),
               ...item
             }));
             mockDataStore.userPreferences.push(...results);
             return results;
+          } else if (tableName === 'pattern_embeddings') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-pattern-${Date.now()}-${index}`,
+              symbolName: 'TESTUSDT',
+              patternType: 'ready_state',
+              confidence: 85.0,
+              isActive: true,
+              createdAt: new Date(),
+              ...item
+            }));
+            mockDataStore.patternEmbeddings.push(...results);
+            return results;
+          } else if (tableName === 'execution_history') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-execution-${Date.now()}-${index}`,
+              userId: 'test-user-id',
+              symbolName: 'TESTUSDT',
+              executedAt: new Date(),
+              createdAt: new Date(),
+              ...item
+            }));
+            mockDataStore.executionHistory.push(...results);
+            return results;
+          } else if (tableName === 'transaction_locks') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-lock-${Date.now()}-${index}`,
+              resourceId: 'test-resource',
+              status: 'active',
+              expiresAt: new Date(Date.now() + 60000),
+              createdAt: new Date(),
+              ...item
+            }));
+            mockDataStore.transactionLocks.push(...results);
+            return results;
+          } else if (tableName === 'workflow_activity') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-workflow-${Date.now()}-${index}`,
+              userId: 'test-user-id',
+              timestamp: new Date(),
+              type: 'test',
+              ...item
+            }));
+            mockDataStore.workflowActivity.push(...results);
+            return results;
+          } else if (tableName === 'monitored_listings') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-listing-${Date.now()}-${index}`,
+              hasReadyPattern: false,
+              status: 'monitoring',
+              confidence: 0.0,
+              createdAt: new Date(),
+              ...item
+            }));
+            mockDataStore.monitoredListings.push(...results);
+            return results;
+          } else if (tableName === 'trading_strategies') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-strategy-${Date.now()}-${index}`,
+              userId: 'test-user-id',
+              status: 'active',
+              updatedAt: new Date(),
+              createdAt: new Date(),
+              ...item
+            }));
+            mockDataStore.tradingStrategies.push(...results);
+            return results;
+          } else if (tableName === 'transactions') {
+            const insertedData = Array.isArray(data) ? data : [data];
+            const results = insertedData.map((item, index) => ({
+              id: `mock-transaction-${Date.now()}-${index}`,
+              userId: 'test-user-id',
+              status: 'completed',
+              createdAt: new Date(),
+              ...item
+            }));
+            mockDataStore.transactions.push(...results);
+            return results;
           }
           
-          // Default fallback
+          // Default fallback for any other table
           return Array.isArray(data) ? data.map((item, index) => ({ id: `mock-id-${index}`, ...item })) : [{ id: 'mock-id', ...data }];
         })
       }))
@@ -369,6 +479,20 @@ beforeAll(async () => {
               return Promise.resolve(mockDataStore.coinActivities);
             } else if (tableName === 'user_preferences') {
               return Promise.resolve(mockDataStore.userPreferences);
+            } else if (tableName === 'pattern_embeddings') {
+              return Promise.resolve(mockDataStore.patternEmbeddings);
+            } else if (tableName === 'execution_history') {
+              return Promise.resolve(mockDataStore.executionHistory);
+            } else if (tableName === 'transaction_locks') {
+              return Promise.resolve(mockDataStore.transactionLocks);
+            } else if (tableName === 'workflow_activity') {
+              return Promise.resolve(mockDataStore.workflowActivity);
+            } else if (tableName === 'monitored_listings') {
+              return Promise.resolve(mockDataStore.monitoredListings);
+            } else if (tableName === 'trading_strategies') {
+              return Promise.resolve(mockDataStore.tradingStrategies);
+            } else if (tableName === 'transactions') {
+              return Promise.resolve(mockDataStore.transactions);
             }
             
             return Promise.resolve([]);
@@ -385,6 +509,20 @@ beforeAll(async () => {
               return Promise.resolve(mockDataStore.coinActivities);
             } else if (tableName === 'user_preferences') {
               return Promise.resolve(mockDataStore.userPreferences);
+            } else if (tableName === 'pattern_embeddings') {
+              return Promise.resolve(mockDataStore.patternEmbeddings);
+            } else if (tableName === 'execution_history') {
+              return Promise.resolve(mockDataStore.executionHistory);
+            } else if (tableName === 'transaction_locks') {
+              return Promise.resolve(mockDataStore.transactionLocks);
+            } else if (tableName === 'workflow_activity') {
+              return Promise.resolve(mockDataStore.workflowActivity);
+            } else if (tableName === 'monitored_listings') {
+              return Promise.resolve(mockDataStore.monitoredListings);
+            } else if (tableName === 'trading_strategies') {
+              return Promise.resolve(mockDataStore.tradingStrategies);
+            } else if (tableName === 'transactions') {
+              return Promise.resolve(mockDataStore.transactions);
             }
             
             return Promise.resolve([]);
@@ -396,12 +534,26 @@ beforeAll(async () => {
           
           if (tableName === 'snipe_targets') {
             return Promise.resolve(mockDataStore.snipeTargets);
-          } else if (tableName === 'users') {
-            return Promise.resolve(mockDataStore.users);
+          } else if (tableName === 'user') {
+            return Promise.resolve(mockDataStore.user);
           } else if (tableName === 'coin_activities') {
             return Promise.resolve(mockDataStore.coinActivities);
           } else if (tableName === 'user_preferences') {
             return Promise.resolve(mockDataStore.userPreferences);
+          } else if (tableName === 'pattern_embeddings') {
+            return Promise.resolve(mockDataStore.patternEmbeddings);
+          } else if (tableName === 'execution_history') {
+            return Promise.resolve(mockDataStore.executionHistory);
+          } else if (tableName === 'transaction_locks') {
+            return Promise.resolve(mockDataStore.transactionLocks);
+          } else if (tableName === 'workflow_activity') {
+            return Promise.resolve(mockDataStore.workflowActivity);
+          } else if (tableName === 'monitored_listings') {
+            return Promise.resolve(mockDataStore.monitoredListings);
+          } else if (tableName === 'trading_strategies') {
+            return Promise.resolve(mockDataStore.tradingStrategies);
+          } else if (tableName === 'transactions') {
+            return Promise.resolve(mockDataStore.transactions);
           }
           
           return Promise.resolve([]);
@@ -412,12 +564,26 @@ beforeAll(async () => {
           
           if (tableName === 'snipe_targets') {
             return Promise.resolve(mockDataStore.snipeTargets);
-          } else if (tableName === 'users') {
-            return Promise.resolve(mockDataStore.users);
+          } else if (tableName === 'user') {
+            return Promise.resolve(mockDataStore.user);
           } else if (tableName === 'coin_activities') {
             return Promise.resolve(mockDataStore.coinActivities);
           } else if (tableName === 'user_preferences') {
             return Promise.resolve(mockDataStore.userPreferences);
+          } else if (tableName === 'pattern_embeddings') {
+            return Promise.resolve(mockDataStore.patternEmbeddings);
+          } else if (tableName === 'execution_history') {
+            return Promise.resolve(mockDataStore.executionHistory);
+          } else if (tableName === 'transaction_locks') {
+            return Promise.resolve(mockDataStore.transactionLocks);
+          } else if (tableName === 'workflow_activity') {
+            return Promise.resolve(mockDataStore.workflowActivity);
+          } else if (tableName === 'monitored_listings') {
+            return Promise.resolve(mockDataStore.monitoredListings);
+          } else if (tableName === 'trading_strategies') {
+            return Promise.resolve(mockDataStore.tradingStrategies);
+          } else if (tableName === 'transactions') {
+            return Promise.resolve(mockDataStore.transactions);
           }
           
           return Promise.resolve([]);
@@ -453,24 +619,87 @@ beforeAll(async () => {
       name: 'snipe_targets',
       userId: { name: 'user_id' },
       symbolName: { name: 'symbol_name' },
-      vcoinId: { name: 'vcoin_id' }
+      vcoinId: { name: 'vcoin_id' },
+      status: { name: 'status' },
+      priority: { name: 'priority' },
+      createdAt: { name: 'created_at' }
     },
     user: { 
       _: { name: 'user' },
       name: 'user',
       id: { name: 'id' },
-      email: { name: 'email' }
+      email: { name: 'email' },
+      createdAt: { name: 'created_at' },
+      updatedAt: { name: 'updated_at' }
     },
     userPreferences: { 
       _: { name: 'user_preferences' },
       name: 'user_preferences',
-      userId: { name: 'user_id' }
+      userId: { name: 'user_id' },
+      updatedAt: { name: 'updated_at' },
+      createdAt: { name: 'created_at' }
     },
     coinActivities: { 
       _: { name: 'coin_activities' },
       name: 'coin_activities',
       vcoinId: { name: 'vcoin_id' },
-      currency: { name: 'currency' }
+      currency: { name: 'currency' },
+      createdAt: { name: 'created_at' }
+    },
+    patternEmbeddings: {
+      _: { name: 'pattern_embeddings' },
+      name: 'pattern_embeddings',
+      symbolName: { name: 'symbol_name' },
+      patternType: { name: 'pattern_type' },
+      confidence: { name: 'confidence' },
+      isActive: { name: 'is_active' },
+      createdAt: { name: 'created_at' }
+    },
+    executionHistory: {
+      _: { name: 'execution_history' },
+      name: 'execution_history',
+      userId: { name: 'user_id' },
+      symbolName: { name: 'symbol_name' },
+      executedAt: { name: 'executed_at' },
+      createdAt: { name: 'created_at' }
+    },
+    transactionLocks: {
+      _: { name: 'transaction_locks' },
+      name: 'transaction_locks',
+      resourceId: { name: 'resource_id' },
+      status: { name: 'status' },
+      expiresAt: { name: 'expires_at' },
+      createdAt: { name: 'created_at' }
+    },
+    workflowActivity: {
+      _: { name: 'workflow_activity' },
+      name: 'workflow_activity',
+      userId: { name: 'user_id' },
+      timestamp: { name: 'timestamp' },
+      type: { name: 'type' }
+    },
+    monitoredListings: {
+      _: { name: 'monitored_listings' },
+      name: 'monitored_listings',
+      hasReadyPattern: { name: 'has_ready_pattern' },
+      status: { name: 'status' },
+      confidence: { name: 'confidence' },
+      createdAt: { name: 'created_at' }
+    },
+    tradingStrategies: {
+      _: { name: 'trading_strategies' },
+      name: 'trading_strategies',
+      userId: { name: 'user_id' },
+      status: { name: 'status' },
+      updatedAt: { name: 'updated_at' },
+      createdAt: { name: 'created_at' }
+    },
+    transactions: {
+      _: { name: 'transactions' },
+      name: 'transactions',
+      userId: { name: 'user_id' },
+      status: { name: 'status' },
+      createdAt: { name: 'created_at' }
     }
   };
 
@@ -478,7 +707,14 @@ beforeAll(async () => {
     snipeTargets: mockTableSchemas.snipeTargets,
     user: mockTableSchemas.user,
     userPreferences: mockTableSchemas.userPreferences,
-    coinActivities: mockTableSchemas.coinActivities
+    coinActivities: mockTableSchemas.coinActivities,
+    patternEmbeddings: mockTableSchemas.patternEmbeddings,
+    executionHistory: mockTableSchemas.executionHistory,
+    transactionLocks: mockTableSchemas.transactionLocks,
+    workflowActivity: mockTableSchemas.workflowActivity,
+    monitoredListings: mockTableSchemas.monitoredListings,
+    tradingStrategies: mockTableSchemas.tradingStrategies,
+    transactions: mockTableSchemas.transactions
   }))
 
   vi.mock('@/src/db', () => ({

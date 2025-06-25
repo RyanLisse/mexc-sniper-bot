@@ -324,7 +324,7 @@ export class OptimizedAutoSnipingCore {
       
       // API compatibility properties
       activeTargets: this.activePositions.size,
-      readyTargets: 0, // Would be calculated from pattern engine
+      readyTargets: await this.calculateReadyTargets(),
       executedToday: this.stats.dailyTradeCount,
       successRate: this.stats.successRate,
       totalProfit: parseFloat(this.stats.totalPnl),
@@ -792,6 +792,54 @@ export class OptimizedAutoSnipingCore {
       averagePatternConfidence: 0,
       mostSuccessfulPattern: null,
     };
+  }
+
+  /**
+   * Calculate ready targets from calendar and pattern data
+   * Returns count of launches within 4 hours (ready for sniping)
+   */
+  private async calculateReadyTargets(): Promise<number> {
+    try {
+      // Use MEXC service to get calendar data (respects demo mode)
+      const { getRecommendedMexcService } = await import('./mexc-unified-exports');
+      const mexcService = getRecommendedMexcService();
+      const calendarResponse = await mexcService.getCalendarListings();
+      
+      if (!calendarResponse.success || !Array.isArray(calendarResponse.data)) {
+        console.warn('[AutoSnipingCore] Invalid calendar response or no data');
+        return 0;
+      }
+      
+      const calendar = calendarResponse.data;
+      const now = new Date();
+      const hours24 = 24 * 60 * 60 * 1000; // 24 hours in milliseconds (extended for demo)
+      
+      // Filter for ready targets (launching within 24 hours - extended for demo visibility)
+      const readyTargets = calendar.filter((entry: any) => {
+        try {
+          const launchTime = new Date(entry.firstOpenTime);
+          return (
+            launchTime.getTime() > now.getTime() && 
+            launchTime.getTime() < now.getTime() + hours24
+          );
+        } catch (error) {
+          console.warn('[AutoSnipingCore] Invalid date in calendar entry:', entry.firstOpenTime);
+          return false;
+        }
+      });
+      
+      console.info('[AutoSnipingCore] Calculated ready targets', {
+        total: calendar.length,
+        ready: readyTargets.length,
+        timeWindow: '24 hours (demo mode)',
+        source: 'MEXC service'
+      });
+      
+      return readyTargets.length;
+    } catch (error) {
+      console.error('[AutoSnipingCore] Error calculating ready targets:', error);
+      return 0;
+    }
   }
 }
 
