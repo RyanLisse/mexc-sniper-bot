@@ -23,7 +23,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Component handles complex pattern detection UI with multiple conditional rendering paths
-export const PatternSniperComponent: React.FC = () => {
+export const PatternSniperComponent: React.FC = memo(function PatternSniperComponent() {
   const {
     isMonitoring,
     isConnected,
@@ -44,30 +44,18 @@ export const PatternSniperComponent: React.FC = () => {
 
   const [_selectedTarget, _setSelectedTarget] = useState<string | null>(null);
 
-  // Format time remaining
-  const formatTimeRemaining = (launchTime: Date): string => {
-    const now = new Date();
-    const diff = launchTime.getTime() - now.getTime();
+  // Memoized event handlers
+  const handleExecuteSnipe = useCallback((target: any) => {
+    executeSnipe(target);
+  }, [executeSnipe]);
 
-    if (diff <= 0) return "LIVE";
+  const handleRemoveTarget = useCallback((vcoinId: string) => {
+    removeTarget(vcoinId);
+  }, [removeTarget]);
 
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
-  };
-
-  // Format uptime
-  const formatUptime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-
-    if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
-    if (minutes > 0) return `${minutes}m ${secs}s`;
-    return `${secs}s`;
-  };
+  const handleToggleMonitoring = useMemo(() => {
+    return isMonitoring ? stopMonitoring : startMonitoring;
+  }, [isMonitoring, stopMonitoring, startMonitoring]);
 
   return (
     <div className="space-y-6">
@@ -98,7 +86,7 @@ export const PatternSniperComponent: React.FC = () => {
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <Button
-              onClick={isMonitoring ? stopMonitoring : startMonitoring}
+              onClick={handleToggleMonitoring}
               disabled={isLoading}
               className={`${
                 isMonitoring ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"
@@ -294,7 +282,7 @@ export const PatternSniperComponent: React.FC = () => {
                     <div className="flex space-x-2">
                       <Button
                         size="sm"
-                        onClick={() => executeSnipe(target)}
+                        onClick={() => handleExecuteSnipe(target)}
                         className="bg-green-500 hover:bg-green-600"
                       >
                         <Zap className="h-4 w-4 mr-1" />
@@ -303,7 +291,7 @@ export const PatternSniperComponent: React.FC = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => removeTarget(target.vcoinId)}
+                        onClick={() => handleRemoveTarget(target.vcoinId)}
                         className="border-red-500 text-red-400 hover:bg-red-700"
                       >
                         <XCircle className="h-4 w-4" />
@@ -444,6 +432,6 @@ export const PatternSniperComponent: React.FC = () => {
       )}
     </div>
   );
-};
+});
 
 export default PatternSniperComponent;

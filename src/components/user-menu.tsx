@@ -3,7 +3,7 @@
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import { ChevronDown, ChevronUp, LogOut, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { Badge } from "./ui/badge";
 
 interface UserMenuProps {
@@ -15,15 +15,34 @@ interface UserMenuProps {
   };
 }
 
-export function UserMenu({ user }: UserMenuProps) {
+export const UserMenu = memo(function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const router = useRouter();
 
-  const handleSignOut = () => {
+  const handleSignOut = useCallback(() => {
     setIsSigningOut(true);
     setIsOpen(false);
-  };
+  }, []);
+
+  const handleToggleOpen = useCallback(() => {
+    setIsOpen(!isOpen);
+  }, [isOpen]);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  }, []);
+
+  const handleSettingsClick = useCallback(() => {
+    setIsOpen(false);
+    router.push("/config");
+  }, [router]);
 
   const displayName = user.name || user.username || user.email;
   const displayEmail = user.email;
@@ -33,7 +52,7 @@ export function UserMenu({ user }: UserMenuProps) {
       {/* User Badge - Clickable */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggleOpen}
         className="flex items-center space-x-2 hover:bg-slate-700/50 px-3 py-2 rounded-lg transition-colors"
       >
         <Badge variant="secondary" className="bg-green-900 text-green-300 cursor-pointer">
@@ -53,12 +72,8 @@ export function UserMenu({ user }: UserMenuProps) {
           {/* Backdrop to close dropdown */}
           <div
             className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                setIsOpen(false);
-              }
-            }}
+            onClick={handleClose}
+            onKeyDown={handleKeyDown}
             role="button"
             tabIndex={0}
             aria-label="Close dropdown"
@@ -87,10 +102,7 @@ export function UserMenu({ user }: UserMenuProps) {
               {/* Profile/Settings Link */}
               <button
                 type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                  router.push("/config");
-                }}
+                onClick={handleSettingsClick}
                 className="w-full flex items-center px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 transition-colors"
               >
                 <Settings className="h-4 w-4 mr-3" />
@@ -114,4 +126,4 @@ export function UserMenu({ user }: UserMenuProps) {
       )}
     </div>
   );
-}
+});

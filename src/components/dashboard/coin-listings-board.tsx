@@ -442,7 +442,7 @@ const SystemControlBar = ({
   );
 };
 
-export function CoinListingsBoard() {
+export const CoinListingsBoard = memo(function CoinListingsBoard() {
   const {
     isMonitoring,
     isLoading,
@@ -460,6 +460,20 @@ export function CoinListingsBoard() {
     executedTargetsEnriched,
     readyTargets,
   } = useProcessedCoinData();
+
+  // Memoized event handlers
+  const handleExecuteFromAll = useCallback((coin: any) => {
+    const target = readyTargets.find((t) => t.vcoinId === coin.vcoinId);
+    if (target) executeSnipe(target);
+  }, [readyTargets, executeSnipe]);
+
+  const handleRemoveTarget = useCallback((vcoinId: string) => {
+    removeTarget(vcoinId);
+  }, [removeTarget]);
+
+  const handleExecuteSnipe = useCallback((target: any) => {
+    executeSnipe(target);
+  }, [executeSnipe]);
 
   return (
     <div className="space-y-6">
@@ -630,4 +644,4 @@ export function CoinListingsBoard() {
       </Card>
     </div>
   );
-}
+});

@@ -408,6 +408,6 @@ export function ConfigStatusPanel({
       )}
     </div>
   );
-}
+});
 
 export default ConfigStatusPanel;

@@ -14,7 +14,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useSafetyMonitoring } from "../hooks/use-safety-monitoring";
 import { cn } from "../lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
@@ -62,7 +62,7 @@ function formatPercentage(value: number) {
   return `${value.toFixed(2)}%`;
 }
 
-export function SafetyMonitoringDashboard() {
+export const SafetyMonitoringDashboard = memo(function SafetyMonitoringDashboard() {
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
 
   const {
@@ -93,6 +93,14 @@ export function SafetyMonitoringDashboard() {
     toggleSimulation({ enable: !simulationStatus?.active });
   }, [toggleSimulation, simulationStatus?.active]);
 
+  const handleAutoRefreshToggle = useCallback(() => {
+    setIsAutoRefresh(!isAutoRefresh);
+  }, [isAutoRefresh]);
+
+  const handleSafetyCheck = useCallback(() => {
+    runSafetyCheck();
+  }, [runSafetyCheck]);
+
   const renderDashboardHeader = () => (
     <>
       <div>
@@ -103,7 +111,7 @@ export function SafetyMonitoringDashboard() {
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => setIsAutoRefresh(!isAutoRefresh)}>
+          <Button variant="outline" onClick={handleAutoRefreshToggle}>
             {isAutoRefresh ? (
               <PauseCircle className="h-4 w-4 mr-2" />
             ) : (
@@ -117,7 +125,7 @@ export function SafetyMonitoringDashboard() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => runSafetyCheck()}
+            onClick={handleSafetyCheck}
             disabled={isRunningSafetyCheck}
           >
             <Shield className={cn("h-4 w-4 mr-2", isRunningSafetyCheck && "animate-pulse")} />
@@ -519,4 +527,4 @@ export function SafetyMonitoringDashboard() {
       </Tabs>
     </div>
   );
-}
+});

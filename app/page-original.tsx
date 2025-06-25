@@ -7,52 +7,33 @@ import { Button } from "../src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../src/components/ui/card";
 import { Badge } from "../src/components/ui/badge";
 import { Zap, Bot, Brain, BarChart3, Target, TrendingUp, Clock, Shield } from "lucide-react";
-import { ClientSafeWrapper, useIsClient } from "../src/components/client-safe-wrapper";
-import { ErrorBoundary } from "../src/components/error-boundary";
 
-function AuthenticatedRedirect() {
+export default function HomePage() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
-  const isClient = useIsClient();
 
   useEffect(() => {
-    // Only redirect on client side and when fully loaded
-    if (isClient && isAuthenticated && user && !isLoading) {
+    // Redirect authenticated users to dashboard
+    if (isAuthenticated && user) {
       router.push("/dashboard");
     }
-  }, [isAuthenticated, user, router, isClient, isLoading]);
+  }, [isAuthenticated, user, router]);
 
-  return null;
-}
-
-function LoadingState() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading...</p>
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function HomePage() {
-  const { user, isLoading, isAuthenticated } = useAuth();
-  const isClient = useIsClient();
-
-  // Show loading state while checking authentication or hydrating
-  if (!isClient || isLoading) {
-    return <LoadingState />;
+    );
   }
 
-  // If authenticated, show loading while redirecting
-  if (isAuthenticated && user) {
-    return (
-      <>
-        <AuthenticatedRedirect />
-        <LoadingState />
-      </>
-    );
+  // If authenticated, let the effect handle redirect
+  if (isAuthenticated) {
+    return null;
   }
 
   // Homepage for unauthenticated users
@@ -68,10 +49,10 @@ function HomePage() {
             <span className="font-semibold text-lg">MEXC Sniper</span>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => window.location.href = "/auth"}>
+            <Button variant="ghost" onClick={() => router.push("/auth")}>
               Sign In
             </Button>
-            <Button onClick={() => window.location.href = "/auth"}>
+            <Button onClick={() => router.push("/auth")}>
               Get Started
             </Button>
           </div>
@@ -97,7 +78,7 @@ function HomePage() {
           <div className="flex gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => window.location.href = "/auth"}
+              onClick={() => router.push("/auth")}
               className="px-8 py-3 text-lg"
             >
               <Zap className="w-5 h-5 mr-2" />
@@ -106,7 +87,7 @@ function HomePage() {
             <Button 
               variant="outline" 
               size="lg"
-              onClick={() => window.location.href = "/auth"}
+              onClick={() => router.push("/auth")}
               className="px-8 py-3 text-lg"
             >
               Sign In
@@ -234,7 +215,7 @@ function HomePage() {
             </p>
             <Button 
               size="lg"
-              onClick={() => window.location.href = "/auth"}
+              onClick={() => router.push("/auth")}
               className="px-12 py-4 text-lg"
             >
               <Zap className="w-5 h-5 mr-2" />
@@ -244,25 +225,5 @@ function HomePage() {
         </Card>
       </main>
     </div>
-  );
-}
-
-// Export the main component wrapped in error boundary and client-safe wrapper
-export default function SafeHomePage() {
-  return (
-    <ErrorBoundary level="page">
-      <ClientSafeWrapper
-        fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading...</p>
-            </div>
-          </div>
-        }
-      >
-        <HomePage />
-      </ClientSafeWrapper>
-    </ErrorBoundary>
   );
 }
