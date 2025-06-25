@@ -1,6 +1,6 @@
 /**
  * Cache Utilities
- * 
+ *
  * Helper functions for cache operations and management
  */
 
@@ -9,7 +9,7 @@ import { createLogger } from "../unified-logger";
 import type { CacheDataType, CacheEntry } from "./types";
 
 const logger = createLogger("cache-utils", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 

@@ -12,7 +12,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
+import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // Lazy load Recharts components to reduce initial bundle size
 const LazyRecharts = lazy(() =>
@@ -33,6 +33,7 @@ const LazyRecharts = lazy(() =>
     },
   }))
 );
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -402,27 +403,54 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                 <CardDescription>Real-time system metrics (last 50 data points)</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={chartMetrics}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="timestamp"
-                      tickFormatter={(time) => new Date(time).toLocaleTimeString().slice(0, 5)}
-                    />
-                    <YAxis />
-                    <Tooltip
-                      labelFormatter={(time) => new Date(time).toLocaleTimeString()}
-                      formatter={durationTooltipFormatter}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="responseTime"
-                      stroke="#8884d8"
-                      name="Response Time (ms)"
-                    />
-                    <Line type="monotone" dataKey="throughput" stroke="#82ca9d" name="Throughput" />
-                  </LineChart>
-                </ResponsiveContainer>
+                <Suspense
+                  fallback={
+                    <div className="w-full h-[300px] animate-pulse bg-gray-100 rounded">
+                      Loading chart...
+                    </div>
+                  }
+                >
+                  <LazyRecharts>
+                    {({
+                      ResponsiveContainer,
+                      LineChart,
+                      CartesianGrid,
+                      XAxis,
+                      YAxis,
+                      Tooltip,
+                      Line,
+                    }) => (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={chartMetrics}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis
+                            dataKey="timestamp"
+                            tickFormatter={(time) =>
+                              new Date(time).toLocaleTimeString().slice(0, 5)
+                            }
+                          />
+                          <YAxis />
+                          <Tooltip
+                            labelFormatter={(time) => new Date(time).toLocaleTimeString()}
+                            formatter={durationTooltipFormatter}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="responseTime"
+                            stroke="#8884d8"
+                            name="Response Time (ms)"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="throughput"
+                            stroke="#82ca9d"
+                            name="Throughput"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )}
+                  </LazyRecharts>
+                </Suspense>
               </CardContent>
             </Card>
 
@@ -432,36 +460,58 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                 <CardDescription>CPU, memory, and network usage</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={chartMetrics}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="timestamp"
-                      tickFormatter={(time) => new Date(time).toLocaleTimeString().slice(0, 5)}
-                    />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip
-                      labelFormatter={(time) => new Date(time).toLocaleTimeString()}
-                      formatter={percentageTooltipFormatter}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="cpuUsage"
-                      stackId="1"
-                      stroke="#8884d8"
-                      fill="#8884d8"
-                      name="CPU Usage"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="memoryUsage"
-                      stackId="1"
-                      stroke="#82ca9d"
-                      fill="#82ca9d"
-                      name="Memory Usage"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <Suspense
+                  fallback={
+                    <div className="w-full h-[300px] animate-pulse bg-gray-100 rounded">
+                      Loading chart...
+                    </div>
+                  }
+                >
+                  <LazyRecharts>
+                    {({
+                      ResponsiveContainer,
+                      AreaChart,
+                      CartesianGrid,
+                      XAxis,
+                      YAxis,
+                      Tooltip,
+                      Area,
+                    }) => (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <AreaChart data={chartMetrics}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis
+                            dataKey="timestamp"
+                            tickFormatter={(time) =>
+                              new Date(time).toLocaleTimeString().slice(0, 5)
+                            }
+                          />
+                          <YAxis domain={[0, 100]} />
+                          <Tooltip
+                            labelFormatter={(time) => new Date(time).toLocaleTimeString()}
+                            formatter={percentageTooltipFormatter}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="cpuUsage"
+                            stackId="1"
+                            stroke="#8884d8"
+                            fill="#8884d8"
+                            name="CPU Usage"
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="memoryUsage"
+                            stackId="1"
+                            stroke="#82ca9d"
+                            fill="#82ca9d"
+                            name="Memory Usage"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
+                  </LazyRecharts>
+                </Suspense>
               </CardContent>
             </Card>
           </div>
@@ -651,28 +701,40 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                 <CardDescription>Distribution of detected pattern types</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={data.patternDiscoveryAnalytics.patternTypes}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="count"
-                      nameKey="type"
-                    >
-                      {data.patternDiscoveryAnalytics.patternTypes.map((entry, index) => (
-                        <Cell
-                          key={generateChartCellKey(index, entry.type)}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                <Suspense
+                  fallback={
+                    <div className="w-full h-[200px] animate-pulse bg-gray-100 rounded">
+                      Loading chart...
+                    </div>
+                  }
+                >
+                  <LazyRecharts>
+                    {({ ResponsiveContainer, PieChart, Pie, Cell, Tooltip }) => (
+                      <ResponsiveContainer width="100%" height={200}>
+                        <PieChart>
+                          <Pie
+                            data={data.patternDiscoveryAnalytics.patternTypes}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={40}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="count"
+                            nameKey="type"
+                          >
+                            {data.patternDiscoveryAnalytics.patternTypes.map((entry, index) => (
+                              <Cell
+                                key={generateChartCellKey(index, entry.type)}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+                  </LazyRecharts>
+                </Suspense>
                 <div className="mt-2 space-y-1">
                   {data.patternDiscoveryAnalytics.patternTypes.map((type, index) => (
                     <div key={type.type} className="flex items-center gap-2 text-sm">

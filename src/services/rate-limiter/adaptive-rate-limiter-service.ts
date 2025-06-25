@@ -7,18 +7,13 @@
 import { createLogger } from "../../lib/unified-logger";
 import { circuitBreakerRegistry } from "../circuit-breaker";
 import { ErrorLoggingService } from "../error-logging-service";
-import { TokenBucketManager } from "./token-bucket";
-import { SlidingWindowManager } from "./sliding-window";
 import { MexcRateLimiter } from "./mexc-rate-limiter";
-import type { 
-  RateLimitConfig, 
-  RateLimitResult, 
-  EndpointMetrics, 
-  UserLimits 
-} from "./types";
+import { SlidingWindowManager } from "./sliding-window";
+import { TokenBucketManager } from "./token-bucket";
+import type { EndpointMetrics, RateLimitConfig, RateLimitResult, UserLimits } from "./types";
 
 const logger = createLogger("adaptive-rate-limiter", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 
@@ -140,7 +135,11 @@ export class AdaptiveRateLimiterService {
 
       return result;
     } catch (error) {
-      logger.error("Check failed:", { endpoint, userId, userAgent }, error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Check failed:",
+        { endpoint, userId, userAgent },
+        error instanceof Error ? error : new Error(String(error))
+      );
 
       await this.errorLogger.logError(error as Error, {
         context: "rate_limit_check",
@@ -427,10 +426,9 @@ export class AdaptiveRateLimiterService {
       }
     }
 
-    logger.info(
-      `Cleanup completed - ${this.endpointMetrics.size} metrics`,
-      { metricsCount: this.endpointMetrics.size }
-    );
+    logger.info(`Cleanup completed - ${this.endpointMetrics.size} metrics`, {
+      metricsCount: this.endpointMetrics.size,
+    });
   }
 
   /**
@@ -469,10 +467,11 @@ export class AdaptiveRateLimiterService {
     userLimits.customLimits[endpoint] = { ...this.defaultConfig, ...config };
     this.userLimits.set(userId, userLimits);
 
-    logger.info(
-      `Set custom limits for user ${userId} endpoint ${endpoint}`,
-      { userId, endpoint, config }
-    );
+    logger.info(`Set custom limits for user ${userId} endpoint ${endpoint}`, {
+      userId,
+      endpoint,
+      config,
+    });
   }
 
   public getMetrics(key?: string): EndpointMetrics | Map<string, EndpointMetrics> {

@@ -8,6 +8,7 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
+import { createTimer } from "../../lib/structured-logger";
 import type {
   RiskMetrics,
   SafetyAlert,
@@ -22,7 +23,6 @@ import type {
   ExecutionPosition,
 } from "../auto-sniping-execution-service";
 import type { PatternMonitoringService } from "../pattern-monitoring-service";
-import { createTimer } from "../../lib/structured-logger";
 
 export interface CoreSafetyMonitoringConfig {
   configuration: SafetyConfiguration;

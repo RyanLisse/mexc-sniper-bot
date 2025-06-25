@@ -3,14 +3,10 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { 
-  AgentBehaviorMetrics, 
-  SafetyProtocolViolation,
-  SafetyMonitorConfig 
-} from "./types";
+import type { AgentBehaviorMetrics, SafetyMonitorConfig, SafetyProtocolViolation } from "./types";
 
 const logger = createLogger("behavior-monitor", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 
@@ -100,7 +96,7 @@ export class BehaviorMonitor {
     this.lastBehaviorCheck = Date.now();
 
     return { anomaliesDetected: anomalies, violations, recommendations };
-  }  /**
+  } /**
    * Check agent performance degradation
    */
   async checkPerformanceDegradation(): Promise<{
@@ -216,7 +212,7 @@ export class BehaviorMonitor {
       reason: reasons.join("; "),
       score: Math.min(anomalyScore, 100),
     };
-  }  /**
+  } /**
    * Determine severity level based on anomaly score
    */
   private determineSeverity(anomalyScore: number): SafetyProtocolViolation["severity"] {
@@ -239,7 +235,9 @@ export class BehaviorMonitor {
   /**
    * Get behavior history for debugging
    */
-  getBehaviorHistory(agentId?: string): Map<string, AgentBehaviorMetrics[]> | AgentBehaviorMetrics[] | undefined {
+  getBehaviorHistory(
+    agentId?: string
+  ): Map<string, AgentBehaviorMetrics[]> | AgentBehaviorMetrics[] | undefined {
     if (agentId) {
       return this.agentBehaviorHistory.get(agentId);
     }

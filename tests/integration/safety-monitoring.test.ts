@@ -168,7 +168,7 @@ const createMockSafetyService = () => ({
     });
 
 // Mock the safety monitoring service module
-vi.mock('../../src/services/real-time-safety-monitoring-service', () => ({
+vi.mock('../../src/services/real-time-safety-monitoring-modules', () => ({
   RealTimeSafetyMonitoringService: {
     getInstance: vi.fn(() => mockSafetyService)
   }
@@ -666,7 +666,7 @@ describe('Safety Monitoring API Integration', () => {
   describe('Advanced Error Handling', () => {
     it('should handle service initialization failure', async () => {
       // Mock getInstance to throw an error for this test
-      const { RealTimeSafetyMonitoringService } = await import('../../src/services/real-time-safety-monitoring-service');
+      const { RealTimeSafetyMonitoringService } = await import('../../src/services/real-time-safety-monitoring-modules');
       vi.mocked(RealTimeSafetyMonitoringService.getInstance).mockImplementationOnce(() => {
         throw new Error('Service initialization failed');
       });

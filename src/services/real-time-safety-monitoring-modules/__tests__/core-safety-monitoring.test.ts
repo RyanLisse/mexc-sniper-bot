@@ -326,7 +326,7 @@ describe("CoreSafetyMonitoring", () => {
     it("should detect API latency threshold violations", async () => {
       // Reset risk metrics first to ensure clean state
       coreMonitoring.resetRiskMetrics();
-      
+
       // Set high API latency using the direct setter method
       coreMonitoring.setRiskMetrics({ apiLatency: 1500 }); // Above 1000ms threshold
 

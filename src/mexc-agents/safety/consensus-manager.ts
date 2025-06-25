@@ -3,14 +3,10 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { 
-  AgentConsensusRequest,
-  AgentConsensusResponse,
-  SafetyMonitorConfig 
-} from "./types";
+import type { AgentConsensusRequest, AgentConsensusResponse, SafetyMonitorConfig } from "./types";
 
 const logger = createLogger("consensus-manager", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 
@@ -96,7 +92,7 @@ export class ConsensusManager {
     });
 
     return response;
-  }  /**
+  } /**
    * Analyze consensus request for risk level and complexity
    */
   private async analyzeConsensusRequest(request: AgentConsensusRequest): Promise<{

@@ -2,20 +2,19 @@
  * Safety Monitor Module Exports
  */
 
-// Main agent
-export { SafetyMonitorAgent } from "./safety-monitor-agent";
-
 // Component modules
 export { BehaviorMonitor } from "./behavior-monitor";
-export { PatternValidator } from "./pattern-validator";
 export { ConsensusManager } from "./consensus-manager";
+export { PatternValidator } from "./pattern-validator";
+// Main agent
+export { SafetyMonitorAgent } from "./safety-monitor-agent";
 
 // Types
 export type {
   AgentBehaviorMetrics,
-  PatternValidationResult,
   AgentConsensusRequest,
   AgentConsensusResponse,
-  SafetyProtocolViolation,
+  PatternValidationResult,
   SafetyMonitorConfig,
+  SafetyProtocolViolation,
 } from "./types";

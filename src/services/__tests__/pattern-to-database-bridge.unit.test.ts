@@ -220,7 +220,7 @@ describe("PatternToDatabaseBridge Unit Tests", () => {
 
       // Note: All patterns use "ready_state" which gives -1 priority adjustment
       // High: 1 (confidence >= 90) → 1 (ready_state: max(1, 1-1)) = 1
-      // Medium: 2 (confidence >= 80) → 1 (ready_state: max(1, 2-1)) = 1  
+      // Medium: 2 (confidence >= 80) → 1 (ready_state: max(1, 2-1)) = 1
       // Low: 4 (confidence >= 70) → 3 (ready_state: max(1, 4-1)) = 3
       expect(bridgeAny.calculatePriority(highConfidence)).toBe(1); // Highest priority
       expect(bridgeAny.calculatePriority(mediumConfidence)).toBe(1); // Also gets ready_state boost
@@ -256,7 +256,7 @@ describe("PatternToDatabaseBridge Unit Tests", () => {
 
       // With confidence 80 and ready_state pattern:
       // Low: 2 → ready_state (-1) = 1 → low risk (-1) = max(1, 0) = 1
-      // Medium: 2 → ready_state (-1) = 1 → no adjustment = 1  
+      // Medium: 2 → ready_state (-1) = 1 → no adjustment = 1
       // High: 2 → ready_state (-1) = 1 → high risk (+1) = min(10, 2) = 2
       expect(lowPriority).toBe(1); // Lowest number = highest priority
       expect(mediumPriority).toBe(1); // Same as low risk due to ready_state boost
@@ -481,10 +481,15 @@ describe("PatternToDatabaseBridge Unit Tests", () => {
       // Test patterns with missing fields - need to provide detectedAt to avoid getTime() error
       const basePattern = {
         detectedAt: new Date(),
-        activityInfo: { activityTypes: ["test"], activities: [], activityBoost: 1.0, hasHighPriorityActivity: false },
+        activityInfo: {
+          activityTypes: ["test"],
+          activities: [],
+          activityBoost: 1.0,
+          hasHighPriorityActivity: false,
+        },
         riskLevel: "medium",
         recommendation: "immediate_action",
-        indicators: {}
+        indicators: {},
       };
 
       const invalidPatterns = [

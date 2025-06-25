@@ -1,6 +1,6 @@
 "use client";
 import type * as React from "react";
-import { Suspense, lazy } from "react";
+import { lazy, Suspense } from "react";
 
 export interface ChartConfig {
   [key: string]: { label?: string; color?: string };

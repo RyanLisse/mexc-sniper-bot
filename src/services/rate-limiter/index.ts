@@ -4,19 +4,18 @@
 
 // Main service
 export { AdaptiveRateLimiterService } from "./adaptive-rate-limiter-service";
-
+export { MexcRateLimiter } from "./mexc-rate-limiter";
+export { SlidingWindowManager } from "./sliding-window";
 // Component managers
 export { TokenBucketManager } from "./token-bucket";
-export { SlidingWindowManager } from "./sliding-window";
-export { MexcRateLimiter } from "./mexc-rate-limiter";
 
 // Types
 export type {
+  EndpointMetrics,
   RateLimitConfig,
   RateLimitResult,
-  EndpointMetrics,
-  TokenBucket,
   SlidingWindow,
+  TokenBucket,
   UserLimits,
 } from "./types";
 

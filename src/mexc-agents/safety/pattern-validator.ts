@@ -3,13 +3,10 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { 
-  PatternValidationResult,
-  SafetyMonitorConfig 
-} from "./types";
+import type { PatternValidationResult, SafetyMonitorConfig } from "./types";
 
 const logger = createLogger("pattern-validator", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 
@@ -161,7 +158,7 @@ export class PatternValidator {
     });
 
     return result;
-  }  /**
+  } /**
    * Validate market conditions for a symbol
    */
   private async validateMarketConditions(_symbol: string): Promise<{

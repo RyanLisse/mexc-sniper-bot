@@ -1,6 +1,6 @@
 /**
  * Cache Types and Interfaces
- * 
+ *
  * Comprehensive type definitions for the multi-level cache system
  */
 

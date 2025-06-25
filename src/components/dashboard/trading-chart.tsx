@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { ChartContainer, ChartTooltip } from "../ui/chart";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
@@ -81,7 +81,13 @@ export function TradingChart({ className }: TradingChartProps) {
       </CardHeader>
       <CardContent className="pt-4">
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
-          <Suspense fallback={<div className="w-full h-[300px] animate-pulse bg-gray-100 rounded">Loading chart...</div>}>
+          <Suspense
+            fallback={
+              <div className="w-full h-[300px] animate-pulse bg-gray-100 rounded">
+                Loading chart...
+              </div>
+            }
+          >
             <LazyRecharts>
               {({ Area, AreaChart, ResponsiveContainer, XAxis, YAxis }) => (
                 <ResponsiveContainer width="100%" height="100%">

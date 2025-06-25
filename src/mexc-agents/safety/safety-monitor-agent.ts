@@ -7,25 +7,25 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import { SafetyBaseAgent } from "../safety-base-agent";
-import type { AgentConfig } from "../base-agent";
 import type { AdvancedRiskEngine } from "../../services/advanced-risk-engine";
 import type { EmergencySafetySystem } from "../../services/emergency-safety-system";
+import type { AgentConfig } from "../base-agent";
+import { SafetyBaseAgent } from "../safety-base-agent";
 
 import { BehaviorMonitor } from "./behavior-monitor";
-import { PatternValidator } from "./pattern-validator";
 import { ConsensusManager } from "./consensus-manager";
-import type { 
+import { PatternValidator } from "./pattern-validator";
+import type {
   AgentBehaviorMetrics,
-  PatternValidationResult,
   AgentConsensusRequest,
   AgentConsensusResponse,
+  PatternValidationResult,
+  SafetyMonitorConfig,
   SafetyProtocolViolation,
-  SafetyMonitorConfig 
 } from "./types";
 
 const logger = createLogger("safety-monitor-agent", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 
@@ -90,7 +90,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     this.consensusManager = new ConsensusManager(fullConfig);
 
     logger.info("Initialized with comprehensive AI safety monitoring");
-  }  /**
+  } /**
    * Set integration with risk engine and emergency system
    */
   setIntegrations(riskEngine: AdvancedRiskEngine, emergencySystem: EmergencySafetySystem): void {
@@ -207,7 +207,7 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     this.lastPerformanceCheck = Date.now();
 
     return result;
-  }  /**
+  } /**
    * Get comprehensive safety status
    */
   getSafetyStatus(): {
@@ -304,7 +304,8 @@ Always prioritize system safety and capital protection. When in doubt, err on th
       issues,
       recommendations,
     };
-  }  async checkAgentHealth(): Promise<{
+  }
+  async checkAgentHealth(): Promise<{
     healthy: boolean;
     issues: string[];
   }> {
@@ -350,10 +351,11 @@ Always prioritize system safety and capital protection. When in doubt, err on th
    * Handle safety violations
    */
   private async handleSafetyViolation(violation: SafetyProtocolViolation): Promise<void> {
-    logger.info(
-      `Handling violation: ${violation.id} - ${violation.description}`,
-      { violationId: violation.id, severity: violation.severity, action: violation.action }
-    );
+    logger.info(`Handling violation: ${violation.id} - ${violation.description}`, {
+      violationId: violation.id,
+      severity: violation.severity,
+      action: violation.action,
+    });
 
     switch (violation.action) {
       case "shutdown":

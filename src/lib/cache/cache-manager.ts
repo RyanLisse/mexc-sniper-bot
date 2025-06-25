@@ -8,20 +8,20 @@
  */
 
 import { createLogger } from "../unified-logger";
-import type { 
-  CacheConfig, 
-  CacheEntry, 
-  CacheMetrics, 
-  CacheAnalytics, 
-  CacheDataType, 
-  TTLConfig,
-  CacheSetOptions 
-} from "./types";
 import { LRUCache } from "./lru-cache";
+import type {
+  CacheAnalytics,
+  CacheConfig,
+  CacheDataType,
+  CacheEntry,
+  CacheMetrics,
+  CacheSetOptions,
+  TTLConfig,
+} from "./types";
 import { cleanupLevel, estimateSize } from "./utils";
 
 const logger = createLogger("cache-manager", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 
@@ -118,7 +118,11 @@ export class CacheManager {
       this.updateGlobalMetrics("miss", performance.now() - startTime);
       return null;
     } catch (error) {
-      logger.error("Get error:", { key }, error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Get error:",
+        { key },
+        error instanceof Error ? error : new Error(String(error))
+      );
       this.updateGlobalMetrics("miss", performance.now() - startTime);
       return null;
     }
@@ -127,11 +131,7 @@ export class CacheManager {
   /**
    * Set value in appropriate cache level based on data type
    */
-  async set<T = any>(
-    key: string,
-    value: T,
-    options: CacheSetOptions<T> = {}
-  ): Promise<void> {
+  async set<T = any>(key: string, value: T, options: CacheSetOptions<T> = {}): Promise<void> {
     const { type = "api_response", level = "all" } = options;
     const ttl = options.ttl || this.ttlConfig[type] || this.config.defaultTTL;
     const now = Date.now();
@@ -169,7 +169,11 @@ export class CacheManager {
       this.globalMetrics.sets++;
       this.emit("set", key, value);
     } catch (error) {
-      logger.error("Set error:", { key, type }, error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Set error:",
+        { key, type },
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 
@@ -189,7 +193,11 @@ export class CacheManager {
         this.emit("delete", key, null);
       }
     } catch (error) {
-      logger.error("Delete error:", { key }, error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Delete error:",
+        { key },
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
 
     return deleted;
@@ -223,7 +231,11 @@ export class CacheManager {
 
       this.emit("clear", "all", null);
     } catch (error) {
-      logger.error("Clear error:", { level }, error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Clear error:",
+        { level },
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }
 
@@ -261,10 +273,11 @@ export class CacheManager {
     this.globalMetrics.lastCleanup = Date.now();
 
     if (results.total > 0) {
-      logger.info(
-        `Cleaned up ${results.total} expired entries`,
-        { L1: results.L1, L2: results.L2, L3: results.L3 }
-      );
+      logger.info(`Cleaned up ${results.total} expired entries`, {
+        L1: results.L1,
+        L2: results.L2,
+        L3: results.L3,
+      });
     }
 
     return results;
@@ -310,7 +323,11 @@ export class CacheManager {
         try {
           listener(key, value);
         } catch (error) {
-          logger.error(`Event listener error for ${event}:`, { event, key }, error instanceof Error ? error : new Error(String(error)));
+          logger.error(
+            `Event listener error for ${event}:`,
+            { event, key },
+            error instanceof Error ? error : new Error(String(error))
+          );
         }
       }
     }

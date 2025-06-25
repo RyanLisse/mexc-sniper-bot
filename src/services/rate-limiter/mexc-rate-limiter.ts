@@ -1,14 +1,14 @@
 /**
  * MEXC-Specific Rate Limiting Logic
- * 
+ *
  * Handles MEXC API rate limiting headers and adaptive adjustments
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { RateLimitConfig, EndpointMetrics } from "./types";
+import type { EndpointMetrics, RateLimitConfig } from "./types";
 
 const logger = createLogger("mexc-rate-limiter", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 
@@ -93,7 +93,7 @@ export class MexcRateLimiter {
         error instanceof Error ? error : new Error(String(error))
       );
     }
-  }  /**
+  } /**
    * Process order count limits for 1s and 1m windows
    */
   private processOrderCountLimits(
@@ -177,7 +177,7 @@ export class MexcRateLimiter {
         error instanceof Error ? error : new Error(String(error))
       );
     }
-  }  /**
+  } /**
    * Extract weight limit from headers or use defaults
    */
   private extractWeightLimit(headers: Record<string, string>, weightHeader: string): number {
@@ -253,21 +253,18 @@ export class MexcRateLimiter {
 
     // Only update if significant change
     if (Math.abs(newAdaptationFactor - metrics.adaptationFactor) > 0.05) {
-      logger.info(
-        `Adjusting ${endpoint} based on ${limitType} utilization`,
-        {
-          endpoint,
-          utilizationRate: `${(utilizationRate * 100).toFixed(1)}%`,
-          oldFactor: metrics.adaptationFactor.toFixed(2),
-          newFactor: newAdaptationFactor.toFixed(2),
-          limitType,
-        }
-      );
+      logger.info(`Adjusting ${endpoint} based on ${limitType} utilization`, {
+        endpoint,
+        utilizationRate: `${(utilizationRate * 100).toFixed(1)}%`,
+        oldFactor: metrics.adaptationFactor.toFixed(2),
+        newFactor: newAdaptationFactor.toFixed(2),
+        limitType,
+      });
 
       metrics.adaptationFactor = newAdaptationFactor;
       metrics.lastAdaptation = Date.now();
     }
-  }  /**
+  } /**
    * Temporarily reduce endpoint limits after rate limiting
    */
   private temporarilyReduceEndpointLimits(endpoint: string, retryAfterSeconds: number): void {
@@ -286,10 +283,7 @@ export class MexcRateLimiter {
       // Reset limits after some time (double the retry-after period)
       setTimeout(() => {
         this.endpointConfigs[endpoint] = currentConfig;
-        logger.info(
-          `Reset limits for ${endpoint} after rate limit period`,
-          { endpoint }
-        );
+        logger.info(`Reset limits for ${endpoint} after rate limit period`, { endpoint });
       }, retryAfterSeconds * 2000);
 
       logger.info(`Temporarily reduced limits for ${endpoint}`, {

@@ -88,9 +88,10 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
     if (process.env.JAEGER_ENDPOINT || process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
       traceExporters.push(
         new OTLPTraceExporter({
-          url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 
-               process.env.JAEGER_ENDPOINT || 
-               "http://localhost:4318/v1/traces", // Default OTLP HTTP endpoint
+          url:
+            process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
+            process.env.JAEGER_ENDPOINT ||
+            "http://localhost:4318/v1/traces", // Default OTLP HTTP endpoint
         })
       );
     }

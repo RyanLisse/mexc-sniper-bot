@@ -14,7 +14,7 @@ import type {
 import { AutoSnipingExecutionService } from "../../auto-sniping-execution-service";
 import type { EmergencySafetySystem } from "../../emergency-safety-system";
 import { PatternMonitoringService } from "../../pattern-monitoring-service";
-import { UnifiedMexcServiceV2V2 } from "../../unified-mexc-service-v2";
+import type { UnifiedMexcServiceV2 } from "../../unified-mexc-service-v2";
 import { createRealTimeSafetyMonitoringService, RealTimeSafetyMonitoringService } from "../index";
 
 // Mock all dependencies

@@ -1,6 +1,6 @@
 /**
  * LRU Cache Implementation
- * 
+ *
  * Least Recently Used cache with performance tracking
  */
 
@@ -8,7 +8,7 @@ import { createLogger } from "../unified-logger";
 import type { CacheEntry, CacheMetrics } from "./types";
 
 const logger = createLogger("lru-cache", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 

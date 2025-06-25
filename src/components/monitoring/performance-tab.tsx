@@ -5,16 +5,23 @@
  * best/worst trades, and P&L distribution charts.
  */
 
-import { memo, useMemo } from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { lazy, memo, Suspense, useMemo } from "react";
+
+// Lazy load Recharts components to reduce initial bundle size
+const LazyRecharts = lazy(() =>
+  import("recharts").then((module) => ({
+    default: {
+      Area: module.Area,
+      AreaChart: module.AreaChart,
+      CartesianGrid: module.CartesianGrid,
+      ResponsiveContainer: module.ResponsiveContainer,
+      Tooltip: module.Tooltip,
+      XAxis: module.XAxis,
+      YAxis: module.YAxis,
+    },
+  }))
+);
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { createTooltipFormatter, generateListKey } from "../../lib/react-utilities";

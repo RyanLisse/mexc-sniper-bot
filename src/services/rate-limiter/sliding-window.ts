@@ -3,10 +3,10 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { SlidingWindow, RateLimitConfig, RateLimitResult, EndpointMetrics } from "./types";
+import type { EndpointMetrics, RateLimitConfig, RateLimitResult, SlidingWindow } from "./types";
 
 const logger = createLogger("sliding-window", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 

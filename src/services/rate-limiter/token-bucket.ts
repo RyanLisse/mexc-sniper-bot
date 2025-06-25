@@ -3,10 +3,10 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { TokenBucket, RateLimitConfig, RateLimitResult, EndpointMetrics } from "./types";
+import type { EndpointMetrics, RateLimitConfig, RateLimitResult, TokenBucket } from "./types";
 
 const logger = createLogger("token-bucket", {
-  enableStructuredLogging: process.env.NODE_ENV === 'production',
+  enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });
 
