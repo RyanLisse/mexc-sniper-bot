@@ -1,6 +1,5 @@
 "use client";
 
-import { KindeProvider } from "@kinde-oss/kinde-auth-nextjs";
 import type { ReactNode } from "react";
 
 interface KindeAuthProviderProps {
@@ -8,5 +7,7 @@ interface KindeAuthProviderProps {
 }
 
 export function KindeAuthProvider({ children }: KindeAuthProviderProps) {
-  return <KindeProvider>{children}</KindeProvider>;
+  // Simple fallback provider until auth is properly configured
+  // This prevents client-side errors from missing Kinde configuration
+  return <>{children}</>;
 }

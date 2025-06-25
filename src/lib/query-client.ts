@@ -1,6 +1,4 @@
 import { QueryClient } from "@tanstack/react-query";
-// Import optimized query keys from modular MEXC service
-import { mexcQueryKeys } from "../services/modules/mexc-api-types";
 
 /**
  * React Query Configuration - Anti-Retry Storm Configuration
@@ -89,14 +87,11 @@ export const queryKeys = {
   // User preferences
   userPreferences: (userId: string) => ["userPreferences", userId] as const,
 
-  // MEXC data - using optimized modular keys
-  mexc: mexcQueryKeys,
-
-  // Legacy compatibility (gradually migrate these)
-  mexcCalendar: () => mexcQueryKeys.calendar(),
+  // MEXC data - simplified keys
+  mexcCalendar: () => ["mexc", "calendar"] as const,
   mexcSymbols: (vcoinId?: string) =>
-    vcoinId ? mexcQueryKeys.symbol(vcoinId) : mexcQueryKeys.symbols(),
-  mexcServerTime: () => mexcQueryKeys.serverTime(),
+    vcoinId ? ["mexc", "symbol", vcoinId] as const : ["mexc", "symbols"] as const,
+  mexcServerTime: () => ["mexc", "serverTime"] as const,
 
   // Monitored listings
   monitoredListings: () => ["monitoredListings"] as const,
