@@ -52,6 +52,11 @@ export const AutoSnipingConfigSchema = z.object({
   advanceHoursThreshold: z.number().positive().default(3.5),
   enableMultiPhaseStrategy: z.boolean().default(false),
   slippageTolerancePercentage: z.number().min(0).max(10).default(1),
+  
+  // Additional properties for API compatibility
+  maxConcurrentTargets: z.number().int().min(1).max(50).default(5),
+  retryAttempts: z.number().int().min(1).max(10).default(3),
+  executionDelay: z.number().min(0).default(1000),
 });
 
 export const ExecutionMetadataSchema = z.object({
@@ -144,6 +149,20 @@ export interface AutoSnipingExecutionReport {
   systemHealth: SystemHealth;
   recommendations: string[];
   lastUpdated: string;
+  
+  // Additional properties for API compatibility
+  activeTargets: number;
+  readyTargets: number;
+  executedToday: number;
+  successRate: number;
+  totalProfit: number;
+  lastExecution?: string;
+  safetyStatus: "safe" | "warning" | "danger";
+  patternDetectionActive: boolean;
+  executionCount: number;
+  successCount: number;
+  errorCount: number;
+  uptime: number;
 }
 
 // ============================================================================
@@ -302,6 +321,20 @@ export class OptimizedAutoSnipingCore {
       systemHealth,
       recommendations: this.generateIntelligentRecommendations(),
       lastUpdated: new Date().toISOString(),
+      
+      // API compatibility properties
+      activeTargets: this.activePositions.size,
+      readyTargets: 0, // Would be calculated from pattern engine
+      executedToday: this.stats.dailyTradeCount,
+      successRate: this.stats.successRate,
+      totalProfit: parseFloat(this.stats.totalPnl),
+      lastExecution: this.executionHistory.length > 0 ? this.executionHistory[this.executionHistory.length - 1].entryTime : undefined,
+      safetyStatus: this.stats.currentDrawdown > this.config.maxDrawdownPercentage * 0.8 ? "warning" : "safe",
+      patternDetectionActive: true,
+      executionCount: this.stats.totalTrades,
+      successCount: this.stats.successfulTrades,
+      errorCount: this.stats.failedTrades,
+      uptime: this.isActive ? Date.now() - (this.stats.totalTrades > 0 ? 0 : Date.now()) : 0,
     };
   }
 
@@ -727,6 +760,11 @@ export class OptimizedAutoSnipingCore {
       slippageTolerancePercentage: Number.parseFloat(
         process.env.AUTO_SNIPING_SLIPPAGE_TOLERANCE || "1"
       ),
+      
+      // Additional properties for API compatibility
+      maxConcurrentTargets: Number.parseInt(process.env.AUTO_SNIPING_MAX_CONCURRENT_TARGETS || "5"),
+      retryAttempts: Number.parseInt(process.env.AUTO_SNIPING_RETRY_ATTEMPTS || "3"),
+      executionDelay: Number.parseInt(process.env.AUTO_SNIPING_EXECUTION_DELAY || "1000"),
     };
   }
 

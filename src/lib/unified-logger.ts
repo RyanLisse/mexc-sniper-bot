@@ -17,12 +17,37 @@
 // ============================================================================
 
 export interface LogContext {
-  operation?: string;
-  userId?: string;
+  // Trading context
   symbol?: string;
-  duration?: string;
-  requestId?: string;
+  side?: "BUY" | "SELL";
+  quantity?: number | string;
+  price?: number | string;
+  patternType?: string;
+  confidence?: number;
+  riskScore?: number;
+
+  // Agent context
+  agentId?: string;
+  agentType?: string;
+  taskType?: string;
+
+  // System context
+  service?: string;
+  operation?: string;
   component?: string;
+
+  // Performance context
+  duration?: number;
+  responseTime?: number;
+  
+  // API context
+  method?: string;
+  endpoint?: string;
+  statusCode?: number;
+  
+  // General context
+  userId?: string;
+  requestId?: string;
   [key: string]: unknown;
 }
 
@@ -54,7 +79,9 @@ export interface LoggerConfig {
 // Logger Implementation
 // ============================================================================
 
-export class UnifiedLogger {
+import type { ILogger } from "./structured-logger";
+
+export class UnifiedLogger implements ILogger {
   private config: LoggerConfig;
   private recentLogs: LogMetadata[] = [];
   private component: string;
@@ -112,15 +139,15 @@ export class UnifiedLogger {
   /**
    * Performance logging for optimization tracking
    */
-  performance(operation: string, startTime: number, context?: LogContext): void {
+  performance(operation: string, duration: number, context?: LogContext): void {
     if (this.config.enablePerformanceLogging) {
-      const duration = Date.now() - startTime;
       const memoryUsage = process.memoryUsage().heapUsed;
+      const level = duration > 1000 ? "warn" : "info";
 
-      this.info(`Performance: ${operation}`, {
+      this.log(level, `Performance: ${operation} completed in ${duration}ms`, {
         ...context,
         operation,
-        duration: `${duration}ms`,
+        duration,
         performance: {
           memoryUsage,
           duration,
@@ -132,26 +159,24 @@ export class UnifiedLogger {
   /**
    * Trading-specific logging with specialized context
    */
-  trading(action: string, symbol?: string, context?: LogContext): void {
-    this.info(`Trading: ${action}`, {
+  trading(operation: string, context: LogContext): void {
+    this.info(`Trading: ${operation}`, {
       ...context,
       operation: "trading",
-      symbol,
-      action,
     });
   }
 
   /**
    * API-specific logging with request tracking
    */
-  api(method: string, endpoint: string, statusCode?: number, context?: LogContext): void {
-    const level = statusCode && statusCode >= 400 ? "error" : "info";
+  api(endpoint: string, method: string, responseTime: number, context?: LogContext): void {
+    const level = responseTime > 1000 ? "warn" : "info";
     this.log(level, `API: ${method} ${endpoint}`, {
       ...context,
       operation: "api",
       method,
       endpoint,
-      statusCode,
+      responseTime,
     });
   }
 
@@ -164,6 +189,62 @@ export class UnifiedLogger {
       operation: "database",
       table,
       dbOperation: operation,
+    });
+  }
+
+  /**
+   * Fatal level logging - critical errors that cause application shutdown
+   */
+  fatal(message: string, context?: LogContext, error?: Error): void {
+    this.log("error", `FATAL: ${message}`, context, error);
+  }
+
+  /**
+   * Pattern detection logging
+   */
+  pattern(patternType: string, confidence: number, context?: LogContext): void {
+    this.info(`Pattern detected: ${patternType}`, {
+      ...context,
+      patternType,
+      confidence,
+      operation: "pattern-detection",
+    });
+  }
+
+  /**
+   * Agent activity logging
+   */
+  agent(agentId: string, taskType: string, context?: LogContext): void {
+    this.info(`Agent ${agentId}: ${taskType}`, {
+      ...context,
+      agentId,
+      taskType,
+      operation: "agent",
+    });
+  }
+
+  /**
+   * Cache operation logging
+   */
+  cache(operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext): void {
+    this.debug(`Cache ${operation}: ${key}`, {
+      ...context,
+      cacheOperation: operation,
+      cacheKey: key,
+      operation: "cache",
+    });
+  }
+
+  /**
+   * Safety system logging
+   */
+  safety(event: string, riskScore: number, context?: LogContext): void {
+    const level = riskScore > 70 ? "warn" : "info";
+    this.log(level, `Safety: ${event}`, {
+      ...context,
+      riskScore,
+      safetyEvent: event,
+      operation: "safety",
     });
   }
 
