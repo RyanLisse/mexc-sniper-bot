@@ -105,8 +105,8 @@ export class MexcCoreClient {
         method: "GET",
       });
 
-      if (response.symbols && Array.isArray(response.symbols)) {
-        const matchingSymbols = response.symbols
+      if (response.data?.symbols && Array.isArray(response.data.symbols)) {
+        const matchingSymbols = response.data.symbols
           .filter(
             (symbol: any) =>
               symbol.symbol?.includes(vcoinId.toUpperCase()) ||
@@ -159,8 +159,8 @@ export class MexcCoreClient {
         method: "GET",
       });
 
-      if (response.symbols && Array.isArray(response.symbols)) {
-        const allSymbols = response.symbols.map((symbol: any) => ({
+      if (response.data?.symbols && Array.isArray(response.data.symbols)) {
+        const allSymbols = response.data.symbols.map((symbol: any) => ({
           symbol: symbol.symbol,
           baseAsset: symbol.baseAsset,
           quoteAsset: symbol.quoteAsset,
@@ -385,29 +385,25 @@ export class MexcCoreClient {
   ): Promise<MexcApiResponse> {
     const { timeout = this.config.timeout, ...fetchOptions } = options;
 
-    // Use AbortController for broader compatibility with Node.js versions and test environments
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    const response = await fetch(url, {
+      ...fetchOptions,
+      headers: {
+        ...this.baseHeaders,
+        ...fetchOptions.headers,
+      },
+      signal: (() => {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), timeout);
+        return controller.signal;
+      })(),
+    });
 
-    try {
-      const response = await fetch(url, {
-        ...fetchOptions,
-        headers: {
-          ...this.baseHeaders,
-          ...fetchOptions.headers,
-        },
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      return await response.json();
-    } finally {
-      clearTimeout(timeoutId);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
+
+    return await response.json();
   }
 
   private async makeAuthenticatedRequest(

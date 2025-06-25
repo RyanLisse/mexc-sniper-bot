@@ -208,9 +208,6 @@ export class MexcClientCore {
               `[MexcClientCore] ${authenticated ? "Auth" : "Public"} request: ${endpoint} (attempt ${attempt}/${maxRetries}) (${requestId})`
             );
 
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
-
             let response: Response;
 
             if (authenticated) {
@@ -236,7 +233,11 @@ export class MexcClientCore {
                     "X-Request-ID": headers["X-Request-ID"],
                     // Do NOT set Content-Type for GET requests to avoid "Invalid content Type" error
                   },
-                  signal: controller.signal,
+                  signal: (() => {
+                    const controller = new AbortController();
+                    setTimeout(() => controller.abort(), this.config.timeout);
+                    return controller.signal;
+                  })(),
                 });
               } else {
                 // Trading endpoints: POST with form data
@@ -254,7 +255,11 @@ export class MexcClientCore {
                     "Content-Type": "application/x-www-form-urlencoded",
                   },
                   body: body.toString(),
-                  signal: controller.signal,
+                  signal: (() => {
+                    const controller = new AbortController();
+                    setTimeout(() => controller.abort(), this.config.timeout);
+                    return controller.signal;
+                  })(),
                 });
               }
             } else {
@@ -262,11 +267,13 @@ export class MexcClientCore {
               response = await fetch(urlObj.toString(), {
                 method: "GET",
                 headers,
-                signal: controller.signal,
+                signal: (() => {
+                  const controller = new AbortController();
+                  setTimeout(() => controller.abort(), this.config.timeout);
+                  return controller.signal;
+                })(),
               });
             }
-
-            clearTimeout(timeoutId);
 
             if (!response.ok) {
               const errorText = await response.text();

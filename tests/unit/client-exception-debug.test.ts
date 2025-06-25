@@ -231,7 +231,7 @@ describe('Client Exception Debugging', () => {
 
     it('should handle undefined environment variables gracefully', () => {
       const originalEnv = process.env.NODE_ENV;
-      delete process.env.NODE_ENV;
+      process.env.NODE_ENV = undefined as any;
 
       const { QueryProvider } = require('../../src/components/query-provider');
       
@@ -377,7 +377,13 @@ describe('Client Exception Debugging', () => {
     it('should handle window object access safely', () => {
       // Test when window is undefined (SSR simulation)
       const originalWindow = global.window;
-      delete (global as any).window;
+      
+      // Temporarily remove window
+      Object.defineProperty(global, 'window', {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
 
       expect(() => {
         const { signIn } = require('../../src/lib/kinde-auth-client');
@@ -387,7 +393,12 @@ describe('Client Exception Debugging', () => {
         }
       }).not.toThrow();
 
-      global.window = originalWindow;
+      // Restore original window
+      Object.defineProperty(global, 'window', {
+        value: originalWindow,
+        writable: true,
+        configurable: true,
+      });
     });
 
     it('should handle localStorage access safely', () => {

@@ -51,15 +51,6 @@ describe("MexcCoreClient", () => {
       value: undefined,
       writable: true
     });
-    
-    // Mock crypto for signature generation
-    vi.doMock('crypto', () => ({
-      createHmac: vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          digest: vi.fn().mockReturnValue('mocked-signature-hash')
-        })
-      })
-    }));
 
     client = new MexcCoreClient(TEST_CONFIG);
     mockFetch = vi.fn();
@@ -68,7 +59,6 @@ describe("MexcCoreClient", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-    vi.doUnmock('crypto');
   });
 
   // ============================================================================

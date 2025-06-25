@@ -2,6 +2,53 @@ import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { useIsMobile, useViewportHeight, useTouchGestures } from "../../../src/hooks/use-mobile-clean";
 
+// Ensure window and document objects are available for tests
+if (typeof global.window === 'undefined') {
+  global.window = {
+    innerWidth: 1024,
+    innerHeight: 768,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+    location: { href: 'http://localhost:3000' },
+    navigator: {
+      maxTouchPoints: 0,
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+  } as any;
+}
+
+if (typeof global.document === 'undefined') {
+  global.document = {
+    body: {
+      appendChild: vi.fn((child) => child)
+    },
+    documentElement: {
+      style: {
+        setProperty: vi.fn(),
+        getPropertyValue: vi.fn(() => '6.67px')
+      }
+    },
+    createElement: vi.fn((tagName) => ({
+      tagName: tagName.toUpperCase(),
+      appendChild: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      style: {}
+    })),
+    dispatchEvent: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn()
+  } as any;
+}
+
+if (typeof global.navigator === 'undefined') {
+  global.navigator = {
+    maxTouchPoints: 0,
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+  } as any;
+}
+
 // Mock window dimensions
 const mockWindowDimensions = (width: number, height: number) => {
   Object.defineProperty(window, "innerWidth", {
@@ -30,7 +77,11 @@ const mockTouchCapabilities = (hasTouch: boolean) => {
       value: 1,
     });
   } else {
-    delete (window as any).ontouchstart;
+    Object.defineProperty(window, "ontouchstart", {
+      writable: true,
+      configurable: true,
+      value: undefined,
+    });
     Object.defineProperty(navigator, "maxTouchPoints", {
       writable: true,
       configurable: true,
@@ -46,8 +97,22 @@ describe("useIsMobile Hook", () => {
   });
 
   afterEach(() => {
-    // Cleanup
+    // Cleanup mocks and global state
     vi.restoreAllMocks();
+    
+    // Restore window dimensions if they were modified
+    if (typeof window !== 'undefined') {
+      Object.defineProperty(window, 'innerWidth', {
+        value: 1024,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(window, 'innerHeight', {
+        value: 768,
+        writable: true,
+        configurable: true,
+      });
+    }
   });
 
   it("should detect mobile device when width < 768px", () => {

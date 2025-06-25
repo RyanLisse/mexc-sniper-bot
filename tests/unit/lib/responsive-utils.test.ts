@@ -16,6 +16,29 @@ import {
   parseBreakpointValue,
 } from "../../../src/lib/responsive-utils-clean";
 
+// Ensure window object is available for tests
+if (typeof global.window === 'undefined') {
+  global.window = {
+    innerWidth: 1024,
+    innerHeight: 768,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    location: { href: 'http://localhost:3000' },
+    navigator: {
+      maxTouchPoints: 0,
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+  } as any;
+}
+
+// Ensure navigator object is available
+if (typeof global.navigator === 'undefined') {
+  global.navigator = {
+    maxTouchPoints: 0,
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+  } as any;
+}
+
 // Mock window dimensions
 const mockWindowDimensions = (width: number, height: number) => {
   Object.defineProperty(window, "innerWidth", {
@@ -47,6 +70,14 @@ describe("Responsive Utils - Constants", () => {
 describe("Responsive Utils - Device Detection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Ensure window is available in test environment
+    if (typeof global.window === 'undefined') {
+      global.window = global.window || {};
+    }
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("should detect breakpoint correctly", () => {
@@ -57,13 +88,25 @@ describe("Responsive Utils - Device Detection", () => {
   });
 
   it("should return false for breakpoint check in SSR", () => {
-    // Simulate server-side rendering
+    // Simulate server-side rendering by temporarily setting window to undefined
     const originalWindow = global.window;
-    delete (global as any).window;
+    const originalWindowType = typeof window;
+    
+    // Temporarily remove window
+    Object.defineProperty(global, 'window', {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
 
     expect(isBreakpoint("md")).toBe(false);
 
-    global.window = originalWindow;
+    // Restore original window
+    Object.defineProperty(global, 'window', {
+      value: originalWindow,
+      writable: true,
+      configurable: true,
+    });
   });
 
   it("should categorize devices correctly", () => {
@@ -86,26 +129,76 @@ describe("Responsive Utils - Device Detection", () => {
   });
 
   it("should detect touch device capabilities", () => {
+    // Store original values
+    const originalOntouchstart = (window as any).ontouchstart;
+    const originalMaxTouchPoints = navigator.maxTouchPoints;
+    const originalMsMaxTouchPoints = (navigator as any).msMaxTouchPoints;
+    const hadOntouchstart = "ontouchstart" in window;
+
     // Mock touch support
     Object.defineProperty(window, "ontouchstart", {
       value: {},
       configurable: true,
+      writable: true,
     });
     Object.defineProperty(navigator, "maxTouchPoints", {
       value: 1,
       configurable: true,
+      writable: true,
     });
 
     expect(isTouchDevice()).toBe(true);
 
-    // Mock no touch support
-    delete (window as any).ontouchstart;
+    // Mock no touch support - ensure all touch indicators are false
+    if ("ontouchstart" in window) {
+      try {
+        delete (window as any).ontouchstart;
+      } catch (e) {
+        // If delete fails, set to undefined and ensure it's not enumerable
+        Object.defineProperty(window, "ontouchstart", {
+          value: undefined,
+          configurable: true,
+          writable: true,
+          enumerable: false,
+        });
+      }
+    }
+    
     Object.defineProperty(navigator, "maxTouchPoints", {
       value: 0,
       configurable: true,
+      writable: true,
+    });
+    
+    // Also ensure msMaxTouchPoints is not truthy
+    Object.defineProperty(navigator, "msMaxTouchPoints", {
+      value: 0,
+      configurable: true,
+      writable: true,
     });
 
     expect(isTouchDevice()).toBe(false);
+
+    // Restore original values
+    if (hadOntouchstart && originalOntouchstart !== undefined) {
+      Object.defineProperty(window, "ontouchstart", {
+        value: originalOntouchstart,
+        configurable: true,
+        writable: true,
+      });
+    }
+    Object.defineProperty(navigator, "maxTouchPoints", {
+      value: originalMaxTouchPoints,
+      configurable: true,
+      writable: true,
+    });
+    if (originalMsMaxTouchPoints !== undefined) {
+      Object.defineProperty(navigator, "msMaxTouchPoints", {
+        value: originalMsMaxTouchPoints,
+        configurable: true,
+        writable: true,
+      });
+    }
   });
 
   it("should detect orientation correctly", () => {
