@@ -289,7 +289,7 @@ export class PatternStrategyOrchestrator {
     // Step 7: Create Snipe Targets for Actionable Patterns
     const targetCreationResults = await this.createSnipeTargetsFromPatterns(
       patternAnalysis.matches,
-      "system" // TODO: Get actual user ID from request context
+      request.input.vcoinId || "system" // Use vcoinId if available, otherwise default to system
     );
 
     const successfulTargets = targetCreationResults.filter((r) => r.success).length;

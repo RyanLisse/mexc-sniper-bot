@@ -88,6 +88,16 @@ export class EmergencyManager extends EventEmitter {
   }
 
   /**
+   * Check if emergency is currently active
+   */
+  isEmergencyActive(): boolean {
+    return this.emergencyState.level === "critical" || 
+           this.emergencyState.level === "warning" || 
+           this.emergencyState.tradingHalted ||
+           this.emergencyState.activeIncidents > 0;
+  }
+
+  /**
    * Execute emergency shutdown
    */
   async executeEmergencyShutdown(reason: string, userId: string): Promise<boolean> {

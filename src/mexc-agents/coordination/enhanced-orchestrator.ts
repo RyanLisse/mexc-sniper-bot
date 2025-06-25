@@ -65,7 +65,7 @@ export class EnhancedMexcOrchestrator {
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
-      logger.warn("[EnhancedMexcOrchestrator] Already initialized");
+      this.logger.warn("[EnhancedMexcOrchestrator] Already initialized");
       return;
     }
 
@@ -82,9 +82,9 @@ export class EnhancedMexcOrchestrator {
       this.workflowEngine.validateRegisteredWorkflows();
 
       this.isInitialized = true;
-      logger.info("[EnhancedMexcOrchestrator] Initialization completed with health monitoring");
+      this.logger.info("[EnhancedMexcOrchestrator] Initialization completed with health monitoring");
     } catch (error) {
-      logger.error("[EnhancedMexcOrchestrator] Initialization failed:", error);
+      this.logger.error("[EnhancedMexcOrchestrator] Initialization failed:", error);
       throw error;
     }
   }
@@ -128,7 +128,7 @@ export class EnhancedMexcOrchestrator {
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
     } catch (error) {
-      logger.error("[EnhancedMexcOrchestrator] Calendar discovery workflow failed:", error);
+      this.logger.error("[EnhancedMexcOrchestrator] Calendar discovery workflow failed:", error);
 
       const errorResult: MexcWorkflowResult = {
         success: false,
@@ -188,7 +188,7 @@ export class EnhancedMexcOrchestrator {
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
     } catch (error) {
-      logger.error(
+      this.logger.error(
         `[EnhancedMexcOrchestrator] Symbol analysis workflow failed for ${request.vcoinId}:`,
         error
       );
@@ -234,7 +234,7 @@ export class EnhancedMexcOrchestrator {
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
     } catch (error) {
-      logger.error("[EnhancedMexcOrchestrator] Pattern analysis workflow failed:", error);
+      this.logger.error("[EnhancedMexcOrchestrator] Pattern analysis workflow failed:", error);
 
       const errorResult: MexcWorkflowResult = {
         success: false,
@@ -278,7 +278,7 @@ export class EnhancedMexcOrchestrator {
       this.updateMetrics(mexcResult, startTime);
       return mexcResult;
     } catch (error) {
-      logger.error(
+      this.logger.error(
         `[EnhancedMexcOrchestrator] Trading strategy workflow failed for ${request.vcoinId}:`,
         error
       );
@@ -426,7 +426,7 @@ export class EnhancedMexcOrchestrator {
 
       return coordinationHealthy && workflowEngineHealthy && monitoringHealthy;
     } catch (error) {
-      logger.error("[EnhancedMexcOrchestrator] Health check failed:", error);
+      this.logger.error("[EnhancedMexcOrchestrator] Health check failed:", error);
       return false;
     }
   }
@@ -549,7 +549,7 @@ export class EnhancedMexcOrchestrator {
    * Shutdown coordination systems gracefully
    */
   async shutdown(): Promise<void> {
-    logger.info("[EnhancedMexcOrchestrator] Shutting down...");
+    this.logger.info("[EnhancedMexcOrchestrator] Shutting down...");
 
     try {
       // Stop monitoring systems
@@ -567,9 +567,9 @@ export class EnhancedMexcOrchestrator {
       this.performanceCollector.destroy();
 
       this.isInitialized = false;
-      logger.info("[EnhancedMexcOrchestrator] Shutdown completed");
+      this.logger.info("[EnhancedMexcOrchestrator] Shutdown completed");
     } catch (error) {
-      logger.error("[EnhancedMexcOrchestrator] Shutdown error:", error);
+      this.logger.error("[EnhancedMexcOrchestrator] Shutdown error:", error);
     }
   }
 
@@ -718,7 +718,7 @@ export class EnhancedMexcOrchestrator {
     this.workflowEngine.registerWorkflow(patternWorkflow);
     this.workflowEngine.registerWorkflow(strategyWorkflow);
 
-    logger.info("[EnhancedMexcOrchestrator] Registered 4 MEXC workflows");
+    this.logger.info("[EnhancedMexcOrchestrator] Registered 4 MEXC workflows");
   }
 
   /**

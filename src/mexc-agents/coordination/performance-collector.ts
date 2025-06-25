@@ -208,6 +208,13 @@ export class PerformanceCollector {
 
     for (const agent of agents) {
       try {
+        // Double-check agent still exists to avoid race conditions
+        const currentAgent = this.agentRegistry.getAgent(agent.id);
+        if (!currentAgent) {
+          // Agent was destroyed between getAllAgents() and now, skip silently
+          continue;
+        }
+
         const metrics = await this.calculateAgentMetrics(agent.id, timestamp);
 
         // Add to history
@@ -221,10 +228,13 @@ export class PerformanceCollector {
 
         this.agentMetricsHistory.set(agent.id, agentHistory);
       } catch (error) {
-        this.logger.error(
-          `[PerformanceCollector] Failed to collect metrics for agent ${agent.id}:`,
-          error
-        );
+        // Only log error if it's not a "not found" error (race condition)
+        if (!error.message?.includes('not found')) {
+          this.logger.error(
+            `[PerformanceCollector] Failed to collect metrics for agent ${agent.id}:`,
+            error
+          );
+        }
       }
     }
   }

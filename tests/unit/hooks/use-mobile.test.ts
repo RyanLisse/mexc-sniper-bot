@@ -77,11 +77,18 @@ const mockTouchCapabilities = (hasTouch: boolean) => {
       value: 1,
     });
   } else {
-    Object.defineProperty(window, "ontouchstart", {
-      writable: true,
-      configurable: true,
-      value: undefined,
-    });
+    // Delete the property entirely instead of setting to undefined
+    try {
+      delete (window as any).ontouchstart;
+    } catch {
+      // If deletion fails, set to undefined and mark as non-enumerable
+      Object.defineProperty(window, "ontouchstart", {
+        writable: true,
+        configurable: true,
+        value: undefined,
+        enumerable: false
+      });
+    }
     Object.defineProperty(navigator, "maxTouchPoints", {
       writable: true,
       configurable: true,

@@ -232,6 +232,7 @@ describe("Agent Coordination System", () => {
       const mockSymbolAnalysis = new MockAgent("symbol-analysis");
       const mockStrategy = new MockAgent("strategy");
       const mockRiskManager = new MockAgent("risk-manager");
+      const mockSimulation = new MockAgent("simulation");
 
       agentRegistry.registerAgent("mexc-api", mockMexcApi, {
         name: "MEXC API Agent",
@@ -257,6 +258,10 @@ describe("Agent Coordination System", () => {
         name: "Risk Manager Agent",
         type: "risk"
       });
+      agentRegistry.registerAgent("simulation", mockSimulation, {
+        name: "Simulation Agent",
+        type: "safety"
+      });
 
       // Perform health checks to make agents available
       await agentRegistry.checkAgentHealth("mexc-api");
@@ -265,6 +270,7 @@ describe("Agent Coordination System", () => {
       await agentRegistry.checkAgentHealth("symbol-analysis");
       await agentRegistry.checkAgentHealth("strategy");
       await agentRegistry.checkAgentHealth("risk-manager");
+      await agentRegistry.checkAgentHealth("simulation");
 
       // Create other components
       const workflowEngine = new WorkflowEngine(agentRegistry);
@@ -313,6 +319,7 @@ describe("Agent Coordination System", () => {
       mockSymbolAnalysis.destroy();
       mockStrategy.destroy();
       mockRiskManager.destroy();
+      mockSimulation.destroy();
       await system.orchestrator.shutdown();
     });
 
@@ -336,6 +343,7 @@ describe("Agent Coordination System", () => {
       const mockSymbolAnalysis = new MockAgent("symbol-analysis");
       const mockStrategy = new MockAgent("strategy");
       const mockRiskManager = new MockAgent("risk-manager");
+      const mockSimulation = new MockAgent("simulation");
 
       agentRegistry.registerAgent("mexc-api", mockMexcApi, {
         name: "MEXC API Agent",
@@ -361,6 +369,10 @@ describe("Agent Coordination System", () => {
         name: "Risk Manager Agent",
         type: "risk"
       });
+      agentRegistry.registerAgent("simulation", mockSimulation, {
+        name: "Simulation Agent",
+        type: "safety"
+      });
 
       // Perform health checks to make agents available
       await agentRegistry.checkAgentHealth("mexc-api");
@@ -369,6 +381,7 @@ describe("Agent Coordination System", () => {
       await agentRegistry.checkAgentHealth("symbol-analysis");
       await agentRegistry.checkAgentHealth("strategy");
       await agentRegistry.checkAgentHealth("risk-manager");
+      await agentRegistry.checkAgentHealth("simulation");
 
       // Create other components
       const workflowEngine = new WorkflowEngine(agentRegistry);
@@ -420,6 +433,7 @@ describe("Agent Coordination System", () => {
       mockSymbolAnalysis.destroy();
       mockStrategy.destroy();
       mockRiskManager.destroy();
+      mockSimulation.destroy();
       await system.orchestrator.shutdown();
     });
   });

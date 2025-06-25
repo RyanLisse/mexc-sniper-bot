@@ -13,6 +13,7 @@
 
 import { toSafeError } from "../../lib/error-type-utils";
 import type { SymbolEntry } from "../../services/mexc-unified-exports";
+import { getActivityDataForSymbol as fetchActivityData } from "../../services/pattern-detection/activity-integration";
 import { ConfidenceCalculator } from "./confidence-calculator";
 import type {
   CorrelationAnalysis,
@@ -395,25 +396,31 @@ export class PatternDetectionCore {
   }
 
   /**
-   * Get activity data for a symbol (for test compatibility)
+   * Get activity data for a symbol
    *
-   * This method provides backward compatibility with existing tests
-   * while delegating to the modular architecture.
+   * Integrates with the activity data service to fetch real activity data
+   * for enhanced pattern detection confidence.
    */
   private async getActivityDataForSymbol(symbol: string): Promise<any[]> {
     try {
-      // In the refactored architecture, activity data would be fetched
-      // through the activity integration module. For now, return empty
-      // array to maintain test compatibility.
-
-      // This could be enhanced to:
-      // 1. Fetch from a dedicated activity service
-      // 2. Use caching for performance
-      // 3. Integrate with MEXC activity APIs
-
-      return [];
+      // Use the dedicated activity integration service
+      const activityData = await fetchActivityData(symbol);
+      
+      if (this.config.enableActivityEnhancement) {
+        this.logger.debug("Activity data fetched", { 
+          symbol, 
+          count: activityData.length,
+          activityTypes: [...new Set(activityData.map(a => a.activityType))]
+        });
+      }
+      
+      return activityData;
     } catch (error) {
-      console.warn("Failed to fetch activity data", { symbol, error });
+      const safeError = toSafeError(error);
+      this.logger.warn("Failed to fetch activity data", { 
+        symbol, 
+        error: safeError.message 
+      });
       return [];
     }
   }

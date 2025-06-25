@@ -126,7 +126,7 @@ vi.mock('@/src/services/transaction-lock-service', () => {
         );
 
         if (existingLock) {
-          return { success: false, reason: 'Resource already locked' };
+          return { success: false, error: 'Resource locked, added to queue' };
         }
 
         // Create new lock

@@ -13,6 +13,7 @@
 
 import { toSafeError } from "../../lib/error-type-utils";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
+import { getActivityDataForSymbol as fetchActivityData } from "../../services/pattern-detection/activity-integration";
 import type {
   CorrelationAnalysis,
   IPatternAnalyzer,
@@ -549,15 +550,22 @@ export class PatternAnalyzer implements IPatternAnalyzer {
    */
   private async getActivityDataForSymbol(symbol: string): Promise<any[]> {
     try {
-      // In a full implementation, this would:
-      // 1. Fetch from activity service
-      // 2. Query database for activities
-      // 3. Use caching for performance
-
-      // For now, return empty array for test compatibility
-      return [];
+      // Use the dedicated activity integration service
+      const activityData = await fetchActivityData(symbol);
+      
+      this.logger.debug("Activity data fetched", { 
+        symbol, 
+        count: activityData.length,
+        activityTypes: [...new Set(activityData.map(a => a.activityType))]
+      });
+      
+      return activityData;
     } catch (error) {
-      console.warn("Failed to fetch activity data", { symbol, error });
+      const safeError = toSafeError(error);
+      this.logger.warn("Failed to fetch activity data", { 
+        symbol, 
+        error: safeError.message 
+      });
       return [];
     }
   }
