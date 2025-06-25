@@ -256,7 +256,7 @@ export function SimpleAutoSnipingControl({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
-            <span>{error}</span>
+            <span>{error instanceof Error ? error.message : String(error)}</span>
             <Button variant="outline" size="sm" onClick={clearError}>
               Dismiss
             </Button>

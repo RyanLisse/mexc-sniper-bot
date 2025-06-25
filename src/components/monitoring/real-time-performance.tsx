@@ -286,7 +286,7 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-red-600 mb-4">{error}</p>
+          <p className="text-red-600 mb-4">{error instanceof Error ? error.message : String(error)}</p>
           <Button onClick={fetchPerformanceData} variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
             Retry

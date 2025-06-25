@@ -296,7 +296,7 @@ export function UnifiedStatusCard({
                 variant="destructive"
                 className="p-2"
               >
-                <AlertDescription className="text-xs">{error}</AlertDescription>
+                <AlertDescription className="text-xs">{error instanceof Error ? error.message : String(error)}</AlertDescription>
               </Alert>
             ))}
           </div>

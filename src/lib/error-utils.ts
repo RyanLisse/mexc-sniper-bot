@@ -231,3 +231,61 @@ export class ErrorCollector {
     }
   }
 }
+
+/**
+ * React-safe error handling utilities
+ * Prevents React error #306 when rendering error objects
+ */
+
+/**
+ * Safely converts any error value to a human-readable string
+ * Prevents React error #306 when rendering error objects
+ */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  if (typeof error === 'string') {
+    return error;
+  }
+  
+  if (error && typeof error === 'object') {
+    // Handle objects with message property
+    if ('message' in error && typeof error.message === 'string') {
+      return error.message;
+    }
+    
+    // Handle objects with error property
+    if ('error' in error && typeof error.error === 'string') {
+      return error.error;
+    }
+    
+    // Fallback for other objects
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return 'An error occurred';
+    }
+  }
+  
+  return 'An unknown error occurred';
+}
+
+/**
+ * Formats error for display with optional context
+ */
+export function formatErrorForDisplay(error: unknown, context?: string): string {
+  const message = getErrorMessage(error);
+  return context ? `${context}: ${message}` : message;
+}
+
+/**
+ * Creates a safe error object that can be serialized
+ */
+export function createSafeError(error: unknown): { message: string; type: string } {
+  return {
+    message: getErrorMessage(error),
+    type: error instanceof Error ? error.constructor.name : typeof error,
+  };
+}
