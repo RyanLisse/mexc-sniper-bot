@@ -22,7 +22,7 @@ import type {
   WebSocketChannel,
   WebSocketMessage,
 } from "../lib/websocket-types";
-import { type WebSocketClientState, webSocketClient } from "../services/websocket-client";
+import { type WebSocketClientState, webSocketClient } from "../services/data/websocket-client";
 
 // ======================
 // Hook Configuration

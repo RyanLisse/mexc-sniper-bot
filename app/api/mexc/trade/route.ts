@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
+import { getRecommendedMexcService } from "../../../../src/services/api/mexc-unified-exports";
 import { type OrderParameters } from "../../../../src/services/api/mexc-client-types";
 import { enhancedRiskManagementService } from "../../../../src/services/enhanced-risk-management-service";
 import { transactionLockService } from "../../../../src/services/transaction-lock-service";
@@ -13,7 +13,7 @@ import { handleApiError } from "../../../../src/lib/error-handler";
 import { db } from "../../../../src/db";
 import { apiCredentials, executionHistory } from "../../../../src/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getEncryptionService } from "../../../../src/services/secure-encryption-service";
+import { getEncryptionService } from "../../../../src/services/api/secure-encryption-service";
 import { getCachedCredentials } from "../../../../src/lib/credential-cache";
 import type { NewExecutionHistory } from "../../../../src/db/schema";
 

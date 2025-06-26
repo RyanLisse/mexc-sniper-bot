@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { OptimizedAutoSnipingCore } from "../../../../src/services/optimized-auto-sniping-core";
+import { OptimizedAutoSnipingCore } from "../../../../src/services/trading/optimized-auto-sniping-core";
 import { 
   createSuccessResponse, 
   createErrorResponse, 

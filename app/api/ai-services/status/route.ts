@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAiIntelligenceService } from "../../../../src/services/ai-intelligence-service";
+import { getAiIntelligenceService } from "../../../../src/services/ai/ai-intelligence-service";
 import { createApiResponse } from "../../../../src/lib/api-response";
 
 export async function GET(request: NextRequest) {

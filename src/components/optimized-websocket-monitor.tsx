@@ -5,7 +5,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCurrencyFormatting } from "../hooks/use-currency-formatting";
-import { webSocketPriceService } from "../services/websocket-price-service";
+import { webSocketPriceService } from "../services/data/websocket-price-service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 interface MemoryStats {

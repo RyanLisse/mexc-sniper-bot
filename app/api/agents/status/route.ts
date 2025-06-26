@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGlobalAgentRegistry } from "../../../../src/mexc-agents/coordination/agent-registry";
-import { AgentMonitoringService } from "../../../../src/services/agent-monitoring-service";
+import { AgentMonitoringService } from "../../../../src/services/notification/agent-monitoring-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

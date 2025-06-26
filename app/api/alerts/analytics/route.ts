@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "../../../../src/lib/kinde-auth";
 import { db } from "../../../../src/db";
-import { AutomatedAlertingService } from "../../../../src/services/automated-alerting-service";
-import { AnomalyDetectionService } from "../../../../src/services/anomaly-detection-service";
-import { AlertCorrelationEngine } from "../../../../src/services/alert-correlation-engine";
+import { AutomatedAlertingService } from "../../../../src/services/notification/automated-alerting-service";
+import { AnomalyDetectionService } from "../../../../src/services/notification/anomaly-detection-service";
+import { AlertCorrelationEngine } from "../../../../src/services/notification/alert-correlation-engine";
 import { validateRequest } from "../../../../src/lib/api-auth";
 import { handleApiError } from "../../../../src/lib/api-response";
 

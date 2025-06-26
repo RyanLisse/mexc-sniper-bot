@@ -7,7 +7,7 @@
 
 import { NextRequest } from 'next/server';
 import { apiResponse } from '@/src/lib/api-response';
-import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
+import { MexcConfigValidator } from '@/src/services/api/mexc-config-validator';
 
 /**
  * GET /api/health

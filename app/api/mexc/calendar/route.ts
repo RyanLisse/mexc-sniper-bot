@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRecommendedMexcService } from "../../../../src/services/mexc-unified-exports";
+import { getRecommendedMexcService } from "../../../../src/services/api/mexc-unified-exports";
 import { 
   createSuccessResponse, 
   createErrorResponse, 

@@ -33,7 +33,7 @@ import {
   TRADING_STRATEGIES,
   type TradingStrategy,
   TradingStrategyManager,
-} from "../services/trading-strategy-manager";
+} from "../services/trading/trading-strategy-manager";
 
 interface StrategyPerformance {
   strategyId: string;

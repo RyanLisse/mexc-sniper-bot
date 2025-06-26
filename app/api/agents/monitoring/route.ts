@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AgentMonitoringService } from "../../../../src/services/agent-monitoring-service";
+import { AgentMonitoringService } from "../../../../src/services/notification/agent-monitoring-service";
 import { createLogger } from "../../../../src/lib/unified-logger";
 
 export const runtime = "nodejs";

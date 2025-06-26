@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, apiCredentials, type NewApiCredentials } from "../../../src/db";
 import { eq, and } from 'drizzle-orm';
-import { getEncryptionService, SecureEncryptionService } from "../../../src/services/secure-encryption-service";
+import { getEncryptionService, SecureEncryptionService } from "../../../src/services/api/secure-encryption-service";
 import {
   createSuccessResponse,
   createErrorResponse,

@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
-import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
+import { MexcConfigValidator } from '@/src/services/api/mexc-config-validator';
 import { multiPhaseTradingService } from '@/src/services/multi-phase-trading-service';
 import { resetGlobalReliabilityManager } from '@/src/services/mexc-circuit-breaker';
 

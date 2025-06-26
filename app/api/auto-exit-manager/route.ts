@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exitManagerService } from "../../../src/services/optimized-auto-exit-manager";
+import { exitManagerService } from "../../../src/services/trading/optimized-auto-exit-manager";
 
 export async function GET() {
   try {

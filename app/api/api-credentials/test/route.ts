@@ -12,7 +12,7 @@ import {
   validateMexcApiRequest,
   type ApiCredentialsTestRequest
 } from "../../../../src/schemas/mexc-api-validation-schemas";
-import { apiCredentialsTestService } from "../../../../src/services/api-credentials-test-service";
+import { apiCredentialsTestService } from "../../../../src/services/api/api-credentials-test-service";
 
 // POST /api/api-credentials/test
 export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) => {

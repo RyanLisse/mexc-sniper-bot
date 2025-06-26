@@ -8,7 +8,7 @@
 import { NextRequest } from 'next/server';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
-import { MexcConfigValidator } from '@/src/services/mexc-config-validator';
+import { MexcConfigValidator } from '@/src/services/api/mexc-config-validator';
 // Function defined at bottom of file
 
 // Configuration validation function
@@ -216,7 +216,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
     }
 
     // Validate configuration using the auto-sniping core
-    const { OptimizedAutoSnipingCore } = await import('../../../../src/services/optimized-auto-sniping-core');
+    const { OptimizedAutoSnipingCore } = await import('../../../../src/services/trading/optimized-auto-sniping-core');
     const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
     
     // Perform validation

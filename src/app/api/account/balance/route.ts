@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { trace } from "@opentelemetry/api";
 import { getMexcService } from "../../../../services/mexc-unified-exports";
-import { balancePersistenceService } from "../../../../services/balance-persistence-service";
+// Note: Balance persistence temporarily disabled - implement when needed
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
 // Request validation schema
@@ -164,36 +164,12 @@ export async function GET(request: NextRequest) {
         }, { status: 500 });
       }
 
-      // Persist balance data asynchronously (don't block response)
-      if (validUserId !== "default-user" && balanceResponse.data.balances.length > 0) {
-        span.addEvent("balance_persistence_start");
-        
-        // Convert to persistence format and save asynchronously
-        const persistenceData = {
-          balances: balanceResponse.data.balances.map(balance => ({
-            asset: balance.asset,
-            free: balance.free,
-            locked: balance.locked,
-            total: balance.total,
-            usdtValue: balance.usdtValue || 0,
-          })),
-          totalUsdtValue: balanceResponse.data.totalUsdtValue,
-        };
-
-        // Don't await - let this run in background
-        balancePersistenceService.saveBalanceSnapshot(validUserId, persistenceData, {
-          snapshotType: "triggered",
-          dataSource: "api",
-          priceSource: "mexc",
-        }).catch(error => {
-          console.error("[BalanceAPI] Background persistence failed", {
-            userId: validUserId,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        });
-
-        span.addEvent("balance_persistence_initiated");
-      }
+      // TODO: Implement balance persistence when service is available
+      // Currently disabled to avoid dependency on non-existent service
+      span.addEvent("balance_persistence_skipped", {
+        reason: "service_not_implemented",
+        userId: validUserId,
+      });
 
       span.setAttributes({
         "response.success": true,
