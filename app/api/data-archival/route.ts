@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dataArchivalService } from "../../../src/services/data-archival-service";
+import { dataArchivalService } from "../../../src/services/data/data-archival-service";
 
 export async function GET() {
   try {

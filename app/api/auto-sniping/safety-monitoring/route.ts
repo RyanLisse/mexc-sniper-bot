@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
-import { RealTimeSafetyMonitoringService, type SafetyConfiguration } from '@/src/services/real-time-safety-monitoring-modules';
+import { RealTimeSafetyMonitoringService, type SafetyConfiguration } from '@/src/services/risk/real-time-safety-monitoring-modules';
 
 // Lazy service getter to avoid build-time initialization
 function getSafetyMonitoringService() {

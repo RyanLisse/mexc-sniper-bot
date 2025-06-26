@@ -14,7 +14,7 @@
 import { NextRequest } from 'next/server';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
-import { AutoSnipingOrchestrator } from '@/src/services/auto-sniping-orchestrator';
+import { AutoSnipingOrchestrator } from '@/src/services/trading/auto-sniping-orchestrator';
 
 /**
  * POST /api/auto-sniping/control

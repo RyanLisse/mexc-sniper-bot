@@ -8,7 +8,7 @@
 
 import { NextRequest } from 'next/server';
 import { apiResponse } from '@/src/lib/api-response';
-import { environmentValidation } from '@/src/services/enhanced-environment-validation';
+import { environmentValidation } from '@/src/services/risk/enhanced-environment-validation';
 
 /**
  * GET /api/health/environment

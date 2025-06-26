@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PatternMonitoringService } from '@/src/services/pattern-monitoring-service';
+import { PatternMonitoringService } from '@/src/services/notification/pattern-monitoring-service';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 

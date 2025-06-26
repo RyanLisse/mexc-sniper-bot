@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { mexcConnectivityService } from "../../../../src/services/mexc-connectivity-service";
+import { mexcConnectivityService } from "../../../../src/services/api/mexc-connectivity-service";
 import { 
   createSuccessResponse,
   createErrorResponse,
