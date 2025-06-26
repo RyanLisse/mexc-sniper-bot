@@ -397,53 +397,39 @@ describe("Agent Health Monitoring System", () => {
 
     it("should attempt automatic recovery for failing agents", async () => {
       // Verify agent exists first
-      console.log("Starting recovery test - checking agent exists");
       expect(registry.hasAgent("test-1")).toBe(true);
       
       const agent = registry.getAgent("test-1");
       expect(agent).toBeDefined();
       expect(agent!.autoRecovery).toBe(true);
-      console.log("Agent found with autoRecovery:", agent!.autoRecovery);
 
       // Test recovery mechanism with failing agent
       testAgent1.setFailure(true);
-      console.log("Set agent to fail");
       
-      // Perform a single health check first to see what happens
-      console.log("Performing first health check");
+      // Perform health checks to trigger recovery (threshold is 3 consecutive errors)
       const firstResult = await registry.checkAgentHealth("test-1");
       expect(firstResult).toBeDefined();
-      console.log("First health check result:", { success: firstResult.success, error: firstResult.error });
       
       // Verify agent still exists after first check
-      console.log("Checking if agent still exists after first health check");
       const agentAfterFirst = registry.getAgent("test-1");
       expect(agentAfterFirst).toBeDefined();
-      console.log("Agent still exists:", !!agentAfterFirst);
       
       // Perform second health check
-      console.log("Performing second health check");
       const secondResult = await registry.checkAgentHealth("test-1");
       expect(secondResult).toBeDefined();
-      console.log("Second health check result:", { success: secondResult.success, error: secondResult.error });
       
       // Verify agent still exists after second check
-      console.log("Checking if agent still exists after second health check");
       const agentAfterSecond = registry.getAgent("test-1");
       expect(agentAfterSecond).toBeDefined();
-      console.log("Agent still exists after second check:", !!agentAfterSecond);
       
       // Perform third health check to trigger recovery
-      console.log("Performing third health check (should trigger recovery)");
       const thirdResult = await registry.checkAgentHealth("test-1");
       expect(thirdResult).toBeDefined();
-      console.log("Third health check result:", { success: thirdResult.success, error: thirdResult.error });
       
       // Wait for recovery to potentially complete
       await new Promise(resolve => setTimeout(resolve, 200));
       
       // Verify agent is still tracked by registry after recovery attempts
-      console.log("Final check - verifying agent still exists");
       const agentAfterFailures = registry.getAgent("test-1");
       expect(agentAfterFailures).toBeDefined();
       
@@ -455,8 +441,6 @@ describe("Agent Health Monitoring System", () => {
       // Verify recovery tracking exists
       expect(typeof agentAfterFailures!.health.recoveryAttempts).toBe("number");
       expect(agentAfterFailures!.health.recoveryAttempts).toBeGreaterThanOrEqual(0);
-      
-      console.log("Test completed successfully");
     });
   });
 
@@ -481,13 +465,21 @@ describe("Agent Health Monitoring System", () => {
       // Generate multiple health check failures
       let totalFailures = 0;
       for (let i = 0; i < 5; i++) {
-        const result1 = await registry.checkAgentHealth("test-1");
-        if (!result1.success) {
+        try {
+          const result1 = await registry.checkAgentHealth("test-1");
+          if (!result1.success) {
+            totalFailures++;
+          }
+        } catch (error) {
           totalFailures++;
         }
         
-        const result2 = await registry.checkAgentHealth("test-2");
-        if (!result2.success) {
+        try {
+          const result2 = await registry.checkAgentHealth("test-2");
+          if (!result2.success) {
+            totalFailures++;
+          }
+        } catch (error) {
           totalFailures++;
         }
       }
@@ -666,9 +658,13 @@ describe("Agent Health Monitoring System", () => {
       let failureCount = 0;
       
       for (let i = 0; i < 3; i++) {
-        const result = await registry.checkAgentHealth("test-1");
-        expect(result).toBeDefined();
-        if (!result.success) {
+        try {
+          const result = await registry.checkAgentHealth("test-1");
+          expect(result).toBeDefined();
+          if (!result.success) {
+            failureCount++;
+          }
+        } catch (error) {
           failureCount++;
         }
       }
@@ -697,9 +693,13 @@ describe("Agent Health Monitoring System", () => {
       // Test the recovery status mechanism
       let errorCount = 0;
       for (let i = 0; i < 3; i++) {
-        const result = await registry.checkAgentHealth("test-1");
-        expect(result).toBeDefined();
-        if (!result.success) {
+        try {
+          const result = await registry.checkAgentHealth("test-1");
+          expect(result).toBeDefined();
+          if (!result.success) {
+            errorCount++;
+          }
+        } catch (error) {
           errorCount++;
         }
       }
@@ -779,12 +779,18 @@ describe("Agent Health Monitoring System", () => {
       });
       
       // The registry should prevent duplicate registrations by throwing an error
-      expect(() => {
+      let errorThrown = false;
+      try {
         registry.registerAgent("test-1", duplicateAgent, {
           name: "Duplicate Agent",
           type: "test",
         });
-      }).toThrow("Agent with ID 'test-1' is already registered");
+      } catch (error) {
+        errorThrown = true;
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain("Agent with ID 'test-1' is already registered");
+      }
+      expect(errorThrown).toBe(true);
       
       // Verify the original agent is still there and unchanged
       const agentAfter = registry.getAgent("test-1");

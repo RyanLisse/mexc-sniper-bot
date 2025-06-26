@@ -275,10 +275,56 @@ export class PatternMonitoringService {
   }
 
   /**
+   * Clear all alerts (primarily for testing)
+   */
+  clearAllAlerts(): number {
+    const clearedCount = this.activeAlerts.length;
+    this.activeAlerts = [];
+    return clearedCount;
+  }
+
+  /**
+   * Reset monitoring service state (primarily for testing)
+   */
+  resetState(): void {
+    // Stop monitoring if active
+    this.stopMonitoring();
+
+    // Reset all statistics
+    this.stats = {
+      totalPatternsDetected: 0,
+      readyStatePatterns: 0,
+      preReadyPatterns: 0,
+      advanceOpportunities: 0,
+      averageConfidence: 0,
+      patternsLast24h: 0,
+      patternsLastHour: 0,
+      detectionRate: 0,
+      falsePositiveRate: 0,
+      avgProcessingTime: 0,
+      engineStatus: "idle",
+      lastHealthCheck: new Date().toISOString(),
+      consecutiveErrors: 0,
+    };
+
+    // Clear all state arrays
+    this.recentActivity = [];
+    this.activeAlerts = [];
+    this.patternHistory = [];
+
+    // Reset monitoring state
+    this.isMonitoring = false;
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval);
+      this.monitoringInterval = null;
+    }
+  }
+
+  /**
    * Perform a single monitoring cycle
    */
   private async performMonitoringCycle(): Promise<void> {
-    const _startTime = Date.now();
+    const startTime = Date.now();
 
     try {
       console.info("[PatternMonitoring] Performing monitoring cycle...");
@@ -297,8 +343,33 @@ export class PatternMonitoringService {
         return;
       }
 
-      // Detect patterns
-      const allPatterns = await this.detectPatternsManually(candidateSymbols);
+      // Perform pattern detection directly (avoid recursion)
+      const allPatterns: PatternMatch[] = [];
+
+      // Detect ready state patterns
+      const readyPatterns = await this.patternEngine.detectReadyStatePattern(candidateSymbols);
+      allPatterns.push(...readyPatterns);
+
+      // Detect pre-ready patterns
+      const preReadyPatterns = await this.patternEngine.detectPreReadyPatterns(candidateSymbols);
+      allPatterns.push(...preReadyPatterns);
+
+      const processingTime = Date.now() - startTime;
+
+      // Record activity
+      this.recordActivity({
+        timestamp: new Date().toISOString(),
+        patterns: allPatterns,
+        processingTime,
+        symbolsAnalyzed: candidateSymbols.length,
+        calendarEntriesAnalyzed: 0,
+      });
+
+      // Update statistics
+      this.updateStats(allPatterns, processingTime);
+
+      // Check for alerts
+      this.checkForAlerts(allPatterns);
 
       this.stats.consecutiveErrors = 0; // Reset error count on success
       console.info(`[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`);

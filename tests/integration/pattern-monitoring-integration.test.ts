@@ -22,6 +22,10 @@ describe('Pattern Monitoring Integration', () => {
   let mexcService: UnifiedMexcServiceV2;
 
   beforeEach(async () => {
+    // Clear singleton instances first to ensure fresh state
+    (PatternMonitoringService as any).instance = undefined;
+    (PatternDetectionCore as any).instance = undefined;
+
     // Setup global fetch mock with proper headers for MEXC API
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -68,18 +72,26 @@ describe('Pattern Monitoring Integration', () => {
       source: 'test-mock'
     });
 
-    // Initialize services
+    // Mock other methods that might be called during monitoring
+
+    // Mock pattern detection methods to prevent errors
+    vi.spyOn(PatternDetectionCore.prototype, 'detectReadyStatePattern').mockResolvedValue([]);
+    vi.spyOn(PatternDetectionCore.prototype, 'detectAdvanceOpportunities').mockResolvedValue([]);
+
+    // Initialize services after mocks are set up
     monitoringService = PatternMonitoringService.getInstance();
     patternEngine = PatternDetectionCore.getInstance();
     mexcService = new UnifiedMexcServiceV2();
 
-    // Ensure monitoring is stopped before each test
-    monitoringService.stopMonitoring();
+    // Reset monitoring service state before each test
+    monitoringService.resetState();
   });
 
   afterEach(() => {
     // Clean up after each test
-    monitoringService.stopMonitoring();
+    if (monitoringService && typeof monitoringService.resetState === 'function') {
+      monitoringService.resetState();
+    }
     vi.restoreAllMocks();
     
     // Clean up global fetch mock
@@ -383,9 +395,9 @@ describe('Pattern Monitoring Integration', () => {
       expect(report.recommendations).toBeDefined();
       expect(report.recommendations.length).toBeGreaterThan(0);
       
-      // Should include low detection rate recommendation initially
+      // Should include low detection rate recommendation initially (detectionRate = 0 < 1)
       expect(report.recommendations.some(rec => 
-        rec.includes('detection rate')
+        rec.toLowerCase().includes('detection rate')
       )).toBe(true);
     }, TEST_TIMEOUT);
   });
