@@ -92,14 +92,14 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
 
     const mexcController = new AbortController();
     setTimeout(() => mexcController.abort(), 5000);
-    
+
     const response = await fetch(testUrl.toString(), {
       method: "GET",
       headers: {
         "X-MEXC-APIKEY": process.env.MEXC_API_KEY,
         "Content-Type": "application/json",
       },
-      signal: mexcController.signal
+      signal: mexcController.signal,
     });
 
     const latency = Date.now() - startTime;
@@ -197,14 +197,14 @@ export async function checkOpenAiHealth(): Promise<HealthStatus> {
     // Simple API test - check if we can reach OpenAI
     const openaiController = new AbortController();
     setTimeout(() => openaiController.abort(), 5000);
-    
+
     const response = await fetch("https://api.openai.com/v1/models", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
-      signal: openaiController.signal
+      signal: openaiController.signal,
     });
 
     const latency = Date.now() - startTime;

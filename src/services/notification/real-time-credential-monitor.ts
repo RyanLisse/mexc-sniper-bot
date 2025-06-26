@@ -10,13 +10,13 @@
  */
 
 import { toSafeError } from "@/src/lib/error-type-utils";
-import type { ConnectionHealthMonitor } from "@/src/services/data/connection-health-monitor";
-import { getGlobalHealthMonitor } from "@/src/services/data/connection-health-monitor";
 import type {
   CredentialValidationResult,
   EnhancedCredentialValidator,
 } from "@/src/services/api/enhanced-mexc-credential-validator";
 import { getGlobalCredentialValidator } from "@/src/services/api/enhanced-mexc-credential-validator";
+import type { ConnectionHealthMonitor } from "@/src/services/data/connection-health-monitor";
+import { getGlobalHealthMonitor } from "@/src/services/data/connection-health-monitor";
 
 // ============================================================================
 // Types and Interfaces

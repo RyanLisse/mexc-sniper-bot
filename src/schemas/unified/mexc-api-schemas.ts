@@ -1,6 +1,6 @@
 /**
  * Unified MEXC API Schemas
- * 
+ *
  * Single source of truth for all MEXC API related types and schemas.
  * Consolidates types from:
  * - services/mexc-schemas.ts
@@ -8,7 +8,7 @@
  * - services/api/mexc-api-types.ts
  * - schemas/mexc-schemas.ts
  * - lib/api-schemas.ts
- * 
+ *
  * This eliminates duplication and provides consistent type definitions across the codebase.
  */
 
@@ -55,9 +55,9 @@ export const MexcServiceResponseSchema = z.object({
   data: z.unknown().optional(),
   error: z.string().optional(),
   code: z.string().optional(),
-  timestamp: z.union([z.string(), z.number()]).transform(val => 
-    typeof val === 'string' ? val : new Date(val).toISOString()
-  ),
+  timestamp: z
+    .union([z.string(), z.number()])
+    .transform((val) => (typeof val === "string" ? val : new Date(val).toISOString())),
   source: z.string().optional(),
   requestId: z.string().optional(),
   responseTime: z.number().optional(),
@@ -67,7 +67,10 @@ export const MexcServiceResponseSchema = z.object({
   metadata: z.unknown().optional(),
 });
 
-export type MexcServiceResponse<T = any> = Omit<z.infer<typeof MexcServiceResponseSchema>, 'data'> & {
+export type MexcServiceResponse<T = any> = Omit<
+  z.infer<typeof MexcServiceResponseSchema>,
+  "data"
+> & {
   data?: T;
 };
 
@@ -92,8 +95,8 @@ export const SymbolEntrySchema = z.object({
   cd: z.string(),
   symbol: z.string().optional(),
   sts: z.number(), // Symbol Trading Status
-  st: z.number(),  // Symbol State  
-  tt: z.number(),  // Trading Time
+  st: z.number(), // Symbol State
+  tt: z.number(), // Trading Time
   ca: z.number().optional(),
   ps: z.number().optional(),
   qs: z.number().optional(),
@@ -212,12 +215,16 @@ export const OrderResultSchema = z.object({
   cummulativeQuoteQty: z.string().optional(),
   error: z.string().optional(),
   timestamp: z.string(),
-  fills: z.array(z.object({
-    price: z.string(),
-    qty: z.string(),
-    commission: z.string(),
-    commissionAsset: z.string(),
-  })).optional(),
+  fills: z
+    .array(
+      z.object({
+        price: z.string(),
+        qty: z.string(),
+        commission: z.string(),
+        commissionAsset: z.string(),
+      })
+    )
+    .optional(),
 });
 
 /**
@@ -287,12 +294,16 @@ export const KlineSchema = z.object({
 export const ExchangeInfoSchema = z.object({
   timezone: z.string(),
   serverTime: z.number(),
-  rateLimits: z.array(z.object({
-    rateLimitType: z.string(),
-    interval: z.string(),
-    intervalNum: z.number(),
-    limit: z.number(),
-  })).optional(),
+  rateLimits: z
+    .array(
+      z.object({
+        rateLimitType: z.string(),
+        interval: z.string(),
+        intervalNum: z.number(),
+        limit: z.number(),
+      })
+    )
+    .optional(),
   exchangeFilters: z.array(TradingFilterSchema).optional(),
   symbols: z.array(ExchangeSymbolSchema),
 });
@@ -381,12 +392,12 @@ export const isValidForSnipe = (entry: CalendarEntry): boolean => {
   if (!entry.symbol || !entry.vcoinId || !entry.firstOpenTime) {
     return false;
   }
-  
+
   // Check if the launch time is in the future (at least 5 minutes)
   const now = Date.now();
   const launchTime = entry.firstOpenTime;
   const fiveMinutes = 5 * 60 * 1000;
-  
+
   return launchTime > now + fiveMinutes;
 };
 
@@ -489,10 +500,10 @@ export const MEXC_API_SCHEMAS = {
   MexcApiConfigSchema,
   MexcCacheConfigSchema,
   MexcReliabilityConfigSchema,
-  
+
   // Response Wrapper
   MexcServiceResponseSchema,
-  
+
   // Core Data
   CalendarEntrySchema,
   SymbolEntrySchema,
@@ -505,11 +516,11 @@ export const MEXC_API_SCHEMAS = {
   OrderStatusSchema,
   OrderBookSchema,
   AccountInfoSchema,
-  
+
   // Market Data
   KlineSchema,
   ExchangeInfoSchema,
-  
+
   // Activity
   ActivityDataSchema,
 } as const;

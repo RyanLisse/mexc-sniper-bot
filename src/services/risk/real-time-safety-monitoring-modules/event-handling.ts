@@ -7,9 +7,9 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
+import { createTimer } from "@/src/lib/structured-logger";
 import type { ScheduledOperation } from "@/src/schemas/safety-monitoring-schemas";
 import { validateScheduledOperation } from "@/src/schemas/safety-monitoring-schemas";
-import { createTimer } from "@/src/lib/structured-logger";
 
 export interface EventHandlingConfig {
   baseTickMs?: number;

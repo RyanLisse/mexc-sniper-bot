@@ -1,13 +1,13 @@
 /**
  * Unified Pattern Detection Schemas
- * 
+ *
  * Single source of truth for all pattern detection related types and schemas.
  * Consolidates types from:
  * - core/pattern-detection/interfaces.ts
  * - services/pattern-detection/pattern-types.ts
  * - schemas/pattern-detection-schemas-extracted.ts
  * - mexc-agents/orchestrator-types.ts (pattern-related types)
- * 
+ *
  * This eliminates duplication and provides consistent pattern detection definitions.
  */
 
@@ -157,15 +157,17 @@ export const PatternDetectionMetricsSchema = z.object({
   cacheHitRatio: z.number().min(0).max(1),
   errorCount: z.number(),
   warningCount: z.number(),
-  
+
   // Performance breakdown
   algorithmTimes: z.record(z.string(), z.number()).optional(),
   patternTypeDistribution: z.record(z.string(), z.number()).optional(),
-  confidenceDistribution: z.object({
-    low: z.number(),     // 0-33
-    medium: z.number(),  // 34-66
-    high: z.number(),    // 67-100
-  }).optional(),
+  confidenceDistribution: z
+    .object({
+      low: z.number(), // 0-33
+      medium: z.number(), // 34-66
+      high: z.number(), // 67-100
+    })
+    .optional(),
 });
 
 export type PatternDetectionMetrics = z.infer<typeof PatternDetectionMetricsSchema>;
@@ -182,12 +184,14 @@ export const StoredPatternSchema = z.object({
   vcoinId: z.string().optional(),
   detectedAt: z.date(),
   successOutcome: z.boolean().optional(),
-  performanceMetrics: z.object({
-    priceChange24h: z.number().optional(),
-    volumeChange24h: z.number().optional(),
-    actualLaunchTime: z.date().optional(),
-    predictionAccuracy: z.number().optional(),
-  }).optional(),
+  performanceMetrics: z
+    .object({
+      priceChange24h: z.number().optional(),
+      volumeChange24h: z.number().optional(),
+      actualLaunchTime: z.date().optional(),
+      predictionAccuracy: z.number().optional(),
+    })
+    .optional(),
   rawData: z.record(z.unknown()),
 });
 
@@ -251,10 +255,12 @@ export const PatternServiceOptionsSchema = z.object({
   limit: z.number().positive().optional(),
   sameTypeOnly: z.boolean().optional(),
   includeHistorical: z.boolean().optional(),
-  timeRange: z.object({
-    start: z.date(),
-    end: z.date(),
-  }).optional(),
+  timeRange: z
+    .object({
+      start: z.date(),
+      end: z.date(),
+    })
+    .optional(),
 });
 
 export type PatternServiceOptions = z.infer<typeof PatternServiceOptionsSchema>;
@@ -310,14 +316,21 @@ export interface IPatternAnalyzer {
 
 export interface IConfidenceCalculator {
   calculateReadyStateConfidence(symbol: SymbolEntry): Promise<number>;
-  calculateAdvanceOpportunityConfidence(entry: CalendarEntry, advanceHours: number): Promise<number>;
+  calculateAdvanceOpportunityConfidence(
+    entry: CalendarEntry,
+    advanceHours: number
+  ): Promise<number>;
   calculatePreReadyScore(symbol: SymbolEntry): Promise<PreReadyPatternResult>;
   validateConfidenceScore(score: number): boolean;
   enhanceConfidenceWithActivity(baseConfidence: number, activities: ActivityData[]): number;
 }
 
 export interface IPatternStorage {
-  storeSuccessfulPattern(data: SymbolEntry | CalendarEntry, type: string, confidence: number): Promise<void>;
+  storeSuccessfulPattern(
+    data: SymbolEntry | CalendarEntry,
+    type: string,
+    confidence: number
+  ): Promise<void>;
   getHistoricalSuccessRate(patternType: string): Promise<number>;
   findSimilarPatterns(pattern: any, options?: PatternServiceOptions): Promise<StoredPattern[]>;
   clearCache(): void;
@@ -341,29 +354,29 @@ export const PATTERN_DETECTION_SCHEMAS = {
   PatternIndicatorsSchema,
   ActivityInfoSchema,
   PatternMatchSchema,
-  
+
   // Analysis
   PatternAnalysisRequestSchema,
   CorrelationAnalysisSchema,
   PatternAnalysisResultSchema,
-  
+
   // Configuration
   PatternDetectionConfigSchema,
-  
+
   // Metrics
   PatternDetectionMetricsSchema,
-  
+
   // Storage
   StoredPatternSchema,
   PatternCacheStatsSchema,
-  
+
   // Validation
   ValidationResultSchema,
-  
+
   // Enhanced Types
   PreReadyPatternResultSchema,
   AdvanceOpportunitySchema,
-  
+
   // Service Options
   PatternServiceOptionsSchema,
 } as const;
@@ -439,8 +452,8 @@ export function calculateConfidenceDistribution(matches: PatternMatch[]): {
   high: number;
 } {
   const distribution = { low: 0, medium: 0, high: 0 };
-  
-  matches.forEach(match => {
+
+  matches.forEach((match) => {
     if (match.confidence <= 33) {
       distribution.low++;
     } else if (match.confidence <= 66) {

@@ -150,10 +150,10 @@ export class ConnectionHealthMonitor {
       // Test basic connectivity with MEXC ping endpoint
       const healthController = new AbortController();
       setTimeout(() => healthController.abort(), 10000);
-      
+
       const response = await fetch("https://api.mexc.com/api/v3/ping", {
         method: "GET",
-        signal: healthController.signal
+        signal: healthController.signal,
       });
 
       const latency = Date.now() - startTime;

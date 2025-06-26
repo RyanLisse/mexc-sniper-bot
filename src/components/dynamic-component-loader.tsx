@@ -6,7 +6,8 @@
 
 "use client";
 
-import React, { lazy, Suspense } from "react";
+import type React from "react";
+import { lazy, Suspense } from "react";
 import { Skeleton } from "./ui/optimized-exports";
 
 // Loading fallback components
@@ -150,11 +151,13 @@ function safeLazy<T extends React.ComponentType<any>>(
     factory().catch((error) => {
       console.warn(`Failed to load component ${fallbackName}:`, error);
       return {
-        default: fallback || (() => (
-          <div className="p-4 text-center text-muted-foreground">
-            Component "{fallbackName}" failed to load
-          </div>
-        )) as T,
+        default:
+          fallback ||
+          ((() => (
+            <div className="p-4 text-center text-muted-foreground">
+              Component "{fallbackName}" failed to load
+            </div>
+          )) as T),
       };
     })
   );
@@ -162,98 +165,110 @@ function safeLazy<T extends React.ComponentType<any>>(
 
 // Lazy loaded dashboard components with safe error handling
 export const OptimizedCoinCalendar = safeLazy(
-  () => import("./optimized-coin-calendar").then((module) => ({
-    default: module.OptimizedCoinCalendar || module.default,
-  })),
+  () =>
+    import("./optimized-coin-calendar").then((module) => ({
+      default: module.OptimizedCoinCalendar || module.default,
+    })),
   "OptimizedCoinCalendar",
   () => <CardSkeleton />
 );
 
 export const OptimizedAccountBalance = safeLazy(
-  () => import("./optimized-account-balance").then((module) => ({
-    default: module.OptimizedAccountBalance || module.default,
-  })),
+  () =>
+    import("./optimized-account-balance").then((module) => ({
+      default: module.OptimizedAccountBalance || module.default,
+    })),
   "OptimizedAccountBalance",
   () => <CardSkeleton />
 );
 
 export const OptimizedWebSocketMonitor = safeLazy(
-  () => import("./optimized-websocket-monitor").then((module) => ({
-    default: module.OptimizedWebSocketMonitor || module.default,
-  })),
+  () =>
+    import("./optimized-websocket-monitor").then((module) => ({
+      default: module.OptimizedWebSocketMonitor || module.default,
+    })),
   "OptimizedWebSocketMonitor",
   () => <CardSkeleton />
 );
 
 export const SafetyMonitoringDashboard = safeLazy(
-  () => import("./safety-monitoring-dashboard").then((module) => ({
-    default: module.SafetyMonitoringDashboard || module.default,
-  })),
+  () =>
+    import("./safety-monitoring-dashboard").then((module) => ({
+      default: module.SafetyMonitoringDashboard || module.default,
+    })),
   "SafetyMonitoringDashboard",
   () => <CardSkeleton />
 );
 
 export const PatternSniper = safeLazy(
-  () => import("./pattern-sniper").then((module) => ({
-    default: module.default || module.PatternSniper || module.PatternSniperComponent,
-  })),
+  () =>
+    import("./pattern-sniper").then((module) => ({
+      default: module.default || module.PatternSniper || module.PatternSniperComponent,
+    })),
   "PatternSniper",
   () => <CardSkeleton />
 );
 
 export const AgentDashboard = safeLazy(
-  () => import("./agent-dashboard").then((module) => ({
-    default: module.AgentDashboard || module.default,
-  })),
+  () =>
+    import("./agent-dashboard").then((module) => ({
+      default: module.AgentDashboard || module.default,
+    })),
   "AgentDashboard",
   () => <CardSkeleton />
 );
 
 export const StrategyManager = safeLazy(
-  () => import("./strategy-manager").then((module) => ({
-    default: module.StrategyManager || module.default,
-  })),
+  () =>
+    import("./strategy-manager").then((module) => ({
+      default: module.StrategyManager || module.default,
+    })),
   "StrategyManager",
   () => <CardSkeleton />
 );
 
 export const WorkflowManager = safeLazy(
-  () => import("./workflow-manager").then((module) => ({
-    default: module.WorkflowManager || module.default,
-  })),
+  () =>
+    import("./workflow-manager").then((module) => ({
+      default: module.WorkflowManager || module.default,
+    })),
   "WorkflowManager",
   () => <CardSkeleton />
 );
 
 export const TradingConfiguration = safeLazy(
-  () => import("./trading-configuration").then((module) => ({
-    default: module.TradingConfiguration || module.default,
-  })),
+  () =>
+    import("./trading-configuration").then((module) => ({
+      default: module.TradingConfiguration || module.default,
+    })),
   "TradingConfiguration",
   () => <CardSkeleton />
 );
 
 export const UserPreferences = safeLazy(
-  () => import("./user-preferences").then((module) => ({
-    default: module.UserPreferences || module.default,
-  })),
+  () =>
+    import("./user-preferences").then((module) => ({
+      default: module.UserPreferences || module.default,
+    })),
   "UserPreferences",
   () => <CardSkeleton />
 );
 
 // Dashboard section components with safe loading
 export const CoinListingsBoard = safeLazy(
-  () => import("./dashboard/coin-listings-board").then((module) => ({
-    default: module.CoinListingsBoard || module.default,
-  })),
+  () =>
+    import("./dashboard/coin-listings-board").then((module) => ({
+      default: module.CoinListingsBoard || module.default,
+    })),
   "CoinListingsBoard",
   () => <CardSkeleton />
 );
 
 export const MetricCard = safeLazy(
-  () => import("./dashboard/metric-card").then((module) => ({
-    default: module.MetricCard || module.default,
-  })),
+  () =>
+    import("./dashboard/metric-card").then((module) => ({
+      default: module.MetricCard || module.default,
+    })),
   "MetricCard",
   ({ title = "Metric", value = "N/A" }: any) => (
     <div className="rounded-lg border p-4">
@@ -264,163 +279,183 @@ export const MetricCard = safeLazy(
 );
 
 export const OptimizedActivityFeed = safeLazy(
-  () => import("./dashboard/optimized-activity-feed").then((module) => ({
-    default: module.OptimizedActivityFeed || module.default,
-  })),
+  () =>
+    import("./dashboard/optimized-activity-feed").then((module) => ({
+      default: module.OptimizedActivityFeed || module.default,
+    })),
   "OptimizedActivityFeed",
   () => <CardSkeleton />
 );
 
 export const OptimizedMetricsGrid = safeLazy(
-  () => import("./dashboard/optimized-metrics-grid").then((module) => ({
-    default: module.OptimizedMetricsGrid || module.default,
-  })),
+  () =>
+    import("./dashboard/optimized-metrics-grid").then((module) => ({
+      default: module.OptimizedMetricsGrid || module.default,
+    })),
   "OptimizedMetricsGrid",
   () => <CardSkeleton />
 );
 
 export const OptimizedTradingTargets = safeLazy(
-  () => import("./dashboard/optimized-trading-targets").then((module) => ({
-    default: module.OptimizedTradingTargets || module.default,
-  })),
+  () =>
+    import("./dashboard/optimized-trading-targets").then((module) => ({
+      default: module.OptimizedTradingTargets || module.default,
+    })),
   "OptimizedTradingTargets",
   () => <CardSkeleton />
 );
 
 export const RecentTradesTable = safeLazy(
-  () => import("./dashboard/recent-trades-table").then((module) => ({
-    default: module.RecentTradesTable || module.default,
-  })),
+  () =>
+    import("./dashboard/recent-trades-table").then((module) => ({
+      default: module.RecentTradesTable || module.default,
+    })),
   "RecentTradesTable",
   () => <TableSkeleton />
 );
 
 export const TradingChart = safeLazy(
-  () => import("./dashboard/trading-chart").then((module) => ({
-    default: module.TradingChart || module.default,
-  })),
+  () =>
+    import("./dashboard/trading-chart").then((module) => ({
+      default: module.TradingChart || module.default,
+    })),
   "TradingChart",
   () => <ChartSkeleton />
 );
 
 export const UpcomingCoinsSection = safeLazy(
-  () => import("./dashboard/upcoming-coins-section").then((module) => ({
-    default: module.UpcomingCoinsSection || module.default,
-  })),
+  () =>
+    import("./dashboard/upcoming-coins-section").then((module) => ({
+      default: module.UpcomingCoinsSection || module.default,
+    })),
   "UpcomingCoinsSection",
   () => <CardSkeleton />
 );
 
 export const WorkflowStatusCard = safeLazy(
-  () => import("./dashboard/workflow-status-card").then((module) => ({
-    default: module.WorkflowStatusCard || module.default,
-  })),
+  () =>
+    import("./dashboard/workflow-status-card").then((module) => ({
+      default: module.WorkflowStatusCard || module.default,
+    })),
   "WorkflowStatusCard",
   () => <CardSkeleton />
 );
 
 // TIER 1 HEAVY COMPONENTS: Critical for 70% faster load performance with safe loading
 export const TradingAnalyticsDashboard = safeLazy(
-  () => import("./monitoring/trading-analytics-dashboard").then((module) => ({
-    default: module.TradingAnalyticsDashboard || module.default,
-  })),
+  () =>
+    import("./monitoring/trading-analytics-dashboard").then((module) => ({
+      default: module.TradingAnalyticsDashboard || module.default,
+    })),
   "TradingAnalyticsDashboard",
   () => <TradingSkeleton />
 );
 
 export const AutoSnipingExecutionDashboard = safeLazy(
-  () => import("./auto-sniping/auto-sniping-execution-dashboard").then((module) => ({
-    default: module.AutoSnipingExecutionDashboard || module.default,
-  })),
+  () =>
+    import("./auto-sniping/auto-sniping-execution-dashboard").then((module) => ({
+      default: module.AutoSnipingExecutionDashboard || module.default,
+    })),
   "AutoSnipingExecutionDashboard",
   () => <ExecutionSkeleton />
 );
 
 export const AlertCenter = safeLazy(
-  () => import("./monitoring/alert-center").then((module) => ({
-    default: module.AlertCenter || module.default,
-  })),
+  () =>
+    import("./monitoring/alert-center").then((module) => ({
+      default: module.AlertCenter || module.default,
+    })),
   "AlertCenter",
   () => <AlertSkeleton />
 );
 
 export const RealTimeSafetyDashboard = safeLazy(
-  () => import("./auto-sniping/real-time-safety-dashboard").then((module) => ({
-    default: module.RealTimeSafetyDashboard || module.default,
-  })),
+  () =>
+    import("./auto-sniping/real-time-safety-dashboard").then((module) => ({
+      default: module.RealTimeSafetyDashboard || module.default,
+    })),
   "RealTimeSafetyDashboard",
   () => <SafetySkeleton />
 );
 
 export const ComprehensiveSafetyDashboard = safeLazy(
-  () => import("./safety/comprehensive-safety-dashboard").then((module) => ({
-    default: module.ComprehensiveSafetyDashboard || module.default,
-  })),
+  () =>
+    import("./safety/comprehensive-safety-dashboard").then((module) => ({
+      default: module.ComprehensiveSafetyDashboard || module.default,
+    })),
   "ComprehensiveSafetyDashboard",
   () => <SafetySkeleton />
 );
 
 export const RealTimePerformance = safeLazy(
-  () => import("./monitoring/real-time-performance").then((module) => ({
-    default: module.RealTimePerformance || module.default,
-  })),
+  () =>
+    import("./monitoring/real-time-performance").then((module) => ({
+      default: module.RealTimePerformance || module.default,
+    })),
   "RealTimePerformance",
   () => <DashboardSkeleton />
 );
 
 // TIER 2 HEAVY COMPONENTS: Quick wins for performance with safe loading
 export const RealTimeDashboard = safeLazy(
-  () => import("./dashboard/real-time-dashboard").then((module) => ({
-    default: module.default || module.RealTimeDashboard,
-  })),
+  () =>
+    import("./dashboard/real-time-dashboard").then((module) => ({
+      default: module.default || module.RealTimeDashboard,
+    })),
   "RealTimeDashboard",
   () => <DashboardSkeleton />
 );
 
 export const AlertsDashboard = safeLazy(
-  () => import("./alerts/alerts-dashboard").then((module) => ({
-    default: module.AlertsDashboard || module.default,
-  })),
+  () =>
+    import("./alerts/alerts-dashboard").then((module) => ({
+      default: module.AlertsDashboard || module.default,
+    })),
   "AlertsDashboard",
   () => <AlertSkeleton />
 );
 
 export const UnifiedTakeProfitSettings = safeLazy(
-  () => import("./unified-take-profit-settings").then((module) => ({
-    default: module.UnifiedTakeProfitSettings || module.default,
-  })),
+  () =>
+    import("./unified-take-profit-settings").then((module) => ({
+      default: module.UnifiedTakeProfitSettings || module.default,
+    })),
   "UnifiedTakeProfitSettings",
   () => <CardSkeleton />
 );
 
 export const SystemArchitectureOverview = safeLazy(
-  () => import("./monitoring/system-architecture-overview").then((module) => ({
-    default: module.SystemArchitectureOverview || module.default,
-  })),
+  () =>
+    import("./monitoring/system-architecture-overview").then((module) => ({
+      default: module.SystemArchitectureOverview || module.default,
+    })),
   "SystemArchitectureOverview",
   () => <DashboardSkeleton />
 );
 
 export const EditableTakeProfitTable = safeLazy(
-  () => import("./editable-take-profit-table").then((module) => ({
-    default: module.EditableTakeProfitTable || module.default,
-  })),
+  () =>
+    import("./editable-take-profit-table").then((module) => ({
+      default: module.EditableTakeProfitTable || module.default,
+    })),
   "EditableTakeProfitTable",
   () => <TableSkeleton />
 );
 
 export const ParameterMonitor = safeLazy(
-  () => import("./tuning/parameter-monitor").then((module) => ({
-    default: module.ParameterMonitor || module.default,
-  })),
+  () =>
+    import("./tuning/parameter-monitor").then((module) => ({
+      default: module.ParameterMonitor || module.default,
+    })),
   "ParameterMonitor",
   () => <CardSkeleton />
 );
 
 export const OptimizationControlPanel = safeLazy(
-  () => import("./tuning/optimization-control-panel").then((module) => ({
-    default: module.OptimizationControlPanel || module.default,
-  })),
+  () =>
+    import("./tuning/optimization-control-panel").then((module) => ({
+      default: module.OptimizationControlPanel || module.default,
+    })),
   "OptimizationControlPanel",
   () => <CardSkeleton />
 );
@@ -632,7 +667,7 @@ export function preloadSettingsComponents() {
 // Smart preloading based on user navigation patterns with logging
 export async function preloadByRoute(currentRoute: string) {
   let preloadPromise: Promise<PromiseSettledResult<any>[]>;
-  
+
   switch (currentRoute) {
     case "/dashboard":
       preloadPromise = preloadDashboardComponents();
@@ -655,13 +690,15 @@ export async function preloadByRoute(currentRoute: string) {
   // Log preload results for debugging
   try {
     const results = await preloadPromise;
-    const successful = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected').length;
-    
+    const successful = results.filter((r) => r.status === "fulfilled").length;
+    const failed = results.filter((r) => r.status === "rejected").length;
+
     if (failed > 0) {
-      console.warn(`Preloaded ${successful}/${successful + failed} components for route ${currentRoute}. ${failed} failed.`);
+      console.warn(
+        `Preloaded ${successful}/${successful + failed} components for route ${currentRoute}. ${failed} failed.`
+      );
       results.forEach((result, index) => {
-        if (result.status === 'rejected') {
+        if (result.status === "rejected") {
           console.warn(`Component ${index} failed to preload:`, result.reason);
         }
       });

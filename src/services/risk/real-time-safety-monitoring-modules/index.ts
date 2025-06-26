@@ -27,10 +27,10 @@ import type {
   SafetyThresholds,
   SystemHealth,
 } from "@/src/schemas/safety-monitoring-schemas";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
+import { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
 import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
 import { OptimizedAutoSnipingCore } from "@/src/services/trading/optimized-auto-sniping-core";
-import { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
-import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import {
   type AlertGenerationData,
   AlertManagement,

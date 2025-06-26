@@ -17,13 +17,6 @@
  * ```
  */
 
-// Import logger
-// Import the production-ready unified client (modular)
-import {
-  getUnifiedMexcClient as getUnifiedMexcClientFactory,
-  resetUnifiedMexcClient,
-  type UnifiedMexcClient,
-} from "./mexc-client-factory";
 // Import types from schemas module
 import type {
   BalanceEntry,
@@ -42,6 +35,13 @@ import type {
   Ticker,
   TradingOpportunity,
 } from "@/src/schemas/unified/mexc-api-schemas";
+// Import logger
+// Import the production-ready unified client (modular)
+import {
+  getUnifiedMexcClient as getUnifiedMexcClientFactory,
+  resetUnifiedMexcClient,
+  type UnifiedMexcClient,
+} from "./mexc-client-factory";
 // Import the new unified V2 service
 import {
   getUnifiedMexcServiceV2,

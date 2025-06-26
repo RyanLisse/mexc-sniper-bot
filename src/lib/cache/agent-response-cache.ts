@@ -185,7 +185,7 @@ export class AgentResponseCache {
         if (criteria.dependencies && criteria.dependencies.length > 0 && !shouldDelete) {
           const cached = await globalCacheManager.get<AgentResponse>(key);
           if (cached?.metadata?.dependencies) {
-            const hasMatchingDependency = criteria.dependencies.some((dep) => 
+            const hasMatchingDependency = criteria.dependencies.some((dep) =>
               cached.metadata.dependencies?.includes(dep)
             );
             shouldDelete = hasMatchingDependency;

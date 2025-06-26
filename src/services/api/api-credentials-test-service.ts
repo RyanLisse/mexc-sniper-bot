@@ -13,12 +13,12 @@ import {
   validateMexcApiRequest,
   validateMexcApiResponse,
 } from "@/src/schemas/mexc-api-validation-schemas";
+import { syncAfterCredentialTest } from "@/src/services/notification/status-synchronization-service";
 import {
   getUnifiedMexcService,
   invalidateUserCredentialsCache,
 } from "./unified-mexc-service-factory";
 import { getUserCredentials } from "./user-credentials-service";
-import { syncAfterCredentialTest } from "@/src/services/notification/status-synchronization-service";
 
 // ============================================================================
 // Types & Interfaces
@@ -168,12 +168,12 @@ export class ApiCredentialsTestService {
         context.requestId
       );
 
-      console.info('[CredentialTestService] Status synchronization completed', {
+      console.info("[CredentialTestService] Status synchronization completed", {
         requestId: context.requestId,
         syncSuccess: statusSyncResult.success,
         servicesNotified: statusSyncResult.servicesNotified,
         cacheInvalidated: statusSyncResult.cacheInvalidated,
-        statusRefreshed: statusSyncResult.statusRefreshed
+        statusRefreshed: statusSyncResult.statusRefreshed,
       });
 
       // Build successful response

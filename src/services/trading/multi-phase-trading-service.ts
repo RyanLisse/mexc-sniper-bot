@@ -617,7 +617,7 @@ export class MultiPhaseTradingService {
       };
     } catch (error) {
       this.logger.error("Failed to get historical success rates", { patternType }, error);
-      
+
       // Return default fallback data
       return {
         successRate: 70,

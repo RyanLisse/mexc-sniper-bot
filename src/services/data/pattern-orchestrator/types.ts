@@ -1,6 +1,6 @@
 /**
  * Pattern Strategy Orchestrator Types
- * 
+ *
  * Extracted types from pattern-strategy-orchestrator.ts to improve modularity
  */
 

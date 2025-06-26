@@ -18,8 +18,8 @@ import {
   validateRiskMetrics,
   validateSafetyThresholds,
 } from "@/src/schemas/safety-monitoring-schemas";
-import type { OptimizedAutoSnipingExecutionEngine } from "@/src/services/trading/optimized-auto-sniping-execution-engine";
 import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
+import type { OptimizedAutoSnipingExecutionEngine } from "@/src/services/trading/optimized-auto-sniping-execution-engine";
 
 export interface CoreSafetyMonitoringConfig {
   configuration: SafetyConfiguration;

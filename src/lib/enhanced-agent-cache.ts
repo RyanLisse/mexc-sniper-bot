@@ -120,7 +120,7 @@ export class EnhancedAgentCache {
     this.workflowCache = new WorkflowCache(this.config);
     this.healthCache = new AgentHealthCacheManager(this.config);
     this.performanceMonitor = new CachePerformanceMonitor(this.config);
-    
+
     // Use the performance monitor from response cache for analytics
     this.analyticsManager = new CacheAnalyticsManager(
       this.config,

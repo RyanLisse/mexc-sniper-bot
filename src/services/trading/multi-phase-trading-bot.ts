@@ -1,3 +1,4 @@
+import { MultiPhaseExecutor } from "./multi-phase-executor";
 import {
   type MaintenanceResult,
   MultiPhasePerformanceAnalytics,
@@ -14,6 +15,7 @@ import {
 } from "./multi-phase-position-manager";
 import { MultiPhaseTradingBotCore } from "./multi-phase-trading-bot-core";
 import type { TradingStrategy } from "./trading-strategy-manager";
+import { TRADING_STRATEGIES } from "./trading-strategy-manager";
 
 /**
  * MULTI-PHASE TRADING BOT
@@ -103,11 +105,7 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
         description: this.executor.getStrategy().description || "",
         levels: this.executor.getStrategy().levels,
       };
-      this.executor = new (require("./multi-phase-executor").MultiPhaseExecutor)(
-        strategyConfig,
-        entryPrice,
-        amount
-      );
+      this.executor = new MultiPhaseExecutor(strategyConfig, entryPrice, amount);
     }
 
     return result;
@@ -226,8 +224,7 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
 export function demonstrateMultiPhaseStrategy(): void {
   console.info("=== Multi-Phase Trading Strategy Demo ===\n");
 
-  // Import required strategies
-  const { TRADING_STRATEGIES } = require("./trading-strategy-manager");
+  // Use imported strategies
 
   // Create bot with conservative strategy
   const bot = new MultiPhaseTradingBot(
@@ -299,7 +296,6 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
       levels: strategy.levels,
     };
 
-    const MultiPhaseExecutor = require("./multi-phase-executor").MultiPhaseExecutor;
     this.executor = new MultiPhaseExecutor(strategyConfig, this.entryPrice, this.position);
     this.currentStrategyId = strategyId;
 

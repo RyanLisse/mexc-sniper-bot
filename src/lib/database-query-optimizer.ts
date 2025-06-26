@@ -657,34 +657,36 @@ export class DatabaseQueryOptimizer {
 
     try {
       // Build the query for analysis
-      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
       const baseQuery = `SELECT * FROM ${table} ${whereClause}`;
 
       // Execute EXPLAIN for cost estimation
-      const explainQuery = analyzeExecution 
+      const explainQuery = analyzeExecution
         ? `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${baseQuery}`
         : `EXPLAIN (FORMAT JSON) ${baseQuery}`;
 
       // For testing purposes, return mock data if in test environment
-      if (process.env.NODE_ENV === 'test') {
+      if (process.env.NODE_ENV === "test") {
         return {
           estimatedCost: 100,
           estimatedRows: 50,
           actualCost: analyzeExecution ? 95 : undefined,
           actualRows: analyzeExecution ? 48 : undefined,
           executionTime: performance.now() - startTime,
-          plans: [{
-            nodeType: 'Index Scan',
-            relationName: table,
-            indexName: `${table}_optimized_idx`,
-            startupCost: 0.42,
-            totalCost: 100,
-            planRows: 50,
-            planWidth: 32,
-          }],
+          plans: [
+            {
+              nodeType: "Index Scan",
+              relationName: table,
+              indexName: `${table}_optimized_idx`,
+              startupCost: 0.42,
+              totalCost: 100,
+              planRows: 50,
+              planWidth: 32,
+            },
+          ],
           recommendations: [
-            'Query is well optimized',
-            'Consider adding compound index for better performance'
+            "Query is well optimized",
+            "Consider adding compound index for better performance",
           ],
           indexesUsed: [`${table}_optimized_idx`],
           inefficiencies: [],
@@ -700,13 +702,12 @@ export class DatabaseQueryOptimizer {
         estimatedRows: 50,
         executionTime,
         plans: [],
-        recommendations: ['Query analysis completed'],
+        recommendations: ["Query analysis completed"],
         indexesUsed: [],
         inefficiencies: [],
       };
-
     } catch (error) {
-      this.logger.error('Query plan analysis failed', { table, error });
+      this.logger.error("Query plan analysis failed", { table, error });
       throw error;
     }
   }
@@ -727,16 +728,21 @@ export class DatabaseQueryOptimizer {
     executionTime: number;
   }> {
     const startTime = performance.now();
-    const defaultTables = ['pattern_embeddings', 'snipe_targets', 'user_preferences', 'execution_history'];
+    const defaultTables = [
+      "pattern_embeddings",
+      "snipe_targets",
+      "user_preferences",
+      "execution_history",
+    ];
     const targetTables = target?.targetTables || defaultTables;
 
-    this.logger.info('Creating optimized indexes', { targetTables });
+    this.logger.info("Creating optimized indexes", { targetTables });
 
     try {
       let optimizedIndexes = 0;
 
       // In test environment, mock the index creation
-      if (process.env.NODE_ENV === 'test') {
+      if (process.env.NODE_ENV === "test") {
         optimizedIndexes = targetTables.length * 2; // 2 indexes per table
       } else {
         // Real implementation would create actual indexes
@@ -756,9 +762,8 @@ export class DatabaseQueryOptimizer {
         estimatedPerformanceGain: `${optimizedIndexes * 25}% immediate`,
         executionTime: Math.round(executionTime),
       };
-
     } catch (error) {
-      this.logger.error('Index optimization failed', { error });
+      this.logger.error("Index optimization failed", { error });
       throw error;
     }
   }
@@ -774,7 +779,7 @@ export class DatabaseQueryOptimizer {
   }> {
     try {
       // Mock implementation for testing
-      if (process.env.NODE_ENV === 'test') {
+      if (process.env.NODE_ENV === "test") {
         return {
           optimizedIndexes: 8,
           missingIndexes: [],
@@ -795,9 +800,8 @@ export class DatabaseQueryOptimizer {
         indexHealth: {},
         recommendations: [],
       };
-
     } catch (error) {
-      this.logger.error('Index verification failed', { error });
+      this.logger.error("Index verification failed", { error });
       throw error;
     }
   }
@@ -814,7 +818,7 @@ export class DatabaseQueryOptimizer {
   }): Promise<any[]> {
     const { patternTypes, symbols, minConfidence, timeRange, limit = 50 } = query;
 
-    this.logger.debug('Executing optimized pattern search', {
+    this.logger.debug("Executing optimized pattern search", {
       patternTypes: patternTypes?.length,
       symbols: symbols?.length,
       minConfidence,
@@ -860,15 +864,14 @@ export class DatabaseQueryOptimizer {
         .orderBy(desc(patternEmbeddings.confidence), desc(patternEmbeddings.discoveredAt))
         .limit(limit);
 
-      this.logger.debug('Optimized pattern search completed', {
+      this.logger.debug("Optimized pattern search completed", {
         resultsFound: results.length,
         queryComplexity: conditions.length,
       });
 
       return results;
-
     } catch (error) {
-      this.logger.error('Optimized pattern search failed', { error });
+      this.logger.error("Optimized pattern search failed", { error });
       throw error;
     }
   }
@@ -881,7 +884,7 @@ export class DatabaseQueryOptimizer {
 
     try {
       // Mock implementation for testing
-      if (process.env.NODE_ENV === 'test') {
+      if (process.env.NODE_ENV === "test") {
         return [`${tableName}_optimized_idx_1`, `${tableName}_optimized_idx_2`];
       }
 
@@ -890,30 +893,29 @@ export class DatabaseQueryOptimizer {
 
       for (const indexDef of indexDefinitions) {
         const indexName = `${tableName}_${indexDef.name}_optimized_idx`;
-        
+
         try {
           // Execute CREATE INDEX statement
-          await db.execute(sql.raw(indexDef.sql.replace('INDEX_NAME', indexName)));
+          await db.execute(sql.raw(indexDef.sql.replace("INDEX_NAME", indexName)));
           createdIndexes.push(indexName);
 
-          this.logger.debug('Created optimized index', {
+          this.logger.debug("Created optimized index", {
             tableName,
             indexName,
             columns: indexDef.columns,
           });
         } catch (error) {
-          this.logger.warn('Failed to create index', {
+          this.logger.warn("Failed to create index", {
             tableName,
             indexName,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }
-
     } catch (error) {
-      this.logger.warn('Failed to create some indexes', {
+      this.logger.warn("Failed to create some indexes", {
         tableName,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
 
@@ -931,40 +933,40 @@ export class DatabaseQueryOptimizer {
     const definitions: Record<string, any[]> = {
       pattern_embeddings: [
         {
-          name: 'active_type_confidence',
-          columns: ['is_active', 'pattern_type', 'confidence'],
-          sql: 'CREATE INDEX IF NOT EXISTS INDEX_NAME ON pattern_embeddings (is_active, pattern_type, confidence) WHERE is_active = true',
+          name: "active_type_confidence",
+          columns: ["is_active", "pattern_type", "confidence"],
+          sql: "CREATE INDEX IF NOT EXISTS INDEX_NAME ON pattern_embeddings (is_active, pattern_type, confidence) WHERE is_active = true",
         },
         {
-          name: 'symbol_type_active',
-          columns: ['symbol_name', 'pattern_type', 'is_active'],
-          sql: 'CREATE INDEX IF NOT EXISTS INDEX_NAME ON pattern_embeddings (symbol_name, pattern_type, is_active)',
+          name: "symbol_type_active",
+          columns: ["symbol_name", "pattern_type", "is_active"],
+          sql: "CREATE INDEX IF NOT EXISTS INDEX_NAME ON pattern_embeddings (symbol_name, pattern_type, is_active)",
         },
       ],
       snipe_targets: [
         {
-          name: 'user_status_priority',
-          columns: ['user_id', 'status', 'priority'],
-          sql: 'CREATE INDEX IF NOT EXISTS INDEX_NAME ON snipe_targets (user_id, status, priority)',
+          name: "user_status_priority",
+          columns: ["user_id", "status", "priority"],
+          sql: "CREATE INDEX IF NOT EXISTS INDEX_NAME ON snipe_targets (user_id, status, priority)",
         },
         {
-          name: 'symbol_status_confidence',
-          columns: ['symbol_name', 'status', 'confidence_score'],
-          sql: 'CREATE INDEX IF NOT EXISTS INDEX_NAME ON snipe_targets (symbol_name, status, confidence_score)',
+          name: "symbol_status_confidence",
+          columns: ["symbol_name", "status", "confidence_score"],
+          sql: "CREATE INDEX IF NOT EXISTS INDEX_NAME ON snipe_targets (symbol_name, status, confidence_score)",
         },
       ],
       user_preferences: [
         {
-          name: 'user_id_active',
-          columns: ['user_id'],
-          sql: 'CREATE INDEX IF NOT EXISTS INDEX_NAME ON user_preferences (user_id)',
+          name: "user_id_active",
+          columns: ["user_id"],
+          sql: "CREATE INDEX IF NOT EXISTS INDEX_NAME ON user_preferences (user_id)",
         },
       ],
       execution_history: [
         {
-          name: 'user_executed_at',
-          columns: ['user_id', 'executed_at'],
-          sql: 'CREATE INDEX IF NOT EXISTS INDEX_NAME ON execution_history (user_id, executed_at DESC)',
+          name: "user_executed_at",
+          columns: ["user_id", "executed_at"],
+          sql: "CREATE INDEX IF NOT EXISTS INDEX_NAME ON execution_history (user_id, executed_at DESC)",
         },
       ],
     };

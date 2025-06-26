@@ -1,6 +1,6 @@
 /**
  * Market Data Service - Type Definitions
- * 
+ *
  * Consolidated type definitions for the market data service that merges
  * all market data, pattern detection, and real-time streaming functionality.
  */
@@ -17,35 +17,50 @@ export const MarketDataConfigSchema = z.object({
   secretKey: z.string().min(1, "Secret key is required"),
   baseUrl: z.string().url("Valid base URL required").default("https://api.mexc.com"),
   websocketUrl: z.string().url("Valid WebSocket URL required").default("wss://wbs.mexc.com"),
-  
+
   // Connection Settings
   timeout: z.number().positive("Timeout must be positive").default(10000),
   maxRetries: z.number().nonnegative("Max retries cannot be negative").default(3),
   rateLimitDelay: z.number().nonnegative("Rate limit delay cannot be negative").default(100),
-  
+
   // Caching Settings
   enableCaching: z.boolean().default(true),
   cacheTTL: z.number().positive("Cache TTL must be positive").default(300000), // 5 minutes
   maxCacheSize: z.number().positive("Max cache size must be positive").default(1000),
-  
+
   // WebSocket Settings
-  maxWebSocketConnections: z.number().positive("Max WebSocket connections must be positive").default(10),
-  websocketReconnectDelay: z.number().positive("WebSocket reconnect delay must be positive").default(5000),
-  websocketHeartbeatInterval: z.number().positive("WebSocket heartbeat interval must be positive").default(30000),
-  
+  maxWebSocketConnections: z
+    .number()
+    .positive("Max WebSocket connections must be positive")
+    .default(10),
+  websocketReconnectDelay: z
+    .number()
+    .positive("WebSocket reconnect delay must be positive")
+    .default(5000),
+  websocketHeartbeatInterval: z
+    .number()
+    .positive("WebSocket heartbeat interval must be positive")
+    .default(30000),
+
   // Pattern Detection Settings
   enablePatternDetection: z.boolean().default(true),
-  patternDetectionInterval: z.number().positive("Pattern detection interval must be positive").default(30000),
+  patternDetectionInterval: z
+    .number()
+    .positive("Pattern detection interval must be positive")
+    .default(30000),
   minPatternConfidence: z.number().min(0).max(100, "Pattern confidence must be 0-100").default(70),
   patternHistoryDays: z.number().positive("Pattern history days must be positive").default(7),
-  
+
   // Price Alert Settings
   enablePriceAlerts: z.boolean().default(true),
   maxAlertsPerSymbol: z.number().positive("Max alerts per symbol must be positive").default(10),
   alertCheckInterval: z.number().positive("Alert check interval must be positive").default(5000),
-  
+
   // Technical Analysis Settings
-  defaultTechnicalPeriod: z.number().positive("Default technical period must be positive").default(20),
+  defaultTechnicalPeriod: z
+    .number()
+    .positive("Default technical period must be positive")
+    .default(20),
   maxTechnicalPeriod: z.number().positive("Max technical period must be positive").default(200),
 });
 
@@ -74,10 +89,14 @@ export type PriceData = z.infer<typeof PriceDataSchema>;
 export const BatchPriceDataSchema = z.object({
   success: z.boolean(),
   data: z.array(PriceDataSchema),
-  errors: z.array(z.object({
-    symbol: z.string(),
-    error: z.string(),
-  })).default([]),
+  errors: z
+    .array(
+      z.object({
+        symbol: z.string(),
+        error: z.string(),
+      })
+    )
+    .default([]),
   timestamp: z.string(),
   source: z.enum(["api", "websocket", "cache"]).default("api"),
 });
@@ -89,9 +108,21 @@ export type BatchPriceData = z.infer<typeof BatchPriceDataSchema>;
 // ============================================================================
 
 export const KlineIntervalSchema = z.enum([
-  "1m", "3m", "5m", "15m", "30m", 
-  "1h", "2h", "4h", "6h", "8h", "12h", 
-  "1d", "3d", "1w", "1M"
+  "1m",
+  "3m",
+  "5m",
+  "15m",
+  "30m",
+  "1h",
+  "2h",
+  "4h",
+  "6h",
+  "8h",
+  "12h",
+  "1d",
+  "3d",
+  "1w",
+  "1M",
 ]);
 
 export type KlineInterval = z.infer<typeof KlineIntervalSchema>;
@@ -109,7 +140,9 @@ export const KlineDataSchema = z.object({
   quoteAssetVolume: z.number().nonnegative("Quote asset volume cannot be negative"),
   trades: z.number().nonnegative("Trades count cannot be negative"),
   takerBuyBaseAssetVolume: z.number().nonnegative("Taker buy base asset volume cannot be negative"),
-  takerBuyQuoteAssetVolume: z.number().nonnegative("Taker buy quote asset volume cannot be negative"),
+  takerBuyQuoteAssetVolume: z
+    .number()
+    .nonnegative("Taker buy quote asset volume cannot be negative"),
 });
 
 export type KlineData = z.infer<typeof KlineDataSchema>;
@@ -120,7 +153,7 @@ export type KlineData = z.infer<typeof KlineDataSchema>;
 
 export const PatternTypeSchema = z.enum([
   "bullish_divergence",
-  "bearish_divergence", 
+  "bearish_divergence",
   "breakout",
   "breakdown",
   "support",
@@ -155,32 +188,36 @@ export const PatternDetectionResultSchema = z.object({
   confidence: z.number().min(0).max(100),
   significance: PatternSignificanceSchema,
   timestamp: z.number(),
-  
+
   // Pattern-specific data
   priceLevel: z.number().positive("Price level must be positive").optional(),
   supportLevel: z.number().positive("Support level must be positive").optional(),
   resistanceLevel: z.number().positive("Resistance level must be positive").optional(),
   volume: z.number().nonnegative("Volume cannot be negative").optional(),
   volumeChange: z.number().optional(),
-  
+
   // Technical indicators that contributed to pattern
-  indicators: z.object({
-    rsi: z.number().min(0).max(100).optional(),
-    macd: z.number().optional(),
-    bollinger: z.object({
-      upper: z.number(),
-      middle: z.number(),
-      lower: z.number(),
-    }).optional(),
-    sma: z.number().optional(),
-    ema: z.number().optional(),
-  }).optional(),
-  
+  indicators: z
+    .object({
+      rsi: z.number().min(0).max(100).optional(),
+      macd: z.number().optional(),
+      bollinger: z
+        .object({
+          upper: z.number(),
+          middle: z.number(),
+          lower: z.number(),
+        })
+        .optional(),
+      sma: z.number().optional(),
+      ema: z.number().optional(),
+    })
+    .optional(),
+
   // Pattern validity
   validFrom: z.number(),
   validUntil: z.number().optional(),
   isActive: z.boolean().default(true),
-  
+
   // Metadata
   metadata: z.record(z.any()).default({}),
   notes: z.string().optional(),
@@ -207,9 +244,16 @@ export const AlertTypeSchema = z.enum([
 export type AlertType = z.infer<typeof AlertTypeSchema>;
 
 export const AlertConditionSchema = z.enum([
-  ">=", "<=", ">", "<", "==", "!=",
-  "crosses_above", "crosses_below",
-  "percentage_change", "absolute_change"
+  ">=",
+  "<=",
+  ">",
+  "<",
+  "==",
+  "!=",
+  "crosses_above",
+  "crosses_below",
+  "percentage_change",
+  "absolute_change",
 ]);
 
 export type AlertCondition = z.infer<typeof AlertConditionSchema>;
@@ -219,32 +263,32 @@ export const PriceAlertSchema = z.object({
   symbol: z.string(),
   type: AlertTypeSchema,
   condition: AlertConditionSchema,
-  
+
   // Target values
   targetPrice: z.number().positive("Target price must be positive").optional(),
   targetPercent: z.number().optional(),
   targetVolume: z.number().nonnegative("Target volume cannot be negative").optional(),
-  
+
   // Current values (for comparison)
   currentPrice: z.number().positive("Current price must be positive").optional(),
   currentPercent: z.number().optional(),
   currentVolume: z.number().nonnegative("Current volume cannot be negative").optional(),
-  
+
   // Alert status
   enabled: z.boolean().default(true),
   triggered: z.boolean().default(false),
   triggerCount: z.number().nonnegative("Trigger count cannot be negative").default(0),
   maxTriggers: z.number().positive("Max triggers must be positive").default(1),
-  
+
   // Timing
   createdAt: z.date(),
   triggeredAt: z.date().optional(),
   expiresAt: z.date().optional(),
-  
+
   // Notification settings
   notificationChannels: z.array(z.enum(["email", "sms", "webhook", "push"])).default(["webhook"]),
   notificationMessage: z.string().optional(),
-  
+
   // Metadata
   metadata: z.record(z.any()).default({}),
   notes: z.string().optional(),
@@ -259,8 +303,17 @@ export type PriceAlert = z.infer<typeof PriceAlertSchema>;
 export const TechnicalIndicatorSchema = z.object({
   symbol: z.string(),
   indicator: z.enum([
-    "sma", "ema", "rsi", "macd", "bollinger", "stochastic",
-    "adx", "cci", "williams_r", "momentum", "roc"
+    "sma",
+    "ema",
+    "rsi",
+    "macd",
+    "bollinger",
+    "stochastic",
+    "adx",
+    "cci",
+    "williams_r",
+    "momentum",
+    "roc",
   ]),
   period: z.number().positive("Period must be positive"),
   value: z.number(),
@@ -290,7 +343,7 @@ export type MACD = z.infer<typeof MACDSchema>;
 
 export const BollingerBandsSchema = z.object({
   upperBand: z.number(),
-  middleBand: z.number(), 
+  middleBand: z.number(),
   lowerBand: z.number(),
   bandwidth: z.number(),
   percentB: z.number(),
@@ -319,10 +372,19 @@ export type RSI = z.infer<typeof RSISchema>;
 export const WebSocketConnectionSchema = z.object({
   id: z.string(),
   symbol: z.string(),
-  streams: z.array(z.enum([
-    "trade", "kline_1m", "kline_5m", "kline_1h", "kline_1d",
-    "ticker", "depth", "aggTrade", "miniTicker"
-  ])),
+  streams: z.array(
+    z.enum([
+      "trade",
+      "kline_1m",
+      "kline_5m",
+      "kline_1h",
+      "kline_1d",
+      "ticker",
+      "depth",
+      "aggTrade",
+      "miniTicker",
+    ])
+  ),
   status: z.enum(["connecting", "connected", "disconnected", "error"]),
   reconnectAttempts: z.number().nonnegative(),
   lastHeartbeat: z.date().optional(),
@@ -381,44 +443,46 @@ export const MarketDataServiceStatusSchema = z.object({
   isHealthy: z.boolean(),
   isConnected: z.boolean(),
   lastApiCall: z.date().optional(),
-  
+
   // WebSocket Status
   webSocketConnections: z.number().nonnegative(),
   maxWebSocketConnections: z.number().positive(),
   totalWebSocketReconnects: z.number().nonnegative(),
-  
+
   // Pattern Detection Status
   patternDetectionEnabled: z.boolean(),
   patternsDetectedToday: z.number().nonnegative(),
   lastPatternDetection: z.date().optional(),
-  
+
   // Price Alert Status
   priceAlertsEnabled: z.boolean(),
   activeAlerts: z.number().nonnegative(),
   alertsTriggeredToday: z.number().nonnegative(),
-  
+
   // Performance Metrics
   cacheHitRate: z.number().min(0).max(100),
   averageResponseTime: z.number().nonnegative(),
   totalApiCalls: z.number().nonnegative(),
   totalErrors: z.number().nonnegative(),
-  
+
   // Data Freshness
   oldestCachedData: z.date().optional(),
   newestCachedData: z.date().optional(),
   symbolsTracked: z.number().nonnegative(),
-  
+
   // System Status
   uptime: z.number().nonnegative(),
   lastHealthCheck: z.date(),
   version: z.string(),
-  
+
   // Resource Usage
-  memoryUsage: z.object({
-    used: z.number(),
-    total: z.number(),
-    percentage: z.number().min(0).max(100),
-  }).optional(),
+  memoryUsage: z
+    .object({
+      used: z.number(),
+      total: z.number(),
+      percentage: z.number().min(0).max(100),
+    })
+    .optional(),
 });
 
 export type MarketDataServiceStatus = z.infer<typeof MarketDataServiceStatusSchema>;
@@ -461,10 +525,19 @@ export interface ServiceResponse<T = any> {
 
 export const SubscriptionConfigSchema = z.object({
   symbol: z.string(),
-  streams: z.array(z.enum([
-    "trade", "kline_1m", "kline_5m", "kline_1h", "kline_1d",
-    "ticker", "depth", "aggTrade", "miniTicker"
-  ])),
+  streams: z.array(
+    z.enum([
+      "trade",
+      "kline_1m",
+      "kline_5m",
+      "kline_1h",
+      "kline_1d",
+      "ticker",
+      "depth",
+      "aggTrade",
+      "miniTicker",
+    ])
+  ),
   enablePatternDetection: z.boolean().default(true),
   enablePriceAlerts: z.boolean().default(true),
   enableTechnicalAnalysis: z.boolean().default(true),
@@ -509,48 +582,38 @@ export type CacheStatistics = z.infer<typeof CacheStatisticsSchema>;
 export type {
   // Configuration
   MarketDataConfig,
-  
   // Price Data
   PriceData,
   BatchPriceData,
   KlineInterval,
   KlineData,
-  
   // Pattern Detection
   PatternType,
   PatternSignificance,
   PatternDetectionResult,
-  
   // Price Alerts
   AlertType,
   AlertCondition,
   PriceAlert,
-  
   // Technical Analysis
   TechnicalIndicator,
   MovingAverage,
   MACD,
   BollingerBands,
   RSI,
-  
   // WebSocket
   WebSocketConnection,
   WebSocketMessage,
-  
   // Market Analysis
   MarketTrend,
   MarketAnalysis,
-  
   // Service Status
   MarketDataServiceStatus,
-  
   // Subscriptions
   SubscriptionConfig,
-  
   // Cache
   CacheEntry,
   CacheStatistics,
-  
   // API
   ServiceResponse,
 };

@@ -8,11 +8,11 @@
 
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
+import { getCachedCredentials } from "@/src/lib/credential-cache";
+import { getErrorMessage, toSafeError } from "@/src/lib/error-type-utils";
 import { db } from "../db";
 import type { NewExecutionHistory } from "../db/schema";
 import { apiCredentials, executionHistory } from "../db/schema";
-import { getCachedCredentials } from "@/src/lib/credential-cache";
-import { getErrorMessage, toSafeError } from "@/src/lib/error-type-utils";
 import type { OrderParameters } from "./api/mexc-client-types";
 import { enhancedRiskManagementService } from "./enhanced-risk-management-service";
 import { getRecommendedMexcService } from "./mexc-unified-exports";

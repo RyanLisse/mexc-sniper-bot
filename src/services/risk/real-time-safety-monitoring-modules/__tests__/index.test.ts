@@ -77,7 +77,9 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
     } as any;
 
     // Mock the getInstance methods
-    vi.mocked(OptimizedAutoSnipingExecutionEngine.getInstance).mockReturnValue(mockExecutionService);
+    vi.mocked(OptimizedAutoSnipingExecutionEngine.getInstance).mockReturnValue(
+      mockExecutionService
+    );
     vi.mocked(PatternMonitoringService.getInstance).mockReturnValue(mockPatternMonitoring);
 
     // Create service instance

@@ -146,9 +146,12 @@ export class CacheManager {
       // Test serialization to catch circular references
       JSON.stringify(value);
     } catch (serializationError) {
-      logger.warn("Value cannot be serialized, skipping cache", { 
-        key, 
-        error: serializationError instanceof Error ? serializationError.message : String(serializationError) 
+      logger.warn("Value cannot be serialized, skipping cache", {
+        key,
+        error:
+          serializationError instanceof Error
+            ? serializationError.message
+            : String(serializationError),
       });
       return;
     }
@@ -280,7 +283,7 @@ export class CacheManager {
    */
   getAnalytics(): CacheAnalytics {
     const metrics = this.getMetrics();
-    
+
     return {
       performance: metrics,
       topKeys: this.getTopKeys(),
@@ -295,7 +298,7 @@ export class CacheManager {
   private getTopKeys(): Array<{ key: string; hits: number; lastAccessed: number }> {
     // Collect from all cache levels
     const allEntries: Array<{ key: string; hits: number; lastAccessed: number }> = [];
-    
+
     // L2 cache entries
     for (const [key, entry] of this.l2Cache) {
       allEntries.push({
@@ -304,7 +307,7 @@ export class CacheManager {
         lastAccessed: entry.lastAccessed,
       });
     }
-    
+
     // L3 cache entries
     for (const [key, entry] of this.l3Cache) {
       allEntries.push({
@@ -313,40 +316,49 @@ export class CacheManager {
         lastAccessed: entry.lastAccessed,
       });
     }
-    
-    return allEntries
-      .sort((a, b) => b.hits - a.hits)
-      .slice(0, 10);
+
+    return allEntries.sort((a, b) => b.hits - a.hits).slice(0, 10);
   }
 
   /**
    * Get cache breakdown by data type
    */
-  private getTypeBreakdown(): Record<CacheDataType, { count: number; size: number; hitRate: number }> {
+  private getTypeBreakdown(): Record<
+    CacheDataType,
+    { count: number; size: number; hitRate: number }
+  > {
     const breakdown: Record<string, { count: number; size: number; hitRate: number }> = {};
-    
+
     // Initialize all types
     const types: CacheDataType[] = [
-      "agent_response", "api_response", "pattern_detection", "query_result",
-      "session_data", "user_preferences", "workflow_result", "performance_metrics", "health_status"
+      "agent_response",
+      "api_response",
+      "pattern_detection",
+      "query_result",
+      "session_data",
+      "user_preferences",
+      "workflow_result",
+      "performance_metrics",
+      "health_status",
     ];
-    
+
     for (const type of types) {
       breakdown[type] = { count: 0, size: 0, hitRate: 0 };
     }
-    
+
     // Count from all cache levels
     const allEntries = [...this.l2Cache.values(), ...this.l3Cache.values()];
-    
+
     for (const entry of allEntries) {
       const type = entry.metadata?.type || "api_response";
       if (breakdown[type]) {
         breakdown[type].count++;
         breakdown[type].size += entry.metadata?.size || 0;
-        breakdown[type].hitRate = entry.accessCount > 0 ? (entry.accessCount / (entry.accessCount + 1)) * 100 : 0;
+        breakdown[type].hitRate =
+          entry.accessCount > 0 ? (entry.accessCount / (entry.accessCount + 1)) * 100 : 0;
       }
     }
-    
+
     return breakdown as Record<CacheDataType, { count: number; size: number; hitRate: number }>;
   }
 
@@ -355,19 +367,23 @@ export class CacheManager {
    */
   private generateRecommendations(metrics: CacheMetrics): string[] {
     const recommendations: string[] = [];
-    
+
     if (metrics.hitRate < 50) {
-      recommendations.push("Consider increasing cache TTL or reviewing cache invalidation strategy");
+      recommendations.push(
+        "Consider increasing cache TTL or reviewing cache invalidation strategy"
+      );
     }
-    
+
     if (metrics.memoryUsage > this.config.maxSize * 0.8) {
-      recommendations.push("Consider increasing cache size or implementing more aggressive cleanup");
+      recommendations.push(
+        "Consider increasing cache size or implementing more aggressive cleanup"
+      );
     }
-    
+
     if (metrics.averageAccessTime > 10) {
       recommendations.push("Cache access time is high, consider optimizing cache structure");
     }
-    
+
     return recommendations;
   }
 
@@ -497,21 +513,21 @@ export class CacheManager {
    */
   getCacheKeys(): string[] {
     const keys = new Set<string>();
-    
+
     // Get keys from L1 cache
     const l1Keys = this.l1Cache.getKeys();
-    l1Keys.forEach(key => keys.add(key));
-    
+    l1Keys.forEach((key) => keys.add(key));
+
     // Get keys from L2 cache
     for (const key of this.l2Cache.keys()) {
       keys.add(key);
     }
-    
+
     // Get keys from L3 cache
     for (const key of this.l3Cache.keys()) {
       keys.add(key);
     }
-    
+
     return Array.from(keys);
   }
 
@@ -520,12 +536,12 @@ export class CacheManager {
    */
   async getKeys(pattern: string): Promise<string[]> {
     const allKeys = this.getCacheKeys();
-    
+
     // Convert pattern to regex (replace * with .*)
-    const regexPattern = pattern.replace(/\*/g, '.*');
+    const regexPattern = pattern.replace(/\*/g, ".*");
     const regex = new RegExp(regexPattern);
-    
-    return allKeys.filter(key => regex.test(key));
+
+    return allKeys.filter((key) => regex.test(key));
   }
 
   /**
@@ -533,17 +549,17 @@ export class CacheManager {
    */
   async invalidatePattern(pattern: RegExp): Promise<number> {
     let invalidated = 0;
-    
+
     try {
       const allKeys = this.getCacheKeys();
-      
+
       for (const key of allKeys) {
         if (pattern.test(key)) {
           await this.delete(key);
           invalidated++;
         }
       }
-      
+
       logger.info(`Invalidated ${invalidated} entries matching pattern ${pattern}`);
     } catch (error) {
       logger.error(
@@ -552,7 +568,7 @@ export class CacheManager {
         error instanceof Error ? error : new Error(String(error))
       );
     }
-    
+
     return invalidated;
   }
 
@@ -561,7 +577,7 @@ export class CacheManager {
    */
   async invalidateByType(type: CacheDataType): Promise<number> {
     let invalidated = 0;
-    
+
     try {
       // Check L2 cache entries
       for (const [key, entry] of this.l2Cache) {
@@ -570,7 +586,7 @@ export class CacheManager {
           invalidated++;
         }
       }
-      
+
       // Check L3 cache entries
       for (const [key, entry] of this.l3Cache) {
         if (entry.metadata?.type === type) {
@@ -578,7 +594,7 @@ export class CacheManager {
           invalidated++;
         }
       }
-      
+
       logger.info(`Invalidated ${invalidated} entries of type ${type}`);
     } catch (error) {
       logger.error(
@@ -587,7 +603,7 @@ export class CacheManager {
         error instanceof Error ? error : new Error(String(error))
       );
     }
-    
+
     return invalidated;
   }
 
@@ -596,7 +612,7 @@ export class CacheManager {
    */
   async invalidateByDependency(dependency: string): Promise<number> {
     let invalidated = 0;
-    
+
     try {
       // Check L2 cache entries
       for (const [key, entry] of this.l2Cache) {
@@ -605,7 +621,7 @@ export class CacheManager {
           invalidated++;
         }
       }
-      
+
       // Check L3 cache entries
       for (const [key, entry] of this.l3Cache) {
         if (entry.metadata?.dependencies?.includes(dependency)) {
@@ -613,7 +629,7 @@ export class CacheManager {
           invalidated++;
         }
       }
-      
+
       logger.info(`Invalidated ${invalidated} entries with dependency ${dependency}`);
     } catch (error) {
       logger.error(
@@ -622,7 +638,7 @@ export class CacheManager {
         error instanceof Error ? error : new Error(String(error))
       );
     }
-    
+
     return invalidated;
   }
 }

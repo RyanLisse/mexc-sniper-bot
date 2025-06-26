@@ -10,13 +10,13 @@ import { EventEmitter } from "events";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schemas/trading";
+import { MexcConfigValidator } from "@/src/services/api/mexc-config-validator";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
-import { MexcConfigValidator } from "@/src/services/api/mexc-config-validator";
 import { MexcTradingService, type TradeExecutionResult } from "./mexc-trading-service";
 import { MultiPhaseTradingService } from "./multi-phase-trading-service";
 import { TRADING_STRATEGIES } from "./trading-strategy-manager";
-import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 
 export interface AutoSnipingConfig {
   enabled: boolean;
@@ -722,7 +722,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
   private monitorRealPosition(position: any): void {
     this.logger.info(`[AutoSnipingOrchestrator] Monitoring position: ${position.orderId}`);
-    
+
     // Set up real-time price monitoring with WebSocket and fallback polling
     const monitoringInterval = 5000; // 5 seconds
     const intervalId = setInterval(async () => {
@@ -734,7 +734,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
     // Set up initial stop-loss and take-profit prices
     this.initializePositionLevels(position);
-    
+
     // Immediate first check
     setTimeout(async () => await this.checkPositionStatus(position), 1000);
   }
@@ -742,7 +742,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
   private async checkPositionStatus(position: any): Promise<void> {
     try {
       this.logger.info(`[AutoSnipingOrchestrator] Checking position: ${position.orderId}`);
-      
+
       // Get current market price
       const tickerResponse = await this.mexcService.getTicker(position.symbol);
       if (!tickerResponse.success || !tickerResponse.data) {
@@ -759,12 +759,16 @@ export class AutoSnipingOrchestrator extends EventEmitter {
       position.unrealizedPnL = currentPnL;
       position.lastUpdated = new Date().toISOString();
 
-      this.logger.debug(`Position ${position.orderId}: Entry=${entryPrice}, Current=${currentPrice}, P&L=${currentPnL.toFixed(2)}%`);
+      this.logger.debug(
+        `Position ${position.orderId}: Entry=${entryPrice}, Current=${currentPrice}, P&L=${currentPnL.toFixed(2)}%`
+      );
 
       // Check stop-loss conditions
       if (position.stopLossPrice && currentPrice <= position.stopLossPrice) {
-        this.logger.warn(`Stop-loss triggered for ${position.orderId}: ${currentPrice} <= ${position.stopLossPrice}`);
-        await this.executeStopLoss(position, 'stop_loss_triggered');
+        this.logger.warn(
+          `Stop-loss triggered for ${position.orderId}: ${currentPrice} <= ${position.stopLossPrice}`
+        );
+        await this.executeStopLoss(position, "stop_loss_triggered");
         return;
       }
 
@@ -772,7 +776,9 @@ export class AutoSnipingOrchestrator extends EventEmitter {
       if (position.takeProfitLevels && position.takeProfitLevels.length > 0) {
         for (const level of position.takeProfitLevels) {
           if (level.isActive && currentPrice >= level.targetPrice && !level.executed) {
-            this.logger.info(`Take-profit level triggered for ${position.orderId}: ${currentPrice} >= ${level.targetPrice}`);
+            this.logger.info(
+              `Take-profit level triggered for ${position.orderId}: ${currentPrice} >= ${level.targetPrice}`
+            );
             await this.executeTakeProfit(position, level);
           }
         }
@@ -787,9 +793,10 @@ export class AutoSnipingOrchestrator extends EventEmitter {
       this.activePositions.set(position.id, position);
 
       // Update metrics
-      this.status.profitLoss.unrealized = Array.from(this.activePositions.values())
-        .reduce((total, pos) => total + (pos.unrealizedPnL || 0), 0);
-      
+      this.status.profitLoss.unrealized = Array.from(this.activePositions.values()).reduce(
+        (total, pos) => total + (pos.unrealizedPnL || 0),
+        0
+      );
     } catch (error) {
       this.logger.error(`Position monitoring error for ${position.orderId}:`, error);
     }
@@ -957,7 +964,7 @@ export class AutoSnipingOrchestrator extends EventEmitter {
    */
   private initializePositionLevels(position: any): void {
     const entryPrice = position.entryPrice;
-    
+
     // Set default stop-loss at 5% loss
     if (!position.stopLossPrice) {
       position.stopLossPrice = entryPrice * 0.95; // 5% stop-loss
@@ -967,26 +974,26 @@ export class AutoSnipingOrchestrator extends EventEmitter {
     if (!position.takeProfitLevels) {
       position.takeProfitLevels = [
         {
-          id: 'tp1',
+          id: "tp1",
           targetPrice: entryPrice * 1.03, // 3% profit
           percentage: 30, // Sell 30% of position
           isActive: true,
-          executed: false
+          executed: false,
         },
         {
-          id: 'tp2', 
+          id: "tp2",
           targetPrice: entryPrice * 1.07, // 7% profit
           percentage: 40, // Sell 40% of position
           isActive: true,
-          executed: false
+          executed: false,
         },
         {
-          id: 'tp3',
-          targetPrice: entryPrice * 1.12, // 12% profit  
+          id: "tp3",
+          targetPrice: entryPrice * 1.12, // 12% profit
           percentage: 30, // Sell remaining 30%
           isActive: true,
-          executed: false
-        }
+          executed: false,
+        },
       ];
     }
 
@@ -995,14 +1002,14 @@ export class AutoSnipingOrchestrator extends EventEmitter {
       position.trailingStopLoss = {
         enabled: true,
         trailingPercent: 3, // 3% trailing stop
-        highestPrice: entryPrice
+        highestPrice: entryPrice,
       };
     }
 
     this.logger.info(`Initialized position levels for ${position.orderId}:`, {
       stopLoss: position.stopLossPrice,
       takeProfitLevels: position.takeProfitLevels.length,
-      trailingStopEnabled: position.trailingStopLoss.enabled
+      trailingStopEnabled: position.trailingStopLoss.enabled,
     });
   }
 
@@ -1026,20 +1033,19 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         const lossAmount = (position.stopLossPrice - position.entryPrice) * position.amount;
         this.status.profitLoss.realized += lossAmount;
         this.status.profitLoss.total += lossAmount;
-        
+
         this.activePositions.delete(position.id);
         this.positionHistory.push({
           ...position,
           closedAt: new Date().toISOString(),
           exitPrice: position.stopLossPrice,
           profit: lossAmount,
-          closeReason: reason
+          closeReason: reason,
         });
       }
 
       this.metrics.session.stopLossTriggered++;
       this.logger.info(`Stop-loss executed for ${position.orderId}`);
-      
     } catch (error) {
       this.logger.error(`Failed to execute stop-loss for ${position.orderId}:`, error);
     }
@@ -1051,32 +1057,33 @@ export class AutoSnipingOrchestrator extends EventEmitter {
   private async executeTakeProfit(position: any, level: any): Promise<void> {
     try {
       this.logger.info(`Executing take-profit level ${level.id} for position ${position.orderId}`);
-      
+
       // Mark level as executed
       level.executed = true;
       level.executedAt = new Date().toISOString();
-      
+
       if (position.realTrade) {
         // For real trades, we would place a partial sell order
         const sellQuantity = position.amount * (level.percentage / 100);
-        this.logger.info(`Would execute partial sell: ${sellQuantity} ${position.symbol} at ${level.targetPrice}`);
-        
+        this.logger.info(
+          `Would execute partial sell: ${sellQuantity} ${position.symbol} at ${level.targetPrice}`
+        );
+
         // Simulate the partial close for now
         const profitAmount = (level.targetPrice - position.entryPrice) * sellQuantity;
         this.status.profitLoss.realized += profitAmount;
         this.status.profitLoss.total += profitAmount;
-        
+
         // Reduce position size
         position.amount -= sellQuantity;
-        
       } else {
         // For simulated trades, calculate profit
         const sellQuantity = position.amount * (level.percentage / 100);
         const profitAmount = (level.targetPrice - position.entryPrice) * sellQuantity;
-        
+
         this.status.profitLoss.realized += profitAmount;
         this.status.profitLoss.total += profitAmount;
-        
+
         // Reduce position size
         position.amount -= sellQuantity;
       }
@@ -1088,20 +1095,19 @@ export class AutoSnipingOrchestrator extends EventEmitter {
         if (position.monitoringIntervalId) {
           clearInterval(position.monitoringIntervalId);
         }
-        
+
         // Move to history
         this.activePositions.delete(position.id);
         this.positionHistory.push({
           ...position,
           closedAt: new Date().toISOString(),
-          closeReason: 'all_take_profits_executed'
+          closeReason: "all_take_profits_executed",
         });
-        
+
         this.logger.info(`Position ${position.orderId} fully closed via take-profits`);
       }
 
       this.metrics.session.takeProfitTriggered++;
-      
     } catch (error) {
       this.logger.error(`Failed to execute take-profit for ${position.orderId}:`, error);
     }
@@ -1112,19 +1118,21 @@ export class AutoSnipingOrchestrator extends EventEmitter {
    */
   private async updateTrailingStopLoss(position: any, currentPrice: number): Promise<void> {
     const trailing = position.trailingStopLoss;
-    
+
     // Update highest price
     if (currentPrice > trailing.highestPrice) {
       trailing.highestPrice = currentPrice;
-      
+
       // Update trailing stop-loss price
       const newStopLoss = trailing.highestPrice * (1 - trailing.trailingPercent / 100);
-      
+
       if (newStopLoss > position.stopLossPrice) {
         const oldStopLoss = position.stopLossPrice;
         position.stopLossPrice = newStopLoss;
-        
-        this.logger.debug(`Trailing stop-loss updated for ${position.orderId}: ${oldStopLoss} -> ${newStopLoss}`);
+
+        this.logger.debug(
+          `Trailing stop-loss updated for ${position.orderId}: ${oldStopLoss} -> ${newStopLoss}`
+        );
       }
     }
   }

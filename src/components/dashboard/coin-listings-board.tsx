@@ -1,6 +1,5 @@
 "use client";
 
-import { memo, useCallback } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -13,6 +12,7 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
+import { memo, useCallback } from "react";
 import { useMexcCalendar } from "../../hooks/use-mexc-data";
 import { usePatternSniper } from "../../hooks/use-pattern-sniper";
 import { Badge } from "../ui/badge";
@@ -463,18 +463,27 @@ export const CoinListingsBoard = memo(function CoinListingsBoard() {
   } = useProcessedCoinData();
 
   // Memoized event handlers
-  const handleExecuteFromAll = useCallback((coin: any) => {
-    const target = readyTargets.find((t) => t.vcoinId === coin.vcoinId);
-    if (target) executeSnipe(target);
-  }, [readyTargets, executeSnipe]);
+  const handleExecuteFromAll = useCallback(
+    (coin: any) => {
+      const target = readyTargets.find((t) => t.vcoinId === coin.vcoinId);
+      if (target) executeSnipe(target);
+    },
+    [readyTargets, executeSnipe]
+  );
 
-  const handleRemoveTarget = useCallback((vcoinId: string) => {
-    removeTarget(vcoinId);
-  }, [removeTarget]);
+  const handleRemoveTarget = useCallback(
+    (vcoinId: string) => {
+      removeTarget(vcoinId);
+    },
+    [removeTarget]
+  );
 
-  const handleExecuteSnipe = useCallback((target: any) => {
-    executeSnipe(target);
-  }, [executeSnipe]);
+  const handleExecuteSnipe = useCallback(
+    (target: any) => {
+      executeSnipe(target);
+    },
+    [executeSnipe]
+  );
 
   return (
     <div className="space-y-6">

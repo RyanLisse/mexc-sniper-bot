@@ -1,17 +1,17 @@
 /**
  * Status Synchronization Service
- * 
+ *
  * Ensures consistent status updates across all credential and connectivity
  * systems when credentials are tested or validated successfully.
- * 
+ *
  * Addresses the synchronization gaps identified by the API Analysis Agent.
  */
 
-import { getGlobalStatusResolver } from '@/src/services/notification/unified-status-resolver';
-import { getGlobalCredentialValidator } from '@/src/services/api/enhanced-mexc-credential-validator';
-import { getGlobalHealthMonitor } from '@/src/services/data/connection-health-monitor';
-import { getGlobalRealTimeMonitor } from '@/src/services/notification/real-time-credential-monitor';
-import { invalidateUserCredentialsCache } from '@/src/services/api/unified-mexc-service-factory';
+import { getGlobalCredentialValidator } from "@/src/services/api/enhanced-mexc-credential-validator";
+import { invalidateUserCredentialsCache } from "@/src/services/api/unified-mexc-service-factory";
+import { getGlobalHealthMonitor } from "@/src/services/data/connection-health-monitor";
+import { getGlobalRealTimeMonitor } from "@/src/services/notification/real-time-credential-monitor";
+import { getGlobalStatusResolver } from "@/src/services/notification/unified-status-resolver";
 
 // ============================================================================
 // Types & Interfaces
@@ -20,7 +20,7 @@ import { invalidateUserCredentialsCache } from '@/src/services/api/unified-mexc-
 export interface StatusSyncContext {
   userId: string;
   provider: string;
-  action: 'credential-test' | 'credential-save' | 'credential-delete' | 'connectivity-change';
+  action: "credential-test" | "credential-save" | "credential-delete" | "connectivity-change";
   timestamp: string;
   requestId?: string;
 }
@@ -42,59 +42,57 @@ export interface StatusSyncResult {
 export class StatusSynchronizationService {
   private logger = {
     info: (message: string, context?: any) =>
-      console.info('[status-sync-service]', message, context || ''),
+      console.info("[status-sync-service]", message, context || ""),
     warn: (message: string, context?: any) =>
-      console.warn('[status-sync-service]', message, context || ''),
+      console.warn("[status-sync-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error('[status-sync-service]', message, context || '', error || ''),
+      console.error("[status-sync-service]", message, context || "", error || ""),
     debug: (message: string, context?: any) =>
-      console.debug('[status-sync-service]', message, context || ''),
+      console.debug("[status-sync-service]", message, context || ""),
   };
 
   /**
    * Synchronize all status systems after successful credential validation
    */
-  async synchronizeAfterCredentialTest(
-    context: StatusSyncContext
-  ): Promise<StatusSyncResult> {
+  async synchronizeAfterCredentialTest(context: StatusSyncContext): Promise<StatusSyncResult> {
     const startTime = Date.now();
-    
-    console.info('[StatusSync] Starting credential test synchronization', {
+
+    console.info("[StatusSync] Starting credential test synchronization", {
       userId: context.userId,
       provider: context.provider,
       action: context.action,
       requestId: context.requestId,
-      timestamp: context.timestamp
+      timestamp: context.timestamp,
     });
 
     try {
       const servicesNotified: string[] = [];
-      
+
       // Step 1: Invalidate user credentials cache
-      console.info('[StatusSync] Invalidating user credentials cache', {
+      console.info("[StatusSync] Invalidating user credentials cache", {
         userId: context.userId,
-        requestId: context.requestId
+        requestId: context.requestId,
       });
-      
+
       invalidateUserCredentialsCache(context.userId);
-      servicesNotified.push('unified-mexc-service-cache');
+      servicesNotified.push("unified-mexc-service-cache");
 
       // Step 2: Reset and refresh global credential validator
       try {
         const credentialValidator = getGlobalCredentialValidator();
         credentialValidator.reset(); // Clear circuit breaker if needed
-        
+
         // Trigger a fresh validation to update global state
         await credentialValidator.validateCredentials();
-        servicesNotified.push('global-credential-validator');
-        
-        console.info('[StatusSync] Global credential validator refreshed', {
-          requestId: context.requestId
+        servicesNotified.push("global-credential-validator");
+
+        console.info("[StatusSync] Global credential validator refreshed", {
+          requestId: context.requestId,
         });
       } catch (error) {
-        console.warn('[StatusSync] Failed to refresh credential validator:', {
+        console.warn("[StatusSync] Failed to refresh credential validator:", {
           error: error instanceof Error ? error.message : String(error),
-          requestId: context.requestId
+          requestId: context.requestId,
         });
         // Continue with other services
       }
@@ -103,15 +101,15 @@ export class StatusSynchronizationService {
       try {
         const healthMonitor = getGlobalHealthMonitor();
         await healthMonitor.performHealthCheck();
-        servicesNotified.push('global-health-monitor');
-        
-        console.info('[StatusSync] Health monitor refreshed', {
-          requestId: context.requestId
+        servicesNotified.push("global-health-monitor");
+
+        console.info("[StatusSync] Health monitor refreshed", {
+          requestId: context.requestId,
         });
       } catch (error) {
-        console.warn('[StatusSync] Failed to refresh health monitor:', {
+        console.warn("[StatusSync] Failed to refresh health monitor:", {
           error: error instanceof Error ? error.message : String(error),
-          requestId: context.requestId
+          requestId: context.requestId,
         });
       }
 
@@ -119,15 +117,15 @@ export class StatusSynchronizationService {
       try {
         const realTimeMonitor = getGlobalRealTimeMonitor();
         await realTimeMonitor.refresh();
-        servicesNotified.push('global-realtime-monitor');
-        
-        console.info('[StatusSync] Real-time monitor refreshed', {
-          requestId: context.requestId
+        servicesNotified.push("global-realtime-monitor");
+
+        console.info("[StatusSync] Real-time monitor refreshed", {
+          requestId: context.requestId,
         });
       } catch (error) {
-        console.warn('[StatusSync] Failed to refresh real-time monitor:', {
+        console.warn("[StatusSync] Failed to refresh real-time monitor:", {
           error: error instanceof Error ? error.message : String(error),
-          requestId: context.requestId
+          requestId: context.requestId,
         });
       }
 
@@ -135,25 +133,25 @@ export class StatusSynchronizationService {
       try {
         const statusResolver = getGlobalStatusResolver();
         await statusResolver.forceRefresh();
-        servicesNotified.push('unified-status-resolver');
-        
-        console.info('[StatusSync] Unified status resolver refreshed', {
-          requestId: context.requestId
+        servicesNotified.push("unified-status-resolver");
+
+        console.info("[StatusSync] Unified status resolver refreshed", {
+          requestId: context.requestId,
         });
       } catch (error) {
-        console.warn('[StatusSync] Failed to refresh status resolver:', {
+        console.warn("[StatusSync] Failed to refresh status resolver:", {
           error: error instanceof Error ? error.message : String(error),
-          requestId: context.requestId
+          requestId: context.requestId,
         });
       }
 
       const duration = Date.now() - startTime;
-      
-      console.info('[StatusSync] Credential test synchronization completed', {
+
+      console.info("[StatusSync] Credential test synchronization completed", {
         userId: context.userId,
         servicesNotified,
         duration: `${duration}ms`,
-        requestId: context.requestId
+        requestId: context.requestId,
       });
 
       return {
@@ -164,16 +162,15 @@ export class StatusSynchronizationService {
         timestamp: new Date().toISOString(),
         triggeredBy: context.action,
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
-      console.error('[StatusSync] Synchronization failed:', {
+
+      console.error("[StatusSync] Synchronization failed:", {
         userId: context.userId,
         error: errorMessage,
         duration: `${duration}ms`,
-        requestId: context.requestId
+        requestId: context.requestId,
       });
 
       return {
@@ -191,13 +188,11 @@ export class StatusSynchronizationService {
   /**
    * Synchronize status after credential changes (save/delete)
    */
-  async synchronizeAfterCredentialChange(
-    context: StatusSyncContext
-  ): Promise<StatusSyncResult> {
-    console.info('[StatusSync] Starting credential change synchronization', {
+  async synchronizeAfterCredentialChange(context: StatusSyncContext): Promise<StatusSyncResult> {
+    console.info("[StatusSync] Starting credential change synchronization", {
       userId: context.userId,
       action: context.action,
-      requestId: context.requestId
+      requestId: context.requestId,
     });
 
     // Use the same synchronization logic as credential test
@@ -209,12 +204,12 @@ export class StatusSynchronizationService {
    */
   getReactQueryKeysToInvalidate(userId: string): string[][] {
     return [
-      ['mexc-connectivity', userId],
-      ['api-credentials', userId],
-      ['account-balance', userId, 'active'],
-      ['credential-status', userId],
-      ['mexc-status'],
-      ['enhanced-connectivity'],
+      ["mexc-connectivity", userId],
+      ["api-credentials", userId],
+      ["account-balance", userId, "active"],
+      ["credential-status", userId],
+      ["mexc-status"],
+      ["enhanced-connectivity"],
     ];
   }
 
@@ -224,7 +219,7 @@ export class StatusSynchronizationService {
   createSyncContext(
     userId: string,
     provider: string,
-    action: StatusSyncContext['action'],
+    action: StatusSyncContext["action"],
     requestId?: string
   ): StatusSyncContext {
     return {
@@ -262,7 +257,7 @@ export async function syncAfterCredentialTest(
   requestId?: string
 ): Promise<StatusSyncResult> {
   const syncService = getGlobalStatusSyncService();
-  const context = syncService.createSyncContext(userId, provider, 'credential-test', requestId);
+  const context = syncService.createSyncContext(userId, provider, "credential-test", requestId);
   return syncService.synchronizeAfterCredentialTest(context);
 }
 
@@ -272,7 +267,7 @@ export async function syncAfterCredentialTest(
 export async function syncAfterCredentialChange(
   userId: string,
   provider: string,
-  action: 'credential-save' | 'credential-delete',
+  action: "credential-save" | "credential-delete",
   requestId?: string
 ): Promise<StatusSyncResult> {
   const syncService = getGlobalStatusSyncService();

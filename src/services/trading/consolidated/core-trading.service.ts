@@ -1,6 +1,6 @@
 /**
  * Core Trading Service - Consolidated Implementation
- * 
+ *
  * This service consolidates all trading-related functionality including:
  * - Manual trading operations
  * - Auto-sniping execution and orchestration
@@ -8,18 +8,21 @@
  * - Position management and analytics
  * - Risk management integration
  * - Performance tracking and reporting
- * 
+ *
  * Replaces 25+ fragmented trading services with a single, cohesive interface.
  */
 
-import { EventEmitter } from "events";
 import { and, eq, lt } from "drizzle-orm";
-import { toSafeError } from "../../lib/error-type-utils";
+import { EventEmitter } from "events";
 import { db } from "../../db";
 import { snipeTargets } from "../../db/schemas/trading";
-
+import { toSafeError } from "../../lib/error-type-utils";
+import { ComprehensiveSafetyCoordinator } from "../comprehensive-safety-coordinator";
+// Import existing components that will be integrated
+import { UnifiedMexcServiceV2 } from "../unified-mexc-service-v2";
 // Import consolidated types
 import type {
+  AutoSnipeTarget,
   CoreTradingConfig,
   CoreTradingEvents,
   MultiPhaseConfig,
@@ -31,22 +34,16 @@ import type {
   TradeParameters,
   TradeResult,
   TradingStrategy,
-  AutoSnipeTarget,
 } from "./core-trading.types";
-
 import {
   CoreTradingConfigSchema,
-  TradeParametersSchema,
   ServiceStatusSchema,
+  TradeParametersSchema,
 } from "./core-trading.types";
-
-// Import existing components that will be integrated
-import { UnifiedMexcServiceV2 } from "../unified-mexc-service-v2";
-import { ComprehensiveSafetyCoordinator } from "../comprehensive-safety-coordinator";
 
 /**
  * Core Trading Service
- * 
+ *
  * Consolidated trading service that provides a unified interface for all
  * trading operations, auto-sniping, strategy management, and analytics.
  */
@@ -179,7 +176,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to initialize Core Trading Service", safeError);
-      
+
       return {
         success: false,
         error: safeError.message,
@@ -218,7 +215,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Error during shutdown", safeError);
-      
+
       return {
         success: false,
         error: safeError.message,
@@ -278,9 +275,9 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Trade execution failed", { params, error: safeError });
-      
+
       this.handleTradeFailure(safeError);
-      
+
       return {
         success: false,
         error: safeError.message,
@@ -294,11 +291,11 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   private async executePaperTrade(params: TradeParameters): Promise<TradeResult> {
     const startTime = Date.now();
-    
+
     // Simulate trade execution
     const simulatedPrice = await this.getSimulatedPrice(params.symbol);
     const orderId = `paper-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const result: TradeResult = {
       success: true,
       data: {
@@ -326,7 +323,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
 
     // Update metrics
     this.updateTradeMetrics(result, params);
-    
+
     // Emit event
     this.emit("trade_executed", result);
 
@@ -345,7 +342,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   private async executeRealTrade(params: TradeParameters): Promise<TradeResult> {
     const startTime = Date.now();
-    
+
     try {
       // Prepare MEXC API parameters
       const mexcParams = {
@@ -362,7 +359,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
 
       // Execute through MEXC service
       const mexcResult = await this.mexcService.placeOrder(mexcParams);
-      
+
       if (!mexcResult.success || !mexcResult.data) {
         throw new Error(mexcResult.error || "Trade execution failed");
       }
@@ -394,7 +391,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
 
       // Update metrics
       this.updateTradeMetrics(result, params);
-      
+
       // Emit event
       this.emit("trade_executed", result);
 
@@ -451,13 +448,15 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   /**
    * Process ready snipe targets from database
    */
-  async processSnipeTargets(): Promise<ServiceResponse<{ processedCount: number; successCount: number }>> {
+  async processSnipeTargets(): Promise<
+    ServiceResponse<{ processedCount: number; successCount: number }>
+  > {
     try {
       this.lastSnipeCheck = new Date();
-      
+
       // Get ready snipe targets from database
       const readyTargets = await this.getReadySnipeTargets();
-      
+
       if (readyTargets.length === 0) {
         return {
           success: true,
@@ -469,7 +468,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       this.logger.info(`Processing ${readyTargets.length} ready snipe targets`);
 
       let successCount = 0;
-      
+
       // Process each target
       for (const target of readyTargets) {
         if (target.confidenceScore >= this.config.confidenceThreshold) {
@@ -498,7 +497,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to process snipe targets", safeError);
-      
+
       return {
         success: false,
         error: safeError.message,
@@ -539,10 +538,10 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       if (result.success) {
         // Update target status to completed
         await this.updateSnipeTargetStatus(target.id, "completed");
-        
+
         // Emit auto-snipe event
         this.emit("auto_snipe_executed", { target, result });
-        
+
         this.logger.info("Snipe target executed successfully", {
           symbol: target.symbolName,
           orderId: result.data?.orderId,
@@ -569,7 +568,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   async executeMultiPhaseStrategy(config: MultiPhaseConfig): Promise<MultiPhaseResult> {
     const startTime = Date.now();
-    
+
     try {
       this.logger.info("Executing multi-phase strategy", {
         symbol: config.symbol,
@@ -585,18 +584,19 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       }
 
       // Calculate phase allocations
-      const allocations = config.phaseAllocation || this.calculatePhaseAllocations(config.phaseCount, strategy);
-      
+      const allocations =
+        config.phaseAllocation || this.calculatePhaseAllocations(config.phaseCount, strategy);
+
       const phases: MultiPhaseResult["phases"] = [];
       let totalExecuted = 0;
-      let totalFees = 0;
+      const totalFees = 0;
       let priceSum = 0;
       let priceCount = 0;
 
       // Execute each phase
       for (let i = 0; i < config.phaseCount; i++) {
         const phaseAmount = config.totalAmount * allocations[i];
-        
+
         const phaseParams: TradeParameters = {
           symbol: config.symbol,
           side: "BUY",
@@ -616,13 +616,13 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
         try {
           // Execute phase trade
           const result = await this.executeTrade(phaseParams);
-          
+
           if (result.success && result.data) {
             phase.status = "completed";
             phase.result = result;
-            
+
             totalExecuted += parseFloat(result.data.executedQty || "0");
-            
+
             if (result.data.price) {
               priceSum += parseFloat(result.data.price);
               priceCount++;
@@ -641,14 +641,14 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
 
         // Wait between phases if not the last phase
         if (i < config.phaseCount - 1 && config.phaseDelayMs > 0) {
-          await new Promise(resolve => setTimeout(resolve, config.phaseDelayMs));
+          await new Promise((resolve) => setTimeout(resolve, config.phaseDelayMs));
         }
       }
 
       const result: MultiPhaseResult = {
-        success: phases.some(p => p.status === "completed"),
+        success: phases.some((p) => p.status === "completed"),
         totalPhases: config.phaseCount,
-        completedPhases: phases.filter(p => p.status === "completed").length,
+        completedPhases: phases.filter((p) => p.status === "completed").length,
         strategy: config.strategy,
         phases,
         totalExecuted,
@@ -699,15 +699,15 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       if (strategy.maxPositionSize <= 0 || strategy.maxPositionSize > 1) {
         throw new Error("Max position size must be between 0 and 1");
       }
-      
+
       if (strategy.stopLossPercent < 0 || strategy.stopLossPercent > 100) {
         throw new Error("Stop loss percent must be between 0 and 100");
       }
 
       this.tradingStrategies.set(strategy.name, strategy);
-      
+
       this.logger.info("Custom strategy added", { name: strategy.name });
-      
+
       return {
         success: true,
         timestamp: new Date().toISOString(),
@@ -746,9 +746,9 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   async closeAllPositions(reason: string): Promise<ServiceResponse<{ closedCount: number }>> {
     try {
       this.logger.info(`Closing all positions: ${reason}`);
-      
+
       let closedCount = 0;
-      
+
       for (const [positionId, position] of this.activePositions) {
         try {
           if (this.config.enablePaperTrading) {
@@ -792,7 +792,9 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     const timeframe = "session";
     const startDate = this.startTime;
     const endDate = new Date();
-    const tradingDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const tradingDays = Math.ceil(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
     const metrics: PerformanceMetrics = {
       // Trading Statistics
@@ -800,14 +802,14 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       successfulTrades: this.successfulTrades,
       failedTrades: this.failedTrades,
       successRate: this.totalTrades > 0 ? (this.successfulTrades / this.totalTrades) * 100 : 0,
-      
+
       // Financial Performance
       totalPnL: this.totalPnL,
       realizedPnL: this.totalPnL, // For now, same as total
       unrealizedPnL: 0, // Would calculate from open positions
       totalVolume: this.totalVolume,
       averageTradeSize: this.totalTrades > 0 ? this.totalVolume / this.totalTrades : 0,
-      
+
       // Risk Metrics
       maxDrawdown: 0, // Would calculate from historical data
       sharpeRatio: undefined, // Would calculate with more data
@@ -815,23 +817,23 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       calmarRatio: undefined,
       maxConsecutiveLosses: 0, // Would track
       maxConsecutiveWins: 0, // Would track
-      
+
       // Execution Metrics
       averageExecutionTime: 0, // Would track
       slippageAverage: 0, // Would calculate
       fillRate: 100, // Assume 100% for now
-      
+
       // Auto-Sniping Metrics
       autoSnipeCount: 0, // Would track
       autoSnipeSuccessRate: 0, // Would calculate
       averageConfidenceScore: 0, // Would track
-      
+
       // Time-based Metrics
       timeframe,
       startDate,
       endDate,
       tradingDays,
-      
+
       // Strategy Performance
       strategyPerformance: {},
     };
@@ -849,32 +851,34 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       isHealthy: this.isHealthy,
       isConnected: true, // Would check MEXC connection
       isAuthenticated: this.config.apiKey.length > 0,
-      
+
       // Trading Status
       tradingEnabled: !this.circuitBreakerOpen,
       autoSnipingEnabled: this.config.autoSnipingEnabled && this.autoSnipingInterval !== null,
       paperTradingMode: this.config.enablePaperTrading,
-      
+
       // Position Status
       activePositions: this.activePositions.size,
       maxPositions: this.config.maxConcurrentPositions,
-      availableCapacity: (this.config.maxConcurrentPositions - this.activePositions.size) / this.config.maxConcurrentPositions,
-      
+      availableCapacity:
+        (this.config.maxConcurrentPositions - this.activePositions.size) /
+        this.config.maxConcurrentPositions,
+
       // Circuit Breaker Status
       circuitBreakerOpen: this.circuitBreakerOpen,
       circuitBreakerFailures: this.circuitBreakerFailures,
       circuitBreakerResetTime: this.circuitBreakerResetTime,
-      
+
       // Performance Status
       lastTradeTime: undefined, // Would track
       averageResponseTime: 0, // Would track
       cacheHitRate: 0, // Would get from MEXC service
-      
+
       // Risk Status
       currentRiskLevel: "low", // Would calculate
       dailyPnL: 0, // Would calculate
       dailyVolume: 0, // Would calculate
-      
+
       // System Status
       uptime: Date.now() - this.startTime.getTime(),
       lastHealthCheck: new Date(),
@@ -1022,13 +1026,14 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
         updateData.errorMessage = errorMessage;
       }
 
-      await db
-        .update(snipeTargets)
-        .set(updateData)
-        .where(eq(snipeTargets.id, targetId));
+      await db.update(snipeTargets).set(updateData).where(eq(snipeTargets.id, targetId));
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to update snipe target status", { targetId, status, error: safeError });
+      this.logger.error("Failed to update snipe target status", {
+        targetId,
+        status,
+        error: safeError,
+      });
     }
   }
 
@@ -1091,10 +1096,10 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   private updateTradeMetrics(result: TradeResult, params: TradeParameters): void {
     this.totalTrades++;
-    
+
     if (result.success) {
       this.successfulTrades++;
-      
+
       if (result.data?.quantity && result.data?.price) {
         const volume = parseFloat(result.data.quantity) * parseFloat(result.data.price);
         this.totalVolume += volume;
@@ -1109,9 +1114,11 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   private handleTradeFailure(error: Error): void {
     this.circuitBreakerFailures++;
-    
-    if (this.config.enableCircuitBreaker && 
-        this.circuitBreakerFailures >= this.config.circuitBreakerThreshold) {
+
+    if (
+      this.config.enableCircuitBreaker &&
+      this.circuitBreakerFailures >= this.config.circuitBreakerThreshold
+    ) {
       this.openCircuitBreaker("Too many trade failures");
     }
   }
@@ -1122,10 +1129,10 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   private openCircuitBreaker(reason: string): void {
     this.circuitBreakerOpen = true;
     this.circuitBreakerResetTime = new Date(Date.now() + this.config.circuitBreakerResetTime);
-    
+
     this.logger.warn("Circuit breaker opened", { reason, resetTime: this.circuitBreakerResetTime });
     this.emit("circuit_breaker_triggered", { reason, timestamp: new Date() });
-    
+
     // Auto-reset after timeout
     setTimeout(() => {
       this.resetCircuitBreaker();
@@ -1139,7 +1146,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     this.circuitBreakerOpen = false;
     this.circuitBreakerFailures = 0;
     this.circuitBreakerResetTime = null;
-    
+
     this.logger.info("Circuit breaker reset");
   }
 
@@ -1162,7 +1169,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     // Simulate P&L
     const currentPrice = position.entryPrice * (1 + (Math.random() - 0.5) * 0.1); // ±5% random
     const pnl = (currentPrice - position.entryPrice) * position.quantity;
-    
+
     position.status = "closed";
     position.closeTime = new Date();
     position.realizedPnL = pnl;
@@ -1173,7 +1180,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     this.totalPnL += pnl;
 
     this.emit("position_closed", position);
-    
+
     this.logger.info("Paper position closed", {
       positionId,
       pnl,
@@ -1196,12 +1203,13 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       };
 
       const result = await this.executeTrade(closeParams);
-      
+
       if (result.success && result.data) {
         const exitPrice = parseFloat(result.data.price);
-        const pnl = position.side === "BUY" 
-          ? (exitPrice - position.entryPrice) * position.quantity
-          : (position.entryPrice - exitPrice) * position.quantity;
+        const pnl =
+          position.side === "BUY"
+            ? (exitPrice - position.entryPrice) * position.quantity
+            : (position.entryPrice - exitPrice) * position.quantity;
 
         position.status = "closed";
         position.closeTime = new Date();
@@ -1214,7 +1222,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
         this.totalPnL += pnl;
 
         this.emit("position_closed", position);
-        
+
         this.logger.info("Real position closed", {
           positionId: position.id,
           exitPrice,
@@ -1227,7 +1235,10 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       }
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Failed to close real position", { positionId: position.id, error: safeError });
+      this.logger.error("Failed to close real position", {
+        positionId: position.id,
+        error: safeError,
+      });
       throw error;
     }
   }

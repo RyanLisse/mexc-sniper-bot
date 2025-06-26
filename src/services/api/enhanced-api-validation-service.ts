@@ -9,9 +9,9 @@
  * - Security compliance checks
  */
 
-import { getUnifiedMexcClient } from "./mexc-client-factory";
-import { circuitBreakerRegistry } from "@/src/services/risk/circuit-breaker";
 import { ErrorLoggingService } from "@/src/services/notification/error-logging-service";
+import { circuitBreakerRegistry } from "@/src/services/risk/circuit-breaker";
+import { getUnifiedMexcClient } from "./mexc-client-factory";
 
 export interface ApiValidationConfig {
   apiKey: string;

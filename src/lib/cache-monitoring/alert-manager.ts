@@ -1,14 +1,14 @@
 /**
  * Cache Alert and Recommendation Manager
- * 
+ *
  * Extracted alert and recommendation logic from cache-monitoring.ts
  */
 
-import type { 
-  CacheAlert, 
-  CacheRecommendation, 
+import type {
+  CacheAlert,
+  CacheMonitoringConfig,
+  CacheRecommendation,
   SystemCacheMetrics,
-  CacheMonitoringConfig
 } from "./types";
 
 export class CacheAlertManager {
@@ -51,20 +51,25 @@ export class CacheAlertManager {
         title: "Improve Cache Hit Rate",
         description: "Consider increasing TTL for stable data or implementing cache warming",
         impact: `Potential to improve hit rate from ${metrics.global.hitRate.toFixed(1)}% to 85%+`,
-        implementation: "Review TTL configurations and implement cache warming for frequently accessed data",
+        implementation:
+          "Review TTL configurations and implement cache warming for frequently accessed data",
         estimatedImprovement: { hitRate: 15 },
       });
     }
 
     // Memory recommendations
-    if (metrics.performance.totalMemoryUsage > this.config.performanceThresholds.maxMemoryUsage * 0.7) {
+    if (
+      metrics.performance.totalMemoryUsage >
+      this.config.performanceThresholds.maxMemoryUsage * 0.7
+    ) {
       this.addRecommendation({
         type: "cleanup",
         priority: "medium",
         title: "Optimize Memory Usage",
         description: "Memory usage is approaching limits, consider cleanup or size optimization",
         impact: "Reduce memory usage by 20-30%",
-        implementation: "Enable more aggressive cleanup, review cache sizes, or implement LRU eviction",
+        implementation:
+          "Enable more aggressive cleanup, review cache sizes, or implement LRU eviction",
         estimatedImprovement: { memoryUsage: -30 },
       });
     }
@@ -156,7 +161,8 @@ export class CacheAlertManager {
       });
     }
 
-    const memoryChange = current.performance.totalMemoryUsage - previous.performance.totalMemoryUsage;
+    const memoryChange =
+      current.performance.totalMemoryUsage - previous.performance.totalMemoryUsage;
     const memoryChangePercent = (memoryChange / previous.performance.totalMemoryUsage) * 100;
     if (memoryChangePercent > 20) {
       this.createAlert({
@@ -185,7 +191,8 @@ export class CacheAlertManager {
         type: "optimization",
         priority: "medium",
         title: "Cache Performance Review",
-        description: "Review cache hit rates and performance metrics for optimization opportunities",
+        description:
+          "Review cache hit rates and performance metrics for optimization opportunities",
         impact: "Improve overall system performance",
         implementation: "Analyze cache patterns and adjust TTL settings",
         estimatedImprovement: { hitRate: 10 },
@@ -245,10 +252,14 @@ export class CacheAlertManager {
 
   private getPriorityWeight(priority: string): number {
     switch (priority) {
-      case "high": return 3;
-      case "medium": return 2;
-      case "low": return 1;
-      default: return 0;
+      case "high":
+        return 3;
+      case "medium":
+        return 2;
+      case "low":
+        return 1;
+      default:
+        return 0;
     }
   }
 }

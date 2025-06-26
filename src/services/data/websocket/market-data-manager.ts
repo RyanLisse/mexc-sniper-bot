@@ -6,12 +6,12 @@
  */
 
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
+import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
 import type {
   NotificationMessage,
   TradingPriceMessage,
   TradingSignalMessage,
 } from "../../lib/websocket-types";
-import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
 
 // ======================
 // MEXC WebSocket Types

@@ -1,9 +1,9 @@
 /**
  * Optimized Pattern Service
- * 
+ *
  * Eliminates N+1 query patterns in pattern processing operations.
  * Implements batch operations and efficient data fetching strategies.
- * 
+ *
  * Key Optimizations:
  * - Batch user preference fetching
  * - Optimized pattern similarity searches
@@ -11,11 +11,11 @@
  * - Bulk pattern processing
  */
 
-import { and, eq, inArray, sql } from 'drizzle-orm';
-import { z } from 'zod';
-import { db, executeWithRetry, monitoredQuery } from '../db';
-import { patternEmbeddings, snipeTargets, userPreferences } from '../db/schema';
-import { toSafeError } from '../lib/error-type-utils';
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { z } from "zod";
+import { db, executeWithRetry, monitoredQuery } from "../db";
+import { patternEmbeddings, snipeTargets, userPreferences } from "../db/schema";
+import { toSafeError } from "../lib/error-type-utils";
 
 // ============================================================================
 // Types and Schemas
@@ -23,7 +23,7 @@ import { toSafeError } from '../lib/error-type-utils';
 
 const PatternBatchSchema = z.object({
   symbol: z.string(),
-  patternType: z.enum(['ready_state', 'pre_ready', 'launch_sequence', 'price_action']),
+  patternType: z.enum(["ready_state", "pre_ready", "launch_sequence", "price_action"]),
   userId: z.string(),
   confidence: z.number().min(0).max(100).optional(),
   vcoinId: z.string().optional(),
@@ -32,7 +32,7 @@ const PatternBatchSchema = z.object({
 
 const BulkPatternSchema = z.object({
   symbol: z.string(),
-  patternType: z.enum(['ready_state', 'pre_ready', 'launch_sequence', 'price_action']),
+  patternType: z.enum(["ready_state", "pre_ready", "launch_sequence", "price_action"]),
   confidence: z.number().min(0).max(100),
   embedding: z.array(z.number()),
   metadata: z.record(z.any()).optional(),
@@ -64,13 +64,13 @@ interface UserPreferenceCache {
 export class OptimizedPatternService {
   private logger = {
     info: (message: string, context?: any) =>
-      console.info('[optimized-pattern-service]', message, context || ''),
+      console.info("[optimized-pattern-service]", message, context || ""),
     warn: (message: string, context?: any) =>
-      console.warn('[optimized-pattern-service]', message, context || ''),
+      console.warn("[optimized-pattern-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error('[optimized-pattern-service]', message, context || '', error || ''),
+      console.error("[optimized-pattern-service]", message, context || "", error || ""),
     debug: (message: string, context?: any) =>
-      console.debug('[optimized-pattern-service]', message, context || ''),
+      console.debug("[optimized-pattern-service]", message, context || ""),
   };
 
   private userPreferenceCache: UserPreferenceCache = {};
@@ -85,9 +85,9 @@ export class OptimizedPatternService {
     if (patterns.length === 0) return;
 
     const startTime = performance.now();
-    this.logger.info('Processing patterns batch', {
+    this.logger.info("Processing patterns batch", {
       count: patterns.length,
-      operation: 'batch_processing'
+      operation: "batch_processing",
     });
 
     try {
@@ -101,20 +101,23 @@ export class OptimizedPatternService {
       await this.processNonDuplicatePatterns(nonDuplicatePatterns, userPrefs);
 
       const processingTime = performance.now() - startTime;
-      this.logger.info('Batch processing completed', {
+      this.logger.info("Batch processing completed", {
         totalPatterns: patterns.length,
         processedPatterns: nonDuplicatePatterns.length,
         duplicatesSkipped: patterns.length - nonDuplicatePatterns.length,
         processingTimeMs: Math.round(processingTime),
         avgTimePerPattern: Math.round(processingTime / patterns.length),
       });
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Batch processing failed', {
-        patternCount: patterns.length,
-        error: safeError.message,
-      }, safeError);
+      this.logger.error(
+        "Batch processing failed",
+        {
+          patternCount: patterns.length,
+          error: safeError.message,
+        },
+        safeError
+      );
       throw error;
     }
   }
@@ -124,8 +127,8 @@ export class OptimizedPatternService {
    * Eliminates N+1 pattern: 1 query per user → 1 query for all users
    */
   private async batchFetchUserPreferences(patterns: PatternBatch[]): Promise<UserPreferenceCache> {
-    const uniqueUserIds = [...new Set(patterns.map(p => p.userId))];
-    
+    const uniqueUserIds = [...new Set(patterns.map((p) => p.userId))];
+
     // Check cache first
     const cachedPrefs: UserPreferenceCache = {};
     const uncachedUserIds: string[] = [];
@@ -134,7 +137,7 @@ export class OptimizedPatternService {
     for (const userId of uniqueUserIds) {
       const cacheKey = `user_pref_${userId}`;
       const expiry = this.cacheExpiry.get(cacheKey);
-      
+
       if (expiry && expiry > now && this.userPreferenceCache[userId]) {
         cachedPrefs[userId] = this.userPreferenceCache[userId];
       } else {
@@ -142,7 +145,7 @@ export class OptimizedPatternService {
       }
     }
 
-    this.logger.debug('User preference cache status', {
+    this.logger.debug("User preference cache status", {
       totalUsers: uniqueUserIds.length,
       cachedUsers: Object.keys(cachedPrefs).length,
       uncachedUsers: uncachedUserIds.length,
@@ -151,7 +154,7 @@ export class OptimizedPatternService {
     // Fetch uncached preferences in single batch query
     if (uncachedUserIds.length > 0) {
       const preferences = await monitoredQuery(
-        'batch_fetch_user_preferences',
+        "batch_fetch_user_preferences",
         async () => {
           return await executeWithRetry(async () => {
             return await db
@@ -167,9 +170,9 @@ export class OptimizedPatternService {
           });
         },
         {
-          operationType: 'select',
-          tableName: 'user_preferences',
-          query: `SELECT userId, defaultBuyAmountUsdt, defaultTakeProfitLevel, stopLossPercent, takeProfitCustom FROM user_preferences WHERE userId IN (${uncachedUserIds.map(() => '?').join(',')})`,
+          operationType: "select",
+          tableName: "user_preferences",
+          query: `SELECT userId, defaultBuyAmountUsdt, defaultTakeProfitLevel, stopLossPercent, takeProfitCustom FROM user_preferences WHERE userId IN (${uncachedUserIds.map(() => "?").join(",")})`,
           parameters: uncachedUserIds,
         }
       );
@@ -209,12 +212,12 @@ export class OptimizedPatternService {
   private async batchCheckDuplicates(patterns: PatternBatch[]): Promise<PatternBatch[]> {
     if (patterns.length === 0) return [];
 
-    const userIds = [...new Set(patterns.map(p => p.userId))];
-    const symbols = [...new Set(patterns.map(p => p.symbol))];
+    const userIds = [...new Set(patterns.map((p) => p.userId))];
+    const symbols = [...new Set(patterns.map((p) => p.symbol))];
 
     // Single query to find existing targets for all users and symbols
     const existingTargets = await monitoredQuery(
-      'batch_check_snipe_target_duplicates',
+      "batch_check_snipe_target_duplicates",
       async () => {
         return await executeWithRetry(async () => {
           return await db
@@ -227,31 +230,31 @@ export class OptimizedPatternService {
               and(
                 inArray(snipeTargets.userId, userIds),
                 inArray(snipeTargets.symbolName, symbols),
-                eq(snipeTargets.status, 'pending')
+                eq(snipeTargets.status, "pending")
               )
             );
         });
       },
       {
-        operationType: 'select',
-        tableName: 'snipe_targets',
-        query: `SELECT userId, symbolName FROM snipe_targets WHERE userId IN (${userIds.map(() => '?').join(',')}) AND symbolName IN (${symbols.map(() => '?').join(',')}) AND status = 'pending'`,
+        operationType: "select",
+        tableName: "snipe_targets",
+        query: `SELECT userId, symbolName FROM snipe_targets WHERE userId IN (${userIds.map(() => "?").join(",")}) AND symbolName IN (${symbols.map(() => "?").join(",")}) AND status = 'pending'`,
         parameters: [...userIds, ...symbols],
       }
     );
 
     // Create lookup set for O(1) duplicate checking
     const existingCombinations = new Set(
-      existingTargets.map(target => `${target.userId}:${target.symbolName}`)
+      existingTargets.map((target) => `${target.userId}:${target.symbolName}`)
     );
 
     // Filter out duplicates in O(n) time
-    const nonDuplicates = patterns.filter(pattern => {
+    const nonDuplicates = patterns.filter((pattern) => {
       const combination = `${pattern.userId}:${pattern.symbol}`;
       return !existingCombinations.has(combination);
     });
 
-    this.logger.debug('Duplicate checking completed', {
+    this.logger.debug("Duplicate checking completed", {
       totalPatterns: patterns.length,
       existingTargets: existingTargets.length,
       nonDuplicates: nonDuplicates.length,
@@ -270,19 +273,19 @@ export class OptimizedPatternService {
   ): Promise<void> {
     if (patterns.length === 0) return;
 
-    const records = patterns.map(pattern => {
+    const records = patterns.map((pattern) => {
       const prefs = userPrefs[pattern.userId];
-      
+
       return {
         userId: pattern.userId,
         vcoinId: pattern.vcoinId || pattern.symbol,
         symbolName: pattern.symbol,
-        entryStrategy: 'market',
+        entryStrategy: "market",
         positionSizeUsdt: prefs.defaultBuyAmountUsdt,
         takeProfitLevel: prefs.defaultTakeProfitLevel,
         takeProfitCustom: prefs.takeProfitCustom,
         stopLossPercent: prefs.stopLossPercent,
-        status: pattern.patternType === 'ready_state' ? 'ready' : 'pending',
+        status: pattern.patternType === "ready_state" ? "ready" : "pending",
         priority: this.calculatePriority(pattern),
         confidenceScore: Math.round(pattern.confidence || 80),
         riskLevel: this.calculateRiskLevel(pattern),
@@ -291,7 +294,7 @@ export class OptimizedPatternService {
 
     // Batch insert all records
     await monitoredQuery(
-      'batch_insert_snipe_targets',
+      "batch_insert_snipe_targets",
       async () => {
         return await executeWithRetry(async () => {
           await db.insert(snipeTargets).values(records);
@@ -299,14 +302,14 @@ export class OptimizedPatternService {
         });
       },
       {
-        operationType: 'insert',
-        tableName: 'snipe_targets',
+        operationType: "insert",
+        tableName: "snipe_targets",
         query: `INSERT INTO snipe_targets (userId, vcoinId, symbolName, ...) VALUES ...`,
         parameters: records,
       }
     );
 
-    this.logger.info('Batch insert completed', {
+    this.logger.info("Batch insert completed", {
       recordsInserted: records.length,
     });
   }
@@ -327,7 +330,7 @@ export class OptimizedPatternService {
 
     if (patterns.length === 0) return;
 
-    this.logger.info('Starting bulk pattern processing', {
+    this.logger.info("Starting bulk pattern processing", {
       totalPatterns: patterns.length,
       batchSize,
       useOptimizedQueries,
@@ -340,7 +343,7 @@ export class OptimizedPatternService {
     try {
       // Process in batches to avoid memory issues
       const batches = this.chunkArray(patterns, batchSize);
-      
+
       if (maxConcurrency === 1) {
         // Sequential processing
         for (const batch of batches) {
@@ -356,7 +359,10 @@ export class OptimizedPatternService {
             while (batchIndex < batches.length) {
               const currentBatch = batches[batchIndex++];
               if (currentBatch) {
-                await this.processBulkBatch(currentBatch, { useOptimizedQueries, enableVectorOptimization });
+                await this.processBulkBatch(currentBatch, {
+                  useOptimizedQueries,
+                  enableVectorOptimization,
+                });
               }
             }
           })
@@ -364,20 +370,23 @@ export class OptimizedPatternService {
       }
 
       const processingTime = performance.now() - startTime;
-      this.logger.info('Bulk processing completed', {
+      this.logger.info("Bulk processing completed", {
         totalPatterns: patterns.length,
         batchCount: batches.length,
         processingTimeMs: Math.round(processingTime),
         avgTimePerPattern: Math.round(processingTime / patterns.length),
         patternsPerSecond: Math.round(patterns.length / (processingTime / 1000)),
       });
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Bulk processing failed', {
-        totalPatterns: patterns.length,
-        error: safeError.message,
-      }, safeError);
+      this.logger.error(
+        "Bulk processing failed",
+        {
+          totalPatterns: patterns.length,
+          error: safeError.message,
+        },
+        safeError
+      );
       throw error;
     }
   }
@@ -392,7 +401,7 @@ export class OptimizedPatternService {
     const { useOptimizedQueries, enableVectorOptimization } = options;
 
     // Convert to embedding records
-    const embeddingRecords = batch.map(pattern => ({
+    const embeddingRecords = batch.map((pattern) => ({
       patternId: `bulk-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       patternType: pattern.patternType,
       symbolName: pattern.symbol,
@@ -407,7 +416,7 @@ export class OptimizedPatternService {
     if (useOptimizedQueries) {
       // Use batch insert for better performance
       await monitoredQuery(
-        'bulk_batch_insert_embeddings',
+        "bulk_batch_insert_embeddings",
         async () => {
           return await executeWithRetry(async () => {
             await db.insert(patternEmbeddings).values(embeddingRecords);
@@ -415,8 +424,8 @@ export class OptimizedPatternService {
           });
         },
         {
-          operationType: 'insert',
-          tableName: 'pattern_embeddings',
+          operationType: "insert",
+          tableName: "pattern_embeddings",
           query: `INSERT INTO pattern_embeddings (...) VALUES ...`,
           parameters: embeddingRecords,
         }
@@ -428,7 +437,7 @@ export class OptimizedPatternService {
       }
     }
 
-    this.logger.debug('Bulk batch processed', {
+    this.logger.debug("Bulk batch processed", {
       batchSize: batch.length,
       useOptimizedQueries,
       enableVectorOptimization,
@@ -447,8 +456,8 @@ export class OptimizedPatternService {
     else if (confidence >= 80) priority = 3;
     else if (confidence >= 75) priority = 4;
 
-    if (pattern.patternType === 'ready_state') priority = Math.max(1, priority - 1);
-    if (pattern.patternType === 'launch_sequence') priority = Math.max(1, priority - 1);
+    if (pattern.patternType === "ready_state") priority = Math.max(1, priority - 1);
+    if (pattern.patternType === "launch_sequence") priority = Math.max(1, priority - 1);
 
     return Math.max(1, Math.min(10, priority));
   }
@@ -456,12 +465,12 @@ export class OptimizedPatternService {
   /**
    * Helper: Calculate risk level
    */
-  private calculateRiskLevel(pattern: PatternBatch): 'low' | 'medium' | 'high' {
+  private calculateRiskLevel(pattern: PatternBatch): "low" | "medium" | "high" {
     const confidence = pattern.confidence || 80;
-    
-    if (confidence >= 90) return 'low';
-    if (confidence >= 80) return 'medium';
-    return 'high';
+
+    if (confidence >= 90) return "low";
+    if (confidence >= 80) return "medium";
+    return "high";
   }
 
   /**
@@ -481,7 +490,7 @@ export class OptimizedPatternService {
   clearCaches(): void {
     this.userPreferenceCache = {};
     this.cacheExpiry.clear();
-    this.logger.debug('Internal caches cleared');
+    this.logger.debug("Internal caches cleared");
   }
 
   /**
@@ -495,10 +504,12 @@ export class OptimizedPatternService {
     const now = Date.now();
     const cachedUsers = Object.keys(this.userPreferenceCache).length;
     const expiries = Array.from(this.cacheExpiry.values());
-    const validExpiries = expiries.filter(expiry => expiry > now);
-    const averageAge = validExpiries.length > 0 
-      ? (this.cacheTTL - (validExpiries.reduce((sum, exp) => sum + (exp - now), 0) / validExpiries.length)) 
-      : 0;
+    const validExpiries = expiries.filter((expiry) => expiry > now);
+    const averageAge =
+      validExpiries.length > 0
+        ? this.cacheTTL -
+          validExpiries.reduce((sum, exp) => sum + (exp - now), 0) / validExpiries.length
+        : 0;
 
     return {
       userPreferencesCached: cachedUsers,

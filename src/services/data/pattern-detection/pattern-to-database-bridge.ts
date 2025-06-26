@@ -9,7 +9,10 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
-import type { PatternDetectionEventData, PatternMatch } from "@/src/core/pattern-detection/interfaces";
+import type {
+  PatternDetectionEventData,
+  PatternMatch,
+} from "@/src/core/pattern-detection/interfaces";
 import { EnhancedPatternDetectionCore } from "@/src/core/pattern-detection/pattern-detection-core-enhanced";
 import { db } from "@/src/db";
 import { snipeTargets, userPreferences } from "@/src/db/schema";
@@ -95,9 +98,12 @@ export class PatternToDatabaseBridge {
     } else if (config) {
       // Update configuration if provided (useful for testing)
       PatternToDatabaseBridge.instance.config = BridgeConfigSchema.parse(config);
-      PatternToDatabaseBridge.instance.logger.info("PatternToDatabaseBridge configuration updated", {
-        config: PatternToDatabaseBridge.instance.config,
-      });
+      PatternToDatabaseBridge.instance.logger.info(
+        "PatternToDatabaseBridge configuration updated",
+        {
+          config: PatternToDatabaseBridge.instance.config,
+        }
+      );
     }
     return PatternToDatabaseBridge.instance;
   }
@@ -184,9 +190,9 @@ export class PatternToDatabaseBridge {
         patternType: eventData.patternType,
         matchesCount: eventData.matches.length,
         isListening: this.isListening,
-        enabled: this.config.enabled
+        enabled: this.config.enabled,
       });
-      
+
       this.logger.info("📥 Received pattern detection event", {
         patternType: eventData.patternType,
         matchesCount: eventData.matches.length,
@@ -202,10 +208,12 @@ export class PatternToDatabaseBridge {
         filteredCount: filteredMatches.length,
         minConfidence: this.config.minConfidenceThreshold,
         supportedTypes: this.config.supportedPatternTypes,
-        firstMatch: eventData.matches[0] ? {
-          confidence: eventData.matches[0].confidence,
-          patternType: eventData.matches[0].patternType
-        } : null
+        firstMatch: eventData.matches[0]
+          ? {
+              confidence: eventData.matches[0].confidence,
+              patternType: eventData.matches[0].patternType,
+            }
+          : null,
       });
 
       if (filteredMatches.length === 0) {
@@ -223,27 +231,29 @@ export class PatternToDatabaseBridge {
       console.log("🔍 PatternToDatabaseBridge: After conversion", {
         filteredMatchesCount: filteredMatches.length,
         snipeTargetRecordsCount: snipeTargetRecords.length,
-        firstRecord: snipeTargetRecords[0] ? {
-          userId: snipeTargetRecords[0].userId,
-          symbolName: snipeTargetRecords[0].symbolName,
-          vcoinId: snipeTargetRecords[0].vcoinId
-        } : null
+        firstRecord: snipeTargetRecords[0]
+          ? {
+              userId: snipeTargetRecords[0].userId,
+              symbolName: snipeTargetRecords[0].symbolName,
+              vcoinId: snipeTargetRecords[0].vcoinId,
+            }
+          : null,
       });
 
       // Batch insert into database
       if (snipeTargetRecords.length > 0) {
         try {
           const insertedCount = await this.insertSnipeTargets(snipeTargetRecords);
-          
+
           console.log("🔍 PatternToDatabaseBridge: After insertion", {
             insertedCount,
-            recordsToInsert: snipeTargetRecords.length
+            recordsToInsert: snipeTargetRecords.length,
           });
         } catch (insertError) {
           console.error("🔍 PatternToDatabaseBridge: Insertion failed", {
             error: insertError,
             recordsToInsert: snipeTargetRecords.length,
-            firstRecord: snipeTargetRecords[0]
+            firstRecord: snipeTargetRecords[0],
           });
           throw insertError;
         }
@@ -317,7 +327,7 @@ export class PatternToDatabaseBridge {
         console.log(`🔍 PatternToDatabaseBridge: Converting pattern to record`, {
           symbol: match.symbol,
           patternType: match.patternType,
-          confidence: match.confidence
+          confidence: match.confidence,
         });
 
         // Determine user ID (could be from config mapping or default)
@@ -357,16 +367,18 @@ export class PatternToDatabaseBridge {
         // Validate the record
         const validatedRecord = SnipeTargetRecordSchema.parse(record);
         console.log(`🔍 PatternToDatabaseBridge: Record validation successful:`, validatedRecord);
-        
+
         records.push(validatedRecord);
-        console.log(`✅ PatternToDatabaseBridge: Successfully converted pattern to record for ${match.symbol}`);
+        console.log(
+          `✅ PatternToDatabaseBridge: Successfully converted pattern to record for ${match.symbol}`
+        );
       } catch (error) {
         const safeError = toSafeError(error);
         console.error(`❌ PatternToDatabaseBridge: Failed to convert pattern match to record`, {
           symbol: match.symbol,
           patternType: match.patternType,
           error: safeError.message,
-          fullError: safeError
+          fullError: safeError,
         });
         this.logger.warn("Failed to convert pattern match to record", {
           symbol: match.symbol,
@@ -376,7 +388,9 @@ export class PatternToDatabaseBridge {
       }
     }
 
-    console.log(`🔍 PatternToDatabaseBridge: Final conversion result: ${records.length} records from ${matches.length} matches`);
+    console.log(
+      `🔍 PatternToDatabaseBridge: Final conversion result: ${records.length} records from ${matches.length} matches`
+    );
     return records;
   }
 
@@ -393,7 +407,7 @@ export class PatternToDatabaseBridge {
       mappedUserId,
       userIdMapping: this.config.userIdMapping,
       activityTypes: match.activityInfo?.activityTypes,
-      symbol: match.symbol
+      symbol: match.symbol,
     });
 
     if (mappedUserId) {

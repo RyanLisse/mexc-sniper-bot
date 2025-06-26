@@ -15,9 +15,10 @@ import { getRecommendedMexcService } from "./mexc-unified-exports";
 function createTimer(operation: string, component: string) {
   const start = Date.now();
   return {
-    end: () => Date.now() - start
+    end: () => Date.now() - start,
   };
 }
+
 import {
   type AutoSnipingConfig,
   AutoSnipingConfigSchema,
@@ -191,7 +192,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       apiConnection: await this.checkApiConnection(),
       patternEngine: this.patternEngine != null,
       safetySystem: this.safetySystem != null,
-      riskLimits: true
+      riskLimits: true,
     };
 
     const recommendations = this.generateRecommendations();
@@ -202,7 +203,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       stats: this.stats,
       activePositions: Array.from(this.activePositions.values()),
       recentExecutions: this.executionHistory.slice(-10),
-      activeAlerts: this.alerts.filter(alert => !alert.acknowledged),
+      activeAlerts: this.alerts.filter((alert) => !alert.acknowledged),
       systemHealth,
       recommendations,
       lastUpdated: new Date().toISOString(),
@@ -211,13 +212,16 @@ export class OptimizedAutoSnipingExecutionEngine {
       executedToday: this.stats.dailyTradeCount,
       successRate: this.stats.successRate,
       totalProfit: parseFloat(this.stats.totalPnl || "0"),
-      lastExecution: this.executionHistory.length > 0 ? this.executionHistory[this.executionHistory.length - 1].entryTime : undefined,
+      lastExecution:
+        this.executionHistory.length > 0
+          ? this.executionHistory[this.executionHistory.length - 1].entryTime
+          : undefined,
       safetyStatus: this.getSafetyStatus(),
       patternDetectionActive: true,
       executionCount: this.stats.totalTrades,
       successCount: this.stats.successfulTrades,
       errorCount: this.stats.failedTrades,
-      uptime: this.isExecutionActive ? Date.now() - this.stats.startTime : 0
+      uptime: this.isExecutionActive ? Date.now() - this.stats.startTime : 0,
     };
   }
 
@@ -228,18 +232,18 @@ export class OptimizedAutoSnipingExecutionEngine {
     if (!this.isExecutionActive) {
       throw new Error("Auto-sniping execution is not active");
     }
-    
+
     this.clearIntervals();
     this.addAlert({
       type: "position_opened",
       severity: "info",
       message: "Auto-sniping execution paused",
-      details: { activePositions: this.activePositions.size }
+      details: { activePositions: this.activePositions.size },
     });
-    
+
     console.info("Auto-sniping execution paused", {
       operation: "pause_execution",
-      activePositions: this.activePositions.size
+      activePositions: this.activePositions.size,
     });
   }
 
@@ -253,17 +257,17 @@ export class OptimizedAutoSnipingExecutionEngine {
 
     await this.performPreflightChecks();
     this.startExecutionCycles();
-    
+
     this.addAlert({
       type: "position_opened",
       severity: "info",
       message: "Auto-sniping execution resumed",
-      details: { activePositions: this.activePositions.size }
+      details: { activePositions: this.activePositions.size },
     });
-    
+
     console.info("Auto-sniping execution resumed", {
       operation: "resume_execution",
-      activePositions: this.activePositions.size
+      activePositions: this.activePositions.size,
     });
   }
 
@@ -271,18 +275,18 @@ export class OptimizedAutoSnipingExecutionEngine {
    * Acknowledge an alert
    */
   public acknowledgeAlert(alertId: string): boolean {
-    const alert = this.alerts.find(a => a.id === alertId);
+    const alert = this.alerts.find((a) => a.id === alertId);
     if (!alert) {
       return false;
     }
-    
+
     alert.acknowledged = true;
     console.info("Alert acknowledged", {
       operation: "acknowledge_alert",
       alertId,
-      alertType: alert.type
+      alertType: alert.type,
     });
-    
+
     return true;
   }
 
@@ -291,14 +295,14 @@ export class OptimizedAutoSnipingExecutionEngine {
    */
   public clearAcknowledgedAlerts(): number {
     const initialCount = this.alerts.length;
-    this.alerts = this.alerts.filter(alert => !alert.acknowledged);
+    this.alerts = this.alerts.filter((alert) => !alert.acknowledged);
     const clearedCount = initialCount - this.alerts.length;
-    
+
     console.info("Acknowledged alerts cleared", {
       operation: "clear_acknowledged_alerts",
-      clearedCount
+      clearedCount,
     });
-    
+
     return clearedCount;
   }
 
@@ -395,9 +399,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     // Safety system check
     const safetyStatus = await this.safetySystem.performSystemHealthCheck();
     if (safetyStatus.overall === "critical") {
-      throw new Error(
-        `Safety system status: critical`
-      );
+      throw new Error(`Safety system status: critical`);
     }
 
     const duration = timer.end();
@@ -902,19 +904,19 @@ export class OptimizedAutoSnipingExecutionEngine {
 
   private generateRecommendations(): string[] {
     const recommendations: string[] = [];
-    
+
     if (this.activePositions.size === 0) {
       recommendations.push("No active positions - system ready for new opportunities");
     }
-    
+
     if (this.stats.successRate < 50 && this.stats.totalTrades > 5) {
       recommendations.push("Consider adjusting confidence threshold - success rate below 50%");
     }
-    
+
     if (this.config.maxPositions - this.activePositions.size <= 1) {
       recommendations.push("Approaching maximum position limit");
     }
-    
+
     return recommendations;
   }
 
@@ -951,7 +953,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       },
       averagePatternConfidence: 0,
       mostSuccessfulPattern: null,
-      startTime: Date.now()
+      startTime: Date.now(),
     });
   }
 }

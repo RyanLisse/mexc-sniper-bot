@@ -1,21 +1,21 @@
 /**
  * Test Credentials Component with Status Synchronization
- * 
+ *
  * Demonstrates how to properly handle status synchronization when testing
  * API credentials, ensuring UI state remains consistent across all components.
  */
 
 "use client";
 
-import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useKindeAuth } from '@kinde-oss/kinde-auth-nextjs';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react';
-import { useStatusSync, extractStatusSyncData } from '@/hooks/use-status-sync';
+import { useKindeAuth } from "@kinde-oss/kinde-auth-nextjs";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { CheckCircle, Loader2, RefreshCw, XCircle } from "lucide-react";
+import React, { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { extractStatusSyncData, useStatusSync } from "@/hooks/use-status-sync";
 
 // ============================================================================
 // Types & Interfaces
@@ -23,7 +23,7 @@ import { useStatusSync, extractStatusSyncData } from '@/hooks/use-status-sync';
 
 interface TestCredentialsRequest {
   userId: string;
-  provider: 'mexc';
+  provider: "mexc";
 }
 
 interface TestCredentialsResponse {
@@ -60,61 +60,61 @@ export function TestCredentialsWithSync() {
   // Test credentials mutation with status sync handling
   const testCredentialsMutation = useMutation({
     mutationFn: async (request: TestCredentialsRequest): Promise<TestCredentialsResponse> => {
-      const response = await fetch('/api/api-credentials/test', {
-        method: 'POST',
+      const response = await fetch("/api/api-credentials/test", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(request),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Credential test failed');
+        throw new Error(errorData.error || "Credential test failed");
       }
 
       return response.json();
     },
     onSuccess: async (data) => {
-      console.info('[TestCredentials] Test completed successfully', data);
+      console.info("[TestCredentials] Test completed successfully", data);
 
       // Extract and handle status sync data
       const statusSyncData = extractStatusSyncData(data);
       if (statusSyncData) {
-        console.info('[TestCredentials] Processing status sync data', statusSyncData);
-        
+        console.info("[TestCredentials] Processing status sync data", statusSyncData);
+
         await handleStatusSync(statusSyncData, {
           invalidateRelatedQueries: true,
           refetchActiveQueries: true,
           notifySuccess: true,
         });
       } else {
-        console.warn('[TestCredentials] No status sync data received - manual cache invalidation');
+        console.warn("[TestCredentials] No status sync data received - manual cache invalidation");
         await invalidateStatusQueries();
       }
     },
     onError: (error) => {
-      console.error('[TestCredentials] Test failed:', error);
+      console.error("[TestCredentials] Test failed:", error);
     },
   });
 
   // Handle test credentials button click
   const handleTestCredentials = () => {
     if (!user?.id) {
-      console.error('[TestCredentials] No user ID available');
+      console.error("[TestCredentials] No user ID available");
       return;
     }
 
     testCredentialsMutation.mutate({
       userId: user.id,
-      provider: 'mexc',
+      provider: "mexc",
     });
   };
 
   // Handle manual cache invalidation
   const handleManualInvalidation = async () => {
-    console.info('[TestCredentials] Manually invalidating status queries');
+    console.info("[TestCredentials] Manually invalidating status queries");
     await invalidateStatusQueries();
   };
 
@@ -134,11 +134,11 @@ export function TestCredentialsWithSync() {
           Test your MEXC API credentials and verify status synchronization across all systems
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Test Button */}
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={handleTestCredentials}
             disabled={isLoading || !user?.id}
             className="flex items-center gap-2"
@@ -148,10 +148,10 @@ export function TestCredentialsWithSync() {
             ) : (
               <CheckCircle className="h-4 w-4" />
             )}
-            {isLoading ? 'Testing Credentials...' : 'Test Credentials'}
+            {isLoading ? "Testing Credentials..." : "Test Credentials"}
           </Button>
-          
-          <Button 
+
+          <Button
             variant="outline"
             onClick={handleManualInvalidation}
             className="flex items-center gap-2"
@@ -165,9 +165,7 @@ export function TestCredentialsWithSync() {
         {error && (
           <Alert variant="destructive">
             <XCircle className="h-4 w-4" />
-            <AlertDescription>
-              Test failed: {error.message}
-            </AlertDescription>
+            <AlertDescription>Test failed: {error.message}</AlertDescription>
           </Alert>
         )}
 
@@ -176,7 +174,8 @@ export function TestCredentialsWithSync() {
           <Alert className="border-green-200 bg-green-50">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              Credentials test completed successfully! Status has been synchronized across all systems.
+              Credentials test completed successfully! Status has been synchronized across all
+              systems.
             </AlertDescription>
           </Alert>
         )}
@@ -185,32 +184,42 @@ export function TestCredentialsWithSync() {
         {testCredentialsMutation.data?.data && (
           <div className="space-y-3">
             <h4 className="font-medium">Test Results</h4>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center justify-between p-2 border rounded">
                 <span className="text-sm">Connectivity</span>
-                <Badge variant={testCredentialsMutation.data.data.connectivity ? "default" : "destructive"}>
+                <Badge
+                  variant={
+                    testCredentialsMutation.data.data.connectivity ? "default" : "destructive"
+                  }
+                >
                   {testCredentialsMutation.data.data.connectivity ? "Connected" : "Failed"}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center justify-between p-2 border rounded">
                 <span className="text-sm">Authentication</span>
-                <Badge variant={testCredentialsMutation.data.data.authentication ? "default" : "destructive"}>
+                <Badge
+                  variant={
+                    testCredentialsMutation.data.data.authentication ? "default" : "destructive"
+                  }
+                >
                   {testCredentialsMutation.data.data.authentication ? "Valid" : "Invalid"}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center justify-between p-2 border rounded">
                 <span className="text-sm">Account Type</span>
                 <Badge variant="outline">
                   {testCredentialsMutation.data.data.accountType.toUpperCase()}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center justify-between p-2 border rounded">
                 <span className="text-sm">Can Trade</span>
-                <Badge variant={testCredentialsMutation.data.data.canTrade ? "default" : "secondary"}>
+                <Badge
+                  variant={testCredentialsMutation.data.data.canTrade ? "default" : "secondary"}
+                >
                   {testCredentialsMutation.data.data.canTrade ? "Yes" : "No"}
                 </Badge>
               </div>
@@ -228,10 +237,10 @@ export function TestCredentialsWithSync() {
                 size="sm"
                 onClick={() => setShowSyncDetails(!showSyncDetails)}
               >
-                {showSyncDetails ? 'Hide Details' : 'Show Details'}
+                {showSyncDetails ? "Hide Details" : "Show Details"}
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center justify-between p-2 border rounded">
                 <span className="text-sm">Cache Invalidated</span>
@@ -239,7 +248,7 @@ export function TestCredentialsWithSync() {
                   {syncData.cacheInvalidated ? "Yes" : "No"}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center justify-between p-2 border rounded">
                 <span className="text-sm">Status Refreshed</span>
                 <Badge variant={syncData.statusRefreshed ? "default" : "secondary"}>
@@ -256,7 +265,8 @@ export function TestCredentialsWithSync() {
                     <span className="font-medium">Triggered By:</span> {syncData.triggeredBy}
                   </div>
                   <div>
-                    <span className="font-medium">Timestamp:</span> {new Date(syncData.timestamp).toLocaleString()}
+                    <span className="font-medium">Timestamp:</span>{" "}
+                    {new Date(syncData.timestamp).toLocaleString()}
                   </div>
                   {syncData.servicesNotified && (
                     <div>

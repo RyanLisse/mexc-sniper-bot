@@ -5,8 +5,8 @@
  * Extracted from mexc-api-client.ts for better modularity.
  */
 
-import { toSafeError } from "../../lib/error-type-utils";
 import type { MexcServiceResponse } from "@/src/schemas/unified/mexc-api-schemas";
+import { toSafeError } from "../../lib/error-type-utils";
 import type { MexcApiClient } from "./mexc-api-client-refactored";
 
 export interface OrderParams {

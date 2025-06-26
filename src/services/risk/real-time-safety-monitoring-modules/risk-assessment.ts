@@ -9,10 +9,10 @@
 
 import type { SafetyConfiguration, SystemHealth } from "@/src/schemas/safety-monitoring-schemas";
 import { validateSystemHealth } from "@/src/schemas/safety-monitoring-schemas";
-import type { OptimizedAutoSnipingExecutionEngine } from "@/src/services/trading/optimized-auto-sniping-execution-engine";
-import type { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
-import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
+import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
+import type { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
+import type { OptimizedAutoSnipingExecutionEngine } from "@/src/services/trading/optimized-auto-sniping-execution-engine";
 
 export interface RiskAssessmentConfig {
   configuration: SafetyConfiguration;

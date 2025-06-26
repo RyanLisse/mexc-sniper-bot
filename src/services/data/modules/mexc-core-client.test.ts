@@ -47,9 +47,9 @@ describe("MexcCoreClient", () => {
 
   beforeEach(() => {
     // Mock Node.js environment by removing window object
-    Object.defineProperty(global, 'window', {
+    Object.defineProperty(global, "window", {
       value: undefined,
-      writable: true
+      writable: true,
     });
 
     client = new MexcCoreClient(TEST_CONFIG);

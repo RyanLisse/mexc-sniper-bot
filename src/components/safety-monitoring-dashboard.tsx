@@ -123,11 +123,7 @@ export const SafetyMonitoringDashboard = memo(function SafetyMonitoringDashboard
             <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
             Refresh
           </Button>
-          <Button
-            variant="outline"
-            onClick={handleSafetyCheck}
-            disabled={isRunningSafetyCheck}
-          >
+          <Button variant="outline" onClick={handleSafetyCheck} disabled={isRunningSafetyCheck}>
             <Shield className={cn("h-4 w-4 mr-2", isRunningSafetyCheck && "animate-pulse")} />
             Safety Check
           </Button>

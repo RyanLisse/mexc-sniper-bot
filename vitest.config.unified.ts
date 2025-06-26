@@ -1,8 +1,8 @@
-import { defineConfig } from 'vitest/config'
-import path from 'path'
-import { config } from 'dotenv'
-import { fileURLToPath } from 'url'
-import tsconfigPaths from 'vite-tsconfig-paths'
+import { defineConfig } from 'vitest/config';
+import path from 'path';
+import { config } from 'dotenv';
+import { fileURLToPath } from 'url';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 // ES module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url)

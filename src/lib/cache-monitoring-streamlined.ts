@@ -1,22 +1,22 @@
 /**
  * Streamlined Cache Monitoring System
- * 
+ *
  * Refactored to use extracted modules and reduce file size from 1051 to under 500 lines
  */
 
 import { globalAPIResponseCache } from "./api-response-cache";
 import { globalCacheManager } from "./cache-manager";
-import { globalEnhancedAgentCache } from "./enhanced-agent-cache";
-import { createConsoleLogger } from "./shared/console-logger";
 import { CacheAlertManager } from "./cache-monitoring/alert-manager";
 import { CachePerformanceCalculator } from "./cache-monitoring/performance-calculator";
 import type {
-  CacheMonitoringConfig,
-  SystemCacheMetrics,
-  PerformanceReport,
   CacheAlert,
+  CacheMonitoringConfig,
   CacheRecommendation,
+  PerformanceReport,
+  SystemCacheMetrics,
 } from "./cache-monitoring/types";
+import { globalEnhancedAgentCache } from "./enhanced-agent-cache";
+import { createConsoleLogger } from "./shared/console-logger";
 
 export class StreamlinedCacheMonitoringSystem {
   private logger = createConsoleLogger("cache-monitoring");
@@ -62,10 +62,14 @@ export class StreamlinedCacheMonitoringSystem {
       try {
         await this.collectMetrics();
         await this.analyzePerformance();
-        await this.alertManager.checkThresholds(this.metricsHistory[this.metricsHistory.length - 1]);
+        await this.alertManager.checkThresholds(
+          this.metricsHistory[this.metricsHistory.length - 1]
+        );
         this.cleanupOldMetrics();
       } catch (error) {
-        this.logger.error("Monitoring cycle error", { error: error instanceof Error ? error.message : error });
+        this.logger.error("Monitoring cycle error", {
+          error: error instanceof Error ? error.message : error,
+        });
       }
     }, this.config.monitoringInterval);
   }
@@ -112,7 +116,9 @@ export class StreamlinedCacheMonitoringSystem {
 
       return metrics;
     } catch (error) {
-      this.logger.error("Error collecting metrics", { error: error instanceof Error ? error.message : error });
+      this.logger.error("Error collecting metrics", {
+        error: error instanceof Error ? error.message : error,
+      });
       throw error;
     }
   }
@@ -130,7 +136,9 @@ export class StreamlinedCacheMonitoringSystem {
       this.alertManager.analyzeTrends(current, previous);
       this.alertManager.generateRecommendations(current);
     } catch (error) {
-      this.logger.error("Performance analysis error", { error: error instanceof Error ? error.message : error });
+      this.logger.error("Performance analysis error", {
+        error: error instanceof Error ? error.message : error,
+      });
     }
   }
 
@@ -214,7 +222,9 @@ export class StreamlinedCacheMonitoringSystem {
         improvements.memoryReduction = cleanupResults.total * 1024;
 
         const optimizationResults = globalCacheManager.optimize();
-        actions.push(`Evicted ${optimizationResults.evicted} entries, promoted ${optimizationResults.promoted}`);
+        actions.push(
+          `Evicted ${optimizationResults.evicted} entries, promoted ${optimizationResults.promoted}`
+        );
         improvements.performanceImprovement = optimizationResults.promoted * 10;
       }
 
@@ -223,7 +233,10 @@ export class StreamlinedCacheMonitoringSystem {
         improvements.hitRateImprovement = 15;
       }
 
-      if (current.performance.totalMemoryUsage > this.config.performanceThresholds.maxMemoryUsage * 0.8) {
+      if (
+        current.performance.totalMemoryUsage >
+        this.config.performanceThresholds.maxMemoryUsage * 0.8
+      ) {
         actions.push("Recommended: Enable more aggressive cache cleanup");
         improvements.memoryReduction = current.performance.totalMemoryUsage * 0.2;
       }
@@ -231,7 +244,9 @@ export class StreamlinedCacheMonitoringSystem {
       this.logger.info(`Cache optimization completed: ${actions.length} actions taken`);
       return { actions, improvements };
     } catch (error) {
-      this.logger.error("Cache optimization error", { error: error instanceof Error ? error.message : error });
+      this.logger.error("Cache optimization error", {
+        error: error instanceof Error ? error.message : error,
+      });
       throw error;
     }
   }

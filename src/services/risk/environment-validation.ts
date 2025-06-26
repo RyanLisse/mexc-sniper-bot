@@ -5,7 +5,10 @@
  * Refactored from enhanced-environment-validation.ts for maintainability
  */
 
-import type { EnvironmentValidationResult, EnvironmentVariable } from "@/src/config/environment/types";
+import type {
+  EnvironmentValidationResult,
+  EnvironmentVariable,
+} from "@/src/config/environment/types";
 import {
   ENVIRONMENT_VARIABLES,
   getCriticalMissing,

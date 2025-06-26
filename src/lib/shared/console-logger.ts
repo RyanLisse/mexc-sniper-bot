@@ -1,6 +1,6 @@
 /**
  * Shared Console Logger Utility
- * 
+ *
  * Centralized logger pattern to eliminate redundant logger initialization
  * across multiple files. Provides consistent logging interface.
  */

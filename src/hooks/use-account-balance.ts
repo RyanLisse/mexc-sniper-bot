@@ -26,7 +26,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
     authenticatedUserId: user?.id,
     effectiveUserId,
     isAuthenticated,
-    enabled
+    enabled,
   });
 
   return useQuery({
@@ -38,7 +38,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
     }> => {
       const url = `/api/account/balance?userId=${encodeURIComponent(effectiveUserId)}`;
       console.debug("[useAccountBalance] Fetching from:", url);
-      
+
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -83,7 +83,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
         totalUsdtValue: data.data.totalUsdtValue || 0,
         lastUpdated: data.data.lastUpdated || new Date().toISOString(),
       };
-      
+
       console.debug("[useAccountBalance] Returning balance data:", result);
       return result;
     },

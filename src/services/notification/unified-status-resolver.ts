@@ -182,13 +182,13 @@ export class UnifiedStatusResolver {
       const url = this.resolveApiUrl("/api/mexc/enhanced-connectivity");
       const enhancedController = new AbortController();
       setTimeout(() => enhancedController.abort(), 2000);
-      
+
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         // Add timeout to prevent hanging during startup
-        signal: enhancedController.signal
+        signal: enhancedController.signal,
       });
 
       if (!response.ok) {
@@ -222,13 +222,13 @@ export class UnifiedStatusResolver {
       const url = this.resolveApiUrl("/api/mexc/connectivity");
       const legacyController = new AbortController();
       setTimeout(() => legacyController.abort(), 2000);
-      
+
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         // Add timeout to prevent hanging during startup
-        signal: legacyController.signal
+        signal: legacyController.signal,
       });
 
       if (!response.ok) {

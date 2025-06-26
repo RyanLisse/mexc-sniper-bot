@@ -4,9 +4,9 @@
  * Main service class that orchestrates all rate limiting functionality
  */
 
-import { createLogger } from "../../lib/unified-logger";
-import { circuitBreakerRegistry } from "@/src/services/risk/circuit-breaker";
 import { ErrorLoggingService } from "@/src/services/notification/error-logging-service";
+import { circuitBreakerRegistry } from "@/src/services/risk/circuit-breaker";
+import { createLogger } from "../../lib/unified-logger";
 import { MexcRateLimiter } from "./mexc-rate-limiter";
 import { SlidingWindowManager } from "./sliding-window";
 import { TokenBucketManager } from "./token-bucket";

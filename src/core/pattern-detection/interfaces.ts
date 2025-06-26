@@ -44,6 +44,7 @@ export interface PatternMatch {
   // Analysis metadata
   detectedAt: Date;
   advanceNoticeHours: number;
+  estimatedTimeToReady?: number; // Estimated time in hours until pattern becomes ready
   riskLevel: "low" | "medium" | "high";
   recommendation: "immediate_action" | "monitor_closely" | "prepare_entry" | "wait" | "avoid";
 

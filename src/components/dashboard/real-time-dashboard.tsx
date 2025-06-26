@@ -112,7 +112,9 @@ const ConnectionStatus = memo(function ConnectionStatus({
           <Alert className="mt-4" variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Connection Error</AlertTitle>
-            <AlertDescription>{error instanceof Error ? error.message : String(error)}</AlertDescription>
+            <AlertDescription>
+              {error instanceof Error ? error.message : String(error)}
+            </AlertDescription>
           </Alert>
         )}
 

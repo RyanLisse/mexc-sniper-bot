@@ -1,7 +1,5 @@
 "use client";
 
-import { BaseMexcService } from "./base-mexc-service";
-import { MexcApiClient } from "./mexc-api-client";
 import {
   type ExchangeInfo,
   ExchangeInfoSchema,
@@ -13,6 +11,8 @@ import {
   type UnifiedMexcConfig,
   validateMexcData,
 } from "@/src/schemas/unified/mexc-api-schemas";
+import { BaseMexcService } from "./base-mexc-service";
+import { MexcApiClient } from "./mexc-api-client";
 
 /**
  * MEXC Market Data Service

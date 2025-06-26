@@ -1,9 +1,9 @@
 /**
  * Enhanced Vector Service
- * 
+ *
  * Implements native pgvector integration for high-performance vector operations.
  * Replaces JavaScript-based vector calculations with PostgreSQL native operations.
- * 
+ *
  * Key Features:
  * - Native pgvector extension integration
  * - Optimized vector similarity search
@@ -12,11 +12,11 @@
  * - Batch vector operations
  */
 
-import { and, eq, sql } from 'drizzle-orm';
-import { z } from 'zod';
-import { db, executeWithRetry, monitoredQuery } from '../db';
-import { patternEmbeddings, patternSimilarityCache } from '../db/schema';
-import { toSafeError } from '../lib/error-type-utils';
+import { and, eq, sql } from "drizzle-orm";
+import { z } from "zod";
+import { db, executeWithRetry, monitoredQuery } from "../db";
+import { patternEmbeddings, patternSimilarityCache } from "../db/schema";
+import { toSafeError } from "../lib/error-type-utils";
 
 // ============================================================================
 // Types and Schemas
@@ -69,13 +69,13 @@ interface IndexStatus {
 export class EnhancedVectorService {
   private logger = {
     info: (message: string, context?: any) =>
-      console.info('[enhanced-vector-service]', message, context || ''),
+      console.info("[enhanced-vector-service]", message, context || ""),
     warn: (message: string, context?: any) =>
-      console.warn('[enhanced-vector-service]', message, context || ''),
+      console.warn("[enhanced-vector-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error('[enhanced-vector-service]', message, context || '', error || ''),
+      console.error("[enhanced-vector-service]", message, context || "", error || ""),
     debug: (message: string, context?: any) =>
-      console.debug('[enhanced-vector-service]', message, context || ''),
+      console.debug("[enhanced-vector-service]", message, context || ""),
   };
 
   private pgvectorAvailable: boolean | null = null;
@@ -86,7 +86,7 @@ export class EnhancedVectorService {
    */
   async initializePgVector(): Promise<void> {
     try {
-      this.logger.info('Initializing pgvector extension...');
+      this.logger.info("Initializing pgvector extension...");
 
       // Try to create the vector extension
       await executeWithRetry(async () => {
@@ -95,23 +95,20 @@ export class EnhancedVectorService {
 
       // Verify the extension is available
       const extensionCheck = await executeWithRetry(async () => {
-        return await db.execute(
-          sql`SELECT 1 FROM pg_extension WHERE extname = 'vector'`
-        );
+        return await db.execute(sql`SELECT 1 FROM pg_extension WHERE extname = 'vector'`);
       });
 
       this.pgvectorAvailable = extensionCheck.length > 0;
 
       if (this.pgvectorAvailable) {
-        this.logger.info('✅ pgvector extension initialized successfully');
+        this.logger.info("✅ pgvector extension initialized successfully");
         await this.createOptimizedIndexes();
       } else {
-        this.logger.warn('⚠️ pgvector extension not available, using JavaScript fallback');
+        this.logger.warn("⚠️ pgvector extension not available, using JavaScript fallback");
       }
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.warn('pgvector initialization failed, using JavaScript fallback', {
+      this.logger.warn("pgvector initialization failed, using JavaScript fallback", {
         error: safeError.message,
       });
       this.pgvectorAvailable = false;
@@ -128,9 +125,7 @@ export class EnhancedVectorService {
 
     try {
       const result = await executeWithRetry(async () => {
-        return await db.execute(
-          sql`SELECT 1 FROM pg_available_extensions WHERE name = 'vector'`
-        );
+        return await db.execute(sql`SELECT 1 FROM pg_available_extensions WHERE name = 'vector'`);
       });
 
       this.pgvectorAvailable = result.length > 0;
@@ -149,7 +144,8 @@ export class EnhancedVectorService {
     options: VectorSearchOptions = {}
   ): Promise<VectorSearchResult[]> {
     const validatedOptions = VectorSearchOptionsSchema.parse(options);
-    const { threshold, limit, useNativeOps, patternType, symbolName, minConfidence, maxResults } = validatedOptions;
+    const { threshold, limit, useNativeOps, patternType, symbolName, minConfidence, maxResults } =
+      validatedOptions;
 
     const isVectorSupported = await this.checkVectorSupport();
 
@@ -173,26 +169,26 @@ export class EnhancedVectorService {
 
     try {
       // Build WHERE conditions
-      const conditions = ['is_active = true'];
+      const conditions = ["is_active = true"];
       const parameters: any[] = [];
 
       if (patternType) {
-        conditions.push('pattern_type = $' + (parameters.length + 1));
+        conditions.push("pattern_type = $" + (parameters.length + 1));
         parameters.push(patternType);
       }
 
       if (symbolName) {
-        conditions.push('symbol_name = $' + (parameters.length + 1));
+        conditions.push("symbol_name = $" + (parameters.length + 1));
         parameters.push(symbolName);
       }
 
       if (minConfidence) {
-        conditions.push('confidence >= $' + (parameters.length + 1));
+        conditions.push("confidence >= $" + (parameters.length + 1));
         parameters.push(minConfidence);
       }
 
       // Convert embedding to PostgreSQL vector format
-      const vectorString = `[${queryEmbedding.join(',')}]`;
+      const vectorString = `[${queryEmbedding.join(",")}]`;
       parameters.push(vectorString);
 
       // Native pgvector similarity search with cosine distance
@@ -205,7 +201,7 @@ export class EnhancedVectorService {
           1 - (embedding::vector <=> $${parameters.length}::vector) as similarity,
           embedding::vector <-> $${parameters.length}::vector as distance
         FROM pattern_embeddings
-        WHERE ${conditions.join(' AND ')}
+        WHERE ${conditions.join(" AND ")}
         AND (1 - (embedding::vector <=> $${parameters.length}::vector)) >= $${parameters.length + 1}
         ORDER BY embedding::vector <=> $${parameters.length}::vector
         LIMIT $${parameters.length + 2}
@@ -215,15 +211,15 @@ export class EnhancedVectorService {
       parameters.push(limit);
 
       const results = await monitoredQuery(
-        'native_vector_similarity_search',
+        "native_vector_similarity_search",
         async () => {
           return await executeWithRetry(async () => {
             return await db.execute(sql.raw(query, parameters));
           });
         },
         {
-          operationType: 'select',
-          tableName: 'pattern_embeddings',
+          operationType: "select",
+          tableName: "pattern_embeddings",
           query: query,
           parameters: parameters,
         }
@@ -231,7 +227,7 @@ export class EnhancedVectorService {
 
       const searchTime = performance.now() - startTime;
 
-      this.logger.debug('Native vector search completed', {
+      this.logger.debug("Native vector search completed", {
         queryDimension: queryEmbedding.length,
         resultsFound: results.length,
         searchTimeMs: Math.round(searchTime),
@@ -248,10 +244,9 @@ export class EnhancedVectorService {
         distance: parseFloat(row.distance),
         confidence: row.confidence,
       }));
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Native vector search failed, falling back to JavaScript', {
+      this.logger.error("Native vector search failed, falling back to JavaScript", {
         error: safeError.message,
         queryDimension: queryEmbedding.length,
       });
@@ -275,22 +270,22 @@ export class EnhancedVectorService {
     try {
       // Build query conditions
       const conditions = [eq(patternEmbeddings.isActive, true)];
-      
+
       if (patternType) {
         conditions.push(eq(patternEmbeddings.patternType, patternType));
       }
-      
+
       if (symbolName) {
         conditions.push(eq(patternEmbeddings.symbolName, symbolName));
       }
-      
+
       if (minConfidence) {
         conditions.push(sql`confidence >= ${minConfidence}`);
       }
 
       // Fetch candidates
       const candidates = await monitoredQuery(
-        'javascript_vector_search_candidates',
+        "javascript_vector_search_candidates",
         async () => {
           return await executeWithRetry(async () => {
             return await db
@@ -307,9 +302,10 @@ export class EnhancedVectorService {
           });
         },
         {
-          operationType: 'select',
-          tableName: 'pattern_embeddings',
-          query: 'SELECT patternId, patternType, symbolName, embedding, confidence FROM pattern_embeddings WHERE ...',
+          operationType: "select",
+          tableName: "pattern_embeddings",
+          query:
+            "SELECT patternId, patternType, symbolName, embedding, confidence FROM pattern_embeddings WHERE ...",
           parameters: [patternType, symbolName, minConfidence].filter(Boolean),
         }
       );
@@ -335,9 +331,9 @@ export class EnhancedVectorService {
             });
           }
         } catch (error) {
-          this.logger.warn('Failed to process candidate embedding', {
+          this.logger.warn("Failed to process candidate embedding", {
             patternId: candidate.patternId,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }
@@ -348,7 +344,7 @@ export class EnhancedVectorService {
 
       const searchTime = performance.now() - startTime;
 
-      this.logger.debug('JavaScript vector search completed', {
+      this.logger.debug("JavaScript vector search completed", {
         queryDimension: queryEmbedding.length,
         candidatesProcessed: candidates.length,
         resultsFound: finalResults.length,
@@ -359,10 +355,9 @@ export class EnhancedVectorService {
       });
 
       return finalResults;
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('JavaScript vector search failed', {
+      this.logger.error("JavaScript vector search failed", {
         error: safeError.message,
         queryDimension: queryEmbedding.length,
       });
@@ -383,7 +378,7 @@ export class EnhancedVectorService {
     if (queryEmbeddings.length === 0) return {};
 
     const startTime = performance.now();
-    this.logger.info('Starting batch similarity search', {
+    this.logger.info("Starting batch similarity search", {
       queryCount: queryEmbeddings.length,
       threshold,
       limit,
@@ -424,7 +419,7 @@ export class EnhancedVectorService {
       const totalTime = performance.now() - startTime;
       const totalResults = Object.values(results).reduce((sum, res) => sum + res.length, 0);
 
-      this.logger.info('Batch similarity search completed', {
+      this.logger.info("Batch similarity search completed", {
         queryCount: queryEmbeddings.length,
         totalResults,
         avgResultsPerQuery: totalResults / queryEmbeddings.length,
@@ -434,10 +429,9 @@ export class EnhancedVectorService {
       });
 
       return results;
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Batch similarity search failed', {
+      this.logger.error("Batch similarity search failed", {
         queryCount: queryEmbeddings.length,
         error: safeError.message,
       });
@@ -449,18 +443,18 @@ export class EnhancedVectorService {
    * Create optimized vector indexes
    */
   async createOptimizedIndexes(): Promise<void> {
-    if (!await this.checkVectorSupport()) {
-      this.logger.warn('Cannot create vector indexes: pgvector not available');
+    if (!(await this.checkVectorSupport())) {
+      this.logger.warn("Cannot create vector indexes: pgvector not available");
       return;
     }
 
     if (this.indexesCreated) {
-      this.logger.debug('Vector indexes already created');
+      this.logger.debug("Vector indexes already created");
       return;
     }
 
     try {
-      this.logger.info('Creating optimized vector indexes...');
+      this.logger.info("Creating optimized vector indexes...");
 
       // Create HNSW index for vector similarity search
       await executeWithRetry(async () => {
@@ -491,11 +485,10 @@ export class EnhancedVectorService {
       });
 
       this.indexesCreated = true;
-      this.logger.info('✅ Vector indexes created successfully');
-
+      this.logger.info("✅ Vector indexes created successfully");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to create vector indexes', {
+      this.logger.error("Failed to create vector indexes", {
         error: safeError.message,
       });
       throw error;
@@ -527,19 +520,18 @@ export class EnhancedVectorService {
         columnName: this.extractColumnFromIndexDef(index.index_definition),
         indexType: this.extractIndexTypeFromDef(index.index_definition),
         isValid: true,
-        indexSize: 'unknown', // Would need additional query to get size
+        indexSize: "unknown", // Would need additional query to get size
       }));
 
-      this.logger.debug('Index verification completed', {
+      this.logger.debug("Index verification completed", {
         indexCount: indexStatus.length,
-        indexes: indexStatus.map(i => i.indexName),
+        indexes: indexStatus.map((i) => i.indexName),
       });
 
       return indexStatus;
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Index verification failed', {
+      this.logger.error("Index verification failed", {
         error: safeError.message,
       });
       return [];
@@ -551,7 +543,7 @@ export class EnhancedVectorService {
    */
   private calculateCosineSimilarity(vec1: number[], vec2: number[]): number {
     if (vec1.length !== vec2.length) {
-      throw new Error('Vectors must have the same dimension');
+      throw new Error("Vectors must have the same dimension");
     }
 
     let dotProduct = 0;
@@ -579,7 +571,7 @@ export class EnhancedVectorService {
    */
   private calculateEuclideanDistance(vec1: number[], vec2: number[]): number {
     if (vec1.length !== vec2.length) {
-      throw new Error('Vectors must have the same dimension');
+      throw new Error("Vectors must have the same dimension");
     }
 
     let sum = 0;
@@ -596,17 +588,17 @@ export class EnhancedVectorService {
    */
   private extractColumnFromIndexDef(indexDef: string): string {
     const match = indexDef.match(/\(([^)]+)\)/);
-    return match ? match[1].split('::')[0] : 'unknown';
+    return match ? match[1].split("::")[0] : "unknown";
   }
 
   /**
    * Extract index type from index definition
    */
   private extractIndexTypeFromDef(indexDef: string): string {
-    if (indexDef.includes('hnsw')) return 'hnsw';
-    if (indexDef.includes('ivfflat')) return 'ivfflat';
-    if (indexDef.includes('btree')) return 'btree';
-    return 'unknown';
+    if (indexDef.includes("hnsw")) return "hnsw";
+    if (indexDef.includes("ivfflat")) return "ivfflat";
+    if (indexDef.includes("btree")) return "btree";
+    return "unknown";
   }
 
   /**

@@ -12,8 +12,8 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import { getActivityDataForSymbol as fetchActivityData } from "../../services/data/pattern-detection/activity-integration";
+import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type {
   CorrelationAnalysis,
   IPatternAnalyzer,
@@ -552,19 +552,19 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     try {
       // Use the dedicated activity integration service
       const activityData = await fetchActivityData(symbol);
-      
-      this.logger.debug("Activity data fetched", { 
-        symbol, 
+
+      this.logger.debug("Activity data fetched", {
+        symbol,
         count: activityData.length,
-        activityTypes: [...new Set(activityData.map(a => a.activityType))]
+        activityTypes: [...new Set(activityData.map((a) => a.activityType))],
       });
-      
+
       return activityData;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.warn("Failed to fetch activity data", { 
-        symbol, 
-        error: safeError.message 
+      this.logger.warn("Failed to fetch activity data", {
+        symbol,
+        error: safeError.message,
       });
       return [];
     }

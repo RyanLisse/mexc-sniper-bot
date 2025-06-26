@@ -6,8 +6,8 @@
  */
 
 import { PatternDetectionCore, type PatternMatch } from "@/src/core/pattern-detection";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 
 export interface PatternMonitoringStats {
   // Overall monitoring metrics

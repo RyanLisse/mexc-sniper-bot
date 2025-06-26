@@ -6,9 +6,9 @@
  */
 
 import { calendarPatternBridgeService } from "@/src/services/data/pattern-detection/calendar-pattern-bridge-service";
+import { patternToDatabaseBridge } from "@/src/services/data/pattern-detection/pattern-to-database-bridge";
 import { environmentValidation } from "@/src/services/risk/enhanced-environment-validation";
 import { OptimizedAutoSnipingCore } from "@/src/services/trading/optimized-auto-sniping-core";
-import { patternToDatabaseBridge } from "@/src/services/data/pattern-detection/pattern-to-database-bridge";
 import { strategyInitializationService } from "@/src/services/trading/strategy-initialization-service";
 
 interface StartupResult {

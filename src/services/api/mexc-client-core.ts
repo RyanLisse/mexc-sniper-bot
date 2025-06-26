@@ -227,7 +227,7 @@ export class MexcClientCore {
 
                 const controller = new AbortController();
                 setTimeout(() => controller.abort(), this.config.timeout);
-                
+
                 response = await fetch(urlObj.toString(), {
                   method: "GET",
                   headers: {
@@ -249,7 +249,7 @@ export class MexcClientCore {
 
                 const postController = new AbortController();
                 setTimeout(() => postController.abort(), this.config.timeout);
-                
+
                 response = await fetch(url, {
                   method: "POST",
                   headers: {
@@ -264,7 +264,7 @@ export class MexcClientCore {
               // Public requests remain as GET with query parameters
               const publicController = new AbortController();
               setTimeout(() => publicController.abort(), this.config.timeout);
-              
+
               response = await fetch(urlObj.toString(), {
                 method: "GET",
                 headers,

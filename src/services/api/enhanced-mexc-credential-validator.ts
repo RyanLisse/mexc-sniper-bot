@@ -468,14 +468,14 @@ export class EnhancedCredentialValidator {
     try {
       const controller = new AbortController();
       setTimeout(() => controller.abort(), this.config.requestTimeout);
-      
+
       const response = await fetch(url, {
         method: "GET",
         headers: {
           "X-MEXC-APIKEY": credentials.apiKey,
           "Content-Type": "application/json",
         },
-        signal: controller.signal
+        signal: controller.signal,
       });
 
       if (!response.ok) {

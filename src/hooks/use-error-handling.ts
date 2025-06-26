@@ -1,17 +1,17 @@
 /**
  * React Hook for Standardized Error Handling
- * 
+ *
  * Provides consistent error handling and recovery for React components.
  * Integrates with the standardized error handling system.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { 
+import {
   type ErrorSeverity,
   errorHandler,
-  RecoveryStrategy, 
+  RecoveryStrategy,
   type StandardizedError,
-  type StandardizedErrorContext
+  type StandardizedErrorContext,
 } from "@/src/lib/standardized-error-handler";
 import { createLogger } from "@/src/lib/unified-logger";
 
@@ -53,16 +53,16 @@ interface UseErrorHandlingOptions {
 interface UseErrorHandlingReturn {
   // Error state
   errorState: ErrorState;
-  
+
   // Error handling methods
   handleError: (error: unknown, context?: Partial<StandardizedErrorContext>) => void;
   clearError: () => void;
   retryOperation: (operation: () => Promise<void> | void) => Promise<void>;
-  
+
   // Utility methods
   isRetryable: (error: unknown) => boolean;
   getRecoveryActions: (error: unknown) => string[];
-  
+
   // Enhanced async wrapper
   withErrorHandling: <T>(
     operation: () => Promise<T>,
@@ -83,9 +83,7 @@ const defaultOptions: UseErrorHandlingOptions = {
 /**
  * Custom hook for standardized error handling
  */
-export function useErrorHandling(
-  options: UseErrorHandlingOptions = {}
-): UseErrorHandlingReturn {
+export function useErrorHandling(options: UseErrorHandlingOptions = {}): UseErrorHandlingReturn {
   const config = { ...defaultOptions, ...options };
   const retryCountRef = useRef(0);
   const pendingOperationRef = useRef<(() => Promise<void> | void) | null>(null);
@@ -97,53 +95,57 @@ export function useErrorHandling(
   });
 
   // Handle error with standardized processing
-  const handleError = useCallback((
-    error: unknown,
-    context?: Partial<StandardizedErrorContext>
-  ) => {
-    const mergedContext = {
-      ...config.context,
-      ...context,
-      operation: context?.operation || config.context?.operation || "component.operation",
-      additionalData: {
-        ...config.context?.additionalData,
-        ...context?.additionalData,
-        hookUsage: true,
-        retryCount: retryCountRef.current,
-      },
-    };
+  const handleError = useCallback(
+    (error: unknown, context?: Partial<StandardizedErrorContext>) => {
+      const mergedContext = {
+        ...config.context,
+        ...context,
+        operation: context?.operation || config.context?.operation || "component.operation",
+        additionalData: {
+          ...config.context?.additionalData,
+          ...context?.additionalData,
+          hookUsage: true,
+          retryCount: retryCountRef.current,
+        },
+      };
 
-    const standardizedError = errorHandler.processError(error, mergedContext);
-    const { error: processedError, metadata } = standardizedError;
+      const standardizedError = errorHandler.processError(error, mergedContext);
+      const { error: processedError, metadata } = standardizedError;
 
-    // Get recovery actions
-    const recoveryActions = errorHandler.getRecoveryActions(error);
+      // Get recovery actions
+      const recoveryActions = errorHandler.getRecoveryActions(error);
 
-    // Update error state
-    setErrorState({
-      error: processedError,
-      isError: true,
-      errorCode: metadata.errorCode,
-      userMessage: metadata.userMessage,
-      severity: metadata.severity,
-      recoveryActions,
-      retryable: metadata.retryable && config.enableRetry,
-      isRecovering: false,
-    });
+      // Update error state
+      setErrorState({
+        error: processedError,
+        isError: true,
+        errorCode: metadata.errorCode,
+        userMessage: metadata.userMessage,
+        severity: metadata.severity,
+        recoveryActions,
+        retryable: metadata.retryable && config.enableRetry,
+        isRecovering: false,
+      });
 
-    // Call custom error handler
-    if (config.onError) {
-      config.onError(standardizedError);
-    }
+      // Call custom error handler
+      if (config.onError) {
+        config.onError(standardizedError);
+      }
 
-    // Log error
-    logger.error("Error handled by hook", {
-      errorCode: metadata.errorCode,
-      severity: metadata.severity,
-      retryable: metadata.retryable,
-      operation: mergedContext.operation,
-    }, processedError);
-  }, [config]);
+      // Log error
+      logger.error(
+        "Error handled by hook",
+        {
+          errorCode: metadata.errorCode,
+          severity: metadata.severity,
+          retryable: metadata.retryable,
+          operation: mergedContext.operation,
+        },
+        processedError
+      );
+    },
+    [config]
+  );
 
   // Clear error state
   const clearError = useCallback(() => {
@@ -160,60 +162,61 @@ export function useErrorHandling(
   }, [config]);
 
   // Retry operation with exponential backoff
-  const retryOperation = useCallback(async (
-    operation: () => Promise<void> | void
-  ) => {
-    if (!config.enableRetry || retryCountRef.current >= (config.maxRetries || 3)) {
-      logger.warn("Retry attempted but not allowed or max retries exceeded", {
-        retryCount: retryCountRef.current,
-        maxRetries: config.maxRetries,
-        enableRetry: config.enableRetry,
-      });
-      return;
-    }
-
-    setErrorState(prev => ({ ...prev, isRecovering: true }));
-    retryCountRef.current++;
-
-    try {
-      // Wait with exponential backoff
-      const delay = (config.retryDelay || 1000) * 2 ** (retryCountRef.current - 1);
-      await new Promise(resolve => setTimeout(resolve, delay));
-
-      // Execute operation
-      await operation();
-
-      // Success - clear error
-      logger.info("Retry operation succeeded", {
-        retryCount: retryCountRef.current,
-        delay,
-      });
-
-      clearError();
-    } catch (error) {
-      logger.warn("Retry operation failed", {
-        retryCount: retryCountRef.current,
-        maxRetries: config.maxRetries,
-        error: error instanceof Error ? error.message : String(error),
-      });
-
-      if (retryCountRef.current >= (config.maxRetries || 3)) {
-        handleError(new Error("Max retries exceeded"), {
-          operation: "retry.max_exceeded",
-          additionalData: { 
-            originalError: error,
-            retryCount: retryCountRef.current,
-          },
+  const retryOperation = useCallback(
+    async (operation: () => Promise<void> | void) => {
+      if (!config.enableRetry || retryCountRef.current >= (config.maxRetries || 3)) {
+        logger.warn("Retry attempted but not allowed or max retries exceeded", {
+          retryCount: retryCountRef.current,
+          maxRetries: config.maxRetries,
+          enableRetry: config.enableRetry,
         });
-      } else {
-        // Update error state with retry info
-        setErrorState(prev => ({
-          ...prev,
-          isRecovering: false,
-        }));
+        return;
       }
-    }
-  }, [config, handleError, clearError]);
+
+      setErrorState((prev) => ({ ...prev, isRecovering: true }));
+      retryCountRef.current++;
+
+      try {
+        // Wait with exponential backoff
+        const delay = (config.retryDelay || 1000) * 2 ** (retryCountRef.current - 1);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+
+        // Execute operation
+        await operation();
+
+        // Success - clear error
+        logger.info("Retry operation succeeded", {
+          retryCount: retryCountRef.current,
+          delay,
+        });
+
+        clearError();
+      } catch (error) {
+        logger.warn("Retry operation failed", {
+          retryCount: retryCountRef.current,
+          maxRetries: config.maxRetries,
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        if (retryCountRef.current >= (config.maxRetries || 3)) {
+          handleError(new Error("Max retries exceeded"), {
+            operation: "retry.max_exceeded",
+            additionalData: {
+              originalError: error,
+              retryCount: retryCountRef.current,
+            },
+          });
+        } else {
+          // Update error state with retry info
+          setErrorState((prev) => ({
+            ...prev,
+            isRecovering: false,
+          }));
+        }
+      }
+    },
+    [config, handleError, clearError]
+  );
 
   // Check if error is retryable
   const isRetryable = useCallback((error: unknown): boolean => {
@@ -226,32 +229,36 @@ export function useErrorHandling(
   }, []);
 
   // Enhanced async wrapper with error handling
-  const withErrorHandling = useCallback(async <T>(
-    operation: () => Promise<T>,
-    context?: Partial<StandardizedErrorContext>
-  ): Promise<T | null> => {
-    try {
-      const result = await operation();
-      
-      // Clear any previous errors on success
-      if (errorState.isError) {
-        clearError();
+  const withErrorHandling = useCallback(
+    async <T>(
+      operation: () => Promise<T>,
+      context?: Partial<StandardizedErrorContext>
+    ): Promise<T | null> => {
+      try {
+        const result = await operation();
+
+        // Clear any previous errors on success
+        if (errorState.isError) {
+          clearError();
+        }
+
+        return result;
+      } catch (error) {
+        handleError(error, context);
+        return null;
       }
-      
-      return result;
-    } catch (error) {
-      handleError(error, context);
-      return null;
-    }
-  }, [errorState.isError, clearError, handleError]);
+    },
+    [errorState.isError, clearError, handleError]
+  );
 
   // Auto-recovery effect
   useEffect(() => {
-    if (config.enableAutoRecovery && 
-        errorState.isError && 
-        errorState.retryable && 
-        pendingOperationRef.current) {
-      
+    if (
+      config.enableAutoRecovery &&
+      errorState.isError &&
+      errorState.retryable &&
+      pendingOperationRef.current
+    ) {
       const autoRetryDelay = 2000; // 2 seconds for auto-recovery
       const timer = setTimeout(() => {
         if (pendingOperationRef.current) {

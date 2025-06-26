@@ -1,7 +1,10 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { SymbolEntry } from "@/src/schemas/unified/mexc-api-schemas";
 import type { CalendarEntry } from "@/src/services/api/mexc-client-types";
-import { getRecommendedMexcService, type ServiceResponse } from "@/src/services/api/mexc-unified-exports";
+import {
+  getRecommendedMexcService,
+  type ServiceResponse,
+} from "@/src/services/api/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 export interface MexcApiParams {

@@ -7,8 +7,8 @@
 
 import { embeddingsService } from "./embeddings-service";
 import { type EnhancedPatternData, intelligenceOrchestrator } from "./intelligence-orchestrator";
-import { type PerplexityResearchResult, researchService } from "./research-service";
 import type { PatternData } from "./pattern-embedding-service";
+import { type PerplexityResearchResult, researchService } from "./research-service";
 
 // Re-export types for backward compatibility
 export type { EnhancedPatternData, PerplexityResearchResult };
@@ -125,16 +125,16 @@ export class AIIntelligenceService {
   } {
     const embeddingsStats = embeddingsService.getCacheStats();
     const researchStats = researchService.getCacheStats();
-    
+
     return {
       research: {
         size: researchStats.size,
-        hitRate: 0.85 // Mock hit rate for backward compatibility
+        hitRate: 0.85, // Mock hit rate for backward compatibility
       },
       embeddings: {
         size: embeddingsStats.size,
-        hitRate: 0.90 // Mock hit rate for backward compatibility
-      }
+        hitRate: 0.9, // Mock hit rate for backward compatibility
+      },
     };
   }
 
@@ -153,71 +153,72 @@ export class AIIntelligenceService {
   }> {
     try {
       const { symbol, currentConfidence, symbolData } = request;
-      
+
       // Base AI enhancement logic
       let confidenceAdjustment = 0;
       const factors: string[] = [];
-      
+
       // Symbol name analysis
       if (symbol) {
         const symbolLower = symbol.toLowerCase();
-        if (symbolLower.includes('ai') || symbolLower.includes('defi')) {
+        if (symbolLower.includes("ai") || symbolLower.includes("defi")) {
           confidenceAdjustment += 3;
-          factors.push('Trending sector (AI/DeFi)');
+          factors.push("Trending sector (AI/DeFi)");
         }
-        if (symbolLower.includes('usdt')) {
+        if (symbolLower.includes("usdt")) {
           confidenceAdjustment += 2;
-          factors.push('USDT pair stability');
+          factors.push("USDT pair stability");
         }
       }
-      
+
       // Symbol data analysis
       if (symbolData) {
         if (symbolData.ps && symbolData.ps > 80) {
           confidenceAdjustment += 4;
-          factors.push('High position score');
+          factors.push("High position score");
         }
         if (symbolData.qs && symbolData.qs > 70) {
           confidenceAdjustment += 3;
-          factors.push('Good quality score');
+          factors.push("Good quality score");
         }
         if (symbolData.ca && symbolData.ca > 50000) {
           confidenceAdjustment += 2;
-          factors.push('Large cap allocation');
+          factors.push("Large cap allocation");
         }
       }
-      
+
       // Market timing analysis
       const hour = new Date().getUTCHours();
       if (hour >= 8 && hour <= 16) {
         confidenceAdjustment += 1;
-        factors.push('Peak market hours');
+        factors.push("Peak market hours");
       }
-      
+
       // Confidence bounds
       if (currentConfidence < 50) {
         confidenceAdjustment = Math.max(confidenceAdjustment - 2, -5);
-        factors.push('Low base confidence penalty');
+        factors.push("Low base confidence penalty");
       }
-      
+
       // Cap adjustment between -10 and +15
       confidenceAdjustment = Math.max(-10, Math.min(15, confidenceAdjustment));
-      
-      const reasoning = factors.length > 0 
-        ? `AI analysis suggests ${confidenceAdjustment > 0 ? 'positive' : 'negative'} adjustment based on: ${factors.join(', ')}`
-        : 'Neutral AI assessment - no significant factors detected';
-      
+
+      const reasoning =
+        factors.length > 0
+          ? `AI analysis suggests ${confidenceAdjustment > 0 ? "positive" : "negative"} adjustment based on: ${factors.join(", ")}`
+          : "Neutral AI assessment - no significant factors detected";
+
       return {
         confidenceAdjustment,
         reasoning,
-        factors
+        factors,
       };
     } catch (error) {
-      console.warn('AI confidence enhancement failed', error);
+      console.warn("AI confidence enhancement failed", error);
       return {
         confidenceAdjustment: 0,
-        reasoning: 'AI enhancement unavailable',
-        factors: []
+        reasoning: "AI enhancement unavailable",
+        factors: [],
       };
     }
   }

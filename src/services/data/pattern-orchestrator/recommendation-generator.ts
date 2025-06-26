@@ -1,6 +1,6 @@
 /**
  * Strategic Recommendation Generator
- * 
+ *
  * Extracted recommendation logic from pattern-strategy-orchestrator.ts
  */
 
@@ -21,11 +21,11 @@ export class StrategicRecommendationGenerator {
       const recommendation: StrategicRecommendation = {
         vcoinId: pattern.vcoinId || pattern.symbol,
         symbol: pattern.symbol,
-        action: this.determineAction(pattern, workflowType),
+        action: StrategicRecommendationGenerator.determineAction(pattern, workflowType),
         confidence: pattern.confidence,
-        reasoning: this.generateReasoning(pattern),
-        timing: this.calculateOptimalTiming(pattern),
-        riskManagement: this.calculateRiskManagement(pattern),
+        reasoning: StrategicRecommendationGenerator.generateReasoning(pattern),
+        timing: StrategicRecommendationGenerator.calculateOptimalTiming(pattern),
+        riskManagement: StrategicRecommendationGenerator.calculateRiskManagement(pattern),
       };
 
       recommendations.push(recommendation);

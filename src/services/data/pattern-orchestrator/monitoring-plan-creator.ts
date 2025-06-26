@@ -1,15 +1,15 @@
 /**
  * Monitoring Plan Creator
- * 
+ *
  * Extracted monitoring plan creation logic from pattern-strategy-orchestrator.ts
  */
 
 import type { PatternMatch } from "@/src/core/pattern-detection";
 import type {
-  MonitoringPlan,
-  MonitoringTarget,
-  MonitoringSchedule,
   AlertConfiguration,
+  MonitoringPlan,
+  MonitoringSchedule,
+  MonitoringTarget,
   ResourceAllocation,
 } from "./types";
 
@@ -27,20 +27,20 @@ export class MonitoringPlanCreator {
       targets.push({
         vcoinId: pattern.vcoinId || pattern.symbol,
         symbol: pattern.symbol,
-        priority: this.determinePriority(pattern),
+        priority: MonitoringPlanCreator.determinePriority(pattern),
         expectedReadyTime:
           pattern.patternType === "launch_sequence"
             ? new Date(Date.now() + pattern.advanceNoticeHours * 60 * 60 * 1000)
             : undefined,
         currentStatus: `${pattern.patternType} (${pattern.confidence.toFixed(1)}% confidence)`,
-        requiredActions: this.generateRequiredActions(pattern),
+        requiredActions: MonitoringPlanCreator.generateRequiredActions(pattern),
       });
 
       // Create monitoring schedule
       schedules.push({
         vcoinId: pattern.vcoinId || pattern.symbol,
-        intervals: this.calculateMonitoringIntervals(pattern),
-        escalationTriggers: this.generateEscalationTriggers(pattern),
+        intervals: MonitoringPlanCreator.calculateMonitoringIntervals(pattern),
+        escalationTriggers: MonitoringPlanCreator.generateEscalationTriggers(pattern),
       });
 
       // Create alert configuration
@@ -111,7 +111,9 @@ export class MonitoringPlanCreator {
   /**
    * Calculate monitoring intervals based on pattern urgency
    */
-  private static calculateMonitoringIntervals(pattern: PatternMatch): MonitoringSchedule["intervals"] {
+  private static calculateMonitoringIntervals(
+    pattern: PatternMatch
+  ): MonitoringSchedule["intervals"] {
     if (pattern.patternType === "ready_state") {
       return { current: 1, approaching: 0.5, critical: 0.25 }; // Minutes
     }

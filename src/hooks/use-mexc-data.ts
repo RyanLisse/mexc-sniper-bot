@@ -159,7 +159,7 @@ export function useMexcConnectivity() {
       try {
         const connectivityController = new AbortController();
         setTimeout(() => connectivityController.abort(), 10000); // 10 seconds timeout
-        
+
         const response = await fetch("/api/mexc/connectivity", {
           signal: connectivityController.signal,
           credentials: "include", // Include authentication cookies

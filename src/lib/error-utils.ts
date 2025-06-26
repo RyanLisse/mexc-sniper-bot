@@ -245,31 +245,31 @@ export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
-  
-  if (typeof error === 'string') {
+
+  if (typeof error === "string") {
     return error;
   }
-  
-  if (error && typeof error === 'object') {
+
+  if (error && typeof error === "object") {
     // Handle objects with message property
-    if ('message' in error && typeof error.message === 'string') {
+    if ("message" in error && typeof error.message === "string") {
       return error.message;
     }
-    
+
     // Handle objects with error property
-    if ('error' in error && typeof error.error === 'string') {
+    if ("error" in error && typeof error.error === "string") {
       return error.error;
     }
-    
+
     // Fallback for other objects
     try {
       return JSON.stringify(error);
     } catch {
-      return 'An error occurred';
+      return "An error occurred";
     }
   }
-  
-  return 'An unknown error occurred';
+
+  return "An unknown error occurred";
 }
 
 /**

@@ -7,7 +7,7 @@
  */
 
 import type { PatternMatch } from "@/src/core/pattern-detection";
-import { PatternDetectionCore } from "@/src/core/pattern-detection";
+import { EnhancedPatternDetectionCore } from "@/src/core/pattern-detection/pattern-detection-core-enhanced";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 export interface PatternEventData {
@@ -83,7 +83,7 @@ export class PatternTargetBridgeService {
     }
 
     // Listen for pattern detection events
-    PatternDetectionCore.getInstance().on(
+    EnhancedPatternDetectionCore.getInstance().on(
       "patterns_detected",
       async (eventData: PatternEventData) => {
         await this.handlePatternDetectedEvent(eventData, defaultUserId);
@@ -106,7 +106,7 @@ export class PatternTargetBridgeService {
       return;
     }
 
-    PatternDetectionCore.getInstance().removeAllListeners("patterns_detected");
+    EnhancedPatternDetectionCore.getInstance().removeAllListeners("patterns_detected");
     this.isListening = false;
     console.info("Pattern-Target Bridge stopped listening");
   }

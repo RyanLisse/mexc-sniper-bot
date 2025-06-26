@@ -52,7 +52,7 @@ export const AutoSnipingConfigSchema = z.object({
   advanceHoursThreshold: z.number().positive().default(3.5),
   enableMultiPhaseStrategy: z.boolean().default(false),
   slippageTolerancePercentage: z.number().min(0).max(10).default(1),
-  
+
   // Additional properties for API compatibility
   maxConcurrentTargets: z.number().int().min(1).max(50).default(5),
   retryAttempts: z.number().int().min(1).max(10).default(3),
@@ -158,7 +158,7 @@ export interface AutoSnipingExecutionReport {
   systemHealth: SystemHealth;
   recommendations: string[];
   lastUpdated: string;
-  
+
   // Additional properties for API compatibility
   activeTargets: number;
   readyTargets: number;
@@ -330,15 +330,19 @@ export class OptimizedAutoSnipingCore {
       systemHealth,
       recommendations: this.generateIntelligentRecommendations(),
       lastUpdated: new Date().toISOString(),
-      
+
       // API compatibility properties
       activeTargets: this.activePositions.size,
       readyTargets: await this.calculateReadyTargets(),
       executedToday: this.stats.dailyTradeCount,
       successRate: this.stats.successRate,
       totalProfit: parseFloat(this.stats.totalPnl),
-      lastExecution: this.executionHistory.length > 0 ? this.executionHistory[this.executionHistory.length - 1].entryTime : undefined,
-      safetyStatus: this.stats.currentDrawdown > this.config.maxDrawdownPercentage * 0.8 ? "warning" : "safe",
+      lastExecution:
+        this.executionHistory.length > 0
+          ? this.executionHistory[this.executionHistory.length - 1].entryTime
+          : undefined,
+      safetyStatus:
+        this.stats.currentDrawdown > this.config.maxDrawdownPercentage * 0.8 ? "warning" : "safe",
       patternDetectionActive: true,
       executionCount: this.stats.totalTrades,
       successCount: this.stats.successfulTrades,
@@ -596,7 +600,7 @@ export class OptimizedAutoSnipingCore {
     try {
       // Get potential trading opportunities from pattern detection
       const tradingOpportunities = await this.scanForTradingOpportunities();
-      
+
       if (tradingOpportunities.length === 0) {
         return;
       }
@@ -614,22 +618,22 @@ export class OptimizedAutoSnipingCore {
             this.stats.dailyTradeCount++;
             this.stats.failedTrades++;
           }
-          
+
           // Update success rate
           this.stats.successRate = (this.stats.successfulTrades / this.stats.totalTrades) * 100;
-          
+
           // Only execute one opportunity per cycle to avoid overwhelming the system
           break;
         } catch (error) {
           console.error("Failed to execute trading opportunity", {
             symbol: opportunity.symbol,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }
     } catch (error) {
       console.error("Execution cycle error", {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -663,12 +667,12 @@ export class OptimizedAutoSnipingCore {
       const validatedPosition = ExecutionPositionSchema.parse(position);
 
       // Get current market price
-      const { getRecommendedMexcService } = await import('../api/mexc-unified-exports');
+      const { getRecommendedMexcService } = await import("../api/mexc-unified-exports");
       const mexcService = getRecommendedMexcService();
       const tickerResponse = await mexcService.getSymbolTicker(validatedPosition.symbol);
 
       if (!tickerResponse.success || !tickerResponse.data) {
-        console.warn('Failed to get ticker data for position monitoring', {
+        console.warn("Failed to get ticker data for position monitoring", {
           positionId: validatedPosition.id,
           symbol: validatedPosition.symbol,
         });
@@ -681,11 +685,11 @@ export class OptimizedAutoSnipingCore {
 
       // Update current price and PnL
       validatedPosition.currentPrice = currentPrice.toString();
-      
+
       // Calculate unrealized PnL
       const unrealizedPnl = (currentPrice - entryPrice) * quantity;
       const unrealizedPnlPercentage = ((currentPrice - entryPrice) / entryPrice) * 100;
-      
+
       validatedPosition.unrealizedPnl = unrealizedPnl.toFixed(4);
       validatedPosition.unrealizedPnlPercentage = unrealizedPnlPercentage;
 
@@ -696,7 +700,7 @@ export class OptimizedAutoSnipingCore {
       if (validatedPosition.stopLossPrice) {
         const stopLossPrice = parseFloat(validatedPosition.stopLossPrice);
         if (currentPrice <= stopLossPrice) {
-          console.warn('Stop loss triggered', {
+          console.warn("Stop loss triggered", {
             positionId: validatedPosition.id,
             symbol: validatedPosition.symbol,
             currentPrice,
@@ -713,7 +717,7 @@ export class OptimizedAutoSnipingCore {
       if (validatedPosition.takeProfitPrice) {
         const takeProfitPrice = parseFloat(validatedPosition.takeProfitPrice);
         if (currentPrice >= takeProfitPrice) {
-          console.info('Take profit triggered', {
+          console.info("Take profit triggered", {
             positionId: validatedPosition.id,
             symbol: validatedPosition.symbol,
             currentPrice,
@@ -727,7 +731,8 @@ export class OptimizedAutoSnipingCore {
       }
 
       // Check for extreme movements (circuit breaker)
-      if (Math.abs(unrealizedPnlPercentage) > 25) { // 25% movement triggers review
+      if (Math.abs(unrealizedPnlPercentage) > 25) {
+        // 25% movement triggers review
         this.addValidatedAlert({
           type: "risk_limit_hit",
           severity: "warning",
@@ -737,18 +742,17 @@ export class OptimizedAutoSnipingCore {
             currentPrice,
             entryPrice,
             pnlPercentage: unrealizedPnlPercentage.toFixed(2),
-            movementType: unrealizedPnlPercentage > 0 ? 'gain' : 'loss',
+            movementType: unrealizedPnlPercentage > 0 ? "gain" : "loss",
           },
           positionId: validatedPosition.id,
           symbol: validatedPosition.symbol,
         });
       }
-
     } catch (error) {
-      console.error('Position monitoring error', {
+      console.error("Position monitoring error", {
         positionId: position.id,
         symbol: position.symbol,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -758,16 +762,16 @@ export class OptimizedAutoSnipingCore {
    */
   private async executeStopLoss(position: ExecutionPosition, currentPrice: number): Promise<void> {
     try {
-      const { CoreTradingEngine } = await import('./auto-sniping/core-trading-engine');
+      const { CoreTradingEngine } = await import("./auto-sniping/core-trading-engine");
       const tradingEngine = CoreTradingEngine.getInstance();
 
-      const result = await tradingEngine.executeSellTrade(position, 'stop_loss');
-      
+      const result = await tradingEngine.executeSellTrade(position, "stop_loss");
+
       if (result.success) {
         // Remove from active positions
         this.activePositions.delete(position.id);
         this.stats.activePositions = this.activePositions.size;
-        
+
         // Add to execution history
         position.status = "CLOSED";
         this.executionHistory.push(position);
@@ -776,10 +780,10 @@ export class OptimizedAutoSnipingCore {
         const entryPrice = parseFloat(position.entryPrice);
         const quantity = parseFloat(position.quantity);
         const realizedPnl = (currentPrice - entryPrice) * quantity;
-        
+
         // Update stats
         this.stats.totalPnl = (parseFloat(this.stats.totalPnl) + realizedPnl).toFixed(4);
-        
+
         this.addValidatedAlert({
           type: "stop_loss_hit",
           severity: "warning",
@@ -796,10 +800,10 @@ export class OptimizedAutoSnipingCore {
         });
       }
     } catch (error) {
-      console.error('Stop loss execution failed', {
+      console.error("Stop loss execution failed", {
         positionId: position.id,
         symbol: position.symbol,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -807,18 +811,21 @@ export class OptimizedAutoSnipingCore {
   /**
    * Execute take profit for a position
    */
-  private async executeTakeProfit(position: ExecutionPosition, currentPrice: number): Promise<void> {
+  private async executeTakeProfit(
+    position: ExecutionPosition,
+    currentPrice: number
+  ): Promise<void> {
     try {
-      const { CoreTradingEngine } = await import('./auto-sniping/core-trading-engine');
+      const { CoreTradingEngine } = await import("./auto-sniping/core-trading-engine");
       const tradingEngine = CoreTradingEngine.getInstance();
 
-      const result = await tradingEngine.executeSellTrade(position, 'take_profit');
-      
+      const result = await tradingEngine.executeSellTrade(position, "take_profit");
+
       if (result.success) {
         // Remove from active positions
         this.activePositions.delete(position.id);
         this.stats.activePositions = this.activePositions.size;
-        
+
         // Add to execution history
         position.status = "CLOSED";
         this.executionHistory.push(position);
@@ -827,10 +834,10 @@ export class OptimizedAutoSnipingCore {
         const entryPrice = parseFloat(position.entryPrice);
         const quantity = parseFloat(position.quantity);
         const realizedPnl = (currentPrice - entryPrice) * quantity;
-        
+
         // Update stats
         this.stats.totalPnl = (parseFloat(this.stats.totalPnl) + realizedPnl).toFixed(4);
-        
+
         this.addValidatedAlert({
           type: "take_profit_hit",
           severity: "info",
@@ -847,10 +854,10 @@ export class OptimizedAutoSnipingCore {
         });
       }
     } catch (error) {
-      console.error('Take profit execution failed', {
+      console.error("Take profit execution failed", {
         positionId: position.id,
         symbol: position.symbol,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -905,12 +912,16 @@ export class OptimizedAutoSnipingCore {
   private async validateApiConnection(): Promise<boolean> {
     try {
       // Use MEXC service to test connectivity
-      const { getRecommendedMexcService } = await import('../api/mexc-unified-exports');
+      const { getRecommendedMexcService } = await import("../api/mexc-unified-exports");
       const mexcService = getRecommendedMexcService();
 
       // Test basic API connectivity by checking server time
       const serverTimeResponse = await mexcService.getServerTime();
-      return serverTimeResponse.success && typeof serverTimeResponse.data === "number" && serverTimeResponse.data > 0;
+      return (
+        serverTimeResponse.success &&
+        typeof serverTimeResponse.data === "number" &&
+        serverTimeResponse.data > 0
+      );
     } catch (error) {
       console.error("API connectivity check failed", { error: toSafeError(error).message });
       return false;
@@ -921,7 +932,9 @@ export class OptimizedAutoSnipingCore {
     try {
       // Test pattern engine with a minimal symbol
       const testSymbol = { cd: "BTCUSDT", sts: 2, st: 2, tt: 4 };
-      const { patternDetectionEngine } = await import("../data/pattern-detection/pattern-detection-engine");
+      const { patternDetectionEngine } = await import(
+        "../data/pattern-detection/pattern-detection-engine"
+      );
       const patterns = await patternDetectionEngine.detectReadyStatePattern([testSymbol]);
       return Array.isArray(patterns);
     } catch (error) {
@@ -986,7 +999,7 @@ export class OptimizedAutoSnipingCore {
       slippageTolerancePercentage: Number.parseFloat(
         process.env.AUTO_SNIPING_SLIPPAGE_TOLERANCE || "1"
       ),
-      
+
       // Additional properties for API compatibility
       maxConcurrentTargets: Number.parseInt(process.env.AUTO_SNIPING_MAX_CONCURRENT_TARGETS || "5"),
       retryAttempts: Number.parseInt(process.env.AUTO_SNIPING_RETRY_ATTEMPTS || "3"),
@@ -1027,43 +1040,42 @@ export class OptimizedAutoSnipingCore {
   private async calculateReadyTargets(): Promise<number> {
     try {
       // Use MEXC service to get calendar data (respects demo mode)
-      const { getRecommendedMexcService } = await import('../api/mexc-unified-exports');
+      const { getRecommendedMexcService } = await import("../api/mexc-unified-exports");
       const mexcService = getRecommendedMexcService();
       const calendarResponse = await mexcService.getCalendarListings();
-      
+
       if (!calendarResponse.success || !Array.isArray(calendarResponse.data)) {
-        console.warn('[AutoSnipingCore] Invalid calendar response or no data');
+        console.warn("[AutoSnipingCore] Invalid calendar response or no data");
         return 0;
       }
-      
+
       const calendar = calendarResponse.data;
       const now = new Date();
       const hours24 = 24 * 60 * 60 * 1000; // 24 hours in milliseconds (extended for demo)
-      
+
       // Filter for ready targets (launching within 24 hours - extended for demo visibility)
       const readyTargets = calendar.filter((entry: any) => {
         try {
           const launchTime = new Date(entry.firstOpenTime);
           return (
-            launchTime.getTime() > now.getTime() && 
-            launchTime.getTime() < now.getTime() + hours24
+            launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours24
           );
         } catch (error) {
-          console.warn('[AutoSnipingCore] Invalid date in calendar entry:', entry.firstOpenTime);
+          console.warn("[AutoSnipingCore] Invalid date in calendar entry:", entry.firstOpenTime);
           return false;
         }
       });
-      
-      console.info('[AutoSnipingCore] Calculated ready targets', {
+
+      console.info("[AutoSnipingCore] Calculated ready targets", {
         total: calendar.length,
         ready: readyTargets.length,
-        timeWindow: '24 hours (demo mode)',
-        source: 'MEXC service'
+        timeWindow: "24 hours (demo mode)",
+        source: "MEXC service",
       });
-      
+
       return readyTargets.length;
     } catch (error) {
-      console.error('[AutoSnipingCore] Error calculating ready targets:', error);
+      console.error("[AutoSnipingCore] Error calculating ready targets:", error);
       return 0;
     }
   }
@@ -1074,10 +1086,10 @@ export class OptimizedAutoSnipingCore {
   private async scanForTradingOpportunities(): Promise<TradingOpportunity[]> {
     try {
       // Get calendar listings for potential new coins
-      const { getRecommendedMexcService } = await import('../api/mexc-unified-exports');
+      const { getRecommendedMexcService } = await import("../api/mexc-unified-exports");
       const mexcService = getRecommendedMexcService();
       const calendarResponse = await mexcService.getCalendarListings();
-      
+
       if (!calendarResponse.success || !Array.isArray(calendarResponse.data)) {
         return [];
       }
@@ -1085,7 +1097,7 @@ export class OptimizedAutoSnipingCore {
       const calendar = calendarResponse.data;
       const now = new Date();
       const advanceThresholdMs = this.config.advanceHoursThreshold * 60 * 60 * 1000;
-      
+
       // Filter for coins launching soon (within advance threshold)
       const upcomingCoins = calendar.filter((entry: any) => {
         try {
@@ -1098,27 +1110,30 @@ export class OptimizedAutoSnipingCore {
       });
 
       // Use pattern detection engine to analyze opportunities
-      const { patternDetectionEngine } = await import('../data/pattern-detection/pattern-detection-engine');
+      const { patternDetectionEngine } = await import(
+        "../data/pattern-detection/pattern-detection-engine"
+      );
       const patternEngine = patternDetectionEngine;
-      
+
       const opportunities: TradingOpportunity[] = [];
-      
-      for (const coin of upcomingCoins.slice(0, 5)) { // Limit to 5 coins per cycle
+
+      for (const coin of upcomingCoins.slice(0, 5)) {
+        // Limit to 5 coins per cycle
         try {
           // Create symbol data for pattern analysis
           const symbolData = {
             cd: coin.symbol || coin.vcoinId,
             sts: 2, // Status 2 (upcoming)
-            st: 2,  // State 2 (ready for analysis) 
-            tt: 4   // Type 4 (new listing)
+            st: 2, // State 2 (ready for analysis)
+            tt: 4, // Type 4 (new listing)
           };
 
-          // Analyze patterns for this symbol  
+          // Analyze patterns for this symbol
           const patterns = await patternEngine.detectReadyStatePattern([symbolData]);
-          
+
           if (patterns && patterns.length > 0) {
             // Find the highest confidence pattern
-            const bestPattern = patterns.reduce((best, current) => 
+            const bestPattern = patterns.reduce((best, current) =>
               current.confidence > best.confidence ? current : best
             );
 
@@ -1135,14 +1150,14 @@ export class OptimizedAutoSnipingCore {
             }
           }
         } catch (error) {
-          console.warn('Pattern analysis failed for coin', { 
-            symbol: coin.symbol, 
-            error: error instanceof Error ? error.message : 'Unknown error' 
+          console.warn("Pattern analysis failed for coin", {
+            symbol: coin.symbol,
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }
 
-      console.info('Trading opportunities scanned', {
+      console.info("Trading opportunities scanned", {
         upcomingCoins: upcomingCoins.length,
         opportunities: opportunities.length,
         minConfidence: this.config.minConfidence,
@@ -1150,8 +1165,8 @@ export class OptimizedAutoSnipingCore {
 
       return opportunities.sort((a, b) => b.confidence - a.confidence); // Sort by confidence desc
     } catch (error) {
-      console.error('Failed to scan for trading opportunities', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+      console.error("Failed to scan for trading opportunities", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return [];
     }
@@ -1162,14 +1177,14 @@ export class OptimizedAutoSnipingCore {
    */
   private async executeTradingOpportunity(opportunity: TradingOpportunity): Promise<boolean> {
     try {
-      console.info('Executing trading opportunity', {
+      console.info("Executing trading opportunity", {
         symbol: opportunity.symbol,
         confidence: opportunity.confidence,
         patternType: opportunity.patternMatch.patternType,
       });
 
       // Import and use the CoreTradingEngine
-      const { CoreTradingEngine } = await import('./auto-sniping/core-trading-engine');
+      const { CoreTradingEngine } = await import("./auto-sniping/core-trading-engine");
       const tradingEngine = CoreTradingEngine.getInstance();
 
       // Execute buy trade
@@ -1192,8 +1207,14 @@ export class OptimizedAutoSnipingCore {
           currentPrice: result.executedPrice?.toString() || "0",
           unrealizedPnl: "0",
           unrealizedPnlPercentage: 0,
-          stopLossPrice: this.calculateStopLossPrice(result.executedPrice || 0, this.config.stopLossPercentage).toString(),
-          takeProfitPrice: this.calculateTakeProfitPrice(result.executedPrice || 0, this.config.takeProfitPercentage).toString(),
+          stopLossPrice: this.calculateStopLossPrice(
+            result.executedPrice || 0,
+            this.config.stopLossPercentage
+          ).toString(),
+          takeProfitPrice: this.calculateTakeProfitPrice(
+            result.executedPrice || 0,
+            this.config.takeProfitPercentage
+          ).toString(),
           status: "ACTIVE",
           entryTime: new Date().toISOString(),
           patternMatch: {
@@ -1250,9 +1271,9 @@ export class OptimizedAutoSnipingCore {
         return false;
       }
     } catch (error) {
-      console.error('Failed to execute trading opportunity', {
+      console.error("Failed to execute trading opportunity", {
         symbol: opportunity.symbol,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       });
 
       this.addValidatedAlert({
@@ -1261,7 +1282,7 @@ export class OptimizedAutoSnipingCore {
         message: `Trading execution failed: ${opportunity.symbol}`,
         details: {
           symbol: opportunity.symbol,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         },
         symbol: opportunity.symbol,
       });
@@ -1278,7 +1299,7 @@ export class OptimizedAutoSnipingCore {
   }
 
   /**
-   * Calculate take profit price  
+   * Calculate take profit price
    */
   private calculateTakeProfitPrice(entryPrice: number, takeProfitPercentage: number): number {
     return entryPrice * (1 + takeProfitPercentage / 100);

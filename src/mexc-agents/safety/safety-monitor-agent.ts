@@ -6,9 +6,9 @@
  * mechanisms for high-risk trading decisions.
  */
 
-import { createLogger } from "../../lib/unified-logger";
 import type { AdvancedRiskEngine } from "@/src/services/advanced-risk-engine";
 import type { EmergencySafetySystem } from "@/src/services/emergency-safety-system";
+import { createLogger } from "../../lib/unified-logger";
 import type { AgentConfig } from "../base-agent";
 import { SafetyBaseAgent } from "../safety-base-agent";
 

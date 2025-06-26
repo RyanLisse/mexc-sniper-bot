@@ -6,13 +6,13 @@ import {
   snipeTargets,
   userPreferences,
 } from "@/src/db/schema";
+import { getMexcService } from "@/src/services/api/mexc-unified-exports";
 import type { ExitLevel, ExitStrategy } from "@/src/types/exit-strategies";
 import { EXIT_STRATEGIES } from "@/src/types/exit-strategies";
 import {
   getTakeProfitStrategyById,
   type TakeProfitStrategy,
 } from "@/src/types/take-profit-strategies";
-import { getMexcService } from "@/src/services/api/mexc-unified-exports";
 
 export interface ActivePosition {
   id: number;

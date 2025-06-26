@@ -13,7 +13,10 @@
 
 import { toSafeError } from "../../lib/error-type-utils";
 import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
-import { calculateActivityBoost, hasHighPriorityActivity } from "../../schemas/unified/mexc-api-schemas";
+import {
+  calculateActivityBoost,
+  hasHighPriorityActivity,
+} from "../../schemas/unified/mexc-api-schemas";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type { IConfidenceCalculator } from "./interfaces";
 
@@ -384,8 +387,9 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       if (!symbol) return [];
 
       // Import activity service dynamically to avoid circular dependencies
-      const { activityService } = await import("../../services/data/modules/mexc-cache-layer");
-      const activities = await activityService.getRecentActivity(symbol);
+      const { unifiedMexcService } = await import("../../services/api/unified-mexc-service-v2");
+      const activityResponse = await unifiedMexcService.getRecentActivity(symbol);
+      const activities = activityResponse.success ? activityResponse.data?.activities || [] : [];
 
       return activities || [];
     } catch (error) {

@@ -1,15 +1,15 @@
 /**
  * Core Auto-Sniping Trading Engine
- * 
+ *
  * Handles real MEXC trading operations with comprehensive safety controls.
  * Includes position management, risk assessment, and execution logic.
  */
 
 import { z } from "zod";
+import type { PatternMatch } from "@/src/core/pattern-detection";
 import { getErrorMessage } from "@/src/lib/error-type-utils";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
-import type { PatternMatch } from "@/src/core/pattern-detection";
 import type { ExecutionPosition } from "../optimized-auto-sniping-schemas";
 
 // Trading validation schemas
@@ -60,11 +60,12 @@ export class CoreTradingEngine {
   private static instance: CoreTradingEngine;
   private mexcService: UnifiedMexcServiceV2;
   private safetySystem: EmergencySafetySystem;
-  
+
   private logger = {
     info: (msg: string, ctx?: any) => console.info("[core-trading-engine]", msg, ctx || ""),
     warn: (msg: string, ctx?: any) => console.warn("[core-trading-engine]", msg, ctx || ""),
-    error: (msg: string, ctx?: any, err?: Error) => console.error("[core-trading-engine]", msg, ctx || "", err || ""),
+    error: (msg: string, ctx?: any, err?: Error) =>
+      console.error("[core-trading-engine]", msg, ctx || "", err || ""),
   };
 
   private constructor() {
@@ -90,7 +91,7 @@ export class CoreTradingEngine {
     takeProfitPercent: number = 10
   ): Promise<TradeExecutionResult> {
     const startTime = Date.now();
-    
+
     try {
       // Get current market price
       const tickerResult = await this.mexcService.getSymbolTicker(symbol);
@@ -99,7 +100,7 @@ export class CoreTradingEngine {
       }
 
       const currentPrice = parseFloat(tickerResult.data.price);
-      
+
       // Calculate position size
       const quantity = await this.calculateOptimalQuantity({
         symbol,
@@ -162,7 +163,6 @@ export class CoreTradingEngine {
         slippage,
         executionLatency,
       };
-
     } catch (error) {
       this.logger.error("Buy trade execution failed", { symbol }, error as Error);
       return {
@@ -181,7 +181,7 @@ export class CoreTradingEngine {
     reason: string = "manual"
   ): Promise<TradeExecutionResult> {
     const startTime = Date.now();
-    
+
     try {
       const orderResult = await this.mexcService.createOrder({
         symbol: position.symbol,
@@ -198,7 +198,7 @@ export class CoreTradingEngine {
       const executedPrice = parseFloat(orderResult.data?.executedPrice || position.currentPrice);
       const entryPrice = parseFloat(position.entryPrice);
       const quantity = parseFloat(position.quantity);
-      
+
       // Calculate realized PnL
       const realizedPnl = (executedPrice - entryPrice) * quantity;
       const realizedPnlPercent = ((executedPrice - entryPrice) / entryPrice) * 100;
@@ -222,13 +222,16 @@ export class CoreTradingEngine {
         executedQuantity: quantity,
         executionLatency,
       };
-
     } catch (error) {
-      this.logger.error("Sell trade execution failed", { 
-        positionId: position.id, 
-        symbol: position.symbol 
-      }, error as Error);
-      
+      this.logger.error(
+        "Sell trade execution failed",
+        {
+          positionId: position.id,
+          symbol: position.symbol,
+        },
+        error as Error
+      );
+
       return {
         success: false,
         executionLatency: Date.now() - startTime,
@@ -243,17 +246,20 @@ export class CoreTradingEngine {
   private async calculateOptimalQuantity(params: PositionSizeCalculation): Promise<number> {
     const validated = PositionSizeCalculationSchema.parse(params);
     const { positionSizeUSDT, currentPrice } = validated;
-    
+
     // Calculate base quantity from position size
     const baseQuantity = positionSizeUSDT / currentPrice;
-    
+
     // Apply position limits based on current positions
-    const positionLimitFactor = Math.max(0.1, 1 - (validated.currentPositions / validated.maxPositions) * 0.5);
+    const positionLimitFactor = Math.max(
+      0.1,
+      1 - (validated.currentPositions / validated.maxPositions) * 0.5
+    );
     const adjustedQuantity = baseQuantity * positionLimitFactor;
-    
+
     // Ensure minimum viable trade size
     const minTradeSize = 10 / currentPrice; // $10 minimum
-    
+
     return Math.max(minTradeSize, adjustedQuantity);
   }
 
@@ -271,7 +277,7 @@ export class CoreTradingEngine {
       warnings.push("Low pattern confidence");
       riskScore += 20;
     }
-    
+
     if (validated.patternMatch.confidence < 50) {
       blockingFactors.push("Pattern confidence below minimum threshold");
     }
@@ -281,12 +287,12 @@ export class CoreTradingEngine {
       const ticker = await this.mexcService.getSymbolTicker(validated.symbol);
       if (ticker.success && ticker.data) {
         const priceChangePercent = Math.abs(parseFloat(ticker.data.priceChangePercent || "0"));
-        
+
         if (priceChangePercent > 10) {
           warnings.push("High market volatility detected");
           riskScore += 15;
         }
-        
+
         if (priceChangePercent > 20) {
           blockingFactors.push("Extreme market volatility - trading suspended");
         }
@@ -321,8 +327,8 @@ export class CoreTradingEngine {
     }
 
     // Calculate max allowed position based on risk
-    const maxAllowedPosition = Math.max(0.1, 1 - (riskScore / 100));
-    
+    const maxAllowedPosition = Math.max(0.1, 1 - riskScore / 100);
+
     return {
       approved: blockingFactors.length === 0 && riskScore < 75,
       riskScore,
@@ -361,12 +367,19 @@ export class CoreTradingEngine {
 
       return {
         tradeable: symbolInfo.status === "TRADING",
-        minQty: parseFloat(symbolInfo.filters?.find((f: any) => f.filterType === "LOT_SIZE")?.minQty || "0"),
-        maxQty: parseFloat(symbolInfo.filters?.find((f: any) => f.filterType === "LOT_SIZE")?.maxQty || "999999"),
-        stepSize: parseFloat(symbolInfo.filters?.find((f: any) => f.filterType === "LOT_SIZE")?.stepSize || "0.001"),
-        tickSize: parseFloat(symbolInfo.filters?.find((f: any) => f.filterType === "PRICE_FILTER")?.tickSize || "0.01"),
+        minQty: parseFloat(
+          symbolInfo.filters?.find((f: any) => f.filterType === "LOT_SIZE")?.minQty || "0"
+        ),
+        maxQty: parseFloat(
+          symbolInfo.filters?.find((f: any) => f.filterType === "LOT_SIZE")?.maxQty || "999999"
+        ),
+        stepSize: parseFloat(
+          symbolInfo.filters?.find((f: any) => f.filterType === "LOT_SIZE")?.stepSize || "0.001"
+        ),
+        tickSize: parseFloat(
+          symbolInfo.filters?.find((f: any) => f.filterType === "PRICE_FILTER")?.tickSize || "0.01"
+        ),
       };
-
     } catch (error) {
       this.logger.error("Symbol validation failed", { symbol }, error as Error);
       return {
@@ -384,7 +397,7 @@ export class CoreTradingEngine {
    */
   public async emergencyStopTrading(): Promise<void> {
     this.logger.warn("Emergency trading stop initiated", {
-      operation: "emergency_stop"
+      operation: "emergency_stop",
     });
 
     // Additional emergency procedures can be added here

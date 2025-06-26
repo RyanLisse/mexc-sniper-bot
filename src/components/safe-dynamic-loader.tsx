@@ -1,13 +1,13 @@
 /**
  * Safe Dynamic Component Loader
- * 
+ *
  * Prevents client-side exceptions from failed dynamic imports by providing
  * comprehensive error handling and fallbacks for dashboard components.
  */
 
 "use client";
 
-import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
+import { type ComponentType, type LazyExoticComponent, lazy, Suspense } from "react";
 import { ErrorBoundary } from "./error-boundary";
 import { Skeleton } from "./ui/optimized-exports";
 
@@ -46,11 +46,11 @@ function safeLazy<T extends ComponentType<any>>(
       console.warn("Failed to load component:", error);
       // Return fallback or empty component
       return {
-        default: fallbackComponent || (() => (
-          <div className="p-4 text-center text-gray-500">
-            Component failed to load
-          </div>
-        )) as T,
+        default:
+          fallbackComponent ||
+          ((() => (
+            <div className="p-4 text-center text-gray-500">Component failed to load</div>
+          )) as T),
       };
     })
   );
@@ -67,117 +67,112 @@ export function SafeLazyWrapper({
   errorFallback?: React.ReactNode;
 }) {
   return (
-    <ErrorBoundary
-      level="component"
-      fallback={errorFallback || <CardSkeleton />}
-    >
-      <Suspense fallback={fallback || <ComponentSkeleton />}>
-        {children}
-      </Suspense>
+    <ErrorBoundary level="component" fallback={errorFallback || <CardSkeleton />}>
+      <Suspense fallback={fallback || <ComponentSkeleton />}>{children}</Suspense>
     </ErrorBoundary>
   );
 }
 
 // Safely loaded dashboard components with comprehensive error handling
-export const MetricCard = safeLazy(
-  () => import("./dashboard/metric-card").catch(() => 
-    Promise.resolve({ 
+export const MetricCard = safeLazy(() =>
+  import("./dashboard/metric-card").catch(() =>
+    Promise.resolve({
       default: ({ title, value }: { title: string; value: string }) => (
         <div className="rounded-lg border p-4">
           <div className="font-medium">{title}</div>
           <div className="text-2xl font-bold">{value}</div>
         </div>
-      )
+      ),
     })
   )
 );
 
-export const TradingChart = safeLazy(
-  () => import("./dashboard/trading-chart").catch(() =>
+export const TradingChart = safeLazy(() =>
+  import("./dashboard/trading-chart").catch(() =>
     Promise.resolve({
       default: () => (
         <div className="rounded-lg border p-4 h-64 flex items-center justify-center">
           <div className="text-gray-500">Trading Chart</div>
         </div>
-      )
+      ),
     })
   )
 );
 
-export const CoinListingsBoard = safeLazy(
-  () => import("./dashboard/coin-listings-board").catch(() =>
+export const CoinListingsBoard = safeLazy(() =>
+  import("./dashboard/coin-listings-board").catch(() =>
     Promise.resolve({
       default: () => (
         <div className="rounded-lg border p-4">
           <h3 className="font-medium mb-2">Coin Listings</h3>
           <div className="text-gray-500">Loading coin listings...</div>
         </div>
-      )
+      ),
     })
   )
 );
 
-export const OptimizedActivityFeed = safeLazy(
-  () => import("./dashboard/optimized-activity-feed").catch(() =>
+export const OptimizedActivityFeed = safeLazy(() =>
+  import("./dashboard/optimized-activity-feed").catch(() =>
     Promise.resolve({
       default: () => (
         <div className="rounded-lg border p-4">
           <h3 className="font-medium mb-2">Activity Feed</h3>
           <div className="text-gray-500">No recent activity</div>
         </div>
-      )
+      ),
     })
   )
 );
 
-export const OptimizedTradingTargets = safeLazy(
-  () => import("./dashboard/optimized-trading-targets").catch(() =>
+export const OptimizedTradingTargets = safeLazy(() =>
+  import("./dashboard/optimized-trading-targets").catch(() =>
     Promise.resolve({
       default: () => (
         <div className="rounded-lg border p-4">
           <h3 className="font-medium mb-2">Trading Targets</h3>
           <div className="text-gray-500">No active targets</div>
         </div>
-      )
+      ),
     })
   )
 );
 
-export const RecentTradesTable = safeLazy(
-  () => import("./dashboard/recent-trades-table").catch(() =>
+export const RecentTradesTable = safeLazy(() =>
+  import("./dashboard/recent-trades-table").catch(() =>
     Promise.resolve({
       default: () => (
         <div className="rounded-lg border p-4">
           <h3 className="font-medium mb-2">Recent Trades</h3>
           <TableSkeleton />
         </div>
-      )
+      ),
     })
   )
 );
 
-export const UpcomingCoinsSection = safeLazy(
-  () => import("./dashboard/upcoming-coins-section").catch(() =>
+export const UpcomingCoinsSection = safeLazy(() =>
+  import("./dashboard/upcoming-coins-section").catch(() =>
     Promise.resolve({
       default: () => (
         <div className="rounded-lg border p-4">
           <h3 className="font-medium mb-2">Upcoming Coins</h3>
           <div className="text-gray-500">No upcoming listings</div>
         </div>
-      )
+      ),
     })
   )
 );
 
-export const OptimizedAccountBalance = safeLazy(
-  () => import("./optimized-account-balance").catch(() =>
+export const OptimizedAccountBalance = safeLazy(() =>
+  import("./optimized-account-balance").catch(() =>
     Promise.resolve({
       default: () => (
         <div className="rounded-lg border p-4">
           <h3 className="font-medium mb-2">Account Balance</h3>
           <div className="text-2xl font-bold">$0.00</div>
         </div>
-      )
+      ),
     })
   )
 );
@@ -260,23 +255,21 @@ export async function preloadDashboardComponents() {
     () => import("./optimized-account-balance"),
   ];
 
-  const results = await Promise.allSettled(
-    componentsToPreload.map(loader => loader())
-  );
+  const results = await Promise.allSettled(componentsToPreload.map((loader) => loader()));
 
   // Log any failed preloads for debugging
   results.forEach((result, index) => {
-    if (result.status === 'rejected') {
+    if (result.status === "rejected") {
       console.warn(`Failed to preload component ${index}:`, result.reason);
     }
   });
 
   // Return summary of preload results
-  const successful = results.filter(r => r.status === 'fulfilled').length;
-  const failed = results.filter(r => r.status === 'rejected').length;
-  
+  const successful = results.filter((r) => r.status === "fulfilled").length;
+  const failed = results.filter((r) => r.status === "rejected").length;
+
   console.info(`Preloaded ${successful}/${successful + failed} dashboard components`);
-  
+
   return {
     successful,
     failed,

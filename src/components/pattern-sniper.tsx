@@ -45,13 +45,19 @@ export const PatternSniperComponent: React.FC = memo(function PatternSniperCompo
   const [_selectedTarget, _setSelectedTarget] = useState<string | null>(null);
 
   // Memoized event handlers
-  const handleExecuteSnipe = useCallback((target: any) => {
-    executeSnipe(target);
-  }, [executeSnipe]);
+  const handleExecuteSnipe = useCallback(
+    (target: any) => {
+      executeSnipe(target);
+    },
+    [executeSnipe]
+  );
 
-  const handleRemoveTarget = useCallback((vcoinId: string) => {
-    removeTarget(vcoinId);
-  }, [removeTarget]);
+  const handleRemoveTarget = useCallback(
+    (vcoinId: string) => {
+      removeTarget(vcoinId);
+    },
+    [removeTarget]
+  );
 
   const handleToggleMonitoring = useMemo(() => {
     return isMonitoring ? stopMonitoring : startMonitoring;

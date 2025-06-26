@@ -1,18 +1,11 @@
 "use client";
 
 import { useState } from "react";
+// Direct imports for Recharts - since TradingChart is already lazy-loaded by dynamic-component-loader
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { ChartContainer, ChartTooltip } from "../ui/chart";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
-
-// Direct imports for Recharts - since TradingChart is already lazy-loaded by dynamic-component-loader
-import {
-  Area,
-  AreaChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 interface TradingChartProps {
   className?: string;

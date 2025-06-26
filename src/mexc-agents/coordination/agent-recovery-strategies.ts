@@ -49,7 +49,9 @@ export class AgentRecoveryStrategies {
     // Verify agent still exists before attempting recovery
     const currentAgent = getUpdatedAgent(agent.id);
     if (!currentAgent) {
-      this.logger.warn(`Cannot attempt recovery for agent ${agent.id}: agent not found in registry`);
+      this.logger.warn(
+        `Cannot attempt recovery for agent ${agent.id}: agent not found in registry`
+      );
       return false;
     }
 

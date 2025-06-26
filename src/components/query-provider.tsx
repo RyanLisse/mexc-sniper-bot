@@ -28,7 +28,7 @@ export function QueryProvider({ children }: QueryProviderProps) {
     <ErrorBoundary level="component">
       <QueryClientProvider client={queryClient}>
         {children}
-        
+
         {/* Safely render DevTools only in development */}
         <EnvironmentSafeComponent developmentOnly>
           <Suspense fallback={null}>

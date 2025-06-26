@@ -144,7 +144,7 @@ export class WorkflowCache {
         // Invalidate workflows that have specific dependencies
         for (const dependency of criteria.dependencies) {
           invalidated += await globalCacheManager.invalidateByDependency(dependency);
-          
+
           // Also check local workflow cache
           for (const [key, entry] of this.workflowCache.entries()) {
             if (entry.dependencies && entry.dependencies.includes(dependency)) {

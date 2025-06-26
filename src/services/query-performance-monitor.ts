@@ -1,6 +1,6 @@
 /**
  * Query Performance Monitor Service
- * 
+ *
  * Monitors database query performance and provides metrics for optimization.
  * Integrates with OpenTelemetry for distributed tracing.
  */
@@ -51,7 +51,7 @@ class QueryPerformanceMonitor {
     }
 
     const tracer = trace.getTracer("query-performance-monitor");
-    
+
     return tracer.startActiveSpan(`db_query_${queryName}`, async (span) => {
       const startTime = Date.now();
       let success = true;
@@ -67,7 +67,7 @@ class QueryPerformanceMonitor {
         });
 
         const result = await queryFn();
-        
+
         span.setAttributes({
           "db.success": true,
           "db.execution_time_ms": Date.now() - startTime,
@@ -77,7 +77,7 @@ class QueryPerformanceMonitor {
       } catch (err) {
         success = false;
         error = err instanceof Error ? err.message : String(err);
-        
+
         span.setAttributes({
           "db.success": false,
           "db.error": error,
@@ -87,7 +87,7 @@ class QueryPerformanceMonitor {
         throw err;
       } finally {
         const executionTime = Date.now() - startTime;
-        
+
         // Record metrics
         this.recordMetrics({
           queryName,
@@ -106,7 +106,7 @@ class QueryPerformanceMonitor {
 
   private recordMetrics(metrics: QueryMetrics): void {
     this.metrics.push(metrics);
-    
+
     // Keep only the last maxMetrics entries
     if (this.metrics.length > this.maxMetrics) {
       this.metrics = this.metrics.slice(-this.maxMetrics);
@@ -130,16 +130,16 @@ class QueryPerformanceMonitor {
   }
 
   getSlowQueries(thresholdMs = 1000): QueryMetrics[] {
-    return this.metrics.filter(m => m.executionTime > thresholdMs);
+    return this.metrics.filter((m) => m.executionTime > thresholdMs);
   }
 
   getAverageExecutionTime(queryName?: string): number {
-    const relevantMetrics = queryName 
-      ? this.metrics.filter(m => m.queryName === queryName)
+    const relevantMetrics = queryName
+      ? this.metrics.filter((m) => m.queryName === queryName)
       : this.metrics;
-    
+
     if (relevantMetrics.length === 0) return 0;
-    
+
     const totalTime = relevantMetrics.reduce((sum, m) => sum + m.executionTime, 0);
     return totalTime / relevantMetrics.length;
   }
@@ -151,7 +151,7 @@ class QueryPerformanceMonitor {
     slowQueries: number;
   } {
     const total = this.metrics.length;
-    const successful = this.metrics.filter(m => m.success).length;
+    const successful = this.metrics.filter((m) => m.success).length;
     const slowQueries = this.getSlowQueries().length;
     const avgTime = this.getAverageExecutionTime();
 

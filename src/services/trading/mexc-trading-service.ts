@@ -19,9 +19,9 @@ import {
   validateMexcApiRequest,
   validateMexcApiResponse,
 } from "@/src/schemas/mexc-api-validation-schemas";
-import { enhancedRiskManagementService } from "@/src/services/risk/enhanced-risk-management-service";
 import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
 import { transactionLockService } from "@/src/services/data/transaction-lock-service";
+import { enhancedRiskManagementService } from "@/src/services/risk/enhanced-risk-management-service";
 import type { OrderParameters } from "./unified-mexc-client";
 
 // ============================================================================

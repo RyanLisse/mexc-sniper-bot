@@ -1,15 +1,15 @@
 /**
  * Client-Safe Wrapper Component
- * 
+ *
  * Prevents hydration mismatches by ensuring consistent rendering between
  * server and client. This component addresses the client-side exception
- * "Application error: a client-side exception has occurred" 
+ * "Application error: a client-side exception has occurred"
  */
 
 "use client";
 
-import React, { useEffect, useState, type ReactNode } from 'react';
-import { ErrorBoundary } from './error-boundary';
+import React, { type ReactNode, useEffect, useState } from "react";
+import { ErrorBoundary } from "./error-boundary";
 
 interface ClientSafeWrapperProps {
   children: ReactNode;
@@ -20,10 +20,10 @@ interface ClientSafeWrapperProps {
 /**
  * Wrapper that ensures client-side consistency and prevents hydration mismatches
  */
-export function ClientSafeWrapper({ 
-  children, 
+export function ClientSafeWrapper({
+  children,
   fallback,
-  suppressHydrationWarning = true 
+  suppressHydrationWarning = true,
 }: ClientSafeWrapperProps) {
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -34,19 +34,11 @@ export function ClientSafeWrapper({
 
   // During SSR or before hydration, show fallback
   if (!isHydrated) {
-    return (
-      <div suppressHydrationWarning={suppressHydrationWarning}>
-        {fallback || children}
-      </div>
-    );
+    return <div suppressHydrationWarning={suppressHydrationWarning}>{fallback || children}</div>;
   }
 
   // After hydration, wrap in error boundary for safety
-  return (
-    <ErrorBoundary level="component">
-      {children}
-    </ErrorBoundary>
-  );
+  return <ErrorBoundary level="component">{children}</ErrorBoundary>;
 }
 
 /**
@@ -65,19 +57,16 @@ export function useIsClient() {
 /**
  * Hook to safely access window object
  */
-export function useWindowSafe<T>(
-  accessor: (window: Window) => T,
-  defaultValue: T
-): T {
+export function useWindowSafe<T>(accessor: (window: Window) => T, defaultValue: T): T {
   const [value, setValue] = useState<T>(defaultValue);
   const isClient = useIsClient();
 
   useEffect(() => {
-    if (isClient && typeof window !== 'undefined') {
+    if (isClient && typeof window !== "undefined") {
       try {
         setValue(accessor(window));
       } catch (error) {
-        console.warn('Error accessing window:', error);
+        console.warn("Error accessing window:", error);
         setValue(defaultValue);
       }
     }
@@ -89,28 +78,28 @@ export function useWindowSafe<T>(
 /**
  * Environment-safe component that handles NODE_ENV differences
  */
-export function EnvironmentSafeComponent({ 
+export function EnvironmentSafeComponent({
   children,
   developmentOnly = false,
-  productionOnly = false 
+  productionOnly = false,
 }: {
   children: ReactNode;
   developmentOnly?: boolean;
   productionOnly?: boolean;
 }) {
   const isClient = useIsClient();
-  
+
   // Wait for hydration to check environment
   if (!isClient) {
     return null;
   }
 
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  
+  const isDevelopment = process.env.NODE_ENV === "development";
+
   if (developmentOnly && !isDevelopment) {
     return null;
   }
-  
+
   if (productionOnly && isDevelopment) {
     return null;
   }
@@ -122,7 +111,7 @@ export function EnvironmentSafeComponent({
  * Safe localStorage wrapper that handles access errors
  */
 export function useLocalStorageSafe(
-  key: string, 
+  key: string,
   defaultValue: string | null = null
 ): [string | null, (value: string | null) => void] {
   const [value, setValue] = useState<string | null>(defaultValue);
@@ -142,7 +131,7 @@ export function useLocalStorageSafe(
 
   const setStoredValue = (newValue: string | null) => {
     setValue(newValue);
-    
+
     if (isClient) {
       try {
         if (newValue === null) {

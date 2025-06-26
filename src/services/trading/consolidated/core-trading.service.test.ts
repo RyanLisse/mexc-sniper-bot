@@ -1,6 +1,6 @@
 /**
  * Core Trading Service - TDD Test Suite
- * 
+ *
  * Comprehensive test suite for the consolidated core trading service that merges:
  * - Auto-sniping execution and orchestration
  * - Multi-phase trading strategies
@@ -38,18 +38,20 @@ const TradeParametersSchema = z.object({
 
 const TradeResultSchema = z.object({
   success: z.boolean(),
-  data: z.object({
-    orderId: z.string(),
-    clientOrderId: z.string().optional(),
-    symbol: z.string(),
-    side: z.string(),
-    type: z.string(),
-    quantity: z.string(),
-    price: z.string(),
-    status: z.string(),
-    executedQty: z.string(),
-    timestamp: z.string(),
-  }).optional(),
+  data: z
+    .object({
+      orderId: z.string(),
+      clientOrderId: z.string().optional(),
+      symbol: z.string(),
+      side: z.string(),
+      type: z.string(),
+      quantity: z.string(),
+      price: z.string(),
+      status: z.string(),
+      executedQty: z.string(),
+      timestamp: z.string(),
+    })
+    .optional(),
   error: z.string().optional(),
 });
 
@@ -74,7 +76,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     mockConfig = {
       apiKey: "test-api-key-123",
-      secretKey: "test-secret-key-456", 
+      secretKey: "test-secret-key-456",
       baseUrl: "https://api.mexc.com",
       timeout: 10000,
       maxRetries: 3,
@@ -138,18 +140,19 @@ describe("CoreTradingService - TDD Implementation", () => {
         status: 200,
         statusText: "OK",
         headers: new Headers({ "content-type": "application/json" }),
-        json: () => Promise.resolve({
-          orderId: "12345",
-          clientOrderId: "client123",
-          symbol: "BTCUSDT",
-          side: "BUY",
-          type: "MARKET",
-          quantity: "0.001",
-          price: "50000.00",
-          status: "FILLED",
-          executedQty: "0.001",
-          timestamp: Date.now().toString(),
-        }),
+        json: () =>
+          Promise.resolve({
+            orderId: "12345",
+            clientOrderId: "client123",
+            symbol: "BTCUSDT",
+            side: "BUY",
+            type: "MARKET",
+            quantity: "0.001",
+            price: "50000.00",
+            status: "FILLED",
+            executedQty: "0.001",
+            timestamp: Date.now().toString(),
+          }),
       });
     });
 
@@ -366,12 +369,13 @@ describe("CoreTradingService - TDD Implementation", () => {
       // Arrange - Mock partial fill response
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({
-          orderId: "partial123",
-          status: "PARTIALLY_FILLED",
-          executedQty: "0.5", // Only half filled
-          quantity: "1.0",
-        }),
+        json: () =>
+          Promise.resolve({
+            orderId: "partial123",
+            status: "PARTIALLY_FILLED",
+            executedQty: "0.5", // Only half filled
+            quantity: "1.0",
+          }),
       });
 
       // Act
@@ -476,7 +480,7 @@ describe("CoreTradingService - TDD Implementation", () => {
     it("should implement stop-loss and take-profit", async () => {
       // Arrange
       const positionWithStops = {
-        symbol: "ETHUSDT", 
+        symbol: "ETHUSDT",
         side: "BUY" as const,
         type: "MARKET" as const,
         quoteOrderQty: 200,
@@ -592,7 +596,7 @@ describe("CoreTradingService - TDD Implementation", () => {
       // Act
       // const result = await tradingService.executeTrade({
       //   symbol: "BTCUSDT",
-      //   side: "BUY", 
+      //   side: "BUY",
       //   type: "MARKET",
       //   quoteOrderQty: 50,
       // });
@@ -632,7 +636,7 @@ describe("CoreTradingService - TDD Implementation", () => {
       // await tradingService.executeTrade({
       //   symbol: "BTCUSDT",
       //   side: "BUY",
-      //   type: "MARKET", 
+      //   type: "MARKET",
       //   quoteOrderQty: 100,
       // });
 

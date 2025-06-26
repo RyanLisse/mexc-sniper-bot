@@ -90,7 +90,7 @@ export const queryKeys = {
   // MEXC data - simplified keys
   mexcCalendar: () => ["mexc", "calendar"] as const,
   mexcSymbols: (vcoinId?: string) =>
-    vcoinId ? ["mexc", "symbol", vcoinId] as const : ["mexc", "symbols"] as const,
+    vcoinId ? (["mexc", "symbol", vcoinId] as const) : (["mexc", "symbols"] as const),
   mexcServerTime: () => ["mexc", "serverTime"] as const,
 
   // Monitored listings

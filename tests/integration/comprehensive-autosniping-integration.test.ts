@@ -25,11 +25,11 @@ import {
   globalTimeoutMonitor 
 } from '../utils/timeout-utilities';
 import { PatternDetectionCore } from '@/src/core/pattern-detection/pattern-detection-core';
-import { MultiPhaseTradingBot } from '@/src/services/multi-phase-trading-bot';
-import { ComprehensiveSafetyCoordinator } from '@/src/services/comprehensive-safety-coordinator';
+import { MultiPhaseTradingBot } from '@/src/services/trading/multi-phase-trading-bot';
+import { ComprehensiveSafetyCoordinator } from '@/src/services/risk/comprehensive-safety-coordinator';
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
-import { AdvancedRiskEngine } from '@/src/services/advanced-risk-engine';
-import { MultiPhaseExecutor } from '@/src/services/multi-phase-executor';
+import { AdvancedRiskEngine } from '@/src/services/risk/advanced-risk-engine';
+import { MultiPhaseExecutor } from '@/src/services/trading/multi-phase-executor';
 import type { SymbolEntry, CalendarEntry } from '@/src/services/mexc-unified-exports';
 import type { ActivityData } from '@/src/schemas/unified/mexc-api-schemas';
 

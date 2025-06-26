@@ -92,10 +92,10 @@ async function prepareDatabaseForTesting() {
     if (useTestBranches && process.env.NEON_API_KEY) {
       console.log("🌿 Setting up isolated NeonDB test branch...");
 
-      // Import branch setup utilities
-      const { setupVitestBranch } = await import("@/src/lib/test-branch-setup");
-
+      // Import branch setup utilities with relative path
       try {
+        const { setupVitestBranch } = await import("../../src/lib/test-branch-setup.js");
+
         // Create isolated test branch for this test run
         global.testBranchContext = await setupVitestBranch();
         console.log(
@@ -104,7 +104,7 @@ async function prepareDatabaseForTesting() {
 
         // Import and run migrations on the test branch
         const { migrateTestBranch } = await import(
-          "@/src/lib/test-branch-setup"
+          "../../src/lib/test-branch-setup.js"
         );
         await migrateTestBranch(global.testBranchContext);
         console.log("📦 Test branch migrations completed");
@@ -121,18 +121,22 @@ async function prepareDatabaseForTesting() {
     if (!useTestBranches) {
       console.log("📦 Using main database connection for testing");
 
-      // Import database utilities
-      const { db } = await import("@/src/db/index");
+      // Import database utilities with relative path
+      try {
+        const { db } = await import("../../src/db/index.js");
 
-      // Test database connection
-      if (db) {
-        console.log("📦 Database connection verified");
+        // Test database connection
+        if (db) {
+          console.log("📦 Database connection verified");
 
-        // Optional: Clear test data if needed
-        if (process.env.CLEAR_TEST_DATA === "true") {
-          console.log("🧹 Clearing existing test data...");
-          // Add database clearing logic here if needed
+          // Optional: Clear test data if needed
+          if (process.env.CLEAR_TEST_DATA === "true") {
+            console.log("🧹 Clearing existing test data...");
+            // Add database clearing logic here if needed
+          }
         }
+      } catch (dbError) {
+        console.warn("⚠️ Database connection warning:", dbError.message);
       }
     }
   } catch (error) {
@@ -346,7 +350,7 @@ export async function globalTeardown() {
       console.log("🌿 Cleaning up test branch...");
       try {
         const { cleanupTestBranch } = await import(
-          "@/src/lib/test-branch-setup"
+          "../../src/lib/test-branch-setup.js"
         );
         await cleanupTestBranch(global.testBranchContext);
         global.testBranchContext = null;
@@ -360,7 +364,7 @@ export async function globalTeardown() {
     if (process.env.USE_TEST_BRANCHES === "true" && process.env.NEON_API_KEY) {
       try {
         const { cleanupAllTestBranches } = await import(
-          "@/src/lib/test-branch-setup"
+          "../../src/lib/test-branch-setup.js"
         );
         await cleanupAllTestBranches();
         console.log("🧹 Emergency branch cleanup completed");

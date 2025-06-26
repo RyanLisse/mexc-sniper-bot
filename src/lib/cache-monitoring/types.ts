@@ -1,6 +1,6 @@
 /**
  * Cache Monitoring Types and Interfaces
- * 
+ *
  * Extracted from cache-monitoring.ts to reduce file size and improve modularity
  */
 

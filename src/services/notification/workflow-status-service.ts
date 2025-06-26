@@ -325,10 +325,10 @@ export class WorkflowStatusService {
     // Determine workflow states based on system status and active workflows
     const isSystemRunning = systemStatus.systemStatus === "running";
     const hasActiveWorkflows = activeWorkflows.length > 0;
-    
+
     // Discovery is running if system is running
     const discoveryRunning = isSystemRunning;
-    
+
     // Sniper is active if system is running and has active workflows
     const sniperActive = isSystemRunning && hasActiveWorkflows;
 
@@ -344,9 +344,12 @@ export class WorkflowStatusService {
       vcoinId: activity.vcoinId,
       // Required fields for schema validation
       event: activity.type, // Use activity type as event
-      status: activity.level === "error" ? "error" as const : 
-              activity.level === "warning" ? "warning" as const : 
-              "success" as const, // Map level to status
+      status:
+        activity.level === "error"
+          ? ("error" as const)
+          : activity.level === "warning"
+            ? ("warning" as const)
+            : ("success" as const), // Map level to status
     }));
 
     return {

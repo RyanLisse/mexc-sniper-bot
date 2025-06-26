@@ -1,12 +1,12 @@
 /**
  * Cache Performance Calculator
- * 
+ *
  * Extracted performance calculation logic from cache-monitoring.ts
  */
 
+import type { APICacheAnalytics } from "../api-response-cache";
 import type { CacheMetrics } from "../cache-manager";
 import type { AgentCacheAnalytics } from "../enhanced-agent-cache";
-import type { APICacheAnalytics } from "../api-response-cache";
 import type { SystemCacheMetrics } from "./types";
 
 export class CachePerformanceCalculator {

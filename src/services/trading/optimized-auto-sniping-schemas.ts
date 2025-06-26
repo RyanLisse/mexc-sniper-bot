@@ -53,7 +53,7 @@ export const AutoSnipingConfigSchema = z.object({
   advanceHoursThreshold: z.number().positive().default(3.5),
   enableMultiPhaseStrategy: z.boolean().default(false),
   slippageTolerancePercentage: z.number().min(0).max(10).default(1),
-  
+
   // Additional configuration properties for API compatibility
   maxConcurrentTargets: z.number().int().min(1).max(50).default(5),
   retryAttempts: z.number().int().min(1).max(10).default(3),
@@ -136,7 +136,7 @@ export const AutoSnipingExecutionReportSchema = z.object({
   systemHealth: SystemHealthSchema,
   recommendations: z.array(z.string()),
   lastUpdated: z.string(),
-  
+
   // Additional properties for API compatibility
   activeTargets: z.number().nonnegative().default(0),
   readyTargets: z.number().nonnegative().default(0),

@@ -82,7 +82,9 @@ export class EnhancedMexcOrchestrator {
       this.workflowEngine.validateRegisteredWorkflows();
 
       this.isInitialized = true;
-      this.logger.info("[EnhancedMexcOrchestrator] Initialization completed with health monitoring");
+      this.logger.info(
+        "[EnhancedMexcOrchestrator] Initialization completed with health monitoring"
+      );
     } catch (error) {
       this.logger.error("[EnhancedMexcOrchestrator] Initialization failed:", error);
       throw error;

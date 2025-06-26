@@ -39,12 +39,12 @@ export interface LogContext {
   // Performance context
   duration?: number;
   responseTime?: number;
-  
+
   // API context
   method?: string;
   endpoint?: string;
   statusCode?: number;
-  
+
   // General context
   userId?: string;
   requestId?: string;

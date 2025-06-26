@@ -132,14 +132,15 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
         hasBalances: !!accountResponse.data?.balances,
         balancesLength: accountResponse.data?.balances?.length,
         error: accountResponse.error,
-        timestamp: accountResponse.timestamp
+        timestamp: accountResponse.timestamp,
       });
 
       // Handle nested MEXC API response structure: response.data.data.balances
       // MEXC API returns data.data = null when account has no balances (valid case)
-      const actualBalances = accountResponse.data?.data?.balances || accountResponse.data?.balances || [];
+      const actualBalances =
+        accountResponse.data?.data?.balances || accountResponse.data?.balances || [];
       const hasValidData = accountResponse.success && accountResponse.data;
-      
+
       if (!hasValidData) {
         console.error("[MexcAccountApi] Account response validation failed:", {
           success: accountResponse.success,
@@ -148,9 +149,9 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
           hasDirectBalances: !!accountResponse.data?.balances,
           hasActualBalances: !!actualBalances,
           error: accountResponse.error,
-          data: accountResponse.data
+          data: accountResponse.data,
         });
-        
+
         return {
           success: false,
           data: {

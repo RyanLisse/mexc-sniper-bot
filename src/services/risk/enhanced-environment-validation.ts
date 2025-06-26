@@ -6,7 +6,10 @@
  */
 
 // Re-export types and utilities
-export type { EnvironmentValidationResult, EnvironmentVariable } from "@/src/config/environment/types";
+export type {
+  EnvironmentValidationResult,
+  EnvironmentVariable,
+} from "@/src/config/environment/types";
 export { ENVIRONMENT_VARIABLES } from "@/src/config/environment/variables";
 
 // Re-export main service with backward compatibility

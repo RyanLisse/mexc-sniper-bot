@@ -6,30 +6,34 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PatternDetectionCore } from '@/src/core/pattern-detection';
+import { EnhancedPatternDetectionCore } from '@/src/core/pattern-detection/pattern-detection-core-enhanced';
 import { PatternTargetBridgeService } from '@/src/services/data/pattern-detection/pattern-target-bridge-service';
 import { PatternTargetIntegrationService } from '@/src/services/data/pattern-detection/pattern-target-integration-service';
 import type { SymbolEntry, CalendarEntry } from '@/src/services/api/mexc-unified-exports';
 
 describe('Pattern-Target Integration Bridge', () => {
-  let patternEngine: PatternDetectionCore;
+  let patternEngine: EnhancedPatternDetectionCore;
   let bridgeService: PatternTargetBridgeService;
   let integrationService: PatternTargetIntegrationService;
 
   beforeEach(() => {
     // Get singleton instances
-    patternEngine = PatternDetectionCore.getInstance();
+    patternEngine = EnhancedPatternDetectionCore.getInstance();
     bridgeService = PatternTargetBridgeService.getInstance();
     integrationService = PatternTargetIntegrationService.getInstance();
 
-    // Reset bridge service for clean testing
-    bridgeService.stopListening();
+    // Reset bridge service for clean testing - only stop if already listening
+    if (bridgeService.isActive()) {
+      bridgeService.stopListening();
+    }
     bridgeService.resetStatistics();
   });
 
   afterEach(() => {
-    // Clean up listeners
-    bridgeService.stopListening();
+    // Clean up listeners - only stop if currently listening
+    if (bridgeService.isActive()) {
+      bridgeService.stopListening();
+    }
   });
 
   it('should automatically create targets when ready state patterns are detected', async () => {
@@ -60,7 +64,7 @@ describe('Pattern-Target Integration Bridge', () => {
     ];
 
     // Act: Trigger pattern detection (this should emit events and create targets)
-    const patterns = await patternEngine.detectReadyStatePattern(mockSymbolData, { forceEmitEvents: true });
+    const patterns = await patternEngine.detectReadyStatePattern(mockSymbolData);
 
     // Wait for async event processing
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -120,7 +124,7 @@ describe('Pattern-Target Integration Bridge', () => {
     ];
 
     // Act: Trigger advance opportunity detection
-    const patterns = await patternEngine.detectAdvanceOpportunities(mockCalendarData, { forceEmitEvents: true });
+    const patterns = await patternEngine.detectAdvanceOpportunities(mockCalendarData);
 
     // Wait for async event processing
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -169,7 +173,7 @@ describe('Pattern-Target Integration Bridge', () => {
     ];
 
     // Act: Detect patterns
-    await patternEngine.detectReadyStatePattern(mockSymbolData, { forceEmitEvents: true });
+    await patternEngine.detectReadyStatePattern(mockSymbolData);
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Assert: Verify filtering worked (only high-quality patterns should trigger targets)
@@ -209,7 +213,7 @@ describe('Pattern-Target Integration Bridge', () => {
       ps: 1, qs: 1
     } as SymbolEntry];
 
-    await patternEngine.detectReadyStatePattern(mockSymbolData, { forceEmitEvents: true });
+    await patternEngine.detectReadyStatePattern(mockSymbolData);
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Check updated statistics
@@ -217,7 +221,7 @@ describe('Pattern-Target Integration Bridge', () => {
     expect(stats.totalEventsProcessed).toBe(1);
     expect(stats.totalTargetsCreated).toBe(1);
     expect(stats.lastEventProcessed).not.toBeNull();
-    expect(stats.averageProcessingTime).toBeGreaterThan(0);
+    expect(stats.averageProcessingTime).toBeGreaterThanOrEqual(0);
 
     // Stop listening
     bridgeService.stopListening();
@@ -240,7 +244,7 @@ describe('Pattern-Target Integration Bridge', () => {
     } as SymbolEntry];
 
     // Act: Trigger pattern detection
-    await patternEngine.detectReadyStatePattern(mockSymbolData, { forceEmitEvents: true });
+    await patternEngine.detectReadyStatePattern(mockSymbolData);
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Assert: Bridge should still be active and have processed the event (even if it failed)

@@ -1,6 +1,6 @@
 /**
  * Market Data Service - TDD Test Suite
- * 
+ *
  * Comprehensive test suite for the consolidated market data service that merges:
  * - Real-time market data streaming
  * - Pattern detection and analysis
@@ -41,7 +41,14 @@ const PriceDataSchema = z.object({
 
 const PatternDetectionResultSchema = z.object({
   symbol: z.string(),
-  pattern: z.enum(["bullish_divergence", "bearish_divergence", "breakout", "support", "resistance", "volume_spike"]),
+  pattern: z.enum([
+    "bullish_divergence",
+    "bearish_divergence",
+    "breakout",
+    "support",
+    "resistance",
+    "volume_spike",
+  ]),
   confidence: z.number().min(0).max(100),
   timestamp: z.number(),
   priceLevel: z.number().positive(),
@@ -106,7 +113,9 @@ describe("MarketDataService - TDD Implementation", () => {
       const invalidConfig = { ...mockConfig, websocketUrl: "invalid-url" };
 
       // Act & Assert
-      expect(() => MarketDataConfigSchema.parse(invalidConfig)).toThrow("Valid WebSocket URL required");
+      expect(() => MarketDataConfigSchema.parse(invalidConfig)).toThrow(
+        "Valid WebSocket URL required"
+      );
     });
 
     it("should initialize WebSocket connections", async () => {
@@ -133,15 +142,16 @@ describe("MarketDataService - TDD Implementation", () => {
         status: 200,
         statusText: "OK",
         headers: new Headers({ "content-type": "application/json" }),
-        json: () => Promise.resolve({
-          symbol: "BTCUSDT",
-          price: "50000.00",
-          volume: "1000.50",
-          change: "1500.00",
-          changePercent: "3.10",
-          high: "51000.00",
-          low: "48500.00",
-        }),
+        json: () =>
+          Promise.resolve({
+            symbol: "BTCUSDT",
+            price: "50000.00",
+            volume: "1000.50",
+            change: "1500.00",
+            changePercent: "3.10",
+            high: "51000.00",
+            low: "48500.00",
+          }),
       });
     });
 
@@ -208,22 +218,23 @@ describe("MarketDataService - TDD Implementation", () => {
       // Mock kline data response
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve([
-          [
-            1640995200000, // openTime
-            "49000.00",     // open
-            "51000.00",     // high
-            "48500.00",     // low
-            "50000.00",     // close
-            "1250.75",      // volume
-            1640998800000,  // closeTime
-            "62537500.00",  // quoteAssetVolume
-            1500,           // trades
-            "625.50",       // takerBuyBaseAssetVolume
-            "31268750.00",  // takerBuyQuoteAssetVolume
-            "0"             // ignore
-          ]
-        ]),
+        json: () =>
+          Promise.resolve([
+            [
+              1640995200000, // openTime
+              "49000.00", // open
+              "51000.00", // high
+              "48500.00", // low
+              "50000.00", // close
+              "1250.75", // volume
+              1640998800000, // closeTime
+              "62537500.00", // quoteAssetVolume
+              1500, // trades
+              "625.50", // takerBuyBaseAssetVolume
+              "31268750.00", // takerBuyQuoteAssetVolume
+              "0", // ignore
+            ],
+          ]),
       });
     });
 
@@ -280,7 +291,7 @@ describe("MarketDataService - TDD Implementation", () => {
         // Mock historical price and volume data
         prices: [48000, 47000, 47500, 49000, 48500, 50000],
         volumes: [1000, 1200, 800, 1500, 900, 2000],
-        timestamps: [1, 2, 3, 4, 5, 6].map(i => Date.now() - i * 3600000),
+        timestamps: [1, 2, 3, 4, 5, 6].map((i) => Date.now() - i * 3600000),
       };
 
       // Act
@@ -312,7 +323,7 @@ describe("MarketDataService - TDD Implementation", () => {
     it("should detect support and resistance levels", async () => {
       // Arrange
       const symbol = "ADAUSDT";
-      const priceData = [1.20, 1.18, 1.21, 1.19, 1.20, 1.22, 1.19, 1.21]; // Support around 1.19-1.20
+      const priceData = [1.2, 1.18, 1.21, 1.19, 1.2, 1.22, 1.19, 1.21]; // Support around 1.19-1.20
 
       // Act
       // const levels = await marketDataService.detectSupportResistance(symbol, priceData);
@@ -698,7 +709,7 @@ describe("MarketDataService - TDD Implementation", () => {
 
       // Act
       // marketDataService.integrateNotificationService(mockNotificationService);
-      // await marketDataService.triggerPriceAlert("BTCUSDT", { 
+      // await marketDataService.triggerPriceAlert("BTCUSDT", {
       //   type: "price_above",
       //   targetPrice: 50000,
       //   currentPrice: 52000,

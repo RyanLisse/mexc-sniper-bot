@@ -1,26 +1,23 @@
 /**
  * Streamlined Pattern Strategy Orchestrator
- * 
+ *
  * Refactored to use extracted modules and reduce file size from 927 to under 500 lines
  */
 
 import { and, desc, eq, gte } from "drizzle-orm";
 import { PatternDetectionCore, type PatternMatch } from "@/src/core/pattern-detection";
-import { db } from "../db";
 import { monitoredListings } from "@/src/db/schemas/patterns";
+import { createConsoleLogger } from "@/src/lib/shared/console-logger";
 import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
 import { PatternDiscoveryAgent } from "@/src/mexc-agents/pattern-discovery-agent";
 import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
-import { createConsoleLogger } from "@/src/lib/shared/console-logger";
-import { patternTargetIntegrationService } from "./pattern-target-integration-service";
+import { db } from "../db";
 import type { SymbolEntry } from "./mexc-unified-exports";
-import { StrategicRecommendationGenerator } from "./pattern-orchestrator/recommendation-generator";
 import { MonitoringPlanCreator } from "./pattern-orchestrator/monitoring-plan-creator";
-import type {
-  PatternWorkflowRequest,
-  PatternWorkflowResult,
-} from "./pattern-orchestrator/types";
+import { StrategicRecommendationGenerator } from "./pattern-orchestrator/recommendation-generator";
+import type { PatternWorkflowRequest, PatternWorkflowResult } from "./pattern-orchestrator/types";
+import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 export class StreamlinedPatternOrchestrator {
   private static instance: StreamlinedPatternOrchestrator;
@@ -74,7 +71,9 @@ export class StreamlinedPatternOrchestrator {
       }
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      this.logger.error("Workflow failed", { error: error instanceof Error ? error.message : error });
+      this.logger.error("Workflow failed", {
+        error: error instanceof Error ? error.message : error,
+      });
 
       return {
         success: false,
@@ -128,10 +127,11 @@ export class StreamlinedPatternOrchestrator {
     }
 
     // Step 4: Generate strategic recommendations
-    const strategicRecommendations = await StrategicRecommendationGenerator.generateStrategicRecommendations(
-      patternAnalysis.matches,
-      "discovery"
-    );
+    const strategicRecommendations =
+      await StrategicRecommendationGenerator.generateStrategicRecommendations(
+        patternAnalysis.matches,
+        "discovery"
+      );
     results.strategicRecommendations = strategicRecommendations;
 
     // Step 5: Create monitoring plan
@@ -150,7 +150,9 @@ export class StreamlinedPatternOrchestrator {
     );
 
     const successfulTargets = targetResults.filter((r) => r.success).length;
-    this.logger.info(`Created ${successfulTargets} snipe targets from ${patternAnalysis.matches.length} patterns`);
+    this.logger.info(
+      `Created ${successfulTargets} snipe targets from ${patternAnalysis.matches.length} patterns`
+    );
 
     const executionTime = Date.now() - startTime;
     this.logger.info(`Discovery workflow completed in ${executionTime}ms`);
@@ -181,7 +183,9 @@ export class StreamlinedPatternOrchestrator {
         symbolData = await this.getMonitoredSymbolsFromDatabase();
         this.logger.info(`Found ${symbolData.length} monitored symbols in database`);
       } catch (error) {
-        this.logger.error("Failed to fetch monitored symbols", { error: error instanceof Error ? error.message : error });
+        this.logger.error("Failed to fetch monitored symbols", {
+          error: error instanceof Error ? error.message : error,
+        });
       }
     }
 
@@ -199,7 +203,8 @@ export class StreamlinedPatternOrchestrator {
       // Enhanced AI analysis for high-priority symbols
       if (request.options?.enableAgentAnalysis) {
         const readyCandidates = patternAnalysis.matches.filter(
-          (m) => m.patternType === "ready_state" || (m.patternType === "pre_ready" && m.confidence >= 75)
+          (m) =>
+            m.patternType === "ready_state" || (m.patternType === "pre_ready" && m.confidence >= 75)
         );
 
         for (const candidate of readyCandidates.slice(0, 3)) {
@@ -213,10 +218,11 @@ export class StreamlinedPatternOrchestrator {
       }
 
       // Generate monitoring recommendations
-      const strategicRecommendations = await StrategicRecommendationGenerator.generateStrategicRecommendations(
-        patternAnalysis.matches,
-        "monitoring"
-      );
+      const strategicRecommendations =
+        await StrategicRecommendationGenerator.generateStrategicRecommendations(
+          patternAnalysis.matches,
+          "monitoring"
+        );
       results.strategicRecommendations = strategicRecommendations;
     }
 
@@ -266,7 +272,11 @@ export class StreamlinedPatternOrchestrator {
       success: true,
       type: "validation",
       results,
-      performance: { executionTime, agentsUsed, patternsProcessed: request.input.symbolData?.length || 0 },
+      performance: {
+        executionTime,
+        agentsUsed,
+        patternsProcessed: request.input.symbolData?.length || 0,
+      },
     };
   }
 
@@ -303,10 +313,11 @@ export class StreamlinedPatternOrchestrator {
         results.agentResponses!["strategy-creation"] = strategyResponse;
       }
 
-      const strategicRecommendations = await StrategicRecommendationGenerator.generateStrategicRecommendations(
-        patternAnalysis.matches,
-        "strategy_creation"
-      );
+      const strategicRecommendations =
+        await StrategicRecommendationGenerator.generateStrategicRecommendations(
+          patternAnalysis.matches,
+          "strategy_creation"
+        );
       results.strategicRecommendations = strategicRecommendations;
     }
 
@@ -315,14 +326,21 @@ export class StreamlinedPatternOrchestrator {
       success: true,
       type: "strategy_creation",
       results,
-      performance: { executionTime, agentsUsed, patternsProcessed: request.input.symbolData?.length || 0 },
+      performance: {
+        executionTime,
+        agentsUsed,
+        patternsProcessed: request.input.symbolData?.length || 0,
+      },
     };
   }
 
   /**
    * Create snipe targets from pattern matches
    */
-  private async createSnipeTargetsFromPatterns(patterns: PatternMatch[], userId: string): Promise<any[]> {
+  private async createSnipeTargetsFromPatterns(
+    patterns: PatternMatch[],
+    userId: string
+  ): Promise<any[]> {
     try {
       const actionablePatterns = patterns.filter(
         (pattern) =>
@@ -335,7 +353,9 @@ export class StreamlinedPatternOrchestrator {
         return [];
       }
 
-      this.logger.info(`Creating snipe targets for ${actionablePatterns.length} actionable patterns`);
+      this.logger.info(
+        `Creating snipe targets for ${actionablePatterns.length} actionable patterns`
+      );
 
       const results = await patternTargetIntegrationService.createTargetsFromPatterns(
         actionablePatterns,
@@ -355,12 +375,17 @@ export class StreamlinedPatternOrchestrator {
         this.logger.info(`Successfully created ${successful.length} snipe targets`);
       }
       if (failed.length > 0) {
-        this.logger.info(`Failed to create ${failed.length} snipe targets`, failed.map((f) => f.reason || f.error));
+        this.logger.info(
+          `Failed to create ${failed.length} snipe targets`,
+          failed.map((f) => f.reason || f.error)
+        );
       }
 
       return results;
     } catch (error) {
-      this.logger.error("Failed to create snipe targets from patterns", { error: error instanceof Error ? error.message : error });
+      this.logger.error("Failed to create snipe targets from patterns", {
+        error: error instanceof Error ? error.message : error,
+      });
       return [];
     }
   }
@@ -396,7 +421,9 @@ export class StreamlinedPatternOrchestrator {
                 patternSts: pattern.indicators.sts,
                 patternSt: pattern.indicators.st,
                 patternTt: pattern.indicators.tt,
-                hasReadyPattern: pattern.patternType === "ready_state" || pattern.patternType === "launch_sequence",
+                hasReadyPattern:
+                  pattern.patternType === "ready_state" ||
+                  pattern.patternType === "launch_sequence",
                 lastChecked: new Date(),
                 updatedAt: new Date(),
               },
@@ -405,7 +432,9 @@ export class StreamlinedPatternOrchestrator {
       }
       this.logger.info(`Stored ${patterns.length} patterns in database`);
     } catch (error) {
-      this.logger.warn("Failed to store patterns", { error: error instanceof Error ? error.message : error });
+      this.logger.warn("Failed to store patterns", {
+        error: error instanceof Error ? error.message : error,
+      });
     }
   }
 
@@ -424,7 +453,9 @@ export class StreamlinedPatternOrchestrator {
           patternTt: monitoredListings.patternTt,
         })
         .from(monitoredListings)
-        .where(and(eq(monitoredListings.status, "monitoring"), gte(monitoredListings.confidence, 60)))
+        .where(
+          and(eq(monitoredListings.status, "monitoring"), gte(monitoredListings.confidence, 60))
+        )
         .orderBy(desc(monitoredListings.confidence))
         .limit(50);
 
@@ -440,7 +471,9 @@ export class StreamlinedPatternOrchestrator {
         vcoinId: symbol.vcoinId,
       }));
     } catch (error) {
-      this.logger.error("Failed to fetch monitored symbols from database", { error: error instanceof Error ? error.message : error });
+      this.logger.error("Failed to fetch monitored symbols from database", {
+        error: error instanceof Error ? error.message : error,
+      });
       return [];
     }
   }
@@ -452,7 +485,8 @@ export class StreamlinedPatternOrchestrator {
     return {
       executionMetrics: Object.fromEntries(this.executionMetrics),
       cacheMetrics: this.cacheMetrics,
-      cacheHitRate: this.cacheMetrics.hits / (this.cacheMetrics.hits + this.cacheMetrics.misses) || 0,
+      cacheHitRate:
+        this.cacheMetrics.hits / (this.cacheMetrics.hits + this.cacheMetrics.misses) || 0,
     };
   }
 

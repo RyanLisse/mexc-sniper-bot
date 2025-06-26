@@ -9,11 +9,13 @@
  * - Clean module coordination
  * - Comprehensive error handling
  * - Performance monitoring
+ * - Event emission for pattern-target bridge integration
  */
 
+import { EventEmitter } from "events";
 import { toSafeError } from "../../lib/error-type-utils";
-import type { SymbolEntry } from "../../services/mexc-unified-exports";
 import { getActivityDataForSymbol as fetchActivityData } from "../../services/data/pattern-detection/activity-integration";
+import type { SymbolEntry } from "../../services/mexc-unified-exports";
 import { ConfidenceCalculator } from "./confidence-calculator";
 import type {
   CorrelationAnalysis,
@@ -27,6 +29,7 @@ import type {
   PatternDetectionMetrics,
   PatternMatch,
 } from "./interfaces";
+import { PatternDetectionError } from "./interfaces";
 import { PatternAnalyzer } from "./pattern-analyzer";
 import { PatternStorage } from "./pattern-storage";
 import { PatternValidator } from "./pattern-validator";
@@ -36,8 +39,9 @@ import { PatternValidator } from "./pattern-validator";
  *
  * Main orchestrator that coordinates all pattern detection modules.
  * Provides the same interface as the original engine but with improved architecture.
+ * Extends EventEmitter to enable pattern-target bridge integration.
  */
-export class PatternDetectionCore {
+export class PatternDetectionCore extends EventEmitter {
   private static instance: PatternDetectionCore;
   private _logger?: {
     info: (message: string, context?: any) => void;
@@ -83,6 +87,8 @@ export class PatternDetectionCore {
   };
 
   private constructor(config?: Partial<PatternDetectionConfig>) {
+    super(); // Initialize EventEmitter
+
     // Initialize default configuration
     this.config = {
       minAdvanceHours: 3.5,
@@ -199,6 +205,30 @@ export class PatternDetectionCore {
         executionTime,
         correlationsFound: correlations.length,
       });
+
+      // Emit patterns_detected event for pattern-target bridge integration
+      if (filteredMatches.length > 0) {
+        const eventData = {
+          patternType: request.analysisType || "mixed",
+          matches: filteredMatches,
+          metadata: {
+            symbolsAnalyzed: request.symbols?.length || 0,
+            calendarEntriesAnalyzed: request.calendarEntries?.length || 0,
+            duration: executionTime,
+            source: "pattern-detection-core",
+            averageAdvanceHours: this.calculateAverageAdvanceHours(filteredMatches),
+            averageEstimatedTimeToReady: this.calculateAverageTimeToReady(filteredMatches),
+          },
+        };
+
+        this.emit("patterns_detected", eventData);
+
+        console.info("Pattern detection event emitted", {
+          eventType: "patterns_detected",
+          patternsCount: filteredMatches.length,
+          patternTypes: [...new Set(filteredMatches.map((m) => m.patternType))],
+        });
+      }
 
       return {
         matches: filteredMatches,
@@ -405,21 +435,21 @@ export class PatternDetectionCore {
     try {
       // Use the dedicated activity integration service
       const activityData = await fetchActivityData(symbol);
-      
+
       if (this.config.enableActivityEnhancement) {
-        this.logger.debug("Activity data fetched", { 
-          symbol, 
+        this.logger.debug("Activity data fetched", {
+          symbol,
           count: activityData.length,
-          activityTypes: [...new Set(activityData.map(a => a.activityType))]
+          activityTypes: [...new Set(activityData.map((a) => a.activityType))],
         });
       }
-      
+
       return activityData;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.warn("Failed to fetch activity data", { 
-        symbol, 
-        error: safeError.message 
+      this.logger.warn("Failed to fetch activity data", {
+        symbol,
+        error: safeError.message,
       });
       return [];
     }
@@ -523,5 +553,29 @@ export class PatternDetectionCore {
         filteredMatches.reduce((sum, m) => sum + m.confidence, 0) / filteredMatches.length;
       this.metrics.averageConfidence = Math.round(avgConfidence * 100) / 100;
     }
+  }
+
+  /**
+   * Calculate average advance hours for event emission
+   */
+  private calculateAverageAdvanceHours(matches: PatternMatch[]): number {
+    const advanceMatches = matches.filter((m) => m.advanceNoticeHours && m.advanceNoticeHours > 0);
+    if (advanceMatches.length === 0) return 0;
+
+    const totalHours = advanceMatches.reduce((sum, m) => sum + (m.advanceNoticeHours || 0), 0);
+    return Math.round((totalHours / advanceMatches.length) * 100) / 100;
+  }
+
+  /**
+   * Calculate average estimated time to ready for event emission
+   */
+  private calculateAverageTimeToReady(matches: PatternMatch[]): number {
+    const readyMatches = matches.filter(
+      (m) => m.estimatedTimeToReady && m.estimatedTimeToReady > 0
+    );
+    if (readyMatches.length === 0) return 0;
+
+    const totalTime = readyMatches.reduce((sum, m) => sum + (m.estimatedTimeToReady || 0), 0);
+    return Math.round((totalTime / readyMatches.length) * 100) / 100;
   }
 }

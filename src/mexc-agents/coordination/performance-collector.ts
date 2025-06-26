@@ -229,7 +229,7 @@ export class PerformanceCollector {
         this.agentMetricsHistory.set(agent.id, agentHistory);
       } catch (error) {
         // Only log error if it's not a "not found" error (race condition)
-        if (!error.message?.includes('not found')) {
+        if (!error.message?.includes("not found")) {
           this.logger.error(
             `[PerformanceCollector] Failed to collect metrics for agent ${agent.id}:`,
             error
