@@ -18,8 +18,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import type React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/src/components/ui/alert";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -408,6 +407,6 @@ export function ConfigStatusPanel({
       )}
     </div>
   );
-});
+}
 
 export default ConfigStatusPanel;
