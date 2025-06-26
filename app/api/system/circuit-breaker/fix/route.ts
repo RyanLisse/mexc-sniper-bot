@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { CircuitBreakerSafetyService } from '@/src/services/circuit-breaker-safety-service'
-import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2'
+import { CircuitBreakerSafetyService } from '@/src/services/risk/circuit-breaker-safety-service'
+import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2'
 import { getGlobalReliabilityManager } from '@/src/services/mexc-circuit-breaker'
 import { z } from 'zod'
 

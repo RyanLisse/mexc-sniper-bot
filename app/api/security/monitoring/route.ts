@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { securityMonitoring } from "../../../../src/services/security-monitoring-service";
+import { securityMonitoring } from "../../../../src/services/risk/security-monitoring-service";
 import { checkRateLimit, getClientIP } from "../../../../src/lib/rate-limiter";
 
 // ============================================================================
