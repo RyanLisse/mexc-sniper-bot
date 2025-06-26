@@ -8,27 +8,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { trace } from "@opentelemetry/api";
+import { getMexcService } from "../../../../src/services/api/mexc-unified-exports";
 
 // Request validation schema
 const BalanceRequestSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
-});
-
-// Response schema for validation
-const BalanceResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.object({
-    balances: z.array(z.object({
-      asset: z.string(),
-      free: z.string(),
-      locked: z.string(),
-      total: z.number(),
-      usdtValue: z.number().optional(),
-    })),
-    totalUsdtValue: z.number(),
-    lastUpdated: z.string(),
-  }).optional(),
-  error: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -47,50 +31,25 @@ export async function GET(request: NextRequest) {
 
     const { userId: validUserId } = validationResult.data;
 
-    // Simulated balance data for testing
-    const balanceData = {
-      balances: [
-        {
-          asset: "USDT",
-          free: "1250.75",
-          locked: "0.00",
-          total: 1250.75,
-          usdtValue: 1250.75,
-        },
-        {
-          asset: "BTC",
-          free: "0.02156789",
-          locked: "0.00",
-          total: 0.02156789,
-          usdtValue: 2145.32,
-        },
-        {
-          asset: "ETH",
-          free: "0.8",
-          locked: "0.2",
-          total: 1.0,
-          usdtValue: 3800.00,
-        },
-        {
-          asset: "ADA",
-          free: "1500.0",
-          locked: "0.0",
-          total: 1500.0,
-          usdtValue: 1350.00,
-        },
-        {
-          asset: "DOT",
-          free: "25.5",
-          locked: "4.5",
-          total: 30.0,
-          usdtValue: 240.00,
-        },
-      ],
-      totalUsdtValue: 8786.07,
-      lastUpdated: new Date().toISOString(),
-    };
+    // Get real MEXC account balances using credentials from environment
+    const mexcClient = getMexcService();
+    const balanceResponse = await mexcClient.getAccountBalances();
 
-    console.info("[BalanceAPI] Balance data returned successfully", {
+    if (!balanceResponse.success) {
+      console.error("[BalanceAPI] Failed to fetch real balance data", {
+        error: balanceResponse.error,
+        userId: validUserId,
+      });
+
+      return NextResponse.json({
+        success: false,
+        error: balanceResponse.error || "Failed to fetch account balance data",
+      }, { status: 500 });
+    }
+
+    const balanceData = balanceResponse.data;
+
+    console.info("[BalanceAPI] Real balance data returned successfully", {
       userId: validUserId,
       balancesCount: balanceData.balances.length,
       totalUsdValue: balanceData.totalUsdtValue,
@@ -110,7 +69,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: false,
-      error: "Internal server error",
+      error: "Internal server error - please check MEXC API credentials",
     }, { status: 500 });
   }
 }
