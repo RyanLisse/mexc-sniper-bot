@@ -62,7 +62,7 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
 
   try {
     // Check if credentials are configured
-    if (!process.env.MEXC_API_KEY || !process.env.MEXC_API_SECRET) {
+    if (!process.env.MEXC_API_KEY || !process.env.MEXC_SECRET_KEY) {
       return {
         service: "mexc-api",
         status: "unhealthy",
@@ -70,7 +70,7 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
         error: "MEXC API credentials not configured",
         details: {
           hasApiKey: !!process.env.MEXC_API_KEY,
-          hasApiSecret: !!process.env.MEXC_API_SECRET,
+          hasApiSecret: !!process.env.MEXC_SECRET_KEY,
           message: "API key and secret required for MEXC connectivity",
         },
       };
@@ -84,7 +84,7 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
     const crypto = require("crypto");
     const queryString = testUrl.searchParams.toString();
     const signature = crypto
-      .createHmac("sha256", process.env.MEXC_API_SECRET)
+      .createHmac("sha256", process.env.MEXC_SECRET_KEY)
       .update(queryString)
       .digest("hex");
 

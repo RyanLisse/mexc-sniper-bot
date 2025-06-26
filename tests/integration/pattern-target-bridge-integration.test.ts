@@ -7,9 +7,9 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
-import { PatternTargetBridgeService } from '@/src/services/pattern-target-bridge-service';
-import { PatternTargetIntegrationService } from '@/src/services/pattern-target-integration-service';
-import type { SymbolEntry, CalendarEntry } from '@/src/services/mexc-unified-exports';
+import { PatternTargetBridgeService } from '@/src/services/data/pattern-detection/pattern-target-bridge-service';
+import { PatternTargetIntegrationService } from '@/src/services/data/pattern-detection/pattern-target-integration-service';
+import type { SymbolEntry, CalendarEntry } from '@/src/services/api/mexc-unified-exports';
 
 describe('Pattern-Target Integration Bridge', () => {
   let patternEngine: PatternDetectionCore;
