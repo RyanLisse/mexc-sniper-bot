@@ -663,7 +663,7 @@ export class OptimizedAutoSnipingCore {
       const validatedPosition = ExecutionPositionSchema.parse(position);
 
       // Get current market price
-      const { getRecommendedMexcService } = await import('./mexc-unified-exports');
+      const { getRecommendedMexcService } = await import('../api/mexc-unified-exports');
       const mexcService = getRecommendedMexcService();
       const tickerResponse = await mexcService.getSymbolTicker(validatedPosition.symbol);
 
@@ -905,7 +905,7 @@ export class OptimizedAutoSnipingCore {
   private async validateApiConnection(): Promise<boolean> {
     try {
       // Use MEXC service to test connectivity
-      const { getRecommendedMexcService } = await import('./mexc-unified-exports');
+      const { getRecommendedMexcService } = await import('../api/mexc-unified-exports');
       const mexcService = getRecommendedMexcService();
 
       // Test basic API connectivity by checking server time
@@ -921,7 +921,7 @@ export class OptimizedAutoSnipingCore {
     try {
       // Test pattern engine with a minimal symbol
       const testSymbol = { cd: "BTCUSDT", sts: 2, st: 2, tt: 4 };
-      const { patternDetectionEngine } = await import("../services/pattern-detection-engine");
+      const { patternDetectionEngine } = await import("../data/pattern-detection/pattern-detection-engine");
       const patterns = await patternDetectionEngine.detectReadyStatePattern([testSymbol]);
       return Array.isArray(patterns);
     } catch (error) {
@@ -1027,7 +1027,7 @@ export class OptimizedAutoSnipingCore {
   private async calculateReadyTargets(): Promise<number> {
     try {
       // Use MEXC service to get calendar data (respects demo mode)
-      const { getRecommendedMexcService } = await import('./mexc-unified-exports');
+      const { getRecommendedMexcService } = await import('../api/mexc-unified-exports');
       const mexcService = getRecommendedMexcService();
       const calendarResponse = await mexcService.getCalendarListings();
       
@@ -1074,7 +1074,7 @@ export class OptimizedAutoSnipingCore {
   private async scanForTradingOpportunities(): Promise<TradingOpportunity[]> {
     try {
       // Get calendar listings for potential new coins
-      const { getRecommendedMexcService } = await import('./mexc-unified-exports');
+      const { getRecommendedMexcService } = await import('../api/mexc-unified-exports');
       const mexcService = getRecommendedMexcService();
       const calendarResponse = await mexcService.getCalendarListings();
       
@@ -1098,7 +1098,7 @@ export class OptimizedAutoSnipingCore {
       });
 
       // Use pattern detection engine to analyze opportunities
-      const { patternDetectionEngine } = await import('../services/pattern-detection-engine');
+      const { patternDetectionEngine } = await import('../data/pattern-detection/pattern-detection-engine');
       const patternEngine = patternDetectionEngine;
       
       const opportunities: TradingOpportunity[] = [];
