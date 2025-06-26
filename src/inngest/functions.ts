@@ -1,5 +1,5 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import { MexcOrchestrator } from "../mexc-agents/orchestrator";
+import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
 import { inngest } from "./client";
 // Import safety functions
 import { safetyFunctions } from "./safety-functions";

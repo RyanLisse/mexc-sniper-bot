@@ -14,7 +14,7 @@ import {
   validateResponsiveConfig,
   createResponsiveClasses,
   parseBreakpointValue,
-} from "../../../src/lib/responsive-utils-clean";
+} from "@/src/lib/responsive-utils-clean";
 
 // Ensure window object is available for tests
 if (typeof global.window === 'undefined') {

@@ -8,7 +8,7 @@
  * Part of the modular refactoring of advanced-risk-engine.ts
  */
 
-import type { TradeRiskAssessment } from "../../mexc-agents/risk-manager-agent";
+import type { TradeRiskAssessment } from "@/src/mexc-agents/risk-manager-agent";
 import type {
   MarketConditions,
   PositionRiskProfile,

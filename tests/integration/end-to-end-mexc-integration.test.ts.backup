@@ -1,6 +1,6 @@
 /**
  * End-to-End MEXC Integration Tests
- * 
+ *
  * Comprehensive validation of the complete MEXC API integration flow
  * from credential configuration to balance display, identifying
  * synchronization and status update issues
@@ -10,12 +10,12 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vite
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import { db, apiCredentials, user } from '../../src/db';
+import { db, apiCredentials, user } from '@/src/db';
 import { eq } from 'drizzle-orm';
-import { getEncryptionService } from '../../src/services/secure-encryption-service';
-import { ApiCredentialsForm } from '../../src/components/api-credentials-form';
-import { OptimizedAccountBalance } from '../../src/components/optimized-account-balance';
-import { ConsolidatedCredentialStatus } from '../../src/components/enhanced-credential-status-consolidated';
+import { getEncryptionService } from '@/src/services/secure-encryption-service';
+import { ApiCredentialsForm } from '@/src/components/api-credentials-form';
+import { OptimizedAccountBalance } from '@/src/components/optimized-account-balance';
+import { ConsolidatedCredentialStatus } from '@/src/components/enhanced-credential-status-consolidated';
 
 // Ensure React is available globally for JSX
 globalThis.React = React;
@@ -44,7 +44,7 @@ describe('End-to-End MEXC Integration Tests', () => {
     global.window = dom.window as any;
     global.navigator = dom.window.navigator;
   });
-  
+
   beforeEach(async () => {
     queryClient = new QueryClient({
       defaultOptions: {
@@ -52,7 +52,7 @@ describe('End-to-End MEXC Integration Tests', () => {
         mutations: { retry: false }
       }
     });
-    
+
     vi.clearAllMocks();
 
     // Set up status context mock
@@ -76,11 +76,11 @@ describe('End-to-End MEXC Integration Tests', () => {
       getOverallStatus: () => 'disconnected',
       isFullyConnected: () => false
     };
-    
+
     // Set up fetch mock
     mockFetch = vi.fn();
     global.fetch = mockFetch;
-    
+
     // Clean up any existing test data
     await db.delete(apiCredentials)
       .where(eq(apiCredentials.userId, testUserId));
@@ -99,13 +99,13 @@ describe('End-to-End MEXC Integration Tests', () => {
 
   afterEach(async () => {
     queryClient.clear();
-    
+
     // Clean up test data
     await db.delete(apiCredentials)
       .where(eq(apiCredentials.userId, testUserId));
     await db.delete(user)
       .where(eq(user.id, testUserId));
-      
+
     // Restore fetch
     vi.restoreAllMocks();
   });
@@ -120,7 +120,7 @@ describe('End-to-End MEXC Integration Tests', () => {
     it.skip('should demonstrate the complete flow and identify synchronization gaps', async () => {
       // Phase 1: Initial State - No Credentials
       console.log('=== Phase 1: Initial State ===');
-      
+
       // Render credential form
       renderWithQueryClient(
         React.createElement(ApiCredentialsForm, { userId: testUserId })
@@ -132,7 +132,7 @@ describe('End-to-End MEXC Integration Tests', () => {
 
       // Phase 2: Add Credentials
       console.log('=== Phase 2: Adding Credentials ===');
-      
+
       // Mock successful save response
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -147,10 +147,10 @@ describe('End-to-End MEXC Integration Tests', () => {
 
       // Click add button and fill form
       fireEvent.click(addButton);
-      
+
       const apiKeyInput = screen.getByLabelText(/MEXC API Key/i);
       const secretKeyInput = screen.getByLabelText(/MEXC Secret Key/i);
-      
+
       fireEvent.change(apiKeyInput, { target: { value: testApiKey } });
       fireEvent.change(secretKeyInput, { target: { value: testSecretKey } });
 
@@ -166,7 +166,7 @@ describe('End-to-End MEXC Integration Tests', () => {
 
       // Phase 3: Test Credentials
       console.log('=== Phase 3: Testing Credentials ===');
-      
+
       // Mock successful test response
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -197,13 +197,13 @@ describe('End-to-End MEXC Integration Tests', () => {
       expect(mockStatusContext.status.credentials.isValid).toBe(false);
       expect(mockStatusContext.status.network.connected).toBe(false);
       expect(mockStatusContext.getOverallStatus()).toBe('disconnected');
-      
+
       console.log('❌ Status synchronization issue: Test passed but status still shows disconnected');
 
       // Phase 4: Check Balance
       console.log('=== Phase 4: Checking Account Balance ===');
-      
-      // Mock successful balance response  
+
+      // Mock successful balance response
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -240,14 +240,14 @@ describe('End-to-End MEXC Integration Tests', () => {
 
       // Phase 5: Status Display Discrepancy
       console.log('=== Phase 5: Status Display Issues ===');
-      
+
       // Render status component
       const statusComponent = React.createElement(ConsolidatedCredentialStatus);
       renderWithQueryClient(statusComponent);
 
       // Status component should show connected state, but due to sync issues it may not
       // This demonstrates the core problem: successful API operations don't sync with status
-      
+
       // The status component will show old/cached status despite successful operations
       console.log('❌ Expected: Status shows connected after successful test and balance');
       console.log('❌ Actual: Status may still show disconnected due to sync gap');
@@ -412,7 +412,7 @@ describe('End-to-End MEXC Integration Tests', () => {
       console.log('1. Direct Status Context Updates:');
       mockStatusContext.updateCredentials({ isValid: true, hasCredentials: true });
       mockStatusContext.updateTradingStatus({ canTrade: true, accountType: 'spot' });
-      
+
       expect(mockStatusContext.updateCredentials).toHaveBeenCalledWith({
         isValid: true,
         hasCredentials: true
@@ -422,7 +422,7 @@ describe('End-to-End MEXC Integration Tests', () => {
       console.log('2. React Query Cache Updates:');
       const credentialQueryKey = ['api-credentials', testUserId];
       const connectivityQueryKey = ['mexc-connectivity', testUserId];
-      
+
       // Mock query invalidation
       const invalidateQueries = vi.fn();
       queryClient.invalidateQueries = invalidateQueries;
@@ -448,7 +448,7 @@ describe('End-to-End MEXC Integration Tests', () => {
       console.log('📊 Synchronization Gap Analysis:');
       console.log('   1. API test endpoint: Updates its own response ✅');
       console.log('   2. Status context: Requires manual updates ❌');
-      console.log('   3. React Query cache: No auto-invalidation ❌'); 
+      console.log('   3. React Query cache: No auto-invalidation ❌');
       console.log('   4. Background services: Independent updates ❌');
       console.log('   5. UI components: Show cached/stale data ❌');
     });
@@ -482,10 +482,10 @@ describe('End-to-End MEXC Integration Tests', () => {
       };
 
       // Credential test success would emit event
-      eventBus.emit('credential-test-success', { 
-        userId: testUserId, 
-        accountType: 'spot', 
-        canTrade: true 
+      eventBus.emit('credential-test-success', {
+        userId: testUserId,
+        accountType: 'spot',
+        canTrade: true
       });
 
       // Status components would listen for events
@@ -494,7 +494,7 @@ describe('End-to-End MEXC Integration Tests', () => {
         queryClient.invalidateQueries(['mexc-connectivity', data.userId]);
       });
 
-      expect(eventBus.emit).toHaveBeenCalledWith('credential-test-success', 
+      expect(eventBus.emit).toHaveBeenCalledWith('credential-test-success',
         expect.objectContaining({ userId: testUserId })
       );
 
@@ -505,7 +505,7 @@ describe('End-to-End MEXC Integration Tests', () => {
           // Invalidate related queries
           queryClient.invalidateQueries(['mexc-connectivity']);
           queryClient.invalidateQueries(['account-balance']);
-          
+
           // Update status context
           mockStatusContext.syncStatus();
         })
@@ -578,7 +578,7 @@ describe('End-to-End MEXC Integration Tests', () => {
           }
 
           console.log(`✅ ${scenario.name}: PASSED`);
-          
+
         } catch (error) {
           if (scenario.name.includes('Network error')) {
             // Network error scenario is expected to fail

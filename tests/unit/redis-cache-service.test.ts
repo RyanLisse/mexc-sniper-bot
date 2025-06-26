@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
-import { RedisCacheService, getRedisCacheService, resetRedisCacheService } from '../../src/lib/redis-cache-service';
+import { RedisCacheService, getRedisCacheService, resetRedisCacheService } from '@/src/lib/redis-cache-service';
 
 // Mock Redis to test graceful degradation
 const mockRedis = {

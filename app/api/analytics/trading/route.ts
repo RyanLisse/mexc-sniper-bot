@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { tradingAnalytics } from "../../../../src/services/trading/trading-analytics-service";
-import { checkRateLimit, getClientIP } from "../../../../src/lib/rate-limiter";
+import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
+import { checkRateLimit, getClientIP } from "@/src/lib/rate-limiter";
 import { z } from "zod";
 
 // ============================================================================

@@ -6,7 +6,7 @@
  * reliable status reporting across all endpoints.
  */
 
-import { toSafeError } from "../lib/error-type-utils";
+import { toSafeError } from "@/src/lib/error-type-utils";
 import { getUnifiedMexcService } from "./unified-mexc-service-factory";
 
 // ============================================================================

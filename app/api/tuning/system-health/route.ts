@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { logger } from "../../../../src/lib/utils";
+import { logger } from "@/src/lib/utils";
 
 /**
  * GET /api/tuning/system-health

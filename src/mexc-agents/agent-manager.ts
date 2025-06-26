@@ -1,4 +1,4 @@
-import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "../lib/health-checks";
+import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "@/src/lib/health-checks";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { CalendarAgent } from "./calendar-agent";
 import { ErrorRecoveryAgent } from "./error-recovery-agent";

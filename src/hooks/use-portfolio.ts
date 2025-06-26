@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { snipeTargets } from "../db/schema";
-import { useAuth } from "../lib/kinde-auth-client";
+import { useAuth } from "@/src/lib/kinde-auth-client";
 
 export interface PortfolioPosition {
   id: number;

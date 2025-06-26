@@ -21,7 +21,7 @@ import type {
   SubscriptionRequest,
   WebSocketChannel,
   WebSocketMessage,
-} from "../lib/websocket-types";
+} from "@/src/lib/websocket-types";
 import { type WebSocketClientState, webSocketClient } from "../services/data/websocket-client";
 
 // ======================

@@ -7,7 +7,7 @@
 
 import { NextRequest } from 'next/server';
 import { apiResponse } from '@/src/lib/api-response';
-import { systemReadinessValidator } from '@/src/services/system-readiness-validator';
+import { systemReadinessValidator } from '@/src/services/risk/system-readiness-validator';
 
 /**
  * GET /api/system/validation

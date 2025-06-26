@@ -10,7 +10,7 @@ import {
   createCustomTakeProfitLevel,
   calculatePotentialProfit,
   convertLegacyToStrategy
-} from '../../src/types/take-profit-strategies';
+} from '@/src/types/take-profit-strategies';
 
 describe('Take Profit Strategies', () => {
   describe('Predefined Strategies', () => {

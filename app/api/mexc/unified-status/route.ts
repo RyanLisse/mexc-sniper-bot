@@ -1,41 +1,41 @@
 /**
  * Unified MEXC Status API Endpoint
- * 
- * Single source of truth for MEXC API status that consolidates all status 
+ *
+ * Single source of truth for MEXC API status that consolidates all status
  * information and eliminates contradictory reports.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { apiResponse, handleApiError } from "../../../../src/lib/api-response";
-import { getUnifiedStatus } from "../../../../src/services/notification/unified-status-resolver";
-import { toSafeError } from "../../../../src/lib/error-type-utils";
+import { apiResponse, handleApiError } from "@/src/lib/api-response";
+import { getUnifiedStatus } from "@/src/services/notification/unified-status-resolver";
+import { toSafeError } from "@/src/lib/error-type-utils";
 interface UnifiedStatusResponse {
   // Core Status
   connected: boolean;
   hasCredentials: boolean;
   credentialsValid: boolean;
   canTrade: boolean;
-  
+
   // Credential Details
   credentialSource: "database" | "environment" | "none";
   hasUserCredentials: boolean;
   hasEnvironmentCredentials: boolean;
   isTestCredentials?: boolean;
-  
+
   // Connection Quality
   connectionHealth?: "excellent" | "good" | "fair" | "poor";
   responseTime?: number;
-  
+
   // Overall System Status
   overallStatus: "healthy" | "warning" | "error" | "loading";
   statusMessage: string;
-  
+
   // Metadata
   lastChecked: string;
   source: "enhanced" | "legacy" | "fallback";
   error?: string;
-  
+
   // Troubleshooting Info
   recommendations: string[];
   nextSteps: string[];
@@ -66,26 +66,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       hasCredentials: unifiedStatus.credentials.hasCredentials,
       credentialsValid: unifiedStatus.credentials.isValid,
       canTrade: unifiedStatus.overall.canTrade,
-      
+
       // Credential Details
       credentialSource: unifiedStatus.credentials.source,
       hasUserCredentials: unifiedStatus.credentials.hasUserCredentials,
-      hasEnvironmentCredentials: unifiedStatus.credentials.hasEnvironmentCredentials,
+      hasEnvironmentCredentials:
+        unifiedStatus.credentials.hasEnvironmentCredentials,
       isTestCredentials: unifiedStatus.credentials.isTestCredentials,
-      
+
       // Connection Quality
       connectionHealth: unifiedStatus.credentials.connectionHealth,
       responseTime: unifiedStatus.network.responseTime || responseTime,
-      
+
       // Overall System Status
       overallStatus: unifiedStatus.overall.status,
       statusMessage: unifiedStatus.overall.message,
-      
+
       // Metadata
       lastChecked: unifiedStatus.timestamp,
       source: unifiedStatus.source,
       error: unifiedStatus.credentials.error || unifiedStatus.network.error,
-      
+
       // Troubleshooting Info
       recommendations,
       nextSteps,
@@ -101,18 +102,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         responseTime,
       },
     });
-
   } catch (error) {
     console.error("[Unified Status] Error:", { error: error });
     const safeError = toSafeError(error);
-    
+
     return apiResponse.error(
       safeError.message || "Unified status check failed",
       500,
       {
         requestId,
         responseTime: Date.now() - startTime,
-      }
+      },
     );
   }
 }
@@ -130,9 +130,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (forceRefresh) {
       // Force refresh the unified status
-      const { refreshUnifiedStatus } = await import("../../../../src/services/notification/unified-status-resolver");
+      const { refreshUnifiedStatus } = await import(
+        "@/src/services/notification/unified-status-resolver"
+      );
       const unifiedStatus = await refreshUnifiedStatus();
-      
+
       const recommendations = generateRecommendations(unifiedStatus);
       const nextSteps = generateNextSteps(unifiedStatus);
 
@@ -143,7 +145,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         canTrade: unifiedStatus.overall.canTrade,
         credentialSource: unifiedStatus.credentials.source,
         hasUserCredentials: unifiedStatus.credentials.hasUserCredentials,
-        hasEnvironmentCredentials: unifiedStatus.credentials.hasEnvironmentCredentials,
+        hasEnvironmentCredentials:
+          unifiedStatus.credentials.hasEnvironmentCredentials,
         isTestCredentials: unifiedStatus.credentials.isTestCredentials,
         connectionHealth: unifiedStatus.credentials.connectionHealth,
         responseTime: Date.now() - startTime,
@@ -176,7 +179,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         requestId,
       },
     });
-
   } catch (error) {
     console.error("[Unified Status POST] Error:", { error: error });
     return apiResponse.error(
@@ -185,7 +187,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       {
         requestId,
         responseTime: Date.now() - startTime,
-      }
+      },
     );
   }
 }
@@ -203,12 +205,16 @@ function generateRecommendations(status: any): string[] {
   }
 
   if (!status.credentials.hasCredentials) {
-    recommendations.push("Configure MEXC API credentials in your user settings");
+    recommendations.push(
+      "Configure MEXC API credentials in your user settings",
+    );
     recommendations.push("Ensure API keys have spot trading permissions");
   } else if (!status.credentials.isValid) {
     recommendations.push("Verify API credentials are correct");
     recommendations.push("Check API key permissions and restrictions");
-    recommendations.push("Ensure IP allowlist includes your current IP address");
+    recommendations.push(
+      "Ensure IP allowlist includes your current IP address",
+    );
   }
 
   if (status.credentials.isTestCredentials) {

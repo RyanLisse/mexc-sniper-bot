@@ -19,7 +19,7 @@ import type {
   PatternDiscoveryMessage,
   PatternReadyStateMessage,
   TradingSignalMessage,
-} from "../lib/websocket-types";
+} from "@/src/lib/websocket-types";
 import { useWebSocket } from "./use-websocket";
 
 // ======================

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { inngest } from "../../../../src/inngest/client";
+import { inngest } from "@/src/inngest/client";
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,4 +1,4 @@
-import type { SelectAlertInstance, SelectNotificationChannel } from "../../db/schemas/alerts";
+import type { SelectAlertInstance, SelectNotificationChannel } from "@/src/db/schemas/alerts";
 import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
 
 interface SlackConfig {

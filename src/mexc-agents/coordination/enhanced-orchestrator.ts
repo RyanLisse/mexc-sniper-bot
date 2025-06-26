@@ -1,5 +1,5 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import { AgentMonitoringService } from "../../services/agent-monitoring-service";
+import { AgentMonitoringService } from "@/src/services/notification/agent-monitoring-service";
 import type {
   AgentOrchestrationMetrics,
   CalendarDiscoveryWorkflowRequest,

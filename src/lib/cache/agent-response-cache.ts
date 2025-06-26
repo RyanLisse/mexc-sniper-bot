@@ -5,7 +5,7 @@
  * performance tracking, and cache invalidation strategies.
  */
 
-import type { AgentResponse } from "../../mexc-agents/base-agent";
+import type { AgentResponse } from "@/src/mexc-agents/base-agent";
 import { generateCacheKey, globalCacheManager } from "../cache-manager";
 import type {
   AgentCacheConfig,

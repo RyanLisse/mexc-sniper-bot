@@ -7,9 +7,9 @@
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
-import { db, apiCredentials, user } from '../../src/db';
+import { db, apiCredentials, user } from '@/src/db';
 import { eq } from 'drizzle-orm';
-import { getEncryptionService } from '../../src/services/secure-encryption-service';
+import { getEncryptionService } from '@/src/services/secure-encryption-service';
 
 // Mock status context with reactive updates
 let mockStatusContext: any;

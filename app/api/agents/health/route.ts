@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getGlobalAgentRegistry } from "../../../../src/mexc-agents/coordination/agent-registry";
+import { getGlobalAgentRegistry } from "@/src/mexc-agents/coordination/agent-registry";
 import type { 
   AgentRegistryStats, 
   RegisteredAgent, 
   HealthCheckResult,
   AgentStatus 
-} from "../../../../src/mexc-agents/coordination/agent-registry";
+} from "@/src/mexc-agents/coordination/agent-registry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

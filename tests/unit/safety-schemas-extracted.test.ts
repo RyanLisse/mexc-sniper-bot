@@ -13,7 +13,7 @@ import {
   SafetyAlertSchema,
   SafetyActionSchema,
   SafetyMetricsSchema,
-} from '../../src/schemas/safety-schemas-extracted';
+} from '@/src/schemas/safety-schemas-extracted';
 
 describe('Safety Schemas - TDD Extraction Tests', () => {
   describe('SafetyCoordinatorConfigSchema', () => {

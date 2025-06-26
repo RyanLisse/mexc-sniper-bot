@@ -23,8 +23,8 @@ import type {
   PatternDiscoveryMessage,
   PatternReadyStateMessage,
   TradingSignalMessage,
-} from "../lib/websocket-types";
-import { webSocketServer } from "../services/websocket-server";
+} from "@/src/lib/websocket-types";
+import { webSocketServer } from "@/src/services/data/websocket-server";
 import type { AgentRegistry } from "./coordination/agent-registry";
 import type { EnhancedMexcOrchestrator } from "./coordination/enhanced-orchestrator";
 import type { PerformanceCollector } from "./coordination/performance-collector";

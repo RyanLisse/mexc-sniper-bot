@@ -13,7 +13,7 @@
 
 import { toSafeError } from "../../lib/error-type-utils";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
-import { getActivityDataForSymbol as fetchActivityData } from "../../services/pattern-detection/activity-integration";
+import { getActivityDataForSymbol as fetchActivityData } from "../../services/data/pattern-detection/activity-integration";
 import type {
   CorrelationAnalysis,
   IPatternAnalyzer,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AgentMonitoringService } from "../../../../src/services/notification/agent-monitoring-service";
-import { createLogger } from "../../../../src/lib/unified-logger";
+import { AgentMonitoringService } from "@/src/services/notification/agent-monitoring-service";
+import { createLogger } from "@/src/lib/unified-logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

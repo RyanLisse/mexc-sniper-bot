@@ -1,5 +1,5 @@
 import { handleAuth } from "@kinde-oss/kinde-auth-nextjs/server";
-import { getCookieConfig } from "../../../../src/lib/security-config";
+import { getCookieConfig } from "@/src/lib/security-config";
 
 // Configure cookie settings based on environment
 const cookieConfig = getCookieConfig();

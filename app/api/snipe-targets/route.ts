@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "../../../src/db";
-import { snipeTargets } from "../../../src/db/schema";
+import { db } from "@/src/db";
+import { snipeTargets } from "@/src/db/schema";
 import { eq, and } from "drizzle-orm";
 import { 
   createSuccessResponse, 
@@ -8,8 +8,8 @@ import {
   apiResponse, 
   HTTP_STATUS,
   createValidationErrorResponse
-} from "../../../src/lib/api-response";
-import { handleApiError } from "../../../src/lib/error-handler";
+} from "@/src/lib/api-response";
+import { handleApiError } from "@/src/lib/error-handler";
 
 export async function POST(request: NextRequest) {
   try {

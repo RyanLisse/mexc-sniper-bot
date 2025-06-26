@@ -9,7 +9,7 @@
  * - Performance trend analysis
  */
 
-import { toSafeError } from "../lib/error-type-utils";
+import { toSafeError } from "@/src/lib/error-type-utils";
 // ============================================================================
 // Types and Interfaces
 // ============================================================================

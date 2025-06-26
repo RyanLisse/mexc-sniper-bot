@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRecommendedMexcService } from "../../../../src/services/api/mexc-unified-exports";
-import { type OrderParameters } from "../../../../src/services/api/mexc-client-types";
-import { enhancedRiskManagementService } from "../../../../src/services/risk/enhanced-risk-management-service";
-import { transactionLockService } from "../../../../src/services/data/transaction-lock-service";
+import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
+import { type OrderParameters } from "@/src/services/api/mexc-client-types";
+import { enhancedRiskManagementService } from "@/src/services/risk/enhanced-risk-management-service";
+import { transactionLockService } from "@/src/services/data/transaction-lock-service";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
   apiResponse, 
   HTTP_STATUS 
-} from "../../../../src/lib/api-response";
-import { handleApiError } from "../../../../src/lib/error-handler";
-import { db } from "../../../../src/db";
-import { apiCredentials, executionHistory } from "../../../../src/db/schema";
+} from "@/src/lib/api-response";
+import { handleApiError } from "@/src/lib/error-handler";
+import { db } from "@/src/db";
+import { apiCredentials, executionHistory } from "@/src/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getEncryptionService } from "../../../../src/services/api/secure-encryption-service";
-import { getCachedCredentials } from "../../../../src/lib/credential-cache";
-import type { NewExecutionHistory } from "../../../../src/db/schema";
+import { getEncryptionService } from "@/src/services/api/secure-encryption-service";
+import { getCachedCredentials } from "@/src/lib/credential-cache";
+import type { NewExecutionHistory } from "@/src/db/schema";
 
 // Create logger at module level like other working routes
 export async function POST(request: NextRequest) {

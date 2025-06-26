@@ -17,7 +17,7 @@
  */
 
 import EventEmitter from "events";
-import { toSafeError } from "../lib/error-type-utils";
+import { toSafeError } from "@/src/lib/error-type-utils";
 
 export { EmergencyManager } from "./safety/emergency-management";
 

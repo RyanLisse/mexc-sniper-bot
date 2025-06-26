@@ -12,7 +12,7 @@
  * - Error handling helpers
  */
 
-import type { AgentResponse } from "../../mexc-agents/base-agent";
+import type { AgentResponse } from "@/src/mexc-agents/base-agent";
 import { generateCacheKey } from "../cache-manager";
 import type {
   AgentCacheConfig,

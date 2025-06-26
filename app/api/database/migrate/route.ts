@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "../../../../src/db/schema";
+import * as schema from "@/src/db/schema";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
   apiResponse, 
   HTTP_STATUS 
-} from "../../../../src/lib/api-response";
+} from "@/src/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {

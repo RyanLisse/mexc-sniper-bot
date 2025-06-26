@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MultiPhaseExecutor } from "../../src/services/multi-phase-executor";
-import type { TradingStrategyConfig } from "../../src/services/multi-phase-trading-service";
+import { MultiPhaseExecutor } from "@/src/services/multi-phase-executor";
+import type { TradingStrategyConfig } from "@/src/services/multi-phase-trading-service";
 
 describe('MultiPhaseExecutor', () => {
   let executor: MultiPhaseExecutor;

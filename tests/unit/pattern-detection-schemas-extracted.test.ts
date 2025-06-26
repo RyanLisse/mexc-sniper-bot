@@ -13,7 +13,7 @@ import {
   PatternAnalysisRequestSchema,
   PatternAnalysisResultSchema,
   CorrelationAnalysisSchema,
-} from '../../src/schemas/pattern-detection-schemas-extracted';
+} from '@/src/schemas/pattern-detection-schemas-extracted';
 
 describe('Pattern Detection Schemas - TDD Extraction Tests', () => {
   describe('ReadyStatePatternSchema', () => {

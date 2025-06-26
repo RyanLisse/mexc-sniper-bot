@@ -7,8 +7,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { tradingAnalytics } from "../../../../src/services/trading/trading-analytics-service";
-import { getRecommendedMexcService } from "../../../../src/services/api/mexc-unified-exports";
+import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
+import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
 // Request validation schemas

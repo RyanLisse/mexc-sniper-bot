@@ -1,6 +1,6 @@
 import { lte, sql } from "drizzle-orm";
-import { db } from "../db";
-import { executionHistory, workflowActivity } from "../db/schema";
+import { db } from "@/src/db";
+import { executionHistory, workflowActivity } from "@/src/db/schema";
 /**
  * Data Archival Service
  * Manages automatic archival of old execution history and activity logs

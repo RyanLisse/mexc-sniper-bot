@@ -5,7 +5,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { calendarPatternBridgeService } from "../../src/services/calendar-pattern-bridge-service";
+import { calendarPatternBridgeService } from "@/src/services/calendar-pattern-bridge-service";
 
 describe("Calendar-Pattern Bridge Service Integration", () => {
   beforeEach(() => {

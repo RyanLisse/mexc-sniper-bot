@@ -6,11 +6,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { db, apiCredentials, user } from '../../src/db';
+import { db, apiCredentials, user } from '@/src/db';
 import { eq } from 'drizzle-orm';
-import { getEncryptionService } from '../../src/services/secure-encryption-service';
-import { UnifiedStatusResolver } from '../../src/services/unified-status-resolver';
-import { apiCredentialsTestService } from '../../src/services/api-credentials-test-service';
+import { getEncryptionService } from '@/src/services/secure-encryption-service';
+import { UnifiedStatusResolver } from '@/src/services/unified-status-resolver';
+import { apiCredentialsTestService } from '@/src/services/api-credentials-test-service';
 
 describe('MEXC Credential Status Synchronization Integration', () => {
   const testUserId = 'test-user-123';

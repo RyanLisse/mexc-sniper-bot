@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "../../../src/db";
-import { executionHistory, snipeTargets } from "../../../src/db/schema";
+import { db } from "@/src/db";
+import { executionHistory, snipeTargets } from "@/src/db/schema";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {

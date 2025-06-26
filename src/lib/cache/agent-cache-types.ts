@@ -5,7 +5,7 @@
  * Extracted from enhanced-agent-cache.ts for better modularity.
  */
 
-import type { AgentResponse } from "../../mexc-agents/base-agent";
+import type { AgentResponse } from "@/src/mexc-agents/base-agent";
 
 // =======================
 // Agent Cache Types

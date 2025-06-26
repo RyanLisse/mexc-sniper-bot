@@ -1,7 +1,7 @@
-import { AgentManager } from "../mexc-agents/agent-manager";
-import { SafetyMonitorAgent } from "../mexc-agents/safety-monitor-agent";
-import { AdvancedRiskEngine } from "../services/advanced-risk-engine";
-import { EmergencySafetySystem } from "../services/emergency-safety-system";
+import { AgentManager } from "@/src/mexc-agents/agent-manager";
+import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
+import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
+import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
 import { inngest } from "./client";
 
 // Initialize safety systems

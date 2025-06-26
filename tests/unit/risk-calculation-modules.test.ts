@@ -12,12 +12,12 @@ import {
   PortfolioMetricsEngine,
   PositionValidationEngine,
   RiskAssessmentUtils,
-} from '../../src/lib/risk-calculation-modules';
+} from '@/src/lib/risk-calculation-modules';
 
 import type { 
   MarketConditions, 
   PositionRiskProfile 
-} from '../../src/schemas/risk-engine-schemas-extracted';
+} from '@/src/schemas/risk-engine-schemas-extracted';
 
 describe('Risk Calculation Modules', () => {
   let mockMarketConditions: MarketConditions;

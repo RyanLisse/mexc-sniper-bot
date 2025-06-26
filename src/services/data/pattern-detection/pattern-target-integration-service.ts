@@ -7,9 +7,9 @@
  */
 
 import { and, eq } from "drizzle-orm";
-import type { PatternMatch } from "../core/pattern-detection/interfaces";
-import { db } from "../db";
-import { snipeTargets } from "../db/schemas/trading";
+import type { PatternMatch } from "@/src/core/pattern-detection/interfaces";
+import { db } from "@/src/db";
+import { snipeTargets } from "@/src/db/schemas/trading";
 export interface PatternTargetConfig {
   // User configuration
   defaultUserId: string;

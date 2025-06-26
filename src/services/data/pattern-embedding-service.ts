@@ -1,7 +1,7 @@
 import OpenAI from "openai";
-import type { NewPatternEmbedding } from "../db/schema";
-import { vectorUtils } from "../db/vector-utils";
-import { getAiIntelligenceService } from "./ai-intelligence-service";
+import type { NewPatternEmbedding } from "@/src/db/schema";
+import { vectorUtils } from "@/src/db/vector-utils";
+import { getAiIntelligenceService } from "@/src/services/ai/ai-intelligence-service";
 
 export interface PatternData {
   symbolName: string;

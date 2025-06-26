@@ -3,7 +3,7 @@ import {
   clearAllRateLimitData, 
   clearSecurityEvents,
   getClientIP
-} from "../../../../src/lib/rate-limiter";
+} from "@/src/lib/rate-limiter";
 
 export async function POST(request: NextRequest) {
   try {

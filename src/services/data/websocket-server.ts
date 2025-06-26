@@ -21,7 +21,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import {
   instrumentChannelOperation,
   instrumentWebSocketSend,
-} from "../lib/opentelemetry-websocket-instrumentation";
+} from "@/src/lib/opentelemetry-websocket-instrumentation";
 import type {
   AgentStatusMessage,
   ConnectionMetrics,
@@ -34,7 +34,7 @@ import type {
   WebSocketConnection,
   WebSocketMessage,
   WebSocketServerConfig,
-} from "../lib/websocket-types";
+} from "@/src/lib/websocket-types";
 
 // ======================
 // Connection Management

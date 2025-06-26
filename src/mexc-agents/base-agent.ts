@@ -1,10 +1,10 @@
 import crypto from "node:crypto";
 import OpenAI from "openai";
-import { CACHE_CONSTANTS, TIME_CONSTANTS } from "../lib/constants";
-import { globalEnhancedAgentCache, initializeAgentCache } from "../lib/enhanced-agent-cache";
-import { toSafeError } from "../lib/error-type-utils";
+import { CACHE_CONSTANTS, TIME_CONSTANTS } from "@/src/lib/constants";
+import { globalEnhancedAgentCache, initializeAgentCache } from "@/src/lib/enhanced-agent-cache";
+import { toSafeError } from "@/src/lib/error-type-utils";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import { ErrorLoggingService } from "../services/error-logging-service";
+import { ErrorLoggingService } from "@/src/services/notification/error-logging-service";
 
 export interface AgentConfig {
   name: string;

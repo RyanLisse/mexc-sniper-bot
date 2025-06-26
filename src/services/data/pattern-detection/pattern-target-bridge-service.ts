@@ -6,8 +6,8 @@
  * snipe targets in the database for immediate execution by the auto-sniping system.
  */
 
-import type { PatternMatch } from "../core/pattern-detection";
-import { PatternDetectionCore } from "../core/pattern-detection";
+import type { PatternMatch } from "@/src/core/pattern-detection";
+import { PatternDetectionCore } from "@/src/core/pattern-detection";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 export interface PatternEventData {

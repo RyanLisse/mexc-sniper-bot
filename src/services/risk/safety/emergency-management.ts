@@ -9,7 +9,7 @@ import { EventEmitter } from "events";
 import type {
   AgentConsensusRequest,
   SafetyMonitorAgent,
-} from "../../mexc-agents/safety-monitor-agent";
+} from "@/src/mexc-agents/safety-monitor-agent";
 import type { EmergencySafetySystem } from "../emergency-safety-system";
 import type { SafetyAlertsManager } from "./safety-alerts";
 import type { EmergencyLevel, SafetyCoordinatorConfig, SafetyMetrics } from "./safety-types";

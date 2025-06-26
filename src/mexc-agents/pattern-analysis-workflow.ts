@@ -1,12 +1,12 @@
 import type {
   PatternAnalysisResult as EngineResult,
   PatternMatch,
-} from "../core/pattern-detection/interfaces";
-import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
+} from "@/src/core/pattern-detection/interfaces";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import {
   type PatternWorkflowRequest,
   patternStrategyOrchestrator,
-} from "../services/pattern-strategy-orchestrator";
+} from "@/src/services/data/pattern-detection/pattern-strategy-orchestrator";
 import type { AgentResponse } from "./base-agent";
 
 export interface PatternAnalysisResult {

@@ -5,9 +5,9 @@
  * while using the new modular AI services architecture
  */
 
-import { embeddingsService } from "./ai/embeddings-service";
-import { type EnhancedPatternData, intelligenceOrchestrator } from "./ai/intelligence-orchestrator";
-import { type PerplexityResearchResult, researchService } from "./ai/research-service";
+import { embeddingsService } from "./embeddings-service";
+import { type EnhancedPatternData, intelligenceOrchestrator } from "./intelligence-orchestrator";
+import { type PerplexityResearchResult, researchService } from "./research-service";
 import type { PatternData } from "./pattern-embedding-service";
 
 // Re-export types for backward compatibility

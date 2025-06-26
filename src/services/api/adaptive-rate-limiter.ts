@@ -6,11 +6,11 @@
  */
 
 // Re-export everything from the new modular rate limiter system
-export * from "./rate-limiter";
+export * from "../rate-limiter";
 // Maintain backward compatibility with the main service export
 // Legacy export for backward compatibility
 export {
   AdaptiveRateLimiterService,
   adaptiveRateLimiter,
   adaptiveRateLimiter as default,
-} from "./rate-limiter";
+} from "../rate-limiter";

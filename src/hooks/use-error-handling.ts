@@ -12,8 +12,8 @@ import {
   RecoveryStrategy, 
   type StandardizedError,
   type StandardizedErrorContext
-} from "../lib/standardized-error-handler";
-import { createLogger } from "../lib/unified-logger";
+} from "@/src/lib/standardized-error-handler";
+import { createLogger } from "@/src/lib/unified-logger";
 
 const logger = createLogger("use-error-handling", {
   enableStructuredLogging: true,

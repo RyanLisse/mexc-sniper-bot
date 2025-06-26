@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db";
-import { tradingStrategies } from "../db/schemas/strategies";
-import { CalendarAgent } from "../mexc-agents/calendar-agent";
-import { RiskManagerAgent } from "../mexc-agents/risk-manager-agent";
-import { StrategyAgent } from "../mexc-agents/strategy-agent";
-import { SymbolAnalysisAgent } from "../mexc-agents/symbol-analysis-agent";
+import { tradingStrategies } from "@/src/db/schemas/strategies";
+import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
+import { RiskManagerAgent } from "@/src/mexc-agents/risk-manager-agent";
+import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
+import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
 import { createExecutorFromStrategy } from "../services/multi-phase-executor";
 import {
   MultiPhaseStrategyBuilder,

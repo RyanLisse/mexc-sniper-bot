@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
-import { db } from "../../src/db";
-import { transactionLocks, transactionQueue } from "../../src/db/schema";
+import { db } from "@/src/db";
+import { transactionLocks, transactionQueue } from "@/src/db/schema";
 
 const BASE_URL = "http://localhost:3008";
 

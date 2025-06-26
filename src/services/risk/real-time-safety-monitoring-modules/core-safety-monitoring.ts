@@ -8,18 +8,18 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import { createTimer } from "../../lib/structured-logger";
+import { createTimer } from "@/src/lib/structured-logger";
 import type {
   RiskMetrics,
   SafetyAlert,
   SafetyConfiguration,
-} from "../../schemas/safety-monitoring-schemas";
+} from "@/src/schemas/safety-monitoring-schemas";
 import {
   validateRiskMetrics,
   validateSafetyThresholds,
-} from "../../schemas/safety-monitoring-schemas";
-import type { OptimizedAutoSnipingExecutionEngine } from "../../trading/optimized-auto-sniping-execution-engine";
-import type { PatternMonitoringService } from "../pattern-monitoring-service";
+} from "@/src/schemas/safety-monitoring-schemas";
+import type { OptimizedAutoSnipingExecutionEngine } from "@/src/services/trading/optimized-auto-sniping-execution-engine";
+import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
 
 export interface CoreSafetyMonitoringConfig {
   configuration: SafetyConfiguration;

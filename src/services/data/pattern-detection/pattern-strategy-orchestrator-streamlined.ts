@@ -5,14 +5,14 @@
  */
 
 import { and, desc, eq, gte } from "drizzle-orm";
-import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detection";
+import { PatternDetectionCore, type PatternMatch } from "@/src/core/pattern-detection";
 import { db } from "../db";
-import { monitoredListings } from "../db/schemas/patterns";
-import { CalendarAgent } from "../mexc-agents/calendar-agent";
-import { PatternDiscoveryAgent } from "../mexc-agents/pattern-discovery-agent";
-import { StrategyAgent } from "../mexc-agents/strategy-agent";
-import { SymbolAnalysisAgent } from "../mexc-agents/symbol-analysis-agent";
-import { createConsoleLogger } from "../lib/shared/console-logger";
+import { monitoredListings } from "@/src/db/schemas/patterns";
+import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
+import { PatternDiscoveryAgent } from "@/src/mexc-agents/pattern-discovery-agent";
+import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
+import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
+import { createConsoleLogger } from "@/src/lib/shared/console-logger";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 import type { SymbolEntry } from "./mexc-unified-exports";
 import { StrategicRecommendationGenerator } from "./pattern-orchestrator/recommendation-generator";

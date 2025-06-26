@@ -10,11 +10,11 @@
 import type {
   SafetyConfiguration,
   SafetyThresholds,
-} from "../../schemas/safety-monitoring-schemas";
+} from "@/src/schemas/safety-monitoring-schemas";
 import {
   validateSafetyConfiguration,
   validateSafetyThresholds,
-} from "../../schemas/safety-monitoring-schemas";
+} from "@/src/schemas/safety-monitoring-schemas";
 
 export interface ConfigurationManagementConfig {
   onConfigUpdate?: (config: SafetyConfiguration) => void;

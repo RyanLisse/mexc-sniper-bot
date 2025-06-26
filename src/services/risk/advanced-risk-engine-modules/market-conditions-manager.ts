@@ -13,12 +13,12 @@ import type {
   PortfolioRiskMetrics,
   PositionRiskProfile,
   RiskEngineConfig,
-} from "../../schemas/risk-engine-schemas-extracted";
+} from "@/src/schemas/risk-engine-schemas-extracted";
 import {
   validateMarketConditions,
   validatePortfolioRiskMetrics,
   validatePositionRiskProfile,
-} from "../../schemas/risk-engine-schemas-extracted";
+} from "@/src/schemas/risk-engine-schemas-extracted";
 
 export interface MarketConditionsManagerConfig {
   riskConfig: RiskEngineConfig;

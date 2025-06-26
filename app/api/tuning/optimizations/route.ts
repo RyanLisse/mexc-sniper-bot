@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getParameterOptimizationEngine } from "../../../../src/services/parameter-optimization-engine";
-import { logger } from "../../../../src/lib/utils";
+import { getParameterOptimizationEngine } from "@/src/services/trading/parameter-optimization-engine";
+import { logger } from "@/src/lib/utils";
 
 // Validation schemas
 const OptimizationRequestSchema = z.object({

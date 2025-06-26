@@ -11,11 +11,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
-import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
+import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
 import { MexcConfigValidator } from '@/src/services/api/mexc-config-validator';
-import { multiPhaseTradingService } from '@/src/services/multi-phase-trading-service';
-import { resetGlobalReliabilityManager } from '@/src/services/mexc-circuit-breaker';
+import { multiPhaseTradingService } from '@/src/services/trading/multi-phase-trading-service';
+import { circuitBreakerRegistry } from '@/src/services/risk/circuit-breaker';
 
 interface SystemFixReport {
   timestamp: string;
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     // 2. Fix Circuit Breaker (reset from protective state)
     console.info('[SystemFix] Resetting circuit breaker...');
     try {
-      resetGlobalReliabilityManager();
+      circuitBreakerRegistry.resetAll();
       fixesApplied.push('Circuit breaker reset from protective state');
       recommendations.push('Circuit breaker reset successfully - system protection restored');
     } catch (error) {

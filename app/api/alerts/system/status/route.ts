@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { db } from "../../../../../src/db";
+import { db } from "@/src/db";
 import { sql } from "drizzle-orm";
-import { AutomatedAlertingService } from "../../../../../src/services/notification/automated-alerting-service";
-import { AnomalyDetectionService } from "../../../../../src/services/notification/anomaly-detection-service";
-import { AlertCorrelationEngine } from "../../../../../src/services/notification/alert-correlation-engine";
-import { NotificationService } from "../../../../../src/services/notification/notification-providers";
-import { AlertConfigurationService } from "../../../../../src/lib/alert-configuration";
-import { validateRequest } from "../../../../../src/lib/api-auth";
-import { handleApiError } from "../../../../../src/lib/api-response";
+import { AutomatedAlertingService } from "@/src/services/notification/automated-alerting-service";
+import { AnomalyDetectionService } from "@/src/services/notification/anomaly-detection-service";
+import { AlertCorrelationEngine } from "@/src/services/notification/alert-correlation-engine";
+import { NotificationService } from "@/src/services/notification/notification-providers";
+import { AlertConfigurationService } from "@/src/lib/alert-configuration";
+import { validateRequest } from "@/src/lib/api-auth";
+import { handleApiError } from "@/src/lib/api-response";
 
 // Initialize services
 const alertingService = new AutomatedAlertingService(db);

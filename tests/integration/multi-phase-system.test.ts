@@ -100,17 +100,17 @@ vi.mock('@/src/db', () => {
     getDb: vi.fn().mockReturnValue(mockDb)
   };
 });
-import { db } from "../../src/db";
-import { tradingStrategies, strategyTemplates } from "../../src/db/schemas/strategies";
+import { db } from "@/src/db";
+import { tradingStrategies, strategyTemplates } from "@/src/db/schemas/strategies";
 
 // Import strategyPhaseExecutions separately to avoid duplicate identifier
-import { strategyPhaseExecutions } from "../../src/db/schemas/strategies";
-import { user } from "../../src/db/schema";
-import { multiPhaseTradingService } from "../../src/services/multi-phase-trading-service";
-import { MultiPhaseExecutor, createExecutorFromStrategy } from "../../src/services/multi-phase-executor";
-import { TradingStrategyManager } from "../../src/services/trading-strategy-manager";
-import { AdvancedTradingStrategy } from "../../src/services/advanced-trading-strategy";
-import { MultiPhaseTradingBot } from "../../src/services/multi-phase-trading-bot";
+import { strategyPhaseExecutions } from "@/src/db/schemas/strategies";
+import { user } from "@/src/db/schema";
+import { multiPhaseTradingService } from "@/src/services/multi-phase-trading-service";
+import { MultiPhaseExecutor, createExecutorFromStrategy } from "@/src/services/multi-phase-executor";
+import { TradingStrategyManager } from "@/src/services/trading-strategy-manager";
+import { AdvancedTradingStrategy } from "@/src/services/advanced-trading-strategy";
+import { MultiPhaseTradingBot } from "@/src/services/multi-phase-trading-bot";
 import { eq } from 'drizzle-orm';
 
 describe('Multi-Phase Trading System Integration', () => {

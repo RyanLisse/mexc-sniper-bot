@@ -6,7 +6,7 @@ import {
   instrumentConnectionHealth,
   instrumentDatabase,
   instrumentDatabaseQuery,
-} from "../lib/opentelemetry-database-instrumentation";
+} from "@/src/lib/opentelemetry-database-instrumentation";
 import * as schema from "./schema";
 
 // Retry configuration
@@ -279,9 +279,9 @@ export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
 // Export schema for use in other files
 export * from "./schema";
 
-import { databaseConnectionPool } from "../lib/database-connection-pool";
+import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
 // Import optimization tools
-import { databaseOptimizationManager } from "../lib/database-optimization-manager";
+import { databaseOptimizationManager } from "@/src/lib/database-optimization-manager";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
 
 // Database utilities with retry logic

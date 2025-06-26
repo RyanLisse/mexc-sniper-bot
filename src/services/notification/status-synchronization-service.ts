@@ -7,11 +7,11 @@
  * Addresses the synchronization gaps identified by the API Analysis Agent.
  */
 
-import { getGlobalStatusResolver } from './unified-status-resolver';
-import { getGlobalCredentialValidator } from './enhanced-mexc-credential-validator';
-import { getGlobalHealthMonitor } from './connection-health-monitor';
-import { getGlobalRealTimeMonitor } from './real-time-credential-monitor';
-import { invalidateUserCredentialsCache } from './unified-mexc-service-factory';
+import { getGlobalStatusResolver } from '@/src/services/notification/unified-status-resolver';
+import { getGlobalCredentialValidator } from '@/src/services/api/enhanced-mexc-credential-validator';
+import { getGlobalHealthMonitor } from '@/src/services/data/connection-health-monitor';
+import { getGlobalRealTimeMonitor } from '@/src/services/notification/real-time-credential-monitor';
+import { invalidateUserCredentialsCache } from '@/src/services/api/unified-mexc-service-factory';
 
 // ============================================================================
 // Types & Interfaces

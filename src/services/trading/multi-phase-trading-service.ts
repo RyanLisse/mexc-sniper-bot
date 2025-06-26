@@ -1,6 +1,6 @@
 import { and, asc, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "../db";
+import { db } from "@/src/db";
 import {
   type NewStrategyPhaseExecution,
   type NewTradingStrategy,
@@ -10,7 +10,7 @@ import {
   strategyTemplates,
   type TradingStrategy,
   tradingStrategies,
-} from "../db/schemas/strategies";
+} from "@/src/db/schemas/strategies";
 // ===========================================
 // MULTI-PHASE TRADING STRATEGY SERVICE
 // ===========================================

@@ -12,13 +12,13 @@ import {
   ApiCredentialsTestResponseSchema,
   validateMexcApiRequest,
   validateMexcApiResponse,
-} from "../schemas/mexc-api-validation-schemas";
+} from "@/src/schemas/mexc-api-validation-schemas";
 import {
   getUnifiedMexcService,
   invalidateUserCredentialsCache,
 } from "./unified-mexc-service-factory";
 import { getUserCredentials } from "./user-credentials-service";
-import { syncAfterCredentialTest } from "./status-synchronization-service";
+import { syncAfterCredentialTest } from "@/src/services/notification/status-synchronization-service";
 
 // ============================================================================
 // Types & Interfaces

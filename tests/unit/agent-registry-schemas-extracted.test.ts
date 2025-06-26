@@ -17,7 +17,7 @@ import {
   AgentRegistryOptionsSchema,
   SystemAlertSchema,
   AgentRecoveryResultSchema,
-} from '../../src/schemas/agent-registry-schemas-extracted';
+} from '@/src/schemas/agent-registry-schemas-extracted';
 
 describe('Agent Registry Schemas - TDD Extraction Tests', () => {
   describe('AgentStatusSchema', () => {

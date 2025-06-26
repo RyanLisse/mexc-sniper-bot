@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 // Build-safe imports
-import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
-import { AgentManager } from "../../../../src/mexc-agents/agent-manager";
-import { db } from "../../../../src/db";
-import { executionHistory, patternEmbeddings, workflowActivity } from "../../../../src/db/schema";
+import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
+import { AgentManager } from "@/src/mexc-agents/agent-manager";
+import { db } from "@/src/db";
+import { executionHistory, patternEmbeddings, workflowActivity } from "@/src/db/schema";
 import { desc, gte, sql } from "drizzle-orm";
 
 // Simple console logger to avoid webpack bundling issues

@@ -3,9 +3,9 @@
  * Tests N+1 query fixes, batch operations, and caching improvements
  */
 
-import { OptimizedAutoExitManager } from "../../src/services/optimized-auto-exit-manager";
-import { db } from "../../src/db";
-import { snipeTargets, executionHistory, userPreferences } from "../../src/db/schema";
+import { OptimizedAutoExitManager } from "@/src/services/optimized-auto-exit-manager";
+import { db } from "@/src/db";
+import { snipeTargets, executionHistory, userPreferences } from "@/src/db/schema";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 describe("OptimizedAutoExitManager Performance Tests", () => {

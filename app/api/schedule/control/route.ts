@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import { inngest } from "../../../../src/inngest/client";
+import { inngest } from "@/src/inngest/client";
 
 export async function POST(request: NextRequest) {
   // Simple console logger to avoid webpack bundling issues

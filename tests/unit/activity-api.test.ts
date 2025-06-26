@@ -13,7 +13,7 @@ import {
   type ActivityData,
   type ActivityResponse,
   type ActivityEnhancement
-} from '../../src/schemas/mexc-schemas'
+} from '@/src/schemas/mexc-schemas'
 
 describe('Activity API Schemas and Utilities', () => {
   describe('ActivityDataSchema', () => {

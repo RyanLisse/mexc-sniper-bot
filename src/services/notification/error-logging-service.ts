@@ -6,7 +6,7 @@
  * external monitoring services.
  */
 
-import { ApplicationError } from "../lib/errors";
+import { ApplicationError } from "@/src/lib/errors";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 
 export interface ErrorLogEntry {

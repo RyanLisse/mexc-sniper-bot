@@ -1,6 +1,6 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { validateCalendarEntry } from "../schemas/mexc-schemas";
-import type { CalendarEntry } from "../services/mexc-unified-exports";
+import type { CalendarEntry } from "@/src/services/api/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 import { MexcApiAgent } from "./mexc-api-agent";
 

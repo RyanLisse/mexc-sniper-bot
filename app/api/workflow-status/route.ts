@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { WorkflowStatusService } from "../../../src/services/workflow-status-service";
+import { WorkflowStatusService } from "@/src/services/notification/workflow-status-service";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
   apiResponse, 
   HTTP_STATUS,
   createValidationErrorResponse
-} from "../../../src/lib/api-response";
+} from "@/src/lib/api-response";
 
 export async function GET(request: NextRequest) {
   try {

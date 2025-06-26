@@ -6,8 +6,8 @@ import React from 'react';
 
 // Ensure React is available globally for JSX
 globalThis.React = React;
-import { ApiCredentialsForm } from "../../src/components/api-credentials-form";
-import { ConsolidatedCredentialStatus } from "../../src/components/enhanced-credential-status-consolidated";
+import { ApiCredentialsForm } from "@/src/components/api-credentials-form";
+import { ConsolidatedCredentialStatus } from "@/src/components/enhanced-credential-status-consolidated";
 
 // Mock the auth hook
 vi.mock('@/src/lib/kinde-auth-client', () => ({

@@ -6,10 +6,10 @@
  */
 
 import { z } from "zod";
-import { getErrorMessage } from "../../lib/error-type-utils";
-import { UnifiedMexcServiceV2 } from "../unified-mexc-service-v2";
-import { EmergencySafetySystem } from "../emergency-safety-system";
-import type { PatternMatch } from "../../core/pattern-detection";
+import { getErrorMessage } from "@/src/lib/error-type-utils";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
+import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
+import type { PatternMatch } from "@/src/core/pattern-detection";
 import type { ExecutionPosition } from "../optimized-auto-sniping-schemas";
 
 // Trading validation schemas

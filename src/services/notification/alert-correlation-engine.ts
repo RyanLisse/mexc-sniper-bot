@@ -7,7 +7,7 @@ import {
   type InsertAlertInstance,
   type SelectAlertCorrelation,
   type SelectAlertInstance,
-} from "../db/schemas/alerts";
+} from "@/src/db/schemas/alerts";
 export interface CorrelationPattern {
   id: string;
   type: "temporal" | "source" | "metric" | "severity" | "custom";

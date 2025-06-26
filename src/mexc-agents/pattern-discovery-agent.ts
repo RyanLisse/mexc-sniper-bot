@@ -1,5 +1,5 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 // Extended calendar entry for pattern analysis

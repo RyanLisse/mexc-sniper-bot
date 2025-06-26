@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { inngest } from "../../../../src/inngest/client";
-import { patternStrategyOrchestrator } from "../../../../src/services/pattern-strategy-orchestrator";
+import { inngest } from "@/src/inngest/client";
+import { patternStrategyOrchestrator } from "@/src/services/data/pattern-detection/pattern-strategy-orchestrator";
 
 export async function POST(request: NextRequest) {
   try {

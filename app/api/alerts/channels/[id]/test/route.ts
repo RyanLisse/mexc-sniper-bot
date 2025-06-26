@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { db } from "../../../../../../src/db";
-import { NotificationService } from "../../../../../../src/services/notification/notification-providers";
-import { validateRequest } from "../../../../../../src/lib/api-auth";
-import { handleApiError } from "../../../../../../src/lib/api-response";
+import { db } from "@/src/db";
+import { NotificationService } from "@/src/services/notification/notification-providers";
+import { validateRequest } from "@/src/lib/api-auth";
+import { handleApiError } from "@/src/lib/api-response";
 
 // ==========================================
 // POST /api/alerts/channels/[id]/test - Test notification channel
@@ -11,7 +11,7 @@ import { handleApiError } from "../../../../../../src/lib/api-response";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -32,11 +32,14 @@ export async function POST(
         },
       });
     } else {
-      return NextResponse.json({
-        success: false,
-        error: "Test notification failed",
-        details: result.error,
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Test notification failed",
+          details: result.error,
+        },
+        { status: 400 },
+      );
     }
   } catch (error) {
     console.error("Error testing notification channel:", { error: error });

@@ -7,7 +7,7 @@ import {
   notificationChannels,
   type SelectAlertRule,
   type SelectNotificationChannel,
-} from "../db/schemas/alerts";
+} from "@/src/db/schemas/alerts";
 // ==========================================
 // VALIDATION SCHEMAS
 // ==========================================

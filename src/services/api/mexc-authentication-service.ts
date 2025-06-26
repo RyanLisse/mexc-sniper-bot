@@ -14,7 +14,7 @@
  */
 
 import * as crypto from "node:crypto";
-import { toSafeError } from "../lib/error-type-utils";
+import { toSafeError } from "@/src/lib/error-type-utils";
 import type { MexcApiClient } from "./mexc-api-client";
 
 // ============================================================================

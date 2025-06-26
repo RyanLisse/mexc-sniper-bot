@@ -5,11 +5,11 @@
  * Ensures critical systems are properly initialized before handling requests
  */
 
-import { calendarPatternBridgeService } from "../services/calendar-pattern-bridge-service";
-import { environmentValidation } from "../services/enhanced-environment-validation";
-import { OptimizedAutoSnipingCore } from "../services/optimized-auto-sniping-core";
-import { patternToDatabaseBridge } from "../services/pattern-to-database-bridge";
-import { strategyInitializationService } from "../services/strategy-initialization-service";
+import { calendarPatternBridgeService } from "@/src/services/data/pattern-detection/calendar-pattern-bridge-service";
+import { environmentValidation } from "@/src/services/risk/enhanced-environment-validation";
+import { OptimizedAutoSnipingCore } from "@/src/services/trading/optimized-auto-sniping-core";
+import { patternToDatabaseBridge } from "@/src/services/data/pattern-detection/pattern-to-database-bridge";
+import { strategyInitializationService } from "@/src/services/trading/strategy-initialization-service";
 
 interface StartupResult {
   success: boolean;

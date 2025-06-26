@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from "../../../src/db";
-import { transactions, type NewTransaction } from "../../../src/db/schema";
+import { db } from "@/src/db";
+import { transactions, type NewTransaction } from "@/src/db/schema";
 import { eq, desc, and, gte, lte } from 'drizzle-orm';
 import { z } from 'zod';
 import { 
@@ -10,8 +10,8 @@ import {
   HTTP_STATUS,
   createValidationErrorResponse,
   createPaginatedResponse
-} from "../../../src/lib/api-response";
-import { handleApiError } from "../../../src/lib/error-handler";
+} from "@/src/lib/api-response";
+import { handleApiError } from "@/src/lib/error-handler";
 
 // Validation schemas
 const createTransactionSchema = z.object({

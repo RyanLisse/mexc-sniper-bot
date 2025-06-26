@@ -7,16 +7,16 @@
 
 import { and, eq, lt } from "drizzle-orm";
 import { EventEmitter } from "events";
-import { PatternDetectionCore } from "../core/pattern-detection";
-import { db } from "../db";
-import { snipeTargets } from "../db/schemas/trading";
+import { PatternDetectionCore } from "@/src/core/pattern-detection";
+import { db } from "@/src/db";
+import { snipeTargets } from "@/src/db/schemas/trading";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
-import { MexcConfigValidator } from "./mexc-config-validator";
+import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
+import { MexcConfigValidator } from "@/src/services/api/mexc-config-validator";
 import { MexcTradingService, type TradeExecutionResult } from "./mexc-trading-service";
 import { MultiPhaseTradingService } from "./multi-phase-trading-service";
 import { TRADING_STRATEGIES } from "./trading-strategy-manager";
-import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 
 export interface AutoSnipingConfig {
   enabled: boolean;

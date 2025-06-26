@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, lt, sql } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "@/src/db";
 import {
   type NewWorkflowActivity,
   type NewWorkflowSystemStatus,
@@ -8,8 +8,8 @@ import {
   type WorkflowSystemStatus,
   workflowActivity,
   workflowSystemStatus,
-} from "../db/schema";
-import { databaseBreaker } from "./circuit-breaker";
+} from "@/src/db/schema";
+import { databaseBreaker } from "@/src/services/risk/circuit-breaker";
 
 export interface WorkflowMetrics {
   readyTokens?: number;

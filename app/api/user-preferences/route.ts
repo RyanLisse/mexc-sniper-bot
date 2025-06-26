@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, userPreferences, type NewUserPreferences } from "../../../src/db";
+import { db, userPreferences, type NewUserPreferences } from "@/src/db";
 import { eq } from 'drizzle-orm';
 import {
   createSuccessResponse,
@@ -7,13 +7,13 @@ import {
   apiResponse,
   HTTP_STATUS,
   createValidationErrorResponse
-} from "../../../src/lib/api-response";
+} from "@/src/lib/api-response";
 import { 
   withApiErrorHandling, 
   withDatabaseErrorHandling, 
   validateUserId,
   DatabaseConnectionError
-} from "../../../src/lib/central-api-error-handler";
+} from "@/src/lib/central-api-error-handler";
 
 // GET /api/user-preferences?userId=xxx
 export const GET = withApiErrorHandling(async (request: NextRequest) => {

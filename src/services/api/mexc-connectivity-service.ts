@@ -6,7 +6,7 @@
  */
 
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { ErrorFactory } from "../lib/error-types";
+import { ErrorFactory } from "@/src/lib/error-types";
 import {
   type ConnectivityMetrics,
   type ConnectivityTestRequest,
@@ -15,7 +15,7 @@ import {
   ConnectivityTestResponseSchema,
   validateMexcApiRequest,
   validateMexcApiResponse,
-} from "../schemas/mexc-api-validation-schemas";
+} from "@/src/schemas/mexc-api-validation-schemas";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
 import { getUserCredentials } from "./user-credentials-service";
 

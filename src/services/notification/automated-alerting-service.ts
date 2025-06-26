@@ -7,7 +7,7 @@ import {
   type InsertAlertInstance,
   type SelectAlertInstance,
   type SelectAlertRule,
-} from "../db/schemas/alerts";
+} from "@/src/db/schemas/alerts";
 import { AlertCorrelationEngine } from "./alert-correlation-engine";
 import { AnomalyDetectionService } from "./anomaly-detection-service";
 import { NotificationService } from "./notification-providers";

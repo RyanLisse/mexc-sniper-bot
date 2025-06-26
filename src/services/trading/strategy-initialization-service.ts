@@ -6,8 +6,8 @@
  */
 
 import { count } from "drizzle-orm";
-import { db } from "../db";
-import { strategyTemplates } from "../db/schemas/strategies";
+import { db } from "@/src/db";
+import { strategyTemplates } from "@/src/db/schemas/strategies";
 import { multiPhaseTradingService } from "./multi-phase-trading-service";
 
 export interface StrategySystemHealth {

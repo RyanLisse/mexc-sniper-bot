@@ -6,7 +6,7 @@
  */
 
 import { z } from "zod";
-import type { PatternMatch } from "../core/pattern-detection";
+import type { PatternMatch } from "@/src/core/pattern-detection";
 
 // ============================================================================
 // Core Pattern and Alert Types

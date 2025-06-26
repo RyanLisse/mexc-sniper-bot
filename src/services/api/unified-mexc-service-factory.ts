@@ -7,9 +7,9 @@
  */
 
 import { and, eq } from "drizzle-orm";
-import { apiCredentials, db } from "../db";
-import { getUnifiedMexcClient, UnifiedMexcClient } from "./api/mexc-client-factory";
-import type { UnifiedMexcConfig } from "./api/mexc-client-types";
+import { apiCredentials, db } from "@/src/db";
+import { getUnifiedMexcClient, UnifiedMexcClient } from "./mexc-client-factory";
+import type { UnifiedMexcConfig } from "./mexc-client-types";
 import { getEncryptionService } from "./secure-encryption-service";
 
 // ============================================================================

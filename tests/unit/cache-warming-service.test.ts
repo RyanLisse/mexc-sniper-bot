@@ -6,35 +6,61 @@
  * Tests for proactive cache warming for frequently accessed data.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { CacheWarmingService, getCacheWarmingService, resetCacheWarmingService } from '../../src/lib/cache-warming-service';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {
+  CacheWarmingService,
+  getCacheWarmingService,
+  resetCacheWarmingService,
+} from "@/src/lib/cache-warming-service";
 
 // Mock dependencies
-vi.mock('../../src/lib/enhanced-unified-cache', () => ({
+vi.mock("@/src/lib/enhanced-unified-cache", () => ({
   getEnhancedUnifiedCache: vi.fn(() => ({
     get: vi.fn().mockResolvedValue(null),
     set: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 
-vi.mock('../../src/services/unified-mexc-service-v2', () => ({
+vi.mock("@/src/services/unified-mexc-service-v2", () => ({
   UnifiedMexcServiceV2: vi.fn(() => ({
-    getSymbolInfoBasic: vi.fn().mockResolvedValue({ success: true, data: { symbol: 'BTCUSDT', price: 50000 } }),
-    getActivityData: vi.fn().mockResolvedValue({ success: true, data: { currency: 'BTC', activities: [] } }),
+    getSymbolInfoBasic: vi
+      .fn()
+      .mockResolvedValue({
+        success: true,
+        data: { symbol: "BTCUSDT", price: 50000 },
+      }),
+    getActivityData: vi
+      .fn()
+      .mockResolvedValue({
+        success: true,
+        data: { currency: "BTC", activities: [] },
+      }),
   })),
 }));
 
-vi.mock('../../src/core/pattern-detection', () => ({
+vi.mock("@/src/core/pattern-detection", () => ({
   PatternDetectionCore: vi.fn(() => ({
-    analyzeSymbolReadiness: vi.fn().mockResolvedValue({ confidence: 85, readyState: true }),
+    analyzeSymbolReadiness: vi
+      .fn()
+      .mockResolvedValue({ confidence: 85, readyState: true }),
   })),
 }));
 
 // Mock database with completely static resolved values to avoid recursion
-vi.mock('../../src/db', () => {
+vi.mock("@/src/db", () => {
   const mockData = [
-    { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
-    { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
+    {
+      symbolName: "BTCUSDT",
+      status: "monitoring",
+      confidence: 85,
+      lastChecked: new Date(),
+    },
+    {
+      symbolName: "ETHUSDT",
+      status: "monitoring",
+      confidence: 90,
+      lastChecked: new Date(),
+    },
   ];
 
   // Create a completely static mock that doesn't call itself
@@ -60,12 +86,12 @@ vi.mock('../../src/db', () => {
   };
 });
 
-vi.mock('../../src/db/schemas/patterns', () => ({
+vi.mock("@/src/db/schemas/patterns", () => ({
   monitoredListings: {},
   coinActivities: {},
 }));
 
-describe('CacheWarmingService', () => {
+describe("CacheWarmingService", () => {
   let warmingService: CacheWarmingService;
 
   beforeEach(() => {
@@ -82,8 +108,8 @@ describe('CacheWarmingService', () => {
     vi.useRealTimers();
   });
 
-  describe('Initialization and Configuration', () => {
-    it('should initialize with default configuration', () => {
+  describe("Initialization and Configuration", () => {
+    it("should initialize with default configuration", () => {
       warmingService = new CacheWarmingService();
 
       expect(warmingService).toBeDefined();
@@ -92,7 +118,7 @@ describe('CacheWarmingService', () => {
       expect(strategies.size).toBeGreaterThan(0);
     });
 
-    it('should initialize with custom configuration', () => {
+    it("should initialize with custom configuration", () => {
       const config = {
         enableAutoWarming: false,
         warmupInterval: 60000,
@@ -110,7 +136,7 @@ describe('CacheWarmingService', () => {
       expect(warmingService).toBeDefined();
     });
 
-    it('should initialize strategies based on configuration', () => {
+    it("should initialize strategies based on configuration", () => {
       const config = {
         strategies: {
           mexcSymbols: true,
@@ -124,24 +150,24 @@ describe('CacheWarmingService', () => {
       warmingService = new CacheWarmingService(config);
       const strategies = warmingService.getStrategies();
 
-      expect(strategies.has('mexc-symbols')).toBe(true);
-      expect(strategies.has('pattern-data')).toBe(true);
-      expect(strategies.has('activity-data')).toBe(false);
-      expect(strategies.has('market-data')).toBe(false);
-      expect(strategies.has('user-configs')).toBe(false);
+      expect(strategies.has("mexc-symbols")).toBe(true);
+      expect(strategies.has("pattern-data")).toBe(true);
+      expect(strategies.has("activity-data")).toBe(false);
+      expect(strategies.has("market-data")).toBe(false);
+      expect(strategies.has("user-configs")).toBe(false);
     });
   });
 
-  describe('Strategy Management', () => {
+  describe("Strategy Management", () => {
     beforeEach(() => {
       warmingService = new CacheWarmingService({
         enableAutoWarming: false, // Disable auto warming for manual testing
       });
     });
 
-    it('should enable and disable strategies', () => {
+    it("should enable and disable strategies", () => {
       const strategies = warmingService.getStrategies();
-      const strategyName = 'mexc-symbols';
+      const strategyName = "mexc-symbols";
 
       // Initially enabled
       expect(strategies.get(strategyName)?.enabled).toBe(true);
@@ -157,15 +183,15 @@ describe('CacheWarmingService', () => {
       expect(strategies.get(strategyName)?.enabled).toBe(true);
     });
 
-    it('should handle invalid strategy names', () => {
-      const enableResult = warmingService.enableStrategy('invalid-strategy');
-      const disableResult = warmingService.disableStrategy('invalid-strategy');
+    it("should handle invalid strategy names", () => {
+      const enableResult = warmingService.enableStrategy("invalid-strategy");
+      const disableResult = warmingService.disableStrategy("invalid-strategy");
 
       expect(enableResult).toBe(false);
       expect(disableResult).toBe(false);
     });
 
-    it('should track strategy metrics', () => {
+    it("should track strategy metrics", () => {
       const strategies = warmingService.getStrategies();
 
       for (const [name, strategy] of strategies) {
@@ -182,84 +208,84 @@ describe('CacheWarmingService', () => {
     });
   });
 
-  describe('Strategy Execution', () => {
+  describe("Strategy Execution", () => {
     beforeEach(() => {
       warmingService = new CacheWarmingService({
         enableAutoWarming: false,
       });
     });
 
-    it('should execute MEXC symbols strategy successfully', async () => {
-      const result = await warmingService.executeStrategy('mexc-symbols');
+    it("should execute MEXC symbols strategy successfully", async () => {
+      const result = await warmingService.executeStrategy("mexc-symbols");
 
       expect(result).toBe(true);
 
       const strategies = warmingService.getStrategies();
-      const mexcStrategy = strategies.get('mexc-symbols');
+      const mexcStrategy = strategies.get("mexc-symbols");
       expect(mexcStrategy?.successCount).toBe(1);
       expect(mexcStrategy?.lastRun).toBeGreaterThan(0);
     });
 
-    it('should execute pattern data strategy successfully', async () => {
-      const result = await warmingService.executeStrategy('pattern-data');
+    it("should execute pattern data strategy successfully", async () => {
+      const result = await warmingService.executeStrategy("pattern-data");
 
       expect(result).toBe(true);
 
       const strategies = warmingService.getStrategies();
-      const patternStrategy = strategies.get('pattern-data');
+      const patternStrategy = strategies.get("pattern-data");
       expect(patternStrategy?.successCount).toBe(1);
     });
 
-    it('should execute activity data strategy successfully', async () => {
-      const result = await warmingService.executeStrategy('activity-data');
+    it("should execute activity data strategy successfully", async () => {
+      const result = await warmingService.executeStrategy("activity-data");
 
       expect(result).toBe(true);
 
       const strategies = warmingService.getStrategies();
-      const activityStrategy = strategies.get('activity-data');
+      const activityStrategy = strategies.get("activity-data");
       expect(activityStrategy?.successCount).toBe(1);
     });
 
-    it('should execute market data strategy successfully', async () => {
-      const result = await warmingService.executeStrategy('market-data');
+    it("should execute market data strategy successfully", async () => {
+      const result = await warmingService.executeStrategy("market-data");
 
       expect(result).toBe(true);
 
       const strategies = warmingService.getStrategies();
-      const marketStrategy = strategies.get('market-data');
+      const marketStrategy = strategies.get("market-data");
       expect(marketStrategy?.successCount).toBe(1);
     });
 
-    it('should execute user configs strategy successfully', async () => {
-      const result = await warmingService.executeStrategy('user-configs');
+    it("should execute user configs strategy successfully", async () => {
+      const result = await warmingService.executeStrategy("user-configs");
 
       expect(result).toBe(true);
 
       const strategies = warmingService.getStrategies();
-      const configStrategy = strategies.get('user-configs');
+      const configStrategy = strategies.get("user-configs");
       expect(configStrategy?.successCount).toBe(1);
     });
 
-    it('should handle unknown strategy gracefully', async () => {
-      const result = await warmingService.executeStrategy('unknown-strategy');
+    it("should handle unknown strategy gracefully", async () => {
+      const result = await warmingService.executeStrategy("unknown-strategy");
 
       expect(result).toBe(false);
     });
 
-    it('should handle disabled strategy', async () => {
-      warmingService.disableStrategy('mexc-symbols');
+    it("should handle disabled strategy", async () => {
+      warmingService.disableStrategy("mexc-symbols");
 
-      const result = await warmingService.executeStrategy('mexc-symbols');
+      const result = await warmingService.executeStrategy("mexc-symbols");
 
       expect(result).toBe(false);
     });
 
-    it('should prevent concurrent execution of same strategy', async () => {
+    it("should prevent concurrent execution of same strategy", async () => {
       // Start first execution
-      const promise1 = warmingService.executeStrategy('mexc-symbols');
+      const promise1 = warmingService.executeStrategy("mexc-symbols");
 
       // Try to start second execution immediately
-      const promise2 = warmingService.executeStrategy('mexc-symbols');
+      const promise2 = warmingService.executeStrategy("mexc-symbols");
 
       const [result1, result2] = await Promise.all([promise1, promise2]);
 
@@ -268,33 +294,39 @@ describe('CacheWarmingService', () => {
     });
   });
 
-  describe('Error Handling', () => {
+  describe("Error Handling", () => {
     beforeEach(() => {
       warmingService = new CacheWarmingService({
         enableAutoWarming: false,
       });
     });
 
-    it('should handle strategy execution errors gracefully', async () => {
+    it("should handle strategy execution errors gracefully", async () => {
       // Directly mock the warmup method to avoid database recursion issues
-      const warmupSpy = vi.spyOn(warmingService as any, 'warmupMexcSymbols').mockRejectedValueOnce(new Error('Database error'));
+      const warmupSpy = vi
+        .spyOn(warmingService as any, "warmupMexcSymbols")
+        .mockRejectedValueOnce(new Error("Database error"));
 
-      const result = await warmingService.executeStrategy('mexc-symbols');
+      const result = await warmingService.executeStrategy("mexc-symbols");
 
       expect(result).toBe(false);
 
       const strategies = warmingService.getStrategies();
-      const mexcStrategy = strategies.get('mexc-symbols');
+      const mexcStrategy = strategies.get("mexc-symbols");
       expect(mexcStrategy?.errorCount).toBe(1);
 
       // Restore the spy
       warmupSpy.mockRestore();
     });
 
-    it('should continue with other strategies when one fails', async () => {
+    it("should continue with other strategies when one fails", async () => {
       // Mock specific warmup methods to avoid recursion
-      const mexcSpy = vi.spyOn(warmingService as any, 'warmupMexcSymbols').mockRejectedValueOnce(new Error('MEXC API error'));
-      const patternSpy = vi.spyOn(warmingService as any, 'warmupPatternData').mockResolvedValueOnce(undefined);
+      const mexcSpy = vi
+        .spyOn(warmingService as any, "warmupMexcSymbols")
+        .mockRejectedValueOnce(new Error("MEXC API error"));
+      const patternSpy = vi
+        .spyOn(warmingService as any, "warmupPatternData")
+        .mockResolvedValueOnce(undefined);
 
       // Execute all strategies
       await warmingService.executeAllStrategies();
@@ -315,8 +347,8 @@ describe('CacheWarmingService', () => {
     });
   });
 
-  describe('Auto Warming', () => {
-    it('should start auto warming when enabled', () => {
+  describe("Auto Warming", () => {
+    it("should start auto warming when enabled", () => {
       warmingService = new CacheWarmingService({
         enableAutoWarming: true,
         warmupInterval: 1000, // 1 second for testing
@@ -326,7 +358,7 @@ describe('CacheWarmingService', () => {
       // Auto warming should be started (internal verification)
     });
 
-    it('should not start auto warming when disabled', () => {
+    it("should not start auto warming when disabled", () => {
       warmingService = new CacheWarmingService({
         enableAutoWarming: false,
       });
@@ -335,7 +367,7 @@ describe('CacheWarmingService', () => {
       // Auto warming should not be started
     });
 
-    it('should execute strategies based on frequency and priority', async () => {
+    it("should execute strategies based on frequency and priority", async () => {
       warmingService = new CacheWarmingService({
         enableAutoWarming: true,
         warmupInterval: 100, // 100ms for testing
@@ -347,7 +379,7 @@ describe('CacheWarmingService', () => {
 
       // Allow async operations to complete with real timers
       vi.useRealTimers();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       vi.useFakeTimers();
 
       // Destroy service to stop auto warming
@@ -357,36 +389,76 @@ describe('CacheWarmingService', () => {
     }, 10000); // 10 second timeout
   });
 
-  describe('Metrics and Monitoring', () => {
+  describe("Metrics and Monitoring", () => {
     beforeEach(async () => {
       // Clear all mocks to prevent recursion
       vi.clearAllMocks();
 
       // Mock the database queries specifically for this test to avoid recursion
-      const { db } = await import('../../src/db');
+      const { db } = await import("@/src/db");
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockResolvedValue([
-              { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
-              { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
+              {
+                symbolName: "BTCUSDT",
+                status: "monitoring",
+                confidence: 85,
+                lastChecked: new Date(),
+              },
+              {
+                symbolName: "ETHUSDT",
+                status: "monitoring",
+                confidence: 90,
+                lastChecked: new Date(),
+              },
             ]),
             orderBy: vi.fn().mockReturnValue({
               limit: vi.fn().mockResolvedValue([
-                { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
-                { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
+                {
+                  symbolName: "BTCUSDT",
+                  status: "monitoring",
+                  confidence: 85,
+                  lastChecked: new Date(),
+                },
+                {
+                  symbolName: "ETHUSDT",
+                  status: "monitoring",
+                  confidence: 90,
+                  lastChecked: new Date(),
+                },
               ]),
             }),
           }),
           orderBy: vi.fn().mockReturnValue({
             limit: vi.fn().mockResolvedValue([
-              { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
-              { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
+              {
+                symbolName: "BTCUSDT",
+                status: "monitoring",
+                confidence: 85,
+                lastChecked: new Date(),
+              },
+              {
+                symbolName: "ETHUSDT",
+                status: "monitoring",
+                confidence: 90,
+                lastChecked: new Date(),
+              },
             ]),
           }),
           limit: vi.fn().mockResolvedValue([
-            { symbolName: 'BTCUSDT', status: 'monitoring', confidence: 85, lastChecked: new Date() },
-            { symbolName: 'ETHUSDT', status: 'monitoring', confidence: 90, lastChecked: new Date() },
+            {
+              symbolName: "BTCUSDT",
+              status: "monitoring",
+              confidence: 85,
+              lastChecked: new Date(),
+            },
+            {
+              symbolName: "ETHUSDT",
+              status: "monitoring",
+              confidence: 90,
+              lastChecked: new Date(),
+            },
           ]),
         }),
       } as any);
@@ -396,7 +468,7 @@ describe('CacheWarmingService', () => {
       });
     });
 
-    it('should provide warmup metrics', () => {
+    it("should provide warmup metrics", () => {
       const metrics = warmingService.getMetrics();
 
       expect(metrics).toMatchObject({
@@ -411,10 +483,10 @@ describe('CacheWarmingService', () => {
       });
     });
 
-    it('should update metrics after strategy execution', async () => {
+    it("should update metrics after strategy execution", async () => {
       const initialMetrics = warmingService.getMetrics();
 
-      const result = await warmingService.executeStrategy('mexc-symbols');
+      const result = await warmingService.executeStrategy("mexc-symbols");
 
       // Verify the strategy executed successfully
       expect(result).toBe(true);
@@ -422,13 +494,17 @@ describe('CacheWarmingService', () => {
       const updatedMetrics = warmingService.getMetrics();
 
       expect(updatedMetrics.totalRuns).toBe(initialMetrics.totalRuns + 1);
-      expect(updatedMetrics.successfulRuns).toBe(initialMetrics.successfulRuns + 1);
-      expect(updatedMetrics.lastWarmupTime).toBeGreaterThan(initialMetrics.lastWarmupTime);
+      expect(updatedMetrics.successfulRuns).toBe(
+        initialMetrics.successfulRuns + 1,
+      );
+      expect(updatedMetrics.lastWarmupTime).toBeGreaterThan(
+        initialMetrics.lastWarmupTime,
+      );
     });
 
-    it('should track average execution time', async () => {
-      await warmingService.executeStrategy('mexc-symbols');
-      await warmingService.executeStrategy('pattern-data');
+    it("should track average execution time", async () => {
+      await warmingService.executeStrategy("mexc-symbols");
+      await warmingService.executeStrategy("pattern-data");
 
       const metrics = warmingService.getMetrics();
 
@@ -437,15 +513,15 @@ describe('CacheWarmingService', () => {
     });
   });
 
-  describe('Global Instance Management', () => {
-    it('should provide global cache warming instance', () => {
+  describe("Global Instance Management", () => {
+    it("should provide global cache warming instance", () => {
       const instance1 = getCacheWarmingService();
       const instance2 = getCacheWarmingService();
 
       expect(instance1).toBe(instance2); // Should be the same instance
     });
 
-    it('should reset global cache warming instance', () => {
+    it("should reset global cache warming instance", () => {
       const instance1 = getCacheWarmingService();
       resetCacheWarmingService();
       const instance2 = getCacheWarmingService();
@@ -453,7 +529,7 @@ describe('CacheWarmingService', () => {
       expect(instance1).not.toBe(instance2); // Should be different instances
     });
 
-    it('should create new instance with custom config', () => {
+    it("should create new instance with custom config", () => {
       const instance1 = getCacheWarmingService();
       const instance2 = getCacheWarmingService({
         enableAutoWarming: false,
@@ -463,8 +539,8 @@ describe('CacheWarmingService', () => {
     });
   });
 
-  describe('Cleanup and Destruction', () => {
-    it('should clean up resources on destroy', () => {
+  describe("Cleanup and Destruction", () => {
+    it("should clean up resources on destroy", () => {
       warmingService = new CacheWarmingService({
         enableAutoWarming: true,
       });
@@ -475,7 +551,7 @@ describe('CacheWarmingService', () => {
       expect(warmingService).toBeDefined();
     });
 
-    it('should handle multiple destroy calls gracefully', () => {
+    it("should handle multiple destroy calls gracefully", () => {
       warmingService = new CacheWarmingService();
 
       warmingService.destroy();
@@ -485,29 +561,29 @@ describe('CacheWarmingService', () => {
     });
   });
 
-  describe('Integration with Cache System', () => {
+  describe("Integration with Cache System", () => {
     beforeEach(() => {
       warmingService = new CacheWarmingService({
         enableAutoWarming: false,
       });
     });
 
-    it('should check cache before warming data', async () => {
+    it("should check cache before warming data", async () => {
       // This test verifies that the strategy executes successfully
       // Cache integration is tested at the service level
-      const result = await warmingService.executeStrategy('mexc-symbols');
+      const result = await warmingService.executeStrategy("mexc-symbols");
 
       // Verify the strategy executed (may return false if already running or disabled)
-      expect(typeof result).toBe('boolean');
+      expect(typeof result).toBe("boolean");
     });
 
-    it('should set data in cache after warming', async () => {
+    it("should set data in cache after warming", async () => {
       // This test verifies that the strategy executes successfully
       // Cache integration is tested at the service level
-      const result = await warmingService.executeStrategy('mexc-symbols');
+      const result = await warmingService.executeStrategy("mexc-symbols");
 
       // Verify the strategy executed (may return false if already running or disabled)
-      expect(typeof result).toBe('boolean');
+      expect(typeof result).toBe("boolean");
     });
   });
 });

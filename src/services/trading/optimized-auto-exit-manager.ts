@@ -1,18 +1,18 @@
 import { and, eq } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "@/src/db";
 import {
   executionHistory,
   type NewExecutionHistory,
   snipeTargets,
   userPreferences,
-} from "../db/schema";
-import type { ExitLevel, ExitStrategy } from "../types/exit-strategies";
-import { EXIT_STRATEGIES } from "../types/exit-strategies";
+} from "@/src/db/schema";
+import type { ExitLevel, ExitStrategy } from "@/src/types/exit-strategies";
+import { EXIT_STRATEGIES } from "@/src/types/exit-strategies";
 import {
   getTakeProfitStrategyById,
   type TakeProfitStrategy,
-} from "../types/take-profit-strategies";
-import { getMexcService } from "./mexc-unified-exports";
+} from "@/src/types/take-profit-strategies";
+import { getMexcService } from "@/src/services/api/mexc-unified-exports";
 
 export interface ActivePosition {
   id: number;

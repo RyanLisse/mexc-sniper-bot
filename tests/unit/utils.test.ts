@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { cn } from '../../src/lib/utils'
+import { cn } from '@/src/lib/utils'
 
 describe('Utils', () => {
   describe('cn function', () => {

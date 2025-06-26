@@ -3,7 +3,7 @@ import {
   anomalyModels,
   type InsertAnomalyModel,
   type SelectAnomalyModel,
-} from "../db/schemas/alerts";
+} from "@/src/db/schemas/alerts";
 export interface AnomalyDetectionResult {
   isAnomaly: boolean;
   score: number; // Standard deviations from normal

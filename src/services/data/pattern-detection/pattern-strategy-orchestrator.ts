@@ -16,15 +16,15 @@ import {
   type PatternAnalysisResult,
   PatternDetectionCore,
   type PatternMatch,
-} from "../core/pattern-detection";
-import { db } from "../db";
-import { monitoredListings } from "../db/schemas/patterns";
-import type { AgentResponse } from "../mexc-agents/base-agent";
-import { CalendarAgent } from "../mexc-agents/calendar-agent";
-import { PatternDiscoveryAgent } from "../mexc-agents/pattern-discovery-agent";
-import { StrategyAgent } from "../mexc-agents/strategy-agent";
-import { SymbolAnalysisAgent } from "../mexc-agents/symbol-analysis-agent";
-import type { CalendarEntry, SymbolEntry } from "./mexc-unified-exports";
+} from "@/src/core/pattern-detection";
+import { db } from "@/src/db";
+import { monitoredListings } from "@/src/db/schemas/patterns";
+import type { AgentResponse } from "@/src/mexc-agents/base-agent";
+import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
+import { PatternDiscoveryAgent } from "@/src/mexc-agents/pattern-discovery-agent";
+import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
+import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 // ============================================================================

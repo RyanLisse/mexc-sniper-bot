@@ -1,5 +1,5 @@
-import { checkDatabaseHealth, checkAuthTables } from "../../../../src/lib/db-health-check";
-import { createHealthResponse, apiResponse, handleApiError } from "../../../../src/lib/api-response";
+import { checkDatabaseHealth, checkAuthTables } from "@/src/lib/db-health-check";
+import { createHealthResponse, apiResponse, handleApiError } from "@/src/lib/api-response";
 
 export async function GET() {
   let dbHealth: { healthy: boolean; message: string; error: string | null } = { healthy: false, message: 'Database check not performed', error: 'Unknown error' };

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRecommendedMexcService } from "../../../../src/services/api/mexc-unified-exports";
-import { getUserCredentials } from "../../../../src/services/api/user-credentials-service";
+import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
+import { getUserCredentials } from "@/src/services/api/user-credentials-service";
 
 export async function GET(request: NextRequest) {
   try {

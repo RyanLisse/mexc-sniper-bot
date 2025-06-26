@@ -7,8 +7,8 @@
  */
 
 import { EventEmitter } from "events";
-import { getParameterManager, type ParameterManager } from "../lib/parameter-management";
-import { logger } from "../lib/utils";
+import { getParameterManager, type ParameterManager } from "@/src/lib/parameter-management";
+import { logger } from "@/src/lib/utils";
 
 export interface OptimizationObjective {
   name: string;

@@ -9,12 +9,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { databaseOptimizationManager } from "../../../../src/lib/database-optimization-manager";
-import { databasePerformanceAnalyzer } from "../../../../src/lib/database-performance-analyzer";
-import { databaseIndexOptimizer } from "../../../../src/lib/database-index-optimizer";
-import { databaseQueryOptimizer } from "../../../../src/lib/database-query-optimizer";
-import { databaseConnectionPool } from "../../../../src/lib/database-connection-pool";
-import { queryPerformanceMonitor } from "../../../../src/services/query-performance-monitor";
+import { databaseOptimizationManager } from "@/src/lib/database-optimization-manager";
+import { databasePerformanceAnalyzer } from "@/src/lib/database-performance-analyzer";
+import { databaseIndexOptimizer } from "@/src/lib/database-index-optimizer";
+import { databaseQueryOptimizer } from "@/src/lib/database-query-optimizer";
+import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
+import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
 
 // GET - Get current optimization status and metrics
 export async function GET(request: NextRequest) {

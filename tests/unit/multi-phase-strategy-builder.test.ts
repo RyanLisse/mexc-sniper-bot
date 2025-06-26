@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MultiPhaseStrategyBuilder, StrategyPatterns } from "../../src/services/multi-phase-strategy-builder";
+import { MultiPhaseStrategyBuilder, StrategyPatterns } from "@/src/services/multi-phase-strategy-builder";
 
 describe('MultiPhaseStrategyBuilder', () => {
   let builder: MultiPhaseStrategyBuilder;

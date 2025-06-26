@@ -5,13 +5,13 @@
  * Extracted from mexc-websocket-stream.ts for modularity
  */
 
-import { PatternDetectionCore } from "../../core/pattern-detection";
+import { PatternDetectionCore } from "@/src/core/pattern-detection";
 import type {
   NotificationMessage,
   TradingPriceMessage,
   TradingSignalMessage,
 } from "../../lib/websocket-types";
-import { webSocketAgentBridge } from "../../mexc-agents/websocket-agent-bridge";
+import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
 
 // ======================
 // MEXC WebSocket Types

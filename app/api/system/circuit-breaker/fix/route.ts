@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CircuitBreakerSafetyService } from '@/src/services/risk/circuit-breaker-safety-service'
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2'
-import { getGlobalReliabilityManager } from '@/src/services/mexc-circuit-breaker'
+import { circuitBreakerRegistry, mexcApiBreaker } from '@/src/services/risk/circuit-breaker'
 import { z } from 'zod'
 
 // ============================================================================
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Initialize services
     const mexcService = new UnifiedMexcServiceV2()
     const safetyService = new CircuitBreakerSafetyService(mexcService)
-    const reliabilityManager = getGlobalReliabilityManager()
+    const reliabilityManager = mexcApiBreaker
     
     const timestamp = new Date().toISOString()
     let result: any

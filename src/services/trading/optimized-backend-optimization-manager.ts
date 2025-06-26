@@ -7,7 +7,7 @@
  */
 
 import { z } from "zod";
-import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
+import { getErrorMessage, toSafeError } from "@/src/lib/error-type-utils";
 import { OptimizedAutoSnipingExecutionEngine } from "./optimized-auto-sniping-execution-engine";
 import {
   type AutoSnipingConfig,

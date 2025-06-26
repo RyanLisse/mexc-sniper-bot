@@ -5,8 +5,8 @@
  * This service ensures all components are properly configured before enabling auto-sniping.
  */
 
-import { PatternDetectionCore } from "../core/pattern-detection";
-import { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
+import { PatternDetectionCore } from "@/src/core/pattern-detection";
+import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
 import { UnifiedMexcServiceV2 } from "./unified-mexc-service-v2";
 
 export interface ConfigValidationResult {

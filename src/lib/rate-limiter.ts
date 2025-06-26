@@ -4,7 +4,7 @@
  * In production, consider using Redis or a distributed cache
  */
 
-import { adaptiveRateLimiter } from "../services/adaptive-rate-limiter";
+import { adaptiveRateLimiter } from "@/src/services/api/adaptive-rate-limiter";
 
 interface RateLimitEntry {
   count: number;

@@ -1,4 +1,4 @@
-import { toSafeError } from "../lib/error-type-utils";
+import { toSafeError } from "@/src/lib/error-type-utils";
 import type { CalendarEntry } from "../schemas/mexc-schemas";
 import type { AgentManager } from "./agent-manager";
 import { CalendarWorkflow } from "./calendar-workflow";

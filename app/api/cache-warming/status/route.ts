@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createApiResponse } from "../../../../src/lib/api-response";
+import { createApiResponse } from "@/src/lib/api-response";
 
 // Lazy import cache services to prevent build-time initialization
 const getCacheWarmingService = () => {
   try {
     // Only import during runtime, not build time
-    const { getCacheWarmingService: _getCacheWarmingService } = require("../../../../src/lib/cache-warming-service");
+    const {
+      getCacheWarmingService: _getCacheWarmingService,
+    } = require("@/src/lib/cache-warming-service");
     return _getCacheWarmingService();
   } catch (error) {
-    console.warn("[Cache Warming Status] Failed to load cache warming service:", { error: error });
+    console.warn(
+      "[Cache Warming Status] Failed to load cache warming service:",
+      { error: error },
+    );
     return null;
   }
 };
@@ -16,10 +21,12 @@ const getCacheWarmingService = () => {
 const getGlobalCacheMonitoring = () => {
   try {
     // Only import during runtime, not build time
-    const { globalCacheMonitoring } = require("../../../../src/lib/cache-monitoring");
+    const { globalCacheMonitoring } = require("@/src/lib/cache-monitoring");
     return globalCacheMonitoring;
   } catch (error) {
-    console.warn("[Cache Warming Status] Failed to load cache monitoring:", { error: error });
+    console.warn("[Cache Warming Status] Failed to load cache monitoring:", {
+      error: error,
+    });
     return null;
   }
 };
@@ -50,9 +57,11 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: "Failed to get cache warming status",
-        details: { error: error instanceof Error ? error.message : "Unknown error" },
+        details: {
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       },
-      500
+      500,
     );
   }
 }
@@ -79,30 +88,39 @@ async function getCacheWarmingStatus() {
 
     return {
       isActive: !!cacheWarmingService, // Service exists and is initialized
-      strategies: (Array.from(strategies.entries()) as [string, any][]).map(([name, strategy]) => ({
-        name,
-        enabled: strategy.enabled,
-        priority: strategy.priority,
-        frequency: strategy.frequency,
-        lastRun: strategy.lastRun ? new Date(strategy.lastRun).toISOString() : null,
-        nextRun: strategy.lastRun
-          ? new Date(strategy.lastRun + strategy.frequency).toISOString()
-          : null,
-        status: getStrategyStatus(strategy),
-      })),
+      strategies: (Array.from(strategies.entries()) as [string, any][]).map(
+        ([name, strategy]) => ({
+          name,
+          enabled: strategy.enabled,
+          priority: strategy.priority,
+          frequency: strategy.frequency,
+          lastRun: strategy.lastRun
+            ? new Date(strategy.lastRun).toISOString()
+            : null,
+          nextRun: strategy.lastRun
+            ? new Date(strategy.lastRun + strategy.frequency).toISOString()
+            : null,
+          status: getStrategyStatus(strategy),
+        }),
+      ),
       metrics: {
         totalExecutions: metrics.totalRuns,
         successfulExecutions: metrics.successfulRuns,
         failedExecutions: metrics.failedRuns,
         averageExecutionTime: metrics.avgExecutionTime,
-        lastExecution: metrics.lastWarmupTime ? new Date(metrics.lastWarmupTime).toISOString() : null,
-        successRate: metrics.totalRuns > 0
-          ? (metrics.successfulRuns / metrics.totalRuns) * 100
-          : 0,
+        lastExecution: metrics.lastWarmupTime
+          ? new Date(metrics.lastWarmupTime).toISOString()
+          : null,
+        successRate:
+          metrics.totalRuns > 0
+            ? (metrics.successfulRuns / metrics.totalRuns) * 100
+            : 0,
       },
     };
   } catch (error) {
-    console.error("[Cache Warming Status] Error getting warming status:", { error: error });
+    console.error("[Cache Warming Status] Error getting warming status:", {
+      error: error,
+    });
     return {
       isActive: false,
       strategies: [],
@@ -156,7 +174,9 @@ async function getCachePerformanceMetrics() {
       },
     };
   } catch (error) {
-    console.error("[Cache Performance] Error getting metrics:", { error: error });
+    console.error("[Cache Performance] Error getting metrics:", {
+      error: error,
+    });
     return {
       hitRate: 0,
       missRate: 100,
@@ -185,25 +205,32 @@ async function getCacheConnectionStatus() {
       redis: {
         connected: redisConnected,
         status: redisConnected ? "healthy" : "disconnected",
-        message: redisConnected ? "Redis connection active" : "Redis connection failed",
+        message: redisConnected
+          ? "Redis connection active"
+          : "Redis connection failed",
         lastCheck: new Date().toISOString(),
       },
       valkey: {
         connected: valkeyConnected,
         status: valkeyConnected ? "healthy" : "disconnected",
-        message: valkeyConnected ? "Valkey connection active" : "Valkey connection failed",
+        message: valkeyConnected
+          ? "Valkey connection active"
+          : "Valkey connection failed",
         lastCheck: new Date().toISOString(),
       },
       gracefulDegradation: {
         enabled: true,
         fallbackMode: !redisConnected && !valkeyConnected,
-        message: !redisConnected && !valkeyConnected
-          ? "Operating in fallback mode - cache operations disabled"
-          : "Cache operations active",
+        message:
+          !redisConnected && !valkeyConnected
+            ? "Operating in fallback mode - cache operations disabled"
+            : "Cache operations active",
       },
     };
   } catch (error) {
-    console.error("[Cache Connection] Error checking connection:", { error: error });
+    console.error("[Cache Connection] Error checking connection:", {
+      error: error,
+    });
     return {
       redis: {
         connected: false,

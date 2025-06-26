@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { BaseAgent, type AgentConfig } from '../../src/mexc-agents/base-agent';
+import { BaseAgent, type AgentConfig } from '@/src/mexc-agents/base-agent';
 
 class TestAgent extends BaseAgent {
   private mockCallCount = 0;

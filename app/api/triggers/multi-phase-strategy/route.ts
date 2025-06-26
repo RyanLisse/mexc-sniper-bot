@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { inngest } from "../../../../src/inngest/client";
+import { inngest } from "@/src/inngest/client";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { multiPhaseTradingService } from "../../../../src/services/multi-phase-trading-service";
-import { StrategyAgent } from "../../../../src/mexc-agents/strategy-agent";
-import { rateLimiter } from "../../../../src/lib/rate-limiter";
-import { apiResponse } from "../../../../src/lib/api-response";
-import { ensureStartupInitialization } from "../../../../src/lib/startup-initialization";
+import { multiPhaseTradingService } from "@/src/services/trading/multi-phase-trading-service";
+import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
+import { rateLimiter } from "@/src/lib/rate-limiter";
+import { apiResponse } from "@/src/lib/api-response";
+import { ensureStartupInitialization } from "@/src/lib/startup-initialization";
 
 // ===========================================
 // MULTI-PHASE STRATEGY CREATION TRIGGER

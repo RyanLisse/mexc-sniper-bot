@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { transactionLockService } from "../../../src/services/data/transaction-lock-service";
-import { db } from "../../../src/db";
-import { transactionLocks, transactionQueue } from "../../../src/db/schema";
+import { transactionLockService } from "@/src/services/data/transaction-lock-service";
+import { db } from "@/src/db";
+import { transactionLocks, transactionQueue } from "@/src/db/schema";
 import { eq, and, gte, or, desc } from "drizzle-orm";
 import {
   TransactionLockQuerySchema,
@@ -11,7 +11,7 @@ import {
   validateApiQuery,
   validateApiBody,
   createValidatedApiResponse,
-} from "../../../src/schemas/api-validation-schemas";
+} from "@/src/schemas/api-validation-schemas";
 
 export async function GET(request: NextRequest) {
   try {

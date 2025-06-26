@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getParameterManager } from "../../../../src/lib/parameter-management";
-import { logger } from "../../../../src/lib/utils";
+import { getParameterManager } from "@/src/lib/parameter-management";
+import { logger } from "@/src/lib/utils";
 
 // Validation schemas
 const ParameterUpdateSchema = z.object({

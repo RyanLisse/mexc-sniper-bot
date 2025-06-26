@@ -14,7 +14,7 @@ import {
   WorkflowCacheEntrySchema,
   AgentHealthCacheSchema,
   AgentCacheAnalyticsSchema,
-} from '../../src/schemas/agent-cache-schemas-extracted';
+} from '@/src/schemas/agent-cache-schemas-extracted';
 
 describe('Agent Cache Schemas - TDD Extraction Tests', () => {
   describe('AgentCacheConfigSchema', () => {

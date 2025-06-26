@@ -6,7 +6,7 @@ import {
   notificationChannels,
   type SelectAlertInstance,
   type SelectNotificationChannel,
-} from "../../db/schemas/alerts";
+} from "@/src/db/schemas/alerts";
 import { TRADING_TELEMETRY_CONFIG } from "../../lib/opentelemetry-setup";
 import { EmailProvider } from "./email-provider";
 import { SlackProvider } from "./slack-provider";

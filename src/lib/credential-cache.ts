@@ -10,7 +10,7 @@
  * - Access logging for security monitoring
  */
 
-import { getEncryptionService } from "../services/secure-encryption-service";
+import { getEncryptionService } from "@/src/services/api/secure-encryption-service";
 
 interface CachedCredentials {
   apiKey: string;

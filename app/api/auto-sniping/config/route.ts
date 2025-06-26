@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { OptimizedAutoSnipingCore } from "../../../../src/services/trading/optimized-auto-sniping-core";
+import { OptimizedAutoSnipingCore } from "@/src/services/trading/optimized-auto-sniping-core";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
   apiResponse, 
   HTTP_STATUS 
-} from "../../../../src/lib/api-response";
-import { handleApiError } from "../../../../src/lib/error-handler";
+} from "@/src/lib/api-response";
+import { handleApiError } from "@/src/lib/error-handler";
 
 const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
 

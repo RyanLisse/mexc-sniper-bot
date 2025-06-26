@@ -10,7 +10,7 @@ import type {
   NotificationMessage,
   TradingPriceMessage,
   TradingSignalMessage,
-} from "../lib/websocket-types";
+} from "@/src/lib/websocket-types";
 import { mexcWebSocketStream as streamProcessor } from "./websocket/stream-processor";
 
 // Re-export types for backward compatibility

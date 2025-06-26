@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "../../../../src/lib/kinde-auth";
-import { apiResponse } from "../../../../src/lib/api-response";
-import { AdvancedRiskEngine } from "../../../../src/services/risk/advanced-risk-engine";
-import { EmergencySafetySystem } from "../../../../src/services/risk/emergency-safety-system";
-import { SafetyMonitorAgent } from "../../../../src/mexc-agents/safety-monitor-agent";
+import { requireAuth } from "@/src/lib/kinde-auth";
+import { apiResponse } from "@/src/lib/api-response";
+import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
+import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
+import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
 
 /**
  * Safety System Status API

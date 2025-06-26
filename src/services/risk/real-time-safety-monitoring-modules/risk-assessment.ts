@@ -7,12 +7,12 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
-import type { SafetyConfiguration, SystemHealth } from "../../schemas/safety-monitoring-schemas";
-import { validateSystemHealth } from "../../schemas/safety-monitoring-schemas";
-import type { OptimizedAutoSnipingExecutionEngine } from "../../trading/optimized-auto-sniping-execution-engine";
-import type { EmergencySafetySystem } from "../emergency-safety-system";
-import type { PatternMonitoringService } from "../pattern-monitoring-service";
-import type { UnifiedMexcServiceV2 } from "../unified-mexc-service-v2";
+import type { SafetyConfiguration, SystemHealth } from "@/src/schemas/safety-monitoring-schemas";
+import { validateSystemHealth } from "@/src/schemas/safety-monitoring-schemas";
+import type { OptimizedAutoSnipingExecutionEngine } from "@/src/services/trading/optimized-auto-sniping-execution-engine";
+import type { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
+import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
+import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 
 export interface RiskAssessmentConfig {
   configuration: SafetyConfiguration;

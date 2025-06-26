@@ -1,5 +1,5 @@
-import { emergencyRecoveryService } from "../lib/emergency-recovery";
-import { getConnectivityStatus, performSystemHealthCheck } from "../lib/health-checks";
+import { emergencyRecoveryService } from "@/src/lib/emergency-recovery";
+import { getConnectivityStatus, performSystemHealthCheck } from "@/src/lib/health-checks";
 import { inngest } from "./client";
 
 // Helper function to update workflow status

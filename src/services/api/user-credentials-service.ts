@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { apiCredentials, db } from "../db";
+import { apiCredentials, db } from "@/src/db";
 import { getEncryptionService } from "./secure-encryption-service";
 
 export interface DecryptedCredentials {

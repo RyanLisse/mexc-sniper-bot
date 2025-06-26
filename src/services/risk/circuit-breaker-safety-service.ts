@@ -9,8 +9,8 @@
  */
 
 import { context, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
-import { TRADING_TELEMETRY_CONFIG } from "../lib/opentelemetry-setup";
-import { UnifiedErrorHandler } from "../lib/unified-error-handling";
+import { TRADING_TELEMETRY_CONFIG } from "@/src/lib/opentelemetry-setup";
+import { UnifiedErrorHandler } from "@/src/lib/unified-error-handling";
 import {
   CircuitBreakerCoordinator,
   CoordinatedCircuitBreakerRegistry,

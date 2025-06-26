@@ -19,8 +19,8 @@
  */
 
 import { z } from "zod";
-import type { PatternMatch } from "../core/pattern-detection";
-import { toSafeError } from "../lib/error-type-utils";
+import type { PatternMatch } from "@/src/core/pattern-detection";
+import { toSafeError } from "@/src/lib/error-type-utils";
 import {
   type AutoSnipingConfig,
   type AutoSnipingExecutionReport,

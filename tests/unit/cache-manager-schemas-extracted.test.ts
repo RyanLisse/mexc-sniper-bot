@@ -18,7 +18,7 @@ import {
   CacheSizeBreakdownSchema,
   CacheCleanupResultSchema,
   CacheOptimizationResultSchema,
-} from '../../src/schemas/cache-manager-schemas-extracted';
+} from '@/src/schemas/cache-manager-schemas-extracted';
 
 describe('Cache Manager Schemas - TDD Extraction Tests', () => {
   describe('CacheEntrySchema', () => {

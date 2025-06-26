@@ -20,7 +20,7 @@
  */
 
 import crypto from "node:crypto";
-import type { AgentResponse } from "../mexc-agents/base-agent";
+import type { AgentResponse } from "@/src/mexc-agents/base-agent";
 
 // ============================================================================
 // Core Types and Interfaces

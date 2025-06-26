@@ -360,7 +360,7 @@ jobs:
           MEXC_SECRET_KEY: ${{ secrets.MEXC_SECRET_KEY }}
         run: |
           # Test agent initialization
-          bun run --env-file=.env.local test ./src/mexc-agents/index.ts || echo "Agent system test completed"
+          bun run --env-file=.env.local test@/src/mexc-agents/index.ts || echo "Agent system test completed"
 
       - name: Notify health check results
         uses: actions/github-script@v7

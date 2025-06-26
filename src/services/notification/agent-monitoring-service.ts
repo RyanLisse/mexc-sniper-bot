@@ -1,11 +1,11 @@
-import { BaseService } from "../lib/logger-injection";
-import type { ILogger } from "../lib/structured-logger";
+import { BaseService } from "@/src/lib/logger-injection";
+import type { ILogger } from "@/src/lib/structured-logger";
 import type {
   AgentRegistryStats,
   AgentStatus,
   RegisteredAgent,
-} from "../mexc-agents/coordination/agent-registry";
-import { getGlobalAgentRegistry } from "../mexc-agents/coordination/agent-registry";
+} from "@/src/mexc-agents/coordination/agent-registry";
+import { getGlobalAgentRegistry } from "@/src/mexc-agents/coordination/agent-registry";
 import { ErrorLoggingService } from "./error-logging-service";
 
 export interface MonitoringAlert {

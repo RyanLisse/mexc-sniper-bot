@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { SecureEncryptionService, getEncryptionService } from "../../src/services/secure-encryption-service";
+import { SecureEncryptionService, getEncryptionService } from "@/src/services/secure-encryption-service";
 
 describe('SecureEncryptionService', () => {
   let originalEnv: string | undefined;

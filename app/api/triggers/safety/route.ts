@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { inngest } from "../../../../src/inngest/client";
+import { inngest } from "@/src/inngest/client";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
   createValidationErrorResponse,
   apiResponse, 
   HTTP_STATUS 
-} from "../../../../src/lib/api-response";
+} from "@/src/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {

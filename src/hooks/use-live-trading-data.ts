@@ -20,7 +20,7 @@ import type {
   TradingPortfolioMessage,
   TradingPriceMessage,
   TradingSignalMessage,
-} from "../lib/websocket-types";
+} from "@/src/lib/websocket-types";
 import { useWebSocket } from "./use-websocket";
 
 // ======================

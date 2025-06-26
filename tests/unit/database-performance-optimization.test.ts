@@ -12,15 +12,15 @@
 
 import { describe, test, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { sql } from 'drizzle-orm';
-import { db, clearDbCache } from '../../src/db';
-import { patternEmbeddings, snipeTargets, userPreferences } from '../../src/db/schema';
+import { db, clearDbCache } from '@/src/db';
+import { patternEmbeddings, snipeTargets, userPreferences } from '@/src/db/schema';
 
 // Import services to test
-import { OptimizedPatternService } from '../../src/services/optimized-pattern-service';
-import { EnhancedVectorService } from '../../src/services/enhanced-vector-service';
-import { BatchDatabaseService } from '../../src/services/batch-database-service';
-import { DatabaseQueryOptimizer } from '../../src/lib/database-query-optimizer';
-import { user } from '../../src/db/schema';
+import { OptimizedPatternService } from '@/src/services/optimized-pattern-service';
+import { EnhancedVectorService } from '@/src/services/enhanced-vector-service';
+import { BatchDatabaseService } from '@/src/services/batch-database-service';
+import { DatabaseQueryOptimizer } from '@/src/lib/database-query-optimizer';
+import { user } from '@/src/db/schema';
 
 describe('Database Performance Optimization', () => {
   let optimizedPatternService: OptimizedPatternService;

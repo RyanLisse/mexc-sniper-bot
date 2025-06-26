@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, apiCredentials, type NewApiCredentials } from "../../../src/db";
+import { db, apiCredentials, type NewApiCredentials } from "@/src/db";
 import { eq, and } from 'drizzle-orm';
-import { getEncryptionService, SecureEncryptionService } from "../../../src/services/api/secure-encryption-service";
+import { getEncryptionService, SecureEncryptionService } from "@/src/services/api/secure-encryption-service";
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -9,13 +9,13 @@ import {
   apiResponse,
   HTTP_STATUS,
   createValidationErrorResponse
-} from "../../../src/lib/api-response";
+} from "@/src/lib/api-response";
 import {
   userQueryRoute,
   userBodyRoute,
   sensitiveDataRoute,
   validateRequiredFields
-} from "../../../src/lib/auth-decorators";
+} from "@/src/lib/auth-decorators";
 
 // GET /api/api-credentials?userId=xxx&provider=mexc
 export const GET = sensitiveDataRoute(async (request: NextRequest, user: any) => {

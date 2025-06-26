@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { trace } from "@opentelemetry/api";
-import { getMexcService } from "../../../../src/services/api/mexc-unified-exports";
+import { getMexcService } from "@/src/services/api/mexc-unified-exports";
 
 // Request validation schema
 const BalanceRequestSchema = z.object({

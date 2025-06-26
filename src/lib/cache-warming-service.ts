@@ -12,10 +12,10 @@
  */
 
 import { and, desc, eq, gte } from "drizzle-orm";
-import { PatternDetectionCore } from "../core/pattern-detection";
-import { db } from "../db";
-import { coinActivities, monitoredListings } from "../db/schemas/patterns";
-import { UnifiedMexcServiceV2 } from "../services/unified-mexc-service-v2";
+import { PatternDetectionCore } from "@/src/core/pattern-detection";
+import { db } from "@/src/db";
+import { coinActivities, monitoredListings } from "@/src/db/schemas/patterns";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { type EnhancedUnifiedCacheSystem, getEnhancedUnifiedCache } from "./enhanced-unified-cache";
 
 // ============================================================================

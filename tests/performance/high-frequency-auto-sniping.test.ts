@@ -18,18 +18,18 @@ import {
   timeoutPromise,
   globalTimeoutMonitor 
 } from '../utils/timeout-utilities';
-import { PatternDetectionCore } from '../../src/core/pattern-detection';
-import { MultiPhaseTradingBot } from '../../src/services/multi-phase-trading-bot';
-import { UnifiedMexcServiceV2 } from '../../src/services/unified-mexc-service-v2';
-import { ComprehensiveSafetyCoordinator } from '../../src/services/comprehensive-safety-coordinator';
-import { webSocketClient } from '../../src/services/websocket-client';
+import { PatternDetectionCore } from '@/src/core/pattern-detection';
+import { MultiPhaseTradingBot } from '@/src/services/multi-phase-trading-bot';
+import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
+import { ComprehensiveSafetyCoordinator } from '@/src/services/comprehensive-safety-coordinator';
+import { webSocketClient } from '@/src/services/websocket-client';
 import { 
   MockDataGenerator, 
   PerformanceTestUtils, 
   ApiMockingUtils,
   TestFixtures 
 } from '../utils/auto-sniping-test-utilities';
-import type { SymbolEntry } from '../../src/services/mexc-unified-exports';
+import type { SymbolEntry } from '@/src/services/mexc-unified-exports';
 
 describe('High-Frequency Auto Sniping Performance', () => {
   // Set extended timeout for performance tests (60 seconds)

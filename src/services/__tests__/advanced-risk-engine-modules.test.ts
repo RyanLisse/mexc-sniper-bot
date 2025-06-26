@@ -14,7 +14,7 @@
 
 import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
 import { z } from "zod";
-import type { TradeRiskAssessment } from "../../mexc-agents/risk-manager-agent";
+import type { TradeRiskAssessment } from "@/src/mexc-agents/risk-manager-agent";
 import type {
   MarketConditions,
   PortfolioRiskMetrics,

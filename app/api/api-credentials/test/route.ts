@@ -5,14 +5,14 @@ import {
   apiResponse,
   HTTP_STATUS,
   createValidationErrorResponse
-} from "../../../../src/lib/api-response";
-import { sensitiveDataRoute } from "../../../../src/lib/auth-decorators";
+} from "@/src/lib/api-response";
+import { sensitiveDataRoute } from "@/src/lib/auth-decorators";
 import { 
   ApiCredentialsTestRequestSchema,
   validateMexcApiRequest,
   type ApiCredentialsTestRequest
-} from "../../../../src/schemas/mexc-api-validation-schemas";
-import { apiCredentialsTestService } from "../../../../src/services/api/api-credentials-test-service";
+} from "@/src/schemas/mexc-api-validation-schemas";
+import { apiCredentialsTestService } from "@/src/services/api/api-credentials-test-service";
 
 // POST /api/api-credentials/test
 export const POST = sensitiveDataRoute(async (request: NextRequest, user: any) => {

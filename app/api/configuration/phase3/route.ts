@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createApiResponse } from "../../../../src/lib/api-response";
-import { apiAuthWrapper } from "../../../../src/lib/api-auth";
+import { createApiResponse } from "@/src/lib/api-response";
+import { apiAuthWrapper } from "@/src/lib/api-auth";
 
 // ======================
 // Types

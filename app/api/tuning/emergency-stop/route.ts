@@ -5,8 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getParameterManager } from "../../../../src/lib/parameter-management";
-import { logger } from "../../../../src/lib/utils";
+import { getParameterManager } from "@/src/lib/parameter-management";
+import { logger } from "@/src/lib/utils";
 
 /**
  * POST /api/tuning/emergency-stop

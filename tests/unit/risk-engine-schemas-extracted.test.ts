@@ -14,7 +14,7 @@ import {
   RiskEngineConfigSchema,
   RiskAlertSchema,
   StressTestScenarioSchema,
-} from '../../src/schemas/risk-engine-schemas-extracted';
+} from '@/src/schemas/risk-engine-schemas-extracted';
 
 describe('Risk Engine Schemas - TDD Extraction Tests', () => {
   describe('MarketConditionsSchema', () => {

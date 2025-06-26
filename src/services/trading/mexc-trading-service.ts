@@ -6,10 +6,10 @@
  */
 
 import { and, eq } from "drizzle-orm";
-import { db } from "../db";
-import type { NewExecutionHistory } from "../db/schema";
-import { apiCredentials, executionHistory } from "../db/schema";
-import { getCachedCredentials } from "../lib/credential-cache";
+import { db } from "@/src/db";
+import type { NewExecutionHistory } from "@/src/db/schema";
+import { apiCredentials, executionHistory } from "@/src/db/schema";
+import { getCachedCredentials } from "@/src/lib/credential-cache";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import {
   type TradingOrderRequest,
@@ -18,10 +18,10 @@ import {
   TradingOrderResponseSchema,
   validateMexcApiRequest,
   validateMexcApiResponse,
-} from "../schemas/mexc-api-validation-schemas";
-import { enhancedRiskManagementService } from "./enhanced-risk-management-service";
-import { getRecommendedMexcService } from "./mexc-unified-exports";
-import { transactionLockService } from "./transaction-lock-service";
+} from "@/src/schemas/mexc-api-validation-schemas";
+import { enhancedRiskManagementService } from "@/src/services/risk/enhanced-risk-management-service";
+import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
+import { transactionLockService } from "@/src/services/data/transaction-lock-service";
 import type { OrderParameters } from "./unified-mexc-client";
 
 // ============================================================================

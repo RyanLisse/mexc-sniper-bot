@@ -11,9 +11,9 @@ import type {
   SafetyAction,
   SafetyAlert,
   SafetyConfiguration,
-} from "../../schemas/safety-monitoring-schemas";
-import { validateSafetyAction, validateSafetyAlert } from "../../schemas/safety-monitoring-schemas";
-import type { OptimizedAutoSnipingExecutionEngine } from "../../trading/optimized-auto-sniping-execution-engine";
+} from "@/src/schemas/safety-monitoring-schemas";
+import { validateSafetyAction, validateSafetyAlert } from "@/src/schemas/safety-monitoring-schemas";
+import type { OptimizedAutoSnipingExecutionEngine } from "@/src/services/trading/optimized-auto-sniping-execution-engine";
 
 export interface AlertManagementConfig {
   configuration: SafetyConfiguration;

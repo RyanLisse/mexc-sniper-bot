@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { db } from '../../src/db';
-import { apiCredentials, user, userPreferences } from '../../src/db/schema';
+import { db } from '@/src/db';
+import { apiCredentials, user, userPreferences } from '@/src/db/schema';
 import { eq } from 'drizzle-orm';
 
 // Test configuration

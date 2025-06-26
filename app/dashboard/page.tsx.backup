@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { DashboardLayout } from "../../src/components/dashboard-layout";
-import { 
+import { DashboardLayout } from "@/src/components/dashboard-layout";
+import {
   MetricCard,
   TradingChart,
   CoinListingsBoard,
@@ -16,23 +16,23 @@ import {
   LazyCardWrapper,
   LazyTableWrapper,
   preloadDashboardComponents
-} from "../../src/components/dynamic-component-loader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../src/components/ui/tabs";
-import { Button } from "../../src/components/ui/button";
+} from "@/src/components/dynamic-component-loader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+import { Button } from "@/src/components/ui/button";
 import { Plus } from "lucide-react";
-import { ManualTradingPanel } from "../../src/components/manual-trading-panel";
-import { useMexcCalendar, useReadyTargets } from "../../src/hooks/use-mexc-data";
-import { usePortfolio } from "../../src/hooks/use-portfolio";
-import { useAccountBalance } from "../../src/hooks/use-account-balance";
-import { useAuth } from "../../src/lib/kinde-auth-client";
-import { AIServiceStatusPanel } from "../../src/components/dashboard/ai-intelligence/ai-service-status-panel";
-import { AIEnhancedPatternDisplay } from "../../src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
-import { CacheWarmingControlPanel } from "../../src/components/dashboard/cache-warming/cache-warming-control-panel";
-import { Phase3ConfigurationPanel } from "../../src/components/dashboard/phase3-config/phase3-configuration-panel";
-import PerformanceMonitoringDashboard from "../../src/components/dashboard/performance-monitoring-dashboard";
-import { useEnhancedPatterns } from "../../src/hooks/use-enhanced-patterns";
-import { Phase3IntegrationSummary } from "../../src/components/dashboard/phase3-integration-summary";
-import { AutoSnipingControlPanel } from "../../src/components/auto-sniping-control-panel";
+import { ManualTradingPanel } from "@/src/components/manual-trading-panel";
+import { useMexcCalendar, useReadyTargets } from "@/src/hooks/use-mexc-data";
+import { usePortfolio } from "@/src/hooks/use-portfolio";
+import { useAccountBalance } from "@/src/hooks/use-account-balance";
+import { useAuth } from "@/src/lib/kinde-auth-client";
+import { AIServiceStatusPanel } from "@/src/components/dashboard/ai-intelligence/ai-service-status-panel";
+import { AIEnhancedPatternDisplay } from "@/src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
+import { CacheWarmingControlPanel } from "@/src/components/dashboard/cache-warming/cache-warming-control-panel";
+import { Phase3ConfigurationPanel } from "@/src/components/dashboard/phase3-config/phase3-configuration-panel";
+import PerformanceMonitoringDashboard from "@/src/components/dashboard/performance-monitoring-dashboard";
+import { useEnhancedPatterns } from "@/src/hooks/use-enhanced-patterns";
+import { Phase3IntegrationSummary } from "@/src/components/dashboard/phase3-integration-summary";
+import { AutoSnipingControlPanel } from "@/src/components/auto-sniping-control-panel";
 
 export default function DashboardPage() {
   const { user, isLoading: userLoading } = useAuth();
@@ -55,26 +55,26 @@ export default function DashboardPage() {
   const handleTabHover = (tabValue: string) => {
     switch (tabValue) {
       case "listings":
-        import("../../src/components/dashboard/coin-listings-board").catch(console.error);
+        import("@/src/components/dashboard/coin-listings-board").catch(console.error);
         break;
       case "ai-performance":
         Promise.all([
-          import("../../src/components/dashboard/ai-intelligence/ai-service-status-panel"),
-          import("../../src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display"),
-          import("../../src/components/dashboard/cache-warming/cache-warming-control-panel"),
-          import("../../src/components/dashboard/performance-monitoring-dashboard"),
-          import("../../src/components/dashboard/phase3-config/phase3-configuration-panel"),
-          import("../../src/components/dashboard/phase3-integration-summary")
+          import("@/src/components/dashboard/ai-intelligence/ai-service-status-panel"),
+          import("@/src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display"),
+          import("@/src/components/dashboard/cache-warming/cache-warming-control-panel"),
+          import("@/src/components/dashboard/performance-monitoring-dashboard"),
+          import("@/src/components/dashboard/phase3-config/phase3-configuration-panel"),
+          import("@/src/components/dashboard/phase3-integration-summary")
         ]).catch(console.error);
         break;
       case "trades":
-        import("../../src/components/dashboard/recent-trades-table").catch(console.error);
+        import("@/src/components/dashboard/recent-trades-table").catch(console.error);
         break;
     }
   };
-  const { data: accountBalance, isLoading: balanceLoading } = useAccountBalance({ 
+  const { data: accountBalance, isLoading: balanceLoading } = useAccountBalance({
     userId,
-    enabled: !!userId && !userLoading 
+    enabled: !!userId && !userLoading
   });
   const { data: portfolio } = usePortfolio(userId || "");
   const { data: calendarData } = useMexcCalendar();
@@ -155,7 +155,7 @@ export default function DashboardPage() {
             <TabsList>
               <TabsTrigger value="auto-sniping">Auto-Sniping Control</TabsTrigger>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="patterns"
                 onMouseEnter={() => handleTabHover("patterns")}
               >
@@ -164,13 +164,13 @@ export default function DashboardPage() {
                   {readyTargets ? readyTargets.length : 0}
                 </span>
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="trades"
                 onMouseEnter={() => handleTabHover("trades")}
               >
                 Trading History
               </TabsTrigger>
-              <TabsTrigger 
+              <TabsTrigger
                 value="listings"
                 onMouseEnter={() => handleTabHover("listings")}
               >

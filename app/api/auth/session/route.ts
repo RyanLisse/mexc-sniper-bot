@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "../../../../src/lib/kinde-auth";
+import { getSession } from "@/src/lib/kinde-auth";
 
 export async function GET(request: NextRequest) {
   try {

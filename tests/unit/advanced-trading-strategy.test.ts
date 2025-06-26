@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { AdvancedTradingStrategy } from "../../src/services/advanced-trading-strategy";
+import { AdvancedTradingStrategy } from "@/src/services/advanced-trading-strategy";
 
 describe('AdvancedTradingStrategy', () => {
   let strategy: AdvancedTradingStrategy;

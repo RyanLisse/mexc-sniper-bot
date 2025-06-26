@@ -1,4 +1,4 @@
-import type { TradingStrategy } from "../db/schemas/strategies";
+import type { TradingStrategy } from "@/src/db/schemas/strategies";
 import { MultiPhaseExecutionAnalyzer } from "./multi-phase-execution-analyzer";
 import type {
   ExecutionAnalytics,

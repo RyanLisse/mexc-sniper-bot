@@ -5,8 +5,8 @@
  * status reporting by normalizing responses from multiple endpoints.
  */
 
-import { toSafeError } from "../lib/error-type-utils";
-import { getUnifiedMexcService } from "./unified-mexc-service-factory";
+import { toSafeError } from "@/src/lib/error-type-utils";
+import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
 // Standardized Status Types
 export interface UnifiedCredentialStatus {
   hasCredentials: boolean;

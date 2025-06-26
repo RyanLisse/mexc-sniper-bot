@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import { MexcOrchestrator } from "../../../../src/mexc-agents/orchestrator";
-import { db } from "../../../../src/db";
-import { workflowActivity, transactionLocks } from "../../../../src/db/schema";
+import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
+import { db } from "@/src/db";
+import { workflowActivity, transactionLocks } from "@/src/db/schema";
 import { desc, gte } from "drizzle-orm";
 
 // Server-Sent Events for real-time monitoring

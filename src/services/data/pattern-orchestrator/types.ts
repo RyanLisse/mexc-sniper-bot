@@ -4,8 +4,8 @@
  * Extracted types from pattern-strategy-orchestrator.ts to improve modularity
  */
 
-import type { PatternAnalysisResult, PatternMatch } from "../../core/pattern-detection";
-import type { AgentResponse } from "../../mexc-agents/base-agent";
+import type { PatternAnalysisResult, PatternMatch } from "@/src/core/pattern-detection";
+import type { AgentResponse } from "@/src/mexc-agents/base-agent";
 import type { CalendarEntry, SymbolEntry } from "../mexc-unified-exports";
 
 export interface PatternWorkflowRequest {

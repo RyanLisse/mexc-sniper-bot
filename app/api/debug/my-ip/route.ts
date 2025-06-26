@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getClientIP } from "../../../../src/lib/rate-limiter";
+import { getClientIP } from "@/src/lib/rate-limiter";
 
 export async function GET(request: NextRequest) {
   const ip = getClientIP(request);

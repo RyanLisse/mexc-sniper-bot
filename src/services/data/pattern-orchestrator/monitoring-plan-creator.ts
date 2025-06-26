@@ -4,7 +4,7 @@
  * Extracted monitoring plan creation logic from pattern-strategy-orchestrator.ts
  */
 
-import type { PatternMatch } from "../../core/pattern-detection";
+import type { PatternMatch } from "@/src/core/pattern-detection";
 import type {
   MonitoringPlan,
   MonitoringTarget,

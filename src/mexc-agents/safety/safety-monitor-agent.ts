@@ -7,8 +7,8 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { AdvancedRiskEngine } from "../../services/advanced-risk-engine";
-import type { EmergencySafetySystem } from "../../services/emergency-safety-system";
+import type { AdvancedRiskEngine } from "@/src/services/advanced-risk-engine";
+import type { EmergencySafetySystem } from "@/src/services/emergency-safety-system";
 import type { AgentConfig } from "../base-agent";
 import { SafetyBaseAgent } from "../safety-base-agent";
 

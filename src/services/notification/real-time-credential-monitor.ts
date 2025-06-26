@@ -9,14 +9,14 @@
  * - Health metrics aggregation
  */
 
-import { toSafeError } from "../lib/error-type-utils";
-import type { ConnectionHealthMonitor } from "./connection-health-monitor";
-import { getGlobalHealthMonitor } from "./connection-health-monitor";
+import { toSafeError } from "@/src/lib/error-type-utils";
+import type { ConnectionHealthMonitor } from "@/src/services/data/connection-health-monitor";
+import { getGlobalHealthMonitor } from "@/src/services/data/connection-health-monitor";
 import type {
   CredentialValidationResult,
   EnhancedCredentialValidator,
-} from "./enhanced-mexc-credential-validator";
-import { getGlobalCredentialValidator } from "./enhanced-mexc-credential-validator";
+} from "@/src/services/api/enhanced-mexc-credential-validator";
+import { getGlobalCredentialValidator } from "@/src/services/api/enhanced-mexc-credential-validator";
 
 // ============================================================================
 // Types and Interfaces

@@ -1,4 +1,4 @@
-import { getSecurityEvents, isIPSuspicious, logSecurityEvent } from "../lib/rate-limiter";
+import { getSecurityEvents, isIPSuspicious, logSecurityEvent } from "@/src/lib/rate-limiter";
 import { mexcApiBreaker } from "./circuit-breaker";
 
 // ============================================================================

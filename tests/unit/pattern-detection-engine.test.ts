@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SymbolEntry, CalendarEntry } from '../../src/services/mexc-unified-exports';
-import type { ActivityData } from '../../src/schemas/mexc-schemas';
-import { PatternDetectionCore } from '../../src/core/pattern-detection';
+import type { SymbolEntry, CalendarEntry } from '@/src/services/mexc-unified-exports';
+import type { ActivityData } from '@/src/schemas/mexc-schemas';
+import { PatternDetectionCore } from '@/src/core/pattern-detection';
 
 describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
   let patternEngine: PatternDetectionCore;
