@@ -19,7 +19,7 @@
  * - pattern-validator.ts: Validation logic
  */
 
-export { ConfidenceCalculator } from "../core/pattern-detection/confidence-calculator";
+export { ConfidenceCalculator } from "../../../core/pattern-detection/confidence-calculator";
 
 // Export all interfaces and types for backward compatibility
 export type {
@@ -43,14 +43,14 @@ export type {
   // Utility types
   PatternType,
   ReadyStatePattern,
-} from "../core/pattern-detection/interfaces";
+} from "../../../core/pattern-detection/interfaces";
 
 // Export individual components for advanced usage
-export { PatternAnalyzer } from "../core/pattern-detection/pattern-analyzer";
+export { PatternAnalyzer } from "../../../core/pattern-detection/pattern-analyzer";
 // Export the main PatternDetectionCore as the primary interface
-export { PatternDetectionCore } from "../core/pattern-detection/pattern-detection-core";
-export { PatternStorage } from "../core/pattern-detection/pattern-storage";
-export { PatternValidator } from "../core/pattern-detection/pattern-validator";
+export { PatternDetectionCore } from "../../../core/pattern-detection/pattern-detection-core";
+export { PatternStorage } from "../../../core/pattern-detection/pattern-storage";
+export { PatternValidator } from "../../../core/pattern-detection/pattern-validator";
 
 // Convenience function for backward compatibility
 export function createPatternDetectionEngine(config?: any) {

@@ -119,8 +119,8 @@ Always provide detailed, actionable insights with proper risk management conside
     for (const symbol of symbols) {
       try {
         // Import market data services
-        const { mexcApiClient } = await import("../services/mexc-api-client");
-        const { PatternDetectionEngine } = await import("../services/pattern-detection-engine");
+        const { mexcApiClient } = await import("../services/api/mexc-api-client");
+        const { PatternDetectionEngine } = await import("../services/data/pattern-detection/pattern-detection-engine");
 
         // Get current market data
         const ticker = await mexcApiClient.getSymbolTicker(symbol);

@@ -40,12 +40,12 @@ export type {
   RequestOptions,
   RetryConfig,
   TimeoutConfig,
-} from "./api/mexc-api-types";
+} from "./mexc-api-types";
 
 // Export individual services for advanced usage
-export { MexcAuthService } from "./api/mexc-auth-service";
-export { MexcRequestService } from "./api/mexc-request-service";
-export { MexcRetryService } from "./api/mexc-retry-service";
+export { MexcAuthService } from "./mexc-auth-service";
+export { MexcRequestService } from "./mexc-request-service";
+export { MexcRetryService } from "./mexc-retry-service";
 // Export trading-specific types
 export type {
   AccountInfo,
@@ -53,8 +53,8 @@ export type {
   OrderBook,
   OrderParams,
   OrderResult,
-} from "./api/mexc-trading-service";
-export { MexcTradingService } from "./api/mexc-trading-service";
+} from "./mexc-trading-service";
+export { MexcTradingService } from "./mexc-trading-service";
 
 /**
  * Main MEXC API Client - Refactored Implementation

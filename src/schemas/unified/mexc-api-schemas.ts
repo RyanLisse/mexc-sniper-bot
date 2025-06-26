@@ -371,6 +371,25 @@ export const getUniqueActivityTypes = (activities: ActivityData[]): string[] => 
   return [...new Set(activities.map((activity) => activity.activityType))];
 };
 
+export const hasHighPriorityActivity = (activities: ActivityData[]): boolean => {
+  const highPriorityTypes = ["LISTING_EVENT", "LAUNCH_EVENT", "SUN_SHINE", "PROMOTION"];
+  return activities.some((activity) => highPriorityTypes.includes(activity.activityType));
+};
+
+export const isValidForSnipe = (entry: CalendarEntry): boolean => {
+  // Check if the calendar entry is valid for sniping
+  if (!entry.symbol || !entry.vcoinId || !entry.firstOpenTime) {
+    return false;
+  }
+  
+  // Check if the launch time is in the future (at least 5 minutes)
+  const now = Date.now();
+  const launchTime = entry.firstOpenTime;
+  const fiveMinutes = 5 * 60 * 1000;
+  
+  return launchTime > now + fiveMinutes;
+};
+
 // ============================================================================
 // Additional Legacy Schemas
 // ============================================================================

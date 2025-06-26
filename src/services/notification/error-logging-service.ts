@@ -217,8 +217,8 @@ export class ErrorLoggingService {
   private async storeInDatabase(entries: ErrorLogEntry[]): Promise<void> {
     try {
       // Import database connection
-      const { db } = await import("../db");
-      const { errorLogs } = await import("../db/schema");
+      const { db } = await import("../../db");
+      const { errorLogs } = await import("../../db/schema");
 
       // Convert entries to database format
       const dbEntries = entries.map((entry) => ({
@@ -278,8 +278,8 @@ export class ErrorLoggingService {
    */
   async queryLogs(filter: ErrorLogFilter): Promise<ErrorLogEntry[]> {
     try {
-      const { db } = await import("../db");
-      const { errorLogs } = await import("../db/schema");
+      const { db } = await import("../../db");
+      const { errorLogs } = await import("../../db/schema");
       const { and, eq, gte, lte, like, desc } = await import("drizzle-orm");
 
       // Build query conditions
@@ -359,8 +359,8 @@ export class ErrorLoggingService {
     byHour: Record<string, number>;
   }> {
     try {
-      const { db } = await import("../db");
-      const { errorLogs } = await import("../db/schema");
+      const { db } = await import("../../db");
+      const { errorLogs } = await import("../../db/schema");
       const { count, sql, gte } = await import("drizzle-orm");
 
       const endDate = end || new Date();
@@ -451,8 +451,8 @@ export class ErrorLoggingService {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
-      const { db } = await import("../db");
-      const { errorLogs } = await import("../db/schema");
+      const { db } = await import("../../db");
+      const { errorLogs } = await import("../../db/schema");
       const { lt, count } = await import("drizzle-orm");
 
       // First, count how many logs will be deleted
