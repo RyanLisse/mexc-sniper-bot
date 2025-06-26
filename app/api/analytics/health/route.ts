@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
-import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
+import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
 // Request validation schemas
@@ -21,6 +21,17 @@ const HealthQuerySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    // Get user context for user-specific health checks
+    let userId: string | undefined;
+    try {
+      const { getUser } = getKindeServerSession();
+      const user = await getUser();
+      userId = user?.id;
+    } catch {
+      // Health check can work without user context (falls back to environment credentials)
+      userId = undefined;
+    }
+
     // Parse and validate query parameters
     const url = new URL(request.url);
     const params = Object.fromEntries(url.searchParams.entries());
@@ -42,7 +53,8 @@ export async function GET(request: NextRequest) {
     const healthData = await performComprehensiveHealthCheck(
       includeDetails,
       includeRecommendations,
-      checkExternal
+      checkExternal,
+      userId
     );
 
     // Return data in requested format
@@ -164,7 +176,8 @@ export async function POST(request: NextRequest) {
 async function performComprehensiveHealthCheck(
   includeDetails: boolean,
   includeRecommendations: boolean,
-  checkExternal: boolean
+  checkExternal: boolean,
+  userId?: string
 ): Promise<any> {
   const startTime = Date.now();
 
@@ -175,7 +188,7 @@ async function performComprehensiveHealthCheck(
     performance: await checkPerformanceHealth(),
     cache: await checkCacheHealth(),
     ...(checkExternal && {
-      mexc: await checkMexcApiHealth(),
+      mexc: await checkMexcApiHealth(userId),
       database: await checkDatabaseHealth(),
       auth: await checkAuthHealth(),
     }),
@@ -451,9 +464,12 @@ async function checkCacheHealth(): Promise<any> {
   }
 }
 
-async function checkMexcApiHealth(): Promise<any> {
+async function checkMexcApiHealth(userId?: string): Promise<any> {
   try {
-    const mexcService = getRecommendedMexcService();
+    // Try to get user-specific service if userId provided, otherwise fall back to environment
+    const mexcService = userId 
+      ? await getUnifiedMexcService({ userId })
+      : await getUnifiedMexcService();
 
     // Use a basic ping or server time check as health indicator
     const serverTimeResponse = await mexcService.getServerTime();
@@ -468,6 +484,7 @@ async function checkMexcApiHealth(): Promise<any> {
       connectivity: isHealthy ? 'connected' : 'failed',
       latency: serverTimeResponse.responseTime || 'unknown',
       lastUpdated: new Date().toISOString(),
+      credentialSource: userId ? 'user-specific' : 'environment',
       issues: !isHealthy ? [{
         severity: 'critical',
         message: 'MEXC API connectivity failed',
@@ -480,6 +497,7 @@ async function checkMexcApiHealth(): Promise<any> {
       status: 'critical',
       score: 0,
       error: error instanceof Error ? error.message : 'Unknown error',
+      credentialSource: userId ? 'user-specific' : 'environment',
       issues: [{
         severity: 'critical',
         message: 'MEXC service health check failed',
