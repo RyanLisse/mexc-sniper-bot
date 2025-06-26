@@ -77,51 +77,39 @@ export function TradingChart({ className }: TradingChartProps) {
       </CardHeader>
       <CardContent className="pt-4">
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
-          <Suspense
-            fallback={
-              <div className="w-full h-[300px] animate-pulse bg-gray-100 rounded">
-                Loading chart...
-              </div>
-            }
-          >
-            <LazyRecharts>
-              {({ Area, AreaChart, ResponsiveContainer, XAxis, YAxis }) => (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="date"
-                      stroke="#888888"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      stroke="#888888"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                    />
-                    <ChartTooltip />
-                    <Area
-                      type="monotone"
-                      dataKey="volume"
-                      stroke="hsl(var(--chart-1))"
-                      fillOpacity={1}
-                      fill="url(#colorVolume)"
-                      strokeWidth={2}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </LazyRecharts>
-          </Suspense>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="date"
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+              />
+              <ChartTooltip />
+              <Area
+                type="monotone"
+                dataKey="volume"
+                stroke="hsl(var(--chart-1))"
+                fillOpacity={1}
+                fill="url(#colorVolume)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
     </Card>
