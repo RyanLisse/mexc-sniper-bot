@@ -322,7 +322,17 @@ export class WorkflowStatusService {
       activeWorkflows = [];
     }
 
-    // Format activities for API response
+    // Determine workflow states based on system status and active workflows
+    const isSystemRunning = systemStatus.systemStatus === "running";
+    const hasActiveWorkflows = activeWorkflows.length > 0;
+    
+    // Discovery is running if system is running
+    const discoveryRunning = isSystemRunning;
+    
+    // Sniper is active if system is running and has active workflows
+    const sniperActive = isSystemRunning && hasActiveWorkflows;
+
+    // Format activities for API response with required event and status fields
     const formattedActivities = recentActivity.map((activity) => ({
       id: activity.activityId,
       type: activity.type,
@@ -332,12 +342,21 @@ export class WorkflowStatusService {
       workflowId: activity.workflowId,
       symbolName: activity.symbolName,
       vcoinId: activity.vcoinId,
+      // Required fields for schema validation
+      event: activity.type, // Use activity type as event
+      status: activity.level === "error" ? "error" as const : 
+              activity.level === "warning" ? "warning" as const : 
+              "success" as const, // Map level to status
     }));
 
     return {
+      // Required WorkflowStatus fields
+      discoveryRunning,
+      sniperActive,
+      activeWorkflows,
       systemStatus: systemStatus.systemStatus,
       lastUpdate: systemStatus.lastUpdate.toISOString(),
-      activeWorkflows,
+      // Additional fields
       metrics: {
         readyTokens: systemStatus.readyTokens,
         totalDetections: systemStatus.totalDetections,
