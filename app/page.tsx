@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useAuth } from "../src/lib/kinde-auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";

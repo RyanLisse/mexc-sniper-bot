@@ -35,7 +35,18 @@ export async function GET(request: NextRequest) {
       userId: validUserId,
       hasApiKey: !!process.env.MEXC_API_KEY,
       hasSecretKey: !!process.env.MEXC_SECRET_KEY,
+      nodeEnv: process.env.NODE_ENV,
     });
+
+    // Check if credentials are available before proceeding
+    if (!process.env.MEXC_API_KEY || !process.env.MEXC_SECRET_KEY) {
+      console.error("[BalanceAPI] Missing MEXC credentials in environment");
+      return NextResponse.json({
+        success: false,
+        error: "MEXC API credentials not configured on server",
+        details: "Contact administrator to configure MEXC_API_KEY and MEXC_SECRET_KEY",
+      }, { status: 503 });
+    }
 
     // Get real MEXC account balances using user-specific credentials
     const mexcClient = await getUnifiedMexcService({ userId: validUserId });
@@ -68,7 +79,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: balanceData,
+      data: {
+        ...balanceData,
+        hasUserCredentials: true,
+        credentialsType: "user-specific",
+      },
     });
 
   } catch (error) {

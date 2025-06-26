@@ -12,6 +12,10 @@ import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import { db } from '../../src/db';
 import '@testing-library/jest-dom';
 import { globalTimeoutMonitor } from '../utils/timeout-utilities';
+import React from 'react';
+
+// Make React globally available for JSX
+global.React = React;
 
 // Import modular components
 import { 

@@ -190,9 +190,8 @@ export default defineConfig({
     },
     
     // Setup files
-    setupFiles: [
-      './tests/setup/vitest-setup.js'
-    ],
+    // Test setup files
+    setupFiles: ['./tests/setup/vitest-setup.ts'],
     
     // Globals configuration
     globalSetup: './tests/setup/global-setup.js',
@@ -246,7 +245,9 @@ export default defineConfig({
   esbuild: {
     target: 'node18',
     sourcemap: true,
-    minify: false
+    minify: false,
+    jsxFactory: 'React.createElement',
+    jsxFragment: 'React.Fragment',
   },
   
   // Define global constants
