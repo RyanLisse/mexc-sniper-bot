@@ -139,6 +139,15 @@ export interface SystemHealth {
   riskLimits: boolean;
 }
 
+export interface TradingOpportunity {
+  symbol: string;
+  patternMatch: PatternMatch;
+  launchTime: Date;
+  confidence: number;
+  vcoinId: string;
+  projectName: string;
+}
+
 export interface AutoSnipingExecutionReport {
   status: ExecutionStatus;
   config: AutoSnipingConfig;
@@ -271,7 +280,7 @@ export class OptimizedAutoSnipingCore {
       type: "position_opened",
       severity: "info",
       message: "Optimized auto-sniping execution started",
-      details: { config: this.config },
+      details: { enabled: this.config.enabled, maxPositions: this.config.maxPositions },
     });
   }
 
@@ -301,7 +310,7 @@ export class OptimizedAutoSnipingCore {
       type: "position_closed",
       severity: "info",
       message: "Optimized auto-sniping execution stopped",
-      details: { finalStats: this.stats },
+      details: { totalTrades: this.stats.totalTrades, successRate: this.stats.successRate },
     });
   }
 
@@ -351,19 +360,13 @@ export class OptimizedAutoSnipingCore {
 
       console.info("Configuration updated successfully", {
         updatedFields: Object.keys(newConfig),
-        newConfig: Object.fromEntries(
-          Object.entries(newConfig).map(([key, value]) => [
-            key,
-            typeof value === "object" ? JSON.stringify(value) : value,
-          ])
-        ),
       });
 
       this.addValidatedAlert({
         type: "position_opened", // Using existing type for system events
         severity: "info",
         message: "Configuration updated with validation",
-        details: { updatedFields: Object.keys(newConfig) },
+        details: { updatedFieldCount: Object.keys(newConfig).length },
       });
     } catch (error) {
       const safeError = toSafeError(error);
@@ -590,8 +593,45 @@ export class OptimizedAutoSnipingCore {
       return;
     }
 
-    // This would integrate with pattern monitoring service
-    // Implementation continues in execution modules
+    try {
+      // Get potential trading opportunities from pattern detection
+      const tradingOpportunities = await this.scanForTradingOpportunities();
+      
+      if (tradingOpportunities.length === 0) {
+        return;
+      }
+
+      // Process opportunities with risk assessment
+      for (const opportunity of tradingOpportunities) {
+        try {
+          const success = await this.executeTradingOpportunity(opportunity);
+          if (success) {
+            this.stats.totalTrades++;
+            this.stats.dailyTradeCount++;
+            this.stats.successfulTrades++;
+          } else {
+            this.stats.totalTrades++;
+            this.stats.dailyTradeCount++;
+            this.stats.failedTrades++;
+          }
+          
+          // Update success rate
+          this.stats.successRate = (this.stats.successfulTrades / this.stats.totalTrades) * 100;
+          
+          // Only execute one opportunity per cycle to avoid overwhelming the system
+          break;
+        } catch (error) {
+          console.error("Failed to execute trading opportunity", {
+            symbol: opportunity.symbol,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Execution cycle error", {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
   }
 
   private async monitorPositionsParallel(): Promise<void> {
@@ -618,14 +658,201 @@ export class OptimizedAutoSnipingCore {
   }
 
   private async monitorSinglePosition(position: ExecutionPosition): Promise<void> {
-    // Validate position before monitoring
-    const validatedPosition = ExecutionPositionSchema.parse(position);
+    try {
+      // Validate position before monitoring
+      const validatedPosition = ExecutionPositionSchema.parse(position);
 
-    // Monitor individual position
-    // Implementation would include:
-    // - PnL updates
-    // - Stop loss/take profit checks
-    // - Risk management
+      // Get current market price
+      const { getRecommendedMexcService } = await import('./mexc-unified-exports');
+      const mexcService = getRecommendedMexcService();
+      const tickerResponse = await mexcService.getSymbolTicker(validatedPosition.symbol);
+
+      if (!tickerResponse.success || !tickerResponse.data) {
+        console.warn('Failed to get ticker data for position monitoring', {
+          positionId: validatedPosition.id,
+          symbol: validatedPosition.symbol,
+        });
+        return;
+      }
+
+      const currentPrice = parseFloat(tickerResponse.data.price);
+      const entryPrice = parseFloat(validatedPosition.entryPrice);
+      const quantity = parseFloat(validatedPosition.quantity);
+
+      // Update current price and PnL
+      validatedPosition.currentPrice = currentPrice.toString();
+      
+      // Calculate unrealized PnL
+      const unrealizedPnl = (currentPrice - entryPrice) * quantity;
+      const unrealizedPnlPercentage = ((currentPrice - entryPrice) / entryPrice) * 100;
+      
+      validatedPosition.unrealizedPnl = unrealizedPnl.toFixed(4);
+      validatedPosition.unrealizedPnlPercentage = unrealizedPnlPercentage;
+
+      // Update position in map
+      this.activePositions.set(validatedPosition.id, validatedPosition);
+
+      // Check stop loss
+      if (validatedPosition.stopLossPrice) {
+        const stopLossPrice = parseFloat(validatedPosition.stopLossPrice);
+        if (currentPrice <= stopLossPrice) {
+          console.warn('Stop loss triggered', {
+            positionId: validatedPosition.id,
+            symbol: validatedPosition.symbol,
+            currentPrice,
+            stopLossPrice,
+            unrealizedPnl: unrealizedPnl.toFixed(4),
+          });
+
+          await this.executeStopLoss(validatedPosition, currentPrice);
+          return;
+        }
+      }
+
+      // Check take profit
+      if (validatedPosition.takeProfitPrice) {
+        const takeProfitPrice = parseFloat(validatedPosition.takeProfitPrice);
+        if (currentPrice >= takeProfitPrice) {
+          console.info('Take profit triggered', {
+            positionId: validatedPosition.id,
+            symbol: validatedPosition.symbol,
+            currentPrice,
+            takeProfitPrice,
+            unrealizedPnl: unrealizedPnl.toFixed(4),
+          });
+
+          await this.executeTakeProfit(validatedPosition, currentPrice);
+          return;
+        }
+      }
+
+      // Check for extreme movements (circuit breaker)
+      if (Math.abs(unrealizedPnlPercentage) > 25) { // 25% movement triggers review
+        this.addValidatedAlert({
+          type: "risk_limit_hit",
+          severity: "warning",
+          message: `Extreme price movement detected: ${validatedPosition.symbol}`,
+          details: {
+            symbol: validatedPosition.symbol,
+            currentPrice,
+            entryPrice,
+            pnlPercentage: unrealizedPnlPercentage.toFixed(2),
+            movementType: unrealizedPnlPercentage > 0 ? 'gain' : 'loss',
+          },
+          positionId: validatedPosition.id,
+          symbol: validatedPosition.symbol,
+        });
+      }
+
+    } catch (error) {
+      console.error('Position monitoring error', {
+        positionId: position.id,
+        symbol: position.symbol,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /**
+   * Execute stop loss for a position
+   */
+  private async executeStopLoss(position: ExecutionPosition, currentPrice: number): Promise<void> {
+    try {
+      const { CoreTradingEngine } = await import('./auto-sniping/core-trading-engine');
+      const tradingEngine = CoreTradingEngine.getInstance();
+
+      const result = await tradingEngine.executeSellTrade(position, 'stop_loss');
+      
+      if (result.success) {
+        // Remove from active positions
+        this.activePositions.delete(position.id);
+        this.stats.activePositions = this.activePositions.size;
+        
+        // Add to execution history
+        position.status = "CLOSED";
+        this.executionHistory.push(position);
+
+        // Calculate final PnL
+        const entryPrice = parseFloat(position.entryPrice);
+        const quantity = parseFloat(position.quantity);
+        const realizedPnl = (currentPrice - entryPrice) * quantity;
+        
+        // Update stats
+        this.stats.totalPnl = (parseFloat(this.stats.totalPnl) + realizedPnl).toFixed(4);
+        
+        this.addValidatedAlert({
+          type: "stop_loss_hit",
+          severity: "warning",
+          message: `Stop loss executed: ${position.symbol}`,
+          details: {
+            symbol: position.symbol,
+            entryPrice: position.entryPrice,
+            exitPrice: currentPrice.toString(),
+            realizedPnl: realizedPnl.toFixed(4),
+            quantity: position.quantity,
+          },
+          positionId: position.id,
+          symbol: position.symbol,
+        });
+      }
+    } catch (error) {
+      console.error('Stop loss execution failed', {
+        positionId: position.id,
+        symbol: position.symbol,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /**
+   * Execute take profit for a position
+   */
+  private async executeTakeProfit(position: ExecutionPosition, currentPrice: number): Promise<void> {
+    try {
+      const { CoreTradingEngine } = await import('./auto-sniping/core-trading-engine');
+      const tradingEngine = CoreTradingEngine.getInstance();
+
+      const result = await tradingEngine.executeSellTrade(position, 'take_profit');
+      
+      if (result.success) {
+        // Remove from active positions
+        this.activePositions.delete(position.id);
+        this.stats.activePositions = this.activePositions.size;
+        
+        // Add to execution history
+        position.status = "CLOSED";
+        this.executionHistory.push(position);
+
+        // Calculate final PnL
+        const entryPrice = parseFloat(position.entryPrice);
+        const quantity = parseFloat(position.quantity);
+        const realizedPnl = (currentPrice - entryPrice) * quantity;
+        
+        // Update stats
+        this.stats.totalPnl = (parseFloat(this.stats.totalPnl) + realizedPnl).toFixed(4);
+        
+        this.addValidatedAlert({
+          type: "take_profit_hit",
+          severity: "info",
+          message: `Take profit executed: ${position.symbol}`,
+          details: {
+            symbol: position.symbol,
+            entryPrice: position.entryPrice,
+            exitPrice: currentPrice.toString(),
+            realizedPnl: realizedPnl.toFixed(4),
+            quantity: position.quantity,
+          },
+          positionId: position.id,
+          symbol: position.symbol,
+        });
+      }
+    } catch (error) {
+      console.error('Take profit execution failed', {
+        positionId: position.id,
+        symbol: position.symbol,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
   private addValidatedAlert(
@@ -660,7 +887,7 @@ export class OptimizedAutoSnipingCore {
     return "active";
   }
 
-  private async checkSystemHealth(): SystemHealth {
+  private async checkSystemHealth(): Promise<SystemHealth> {
     // Real system health checks
     const apiConnection = await this.validateApiConnection();
     const patternEngine = await this.validatePatternEngine();
@@ -677,13 +904,13 @@ export class OptimizedAutoSnipingCore {
 
   private async validateApiConnection(): Promise<boolean> {
     try {
-      // Use existing MEXC API client to test connectivity
-      const mexcClient = await import("../services/mexc-api-client");
-      const client = mexcClient.mexcApiClient;
+      // Use MEXC service to test connectivity
+      const { getRecommendedMexcService } = await import('./mexc-unified-exports');
+      const mexcService = getRecommendedMexcService();
 
       // Test basic API connectivity by checking server time
-      const serverTime = await client.getServerTime();
-      return typeof serverTime === "number" && serverTime > 0;
+      const serverTimeResponse = await mexcService.getServerTime();
+      return serverTimeResponse.success && typeof serverTimeResponse.data === "number" && serverTimeResponse.data > 0;
     } catch (error) {
       console.error("API connectivity check failed", { error: toSafeError(error).message });
       return false;
@@ -694,9 +921,8 @@ export class OptimizedAutoSnipingCore {
     try {
       // Test pattern engine with a minimal symbol
       const testSymbol = { cd: "BTCUSDT", sts: 2, st: 2, tt: 4 };
-      const { PatternDetectionEngine } = await import("../services/pattern-detection-engine");
-      const engine = PatternDetectionEngine.getInstance();
-      const patterns = await engine.detectReadyStatePattern(testSymbol);
+      const { patternDetectionEngine } = await import("../services/pattern-detection-engine");
+      const patterns = await patternDetectionEngine.detectReadyStatePattern([testSymbol]);
       return Array.isArray(patterns);
     } catch (error) {
       console.error("Pattern engine validation failed", { error: toSafeError(error).message });
@@ -840,6 +1066,222 @@ export class OptimizedAutoSnipingCore {
       console.error('[AutoSnipingCore] Error calculating ready targets:', error);
       return 0;
     }
+  }
+
+  /**
+   * Scan for trading opportunities using pattern detection
+   */
+  private async scanForTradingOpportunities(): Promise<TradingOpportunity[]> {
+    try {
+      // Get calendar listings for potential new coins
+      const { getRecommendedMexcService } = await import('./mexc-unified-exports');
+      const mexcService = getRecommendedMexcService();
+      const calendarResponse = await mexcService.getCalendarListings();
+      
+      if (!calendarResponse.success || !Array.isArray(calendarResponse.data)) {
+        return [];
+      }
+
+      const calendar = calendarResponse.data;
+      const now = new Date();
+      const advanceThresholdMs = this.config.advanceHoursThreshold * 60 * 60 * 1000;
+      
+      // Filter for coins launching soon (within advance threshold)
+      const upcomingCoins = calendar.filter((entry: any) => {
+        try {
+          const launchTime = new Date(entry.firstOpenTime);
+          const timeDiff = launchTime.getTime() - now.getTime();
+          return timeDiff > 0 && timeDiff <= advanceThresholdMs;
+        } catch (error) {
+          return false;
+        }
+      });
+
+      // Use pattern detection engine to analyze opportunities
+      const { patternDetectionEngine } = await import('../services/pattern-detection-engine');
+      const patternEngine = patternDetectionEngine;
+      
+      const opportunities: TradingOpportunity[] = [];
+      
+      for (const coin of upcomingCoins.slice(0, 5)) { // Limit to 5 coins per cycle
+        try {
+          // Create symbol data for pattern analysis
+          const symbolData = {
+            cd: coin.symbol || coin.vcoinId,
+            sts: 2, // Status 2 (upcoming)
+            st: 2,  // State 2 (ready for analysis) 
+            tt: 4   // Type 4 (new listing)
+          };
+
+          // Analyze patterns for this symbol  
+          const patterns = await patternEngine.detectReadyStatePattern([symbolData]);
+          
+          if (patterns && patterns.length > 0) {
+            // Find the highest confidence pattern
+            const bestPattern = patterns.reduce((best, current) => 
+              current.confidence > best.confidence ? current : best
+            );
+
+            // Only consider patterns above minimum confidence
+            if (bestPattern.confidence >= this.config.minConfidence) {
+              opportunities.push({
+                symbol: `${coin.symbol}USDT`, // Assume USDT pairs for new listings
+                patternMatch: bestPattern,
+                launchTime: new Date(coin.firstOpenTime),
+                confidence: bestPattern.confidence,
+                vcoinId: coin.vcoinId,
+                projectName: coin.projectName || coin.vcoinNameFull || coin.symbol,
+              });
+            }
+          }
+        } catch (error) {
+          console.warn('Pattern analysis failed for coin', { 
+            symbol: coin.symbol, 
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          });
+        }
+      }
+
+      console.info('Trading opportunities scanned', {
+        upcomingCoins: upcomingCoins.length,
+        opportunities: opportunities.length,
+        minConfidence: this.config.minConfidence,
+      });
+
+      return opportunities.sort((a, b) => b.confidence - a.confidence); // Sort by confidence desc
+    } catch (error) {
+      console.error('Failed to scan for trading opportunities', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Execute a trading opportunity using the core trading engine
+   */
+  private async executeTradingOpportunity(opportunity: TradingOpportunity): Promise<boolean> {
+    try {
+      console.info('Executing trading opportunity', {
+        symbol: opportunity.symbol,
+        confidence: opportunity.confidence,
+        patternType: opportunity.patternMatch.patternType,
+      });
+
+      // Import and use the CoreTradingEngine
+      const { CoreTradingEngine } = await import('./auto-sniping/core-trading-engine');
+      const tradingEngine = CoreTradingEngine.getInstance();
+
+      // Execute buy trade
+      const result = await tradingEngine.executeBuyTrade(
+        opportunity.symbol,
+        opportunity.patternMatch,
+        this.config.positionSizeUSDT,
+        this.config.stopLossPercentage,
+        this.config.takeProfitPercentage
+      );
+
+      if (result.success) {
+        // Create and store the position
+        const position: ExecutionPosition = {
+          id: `pos_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          symbol: opportunity.symbol,
+          side: "BUY",
+          quantity: result.executedQuantity?.toString() || this.config.positionSizeUSDT.toString(),
+          entryPrice: result.executedPrice?.toString() || "0",
+          currentPrice: result.executedPrice?.toString() || "0",
+          unrealizedPnl: "0",
+          unrealizedPnlPercentage: 0,
+          stopLossPrice: this.calculateStopLossPrice(result.executedPrice || 0, this.config.stopLossPercentage).toString(),
+          takeProfitPrice: this.calculateTakeProfitPrice(result.executedPrice || 0, this.config.takeProfitPercentage).toString(),
+          status: "ACTIVE",
+          entryTime: new Date().toISOString(),
+          patternMatch: {
+            symbol: opportunity.symbol,
+            patternType: opportunity.patternMatch.patternType,
+            confidence: opportunity.patternMatch.confidence,
+            timestamp: new Date().toISOString(),
+            riskLevel: opportunity.patternMatch.riskLevel,
+            advanceNoticeHours: opportunity.patternMatch.advanceNoticeHours,
+          },
+          executionMetadata: {
+            confidence: opportunity.confidence,
+            executionLatency: result.executionLatency,
+            slippage: result.slippage || 0,
+            orderType: "MARKET",
+          },
+        };
+
+        // Store the position
+        this.activePositions.set(position.id, position);
+        this.stats.activePositions = this.activePositions.size;
+
+        // Add success alert
+        this.addValidatedAlert({
+          type: "position_opened",
+          severity: "info",
+          message: `Position opened: ${opportunity.symbol}`,
+          details: {
+            symbol: opportunity.symbol,
+            confidence: opportunity.confidence,
+            executedPrice: result.executedPrice,
+            quantity: result.executedQuantity,
+            slippage: result.slippage,
+          },
+          positionId: position.id,
+          symbol: opportunity.symbol,
+        });
+
+        return true;
+      } else {
+        // Add error alert
+        this.addValidatedAlert({
+          type: "execution_error",
+          severity: "error",
+          message: `Failed to open position: ${opportunity.symbol}`,
+          details: {
+            symbol: opportunity.symbol,
+            error: result.error,
+            confidence: opportunity.confidence,
+          },
+          symbol: opportunity.symbol,
+        });
+
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to execute trading opportunity', {
+        symbol: opportunity.symbol,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+
+      this.addValidatedAlert({
+        type: "execution_error",
+        severity: "error",
+        message: `Trading execution failed: ${opportunity.symbol}`,
+        details: {
+          symbol: opportunity.symbol,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        symbol: opportunity.symbol,
+      });
+
+      return false;
+    }
+  }
+
+  /**
+   * Calculate stop loss price
+   */
+  private calculateStopLossPrice(entryPrice: number, stopLossPercentage: number): number {
+    return entryPrice * (1 - stopLossPercentage / 100);
+  }
+
+  /**
+   * Calculate take profit price  
+   */
+  private calculateTakeProfitPrice(entryPrice: number, takeProfitPercentage: number): number {
+    return entryPrice * (1 + takeProfitPercentage / 100);
   }
 }
 

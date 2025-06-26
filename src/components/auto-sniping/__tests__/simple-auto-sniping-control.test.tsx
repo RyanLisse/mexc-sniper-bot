@@ -8,7 +8,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { StatusProvider } from "../../../contexts/status-context";
+import { StatusProvider } from "../../../contexts/status-context-v2";
 import { SimpleAutoSnipingControl } from "../simple-auto-sniping-control";
 
 // Mock the hooks

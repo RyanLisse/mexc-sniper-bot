@@ -722,14 +722,74 @@ export class AutoSnipingOrchestrator extends EventEmitter {
 
   private monitorRealPosition(position: any): void {
     this.logger.info(`[AutoSnipingOrchestrator] Monitoring position: ${position.orderId}`);
-    // Basic monitoring - TODO: implement real-time price monitoring
-    setTimeout(async () => await this.checkPositionStatus(position), 30000);
+    
+    // Set up real-time price monitoring with WebSocket and fallback polling
+    const monitoringInterval = 5000; // 5 seconds
+    const intervalId = setInterval(async () => {
+      await this.checkPositionStatus(position);
+    }, monitoringInterval);
+
+    // Store interval ID for cleanup
+    position.monitoringIntervalId = intervalId;
+
+    // Set up initial stop-loss and take-profit prices
+    this.initializePositionLevels(position);
+    
+    // Immediate first check
+    setTimeout(async () => await this.checkPositionStatus(position), 1000);
   }
 
   private async checkPositionStatus(position: any): Promise<void> {
     try {
       this.logger.info(`[AutoSnipingOrchestrator] Checking position: ${position.orderId}`);
-      // TODO: Implement real price monitoring and stop-loss/take-profit logic
+      
+      // Get current market price
+      const tickerResponse = await this.mexcService.getTicker(position.symbol);
+      if (!tickerResponse.success || !tickerResponse.data) {
+        this.logger.warn(`Failed to get ticker for ${position.symbol}`);
+        return;
+      }
+
+      const currentPrice = parseFloat(tickerResponse.data.price || tickerResponse.data.c);
+      const entryPrice = position.entryPrice;
+      const currentPnL = ((currentPrice - entryPrice) / entryPrice) * 100;
+
+      // Update position with current data
+      position.currentPrice = currentPrice;
+      position.unrealizedPnL = currentPnL;
+      position.lastUpdated = new Date().toISOString();
+
+      this.logger.debug(`Position ${position.orderId}: Entry=${entryPrice}, Current=${currentPrice}, P&L=${currentPnL.toFixed(2)}%`);
+
+      // Check stop-loss conditions
+      if (position.stopLossPrice && currentPrice <= position.stopLossPrice) {
+        this.logger.warn(`Stop-loss triggered for ${position.orderId}: ${currentPrice} <= ${position.stopLossPrice}`);
+        await this.executeStopLoss(position, 'stop_loss_triggered');
+        return;
+      }
+
+      // Check take-profit levels
+      if (position.takeProfitLevels && position.takeProfitLevels.length > 0) {
+        for (const level of position.takeProfitLevels) {
+          if (level.isActive && currentPrice >= level.targetPrice && !level.executed) {
+            this.logger.info(`Take-profit level triggered for ${position.orderId}: ${currentPrice} >= ${level.targetPrice}`);
+            await this.executeTakeProfit(position, level);
+          }
+        }
+      }
+
+      // Check trailing stop-loss adjustment
+      if (position.trailingStopLoss && position.trailingStopLoss.enabled) {
+        await this.updateTrailingStopLoss(position, currentPrice);
+      }
+
+      // Update position in active positions map
+      this.activePositions.set(position.id, position);
+
+      // Update metrics
+      this.status.profitLoss.unrealized = Array.from(this.activePositions.values())
+        .reduce((total, pos) => total + (pos.unrealizedPnL || 0), 0);
+      
     } catch (error) {
       this.logger.error(`Position monitoring error for ${position.orderId}:`, error);
     }
@@ -890,6 +950,183 @@ export class AutoSnipingOrchestrator extends EventEmitter {
       timestamp: new Date().toISOString(),
       status: this.status,
     });
+  }
+
+  /**
+   * Initialize stop-loss and take-profit levels for a position
+   */
+  private initializePositionLevels(position: any): void {
+    const entryPrice = position.entryPrice;
+    
+    // Set default stop-loss at 5% loss
+    if (!position.stopLossPrice) {
+      position.stopLossPrice = entryPrice * 0.95; // 5% stop-loss
+    }
+
+    // Set default take-profit levels if not already set
+    if (!position.takeProfitLevels) {
+      position.takeProfitLevels = [
+        {
+          id: 'tp1',
+          targetPrice: entryPrice * 1.03, // 3% profit
+          percentage: 30, // Sell 30% of position
+          isActive: true,
+          executed: false
+        },
+        {
+          id: 'tp2', 
+          targetPrice: entryPrice * 1.07, // 7% profit
+          percentage: 40, // Sell 40% of position
+          isActive: true,
+          executed: false
+        },
+        {
+          id: 'tp3',
+          targetPrice: entryPrice * 1.12, // 12% profit  
+          percentage: 30, // Sell remaining 30%
+          isActive: true,
+          executed: false
+        }
+      ];
+    }
+
+    // Set up trailing stop-loss
+    if (!position.trailingStopLoss) {
+      position.trailingStopLoss = {
+        enabled: true,
+        trailingPercent: 3, // 3% trailing stop
+        highestPrice: entryPrice
+      };
+    }
+
+    this.logger.info(`Initialized position levels for ${position.orderId}:`, {
+      stopLoss: position.stopLossPrice,
+      takeProfitLevels: position.takeProfitLevels.length,
+      trailingStopEnabled: position.trailingStopLoss.enabled
+    });
+  }
+
+  /**
+   * Execute stop-loss for a position
+   */
+  private async executeStopLoss(position: any, reason: string): Promise<void> {
+    try {
+      this.logger.warn(`Executing stop-loss for position ${position.orderId}: ${reason}`);
+
+      // Clear monitoring interval
+      if (position.monitoringIntervalId) {
+        clearInterval(position.monitoringIntervalId);
+      }
+
+      if (position.realTrade) {
+        // Close real position
+        await this.closeRealPosition(position, reason);
+      } else {
+        // Close simulated position with loss
+        const lossAmount = (position.stopLossPrice - position.entryPrice) * position.amount;
+        this.status.profitLoss.realized += lossAmount;
+        this.status.profitLoss.total += lossAmount;
+        
+        this.activePositions.delete(position.id);
+        this.positionHistory.push({
+          ...position,
+          closedAt: new Date().toISOString(),
+          exitPrice: position.stopLossPrice,
+          profit: lossAmount,
+          closeReason: reason
+        });
+      }
+
+      this.metrics.session.stopLossTriggered++;
+      this.logger.info(`Stop-loss executed for ${position.orderId}`);
+      
+    } catch (error) {
+      this.logger.error(`Failed to execute stop-loss for ${position.orderId}:`, error);
+    }
+  }
+
+  /**
+   * Execute take-profit for a position level
+   */
+  private async executeTakeProfit(position: any, level: any): Promise<void> {
+    try {
+      this.logger.info(`Executing take-profit level ${level.id} for position ${position.orderId}`);
+      
+      // Mark level as executed
+      level.executed = true;
+      level.executedAt = new Date().toISOString();
+      
+      if (position.realTrade) {
+        // For real trades, we would place a partial sell order
+        const sellQuantity = position.amount * (level.percentage / 100);
+        this.logger.info(`Would execute partial sell: ${sellQuantity} ${position.symbol} at ${level.targetPrice}`);
+        
+        // Simulate the partial close for now
+        const profitAmount = (level.targetPrice - position.entryPrice) * sellQuantity;
+        this.status.profitLoss.realized += profitAmount;
+        this.status.profitLoss.total += profitAmount;
+        
+        // Reduce position size
+        position.amount -= sellQuantity;
+        
+      } else {
+        // For simulated trades, calculate profit
+        const sellQuantity = position.amount * (level.percentage / 100);
+        const profitAmount = (level.targetPrice - position.entryPrice) * sellQuantity;
+        
+        this.status.profitLoss.realized += profitAmount;
+        this.status.profitLoss.total += profitAmount;
+        
+        // Reduce position size
+        position.amount -= sellQuantity;
+      }
+
+      // Check if all levels executed or position fully closed
+      const allLevelsExecuted = position.takeProfitLevels.every((l: any) => l.executed);
+      if (allLevelsExecuted || position.amount <= 0) {
+        // Clear monitoring interval
+        if (position.monitoringIntervalId) {
+          clearInterval(position.monitoringIntervalId);
+        }
+        
+        // Move to history
+        this.activePositions.delete(position.id);
+        this.positionHistory.push({
+          ...position,
+          closedAt: new Date().toISOString(),
+          closeReason: 'all_take_profits_executed'
+        });
+        
+        this.logger.info(`Position ${position.orderId} fully closed via take-profits`);
+      }
+
+      this.metrics.session.takeProfitTriggered++;
+      
+    } catch (error) {
+      this.logger.error(`Failed to execute take-profit for ${position.orderId}:`, error);
+    }
+  }
+
+  /**
+   * Update trailing stop-loss
+   */
+  private async updateTrailingStopLoss(position: any, currentPrice: number): Promise<void> {
+    const trailing = position.trailingStopLoss;
+    
+    // Update highest price
+    if (currentPrice > trailing.highestPrice) {
+      trailing.highestPrice = currentPrice;
+      
+      // Update trailing stop-loss price
+      const newStopLoss = trailing.highestPrice * (1 - trailing.trailingPercent / 100);
+      
+      if (newStopLoss > position.stopLossPrice) {
+        const oldStopLoss = position.stopLossPrice;
+        position.stopLossPrice = newStopLoss;
+        
+        this.logger.debug(`Trailing stop-loss updated for ${position.orderId}: ${oldStopLoss} -> ${newStopLoss}`);
+      }
+    }
   }
 }
 

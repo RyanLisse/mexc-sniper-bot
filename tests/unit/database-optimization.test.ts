@@ -487,7 +487,6 @@ describe("Database Optimization", () => {
       console.log("✅ Query monitoring wrapper working");
     });
   });
-});
 
 // Helper function to ensure test tables exist
 async function ensureTestTables(database: any) {

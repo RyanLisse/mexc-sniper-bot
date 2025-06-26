@@ -10,6 +10,14 @@ import { PatternDetectionCore, type PatternMatch } from "../core/pattern-detecti
 import { getErrorMessage, toSafeError } from "../lib/error-type-utils";
 import { EmergencySafetySystem } from "./emergency-safety-system";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
+
+// Timer utility function
+function createTimer(operation: string, component: string) {
+  const start = Date.now();
+  return {
+    end: () => Date.now() - start
+  };
+}
 import {
   type AutoSnipingConfig,
   AutoSnipingConfigSchema,
@@ -64,7 +72,7 @@ export class OptimizedAutoSnipingExecutionEngine {
   private activePositions: Map<string, ExecutionPosition> = new Map();
   private executionHistory: ExecutionPosition[] = [];
   private alerts: ExecutionAlert[] = [];
-  private stats: ExecutionStats;
+  private stats: ExecutionStats & { startTime: number };
 
   private executionInterval: NodeJS.Timeout | null = null;
   private monitoringInterval: NodeJS.Timeout | null = null;
@@ -99,6 +107,10 @@ export class OptimizedAutoSnipingExecutionEngine {
   public async startExecution(): Promise<void> {
     if (this.isExecutionActive) {
       throw new Error("Auto-sniping execution is already active");
+    }
+
+    if (!this.config.enabled) {
+      throw new Error("Auto-sniping is disabled in configuration");
     }
 
     console.info("Starting optimized auto-sniping execution", {
@@ -165,10 +177,129 @@ export class OptimizedAutoSnipingExecutionEngine {
   }
 
   /**
-   * Get current configuration (always enabled)
+   * Get current configuration
    */
   public async getConfig(): Promise<AutoSnipingConfig> {
-    return { ...this.config, enabled: true };
+    return { ...this.config };
+  }
+
+  /**
+   * Get comprehensive execution report
+   */
+  public async getExecutionReport(): Promise<any> {
+    const systemHealth = {
+      apiConnection: await this.checkApiConnection(),
+      patternEngine: this.patternEngine != null,
+      safetySystem: this.safetySystem != null,
+      riskLimits: true
+    };
+
+    const recommendations = this.generateRecommendations();
+
+    return {
+      status: this.isExecutionActive ? "active" : "idle",
+      config: this.config,
+      stats: this.stats,
+      activePositions: Array.from(this.activePositions.values()),
+      recentExecutions: this.executionHistory.slice(-10),
+      activeAlerts: this.alerts.filter(alert => !alert.acknowledged),
+      systemHealth,
+      recommendations,
+      lastUpdated: new Date().toISOString(),
+      activeTargets: this.activePositions.size,
+      readyTargets: 0,
+      executedToday: this.stats.dailyTradeCount,
+      successRate: this.stats.successRate,
+      totalProfit: parseFloat(this.stats.totalPnl || "0"),
+      lastExecution: this.executionHistory.length > 0 ? this.executionHistory[this.executionHistory.length - 1].entryTime : undefined,
+      safetyStatus: this.getSafetyStatus(),
+      patternDetectionActive: true,
+      executionCount: this.stats.totalTrades,
+      successCount: this.stats.successfulTrades,
+      errorCount: this.stats.failedTrades,
+      uptime: this.isExecutionActive ? Date.now() - this.stats.startTime : 0
+    };
+  }
+
+  /**
+   * Pause execution temporarily
+   */
+  public pauseExecution(): void {
+    if (!this.isExecutionActive) {
+      throw new Error("Auto-sniping execution is not active");
+    }
+    
+    this.clearIntervals();
+    this.addAlert({
+      type: "position_opened",
+      severity: "info",
+      message: "Auto-sniping execution paused",
+      details: { activePositions: this.activePositions.size }
+    });
+    
+    console.info("Auto-sniping execution paused", {
+      operation: "pause_execution",
+      activePositions: this.activePositions.size
+    });
+  }
+
+  /**
+   * Resume execution from paused state
+   */
+  public async resumeExecution(): Promise<void> {
+    if (!this.isExecutionActive) {
+      throw new Error("Auto-sniping execution is not active");
+    }
+
+    await this.performPreflightChecks();
+    this.startExecutionCycles();
+    
+    this.addAlert({
+      type: "position_opened",
+      severity: "info",
+      message: "Auto-sniping execution resumed",
+      details: { activePositions: this.activePositions.size }
+    });
+    
+    console.info("Auto-sniping execution resumed", {
+      operation: "resume_execution",
+      activePositions: this.activePositions.size
+    });
+  }
+
+  /**
+   * Acknowledge an alert
+   */
+  public acknowledgeAlert(alertId: string): boolean {
+    const alert = this.alerts.find(a => a.id === alertId);
+    if (!alert) {
+      return false;
+    }
+    
+    alert.acknowledged = true;
+    console.info("Alert acknowledged", {
+      operation: "acknowledge_alert",
+      alertId,
+      alertType: alert.type
+    });
+    
+    return true;
+  }
+
+  /**
+   * Clear all acknowledged alerts
+   */
+  public clearAcknowledgedAlerts(): number {
+    const initialCount = this.alerts.length;
+    this.alerts = this.alerts.filter(alert => !alert.acknowledged);
+    const clearedCount = initialCount - this.alerts.length;
+    
+    console.info("Acknowledged alerts cleared", {
+      operation: "clear_acknowledged_alerts",
+      clearedCount
+    });
+    
+    return clearedCount;
   }
 
   /**
@@ -265,7 +396,7 @@ export class OptimizedAutoSnipingExecutionEngine {
     const safetyStatus = await this.safetySystem.performSystemHealthCheck();
     if (safetyStatus.overall === "critical") {
       throw new Error(
-        `Safety system in critical state: ${safetyStatus.criticalIssues?.join(", ") || "Unknown critical issues"}`
+        `Safety system status: critical`
       );
     }
 
@@ -760,6 +891,43 @@ export class OptimizedAutoSnipingExecutionEngine {
     return result;
   }
 
+  private async checkApiConnection(): Promise<boolean> {
+    try {
+      const result = await this.mexcService.getAccountBalances();
+      return result.success;
+    } catch {
+      return false;
+    }
+  }
+
+  private generateRecommendations(): string[] {
+    const recommendations: string[] = [];
+    
+    if (this.activePositions.size === 0) {
+      recommendations.push("No active positions - system ready for new opportunities");
+    }
+    
+    if (this.stats.successRate < 50 && this.stats.totalTrades > 5) {
+      recommendations.push("Consider adjusting confidence threshold - success rate below 50%");
+    }
+    
+    if (this.config.maxPositions - this.activePositions.size <= 1) {
+      recommendations.push("Approaching maximum position limit");
+    }
+    
+    return recommendations;
+  }
+
+  private getSafetyStatus(): "safe" | "warning" | "danger" {
+    if (this.stats.currentDrawdown > this.config.maxDrawdownPercentage * 0.8) {
+      return "danger";
+    }
+    if (this.stats.currentDrawdown > this.config.maxDrawdownPercentage * 0.5) {
+      return "warning";
+    }
+    return "safe";
+  }
+
   private getDefaultStats(): ExecutionStats {
     return ExecutionStatsSchema.parse({
       totalTrades: 0,
@@ -783,6 +951,7 @@ export class OptimizedAutoSnipingExecutionEngine {
       },
       averagePatternConfidence: 0,
       mostSuccessfulPattern: null,
+      startTime: Date.now()
     });
   }
 }

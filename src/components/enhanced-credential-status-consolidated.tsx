@@ -14,7 +14,7 @@
  */
 
 import { useState } from "react";
-import { useStatus } from "../contexts/status-context";
+import { useStatus } from "../contexts/status-context-v2";
 import {
   CredentialStatusIndicator,
   NetworkStatusIndicator,

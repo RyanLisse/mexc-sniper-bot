@@ -11,7 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { useStatus } from "../../contexts/status-context";
+import { useStatus } from "../../contexts/status-context-v2";
 import { useAutoSnipingExecution } from "../../hooks/use-auto-sniping-execution";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";

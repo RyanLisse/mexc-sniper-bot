@@ -399,6 +399,47 @@ export class MexcCoreClient {
     }
   }
 
+  /**
+   * Get order book for a symbol (required by tests)
+   */
+  async getOrderBook(symbol: string, limit: number = 20): Promise<MexcServiceResponse<{
+    bids: [string, string][];
+    asks: [string, string][];
+    lastUpdateId: number;
+  }>> {
+    const startTime = Date.now();
+
+    try {
+      const url = `${this.config.baseUrl}/api/v3/depth?symbol=${symbol}&limit=${limit}`;
+      const response = await this.makeRequest(url, {
+        method: "GET",
+      });
+
+      if (response.data?.bids && response.data?.asks) {
+        return {
+          success: true,
+          data: {
+            bids: response.data.bids,
+            asks: response.data.asks,
+            lastUpdateId: response.data.lastUpdateId || Date.now(),
+          },
+          timestamp: Date.now(),
+          executionTimeMs: Date.now() - startTime,
+          source: "mexc-core-client",
+        };
+      }
+
+      return {
+        success: false,
+        error: "Invalid order book response format",
+        timestamp: Date.now(),
+        source: "mexc-core-client",
+      };
+    } catch (error) {
+      return this.handleError(error, "getOrderBook", startTime);
+    }
+  }
+
   // ============================================================================
   // Private Helper Methods
   // ============================================================================
