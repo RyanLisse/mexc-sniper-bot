@@ -39,8 +39,8 @@ vi.mock('@/src/hooks/use-mexc-data', () => ({
 }));
 
 // Mock the status context hook for successful status
-vi.mock('@/src/contexts/status-context', async () => {
-  const actual = await vi.importActual('@/src/contexts/status-context');
+vi.mock('@/src/contexts/status-context-v2', async () => {
+  const actual = await vi.importActual('@/src/contexts/status-context-v2');
   return {
     ...actual,
     useStatus: () => ({
