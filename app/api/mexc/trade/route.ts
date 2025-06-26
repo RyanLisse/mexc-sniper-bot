@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRecommendedMexcService } from "../../../../src/services/api/mexc-unified-exports";
 import { type OrderParameters } from "../../../../src/services/api/mexc-client-types";
-import { enhancedRiskManagementService } from "../../../../src/services/enhanced-risk-management-service";
-import { transactionLockService } from "../../../../src/services/transaction-lock-service";
+import { enhancedRiskManagementService } from "../../../../src/services/risk/enhanced-risk-management-service";
+import { transactionLockService } from "../../../../src/services/data/transaction-lock-service";
 import { 
   createSuccessResponse, 
   createErrorResponse, 

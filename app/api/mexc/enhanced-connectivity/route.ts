@@ -10,8 +10,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { apiResponse, handleApiError } from "../../../../src/lib/api-response";
 import { getGlobalCredentialValidator } from "../../../../src/services/api/enhanced-mexc-credential-validator";
-import { getGlobalHealthMonitor } from "../../../../src/services/connection-health-monitor";
-import { getGlobalRealTimeMonitor } from "../../../../src/services/real-time-credential-monitor";
+import { getGlobalHealthMonitor } from "../../../../src/services/data/connection-health-monitor";
+import { getGlobalRealTimeMonitor } from "../../../../src/services/notification/real-time-credential-monitor";
 import { getUserCredentials } from "../../../../src/services/api/user-credentials-service";
 import { toSafeError } from "../../../../src/lib/error-type-utils";
 interface EnhancedConnectivityResponse {

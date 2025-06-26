@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRecommendedMexcService } from "../../../../src/services/api/mexc-unified-exports";
-import { enhancedApiValidationService } from "../../../../src/services/enhanced-api-validation-service";
+import { enhancedApiValidationService } from "../../../../src/services/api/enhanced-api-validation-service";
 import {
   createSuccessResponse,
   createErrorResponse,
